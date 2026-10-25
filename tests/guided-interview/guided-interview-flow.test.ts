@@ -1007,6 +1007,7 @@ describe("emptyCapitalGainTransaction", () => {
       proceeds: "",
       costBasis: "",
       holdingPeriod: "",
+      specialGainCharacter: "",
       basisReportedToIRS: null,
       digitalAsset: null,
       washSale: null,

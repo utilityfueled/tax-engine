@@ -27,7 +27,11 @@ it('collects and edits actual child and preference sources', async () => {
   await change('Have you checked every child AMT statement?', 'true');
   await change('Have you reviewed all child election sources?', 'true'); expect(childElectionFactErrors(latest, 2025)).toEqual({});
   await change('Did the child receive Alaska Permanent Fund dividends?', 'true');
-  await change('Have you reviewed all child election sources?', 'true'); expect(childElectionFactErrors(latest, 2025).childElectionSources).toMatch(/separate method/i);
+  await change('Have you reviewed all child election sources?', 'true'); expect(childElectionFactErrors(latest, 2025).childElectionSources).toMatch(/actual.*source reference/i);
+  await change('Child ordinary dividends', '2000');
+  await change('Child Alaska Permanent Fund dividends included in ordinary dividends', '2000');
+  await change('Child income character source reference', 'Actual Alaska dividend statement');
+  await change('Have you reviewed all child election sources?', 'true'); expect(childElectionFactErrors(latest, 2025)).toEqual({});
   expect(latest[0]?.amtStatements?.[0]?.specifiedPrivateActivityBondInterest).toBe('125.11');
   await click('Add child statement'); expect(latest[0]?.amtStatements).toHaveLength(2);
   await click('Remove child statement 2'); expect(latest[0]?.amtStatements).toHaveLength(1);

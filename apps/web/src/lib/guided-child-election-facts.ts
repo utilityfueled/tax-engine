@@ -20,7 +20,7 @@ type BooleanKey = 'sourceFactsConfirmed' | 'electionRequested' | 'childRequiredT
   | 'alaskaDividendPresent' | 'specialCapitalDistributionPresent' | 'foreignAccountOrTrustPresent'
   | 'amtFactsConfirmed' | 'deductionAllowanceAndNoDuplicationConfirmed';
 export interface ChildPreferenceStatement { sourceId?: string; form?: string; taxExemptInterest?: string; specifiedPrivateActivityBondInterest?: string }
-export type ChildElectionData = Partial<Record<TextKey, string>> & Partial<Record<BooleanKey, boolean | null>> & { amtStatements?: ChildPreferenceStatement[] };
+export type ChildElectionData = Partial<Record<TextKey | 'incomeCharacterSourceReference' | 'alaskaPermanentFundDividends' | 'collectiblesGain' | 'unrecapturedSection1250Gain' | 'section1202Gain', string>> & Partial<Record<BooleanKey, boolean | null>> & { amtStatements?: ChildPreferenceStatement[] };
 const comparisonSituations = ['married_separate', 'custodial_separate_stepparent', 'surviving_separate_stepparent', 'never_married_together_all_year'];
 function text(value: string | undefined, name: string) { if (!value?.trim()) throw new Error(`Enter the actual ${name}.`); return value.trim(); }
 function money(value: string | undefined, name: string) {
@@ -37,15 +37,28 @@ export function buildGuidedChildElections(entries: ChildElectionData[] | undefin
   const children = entries.map(entry => {
     if (entry.taxYear !== String(taxYear)) throw new Error('Match the actual child source year to the return.');
     if (entry.sourceFactsConfirmed !== true) throw new Error('Review and confirm the actual child election sources after the last edit.');
-    for (const [key, label] of [['alaskaDividendPresent', 'Alaska dividend'], ['specialCapitalDistributionPresent', 'special capital distribution'], ['foreignAccountOrTrustPresent', 'foreign account or trust']] as const) {
-      if (bool(entry[key], `${label} answer`)) throw new Error(`This child ${label} source needs its separate method. Keep the source for review; do not substitute zero.`);
-    }
+    const alaskaPresent = bool(entry.alaskaDividendPresent, 'Alaska dividend answer');
+    const specialPresent = bool(entry.specialCapitalDistributionPresent, 'special capital distribution answer');
+    if (bool(entry.foreignAccountOrTrustPresent, 'foreign account or trust answer')) throw new Error('This child foreign account or trust source needs its separate reporting method. Keep the source for review.');
+    const sourceComponent = (value: string | undefined, present: boolean, label: string) => {
+      if (present) return money(value, label);
+      if (value?.trim() && !parseGuidedCurrency(money(value, label)).isZero()) throw new Error(`Reconcile the actual ${label} with the answer that this source is absent.`);
+      return '0'; // Established by the explicit source absence answer, not omission.
+    };
+    const character = { sourceReference: text(alaskaPresent || specialPresent ? entry.incomeCharacterSourceReference : entry.sourceReference, 'child income character source reference'),
+      alaskaPermanentFundDividends: sourceComponent(entry.alaskaPermanentFundDividends, alaskaPresent, 'Alaska dividend amount'),
+      collectiblesGain: sourceComponent(entry.collectiblesGain, specialPresent, 'collectibles gain'),
+      unrecapturedSection1250Gain: sourceComponent(entry.unrecapturedSection1250Gain, specialPresent, 'unrecaptured section1250 gain'),
+      section1202Gain: sourceComponent(entry.section1202Gain, specialPresent, 'section1202 gain') };
     const ssn = text(entry.ssn, 'child SSN');
     if (!/^\d{3}-?\d{2}-?\d{4}$/.test(ssn)) throw new Error('Enter the actual nine-digit child SSN.');
     const identity = ssn.replace(/-/g, '');
     if (seen.has(identity)) throw new Error('Duplicate child election identity.');
     seen.add(identity);
     const amounts = Object.fromEntries(childElectionAmounts.map(([key, label]) => [key, money(entry[key], label)]));
+    if (parseGuidedCurrency(character.alaskaPermanentFundDividends).gt(parseGuidedCurrency(amounts.ordinaryDividends).minus(amounts.qualifiedDividends))) throw new Error('The actual child Alaska amount must be included in nonqualified ordinary dividends.');
+    if (parseGuidedCurrency(character.collectiblesGain).plus(character.unrecapturedSection1250Gain).plus(character.section1202Gain).gt(amounts.capitalGainDistributions)) throw new Error('The actual child special capital components exceed total capital distributions.');
+    if (parseGuidedCurrency(character.section1202Gain).gt(0)) throw new Error('Child section1202 gain requires its actual issuer and acquisition exclusion method.');
     const studentStarted = !!(entry.studentProgram || entry.studentMonths || entry.studentSourceReference);
     if (studentStarted && !/^\s*(?:[1-9]|1[0-2])(?:\s*,\s*(?:[1-9]|1[0-2]))*\s*$/.test(entry.studentMonths ?? '')) throw new Error('Enter the actual student months as distinct month numbers separated by commas.');
     const comparisonStarted = comparisonSituations.includes(entry.parentSituation ?? '') || [entry.comparisonTaxYear, entry.returnTaxableIncomeWithoutChild, entry.otherParentTaxableIncomeWithoutChild, entry.returnSourceReference, entry.otherParentSourceReference].some(value => value?.trim());
@@ -59,7 +72,7 @@ export function buildGuidedChildElections(entries: ChildElectionData[] | undefin
     const amtStarted = parseGuidedCurrency(amounts.taxExemptInterest).gt(0) || entry.amtFactsConfirmed != null || !!entry.amtStatements?.length || !!entry.otherwiseAllowableDeduction?.trim() || !!entry.deductionSourceReference?.trim();
     const parsed = Form8814ChildSchema.safeParse({ ...amounts, electionFacts: {
       taxYear, sourceReference: text(entry.sourceReference, 'child election worksheet reference'), sourceFactsConfirmed: true,
-      incomeCharacter: { sourceReference: text(entry.sourceReference, 'child income character worksheet reference'), alaskaPermanentFundDividends: '0', collectiblesGain: '0', unrecapturedSection1250Gain: '0', section1202Gain: '0' },
+      incomeCharacter: character,
       child: { firstName: text(entry.firstName, 'child first name'), lastName: text(entry.lastName, 'child last name'), ssn, dateOfBirth: text(entry.dateOfBirth, 'child birth date') },
       electionRequested: bool(entry.electionRequested, 'affirmative election choice'), timelyElectionStatus: entry.timelyElectionStatus,
       childRequiredToFile: bool(entry.childRequiredToFile, 'child required-return determination'), childFilesJointReturn: bool(entry.childFilesJointReturn, 'child joint-return answer'),

@@ -835,6 +835,7 @@ export interface CapitalGainTransactionData {
   washSaleDisallowed?: string;
   adjustments?: string;
   sourceClassificationConfirmed?: boolean | null;
+  specialGainCharacter?: "" | "ordinary" | "collectible" | "qsbs" | "other";
 }
 
 export const emptyCapitalGainTransaction: CapitalGainTransactionData = {
@@ -850,6 +851,7 @@ export const emptyCapitalGainTransaction: CapitalGainTransactionData = {
   washSaleDisallowed: "",
   adjustments: "",
   sourceClassificationConfirmed: null,
+  specialGainCharacter: "",
 };
 
 export interface BrokerageEntryData extends InvestmentSourceData {
@@ -1510,6 +1512,7 @@ export function updateSectionData(
   const estimatedTaxSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "payments", "additional-deductions", "other-taxes"].includes(sectionId) && nextPayments?.estimatedTaxFacts;
   const nextInvestments = sectionId === "income-investments" ? data as InvestmentData : state.sectionData["income-investments"];
   const qofSourcesChanged = sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment"].includes(sectionId) && nextInvestments?.qofDispositionFacts;
+  const capitalSourcesChanged = sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment", "income-rental", "adjustments"].includes(sectionId) && nextInvestments?.scheduleDSources;
   const childElectionSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "payments", "additional-deductions", "other-taxes"].includes(sectionId) && nextInvestments?.childElections?.length;
   const niitOtherTaxes = state.sectionData["other-taxes"];
   const nextOtherTaxes = sectionId === "other-taxes" ? data as OtherTaxesData : niitOtherTaxes;
@@ -1545,7 +1548,7 @@ export function updateSectionData(
       ...state.sectionData,
       [sectionId]: data,
       ...(estimatedTaxSourcesChanged && nextPayments ? { payments: { ...nextPayments, estimatedTaxFacts: { ...estimatedTaxSourcesChanged, sourceFactsConfirmed: null } } } : {}),
-      ...((childElectionSourcesChanged || qofSourcesChanged) && nextInvestments ? { "income-investments": { ...nextInvestments, ...(childElectionSourcesChanged ? { childElections: nextInvestments.childElections?.map(child => ({ ...child, sourceFactsConfirmed: null })) } : {}), ...(qofSourcesChanged ? { qofDispositionFacts: { ...qofSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
+      ...((childElectionSourcesChanged || qofSourcesChanged || capitalSourcesChanged) && nextInvestments ? { "income-investments": { ...nextInvestments, ...(childElectionSourcesChanged ? { childElections: nextInvestments.childElections?.map(child => ({ ...child, sourceFactsConfirmed: null })) } : {}), ...(qofSourcesChanged ? { qofDispositionFacts: { ...qofSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(capitalSourcesChanged ? { scheduleDSources: { ...capitalSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...((niitSourcesChanged || foreignTaxSourcesChanged) && nextOtherTaxes ? { "other-taxes": { ...nextOtherTaxes, ...(niitSourcesChanged ? { niitSources: { ...niitSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(foreignTaxSourcesChanged ? { foreignTaxElection: { ...foreignTaxSourcesChanged, sourceFactsConfirmed: null, ...(foreignTaxSourcesChanged.creditWithoutForm1116 ? { creditWithoutForm1116: { ...foreignTaxSourcesChanged.creditWithoutForm1116, sourceFactsConfirmed: null } } : {}) } } : {}) } } : {}),
       ...((tipSourcesChanged || additionalSourcesChanged) && nextAdditional ? { "additional-deductions": { ...nextAdditional, ...(tipSourcesChanged ? { tipIncomeAccounts: nextAdditional.tipIncomeAccounts?.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(additionalSourcesChanged ? { schedule1A: { ...additionalSourcesChanged, sourceFactsConfirmed: null } } : {}) } } : {}),
       ...(mortgageSourcesChanged ? { deductions: { ...mortgageSourcesChanged, mortgageEntries: mortgageSourcesChanged.mortgageEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })), ...(mortgageSourcesChanged.mortgageWorksheet ? { mortgageWorksheet: { ...mortgageSourcesChanged.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) } } : {}),
@@ -1792,9 +1795,10 @@ function validateInvestmentSection(
   taxYear?: number | null,
   stateData?: StateReturnData,
   stateCode?: string | null,
+  personal?: PersonalInfoData,
 ): SectionValidationResult {
-  if (!data || (![...data.interestEntries, ...data.dividendEntries, ...data.brokerageEntries].some(isStartedInvestment) && !data.brokerageEntries.some(entry => entry.transactions.some(isStartedInvestment)) && !data.oidEntries?.some(isStartedOid) && !data.childElections?.length)) return EMPTY_SECTION("investment info");
-  const errors = investmentFactErrors(data, filingStatus, taxYear, stateData, stateCode);
+  if (!data || (![...data.interestEntries, ...data.dividendEntries, ...data.brokerageEntries].some(isStartedInvestment) && !data.brokerageEntries.some(entry => entry.transactions.some(isStartedInvestment)) && !data.oidEntries?.some(isStartedOid) && !data.childElections?.length && !data.scheduleDSources && !data.qofDispositionFacts)) return EMPTY_SECTION("investment info");
+  const errors = investmentFactErrors(data, filingStatus, taxYear, stateData, stateCode, personal);
   if (Object.keys(errors).length) return { status: "partial", message: "Complete the actual investment source amounts, ownership and classifications.", fieldErrors: errors, allowSkip: true };
   return VALID_SECTION;
 }
@@ -1866,7 +1870,7 @@ export function validateSection(
     case "income-self-employment":
       return validateSelfEmploymentSection(getSectionData(state, "income-self-employment"), state.segmentation.filingStatus, getSectionData(state, "income-w2")?.entries, getSectionData(state, "state-return"), state.taxYear);
     case "income-investments":
-      return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"), state.segmentation.stateCode);
+      return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"), state.segmentation.stateCode, getSectionData(state, "personal-info"));
     case "income-rental":
       return validateRentalSection(getSectionData(state, "income-rental"), state.segmentation.filingStatus, state.taxYear, state.segmentation.stateCode);
     case "income-retirement":

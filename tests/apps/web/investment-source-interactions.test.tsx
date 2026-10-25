@@ -79,7 +79,9 @@ describe("actual investment input interactions", () => {
     await change(source, "Box 2b unrecaptured section 1250 gain", "101"); expect(investmentFactErrors(latest, "single", 2025)).toHaveProperty("dividend-0-section1250Gain");
     await change(source, "Box 2b unrecaptured section 1250 gain", "25");
     await change(source, "Box 3 nondividend distributions", "0.01"); expect(investmentFactErrors(latest, "single", 2025)).toHaveProperty("dividend-0-nondividendDistributions"); expect(latest.dividendEntries[0].nondividendDistributions).toBe("0.01");
-    await change(source, "Box 3 nondividend distributions", "0"); expect(investmentFactErrors(latest, "single", 2025)).toEqual({});
+    await change(source, "Box 3 nondividend distributions", "0"); expect(investmentFactErrors(latest, "single", 2025)).toHaveProperty("scheduleDSources");
+    expect(latest.dividendEntries[0].section1250Gain).toBe("25");
+    await change(source, "Box 2b unrecaptured section 1250 gain", "0"); expect(investmentFactErrors(latest, "single", 2025)).toEqual({});
     await click("+ Add another 1099-DIV"); await click("Remove", card("1099-DIV #2")); expect(latest.dividendEntries).toHaveLength(1);
   });
   it("requires renewed sale classification after edits and preserves false and zero", async () => {

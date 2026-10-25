@@ -1,4 +1,5 @@
 import { buildGuidedQofFacts } from "./guided-qof-facts";
+import { buildGuidedScheduleDInputs } from "./guided-schedule-d-sources";
 import { buildBrokerageWithholdingSource } from "./guided-brokerage-withholding";
 import { buildForeignIncomeInput, foreignIncomeFactErrors } from "./guided-foreign-income";
 import { buildEstimatedTaxFacts, estimatedTaxFactErrors } from "./guided-estimated-tax-facts";
@@ -637,7 +638,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(tipIncomeFactErrors(state));
     assertKnownFacts(schedule1AFactErrors(state));
     assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus, state.taxYear));
-    assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode));
+    assertKnownFacts(investmentFactErrors(investData, segmentation.filingStatus, state.taxYear, stateReturnData, segmentation.stateCode, personalInfo));
     assertKnownFacts(businessFactErrors(seData, segmentation.filingStatus, w2Data?.entries, stateReturnData, state.taxYear));
     assertKnownFacts(rentalFactErrors(rentalData?.entries, segmentation.filingStatus, state.taxYear, segmentation.stateCode));
     assertKnownFacts(deductionFactErrors(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse));
@@ -764,6 +765,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     form1099Int,
     form8814: buildGuidedChildElections(investData?.childElections, state.taxYear),
     qofDispositionFacts: buildGuidedQofFacts(investData?.qofDispositionFacts, state.taxYear),
+    ...buildGuidedScheduleDInputs(investData, state.taxYear, segmentation.filingStatus, personalInfo),
     form1099OID,
     paResidentReturn: stateCode === "PA" && form1099OID.length ? { scheduleA: { oidSources: buildPaOidSources(investData?.oidEntries) } } : undefined,
     form1099Div,

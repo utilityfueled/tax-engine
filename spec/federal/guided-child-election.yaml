@@ -6,8 +6,9 @@ notes: |
   Source collection for historical2025 and the isolated2026 candidate. No
   income, identity, parent selection, payment or student fact is inferred.
   Canonical Form8814 eligibility and computed parent comparisons remain
-  authoritative. Special Alaska/capital/foreign-account methods remain saved
-  with an explicit unsupported route until their source methods are complete.
+  authoritative. Actual Alaska and collectible/section1250 income character
+  is collected by guided-schedule-d-sources.yaml. QSBS issuer/history and
+  foreign-account reporting methods retain their explicit separate boundaries.
 lines:
   - line: "actual-child"
     description: "Complete actual child election sources"

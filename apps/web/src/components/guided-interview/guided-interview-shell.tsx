@@ -540,6 +540,8 @@ function SectionContent({
           oidEntries={oidEntries}
           childElections={investData?.childElections}
           qofDispositionFacts={investData?.qofDispositionFacts}
+          scheduleDSources={investData?.scheduleDSources}
+          onScheduleDSourcesChange={scheduleDSources => onStateChange(updateSectionData(state, "income-investments", { ...investData, interestEntries, dividendEntries, brokerageEntries, oidEntries, scheduleDSources }))}
           onQofDispositionFactsChange={qofDispositionFacts => onStateChange(updateSectionData(state, "income-investments", { ...investData, interestEntries, dividendEntries, brokerageEntries, oidEntries, qofDispositionFacts }))}
           onChildElectionsChange={childElections => onStateChange(updateSectionData(state, "income-investments", { ...investData, interestEntries, dividendEntries, brokerageEntries, oidEntries, childElections }))}
           stateCode={state.segmentation.stateCode}

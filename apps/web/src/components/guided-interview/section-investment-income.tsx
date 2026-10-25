@@ -1,6 +1,8 @@
 "use client";
 import { QofDispositionDetails } from "./qof-disposition-details";
 import { BrokerageWithholdingDetails } from "./brokerage-withholding-details";
+import { ScheduleDSourceDetails } from "./schedule-d-source-details";
+import type { ScheduleDSourceData } from "@/lib/guided-schedule-d-sources";
 import type { QofDispositionData } from "@/lib/guided-qof-facts";
 import { changePrivateActivitySource } from "@/lib/guided-private-activity-facts";
 
@@ -286,6 +288,9 @@ function TransactionRow({
         <CurrencyField label="Actual wash-sale loss disallowed" value={transaction.washSaleDisallowed ?? ""} onChange={value => onUpdate("washSaleDisallowed", value)} />
         <CurrencyField allowNegative label="Other Form 8949 adjustment amount" hint="Exclude the wash-sale amount above. Nonzero other adjustments need codes and a supporting worksheet that this guided path does not yet support." value={transaction.adjustments ?? ""} onChange={value => onUpdate("adjustments", value)} />
       </div>
+      {transaction.holdingPeriod === "long" && <label className="guided-field"><span className="guided-field-label">Actual long-term asset character</span><select className="guided-input" value={transaction.specialGainCharacter ?? ""} onChange={event => onUpdate("specialGainCharacter", event.target.value)}>
+        <option value="">Choose from actual asset records</option><option value="ordinary">Ordinary capital asset</option><option value="collectible">Collectible</option><option value="qsbs">Qualified small business stock requiring issuer history</option><option value="other">Another special asset or method</option>
+      </select><span className="guided-field-hint">Holding a property for more than one year does not establish its capital-gain character.</span></label>}
       <BooleanFact label="Have you checked these sale classifications against the actual source records?" value={transaction.sourceClassificationConfirmed} onChange={value => onUpdate("sourceClassificationConfirmed", value)} />
 
     </div>
@@ -403,6 +408,8 @@ export function SectionInvestmentIncome({
   onChildElectionsChange,
   qofDispositionFacts,
   onQofDispositionFactsChange,
+  scheduleDSources,
+  onScheduleDSourcesChange,
 }: {
   interestEntries: InterestEntryData[];
   dividendEntries: DividendEntryData[];
@@ -417,6 +424,8 @@ export function SectionInvestmentIncome({
   onChildElectionsChange?: (entries: ChildElectionData[]) => void;
   qofDispositionFacts?: QofDispositionData;
   onQofDispositionFactsChange?: (data: QofDispositionData | undefined) => void;
+  scheduleDSources?: ScheduleDSourceData;
+  onScheduleDSourcesChange?: (data: ScheduleDSourceData | undefined) => void;
 }) {
   const currentInterest = interestEntries.length > 0 ? interestEntries : [emptyInterestEntry];
   const currentDividends = dividendEntries.length > 0 ? dividendEntries : [emptyDividendEntry];
@@ -494,6 +503,7 @@ export function SectionInvestmentIncome({
         {onOidEntriesChange && <OidSourceCards entries={oidEntries} stateCode={stateCode} onChange={onOidEntriesChange} />}
         {onChildElectionsChange && <ChildElectionCards entries={childElections} onChange={onChildElectionsChange} />}
         {onQofDispositionFactsChange && <QofDispositionDetails data={qofDispositionFacts} onChange={onQofDispositionFactsChange} />}
+        {onScheduleDSourcesChange && <ScheduleDSourceDetails data={scheduleDSources} investments={{ brokerageEntries, dividendEntries }} onChange={onScheduleDSourcesChange} />}
 
         {/* ── 1099-DIV: Dividends ── */}
         <h3 className="guided-w2-card-title" style={{ marginTop: "24px", marginBottom: "8px" }}>
