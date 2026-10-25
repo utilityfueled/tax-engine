@@ -13,6 +13,8 @@ export interface ProviderWorkspaceResponderDependencies {
   /** Trusted harness/server configuration only; never accepted from request JSON. */
   execution?: AiTaskExecution;
   resolveTaxContext?: (request: ProviderWorkspaceRequest) => VerifiedAiTaxContext | undefined;
+  /** Request-local known-identity check for a private calculation, never from request JSON. */
+  assertResponsePrivacy?: (text: string) => void;
 }
 
 /**
@@ -157,6 +159,7 @@ export function createProviderWorkspaceResponder(dependencies: ProviderWorkspace
       validateGrounding(value) {
         if (value.sourceIds.some(id => !permittedSources.has(id))) throw new Error("Unverified source citation.");
         const text = "summary" in value ? value.summary : value.answer;
+        dependencies.assertResponsePrivacy?.(text);
         if (/ready (?:to|for) (?:download|fil(?:e|ing))|filing[- ]ready|guaranteed (?:refund|deduction)/i.test(text)) throw new Error("Invented readiness claim.");
         if ("engineValues" in value) {
           if (!value.sourceIds.some(id => taxContext?.excerpts.some(entry => entry.id === id))

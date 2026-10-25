@@ -7,7 +7,7 @@ Updated 2026-10-25 UTC. This is a durable package checklist, not release approva
 | Atomic credit ledger | Implemented; local PostgreSQL verified | Owner-serialized reservations, exact attempt cost, one-cent aggregate retail minimum, idempotency, failure holds, reconciliation and refund; 19/19 tests against disposable PostgreSQL 16.14 on loopback |
 | Task adapter/responder | Implemented; focused tests passing | Fixed providers, explicit task profiles, structured response/schema versions, bounded usage/timeouts/cancellation, actual usage hooks, local fallback |
 | Local opt-out | Implemented | Workspace-scoped default local help, failed-write fail-closed behavior, conversation clear on workspace change |
-| Tax grounding | Safe catalog/receipt infrastructure implemented; current helper transport cannot supply verified audit | Server recomputation receipt bound to owner/workspace revision/year/rules; 2026 incomplete and client previews rejected |
+| Tax grounding | Confirmed transient transport implemented; production disabled | Separate private endpoint recomputes actual input, binds owner/workspace/revision/year/rules, redacts source identities and verifies output;2026 incomplete and client previews rejected |
 | Evaluation | Infrastructure implemented; qualification blocked | 270 draft cases: 240 template variants and 30 distinct source-layout/decision scenarios, 88 held-out; **zero independently reviewed cases** and **zero measured provider runs** |
 | Rollout | Implemented and disabled | Empty production config; qualification hashes/version/account evidence/owner approval, 5/25/100 observations, immediate prior-route/deterministic rollback |
 
@@ -35,6 +35,33 @@ Read through official developer documentation on 2026-10-24/25; these are docume
 
 1. Owner must supply approved synthetic-only provider account access and an explicit spending cap. Record actual model IDs, structured-output/effort/usage capability, account settings and dated evidence for Luna High, Sol Low/High, optional Gemini 3.8 High and the two baseline profiles. Document unavailable/failed profiles; do not infer availability from pricing pages. No API key was present in the inspected process/usual local env-file locations.
 2. Independent human reviewers must validate 200–300 representative cases and their expected fields/source grounding, retaining the held-out split. The 270 drafts do not satisfy this requirement. Execute repeated runs within the approved budget; retain failures, actual tokens/cost and independent quality/PII judgments. No LLM-only monetary judge is used.
-3. Complete and independently qualify year-specific tax rules/forms, then bind the existing server audit helpers to an authorized transient complete-confirmed-input calculation request. Current redacted workspace requests cannot safely prove taxpayer facts or audit values. Source catalog and exact blocked conditions are implemented; private-input transport is deliberately not expanded without a reviewed privacy/data contract.
+3. The transient calculation transport is implemented under [its explicit privacy contract](ai-transient-calculation-contract.md). Separate unchecked calculation consent is required, local-only preferences take precedence, and the server recomputes validated facts. Known source identities are removed before provider/accounting hooks; known-identity model answers use the billed-failure fallback. Opaque request IDs stay stable when facts change; a separate payload digest detects reuse with changed calculations. The2026 catalog and model promotion remain closed. Final integrated browser/release and human review evidence is still required.
 4. Rehearse real authenticated staging billing/provider/DB outages, duplicate/retried Stripe credits, concurrent spend, migration, backup restore and rollback with approved staging credentials. Local PostgreSQL tests are useful software evidence, not staging/auth/provider evidence.
 5. Require reviewed report/corpus hashes, capability evidence and explicit owner promotion approval before any rollout configuration changes. Production remains deterministic and filing readiness unchanged.
+
+## Transient transport verification
+
+- Initial route, consent, source-identity and output-privacy regressions failed before their implementation. Latest adjacent route/adapter/context/privacy/billing/rollout/DOM cohort:123 tests across11 files passed. Log:`.local/upgrade-evidence/ai-transient-privacy-final.log`.
+- Independent agent review found an employer-name leak and then legacy payer/recipient identity keys; both were reproduced red and fixed. Human review and live provider evaluation remain absent.
+- No raw facts are added to the ordinary provider packet. The private POST is bounded to1MiB, same-origin checked, authenticated and entitlement checked in hosted mode, no-store on every response, cancellable and nonpersistent. Only allowlisted audited values and matching-year excerpts can ground answers.
+
+### Reviewed transport and browser proof
+
+Exact application tree `e2505e8b5e1bf848a8ea0ac9da21d90608f3dd19` passes
+225 tests across10 route/context/privacy/auth/DOM files, the production web build
+and scoped lint with zero findings. Desktop1280px and mobile390px Chromium cases
+both pass with retries disabled; screenshots were inspected. These exercise
+keyboard consent, no fact transmission while opted out, one private confirmed
+request, disabled production-provider fallback and consent reset on reload.
+Logs: `.local/upgrade-evidence/ai-transport-reviewed-{tests,build,lint,browser}.log`.
+
+The browser found two actual integration defects: a completed guided-only return
+had no document-derived year, and Next normalized a loopback request URL to
+localhost. The client now uses the explicit confirmed input year only when no
+document year exists; conflicts still reject. The origin guard uses the configured
+public URL, with a narrowly checked loopback Host fallback for unconfigured
+self-hosts. An independent agent then reproduced an originless hosted-config
+bypass, which is corrected. Its two original probes and16 origin cases pass.
+Forwarded headers cannot establish trust, and missing/invalid hosted production
+configuration rejects even originless requests. These are finite synthetic local
+checks, not live provider, staging or independent human qualification.

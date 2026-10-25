@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type {
   ProviderFacingPayloadRedaction,
@@ -45,7 +45,8 @@ import {
   type GuidedReviewIssue,
   type InterviewSectionId,
 } from "@/lib/guided-interview-flow";
-import { mapFilingStatus } from "@/lib/guided-interview-bridge";
+import { TaxYearInputSchema } from "@/models/inputs";
+import { buildTaxInputFromGuidedData, mapFilingStatus } from "@/lib/guided-interview-bridge";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import { getInterviewQuestionUiHint } from "@/lib/interview-question-ui";
 import {
@@ -423,6 +424,13 @@ export function ReturnWorkspaceScreen({
   );
   const [partnerReviewDownloadRun, setPartnerReviewDownloadRun] = useState<PartnerReviewDownloadRun | null>(null);
   const [persistedGuidedFlowState, setPersistedGuidedFlowState] = useState<GuidedFlowState | null>(null);
+  const getTaxExplanationInput = useCallback(() => {
+    if (persistedGuidedFlowState?.phase !== "complete" || persistedGuidedFlowState.taxYear !== 2025) return null;
+    try {
+      const parsed = TaxYearInputSchema.safeParse(buildTaxInputFromGuidedData(persistedGuidedFlowState));
+      return parsed.success ? parsed.data : null;
+    } catch { return null; }
+  }, [persistedGuidedFlowState]);
   const [guidedFallbackPreview, setGuidedFallbackPreview] = useState<RefundTickerPreviewData | null>(null);
   const [guidedResumeSectionId, setGuidedResumeSectionId] = useState<InterviewSectionId | null>(null);
   const [guidedReviewIssues, setGuidedReviewIssues] = useState<GuidedReviewIssue[]>([]);
@@ -1592,6 +1600,7 @@ export function ReturnWorkspaceScreen({
         mode="workspace"
         onUploadDocuments={handleGuidedUpload}
         deploymentMode={effectiveDeploymentMode}
+        getTaxExplanationInput={persistedGuidedFlowState?.phase === "complete" && persistedGuidedFlowState.taxYear === 2025 ? getTaxExplanationInput : undefined}
         onOpenGuided={() => setGuidedMode(true)}
       />
 

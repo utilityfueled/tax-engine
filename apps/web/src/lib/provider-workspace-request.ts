@@ -14,8 +14,12 @@ export interface ProviderWorkspaceRequest {
   task: "workspace-summary" | "workspace-help";
   requestId: string;
   requestedAt: string;
-  workspace: ReturnWorkspaceRecord;
-  unsupportedRoutes: WorkspaceUnsupportedRoute[];
+  workspace: Pick<ReturnWorkspaceRecord, "id" | "updatedAt" | "storageMode"> & {
+    summary: Pick<ReturnWorkspaceRecord["summary"], "totalDocuments">;
+    seededReturn: { interviewQuestions: Array<Pick<ReturnWorkspaceRecord["seededReturn"]["interviewQuestions"][number], "status" | "prompt">> };
+    returnSummary: Pick<ReturnWorkspaceRecord["returnSummary"], "status" | "targetTaxYear">;
+  };
+  unsupportedRoutes: Array<Pick<WorkspaceUnsupportedRoute, "title" | "description" | "reasons"> & { id: string }>;
   redactions: ProviderFacingPayloadRedaction[];
   replacementCount: number;
   question?: string;

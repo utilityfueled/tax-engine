@@ -6,12 +6,17 @@ import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
 import { ReturnHelpDock } from "@/components/return-help-dock";
 import { createWorkspaceRecord } from "@/lib/workspace-storage";
 import { writeWorkspaceAiOptOut } from "@/lib/workspace-ai-preferences";
+import { requestTaxCalculationExplanation } from "@/lib/transient-tax-explanation-request";
+import { simpleW2Fixture } from "../../fixtures/simple-w2";
 import { ProviderWorkspaceRequestError, requestProviderWorkspaceHelp } from "@/lib/provider-workspace-request";
 
 vi.mock("@/lib/provider-workspace-request", async (original) => ({
   ...await original<typeof import("@/lib/provider-workspace-request")>(),
   requestProviderWorkspaceHelp: vi.fn(),
 }));
+
+vi.mock("@/lib/transient-tax-explanation-request", () => ({ requestTaxCalculationExplanation: vi.fn() }));
+const explanation = vi.mocked(requestTaxCalculationExplanation);
 
 let container: HTMLDivElement;
 let root: Root;
@@ -66,6 +71,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
   provider.mockResolvedValue(answer());
+  explanation.mockResolvedValue(answer());
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -79,6 +85,39 @@ afterEach(async () => {
 });
 
 describe("return helper privacy and user interactions", () => {
+  it("requires a separate confirmation before uploading complete calculation facts", async () => {
+    const getTaxExplanationInput = vi.fn().mockReturnValue(simpleW2Fixture);
+    await render({ getTaxExplanationInput }); await click(button("Need help?"));
+    const consent = query<HTMLInputElement>('input[aria-label="Explain my confirmed calculation"]');
+    expect(consent.checked).toBe(false); expect(consent.disabled).toBe(true);
+    await ask("Explain AGI."); expect(getTaxExplanationInput).not.toHaveBeenCalled(); expect(explanation).not.toHaveBeenCalled();
+    await click(query<HTMLInputElement>('input[type="checkbox"]'));
+    await ask("Ordinary help."); expect(provider).toHaveBeenCalledOnce(); expect(getTaxExplanationInput).not.toHaveBeenCalled();
+    await click(consent); await ask("Explain the entered calculation.");
+    expect(getTaxExplanationInput).toHaveBeenCalledOnce();
+    expect(explanation).toHaveBeenCalledWith(workspace, "Explain the entered calculation.", simpleW2Fixture, expect.objectContaining({ confirmed: true, optedOut: false, signal: expect.any(AbortSignal) }));
+    expect(text()).toContain("Complete taxpayer facts are sent to this server only for this calculation");
+    await render({ workspace: { ...workspace, updatedAt: "2026-10-25T13:00:00Z" } });
+    expect(query<HTMLInputElement>('input[aria-label="Explain my confirmed calculation"]').checked).toBe(false);
+  });
+
+  it("keeps invalid confirmed facts local and cancels pending explanations on opt-out", async () => {
+    writeWorkspaceAiOptOut(workspace.id, false);
+    const getTaxExplanationInput = vi.fn().mockReturnValue(null);
+    await render({ getTaxExplanationInput }); await click(button("Need help?"));
+    await click(query<HTMLInputElement>('input[aria-label="Explain my confirmed calculation"]'));
+    await ask("Explain the calculation.");
+    expect(explanation).not.toHaveBeenCalled(); expect(provider).not.toHaveBeenCalled();
+    expect(text()).toContain("Complete and confirm the taxpayer facts first.");
+    getTaxExplanationInput.mockReturnValue(simpleW2Fixture);
+    const waiting = deferred<Awaited<ReturnType<typeof requestTaxCalculationExplanation>>>();
+    explanation.mockReturnValue(waiting.promise); await ask("Explain the corrected calculation.");
+    const signal = required(required(explanation.mock.calls[0])[3].signal);
+    await click(query<HTMLInputElement>('input[type="checkbox"]'));
+    expect(signal.aborted).toBe(true);
+    await act(async () => waiting.resolve(answer("STALE PRIVATE CALCULATION")));
+    expect(text()).not.toContain("STALE PRIVATE CALCULATION");
+  });
   it("starts in local-only mode and answers without external processing", async () => {
     const onOpenGuided = vi.fn();
     await render({ onOpenGuided });
