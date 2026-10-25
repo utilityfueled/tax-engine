@@ -15,6 +15,7 @@
  */
 
 import Decimal from "decimal.js";
+import { calculateForm1099G } from "@/engine/forms/form-1099-g.js";
 import type {
   TaxYearInput,
   W2,
@@ -484,6 +485,7 @@ function deriveJointFilingQualifyingIncome(
   form1099Rs: Form1099R[] = [],
   qualifyingBusinessIncome?: Decimal | string | number,
   businessIncomeDeductionCap?: Decimal | string | number,
+  taxYear = 2025,
 ): DerivedJointFilingQualifyingIncome {
   if (filingStatus !== "married_filing_jointly") {
     return {
@@ -518,8 +520,14 @@ function deriveJointFilingQualifyingIncome(
     addAttributedAmount(form.accountHolder, form.reportableWinnings);
   }
 
-  for (const form of form1099Gs) {
-    addAttributedAmount(form.accountHolder, form.unemploymentCompensation);
+  if (form1099Gs.length) {
+    const government = calculateForm1099G(form1099Gs, taxYear, filingStatus);
+    for (const program of government.programs) {
+      addAttributedAmount(program.accountHolder, program.taxableUnemployment);
+    }
+    for (const source of government.sources) {
+      addAttributedAmount(source.accountHolder, source.taxableRtaa.plus(source.taxableGrants).plus(source.taxableFamilyLeave));
+    }
   }
 
   for (const form of form1099Miscs) {
@@ -596,6 +604,7 @@ export function determineBothSpousesQualifyingIncome(
   form1099Rs: Form1099R[] = [],
   qualifyingBusinessIncome?: Decimal | string | number,
   businessIncomeDeductionCap?: Decimal | string | number,
+  taxYear = 2025,
 ): boolean {
   if (filingStatus !== "married_filing_jointly") return false;
 
@@ -620,6 +629,7 @@ export function determineBothSpousesQualifyingIncome(
     form1099Rs,
     qualifyingBusinessIncome,
     businessIncomeDeductionCap,
+    taxYear,
   );
   if (!derived.hasAttribution) return false;
 
@@ -818,6 +828,7 @@ export function buildOhioResidentReturnInput(
     form1099Rs,
     qualifyingBusinessIncome,
     businessIncomeDeductionCap,
+    federalResult.taxYear,
   );
   const primaryQualifyingIncome =
     overlay.primaryQualifyingIncome !== undefined
@@ -843,6 +854,7 @@ export function buildOhioResidentReturnInput(
     form1099Rs,
     qualifyingBusinessIncome,
     businessIncomeDeductionCap,
+    federalResult.taxYear,
   );
 
   // Auto-extract federal interest exempt from Ohio (1099-INT box 3) unless overridden

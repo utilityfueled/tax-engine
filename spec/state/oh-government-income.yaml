@@ -1,0 +1,39 @@
+form: "Ohio government-payment qualifying income"
+fullName: "Ohio joint filing credit actual government-payment source reconciliation"
+taxYear: 2026
+notes: |
+  Applies to source-supported 2025 and 2026 computations. Retrieved 2026-10-25:
+  https://codes.ohio.gov/ohio-revised-code/section-5747.05/9-30-2025
+  division(E): each spouse must have at least $500 of Ohio adjusted gross
+  income excluding interest, dividends/distributions, royalties, rents and gains.
+  https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf
+  Schedule of Credits line12: only amounts included in Ohio AGI qualify.
+  IRS Publication525 unemployment/RTAA and Revenue Ruling2025-4 family leave
+  treatment are implemented by the canonical Form1099G source worksheet.
+  This is a source-conservation correction, not state/form filing qualification.
+lines:
+  - line: "actual-government-income-by-owner"
+    description: "Count actual taxable government income for its recipient once"
+    formula: |
+      For each primary/spouse owner, sum canonical unemployment program taxable
+      income after actual current-year repayments and one contribution recovery
+      per payer/owner/program. Add that owner's taxable RTAA, nonbusiness grants
+      and state PFML family-leave income included in federal/Ohio AGI. Do not use
+      gross Box1, federal/state withholding, refund sources or contributions as
+      separate income. Compare each spouse's complete qualifying income to $500.
+      Use Decimal throughout; preserve actual exact source cents and zero.
+    testRef: "tests/engine/state/oh-government-income.test.ts::Ohio joint credit uses net unemployment after actual repayment and contributions"
+  - line: "complete-program-aggregation"
+    description: "Keep one contribution balance per actual program and owner"
+    formula: "Sum linked receipts, subtract current repayments, then recover the matching opening contribution balance once, without attributing either spouse's income to the other."
+    testRef: "tests/engine/state/oh-government-income.test.ts::Ohio pools a shared government program once without moving spouse income"
+  - line: "other-government-income"
+    description: "Preserve other government income and actual source years"
+    formula: |
+      Add separately classified RTAA, grants and family benefits to the actual
+      recipient's qualifying income. Actual 2026 records must match 2026 source
+      revision and completeness rules. Unverified historical 2024 documents
+      retain historical Box1 handling; an actual source worksheet for an
+      unsupported year rejects explicitly. Explicit qualifying-income overlays
+      remain caller-supplied reconciled amounts and preserve zero.
+    testRef: "tests/engine/state/oh-government-income.test.ts::Ohio counts actual other government income and preserves a zero overlay"

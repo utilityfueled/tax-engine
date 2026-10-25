@@ -527,7 +527,9 @@ lines:
         overlay.spouseQualifyingIncome >= $500
       Otherwise, MFJ only. First derive spouse-level qualifying income as:
         wages from W-2 box 1
-        + unemployment compensation from 1099-G box 1
+        + actual taxable government unemployment after repayments and program
+          contribution recovery, plus taxable RTAA/nonbusiness grants/family
+          benefits from the canonical Form1099G source worksheet
         + reportable winnings from W-2G box 1
         + 1099-MISC box 3 other income
         + taxable disability pensions from 1099-R records treated as wages

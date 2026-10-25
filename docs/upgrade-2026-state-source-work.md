@@ -261,3 +261,27 @@ findings. This is code review, not the required human tax qualification. Logs:
 `.local/upgrade-evidence/oh-year-ceilings-{red,expanded,types,spec,lint}.log`
 and `oh-exemption-independent-review.log`. Exact staged verification is recorded
 with the package commit in the durable checklist.
+
+## Ohio government-payment qualifying income — 2026-10-25
+
+The refreshed [R.C. 5747.05(E)](https://codes.ohio.gov/ohio-revised-code/section-5747.05/9-30-2025)
+and [2025 Ohio booklet](https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf),
+Schedule of Credits line 12, require at least $500 of qualifying income included
+in Ohio AGI for each spouse. The adapter previously counted gross unemployment
+before repayments and contribution recovery, and omitted other actual taxable
+government payments. It now consumes the canonical Form 1099-G source result
+for the return's actual year and owner. Linked program contributions are
+recovered once; actual RTAA, nonbusiness grants and state family-leave income
+remain distinct from withholding and refunds. An explicit reconciled zero
+qualifying-income overlay remains zero.
+
+The spec preceded three failing cases, covering $499/$500 boundaries, gross and
+already-netted repayment reporting, linked source cents, owner conservation,
+other government income and actual 2026 family leave. The initial expanded run
+passes 112 tests; the final combined federal/guided/Ohio review passes 175 tests.
+An independent agent reopened the official statute and booklet and reran the
+three new cases, with no actionable findings. Exact isolated package checks and
+the commit are recorded in the checklist. This is bounded code review and
+synthetic evidence, not state/form or independent human qualification. Evidence:
+`.local/upgrade-evidence/oh-government-{red,green}.log`,
+`parent-government-final-review.log` and `ai-oh-government-review.log`.
