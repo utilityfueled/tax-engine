@@ -1312,26 +1312,26 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "OrdinaryDA guided source collection and actual capital-origin collector; PA/OH actual digital source handoff is committed with independent review.",
-      "Actual prior/mixed charitable carry,2026 nonitemizer carry and source-bound COD vintage reductions; positive1202 and positiveATNOL/current public-cash routes are committed.",
-      "Enabled-scenario source/calculation/review/readiness audit; deliberately unsupported special methods remain distinct from external dependencies.",
-      "Full4aef633coverage is running; inventory392entries regenerated. Final browser/remoteCI/nativeimages/SBOMs/scans/recovery remain.",
+      "Actual prior/mixed charitable history,2026 nonitemizer carry and guided COD collector. DA/capital-origin intake are committed in a66b5de and9d71c5f; COD source core is bb5cbe6.",
+      "Actual prior/mixed charitable history and2026 nonitemizer carry, including confirmed2025 current-gift eligibility/year defects.",
+      "Final enabled-scenario source/calculation/review/readiness audit; deliberately unsupported methods stay explicit.",
+      "Full4aef633coverage/types/spec/inventory/build/lint pass. Browser found a pinned-PDF-runtime setup omission; isolated affected rerun passes. Final full browser/remoteCI/native images/recovery remain.",
       "External staging/providerbudget/humanreview/state-demand/final-form inputs remain unanswered; all240 AIcases human-unreviewed with zero live results/promotion."
     ],
     "latestIntegratedCommit": "4aef633349dbb39c2481b914730c309785cc8c41",
     "activeIntegrationRun": {
       "commit": "4aef633349dbb39c2481b914730c309785cc8c41",
       "command": "pnpm test:coverage --maxWorkers=1",
-      "status": "coverage-types-spec-inventory-build-lint-passed-browser-running",
+      "status": "coverage-types-spec-inventory-build-lint-passed-browser-prerequisite-failed",
       "directory": "/private/tmp/tax-engine-checks-3sahj4b9",
       "evidence": ".local/upgrade-evidence/full-coverage-4aef633.log",
       "sessionId": null,
       "scope": "Immutable committed source; pinnedPython/pypdf, downloaded sample documents and disposable loopback PostgreSQL. No WIP included; all thresholds unchanged.",
       "coveragePassed": 17754,
       "coverageFiles": 918,
-      "browserSessionId": 87186,
+      "browserSessionId": null,
       "browserEvidence": ".local/upgrade-evidence/full-browser-4aef633.log",
-      "browserServerSessionId": 43412,
+      "browserServerSessionId": null,
       "browserOrigin": "http://127.0.0.1:3127"
     },
     "latestCoverageDiagnostic": {
@@ -1564,7 +1564,12 @@
       "scheduleDDigitalSources": "905d219",
       "digitalPacketReadiness": "81668db",
       "digitalStateSources": "4aef633",
-      "pdfFieldLookupRuntime": "b5a0675"
+      "pdfFieldLookupRuntime": "b5a0675",
+      "guidedDigitalAssetSources": "a66b5de",
+      "exactCharitableReporting": "9015b41",
+      "actualCodLossVintages": "bb5cbe6",
+      "guidedCurrentCapitalOrigins": "9d71c5f",
+      "browserPinnedPdfRuntime": "b31b5df"
     },
     "remoteCi": {
       "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
@@ -1633,16 +1638,33 @@
       "thresholdChanged": false,
       "evidence": ".local/upgrade-evidence/full-coverage-1791979.log"
     },
-    "lastPushedCommit": "4aef633349dbb39c2481b914730c309785cc8c41",
+    "lastPushedCommit": "b31b5df97dfacc921a635c0c0cbcf71480fc25ff",
     "currentBrowserRun": {
       "commit": "4aef633349dbb39c2481b914730c309785cc8c41",
-      "status": "running",
+      "status": "completed-with-missing-pdf-runtime",
       "retries": 0,
       "workers": 1,
-      "sessionId": 87186,
+      "sessionId": null,
       "origin": "http://127.0.0.1:3127",
       "evidence": ".local/upgrade-evidence/full-browser-4aef633.log",
-      "stagingEvidence": false
+      "stagingEvidence": false,
+      "passed": 340,
+      "failed": 2,
+      "skipped": 5,
+      "durationMinutes": "13.2",
+      "evidenceSha256": "50260e0911bdc90a7a961c577e70542cd7b7cede73b9aa3900dfe97f6a118010",
+      "failure": "Both QSBS PDF readers selected system python3 without pypdf; review downloads returned successfully.",
+      "focusedRerun": {
+        "passed": 2,
+        "failed": 0,
+        "retries": 0,
+        "explicitPinnedPython": true,
+        "evidence": {
+          "path": ".local/upgrade-evidence/browser-4aef633-pdf-prerequisite-rerun.log",
+          "sha256": "3008d91b77dbde52bb02b27f1952580337cc46066a4a4eae175b6baa733f0d34"
+        }
+      },
+      "limitation": "A focused prerequisite rerun does not make the original full run green. Final integrated browser run still required."
     },
     "currentPackageAudit": {
       "date": "2026-10-25",
@@ -1706,23 +1728,16 @@
       "limitation": "Actual React DOM callback checks; final production browser rerun required."
     },
     "remoteCiLatestObserved": {
-      "date": "2026-10-25",
-      "commit": "71a2536503096550764c14b76e04c248b62c90cd",
-      "runs": [
-        {
-          "name": "CI",
-          "databaseId": 40236691327,
-          "status": "in_progress",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40236691327"
-        },
-        {
-          "name": "Web",
-          "databaseId": 40236691429,
-          "status": "in_progress",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40236691429"
-        }
-      ],
-      "limitation": "Observed before later packages;4aef633 workflows cancelled by71a2536push. No final remote green claimed."
+      "commit": "9015b41a87f16c9b4d698f6c146a37c9da679581",
+      "ci": {
+        "runId": 40238664517,
+        "status": "in_progress"
+      },
+      "web": {
+        "runId": 40238664520,
+        "status": "in_progress"
+      },
+      "limitation": "Observed before later package pushes; no final remote green claimed."
     },
     "remoteCi6b07529": {
       "run": 40176974652,
@@ -2486,12 +2501,87 @@
     },
     "currentArm64Build": {
       "sourceCommit": "4aef633349dbb39c2481b914730c309785cc8c41",
-      "status": "built-runtime-checks-pending",
+      "status": "smoke-recovery-sbom-scan-complete",
       "evidence": ".local/upgrade-evidence/container-4aef633-arm64-build-retry.log",
-      "boundary": "Exact committed4aef633image built after narrowly scoped obsolete build-cache cleanup. Runtime, SBOM/scan and recovery checks pending; not final release code.",
+      "boundary": "Exact committed intermediate4aef633 runtime passes smoke and six-phase local synthetic recovery.157 OS matches remain unaccepted; later source packages and final native platforms need requalification.",
       "image": "localhost/tax-engine:2026-4aef633-arm64",
       "imageDigest": "sha256:535c87589d0dd979e0df15fbd0cf76fcd45949370c60a36a2205769c8dbb203f",
-      "initialFailureEvidence": ".local/upgrade-evidence/container-4aef633-arm64-build.log"
+      "initialFailureEvidence": ".local/upgrade-evidence/container-4aef633-arm64-build.log",
+      "cleanup": {
+        "evidence": ".local/upgrade-evidence/container-owned-build-cache-cleanup.log",
+        "unusedAncestorImagesRemoved": 7,
+        "preservedInUseBuilder": "4312dc4403ef75a358fce3cf6c8c71a41ff4eaee68cd00787056173bdd17bcb2",
+        "freeSpaceBefore": "3.9GiB",
+        "freeSpaceAfter": "6.5GiB",
+        "correction": "Two were selected; only one cache chain was removed. The second was in use and preserved. No force removal, broad prune, tagged-image, container or volume deletion.",
+        "removedUntaggedBuilder": "b12f4c49cf5b4eca702ef09675d6e1af84b89825ceaba1ba4ea90dbc21fc8e31"
+      },
+      "runtimeEvidence": "docs/upgrade-2026-runtime-4aef633.json"
+    },
+    "charityEligibilityReview": {
+      "sourceCommit": "4aef633349dbb39c2481b914730c309785cc8c41",
+      "status": "confirmed-assigned-for-spec-first-correction",
+      "evidence": {
+        "path": ".local/upgrade-evidence/parent-charity-eligibility-audit.log",
+        "sha256": "a70ffd60a759ab8db957fd3f1e2155f18565cc66878b54af267cbc11768bf470"
+      },
+      "probes": 3,
+      "finding": "Legacy2025 accepts explicitly unqualified cash/property gifts and an out-of-year gift as current deductions. Missing/false qualification and actual date need source validation without defaults.",
+      "owner": "ai_billing"
+    },
+    "codSourceIndependentReview": {
+      "tree": "183cbe33621972e0f073ddb55fc72116ae5233b2",
+      "passed": 16,
+      "files": 4,
+      "newIndependentProbes": 5,
+      "evidence": {
+        "path": ".local/upgrade-evidence/parent-cod-review-183cbe33.log",
+        "sha256": "9dbe038fcbde16108b9ac16410bc8cd200c43f37aa56c90dfe0dfe39b3b5e14d"
+      },
+      "humanTaxQualification": false,
+      "finding": "No actionable finding within the documented bounded method.",
+      "commit": "bb5cbe66af8bbefd9906d4e51f049ea29b0d7deb",
+      "packageTests": {
+        "passed": 713,
+        "files": 34,
+        "rootTypes": "passed",
+        "webTypes": "passed",
+        "specReferences": 4665,
+        "renderedPagesInspected": 4
+      }
+    },
+    "browserPdfRuntimeRepair": {
+      "commit": "b31b5df97dfacc921a635c0c0cbcf71480fc25ff",
+      "evidenceDocument": "docs/upgrade-2026-browser-pdf-runtime.md",
+      "focusedBrowserTests": 2,
+      "unitPathTests": 28,
+      "independentReview": "passed-bounded-software-review",
+      "readinessGatesChanged": false
+    },
+    "guidedCurrentCapitalOrigins": {
+      "commit": "9d71c5f30afb1fbabaf0bf50c81925c3138dbb00",
+      "finalTree": "7ce6ce3e12a7d1ff4f64bdaca64d95c04438d5b4",
+      "adjacentTests": 795,
+      "postCodIntegrationTests": 32,
+      "productionBrowserTests": 2,
+      "retries": 0,
+      "independentReview": "passed-bounded-source-and-software-review",
+      "evidenceDocument": "docs/upgrade-2026-facts-work.md"
+    },
+    "runtime4aefIndependentEvidenceReview": {
+      "reviewer": "separate complete_facts agent",
+      "status": "passed-bounded-software-evidence-review",
+      "runtimeDocumentSha256": "82accd11635f8a3357b93e2ee6ca6a7754ae7bee396c1959233bb08f56fa6dae",
+      "advisoryDocumentSha256": "72206d7090621e600b1df7dceb26a91c86537599fc65e28dc33eb9141eae783c",
+      "verified": [
+        "Docker archive manifest/config hash, architecture and revision",
+        "10 local evidence hashes",
+        "six recovery phases and conserved data hashes",
+        "fresh valid Grype database",
+        "157 exact current/prior advisory package tuples and unchanged dispositions",
+        "older exposure evidence explicitly attributed to c018 image"
+      ],
+      "humanSecurityQualification": false
     }
   },
   "historicalReleaseBlockers": {

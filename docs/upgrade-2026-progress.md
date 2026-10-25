@@ -3,7 +3,7 @@
 ## Current checkpoint
 
 Execution remains active and **not release-ready**. Latest confirmed pushed
-integration is `4aef633` on `upgrade/2026-baseline`. Resume from
+commit is `b31b5df` on `upgrade/2026-baseline`. Resume from
 [the durable checklist](upgrade-2026-checklist.md) and `ongoingExecution` in the
 machine checkpoint. Older evidence applies only to its recorded code.
 
@@ -28,15 +28,21 @@ is not expected to resolve the tax arithmetic.
 
 The actual PA/OH digital-source handoff (`4aef633`) passes4,264 tests/154files,
 roottypes,4,634 references, lint and separate12-case review. Three reference
-pages are rendered/inspected. Guided intake remains active. `b5a0675` removes
+pages are rendered/inspected. Guided intake is committed in `a66b5de`. `b5a0675` removes
 repeated PDF test field scans with all assertions and deadlines retained; both
 independent four-case runs pass. Full coverage on committed`4aef633` passes
 17,754 tests in918files, with86.98%branches against the unchanged85%gate.
 All three type checks,4,634spec references, both builds and lint pass; its
-regenerated392-entry inventory passes freshness validation. Full browser checks
-are running. Native arm64 image`535c87589d0d`built after cleanup of two proven
-task-owned obsolete build caches resolved a layer-commit disk failure. Runtime,
-SBOM/scan and recovery checks remain pending.
+regenerated 392-entry inventory passes freshness validation. The full browser
+run records 340 passes, five hosted skips and two missing-reader prerequisite
+failures; both affected cases pass with the pinned reader. The shared launcher
+and CI prerequisite repair is reviewed, committed and pushed in `b31b5df`. Native arm64 image
+`535c87589d0d` built after removal of one proven task-owned obsolete build cache
+and its unused parents resolved a disk failure.
+A second selected cache was in use and was preserved. Smoke and six-phase
+upgrade/recovery/rollback pass. The refreshed scan has the identical157 OS
+package/advisory matches (67advisories,0critical,0npm,0available fixes); owner
+acceptance remains pending. See `upgrade-2026-runtime-4aef633.json`.
 
 Full unit integration at `5006088` passes 17,723 tests in 907 files with no
 failures or skips (382.79 seconds). This excludes later packages and is separate
@@ -53,22 +59,29 @@ provide no staging evidence. Later packages need another full integrated run.
 CI at `9da0bab` passes17,725 cases but fails one fourteen-page PDF timeout
 and stale inventory. The measured lookup repair is committed in`b5a0675`; inventory392entries
 are regenerated from committed`4aef633`.
-Latest observed `71a2536` workflows are pending; they superseded`4aef633`.
+Latest observed `9015b41` workflows are running; earlier push runs were cancelled.
 No current remote green is claimed. A fresh package audit at`71a2536` reports
 zero findings across521 locked entries; OS advisories remain separately tracked.
 
 The [public capability and entry-path audit](upgrade-2026-enabled-scenario-audit.md)
 passes64focused gate cases and corrects stale self-host persistence instructions.
 Review reproduced a missingDA ScheduleD copy action and generic-state DA
-withholding omission; the facts package is correcting both. Separate charity
+withholding omission; both are fixed in `a66b5de`, with781tests and two
+desktop/mobile browser cases plus separate11-case review. Separate charity
 review reproduced early percentage rounding and changed exact amounts surviving
-PDF checks. The corrected immutable package passes27parent review cases; its
-broader checks and source-history work continue.
+PDF checks. The corrected reporting package `9015b41` passes27parent review cases,
+1,476broad cases and476final rebase cases. A separate three-probe audit
+confirms legacy2025 gift eligibility/year defects; their source correction
+and actual charitable history work continue.
 
-The finite internal queue continues with ordinaryDA guided
-intake, capital-origin intake, actual prior/mixed charity,2026 nonitemizer carry
-and source-bound COD
-reductions. The negative-net1202/Form172 overlap remains a named interpretation
+Capital-origin intake is committed and pushed in `9d71c5f`: 795 adjacent
+tests, 32 post-COD integration checks, types/build and both desktop/mobile cases
+pass, with separate source/DOM review. The finite implementation queue continues
+with actual prior and mixed charity history, 2026 nonitemizer carry, and guided
+debt-cancellation sources. The source-bound COD core is independently reviewed and committed in
+`bb5cbe6` and pushed: 713 tests in 34 files, root/web types, 4,665 spec
+references and separate 16-case review pass. Four saved review pages were
+rendered and inspected. The negative-net1202/Form172 overlap remains a named interpretation
 question; unaffected methods continue. Both AI scorer review defects are fixed,
 but all240evaluation cases remain human-unreviewed with zero live measurements.
 Final enabled-scenario auditing, inventory, all integrated checks, native

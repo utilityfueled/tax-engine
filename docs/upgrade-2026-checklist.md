@@ -7,10 +7,21 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-`4aef633` is the latest confirmed pushed integration on `upgrade/2026-baseline`. The goal remains active and the
+`b31b5df` is the latest confirmed pushed commit on `upgrade/2026-baseline`. The goal remains active and the
 upgrade is **not release-ready**. Unanswered external inputs are listed below;
 internal implementation and review continue in parallel.
 
+- `b31b5df`: browser and CI commands use the shared pinned PDF-reader
+  prerequisite. Both unchanged download cases and 28 unit-path cases pass;
+  separate argument/environment/failure-path review passes. The original
+  full browser run is still recorded as failed and needs final replacement.
+- `9d71c5f`: capital-origin guided collection passes 795 adjacent tests,
+  32 post-COD integration checks, types/build and both desktop/mobile cases.
+  Separate source/DOM review passes; screenshots are inspected.
+- `bb5cbe6`: actual insolvency sources reduce independent regular/AMT loss
+  vintages after current tax. The package passes 713 tests in 34 files,
+  root/web types, 4,665 references and separate 16-case review. Four saved
+  pages were rendered and inspected. Actual guided collection remains active.
 - `4aef633`: actual PA digital-asset basis and separate OH withholding sources.
   Exact4,264 tests/154files, roottypes,4,634 references and lint pass; parent12
   independent source cases and three rendered reference pages pass. Guided
@@ -21,15 +32,20 @@ internal implementation and review continue in parallel.
 - Full immutable coverage on`4aef633` passes17,754tests/918files with zero
   failures/skips and86.98%branches against the unchanged85%gate. All three type
   checks,4,634spec references,392-entry inventory, both builds and lint pass.
-  Full production browser checks are running. Arm64 image`535c87589d0d`built
-  after two proven task-owned obsolete build caches were removed to resolve
-  disk exhaustion. Runtime, SBOM/scan and recovery checks remain pending.
+  Full production browser checks finish340passes/5hosted skips/2missing-reader
+  failures; both affected cases pass with the pinned Python reader. Arm64 image`535c87589d0d`built
+  after one proven task-owned obsolete cache chain was removed to resolve
+  disk exhaustion. A second selected cache was in use and was preserved.
+  Smoke and six-phase recovery pass. Refreshed scan retains the identical157
+  OS matches/67advisories,0critical/0npm/0available fixes. Acceptance is pending.
+  See `upgrade-2026-runtime-4aef633.json` for exact image binding and hashes.
 - The [entry-path audit](upgrade-2026-enabled-scenario-audit.md) passes64gate
   cases and corrects stale self-host persistence instructions. Review caught
   omittedDA records in the ScheduleD copy action and generic-state withholding;
-  both are with the facts owner. Corrected charity reporting passes27parent
-  review cases after reproducing early rounding and exact-cent conservation
-  defects. Its broad package checks and actual history work continue.
+  both are fixed in `a66b5de` (781tests,2browser cases,11independent cases).
+  Corrected charity reporting is committed in `9015b41`:27parent review cases,
+  1,476broad cases and476final rebase cases pass. Actual charitable history
+  work includes three newly reproduced2025 gift qualification/year defects.
 - `678fe38`: source-bound positive1202 current origins where the printed and
   statutory traces reconcile. Final12 affected cases,571 adjacent cases, root/web
   types and4,614 references pass after the separate reader repair; parent13-case
@@ -107,7 +123,7 @@ internal implementation and review continue in parallel.
   and the refreshed package audit pass with zero findings across521 entries.
 - CI at `9da0bab` passes17,725 cases but fails one fourteen-page PDF timeout
   and stale inventory. The test lookup repair is committed in`b5a0675`; the regenerated inventory
-  has392entries on`4aef633`. Observed`71a2536`CI/Web remain pending; its fresh
+  has392entries on`4aef633`. Observed `9015b41` CI/Web are running; the earlier fresh
   package audit has zero findings across521entries. Final-head full verification,
   runtime-image advisories/rehearsal and external qualification remain required.
   Full synthetic unit integration on isolated committed `5006088` passed
@@ -119,9 +135,8 @@ internal implementation and review continue in parallel.
   pass; no assertions, timeout or production code changed. See
   [the repair evidence](upgrade-2026-pdf-reader-repair.md).
 
-The remaining finite internal queue is ordinaryDA guided intake;
-ordinary capital-origin intake; actual prior/mixed charity and2026 nonitemizer carry; and source-bound COD
-vintage reductions. Then close the enabled-scenario facts/calculation/review/
+The remaining finite internal queue is actual prior/mixed charity and
+2026 nonitemizer carry, and actual guided COD sources. Then close the enabled-scenario facts/calculation/review/
 readiness audit and run final integration, native images and recovery checks.
 The negative-net1202/Form172 overlap is a specifically unresolved interpretation,
 not an invented zero or completed method. The user has no interpretation to

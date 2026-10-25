@@ -1,10 +1,10 @@
 {
   "recordedAt": "2026-10-25",
   "scope": "exact committed intermediate arm64 runtime candidate; not a qualified release artifact",
-  "imageId": "sha256:c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598",
+  "imageId": "sha256:535c87589d0dd979e0df15fbd0cf76fcd45949370c60a36a2205769c8dbb203f",
   "base": "node:24.22.1-trixie-slim",
   "scanner": "grype 0.121.0",
-  "databaseBuilt": "2026-10-24T17:45:29Z",
+  "databaseBuilt": "2026-10-25T06:27:34Z",
   "matchCounts": {
     "High": 54,
     "Medium": 47,
@@ -12,8 +12,8 @@
     "Low": 10
   },
   "uniqueAdvisories": 67,
-  "sbomSha256": "6be93818604d1ff44c92c185919d5779782276464573d374ab572b1480d68634",
-  "scanSha256": "0c058fa350f49217ca7c36d90c839d1d095cce8b573e08d6c358e27217c1196c",
+  "sbomSha256": "11eb225e2c4c80909e05ff46441393421c52c1891c9b9b8c0100e2242781193f",
+  "scanSha256": "00df6b1876d3631e3d96d2de741a88eea23e1cabdb7077956485a3e1b78f6dbb",
   "advisories": [
     {
       "id": "CVE-2005-2541",
@@ -2813,7 +2813,7 @@
       }
     }
   ],
-  "sourceCommit": "da3e0fc5e51184418f29e16f98faecd13d3ddbb3",
+  "sourceCommit": "4aef633349dbb39c2481b914730c309785cc8c41",
   "exposureEvidence": {
     "glibc": {
       "assessment": "The observed Node process links libc and the dynamic loader. Application source does not directly call the advisory-specific C functions. Native/transitive reachability has not been ruled out. DNS/environment and loader conditions need release-owner review; container controls do not eliminate memory-safety risk.",
@@ -2879,7 +2879,7 @@
       }
     ],
     "shippedComposeProof": "docs/upgrade-2026-compose-security.json",
-    "scope": "Runtime component observations use the registered intermediate arm64 image; source search uses tracked application code; final images require fresh verification."
+    "scope": "Runtime component observations use arm64 image sha256:c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598 at da3e0fc; tracked-source search and official advisory reviews retain their recorded evidence. The new4aef633 scan has an identical157-entry package/advisory/fix-state set; final images still require fresh exposure verification."
   },
   "additionalPlatformEvidence": {
     "commit": "214411a04c0113fbdbc073862cf3803ee3d6b6a4",
@@ -2894,5 +2894,15 @@
     "distinctAdvisories": 67,
     "critical": 0,
     "qualification": "intermediate-native-CI-evidence-not-final-release"
-  }
+  },
+  "previousRuntimeScans": [
+    {
+      "imageId": "sha256:c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598",
+      "sourceCommit": "da3e0fc5e51184418f29e16f98faecd13d3ddbb3",
+      "databaseBuilt": "2026-10-24T17:45:29Z",
+      "sbomSha256": "6be93818604d1ff44c92c185919d5779782276464573d374ab572b1480d68634",
+      "scanSha256": "0c058fa350f49217ca7c36d90c839d1d095cce8b573e08d6c358e27217c1196c"
+    }
+  ],
+  "currentRuntimeEvidence": "docs/upgrade-2026-runtime-4aef633.json"
 }
