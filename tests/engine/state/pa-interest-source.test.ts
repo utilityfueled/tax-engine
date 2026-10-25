@@ -65,7 +65,7 @@ describe("PA interest source boxes and federal reconciliation", () => {
         americanSamoaIncomeExclusion: "0", puertoRicoIncomeExclusion: "0",
         royaltyInterestAdjustment: "0",
         educationExpenses: [{
-          sourceId: "synthetic-college", beneficiaryName: "Synthetic Resident",
+          sourceId: "synthetic-college", beneficiaryName: "Synthetic Resident", beneficiaryTaxId: "111-22-3333",
           relationship: "taxpayer", institutionName: "Synthetic College",
           institutionAddress: "1 College Rd, Harrisburg, PA 17101",
           expenseType: "tuition_and_required_fees", paidTaxYear: 2025,

@@ -77,6 +77,7 @@ import { calculateForm2210 } from "./forms/form-2210.js";
 import { calculateForm3800 } from "./forms/form-3800.js";
 import { calculateForm5695 } from "./forms/form-5695.js";
 import { calculateForm8815, type Form8815Result } from "./forms/form-8815.js";
+import { validateSavingsBondReturnIdentity } from "./forms/savings-bond-return-identity.js";
 import { reconcileEducatorEducationExclusions } from "./forms/educator-education-exclusions.js";
 import { calculateForm8995 } from "./forms/form-8995.js";
 import { calculateForm8995A } from "./forms/form-8995-a.js";
@@ -1787,6 +1788,11 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   let form8815: Form8815Result | undefined;
   let savingsBondExclusion = new Decimal(0);
   if (input.savingsBondRedemptions && input.savingsBondRedemptions.length > 0) {
+    validateSavingsBondReturnIdentity({
+      taxYear: year, filingStatus, primary: input.taxpayer.primary,
+      spouse: input.taxpayer.spouse, dependents: input.taxpayer.dependents,
+      redemptions: input.savingsBondRedemptions, facts: input.form8815,
+    });
     const bondMagiFacts = input.form8815;
     const verifiedBondFacts = filingStatus !== "married_filing_separately" && (year === 2026 || bondMagiFacts !== undefined);
     if (verifiedBondFacts) {

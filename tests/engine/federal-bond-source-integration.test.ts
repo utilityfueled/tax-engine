@@ -17,13 +17,13 @@ function fixture(year = 2025) {
       calculationMethod:"regular",withholdingMethod:"equal-installments",priorYearTaxStatus:"no-tax-liability",priorYearFullYear:true,
       priorYearResidentAllYear:true,priorYearTaxForForm2210:"0",priorYearTaxComputationConfirmed:true,
     },
-    taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: year },
+    taxpayer: { ...simpleW2Fixture.taxpayer, taxYear: year, primary: { ...simpleW2Fixture.taxpayer.primary, dateOfBirth: "1980-01-01" } },
     form1099Int: [{ payer: "Treasury", interestIncome: "100", usSavingsBondInterest: "2000" }],
     savingsBondRedemptions: [{ sourceId: "synthetic-bond", proceeds: "10000", bondType: "paper_ee", issueDate: "2005-01-01", redemptionDate: `${year}-06-15`, ownerDateOfBirth: "1980-01-01", registeredOwner: "taxpayer", ownershipConfirmed: true, faceValue: "16000", priorYearInterestReported: "0" }],
     form8815: {
       sourceFactsConfirmed: true, currentStatementReconciliationConfirmed: true,
       priorYearInterestIncludedInCurrentStatements: "0", americanSamoaIncomeExclusion: "0", puertoRicoIncomeExclusion: "0", royaltyInterestAdjustment: "0",
-      educationExpenses: [{ sourceId: "synthetic-college", beneficiaryName: "Synthetic Student", relationship: "taxpayer", institutionName: "Synthetic College", institutionAddress: "1 College Rd, Example, NY10001", expenseType: "tuition_and_required_fees", paidTaxYear: year, amountPaid: "10000", qualificationConfirmed: true, coordinationConfirmed: true, directInstitutionBenefits: "0", educationCreditExpenses: "0", taxFreeDistributionExpenses: "0", beneficiaryBenefits: "0" }],
+      educationExpenses: [{ sourceId: "synthetic-college", beneficiaryName: "Jane Doe", beneficiaryTaxId: simpleW2Fixture.taxpayer.primary.ssn, relationship: "taxpayer", institutionName: "Synthetic College", institutionAddress: "1 College Rd, Example, NY10001", expenseType: "tuition_and_required_fees", paidTaxYear: year, amountPaid: "10000", qualificationConfirmed: true, coordinationConfirmed: true, directInstitutionBenefits: "0", educationCreditExpenses: "0", taxFreeDistributionExpenses: "0", beneficiaryBenefits: "0" }],
     },
   });
   if (!parsed.form8815) throw new Error("Synthetic source facts must be present");
@@ -57,6 +57,22 @@ describe("Savings-bond return source integration", () => {
     const insufficient = fixture();
     insufficient.form1099Int[0].usSavingsBondInterest = "1000";
     expect(() => calculateFederalTax(insufficient)).toThrow(/statement|Box.?3|exclusion/i);
+  });
+  it("validates actual household identities before the bond exclusion", () => {
+    const actual = fixture();
+    expect(calculateFederalTax(actual).form8815?.excludableSavingsBondInterest.toString()).toBe("2000");
+    const wrongBirth = fixture(); wrongBirth.savingsBondRedemptions[0].ownerDateOfBirth = "1970-01-01";
+    expect(() => calculateFederalTax(wrongBirth)).toThrow(/owner.*birth|birth.*owner/i);
+    const wrongBeneficiary = fixture();
+    const expense = wrongBeneficiary.form8815.educationExpenses?.[0];
+    if (!expense) throw new Error("Missing synthetic expense");
+    expense.beneficiaryTaxId = "999-88-7777";
+    expect(() => calculateFederalTax(wrongBeneficiary)).toThrow(/beneficiary.*identity|identity.*household/i);
+    const missingId = fixture();
+    const missingExpense = missingId.form8815.educationExpenses?.[0];
+    if (!missingExpense) throw new Error("Missing synthetic expense");
+    delete missingExpense.beneficiaryTaxId;
+    expect(() => calculateFederalTax(missingId)).toThrow(/actual.*tax ID/i);
   });
   it("uses actual territory and signed royalty MAGI adjustments", () => {
     const input = fixture();

@@ -22,9 +22,10 @@ describe("Ohio federal source inclusion limits", () => {
   });
   it("Ohio never deducts savings-bond interest already excluded federally", () => {
     const input = TaxYearInputSchema.parse({ ...simpleW2Fixture,
+      taxpayer: { ...simpleW2Fixture.taxpayer, primary: { ...simpleW2Fixture.taxpayer.primary, dateOfBirth: "1980-01-01" } },
       form1099Int: [{ payer: "Treasury", interestIncome: "100", usSavingsBondInterest: "2000" }],
       savingsBondRedemptions: [{ sourceId: "synthetic-bond", proceeds: "10000", bondType: "paper_ee", issueDate: "2005-01-01", redemptionDate: "2025-06-15", ownerDateOfBirth: "1980-01-01", registeredOwner: "taxpayer", ownershipConfirmed: true, faceValue: "16000", priorYearInterestReported: "500" }],
-      form8815: { sourceFactsConfirmed: true, currentStatementReconciliationConfirmed: true, priorYearInterestIncludedInCurrentStatements: "500", americanSamoaIncomeExclusion: "0", puertoRicoIncomeExclusion: "0", royaltyInterestAdjustment: "0", educationExpenses: [{ sourceId: "college", beneficiaryName: "Student", relationship: "taxpayer", institutionName: "Synthetic College", institutionAddress: "1 College Rd", expenseType: "tuition_and_required_fees", paidTaxYear: 2025, amountPaid: "10000", qualificationConfirmed: true, coordinationConfirmed: true, directInstitutionBenefits: "0", educationCreditExpenses: "0", taxFreeDistributionExpenses: "0", beneficiaryBenefits: "0" }] } });
+      form8815: { sourceFactsConfirmed: true, currentStatementReconciliationConfirmed: true, priorYearInterestIncludedInCurrentStatements: "500", americanSamoaIncomeExclusion: "0", puertoRicoIncomeExclusion: "0", royaltyInterestAdjustment: "0", educationExpenses: [{ sourceId: "college", beneficiaryName: "Jane Doe", beneficiaryTaxId: simpleW2Fixture.taxpayer.primary.ssn, relationship: "taxpayer", institutionName: "Synthetic College", institutionAddress: "1 College Rd", expenseType: "tuition_and_required_fees", paidTaxYear: 2025, amountPaid: "10000", qualificationConfirmed: true, coordinationConfirmed: true, directInstitutionBenefits: "0", educationCreditExpenses: "0", taxFreeDistributionExpenses: "0", beneficiaryBenefits: "0" }] } });
     const federal = calculateFederalTax(input);
     expect(federal.totalInterest.toString()).toBe("100");
     expect(federal.form8815?.excludableSavingsBondInterest.toString()).toBe("1500");

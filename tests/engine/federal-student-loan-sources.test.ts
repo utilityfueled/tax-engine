@@ -79,6 +79,7 @@ describe("Canonical actual student loan return worksheet", () => {
   });
   it("uses the allowed savings-bond exclusion before the loan deduction", () => {
     const input = raw();
+    input.taxpayer.primary = { ...input.taxpayer.primary, dateOfBirth: "1980-01-01" };
     const result = calculate({ ...input, w2s: [{ ...input.w2s[0], wages: "97000", federalWithheld: "25000" }],
       studentLoanInterestFacts: facts(2025, { loans: [loan({ interestPaid: "2500" })] }),
       form1099Int: [{ payer: "Treasury", interestIncome: "0", usSavingsBondInterest: "4000" }],
@@ -86,7 +87,7 @@ describe("Canonical actual student loan return worksheet", () => {
         ownerDateOfBirth: "1980-01-01", registeredOwner: "taxpayer", ownershipConfirmed: true, faceValue: "12000", priorYearInterestReported: "0" }],
       form8815: { sourceFactsConfirmed: true, currentStatementReconciliationConfirmed: true,
         priorYearInterestIncludedInCurrentStatements: "0", americanSamoaIncomeExclusion: "0", puertoRicoIncomeExclusion: "0", royaltyInterestAdjustment: "0",
-        educationExpenses: [{ sourceId: "college1", beneficiaryName: "Synthetic taxpayer", relationship: "taxpayer", institutionName: "Synthetic College",
+        educationExpenses: [{ sourceId: "college1", beneficiaryName: "Jane Doe", beneficiaryTaxId: simpleW2Fixture.taxpayer.primary.ssn, relationship: "taxpayer", institutionName: "Synthetic College",
           institutionAddress: "1 College Rd, Example, NY10001", expenseType: "tuition_and_required_fees", paidTaxYear: 2025, amountPaid: "10000",
           qualificationConfirmed: true, coordinationConfirmed: true, directInstitutionBenefits: "0", educationCreditExpenses: "0", taxFreeDistributionExpenses: "0", beneficiaryBenefits: "0" }],
       },

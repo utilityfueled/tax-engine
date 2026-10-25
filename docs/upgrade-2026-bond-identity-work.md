@@ -46,3 +46,27 @@ checks, root types and all3849 spec references. Evidence logs are
 `bond-identity-{adjacent,types,lint}.log` and
 `bond-identity-staged-{tests,types,spec}.log`. Only seven owned files are staged;
 the Form4137 model work, guided intake and hosting work remain separate.
+
+## Canonical return boundary
+
+Core identity validation is committed as `fe4afa8`. The parent independently
+ran all four identity cases successfully (`parent-bond-identity-review.log`).
+The federal owner separately committed the educator exclusion handoff as
+`1dac908` and granted the narrow Form8815 import/call integration to this package.
+
+The new return-level regression first failed because a contradictory birth date
+still reached the exclusion (`bond-return-identity-red.log`). Federal now invokes
+the shared validator with the actual household before the first Form8815
+calculation. The same regression rejects changed or missing beneficiary IDs.
+Synthetic federal, student-loan, Pennsylvania and Ohio fixtures now carry actual
+matching fictional identities; every existing monetary oracle is unchanged.
+All1,048 tests across19 affected consumer files pass (`bond-return-consumers.log`).
+The standalone source module, historical aggregate-only boundary and monetary
+formulas are unchanged. Current guided/privacy checks pass separately and will
+be committed as their own intake package. The exact canonical staged snapshot
+is verified separately from concurrent health, tips and hosting work.
+
+Exact canonical staged tree `d60d56e9` passed all1,038 affected tests in17files,
+root types and all3,859 spec references (`bond-canonical-staged-{tests,types,spec}.log`).
+The staged federal delta contains only the identity import and five-line call;
+the concurrent health-insurance orchestration remains a separate package.

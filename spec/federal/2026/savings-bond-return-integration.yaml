@@ -17,3 +17,7 @@ lines:
     description: "Apply actual territory and royalty worksheet adjustments"
     formula: "Pre-exclusionAGI plus actual studentloan deduction, net2555lines45and50, adoption exclusion, AmericanSamoa and PuertoRico exclusions, plus signed actual pre-exclusion royalty deduction adjustment. Verified facts require known finite values; territory exclusions cannot be negative."
     testRef: "tests/engine/federal-bond-source-integration.test.ts::uses actual territory and signed royalty MAGI adjustments"
+  - line: "return-identity"
+    description: "Reconcile actual registered owners and education recipients before the exclusion"
+    formula: "Call the source identity validator with actual primary, spouse and claimed dependents before Form8815; reject mismatched DOB, name or tax ID without changing source amounts or promoting historical aggregate-only facts"
+    testRef: "tests/engine/federal-bond-source-integration.test.ts::validates actual household identities before the bond exclusion"
