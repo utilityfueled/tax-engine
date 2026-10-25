@@ -13,7 +13,7 @@ notes: |
   Maximum refundable per child: $1,700 (2025).
 
 lines:
-  - line: "5"
+  - line: "9"
     description: "Phase-out threshold"
     formula: "$400,000 if MFJ; $200,000 for all other filing statuses (single, HoH, MFS, QSS)"
     irsRef: "IRC §24(b)(2); Schedule 8812 Instructions, Line 5"
@@ -38,13 +38,13 @@ lines:
     notes: "This amount goes to Form 1040 Line 19"
     testRef: "tests/engine/forms/form-8812.test.ts::Form 8812 Line 14 - nonrefundable limited to tax"
 
-  - line: "15"
+  - line: "16a"
     description: "Unused CTC"
     formula: "Line 12 - Line 14"
     irsRef: "Schedule 8812 Instructions, Line 15"
     testRef: "tests/engine/forms/form-8812.test.ts::Form 8812 Line 15 - unused CTC"
 
-  - line: "18/20"
+  - line: "18a"
     description: "Earned income for ACTC"
     formula: "W-2 wages + net SE earnings - deductible half of SE tax (Schedule 1, Line 15)"
     irsRef: "Schedule 8812 Instructions, Lines 18a-18f; IRC §24(d)(1)(B)(i) → §32(c)(2)(A)(i)(II)"
@@ -64,7 +64,7 @@ lines:
       - "If SE < $400 post-multiplier, no SE tax → deductible half = $0, but SE income (or loss) still counts"
     testRef: "tests/edge-cases/ctc-actc-edge-cases.test.ts::ACTC earned income subtracts deductible half of SE tax — IRC §32(c)(2)"
 
-  - line: "21"
+  - line: "19"
     description: "Earned income excess over $2,500"
     formula: "max(0, earned income - $2,500)"
     irsRef: "Schedule 8812 Instructions, Line 21"
@@ -73,26 +73,32 @@ lines:
       - "$2,501 earned income: $0.15 ACTC"
     testRef: "tests/engine/forms/form-8812.test.ts::Form 8812 Line 21 - earned income excess"
 
-  - line: "24"
+  - line: "20"
     description: "15% of earned income excess"
-    formula: "Line 21 × 15%"
+    formula: "Line 19 × 15%"
     irsRef: "Schedule 8812 Instructions, Line 24"
     testRef: "tests/engine/forms/form-8812.test.ts::Form 8812 Line 24 - 15% calculation"
 
   - line: "27"
     description: "Additional Child Tax Credit (refundable)"
-    formula: "min(Line 15 total unused, Line 24 earned income amount, Line 25 = $1,700 × qualifying children)"
+    formula: "min(Line 16a unused, Line 16b refundable cap, max(Line 20 earned-income amount, eligible Line 25 payroll alternative))"
     irsRef: "Schedule 8812 Instructions, Line 27; IRC §24(d)(1)"
     notes: |
       Goes to Form 1040 Line 28. Max $1,700 per child refundable (2025).
-      Line 15 is the TOTAL unused credit (CTC + ODC combined, after phase-out
-      and nonrefundable limitation). The $1,700 per child cap (Line 25) is
+      Line 16a is the TOTAL unused credit (CTC + ODC combined, after phase-out
+      and nonrefundable limitation). The $1,700 per child cap (Line 16b) is
       the mechanism that prevents ODC from being refunded in normal cases.
       When phase-out exceeds the per-child CTC amount, any remaining combined
       credit (partly ODC-sourced) can still flow into ACTC, limited by the cap.
     edgeCases:
       - "No qualifying children: no ACTC ($1,700 × 0 = $0 cap)"
-      - "High earners with full CTC used: no ACTC needed (Line 15 = $0)"
+      - "High earners with full CTC used: no ACTC needed (Line 16a = $0)"
       - "Very low income: ACTC limited by 15% earned income formula"
-      - "Phase-out > CTC, ODC remains: ACTC uses Line 15 total, not CTC-only subset"
+      - "Phase-out > CTC, ODC remains: ACTC uses Line 16a total, not CTC-only subset"
     testRef: "tests/engine/forms/form-8812.test.ts::Form 8812 Line 27 - ACTC refundable amount"
+
+  - line: "payroll-alternative-and-credit-reservation"
+    description: "Three-child/PR payroll alternative, Form 2555 exclusion and Worksheet B reservation"
+    formula: "For three or more qualifying children, or a bona fide Puerto Rico resident with a child, alternate=max(0, payroll worksheet line21 + deductible-half-SE/unreported-tax line22 - EIC - excess SS). ACTC=min(unused CTC, indexed refundable cap per child, max(15% of earned income above2500, alternate)). Form2555 disallows ACTC. Worksheet B line14 reserves max(0, line12 - potential ACTC) before adoption/clean-energy limitations. 2026 alternate facts must be known."
+    irsRef: "https://www.irs.gov/pub/irs-pdf/f1040s8.pdf, Part II; https://www.irs.gov/instructions/i1040s8, Credit Limit Worksheet B"
+    testRef: "tests/engine/forms/form-8812-2026.test.ts::Schedule 8812 payroll and reservation worksheets"

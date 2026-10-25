@@ -792,14 +792,14 @@ describe("Form 8812 - audit trail", () => {
     const lineIds = result.lines.map((l) => l.line);
     expect(lineIds).toContain("12");
     expect(lineIds).toContain("14");
-    expect(lineIds).toContain("15");
-    expect(lineIds).toContain("18/20");
-    expect(lineIds).toContain("21");
-    expect(lineIds).toContain("24");
+    expect(lineIds).toContain("16a");
+    expect(lineIds).toContain("18a");
+    expect(lineIds).toContain("19");
+    expect(lineIds).toContain("20");
     expect(lineIds).toContain("27");
   });
 
-  it("audit trail contains all 7 Form 8812 line IDs and no duplicates", () => {
+  it("audit trail contains all supported Form 8812 line IDs and no duplicates", () => {
     // 2025 IRS worksheet: result: line 12 = $4900, nonrefundable = $1000, unused = $3900, ACTC = $3400.
     const result = calculateForm8812(make({
       qualifyingChildren: 2,
@@ -808,7 +808,7 @@ describe("Form 8812 - audit trail", () => {
       taxLiability: d(1000),
     }), c);
     const lineIds = result.lines.map((l) => l.line);
-    const expectedLines = ["12", "14", "15", "18/20", "21", "24", "27"];
+    const expectedLines = ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "16a", "16b", "17", "18a", "19", "20", "21", "22", "23", "24", "25", "26", "27"];
     for (const id of expectedLines) {
       expect(lineIds).toContain(id);
     }
@@ -827,9 +827,9 @@ describe("Form 8812 - audit trail", () => {
     const byLine = Object.fromEntries(result.lines.map((l) => [l.line, l.value]));
     expect(byLine["12"].toNumber()).toBe(result.ctcBeforeLimitation.toNumber());
     expect(byLine["14"].toNumber()).toBe(result.nonrefundableCTC.toNumber());
-    expect(byLine["15"].toNumber()).toBe(result.unusedCTC.toNumber());
-    expect(byLine["21"].toNumber()).toBe(result.earnedIncomeExcess.toNumber());
-    expect(byLine["24"].toNumber()).toBe(result.fifteenPercent.toNumber());
+    expect(byLine["16a"].toNumber()).toBe(result.unusedCTC.toNumber());
+    expect(byLine["19"].toNumber()).toBe(result.earnedIncomeExcess.toNumber());
+    expect(byLine["20"].toNumber()).toBe(result.fifteenPercent.toNumber());
     expect(byLine["27"].toNumber()).toBe(result.actc.toNumber());
   });
 });

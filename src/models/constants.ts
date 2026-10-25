@@ -60,6 +60,7 @@ export interface YearConstants {
   saltCap: Decimal;
   saltPhaseDown: { magiThreshold: Decimal; minimumCap: Decimal; rate: Decimal };
   childTaxCredit: {
+    refundablePerChild?: Decimal;
     perChild: Decimal;
     otherDependentCredit: Decimal; // $500 per ODC-qualifying dependent
     phaseOutThreshold: Record<FilingStatus, Decimal>;
@@ -1254,6 +1255,7 @@ export const TAX_CONSTANTS: Record<number, YearConstants> = {
     saltCap: d(40000),
     saltPhaseDown: { magiThreshold: d(500000), minimumCap: d(10000), rate: d("0.30") },
     childTaxCredit: {
+      refundablePerChild: d("1700"),
       perChild: d(2200),
       otherDependentCredit: d(500),
       phaseOutThreshold: {

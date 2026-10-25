@@ -330,3 +330,19 @@ and whitespace checks. Five older audit expectations now use the official line
 positions and full supported line set, preserving their amount assertions.
 The separate parts also provide the source amounts needed for the Schedule 8812
 payroll-tax alternative. RRTA compensation remains unsupported; no gate changed.
+
+## Package: Schedule 8812 refundable-credit worksheet
+
+Refreshed the final Schedule 8812 and its Credit Limit Worksheet B. The calculator
+now supports the payroll-tax alternative for three-child families and bona fide
+Puerto Rico residents, subtracts EIC/excess Social Security payments, disallows
+ACTC when Form 2555 is filed, and exposes the worksheet's reserved nonrefundable
+amount for adoption/clean-energy ordering. The indexed refundable cap is explicit
+in the constant pack. Unknown 2026 payroll facts reject when material. Counts and
+monetary inputs are validated; all arithmetic uses Decimal. Actual identity and
+foreign-income addback facts remain the next federal integration package.
+
+Seven new assertions failed first; all 115 focused tests, typecheck and spec
+validation pass. Existing audit checks now verify the official line positions
+and complete supported line set; no amount assertion was weakened. Scoped diff
+reviewed. Integration/identity qualifications and Schedule 3-A remain pending.

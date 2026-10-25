@@ -1552,9 +1552,9 @@ describe("audit trail records Form 8812 calculation lines", () => {
     const lineNumbers = form8812Lines.map((l) => l.line);
     expect(lineNumbers).toContain("12");  // CTC before limitation
     expect(lineNumbers).toContain("14");  // Nonrefundable CTC
-    expect(lineNumbers).toContain("15");  // Unused CTC
-    expect(lineNumbers).toContain("21");  // Earned income excess
-    expect(lineNumbers).toContain("24");  // 15% of earned income excess
+    expect(lineNumbers).toContain("16a");  // Unused CTC
+    expect(lineNumbers).toContain("19");  // Earned income excess
+    expect(lineNumbers).toContain("20");  // 15% of earned income excess
     expect(lineNumbers).toContain("27");  // ACTC
   });
 
