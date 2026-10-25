@@ -23,7 +23,7 @@ describe("security: HTTP response headers", () => {
 
     const headerRules = await nextConfig.headers!();
 
-    expect(headerRules).toHaveLength(1);
+    expect(headerRules.map(rule => rule.source)).toEqual(["/(.*)", "/account/recover"]);
     expect(headerRules[0].source).toBe("/(.*)");
 
     const headerKeys = headerRules[0].headers.map((h) => h.key);
@@ -34,6 +34,18 @@ describe("security: HTTP response headers", () => {
     expect(headerKeys).toContain("Referrer-Policy");
     expect(headerKeys).toContain("Permissions-Policy");
     expect(headerKeys).toContain("Content-Security-Policy");
+  });
+
+  it("adds private recovery headers without replacing the global security policy", async () => {
+    const rules = await nextConfig.headers!();
+    const recovery = rules.find(rule => rule.source === "/account/recover");
+    expect(recovery?.headers).toEqual([
+      { key: "Referrer-Policy", value: "no-referrer" },
+      { key: "Cache-Control", value: "private, no-store, max-age=0" },
+      { key: "X-Robots-Tag", value: "noindex, nofollow" },
+    ]);
+    // No route-specific CSP or framing override may relax the all-route policy.
+    expect(recovery?.headers.some(header => ["Content-Security-Policy", "X-Frame-Options"].includes(header.key))).toBe(false);
   });
 
   it("sets X-Content-Type-Options to nosniff", async () => {
