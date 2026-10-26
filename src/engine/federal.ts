@@ -3246,15 +3246,29 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Per IRC §32(c)(2): earned income = wages + net SE earnings − deductible half of SE tax.
   const eicEarnedIncome = sum(totalWages, netSEEarnings).minus(schedSE.deductibleHalf);
 
-  // Investment income for EIC disqualification: taxable + tax-exempt interest,
-  // dividends, capital gain net income (≥ $0), net rental/royalty income (if positive)
+  // Pub. 596 Worksheet 1 lines 5–7 remove the Form 4797 business gain
+  // from capital gain net income. Form 4797 always computes line 9 here;
+  // without lookback losses, it is the positive line 7 amount.
+  const eicNetCapitalGain = Decimal.max(new Decimal(0), capitalGainLoss);
+  const eicBusinessCapitalGain = form4797.line9;
+  const eicInvestmentCapitalGain = Decimal.max(new Decimal(0), eicNetCapitalGain.minus(eicBusinessCapitalGain));
+  audit.record("EIC Investment Income Worksheet", "5", "Positive capital gain net income", eicNetCapitalGain,
+    "Form 1040 line 7a, floored at zero", { "Form 1040 line 7a": capitalGainLoss });
+  audit.record("EIC Investment Income Worksheet", "6", "Business gain excluded from investment capital", eicBusinessCapitalGain,
+    "Form 4797 line 9 after the section 1231 lookback", { "Form 4797 line 9": form4797.line9 });
+  audit.record("EIC Investment Income Worksheet", "7", "Investment capital gain", eicInvestmentCapitalGain,
+    "Worksheet line 5 minus line 6, floored at zero", {
+      "Line 5": eicNetCapitalGain, "Line 6": eicBusinessCapitalGain,
+    });
+
+  // Remaining investment-income components are kept separate from capital gain.
   const eicInvestmentIncome = input.eic?.investmentIncomeOverride !== undefined
     ? d(input.eic.investmentIncomeOverride)
     : sum(
         totalTaxableInterest,
         taxExemptInterest,
         totalDividends,
-        Decimal.max(new Decimal(0), capitalGainLoss),
+        eicInvestmentCapitalGain,
         Decimal.max(new Decimal(0), adjustedScheduleETotal),
       );
 
