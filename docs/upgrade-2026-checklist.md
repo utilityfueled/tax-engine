@@ -7,6 +7,68 @@ complete a checkbox.
 
 ## Current integration — 2026-10-26
 
+The branch is pushed through `e26a7aa`. Rule provenance is `2025.150` /
+`2026.147-law-integration-draft`. The regenerated inventory has 525 entries and
+5,545 specification test references. Readiness gates are unchanged.
+
+| Delivered package | Commit | Bounded verification |
+| --- | --- | --- |
+| Actual charitable source kinds and deduction choice in loss origins | `2bd4fdd` | Final candidate: 565 tests in 13 files; main: 558 in 10. Separate source review: 14 in 7, including five private controls. Parent reopened 49 PDFs/110 pages/259 populated fields, checked twelve literal Schedule A values and inspected rendered output. Two production browser cases pass with zero retries. |
+| Actual prepaid/cash tuition assistance without an ESA | `dbe9bb0` | Final candidate: 787 tests in 64 files; main: 541 in 12. All types/spec/inventory/builds and scoped lint pass. Separate source review: 12 in 7, including four private controls. Parent reopened six PDFs/114 pages, checked sixteen retained fields and eight physical browser placements. Both production browser widths pass with zero retries. |
+| Remaining shared-method inventory associations | `e26a7aa` | Adds 76 links while preserving all 45 prior links. Exactly 76 of 525 rows change; no year, authority, test-presence or e-file/business-rule flag changes and no new fully-supported status. Manifest/inventory/reference/rule checks pass 529 tests in four files. Separate review traced all 76 additions, reproduced and corrected one guard-only PDF association, then passed 532 tests in six files on the corrected tree. |
+
+The delivered tax trees match their separately reviewed candidates. Original
+failing cases, source restrictions, saved artifacts and exact hashes remain in
+the package ledgers. These are agent software/source reviews; qualified human
+tax approval remains outstanding.
+
+All required local checks pass on immutable `3669b00`: 19,086 tests in 1,216
+files pass in both unit and coverage runs. Branch coverage is 86.78%
+(49,739/57,316), functions 90.49% (10,928/12,076), statements 91.86% and lines
+94.61%; every unchanged threshold passes. All eight static checks and 434
+production browser cases pass with zero retries. Five hosted-only tests remain
+skipped. All 3,235 tracked source hashes remained unchanged, and port 3255 is
+closed. This run predates the packages above; final integrated verification
+remains required. Its evidence is
+`.local/upgrade-evidence/3669b00-complete/{verification,summary}.json`.
+
+The refreshed branch and remote exactly matched `dbe9bb0` before the inventory
+commit. Its CI and Web workflows were observed running; no completion is
+inferred. Earlier runs were cancelled by later pushes. The previously completed
+native amd64 evidence remains scoped to `8f1d1ba`, recorded in
+[the runtime report](upgrade-2026-runtime-8f1d1ba.json): six recovery phases and
+both 428-case browser runs passed, each with five hosted skips. The SBOM's
+157 matches across 67 OS advisories match the existing register; owner
+confirmation remains pending. Final native images, scans and recovery evidence
+for both platforms are still required. Nothing was published or deployed.
+
+The October 26 afternoon production dependency audit reports zero advisories
+across 425 dependencies with the unchanged lockfile. Package advisories, image
+advisories and deployed exposure remain distinct evidence.
+
+The finite internal queue is the remaining ordinary health business/payment/
+marriage methods; determined charitable floor/history and zero/unique-origin
+NOL attribution; actual academic-period room-and-board groups; and final
+integrated, remote, native-image and recovery checks. Missing controlling
+interpretations remain explicit. No allocation or taxpayer fact is invented to
+remove a guard.
+
+The goal remains active and **not release-ready**. The
+[external-action handoff](upgrade-2026-external-actions.md) identifies missing
+qualified reviewers, launch-state demand, authorized staging, provider account
+access and approved evaluation funds, final official forms and advisory owner
+acceptance. Work continues on the remaining independent software packages.
+
+The inventory V2 closeout is clear at tree `674dd693`; all three delivered
+file hashes match that reviewed tree. The separate report is
+`facts-inventory-reconciliation-v2-review.json`, SHA256
+`8c03578f2c3cebbb3da3b4ac4babba084b2afb58019965d2b9b4e9b79bb47bd8`.
+The original finding and failed private control remain retained. The package
+ledger accurately discloses the overwritten parent V1 output filenames; final
+V2 logs and independent V1 reviewer evidence remain separately preserved.
+
+## Previous checkpoint through3669b00
+
 The branch is pushed through `3669b00`. Rule provenance is `2025.148` /
 `2026.145-law-integration-draft`. The regenerated inventory has 523
 entries and 5,526 spec test references. Readiness gates are unchanged.

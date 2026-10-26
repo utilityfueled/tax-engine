@@ -194,8 +194,8 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Full immutable 3669b00 integrated checks are running. Prior e91d7d7 passed 19,025 tests in 1,197 files, all static checks, 86.84% branch/90.59% function coverage and 428 browser cases; five hosted skips do not establish staging readiness. Final later-source and remote evidence remains due.",
-    "The 2026 pack and finite health/charitable/education methods remain incomplete; guards are not implementations. Actual partial-family health, current charitable loss origins and mixed tuition with ESA are delivered. Full 2026 calculation remains blocked.",
+    "Immutable 3669b00 passes all required local checks: 19,086 tests/1,216 files, 86.78% branches/90.49% functions and 434 browser cases. Five hosted skips do not establish staging readiness. Later-source integrated and final remote evidence remains due.",
+    "The 2026 pack and remaining finite health/charitable/education methods remain incomplete. Original charitable source closure and actual prepaid/cash tuition assistance are delivered; traceability is reconciled without new qualification. Full 2026 calculation remains blocked.",
     "Independent human tax review, selected-state demand/qualification and final physical forms are outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net \u00a71202/Form172 interpretations remain unresolved.",
     "AI application/scorer bindings are reviewed;240 draft cases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
     "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence; local synthetic checks do not establish staging readiness.",
@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
+    "lastRecordedCommit": "e26a7aaadcbcd37252f74444f8af2bf904e831c5",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1310,17 +1310,20 @@
       "hosted staging",
       "final multi-platform release images"
     ],
-    "workInProgress": "Complete finite ordinary health multi-business/payment/marriage methods, determined charitable floor/history and unique/zero-benefit NOL attribution, tuition assistance and actual academic-period room-board groups. Mixed prepaid/cash tuition with ESA is delivered. Preserve the precise controlling-interpretation questions and specialized exclusions. Finish traceability reconciliation and integrated/remote/native image/recovery verification. Qualified human review, live-provider qualification, authorized staging, final forms and advisory acceptance remain external requirements.",
-    "latestIntegratedCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
+    "workInProgress": "Finish the reviewed health multi-business method and determined charity floor integrations; continue ordinary health payment/marriage methods, zero/unique-origin charitable NOL attribution and actual academic-period room-board groups. Preserve precise controlling-interpretation questions. Complete final integrated/remote/native-image/recovery verification. Human reviews, live-provider qualification, authorized staging, selected-state demand, final forms and advisory acceptance remain external requirements.",
+    "latestIntegratedCommit": "e26a7aaadcbcd37252f74444f8af2bf904e831c5",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
-      "scope": "Exact immutable mixed-tuition integration snapshot; later private tax methods excluded. Hosted skips do not establish staging readiness.",
-      "status": "running",
+      "scope": "Immutable 3669b00 local synthetic evidence only; later delivered/private changes excluded. Five hosted skips do not establish staging readiness.",
+      "status": "complete-passed-later-source-verification-due",
       "manifest": ".local/upgrade-evidence/3669b00-complete/verification.json",
       "snapshot": ".local/upgrade-evidence/3669b00-complete/snapshot.json",
       "trackedFiles": 3235,
-      "browserPort": 3255
+      "browserPort": 3255,
+      "summary": ".local/upgrade-evidence/3669b00-complete/summary.json",
+      "trackedSourceUnchanged": true,
+      "browserServerStopped": true
     },
     "latestCoverageDiagnostic": {
       "sourceCommit": "2011778674757efee5da2f73e29624c8e36a7099",
@@ -1615,37 +1618,10 @@
       "amd64": "local QEMU Next.js compilation failed with signal11; native CI rehearsal now configured"
     },
     "currentStableCoverageRun": {
-      "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
-      "tree": "5f4f0279f2d065f766895610e15eef3f22d497ec",
+      "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
+      "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
       "status": "passed",
-      "tests": 19025,
-      "files": 1197,
-      "failures": 0,
-      "skips": 0,
-      "branchesPercent": "86.84",
-      "functionsPercent": "90.59",
-      "statementsPercent": "91.95",
-      "linesPercent": "94.63",
-      "counts": {
-        "statements": {
-          "covered": 57049,
-          "total": 62038,
-          "percent": 91.95815467939005
-        },
-        "functions": {
-          "covered": 10765,
-          "total": 11883,
-          "percent": 90.59160144744592
-        },
-        "branches": {
-          "covered": 49222,
-          "total": 56676,
-          "percent": 86.8480485567083
-        }
-      },
-      "thresholdsUnchanged": true,
-      "branchThresholdPercent": "85",
-      "functionThresholdPercent": "90",
+      "scope": "Immutable 3669b00 local synthetic evidence only; later delivered/private changes excluded. Five hosted skips do not establish staging readiness.",
       "id": "coverage",
       "command": [
         "pnpm",
@@ -1653,18 +1629,34 @@
         "--maxWorkers=1"
       ],
       "exitCode": 0,
-      "seconds": 987.38,
-      "evidence": ".local/upgrade-evidence/e91d7d7-complete/coverage.log",
-      "sha256": "014944ef23b1409e6e909f8aaa377d649396ca2f0dd2e7ee6b01a40713ce7db6",
-      "scope": "Exact immutable e91d7d7 local synthetic source only; later inventory/tooling and tax changes excluded. Five hosted skips do not establish staging readiness."
+      "seconds": 744.63,
+      "evidence": ".local/upgrade-evidence/3669b00-complete/coverage.log",
+      "sha256": "68063f28ffbaba74ff73304fbc4ee5702147b235af788784f47d2320d6c03976",
+      "tests": 19086,
+      "files": 1216,
+      "failures": 0,
+      "skips": 0,
+      "branchesPercent": "86.78",
+      "functionsPercent": "90.49",
+      "statementsPercent": "91.86",
+      "linesPercent": "94.61",
+      "counts": {
+        "branches": {
+          "percent": "86.78",
+          "covered": 49739,
+          "total": 57316
+        },
+        "functions": {
+          "percent": "90.49",
+          "covered": 10928,
+          "total": 12076
+        }
+      },
+      "thresholdsUnchanged": true,
+      "branchThresholdPercent": "85",
+      "functionThresholdPercent": "90"
     },
-    "remainingInternalWork": [
-      "Complete actual partial-coverage-family health premiums and ordinary outside-payer/payment/marriage combinations. Separate actual plans and multiple owners are delivered in9eafb45. Binding joint2025 repayment attribution needs controlling interpretation.",
-      "Complete current-loss-origin charity and determined floor/current-prior methods. Original current K1/crypto regular-AMT NOL sources are8d97c0f and actual crypto donation intake/history binding ise91d7d7; prior category/vintage replay is405d914. Mixed attribution and partial B remain exact source-method questions.",
-      "Reconcile and implement remaining bounded partial-cash/category education methods against the completed ordinary account-group route. Distinct QTP and multiple ESA sources sharing actual tuition arec6df682/74bf948. Mixed-owner bond and broader code6 interpretations remain unresolved.",
-      "Forty explicit shared-implementation associations are delivered in e3dcc3f; reconcile remaining traceability and current integrated/remote verification. Immutable e91d7d7 static/unit/browser checks pass, with19025tests and428browserpasses; coverage is running. Later tax packages remain in implementation.",
-      "Rehearse final-source native images, SBOMs/scans and full recovery; reconcile artifacts and support evidence. Qualified human review, live-provider qualification, authorized staging, final forms and advisory acceptance remain external requirements."
-    ],
+    "remainingInternalWork": "Finish the reviewed health multi-business method and determined charity floor integrations; continue ordinary health payment/marriage methods, zero/unique-origin charitable NOL attribution and actual academic-period room-board groups. Preserve precise controlling-interpretation questions. Complete final integrated/remote/native-image/recovery verification. Human reviews, live-provider qualification, authorized staging, selected-state demand, final forms and advisory acceptance remain external requirements.",
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
       "tree": "244b253149d4a86fe4b855770a2ec9ffdf46cdc2",
@@ -1685,11 +1677,12 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "5b3d6decd04a2805e02ce5e96348314f43c0e0e6",
+    "lastPushedCommit": "e26a7aaadcbcd37252f74444f8af2bf904e831c5",
     "currentBrowserRun": {
-      "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
-      "tree": "5f4f0279f2d065f766895610e15eef3f22d497ec",
-      "scope": "Immutable e91d7d7 local synthetic evidence only; later inventory tooling excluded. Hosted skips do not establish staging readiness. Coverage is still running.",
+      "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
+      "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
+      "status": "passed",
+      "scope": "Immutable 3669b00 local synthetic evidence only; later delivered/private changes excluded. Five hosted skips do not establish staging readiness.",
       "id": "browser",
       "command": [
         "pnpm",
@@ -1698,16 +1691,17 @@
         "--workers=2"
       ],
       "exitCode": 0,
-      "seconds": 697.82,
-      "evidence": ".local/upgrade-evidence/e91d7d7-complete/browser.log",
-      "sha256": "3ea055ffb2a399e56acb1c62d6b9542943f64e2e3408fc54e35e1b9a2cc39477",
-      "status": "passed",
-      "passed": 428,
-      "failed": 0,
+      "seconds": 655.25,
+      "evidence": ".local/upgrade-evidence/3669b00-complete/browser.log",
+      "sha256": "0ef08c9e23e41237125b9203f3bad55f53c5f24daa66741be5c5a911c4c6fcd1",
+      "passed": 434,
       "skipped": 5,
       "retries": 0,
       "workers": 2,
-      "serverCleanupVerification": "pending runner completion"
+      "port": 3255,
+      "portClosed": true,
+      "failed": 0,
+      "serverStopped": true
     },
     "currentPackageAudit": {
       "sourceCommit": "6e589290ebf31dba23f73a42e706bd29ae4f87b1",
@@ -2739,9 +2733,10 @@
       "humanSecurityQualification": false
     },
     "currentUnitRun": {
-      "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
-      "tree": "5f4f0279f2d065f766895610e15eef3f22d497ec",
-      "scope": "Immutable e91d7d7 local synthetic evidence only; later inventory tooling excluded. Hosted skips do not establish staging readiness. Coverage is still running.",
+      "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
+      "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
+      "status": "passed",
+      "scope": "Immutable 3669b00 local synthetic evidence only; later delivered/private changes excluded. Five hosted skips do not establish staging readiness.",
       "id": "unit",
       "command": [
         "pnpm",
@@ -2749,12 +2744,11 @@
         "--maxWorkers=1"
       ],
       "exitCode": 0,
-      "seconds": 824.72,
-      "evidence": ".local/upgrade-evidence/e91d7d7-complete/unit.log",
-      "sha256": "fc4b2fdf79c531d61a657e4377d338677579aa8823e788773c4613e1fc8e75c2",
-      "status": "passed",
-      "passed": 19025,
-      "files": 1197,
+      "seconds": 619.46,
+      "evidence": ".local/upgrade-evidence/3669b00-complete/unit.log",
+      "sha256": "aa6f5bdc89ce48db5df7dd7d40410b0db1f947959ef623c0a8d4f640f2536ccd",
+      "passed": 19086,
+      "files": 1216,
       "failed": 0,
       "skipped": 0
     },
@@ -4368,15 +4362,74 @@
         "deliveryReceipt": ".local/upgrade-evidence/mixed-tuition-delivery-receipt.json",
         "parentDeliveryVerification": ".local/upgrade-evidence/parent-mixed-tuition-delivery-verification.json",
         "reviewKind": "Separate agent software/source review; qualified human review remains outstanding"
+      },
+      "charitableOriginSourceClosure": {
+        "commit": "2bd4fdd9f6626a72cd7f5084686cb738d21bb90a",
+        "tree": "3ac596b3c42da3228964ca7bc0a6311d63f7081d",
+        "ledger": "docs/upgrade-2026-charity-origin-closure-work.md",
+        "finalCandidateTests": 565,
+        "finalCandidateFiles": 13,
+        "integrationTests": 558,
+        "integrationFiles": 10,
+        "independentTests": 14,
+        "independentFiles": 7,
+        "privateControls": 5,
+        "pdfs": 49,
+        "pdfPages": 110,
+        "populatedFields": 259,
+        "literalScheduleAFields": 12,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "parentDeliveryVerification": ".local/upgrade-evidence/parent-charity-closure-delivery-verification.json",
+        "reviewKind": "Separate agent software/source review; no qualified human review or readiness promotion"
+      },
+      "tuitionAssistanceSources": {
+        "commit": "dbe9bb0beeb6721a1cb99e1a864f7034e888f5b2",
+        "tree": "321e59820b64172ee705f2c14f5947136e5d7038",
+        "ledger": "docs/upgrade-2026-cash-tuition-assistance-work.md",
+        "finalCandidateTests": 787,
+        "finalCandidateFiles": 64,
+        "integrationTests": 541,
+        "integrationFiles": 12,
+        "independentTests": 12,
+        "independentFiles": 7,
+        "privateControls": 4,
+        "pdfs": 6,
+        "pdfPages": 114,
+        "literalRetainedFields": 16,
+        "browserPhysicalFields": 8,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "parentDeliveryVerification": ".local/upgrade-evidence/parent-tuition-assistance-delivery-verification.json",
+        "reviewKind": "Separate agent software/source review; no qualified human review or readiness promotion"
+      },
+      "sharedMethodReconciliation": {
+        "commit": "e26a7aaadcbcd37252f74444f8af2bf904e831c5",
+        "tree": "674dd693bfadb06484b2ce14644fed2c49fbcd46",
+        "ledger": "docs/upgrade-2026-inventory-reconciliation.md",
+        "addedAssociations": 76,
+        "preservedAssociations": 45,
+        "changedInventoryRows": 76,
+        "integrationTests": 529,
+        "integrationFiles": 4,
+        "independentV1SelectedTests": 121,
+        "independentV1SelectedFiles": 91,
+        "independentV2Tests": 532,
+        "independentV2Files": 6,
+        "privateControls": 2,
+        "newFullySupportedEntries": 0,
+        "reviewFinding": "Removed one guard-only packet-generation association; unchanged independent control now passes.",
+        "deliveryReceipt": ".local/upgrade-evidence/inventory-reconciliation-delivery-receipt.json",
+        "reviewKind": "Separate agent software/source review; no qualified human review or readiness promotion"
       }
     },
     "currentInventory": {
-      "entries": 523,
-      "specReferences": 5526,
-      "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
+      "entries": 525,
+      "specReferences": 5545,
+      "sourceCommit": "e26a7aaadcbcd37252f74444f8af2bf904e831c5",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 43,
-      "specOwnedAssociationReferences": 85,
+      "explicitAssociations": 121,
+      "specOwnedAssociationReferences": 185,
       "fullySupportedTraceabilityCount": 69,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
@@ -4482,8 +4535,8 @@
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.148",
-      "2026": "2026.145-law-integration-draft"
+      "2025": "2025.150",
+      "2026": "2026.147-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -5750,6 +5803,65 @@
         "deliveryReceipt": ".local/upgrade-evidence/mixed-tuition-delivery-receipt.json",
         "parentDeliveryVerification": ".local/upgrade-evidence/parent-mixed-tuition-delivery-verification.json",
         "reviewKind": "Separate agent software/source review; qualified human review remains outstanding"
+      },
+      "charitableOriginSourceClosure": {
+        "commit": "2bd4fdd9f6626a72cd7f5084686cb738d21bb90a",
+        "tree": "3ac596b3c42da3228964ca7bc0a6311d63f7081d",
+        "ledger": "docs/upgrade-2026-charity-origin-closure-work.md",
+        "finalCandidateTests": 565,
+        "finalCandidateFiles": 13,
+        "integrationTests": 558,
+        "integrationFiles": 10,
+        "independentTests": 14,
+        "independentFiles": 7,
+        "privateControls": 5,
+        "pdfs": 49,
+        "pdfPages": 110,
+        "populatedFields": 259,
+        "literalScheduleAFields": 12,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "parentDeliveryVerification": ".local/upgrade-evidence/parent-charity-closure-delivery-verification.json",
+        "reviewKind": "Separate agent software/source review; no qualified human review or readiness promotion"
+      },
+      "tuitionAssistanceSources": {
+        "commit": "dbe9bb0beeb6721a1cb99e1a864f7034e888f5b2",
+        "tree": "321e59820b64172ee705f2c14f5947136e5d7038",
+        "ledger": "docs/upgrade-2026-cash-tuition-assistance-work.md",
+        "finalCandidateTests": 787,
+        "finalCandidateFiles": 64,
+        "integrationTests": 541,
+        "integrationFiles": 12,
+        "independentTests": 12,
+        "independentFiles": 7,
+        "privateControls": 4,
+        "pdfs": 6,
+        "pdfPages": 114,
+        "literalRetainedFields": 16,
+        "browserPhysicalFields": 8,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "parentDeliveryVerification": ".local/upgrade-evidence/parent-tuition-assistance-delivery-verification.json",
+        "reviewKind": "Separate agent software/source review; no qualified human review or readiness promotion"
+      },
+      "sharedMethodReconciliation": {
+        "commit": "e26a7aaadcbcd37252f74444f8af2bf904e831c5",
+        "tree": "674dd693bfadb06484b2ce14644fed2c49fbcd46",
+        "ledger": "docs/upgrade-2026-inventory-reconciliation.md",
+        "addedAssociations": 76,
+        "preservedAssociations": 45,
+        "changedInventoryRows": 76,
+        "integrationTests": 529,
+        "integrationFiles": 4,
+        "independentV1SelectedTests": 121,
+        "independentV1SelectedFiles": 91,
+        "independentV2Tests": 532,
+        "independentV2Files": 6,
+        "privateControls": 2,
+        "newFullySupportedEntries": 0,
+        "reviewFinding": "Removed one guard-only packet-generation association; unchanged independent control now passes.",
+        "deliveryReceipt": ".local/upgrade-evidence/inventory-reconciliation-delivery-receipt.json",
+        "reviewKind": "Separate agent software/source review; no qualified human review or readiness promotion"
       }
     },
     "latestPassingCandidateCoverage": {
@@ -6264,6 +6376,72 @@
           }
         ],
         "boundary": "Observed exact branch runs only; in-progress/cancelled workflows are not completed passing evidence."
+      },
+      {
+        "observedAt": "2026-10-26T16:52:32Z",
+        "runs": [
+          {
+            "conclusion": "",
+            "createdAt": "2026-10-26T16:50:44Z",
+            "databaseId": 40363000573,
+            "headSha": "dbe9bb0beeb6721a1cb99e1a864f7034e888f5b2",
+            "status": "in_progress",
+            "updatedAt": "2026-10-26T16:52:32Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40363000573",
+            "workflowName": "CI"
+          },
+          {
+            "conclusion": "",
+            "createdAt": "2026-10-26T16:50:44Z",
+            "databaseId": 40363000516,
+            "headSha": "dbe9bb0beeb6721a1cb99e1a864f7034e888f5b2",
+            "status": "in_progress",
+            "updatedAt": "2026-10-26T16:52:08Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40363000516",
+            "workflowName": "Web"
+          },
+          {
+            "conclusion": "cancelled",
+            "createdAt": "2026-10-26T16:31:48Z",
+            "databaseId": 40360002087,
+            "headSha": "2bd4fdd9f6626a72cd7f5084686cb738d21bb90a",
+            "status": "completed",
+            "updatedAt": "2026-10-26T16:52:21Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40360002087",
+            "workflowName": "CI"
+          },
+          {
+            "conclusion": "cancelled",
+            "createdAt": "2026-10-26T16:31:48Z",
+            "databaseId": 40360002298,
+            "headSha": "2bd4fdd9f6626a72cd7f5084686cb738d21bb90a",
+            "status": "completed",
+            "updatedAt": "2026-10-26T16:51:58Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40360002298",
+            "workflowName": "Web"
+          },
+          {
+            "conclusion": "cancelled",
+            "createdAt": "2026-10-26T16:15:32Z",
+            "databaseId": 40357364546,
+            "headSha": "b511577a14b055a77de3ba9d879461dab30c7f56",
+            "status": "completed",
+            "updatedAt": "2026-10-26T16:33:12Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40357364546",
+            "workflowName": "CI"
+          },
+          {
+            "conclusion": "cancelled",
+            "createdAt": "2026-10-26T16:15:32Z",
+            "databaseId": 40357364589,
+            "headSha": "b511577a14b055a77de3ba9d879461dab30c7f56",
+            "status": "completed",
+            "updatedAt": "2026-10-26T16:32:55Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40357364589",
+            "workflowName": "Web"
+          }
+        ],
+        "boundary": "Historical observation only: dbe9bb0 CI/Web were running, prior runs cancelled. Later status not inferred."
       }
     ],
     "fullVerification603fc1b": {
@@ -6303,9 +6481,9 @@
       "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
     },
     "currentFullVerificationRequired": {
-      "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
-      "reason": "Three reviewed source packages and inventory/tooling follow the passing immutable e91d7d7 run; the new full run is active.",
-      "readiness": "No later completed full pass claimed"
+      "sourceCommit": "e26a7aaadcbcd37252f74444f8af2bf904e831c5",
+      "reason": "The charitable source closure, tuition assistance, inventory reconciliation and pending finite source methods follow the passing 3669b00 run.",
+      "readiness": "Final integrated run required after the finite queue; no later full pass claimed"
     },
     "previousCurrentUnitRunBeforeE91": {
       "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
@@ -6381,11 +6559,11 @@
       "privateControlsPassed": 6,
       "report": ".local/upgrade-evidence/facts-education-partial-inventory.json",
       "remaining": [
-        "Actual prepaid/cash tuition assistance without ESA, independently reviewed private candidate awaiting final artifact review/integration",
-        "Actual academic-period and living-arrangement room-board cap groups"
+        "Actual academic-period and living-arrangement room-board cap groups; preserve unresolved cross-year and competing-source interpretation gates"
       ],
       "notMissing": "Ordinary cash QTP with assistance, education-credit allocation and ordinary ESA",
-      "mixedTuitionDelivered": "3669b0006a8e3d60028d22e5ffa517096b3c58e1"
+      "mixedTuitionDelivered": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
+      "tuitionAssistanceDelivered": "dbe9bb0beeb6721a1cb99e1a864f7034e888f5b2"
     },
     "externalActionHandoff": "docs/upgrade-2026-external-actions.md",
     "previousStableCoverageRunD898091": {
@@ -6528,7 +6706,258 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-26T16:14:04.167257+00:00"
+    "recordedAt": "2026-10-26T17:12:34.900021+00:00",
+    "fullVerification3669b00": {
+      "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
+      "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
+      "archive": "/private/tmp/tax-integration-3669b00-nkng0jv2",
+      "startedAt": "2026-10-26T16:13:10.756946+00:00",
+      "completedAt": "2026-10-26T16:37:23.175166+00:00",
+      "checks": [
+        {
+          "id": "types",
+          "command": [
+            "pnpm",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "seconds": 4.84,
+          "evidence": ".local/upgrade-evidence/3669b00-complete/types.log",
+          "sha256": "3aeadb608e6b5c89bee7c12f8fbc19e8f6c36df3aa8e6797c57221202587e420"
+        },
+        {
+          "id": "contract-types",
+          "command": [
+            "pnpm",
+            "typecheck:contracts"
+          ],
+          "exitCode": 0,
+          "seconds": 0.78,
+          "evidence": ".local/upgrade-evidence/3669b00-complete/contract-types.log",
+          "sha256": "d7b2ed407fa5a4503d5c7059e7fd796e4bfa451f6b00350e9e4d6d19382e7487"
+        },
+        {
+          "id": "web-types",
+          "command": [
+            "pnpm",
+            "typecheck:web"
+          ],
+          "exitCode": 0,
+          "seconds": 9.87,
+          "evidence": ".local/upgrade-evidence/3669b00-complete/web-types.log",
+          "sha256": "b534533d9c1bfa5d2a3abeb41a279923f668c9c09af1608ac9048c73facda6de"
+        },
+        {
+          "id": "spec",
+          "command": [
+            "pnpm",
+            "spec:validate"
+          ],
+          "exitCode": 0,
+          "seconds": 0.95,
+          "evidence": ".local/upgrade-evidence/3669b00-complete/spec.log",
+          "sha256": "6f20ea83f16ef54f3bce116d84638071da37cedd9d52047ee55b0da85a3d1083"
+        },
+        {
+          "id": "inventory",
+          "command": [
+            "pnpm",
+            "spec:inventory:check"
+          ],
+          "exitCode": 0,
+          "seconds": 1.56,
+          "evidence": ".local/upgrade-evidence/3669b00-complete/inventory.log",
+          "sha256": "2a8588e4a439d1a0dde9958c7956371fd9b5d5e72edb019be1af214a1c64a15e"
+        },
+        {
+          "id": "engine-build",
+          "command": [
+            "pnpm",
+            "build"
+          ],
+          "exitCode": 0,
+          "seconds": 5.85,
+          "evidence": ".local/upgrade-evidence/3669b00-complete/engine-build.log",
+          "sha256": "bca4890235f06e7f6d5bd90ceca2a8154a07e22ea448a991fccfe8b503f17fca"
+        },
+        {
+          "id": "web-build",
+          "command": [
+            "pnpm",
+            "build:web"
+          ],
+          "exitCode": 0,
+          "seconds": 49.03,
+          "evidence": ".local/upgrade-evidence/3669b00-complete/web-build.log",
+          "sha256": "eec1e36cd10eaa5cc937c5c0cce5e6dab962dff8dc5dce80e06448e2e47f395b"
+        },
+        {
+          "id": "lint",
+          "command": [
+            "pnpm",
+            "lint"
+          ],
+          "exitCode": 0,
+          "seconds": 15.33,
+          "evidence": ".local/upgrade-evidence/3669b00-complete/lint.log",
+          "sha256": "1d03de72ea5b3146347e16fb223f5a3d3937ae82b7bf3886b6a83563bb4ce7ce"
+        },
+        {
+          "id": "unit",
+          "command": [
+            "pnpm",
+            "test",
+            "--maxWorkers=1"
+          ],
+          "exitCode": 0,
+          "seconds": 619.46,
+          "evidence": ".local/upgrade-evidence/3669b00-complete/unit.log",
+          "sha256": "aa6f5bdc89ce48db5df7dd7d40410b0db1f947959ef623c0a8d4f640f2536ccd"
+        },
+        {
+          "id": "browser",
+          "command": [
+            "pnpm",
+            "test:web",
+            "--retries=0",
+            "--workers=2"
+          ],
+          "exitCode": 0,
+          "seconds": 655.25,
+          "evidence": ".local/upgrade-evidence/3669b00-complete/browser.log",
+          "sha256": "0ef08c9e23e41237125b9203f3bad55f53c5f24daa66741be5c5a911c4c6fcd1"
+        },
+        {
+          "id": "coverage",
+          "command": [
+            "pnpm",
+            "test:coverage",
+            "--maxWorkers=1"
+          ],
+          "exitCode": 0,
+          "seconds": 744.63,
+          "evidence": ".local/upgrade-evidence/3669b00-complete/coverage.log",
+          "sha256": "68063f28ffbaba74ff73304fbc4ee5702147b235af788784f47d2320d6c03976"
+        }
+      ],
+      "unit": {
+        "passed": 19086,
+        "files": 1216
+      },
+      "coverage": {
+        "statementsPercent": "91.86",
+        "branches": {
+          "percent": "86.78",
+          "covered": 49739,
+          "total": 57316
+        },
+        "functions": {
+          "percent": "90.49",
+          "covered": 10928,
+          "total": 12076
+        },
+        "linesPercent": "94.61",
+        "thresholdsChanged": false
+      },
+      "browser": {
+        "passed": 434,
+        "skipped": 5,
+        "retries": 0,
+        "workers": 2,
+        "port": 3255,
+        "portClosed": true
+      },
+      "verifiedTrackedSourceHashes": 3235,
+      "trackedChanges": [],
+      "limitation": "Local synthetic verification of this exact source only; five hosted-only cases skipped. Later source changes, qualified human review, provider qualification and staging remain separate gates."
+    },
+    "currentUnitRunBefore3669b00": {
+      "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+      "tree": "5f4f0279f2d065f766895610e15eef3f22d497ec",
+      "scope": "Immutable e91d7d7 local synthetic evidence only; later inventory tooling excluded. Hosted skips do not establish staging readiness. Coverage is still running.",
+      "id": "unit",
+      "command": [
+        "pnpm",
+        "test",
+        "--maxWorkers=1"
+      ],
+      "exitCode": 0,
+      "seconds": 824.72,
+      "evidence": ".local/upgrade-evidence/e91d7d7-complete/unit.log",
+      "sha256": "fc4b2fdf79c531d61a657e4377d338677579aa8823e788773c4613e1fc8e75c2",
+      "status": "passed",
+      "passed": 19025,
+      "files": 1197,
+      "failed": 0,
+      "skipped": 0
+    },
+    "currentStableCoverageRunBefore3669b00": {
+      "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+      "tree": "5f4f0279f2d065f766895610e15eef3f22d497ec",
+      "status": "passed",
+      "tests": 19025,
+      "files": 1197,
+      "failures": 0,
+      "skips": 0,
+      "branchesPercent": "86.84",
+      "functionsPercent": "90.59",
+      "statementsPercent": "91.95",
+      "linesPercent": "94.63",
+      "counts": {
+        "statements": {
+          "covered": 57049,
+          "total": 62038,
+          "percent": 91.95815467939005
+        },
+        "functions": {
+          "covered": 10765,
+          "total": 11883,
+          "percent": 90.59160144744592
+        },
+        "branches": {
+          "covered": 49222,
+          "total": 56676,
+          "percent": 86.8480485567083
+        }
+      },
+      "thresholdsUnchanged": true,
+      "branchThresholdPercent": "85",
+      "functionThresholdPercent": "90",
+      "id": "coverage",
+      "command": [
+        "pnpm",
+        "test:coverage",
+        "--maxWorkers=1"
+      ],
+      "exitCode": 0,
+      "seconds": 987.38,
+      "evidence": ".local/upgrade-evidence/e91d7d7-complete/coverage.log",
+      "sha256": "014944ef23b1409e6e909f8aaa377d649396ca2f0dd2e7ee6b01a40713ce7db6",
+      "scope": "Exact immutable e91d7d7 local synthetic source only; later inventory/tooling and tax changes excluded. Five hosted skips do not establish staging readiness."
+    },
+    "currentBrowserRunBefore3669b00": {
+      "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+      "tree": "5f4f0279f2d065f766895610e15eef3f22d497ec",
+      "scope": "Immutable e91d7d7 local synthetic evidence only; later inventory tooling excluded. Hosted skips do not establish staging readiness. Coverage is still running.",
+      "id": "browser",
+      "command": [
+        "pnpm",
+        "test:web",
+        "--retries=0",
+        "--workers=2"
+      ],
+      "exitCode": 0,
+      "seconds": 697.82,
+      "evidence": ".local/upgrade-evidence/e91d7d7-complete/browser.log",
+      "sha256": "3ea055ffb2a399e56acb1c62d6b9542943f64e2e3408fc54e35e1b9a2cc39477",
+      "status": "passed",
+      "passed": 428,
+      "failed": 0,
+      "skipped": 5,
+      "retries": 0,
+      "workers": 2,
+      "serverCleanupVerification": "pending runner completion"
+    }
   },
   "historicalReleaseBlockers": {
     "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
