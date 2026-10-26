@@ -1,0 +1,47 @@
+form: "Schedule E"
+fullName: "Actual direct nonbusiness royalty properties and current expenses"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040se"
+retrievedAt: "2026-10-26"
+reviewStatus: "source-derived-implementation-independent-review-pending"
+notes: |
+  Final Schedule E instructions Part I lines 4 and 5-21 require gross receipts
+  and property expenses separately. This bounded source method uses actual
+  original MISC Box2 allocations, cash-paid current-year ordinary expenses and
+  known nonbusiness, nonoperating, nondisposition, domestic property treatment.
+  Original source amounts and ownership must reconcile before computing a net.
+  Interest, depletion, depreciation, prior disallowed expenses, foreign,
+  community-property and negative-net at-risk methods remain separate methods.
+  No computed net income is accepted as a substitute for original facts.
+  Publication596 Worksheet1 lines8-10 subtract the related royalty expenses
+  before its zero floor; unrelated passive losses stay in lines11-13.
+  Form8960 lines4a/4b retain completed portfolio net income once. Final2026
+  qualification remains closed; these are synthetic controls, not IRS examples
+  or independent human qualification. Original2025 and2026 source revisions
+  must match the source year; the existing historical raw input remains distinct
+  from this optional complete actual-property attachment.
+lines:
+  - line: "4-20-21-actual-expenses"
+    description: "Derive actual gross and net royalties without losing cents"
+    formula: "Gross12000.25 minus legal49.25 and management950.50 = net11000.50. At wages200000, AGI211000.50 and round(11000.50*0.038)=418 NIIT. EIC gross12000.25, expenses999.75 and net11000.50 remain separate."
+    testRef: "tests/engine/royalty-property-sources.test.ts::deducts actual direct royalty expenses once across Schedule E EIC and NIIT"
+  - line: "source-allocation"
+    description: "Conserve each original and isolate royalty expense from the passive pool"
+    formula: "One original1000.01 allocated333.33 plus666.68, with respective expenses100.01 plus200.02, produces699.98. Add independent K1portfolio50.02 =750; ordinary passive loss400 remains suspended. Source and receipt order do not change totals."
+    testRef: "tests/engine/royalty-property-sources.test.ts::conserves original allocations across properties and independent K1 royalties"
+  - line: "source-validation"
+    description: "Reject changed original source identity year owner amount or incomplete allocation"
+    formula: "Bind sourceIndex plus original identity, year, revision, payer, owner and Box2 amount; all positive direct originals must be allocated exactly once in total. Reject duplicates, stale originals, missing facts, unsupported treatment and expense losses before handoff."
+    testRef: "tests/engine/royalty-property-sources.test.ts::rejects incomplete stale or unsupported royalty property facts"
+  - line: "known-zero-year"
+    description: "Preserve confirmed zero and source year without changing public readiness"
+    formula: "An explicit empty expense ledger and known zero excluded expenses permit gross=net. Undefined expense completeness is unknown.2026originals require2026-12 revision and source year; standalone Schedule E computes the same source cents while the public2026 gate stays closed."
+    testRef: "tests/engine/royalty-property-sources.test.ts::preserves explicit zero expenses and actual source years"
+  - line: "expense-categories-owner"
+    description: "Retain actual Schedule E expense categories and the original owner"
+    formula: "Five distinct paid receipts of100.01 total500.05; gross12000.25 less500.05 =11500.20, attributed to the actual spouse source on a joint return. A missing spouse or owner cannot be inferred."
+    testRef: "tests/engine/royalty-property-sources.test.ts::retains actual expense categories and separate joint owners"
+  - line: "original-duplicates"
+    description: "Require distinct original accounts rather than renamed copies"
+    formula: "Two source IDs for the same payer, account, year and owner must be reconciled as possible original/corrected duplicates; a separate actual account with equal gross remains independent."
+    testRef: "tests/engine/royalty-property-sources.test.ts::rejects duplicate originals even with different source identifiers"

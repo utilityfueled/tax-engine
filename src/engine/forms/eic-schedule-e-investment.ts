@@ -18,10 +18,12 @@ interface EicScheduleEInvestmentInput {
 export function calculateEicScheduleEInvestment({ input, scheduleE, passive, allowedPassiveLoss, section163jDeduction }: EicScheduleEInvestmentInput) {
   const audit = new AuditTrail();
   const royaltyIncome = zeroFloor(scheduleE.totalRoyaltyIncome);
-  audit.record('EIC Investment Income Worksheet','8','Represented portfolio royalty income',scheduleE.totalRoyaltyIncome,
+  audit.record('EIC Investment Income Worksheet','8','Represented gross portfolio royalty income',scheduleE.grossRoyaltyIncome,
     'ScheduleE portfolio royalties, separate from rental and ordinary business income');
+  audit.record('EIC Investment Income Worksheet','9','Actual direct royalty property expenses',scheduleE.totalRoyaltyExpenses,
+    'Completed direct-property expense ledger; no unrelated passive or business loss');
   audit.record('EIC Investment Income Worksheet','10','Represented net royalty investment income',royaltyIncome,
-    'Portfolio royalty sources floored at zero; no unrelated rental or business loss is a royalty expense. Separate royalty expense and personal-property rental methods remain unqualified.');
+    'Gross portfolio royalties less actual direct-property expenses, floored at zero. Unrepresented property expense and personal-property rental methods remain separate.');
   let passiveIncome = passive.rentalIncome.plus(passive.passiveIncome);
   let passiveLoss = allowedPassiveLoss.negated();
   const unresolved: string[] = [];

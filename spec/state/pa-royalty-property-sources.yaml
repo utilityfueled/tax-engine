@@ -1,0 +1,18 @@
+form: "PA Schedule E"
+fullName: "Actual royalty property state source boundary"
+taxYear: 2025
+irsReference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40e.pdf"
+retrievedAt: "2026-10-26"
+notes: |
+  PA separately classifies commercial enterprises, ownership, allowable expenses
+  and royalty situs. Federal source confirmation alone cannot establish those
+  state facts. Until the actual PA property method is implemented, the canonical
+  PA path must not silently discard an actual federal royalty-property ledger
+  and substitute the gross MISC amount. This guard is a remaining method, not
+  implementation or qualification of PA royalty expenses. Existing raw-input
+  treatment is outside this newly supplied source attachment.
+lines:
+  - line: "actual-property-source-boundary"
+    description: "Reject an unimplemented state-property attachment before gross-only calculation"
+    formula: "A supplied actual royalty-property ledger requires independent PA classification, ownership and expense sources; do not silently replace its net result with gross MISC royalties."
+    testRef: "tests/engine/state/pa-royalty-property-sources.test.ts::requires the PA property source method before using actual royalty ledgers"

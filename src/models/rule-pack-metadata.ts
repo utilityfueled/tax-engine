@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.124",
+    ruleVersion: "2025.125",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040se", section: "Actual nonbusiness royalty property sources, original MISC allocations and current ordinary expenses; Schedule E net portfolio income once in EIC and NIIT", revision: "Final2025 Schedule E lines4-21, Pub596 Worksheet1 lines8-10 and i8960 lines4a/4b; actual zero and cents preserved, separate source/owner controls; loss, depletion, business, PA, physical forms and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s731/", section: "Actual investment-only cash distributions above original partnership or S-stock basis, separate owner gain through Form8949 and ScheduleD", revision: "IRC731/1368/1222, Reg1.731-1/1.1368-1, final8949 and7203; original cash/holding/exclusions and private source review, business/passive, fiscal/interim and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i6198", section: "Actual same-single-activity and gain-item statement for original owner distribution gain; exact PartI reconciliation with independently nonbinding capacity", revision: "Final2025 source instructions and Pub925; bounded activity-source interpretation, no inferred gain allocation or entity basis increase; broader activity methods remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i8960", section: "Lines 4a-4c retain completed Schedule E portfolio royalties once alongside allowed passive income; excluded active business income remains separate", revision: "Final 2025 instructions and IRC 1411(c)(1)(A)(i); represented MISC and K1 sources, exact cents and final tax rounding. Expense and business-character methods, full 2026 and human qualification remain separate", retrievedAt: "2026-10-26" },
@@ -164,11 +165,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.121-law-integration-draft",
+    ruleVersion: "2026.122-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1040se", section: "Actual nonbusiness royalty property sources, original MISC allocations and current ordinary expenses; Schedule E net portfolio income once in EIC and NIIT", revision: "Final2025 Schedule E lines4-21, Pub596 Worksheet1 lines8-10 and i8960 lines4a/4b; actual zero and cents preserved, separate source/owner controls; loss, depletion, business, PA, physical forms and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s731/", section: "Actual investment-only cash distributions above original partnership or S-stock basis, separate owner gain through Form8949 and ScheduleD", revision: "IRC731/1368/1222, Reg1.731-1/1.1368-1, final8949 and7203; original cash/holding/exclusions and private source review, business/passive, fiscal/interim and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i6198", section: "Actual same-single-activity and gain-item statement for original owner distribution gain; exact PartI reconciliation with independently nonbinding capacity", revision: "Final2025 source instructions and Pub925; bounded activity-source interpretation, no inferred gain allocation or entity basis increase; broader activity methods remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i8960", section: "Lines 4a-4c retain completed Schedule E portfolio royalties once alongside allowed passive income; excluded active business income remains separate", revision: "Final 2025 instructions and IRC 1411(c)(1)(A)(i); represented MISC and K1 sources, exact cents and final tax rounding. Expense and business-character methods, full 2026 and human qualification remain separate", retrievedAt: "2026-10-26" },

@@ -1454,6 +1454,9 @@ export function calculatePAReturn(
   input: TaxYearInput,
   overrides: PAOrchestratorOverrides = {},
 ): PAOrchestratorResult {
+  if (input.royaltyPropertySources !== undefined) {
+    throw new Error('PA royalty properties require their separate actual state classification, ownership and expense source method');
+  }
   const digitalCapitalInput = calculateDigitalAssetStateSources(input, "PA");
   const taxYear = input.taxpayer.taxYear;
   const ZERO = new Decimal(0);

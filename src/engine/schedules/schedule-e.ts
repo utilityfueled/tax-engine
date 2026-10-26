@@ -14,6 +14,7 @@ import { calculateForm4562 } from "@/engine/forms/form-4562.js";
 import { calculateForm6198, type Form6198Result } from "@/engine/forms/form-6198.js";
 import { calculatePartnerBasisSchedule, type PartnerBasisScheduleResult } from "@/engine/forms/partner-basis-schedule.js";
 import { calculateK1CharitableReturnSources, type K1CharitableReturnResult, type K1CharitableReturnInput } from "@/engine/forms/k1-charitable-return-sources.js";
+import { calculateRoyaltyPropertySources, type RoyaltyPropertyResult } from "@/engine/forms/royalty-property-sources.js";
 import { d, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
@@ -60,8 +61,12 @@ export interface ScheduleEResult {
   // Part I: Rental
   rentalProperties: RentalPropertyEntry[];
   totalRentalIncome: Decimal; // Line 26
-  /** Portfolio royalties reported in Part I, excluded from the passive activity pool. */
+  /** Net portfolio royalties reported in Part I, excluded from the passive activity pool. */
   totalRoyaltyIncome: Decimal;
+  /** Original royalty gross and actual direct-property expenses, before the EIC zero floor. */
+  grossRoyaltyIncome: Decimal;
+  totalRoyaltyExpenses: Decimal;
+  royaltyProperties: RoyaltyPropertyResult[];
 
   // Part II: Partnerships
   partnerships: PartnershipEntry[];
@@ -285,7 +290,7 @@ function applyAtRiskLimitation(
   };
 }
 
-export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'rentalProperties' | 'form1099Misc'> & Partial<Pick<TaxYearInput, 'k1CharitableSources' | 'qbiLossSources'>> & { taxpayer?: K1CharitableReturnInput['taxpayer'] }, completedCharitable?: K1CharitableReturnResult): ScheduleEResult {
+export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'rentalProperties' | 'form1099Misc'> & Partial<Pick<TaxYearInput, 'k1CharitableSources' | 'qbiLossSources' | 'royaltyPropertySources'>> & { taxpayer?: K1CharitableReturnInput['taxpayer'] }, completedCharitable?: K1CharitableReturnResult): ScheduleEResult {
   if (input.k1CharitableSources && !input.taxpayer) throw new Error('K1 charitable ScheduleE requires the actual taxpayer context');
   const charitable = input.k1CharitableSources ? completedCharitable ?? calculateK1CharitableReturnSources({ ...input, taxpayer: input.taxpayer! }) : undefined;
   const audit = new AuditTrail();
@@ -442,11 +447,15 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
   // ── Portfolio royalties: Schedule E Part I, Line 4 ─────
   // Partner K-1 box7 and shareholder K-1 box6 are portfolio income;
   // they must not supply passive income that releases ordinary activity losses.
-  const miscRoyalties = sum(...input.form1099Misc.map(form => d(form.royalties)));
+  const directRoyalties = calculateRoyaltyPropertySources(input);
+  audit.merge(directRoyalties.lines);
+  const miscRoyalties = directRoyalties.grossIncome;
   const k1Royalties = sum(...input.scheduleK1.map(k1 => d(k1.royalties)));
-  const totalRoyaltyIncome = miscRoyalties.plus(k1Royalties);
-  if (!totalRoyaltyIncome.isZero()) {
-    audit.record("Sched E", "4", "Portfolio royalty income", totalRoyaltyIncome,
+  const grossRoyaltyIncome = miscRoyalties.plus(k1Royalties);
+  const totalRoyaltyExpenses = directRoyalties.totalExpenses;
+  const totalRoyaltyIncome = grossRoyaltyIncome.minus(totalRoyaltyExpenses);
+  if (!grossRoyaltyIncome.isZero()) {
+    audit.record("Sched E", "4", "Portfolio royalty income", grossRoyaltyIncome,
       "Form1099-MISC box2 plus Form1065 K-1 box7 / Form1120S K-1 box6", {
         "Form1099-MISC royalties": miscRoyalties, "K-1 portfolio royalties": k1Royalties,
       });
@@ -697,6 +706,9 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
     rentalProperties,
     totalRentalIncome,
     totalRoyaltyIncome,
+    grossRoyaltyIncome,
+    totalRoyaltyExpenses,
+    royaltyProperties: directRoyalties.properties,
     partnerships,
     totalNonpassiveIncome,
     totalNonpassiveLoss,

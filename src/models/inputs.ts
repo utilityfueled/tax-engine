@@ -16,6 +16,7 @@ import { Form8962MarriageSourcesSchema } from "@/models/form-8962-marriage.js";
 import { K1CharitableReturnSourcesSchema } from "@/models/k1-charitable-return-sources.js";
 import { QbiLossSourcesSchema } from "@/models/qbi-loss-sources.js";
 import { EicSeparatedSpouseSourcesSchema } from "@/models/eic-separated-spouse-sources.js";
+import { RoyaltyPropertySourcesSchema } from "@/models/royalty-property-sources.js";
 
 // Custom Zod type for decimal strings (validated as numbers, stored as strings for Decimal.js)
 const decimal = z.string().regex(/^-?\d+(\.\d+)?$/, "Must be a decimal number");
@@ -5987,6 +5988,7 @@ export const TaxYearInputSchema = z.object({
   form8962: Form8962Schema.optional(),
   donations: z.array(CharitableDonationSchema).default([]),
   rentalProperties: z.array(RentalPropertySchema).default([]),
+  royaltyPropertySources: RoyaltyPropertySourcesSchema.optional(),
   scheduleC: ScheduleCInputSchema.optional(),
   scheduleF: ScheduleFInputSchema.optional(),
   qbiDeductionAllocations: QBIDeductionAllocationsSchema.optional(),
