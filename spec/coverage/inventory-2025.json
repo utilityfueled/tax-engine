@@ -1768,6 +1768,29 @@
       "knownGaps": []
     },
     {
+      "key": "federal/form-1099-q-cash-assistance",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
+      "specPath": "spec/federal/form-1099-q-cash-assistance.yaml",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-cash-assistance.test.ts::applies actual prepaid tuition before the cash expense remainder",
+        "tests/pdf/form-1099-q-cash-assistance.test.ts::binds original cash assistance sources before review output"
+      ],
+      "implementationNote": "Actual prepaid and cash QTP tuition sources after assistance without ESA; shared calculation and historical 2025 review mapping only, with final-year and filing gates unchanged.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-1099-q-corrections",
       "jurisdiction": "federal",
       "taxYear": 2026,

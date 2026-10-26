@@ -117,6 +117,9 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
           const providedCost = linked.reduce((total, benefit) => total.plus(sourceMoney(benefit.amount)), new Decimal(0));
           const exactBenefit = sourceMoney(allocation?.amount).plus(sourceMoney(allocation?.creditAmount)).plus(assistance).eq(providedCost);
           const esaCoordination = forms.some(source => source.beneficiaryId === row.beneficiaryId && source.accountType === "coverdell_esa") && (!exactBenefit || assistance.gt(0));
+          const cashTuitionCoordination = assistance.gt(0) && expense?.category === "postsecondary_tuition"
+            && !forms.some(source => source.beneficiaryId === row.beneficiaryId && source.accountType === "coverdell_esa")
+            && forms.some(source => source.beneficiaryId === row.beneficiaryId && source.distributionMedium === "cash");
           if (esaCoordination) {
             if (!prepared) assertDistinctEducationBeneficiaries(forms, qeeSummary.sourceFacts);
             const inputs = readInKindTuitionEsaSource(forms, qeeSummary.sourceFacts, row.sourceId, expenseId);
@@ -126,8 +129,8 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
             }
             sourceLines.push(describe(entry, `Statement ${index + 1}: `));
           }
-          if (!esaCoordination && !exactBenefit) throw new Error("Education reference in-kind benefit allocation and assistance source disagree with the calculation");
-          if (assistance.gt(0) && !esaCoordination) {
+          if (!esaCoordination && !cashTuitionCoordination && !exactBenefit) throw new Error("Education reference in-kind benefit allocation and assistance source disagree with the calculation");
+          if ((assistance.gt(0) || cashTuitionCoordination) && !esaCoordination) {
             if (!prepared) assertDistinctEducationBeneficiaries(forms, qeeSummary.sourceFacts);
             const expected = readInKindTuitionAssistanceSource(forms, qeeSummary.sourceFacts, row.sourceId, expenseId);
             const assistanceLine = requireAudit("Form1099-Q", `${row.sourceId}:in-kind-assistance:${expenseId}`, assistance);

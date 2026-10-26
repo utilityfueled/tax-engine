@@ -436,6 +436,16 @@
         "tests/pdf/form-172-charitable-closure-review.test.ts::binds original charitable source kinds and independent values in loss review"
       ],
       "note": "Original charitable and independent prior sources in actual selected current loss origins; linked2025 reference is review-only, with isolated2026 choice controls and unchanged final-year gates."
+    },
+    {
+      "key": "federal/form-1099-q-cash-assistance",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-cash-assistance.test.ts::applies actual prepaid tuition before the cash expense remainder",
+        "tests/pdf/form-1099-q-cash-assistance.test.ts::binds original cash assistance sources before review output"
+      ],
+      "note": "Actual prepaid and cash QTP tuition sources after assistance without ESA; shared calculation and historical 2025 review mapping only, with final-year and filing gates unchanged."
     }
   ]
 }
