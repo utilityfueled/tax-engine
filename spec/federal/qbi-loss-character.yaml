@@ -1,0 +1,51 @@
+form: "QBI Loss Character"
+fullName: "Origin-year qualified character at a calculated loss limitation"
+taxYear: 2025
+irsReference: "https://www.irs.gov/irb/2020-29_IRB"
+notes: |
+  Research refreshed 2026-10-25: T.D.9899, Reg1.199A-3(b)(1)(iv)(A)-(D),
+  current Form8995 loss tracking instructions, and Form461 instructions.
+  This is a pure calculation prerequisite, not a newly enabled return path.
+  Allowed loss is calculated by the canonical basis, at-risk, passive or EBL
+  method. It is never an intake override. Regular, AMT, NOL and QBI ledgers
+  remain separate; this calculator neither computes an NOL nor changes AGI.
+  Each suspending Code provision has a separate origin-year history. Prior
+  qualified losses enter QBI as a separate trade or business when allowed.
+  Current loss character comes from actual otherwise-qualified source amounts;
+  originating SSTB qualification must be derived separately by the caller.
+  The current partial-allowance fraction uses exact source amounts. Filed
+  historical balances and final per-vintage transfers use whole dollars.
+  No cross-business allocation of the aggregate Form461 disallowance is
+  established here. A later caller must derive an unambiguous allocation from
+  controlling rules; this helper does not accept discretionary allocation facts.
+lines:
+  - line: "published-partial"
+    description: "Published current-year partial allowance and qualified carry"
+    formula: "Allowed qualified loss =60000*(80000/100000)=48000; suspended total=40000 and qualified suspended=32000"
+    irsRef: "Reg1.199A-3(b)(1)(iv)(D)(1), T.D.9899 Example1"
+    testRef: "tests/engine/forms/qbi-loss-character.test.ts::matches the published48000 current loss and32000 suspended QBI example"
+  - line: "prior-first"
+    description: "Use actual prior vintages before a new current loss"
+    formula: "Use filed opening balances oldest first; pre2018 qualified share is zero; prior qualified utilization is separate from current qualified loss"
+    irsRef: "Reg1.199A-3(b)(1)(iv)(A); Form8995 columnsC/F/J and row4"
+    testRef: "tests/engine/forms/qbi-loss-character.test.ts::preserves prior FIFO character separately from a partially allowed current loss"
+  - line: "origin"
+    description: "Retain the original qualified fraction and remaining filed balances"
+    formula: "Partial prior use times original qualified/original total; complete use exhausts the actual filed qualified remainder; never recompute a fraction from rounded opening remainders"
+    irsRef: "Reg1.199A-3(b)(1)(iv)(B)-(C); Form8995 columnsA/B/I/L"
+    testRef: "tests/engine/forms/qbi-loss-character.test.ts::uses original qualification and exhausts filed rounding remainders"
+  - line: "current-vintage"
+    description: "Open only the actually suspended current loss"
+    formula: "New original/remaining loss = rounded current source loss minus current allowed loss; new qualified amount = exact unallowed source loss times the current exact qualified fraction, rounded once. A.51 total/.49 qualified source opens1/0, never1/1."
+    irsRef: "Form8995 loss tracking columnsA/I; Reg1.199A-3(b)(1)(iv)(B)"
+    testRef: "tests/engine/forms/qbi-loss-character.test.ts::retains exact current source fractions and only newly suspended amounts"
+  - line: "sources"
+    description: "Reject contradictory source histories and calculated limitation amounts"
+    formula: "Confirmed preceding-year history, unique earlier origins, finite nonnegative balances, original/remaining qualified and nonqualified conservation, known pre2018 exclusion, and sum opening losses must all reconcile"
+    irsRef: "Form8995 Tracking Losses or Deductions Suspended by Other Provisions"
+    testRef: "tests/engine/forms/qbi-loss-character.test.ts::rejects unknown or contradictory histories and impossible calculated allowances"
+  - line: "separate-codes"
+    description: "Keep the suspending provision explicit and preserve input source records"
+    formula: "Output carries the exact activity source identity and Code provision; input records are immutable and no regular loss balance is labeled AMT or NOL"
+    irsRef: "Form8995 separate worksheet for each suspending provision; Reg1.199A-3(b)(1)(iv)(A)"
+    testRef: "tests/engine/forms/qbi-loss-character.test.ts::keeps code histories distinct and preserves exact source records"
