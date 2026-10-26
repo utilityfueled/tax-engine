@@ -2,11 +2,11 @@
 import type { TaxYearInput } from '@/models/inputs.js';
 import { calculateEicClaimantEligibility, type EicClaimantInput } from '@/engine/forms/eic-claimant-eligibility.js';
 import { calculateEicSeparatedSpouseSources, type EicSeparatedSpouseInput } from '@/engine/forms/eic-separated-spouse-sources.js';
+import { calculateForm8862, type Form8862Input } from '@/engine/forms/form-8862.js';
 
 type Input = EicClaimantInput & EicSeparatedSpouseInput & {
-  taxpayer: EicClaimantInput['taxpayer'] & {
-    dependents: TaxYearInput['taxpayer']['dependents'];
-  };
+  eic?: Pick<NonNullable<TaxYearInput['eic']>, 'recertificationSources'>;
+  taxpayer: Form8862Input['taxpayer'];
 };
 type Personal = NonNullable<NonNullable<NonNullable<Input['eic']>['claimantEligibility']>['primaryChildless']>;
 
@@ -30,9 +30,12 @@ export function calculateEicReviewCheckboxes(input: Input): {
   const facts = input.eic?.claimantEligibility;
   const joint = taxpayer.filingStatus === 'married_filing_jointly';
   // Same actual qualifying-child route used by the canonical EIC call.
-  const childless = input.eic?.separatedSpouseSources !== undefined
-    ? !calculateEicSeparatedSpouseSources(input).qualifyingChildPresent
-    : !taxpayer.dependents.some(child => child.qualifiesForEIC === true);
+  const current = input.eic?.recertificationSources === undefined ? undefined
+    : calculateForm8862({ ...input, sources: input.eic.recertificationSources });
+  const qualifyingChildPresent = current?.qualifyingChildPresent ?? (input.eic?.separatedSpouseSources !== undefined
+    ? calculateEicSeparatedSpouseSources(input).qualifyingChildPresent
+    : taxpayer.dependents.some(child => child.qualifiesForEIC === true));
+  const childless = !qualifyingChildPresent;
   const knownAgeSources = standard?.primaryDeathDate !== undefined
     && (!joint || standard.spouseDeathDate !== undefined);
   const resolveChildless = childless && (facts !== undefined || knownAgeSources);

@@ -39,6 +39,7 @@ import { prepareCharitableReview, charitableReviewOriginalSourceInput, requiresP
 import { fillK1CharitableReview, K1_CHARITABLE_REFERENCE_FILENAME } from "./mappings/2025/k1-charitable-review.js";
 import { hasHistoricalAdoptionSources, prepareAdoptionReview, type PreparedAdoptionReview } from "./adoption-review-context.js";
 import { eicReviewChildren, eicReviewOriginalSourceInput, hasEicReviewSources, prepareEicReview, type PreparedEicReview } from "./eic-review-context.js";
+import { fillForm8862 } from "./fill-form-8862.js";
 import { fillForm8880 } from "./fill-form-8880.js";
 import { fillForm5329 } from "./fill-form-5329.js";
 import { fillForm8606 } from "./fill-form-8606.js";
@@ -429,7 +430,7 @@ export async function fillReturn(
   const paRoyaltyReview = (input.royaltyPropertySources && result.stateReturns?.pennsylvania) || options.paRoyaltyReview
     ? options.paRoyaltyReview ?? preparePARoyaltyReview(input) : undefined;
   if (paRoyaltyReview) assertPARoyaltyReview(input,result,paRoyaltyReview);
-  const eicReview = hasEicReviewSources(input) || options.eicReview
+  const eicReview = hasEicReviewSources(input) || result.scheduleEIC?.form8862 || options.eicReview
     ? options.eicReview ?? prepareEicReview(input) : undefined;
   const actualEicChildren = eicReview ? eicReviewChildren(eicReviewOriginalSourceInput(input, result, eicReview)) : undefined;
   const qbiLossReview = input.qbiLossSources || options.qbiLossReview
@@ -1118,6 +1119,14 @@ export async function fillReturn(
   // makes draft packets look more filing-ready than they are.
 
   // ── Schedule EIC (if applicable — qualifying children for EIC) ──
+  if (result.earnedIncomeCredit.gt(0) && result.scheduleEIC?.form8862?.required
+    && result.scheduleEIC.form8862.currentFormRequirementsMet) {
+    const doc8862 = await fillForm8862(input, result, join(blankFormsDir, "f8862.pdf"), eicReview);
+    if (flatten) await flattenForm(doc8862.getForm());
+    const outputPath8862 = join(outputDir, "f8862-filled.pdf");
+    await savePacketPdf(doc8862, outputPath8862);
+    filledForms.push(outputPath8862);
+  }
   const eicChildren = actualEicChildren ?? input.taxpayer.dependents.filter((dep) => dep.qualifiesForEIC);
   if (result.scheduleEIC && !result.scheduleEIC.disqualified && eicChildren.length > 0) {
     const seiPath = join(blankFormsDir, "f1040sei.pdf");

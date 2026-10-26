@@ -183,7 +183,7 @@ export async function fillForm1040(
   }
   // Resolve only the actual conditions expressly printed in the instructions;
   // neither an amount nor another zero-credit reason establishes these boxes.
-  const claimantSource = hasEicReviewSources(input) || eicReview ? eicReviewOriginalSourceInput(input, result, eicReview) : input;
+  const claimantSource = hasEicReviewSources(input) || result.scheduleEIC?.form8862 || eicReview ? eicReviewOriginalSourceInput(input, result, eicReview) : input;
   const claimantBoxes = calculateEicReviewCheckboxes(claimantSource);
   if (claimantBoxes.doNotClaimEic && (!result.earnedIncomeCredit.isZero()
     || (getLineValue(result, "1040", "27a")?.isZero() === false))) {

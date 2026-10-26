@@ -1,0 +1,40 @@
+form: guided-form-8862
+taxYear: 2025
+notes: >-
+  Actual current EIC recertification records use the canonical Form8862 source
+  validator without income, credit or eligibility overrides. Identity copies do
+  not answer residence, history, child qualification or confirmations. Blank
+  day counts, unknown lists and actual zero/empty answers remain distinct.
+  Original history, claimant and current-form confirmations revoke on substantive
+  dependent source changes; explicit reconfirmation does not cycle. Review only.
+lines:
+  - line: "sources"
+    description: "Original household and complete current records"
+    formula: "Copy actual filer/dependent originals, preserve unknowns, convert only supplied day counts, and validate through calculateForm8862"
+    irsRef: "Final8862 PartsI/II and i8862 lines3-11"
+    testRef: "tests/guided-interview/guided-form-8862.test.ts::copies current originals without inventing form answers or child history"
+  - line: "canonical"
+    description: "Actual current records reach canonical recertification"
+    formula: "Forward the original source packet once; use current child presence for history and claimant dispatch without changing the underlying credit table"
+    irsRef: "IRC32(k); Reg1.32-3; final8862 PartsI/II"
+    testRef: "tests/guided-interview/guided-form-8862.test.ts::forwards current recertification and actual self-only child sources through the full bridge"
+  - line: "invalidation"
+    description: "Source edits revoke confirmations and retain actual records"
+    formula: "Invalidate actual current/claimant and child-dependent history confirmations on substantive edits; reject stale originals; preserve explicit reconfirmation"
+    irsRef: "Actual current source conservation"
+    testRef: "tests/guided-interview/guided-form-8862.test.ts::preserves unknown zero and stale originals through the confirmation cycle"
+  - line: "controls"
+    description: "Real source controls for current form questions"
+    formula: "Provide editable actual day/absence/military/child/date and known-empty controls; no completed8862 eligibility checkbox"
+    irsRef: "Final8862 lines5-11 and current source evidence"
+    testRef: "tests/apps/web/form-8862-interactions.test.tsx::records actual residence through the current form panel"
+  - line: "child-evidence"
+    description: "Actual child qualification and live-birth attachment records"
+    formula: "Copy the original child, require actual day/identity/qualification answers, and retain a real live-birth document reference and attachment availability"
+    irsRef: "Pub596 Rule8; Form8862 lines5-8"
+    testRef: "tests/apps/web/form-8862-interactions.test.tsx::collects actual birth death and attachment evidence without inferring a child answer"
+  - line: "persistence"
+    description: "Actual current records persist locally across desktop and mobile reloads"
+    formula: "Preserve exact source days, actual false/unknown answers and reconfirmation; explicit review download uses redacted current and ScheduleEIC pages"
+    irsRef: "Actual current recertification source and local privacy boundary"
+    testRef: "apps/web/tests/guided-form-8862.spec.ts::saves current child recertification and downloads the source-bound review"

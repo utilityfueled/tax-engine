@@ -24,6 +24,7 @@ import { actualGuidedK1PassiveDistribution } from "../../fixtures/guided-k1-pass
 import { startCompleteInterview, completeW2Entry } from "../../guided-interview/complete-facts";
 import { emptyDeductionData } from "../../../apps/web/src/lib/guided-interview-flow";
 import { actualGuidedK1Sources } from "../../fixtures/guided-k1-qbi-sources";
+import { actual, guidedForm8862 } from "../../fixtures/guided-form-8862";
 
 vi.mock("server-only", () => ({}));
 
@@ -746,5 +747,44 @@ it("exports actual shared health through the original workspace source context",
   const text = await extractPdfText(download.contents);
   for (const value of ["original premium $1000", "actual advance credit $600", "premium $500; advances $300", "Schedule 1 line 17 transfer: $2340", "Final Form 8962 credit: $3480"]) expect(text).toContain(value);
   expect(text.replace(/\s|-/g, "")).not.toMatch(/111223333|444556666/);
+  expect(JSON.stringify(state)).toBe(before);
+});
+
+// Spec: spec/federal/form-8862-review.yaml.
+it('binds current Form8862 before redacting workspace identities', async () => {
+  const state = guidedForm8862(true), before = JSON.stringify(state), calculate = vi.spyOn(federalEngine, 'calculateFederalTax');
+  const primary = actual(state.sectionData['personal-info']);
+  try {
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    expect(download.includedForms).toContain('f8862-filled.pdf');
+    expect(calculate.mock.calls.every(([input]) => input.taxpayer.primary.ssn === primary.ssn && input.taxpayer.spouse?.ssn === primary.spouse?.ssn)).toBe(true);
+    const text = await extractPdfText(download.contents);
+    expect(text).toContain('Current Form 8862 EIC source record'); expect(text).toContain('Primary filer: 365 home days'); expect(text).toContain('Spouse: 365 home days');
+    for (const secret of [primary.ssn, primary.ssn.replaceAll('-', ''), actual(primary.spouse).ssn, actual(primary.spouse).ssn.replaceAll('-', ''), 'Fictional actual current Form8862 records', 'actual-denial']) expect(text).not.toContain(secret);
+    expect(JSON.stringify(state)).toBe(before);
+  } finally { calculate.mockRestore(); }
+});
+
+// Spec: spec/federal/form-8862-review.yaml.
+it('exports the actual born and deceased child without changing original eligibility sources', async () => {
+  const state = guidedForm8862(), personal = actual(state.sectionData['personal-info']);
+  personal.dateOfBirth = '2003-02-01'; personal.dependentCount = '1';
+  personal.dependents = [{ firstName: 'Alex', lastName: 'Example', ssn: '', dateOfBirth: '2025-10-01', relationship: 'child', monthsLivedWithYou: '3', qualifiesForCTC: false, qualifiesForODC: false, qualifiesForEIC: false }];
+  const current = actual(personal.eicRecertificationSources), owner = actual(current.filers?.[0]), original = actual(personal.dependents[0]);
+  actual(owner.originalTaxpayer).dateOfBirth = personal.dateOfBirth;
+  current.children = [{ sourceId: 'dependent:0', sourceReference: 'Fictional private child evidence',
+    original: { firstName: original.firstName, lastName: original.lastName, ssn: '', dateOfBirth: original.dateOfBirth, relationship: original.relationship, monthsLivedWithYou: original.monthsLivedWithYou },
+    livedWithTaxpayerInUnitedStatesMoreThanHalfYear: true, specialResidencePeriodClaimed: true,
+    marriedAtYearEnd: false, jointReturnFiled: false, validSsnIssuedByDueDate: false,
+    allOtherEligibleClaimantsIncluded: true, otherEligibleClaimants: [], deathDate: '2025-12-31',
+    homeDays: { sourceReference: 'Fictional actual child calendar', actualUnitedStatesDays: '47', temporaryAbsences: [], militaryOutsideUnitedStatesDays: '0', allDaysIncludedAndDistinctConfirmed: true },
+    bornAndDeceasedRecord: { sourceReference: 'Fictional private hospital record', recordType: 'hospital_record', showsLiveBirth: true, copyAvailableForReturnAttachment: true } }];
+  const before = JSON.stringify(state), input = TaxYearInputSchema.parse(actual(buildTaxInputFromGuidedData(state)));
+  expect(calculateFederalTax(input).earnedIncomeCredit.toFixed()).toBe('3409');
+  const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+  expect(download.includedForms).toContain('f8862-filled.pdf'); expect(download.includedForms).toContain('f1040sei-filled.pdf');
+  const text = await extractPdfText(download.contents);
+  expect(text).toContain('actual 47 days; printed 365 days'); expect(text).toContain('Attach the actual live-birth document copy');
+  for (const secret of [personal.ssn, personal.ssn.replaceAll('-', ''), 'dependent:0', 'Fictional private hospital record']) expect(text).not.toContain(secret);
   expect(JSON.stringify(state)).toBe(before);
 });

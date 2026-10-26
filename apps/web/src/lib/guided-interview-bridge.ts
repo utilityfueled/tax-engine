@@ -45,6 +45,7 @@ import { parseGuidedCurrency, hasGuidedCurrency, formatGuidedDollars, sumGuidedD
 import { childCreditExclusionValues, dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts";
 import { allowsBlankEicChildIdentifier, type EicSeparatedSpouseData } from "./guided-eic-separated-spouse";
 import { buildGuidedEicClaimantEligibility } from "./guided-eic-eligibility";
+import { allowsBlankForm8862ChildIdentifier, type Form8862Data } from "./guided-form-8862";
 import { buildVehicleCreditInput, vehicleFactErrors } from "./guided-vehicle-facts";
 import { buildAdoptionInput, adoptionFactErrors } from "./guided-adoption-facts";
 import { allPaymentFactErrors, assertKnownFacts, deductionFactErrors, educationFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
@@ -336,6 +337,7 @@ export function buildDependents(
   countStr: string | undefined,
   detailedDependents?: DependentEntryData[],
   separatedSpouseSources?: EicSeparatedSpouseData,
+  recertificationSources?: Form8862Data,
 ) {
   const entries = detailedDependents ?? [];
   const count = countStr ?? String(entries.length);
@@ -343,7 +345,8 @@ export function buildDependents(
     throw new Error("Enter complete details for every dependent.");
   }
   return entries.map((entry, index) => {
-    const errors = dependentFactErrors(entry, index, undefined, allowsBlankEicChildIdentifier(separatedSpouseSources, entry, index));
+    const errors = dependentFactErrors(entry, index, undefined, allowsBlankEicChildIdentifier(separatedSpouseSources, entry, index)
+      || allowsBlankForm8862ChildIdentifier(recertificationSources, entry, index));
     if (Object.keys(errors).length) throw new Error(Object.values(errors)[0]);
     return {
       ...entry,
@@ -773,7 +776,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
         state: personalInfo.state,
         zip: personalInfo.zip,
       },
-      dependents: buildDependents(personalInfo?.dependentCount, personalInfo?.dependents, personalInfo?.eicSeparatedSpouseSources),
+      dependents: buildDependents(personalInfo?.dependentCount, personalInfo?.dependents, personalInfo?.eicSeparatedSpouseSources, personalInfo?.eicRecertificationSources),
     },
     w2s,
     form2210: buildEstimatedTaxFacts(paymentData, state.taxYear),

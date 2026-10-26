@@ -39,6 +39,7 @@ export function eicHistorySourceValuesChanged(previous: PersonalInfoData | undef
     primary: primaryIdentity(personal),
     spouse: personal.spouse === undefined ? undefined : { firstName: personal.spouse.firstName, lastName: personal.spouse.lastName, ssn: personal.spouse.ssn },
     history: personal.eicDisallowanceHistory,
+    ...(personal.eicRecertificationSources === undefined ? {} : { currentForm: personal.eicRecertificationSources, currentChildren: personal.dependents, currentDependentCount: personal.dependentCount }),
     ...(personal.eicSeparatedSpouseSources === undefined ? {} : {
       separated: personal.eicSeparatedSpouseSources, children: personal.dependents, dependentCount: personal.dependentCount,
       dateOfBirth: personal.dateOfBirth, livedWithSpouseAtAnyTimeDuringYear: personal.livedWithSpouseAtAnyTimeDuringYear,
@@ -57,7 +58,7 @@ export function copyEicHistoryHousehold(personal: PersonalInfoData, status: Fili
     ...(status === 'mfj' && personal.spouse ? [original('spouse', { firstName: personal.spouse.firstName, lastName: personal.spouse.lastName, ssn: personal.spouse.ssn })] : [])] };
 }
 
-export function buildGuidedEicDisallowanceHistory(personal: PersonalInfoData | undefined, status: FilingStatus | null, taxYear: number | null | undefined) {
+export function convertGuidedEicDisallowanceHistory(personal: PersonalInfoData | undefined, status: FilingStatus | null, taxYear: number | null | undefined) {
   const data = personal?.eicDisallowanceHistory;
   if (data === undefined) return undefined;
   if (!personal || !status || !taxYear) throw new Error('EIC history needs the actual household, return year and filing status');
@@ -81,6 +82,12 @@ export function buildGuidedEicDisallowanceHistory(personal: PersonalInfoData | u
       laterAllowances: filer.laterAllowances?.map(row => ({ ...row, taxYear: year(row.taxYear) })),
     })),
   };
+  return source;
+}
+export function buildGuidedEicDisallowanceHistory(personal: PersonalInfoData | undefined, status: FilingStatus | null, taxYear: number | null | undefined) {
+  const source = convertGuidedEicDisallowanceHistory(personal, status, taxYear);
+  if (source === undefined) return undefined;
+  if (!personal || !status || !taxYear) throw new Error('EIC history needs the actual household, return year and filing status');
   const separated = buildGuidedEicSeparatedSpouseSources(personal, status, taxYear);
   const result = calculateEicDisallowanceHistory({ taxpayer: { taxYear, filingStatus: statuses[status], primary: primaryIdentity(personal),
     spouse: status === 'mfj' && personal.spouse ? { firstName: personal.spouse.firstName, lastName: personal.spouse.lastName, ssn: personal.spouse.ssn } : undefined },

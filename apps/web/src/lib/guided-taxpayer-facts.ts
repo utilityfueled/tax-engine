@@ -1,6 +1,7 @@
 import { standardDeductionFactErrors } from "./guided-standard-deduction-facts";
 import { eicClaimantFactErrors } from "./guided-eic-eligibility";
 import { allowsBlankEicChildIdentifier } from "./guided-eic-separated-spouse";
+import { allowsBlankForm8862ChildIdentifier } from "./guided-form-8862";
 import type { DependentEntryData, FilingStatus, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 
@@ -76,7 +77,8 @@ export function personalFactErrors(data: PersonalInfoData | undefined, status: F
   if (!count || !/^\d+$/.test(count) || Number(count) > 20 || Number(count) !== (data?.dependents?.length ?? 0)) {
     errors.dependentCount = "Enter complete details for every dependent";
   }
-  data?.dependents?.forEach((entry, index) => Object.assign(errors, dependentFactErrors(entry, index, taxYear, allowsBlankEicChildIdentifier(data.eicSeparatedSpouseSources, entry, index))));
+  data?.dependents?.forEach((entry, index) => Object.assign(errors, dependentFactErrors(entry, index, taxYear,
+    allowsBlankEicChildIdentifier(data.eicSeparatedSpouseSources, entry, index) || allowsBlankForm8862ChildIdentifier(data.eicRecertificationSources, entry, index))));
   const claimsCtc = data?.dependents?.some((entry) => entry.qualifiesForCTC);
   const claimsOdc = data?.dependents?.some((entry) => entry.qualifiesForODC);
   if (claimsCtc || claimsOdc) {

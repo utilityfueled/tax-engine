@@ -132,6 +132,7 @@ import { calculateScheduleR } from "./forms/schedule-r.js";
 import { calculateForm8839 } from "./forms/form-8839.js";
 import { calculateEic } from "./forms/schedule-eic.js";
 import { calculateEicDisallowanceHistory } from "./forms/eic-disallowance-history.js";
+import { calculateForm8862 } from "./forms/form-8862.js";
 import { calculateEicScheduleEInvestment } from "./forms/eic-schedule-e-investment.js";
 import { calculateEicSeparatedSpouseSources } from "./forms/eic-separated-spouse-sources.js";
 import { calculateForm8936 } from "./forms/form-8936.js";
@@ -3311,10 +3312,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   // Actual Rule3 child qualification precedes the separate SSN amount count.
   const eicSeparated = calculateEicSeparatedSpouseSources(input);
-  const qualifyingEicChildren = eicSeparated.ssnCountedChildSourceIds.length;
+  const eicCurrentInput = input.eic?.recertificationSources === undefined ? undefined : { ...input, sources: input.eic.recertificationSources };
+  const eicCurrent = eicCurrentInput ? calculateForm8862(eicCurrentInput) : undefined;
+  const qualifyingEicChildren = eicCurrent?.ssnCountedChildSourceIds?.length ?? eicSeparated.ssnCountedChildSourceIds.length;
+  const actualEicChildPresent = eicCurrent?.qualifyingChildPresent ?? (eicSeparated.sourceFactsComplete ? eicSeparated.qualifyingChildPresent : undefined);
   audit.merge(eicSeparated.lines);
   const eicDisallowanceInput = { taxpayer: input.taxpayer, sources: input.eic?.disallowanceSources,
-    qualifyingChildPresent: eicSeparated.sourceFactsComplete ? eicSeparated.qualifyingChildPresent : undefined };
+    qualifyingChildPresent: actualEicChildPresent };
 
   // IRC §32(c)(1)(C): Filing Form 2555 disqualifies the taxpayer from EIC
   let eic: Decimal;
@@ -3329,13 +3333,14 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     scheduleEIC = calculateEic({
       filingStatus,
       qualifyingChildren: qualifyingEicChildren,
-      qualifyingChildPresent: eicSeparated.sourceFactsComplete ? eicSeparated.qualifyingChildPresent : undefined,
+      qualifyingChildPresent: actualEicChildPresent,
       marriedNonjoint: eicSeparated.sourceFactsComplete,
       earnedIncome: eicEarnedIncome,
       agi,
       investmentIncome: eicInvestmentIncome,
       claimantInput: input,
       disallowanceInput: eicDisallowanceInput,
+      recertificationInput: eicCurrentInput,
       mfsEicEligible: eicSeparated.separatedSpouseEligible ?? false,
     }, constants);
     if (input.eic?.investmentIncomeOverride === undefined && eicScheduleEInvestment.unresolved.length) {

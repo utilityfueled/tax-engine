@@ -18,6 +18,7 @@ import { roundDollar } from "@/utils/decimal.js";
 import { calculateEicCreditTable } from "./eic-credit-table.js";
 import { calculateEicClaimantEligibility, type EicClaimantInput } from "./eic-claimant-eligibility.js";
 import { calculateEicDisallowanceHistory, type EicDisallowanceInput } from "./eic-disallowance-history.js";
+import { calculateForm8862, type Form8862Input, type Form8862Result } from "./form-8862.js";
 
 const ZERO = new Decimal(0);
 
@@ -38,6 +39,8 @@ export interface EicInput {
   claimantInput?: EicClaimantInput;
   /** Actual history and independently established child presence, never amount-count inference. */
   disallowanceInput?: EicDisallowanceInput;
+  /** Original current records; no caller-supplied completed-form result. */
+  recertificationInput?: Form8862Input;
   /** Whether the MFS filer qualifies for the separated-spouse exception */
   mfsEicEligible: boolean;
   /** Source-established marriage on a nonjoint return, including actual married HOH. */
@@ -51,6 +54,7 @@ export interface EicResult {
   phaseOutReduction: Decimal;
   disqualified: boolean;
   disqualificationReason?: string;
+  form8862?: Form8862Result;
   lines: CalculatedLine[];
 }
 
@@ -69,18 +73,32 @@ export function calculateEic(input: EicInput, constants: YearConstants): EicResu
     && input.disallowanceInput.qualifyingChildPresent !== input.qualifyingChildPresent) {
     throw new Error('EIC history actual-child presence must match the calculation actual-child source answer');
   }
-  const history = input.disallowanceInput ? calculateEicDisallowanceHistory({
-    ...input.disallowanceInput, qualifyingChildPresent: input.qualifyingChildPresent,
+  const current = input.recertificationInput;
+  if (current && (current.taxpayer.taxYear !== constants.taxYear || current.taxpayer.filingStatus !== input.filingStatus)) throw new Error('EIC current Form8862 year and filing status must match the calculation');
+  if (current && input.claimantInput && (sourceValue(claimantContext(current.taxpayer)) !== sourceValue(claimantContext(input.claimantInput.taxpayer))
+    || sourceValue(current.standardDeductionFacts) !== sourceValue(input.claimantInput.standardDeductionFacts)
+    || sourceValue(current.eic?.claimantEligibility) !== sourceValue(input.claimantInput.eic?.claimantEligibility))) throw new Error('EIC current Form8862 and claimant original source contexts conflict');
+  if (current && input.disallowanceInput && (sourceValue(current.eic?.disallowanceSources) !== sourceValue(input.disallowanceInput.sources)
+    || sourceValue(historyIdentity(current.taxpayer)) !== sourceValue(historyIdentity(input.disallowanceInput.taxpayer)))) throw new Error('EIC current Form8862 and actual denial history source contexts conflict');
+  const form8862 = current ? calculateForm8862(current) : undefined;
+  if (form8862?.qualifyingChildPresent !== undefined && (form8862.qualifyingChildPresent !== input.qualifyingChildPresent
+    || form8862.ssnCountedChildSourceIds?.length !== input.qualifyingChildren)) throw new Error('EIC current Form8862 actual child presence and count must match the calculation sources');
+  if (form8862) audit.merge(form8862.lines.filter(row => row.form === '8862'));
+  const historyInput = input.disallowanceInput ?? (current ? { taxpayer: current.taxpayer, sources: current.eic?.disallowanceSources } : undefined);
+  const history = historyInput ? calculateEicDisallowanceHistory({
+    ...historyInput, qualifyingChildPresent: input.qualifyingChildPresent,
   }) : undefined;
   if (history) audit.merge(history.lines);
   // Supplied sources must reconcile even when income rules produce no credit.
   // With no packet, determine whether any credit is possible before requiring
   // unrelated claimant facts; a zero amount does not verify those facts.
-  let claimant = input.claimantInput?.eic?.claimantEligibility !== undefined
-    ? calculateEicClaimantEligibility(input.claimantInput, childless) : undefined;
+  const claimantInput = input.claimantInput ?? current;
+  let claimant = claimantInput?.eic?.claimantEligibility !== undefined
+    ? calculateEicClaimantEligibility(claimantInput, childless) : undefined;
   if (claimant) audit.merge(claimant.lines);
   if (history?.barred) return disqualified(audit, 'Actual final IRS determination bars EIC for this tax year (IRC32(k))');
   if (claimant?.disqualificationReason) return disqualified(audit, claimant.disqualificationReason);
+  if (form8862 && !form8862.currentFormRequirementsMet) return { ...disqualified(audit, 'Actual current Form8862 source requirements are not met'), form8862 };
 
   // ── Disqualification checks ──────────────────────────────
 
@@ -139,8 +157,8 @@ export function calculateEic(input: EicInput, constants: YearConstants): EicResu
   }
 
   if (credit.greaterThan(ZERO)) {
-    if (!claimant && input.claimantInput) {
-      claimant = calculateEicClaimantEligibility(input.claimantInput, childless);
+    if (!claimant && claimantInput) {
+      claimant = calculateEicClaimantEligibility(claimantInput, childless);
       audit.merge(claimant.lines);
       if (claimant.disqualificationReason) return disqualified(audit, claimant.disqualificationReason);
     }
@@ -153,9 +171,9 @@ export function calculateEic(input: EicInput, constants: YearConstants): EicResu
         );
       }
     }
-    const historyRequired = constants.taxYear === 2026 || input.claimantInput?.eic?.claimantEligibility !== undefined;
+    const historyRequired = constants.taxYear === 2026 || claimantInput?.eic?.claimantEligibility !== undefined;
     if (!history?.sourceFactsComplete && historyRequired) throw new Error('EIC actual complete denial and allowance history is unknown for this positive source-confirmed claim');
-    if (history?.form8862Required) throw new Error('EIC requires actual current Form8862 sources; a completed checkbox does not establish recertification');
+    if (history?.form8862Required && (!form8862?.sourceFactsComplete || !form8862.currentFormRequirementsMet)) throw new Error('EIC requires actual current Form8862 sources; a completed checkbox does not establish recertification');
     if (input.disallowanceInput && !history?.sourceFactsComplete) {
       audit.record('EIC', 'disallowanceHistoryUnverified', 'Historical EIC denial history remains unverified', ZERO,
         'No actual history supplied; this result does not establish no prior denial or Form8862 qualification');
@@ -205,8 +223,24 @@ export function calculateEic(input: EicInput, constants: YearConstants): EicResu
     phaseInCredit,
     phaseOutReduction,
     disqualified: false,
+    ...(form8862 ? { form8862 } : {}),
     lines: audit.getLines(),
   };
+}
+
+function sourceValue(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(sourceValue).join(',')}]`;
+  if (value !== null && typeof value === 'object') return `{${Object.entries(value).filter(([, v]) => v !== undefined).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${JSON.stringify(k)}:${sourceValue(v)}`).join(',')}}`;
+  return JSON.stringify(value) ?? 'undefined';
+}
+function historyIdentity(taxpayer: EicDisallowanceInput['taxpayer']) {
+  const person = (value: typeof taxpayer.primary | undefined) => value === undefined ? undefined : ({ firstName: value.firstName, lastName: value.lastName, ssn: value.ssn });
+  return { taxYear: taxpayer.taxYear, filingStatus: taxpayer.filingStatus, primary: person(taxpayer.primary), spouse: person(taxpayer.spouse) };
+}
+function claimantContext(taxpayer: EicClaimantInput['taxpayer']) {
+  const person = (value: typeof taxpayer.primary | undefined) => value === undefined ? undefined : ({ dateOfBirth: value.dateOfBirth,
+    employmentValidSsnIssuedByDueDate: value.employmentValidSsnIssuedByDueDate, tinIssuedByDueDate: value.tinIssuedByDueDate });
+  return { taxYear: taxpayer.taxYear, filingStatus: taxpayer.filingStatus, primary: person(taxpayer.primary), spouse: person(taxpayer.spouse) };
 }
 
 function disqualified(audit: AuditTrail, reason: string): EicResult {

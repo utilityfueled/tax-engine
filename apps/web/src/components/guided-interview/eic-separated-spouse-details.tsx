@@ -3,8 +3,8 @@ import type { FilingStatus, PersonalInfoData } from '@/lib/guided-interview-flow
 import { copyEicSeparatedHousehold, updateEicSeparatedSources, type EicSeparatedSpouseData, type EicSeparatedChildData } from '@/lib/guided-eic-separated-spouse';
 import { BooleanFact, TextFact } from './fact-fields';
 
-function ChildSources({ data, index, onChange }: { data: EicSeparatedChildData; index: number; onChange: (next: EicSeparatedChildData) => void }) {
-  const prefix = `Child ${index + 1}`;
+export function EicQualifyingChildSourceDetails({ data, index, onChange, currentForm = false }: { data: EicSeparatedChildData; index: number; onChange: (next: EicSeparatedChildData) => void; currentForm?: boolean }) {
+  const prefix = currentForm ? `Form 8862 child ${index + 1}` : `Child ${index + 1}`;
   const update = (patch: Partial<EicSeparatedChildData>) => onChange({ ...data, ...patch });
   return <fieldset className="guided-card">
     <legend>{prefix}: {data.original?.firstName} {data.original?.lastName}</legend>
@@ -21,9 +21,9 @@ function ChildSources({ data, index, onChange }: { data: EicSeparatedChildData; 
       {(data.original?.relationship === 'foster-child' || data.authorizedFosterPlacement != null) && <BooleanFact label={`${prefix}: placed by an authorized agency or court order`} value={data.authorizedFosterPlacement} onChange={authorizedFosterPlacement => update({ authorizedFosterPlacement })} />}
       <BooleanFact label={`${prefix}: timely valid employment-authorized SSN`} value={data.validSsnIssuedByDueDate} onChange={validSsnIssuedByDueDate => update({ validSsnIssuedByDueDate })} />
     </div>
-    <p className="guided-hint">A qualifying child without a timely valid SSN may establish the separated-spouse exception while the credit uses the self-only amount. Keep an actual ITIN, nonwork SSN or original blank in the household record. The higher child amount requires a valid SSN. Student and disability answers are needed only when relevant to the child’s age. Married-child, special-period and contested-claim methods need further support.</p>
+    <p className="guided-hint">{currentForm ? 'A qualifying child without a timely valid SSN ordinarily uses the self-only credit amount. A child born and deceased during the claim year can use the separate live-birth evidence fields below. Actual birth/death residence days are recorded separately.' : 'A qualifying child without a timely valid SSN may establish the separated-spouse exception while the credit uses the self-only amount. The higher child amount requires a valid SSN. Special-period methods need further support.'} Keep an actual ITIN, nonwork SSN or original blank in the household record. Student and disability answers are needed only when relevant to the child’s age. Married-child and contested-claim methods need further support.</p>
     <p className="guided-hint">Record every other person eligible to claim this child under the EIC qualifying-child rules. The shared benefits include EIC, child tax credit, head-of-household status, child-care credit and dependent-care benefit exclusion. The ordinary parent agreement route requires that each other eligible person claims none of those benefits for this child.</p>
-    {data.otherEligibleClaimants === undefined ? <button type="button" className="guided-add-button" onClick={() => update({ otherEligibleClaimants: [] })}>{prefix}: record no other eligible claimants</button> : data.otherEligibleClaimants.length === 0 ? <p className="guided-hint">Actual record: no other eligible claimants.</p> : null}
+    {data.otherEligibleClaimants === undefined ? <button type="button" className={currentForm ? "utility-button utility-button-small" : "guided-add-button"} onClick={() => update({ otherEligibleClaimants: [] })}>{prefix}: record no other eligible claimants</button> : data.otherEligibleClaimants.length === 0 ? <p className="guided-hint">Actual record: no other eligible claimants.</p> : null}
     {(data.otherEligibleClaimants ?? []).map((other, otherIndex) => <fieldset className="guided-card" key={otherIndex}>
       <legend>{prefix}, other claimant {otherIndex + 1}</legend>
       <TextFact label={`${prefix}, claimant ${otherIndex + 1}: name`} value={other.name ?? ''} onChange={name => update({ otherEligibleClaimants: data.otherEligibleClaimants?.map((row, i) => i === otherIndex ? { ...row, name } : row) })} />
@@ -31,7 +31,7 @@ function ChildSources({ data, index, onChange }: { data: EicSeparatedChildData; 
       <BooleanFact label={`${prefix}, claimant ${otherIndex + 1}: claims any of the shared child tax benefits`} value={other.claimsAnyChildTaxBenefit} onChange={claimsAnyChildTaxBenefit => update({ otherEligibleClaimants: data.otherEligibleClaimants?.map((row, i) => i === otherIndex ? { ...row, claimsAnyChildTaxBenefit } : row) })} />
       <button type="button" className="guided-card-remove" onClick={() => update({ otherEligibleClaimants: data.otherEligibleClaimants?.filter((_, i) => i !== otherIndex), allOtherEligibleClaimantsIncluded: null })}>Remove {prefix.toLowerCase()} claimant {otherIndex + 1}</button>
     </fieldset>)}
-    <button type="button" className="guided-add-button" onClick={() => update({ otherEligibleClaimants: [...(data.otherEligibleClaimants ?? []), {}], allOtherEligibleClaimantsIncluded: null })}>{prefix}: add another eligible claimant</button>
+    <button type="button" className={currentForm ? "utility-button utility-button-small" : "guided-add-button"} onClick={() => update({ otherEligibleClaimants: [...(data.otherEligibleClaimants ?? []), {}], allOtherEligibleClaimantsIncluded: null })}>{prefix}: add another eligible claimant</button>
     {data.otherEligibleClaimants !== undefined && <button type="button" className="guided-card-remove" onClick={() => update({ otherEligibleClaimants: undefined, allOtherEligibleClaimantsIncluded: null })}>{prefix}: mark claimant history unknown</button>}
     <BooleanFact label={`${prefix}: all other eligible claimants recorded`} value={data.allOtherEligibleClaimantsIncluded} onChange={allOtherEligibleClaimantsIncluded => update({ allOtherEligibleClaimantsIncluded })} />
   </fieldset>;
@@ -72,7 +72,7 @@ export function EicSeparatedSpouseDetails({ personal, filingStatus, onChange }: 
       <button type="button" className="guided-add-button" onClick={() => onChange(copyEicSeparatedHousehold(personal, data))}>Copy current household originals</button>
       <p className="guided-hint">Copy the actual household names, identifiers, birth dates, relationships and residence months entered above. This also records an actual empty candidate list when appropriate. Re-copying clears child answers for review; it does not answer the source questions or establish eligibility.</p>
       {data.taxpayer && <p className="guided-hint">Original claimant: {data.taxpayer.firstName} {data.taxpayer.lastName}; birth date {data.taxpayer.dateOfBirth || 'unknown'}. Identifier retained locally.</p>}
-      {data.children?.map((child, index) => <ChildSources key={child.sourceId ?? index} data={child} index={index} onChange={next => update({ children: data.children?.map((row, i) => i === index ? next : row) })} />)}
+      {data.children?.map((child, index) => <EicQualifyingChildSourceDetails key={child.sourceId ?? index} data={child} index={index} onChange={next => update({ children: data.children?.map((row, i) => i === index ? next : row) })} />)}
       <BooleanFact label="All candidate children have original source records" value={data.allCandidateChildrenIncluded} onChange={allCandidateChildrenIncluded => update({ allCandidateChildrenIncluded })} />
       <BooleanFact label="Separated-spouse sources checked after the last edit" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed => update({ sourceFactsConfirmed })} />
       <p className="guided-hint">Keep the EIC claimant records above complete as well. These records remain local until you explicitly request an operation that uses them. <a href="https://www.irs.gov/publications/p596" target="_blank" rel="noreferrer">IRS Publication 596</a> explains the conditions.</p>

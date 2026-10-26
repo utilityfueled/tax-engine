@@ -1,0 +1,97 @@
+form: "8862"
+taxYear: 2025
+title: "Actual current Form 8862 EIC sources and Parts I–II"
+source: "https://www.irs.gov/instructions/i8862"
+notes: |
+  Official final Form8862 Rev12/2025 and instructions refreshed2026-10-26;
+  https://www.irs.gov/pub/irs-pdf/f8862.pdf; IRC32(k), Reg1.32-3 and Pub596.
+  This EIC method completes PartsI/II only. PartsIII/IV for the other credits
+  remain separate methods; their checkboxes are not marked or implied complete.
+  Prior disallowance history and current eligibility are independent sources.
+  Line3 is derived from all unresolved income-only denials, never an override.
+  Current confirmed originals bind actual owner/year/household. Candidate-child
+  completeness and actual [] establish absence; the legacy amount flag does not.
+  Actual qualifying-child presence stays distinct from SSN-counted amount under
+  IRC32(c)(3)(D); final1040 instructions still require ScheduleEIC for an actual
+  child without a qualifying SSN. General child validation reuses the Rule3
+  original/relationship/age/residence/competing-claim rules without inventing a
+  separated-spouse status. Joint age comparison may use either actual spouse.
+  Residence sources retain actual distinct calendar days and qualifying temporary
+  absences; foreign military days require an actual extended-duty order. Unknown
+  day counts are not zero. Child birth/death uses the actual alive period and
+  the explicit line7 printed365/366 convention, with raw days kept separately.
+  Deceased-claimant short-year home-day computation, other special child periods,
+  contested competing priority and married-child dependency remain named methods.
+  Tests are independently derived literal controls unless a published example is
+  expressly identified. No public year/filing/human-review gate changes here.
+lines:
+  - line: "1-3"
+    description: "Current claim year, EIC box and income-only shortcut"
+    formula: "Bind current originals; use verified history required-form and income-only results; line1=current year, line2=EIC, line3=derived income-only"
+    irsRef: "Final8862 PartI lines1/2, PartII line3; i8862 exceptions"
+    testRef: "tests/engine/forms/form-8862-eic.test.ts::derives current year and the income-only shortcut from original history"
+  - line: "4"
+    description: "Actual Rule10 answer including its filing exception"
+    formula: "Reuse independently reconciled primary/spouse qualifying-child-of-another-taxpayer answers; true bars EIC"
+    irsRef: "i8862 line4; Pub596 Rule10"
+    testRef: "tests/engine/forms/form-8862-eic.test.ts::preserves known Rule10 and dependency restrictions instead of clearing them with a form"
+  - line: "5-6"
+    description: "Actual current child records and qualification before SSN count"
+    formula: "Bind each original dependent once, validate relationship/age/residence/joint-return/priority; choose counted children first or actual self-only child"
+    irsRef: "Final8862 lines5/6; i8862 line6; IRC32(c)(3)(D); final1040 Step3"
+    testRef: "tests/engine/forms/form-8862-eic.test.ts::keeps actual child presence separate from the valid SSN amount count"
+  - line: "7-8"
+    description: "Actual U.S. child days and explicit birth/death printing"
+    formula: "Distinct actual home+qualified temporary+extended-duty days; ordinary threshold>half year; birth/death>half alive period prints365/366 with original dates"
+    irsRef: "i8862 lines7/8; Pub596 residency test"
+    testRef: "tests/engine/forms/form-8862-eic.test.ts::retains raw child days while applying the printed birth and death convention"
+  - line: "9"
+    description: "Each joint claimant has their own actual U.S. home days"
+    formula: "Validate actual full-year periods and distinct day counts; require>half year for each claimant; actual military source may count separately"
+    irsRef: "Final8862 lines9a/9b; i8862 line9; Pub596 Rule14"
+    testRef: "tests/engine/forms/form-8862-eic.test.ts::derives each claimant home day total and preserves unknown zero and military sources"
+  - line: "10-11"
+    description: "Either-spouse age and both independent dependency answers"
+    formula: "Reuse actual claimant age and dependency restrictions; print actual source ages and effective dependency answer with independently established exception"
+    irsRef: "i8862 line10 examples1/2; final8862 line11; Pub596 Rules11/12"
+    testRef: "tests/engine/forms/form-8862-eic.test.ts::uses either actual spouse age while retaining both independent dependency answers"
+  - line: "source"
+    description: "No completed-form scalar replaces actual original facts"
+    formula: "Preserve absent packets, unknown children, dates and explicit zeros; reject replaced identities, repeated sources and stale confirmed originals without mutation"
+    irsRef: "Reg1.32-3; actual current form source conservation"
+    testRef: "tests/engine/forms/form-8862-eic.test.ts::rejects unknown or contradictory current originals without changing the source records"
+  - line: "history"
+    description: "Current form does not override a ban or fabricate a history exception"
+    formula: "Recompute actual history using established child presence; an active ban remains zero and a child-only no-child exception needs actual complete absence"
+    irsRef: "IRC32(k); Reg1.32-3; i8862 Exceptions"
+    testRef: "tests/engine/forms/form-8862-eic.test.ts::keeps active bans and actual no-child history exceptions separate from recertification"
+  - line: "child-ssn-exception"
+    description: "Original live-birth evidence for a child born and deceased in the claim year"
+    formula: "Count a qualifying child without an SSN only when both actual dates are in the claim year and an actual birth/death certificate or hospital live-birth record is available for attachment; retain a review attachment requirement"
+    irsRef: "Pub596 Rule8 Social security number; Schedule EIC line2 instructions"
+    testRef: "tests/engine/forms/form-8862-eic.test.ts::requires actual live-birth evidence for the born-and-deceased SSN exception"
+  - line: "supplied-records"
+    description: "Supplied residence records remain actual source facts when a form shortcut applies"
+    formula: "Validate supplied dates and day ledgers even for line3 Yes; do not require absent irrelevant records or discard contradictory supplied records"
+    irsRef: "Final8862 lines3/7/9 and actual-source consistency"
+    testRef: "tests/engine/forms/form-8862-eic.test.ts::validates supplied residence records without inventing shortcut answers"
+  - line: "canonical"
+    description: "Actual current recertification permits the otherwise eligible claim"
+    formula: "Derive current form from actual history and household; require its source-complete result when the history requires8862; retain all other EIC restrictions and published table amounts"
+    irsRef: "IRC32(k); Reg1.32-3; final8862 PartsI/II; final2025 Pub596 table"
+    testRef: "tests/engine/form-8862-canonical.test.ts::claims the ordinary current credit only after actual recertification sources reconcile"
+  - line: "current-child-dispatch"
+    description: "Current recertification children control actual presence and amount count"
+    formula: "Use original current children before legacy flags; preserve invalid-SSN self-only and evidence-backed born/deceased child routes"
+    irsRef: "IRC32(c)(3)(D); Pub596 Rule8; final1040 Step3"
+    testRef: "tests/engine/form-8862-canonical.test.ts::uses actual current children without imposing childless rules on a self-only child claim"
+  - line: "canonical-binding"
+    description: "A second source packet cannot clear another household or denial"
+    formula: "Reconcile year/status/household/history/claimant answers and actual child presence/count across direct and canonical consumers; verify original sources even at zero credit"
+    irsRef: "Reg1.32-3 actual entitlement evidence and source conservation"
+    testRef: "tests/engine/form-8862-canonical.test.ts::rejects mismatched current form history claimant and child authority even at zero credit"
+  - line: "rule3-binding"
+    description: "Current recertification retains the separate married-nonjoint exception"
+    formula: "Require ordinary Rule3 sources independently and reconcile common child facts to current8862 records"
+    irsRef: "IRC32(d)(2)(B); final8862 line6; Pub596 Rule3"
+    testRef: "tests/engine/form-8862-canonical.test.ts::reconciles current children with the independent separated-spouse source packet"

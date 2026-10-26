@@ -4,6 +4,7 @@ import type { TaxYearInput } from '@/models/inputs.js';
 import type { EicSeparatedSpouseSources } from '@/models/eic-separated-spouse-sources.js';
 import type { CalculatedLine } from '@/models/outputs.js';
 import { AuditTrail } from '@/utils/audit.js';
+import { calculateEicQualifyingChildSources } from './eic-qualifying-child-sources.js';
 
 export type EicSeparatedSpouseInput = Pick<TaxYearInput, 'standardDeductionFacts'> & {
   taxpayer: Pick<TaxYearInput['taxpayer'], 'taxYear' | 'filingStatus' | 'primary' | 'dependents' | 'livedWithSpouseAtAnyTimeDuringYear'>;
@@ -17,10 +18,6 @@ export interface EicSeparatedSpouseResult {
   ssnCountedChildSourceIds: string[];
   lines: CalculatedLine[];
 }
-type Row = NonNullable<EicSeparatedSpouseSources['children']>[number];
-const relationshipKey = (value: string): string => value.trim().toLowerCase().replaceAll('_', ' ').replaceAll('-', ' ');
-const childRelationships = new Set(['child', 'son', 'daughter', 'adopted child', 'stepchild', 'foster child', 'grandchild',
-  'sibling', 'brother', 'sister', 'half brother', 'half sister', 'stepbrother', 'stepsister', 'step sibling', 'niece', 'nephew', 'niece nephew']);
 const instrumentStates = new Set('AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY'.split(' '));
 const text = (v: string | undefined, label: string): string => {
   if (typeof v !== 'string' || !v.trim()) throw new Error(`EIC ${label} needs an actual source value`);
@@ -42,42 +39,6 @@ function originalIdentity(actual: { firstName: string; lastName: string; ssn: st
     throw new Error(`EIC ${label} original source identity does not match the current household`);
   }
   text(actual.firstName, `${label} first name`); text(actual.lastName, `${label} last name`); date(actual.dateOfBirth, `${label} birth date`);
-}
-function qualifyingChild(input: EicSeparatedSpouseInput, row: Row, child: TaxYearInput['taxpayer']['dependents'][number]): boolean {
-  originalIdentity(child, row.original, 'child');
-  if (row.original?.relationship !== child.relationship || row.original.monthsLivedWithYou !== child.monthsLivedWithYou) throw new Error('EIC child original source relationship or residence months changed');
-  text(row.sourceReference, 'child reference');
-  const home = answer(row.livedWithTaxpayerInUnitedStatesMoreThanHalfYear, 'child U.S. shared-home answer');
-  if (answer(row.specialResidencePeriodClaimed, 'child special residence-period answer')) throw new Error('EIC child special residence-period method requires separate actual allocation sources');
-  // Schedule EIC line6 explicitly permits >half-year but <7 actual months.
-  // Retain the original month count; the actual home answer settles the test.
-  if (home && child.monthsLivedWithYou < 6) throw new Error('EIC actual child shared-home answer conflicts with original residence months below six');
-  if (answer(row.marriedAtYearEnd, 'child marital status')) throw new Error('EIC married-child dependency method needs separate actual sources');
-  const joint = answer(row.jointReturnFiled, 'child joint-return answer');
-  const refundOnly = joint ? answer(row.jointReturnRefundOnly, 'child joint-return refund-only answer') : false;
-  const validSsn = answer(row.validSsnIssuedByDueDate, 'child timely valid SSN answer');
-  if (validSsn && !/^\d{9}$/.test(child.ssn.replace(/-/g, ''))) throw new Error('EIC child valid SSN answer needs the actual original nine-digit SSN');
-  if (row.allOtherEligibleClaimantsIncluded !== true || row.otherEligibleClaimants === undefined) throw new Error('EIC child needs complete actual competing-claim records, including known empty records');
-  const relationship = relationshipKey(child.relationship);
-  if (!childRelationships.has(relationship)) throw new Error('EIC child relationship needs a supported actual qualifying-child source category');
-  if (relationship === 'foster child' && row.authorizedFosterPlacement !== true) throw new Error('EIC foster child needs actual authorized placement source confirmation');
-  if (row.otherEligibleClaimants.length && !['child', 'son', 'daughter', 'adopted child'].includes(relationship)) throw new Error('EIC competing nonparent tiebreak method needs actual priority sources');
-  const others = new Set<string>();
-  for (const other of row.otherEligibleClaimants) {
-    const name = text(other.name, 'other eligible claimant name'); text(other.sourceReference, 'other eligible claimant reference');
-    if (others.has(name.trim().toLowerCase())) throw new Error('EIC duplicate competing claimant record');
-    others.add(name.trim().toLowerCase());
-    if (answer(other.claimsAnyChildTaxBenefit, 'competing child tax benefit answer')) throw new Error('EIC contested competing-claim tiebreak method needs actual priority sources');
-  }
-  const birth = date(child.dateOfBirth, 'child birth date');
-  const yearEnd = date(`${input.taxpayer.taxYear}-12-31`, 'year end');
-  if (birth > yearEnd) throw new Error('EIC child original birth date is after the return year');
-  const younger = birth > date(input.taxpayer.primary.dateOfBirth, 'claimant birth date');
-  const reaches = (age: number) => { const d = new Date(birth); d.setUTCFullYear(d.getUTCFullYear() + age); d.setUTCDate(d.getUTCDate() - 1); return d; };
-  let ageEligible = yearEnd < reaches(19) && younger;
-  if (!ageEligible && yearEnd < reaches(24) && younger) ageEligible = answer(row.fullTimeStudentForFiveMonths, 'child full-time student answer');
-  if (!ageEligible) ageEligible = answer(row.permanentlyAndTotallyDisabled, 'child permanent disability answer');
-  return home && (!joint || refundOnly) && ageEligible;
 }
 
 export function calculateEicSeparatedSpouseSources(input: EicSeparatedSpouseInput): EicSeparatedSpouseResult {
@@ -125,25 +86,10 @@ export function calculateEicSeparatedSpouseSources(input: EicSeparatedSpouseInpu
     separated = true;
   } else if (apart === false && stateLawAlternative === false) separated = false;
   else throw new Error('EIC separated-spouse separation alternative is unknown');
-  if (facts.allCandidateChildrenIncluded !== true || facts.children === undefined) throw new Error('EIC separated-spouse claim needs all actual candidate child records, including known empty records');
-  const seen = new Set<string>(); const identities = new Set<string>(); const qualified: string[] = []; const counted: string[] = [];
-  for (const row of facts.children) {
-    const sourceId = text(row.sourceId, 'child source ID'); const match = /^dependent:(0|[1-9]\d*)$/.exec(sourceId);
-    if (!match) throw new Error('EIC child source ID must identify an original dependent');
-    const child = taxpayer.dependents[Number(match[1])];
-    if (!child) throw new Error('EIC original child source is missing');
-    const identifier = child.ssn.replace(/[-\s]/g, '');
-    if (identifier && identifier === taxpayer.primary.ssn.replace(/[-\s]/g, '')) throw new Error('EIC original child identifier duplicates the claimant identifier');
-    const identity = identifier || `${child.firstName.trim().toLowerCase()}|${child.lastName.trim().toLowerCase()}|${child.dateOfBirth}`;
-    if (seen.has(sourceId) || identities.has(identity)) throw new Error('EIC duplicate original child source');
-    seen.add(sourceId); identities.add(identity);
-    if (qualifyingChild(input, row, child)) { qualified.push(sourceId); if (row.validSsnIssuedByDueDate === true) counted.push(sourceId); }
-  }
-  for (const [i, child] of taxpayer.dependents.entries()) {
-    if ((child.qualifiesForEIC || childRelationships.has(relationshipKey(child.relationship))) && !seen.has(`dependent:${i}`)) {
-      throw new Error('EIC represented candidate child is missing from the actual source records');
-    }
-  }
+  const childSources = calculateEicQualifyingChildSources({ taxpayer,
+    allCandidateChildrenIncluded: facts.allCandidateChildrenIncluded, children: facts.children });
+  const qualified = childSources.qualifyingChildSourceIds;
+  const counted = childSources.ssnCountedChildSourceIds;
   const eligible = separated && qualified.length > 0;
   const audit = new AuditTrail();
   audit.record('EIC', 'separatedSpouseSources', 'Actual separated-spouse and qualifying-child sources', new Decimal(eligible ? 1 : 0),

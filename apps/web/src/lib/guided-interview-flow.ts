@@ -573,6 +573,7 @@ export interface SpouseInfoData {
 export const emptySpouseInfo: SpouseInfoData = { firstName: "", lastName: "", ssn: "", dateOfBirth: "", usResidencyMonths: "" };
 
 export interface PersonalInfoData {
+  eicRecertificationSources?: import('./guided-form-8862').Form8862Data;
   eicDisallowanceHistory?: import('./guided-eic-disallowance-history').EicDisallowanceHistoryData;
   eicSeparatedSpouseSources?: import('./guided-eic-separated-spouse').EicSeparatedSpouseData;
   eicClaimantEligibility?: EicClaimantEligibilityData;
@@ -1564,6 +1565,7 @@ export function updateSectionData(
   const nextPersonal = sectionId === "personal-info" ? data as PersonalInfoData : state.sectionData["personal-info"];
   const eicClaimantSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && nextPersonal?.eicClaimantEligibility;
   const eicSeparatedSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && nextPersonal?.eicSeparatedSpouseSources;
+  const eicCurrentSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && nextPersonal?.eicRecertificationSources;
   const eicHistorySourcesChanged = sectionId === "personal-info" && nextPersonal?.eicDisallowanceHistory
     && eicHistorySourceValuesChanged(state.sectionData["personal-info"], nextPersonal) ? nextPersonal.eicDisallowanceHistory : undefined;
   const nextGovernment = sectionId === "income-unemployment" ? data as UnemploymentData : state.sectionData["income-unemployment"];
@@ -1627,10 +1629,11 @@ export function updateSectionData(
       ...state.sectionData,
       [sectionId]: data,
       ...(royaltySourcesChanged ? { "income-royalties": invalidateRoyaltySources(royaltySourcesChanged) } : {}),
-      ...((eicClaimantSourcesChanged || eicSeparatedSourcesChanged || eicHistorySourcesChanged) && nextPersonal ? { "personal-info": { ...nextPersonal,
+      ...((eicClaimantSourcesChanged || eicSeparatedSourcesChanged || eicHistorySourcesChanged || eicCurrentSourcesChanged) && nextPersonal ? { "personal-info": { ...nextPersonal,
         ...(eicClaimantSourcesChanged ? { eicClaimantEligibility: { ...eicClaimantSourcesChanged, sourceFactsConfirmed: null } } : {}),
         ...(eicSeparatedSourcesChanged ? { eicSeparatedSpouseSources: { ...eicSeparatedSourcesChanged, sourceFactsConfirmed: null } } : {}),
         ...(eicHistorySourcesChanged ? { eicDisallowanceHistory: invalidateEicHistorySources(eicHistorySourcesChanged) } : {}),
+        ...(eicCurrentSourcesChanged ? { eicRecertificationSources: { ...eicCurrentSourcesChanged, sourceFactsConfirmed: null } } : {}),
       } } : {}),
       ...(refundSourcesChanged && nextGovernment ? { "income-unemployment": { ...nextGovernment, taxRefund: { ...refundSourcesChanged, sourceFactsConfirmed: null } } } : {}),
       ...(iraBasisSourcesChanged && nextRetirement ? { "income-retirement": { ...nextRetirement, basisSources: { ...iraBasisSourcesChanged, sourceFactsConfirmed: null } } } : {}),

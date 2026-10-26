@@ -120,6 +120,10 @@ export const REVIEW_TEMPLATES_2025 = {
     "sha256": "a251a1cfbd613d5dd81646b276b1cc3562d7efb8bed969491eada7c8eb0d8e00",
     "revisionQualification": "unreviewed-legacy-snapshot"
   },
+  "f8862.pdf": {
+    "sha256": "fd783d1f46f1f286cd1d7a2cca8812fc2ec05760478359873e22ba9d05d5f3b5",
+    "revisionQualification": "source-inspected-review-only"
+  },
   "f8880.pdf": {
     "sha256": "ba2b28770bc82d318ab0b884e56a572771030ce1a3ec80d85bafd2eea3a2778e",
     "revisionQualification": "unreviewed-legacy-snapshot"

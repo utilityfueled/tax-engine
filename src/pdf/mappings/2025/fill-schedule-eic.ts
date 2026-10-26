@@ -149,7 +149,7 @@ export async function fillScheduleEIC(
   eicReview?: PreparedEicReview,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
-  const actualChildren = hasEicReviewSources(input) || eicReview
+  const actualChildren = hasEicReviewSources(input) || result.scheduleEIC?.form8862 || eicReview
     ? eicReviewChildren(eicReviewOriginalSourceInput(input, result, eicReview)) : undefined;
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
@@ -179,7 +179,7 @@ export async function fillScheduleEIC(
     setTextField(form, fields.name, `${child.firstName} ${child.lastName}`);
 
     // Line 2: Child's SSN (no dashes)
-    setTextField(form, fields.ssn, child.ssn.replace(/-/g, ""));
+    setTextField(form, fields.ssn, actual?.bornAndDeceasedWithoutSsn ? 'Died' : child.ssn.replace(/-/g, ""));
 
     // Line 3: Child's year of birth (4 individual digit fields)
     const birthYear = child.dateOfBirth.substring(0, 4);

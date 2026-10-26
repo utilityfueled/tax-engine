@@ -1036,6 +1036,48 @@
       ]
     },
     {
+      "key": "federal/eic-qualifying-child-sources",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/eic-qualifying-child-sources.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/eic-residence-days",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/eic-residence-days.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/eic-schedule-e-investment",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -3130,6 +3172,66 @@
       ]
     },
     {
+      "key": "federal/form-8862",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/form-8862.ts",
+      "packetPath": "src/pdf/fill-form-8862.ts",
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-8862-eic",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/form-8862-eic.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-8862-review",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/form-8862-review.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-8863",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -4080,6 +4182,26 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i1116",
       "specPath": "spec/federal/guided-foreign-tax-ordinary-credit.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/guided-form-8862",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/guided-form-8862.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,
