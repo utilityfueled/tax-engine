@@ -191,3 +191,33 @@ and original-source physical/review output are still unfinished software work.
 The full immutable `d898091` run passes all required local checks and coverage
 gates, but excludes these four later packages and all private candidates.
 Final integrated, remote, image and recovery evidence remains due.
+
+## Follow-through throughb0de955 — October26
+
+Default/no-advance shared-health payment binding is `15549f8`; actual shared and
+household-only originals in one health plan are `827b399`. The next ordinary
+method is independent actual plans/businesses and multiple specified owners,
+with complete person/payment attachments on every linked plan. Other payment
+and marriage combinations remain methods, while binding joint2025 repayment
+attribution still requires a controlling interpretation.
+
+Actual EIC history canonical restrictions and its complete guide are `b41f628`.
+Current Form8862 original facts, canonical eligibility, actual collection and
+review/output remain active software work; the prior history prerequisite is
+no longer the only delivered part. Single-prior-vintage regular/AMT charitable
+NOL replay and collector/review remain private; mixed/floor and partial B methods
+follow without invented attribution or copied AMT sources.
+
+Multiple tuition expenses with actual one-QTP/one-ESA allocation are `b0de955`,
+including canonical/guide/workspace/review/browser paths. The next bounded
+extension is multiple distinct original prepaid QTP statements with one ordinary
+ESA. Each statement must retain its own original earnings ratio and actual
+expense/credit allocations. Qualified mixed-owner bond and broader code6
+interpretations remain separate questions in the education method ledger.
+
+The immutable `d898091` full run passes every required local check and unchanged
+coverage gates but excludes these eight later source packages. Current b0de955
+remote CI/Web were observed in progress, not completed. Final integrated checks,
+images, scans, recovery, support reconciliation and external qualification
+remain required. Every delivered package and exact evidence is recorded in the
+current checklist and checkpoint; no blocked method is counted as implementation.

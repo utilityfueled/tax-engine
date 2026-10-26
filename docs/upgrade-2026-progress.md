@@ -1,6 +1,60 @@
 # 2026 upgrade implementation evidence
 
-## Current checkpoint
+## Current checkpoint — 2026-10-26
+
+The branch is pushed through `b0de955`. Rule provenance is `2025.136` /
+`2026.133-law-integration-draft`; the regenerated inventory has 503 entries and
+5,389 test references. All readiness gates remain unchanged.
+
+All required local checks pass on immutable `d898091` (tree `23f7a5fe`):
+18,843 tests in 1,125 files, root/contracts/web types, spec and inventory checks,
+engine/web builds and lint. Coverage passes the unchanged thresholds: branches
+86.84% (47,523/54,722), functions 90.77% (10,423/11,482), statements 92.03% and
+lines 94.63%. Production browser checks pass 402 cases with zero retries; five
+hosted-only cases remain skipped. The task server was stopped, and all 3,009
+tracked source hashes remained unchanged. Exact commands, timestamps and hashes
+are in `.local/upgrade-evidence/d898091-complete/verification.json`. This source
+excludes the eight subsequent source packages below.
+
+| Delivered package | Commit | Exact bounded verification |
+| --- | --- | --- |
+| Actual EIC denial/allowance chronology prerequisite | `60611f3` | Corrected source 576/7; integration 601/10; separate unchanged review controls 15/2. Canonical and guide follow-through is `b41f628`; current Form8862 remains unfinished. |
+| Shared Marketplace health payment/person sources, actual guide and review | `0b65e34` | Wider 948/53; final 516/11; separate review 55/11; desktop/mobile 2/2; six PDFs and 34 pages. Review exposed and corrected source-reconfirmation reachability. |
+| Current single-category regular/AMT charitable NOL carry | `360f340` | Wider 379/81; final 34/14; separate review 25/9; 27 PDFs and 48 pages. Original categories and distinct regular/AMT sources remain bound. |
+| Distinct actual prepaid tuition benefits, assistance and credits | `374e117` | Final 1,081/156 plus 25 readiness cases; separate source review 11/6 and corrected-delta review 11/3; 18 PDFs, 38 pages and 21 literal fields. |
+| Default/no-advance shared-health allocation and payment sources | `15549f8` | Final 473/5; separate review 11/5 including five private controls; desktop/mobile 2/2; six PDFs, 33 pages and 18 fields. Exact thirds remain separate from printed .67. |
+| Actual EIC history, canonical restrictions and complete guided records | `b41f628` | Final 1,619/148; separate canonical review 11/2 and guided review 17/4; twelve production browser cases with zero retries; types, spec, lint and build pass. |
+| Shared and household-only originals in one health plan | `827b399` | Wider 724/55; final 499/16; separate review 11/5 including five private controls; desktop/mobile 2/2; six PDFs, 36 pages and 32 fields. |
+| Multiple tuition expenses with actual QTP/ESA allocations | `b0de955` | Final 882/64 plus 24 readiness cases; separate product review 10/6 and final spec/test controls; desktop/mobile 2/2; 19 PDFs, 61 pages and eight fields. |
+
+Package ledgers retain original failures, exact snapshots and scoped review
+limits. All listed saved pages were rendered and inspected; all browser cases
+used zero retries. The final education assertions distinguish the browser's
+actual Medicare withholding from the separate inherited source fixture and wait
+for the settled refund. Its lint has zero errors and 98 warnings, primarily new
+synthetic-fixture non-null assertions. No threshold, deadline or privacy gate
+was relaxed, and agent review is not qualified human tax review.
+
+Current `b0de955` CI and Web were observed in progress; the preceding three
+heads were cancelled by later pushes. No completed current remote result is
+claimed. Earlier package audits and `76e3538` local runtime/recovery/scan evidence
+remain separate; final-source artifacts and advisory acceptance are due.
+
+The active internal queue is ordinary independent health plans/multiple owners;
+actual current Form8862 sources, calculation, guide and review; single-prior-
+vintage charitable NOL and remaining mixed/floor source methods; and distinct
+actual prepaid QTP statements sharing one ordinary ESA. Other bounded education
+methods and controlling interpretation questions remain in their source ledgers.
+Guards and prerequisites do not complete those end-user methods. Final integrated,
+remote, runtime and recovery checks follow these deliveries.
+
+The goal is active and the upgrade is **not release-ready**. Human reviews and
+controlling interpretations, provider account access and approved budget,
+authorized staging, launch-state demand, final forms and advisory acceptance
+remain unresolved. Public upgrade-branch pushes are expressly approved.
+Production deployment, filing and model promotion remain disabled/unauthorized.
+
+## Previous checkpoint through63b4c4f
 
 The branch is pushed through `63b4c4f`. Rule provenance remains `2025.129` /
 `2026.126-law-integration-draft`; the regenerated inventory has 493 entries and

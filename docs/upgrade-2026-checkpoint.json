@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "374e117538ea7b5ebb7d5e11ddcd3dab840b9424",
+    "lastRecordedCommit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1310,8 +1310,8 @@
       "hosted staging",
       "final multi-platform release images"
     ],
-    "workInProgress": "Complete reviewed default/no-advance shared-policy health integration and the remaining named source combinations in its ledger; joint repayment attribution still needs controlling interpretation.; Deliver corrected EIC canonical restrictions with actual guided history, current Form8862 facts, original-source review and physical output. The committed history prerequisite alone does not complete the route.; Complete single-prior-vintage regular/AMT charitable NOL replay and its actual collector/review; resolve named mixed attribution, prior-floor and partial B source methods without invented allocation.; Complete the named actual multiple-expense ESA/tuition source coordination and other bounded education methods; qualified mixed-owner bond and broader code6 interpretations remain unresolved.; Run all final integrated checks and complete remote workflows after later source deliveries. Exact d898091 already passes every required local check and unchanged coverage gates, but excludes the four later packages.; Rehearse final-source native images, SBOMs/scans and full recovery; reconcile support and source evidence. Human qualification, live-provider evaluation, authorized staging and final forms remain external requirements.",
-    "latestIntegratedCommit": "374e117538ea7b5ebb7d5e11ddcd3dab840b9424",
+    "workInProgress": "Complete ordinary independent health plans and multiple specified-owner source groups; other payment and marriage combinations remain named methods. Binding joint 2025 repayment attribution still needs controlling interpretation. Complete actual current Form8862 sources, canonical eligibility, guided collection and original-source review/output. Actual disallowance history and its canonical/guided restrictions are delivered in b41f628. Complete single-prior-vintage regular/AMT charitable NOL replay and its actual collector/review; resolve named mixed attribution, prior-floor and partial B source methods without invented allocation. Complete distinct actual prepaid QTP statements sharing one ordinary ESA and other bounded education source groups. Multiple expenses under one QTP/ESA are delivered in b0de955; qualified mixed-owner bond and broader code6 interpretations remain unresolved. Run all final integrated checks and complete remote workflows after later source deliveries. Exact d898091 passes every required local check and unchanged coverage gates, but excludes eight later source packages. Rehearse final-source native images, SBOMs/scans and full recovery; reconcile support and source evidence. Human qualification, live-provider evaluation, authorized staging and final forms remain external requirements.",
+    "latestIntegratedCommit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
     "activeIntegrationRun": {
       "status": "d898091-complete-passed-later-integrated-full-run-due",
       "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
@@ -1577,7 +1577,11 @@
       "eicDisallowanceHistoryPrerequisite": "60611f3425e128b3ca1989674bb742164b7256da",
       "sharedMarketplaceHealth": "0b65e34fde7cf48e6b2b5142f5e372c92f376beb",
       "charitableSingleCategoryNol": "360f3405fae9a092b641e931cffe16521e1dd840",
-      "distinctTuitionAssistance": "374e117538ea7b5ebb7d5e11ddcd3dab840b9424"
+      "distinctTuitionAssistance": "374e117538ea7b5ebb7d5e11ddcd3dab840b9424",
+      "sharedHealthOtherAllocations": "15549f834c2bf0aeed02d75215801c1d1944d081",
+      "eicHistoryCanonicalAndGuide": "b41f62845c5a5fe65f8c9fde14f913bdb4bbab04",
+      "sharedUnsharedHealth": "827b399f8d680cf35dacc2ccd234571cbc10c1d8",
+      "multipleExpenseEsa": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e"
     },
     "remoteCi": {
       "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
@@ -1653,11 +1657,11 @@
       "scope": "Exact immutable d898091 local synthetic source only; all later source packages excluded. Five hosted browser skips are not staging evidence."
     },
     "remainingInternalWork": [
-      "Complete reviewed default/no-advance shared-policy health integration and the remaining named source combinations in its ledger; joint repayment attribution still needs controlling interpretation.",
-      "Deliver corrected EIC canonical restrictions with actual guided history, current Form8862 facts, original-source review and physical output. The committed history prerequisite alone does not complete the route.",
+      "Complete ordinary independent health plans and multiple specified-owner source groups; other payment and marriage combinations remain named methods. Binding joint 2025 repayment attribution still needs controlling interpretation.",
+      "Complete actual current Form8862 sources, canonical eligibility, guided collection and original-source review/output. Actual disallowance history and its canonical/guided restrictions are delivered in b41f628.",
       "Complete single-prior-vintage regular/AMT charitable NOL replay and its actual collector/review; resolve named mixed attribution, prior-floor and partial B source methods without invented allocation.",
-      "Complete the named actual multiple-expense ESA/tuition source coordination and other bounded education methods; qualified mixed-owner bond and broader code6 interpretations remain unresolved.",
-      "Run all final integrated checks and complete remote workflows after later source deliveries. Exact d898091 already passes every required local check and unchanged coverage gates, but excludes the four later packages.",
+      "Complete distinct actual prepaid QTP statements sharing one ordinary ESA and other bounded education source groups. Multiple expenses under one QTP/ESA are delivered in b0de955; qualified mixed-owner bond and broader code6 interpretations remain unresolved.",
+      "Run all final integrated checks and complete remote workflows after later source deliveries. Exact d898091 passes every required local check and unchanged coverage gates, but excludes eight later source packages.",
       "Rehearse final-source native images, SBOMs/scans and full recovery; reconcile support and source evidence. Human qualification, live-provider evaluation, authorized staging and final forms remain external requirements."
     ],
     "previousStableCoverageRun": {
@@ -1680,7 +1684,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "374e117538ea7b5ebb7d5e11ddcd3dab840b9424",
+    "lastPushedCommit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
     "currentBrowserRun": {
       "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
       "tree": "23f7a5fe620edbdb43f13b35fbb315fb660a8a89",
@@ -1782,16 +1786,20 @@
       },
       "currentRuns": [
         {
-          "commit": "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8",
+          "commit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
           "workflow": "CI",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40280499693",
-          "status": "in_progress"
+          "status": "in_progress",
+          "conclusion": "",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40319667573",
+          "createdAt": "2026-10-26T12:03:48Z"
         },
         {
-          "commit": "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8",
+          "commit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
           "workflow": "Web",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40280499638",
-          "status": "in_progress"
+          "status": "in_progress",
+          "conclusion": "",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40319667531",
+          "createdAt": "2026-10-26T12:03:48Z"
         }
       ]
     },
@@ -2658,130 +2666,26 @@
       "scope": "Exact immutable d898091 local synthetic source only; all later source packages excluded. Five hosted browser skips are not staging evidence."
     },
     "currentRemoteRuns": {
-      "observedAt": "2026-10-26T11:12:32.893188+00:00",
+      "observedAt": "2026-10-26T12:10:50.991789+00:00",
       "runs": [
         {
-          "conclusion": "",
-          "createdAt": "2026-10-26T11:07:50Z",
-          "databaseId": 40312721825,
-          "headSha": "374e117538ea7b5ebb7d5e11ddcd3dab840b9424",
+          "commit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
+          "workflow": "CI",
           "status": "in_progress",
-          "updatedAt": "2026-10-26T11:09:07Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40312721825",
-          "workflowName": "Web"
-        },
-        {
           "conclusion": "",
-          "createdAt": "2026-10-26T11:07:50Z",
-          "databaseId": 40312721811,
-          "headSha": "374e117538ea7b5ebb7d5e11ddcd3dab840b9424",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40319667573",
+          "createdAt": "2026-10-26T12:03:48Z"
+        },
+        {
+          "commit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
+          "workflow": "Web",
           "status": "in_progress",
-          "updatedAt": "2026-10-26T11:09:24Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40312721811",
-          "workflowName": "CI"
-        },
-        {
-          "conclusion": "cancelled",
-          "createdAt": "2026-10-26T11:03:43Z",
-          "databaseId": 40312197972,
-          "headSha": "360f3405fae9a092b641e931cffe16521e1dd840",
-          "status": "completed",
-          "updatedAt": "2026-10-26T11:08:58Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40312197972",
-          "workflowName": "Web"
-        },
-        {
-          "conclusion": "cancelled",
-          "createdAt": "2026-10-26T11:03:43Z",
-          "databaseId": 40312197978,
-          "headSha": "360f3405fae9a092b641e931cffe16521e1dd840",
-          "status": "completed",
-          "updatedAt": "2026-10-26T11:09:21Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40312197978",
-          "workflowName": "CI"
-        },
-        {
-          "conclusion": "cancelled",
-          "createdAt": "2026-10-26T10:56:49Z",
-          "databaseId": 40311324200,
-          "headSha": "0b65e34fde7cf48e6b2b5142f5e372c92f376beb",
-          "status": "completed",
-          "updatedAt": "2026-10-26T11:04:02Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40311324200",
-          "workflowName": "CI"
-        },
-        {
-          "conclusion": "cancelled",
-          "createdAt": "2026-10-26T10:56:49Z",
-          "databaseId": 40311324299,
-          "headSha": "0b65e34fde7cf48e6b2b5142f5e372c92f376beb",
-          "status": "completed",
-          "updatedAt": "2026-10-26T11:04:55Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40311324299",
-          "workflowName": "Web"
-        },
-        {
-          "conclusion": "cancelled",
-          "createdAt": "2026-10-26T10:42:20Z",
-          "databaseId": 40309476161,
-          "headSha": "60611f3425e128b3ca1989674bb742164b7256da",
-          "status": "completed",
-          "updatedAt": "2026-10-26T10:57:07Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40309476161",
-          "workflowName": "CI"
-        },
-        {
-          "conclusion": "cancelled",
-          "createdAt": "2026-10-26T10:42:20Z",
-          "databaseId": 40309476201,
-          "headSha": "60611f3425e128b3ca1989674bb742164b7256da",
-          "status": "completed",
-          "updatedAt": "2026-10-26T10:57:06Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40309476201",
-          "workflowName": "Web"
-        },
-        {
-          "conclusion": "cancelled",
-          "createdAt": "2026-10-26T10:29:43Z",
-          "databaseId": 40307843303,
-          "headSha": "d898091fc124dd1ea130121b418163818e2d7f0c",
-          "status": "completed",
-          "updatedAt": "2026-10-26T10:42:38Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40307843303",
-          "workflowName": "CI"
-        },
-        {
-          "conclusion": "cancelled",
-          "createdAt": "2026-10-26T10:29:43Z",
-          "databaseId": 40307843415,
-          "headSha": "d898091fc124dd1ea130121b418163818e2d7f0c",
-          "status": "completed",
-          "updatedAt": "2026-10-26T10:42:50Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40307843415",
-          "workflowName": "Web"
-        },
-        {
-          "conclusion": "cancelled",
-          "createdAt": "2026-10-26T10:26:09Z",
-          "databaseId": 40307391586,
-          "headSha": "63b4c4fc74f811ff47cd070d41ed879d73548938",
-          "status": "completed",
-          "updatedAt": "2026-10-26T10:30:02Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40307391586",
-          "workflowName": "CI"
-        },
-        {
-          "conclusion": "cancelled",
-          "createdAt": "2026-10-26T10:26:09Z",
-          "databaseId": 40307391466,
-          "headSha": "63b4c4fc74f811ff47cd070d41ed879d73548938",
-          "status": "completed",
-          "updatedAt": "2026-10-26T10:30:00Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40307391466",
-          "workflowName": "Web"
+          "conclusion": "",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40319667531",
+          "createdAt": "2026-10-26T12:03:48Z"
         }
       ],
-      "boundary": "Current374e117 CI and Web in progress; previous heads cancelled by subsequent pushes. No completed current remote claim."
+      "boundary": "Current b0de955 CI and Web in progress; 827b399, b41f628 and 15549f8 runs cancelled by subsequent pushes. No completed current remote result is claimed."
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
@@ -3097,6 +3001,18 @@
         ],
         "distinctTuitionAssistance": [
           "374e117538ea7b5ebb7d5e11ddcd3dab840b9424"
+        ],
+        "sharedHealthOtherAllocations": [
+          "15549f834c2bf0aeed02d75215801c1d1944d081"
+        ],
+        "eicHistoryCanonicalAndGuide": [
+          "b41f62845c5a5fe65f8c9fde14f913bdb4bbab04"
+        ],
+        "sharedUnsharedHealth": [
+          "827b399f8d680cf35dacc2ccd234571cbc10c1d8"
+        ],
+        "multipleExpenseEsa": [
+          "b0de9550e52b93e2f829dd2f9df6982dcaadc70e"
         ]
       },
       "owners": {
@@ -3106,11 +3022,11 @@
         "educationAndFinalIntegration": "parent"
       },
       "subsequent": [
-        "Complete reviewed default/no-advance shared-policy health integration and the remaining named source combinations in its ledger; joint repayment attribution still needs controlling interpretation.",
-        "Deliver corrected EIC canonical restrictions with actual guided history, current Form8862 facts, original-source review and physical output. The committed history prerequisite alone does not complete the route.",
+        "Complete ordinary independent health plans and multiple specified-owner source groups; other payment and marriage combinations remain named methods. Binding joint 2025 repayment attribution still needs controlling interpretation.",
+        "Complete actual current Form8862 sources, canonical eligibility, guided collection and original-source review/output. Actual disallowance history and its canonical/guided restrictions are delivered in b41f628.",
         "Complete single-prior-vintage regular/AMT charitable NOL replay and its actual collector/review; resolve named mixed attribution, prior-floor and partial B source methods without invented allocation.",
-        "Complete the named actual multiple-expense ESA/tuition source coordination and other bounded education methods; qualified mixed-owner bond and broader code6 interpretations remain unresolved.",
-        "Run all final integrated checks and complete remote workflows after later source deliveries. Exact d898091 already passes every required local check and unchanged coverage gates, but excludes the four later packages.",
+        "Complete distinct actual prepaid QTP statements sharing one ordinary ESA and other bounded education source groups. Multiple expenses under one QTP/ESA are delivered in b0de955; qualified mixed-owner bond and broader code6 interpretations remain unresolved.",
+        "Run all final integrated checks and complete remote workflows after later source deliveries. Exact d898091 passes every required local check and unchanged coverage gates, but excludes eight later source packages.",
         "Rehearse final-source native images, SBOMs/scans and full recovery; reconcile support and source evidence. Human qualification, live-provider evaluation, authorized staging and final forms remain external requirements."
       ],
       "unsupportedIsComplete": false
@@ -3980,12 +3896,99 @@
         "finalTests": 475,
         "finalFiles": 6,
         "ledger": "docs/upgrade-2026-guided-k1-charitable-work.md"
+      },
+      "sharedHealthOtherAllocations": {
+        "commit": "15549f834c2bf0aeed02d75215801c1d1944d081",
+        "tree": "1af38cf3609910644ece10eaec2b4bf70c9cabfe",
+        "reviewedTree": "892214cfd5eec757c0749f8e5fe526f604f7e273",
+        "ledger": "docs/upgrade-2026-shared-health-other-allocations-work.md",
+        "integrationTests": 473,
+        "integrationFiles": 5,
+        "independentTests": 11,
+        "independentFiles": 5,
+        "independentPrivateControls": 5,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 6,
+        "pdfPages": 33,
+        "literalFields": 18,
+        "specReferences": 5362,
+        "boundary": "Actual default/no-advance allocation before independent person/payment binding; other named source methods remain separate."
+      },
+      "eicHistoryCanonicalAndGuide": {
+        "commit": "b41f62845c5a5fe65f8c9fde14f913bdb4bbab04",
+        "tree": "6d19f62c17bf48894f0cffcb039a7180bbccd6ec",
+        "testedIntegrationTree": "041d30c82af290ddbb85e4352ac92a7daaafc17a",
+        "ledgers": [
+          "docs/upgrade-2026-eic-history-canonical-work.md",
+          "docs/upgrade-2026-guided-eic-history-work.md"
+        ],
+        "integrationTests": 1619,
+        "integrationFiles": 148,
+        "canonicalReviewTests": 11,
+        "canonicalReviewFiles": 2,
+        "guideReviewTests": 17,
+        "guideReviewFiles": 4,
+        "browserPassed": 12,
+        "browserRetries": 0,
+        "specReferences": 5375,
+        "rootWebTypes": "passed",
+        "productionBuild": "passed",
+        "boundary": "Actual history and canonical/guided restrictions delivered; current Form8862 source/form follow-through remains unfinished software work."
+      },
+      "sharedUnsharedHealth": {
+        "commit": "827b399f8d680cf35dacc2ccd234571cbc10c1d8",
+        "tree": "5f9897ad2c2df6321f5a06ca3158b53d1f7a0774",
+        "reviewedTree": "19c1c13b50573ced6d14d5cce1d8ef24bed194a8",
+        "ledger": "docs/upgrade-2026-shared-unshared-health-work.md",
+        "tests": 724,
+        "files": 55,
+        "integrationTests": 499,
+        "integrationFiles": 16,
+        "independentTests": 11,
+        "independentFiles": 5,
+        "independentPrivateControls": 5,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 6,
+        "pdfPages": 36,
+        "literalFields": 32,
+        "specReferences": 5382,
+        "boundary": "Actual shared and household-only originals in one owner/business health plan; multiple plans/owners and other named payment methods remain separate."
+      },
+      "multipleExpenseEsa": {
+        "commit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
+        "tree": "687e50e18ceeb2c989cdbcdb64827bf1383d0834",
+        "reviewedProductTree": "206dced970944ef3851049b1853e54433c3611fd",
+        "reviewedFinalSpecTestTree": "af2bb3d7100ac31e20b51944ac550532c6035bb9",
+        "testedIntegrationTree": "1802a64215c746931839f1c845b94c1407b99b95",
+        "ledger": "docs/upgrade-2026-multiple-expense-esa-work.md",
+        "integrationTests": 882,
+        "integrationFiles": 64,
+        "readinessTests": 24,
+        "readinessFiles": 2,
+        "independentTests": 10,
+        "independentFiles": 6,
+        "independentPrivateControls": 4,
+        "finalReviewCanonicalCases": 1,
+        "finalReviewAdditionalWithholdingControls": 2,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 19,
+        "pdfPages": 61,
+        "literalFields": 8,
+        "specReferences": 5389,
+        "rootWebTypes": "passed",
+        "lintErrors": 0,
+        "lintWarnings": 98,
+        "lintWarningBoundary": "Primarily non-null assertions in new synthetic fixtures, not all pre-existing",
+        "boundary": "Actual multiple expenses with one QTP and one ordinary ESA; independent source ratios and whole-source conservation. Distinct QTP source groups and other named education methods remain separate."
       }
     },
     "currentInventory": {
-      "entries": 498,
-      "specReferences": 5355,
-      "sourceCommit": "374e117538ea7b5ebb7d5e11ddcd3dab840b9424",
+      "entries": 503,
+      "specReferences": 5389,
+      "sourceCommit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
       "path": "spec/coverage/inventory-2025.json",
       "qualification": "Traceability only; no readiness or human review promotion"
     },
@@ -4074,8 +4077,8 @@
     },
     "currentReviewCandidates": {},
     "currentRuleVersions": {
-      "2025": "2025.132",
-      "2026": "2026.129-law-integration-draft"
+      "2025": "2025.136",
+      "2026": "2026.133-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -4970,7 +4973,7 @@
         "integrationFiles": 10,
         "independentTests": 15,
         "independentFiles": 2,
-        "pending": "Canonical restrictions, actual guide and current8862 source/form follow-through remain private. This five-path prerequisite is not a complete end-user route."
+        "pending": "Canonical restrictions and actual guided history delivered in b41f628. Actual current Form8862 sources/form follow-through remain unfinished software work."
       },
       "sharedMarketplaceHealth": {
         "commit": "0b65e34fde7cf48e6b2b5142f5e372c92f376beb",
@@ -5022,6 +5025,93 @@
         "literalFields": 21,
         "reviewFinding": "Own distribution-source edits now invalidate confirmation. Neighboring loan sequence explicitly reconfirms education and preserves all original assertions. Original failed logs retained.",
         "boundary": "Separate actual tuition benefits and assistance/credit sources; remaining actual ESA group and other partial source methods stay separate. Review-only output."
+      },
+      "sharedHealthOtherAllocations": {
+        "commit": "15549f834c2bf0aeed02d75215801c1d1944d081",
+        "tree": "1af38cf3609910644ece10eaec2b4bf70c9cabfe",
+        "reviewedTree": "892214cfd5eec757c0749f8e5fe526f604f7e273",
+        "ledger": "docs/upgrade-2026-shared-health-other-allocations-work.md",
+        "integrationTests": 473,
+        "integrationFiles": 5,
+        "independentTests": 11,
+        "independentFiles": 5,
+        "independentPrivateControls": 5,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 6,
+        "pdfPages": 33,
+        "literalFields": 18,
+        "specReferences": 5362,
+        "boundary": "Actual default/no-advance allocation before independent person/payment binding; other named source methods remain separate."
+      },
+      "eicHistoryCanonicalAndGuide": {
+        "commit": "b41f62845c5a5fe65f8c9fde14f913bdb4bbab04",
+        "tree": "6d19f62c17bf48894f0cffcb039a7180bbccd6ec",
+        "testedIntegrationTree": "041d30c82af290ddbb85e4352ac92a7daaafc17a",
+        "ledgers": [
+          "docs/upgrade-2026-eic-history-canonical-work.md",
+          "docs/upgrade-2026-guided-eic-history-work.md"
+        ],
+        "integrationTests": 1619,
+        "integrationFiles": 148,
+        "canonicalReviewTests": 11,
+        "canonicalReviewFiles": 2,
+        "guideReviewTests": 17,
+        "guideReviewFiles": 4,
+        "browserPassed": 12,
+        "browserRetries": 0,
+        "specReferences": 5375,
+        "rootWebTypes": "passed",
+        "productionBuild": "passed",
+        "boundary": "Actual history and canonical/guided restrictions delivered; current Form8862 source/form follow-through remains unfinished software work."
+      },
+      "sharedUnsharedHealth": {
+        "commit": "827b399f8d680cf35dacc2ccd234571cbc10c1d8",
+        "tree": "5f9897ad2c2df6321f5a06ca3158b53d1f7a0774",
+        "reviewedTree": "19c1c13b50573ced6d14d5cce1d8ef24bed194a8",
+        "ledger": "docs/upgrade-2026-shared-unshared-health-work.md",
+        "tests": 724,
+        "files": 55,
+        "integrationTests": 499,
+        "integrationFiles": 16,
+        "independentTests": 11,
+        "independentFiles": 5,
+        "independentPrivateControls": 5,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 6,
+        "pdfPages": 36,
+        "literalFields": 32,
+        "specReferences": 5382,
+        "boundary": "Actual shared and household-only originals in one owner/business health plan; multiple plans/owners and other named payment methods remain separate."
+      },
+      "multipleExpenseEsa": {
+        "commit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
+        "tree": "687e50e18ceeb2c989cdbcdb64827bf1383d0834",
+        "reviewedProductTree": "206dced970944ef3851049b1853e54433c3611fd",
+        "reviewedFinalSpecTestTree": "af2bb3d7100ac31e20b51944ac550532c6035bb9",
+        "testedIntegrationTree": "1802a64215c746931839f1c845b94c1407b99b95",
+        "ledger": "docs/upgrade-2026-multiple-expense-esa-work.md",
+        "integrationTests": 882,
+        "integrationFiles": 64,
+        "readinessTests": 24,
+        "readinessFiles": 2,
+        "independentTests": 10,
+        "independentFiles": 6,
+        "independentPrivateControls": 4,
+        "finalReviewCanonicalCases": 1,
+        "finalReviewAdditionalWithholdingControls": 2,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 19,
+        "pdfPages": 61,
+        "literalFields": 8,
+        "specReferences": 5389,
+        "rootWebTypes": "passed",
+        "lintErrors": 0,
+        "lintWarnings": 98,
+        "lintWarningBoundary": "Primarily non-null assertions in new synthetic fixtures, not all pre-existing",
+        "boundary": "Actual multiple expenses with one QTP and one ordinary ESA; independent source ratios and whole-source conservation. Distinct QTP source groups and other named education methods remain separate."
       }
     },
     "latestPassingCandidateCoverage": {
@@ -5251,7 +5341,135 @@
       "evidenceSha256": "f785975f25c12001b54417d38509d7eac1b38b29eeed79c39d27f571ba9298dd",
       "scope": "Exact817f76f only; later source packages excluded.",
       "localSyntheticPostgres": true
-    }
+    },
+    "remoteObservationHistory": [
+      {
+        "observedAt": "2026-10-26T11:12:32.893188+00:00",
+        "runs": [
+          {
+            "conclusion": "",
+            "createdAt": "2026-10-26T11:07:50Z",
+            "databaseId": 40312721825,
+            "headSha": "374e117538ea7b5ebb7d5e11ddcd3dab840b9424",
+            "status": "in_progress",
+            "updatedAt": "2026-10-26T11:09:07Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40312721825",
+            "workflowName": "Web"
+          },
+          {
+            "conclusion": "",
+            "createdAt": "2026-10-26T11:07:50Z",
+            "databaseId": 40312721811,
+            "headSha": "374e117538ea7b5ebb7d5e11ddcd3dab840b9424",
+            "status": "in_progress",
+            "updatedAt": "2026-10-26T11:09:24Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40312721811",
+            "workflowName": "CI"
+          },
+          {
+            "conclusion": "cancelled",
+            "createdAt": "2026-10-26T11:03:43Z",
+            "databaseId": 40312197972,
+            "headSha": "360f3405fae9a092b641e931cffe16521e1dd840",
+            "status": "completed",
+            "updatedAt": "2026-10-26T11:08:58Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40312197972",
+            "workflowName": "Web"
+          },
+          {
+            "conclusion": "cancelled",
+            "createdAt": "2026-10-26T11:03:43Z",
+            "databaseId": 40312197978,
+            "headSha": "360f3405fae9a092b641e931cffe16521e1dd840",
+            "status": "completed",
+            "updatedAt": "2026-10-26T11:09:21Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40312197978",
+            "workflowName": "CI"
+          },
+          {
+            "conclusion": "cancelled",
+            "createdAt": "2026-10-26T10:56:49Z",
+            "databaseId": 40311324200,
+            "headSha": "0b65e34fde7cf48e6b2b5142f5e372c92f376beb",
+            "status": "completed",
+            "updatedAt": "2026-10-26T11:04:02Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40311324200",
+            "workflowName": "CI"
+          },
+          {
+            "conclusion": "cancelled",
+            "createdAt": "2026-10-26T10:56:49Z",
+            "databaseId": 40311324299,
+            "headSha": "0b65e34fde7cf48e6b2b5142f5e372c92f376beb",
+            "status": "completed",
+            "updatedAt": "2026-10-26T11:04:55Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40311324299",
+            "workflowName": "Web"
+          },
+          {
+            "conclusion": "cancelled",
+            "createdAt": "2026-10-26T10:42:20Z",
+            "databaseId": 40309476161,
+            "headSha": "60611f3425e128b3ca1989674bb742164b7256da",
+            "status": "completed",
+            "updatedAt": "2026-10-26T10:57:07Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40309476161",
+            "workflowName": "CI"
+          },
+          {
+            "conclusion": "cancelled",
+            "createdAt": "2026-10-26T10:42:20Z",
+            "databaseId": 40309476201,
+            "headSha": "60611f3425e128b3ca1989674bb742164b7256da",
+            "status": "completed",
+            "updatedAt": "2026-10-26T10:57:06Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40309476201",
+            "workflowName": "Web"
+          },
+          {
+            "conclusion": "cancelled",
+            "createdAt": "2026-10-26T10:29:43Z",
+            "databaseId": 40307843303,
+            "headSha": "d898091fc124dd1ea130121b418163818e2d7f0c",
+            "status": "completed",
+            "updatedAt": "2026-10-26T10:42:38Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40307843303",
+            "workflowName": "CI"
+          },
+          {
+            "conclusion": "cancelled",
+            "createdAt": "2026-10-26T10:29:43Z",
+            "databaseId": 40307843415,
+            "headSha": "d898091fc124dd1ea130121b418163818e2d7f0c",
+            "status": "completed",
+            "updatedAt": "2026-10-26T10:42:50Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40307843415",
+            "workflowName": "Web"
+          },
+          {
+            "conclusion": "cancelled",
+            "createdAt": "2026-10-26T10:26:09Z",
+            "databaseId": 40307391586,
+            "headSha": "63b4c4fc74f811ff47cd070d41ed879d73548938",
+            "status": "completed",
+            "updatedAt": "2026-10-26T10:30:02Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40307391586",
+            "workflowName": "CI"
+          },
+          {
+            "conclusion": "cancelled",
+            "createdAt": "2026-10-26T10:26:09Z",
+            "databaseId": 40307391466,
+            "headSha": "63b4c4fc74f811ff47cd070d41ed879d73548938",
+            "status": "completed",
+            "updatedAt": "2026-10-26T10:30:00Z",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40307391466",
+            "workflowName": "Web"
+          }
+        ],
+        "boundary": "Current374e117 CI and Web in progress; previous heads cancelled by subsequent pushes. No completed current remote claim."
+      }
+    ]
   },
   "historicalReleaseBlockers": {
     "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
