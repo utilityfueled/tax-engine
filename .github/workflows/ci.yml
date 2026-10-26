@@ -83,7 +83,9 @@ jobs:
   test:
     name: Tests and Coverage
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Coverage for the complete single-worker suite exceeded the old 30m job cap.
+    # This changes only the job budget, not test deadlines or coverage thresholds.
+    timeout-minutes: 60
     services:
       postgres:
         image: postgres:16-bookworm
