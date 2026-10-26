@@ -17,6 +17,7 @@ import { assertPreparedEducationReview, type PreparedEducationReview } from "../
 export const FORM_1099_Q_REFERENCE_FILENAME = "f1099q-reference-filled.pdf";
 export interface Form1099QReferenceSummaryForm {
   taxYear?: number; payerName: string; accountType: string; box1GrossDistribution: string; box2Earnings: string; box3Basis: string;
+  distributionForm?: string;
   box4TrusteeToTrusteeTransfer: boolean | undefined;
   box4bQtpToRothTransfer?: boolean; box6RecipientNotBeneficiary?: boolean;
 }
@@ -309,6 +310,7 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
     title: "Form 1099-Q Education Distribution Reference Summary", warningLabel: "REFERENCE SUMMARY ONLY", statementCount: forms.length,
     introduction: `Tax year ${result.taxYear}. Computed from ${forms.length} statement${forms.length === 1 ? "" : "s"} using ${result.sourceFactsVerified ? "confirmed actual source records and allocations" : "unverified historical aggregate inputs"}. Other-recipient income and additional tax are excluded from this return's totals.`,
     forms: forms.map((form, index) => ({ ...(form.taxYear !== undefined ? { taxYear: form.taxYear } : {}), payerName: form.payerName?.trim() || `Statement ${index + 1}`, accountType: form.accountType === "coverdell_esa" ? "Coverdell ESA" : "529 plan",
+      ...(result.sourceFactsVerified ? { distributionForm: form.distributionMedium === "cash" ? "Cash distribution" : form.distributionMedium === "in_kind_prepaid_tuition" ? "Prepaid tuition or in-kind benefit" : "Not provided" } : {}),
       box1GrossDistribution: knownAmount(form.grossDistribution), box2Earnings: knownAmount(form.earnings, "Not reported"), box3Basis: knownAmount(form.basis, "Not reported"), box4TrusteeToTrusteeTransfer: form.isTrusteeToTrustee,
       ...(result.sourceFactsVerified ? { box4bQtpToRothTransfer: form.isQtpToRoth, box6RecipientNotBeneficiary: form.recipientNotBeneficiary } : {}),
     })), qualifiedEducationExpenseInputs, lines, sourceLines,
@@ -352,6 +354,7 @@ export async function fillForm1099QReference(forms: Form1099Q[], result: Form109
   draw("This is a calculation reference, not a payer-issued Form 1099-Q. Blank source boxes remain unreported; calculated Coverdell earnings and basis appear in the account audit below.");
   for (const [index, form] of summary.forms.entries()) {
     draw(`Statement ${index + 1}: ${form.payerName}`, true); draw(`Account type: ${form.accountType}`); if (form.taxYear !== undefined) draw(`Statement tax year: ${form.taxYear}`);
+    if (form.distributionForm !== undefined) draw(`Distribution form: ${form.distributionForm}`);
     draw(`Box 1 gross distribution: ${shownValue(form.box1GrossDistribution)}`); draw(`Box 2 earnings: ${shownValue(form.box2Earnings)}`); draw(`Box 3 basis: ${shownValue(form.box3Basis)}`);
     draw(`Box 4a trustee-to-trustee transfer: ${yesNo(form.box4TrusteeToTrusteeTransfer)}`);
     if (result.sourceFactsVerified) { draw(`Box 4b QTP-to-Roth transfer: ${yesNo(form.box4bQtpToRothTransfer)}`); draw(`Box 6 recipient is not the beneficiary: ${yesNo(form.box6RecipientNotBeneficiary)}`); }

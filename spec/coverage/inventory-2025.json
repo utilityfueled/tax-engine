@@ -2044,6 +2044,29 @@
       ]
     },
     {
+      "key": "federal/form-1099-q-mixed-tuition",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": "https://www.irs.gov/publications/p970",
+      "specPath": "spec/federal/form-1099-q-mixed-tuition.yaml",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-mixed-tuition.test.ts::keeps actual prepaid cash and ESA amounts separate",
+        "tests/pdf/form-1099-q-mixed-tuition.test.ts::binds mixed original accounts before private review output"
+      ],
+      "implementationNote": "Actual prepaid and cash QTP tuition with ordinary ESA allocations share the original-source calculation and historical 2025 review summary; no final-year output, filing qualification or readiness promotion.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-1099-q-multiple-expense-esa",
       "jurisdiction": "federal",
       "taxYear": null,

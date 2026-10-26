@@ -209,6 +209,16 @@
       "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
     },
     {
+      "key": "federal/form-1099-q-mixed-tuition",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-mixed-tuition.test.ts::keeps actual prepaid cash and ESA amounts separate",
+        "tests/pdf/form-1099-q-mixed-tuition.test.ts::binds mixed original accounts before private review output"
+      ],
+      "note": "Actual prepaid and cash QTP tuition with ordinary ESA allocations share the original-source calculation and historical 2025 review summary; no final-year output, filing qualification or readiness promotion."
+    },
+    {
       "key": "federal/form-1099-q-multiple-expense-esa",
       "enginePath": "src/engine/forms/form-1099-q.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",

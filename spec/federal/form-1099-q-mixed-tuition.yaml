@@ -1,0 +1,63 @@
+form: "Form1099Q mixed tuition account group"
+fullName: "Actual prepaid and cash QTP tuition with ordinary Coverdell allocations"
+taxYear: [2025, 2026]
+irsReference: "https://www.irs.gov/publications/p970"
+sources:
+  - "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+  - "https://uscode.house.gov/us/usc/119-118/t26/s530/"
+  - "https://www.irs.gov/irb/2016-07_IRB#NOT-2016-13"
+notes: |
+  Official sources refreshed October26,2026. IRC529(c)(3)(B)(v)/(vi) reduces
+  actual tuition for assistance and credit and permits the taxpayer's actual
+  QTP/ESA expense allocation when aggregate distributions exceed expenses.
+  Keep qualifying prepaid benefit costs distinct from cash under(i)/(ii).
+  A cash statement must not acquire a fictional provided benefit. Each original
+  prepaid statement reconciles to its linked benefits; each cash statement and
+  ESA account retains its actual gross and supplied allocations, including zero.
+  Every expense has explicit allocations for its linked prepaid accounts, all
+  cash QTP accounts and all ordinary ESA accounts in this bounded source group.
+  Expense/credit totals and per-account gross limits reconcile with Decimal.
+  Pub970 Worksheet6-3 applies one beneficiary expense ratio to separate ESA basis
+  histories. Notice2016-13 retains separate QTP earnings ratios. Neither a tax
+  result nor an inferred split replaces a source election or account history.
+  Only ordinary same-recipient postsecondary tuition is added. Other categories,
+  refunds, transfers, unsupported assistance-only or shared room-board cap
+  methods remain separate. Public2026 and review-only output gates stay closed.
+  Numerical controls below are independent derivations, not published examples.
+lines:
+  - line: "mixed-originals"
+    description: "Conserve distinct prepaid cash and ESA originals"
+    formula: "Tuition8000 less1000assistance and1000credit gives6000. Prepaid4000/800earnings uses1000expense and1000credit; cash2000/1000 uses1000expense; ESA6000/1200 with4800basis uses4000expense. Excluded earnings200+500+800=1500; taxable1500; credit exception200; additional tax130."
+    testRef: "tests/engine/forms/form-1099-q-mixed-tuition.test.ts::keeps actual prepaid cash and ESA amounts separate"
+  - line: "pooled-esa"
+    description: "Keep the ESA common ratio and original QTP earnings separately"
+    formula: "Two prepaid accounts retain200/200 exclusions; cash2000/1000 allocated1000 excludes500. ESA4000/800earnings and2000/1200 share3500/6000 expense: account expense2333/1167, exclusions467/700. Total excluded2067/taxable2033/credit exception300/additional tax173."
+    testRef: "tests/engine/forms/form-1099-q-mixed-tuition.test.ts::retains the common ESA ratio beside distinct cash earnings"
+  - line: "actual-zero"
+    description: "Require an explicit source allocation even when it is zero"
+    formula: "Cash allocation0 with ESA5000 retains excluded1200/taxable1800/credit exception200/tax160; missing allocation or omitted medium is unknown, never zero or cash by inference. Reconcile source sums before rounding, including a supplied1000.00000000000000000001 rather than1000; local reconciliation precision does not alter global tax arithmetic."
+    testRef: "tests/engine/forms/form-1099-q-mixed-tuition.test.ts::preserves actual zero and rejects missing or conflicting source facts"
+  - line: "canonical-educator"
+    description: "Route each actual recipient amount and educator exclusion once"
+    formula: "50000wages plus1500taxable gives51500AGI with no educator claim. An actual educator source confirms700QTP and800ESA excluded earnings;2000actual expenses less1500 excludes500, capped at300in2025 or350in2026. AGI51200/51150; actual LLC expense remains1000 and education additional tax130."
+    testRef: "tests/engine/education-mixed-tuition-return.test.ts::routes the mixed original source and educator earnings once"
+  - line: "guided"
+    description: "Preserve actual records and require reconfirmation after edits"
+    formula: "Three originals, one prepaid benefit and one actual ESA history survive save/reload. Reassigning500 from ESA to cash gives1650excluded/1350taxable/200credit exception/115tax and51350AGI; omitted basis stays unknown and edits revoke source confirmation."
+    testRef: "tests/guided-interview/guided-mixed-tuition.test.ts::preserves mixed tuition originals and independent confirmation through reload"
+  - line: "panel"
+    description: "Use actual panel choices and editable source records"
+    formula: "Cash/prepaid choices remain distinct; actual cash and ESA allocation edits require reconfirmation. Blank basis remains blank, explicit zero remains zero and contradictory original statements cannot be overridden by a confirmation."
+    testRef: "tests/apps/web/mixed-tuition-interactions.test.tsx::edits the mixed original source group through actual controls"
+  - line: "review"
+    description: "Bind actual mixed originals before review output"
+    formula: "Physical5329 reports1500income/200exception/130tax; cash is labeled cash and has no fabricated benefit. Balanced source edits, missing source rows and changed recipient reject before PDF I/O. All original private identifiers remain redacted and every page review-only."
+    testRef: "tests/pdf/form-1099-q-mixed-tuition.test.ts::binds mixed original accounts before private review output"
+  - line: "workspace"
+    description: "Reopen actual saved mixed-account review output"
+    formula: "The saved bridge produces the same1500/200/130 education amounts and original source ledger without a second allocation or added basis."
+    testRef: "tests/apps/web/mixed-tuition-workspace-packet.test.ts::reopens saved mixed tuition sources as review-only output"
+  - line: "browser"
+    description: "Edit actual source allocations on desktop and mobile"
+    formula: "Original cash versus prepaid identity, explicit allocation changes and missing-versus-zero ESA basis survive reload; source confirmation is required again and original private values remain local."
+    testRef: "apps/web/tests/guided-mixed-tuition.spec.ts::preserves mixed tuition sources through allocation edits and reload"
