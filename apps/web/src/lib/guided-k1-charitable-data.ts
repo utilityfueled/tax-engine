@@ -2,6 +2,7 @@ import { ScheduleK1Schema, type ScheduleK1 } from '@/models/inputs';
 import { K1CharitableReturnSourcesSchema, type K1CharitableReturnSources } from '@/models/k1-charitable-return-sources';
 import { d } from '@/utils/decimal';
 import type { QbiSourceEntry } from './guided-qbi-loss-data';
+import { normalizeGuidedK1CashDistribution } from './guided-k1-cash-distribution';
 
 type Statement = NonNullable<K1CharitableReturnSources['statements']>[number];
 export type K1CharitableStatementData = QbiSourceEntry<Omit<Statement, 'k1SourceId'>> & {
@@ -122,7 +123,7 @@ export function parseGuidedK1CharitableSources(data: K1CharitableSourcesData | u
     const original = parseCharitableK1Original(row);
     if (row.link === 'independent' && original.isPassiveActivity) throw new Error('Link the passive K-1 to its actual activity and independent prior passive-loss history in adjustments.');
     originals.set(index, original);
-    return { ...k1CharitableValues(row) as object, k1SourceId: `scheduleK1:${index}` };
+    return { ...k1CharitableValues(row) as object, cashDistribution: normalizeGuidedK1CashDistribution(row.cashDistribution), k1SourceId: `scheduleK1:${index}` };
   });
   const packet = K1CharitableReturnSourcesSchema.parse({ ...k1CharitableValues(data) as object, statements });
   return { packet, originals, independentCount };

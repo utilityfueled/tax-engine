@@ -1,0 +1,45 @@
+form: "Guided K1 Cash Distribution"
+fullName: "Actual investment-only K1 cash distribution attachment intake"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8949"
+retrievedAt: "2026-10-26"
+notes: |
+  Collect only the original attachment consumed by k1-cash-distribution-gain.yaml.
+  Actual cash, original box/code, distribution/acquisition dates, unchanged block,
+  source year, exclusions, owner tax treatment and single-activity Form6198 links
+  remain separate from the derived gain. There is no entered gain, proceeds,
+  recovered basis, current allowance, AGI or deduction override. The existing
+  original K1 and completed Form6198 retain their actual independently reported
+  amounts and must reconcile. Unknown, false and recorded zero remain distinct.
+  Adding an attachment creates no dates, amounts, IDs, entity classification or
+  affirmative confirmations. Removing it preserves the original K1 and histories;
+  a remaining excess distribution still blocks until actual facts are restored.
+  A source edit revokes nested and outer confirmations. Confirmation alone is
+  not a source edit. Entity-specific hidden answers are retained, never reclassified.
+  Existing known-zero sources require no new attachment. Unsupported investment,
+  business, passive, foreign, holding or distribution methods remain saved and
+  blocked by their actual source validator. The owner status check receives
+  actual personal and confirmed EIC residency/election facts without fabricating
+  an EIC packet or defaulting missing answers. The complete return and review
+  continue through the same canonical source calculation. No year/filing gate opens.
+lines:
+  - line: "original"
+    description: "One actual attachment reaches canonical capital reporting"
+    formula: "Original31.00cash/30.00basis gives1gain and100001AGI for both entity types. The original31.00 remains unchanged and no duplicate K1 or entered gain exists."
+    testRef: "tests/guided-interview/guided-k1-cash-distribution.test.ts::passes actual distribution sources once through the guided return"
+  - line: "unknown"
+    description: "Source normalization preserves blanks false zero and exact cents"
+    formula: "Known0.00 remains0.00; blank is unknown; valid grouped cash1030.25 normalizes without rounding. Missing required facts, changed dates/refs/cash and an injected computed gain reject without erasing saved records."
+    testRef: "tests/guided-interview/guided-k1-cash-distribution.test.ts::preserves source uncertainty and rejects conflicting original attachments"
+  - line: "confirmation"
+    description: "Actual changes invalidate all dependent confirmations"
+    formula: "Changing original cash/source treatment revokes outer, basis, at-risk, prior-history and distribution confirmations. An outer reconfirmation cannot revive stale nested facts; unchanged and confirmation-only edits preserve actual records."
+    testRef: "tests/guided-interview/guided-k1-cash-distribution.test.ts::revokes dependent distribution confirmations and reconciles known owner status"
+  - line: "controls"
+    description: "Optional actual distribution controls are reachable from existing K1"
+    formula: "Add creates an empty attachment, actual false/zero remain saved, entity-specific sources are editable, and removal leaves original cash/basis/history intact. No calculated gain input is exposed."
+    testRef: "tests/apps/web/k1-cash-distribution-interactions.test.tsx::collects and removes actual distribution facts without defaults or gain overrides"
+  - line: "browser"
+    description: "Actual source correction and reload retain the supported result"
+    formula: "Desktop/mobile original31.00cash/30.00basis starts with1gain. Actual1030.25cash and matching Form6198 gain1000.25 restore reported AGI101000 after explicit confirmations; a changed activity reference blocks, and local reload retains exact sources. No original IDs or taxpayer facts are posted."
+    testRef: "apps/web/tests/k1-cash-distribution.spec.ts::retains actual cash distribution sources through local reload"

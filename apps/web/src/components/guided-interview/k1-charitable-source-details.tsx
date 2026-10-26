@@ -5,6 +5,7 @@ import type { K1LossSourcesData } from '@/lib/guided-qbi-loss-data';
 import { updateK1CharitableSources } from '@/lib/guided-k1-charitable-sources';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
+import { K1CashDistributionDetails } from './k1-cash-distribution-details';
 
 type Field = readonly [string, string, 'text' | 'money' | 'signed' | 'boolean' | readonly (readonly [string, string])[]];
 function Fields<T extends object>({ prefix, data, fields, onChange }: { prefix: string; data?: T; fields: readonly Field[]; onChange: (patch: Partial<T>) => void }) {
@@ -116,6 +117,7 @@ function CharitableStatement({ index, data, activities, onChange }: { index: num
     {data.link === 'qbi' && <p className="guided-hint">Select the same original activity already recorded in adjustments. Confirm its separate noncharitable-zero answer there; the original all-other-boxes-zero answer cannot describe a positive charitable contribution.</p>}
     <Original prefix={prefix} data={data.original} onChange={original => change({ original })} />
     <Basis prefix={prefix} data={data.basis} onChange={basis => change({ basis })} />
+    <K1CashDistributionDetails prefix={prefix} data={data.cashDistribution} entityType={data.original?.entityType} onChange={cashDistribution => change({ cashDistribution })} />
     <fieldset><legend>{prefix} recipient receipts</legend>
       {data.receipts === undefined && <p role="status">The recipient receipt list is unknown.</p>}
       {data.receipts?.length === 0 && <p>Explicitly recorded: no recipient receipts.</p>}
@@ -152,7 +154,7 @@ export function K1CharitableSourceDetails({ data, activities, onChange }: { data
   const change = (patch: Partial<K1CharitableSourcesData>) => onChange(updateK1CharitableSources(data ?? {}, patch));
   return <details className="guided-expand"><summary className="guided-expand-trigger">Charitable contributions reported on Schedule K-1</summary><div className="guided-expand-body">
     <p className="guided-hint">Use each original partnership or S-corporation K-1, attached gift receipts, basis history and Form 6198 sources. Keep these amounts separate from gifts you made directly and from charitable percentage-limit carryovers. Passive activities and ordinary losses also need the linked activity and independent histories in adjustments.</p>
-    <p className="guided-hint">Current ordinary cash and appreciated-stock gifts are supported with complete sources and nonbinding at-risk capacity. Earlier charitable basis releases use their original histories. Other property, differing AMT treatment, prior at-risk releases, excess distributions and some 2026 prior-basis timing require separate methods; their entered facts stay saved.</p>
+    <p className="guided-hint">Current ordinary cash and appreciated-stock gifts are supported with complete sources and nonbinding at-risk capacity. Earlier charitable basis releases use their original histories. A cash distribution above basis needs the separate original distribution attachment below; the supported method covers one unchanged investment-only ownership block. Other property, differing AMT treatment, prior at-risk releases, business or passive distributions and some 2026 prior-basis timing require separate methods; their entered facts stay saved.</p>
     {!data ? <button type="button" className="utility-button" onClick={() => onChange({})}>Add K-1 charitable sources</button> : <>
       <Fields prefix="K-1 charitable packet" data={data} fields={[...evidence, ['allK1CharitableSourcesIncluded', 'all original charitable K-1 attachments included', 'boolean']]} onChange={change} />
       {data.statements === undefined && <p role="status">The original charitable K-1 list is unknown.</p>}

@@ -3,6 +3,7 @@ import type { GuidedFlowState } from './guided-interview-flow';
 import { buildGuidedK1Sources } from './guided-k1-qbi-sources';
 import { parseGuidedK1CharitableSources, type K1CharitableSourcesData } from './guided-k1-charitable-data';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
+import { k1CashDistributionKnownTreatment } from './guided-k1-cash-distribution';
 const statuses = { single: 'single', mfj: 'married_filing_jointly', mfs: 'married_filing_separately', hoh: 'head_of_household', qss: 'qualifying_surviving_spouse' } as const;
 
 export function buildGuidedK1CharitableSources(state: GuidedFlowState) {
@@ -26,7 +27,7 @@ export function buildGuidedK1CharitableSources(state: GuidedFlowState) {
   const taxpayer: K1CharitableReturnInput['taxpayer'] = { taxYear, filingStatus: statuses[segmentation.filingStatus],
     primary: { firstName: [personal.firstName.trim(), middle].filter(Boolean).join(' '), lastName: personal.lastName, ssn: personal.ssn },
     ...(segmentation.filingStatus === 'mfj' && personal.spouse ? { spouse: personal.spouse } : {}) };
-  calculateK1CharitableReturnSources({ taxpayer, scheduleK1, k1CharitableSources: parsed.packet, qbiLossSources: existing?.qbiLossSources });
+  calculateK1CharitableReturnSources({ taxpayer, scheduleK1, k1CharitableSources: parsed.packet, qbiLossSources: existing?.qbiLossSources, ...k1CashDistributionKnownTreatment(state) });
   return { scheduleK1, k1CharitableSources: parsed.packet, qbiLossSources: existing?.qbiLossSources, suspendedPassiveLosses: existing?.suspendedPassiveLosses ?? [] };
 }
 export function k1CharitableSourceFactErrors(state: GuidedFlowState): Record<string, string> {
