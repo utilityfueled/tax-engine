@@ -7,40 +7,57 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-Current additions through `f2d0faa` include Marketplace re-entry (`0ffaa3d`),
-historical adoption review packets (`6f2b577`), actual in-kind educator reductions
-(`08214b9`), explicit 2026 nonitemization (`6029f70`), actual QTP expense capacity
-(`51b7182`), pure QBI-loss character prerequisites (`2d1b9bb`), shared Marketplace
-policy calculation/PDF (`d9cccd5`), in-kind tuition credit/recipient coordination
-(`ec05989`), donation interaction repair (`d96a83a`) and public-cash carryovers
-under actual nonitemization (`f2d0faa`). Each package has scoped checks and a
-separate agent source/software review.
+Current additions through `c864287` include current public-cash itemized and
+nonitemized carry candidates (`36cd922`), actual shared Marketplace policy intake
+(`675f5ba`), ordinary public-property carry candidates (`b18e8e9`), the focused
+charitable-heading browser repair (`cb8c139`), and school-limited in-kind
+room-and-board benefits (`c864287`). Each package has scoped checks and
+a separate agent source/software review. Positive-prior charity, ordinary
+Marketplace marriage/two-owner methods, actual QBI handoff and remaining education
+methods continue; guarded methods are not counted as completed.
 
-Full coverage on committed `51b7182` with a regenerated 419-entry inventory
-completed 17,895 passing cases and one stale donation-label failure across 964
-files. It did not produce a passing coverage result. The repaired unit interaction
-and all four affected production browser flows pass, with zero retries. Full
-current-head integration remains necessary. The last passing full branch coverage
-remains 86.98% on its separately recorded `4aef633` source.
+Full coverage on exact committed `7523384` passes **17,934 tests in 975 files**,
+with **87.01% branch coverage** against the unchanged 85% threshold. Root,
+contracts and web types, 4,833 specification references, the 425-entry inventory,
+both builds and lint also pass on that source. Pinned Python/pypdf, original
+sample documents and disposable loopback PostgreSQL were present for the passing
+run. An earlier attempt with incomplete prerequisites was explicitly interrupted
+and retained separately. Later packages are excluded from these results.
 
-The refreshed `f2d0faa` inventory has 425 entries and passes freshness validation.
-The current package audit reports zero advisories across 521 locked dependencies;
-this does not settle the separate OS image findings. Both current remote workflows
-were still in progress when observed.
+The full production browser run on `7523384` completed with 359 passes, five
+hosted skips and one ambiguous-selector failure. `cb8c139` changes the charitable
+contribution assertion to the exact existing heading; all eight affected flows
+pass with zero retries on the same production build. The full run remains failed
+evidence and a final current full run is required. See the
+[browser repair ledger](upgrade-2026-charity-heading-browser-repair.md).
 
-The full production browser run on exact `907b6db` passes 348 cases, with five
-hosted skips, zero failures/retries in 13.0 minutes using the default pinned PDF
-reader. It excludes the subsequent packages and supplies no hosted evidence.
-The [named method audit](upgrade-2026-remaining-methods.md) records the remaining
-Marketplace, charity, mixed-tip, education and QBI methods and current ownership.
-Unsupported guards do not count as implementation.
+The refreshed `c864287` inventory has 429 entries and passes freshness checks.
+The last package advisory refresh at `f2d0faa` reports zero advisories across 521
+locked dependencies; the lockfile is unchanged. OS findings and final runtime
+scans remain separate. The current remote CI and Web runs at `cb8c139` were still
+in progress when observed; preceding runs were canceled by later package pushes.
+No completed remote result or hosted evidence is inferred.
 
-`f2d0faa` is the latest confirmed pushed application commit on
-`upgrade/2026-baseline`. The goal remains active and the upgrade is **not
-release-ready**. External inputs remain unanswered; internal implementation and
-review continue. CI and Web runs for this commit were still in progress when
-observed; no completed remote result is inferred.
+The goal remains active and the upgrade is **not release-ready**. School-limited
+in-kind benefits now pass 200 cases/27 files, both types, 4,860 references, lint
+and production build. Independent rereview passes 73 cases/12 files, including
+unchanged duplicate-student and rendering-taxpayer probes; both findings were
+fixed before commit. See the [education ledger](upgrade-2026-in-kind-room-board-work.md). The QBI source package is under final
+adjacent review and its actual guided collector remains unfinished. External
+human, provider, staging, selected-state demand, final-form and advisory-owner
+requirements remain open. Resume from this checklist and `ongoingExecution` in
+[the checkpoint](upgrade-2026-checkpoint.json); exact source commits control every
+reported result.
 
+- `36cd922`: current public-cash candidates pass 371 tests/39 files, root/web
+  types, 4,838 references and eight independent agent cases. See the
+  [candidate ledger](upgrade-2026-current-charitable-candidates-work.md).
+- `675f5ba`: actual shared-policy collector passes 832 tests/94 files, all types,
+  two production viewport flows and nine independent cases; 23 final rebase cases
+  and 4,845 references pass. See the [intake ledger](upgrade-2026-guided-shared-policy-work.md).
+- `b18e8e9`: current public cash/ordinary property passes 375 tests/42 files,
+  root/web types, 4,849 references and eight independent cases. See the
+  [property ledger](upgrade-2026-current-charitable-public-property-work.md).
 - `f2d0faa`: actual public-cash carryovers under nonitemization pass 1,009
   cases/69 files, root types, 4,833 spec references and scoped lint. Two separate
   reviewers each pass 11 cases, including exact cents, FIFO/expiry and original

@@ -439,6 +439,45 @@
       ]
     },
     {
+      "key": "federal/current-charitable-candidates",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-120/t26/s170/",
+      "specPath": "spec/federal/current-charitable-candidates.yaml",
+      "enginePath": "src/engine/forms/current-charitable-candidates.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/current-charitable-public-property",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-120/t26/s170/",
+      "specPath": "spec/federal/current-charitable-public-property.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/defi-advanced",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -1327,6 +1366,26 @@
       "taxYear": 2026,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
       "specPath": "spec/federal/form-1099-q-in-kind-credit.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-1099-q-in-kind-room-board",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
+      "specPath": "spec/federal/form-1099-q-in-kind-room-board.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,
@@ -3668,6 +3727,26 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i1040sd",
       "specPath": "spec/federal/guided-schedule-d-sources.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/guided-shared-policy",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8962",
+      "specPath": "spec/federal/guided-shared-policy.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,

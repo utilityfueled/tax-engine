@@ -55,18 +55,20 @@ supersede its specific missing-route observations, not its qualification limits.
 - Actual 2025 charity histories and their collector are committed in
   `ea2f422`/`4332623`, with cash ordering `9ce1686`, bounded cash/property
   histories `6cf0463`, explicit 2026 nonitemization `6029f70` and public-cash carry
-  under nonitemization `f2d0faa`. Empty-history dual candidates are in review.
+  under nonitemization `f2d0faa`. Empty-history cash candidates are `36cd922`; current public cash/ordinary-property candidates are `b18e8e9`.
   Positive prior-floor/mixed-NOL and partial mixed-media methods remain with
   `ai_billing`.
 - Ordinary vehicle refinancing and actual intake are committed in
   `2baa03c`/`da7fc1c`; historical foreign-adoption benefits/intake/review are
   `998d55a`/`d153020`/`6f2b577`.
 - Marketplace ordinary re-entry is `0ffaa3d`; actual shared-policy core and
-  physical review are `d9cccd5`. `federal_law` owns the guided collector and
-  remaining ordinary Marketplace methods documented in the shared-policy ledger.
+  physical review are `d9cccd5`. The actual guided collector is `675f5ba`. `federal_law` owns the remaining
+  ordinary marriage/two-owner Marketplace methods documented in the ledger.
 - Full in-kind educator coordination is `08214b9`; credit-reduced tuition/actual
   recipient reconciliation is `ec05989`. The actual QTP expense cap is `51b7182`.
-  Remaining assistance/category/ESA methods stay distinct in the education ledger.
+  The school-limited room-and-board extension is `c864287`; actual student
+  and rendering-taxpayer aliases reject before PDF I/O, with 200 package cases
+  and 73 separate review cases passing. Remaining assistance/category/ESA methods stay distinct in the ledger.
 - Pure QBI loss-character helpers are `2d1b9bb`. `complete_facts` owns actual K1
   source, basis/at-risk/passive and canonical integration. A helper-only package
   does not close this ordinary source gap.
@@ -74,9 +76,9 @@ supersede its specific missing-route observations, not its qualification limits.
   the final reduced deduction between employee and business tips for QBI. The
   [source decision](upgrade-2026-mixed-tips-method-decision.md) identifies the
   precise qualified interpretation needed; no pro-rata election is invented.
-- Full coverage at `51b7182` found one stale interaction among 17,896 cases.
-  `d96a83a` repairs it with focused and four production browser cases passing.
-  Full current integration remains required. Historical browser `907b6db` evidence
-  excludes these additions. Human review, staging, provider qualification,
+- Full coverage on `7523384` passes 17,934 tests/975 files at 87.01% branches.
+  Its full browser run has 359 passes, five hosted skips and one ambiguous
+  heading selector. `cb8c139` repairs that selector and all eight affected flows
+  pass with zero retries; a new full current run remains required. Human review, staging, provider qualification,
   selected-state demand and final forms remain external requirements; guards
   and agent reviews do not complete them.
