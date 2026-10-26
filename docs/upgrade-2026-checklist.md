@@ -7,42 +7,57 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-Current additions through `dd1ef96` include actual K1/QBI loss character and
-canonical sources (`266aee3`), prior public cash with current ordinary-property
-carry candidates (`c89c81c`), and the pure marriage worksheet prerequisite
-(`dd1ef96`). Each has scoped checks and separate agent review. The QBI guided
-collector and canonical marriage election remain in progress; a helper or a
-source guard does not complete those methods.
+Current additions are pushed through `0517691`: actual tuition assistance
+(`b56402c`), source-derived ordinary K1 loss/SE classification (`3e9164`), actual
+charitable recipient categories (`6a90c81`), marriage-year source validation
+(`b2f3796`), and combined tuition assistance/credit/ESA allocations (`0517691`).
+Each package has immutable checks, spec-linked controls and a separate agent
+review. These are software/source checks; human tax qualification remains open.
 
-The full unit suite on exact committed `095d5bd` passes **17,960 tests in 987
-files**, with zero failures or skips. Its production browser suite passes
-**362 tests with zero retries**; five hosted-only cases remain skipped. Both
-builds pass. Pinned Node, Python/pypdf, original sample documents and disposable
-loopback PostgreSQL were present. Later packages are excluded from those results.
-The previous `7523384` browser failure and focused `cb8c139` repair remain in the
-[browser repair ledger](upgrade-2026-charity-heading-browser-repair.md).
+The tuition coordination package passes 433 tests in 38 files, root/web types,
+4,927 spec references, lint with zero warnings, both builds and 27 separate
+readiness/export cases. Its three reference and three physical Form 5329 pages
+were rendered and inspected. Independent unequal-ratio, source identity and
+stale-review probes pass. Original choices and exact amounts remain intact.
+The [package ledger](upgrade-2026-in-kind-coordination-work.md) records hashes.
 
-Full coverage on `7523384` passes 17,934 tests in 975 files at **87.01% branches**
-against the unchanged 85% gate. Root/contracts/web types, 4,833 spec references,
-its 425-entry inventory, both builds and lint also pass. Coverage and full
-integration must run again on the final source; no later package inherits that
-qualification.
+The last complete unit run is exact `095d5bd`: **17,960 tests in 987 files**,
+zero failures/skips; its production browser suite passes **362 cases with zero
+retries** and five hosted-only skips. Both builds pass. The latest complete
+coverage remains `7523384`: **87.01% branches**, against the unchanged 85% gate,
+with 17,934 tests in 975 files passing. Later packages are excluded. Final
+current full checks and coverage must run after internal integration.
 
-The inventory is refreshed against `dd1ef96`: all 435 entries pass freshness checks. The latest
-package advisory refresh still reports zero advisories across 521 locked
-dependencies; the lockfile is unchanged. OS findings and final runtime scans
-remain separate. The last observed `c89c81c` remote CI and Web runs were in
-progress; earlier push runs were canceled by subsequent package pushes.
-No completed remote result or hosted staging evidence is inferred.
+The inventory is refreshed against `0517691`: 442 entries pass freshness checks.
+The latest package advisory refresh reports zero advisories across 521 locked dependencies with the lockfile
+unchanged. Final image scans and owned OS advisory decisions remain separate.
+The last observed remote workflows were still running; no current remote success
+or hosted staging evidence is inferred from a push.
 
-The goal remains active and the upgrade is **not release-ready**. The assistance
-extension is under separate review on immutable tree `1719150`: 426 cases in 34
-files, root/web types, 4,890 spec references and the production web build pass.
-Both saved reference pages were rendered and inspected. Charity recipient
-classification, remaining Marketplace methods, actual QBI intake and final
-integration continue. Human review, provider access/budget, authorized staging,
-launch-state demand, final forms and advisory-owner requirements remain open.
-Resume here and from `ongoingExecution` in the checkpoint.
+Active internal work is the K12 cash-cap/source correction; actual QBI guide
+and original-source review; marriage canonical/guide and ordinary two-owner
+health/PTC; and the finite charity category/history/NOL/media packages in the
+checkpoint. A reproduced missing K1 packet on a selected life event is fixed in
+the private guide candidate and passes independent re-review; main integration
+is pending. Unsupported guards do not complete these methods. Final current tests,
+runtime images, recovery and support reconciliation follow their integration.
+
+The goal stays active and the upgrade is **not release-ready**. Human reviews
+and controlling interpretations, provider access/approved budget, authorized
+staging, launch-state demand, final forms and advisory-owner decisions remain
+external. Resume here and from `ongoingExecution` in the checkpoint.
+
+- `b56402c`: actual assistance passes 426 cases/34 files, 26 readiness cases,
+  root/web types, 4,898 references and both builds; separate source review passes.
+- `3e9164`: ordinary K1 classification passes 375 cases/22 files, root/web types,
+  4,907 references and corrected independent review. The NFT creator source
+  omission found in review was fixed before commit.
+- `6a90c81`: recipient classification passes 661 cases/64 files, root/web types,
+  4,913 references and six browser cases with zero retries; four independent
+  probes verify percentages, basis, unknown legacy answers and private context.
+- `b2f3796`: marriage source prerequisite passes 138 cases/7 files, root/web
+  types, 4,905 references and four independent probes. The final rebase passes
+  112 cases/5 files and root types. Canonical election integration is separate.
 
 - `266aee3`: actual K1/QBI source integration passes 846 cases in 62 files,
   root types and 4,878 spec references. Independent source and SE reconciliation

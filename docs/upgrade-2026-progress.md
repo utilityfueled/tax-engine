@@ -718,3 +718,17 @@ reviewed Roth basis/repayment corrections (`fc46b8d`). Later integration, actual
 retirement/points/recovery facts, canonical Form172, AI executor review fixes and
 application bindings remain active. No human, live-provider, staging, filing,
 final-form or release qualification is claimed.
+
+
+Pushed through `0517691`: actual tuition assistance (`b56402c`), ordinary K1
+loss/SE classification (`3e9164`), charitable recipient categories (`6a90c81`),
+marriage source validation (`b2f3796`) and tuition assistance/credit/ESA
+coordination (`0517691`) have scoped immutable checks and separate agent reviews.
+The last package passes433 cases/38 files,27 readiness/export cases, both types
+and builds,4927 spec references and lint; all six review pages were inspected.
+The checklist/checkpoint retain exact trees and package ledgers. Current full
+verification, finite law/facts extensions and final runtime/recovery remain
+active. No human, live-provider, staging, filing or release qualification is
+claimed. A normal-push approval rejection was resolved using the original
+explicit human authorization and verified existing destination; remote HEAD
+was checked after the normal push.

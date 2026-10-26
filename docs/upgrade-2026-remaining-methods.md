@@ -63,13 +63,13 @@ supersede its specific missing-route observations, not its qualification limits.
   `998d55a`/`d153020`/`6f2b577`.
 - Marketplace ordinary re-entry is `0ffaa3d`; actual shared-policy core and
   physical review are `d9cccd5`. The actual guided collector is `675f5ba`. `federal_law` owns the remaining
-  ordinary marriage/two-owner Marketplace methods documented in the ledger. The pure marriage worksheet prerequisite is `dd1ef96`; actual source intake and canonical election remain unfinished.
+  ordinary marriage/two-owner Marketplace methods documented in the ledger. The pure marriage worksheet prerequisite is `dd1ef96`; actual source prerequisite is `b2f3796`; canonical election, guide and ordinary two-owner health remain active.
 - Full in-kind educator coordination is `08214b9`; credit-reduced tuition/actual
   recipient reconciliation is `ec05989`. The actual QTP expense cap is `51b7182`.
   The school-limited room-and-board extension is `c864287`; actual student
   and rendering-taxpayer aliases reject before PDF I/O, with 200 package cases
-  and 73 separate review cases passing. Remaining assistance/category/ESA methods stay distinct in the ledger.
-- Pure QBI loss-character helpers are `2d1b9bb`; actual K1 basis/at-risk/passive, source character and canonical integration are `266aee3`. `complete_facts` continues the actual guided collector and source-derived ordinary Form461 classification.
+  and 73 separate review cases passing. Actual assistance is `b56402c`; combined assistance/credit and actual single-expense ESA allocation is `0517691`. The K12 cash-only cap/source correction is active; broader category/group methods stay explicit in the ledger.
+- Pure QBI loss-character helpers are `2d1b9bb`; actual K1 basis/at-risk/passive, source character and canonical integration are `266aee3`. Source-derived ordinary Form461/SE classification is `3e9164`; `complete_facts` continues the actual guided collector and original-source/negative8995 review integration.
 - Fresh official mixed-tip research did not locate a controlling allocation of
   the final reduced deduction between employee and business tips for QBI. The
   [source decision](upgrade-2026-mixed-tips-method-decision.md) identifies the
@@ -80,3 +80,10 @@ supersede its specific missing-route observations, not its qualification limits.
   Final current verification remains required. Human review, staging, provider
   qualification, selected-state demand and final forms remain external
   requirements; guards and agent reviews do not complete them.
+
+The recipient source prerequisite is `6a90c81`. The finite ordinary charitable
+endpoint is: current five-category candidates; actual prior-vintage/floor and
+nonitemized coordination; regular/AMT NOL with actual prior/mixed histories; and
+partial same-category B cash/property allocation. Specialized conservation, food,
+inventory, partial-interest and appreciation-basis elections remain explicitly
+excluded methods; no guard is counted as their implementation.

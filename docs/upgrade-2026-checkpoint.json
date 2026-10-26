@@ -1312,14 +1312,14 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Actual QBI source character and bounded prior-cash/current-property are committed; guided QBI and source-derived Form461 continue.",
-      "Pure marriage worksheets are committed; actual source/canonical/PDF/intake and two-owner Marketplace continue.",
-      "In-kind assistance immutable171915 passes426 cases34files/types/spec/build and is under independent review; no main integration yet.",
-      "Charity recipient classification and remaining documented mixed/prior methods continue privately.",
-      "Final current inventory/full checks, remote CI, native image/SBOM/scan/recovery and artifact/support reconciliation remain.",
-      "Qualified human interpretations/reviews, actual provider access/budget, authorized staging, launch-state demand, final forms and advisory ownership remain external."
+      "Actual tuition assistance/credit/ESA coordination is committed0517691; K12 cash-only cap and actual prepaid-program sources are in spec-first implementation privately.",
+      "QBI ordinary source-derived461/SE classification is committed3e9164; guided collector correction for selected-event/missing-packet omission passes independent re-review12cases, final integration pending; original-context/negative8995 review continues.",
+      "Marriage pure worksheets and actual source prerequisite are committeddd1ef96/b2f3796; canonical/PDF, actual guide and ordinary two-owner health/PTC remain active.",
+      "Charity actual recipient classification is committed6a90c81. Finite remaining ordinary blocks: current five-category candidates, actual prior-vintage/floor/nonitemized coordination, regular/AMT NOL mixed-history coordination and partial same-category B cash/property allocation.",
+      "Final current full checks/coverage, remote CI, native image/SBOM/scans/recovery and artifact/support reconciliation remain after final internal integration.",
+      "Qualified human interpretations/reviews, provider account access/approved live budget, authorized staging, launch-state demand, final forms and advisory ownership remain external; no qualification is inferred."
     ],
-    "latestIntegratedCommit": "dd1ef96f884e862ef59c6bd03ee4b48c6ce2cbe7",
+    "latestIntegratedCommit": "0517691f29494a6d36b6ae8353b0f88ea8de206d",
     "activeIntegrationRun": {
       "commit": "095d5bd8d0d56202e07414f6551033b893d03c27",
       "status": "unit-root-build-web-build-browser-passed",
@@ -3026,15 +3026,87 @@
         "independentExtraProbes": 3,
         "canonicalElectionComplete": false,
         "evidenceDocument": "docs/upgrade-2026-marriage-worksheets-work.md"
+      },
+      "inKindAssistance": {
+        "commit": "b56402c6711f537f0bfbe964e5f1c0be40b629a2",
+        "reviewTree": "67589aba76764984b15723ee53bc95e5873144d6",
+        "tests": 426,
+        "files": 34,
+        "readinessTests": 26,
+        "specReferences": 4898,
+        "rootTypes": "passed",
+        "webTypes": "passed",
+        "rootBuild": "passed",
+        "webBuild": "passed",
+        "independentReviewCases": 9,
+        "evidenceDocument": "docs/upgrade-2026-in-kind-assistance-work.md"
+      },
+      "qbiClassification": {
+        "commit": "3e9164877409bcfc129f90af8ce53328d66fb2e5",
+        "reviewTree": "393c3540d83cc36ed66bdbd0a1ea00ba452bddc6",
+        "tests": 375,
+        "files": 22,
+        "specReferences": 4907,
+        "rootTypes": "passed",
+        "webTypes": "passed",
+        "independentReviewCases": 13,
+        "evidenceDocument": "docs/upgrade-2026-qbi-loss-work.md",
+        "reviewFinding": "NFT creator business source was omitted from the ordinary-K1-only classification guard; corrected with a spec-linked regression before commit."
+      },
+      "charitableRecipient": {
+        "commit": "6a90c81",
+        "reviewTree": "383cf3f4240462744a8642cadcef0a33a35c0b2a",
+        "finalTree": "27a7ebc2a94df38c5feaaeb6ed5e2e6ee6cba0c7",
+        "tests": 661,
+        "files": 64,
+        "specReferences": 4913,
+        "rootTypes": "passed",
+        "webTypes": "passed",
+        "browserCases": 6,
+        "browserRetries": 0,
+        "independentPrivateProbes": 4,
+        "evidenceDocument": "docs/upgrade-2026-charitable-recipient-work.md"
+      },
+      "marriageSources": {
+        "commit": "b2f3796434dc9c5a3843236905b792aa8818a181",
+        "reviewTree": "b601babf8fe6f3a8aa849061e5bfc7819ffb7cb5",
+        "tests": 138,
+        "files": 7,
+        "finalRebaseTests": 112,
+        "finalRebaseFiles": 5,
+        "specReferences": 4905,
+        "independentPrivateProbes": 4,
+        "canonicalElectionComplete": false,
+        "evidenceDocument": "docs/upgrade-2026-marriage-sources-work.md"
+      },
+      "inKindCoordination": {
+        "commit": "0517691f29494a6d36b6ae8353b0f88ea8de206d",
+        "reviewTree": "896e727d8d933bdab21067c7a11ad89cac58d88b",
+        "finalTree": "8c546a6726a37ff35d7779285da82c5850c44102",
+        "tests": 433,
+        "files": 38,
+        "readinessTests": 27,
+        "specReferences": 4927,
+        "rootTypes": "passed",
+        "webTypes": "passed",
+        "rootBuild": "passed",
+        "webBuild": "passed",
+        "lintErrors": 0,
+        "lintWarnings": 0,
+        "independentPrivateProbes": 4,
+        "renderedReferencePages": 3,
+        "rendered5329Pages": 3,
+        "evidenceDocument": "docs/upgrade-2026-in-kind-coordination-work.md"
       }
     },
     "currentInventory": {
-      "sourceCommit": "dd1ef96f884e862ef59c6bd03ee4b48c6ce2cbe7",
-      "entries": 435,
+      "sourceCommit": "0517691f29494a6d36b6ae8353b0f88ea8de206d",
+      "entries": 442,
       "generation": "passed",
       "freshness": "passed",
-      "sha256": "97aa689b612a8f71ec78abf3795e515967d6bd2f546f68021b08de6b29ed5e5d",
-      "evidence": ".local/upgrade-evidence/inventory-dd1ef96.log"
+      "sha256": "9a7b5ed5f22fbac2444fb5fb359c177076c2c294d1ad0289e9e10528237940d6",
+      "evidence": ".local/upgrade-evidence/inventory-0517691.log",
+      "evidenceSha256": "45d3394d7c50a8cadad10d374de6b692308a098af458081af82dde4c9c4d528d"
     },
     "previousCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
@@ -3081,6 +3153,12 @@
       "skips": 0,
       "durationSeconds": "473.55",
       "evidenceSha256": "df287c8516aa0838e1719ba5e6e67349b20c0f2bdb1a1a027f9fefb8b55d4e43"
+    },
+    "pushAuthorizationReview": {
+      "status": "resolved-and-normal-push-verified",
+      "publishedHead": "0517691f29494a6d36b6ae8353b0f88ea8de206d",
+      "destination": "utilityfueled/tax-engine refs/heads/upgrade/2026-baseline",
+      "detail": "Automatic review initially rejected the recipient push because explicit public source publication was not established in its view. A retry supplied the original direct human instruction to commit and push this branch plus verified existing public origin and ADMIN access. Normal push succeeded; no approval bypass, force push, main merge or deployment."
     }
   },
   "historicalReleaseBlockers": {
