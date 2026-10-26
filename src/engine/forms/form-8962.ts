@@ -6,6 +6,7 @@ import type { FilingStatus } from "@/models/constants.js";
 import { min, roundDollar, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { calculateForm8962SharedPolicy, type Form8962AllocationInput, type Form8962SharedPolicyResult } from "./form-8962-shared-policy.js";
+import { calculateForm8962Contribution } from "./form-8962-contribution.js";
 
 /** Actual completed household and coverage worksheets; never inferred from AGI alone. */
 export interface Form8962Facts {
@@ -84,16 +85,6 @@ export interface Form8962Result {
   lines: CalculatedLine[];
 }
 
-const FPL = {
-  2025: { contiguous: ["15060", "5380"], alaska: ["18810", "6730"], hawaii: ["17310", "6190"] },
-  2026: { contiguous: ["15650", "5500"], alaska: ["19550", "6880"], hawaii: ["17990", "6330"] },
-} as const;
-type Bracket = readonly [number, number, string, string];
-const CONTRIBUTION_TABLE: Record<2025 | 2026, readonly Bracket[]> = {
-  2025: [[0, 150, "0", "0"], [150, 200, "0", ".02"], [200, 250, ".02", ".04"], [250, 300, ".04", ".06"], [300, 400, ".06", ".085"], [400, 402, ".085", ".085"]],
-  2026: [[0, 133, ".021", ".021"], [133, 150, ".0314", ".0419"], [150, 200, ".0419", ".066"], [200, 250, ".066", ".0844"], [250, 300, ".0844", ".0996"], [300, 402, ".0996", ".0996"]],
-};
-
 function dollars(value: string | Decimal | undefined, label: string, signed = false): Decimal {
   if (value === undefined || value === "") throw new Error(`Form 8962 requires actual ${label}`);
   const amount = new Decimal(value);
@@ -102,13 +93,6 @@ function dollars(value: string | Decimal | undefined, label: string, signed = fa
 }
 function assertMonth(month: number): void {
   if (!Number.isInteger(month) || month < 1 || month > 12) throw new Error("Form 8962 requires an actual month from 1 through 12");
-}
-function contributionRate(year: 2025 | 2026, percentage: Decimal): Decimal {
-  const bracket = CONTRIBUTION_TABLE[year].find(([start, end]) => percentage.gte(start) && percentage.lt(end));
-  if (!bracket) throw new Error("Form 8962 applicable percentage is outside its table");
-  const [start, end, initial, final] = bracket;
-  return new Decimal(initial).plus(new Decimal(final).minus(initial).times(percentage.minus(start)).div(new Decimal(end).minus(start)))
-    .toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
 }
 interface Month {
   month: number; premium: Decimal; slcsp: Decimal; advance: Decimal;
@@ -143,16 +127,14 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   const familySize = facts ? facts.taxFamilySize : input.taxFamilySize;
   if (familySize === undefined || !Number.isSafeInteger(familySize) || familySize < 1) throw new Error("Form 8962 requires a positive actual tax family size");
   const region = facts ? facts.fplRegion : "contiguous";
-  if (region === undefined || !(region in FPL[year])) throw new Error("Form 8962 requires an actual FPL region");
-  const [base, increment] = FPL[year][region];
-  const federalPovertyLine = new Decimal(base).plus(new Decimal(increment).times(familySize - 1));
+  if (region === undefined || !["contiguous", "alaska", "hawaii"].includes(region)) throw new Error("Form 8962 requires an actual FPL region");
   const taxpayerMAGI = dollars(facts ? facts.taxpayerModifiedAGI : input.modifiedAGI, "taxpayer modified AGI", true);
   const dependentMAGI = facts ? dollars(facts.requiredFilingDependentsModifiedAGI, "required-filing dependents modified AGI", true) : new Decimal(0);
   const modifiedAGI = zeroFloor(taxpayerMAGI.plus(dependentMAGI));
-  const fplPercentage = modifiedAGI.div(federalPovertyLine).times(100);
   if (input.orderedDeductionInterim && (input.healthInsuranceCoordination !== `pub974-simplified-${year}` || !facts)) throw new Error("Pub974 auxiliary400 requires actual health-coordination sources.");
-  const fplPercentageForTable = modifiedAGI.gt(federalPovertyLine.times(4))
-    ? new Decimal(input.orderedDeductionInterim ? 400 : 401) : fplPercentage.floor();
+  const { federalPovertyLine, fplPercentage, fplPercentageForTable, contributionRate: rate, expectedContribution, monthlyContribution } = calculateForm8962Contribution({
+    taxYear: year, fplRegion: region, familySize, householdIncome: modifiedAGI, orderedDeductionInterim: input.orderedDeductionInterim,
+  });
 
   const sourceMonths = new Map<number, { premium: Decimal; slcsp: Decimal; advance: Decimal; policyCount: number }>();
   const policyIds = new Set<string>();
@@ -226,9 +208,6 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
     && (input.filingStatus !== "married_filing_separately" || facts?.marriedFilingSeparatelyExceptionConfirmed === true)
     && (fplPercentageForTable.gte(100) || belowPovertyEligible)
     && (year !== 2026 || fplPercentageForTable.lte(400));
-  const rate = contributionRate(year, fplPercentageForTable);
-  const expectedContribution = roundDollar(modifiedAGI.times(rate));
-  const monthlyContribution = roundDollar(expectedContribution.div(12));
   const first = months[0];
   const fullYearUnchanged = input.form1095A.length > 0 && input.form1095A.every(form => {
     const firstMonth = form.monthlyPremiums[0];

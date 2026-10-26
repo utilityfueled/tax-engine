@@ -1,0 +1,67 @@
+form: "Form 8962 Marriage Worksheets"
+fullName: "Publication 974 alternative marriage-year calculation"
+taxYear: [2025, 2026]
+irsReference: "https://www.irs.gov/publications/p974"
+references:
+  - "https://www.irs.gov/instructions/i8962"
+  - "https://www.ecfr.gov/current/title-26/section-1.36B-4"
+  - "https://www.irs.gov/pub/irs-prior/p974--2020.pdf"
+  - "https://www.irs.gov/irb/2025-32_IRB"
+notes: |
+  Refreshed2026-10-25. This prerequisite calculates Worksheets I-V and the
+  resulting monthly transfer using validated coverage/alternative-family
+  amounts. It does not establish actual marriage, dependency, policy identity
+  or election; no root input, canonical return or PDF route is enabled here.
+  Those source bindings follow separately. Current final forms are2025;
+  2026 uses enacted rates/cliff/full repayment, not an asserted final form.
+  Reg1.36B-4(b)(2) permits repayment relief, not an added refundable credit.
+  Paragraph(b)(5)Example4 expressly permits pre-marriage relief above the
+  joint400percent limit; married-month credit remains zero. Archived2020
+  Worksheets I/III stop an individual's calculation when its own percentage
+  is401. This supports the restored2026 cliff without importing old rates.
+  Current Pub974 line4 retains continuation text after removing that old
+  conditional sentence; it is not an unconditional stop for2025.
+  Below-poverty joint eligibility and third-party/SE-health/QSEHRA coordination
+  are outside this standalone ordinary context. Each alternative family has
+  its actual assigned size and own source amounts. The amount on I/III line2
+  is explicitly rounded before percentage/rate calculations. Monetary source
+  groups aggregate before rounding under6102(c); displayed independent groups
+  may differ from a rounded combined total. No residual amount is invented.
+  Published2025 Paulette/Quentin line8a prints9604, but117000*.0788=9219.60
+  rounds9220 and the example's line8b/downstream uses9220. Record this typo;
+  never change the formula to reproduce9604. The2025 narrative publishes
+  combined premiums/benchmarks only. Tests identify individual500/433 and
+  1000/833 inputs as a compatible constructed split, not a published2025 fact.
+lines:
+  - line: "I/III.1-4"
+    description: "Actual separate alternative family sizes and half-income poverty ratios"
+    formula: "For each owner with pre-marriage QHP coverage, use actual alternative family size; halfIncome=round(joint household income/2); FPL uses the same actual region and prior-year guideline as the joint calculation; percentage=401 if halfIncome>4*FPL, otherwise floor(100*halfIncome/FPL). Sizes must sum to actual joint tax family; one spouse/dependent cannot enter both."
+    testRef: "tests/engine/forms/form-8962-marriage-worksheets.test.ts::matches the published2025 aggregate marriage example with a declared compatible source split"
+  - line: "I/III.5-9"
+    description: "Alternative contributions and actual pre-marriage months"
+    formula: "Use actual-year applicable rate at the whole percentage; annual=round(halfIncome*rate); monthly=round(annual/12). First and last actual coverage rows determine the interval, capped by marriage month. Each month in the interval needs known source values, including explicit zero if coverage stops temporarily. Above400 individual percentage produces no2026 alternative credit."
+    testRef: "tests/engine/forms/form-8962-marriage-worksheets.test.ts::keeps the restored2026 cliff separate for joint and individual calculations"
+  - line: "II/IV.A-E"
+    description: "Separate owner monthly assistance"
+    formula: "Each month: A=round(actual enrollment premium group); B=round(actual corrected benchmark group); C=owner monthly contribution; D=max(0,B-C); E=min(A,D) for eligible coverage and an allowed alternative income percentage. Source cents remain unchanged. These independent E amounts are summed, never recomputed using a combined min."
+    testRef: "tests/engine/forms/form-8962-marriage-worksheets.test.ts::preserves source cents and independent worksheet rounding without inventing a residual"
+  - line: "V.1-14"
+    description: "Compare only corresponding pre-marriage months"
+    formula: "A=sum of owners' E in each pre-marriage month; B=ordinary monthly credit for that same month. Election applies only with actual pre-marriage coverage, positive advances, ordinary excess advances and sum(A)>sum(B). Also compare the complete alternative-year credit: if one owner stops at401, an omitted WorksheetV month cannot conceal a larger lost ordinary credit. Because the alternative is optional repayment relief, retain ordinary treatment when the full alternative is not beneficial. This final comparison is an implementation choice to select the beneficial optional method, not an extra published worksheet line. Nonbeneficial or no-excess computations leave PartV absent."
+    testRef: "tests/engine/forms/form-8962-marriage-worksheets.test.ts::retains the ordinary result when the alternative cannot reduce excess advances"
+  - line: "35/36"
+    description: "Derived PartV fields only for a beneficial election"
+    formula: "Family size, monthly contribution, first and last alternative months come from completed owner worksheets; a spouse without pre-marriage coverage has no PartV row. Do not manufacture a policy or contribution interval."
+    testRef: "tests/engine/forms/form-8962-marriage-worksheets.test.ts::uses only actual owner coverage months and preserves post-marriage credit"
+  - line: "12-29"
+    description: "Monthly transfer and repayment only"
+    formula: "Keep ordinary A/B/F. For pre-marriage months use sum of owner contributions in C and WorksheetV A in E; D=max(0,B-C). Keep ordinary credit after marriage. Line24=sum(E),25=sum(F). A beneficial election forces26=0 even when24>25;27=max(0,25-24),28=actual2025 joint repayment cap when needed, no cap in2026;29=min(27,28) where applicable. When no excess remains, omit27-29 audits."
+    testRef: "tests/engine/forms/form-8962-marriage-worksheets.test.ts::never creates a refundable credit from the alternative marriage calculation"
+  - line: "source-boundary"
+    description: "Reject incomplete inconsistent or duplicated calculation inputs"
+    formula: "Known valid year/region/family/month/coverage and finite nonnegative Decimal amounts are required. Both owners appear exactly once. No duplicate months; pre-marriage owner premiums reconcile exactly to the corresponding original joint premium source group. A source month after marriage or missing corresponding joint month rejects. Current special eligibility/coordination is not inferred."
+    testRef: "tests/engine/forms/form-8962-marriage-worksheets.test.ts::rejects missing duplicated and inconsistent original monthly amounts"
+  - line: "complete-comparison"
+    description: "Do not select an optional calculation that increases full-year repayment"
+    formula: "2026joint income126000/family4 is within400percent, primary half63000/family1 is above400; spouse half63000/family3 gives416monthly contribution. Primary-only January1500benchmark yields454ordinary credit, spouse-only February450benchmark yields34alternative credit. WorksheetV covers onlyFebruary, but total34is below ordinary454. Retain454 and ordinary1546repayment of2000advances; do not select1966repayment. Derived statutory calculation, not a published numerical example."
+    testRef: "tests/engine/forms/form-8962-marriage-worksheets.test.ts::does not lose ordinary credit hidden by an excluded alternative owner month"
