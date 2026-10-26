@@ -7,11 +7,12 @@ complete a checkbox.
 
 ## Current integration — 2026-10-26
 
-The branch is pushed through `771c638a`. Rule provenance is `2025.165` /
-`2026.162-law-integration-draft`; the inventory has 544 entries, 5,757
-specification test references and 137 explicit shared-method associations.
-Delivered tax packages match their reviewed final trees; the two performance
-runtime files match their independent review hashes. Calculation, filing,
+The branch is pushed through `a2d4898`. Rule provenance is `2025.167` /
+`2026.164-law-integration-draft`; the inventory has 546 entries, 5,785
+specification test references and 139 explicit shared-method associations.
+Delivered tax packages preserve their reviewed executable files and independently
+checked integration deltas. The PDF serialization change also has an independent
+source and saved-artifact review. Calculation, filing,
 human-review and model-promotion gates remain unchanged.
 
 | Delivered package | Commit | Bounded verification |
@@ -29,6 +30,9 @@ human-review and model-promotion gates remain unchanged.
 | Bounded PDF parse/save batches | `c4c199fb` | Independent review passes 53/3 with one worker; seven representative PDFs spanning 686 fields are byte-identical. The private remaining-PDF cohort passes 1,269/196, with root types and scoped lint. Main utility/new-health consumers pass 5/3. |
 | Ordinary education receipt qualification, actual refunds and supplied allocations | `771c638a` | Final source passes 1,751 tests/217 files, static checks and both builds; main 20/9. Independent source review and original/PDF review cover 77 PDFs/328 pages/422 fields. Final desktop/mobile browser passes 2/2 with zero retries. |
 | Reuse the unchanged synthetic corpus digest in evaluation fixtures | `5b1b57cc` | Main 23/1 and private cohort 35/3 pass. Independent review freezes the entire corpus and confirms all 23 cases pass without mutation. All twelve profiled comparison outcomes match; no production provider or qualification code changes. |
+| Temporary workspace PDF components avoid repeated compression | `d00b554e` | Frozen source passes 1,344 tests/215 files, static checks and both builds; main 4/3. Independent review passes 55/5, including three private controls. Eight saved 22-page outputs retain identical text, appearances, amounts and notices; final downloads remain compressed. Production desktop/mobile download and reopen passes 2/2 with zero retries. |
+| Actual charitable activity allocation after basis | `944f91a4` | Final source passes 648 tests/24 files and static/spec/inventory checks; main 13/5. Independent source/reader review passes 22/8, retaining seven private controls. Independently derived originals and all 97 PDFs/193 pages pass 3,162 comparisons, including 136 physical and 13 flattened placements. |
+| Actual eligible health cash independent of policy allocations | `a2d4898` | Final source passes 92 tests/15 files, static checks and both builds; main 19/6. Independent source review passes 19/7 with eight private controls. Six original inputs and all 15 PDFs/113 pages/229 fields pass 4,044 independent comparisons. Production desktop/mobile workflows pass 2/2 with zero retries. |
 
 Original-source browser and PDF evidence remains attributed to its recorded
 producer. Later source checks do not turn those artifacts into a new integrated
@@ -42,17 +46,26 @@ The finite internal queue is now reconciled against actual source reachability:
   borrower limits, then bounded actual bond reissue/ownership history and
   rational-source reporting remain. See [the education queue](upgrade-2026-education-method-queue.md).
 - **Charity:** prior K-1 basis release and ordinary operating K-1 current
-  Form 172 classification are delivered. Binding at-risk allocation,
-  positive charitable benefit with COD/modified absorption, and changed
+  Form 172 classification and current binding at-risk allocation are delivered.
+  Positive prior at-risk character/history release, raw passive capital
+  classification, positive charitable benefit with COD/modified absorption, and changed
   filing-unit ownership histories remain internal work. See [the charity queue](upgrade-2026-charity-method-queue.md).
 - **Health:** reported-versus-original advance cents are delivered. Signed
   negative Worksheet W remaining-capacity treatment and its actual business
-  gross-income source handoff are also delivered. Remaining actual
-  payer/person and marriage combinations stay in the finite health queue.
+  gross-income source handoff and actual own-family zero-credit cash are also
+  delivered. Actual eligible outside-family persons, determined advance/payment
+  attribution and marriage combinations remain in the finite health queue.
 - **Verification:** investigate the retained remote coverage failures, then run
   the complete integrated checks and final native images, SBOM/scans and
-  recovery rehearsal. The two reviewed performance changes are delivered;
+  recovery rehearsal. The reviewed PDF and evaluation performance changes are delivered;
   they do not establish that the remote failures are resolved.
+
+The new temporary-component source passes all 31 tests in four previously
+relevant PDF suites under instrumentation. This deliberately partial run exits
+below the unchanged full-project coverage thresholds; it is a diagnostic, not a
+coverage pass. Complete coverage still requires a fresh integrated run. Remote
+`11039247` and `d00b554e` static jobs passed, while their unit/coverage runs were
+cancelled by subsequent authorized pushes; neither is complete CI evidence.
 
 The `fdfeedf57` CI coverage job was cancelled after its confirmed 30-minute
 execution limit. Its partial log also reports 16 failed cases in twelve suites;

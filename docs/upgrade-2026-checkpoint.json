@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "771c638a6d5386f64c8bbc0f2abcbc84f1dc7be7",
+    "lastRecordedCommit": "a2d4898d57557e7cd51616ea90dc3ca20a62cc92",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1312,11 +1312,11 @@
     ],
     "workInProgress": [
       "Education: annual cash with existing date/category and borrower limits, then bounded actual bond ownership/reissue history and rational reporting. Ordinary receipt composition and actual current-year retained refund records delivered.",
-      "Charity: binding at-risk source allocation, positive benefit COD with modified absorption, changed filing-unit histories.",
-      "Health: finite remaining payer/person and marriage combinations.",
+      "Charity: positive prior at-risk character/history release and raw passive capital classification, positive benefit COD with modified absorption, changed filing-unit histories.",
+      "Health: actual eligible outside-family persons, determined advance/payment attribution and marriage compositions. Own-family zero-credit actual-cash method delivered.",
       "Verification: resolve retained remote coverage failures without changing test deadlines, assertions or thresholds; final full integrated/remote/native image/SBOM/scan/recovery checks."
     ],
-    "latestIntegratedCommit": "771c638a6d5386f64c8bbc0f2abcbc84f1dc7be7",
+    "latestIntegratedCommit": "a2d4898d57557e7cd51616ea90dc3ca20a62cc92",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1663,8 +1663,8 @@
     },
     "remainingInternalWork": [
       "Education: annual cash with existing date/category and borrower limits, then bounded actual bond ownership/reissue history and rational reporting. Ordinary receipt composition and actual current-year retained refund records delivered.",
-      "Charity: binding at-risk source allocation, positive benefit COD with modified absorption, changed filing-unit histories.",
-      "Health: finite remaining payer/person and marriage combinations.",
+      "Charity: positive prior at-risk character/history release and raw passive capital classification, positive benefit COD with modified absorption, changed filing-unit histories.",
+      "Health: actual eligible outside-family persons, determined advance/payment attribution and marriage compositions. Own-family zero-credit actual-cash method delivered.",
       "Verification: resolve retained remote coverage failures without changing test deadlines, assertions or thresholds; final full integrated/remote/native image/SBOM/scan/recovery checks."
     ],
     "previousStableCoverageRun": {
@@ -1687,7 +1687,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "771c638a6d5386f64c8bbc0f2abcbc84f1dc7be7",
+    "lastPushedCommit": "a2d4898d57557e7cd51616ea90dc3ca20a62cc92",
     "currentBrowserRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -4698,11 +4698,11 @@
       }
     },
     "currentInventory": {
-      "entries": 544,
-      "specReferences": 5757,
-      "sourceCommit": "771c638a6d5386f64c8bbc0f2abcbc84f1dc7be7",
+      "entries": 546,
+      "specReferences": 5785,
+      "sourceCommit": "a2d4898d57557e7cd51616ea90dc3ca20a62cc92",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 137,
+      "explicitAssociations": 139,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -5012,11 +5012,109 @@
         "deliveryTree": "86732f7b145ed0e948ce286ece3eed47f5f93c9f",
         "deliveryReceipt": ".local/upgrade-evidence/parent-education-expense-delivery-verification.json",
         "receiptSha256": "3d7d26bdd103e889b30e568294dbc6c21b4e94843f56fe3a2200a2997f4a713a"
+      },
+      "pdfTemporarySerialization": {
+        "status": "delivered; independent agent source/artifact review clear",
+        "deliveredCommit": "d00b554e9267f2888c2bfbbd6277b784821a0a15",
+        "ledger": "docs/upgrade-2026-pdf-temporary-serialization-work.md",
+        "frozenVerification": {
+          "path": ".local/upgrade-evidence/parent-pdf-temp-streams-frozen-verification.json",
+          "sha256": "fbaa61714a1e6383eba8e88b66395e5596c9fe0ddbe3ea12d33d6a191a54992a"
+        },
+        "mainVerification": {
+          "path": ".local/upgrade-evidence/parent-pdf-temp-streams-main-verification.json",
+          "sha256": "5ff9d1f1dac5e66ad2284c91bd810c16da85be1d38573b36978dcbb7098cb19c"
+        },
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/ai-pdf-temp-streams-independent-review.json",
+          "sha256": "068bdbac6d2abddf4744926f61308fccb05ec1402f590ef753d01ac97fdbc1cb"
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/ai-pdf-temp-streams-profile-review.json",
+          "sha256": "9c8e01f457d3a04116785e1b512da9ffdd0b6e068e582d99a3fbbfa3ee556381"
+        },
+        "finalTests": 1344,
+        "finalFiles": 215,
+        "browserCases": 2,
+        "browserRetries": 0,
+        "instrumentedDiagnostic": {
+          "tests": 31,
+          "files": 4,
+          "workers": 1,
+          "processExit": 1,
+          "reason": "Partial selection retains global coverage scope and thresholds; no complete coverage claim",
+          "log": {
+            "path": ".local/upgrade-evidence/pdf-temp-streams-instrumented-tests.log",
+            "sha256": "d91fa0db6be8eb2d729700721bc71dd7e7282279e392438c00b05f28a6061fcf"
+          }
+        }
+      },
+      "currentCharitableAtRisk": {
+        "status": "delivered; independent agent source/reader/artifact review clear",
+        "deliveredCommit": "944f91a49e66760ee5332305955432226cab003f",
+        "ledger": "docs/upgrade-2026-k1-charitable-at-risk-work.md",
+        "finalManifest": {
+          "path": ".local/upgrade-evidence/k1-charitable-at-risk-final-snapshot.json",
+          "sha256": "7fb8911d4e6d8255bab3b9f9de483efb700dad21d72e9f7e286c9151de60ed12"
+        },
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-k1-charitable-at-risk-delivery-verification.json",
+          "sha256": "9783040d50a63e6695d78ad07ba2c69dedf520c77bc3c6c55db7c1cf0c07820d"
+        },
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/facts-k1-charitable-risk-source-review.json",
+          "sha256": "7a7ee48eefebc17bf8004fdc32d80859d253efab9b56c1ffa0e2f87e41b5084e"
+        },
+        "readerReview": {
+          "path": ".local/upgrade-evidence/facts-k1-charitable-risk-reader-review.json",
+          "sha256": "616e71fbf4021dcb85773233272388847f79329d4d88b1169be9c772db461342"
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/facts-k1-charitable-risk-pdf-review/checks.json",
+          "sha256": "d20f06e23db28f648f39d4f3223dad7bfcf564deae31160924ed66d0ae388edf"
+        },
+        "finalTests": 648,
+        "finalFiles": 24,
+        "mainTests": 13,
+        "mainFiles": 5,
+        "qualification": "Agent review only; all human, filing and complete2026 gates unchanged"
+      },
+      "healthActualCash": {
+        "status": "delivered; independent agent source and original/PDF reviews clear; final exact-base integration verified",
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/parent-health-actual-cash-source-review.json",
+          "sha256": "b1d4d40a807963a3264b1c43440407a286cf8b74f370a1b5cff980bc39bf9183"
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/parent-health-actual-cash-artifact-review/checks.json",
+          "sha256": "f1bf7a9834ec668b1e3a5c863e7d5e2b01c75b2e7a81f13f90b149e35aa95c72"
+        },
+        "pdfs": 15,
+        "pages": 113,
+        "originalInputs": 6,
+        "checks": 4044,
+        "physicalChecks": 212,
+        "humanQualification": false,
+        "deliveredCommit": "a2d4898d57557e7cd51616ea90dc3ca20a62cc92",
+        "finalTree": "61bb9be8680c68ed8d22bef644f9efc37630d836",
+        "ledger": "docs/upgrade-2025-marketplace-actual-cash-work.md",
+        "finalTests": 92,
+        "finalFiles": 15,
+        "mainTests": 19,
+        "mainFiles": 6,
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-health-actual-cash-delivery-verification.json",
+          "sha256": "207ee2714f360f92832be0c9b6b65a29cbe999e32d23ff3ff2d9fceff2c23cd7"
+        },
+        "finalManifest": {
+          "path": ".local/upgrade-evidence/health-actual-cash-final-snapshot.json",
+          "sha256": "e820da930c09e8e420a7daed213ddc4cd64617027366a3fd1527ebdf29923fbc"
+        }
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.165",
-      "2026": "2026.162-law-integration-draft"
+      "2025": "2025.167",
+      "2026": "2026.164-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -7026,8 +7124,8 @@
       "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
     },
     "currentFullVerificationRequired": {
-      "sourceCommit": "5489eb6ba2a812c7d0bed63aad79ae45bef5e947",
-      "reason": "Later reviewed health/charity/AI/PDF packages follow3669b00. c4 full coverage failed3 PDF deadlines with no completed report; isolated profiles do not resolve the full-run failures. Remaining finite source work continues.",
+      "sourceCommit": "a2d4898d57557e7cd51616ea90dc3ca20a62cc92",
+      "reason": "Reviewed packages after3669b00 require final integration. Intermediate944f91a complete coverage is running after the PDF serialization change; no pass claimed. Remaining finite source work continues.",
       "readiness": "Final integrated run required after the finite queue; no later full pass claimed"
     },
     "previousCurrentUnitRunBeforeE91": {
@@ -7253,7 +7351,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-26T22:13:10.768950+00:00",
+    "recordedAt": "2026-10-26T23:33:32.934796+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -7533,11 +7631,12 @@
       "sha256": "90919f70e3420edcb79b82b740ca1d9b3ddf479d6c3feaed1b280c5a1ca128fd",
       "internal": [
         "Separate-business/owner worksheets, applicable stops, signed same-owner W15 and actual gross-income attribution delivered; remaining payer/person, payment-share and marriage compositions continue",
-        "Actual eligible persons, payer evidence and payment shares separate from PartIV allocation",
+        "Actual eligible outside-tax-family persons and payment reconciliation; own-family zero-advance/zero-final-credit unequal-cash method delivered",
         "Determined positive actual noncoverage advances with payment and corresponding-credit bounds",
         "Alternative-marriage composition with preceding original health/shared sources"
       ],
-      "interpretation": "Binding2025 joint capped-repayment attribution among competing owners or qualified/nonqualified source groups; no guessed split"
+      "interpretation": "Binding2025 joint capped-repayment attribution among competing owners or qualified/nonqualified source groups; no guessed split",
+      "deliveredActualCash": "a2d4898d57557e7cd51616ea90dc3ca20a62cc92"
     },
     "remoteRecoveryFailure1e04964": {
       "commit": "1e04964e6e401536ff4c1bee806ba3ac2c4a94e9",
@@ -8033,6 +8132,41 @@
       "corpusDeepFrozenAndUnchanged": true,
       "comparisonOutcomesUnchanged": 12,
       "qualification": "Test setup only; no provider results or full-coverage claim"
+    },
+    "latestSupersededCi": {
+      "11039247": {
+        "path": ".local/upgrade-evidence/remote-11039247-cancelled.json",
+        "sha256": "e46e3eda8b76e6451fb64d77beb8e59d1970c21c0a4684ade80a4c70d04c8c2e"
+      },
+      "d00b554e": {
+        "path": ".local/upgrade-evidence/remote-d00b554e-intermediate.json",
+        "sha256": "3191f794c839e3a9f2d2c7468ccbb7d478d20744718e6cf6bb274f24f3277dea"
+      },
+      "result": "Static checks pass; superseding pushes cancel incomplete unit/coverage jobs. Final full CI remains required."
+    },
+    "currentFullCoverageRun": {
+      "status": "running; no pass claimed",
+      "sourceCommit": "944f91a49e66760ee5332305955432226cab003f",
+      "sourceTree": "4f5b66374c44796edc630d77ef6257296580c7ef",
+      "archive": "/private/tmp/tax-944-coverage-v43_9_fr",
+      "snapshot": ".local/upgrade-evidence/944f91a-coverage/snapshot.json",
+      "snapshotSha256": "c03107c10878d5380461c6a6d528688e2987aa71354ae0c81edc6ce67b559458",
+      "command": [
+        "pnpm",
+        "test:coverage",
+        "--maxWorkers=1"
+      ],
+      "scope": "Complete coverage after new PDF runtime serialization; intermediate head excludes subsequent packages. All existing tests, deadlines and thresholds remain."
+    },
+    "changedMembershipResearch": {
+      "path": "docs/upgrade-2026-changed-membership-research.md",
+      "retrievedAt": "2026-10-26",
+      "sources": [
+        "https://www.ecfr.gov/current/title-26/section-1.170A-10",
+        "https://www.ecfr.gov/current/title-26/section-1.172-7",
+        "https://www.irs.gov/instructions/i172"
+      ],
+      "status": "Official source contract identified; actual membership/ownership implementation remains in finite internal charity queue."
     }
   },
   "historicalReleaseBlockers": {
