@@ -21,7 +21,8 @@ it('selects the prior-cash current-property carry only after the actual deductio
     const before = JSON.stringify(input), result = calculateFederalTax(input);
     expect(result.deductionUsed).toBe(method);
     expect([result.scheduleA?.charitableCurrentCash.toFixed(), result.scheduleA?.charitableCurrentNoncash.toFixed(),
-      result.scheduleA?.charitablePriorYearUsed.toFixed(), result.scheduleA?.charitableTotal.toFixed()]).toEqual(['1000', '1950', '2000', '4950']);
+      result.scheduleA?.charitablePriorYearUsed.toFixed(), result.scheduleA?.charitableTotal.toFixed()])
+      .toEqual(method === 'nonitemized' ? ['0','0','0','0'] : ['1000','1950','2000','4950']);
     expect(result.carryforwards.charitableContributionsByYear.map(row => [row.taxYear, row.category, row.medium, row.amount.toFixed()]))
       .toEqual([[2026, 'noncash_50', 'noncash', carry]]);
     expect(result.scheduleA?.charitableTreatment?.priorTreatedAsPaid.toFixed()).toBe('2000');

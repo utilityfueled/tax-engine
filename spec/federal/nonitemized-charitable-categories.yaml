@@ -1,0 +1,67 @@
+form: "Nonitemized Charitable Categories"
+fullName: "2026 actual ordinary category carryovers under explicit nonitemization"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s170/"
+retrievedAt: "2026-10-26"
+reviewStatus: "independent-review-pending"
+notes: |
+  This is a derived statutory method, not a published matching 2026 example.
+  Section170(b)(1)(B),(C),(D),(G) retains each percentage category; (G)(iii)
+  coordinates aggregate allowed current/prior G with A. Reg1.170A-10(a)(2),
+  (b)(2),(c)(2) creates percentage excess and treats eligible prior amounts as
+  paid even in a standard year. Pub526 Carryovers applies current-before-prior
+  within each category, FIFO, and public-before-other sources. Its 2025 B/G
+  formulas are not substituted for the amended 2026 statutory ceilings.
+  Section170(p) has a separate current-cash deduction; this ledger neither
+  deducts prior contributions nor creates carry from that deduction's cap.
+  The extension to explicit nonitemizers without standard entitlement is the
+  same derived interpretation as the already reviewed pure-G method.
+  All current direct/verified-crypto sources and actual prior histories bind
+  exactly. NOL, changed filing units, K1 sources lacking their actual attached
+  statement/basis method, special property elections and partial same-B media
+  allocation remain separate. Automatic/itemized prior-floor attribution is
+  not established by this nonitemized method. No original vintage is re-aged.
+  A precise amended-B/prior-C conflict is rejected: if prior C tentatively
+  treated-paid under Reg1.170A-10(c)(2), plus reserved current C, exceeds the
+  separately allowable C after B, no unexplained C consumption is inferred.
+  In particular base100000/currentG10000/priorC40000/currentB30000 reserves
+  priorC30000 and allows B20000, but leaves C20000: this is not an allowed
+  60000 result. The regulation predates the new B offset; this unresolved
+  attribution requires a separate controlling method, not a guessed choice.
+lines:
+  - line: "category-capacities"
+    description: "Compute exact current and prior category capacities in sourced order"
+    formula: "Base=max(0,actual contribution base). Current G then prior G share60%. Current A uses50%-aggregateG; prior A additionally reserves min(actualCurrentC,30%). Prior C tentative use=min(30%-reservedCurrentC,50%-G-currentA-priorA-reservedCurrentC). B ceiling=min(30%,50%-G-A-actualCurrentCAllowedWithoutC-priorC+min(G,10%)); current B precedes prior B. C retains its separate final ceiling. D additionally shares the remaining B ceiling after all current/prior B. No floor applies."
+    testRef: "tests/engine/forms/nonitemized-charitable-categories.test.ts::conserves all five actual categories across current and prior sources"
+  - line: "current-versus-prior-capital"
+    description: "Retain actual current capital gifts before the C cap in the B ceiling"
+    formula: "Base100000,currentC40000,priorB30000 -> currentC allowance30000,priorB use10000,newCcarry10000,priorBremaining20000. With currentG10000,currentC30000 and priorB30000, amended B allows20000, C20000; currentCcarry10000 and priorBremaining10000. Prior C reservation is independently checked."
+    testRef: "tests/engine/forms/nonitemized-charitable-categories.test.ts::distinguishes actual current capital property from prior treated-paid reservations"
+  - line: "exact-vintages"
+    description: "Use original source years and exact values through fifth-year expiration"
+    formula: "Current amounts precede oldest eligible prior vintage within category. Source opening=treatedPaid+expired+remaining; actual deduction0. Base10000.49,G4000.11,priorG2500.005 gives prior use2000.184 and remaining499.821; current A1000.01 is percentage excess. Zero/negative base preserves current excess and expires only old actual vintages."
+    testRef: "tests/engine/forms/nonitemized-charitable-categories.test.ts::preserves exact FIFO balances and original expiration without floor carry"
+  - line: "media"
+    description: "Preserve actual other-category media without inventing partial attribution"
+    formula: "Current and each original-year B group share one capacity. Full/zero or one-medium use is exact; a partially used cash/noncash group requires its separate allocation method. Input order does not assign medium priority."
+    testRef: "tests/engine/forms/nonitemized-charitable-categories.test.ts::preserves actual media and rejects only unsupported partial attribution"
+  - line: "binding"
+    description: "Reconcile original receipt valuation and verified crypto with exact context"
+    formula: "Actual recipient/year/qualification, per-receipt min(FMV,basis), long-term stock and verified crypto source values determine categories. An unmatched pass-through amount, missing actual history/identity, unknown source value, unsupported selection or NOL rejects. No caller-supplied carry is accepted."
+    testRef: "tests/engine/forms/nonitemized-charitable-categories.test.ts::binds current sources and separate actual history before computing carry"
+  - line: "prior-capital-conflict"
+    description: "Do not conflate prior capital treated-paid and post-B deductible amounts"
+    formula: "When positive tentative priorC plus current C reserved before B exceeds C's final post-B ceiling, reject. Base100000,G10000,priorC40000,B30000 is unresolved; G10000,priorC10000,B5000 is unambiguous and uses priorC10000. Keep input unchanged."
+    testRef: "tests/engine/forms/nonitemized-charitable-categories.test.ts::retains the exact amended-offset prior-capital boundary"
+  - line: "canonical"
+    description: "Transfer the selected ledger independently from standard entitlement and current deduction"
+    formula: "Base100000,currentG10000/A5000/B10000/C20000/D15000 plus actual priorG10000/A5000/C10000/B10000/D8000 -> prior treatedPaid15000,prior deduction0,carry53000. Explicit standard uses actual16100; explicit nonitemized uses0 standard. Both current170(p)1000 and ScheduleA charity0. State/preview retain actual federal income."
+    testRef: "tests/engine/federal-nonitemized-charitable-categories.test.ts::transfers actual selected category balances without claiming itemization"
+  - line: "collector-and-gates"
+    description: "Use the actual existing collector without broadening the year gates"
+    formula: "The existing five-category source collector forwards original current receipts and confirmed prior years/amounts; unknown confirmation blocks. Direct ScheduleA source calculation works, while unqualified2026 canonical preview/export stay closed."
+    testRef: "tests/guided-interview/guided-nonitemized-charitable-categories.test.ts::preserves all actual current and prior categories through existing intake"
+  - line: "shared-other-capital-ceiling"
+    description: "Preserve the shared B ceiling for current and prior D gifts"
+    formula: "D capacity also cannot exceed max(0,Bcapacity-currentB-priorB) because170(B) aggregates every non-A/non-G gift and170(D) adds restrictions after other gifts. Base100000/G10000/B20000/currentC30000/currentD10000/priorD5000 -> currentD0,priorDuse0,priorDremaining5000,newDcarry10000,newCcarry10000. At B19999.99,currentD.005,priorD.02 only.01 shared headroom remains: currentD.005,priorDuse.005,priorDremaining.015. No floor applies to this selected nonitemized ledger."
+    testRef: "tests/engine/forms/nonitemized-charitable-categories.test.ts::keeps actual current and prior capital gifts inside the shared other ceiling"

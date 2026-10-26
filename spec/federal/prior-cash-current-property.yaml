@@ -39,7 +39,7 @@ lines:
     testRef: "tests/engine/forms/prior-cash-current-property.test.ts::conserves original cash vintages through the zero-base and expiration boundaries"
   - line: "canonical-selection"
     description: "Transfer separate current/prior lines and select carry after the actual deduction method"
-    formula: "Base10000/currentG1000/priorG2000/A3000 gives ScheduleA11=1000,12=1950,13=2000,14=4950. Automatic standard or explicit nonitemization keeps Acarry1000/current170p1000/prior actual deduction0; itemized keeps Acarry1050/current170p0/prior deduction2000. Prior treated-paid2000 is retained under every selection."
+    formula: "Base10000/currentG1000/priorG2000/A3000 gives itemized/automatic ScheduleA candidate11=1000,12=1950,13=2000,14=4950. Explicit nonitemization now uses the separate all-category selected ledger with ScheduleA charity0. Automatic standard and explicit nonitemization keep Acarry1000/current170p1000/prior actual deduction0; itemized keeps Acarry1050/current170p0/prior deduction2000. Prior treated-paid2000 is retained under every selection."
     testRef: "tests/engine/federal-prior-cash-current-property.test.ts::selects the prior-cash current-property carry only after the actual deduction choice"
   - line: "guided-source-gates"
     description: "Reuse actual source history and property inputs while retaining closed full-year gates"

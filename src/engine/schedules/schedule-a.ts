@@ -25,6 +25,7 @@ import { resolveCharitableRecipient } from "@/utils/charitable-recipient.js";
 import { readCurrentCharitableReceiptAmounts } from "@/utils/charitable-current-receipts.js";
 import { calculateCharitableCarryover } from "@/engine/forms/charitable-carryover.js";
 import { calculateNonitemizedCharitableCarryover, type NonitemizedCharitableCarryoverResult } from "@/engine/forms/nonitemized-charitable-carryover.js";
+import { calculateNonitemizedCharitableCategories, type NonitemizedCharitableCategoriesResult } from "@/engine/forms/nonitemized-charitable-categories.js";
 import { calculateCurrentCharitableCandidates, type CurrentCharitableCandidates } from "@/engine/forms/current-charitable-candidates.js";
 import { calculatePriorCashCurrentProperty, type PriorCashCurrentPropertyResult } from "@/engine/forms/prior-cash-current-property.js";
 import type { SelectedCharitableCarryover } from "@/engine/forms/selected-charitable-carryover.js";
@@ -100,7 +101,7 @@ export interface ScheduleAResult {
   charitableSourceDigest: string; // Original charitable facts, excluding render-only identifiers.
   charitableTreatment?: SelectedCharitableCarryover; // Set only after canonical deduction selection.
   /** Derived only for the explicit2026 nonitemizer source method; no itemized charity candidate. */
-  nonitemizedCharitableCarryover?: NonitemizedCharitableCarryoverResult;
+  nonitemizedCharitableCarryover?: NonitemizedCharitableCarryoverResult | NonitemizedCharitableCategoriesResult;
   /** Derived current-only alternatives with an actual empty prior history. */
   currentCharitableCandidates?: CurrentCharitableCandidates;
   /** Actual prior G, with the entire floor attributed to current A only. */
@@ -313,7 +314,7 @@ export function calculateScheduleA(
   let charitableCarryforwards: CharitableCarryforwardEntry[];
   let charitableCarryforwardExpired = ZERO;
   let charitableCarryforwardDetail: CharitableCarryforwardYearDetail[] = [];
-  let nonitemizedCharitableCarryover: NonitemizedCharitableCarryoverResult | undefined;
+  let nonitemizedCharitableCarryover: NonitemizedCharitableCarryoverResult | NonitemizedCharitableCategoriesResult | undefined;
   let currentCharitableCandidates: CurrentCharitableCandidates | undefined;
   let priorCashCurrentProperty: PriorCashCurrentPropertyResult | undefined;
   const crypto = extra?.cryptoCharitableAmounts;
@@ -330,6 +331,10 @@ export function calculateScheduleA(
       && input.charitableCarryoverSources.vintages?.length === 0) {
       if (nolCashLimit !== undefined) throw new Error("Current charitable candidates require their separate NOL replay method");
       currentCharitableCandidates = calculateCurrentCharitableCandidates(input, { contributionBase, current: amounts });
+    } else if (input.taxpayer.taxYear === 2026 && (input.deductionElection === "standard" || input.deductionElection === "nonitemized")
+      && (input.charitableCarryoverSources.vintages?.length ?? 0) > 0) {
+      if (nolCashLimit !== undefined) throw new Error("Nonitemized charitable categories require their separate NOL replay method");
+      nonitemizedCharitableCarryover = calculateNonitemizedCharitableCategories(input, { contributionBase, current: amounts });
     } else if (input.taxpayer.taxYear === 2026 && (input.charitableCarryoverSources.vintages?.length ?? 0) > 0
       && (amounts.noncashPublic.gt(0) || eligibleDonations.some(source => source.type !== "cash"))) {
       if (nolCashLimit !== undefined) throw new Error("Prior cash and current property require their separate NOL replay method");
