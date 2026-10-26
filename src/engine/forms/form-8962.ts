@@ -177,8 +177,8 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   }
   // PartIV amounts replace only the calculation sources; original statements
   // remain intact for identity and source reconciliation and review.
-  if (sharedPolicyAllocation) for (const row of sharedPolicyAllocation.months) {
-    sourceMonths.set(row.month, { premium: row.premium, slcsp: row.slcsp, advance: row.advance, policyCount: 1 });
+  if (sharedPolicyAllocation) for (const row of sharedPolicyAllocation.householdMonths) {
+    sourceMonths.set(row.month, { premium: row.premium, slcsp: row.slcsp, advance: row.advance, policyCount: row.policyIndexes.length });
   }
   const months: Month[] = [];
   if (facts) {

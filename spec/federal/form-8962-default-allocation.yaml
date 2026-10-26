@@ -20,7 +20,8 @@ notes: |
   The source form remains unchanged. No-agreement is an explicit false answer,
   never inferred from blank. The same source identity/year/coverage controls
   as the existing agreement method continue. NoAPTC is Situation3 and remains
-  a separate method; overlapping/unshared policies and other coordination
+  a separate method; actual overlapping/unshared Situation4 sources use
+  form-8962-overlapping-policies.yaml. Other coordination
   methods are not activated by this change. Full2026 readiness remains closed.
 lines:
   - line: "default-source"

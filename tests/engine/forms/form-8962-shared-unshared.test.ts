@@ -45,7 +45,7 @@ it('preserves exact original cents source order and immutability', () => {
   changed.form1095A.reverse(); changed.form1095A[1].policyNumber = 'equal-money-replacement'; expect(() => calculateForm8962SharedPolicy(changed)).toThrow(/snapshot|reconcile/i);
 });
 
-it('retains overlapping benchmark and actual allocation boundaries', () => {
+it('retains missing-month benchmark and actual allocation boundaries', () => {
   const input = sharedUnsharedFixture(); expect(() => calculateForm8962SharedPolicy(input)).not.toThrow();
   const overlap = structuredClone(input); overlap.form1095A[1].coveredIndividuals![0].firstMonth = 6; overlap.form1095A[1].monthlyPremiums[0].month = 6;
   overlap.form8962!.sharedPolicyAllocations!.policies![1].original = structuredClone(overlap.form1095A[1]); expect(() => calculateForm8962SharedPolicy(overlap)).toThrow();

@@ -17,6 +17,15 @@ export const Form8962SharedPolicySchema = z.object({
   sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
   sourceFactsConfirmed: z.boolean().optional(), allSharedPoliciesIncluded: z.boolean().optional(),
   primaryName: z.string().optional(), primarySsn: z.string().optional(), spouseName: z.string().optional(), spouseSsn: z.string().optional(),
+  overlappingCoverage: z.object({
+    sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    allBenchmarkMonthsIncluded: z.boolean().optional(),
+    months: z.array(z.object({ month: z.number().int().optional(), groups: z.array(z.object({
+      sourceId: z.string().optional(), sourceReference: z.string().optional(), ratingArea: z.string().optional(),
+      allUnsharedCoverageFamilyMembersIncludedConfirmed: z.boolean().optional(), allCoveredPeopleShareRatingAreaConfirmed: z.boolean().optional(),
+      policySourceIds: z.array(z.string()).optional(), coveredIndividualSsns: z.array(z.string()).optional(), slcsp: amount,
+    })).optional() })).optional(),
+  }).optional(),
   policies: z.array(z.object({
     sourceId: z.string().optional(), original: originalPolicy.optional(),
     otherTaxpayerName: z.string().optional(), otherTaxpayerSsn: z.string().optional(),

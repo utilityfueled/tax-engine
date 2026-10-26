@@ -1,10 +1,11 @@
 "use client";
 import { NoAdvanceBenchmarkSourceDetails } from "./no-advance-benchmark-source-details";
+import { OverlappingBenchmarkSourceDetails } from "./overlapping-benchmark-source-details";
 
 import { useState } from "react";
 import type { FilingStatus, PersonalInfoData } from "@/lib/guided-interview-flow";
 import type { MarketplacePolicyData, PremiumTaxCreditData } from "@/lib/guided-premium-tax-credit-facts";
-import { captureSharedPolicySources, captureNoAdvanceBenchmarkSources, deriveSharedPolicyMonths, type SharedPolicyAgreementData } from "@/lib/guided-shared-policy";
+import { captureSharedPolicySources, captureNoAdvanceBenchmarkSources, captureOverlappingBenchmarkSources, deriveSharedPolicyMonths, type SharedPolicyAgreementData } from "@/lib/guided-shared-policy";
 import { BooleanFact, TextFact } from "./fact-fields";
 
 function Choice({ label, value, choices, onChange }: { label: string; value: string; choices: readonly (readonly [string, string])[]; onChange: (value: string) => void }) {
@@ -38,7 +39,7 @@ export function SharedPolicySourceDetails({ data, personal, filingStatus, taxYea
   const packet = data.sharedPolicyAllocations;
   function perform(action: () => void) { try { action(); setError(undefined); } catch (caught) { setError(caught instanceof Error ? caught.message : "Check the actual shared-policy sources."); } }
   return <section><h5>Shared policy allocation</h5>
-    <p className="guided-hint">For two tax families with advance credits, enter the actual agreement or original enrollment facts when there is no agreement. If no advance credit was paid, use both families&apos; actual benchmark premiums. Identify policies covering only this return&apos;s family in other months from their actual enrollment records. Marriage, divorce, overlapping policies and self-employed health coordination require their separate methods.</p>
+    <p className="guided-hint">For two tax families with advance credits, enter the actual agreement or original enrollment facts when there is no agreement. If no advance credit was paid, use both families&apos; actual benchmark premiums. Identify policies covering only this return&apos;s family from their actual enrollment records. Overlapping unshared policies need the coverage-group sources below. Overlapping no-advance allocations, marriage, divorce and self-employed health coordination require their separate methods.</p>
     <button type="button" onClick={() => perform(() => onChange({ sharedPolicyAllocations: captureSharedPolicySources(data, personal, filingStatus) }))}>Copy original policies and household</button>
     <p className="guided-hint">Copy again after replacing an original policy or changing the return household. Copying clears the previous agreement answers.</p>
     {error && <p role="alert">{error}</p>}
@@ -94,6 +95,9 @@ export function SharedPolicySourceDetails({ data, personal, filingStatus, taxYea
           </> : !unshared && policy.situation !== "no_advance_credit" && policy.agreementConfirmed === false && <p className="guided-hint">Use the covered-person order on the copied original. The enrolling taxpayer is the person who expected to claim these people when enrolling them. The default share uses their actual coverage months and tax-family assignments; the enrolling taxpayer keeps the remaining share.</p>}
         </fieldset>;
       })}
+      {(packet.overlappingCoverage || packet.policies.filter(policy => policy.situation === "not_shared").length > 1) && <OverlappingBenchmarkSourceDetails packet={packet}
+        onCapture={() => perform(() => onChange({ sharedPolicyAllocations: { ...packet, overlappingCoverage: captureOverlappingBenchmarkSources(packet) } }))}
+        onChange={overlappingCoverage => onChange({ sharedPolicyAllocations: { ...packet, overlappingCoverage } })} onError={perform} />}
       <BooleanFact label="Allocation sources checked after the last edit" value={packet.sourceFactsConfirmed} onChange={sourceFactsConfirmed => onChange({ sharedPolicyAllocations: { ...packet, sourceFactsConfirmed } })} />
       <button type="button" onClick={() => perform(() => onChange({ monthlyReconciliation: deriveSharedPolicyMonths(data, taxYear, filingStatus, personal) }))}>{packet.policies.some(policy => policy.agreementConfirmed === false || policy.situation === "no_advance_credit" || policy.situation === "not_shared") ? "Calculate household amounts from allocation" : "Calculate household amounts from agreement"}</button>
       <p className="guided-hint">After calculation, check the household monthly amounts and confirm the sources below. Each month's coverage eligibility remains your separate source answer.</p>

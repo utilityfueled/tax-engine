@@ -8,6 +8,16 @@ export interface SharedPolicyAllocationData {
   sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null; allSharedPoliciesIncluded: boolean | null;
   primaryName: string; primarySsn: string; spouseName?: string; spouseSsn?: string;
   policies: SharedPolicyAgreementData[];
+  overlappingCoverage?: OverlappingBenchmarkData;
+}
+export interface OverlappingBenchmarkGroupData {
+  sourceId: string; sourceReference: string; ratingArea: string; slcsp: string;
+  allUnsharedCoverageFamilyMembersIncludedConfirmed: boolean | null; allCoveredPeopleShareRatingAreaConfirmed: boolean | null;
+  policySourceIds: string[]; coveredIndividualSsns: string[];
+}
+export interface OverlappingBenchmarkData {
+  sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null; allBenchmarkMonthsIncluded: boolean | null;
+  months: { month: string; groups: OverlappingBenchmarkGroupData[] }[];
 }
 export interface SharedPolicyAgreementData {
   sourceId: string; original?: MarketplacePolicyData; otherTaxpayerName: string; otherTaxpayerSsn: string;
@@ -28,8 +38,35 @@ export interface NoAdvanceBenchmarkData {
     thisReturnCoveredIndividualSsns: string[]; otherReturnCoveredIndividualSsns: string[] }[];
 }
 export function invalidateSharedPolicySources(packet: SharedPolicyAllocationData): SharedPolicyAllocationData {
-  return { ...packet, sourceFactsConfirmed: null, policies: packet.policies.map(policy => ({ ...policy,
+  return { ...packet, sourceFactsConfirmed: null,
+    ...(packet.overlappingCoverage ? { overlappingCoverage: { ...packet.overlappingCoverage, sourceFactsConfirmed: null } } : {}), policies: packet.policies.map(policy => ({ ...policy,
     ...(policy.noAdvanceAllocation ? { noAdvanceAllocation: { ...policy.noAdvanceAllocation, sourceFactsConfirmed: null } } : {}) })) };
+}
+/** Copies actual overlapping months only; locations, groups and money stay unknown. */
+export function captureOverlappingBenchmarkSources(packet: SharedPolicyAllocationData): OverlappingBenchmarkData {
+  const year = whole(packet.sourceTaxYear, "overlapping benchmark source year"), counts = new Map<number, number>();
+  for (const policy of packet.policies.filter(row => row.situation === "not_shared")) {
+    if (!policy.original) throw new Error("Copy the actual original unshared policies first.");
+    for (const row of normalizeMarketplacePolicy(policy.original, year, true).monthlyPremiums) counts.set(row.month, (counts.get(row.month) ?? 0) + 1);
+  }
+  const months = [...counts.entries()].filter(([, count]) => count > 1).sort(([a], [b]) => a - b).map(([month]) => ({ month: String(month), groups: [] }));
+  if (!months.length) throw new Error("There are no overlapping unshared source months to group.");
+  return { sourceTaxYear: packet.sourceTaxYear, sourceReference: "", sourceFactsConfirmed: null, allBenchmarkMonthsIncluded: null, months };
+}
+/** Explicit group selection copies the selected originals' active people, never a benchmark. */
+export function copyBenchmarkGroupPeople(packet: SharedPolicyAllocationData, actualMonth: string, policyIds: string[]): string[] {
+  const m = whole(actualMonth, "benchmark group month"), year = whole(packet.sourceTaxYear, "benchmark source year"), people = new Map<string, string>();
+  if (m < 1 || m > 12 || new Set(policyIds).size !== policyIds.length) throw new Error("Select each actual original policy once for a valid source month.");
+  for (const id of policyIds) {
+    const policy = packet.policies.find(row => row.sourceId === id);
+    if (policy?.situation !== "not_shared" || !policy.original) throw new Error("Select an actual unshared original policy for this group.");
+    const original = normalizeMarketplacePolicy(policy.original, year, true);
+    if (!original.monthlyPremiums.some(row => row.month === m)) throw new Error("The selected original policy has no coverage source for this month.");
+    for (const person of original.coveredIndividuals ?? []) if (person.firstMonth! <= m && person.lastMonth! >= m) {
+      const value = identity(person.ssn, "actual covered-person SSN"); people.set(value.replaceAll("-", ""), value);
+    }
+  }
+  return [...people.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, value]) => value);
 }
 function originalSlcsp(row: MarketplacePolicyData["monthlyPremiums"][number]): string | null {
   if (row.slcspReportedBlank === true) {
@@ -128,6 +165,12 @@ export function resolveGuidedSharedPolicy(data: PremiumTaxCreditData, taxYear: n
   const policies = data.policies.map(policy => normalizeMarketplacePolicy(policy, taxYear, true));
   const sharedPolicyAllocations = {
     ...packet, sourceTaxYear: whole(packet.sourceTaxYear, "allocation source year"), sourceFactsConfirmed: packet.sourceFactsConfirmed ?? undefined, allSharedPoliciesIncluded: packet.allSharedPoliciesIncluded ?? undefined,
+    overlappingCoverage: packet.overlappingCoverage ? { ...packet.overlappingCoverage,
+      sourceTaxYear: whole(packet.overlappingCoverage.sourceTaxYear, "overlapping benchmark source year"), sourceFactsConfirmed: packet.overlappingCoverage.sourceFactsConfirmed ?? undefined,
+      allBenchmarkMonthsIncluded: packet.overlappingCoverage.allBenchmarkMonthsIncluded ?? undefined,
+      months: packet.overlappingCoverage.months.map(row => ({ month: whole(row.month, "overlapping benchmark month"), groups: row.groups.map(group => ({ ...group,
+        slcsp: money(group.slcsp, "applicable group benchmark"), allUnsharedCoverageFamilyMembersIncludedConfirmed: group.allUnsharedCoverageFamilyMembersIncludedConfirmed ?? undefined,
+        allCoveredPeopleShareRatingAreaConfirmed: group.allCoveredPeopleShareRatingAreaConfirmed ?? undefined })) })) } : undefined,
     policies: packet.policies.map(policy => ({ ...policy, original: policy.original ? normalizeMarketplacePolicy(policy.original, taxYear, true) : undefined,
       situation: policy.situation || undefined, noCurrentYearMarriageOrDivorceConfirmed: policy.noCurrentYearMarriageOrDivorceConfirmed ?? undefined,
       twoTaxFamiliesConfirmed: policy.twoTaxFamiliesConfirmed ?? undefined, allCoveredPeopleAssignedConfirmed: policy.allCoveredPeopleAssignedConfirmed ?? undefined,
@@ -156,8 +199,8 @@ export function deriveSharedPolicyMonths(data: PremiumTaxCreditData, taxYear: nu
   const result = resolveGuidedSharedPolicy(data, taxYear, filingStatus, personal);
   const existingMonths = data.monthlyReconciliation.map(row => whole(row.month, "household coverage month"));
   if (new Set(existingMonths).size !== existingMonths.length) throw new Error("Reconcile duplicate household coverage months before deriving allocations.");
-  if (existingMonths.some(month => !result.allocation.months.some(row => row.month === month))) throw new Error("Reconcile household coverage months without an actual original source before deriving allocations.");
-  return result.allocation.months.map(row => {
+  if (existingMonths.some(month => !result.allocation.householdMonths.some(row => row.month === month))) throw new Error("Reconcile household coverage months without an actual original source before deriving allocations.");
+  return result.allocation.householdMonths.map(row => {
     const previous = data.monthlyReconciliation.find(entry => Number(entry.month) === row.month);
     return { ...previous, month: String(row.month), enrolleePremium: row.premium.toFixed(), slcsp: row.slcsp.toFixed(), advancePremiumTaxCredit: row.advance.toFixed(),
       coverageEligible: previous?.coverageEligible ?? null, incomeBasedSepEnrollment: previous?.incomeBasedSepEnrollment ?? null };

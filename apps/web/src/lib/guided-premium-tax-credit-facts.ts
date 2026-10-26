@@ -101,12 +101,12 @@ export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefin
   }
   if (shared) {
     sourceMonths.clear();
-    for (const row of shared.allocation.months) sourceMonths.set(row.month, { premium: row.premium, advance: row.advance });
+    for (const row of shared.allocation.householdMonths) sourceMonths.set(row.month, { premium: row.premium, advance: row.advance });
   }
   const reconciliation = data.monthlyReconciliation?.map(row => {
     const actual = month(row, "household coverage"); const source = sourceMonths.get(actual.month);
     if (!source) throw new Error("The household month has no actual original statement.");
-    const allocated = shared?.allocation.months.find(entry => entry.month === actual.month);
+    const allocated = shared?.allocation.householdMonths.find(entry => entry.month === actual.month);
     if (allocated && (!allocated.premium.eq(actual.enrolleePremium) || !allocated.slcsp.eq(actual.slcsp) || !allocated.advance.eq(actual.advancePremiumTaxCredit))) throw new Error("Reconcile shared household amounts to the actual original sources and allocation.");
     if (!source.advance.eq(actual.advancePremiumTaxCredit)) throw new Error("Reconcile household advance credit to the exact original monthly total.");
     if (new Decimal(actual.enrolleePremium).gt(source.premium)) throw new Error("Eligible enrollment premium cannot exceed the original monthly premiums.");
