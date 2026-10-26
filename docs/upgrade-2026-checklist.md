@@ -7,6 +7,60 @@ complete a checkbox.
 
 ## Current integration — 2026-10-26
 
+The branch is pushed through `603fc1b`. Rule provenance is `2025.141` /
+`2026.138-law-integration-draft`; the regenerated inventory has 513 entries and
+5,455 test references. All readiness gates remain unchanged.
+
+Five further packages complete the ordinary source methods below. Their ledgers
+retain the original failing cases, immutable snapshots, separate reviews and
+saved artifact checks. These follow the eight packages recorded under b0de955.
+
+| Delivered package | Commit | Exact bounded verification |
+| --- | --- | --- |
+| Distinct original prepaid QTP sources with one ordinary ESA | `c6df682` | Wider 889/69; final 504/9 including readiness; separate review 10/6 with four private controls; two browser passes; 19 PDFs, 64 pages and eight literal fields. |
+| One original prior charitable category/vintage with regular and AMT NOL | `405d914` | Wider 1,086/97; final 497/11; separate review 17/7 with five private controls; 39 PDFs, 83 pages and 227 literal fields. Actual regular QBI stays unchanged in the AMT replay. |
+| Separate actual health plans and taxpayer owners | `9eafb45` | Wider 767/62; final 533/10; separate review 13/7 with four private controls; nine PDFs, 35 pages and twelve literal fields. |
+| Multiple original QTP and ESA accounts sharing actual tuition | `74bf948` | Wider 898/74; final 510/10; separate review 12/6 with five private controls; two browser passes; 19 PDFs, 67 pages and eight literal fields. Each original ratio and actual allocation remains separate. |
+| Current Form 8862 sources, eligibility, interview and physical review | `603fc1b` | Integration 1,646/154 plus 24 readiness cases; final main 521/7; root/contracts/web types, spec, inventory, both builds and lint pass. Separate core review 19/3 and follow-through review 39/5; four PDFs, fourteen pages and 36 literal fields. Fourteen EIC browser cases and two rebased downloads pass with zero retries. |
+
+All listed saved pages were rendered and inspected. The Form8862 browser found
+and corrected the born/deceased-child review-checkbox mismatch before delivery.
+Its later PDF assertion normalizes spacing only within the official three-cell
+comb field, retaining the exact row count and value. No deadline, coverage,
+privacy or readiness threshold was relaxed. Separate agent reviews do not count
+as qualified human tax review.
+
+A fresh full run is active on immutable `603fc1b` (tree `22f2f6b6`), using 3,155
+tracked source hashes, synthetic local PostgreSQL and an owned loopback browser
+server. Types, specs, inventory, both builds and lint have passed; full unit,
+coverage and browser results are pending. Evidence is under
+`.local/upgrade-evidence/603fc1b-complete`. The last completed full run remains
+`d898091`: 18,843 tests/1,125 files, branches 86.84%, functions 90.77%, and
+402 browser passes with five hosted-only skips. It excludes the thirteen later
+source packages and cannot establish their integrated coverage.
+
+The October26 production package audit reports zero advisories across 425
+production dependencies on603fc1b. Current603fc1b remote CI/Web were observed
+in progress; the preceding74bf948,9eafb45 and405d914 runs were cancelled by
+later pushes. Neither a completed current remote result nor a new image scan is
+claimed. Final-source images, recovery and advisory acceptance remain due.
+
+Active internal work is partial-coverage-family health sources and the remaining
+ordinary payment/marriage methods; actual deceased-claimant short-year residence;
+original K1/crypto charitable NOL sources, crypto donation intake, current-loss
+origin and remaining determined charitable floor methods; and the remaining
+bounded education methods. Support/inventory mapping, final checks, images and
+recovery follow. Missing controlling interpretations remain explicit questions,
+not guessed allocations or completed features.
+
+The goal is active and the upgrade is **not release-ready**. Qualified human
+reviews, provider account access and approved budget, authorized staging,
+launch-state demand, final forms and advisory acceptance remain unresolved.
+Public upgrade-branch pushes are approved. Production deployment, filing and
+model promotion remain disabled/unauthorized.
+
+## Previous checkpoint throughb0de955
+
 The branch is pushed through `b0de955`. Rule provenance is `2025.136` /
 `2026.133-law-integration-draft`; the regenerated inventory has 503 entries and
 5,389 test references. All readiness gates remain unchanged.

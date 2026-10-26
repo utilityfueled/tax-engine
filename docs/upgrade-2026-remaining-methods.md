@@ -221,3 +221,22 @@ remote CI/Web were observed in progress, not completed. Final integrated checks,
 images, scans, recovery, support reconciliation and external qualification
 remain required. Every delivered package and exact evidence is recorded in the
 current checklist and checkpoint; no blocked method is counted as implementation.
+
+## Follow-through through603fc1b — October26
+
+The ordinary separate-health-plan/multiple-owner group is delivered in9eafb45.
+Current Form8862 actual sources, canonical eligibility, guide and physical review
+are delivered in603fc1b. One prior original charitable category/vintage with
+independent regular/AMT NOL histories is405d914. Distinct prepaid QTP sources
+with one ESA arec6df682; multiple ordinary ESA accounts sharing original tuition
+are74bf948. These close the corresponding earlier queue items, including their
+actual saved review paths; their package ledgers retain bounded evidence.
+
+The remaining finite queue is actual partial-coverage-family health and ordinary
+payment/marriage sources; deceased-claimant short-year residence; current K1 and
+crypto charitable NOL sources, crypto donation intake, current-loss-origin charity
+and determined floor/current-prior methods; and the explicitly remaining partial
+cash/category education methods. Named interpretation questions are not replaced
+with arbitrary allocations. Support/inventory mapping and final checks, native
+images, recovery and external qualification remain due. The603fc1b immutable full
+run is active; its results must not be inferred from the earlier d898091 pass.

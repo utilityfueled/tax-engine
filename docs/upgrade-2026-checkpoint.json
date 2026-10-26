@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
+    "lastRecordedCommit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1310,8 +1310,8 @@
       "hosted staging",
       "final multi-platform release images"
     ],
-    "workInProgress": "Complete ordinary independent health plans and multiple specified-owner source groups; other payment and marriage combinations remain named methods. Binding joint 2025 repayment attribution still needs controlling interpretation. Complete actual current Form8862 sources, canonical eligibility, guided collection and original-source review/output. Actual disallowance history and its canonical/guided restrictions are delivered in b41f628. Complete single-prior-vintage regular/AMT charitable NOL replay and its actual collector/review; resolve named mixed attribution, prior-floor and partial B source methods without invented allocation. Complete distinct actual prepaid QTP statements sharing one ordinary ESA and other bounded education source groups. Multiple expenses under one QTP/ESA are delivered in b0de955; qualified mixed-owner bond and broader code6 interpretations remain unresolved. Run all final integrated checks and complete remote workflows after later source deliveries. Exact d898091 passes every required local check and unchanged coverage gates, but excludes eight later source packages. Rehearse final-source native images, SBOMs/scans and full recovery; reconcile support and source evidence. Human qualification, live-provider evaluation, authorized staging and final forms remain external requirements.",
-    "latestIntegratedCommit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
+    "workInProgress": "Complete actual partial-coverage-family health premiums and ordinary outside-payer/payment/marriage combinations. Separate actual plans and multiple owners are delivered in9eafb45. Binding joint2025 repayment attribution needs controlling interpretation. Complete actual deceased-claimant numeric short-year residence using each original taxpayer period. Current Form8862 sources, canonical eligibility, interview and review are delivered in603fc1b. Complete actual K1/crypto charitable NOL sources and missing crypto donation guide, current-loss-origin charity and other determined floor/current-prior methods. One prior category/vintage regular-AMT replay is delivered in405d914. Mixed attribution and partial B remain exact source-method questions. Reconcile remaining bounded partial-cash/category education methods against the completed ordinary account-group route. Distinct QTP and multiple ordinary ESA sources sharing actual tuition are delivered inc6df682 and74bf948. Mixed-owner bond and broader code6 interpretations remain unresolved. Finish the immutable603fc1b full check, later final integrated/remote workflows and support/inventory implementation mapping. Last completed d898091 excludes thirteen later source packages. Rehearse final-source native images, SBOMs/scans and full recovery; reconcile artifacts and support evidence. Qualified human review, live-provider qualification, authorized staging, final forms and advisory acceptance remain external requirements.",
+    "latestIntegratedCommit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
     "activeIntegrationRun": {
       "status": "d898091-complete-passed-later-integrated-full-run-due",
       "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
@@ -1657,12 +1657,12 @@
       "scope": "Exact immutable d898091 local synthetic source only; all later source packages excluded. Five hosted browser skips are not staging evidence."
     },
     "remainingInternalWork": [
-      "Complete ordinary independent health plans and multiple specified-owner source groups; other payment and marriage combinations remain named methods. Binding joint 2025 repayment attribution still needs controlling interpretation.",
-      "Complete actual current Form8862 sources, canonical eligibility, guided collection and original-source review/output. Actual disallowance history and its canonical/guided restrictions are delivered in b41f628.",
-      "Complete single-prior-vintage regular/AMT charitable NOL replay and its actual collector/review; resolve named mixed attribution, prior-floor and partial B source methods without invented allocation.",
-      "Complete distinct actual prepaid QTP statements sharing one ordinary ESA and other bounded education source groups. Multiple expenses under one QTP/ESA are delivered in b0de955; qualified mixed-owner bond and broader code6 interpretations remain unresolved.",
-      "Run all final integrated checks and complete remote workflows after later source deliveries. Exact d898091 passes every required local check and unchanged coverage gates, but excludes eight later source packages.",
-      "Rehearse final-source native images, SBOMs/scans and full recovery; reconcile support and source evidence. Human qualification, live-provider evaluation, authorized staging and final forms remain external requirements."
+      "Complete actual partial-coverage-family health premiums and ordinary outside-payer/payment/marriage combinations. Separate actual plans and multiple owners are delivered in9eafb45. Binding joint2025 repayment attribution needs controlling interpretation.",
+      "Complete actual deceased-claimant numeric short-year residence using each original taxpayer period. Current Form8862 sources, canonical eligibility, interview and review are delivered in603fc1b.",
+      "Complete actual K1/crypto charitable NOL sources and missing crypto donation guide, current-loss-origin charity and other determined floor/current-prior methods. One prior category/vintage regular-AMT replay is delivered in405d914. Mixed attribution and partial B remain exact source-method questions.",
+      "Reconcile remaining bounded partial-cash/category education methods against the completed ordinary account-group route. Distinct QTP and multiple ordinary ESA sources sharing actual tuition are delivered inc6df682 and74bf948. Mixed-owner bond and broader code6 interpretations remain unresolved.",
+      "Finish the immutable603fc1b full check, later final integrated/remote workflows and support/inventory implementation mapping. Last completed d898091 excludes thirteen later source packages.",
+      "Rehearse final-source native images, SBOMs/scans and full recovery; reconcile artifacts and support evidence. Qualified human review, live-provider qualification, authorized staging, final forms and advisory acceptance remain external requirements."
     ],
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
@@ -1684,7 +1684,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
+    "lastPushedCommit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
     "currentBrowserRun": {
       "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
       "tree": "23f7a5fe620edbdb43f13b35fbb315fb660a8a89",
@@ -1786,20 +1786,20 @@
       },
       "currentRuns": [
         {
-          "commit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
+          "commit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
           "workflow": "CI",
           "status": "in_progress",
           "conclusion": "",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40319667573",
-          "createdAt": "2026-10-26T12:03:48Z"
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40330381094",
+          "createdAt": "2026-10-26T13:25:05Z"
         },
         {
-          "commit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
+          "commit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
           "workflow": "Web",
           "status": "in_progress",
           "conclusion": "",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40319667531",
-          "createdAt": "2026-10-26T12:03:48Z"
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40330381056",
+          "createdAt": "2026-10-26T13:25:05Z"
         }
       ]
     },
@@ -2666,26 +2666,26 @@
       "scope": "Exact immutable d898091 local synthetic source only; all later source packages excluded. Five hosted browser skips are not staging evidence."
     },
     "currentRemoteRuns": {
-      "observedAt": "2026-10-26T12:10:50.991789+00:00",
       "runs": [
         {
-          "commit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
+          "commit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
           "workflow": "CI",
           "status": "in_progress",
           "conclusion": "",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40319667573",
-          "createdAt": "2026-10-26T12:03:48Z"
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40330381094",
+          "createdAt": "2026-10-26T13:25:05Z"
         },
         {
-          "commit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
+          "commit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
           "workflow": "Web",
           "status": "in_progress",
           "conclusion": "",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40319667531",
-          "createdAt": "2026-10-26T12:03:48Z"
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40330381056",
+          "createdAt": "2026-10-26T13:25:05Z"
         }
       ],
-      "boundary": "Current b0de955 CI and Web in progress; 827b399, b41f628 and 15549f8 runs cancelled by subsequent pushes. No completed current remote result is claimed."
+      "boundary": "Current603fc1b CI/Web in progress; preceding74bf948,9eafb45 and405d914 runs cancelled by later pushes. No completed current remote result claimed.",
+      "observedDate": "2026-10-26"
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
@@ -3013,21 +3013,36 @@
         ],
         "multipleExpenseEsa": [
           "b0de9550e52b93e2f829dd2f9df6982dcaadc70e"
+        ],
+        "distinctQtpEsa": [
+          "c6df6827ff0f591e4e91e6eb6f79343a936c61d8"
+        ],
+        "priorCharitableNol": [
+          "405d9141508702a0c53a998c54a5d8d4c7668dbd"
+        ],
+        "separateOwnerHealth": [
+          "9eafb45743471ab0658c7f03f85b3fc0092be660"
+        ],
+        "tuitionAccountGroup": [
+          "74bf9481c5577a03ed10b06d812838fee57a38f6"
+        ],
+        "currentForm8862": [
+          "603fc1bbf48d18d1682f775eeea6752f394808d2"
         ]
       },
       "owners": {
         "marketplaceMethodsAndIntake": "federal_law",
         "charitableSourceMethods": "ai_billing",
         "eicHistoryAndCurrent8862": "complete_facts",
-        "educationAndFinalIntegration": "parent"
+        "educationAndFinalIntegration": "parent; also actual crypto donation guided intake"
       },
       "subsequent": [
-        "Complete ordinary independent health plans and multiple specified-owner source groups; other payment and marriage combinations remain named methods. Binding joint 2025 repayment attribution still needs controlling interpretation.",
-        "Complete actual current Form8862 sources, canonical eligibility, guided collection and original-source review/output. Actual disallowance history and its canonical/guided restrictions are delivered in b41f628.",
-        "Complete single-prior-vintage regular/AMT charitable NOL replay and its actual collector/review; resolve named mixed attribution, prior-floor and partial B source methods without invented allocation.",
-        "Complete distinct actual prepaid QTP statements sharing one ordinary ESA and other bounded education source groups. Multiple expenses under one QTP/ESA are delivered in b0de955; qualified mixed-owner bond and broader code6 interpretations remain unresolved.",
-        "Run all final integrated checks and complete remote workflows after later source deliveries. Exact d898091 passes every required local check and unchanged coverage gates, but excludes eight later source packages.",
-        "Rehearse final-source native images, SBOMs/scans and full recovery; reconcile support and source evidence. Human qualification, live-provider evaluation, authorized staging and final forms remain external requirements."
+        "Complete actual partial-coverage-family health premiums and ordinary outside-payer/payment/marriage combinations. Separate actual plans and multiple owners are delivered in9eafb45. Binding joint2025 repayment attribution needs controlling interpretation.",
+        "Complete actual deceased-claimant numeric short-year residence using each original taxpayer period. Current Form8862 sources, canonical eligibility, interview and review are delivered in603fc1b.",
+        "Complete actual K1/crypto charitable NOL sources and missing crypto donation guide, current-loss-origin charity and other determined floor/current-prior methods. One prior category/vintage regular-AMT replay is delivered in405d914. Mixed attribution and partial B remain exact source-method questions.",
+        "Reconcile remaining bounded partial-cash/category education methods against the completed ordinary account-group route. Distinct QTP and multiple ordinary ESA sources sharing actual tuition are delivered inc6df682 and74bf948. Mixed-owner bond and broader code6 interpretations remain unresolved.",
+        "Finish the immutable603fc1b full check, later final integrated/remote workflows and support/inventory implementation mapping. Last completed d898091 excludes thirteen later source packages.",
+        "Rehearse final-source native images, SBOMs/scans and full recovery; reconcile artifacts and support evidence. Qualified human review, live-provider qualification, authorized staging, final forms and advisory acceptance remain external requirements."
       ],
       "unsupportedIsComplete": false
     },
@@ -3983,12 +3998,104 @@
         "lintWarnings": 98,
         "lintWarningBoundary": "Primarily non-null assertions in new synthetic fixtures, not all pre-existing",
         "boundary": "Actual multiple expenses with one QTP and one ordinary ESA; independent source ratios and whole-source conservation. Distinct QTP source groups and other named education methods remain separate."
+      },
+      "distinctQtpEsa": {
+        "commit": "c6df6827ff0f591e4e91e6eb6f79343a936c61d8",
+        "ledger": "docs/upgrade-2026-distinct-qtp-esa-work.md",
+        "wideTests": 889,
+        "wideFiles": 69,
+        "integrationTests": 504,
+        "integrationFiles": 9,
+        "independentTests": 10,
+        "independentFiles": 6,
+        "privateControls": 4,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 19,
+        "pdfPages": 64,
+        "literalFields": 8,
+        "tree": "476ae0f583f2300d989a22ee2bc452001f15c011",
+        "reviewKind": "Separate agent review; qualified human review remains outstanding"
+      },
+      "priorCharitableNol": {
+        "commit": "405d9141508702a0c53a998c54a5d8d4c7668dbd",
+        "ledger": "docs/upgrade-2026-charity-prior-nol-work.md",
+        "wideTests": 1086,
+        "wideFiles": 97,
+        "integrationTests": 497,
+        "integrationFiles": 11,
+        "independentTests": 17,
+        "independentFiles": 7,
+        "privateControls": 5,
+        "pdfs": 39,
+        "pdfPages": 83,
+        "literalFields": 227,
+        "boundary": "One actual prior category/medium/vintage with no current gifts; independent regular/AMT histories; actual regular QBI retained",
+        "tree": "41a92a29fb09c46d1e910e60a9dc74a741cff51c",
+        "reviewKind": "Separate agent review; qualified human review remains outstanding"
+      },
+      "separateOwnerHealth": {
+        "commit": "9eafb45743471ab0658c7f03f85b3fc0092be660",
+        "ledger": "docs/upgrade-2026-shared-owner-health-work.md",
+        "wideTests": 767,
+        "wideFiles": 62,
+        "integrationTests": 533,
+        "integrationFiles": 10,
+        "independentTests": 13,
+        "independentFiles": 7,
+        "privateControls": 4,
+        "pdfs": 9,
+        "pdfPages": 35,
+        "literalFields": 12,
+        "tree": "37a926fd49b587c0f8e84785997dea912305bcf7",
+        "reviewKind": "Separate agent review; qualified human review remains outstanding"
+      },
+      "tuitionAccountGroup": {
+        "commit": "74bf9481c5577a03ed10b06d812838fee57a38f6",
+        "ledger": "docs/upgrade-2026-tuition-account-group-work.md",
+        "wideTests": 898,
+        "wideFiles": 74,
+        "integrationTests": 510,
+        "integrationFiles": 10,
+        "independentTests": 12,
+        "independentFiles": 6,
+        "privateControls": 5,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 19,
+        "pdfPages": 67,
+        "literalFields": 8,
+        "tree": "99e417b40b1aa36173c67453401eb20db7b358a3",
+        "reviewKind": "Separate agent review; qualified human review remains outstanding"
+      },
+      "currentForm8862": {
+        "commit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
+        "ledger": "docs/upgrade-2026-form8862-followthrough.md",
+        "coreLedger": "docs/upgrade-2026-form8862-work.md",
+        "integrationTests": 1646,
+        "integrationFiles": 154,
+        "readinessTests": 24,
+        "finalMainTests": 521,
+        "finalMainFiles": 7,
+        "independentCoreTests": 19,
+        "independentCoreFiles": 3,
+        "independentFollowthroughTests": 39,
+        "independentFollowthroughFiles": 5,
+        "browserPassed": 14,
+        "rebasedBrowserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 4,
+        "pdfPages": 14,
+        "literalFields": 36,
+        "boundary": "Actual current recertification and positive EIC; deceased-claimant short-year period remains private software work; no final2026 or filing qualification",
+        "tree": "22f2f6b67909b9acf2bc104b2178fe73cfbd7385",
+        "reviewKind": "Separate agent review; qualified human review remains outstanding"
       }
     },
     "currentInventory": {
-      "entries": 503,
-      "specReferences": 5389,
-      "sourceCommit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
+      "entries": 513,
+      "specReferences": 5455,
+      "sourceCommit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
       "path": "spec/coverage/inventory-2025.json",
       "qualification": "Traceability only; no readiness or human review promotion"
     },
@@ -4077,8 +4184,8 @@
     },
     "currentReviewCandidates": {},
     "currentRuleVersions": {
-      "2025": "2025.136",
-      "2026": "2026.133-law-integration-draft"
+      "2025": "2025.141",
+      "2026": "2026.138-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -4302,10 +4409,9 @@
       "noThresholdOrExclusionChanges": true
     },
     "currentProductionPackageAudit": {
-      "sourceCommit": "994d92d5ed541380ec53e28f53863bfd59bf4038",
-      "command": "pnpm audit --prod --json",
-      "evidence": ".local/upgrade-evidence/audit-994d92d-live.json",
-      "sha256": "10f2fe9c5229d79b203106ac14f1f8a6ce8a1d15e774554c48f84d14a04a94f9",
+      "sourceCommit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
+      "retrievedAt": "2026-10-26T13:28:24.934690+00:00",
+      "exitCode": 0,
       "metadata": {
         "vulnerabilities": {
           "info": 0,
@@ -4319,6 +4425,9 @@
         "optionalDependencies": 0,
         "totalDependencies": 425
       },
+      "evidence": ".local/upgrade-evidence/audit-603fc1b-live.json",
+      "sha256": "10f2fe9c5229d79b203106ac14f1f8a6ce8a1d15e774554c48f84d14a04a94f9",
+      "command": "pnpm audit --prod --json",
       "limitation": "Production JS dependencies only; no current OS image or deployed reachability assessment"
     },
     "previousUnitRun76e3538": {
@@ -5112,6 +5221,98 @@
         "lintWarnings": 98,
         "lintWarningBoundary": "Primarily non-null assertions in new synthetic fixtures, not all pre-existing",
         "boundary": "Actual multiple expenses with one QTP and one ordinary ESA; independent source ratios and whole-source conservation. Distinct QTP source groups and other named education methods remain separate."
+      },
+      "distinctQtpEsa": {
+        "commit": "c6df6827ff0f591e4e91e6eb6f79343a936c61d8",
+        "ledger": "docs/upgrade-2026-distinct-qtp-esa-work.md",
+        "wideTests": 889,
+        "wideFiles": 69,
+        "integrationTests": 504,
+        "integrationFiles": 9,
+        "independentTests": 10,
+        "independentFiles": 6,
+        "privateControls": 4,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 19,
+        "pdfPages": 64,
+        "literalFields": 8,
+        "tree": "476ae0f583f2300d989a22ee2bc452001f15c011",
+        "reviewKind": "Separate agent review; qualified human review remains outstanding"
+      },
+      "priorCharitableNol": {
+        "commit": "405d9141508702a0c53a998c54a5d8d4c7668dbd",
+        "ledger": "docs/upgrade-2026-charity-prior-nol-work.md",
+        "wideTests": 1086,
+        "wideFiles": 97,
+        "integrationTests": 497,
+        "integrationFiles": 11,
+        "independentTests": 17,
+        "independentFiles": 7,
+        "privateControls": 5,
+        "pdfs": 39,
+        "pdfPages": 83,
+        "literalFields": 227,
+        "boundary": "One actual prior category/medium/vintage with no current gifts; independent regular/AMT histories; actual regular QBI retained",
+        "tree": "41a92a29fb09c46d1e910e60a9dc74a741cff51c",
+        "reviewKind": "Separate agent review; qualified human review remains outstanding"
+      },
+      "separateOwnerHealth": {
+        "commit": "9eafb45743471ab0658c7f03f85b3fc0092be660",
+        "ledger": "docs/upgrade-2026-shared-owner-health-work.md",
+        "wideTests": 767,
+        "wideFiles": 62,
+        "integrationTests": 533,
+        "integrationFiles": 10,
+        "independentTests": 13,
+        "independentFiles": 7,
+        "privateControls": 4,
+        "pdfs": 9,
+        "pdfPages": 35,
+        "literalFields": 12,
+        "tree": "37a926fd49b587c0f8e84785997dea912305bcf7",
+        "reviewKind": "Separate agent review; qualified human review remains outstanding"
+      },
+      "tuitionAccountGroup": {
+        "commit": "74bf9481c5577a03ed10b06d812838fee57a38f6",
+        "ledger": "docs/upgrade-2026-tuition-account-group-work.md",
+        "wideTests": 898,
+        "wideFiles": 74,
+        "integrationTests": 510,
+        "integrationFiles": 10,
+        "independentTests": 12,
+        "independentFiles": 6,
+        "privateControls": 5,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 19,
+        "pdfPages": 67,
+        "literalFields": 8,
+        "tree": "99e417b40b1aa36173c67453401eb20db7b358a3",
+        "reviewKind": "Separate agent review; qualified human review remains outstanding"
+      },
+      "currentForm8862": {
+        "commit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
+        "ledger": "docs/upgrade-2026-form8862-followthrough.md",
+        "coreLedger": "docs/upgrade-2026-form8862-work.md",
+        "integrationTests": 1646,
+        "integrationFiles": 154,
+        "readinessTests": 24,
+        "finalMainTests": 521,
+        "finalMainFiles": 7,
+        "independentCoreTests": 19,
+        "independentCoreFiles": 3,
+        "independentFollowthroughTests": 39,
+        "independentFollowthroughFiles": 5,
+        "browserPassed": 14,
+        "rebasedBrowserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 4,
+        "pdfPages": 14,
+        "literalFields": 36,
+        "boundary": "Actual current recertification and positive EIC; deceased-claimant short-year period remains private software work; no final2026 or filing qualification",
+        "tree": "22f2f6b67909b9acf2bc104b2178fe73cfbd7385",
+        "reviewKind": "Separate agent review; qualified human review remains outstanding"
       }
     },
     "latestPassingCandidateCoverage": {
@@ -5468,8 +5669,52 @@
           }
         ],
         "boundary": "Current374e117 CI and Web in progress; previous heads cancelled by subsequent pushes. No completed current remote claim."
+      },
+      {
+        "observedAt": "2026-10-26T12:10:50.991789+00:00",
+        "runs": [
+          {
+            "commit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
+            "workflow": "CI",
+            "status": "in_progress",
+            "conclusion": "",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40319667573",
+            "createdAt": "2026-10-26T12:03:48Z"
+          },
+          {
+            "commit": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
+            "workflow": "Web",
+            "status": "in_progress",
+            "conclusion": "",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40319667531",
+            "createdAt": "2026-10-26T12:03:48Z"
+          }
+        ],
+        "boundary": "Current b0de955 CI and Web in progress; 827b399, b41f628 and 15549f8 runs cancelled by subsequent pushes. No completed current remote result is claimed."
       }
-    ]
+    ],
+    "currentFullVerificationInProgress": {
+      "sourceCommit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
+      "tree": "22f2f6b67909b9acf2bc104b2178fe73cfbd7385",
+      "trackedFiles": 3155,
+      "evidence": ".local/upgrade-evidence/603fc1b-complete/verification.json",
+      "passed": [
+        "types",
+        "contract-types",
+        "web-types",
+        "spec",
+        "inventory",
+        "engine-build",
+        "web-build",
+        "lint"
+      ],
+      "pending": [
+        "unit",
+        "coverage",
+        "browser"
+      ],
+      "boundary": "Immutable source with synthetic local PostgreSQL; hosted readiness is not inferred"
+    }
   },
   "historicalReleaseBlockers": {
     "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
