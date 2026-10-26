@@ -119,3 +119,16 @@ separate from the broader2026nonitemized ledger. Parent owns K1 history DOM
 coverage after full9bcf47b coverage failed89.96% functions despite86.97% branches.
 These are active software tasks, not external-review excuses. All final current
 checks, image scans and recovery still follow the finite implementation work.
+
+## Current follow-through at994d92d
+
+The current checklist supersedes earlier work-in-progress labels above. Actual
+investment-only distribution gains and guide (`be0b6be`,`bb731b1`), direct royalty
+properties and guide (`848e1fc`,`bc5c837`), separate-business health ordering
+(`4fcff15`) and corrected ScheduleE physical review (`994d92d`) are delivered.
+The positive federal royalty method does not yet supply actual PA classification
+and expense evidence. Passive distribution coordination and full no-advance
+coverage-family benchmark sources remain active implementation, along with
+coverage interactions and the reproduced pending-upload Enter behavior. The
+remaining charitable, education, EIC and historical health combinations in their
+ledgers remain methods to implement; external interpretations are not invented.

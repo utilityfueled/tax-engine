@@ -194,7 +194,7 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Current-source full and completed remote verification remain required. Immutable67ce5a5 has18265 passing unit cases and all static/build checks, but coverage has one spec-reference timeout. Reviewed21478d6 retains every reference check and deadline while scheduling each source independently; full rerun follows. Earlier817f76f coverage passes unchanged gates only for that exact source.",
+    "Current-source full and completed remote verification remain required. Immutable2011778 passes18725unit cases and static/build checks; coverage fails unchanged90%functions at89.25%, branches86.39%pass85%. Browser391pass/5hostedskip/1strict-locator failure;389a6ee targeted21case repair passes on unchanged2011778 production bundle. Full current reruns remain due.",
     "The 2026 rule pack and finite Marketplace/EIC/charitable source methods remain incomplete; explicit unsupported methods and inactive helpers are not counted as implemented. Full 2026 calculation remains blocked.",
     "Independent human tax review, selected-state demand/qualification and final physical forms are outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net \u00a71202/Form172 interpretations remain unresolved.",
     "AI application/scorer bindings are reviewed;240 draft cases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "61bad8650ccd003eaac9f81107327f789d27e114",
+    "lastRecordedCommit": "994d92d5ed541380ec53e28f53863bfd59bf4038",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1310,36 +1310,42 @@
       "hosted staging",
       "final multi-platform release images"
     ],
-    "workInProgress": "Separate-business health ordering; actual royalty property expenses/intake; source-bound distribution gains/intake; remaining charitable and EIC source methods; current full verification and external qualification.",
-    "latestIntegratedCommit": "61bad8650ccd003eaac9f81107327f789d27e114",
+    "workInProgress": "Implement actual full coverage-family no-advance overlapping Marketplace benchmarks and the remaining named health source combinations; separate-business historical ordering4fcff15 is delivered, binding joint repayment ownership still requires controlling interpretation.; Implement passive single-activity K1 distribution gain/loss coordination, actual guide and physical ordinary/capital reconciliation; investment-only original sources be0b6be and guidebb731b1 are delivered.; Implement actual PA royalty classification/owner/expense sources and guide; federal actual properties848e1fc, guidebc5c837 and physical review994d92d are delivered. Negative properties/other expense histories remain named methods.; Complete meaningful state/payment/setup behavioral coverage and the reproduced pending-upload Enter bug; preserve all thresholds. Then run all exact current-source checks and completed remote workflows.; Complete remaining prior-floor, regular/AMT NOL, partial mixed-media and EIC personal-property/mixed-source methods named in package ledgers; no guard or inactive helper counts as completion.; Finish exact-source native runtime images/SBOM/scans/recovery and support reconciliation; required independent human, live-provider and authorized staging evidence remains external.",
+    "latestIntegratedCommit": "994d92d5ed541380ec53e28f53863bfd59bf4038",
     "activeIntegrationRun": {
-      "sourceCommit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
-      "unit": "passed",
+      "sourceCommit": "2011778674757efee5da2f73e29624c8e36a7099",
+      "unit": "passed18725/1091",
       "static": "passed",
-      "browser": "374 passed; five hosted skips",
-      "coverage": "Exact817f76f passed18189tests/1067files, branches87.14%, functions90.43%; excludes later tax packages.",
+      "coverage": "failed89.25%functions against unchanged90%, branches86.39% against85%",
+      "browser": "391pass5hostedskip1failure; targeted21case locator repair passes",
       "currentHeadVerified": false
     },
     "latestCoverageDiagnostic": {
-      "commit": "817f76f5cde968b8f78ea1ebc698343df0b93600",
-      "tree": "1403c3c0fcb8f6350f09bf74c5754946d8d8c749",
-      "exit": 0,
-      "passed": 18189,
-      "files": 1067,
-      "failed": 0,
-      "skipped": 0,
-      "seconds": 434.3,
-      "statementsPercent": "92.17",
-      "branchesPercent": "87.14",
-      "functionsPercent": "90.43",
-      "linesPercent": "94.77",
-      "branchGatePercent": "85",
-      "functionGatePercent": "90",
-      "thresholdsChanged": false,
-      "localSyntheticPostgres": true,
-      "evidence": ".local/upgrade-evidence/full-coverage-817f76f.log",
-      "sha256": "f785975f25c12001b54417d38509d7eac1b38b29eeed79c39d27f571ba9298dd",
-      "scope": "Exact817f76f only; later source packages excluded."
+      "sourceCommit": "2011778674757efee5da2f73e29624c8e36a7099",
+      "tree": "499eceb5045f3fa60982b3fbdd548209ce2c9c70",
+      "status": "failed-function-coverage-threshold",
+      "id": "coverage",
+      "command": [
+        "pnpm",
+        "test:coverage",
+        "--maxWorkers=1"
+      ],
+      "exitCode": 1,
+      "seconds": 716.97,
+      "evidence": ".local/upgrade-evidence/full-coverage-2011778.log",
+      "sha256": "94142fd0acc7e4d2d0836fb78947599163063082e0b1b07d00a3d7727a98103c",
+      "allTestsPassed": true,
+      "passed": 18725,
+      "files": 1091,
+      "functionsCovered": 9945,
+      "functionsTotal": 11142,
+      "functionsPercent": "89.25",
+      "functionThresholdPercent": "90",
+      "branchesPercent": "86.39",
+      "branchThresholdPercent": "85",
+      "statementsPercent": "91.65",
+      "linesPercent": "94.24",
+      "noThresholdOrExclusionChanges": true
     },
     "recentPackages": {
       "privacyHeaderRedaction": "2d16a94",
@@ -1612,10 +1618,12 @@
       "localSyntheticPostgres": true
     },
     "remainingInternalWork": [
-      "Complete EIC royalty-expense, personal-property rental, mixed earned/passive and disposition source methods. Represented ordinary royalty/passive worksheet is committed with actual Rule3 intake/PDF, capital and child-election components.",
-      "Complete overlapping Marketplace benchmark source groups and historical separate-business health ordering. Disjoint shared/unshared and no-advance allocation are committed. Binding joint2025 repayment ownership still needs a controlling interpretation.",
-      "Complete actual K1 charitable guided intake and excess-distribution gain sources, prior-floor, regular/AMT NOL and partial mixed-media methods. Canonical A/E/F source/basis/nonbinding-risk handoff is committed; its guard does not finish the remaining methods.",
-      "Verify the CI scheduling repair with completed remote runs; run exact current-source unit/coverage/types/spec/inventory/builds/lint/browser, final native images/SBOM/scans/recovery and support reconciliation. Required external qualification remains."
+      "Implement actual full coverage-family no-advance overlapping Marketplace benchmarks and the remaining named health source combinations; separate-business historical ordering4fcff15 is delivered, binding joint repayment ownership still requires controlling interpretation.",
+      "Implement passive single-activity K1 distribution gain/loss coordination, actual guide and physical ordinary/capital reconciliation; investment-only original sources be0b6be and guidebb731b1 are delivered.",
+      "Implement actual PA royalty classification/owner/expense sources and guide; federal actual properties848e1fc, guidebc5c837 and physical review994d92d are delivered. Negative properties/other expense histories remain named methods.",
+      "Complete meaningful state/payment/setup behavioral coverage and the reproduced pending-upload Enter bug; preserve all thresholds. Then run all exact current-source checks and completed remote workflows.",
+      "Complete remaining prior-floor, regular/AMT NOL, partial mixed-media and EIC personal-property/mixed-source methods named in package ledgers; no guard or inactive helper counts as completion.",
+      "Finish exact-source native runtime images/SBOM/scans/recovery and support reconciliation; required independent human, live-provider and authorized staging evidence remains external."
     ],
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
@@ -1637,24 +1645,25 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "61bad8650ccd003eaac9f81107327f789d27e114",
+    "lastPushedCommit": "994d92d5ed541380ec53e28f53863bfd59bf4038",
     "currentBrowserRun": {
-      "commit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
-      "tree": "651098f2b79840dabbd1c39240398c743284d34c",
-      "exit": 0,
-      "passed": 374,
+      "commit": "2011778674757efee5da2f73e29624c8e36a7099",
+      "tree": "499eceb5045f3fa60982b3fbdd548209ce2c9c70",
+      "scope": "Local production bundle, synthetic data, no live-provider or hosted staging qualification",
+      "command": "pnpm test:web --retries=0 --workers=2",
+      "exitCode": 1,
+      "seconds": 634.09,
+      "evidence": ".local/upgrade-evidence/full-browser-2011778.log",
+      "sha256": "dd16ebe1570697ad6b2f1484140cdef56f1d1fde65c7b3cc1413f044ac047d9c",
+      "passed": 391,
+      "failed": 1,
       "skipped": 5,
-      "failed": 0,
       "retries": 0,
       "workers": 2,
-      "minutes": 10.1,
-      "evidence": {
-        "path": ".local/upgrade-evidence/full-browser-76e3538-final.log",
-        "sha256": "9d09e80a8be805e492d085dcf6b0e68b367786eceb091e431409296f9988e325"
-      },
-      "initialFailure": "Two QSBS download checks used system Python; restarted with documented pinned runner. A sandboxed retry could not launch Chromium and was stopped; separate launch diagnostic confirms macOS Mach-port denial. Final authorized local run passed.",
-      "serverStopped": true,
-      "boundary": "Five hosted-only skips provide no staging evidence."
+      "failure": "Head of Household text locator matched badge and eligibility hint",
+      "repairCommit": "389a6ee442ad18b87fdbcb22d10b924427142eb0",
+      "repairVerification": "21/21 review-completion cases, zero retries, unchanged2011778 production bundle",
+      "boundary": "Five hosted-only skips are not staging evidence; full current-source rerun remains due."
     },
     "currentPackageAudit": {
       "sourceCommit": "6e589290ebf31dba23f73a42e706bd29ae4f87b1",
@@ -2590,36 +2599,192 @@
       "humanSecurityQualification": false
     },
     "currentUnitRun": {
-      "sourceCommit": "67ce5a506742783050fb703f1aa5c34c6b0f5559",
-      "tree": "a9b59986257ea81a432dd752d4c753739d405e32",
+      "sourceCommit": "2011778674757efee5da2f73e29624c8e36a7099",
+      "tree": "499eceb5045f3fa60982b3fbdd548209ce2c9c70",
       "status": "passed",
-      "passed": 18265,
-      "files": 1083,
+      "passed": 18725,
+      "files": 1091,
       "skipped": 0,
       "failed": 0,
-      "seconds": "547.64",
-      "exit": 0,
-      "log": ".local/upgrade-evidence/full-unit-67ce5a5.log",
-      "logSha256": "72dbe6c18d40b41616a2c24518d266eec7da62094b46d78a91e3e6769adca0fe",
-      "scope": "Exact immutable67ce5a5; later overlap, NIIT, test scheduling and guided charity packages excluded"
+      "id": "unit",
+      "command": [
+        "pnpm",
+        "test",
+        "--maxWorkers=1"
+      ],
+      "exitCode": 0,
+      "seconds": 556.67,
+      "evidence": ".local/upgrade-evidence/full-unit-2011778.log",
+      "sha256": "444bfbeb1598c705f4d8e1c34faa81b47cdd04dabb107d109dc68426628e29c2",
+      "scope": "Immutable2011778 only; later source and PDF packages excluded"
     },
     "currentRemoteRuns": {
-      "observedSource": "61bad8650ccd003eaac9f81107327f789d27e114",
+      "observedSource": "994d92d5ed541380ec53e28f53863bfd59bf4038",
       "runs": [
         {
-          "name": "CI",
-          "id": 40286297395,
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40286297395",
-          "status": "in_progress"
+          "conclusion": "",
+          "createdAt": "2026-10-26T08:42:45Z",
+          "databaseId": 40294167064,
+          "headSha": "994d92d5ed541380ec53e28f53863bfd59bf4038",
+          "status": "in_progress",
+          "updatedAt": "2026-10-26T08:43:05Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40294167064",
+          "workflowName": "Web"
         },
         {
-          "name": "Web",
-          "id": 40286297200,
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40286297200",
-          "status": "in_progress"
+          "conclusion": "",
+          "createdAt": "2026-10-26T08:42:45Z",
+          "databaseId": 40294167063,
+          "headSha": "994d92d5ed541380ec53e28f53863bfd59bf4038",
+          "status": "queued",
+          "updatedAt": "2026-10-26T08:43:01Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40294167063",
+          "workflowName": "CI"
         }
       ],
-      "finalResult": "pending;21478d6,14f179a,029a182 were superseded/cancelled by subsequent pushes"
+      "olderRuns": [
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T08:37:56Z",
+          "databaseId": 40293611805,
+          "headSha": "389a6ee442ad18b87fdbcb22d10b924427142eb0",
+          "status": "completed",
+          "updatedAt": "2026-10-26T08:43:02Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40293611805",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T08:37:55Z",
+          "databaseId": 40293610876,
+          "headSha": "389a6ee442ad18b87fdbcb22d10b924427142eb0",
+          "status": "completed",
+          "updatedAt": "2026-10-26T08:43:02Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40293610876",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T08:29:46Z",
+          "databaseId": 40292645482,
+          "headSha": "bb731b12421b887e9ff2ba6d5bbed66677ac207a",
+          "status": "completed",
+          "updatedAt": "2026-10-26T08:38:14Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40292645482",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T08:29:46Z",
+          "databaseId": 40292645652,
+          "headSha": "bb731b12421b887e9ff2ba6d5bbed66677ac207a",
+          "status": "completed",
+          "updatedAt": "2026-10-26T08:38:13Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40292645652",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T08:23:27Z",
+          "databaseId": 40291926886,
+          "headSha": "bc5c837eee5e066ae3787f37554d414c2dc272db",
+          "status": "completed",
+          "updatedAt": "2026-10-26T08:30:02Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40291926886",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T08:23:27Z",
+          "databaseId": 40291927003,
+          "headSha": "bc5c837eee5e066ae3787f37554d414c2dc272db",
+          "status": "completed",
+          "updatedAt": "2026-10-26T08:30:19Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40291927003",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T08:20:30Z",
+          "databaseId": 40291584959,
+          "headSha": "4fcff15bef739ad721acb71a1ae7f9805ebe677f",
+          "status": "completed",
+          "updatedAt": "2026-10-26T08:23:45Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40291584959",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T08:20:30Z",
+          "databaseId": 40291584954,
+          "headSha": "4fcff15bef739ad721acb71a1ae7f9805ebe677f",
+          "status": "completed",
+          "updatedAt": "2026-10-26T08:23:46Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40291584954",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T08:04:36Z",
+          "databaseId": 40289787076,
+          "headSha": "848e1fc66881a8d820adf4954677d3d0cb708fdf",
+          "status": "completed",
+          "updatedAt": "2026-10-26T08:20:48Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40289787076",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T08:04:36Z",
+          "databaseId": 40289786952,
+          "headSha": "848e1fc66881a8d820adf4954677d3d0cb708fdf",
+          "status": "completed",
+          "updatedAt": "2026-10-26T08:20:50Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40289786952",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T07:58:08Z",
+          "databaseId": 40289072324,
+          "headSha": "be0b6be4a58cf54d9af9d56fe980a8a58437d8d4",
+          "status": "completed",
+          "updatedAt": "2026-10-26T08:04:54Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40289072324",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T07:58:07Z",
+          "databaseId": 40289072231,
+          "headSha": "be0b6be4a58cf54d9af9d56fe980a8a58437d8d4",
+          "status": "completed",
+          "updatedAt": "2026-10-26T08:04:53Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40289072231",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T07:41:34Z",
+          "databaseId": 40287343891,
+          "headSha": "2011778674757efee5da2f73e29624c8e36a7099",
+          "status": "completed",
+          "updatedAt": "2026-10-26T07:58:26Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40287343891",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T07:41:34Z",
+          "databaseId": 40287343857,
+          "headSha": "2011778674757efee5da2f73e29624c8e36a7099",
+          "status": "completed",
+          "updatedAt": "2026-10-26T07:58:26Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40287343857",
+          "workflowName": "Web"
+        }
+      ],
+      "finalResult": "pending; prior commits superseded and cancelled by normal pushes"
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
@@ -2878,20 +3043,42 @@
         ],
         "eicScheduleEInvestment": [
           "747e37d71e1630a13dca5d370d5b1b34b4b17cde"
+        ],
+        "investmentDistributionSources": [
+          "be0b6be4a58cf54d9af9d56fe980a8a58437d8d4"
+        ],
+        "investmentDistributionGuide": [
+          "bb731b12421b887e9ff2ba6d5bbed66677ac207a"
+        ],
+        "directRoyaltySources": [
+          "848e1fc66881a8d820adf4954677d3d0cb708fdf"
+        ],
+        "directRoyaltyGuide": [
+          "bc5c837eee5e066ae3787f37554d414c2dc272db"
+        ],
+        "separateBusinessHealth": [
+          "4fcff15bef739ad721acb71a1ae7f9805ebe677f"
+        ],
+        "headOfHouseholdBrowserAssertion": [
+          "389a6ee442ad18b87fdbcb22d10b924427142eb0"
+        ],
+        "scheduleEPhysicalReview": [
+          "994d92d5ed541380ec53e28f53863bfd59bf4038"
         ]
       },
       "owners": {
         "marketplaceMethodsAndIntake": "federal_law",
-        "qbiActualSourceIntegration": "delivered bounded ordinary source/guide/review; exclusions remain explicit",
-        "charityMethods": "ai_billing",
-        "educationMethodsAndFinalIntegration": "parent"
+        "passiveDistributionAndCharity": "ai_billing",
+        "meaningfulPanelCoverage": "complete_facts",
+        "paRoyaltyAndFinalIntegration": "parent"
       },
       "subsequent": [
-        "Complete EIC royalty-expense, personal-property rental, mixed earned/passive and disposition source methods. Represented ordinary royalty/passive worksheet is committed with actual Rule3 intake/PDF, capital and child-election components.",
-        "Complete overlapping Marketplace benchmark source groups and historical separate-business health ordering. Disjoint shared/unshared and no-advance allocation are committed. Binding joint2025 repayment ownership still needs a controlling interpretation.",
-        "Complete actual K1 charitable guided intake and excess-distribution gain sources, prior-floor, regular/AMT NOL and partial mixed-media methods. Canonical A/E/F source/basis/nonbinding-risk handoff is committed; its guard does not finish the remaining methods.",
-        "Verify the CI scheduling repair with completed remote runs; run exact current-source unit/coverage/types/spec/inventory/builds/lint/browser, final native images/SBOM/scans/recovery and support reconciliation. Required external qualification remains.",
-        "Qualified interpretations for reduced mixed tips/bonds and negative-net1202 remain unresolved; no invented allocation or review."
+        "Implement actual full coverage-family no-advance overlapping Marketplace benchmarks and the remaining named health source combinations; separate-business historical ordering4fcff15 is delivered, binding joint repayment ownership still requires controlling interpretation.",
+        "Implement passive single-activity K1 distribution gain/loss coordination, actual guide and physical ordinary/capital reconciliation; investment-only original sources be0b6be and guidebb731b1 are delivered.",
+        "Implement actual PA royalty classification/owner/expense sources and guide; federal actual properties848e1fc, guidebc5c837 and physical review994d92d are delivered. Negative properties/other expense histories remain named methods.",
+        "Complete meaningful state/payment/setup behavioral coverage and the reproduced pending-upload Enter bug; preserve all thresholds. Then run all exact current-source checks and completed remote workflows.",
+        "Complete remaining prior-floor, regular/AMT NOL, partial mixed-media and EIC personal-property/mixed-source methods named in package ledgers; no guard or inactive helper counts as completion.",
+        "Finish exact-source native runtime images/SBOM/scans/recovery and support reconciliation; required independent human, live-provider and authorized staging evidence remains external."
       ],
       "unsupportedIsComplete": false
     },
@@ -3763,9 +3950,9 @@
       }
     },
     "currentInventory": {
-      "entries": 478,
-      "specReferences": 5201,
-      "sourceCommit": "61bad8650ccd003eaac9f81107327f789d27e114",
+      "entries": 485,
+      "specReferences": 5248,
+      "sourceCommit": "994d92d5ed541380ec53e28f53863bfd59bf4038",
       "path": "spec/coverage/inventory-2025.json"
     },
     "previousCoverageDiagnostic": {
@@ -3853,8 +4040,8 @@
     },
     "currentReviewCandidates": {},
     "currentRuleVersions": {
-      "2025": "2025.123",
-      "2026": "2026.120-law-integration-draft"
+      "2025": "2025.126",
+      "2026": "2026.123-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -4051,25 +4238,37 @@
       ]
     },
     "latestFailedCoverageRun": {
-      "sourceCommit": "67ce5a506742783050fb703f1aa5c34c6b0f5559",
-      "tree": "a9b59986257ea81a432dd752d4c753739d405e32",
-      "status": "failed-test-deadline",
-      "passed": 18264,
-      "failed": 1,
-      "files": 1083,
-      "failedFiles": 1,
-      "skipped": 0,
-      "seconds": "812.93",
-      "coverageResultAvailable": false,
-      "perTestDeadlineChanged": false,
-      "failure": "Single monolithic all-spec reference case took5143ms against5000ms; subsequent21478d6 schedules identical checks per source document. Complete fresh coverage remains required.",
-      "evidence": ".local/upgrade-evidence/full-coverage-67ce5a5.log",
-      "sha256": "aa684206902277b85b88ca1db541a4dd4b0379d7d7bfdce0734beb08e14d8c9a"
+      "sourceCommit": "2011778674757efee5da2f73e29624c8e36a7099",
+      "tree": "499eceb5045f3fa60982b3fbdd548209ce2c9c70",
+      "status": "failed-function-coverage-threshold",
+      "id": "coverage",
+      "command": [
+        "pnpm",
+        "test:coverage",
+        "--maxWorkers=1"
+      ],
+      "exitCode": 1,
+      "seconds": 716.97,
+      "evidence": ".local/upgrade-evidence/full-coverage-2011778.log",
+      "sha256": "94142fd0acc7e4d2d0836fb78947599163063082e0b1b07d00a3d7727a98103c",
+      "allTestsPassed": true,
+      "passed": 18725,
+      "files": 1091,
+      "functionsCovered": 9945,
+      "functionsTotal": 11142,
+      "functionsPercent": "89.25",
+      "functionThresholdPercent": "90",
+      "branchesPercent": "86.39",
+      "branchThresholdPercent": "85",
+      "statementsPercent": "91.65",
+      "linesPercent": "94.24",
+      "noThresholdOrExclusionChanges": true
     },
     "currentProductionPackageAudit": {
-      "sourceCommit": "67ce5a506742783050fb703f1aa5c34c6b0f5559",
+      "sourceCommit": "994d92d5ed541380ec53e28f53863bfd59bf4038",
       "command": "pnpm audit --prod --json",
-      "status": "passed",
+      "evidence": ".local/upgrade-evidence/audit-994d92d-live.json",
+      "sha256": "10f2fe9c5229d79b203106ac14f1f8a6ce8a1d15e774554c48f84d14a04a94f9",
       "metadata": {
         "vulnerabilities": {
           "info": 0,
@@ -4083,9 +4282,7 @@
         "optionalDependencies": 0,
         "totalDependencies": 425
       },
-      "evidence": ".local/upgrade-evidence/audit-67ce5a5-live.json",
-      "sha256": "10f2fe9c5229d79b203106ac14f1f8a6ce8a1d15e774554c48f84d14a04a94f9",
-      "scope": "Production dependencies only;425 dependencies, zero advisories. Different scope from prior all-package521-entry audit."
+      "limitation": "Production JS dependencies only; no current OS image or deployed reachability assessment"
     },
     "previousUnitRun76e3538": {
       "commit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
@@ -4132,7 +4329,259 @@
         }
       ],
       "finalResult": false
-    }
+    },
+    "integratedChecks2011778": {
+      "commit": "2011778674757efee5da2f73e29624c8e36a7099",
+      "tree": "499eceb5045f3fa60982b3fbdd548209ce2c9c70",
+      "archive": "/private/tmp/tax-integration-2011778-w5dchyn7",
+      "scope": "Immutable tracked source, synthetic loopback PostgreSQL16.14; no live providers or hosted qualification",
+      "checks": [
+        {
+          "id": "unit",
+          "command": [
+            "pnpm",
+            "test",
+            "--maxWorkers=1"
+          ],
+          "exitCode": 0,
+          "seconds": 556.67,
+          "evidence": ".local/upgrade-evidence/full-unit-2011778.log",
+          "sha256": "444bfbeb1598c705f4d8e1c34faa81b47cdd04dabb107d109dc68426628e29c2"
+        },
+        {
+          "id": "coverage",
+          "command": [
+            "pnpm",
+            "test:coverage",
+            "--maxWorkers=1"
+          ],
+          "exitCode": 1,
+          "seconds": 716.97,
+          "evidence": ".local/upgrade-evidence/full-coverage-2011778.log",
+          "sha256": "94142fd0acc7e4d2d0836fb78947599163063082e0b1b07d00a3d7727a98103c"
+        },
+        {
+          "id": "types",
+          "command": [
+            "pnpm",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "seconds": 3.35,
+          "evidence": ".local/upgrade-evidence/full-types-2011778.log",
+          "sha256": "523024eab83b7ab958445989bdf0c720c0472b21ff4cf221bf1c710e858a5aef"
+        },
+        {
+          "id": "contract-types",
+          "command": [
+            "pnpm",
+            "typecheck:contracts"
+          ],
+          "exitCode": 0,
+          "seconds": 0.52,
+          "evidence": ".local/upgrade-evidence/full-contract-types-2011778.log",
+          "sha256": "ea085e373d881496165a24248568a15ffe274f7ea82317fba6956cf9ffb6ca23"
+        },
+        {
+          "id": "web-types",
+          "command": [
+            "pnpm",
+            "typecheck:web"
+          ],
+          "exitCode": 0,
+          "seconds": 8.71,
+          "evidence": ".local/upgrade-evidence/full-web-types-2011778.log",
+          "sha256": "0e839ffec477488464e22a21556d48a6c07cd2760c98cc45485614cf2aa87ede"
+        },
+        {
+          "id": "spec",
+          "command": [
+            "pnpm",
+            "spec:validate"
+          ],
+          "exitCode": 0,
+          "seconds": 0.65,
+          "evidence": ".local/upgrade-evidence/full-spec-2011778.log",
+          "sha256": "bd7d49c0d527921aac1430b2dec4aa08c82e58679199df0a8f0968a0b0c8c801"
+        },
+        {
+          "id": "inventory",
+          "command": [
+            "pnpm",
+            "spec:inventory:check"
+          ],
+          "exitCode": 0,
+          "seconds": 0.8,
+          "evidence": ".local/upgrade-evidence/full-inventory-2011778.log",
+          "sha256": "27ba72c0a9048a1e66379581e3e3228d7421f08f8dd2753fa8bd2907c3135a93"
+        },
+        {
+          "id": "engine-build",
+          "command": [
+            "pnpm",
+            "build"
+          ],
+          "exitCode": 0,
+          "seconds": 4.18,
+          "evidence": ".local/upgrade-evidence/full-engine-build-2011778.log",
+          "sha256": "a958a12e5cabda21787afe74c064c89d2cdbc2fd6ff6222a20662425bb46ed88"
+        },
+        {
+          "id": "web-build",
+          "command": [
+            "pnpm",
+            "build:web"
+          ],
+          "exitCode": 0,
+          "seconds": 40.98,
+          "evidence": ".local/upgrade-evidence/full-web-build-2011778.log",
+          "sha256": "f7a3b6d912c46b9643cad95ac2c291f1f69a2e28c2d8375bab9aa946c4736470"
+        },
+        {
+          "id": "lint",
+          "command": [
+            "pnpm",
+            "lint"
+          ],
+          "exitCode": 0,
+          "seconds": 9.51,
+          "evidence": ".local/upgrade-evidence/full-lint-2011778.log",
+          "sha256": "ccb69b1932c9a83a06d4ab61c1231c7a6221cc86a37cd0225e9134d64653d34e"
+        }
+      ]
+    },
+    "previousUnitRun67ce5a5": {
+      "sourceCommit": "67ce5a506742783050fb703f1aa5c34c6b0f5559",
+      "tree": "a9b59986257ea81a432dd752d4c753739d405e32",
+      "status": "passed",
+      "passed": 18265,
+      "files": 1083,
+      "skipped": 0,
+      "failed": 0,
+      "seconds": "547.64",
+      "exit": 0,
+      "log": ".local/upgrade-evidence/full-unit-67ce5a5.log",
+      "logSha256": "72dbe6c18d40b41616a2c24518d266eec7da62094b46d78a91e3e6769adca0fe",
+      "scope": "Exact immutable67ce5a5; later overlap, NIIT, test scheduling and guided charity packages excluded"
+    },
+    "previousCoverageDiagnostic67ce5a5": {
+      "sourceCommit": "67ce5a506742783050fb703f1aa5c34c6b0f5559",
+      "tree": "a9b59986257ea81a432dd752d4c753739d405e32",
+      "status": "failed-test-deadline",
+      "passed": 18264,
+      "failed": 1,
+      "files": 1083,
+      "failedFiles": 1,
+      "skipped": 0,
+      "seconds": "812.93",
+      "coverageResultAvailable": false,
+      "perTestDeadlineChanged": false,
+      "failure": "Single monolithic all-spec reference case took5143ms against5000ms; subsequent21478d6 schedules identical checks per source document. Complete fresh coverage remains required.",
+      "evidence": ".local/upgrade-evidence/full-coverage-67ce5a5.log",
+      "sha256": "aa684206902277b85b88ca1db541a4dd4b0379d7d7bfdce0734beb08e14d8c9a"
+    },
+    "previousBrowserRun76e3538": {
+      "commit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
+      "tree": "651098f2b79840dabbd1c39240398c743284d34c",
+      "exit": 0,
+      "passed": 374,
+      "skipped": 5,
+      "failed": 0,
+      "retries": 0,
+      "workers": 2,
+      "minutes": 10.1,
+      "evidence": {
+        "path": ".local/upgrade-evidence/full-browser-76e3538-final.log",
+        "sha256": "9d09e80a8be805e492d085dcf6b0e68b367786eceb091e431409296f9988e325"
+      },
+      "initialFailure": "Two QSBS download checks used system Python; restarted with documented pinned runner. A sandboxed retry could not launch Chromium and was stopped; separate launch diagnostic confirms macOS Mach-port denial. Final authorized local run passed.",
+      "serverStopped": true,
+      "boundary": "Five hosted-only skips provide no staging evidence."
+    },
+    "previousRemoteRuns61bad": {
+      "observedSource": "61bad8650ccd003eaac9f81107327f789d27e114",
+      "runs": [
+        {
+          "name": "CI",
+          "id": 40286297395,
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40286297395",
+          "status": "in_progress"
+        },
+        {
+          "name": "Web",
+          "id": 40286297200,
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40286297200",
+          "status": "in_progress"
+        }
+      ],
+      "finalResult": "pending;21478d6,14f179a,029a182 were superseded/cancelled by subsequent pushes"
+    },
+    "scheduleEPhysicalReview": {
+      "commit": "994d92d5ed541380ec53e28f53863bfd59bf4038",
+      "tree": "3232de1a8f965564d618e8f9d41f2948286802cd",
+      "reviewedTree": "cf4f3c8b8356e63387f18d7d48dc2695be78bbff",
+      "ledger": "docs/upgrade-2026-schedule-e-physical-work.md",
+      "frozenTests": {
+        "passed": 86,
+        "files": 10
+      },
+      "workspaceTests": {
+        "passed": 24,
+        "files": 2
+      },
+      "independentReview": {
+        "passed": 44,
+        "files": 3,
+        "privateControls": 5
+      },
+      "finalTests": {
+        "passed": 63,
+        "files": 4
+      },
+      "finalTypes": [
+        "root",
+        "web"
+      ],
+      "specReferences": 5248,
+      "artifacts": {
+        "pdfs": 8,
+        "pages": 19,
+        "literalFields": 23,
+        "allReopenedAndVisuallyInspected": true,
+        "reviewOnly": true
+      },
+      "humanQualified": false
+    },
+    "packagesSince2011778": [
+      {
+        "commit": "be0b6be4a58cf54d9af9d56fe980a8a58437d8d4",
+        "ledger": "docs/upgrade-2026-k1-cash-distribution-work.md"
+      },
+      {
+        "commit": "848e1fc66881a8d820adf4954677d3d0cb708fdf",
+        "ledger": "docs/upgrade-2026-royalty-property-work.md"
+      },
+      {
+        "commit": "4fcff15bef739ad721acb71a1ae7f9805ebe677f",
+        "ledger": "docs/upgrade-2026-health-separate-business-work.md"
+      },
+      {
+        "commit": "bc5c837eee5e066ae3787f37554d414c2dc272db",
+        "ledger": "docs/upgrade-2026-guided-royalty-work.md"
+      },
+      {
+        "commit": "bb731b12421b887e9ff2ba6d5bbed66677ac207a",
+        "ledger": "docs/upgrade-2026-k1-cash-distribution-guide-work.md"
+      },
+      {
+        "commit": "389a6ee442ad18b87fdbcb22d10b924427142eb0",
+        "ledger": "docs/upgrade-2026-review-completion-locator-work.md"
+      },
+      {
+        "commit": "994d92d5ed541380ec53e28f53863bfd59bf4038",
+        "ledger": "docs/upgrade-2026-schedule-e-physical-work.md"
+      }
+    ]
   },
   "historicalReleaseBlockers": {
     "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",

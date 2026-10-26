@@ -2,75 +2,66 @@
 
 ## Current checkpoint
 
-The branch is pushed through `5e1828c`. Since the previous record, delivered
-packages are actual separated-spouse intake (`0871438`) and review PDFs
-(`b2e1dc9`), disjoint shared/unshared Marketplace policies (`0799088`), K1 royalty
-classification with actual at-risk offsets (`8b3daea`), and canonical K1
-charitable sources (`c0dd1eb`). Rule metadata is `2025.121` /
-`2026.118-law-integration-draft`; all readiness gates remain unchanged.
+The branch is pushed through `994d92d`. Rule metadata is `2025.126` /
+`2026.123-law-integration-draft`; readiness gates remain unchanged. The inventory now
+has 485 entries and 5,248 spec references.
 
-The EIC represented royalty/passive worksheet is now committed in `747e37d`:
-801 checks/15 files, 13 separate review checks including five private controls,
-and 35 final integration checks pass. The source method preserves original earned
-income, prior losses and ordinary PTP segregation; the remaining royalty-expense,
-personal-property and mixed-source methods remain explicit gaps. `5e1828c`
-separates full unit and coverage CI runs into one-worker jobs while preserving
-all tests, deadlines and thresholds. Both affected files pass five local cases;
-separate agent review and structural workflow checks pass. Replacement remote
-and full current-source verification remain pending.
+Delivered since the previous integration are original investment-only K1 cash
+distribution gains (`be0b6be`) and their guided sources (`bb731b1`), actual direct
+royalty expenses (`848e1fc`) and intake (`bc5c837`), separate-business Marketplace
+health ordering (`4fcff15`), the exact HoH browser assertion (`389a6ee`) and corrected
+physical Schedule E review fields and continuations (`994d92d`). Their individual
+ledgers retain official sources, literal expected values, initial failures, separate
+agent reviews, exact source trees and artifact hashes. Final test counts are 553/7 for
+cash-source core, 119/8 for royalty core, 10/5 for health, 473/7 for royalty intake,
+469/6 for cash-source intake, and 63/4 for the PDF correction. The health consumer
+cohort also passes 561/31. Both new guided flows pass desktop/mobile production checks
+with zero retries. These are software checks, not human qualification.
 
-The EIC guide passes 968 tests/117 files and two production viewport flows;
-its separate review passes nine checks including four private probes. The PDF
-follow-through passes 122 tests/13 files, two viewport downloads and 38 separate
-parent checks including three private probes. Parent review reopened five PDFs
-with 36 review-marked pages and inspected the relevant rendered pages. The
-shared/unshared package passes 1,127 checks/147 files, two browser cases and 20
-parent checks including four private probes; all 11 physical/reference pages
-were reopened with notices, and the relevant source fields were inspected.
+The Schedule E correction fixes gross-versus-net Part I cells, Part II subtotal
+columns and line 41, retains fourth-property/fifth-K1 continuation rows, and uses
+actual allowed losses and completed depreciation. Its independent review passes 44
+cases including five private controls. Eight saved PDFs/19 pages were reopened, 23
+literal fields checked, and every page and notice visually inspected. Original
+personal/account identifiers are omitted; explicit business EINs remain under the
+existing policy. Legacy unallocated sources, unmatched supplemental adjustments and
+passive/binding section 179 character remain disclosed method gaps.
 
-Royalty review initially reproduced two actual Form6198 income-offset defects.
-The corrected source calculation passes 384 checks/16 files and 48 separate
-review checks/4 files, including the unchanged original failures and three new
-boundary probes. Final integration passes 269 checks/11 files. K1 charitable
-sources pass 975 checks/34 files, both types and 5,172 spec references; separate
-review passes 22 checks/4 files, plus five reopened PDFs/seven pages/27 fields.
-That review found an omitted excess-distribution gain. The package now rejects
-that unsupported source method before handoff; implementing the actual gain
-method remains work. Exact package ledgers retain sources, initial failures,
-review trees and final commits. Agent reviews are not human qualification.
+Full immutable `2011778` passes 18,725 unit tests/1,091 files with no failures/skips,
+all three type checks, spec/inventory, both builds and lint (zero errors, 5,276
+warnings). Coverage also runs all tests successfully but **fails** the unchanged 90%
+function gate at 89.25% (9,945/11,142). Branches 86.39% pass the 85% gate; statements
+91.65%, lines 94.24%. Meaningful state/payment/setup panel interactions are being
+added; no threshold, include or exclusion is changed.
 
-Full immutable `817f76f` passes **18,189 tests in 1,067 files**, zero failures or
-skips, using disposable PostgreSQL. Coverage is **87.14% branches** against 85%
-and **90.43% functions** against 90%; statements 92.17%, lines 94.77%. The run
-excludes later tax packages, so final current-source verification remains due.
-The current regenerated inventory has **475 entries and 5,180 references**.
-Remote CI for `b2e1dc9` failed two unchanged five-second PDF deadlines, with
-18,237 other tests passing; those failures are retained; the scheduling repair awaits a completed remote run.
-The `c0dd1eb` CI and Web runs were still in progress when last observed.
+Its full production browser run records 391 passes, five hosted-only skips and one
+failure, with zero retries. The HoH broad locator matched both the selected badge and
+an eligibility hint. `389a6ee` requires the exact badge label; all 21 cases in that
+file then pass against the unchanged 2011778 production bundle. The original full
+failure remains recorded. A fresh full current-source browser run is still required;
+the targeted repair is not a replacement for it.
 
-The broad `76e3538` unit/static/build/browser evidence remains separate: 18,159
-tests and 374 browser cases pass; five hosted-only skips provide no staging
-evidence. Its [runtime evidence](upgrade-2026-runtime-76e3538.json) binds the
-local arm64 image to source, with smoke and all six recovery phases passing.
-The scan reports 157 OS matches/67 advisories, zero critical/npm/available-fix
-matches. Owner acceptance and expiry 2026-11-07 remain unresolved. No image was
-published; final source/platform artifacts still require verification.
+The earlier 817f76f coverage pass and 76e3538 local arm64 six-phase recovery/image
+scan remain scoped to their original commits. Final source/platform images, recovery
+and advisory-owner acceptance are outstanding. A fresh production package audit on
+994d92d reports zero advisories across 425 dependencies. Current 994d92d remote Web
+was in progress and CI queued when observed; older pushes cancelled their previous
+runs. No current remote pass is claimed.
 
-Active internal work includes overlapping Marketplace benchmark groups,
-separate-business health ordering, actual K1 charitable guided intake and the
-source-bound excess-distribution gain handoff. Complete EIC royalty-expense,
-personal-property and mixed-source methods remain separate from the represented
-ordinary components now committed.
-Remaining methods include excess-distribution gain, prior charitable floor,
-regular/AMT NOL and partial mixed-media coordination, followed by complete
-current-source checks and support reconciliation. A guard or inactive helper
-does not complete an unsupported method.
+Active internal work is overlapping no-advance Marketplace coverage-family benchmarks,
+passive K1 distribution gain/loss coordination and intake, actual PA royalty treatment
+and guide, and the coverage interactions/upload keyboard fix. Prior charitable floor,
+regular/AMT NOL and partial mixed-media coordination, remaining EIC
+personal-property/mixed-source methods, and the source combinations listed in their
+ledgers still need implementation. A guard or inactive helper does not complete a
+method. Once these changes settle, repeat full current-source checks and reconcile
+actual artifacts with support claims.
 
-The goal remains active and the upgrade is **not release-ready**. Human reviews
-and controlling interpretations, provider access and approved budget, authorized
-staging, launch-state demand, final forms and advisory-owner acceptance remain
-outstanding. Normal pushes to this public upgrade branch are expressly approved.
-Production deployment, filing and model promotion remain unauthorized/disabled.
+The goal remains active and the upgrade is **not release-ready**. Human reviews and
+controlling interpretations, provider access and approved budget, authorized staging,
+launch-state demand, final forms and advisory-owner acceptance remain outstanding.
+Public upgrade-branch pushes are expressly approved. Production deployment, filing and
+model promotion remain unauthorized/disabled.
 
 ## Prior execution evidence
 
@@ -833,3 +824,10 @@ Exact logs, hashes and package limits are in the checklist/checkpoint. Actual
 royalty expenses, separate-business health, distribution gains/intake and the
 remaining finite source methods continue. No human, staging, live-provider,
 filing or release qualification is claimed.
+
+## Integration through994d92d
+
+The current checkpoint above records the immutable2011778 full checks and the
+seven subsequent commits, with original failures retained. Exact run metadata is
+in `upgrade-2026-checkpoint.json`; form and source ledgers remain authoritative
+for each package boundary. Useful internal implementation remains active.
