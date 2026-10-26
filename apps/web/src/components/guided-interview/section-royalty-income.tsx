@@ -7,6 +7,7 @@ import { recoveryMiscAmounts } from '@/lib/guided-mortgage-recoveries';
 import { guidedSourceValuesChanged } from '@/lib/guided-source-confirmation';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
+import { PARoyaltySourceDetails } from './pa-royalty-source-details';
 
 function Choice({label,value,onChange,options}:{label:string;value?:string;onChange:(value:string)=>void;options:readonly(readonly[string,string])[]}) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value??''} onChange={event=>onChange(event.target.value)}><option value="">Not answered</option>{options.map(([key,title],index)=><option key={`${key}-${index}`} value={key}>{title}</option>)}</select></label>;
@@ -20,7 +21,7 @@ export function SectionRoyaltyIncome({data,taxYear,stateCode,onDataChange}:{data
   const propertyPatch=(index:number,patch:Partial<RoyaltyPropertyData>)=>rootPatch({properties:data?.properties?.map((row,i)=>i===index?{...row,...patch}:row)});
   return <RetroShell title="Royalty Income" eyebrow="INCOME // SCHEDULE E">
     <p className="guided-hint">Enter the original royalty statements, property classification and actual cash-paid expense records. Blank amounts are unknown. Enter 0 only when the records establish zero. These records stay in this local workspace.</p>
-    {stateCode === "PA" && <p role="status" className="guided-hint">Pennsylvania royalty property classification, ownership and expenses require a separate state source method. These federal records are preserved, but the Pennsylvania calculation is unavailable for this packet.</p>}
+    {stateCode === "PA" && <p role="status" className="guided-hint">Complete the Pennsylvania classification and expense records below each property to calculate its state royalty income.</p>}
     {!data?<button type="button" className="utility-button" onClick={()=>onDataChange({})}>Add royalty source records</button>:<div className="panel-stack">
       <div className="guided-form-grid">
         <TextFact label="Royalty packet source year" value={data.sourceTaxYear??''} onChange={sourceTaxYear=>rootPatch({sourceTaxYear})}/>
@@ -93,6 +94,8 @@ export function SectionRoyaltyIncome({data,taxYear,stateCode,onDataChange}:{data
             <button type="button" className="utility-button" disabled={!!property.expenses?.length} onClick={()=>propertyPatch(index,{expenses:[]})}>Record no property {index+1} expenses</button>
             <button type="button" className="utility-button utility-button-small" disabled={!!property.expenses?.length} onClick={()=>propertyPatch(index,{expenses:undefined})}>Mark property {index+1} expense ledger unknown</button>
           </div>
+          {(stateCode === 'PA' || property.paTreatment) && <PARoyaltySourceDetails property={property} index={index}
+            sourceTaxYear={data.sourceTaxYear} onChange={paTreatment=>propertyPatch(index,{paTreatment})}/>}
           <button type="button" className="utility-button utility-button-small" onClick={()=>rootPatch({properties:data.properties?.filter((_,i)=>i!==index)})}>Remove royalty property {index+1}</button>
         </div></details>;
       })}

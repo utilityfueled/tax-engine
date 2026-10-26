@@ -1,0 +1,43 @@
+form: "Guided PA Royalty Sources"
+fullName: "Actual Pennsylvania royalty property interview"
+taxYear: 2025
+irsReference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40e.pdf"
+retrievedAt: "2026-10-26"
+notes: |
+  Expose the separately sourced PA property method without entering a state net
+  or guessing state residency, income classification or expense treatment.
+  Original property/year/owner and receipts are copied only by an explicit user
+  action. Classification answers stay unknown; actual false and zero survive.
+  State records stay in the existing local/full-fidelity encrypted workspace.
+  State section validation requires the actual PA source method. Federal-only
+  preview can still use completed federal facts while PA remains unavailable.
+  Final2026 calculation/export and human-review qualification stay closed.
+lines:
+  - line: "actual-state-handoff"
+    description: "Convert original PA years, exact receipts and classifications"
+    formula: "Preserve actual values and use the source-bound state calculation. Gross12000.25/legal49.25/management950.50 gives PA11000 while federal net11000.5 remains separate."
+    testRef: "tests/guided-interview/guided-pa-royalty-sources.test.ts::hands actual state classifications through the canonical royalty packet"
+  - line: "unknown-state-facts"
+    description: "Unknown state facts do not become confirmed eligibility"
+    formula: "Missing resident/classification/receipt facts block the PA section and state result. Keep completed federal facts and unknown state answers; never convert blank to zero or false."
+    testRef: "tests/guided-interview/guided-pa-royalty-sources.test.ts::preserves unknown PA facts and actual false without inferring state eligibility"
+  - line: "state-source-invalidation"
+    description: "Invalidate state confirmation after original source or owner edits"
+    formula: "Changing household or property/receipt sources revokes root, original MISC and every PA property confirmation. Preserve copied original receipts until the user explicitly refreshes them."
+    testRef: "tests/guided-interview/guided-pa-royalty-sources.test.ts::revokes state confirmation while retaining the original copied receipts"
+  - line: "actual-panel"
+    description: "Reach state property and receipt controls from the actual royalty panel"
+    formula: "Add unknown state records, explicitly copy actual originals, collect separate residency/classification and receipt answers, preserve actual zero and remove or mark unknown without computed overrides."
+    testRef: "tests/apps/web/pa-royalty-source-interactions.test.tsx::collects PA property classification without inventing receipt answers"
+  - line: "copy-originals"
+    description: "Copy only supplied originals and distinguish an empty ledger from an unknown ledger"
+    formula: "An explicit empty expense array stays empty; an omitted ledger stays unknown; a receipt amount0 stays0. Copy uses the actual supplied year and never fabricates classification answers or confirmation."
+    testRef: "tests/guided-interview/guided-pa-royalty-sources.test.ts::copies only actual state originals while preserving zero and unknown ledgers"
+  - line: "browser-recovery"
+    description: "Keep separate federal and PA readiness after actual browser corrections and reload"
+    formula: "A changed receipt invalidates both source confirmations. Federal confirmation restores only the federal result; PA additionally needs refreshed originals and state confirmation. Blank resident answer stays unknown across reload."
+    testRef: "apps/web/tests/pa-royalty-sources.spec.ts::reconciles original state receipts through correction and local reload"
+  - line: "actual-workspace-export"
+    description: "Render the guided PA source through the complete workspace export"
+    formula: "The original guided source yields a separate PA11000 reference and federal11000.5 calculation. Prepare source contexts before redacting the combined PDF; preserve review notices and omit private references."
+    testRef: "tests/apps/web/pa-royalty-workspace-packet.test.ts::exports actual guided PA royalty records with private source binding"

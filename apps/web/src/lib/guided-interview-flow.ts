@@ -1966,7 +1966,7 @@ export function validateSection(
     case "income-investments":
       return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"), state.segmentation.stateCode, getSectionData(state, "personal-info"));
     case "income-royalties":
-      return validateRequiredFacts(royaltySourceFactErrors(state));
+      return validateRequiredFacts(royaltySourceFactErrors(state, true));
     case "income-rental":
       return validateRentalSection(getSectionData(state, "income-rental"), state.segmentation.filingStatus, state.taxYear, state.segmentation.stateCode, state.sectionData["personal-info"]);
     case "income-retirement":

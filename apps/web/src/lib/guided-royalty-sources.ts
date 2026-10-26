@@ -2,6 +2,7 @@ import Decimal from 'decimal.js';
 import { Form1099MiscSchema, type Form1099Misc } from '@/models/inputs';
 import { RoyaltyPropertySourcesSchema, type RoyaltyPropertySources } from '@/models/royalty-property-sources';
 import { calculateRoyaltyPropertySources } from '@/engine/forms/royalty-property-sources';
+import { calculatePARoyaltyPropertySources } from '@/engine/state/pa-royalty-property-sources';
 import type { GuidedFlowState } from './guided-interview-flow';
 import { recoveryMiscAmounts, type RecoveryMiscData } from './guided-mortgage-recoveries';
 
@@ -10,6 +11,7 @@ type Property = NonNullable<RoyaltyPropertySources['properties']>[number];
 type Original = NonNullable<NonNullable<Property['incomeSources']>[number]['original']>;
 export interface RoyaltyIncomeLinkData { sourceId?: string; allocatedGross?: string; original?: Draft<Original> }
 export type RoyaltyPropertyData = Omit<Draft<Property>, 'incomeSources'> & { incomeSources?: RoyaltyIncomeLinkData[] };
+export type PARoyaltyTreatmentData = NonNullable<RoyaltyPropertyData['paTreatment']>;
 export interface RoyaltyMiscData extends Omit<RecoveryMiscData, 'recoveryOnlyIncomeConfirmed'> { royaltyOnlyIncomeConfirmed?: boolean | null }
 export type RoyaltyIncomeData = Omit<Draft<RoyaltyPropertySources>, 'properties'> & { statements?: RoyaltyMiscData[]; properties?: RoyaltyPropertyData[] };
 
@@ -34,6 +36,16 @@ export const royaltyExpenseFacts = {
   capitalOrImprovement: 'Was this a capital cost or improvement?',
   personalOrOwnLabor: 'Was this personal or the value of your own labor?', reimbursed: 'Was this amount reimbursed?',
 } as const;
+export const paRoyaltyPropertyFacts = {
+  ownerFullYearPAResident: 'Was this owner a full-year Pennsylvania resident?',
+  forProfit: 'Was this property held for profit?',
+  allExpenseClassificationsIncluded: 'Does the state record classify every actual property expense?',
+} as const;
+export const paRoyaltyExpenseFacts = {
+  relatesToRoyaltyRights: 'Does this expense relate to the actual royalty rights?',
+  surfaceRights: 'Does this expense relate to surface rights?',
+  netIncomeTax: 'Is this a net income tax?',
+} as const;
 const statuses = { single:'single', mfj:'married_filing_jointly', mfs:'married_filing_separately', hoh:'head_of_household', qss:'qualifying_surviving_spouse' } as const;
 const stateCodes = new Set('AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY'.split(' '));
 const text = (value: string | undefined, label: string) => { if (!value?.trim()) throw new Error(`Enter the actual ${label}.`); return value.trim(); };
@@ -51,6 +63,42 @@ function optionalMoney(value: string | undefined, label: string) { return value?
 export function copyRoyaltyOriginal(statement: RoyaltyMiscData): Draft<Original> {
   return { sourceId:statement.sourceId, accountReference:statement.accountReference, taxYear:statement.sourceTaxYear,
     sourceFormRevision:statement.sourceFormRevision, payer:statement.payer, accountHolder:statement.accountHolder, royalties:statement.royalties };
+}
+
+/** Explicitly copy supplied originals; never create state classification answers. */
+export function copyPARoyaltyOriginals(property: RoyaltyPropertyData, sourceTaxYear?: string): PARoyaltyTreatmentData {
+  const previous = property.paTreatment;
+  return {
+    ...previous, sourceFactsConfirmed: null, sourceTaxYear,
+    accountHolder: property.accountHolder, propertyType: property.propertyType,
+    expenses: property.expenses?.map(receipt => {
+      const classification = previous?.expenses?.find(row => row.sourceId === receipt.sourceId);
+      return {
+        sourceId: receipt.sourceId, paidDate: receipt.paidDate,
+        amountPaid: receipt.amountPaid, category: receipt.category,
+        relatesToRoyaltyRights: classification?.relatesToRoyaltyRights,
+        surfaceRights: classification?.surfaceRights, netIncomeTax: classification?.netIncomeTax,
+      };
+    }),
+  };
+}
+
+function statePropertySources(source: PARoyaltyTreatmentData | undefined): Property['paTreatment'] {
+  if (!source) return undefined;
+  return {
+    sourceTaxYear: year(source.sourceTaxYear), sourceReference: source.sourceReference,
+    sourceFactsConfirmed: fact(source.sourceFactsConfirmed),
+    accountHolder: source.accountHolder || undefined, propertyType: source.propertyType || undefined,
+    paIncomeClass: source.paIncomeClass || undefined,
+    ownerFullYearPAResident: fact(source.ownerFullYearPAResident), forProfit: fact(source.forProfit),
+    allExpenseClassificationsIncluded: fact(source.allExpenseClassificationsIncluded),
+    expenses: source.expenses?.map(receipt => ({
+      sourceId: receipt.sourceId, paidDate: receipt.paidDate,
+      amountPaid: optionalMoney(receipt.amountPaid, 'PA copied receipt amount'), category: receipt.category || undefined,
+      relatesToRoyaltyRights: fact(receipt.relatesToRoyaltyRights), surfaceRights: fact(receipt.surfaceRights),
+      netIncomeTax: fact(receipt.netIncomeTax),
+    })),
+  };
 }
 
 function originalStatements(data: RoyaltyIncomeData, state: GuidedFlowState): Form1099Misc[] {
@@ -104,6 +152,7 @@ export function buildGuidedRoyaltySources(state: GuidedFlowState, recoveryStatem
     sourceFactsConfirmed:fact(data.sourceFactsConfirmed),allDirectRoyaltySourcesIncluded:fact(data.allDirectRoyaltySourcesIncluded),
     properties:data.properties?.map(property => ({ ...property,
       accountHolder:property.accountHolder || undefined,propertyType:property.propertyType || undefined,
+      paTreatment: statePropertySources(property.paTreatment),
       ...Object.fromEntries(Object.keys(royaltyPropertyFacts).map(key=>[key,fact(property[key as keyof typeof royaltyPropertyFacts])])),
       ...Object.fromEntries(Object.entries(royaltyExcludedAmounts).map(([key,label])=>[key,optionalMoney(property[key as keyof typeof royaltyExcludedAmounts],label)])),
       incomeSources:property.incomeSources?.map(link=>({ sourceIndex:form1099Misc.findIndex(original=>original.sourceId === link.sourceId?.trim()),
@@ -117,10 +166,26 @@ export function buildGuidedRoyaltySources(state: GuidedFlowState, recoveryStatem
   calculateRoyaltyPropertySources({ taxpayer:{taxYear:state.taxYear,filingStatus:statuses[state.segmentation.filingStatus],spouse:state.sectionData['personal-info']?.spouse},form1099Misc,royaltyPropertySources });
   return { form1099Misc,royaltyPropertySources };
 }
-export function royaltySourceFactErrors(state: GuidedFlowState): Record<string,string> {
-  try { buildGuidedRoyaltySources(state); return {}; }
+export function royaltySourceFactErrors(state: GuidedFlowState, includeState = false): Record<string,string> {
+  try {
+    const sources = buildGuidedRoyaltySources(state);
+    if (includeState && state.segmentation.stateCode === 'PA' && sources.royaltyPropertySources) {
+      const filingStatus = state.segmentation.filingStatus;
+      if (!filingStatus || !state.taxYear) throw new Error('Confirm the actual PA household year and filing status.');
+      const personal = state.sectionData['personal-info'];
+      calculatePARoyaltyPropertySources({
+        ...sources, taxpayer: {
+          taxYear: state.taxYear, filingStatus: statuses[filingStatus],
+          spouse: personal?.spouse, stateResidency: personal?.stateResidency ?? undefined,
+        },
+      });
+    }
+    return {};
+  }
   catch(error) { return {royaltySources:error instanceof Error ? error.message : 'Reconcile the actual royalty sources.'}; }
 }
 export function invalidateRoyaltySources(data: RoyaltyIncomeData): RoyaltyIncomeData {
-  return { ...data,sourceFactsConfirmed:null,statements:data.statements?.map(statement=>({...statement,sourceFactsConfirmed:null})) };
+  return { ...data,sourceFactsConfirmed:null,statements:data.statements?.map(statement=>({...statement,sourceFactsConfirmed:null})),
+    properties:data.properties?.map(property=>({...property,paTreatment:property.paTreatment?{...property.paTreatment,sourceFactsConfirmed:null}:undefined})),
+  };
 }
