@@ -1,0 +1,38 @@
+form: "Guided interview"
+fullName: "Existing setup and payment panel behavior"
+taxYear: 2025
+notes: |
+  Behavioral verification of existing source controls, route selection and
+  reconciliation. The pending-upload keyboard listener observes current upload
+  state, matching the existing Continue button. No calculation, threshold,
+  coverage exclusion or eligibility rule changes. Synthetic source facts are
+  supplied only by the tests.
+lines:
+  - line: "state-original-records"
+    description: "Edit and reconcile original state withholding and estimated payments"
+    formula: "New source records retain blank facts; explicit zero differs from omission. Source state/year and the saved total must reconcile before validation succeeds."
+    testRef: "tests/apps/web/state-return-panel-behavior.test.tsx::reconciles state payment records through actual add edit and remove controls"
+  - line: "state-source-confirmation"
+    description: "Preserve Ohio source allocations and revoke an edited confirmation"
+    formula: "Actual source cents and explicit zero categories survive panel updates; changed issuer allocations require a new confirmation and matching original totals."
+    testRef: "tests/apps/web/state-return-panel-behavior.test.tsx::binds Ohio allocation edits and displays actual state result states"
+  - line: "setup-route"
+    description: "Choose and revise the actual interview route"
+    formula: "Unknown filing status blocks progression; explicit income and event selections add their sections, deselection removes them, and skipped state stays null."
+    testRef: "tests/apps/web/segmentation-panel-behavior.test.tsx::selects and revises actual interview routes without assuming missing answers"
+  - line: "setup-upload"
+    description: "Report upload outcomes without converting them into source answers"
+    formula: "Local upload success or failure preserves the setup answers and the current step; an in-progress upload cannot be bypassed by the Continue action."
+    testRef: "tests/apps/web/segmentation-panel-behavior.test.tsx::handles actual upload outcomes and document summaries before continuing"
+  - line: "payment-records"
+    description: "Preserve exact dated payments and distinct extension and applied-refund sources"
+    formula: "Adding a row does not establish a date, amount or source year. Exact source amounts reach the canonical input after source reconciliation; removing a row removes only that source."
+    testRef: "tests/apps/web/payment-panel-behavior.test.tsx::edits dated federal payment types without replacing unknown source facts"
+  - line: "setup-upload-keyboard"
+    description: "Keep the same pending-upload boundary for button and keyboard navigation"
+    formula: "An actual pending upload blocks Enter as well as Continue; the current upload state must be observed before advancing. Completion restores navigation."
+    testRef: "tests/apps/web/segmentation-panel-behavior.test.tsx::keeps keyboard navigation on the upload step while selected files are pending"
+  - line: "payment-confirmation"
+    description: "Revoke the payment worksheet confirmation after actual source changes"
+    formula: "Panel edits use the real interview update boundary. Unknown versus zero and preserved false remain distinct; confirming an incomplete payment cannot make it valid."
+    testRef: "tests/apps/web/payment-panel-behavior.test.tsx::requires actual payment reconfirmation after panel edits"

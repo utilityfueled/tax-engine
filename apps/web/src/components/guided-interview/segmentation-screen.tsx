@@ -82,7 +82,7 @@ export function SegmentationScreen({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [step, answers, onComplete]);
+  }, [step, answers, onComplete, uploadPending]);
 
   function setFilingStatus(value: FilingStatus) {
     setAnswers((prev) => ({ ...prev, filingStatus: value }));
