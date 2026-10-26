@@ -4077,6 +4077,12 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   });
   audit.merge(niitOrdinarySources.lines);
   const niitBusinessIncome = sum(sched1.businessIncome, sched1.supplementalIncome, sched1.farmIncome);
+  // Portfolio royalties are outside the section 469 pool but remain investment
+  // income under section 1411(c)(1)(A)(i). Line 4b must not remove them along
+  // with excluded active business income already included on line 4a.
+  const niitScheduleEIncome = netAllowedPassive.plus(schedE.totalRoyaltyIncome);
+  audit.record("Form8960 Source", "portfolio-royalties", "Portfolio royalties retained in investment income", schedE.totalRoyaltyIncome,
+    "Completed Schedule E portfolio royalty component, included once outside the passive activity pool");
   const form8960 = calculateForm8960(
     {
       taxableInterest: totalTaxableInterest,
@@ -4086,7 +4092,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       excludedDispositionAdjustment: disposition ? niitAmount(disposition.excludedGainOrLossAdjustment, "excluded disposition adjustment") : d("0"),
       passthroughDispositionAdjustment: disposition ? niitAmount(disposition.passthroughAdjustment, "pass-through disposition adjustment") : d("0"),
       tradeOrBusinessIncome: niitBusinessIncome,
-      nonInvestmentBusinessAdjustment: netAllowedPassive.minus(niitBusinessIncome),
+      nonInvestmentBusinessAdjustment: niitScheduleEIncome.minus(niitBusinessIncome),
       investmentInterestExpense: niitOrdinarySources.investmentInterestExpense,
       investmentIncomeTaxes: niitOrdinarySources.investmentIncomeTaxes,
       additionalModifications: niitOrdinarySources.ordinaryLossDeduction,
