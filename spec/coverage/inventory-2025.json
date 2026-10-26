@@ -1716,6 +1716,26 @@
       ]
     },
     {
+      "key": "federal/form-1099-q-distinct-qtp-esa",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
+      "specPath": "spec/federal/form-1099-q-distinct-qtp-esa.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-1099-q-expense-cap",
       "jurisdiction": "federal",
       "taxYear": 2026,
