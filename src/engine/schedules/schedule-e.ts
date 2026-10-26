@@ -13,7 +13,7 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import { calculateForm4562 } from "@/engine/forms/form-4562.js";
 import { calculateForm6198, type Form6198Result } from "@/engine/forms/form-6198.js";
 import { calculatePartnerBasisSchedule, type PartnerBasisScheduleResult } from "@/engine/forms/partner-basis-schedule.js";
-import { calculateK1CharitableReturnSources, type K1CharitableReturnResult } from "@/engine/forms/k1-charitable-return-sources.js";
+import { calculateK1CharitableReturnSources, type K1CharitableReturnResult, type K1CharitableReturnInput } from "@/engine/forms/k1-charitable-return-sources.js";
 import { d, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
@@ -285,7 +285,7 @@ function applyAtRiskLimitation(
   };
 }
 
-export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'rentalProperties' | 'form1099Misc'> & Partial<Pick<TaxYearInput, 'taxpayer' | 'k1CharitableSources' | 'qbiLossSources'>>, completedCharitable?: K1CharitableReturnResult): ScheduleEResult {
+export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'rentalProperties' | 'form1099Misc'> & Partial<Pick<TaxYearInput, 'k1CharitableSources' | 'qbiLossSources'>> & { taxpayer?: K1CharitableReturnInput['taxpayer'] }, completedCharitable?: K1CharitableReturnResult): ScheduleEResult {
   if (input.k1CharitableSources && !input.taxpayer) throw new Error('K1 charitable ScheduleE requires the actual taxpayer context');
   const charitable = input.k1CharitableSources ? completedCharitable ?? calculateK1CharitableReturnSources({ ...input, taxpayer: input.taxpayer! }) : undefined;
   const audit = new AuditTrail();

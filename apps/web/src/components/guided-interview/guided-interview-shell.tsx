@@ -55,6 +55,7 @@ import {
   computeFlowProgress,
   shouldPromptBeforeAdvance,
   emptyBrokerageEntry,
+  emptyDeductionData,
   emptyDividendEntry,
   emptyInterestEntry,
   emptyNecEntry,
@@ -88,6 +89,7 @@ import { SectionUnemployment } from "./section-unemployment";
 import { SectionAdditionalDeductions } from "./section-additional-deductions";
 import { SectionDeductions } from "./section-deductions";
 import { SectionAdjustments } from "./section-adjustments";
+import { K1CharitableSourceDetails } from "./k1-charitable-source-details";
 import { SectionCredits } from "./section-credits";
 import { SectionOtherTaxes } from "./section-other-taxes";
 import { SectionPayments } from "./section-payments";
@@ -616,6 +618,7 @@ function SectionContent({
           taxYear={state.taxYear}
           data={getSectionData(state, "deductions")}
           childEntries={getSectionData(state, "income-investments")?.childElections}
+          k1Activities={getSectionData(state, "adjustments")?.k1LossSources?.activities}
           filingStatus={state.segmentation.filingStatus}
           onDataChange={(data: DeductionData) =>
             onStateChange(updateSectionData(state, "deductions", data))
@@ -624,6 +627,7 @@ function SectionContent({
       );
     case "adjustments":
       return (
+        <div className="panel-stack">
         <SectionAdjustments
           taxYear={state.taxYear}
           data={getSectionData(state, "adjustments")}
@@ -641,6 +645,18 @@ function SectionContent({
             onStateChange(updateSectionData(state, "adjustments", data))
           }
         />
+        {(state.segmentation.lifeEvents.includes("k1-loss-sources") || getSectionData(state, "adjustments")?.k1LossSources) && (
+          <K1CharitableSourceDetails
+            data={getSectionData(state, "deductions")?.k1CharitableSources}
+            activities={getSectionData(state, "adjustments")?.k1LossSources?.activities}
+            onChange={(k1CharitableSources) => onStateChange(updateSectionData(state, "deductions", {
+              ...emptyDeductionData,
+              ...getSectionData(state, "deductions"),
+              k1CharitableSources,
+            }))}
+          />
+        )}
+        </div>
       );
     case "credits": {
       const personalData = getSectionData(state, "personal-info");

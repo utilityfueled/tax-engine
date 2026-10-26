@@ -13,6 +13,8 @@ import { CurrencyField } from "./currency-field";
 import { DeductionSourceDetails } from "./deduction-source-details";
 import { InvestmentInterestSourceDetails } from "./investment-interest-source-details";
 import { CharitableCarryoverDetails } from "./charitable-carryover-details";
+import { K1CharitableSourceDetails } from "./k1-charitable-source-details";
+import type { K1LossSourcesData } from "@/lib/guided-qbi-loss-data";
 import type { ChildElectionData } from "@/lib/guided-child-election-facts";
 import { formatGuidedCurrency, parseGuidedDisplayAmount } from "@/lib/guided-currency";
 
@@ -23,12 +25,14 @@ export function SectionDeductions({
   filingStatus,
   taxYear,
   childEntries,
+  k1Activities,
   onDataChange,
 }: {
   data: DeductionData | undefined;
   filingStatus: FilingStatus | null;
   taxYear?: number | null;
   childEntries?: ChildElectionData[];
+  k1Activities?: K1LossSourcesData['activities'];
   onDataChange: (data: DeductionData) => void;
 }) {
   const current = data ?? emptyDeductionData;
@@ -117,6 +121,7 @@ export function SectionDeductions({
         <CurrencyField label="Non-W-2 withholding already deducted on other schedules" hint="Enter the actual part of state or local withholding from your entered non-W-2 forms that is already deducted on Schedule C, E or F. Enter 0 only after checking. The source withholding is counted separately; do not add it again to additional income taxes." value={current.nonW2IncomeTaxesDeductedElsewhere ?? ""} onChange={value => update("nonW2IncomeTaxesDeductedElsewhere", value)} />
         <InvestmentInterestSourceDetails data={current.investmentInterestSources} childEntries={childEntries} onChange={investmentInterestSources => onDataChange({ ...current, investmentInterestSources })} />
         <CharitableCarryoverDetails data={current.charitableCarryoverSources} onChange={charitableCarryoverSources => onDataChange({ ...current, charitableCarryoverSources })} />
+        <K1CharitableSourceDetails data={current.k1CharitableSources} activities={k1Activities} onChange={k1CharitableSources => onDataChange({ ...current, k1CharitableSources })} />
 
         {current.method === "itemized" && (
           <div className="guided-w2-card" style={{ marginTop: "16px" }}>

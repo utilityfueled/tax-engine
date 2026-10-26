@@ -1,0 +1,63 @@
+form: "Guided K1 Charitable Sources"
+fullName: "Actual K-1 charitable attachments and independent basis histories"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1065sk1"
+retrievedAt: "2026-10-26"
+notes: |
+  Intake only; the existing source binder computes basis and nonbinding at-risk
+  reconciliation, then the canonical return applies charitable limits. Original
+  partnership box13 or shareholder box12 A/E/F amounts remain separate from
+  direct donations and section170 carryovers. Actual gifts, basis suspensions,
+  every basis-use history year, receipts, identities and all eight original
+  Form6198 amounts are retained. No income, current allowance, calculated basis
+  release or deduction override is invented for validation.
+  https://www.irs.gov/instructions/i1120ssk
+  https://www.irs.gov/instructions/i6198
+  Original cash and appreciated-stock methods use the existing reviewed source
+  contract. Excess distributions, binding465, unsupported activity boxes and
+  positive2026 prior-basis release remain explicit source-method boundaries;
+  actual records stay saved. Unknown fields are not zero or affirmative answers.
+  An explicit link to an existing QBI activity retains one original K1/index.
+  Its original statements, basis and risk sources must agree. The old assertion
+  that all other boxes are zero is never reinterpreted as allowing charity.
+  A distinct actual noncharitable-box assertion permits the linked source route.
+  Passive statements use that linked route's independently confirmed prior469
+  history; an independent charitable attachment cannot establish no prior469 loss.
+  Full2026 and filing readiness remain closed.
+lines:
+  - line: "originals"
+    description: "Original source values reach the facts-only binder once"
+    formula: "Actual150property/50basis/30outside basis yields130 after basis and20 suspended; the original150,50,30 and references remain unchanged. Independent source validation receives no AGI or deduction context."
+    testRef: "tests/guided-interview/guided-k1-charitable-sources.test.ts::retains original charitable K1 facts and derives the published basis result"
+  - line: "unknown"
+    description: "Blank original sources cannot become parsed defaults"
+    formula: "Missing original year/owner/amount/Form6198 values, unknown lists, contradictory original boxes and changed recipient identity reject. Actual zero and explicit empty lists survive."
+    testRef: "tests/guided-interview/guided-k1-charitable-sources.test.ts::requires original identity amounts and independently complete histories"
+  - line: "linked"
+    description: "One original K1 is shared with its actual QBI history"
+    formula: "Actual ordinary loss10000 and cash10000 with basis10000 produce5000ordinary and5000charity. Shared source is not duplicated; changed original/QBI/basis/risk facts and the old all-other-zero claim reject."
+    testRef: "tests/guided-interview/guided-k1-charitable-sources.test.ts::links charity to an actual QBI statement without copying or overriding the activity"
+  - line: "history"
+    description: "Prior basis history remains distinct from charitable carry"
+    formula: "Actual2025 prior property basis history retains original acquisition/value/receipt and every prior basis use; current basis release is derived. Positive2026 prior release and unsupported excess distributions preserve their method error."
+    testRef: "tests/guided-interview/guided-k1-charitable-sources.test.ts::preserves prior basis origins and unsupported source methods"
+  - line: "confirmation"
+    description: "Original changes revoke all dependent source confirmations"
+    formula: "Nested source, household or linked-activity changes preserve values and revoke the packet, basis and at-risk confirmations. Reconfirming only the outer packet cannot repair stale nested sources."
+    testRef: "tests/guided-interview/guided-k1-charitable-sources.test.ts::invalidates changed charitable and linked source confirmations"
+  - line: "controls"
+    description: "Actual complete original and history fields are reachable"
+    formula: "The deductions panel exposes original K1, current/prior basis attachments, receipts and independent at-risk history with blank controls and explicit no-record actions. It does not create zero amounts or confirmations when adding records."
+    testRef: "tests/apps/web/k1-charitable-source-interactions.test.tsx::collects actual K1 charity originals receipts and histories without defaults"
+  - line: "persistence"
+    description: "Complete source preview survives local reload at both sizes"
+    formula: "Desktop/mobile source edits and reconfirmation retain exact original amounts and false answers, block an unknown original amount, and restore the derived result after an actual correction. Sensitive sources are not posted during local editing or preview."
+    testRef: "apps/web/tests/k1-charitable-sources.spec.ts::retains original K1 charitable sources through local reload"
+  - line: "linked-reachability"
+    description: "Linked attachments can be completed before advancing from adjustments"
+    formula: "The same stored charitable packet is editable beside the actual qualified-loss K1. Missing charity sources still block validation; entering them does not require reaching the later deductions section or creating a duplicate original statement."
+    testRef: "tests/apps/web/k1-charitable-source-interactions.test.tsx::reaches linked charitable attachments from the blocked adjustments section"
+  - line: "linked-persistence"
+    description: "The linked source path can advance without bypassing validation"
+    formula: "At desktop/mobile sizes actual charitable confirmation beside adjustments enables the one-source 95000AGI/5000charity calculation and later deductions navigation; reload retains the same explicit link and source cents. The stacked panels reserve their actual height so navigation cannot cover the source controls."
+    testRef: "apps/web/tests/k1-charitable-sources.spec.ts::completes linked charity attachments before advancing from adjustments"

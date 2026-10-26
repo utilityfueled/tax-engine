@@ -51,6 +51,7 @@ function K1Activity({ index, data, onChange }: { index: number; data: K1Activity
       ['ordinaryBusinessOnlyConfirmed', 'ordinary business activity only', 'boolean'], ['continuingActivityConfirmed', 'continuing activity without a disposal', 'boolean'],
       ['domesticNonPtpConfirmed', 'domestic activity and not a publicly traded partnership', 'boolean'],
       ['allOtherAmountsZeroConfirmed', 'all other income, deduction, credit, distribution and withholding boxes are zero', 'boolean'],
+      ['allOtherNonCharitableAmountsZeroConfirmed', 'for a linked charitable attachment, all other noncharitable boxes are zero', 'boolean'],
       ...(data.entityType === 's_corporation' ? [['noScorpDebtBasisOrElectionConfirmed', 'no shareholder debt basis or basis-ordering election', 'boolean'] as const] : []),
       ['sameOwnerHistoryConfirmed', 'history belongs to the same current owner', 'boolean'], ['sameRegularAmtTreatmentConfirmed', 'independent regular and AMT basis and loss treatment are the same', 'boolean'],
     ]} onChange={change} />

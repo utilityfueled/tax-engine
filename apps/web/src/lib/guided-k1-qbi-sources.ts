@@ -9,6 +9,7 @@ import type { GuidedFlowState } from './guided-interview-flow';
 import { parseGuidedQbiLossPacket, qbiSourceValues, type K1LossSourcesData } from './guided-qbi-loss-data';
 import { buildGuidedNetOperatingLoss } from './guided-net-operating-loss';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
+import { parseGuidedK1CharitableSources } from './guided-k1-charitable-data';
 const statuses = { single: 'single', mfj: 'married_filing_jointly', mfs: 'married_filing_separately', hoh: 'head_of_household', qss: 'qualifying_surviving_spouse' } as const;
 
 /** Only original facts and canonical source-limit calculations, without an income assumption. */
@@ -18,13 +19,18 @@ export function buildGuidedK1Sources(data: K1LossSourcesData | undefined, state:
   if ((taxYear !== 2025 && taxYear !== 2026) || !segmentation.filingStatus || !personal) throw new Error('Confirm the actual household, filing status and year for K-1 histories.');
   const packet = parseGuidedQbiLossPacket(data);
   if (!packet || !Array.isArray(data.activities) || !Array.isArray(packet.activities)) throw new Error('Record every actual K-1, including an explicit empty list when none.');
+  const charitable = parseGuidedK1CharitableSources(sectionData.deductions?.k1CharitableSources, packet.activities.length);
+  if (charitable?.independentCount) throw new Error('Link every charitable K-1 to its actual qualified-loss activity before combining the complete source packets.');
   const middle = personal.middleName?.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase();
   const taxpayer: K1QbiLossSourceInput['taxpayer'] = { taxYear, filingStatus: statuses[segmentation.filingStatus],
     primary: { firstName: [personal.firstName.trim(), middle].filter(Boolean).join(' '), lastName: personal.lastName, ssn: personal.ssn },
     ...(segmentation.filingStatus === 'mfj' && personal.spouse ? { spouse: personal.spouse } : {}) };
   const scheduleK1 = packet.activities.map((source, index) => {
     const entered = data.activities?.[index];
-    if (entered?.allOtherAmountsZeroConfirmed !== true || entered.domesticNonPtpConfirmed !== true
+    const charitableOriginal = charitable?.originals.get(index);
+    const zeroConfirmed = charitableOriginal ? entered?.allOtherNonCharitableAmountsZeroConfirmed === true
+      && entered.allOtherAmountsZeroConfirmed !== true : entered?.allOtherAmountsZeroConfirmed === true;
+    if (!zeroConfirmed || entered?.domesticNonPtpConfirmed !== true
       || (source.entityType === 's_corporation' && entered.noScorpDebtBasisOrElectionConfirmed !== true)) {
       throw new Error('Confirm actual zero other K-1 boxes and the continuing domestic non-PTP source. S-corporation loan basis and elections require separate actual facts.');
     }
@@ -39,6 +45,9 @@ export function buildGuidedK1Sources(data: K1LossSourcesData | undefined, state:
       || statement.selfEmploymentIncomeType === undefined || !source.selfEmploymentTreatment)) {
       throw new Error('Enter original partnership Box 14 and the actual current adjustment and independent prior SE history.');
     }
+    // A linked attachment carries the actual original worksheet. The common source
+    // validator below reconciles it to the independent QBI/basis/risk history.
+    if (charitableOriginal) return charitableOriginal;
     const original = ScheduleK1Schema.parse({ taxYear: source.sourceTaxYear, partnershipName: source.entityName,
       partnershipEIN: source.entityEIN, entityType: source.entityType, accountHolder: source.accountHolder, ...statement,
       selfEmploymentFactsConfirmed: source.selfEmploymentTreatment?.sourceFactsConfirmed,
@@ -59,9 +68,9 @@ export function buildGuidedK1Sources(data: K1LossSourcesData | undefined, state:
     partnershipName: scheduleK1[index].partnershipName, amount: source.priorPassiveLoss ?? '',
     qbiLossTracking: qbiSourceValues(data.activities?.[index]?.passiveHistory) as NonNullable<TaxYearInput['priorYear']>['suspendedPassiveLosses'][number]['qbiLossTracking'],
   }));
-  const sourceInput = { taxpayer, scheduleK1, qbiLossSources: packet, priorYear: { suspendedPassiveLosses } };
+  const sourceInput = { taxpayer, scheduleK1, qbiLossSources: packet, k1CharitableSources: charitable?.packet, priorYear: { suspendedPassiveLosses } };
   validateK1QbiLossSources(sourceInput);
-  calculateK1OrdinarySelfEmployment(sourceInput, calculateScheduleE({ scheduleK1, rentalProperties: [], form1099Misc: [] }));
+  calculateK1OrdinarySelfEmployment(sourceInput, calculateScheduleE({ ...sourceInput, rentalProperties: [], form1099Misc: [] }));
   if (scheduleK1.length) {
     const classification = packet.form461Classification;
     if (!classification || classification.sourceTaxYear !== taxYear || !classification.sourceReference?.trim()

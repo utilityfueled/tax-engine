@@ -8,6 +8,8 @@ export type QbiSourceEntry<T> = T extends boolean ? boolean | null : T extends n
 type Activity = NonNullable<QbiLossSources['activities']>[number];
 export type K1ActivityData = QbiSourceEntry<Omit<Activity, 'k1SourceId'>> & {
   allOtherAmountsZeroConfirmed?: boolean | null;
+  /** Only for a separately linked and verified charitable attachment; never reinterprets the all-zero answer. */
+  allOtherNonCharitableAmountsZeroConfirmed?: boolean | null;
   domesticNonPtpConfirmed?: boolean | null;
   noScorpDebtBasisOrElectionConfirmed?: boolean | null;
   passiveHistory?: QbiSourceEntry<QbiLossHistorySource>;
