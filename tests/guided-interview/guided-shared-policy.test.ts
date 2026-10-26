@@ -41,5 +41,6 @@ it('preserves zero and full agreements while rejecting ambiguous household rows'
  const duplicate=actualSharedPolicyData();duplicate.monthlyReconciliation.push({...duplicate.monthlyReconciliation[0]!,month:'01',coverageEligible:false});expect(()=>deriveSharedPolicyMonths(duplicate,2025,'single',completePersonalInfo)).toThrow(/duplicate/i);
  const extra=actualSharedPolicyData();extra.monthlyReconciliation.push({...extra.monthlyReconciliation[0]!,month:'13'});expect(()=>deriveSharedPolicyMonths(extra,2025,'single',completePersonalInfo)).toThrow(/month/i);
  const conflicting=actualSharedPolicyData();conflicting.allocationRequired=false;expect(()=>build(conflicting)).toThrow(/reconcile/i);
- for(const field of ['selfEmployedHealthInsuranceCoordinationRequired','qsehraAffected','alternativeMarriageCalculationElected'] as const){const special=actualSharedPolicyData();special[field]=true;expect(()=>build(special)).toThrow();}
+ const health=actualSharedPolicyData();health.selfEmployedHealthInsuranceCoordinationRequired=true;expect(()=>build(health)).not.toThrow();
+ for(const field of ['qsehraAffected','alternativeMarriageCalculationElected'] as const){const special=actualSharedPolicyData();special[field]=true;expect(()=>build(special)).toThrow();}
 });

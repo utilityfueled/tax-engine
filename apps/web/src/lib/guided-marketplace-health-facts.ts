@@ -1,4 +1,7 @@
 import Decimal from "decimal.js";
+import type { Form7206Input } from "@/models/inputs";
+import { calculateSharedMarketplaceHealthSources } from "@/engine/forms/shared-marketplace-health";
+import { resolveGuidedSharedPolicy } from "./guided-shared-policy";
 import type { GuidedFlowState } from "./guided-interview-flow";
 import type { HealthInsuranceData } from "./guided-health-insurance-facts";
 import { buildPremiumTaxCreditInputs, type MarketplacePolicyData } from "./guided-premium-tax-credit-facts";
@@ -15,16 +18,21 @@ function amount(value: string | undefined): Decimal {
   return result;
 }
 /** Source reconciliation only; never supplies business income or a proposed credit. */
-export function validateMarketplaceHealthSources(state: GuidedFlowState, health: HealthInsuranceData): void {
+export function validateMarketplaceHealthSources(state: GuidedFlowState, health: HealthInsuranceData, normalized: Form7206Input | undefined): void {
   const plans = health.plans.filter(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
   if (!plans.length) return;
   const coverage = buildPremiumTaxCreditInputs(state.sectionData.credits?.premiumTaxCredit, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"]);
   if (!coverage.form1095A || !coverage.form8962 || coverage.form8962.selfEmployedHealthInsuranceCoordinationRequired !== true) throw new Error("Enter and confirm the actual Marketplace policy and coverage worksheet in credits before linking health premiums.");
   if (coverage.form8962.qsehraAffected !== false) throw new Error("Marketplace health deduction with QSEHRA requires its separate actual coordination worksheet.");
+  const shared = coverage.form8962.allocationRequired === true;
+  if (!shared && plans.some(plan => plan.sharedMarketplaceSources)) throw new Error("Shared health source links conflict with the actual policy allocation answer.");
+  const originalShared = shared ? resolveGuidedSharedPolicy(state.sectionData.credits!.premiumTaxCredit!, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"]).sourceInput : undefined;
+  const sharedPlans = originalShared ? calculateSharedMarketplaceHealthSources({ ...originalShared, form8962: coverage.form8962, form7206: normalized }) : undefined;
   const used = new Set<string>();
   const totals = new Map<number, { premium: Decimal; advance: Decimal }>();
   for (const plan of plans) {
-    if (plan.allCoveredPersonsInCoverageFamilyConfirmed !== true) throw new Error("Confirm actual coverage-family membership; mixed or unknown coverage requires a separate allocation worksheet.");
+    const sharedPlan = sharedPlans?.get(plan.planId);
+    if (!sharedPlan && plan.allCoveredPersonsInCoverageFamilyConfirmed !== true) throw new Error("Confirm actual coverage-family membership; mixed or unknown coverage requires a separate allocation worksheet.");
     if (!plan.marketplacePolicySourceIds?.length) throw new Error("Link the health plan to its actual original Marketplace policies.");
     const original = new Map<number, { premium: Decimal; advance: Decimal }>();
     for (const id of plan.marketplacePolicySourceIds) {
@@ -40,7 +48,7 @@ export function validateMarketplaceHealthSources(state: GuidedFlowState, health:
     const payments = new Map<number, { premium: Decimal; advance: Decimal }>();
     for (const payment of plan.payments) {
       if (payment.coverageTaxYear !== String(state.taxYear) || !payment.datePaid.startsWith(`${state.taxYear}-`) || !/^(?:[1-9]|1[0-2])$/.test(payment.coverageMonth)) throw new Error("Marketplace health premiums require actual current-year payment and coverage dates; other timing requires a separate worksheet.");
-      if (!amount(payment.otherPersonPaid).isZero() || payment.personAmounts.some(person => !amount(person.otherTaxFreeFunding).isZero() || !amount(person.excludedPublicSafetyOfficerAmount).isZero())) throw new Error("Marketplace outside-payer or separate tax-free funding requires its actual deduction allocation worksheet.");
+      if ((!sharedPlan && !amount(payment.otherPersonPaid).isZero()) || payment.personAmounts.some(person => !amount(person.otherTaxFreeFunding).isZero() || !amount(person.excludedPublicSafetyOfficerAmount).isZero())) throw new Error("Marketplace outside-payer or separate tax-free funding requires its actual deduction allocation worksheet.");
       const month = Number(payment.coverageMonth), sum = payments.get(month) ?? { premium: new Decimal(0), advance: new Decimal(0) };
       sum.premium = sum.premium.plus(amount(payment.grossPremium)); sum.advance = sum.advance.plus(amount(payment.advancePremiumTaxCredit)); payments.set(month, sum);
     }
@@ -53,7 +61,8 @@ export function validateMarketplaceHealthSources(state: GuidedFlowState, health:
       if (employer.employerCoverageEnrolled === true) throw new Error("Actual employer coverage enrollment contradicts credit-eligible coverage-family sources.");
       if (employer.employerSubsidizedPlanEligible && (employer.employerCoverageEnrolled !== false || !employer.employerOfferSourceReference?.trim() || !["unaffordable", "does_not_provide_minimum_value"].includes(employer.employerOfferPtcException ?? ""))) throw new Error("Reconcile actual employer affordability or minimum-value evidence and no enrollment before using the PTC coverage exception.");
       const total = totals.get(month) ?? { premium: new Decimal(0), advance: new Decimal(0) };
-      total.premium = total.premium.plus(source.premium); total.advance = total.advance.plus(source.advance); totals.set(month, total);
+      const attributable = sharedPlan?.months.get(month) ?? source;
+      total.premium = total.premium.plus(attributable.premium); total.advance = total.advance.plus(attributable.advance); totals.set(month, total);
     }
   }
   for (const [month, total] of totals) {

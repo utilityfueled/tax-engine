@@ -3,6 +3,7 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { Form7206Result } from "./form-7206.js";
 import { d, sum } from "@/utils/decimal.js";
+import { calculateSharedMarketplaceHealthSources } from "./shared-marketplace-health.js";
 
 export interface MarketplaceHealthPremiumGroup {
   businessSourceId: string;
@@ -27,13 +28,15 @@ export function calculateMarketplaceHealthPremiums(params: { input: TaxYearInput
   const { input, healthInsurance } = params;
   if (![2025,2026].includes(input.taxpayer.taxYear) || !input.form7206 || !input.form8962 || !healthInsurance.calculationComplete) throw new Error("Actual Marketplace premium coordination requires completed2025 or2026 source and business worksheets.");
   const facts = input.form8962;
-  if (facts.selfEmployedHealthInsuranceCoordinationRequired !== true || facts.coverageFactsConfirmed !== true || facts.allocationRequired !== false || facts.qsehraAffected !== false) throw new Error("Marketplace source coordination requires actual coverage facts and separate special allocations when applicable.");
+  if (facts.selfEmployedHealthInsuranceCoordinationRequired !== true || facts.coverageFactsConfirmed !== true || typeof facts.allocationRequired !== 'boolean' || facts.qsehraAffected !== false) throw new Error("Marketplace source coordination requires actual coverage facts and separate special allocations when applicable.");
+  const sharedPlans = calculateSharedMarketplaceHealthSources(input);
   const groups = new Map<string, MarketplaceHealthPremiumGroup>();
   const usedPolicies = new Set<string>();
   const recordedMonthly = new Map<number, { premium: Decimal; advance: Decimal }>();
   for (const plan of input.form7206.plans ?? []) {
     if (!plan.marketplaceCoverage || !plan.premiumTaxCreditInvolved) continue;
-    if (plan.allCoveredPersonsInCoverageFamilyConfirmed !== true) throw new Error("Marketplace premiums require the actual coverage-family source allocation; unknown is not complete coverage.");
+    const shared = sharedPlans?.get(plan.planId ?? '');
+    if (!shared && plan.allCoveredPersonsInCoverageFamilyConfirmed !== true) throw new Error("Marketplace premiums require the actual coverage-family source allocation; unknown is not complete coverage.");
     if (!plan.marketplacePolicySourceIds?.length) throw new Error("Marketplace plan requires actual policy source identity links.");
     const policyMonths = new Map<number, { premium: Decimal; advance: Decimal }>();
     for (const id of plan.marketplacePolicySourceIds) {
@@ -63,7 +66,7 @@ export function calculateMarketplaceHealthPremiums(params: { input: TaxYearInput
     for (const payment of plan.payments ?? []) {
       const month = payment.coverageMonth;
       if (month === undefined || payment.coverageTaxYear !== input.taxpayer.taxYear || !payment.datePaid?.startsWith(`${input.taxpayer.taxYear}-`)) throw new Error("Marketplace premium source year or payment date requires a separate timing worksheet.");
-      if (!actual(payment.otherPersonPaid).isZero()) throw new Error("Marketplace outside-payer source shares require their actual separate deduction allocation.");
+      if (!shared && !actual(payment.otherPersonPaid).isZero()) throw new Error("Marketplace outside-payer source shares require their actual separate deduction allocation.");
       const row = paymentsByMonth.get(month) ?? { premium: d(0), advance: d(0) };
       row.premium = row.premium.plus(actual(payment.grossPremium)); row.advance = row.advance.plus(actual(payment.advancePremiumTaxCredit)); paymentsByMonth.set(month,row);
     }
@@ -81,12 +84,14 @@ export function calculateMarketplaceHealthPremiums(params: { input: TaxYearInput
       const sources = healthInsurance.sourceRecords.filter(row => row.planId === plan.planId && row.coverageMonth === month);
       if (sources.some(row => row.excludedFunding.gt(0))) throw new Error("Marketplace other tax-free source funding requires its actual coordinated worksheet.");
       const specified = sum(...sources.map(row => row.marketplaceSpecifiedPremium));
+      const attributable = shared?.months.get(month) ?? paid;
+      if (specified.gt(attributable.premium)) throw new Error("Marketplace specified premiums exceed their actual allocated policy source.");
       const combined = group.months.find(row => row.month === month);
-      if (combined) { combined.specifiedPremium = combined.specifiedPremium.plus(specified); combined.sourcePremium = combined.sourcePremium.plus(paid.premium); combined.advancePremiumTaxCredit = combined.advancePremiumTaxCredit.plus(paid.advance); }
-      else group.months.push({ month, specifiedPremium: specified, sourcePremium: paid.premium, advancePremiumTaxCredit: paid.advance });
+      if (combined) { combined.specifiedPremium = combined.specifiedPremium.plus(specified); combined.sourcePremium = combined.sourcePremium.plus(attributable.premium); combined.advancePremiumTaxCredit = combined.advancePremiumTaxCredit.plus(attributable.advance); }
+      else group.months.push({ month, specifiedPremium: specified, sourcePremium: attributable.premium, advancePremiumTaxCredit: attributable.advance });
       group.specifiedPremiums = group.specifiedPremiums.plus(specified);
       const recorded = recordedMonthly.get(month) ?? { premium: d(0), advance: d(0) };
-      recorded.premium = recorded.premium.plus(paid.premium); recorded.advance = recorded.advance.plus(paid.advance); recordedMonthly.set(month,recorded);
+      recorded.premium = recorded.premium.plus(attributable.premium); recorded.advance = recorded.advance.plus(attributable.advance); recordedMonthly.set(month,recorded);
     }
     if (policyMonths.size !== paymentsByMonth.size) throw new Error("Marketplace source needs actual paid records for every linked policy month.");
   }

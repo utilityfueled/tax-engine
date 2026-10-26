@@ -1,3 +1,4 @@
+import { guidedSharedMarketplaceHealthState } from "../../fixtures/guided-shared-marketplace-health";
 import { energySource, sourceCleanProperty } from "../../fixtures/energy-source";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PDFDocument } from "pdf-lib";
@@ -734,4 +735,16 @@ describe("workspace filled return download", () => {
     expect(download.includedForms).toContain("oh-it-1040-reference.pdf");
     expect(download.includedForms).not.toContain("oh-schedule-of-withholding-reference.pdf");
   });
+});
+
+// Spec: spec/federal/guided-shared-marketplace-health.yaml.
+it("exports actual shared health through the original workspace source context", async () => {
+  const state = guidedSharedMarketplaceHealthState(), before = JSON.stringify(state);
+  const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+  expect(download.includedForms.some(name => /form-7206-/.test(name))).toBe(true);
+  expect(download.includedForms).toContain("f8962-filled.pdf");
+  const text = await extractPdfText(download.contents);
+  for (const value of ["original premium $1000", "actual advance credit $600", "premium $500; advances $300", "Schedule 1 line 17 transfer: $2340", "Final Form 8962 credit: $3480"]) expect(text).toContain(value);
+  expect(text.replace(/\s|-/g, "")).not.toMatch(/111223333|444556666/);
+  expect(JSON.stringify(state)).toBe(before);
 });

@@ -10,6 +10,7 @@ import { formatCurrency, loadReviewTemplate, setTextField } from "../../pdf-util
 import { assertMarketplaceHealthReviewSources } from "./form-7206-marketplace-source.js";
 import { calculateForm7206ReviewSources } from "./form-7206-business-source.js";
 import { charitableReviewOriginalSourceInput, type PreparedCharitableReview } from "../../charitable-review-context.js";
+import { hasSharedPremiumTaxCreditSources, premiumTaxCreditReviewOriginalSourceInput, type PreparedPremiumTaxCreditReview } from "../../premium-tax-credit-review-context.js";
 const field = (number: number) => `topmostSubform[0].Page1[0].f1_${number}[0]`;
 /** Sixteen leaf fields inspected against the registered October2,2025 revision. */
 export const FORM_7206_FIELDS = {
@@ -62,18 +63,20 @@ function reconcileSources(input: TaxYearInput, result: NonNullable<TaxReturnResu
   }
 }
 
-export function assertForm7206ReviewSource(input: TaxYearInput, result: TaxReturnResult, charitableReview?: PreparedCharitableReview) {
+export function assertForm7206ReviewSource(input: TaxYearInput, result: TaxReturnResult, charitableReview?: PreparedCharitableReview, premiumTaxCreditReview?: PreparedPremiumTaxCreditReview) {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const calculation = result.form7206;
   if (!input.form7206 || !calculation || calculation.sourceFactsVerified !== true || !calculation.calculationComplete) throw new Error("Form7206 requires actual sources and a completed audited calculation.");
-  const original = charitableReviewOriginalSourceInput(input, result, charitableReview);
+  const charitableOriginal = charitableReviewOriginalSourceInput(input, result, charitableReview);
+  const original = hasSharedPremiumTaxCreditSources(input)
+    ? premiumTaxCreditReviewOriginalSourceInput(charitableOriginal, result, premiumTaxCreditReview) : charitableOriginal;
   reconcileSources(original, calculation, result);
   return calculation;
 }
 
 export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string,
-  businessSourceId: string, accountHolder: "primary" | "spouse", charitableReview?: PreparedCharitableReview): Promise<PDFDocument> {
-  const calculation = assertForm7206ReviewSource(input, result, charitableReview);
+  businessSourceId: string, accountHolder: "primary" | "spouse", charitableReview?: PreparedCharitableReview, premiumTaxCreditReview?: PreparedPremiumTaxCreditReview): Promise<PDFDocument> {
+  const calculation = assertForm7206ReviewSource(input, result, charitableReview, premiumTaxCreditReview);
   const facts = input.form7206!; // The source assertion above requires this original worksheet.
   const groups = calculation.businesses.filter(group => group.businessSourceId === businessSourceId && group.accountHolder === accountHolder);
   if (groups.length !== 1) throw new Error("Form7206 requires one actual business and owner.");
@@ -128,6 +131,13 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
       const index = /^form1095A:(\d+)$/.exec(sourceId)?.[1];
       const policy = index === undefined ? undefined : input.form1095A[Number(index)];
       write(`Marketplace original ${sourceId}: ${policy?.marketplace ?? "Unknown"}; policy ${policy?.policyNumber ?? "Unknown"}; actual source year ${policy?.taxYear ?? "Unknown"}; all covered persons in the coverage family ${String(plan.allCoveredPersonsInCoverageFamilyConfirmed)}.`);
+    }
+    if (plan.sharedMarketplaceSources) {
+      write("Shared policy family allocation: original full payments above and below are preserved. These separately derived amounts belong to this return's coverage family; an agreement alone does not establish a paid share.");
+      const indexes = new Set((plan.marketplacePolicySourceIds ?? []).map(id => Number(id.slice("form1095A:".length))));
+      for (const row of result.form8962?.sharedPolicyAllocation?.months ?? []) {
+        if (indexes.has(row.policyIndex)) write(`Shared policy family allocation, original policy ${row.policyIndex + 1}, month ${row.month}: premium $${row.premium.toFixed()}; advances $${row.advance.toFixed()}.`);
+      }
     }
     for (const month of plan.months ?? []) {
       write(`Coverage month ${month.month}: eligible for subsidized employer coverage ${String(month.employerSubsidizedPlanEligible)}.`);

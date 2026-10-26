@@ -288,7 +288,10 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
   if (packet.sourceTaxYear !== year || packet.sourceFactsConfirmed !== true || packet.allSharedPoliciesIncluded !== true) throw new Error('Form8962 allocation source year and complete confirmation are required');
   text(packet.sourceReference, 'allocation worksheet reference');
   if (input.taxpayer.filingStatus === 'married_filing_separately') throw new Error('Form8962 separate-return allocation requires its separate actual method');
-  if (facts.alternativeMarriageCalculationElected !== false || facts.selfEmployedHealthInsuranceCoordinationRequired !== false
+  // Pub974 allocates a shared policy before deriving specified premiums. A
+  // known health answer permits this pure source step; Form8962 still requires
+  // its independently completed internal health coordination context.
+  if (facts.alternativeMarriageCalculationElected !== false || typeof facts.selfEmployedHealthInsuranceCoordinationRequired !== 'boolean'
     || facts.qsehraAffected !== false || facts.lawfulPresenceReconciliationRequired !== false) {
     throw new Error('Form8962 allocation requires separate marriage, health, QSEHRA or lawful-presence coordination sources');
   }

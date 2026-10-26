@@ -1,6 +1,8 @@
 "use client";
 
-import { emptyHealthInsuranceAllocation, emptyHealthInsuranceFacts, emptyHealthInsurancePayment, emptyHealthInsurancePerson, emptyHealthInsurancePlan, type HealthInsuranceData, type HealthInsuranceIncomeDeductionsData, type HealthInsurancePlanData, type HealthInsuranceSourceOption } from "@/lib/guided-health-insurance-facts";
+import { invalidateHealthInsuranceSources, emptyHealthInsuranceAllocation, emptyHealthInsuranceFacts, emptyHealthInsurancePayment, emptyHealthInsurancePerson, emptyHealthInsurancePlan, type HealthInsuranceData, type HealthInsuranceIncomeDeductionsData, type HealthInsurancePlanData, type HealthInsuranceSourceOption } from "@/lib/guided-health-insurance-facts";
+import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
+import { SharedMarketplaceHealthDetails } from "./shared-marketplace-health-details";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
 import type { MarketplacePolicyOption } from "@/lib/guided-marketplace-health-facts";
@@ -13,9 +15,8 @@ const monthChoices = ["January", "February", "March", "April", "May", "June", "J
 export function HealthInsuranceSourceDetails({ data, sources = [], marketplacePolicies = [], onChange }: { data?: HealthInsuranceData; sources?: HealthInsuranceSourceOption[]; marketplacePolicies?: MarketplacePolicyOption[]; onChange: (data: HealthInsuranceData) => void }) {
   if (!data) return <section><h4>Self-employed health insurance sources</h4><p className="guided-hint">Enter actual policy, payment and monthly eligibility records for a self-employed business or a more-than-two-percent S corporation shareholder. The return's business income determines the allowed deduction.</p><button type="button" onClick={() => onChange({ ...emptyHealthInsuranceFacts, persons: [], plans: [], longTermCareAllocations: [] })}>Add health insurance worksheet</button></section>;
   const update = (patch: Partial<HealthInsuranceData>) => {
-    const substantive = !Object.keys(patch).every(key => key === "sourceFactsConfirmed");
-    onChange({ ...data, ...patch, ...(substantive ? { sourceFactsConfirmed: null } : {}),
-      ...(substantive && !("incomeDeductions" in patch) && data.incomeDeductions ? { incomeDeductions: { ...data.incomeDeductions, sourceFactsConfirmed: null } } : {}) });
+    const next = { ...data, ...patch };
+    onChange(guidedSourceValuesChanged(data, next) ? invalidateHealthInsuranceSources(next) : next);
   };
   const updateIncome = (patch: Partial<HealthInsuranceIncomeDeductionsData>) => {
     if (!data.incomeDeductions) return;
@@ -64,7 +65,7 @@ export function HealthInsuranceSourceDetails({ data, sources = [], marketplacePo
           <BooleanFact label={`${prefix}: Clergy special rules apply`} value={plan.clergySpecialRules} onChange={clergySpecialRules => set({ clergySpecialRules })} />
         </div>
         {(specified || plan.marketplacePolicySourceIds?.length || plan.allCoveredPersonsInCoverageFamilyConfirmed !== undefined) && <fieldset><legend>{prefix}: Marketplace policy links</legend>
-          <p className="guided-hint">Enter the original Marketplace policies and coverage-family worksheet in Credits, then link those records here. Preserve advances separately from amounts you or the business paid. A mixed coverage family or outside payer needs its separate allocation worksheet.</p>
+          <p className="guided-hint">Enter the original Marketplace policies and coverage-family worksheet in Credits, then link those records here. Preserve advances separately from amounts you or the business paid. For a shared policy, keep the full payments and independently link the covered people below; the allocation agreement alone does not establish who paid.</p>
           {(plan.marketplacePolicySourceIds ?? []).map((sourceId, policyIndex) => <div key={policyIndex} className="guided-form-grid">
             <Choice label={`${prefix} policy ${policyIndex + 1}: Original Marketplace policy`} value={sourceId} choices={marketplacePolicies.map(policy => [policy.sourceId, policy.label] as const)} onChange={value => set({ marketplacePolicySourceIds: (plan.marketplacePolicySourceIds ?? []).map((current, position) => position === policyIndex ? value : current) })} />
             <button type="button" onClick={() => set({ marketplacePolicySourceIds: plan.marketplacePolicySourceIds?.filter((_, position) => position !== policyIndex) })}>{prefix} policy {policyIndex + 1}: Remove link</button>
@@ -72,6 +73,7 @@ export function HealthInsuranceSourceDetails({ data, sources = [], marketplacePo
           <button type="button" onClick={() => set({ marketplacePolicySourceIds: [...plan.marketplacePolicySourceIds ?? [], ""] })}>{prefix}: Add Marketplace policy link</button>
           <BooleanFact label={`${prefix}: All covered people belong to the actual PTC coverage family`} value={plan.allCoveredPersonsInCoverageFamilyConfirmed} onChange={allCoveredPersonsInCoverageFamilyConfirmed => set({ allCoveredPersonsInCoverageFamilyConfirmed })} />
         </fieldset>}
+        {(specified || plan.sharedMarketplaceSources) && <SharedMarketplaceHealthDetails prefix={prefix} data={plan.sharedMarketplaceSources} people={people} onChange={sharedMarketplaceSources => set({ sharedMarketplaceSources })} />}
         {plan.businessKind === "s_corporation" && <p className="guided-hint">Use the actual shareholder W-2 source. Qualifying premiums must be paid or reimbursed by the corporation and included in Box 1. Medicare wages supply a separate business income limit.</p>}
         {plan.coveredPersons.map((person, personIndex) => {
           const label = `${prefix} person ${personIndex + 1}`;

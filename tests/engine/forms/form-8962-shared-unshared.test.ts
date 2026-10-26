@@ -59,5 +59,7 @@ it('retains missing-month benchmark and actual allocation boundaries', () => {
   const derived = calculateForm8962SharedPolicy(noAdvance); expect(derived.periods).toHaveLength(1); expect(derived.periods[0].method).toBe('no_advance_benchmark'); expect(derived.months[0].premium.toFixed(2)).toBe('666.67'); expect(derived.months[6].premium.toFixed()).toBe('700');
   noAdvance.form8962!.monthlyReconciliation!.forEach((row, index) => Object.assign(row, { enrolleePremium: derived.months[index].premium.toFixed(), slcsp: derived.months[index].slcsp.toFixed(), advancePremiumTaxCredit: derived.months[index].advance.toFixed() }));
   const calculated = calculateFederalTax(noAdvance); expect([calculated.form8962?.ptcAllowed.toFixed(), calculated.form8962?.advancePTCTotal.toFixed(), calculated.form8962?.netPTC.toFixed()]).toEqual(['7608', '1800', '5808']);
-  input.form8962!.selfEmployedHealthInsuranceCoordinationRequired = true; expect(() => calculateForm8962SharedPolicy(input)).toThrow(/coordination/i);
+  input.form8962!.selfEmployedHealthInsuranceCoordinationRequired = true;
+  expect(() => calculateForm8962SharedPolicy(input)).not.toThrow();
+  expect(() => calculateFederalTax(input)).toThrow(/health|coordination|7206/i);
 });

@@ -11,12 +11,18 @@ type Owner = "primary" | "spouse";
 export interface HealthInsurancePersonData { personId: string; name: string; householdRole: "" | Owner | "other"; attainedAgeAtYearEnd: string }
 export interface HealthInsuranceAllocationData { personId: string; payer: "" | "owner_after_tax" | "business_paid_or_reimbursed"; amountPaid: string; advancePremiumTaxCredit?: string; excludedPublicSafetyOfficerAmount: string; publicSafetyOfficerAccountHolder: "" | Owner; otherTaxFreeFunding: string }
 export interface HealthInsurancePaymentData { sourceId: string; datePaid: string; coverageTaxYear: string; coverageMonth: string; grossPremium: string; ownerOrBusinessPaid: string; otherPersonPaid: string; advancePremiumTaxCredit?: string; personAmounts: HealthInsuranceAllocationData[] }
+export interface SharedMarketplaceHealthData {
+  sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null;
+  allCoveredPersonsLinkedConfirmed: boolean | null; allThisReturnPersonsInCoverageFamilyConfirmed: boolean | null;
+  persons: { personId: string; coveredIndividualSsn: string }[];
+}
 export interface HealthInsurancePlanData {
   planId: string; policyReference: string; accountHolder: "" | Owner; businessSourceId: string; businessKind: "" | "self_employed" | "partnership" | "s_corporation";
   kind: "" | "medical" | "qualified_ltc"; policyHolder: "" | "individual" | "business";
   establishedUnderBusiness: boolean | null; insuranceQualificationConfirmed: boolean | null; premiumsIncludedInOwnerIncome: boolean | null; moreThanTwoPercentShareholder: boolean | null;
   marketplaceCoverage: boolean | null; premiumTaxCreditInvolved: boolean | null; clergySpecialRules: boolean | null;
   marketplacePolicySourceIds?: string[]; allCoveredPersonsInCoverageFamilyConfirmed?: boolean | null;
+  sharedMarketplaceSources?: SharedMarketplaceHealthData;
   coveredPersons: { personId: string; relationshipToOwner: "" | "self" | "spouse" | "dependent" | "child_under_27" | "other"; dependencyEligibilityConfirmed: boolean | null }[];
   months: { month: string; employerSubsidizedPlanEligible: boolean | null; employerOfferPtcException?: "" | "unaffordable" | "does_not_provide_minimum_value"; employerCoverageEnrolled?: boolean | null; employerOfferSourceReference?: string }[];
   payments: HealthInsurancePaymentData[];
@@ -33,6 +39,13 @@ export interface HealthInsuranceData {
 }
 export interface HealthInsuranceSourceOption { sourceId: string; accountHolder: Owner; kind: "self_employed" | "partnership" | "s_corporation"; label: string }
 export const emptyHealthInsuranceFacts: HealthInsuranceData = { sourceTaxYear: "", sourceReference: "", sourceFactsConfirmed: null, allPlansIncluded: null, persons: [], plans: [], longTermCareAllocations: [] };
+/** Revoke independent confirmations without replacing their actual source values. */
+export function invalidateHealthInsuranceSources(data: HealthInsuranceData): HealthInsuranceData {
+  return { ...data, sourceFactsConfirmed: null,
+    ...(data.incomeDeductions ? { incomeDeductions: { ...data.incomeDeductions, sourceFactsConfirmed: null } } : {}),
+    plans: data.plans.map(plan => ({ ...plan, ...(plan.sharedMarketplaceSources ? { sharedMarketplaceSources: { ...plan.sharedMarketplaceSources, sourceFactsConfirmed: null } } : {}) })),
+  };
+}
 export const emptyHealthInsurancePerson: HealthInsurancePersonData = { personId: "", name: "", householdRole: "", attainedAgeAtYearEnd: "" };
 export const emptyHealthInsurancePlan: HealthInsurancePlanData = { planId: "", policyReference: "", accountHolder: "", businessSourceId: "", businessKind: "", kind: "", policyHolder: "", establishedUnderBusiness: null, insuranceQualificationConfirmed: null, premiumsIncludedInOwnerIncome: null, moreThanTwoPercentShareholder: null, marketplaceCoverage: null, premiumTaxCreditInvolved: null, clergySpecialRules: null, coveredPersons: [], months: [], payments: [] };
 export const emptyHealthInsurancePayment: HealthInsurancePaymentData = { sourceId: "", datePaid: "", coverageTaxYear: "", coverageMonth: "", grossPremium: "", ownerOrBusinessPaid: "", otherPersonPaid: "", personAmounts: [] };
@@ -78,6 +91,13 @@ export function buildHealthInsuranceInput(data: HealthInsuranceData | undefined,
     persons: data.persons?.map(person => ({ ...person, householdRole: person.householdRole || undefined, attainedAgeAtYearEnd: integer(person.attainedAgeAtYearEnd, "year-end age") })),
     plans: data.plans?.map(plan => ({ ...plan, accountHolder: plan.accountHolder || undefined, businessKind: plan.businessKind || undefined, kind: plan.kind || undefined, policyHolder: plan.policyHolder || undefined,
       ...Object.fromEntries((["establishedUnderBusiness", "insuranceQualificationConfirmed", "premiumsIncludedInOwnerIncome", "moreThanTwoPercentShareholder", "marketplaceCoverage", "premiumTaxCreditInvolved", "clergySpecialRules", "allCoveredPersonsInCoverageFamilyConfirmed"] as const).map(field => [field, plan[field] ?? undefined])),
+      sharedMarketplaceSources: plan.sharedMarketplaceSources ? { ...plan.sharedMarketplaceSources,
+        sourceTaxYear: integer(plan.sharedMarketplaceSources.sourceTaxYear, "shared health source year"),
+        sourceFactsConfirmed: plan.sharedMarketplaceSources.sourceFactsConfirmed ?? undefined,
+        allCoveredPersonsLinkedConfirmed: plan.sharedMarketplaceSources.allCoveredPersonsLinkedConfirmed ?? undefined,
+        allThisReturnPersonsInCoverageFamilyConfirmed: plan.sharedMarketplaceSources.allThisReturnPersonsInCoverageFamilyConfirmed ?? undefined,
+        persons: plan.sharedMarketplaceSources.persons.map(person => ({ personId: person.personId.trim(), coveredIndividualSsn: person.coveredIndividualSsn.trim() })),
+      } : undefined,
       coveredPersons: plan.coveredPersons?.map(person => ({ ...person, relationshipToOwner: person.relationshipToOwner || undefined, dependencyEligibilityConfirmed: person.dependencyEligibilityConfirmed ?? undefined })),
       months: plan.months?.map(month => ({ month: integer(month.month, "coverage month"), employerSubsidizedPlanEligible: month.employerSubsidizedPlanEligible ?? undefined,
         employerOfferPtcException: month.employerOfferPtcException || undefined, employerCoverageEnrolled: month.employerCoverageEnrolled ?? undefined, employerOfferSourceReference: month.employerOfferSourceReference?.trim() || undefined })),
@@ -144,7 +164,7 @@ export function healthInsuranceSourceErrors(state: GuidedFlowState): Record<stri
       return { healthInsuranceHouseholdAge: "Reconcile the health plan's attained age with this person's actual household birth date and return year." };
     }
   }
-  try { validateMarketplaceHealthSources(state, data); }
+  try { validateMarketplaceHealthSources(state, data, buildHealthInsuranceInput(data, state.segmentation.filingStatus, state.taxYear)); }
   catch (error) { return { healthInsuranceMarketplace: error instanceof Error ? error.message : "Reconcile actual Marketplace policy and premium sources." }; }
   return {};
 }

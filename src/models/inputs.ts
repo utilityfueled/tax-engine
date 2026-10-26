@@ -4218,6 +4218,19 @@ export const Form7206Schema = z.object({
     premiumTaxCreditInvolved: z.boolean().optional(),
     marketplacePolicySourceIds: z.array(z.string()).optional(),
     allCoveredPersonsInCoverageFamilyConfirmed: z.boolean().optional(),
+    /** Actual identity links between complete payment and shared-policy sources.
+     * Neither a paid share nor a health deduction is inferred from the agreement. */
+    sharedMarketplaceSources: z.object({
+      sourceTaxYear: z.number().int().optional(),
+      sourceReference: z.string().optional(),
+      sourceFactsConfirmed: z.boolean().optional(),
+      allCoveredPersonsLinkedConfirmed: z.boolean().optional(),
+      allThisReturnPersonsInCoverageFamilyConfirmed: z.boolean().optional(),
+      persons: z.array(z.object({
+        personId: z.string().optional(),
+        coveredIndividualSsn: z.string().optional(),
+      }).strict()).optional(),
+    }).strict().optional(),
     clergySpecialRules: z.boolean().optional(),
     coveredPersons: z.array(z.object({
       personId: z.string().optional(),

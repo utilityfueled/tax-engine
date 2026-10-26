@@ -478,7 +478,7 @@ export async function fillReturn(
       }
     }
   }
-  if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result, charitableReview);
+  if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result, charitableReview, premiumTaxCreditReview);
   const codNolReview = input.form982NolSources || result.codNolReduction
     ? options.codNolReview ?? prepareCodNolReview(input) : undefined;
   if (input.netOperatingLoss || result.netOperatingLoss) buildNetOperatingLossReview(input, result, capitalGainReview, codNolReview);
@@ -893,7 +893,7 @@ export async function fillReturn(
   // Actual Form7206 has a separate completed worksheet for each business.
   if (result.form7206) {
     for (const [index, business] of result.form7206.businesses.entries()) {
-      const doc = await fillForm7206(input, result, join(blankFormsDir, "f7206.pdf"), business.businessSourceId, business.accountHolder, charitableReview);
+      const doc = await fillForm7206(input, result, join(blankFormsDir, "f7206.pdf"), business.businessSourceId, business.accountHolder, charitableReview, premiumTaxCreditReview);
       if (flatten) await flattenForm(doc.getForm());
       const outputPath = join(outputDir, `form-7206-${business.accountHolder}-${index + 1}.pdf`);
       await savePacketPdf(doc, outputPath); filledForms.push(outputPath);

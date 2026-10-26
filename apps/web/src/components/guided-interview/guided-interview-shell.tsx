@@ -57,6 +57,7 @@ import {
   computeFlowProgress,
   shouldPromptBeforeAdvance,
   emptyBrokerageEntry,
+  emptyCreditsData,
   emptyDeductionData,
   emptyDividendEntry,
   emptyInterestEntry,
@@ -93,6 +94,7 @@ import { SectionDeductions } from "./section-deductions";
 import { SectionAdjustments } from "./section-adjustments";
 import { K1CharitableSourceDetails } from "./k1-charitable-source-details";
 import { SectionCredits } from "./section-credits";
+import { PremiumTaxCreditSourceDetails } from "./premium-tax-credit-source-details";
 import { SectionOtherTaxes } from "./section-other-taxes";
 import { SectionPayments } from "./section-payments";
 import { SectionReview } from "./section-review";
@@ -649,6 +651,19 @@ function SectionContent({
             onStateChange(updateSectionData(state, "adjustments", data))
           }
         />
+        {getSectionData(state, "adjustments")?.healthInsuranceFacts?.plans.some(plan => plan.marketplaceCoverage === true) && (
+          <PremiumTaxCreditSourceDetails
+            data={getSectionData(state, "credits")?.premiumTaxCredit}
+            personal={getSectionData(state, "personal-info")}
+            filingStatus={state.segmentation.filingStatus}
+            taxYear={state.taxYear}
+            onChange={premiumTaxCredit => onStateChange(updateSectionData(state, "credits", {
+              ...emptyCreditsData,
+              ...getSectionData(state, "credits"),
+              premiumTaxCredit,
+            }))}
+          />
+        )}
         {(state.segmentation.lifeEvents.includes("k1-loss-sources") || getSectionData(state, "adjustments")?.k1LossSources) && (
           <K1CharitableSourceDetails
             data={getSectionData(state, "deductions")?.k1CharitableSources}

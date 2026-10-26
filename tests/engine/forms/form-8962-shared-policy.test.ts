@@ -52,7 +52,7 @@ it('preserves zero full and varying agreements with exact cents and explicit met
     i => { i.form8962!.sharedPolicyAllocations!.policies![0].monthlyAllocations![0].fraction = '0.333'; },
     i => { i.form8962!.sharedPolicyAllocations!.policies![0].monthlyAllocations!.pop(); },
     i => { i.form8962!.qsehraAffected = true; },
-    i => { i.form8962!.selfEmployedHealthInsuranceCoordinationRequired = true; },
+    i => { i.form8962!.selfEmployedHealthInsuranceCoordinationRequired = undefined; },
     i => { i.form1095A[0].monthlyPremiums = i.form1095A[0].monthlyPremiums.map(row => ({ ...row, advancePremiumTaxCredit: '0' })); i.form8962!.sharedPolicyAllocations!.policies![0].original = structuredClone(i.form1095A[0]); },
   ];
   for (const mutate of mutations) { const changed = sharedPolicyFixture(); mutate(changed); expect(() => calculateForm8962SharedPolicy(changed)).toThrow(); }

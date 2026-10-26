@@ -266,7 +266,7 @@ export function resolveGuidedSharedPolicy(data: PremiumTaxCreditData, taxYear: n
     ...(filingStatus === "mfj" ? { spouse: person(personal.spouse, "joint spouse") } : {}), dependents: (personal.dependents ?? []).map(entry => person(entry, "claimed dependent")) },
     standardDeductionFacts: { primaryCanBeClaimedAsDependent: personal.standardDeductionFacts?.primaryCanBeClaimedAsDependent ?? undefined,
       spouseCanBeClaimedAsDependent: personal.standardDeductionFacts?.spouseCanBeClaimedAsDependent ?? undefined }, form1095A: policies, form8962 };
-  return { policies, packet: form8962.sharedPolicyAllocations, allocation: calculateForm8962SharedPolicy(input) };
+  return { policies, packet: form8962.sharedPolicyAllocations, allocation: calculateForm8962SharedPolicy(input), sourceInput: input };
 }
 export function deriveSharedPolicyMonths(data: PremiumTaxCreditData, taxYear: number | null | undefined, filingStatus: FilingStatus | null | undefined, personal?: PersonalInfoData): MarketplaceCoverageMonthData[] {
   const result = resolveGuidedSharedPolicy(data, taxYear, filingStatus, personal);

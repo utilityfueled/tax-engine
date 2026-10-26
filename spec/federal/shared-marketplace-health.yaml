@@ -1,0 +1,66 @@
+form: "Shared Marketplace health premium sources"
+fullName: "Actual two-family policy allocation before self-employed health coordination"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+retrievedAt: "2026-10-26"
+notes: |
+  Final Pub974, Specified Premiums, first requires the Form8962 policy allocation
+  between tax families. Only then is the coverage-family portion determined.
+  W1 uses eligible specified premiums and W2 their attributable advances.
+  Form7206/i7206 and IRC162(l) retain actual owner/business-paid qualification;
+  an agreement does not establish which person paid a premium.
+  This derived source method supports an actual Situation4 agreement and one
+  owner/business for the linked shared health plans. Complete full receipts
+  remain unchanged. Their actual person paid/APTC allocations are independently
+  linked to original covered identities and family assignments. All this-return
+  persons must be in its actual coverage family. Outside-family eligible
+  children, owner-paid outside-person amounts, partial coverage-family methods,
+  other allocation situations and multiple-owner shared health remain separate
+  implementation methods. No current allowance or repayment-owner override.
+  Pure policy allocation may precede health validation, but cannot itself
+  enable a credit or health deduction. Final2026 filing remains closed.
+lines:
+  - line: "allocation-before-health"
+    description: "Keep full original receipts and derive allocated premium and advances"
+    formula: "Original monthly1000/APTC600, actual agreement.50 and independently paid owner200/other200 yield own premium500/APTC300. Form7206 gross remains1000 and owner paid remains200. Attributable specified premium is500 only after source identity, actual payment and coverage qualification reconcile."
+    testRef: "tests/engine/forms/shared-marketplace-health.test.ts::derives shared specified premiums after allocation while retaining full paid sources"
+  - line: "source-persons"
+    description: "Bind every actual covered person across both source ledgers"
+    formula: "Require actual source year/reference/confirmations and complete one-to-one personId/originalSSN links. Original names, actual household roles and policy family assignments must agree. Unknown, duplicate, replaced or outside-family eligible relationships reject."
+    testRef: "tests/engine/forms/shared-marketplace-health.test.ts::rejects unknown duplicated and contradictory shared health identities"
+  - line: "paid-conservation"
+    description: "No agreement-based inference of an actual paid share"
+    formula: "Full original gross equals owner paid+other paid+full advances. Existing person records conserve owner paid and advances. Current-family person advances equal allocated advances, own paid plus those advances equals allocated premium; outside-family owner-paid amounts are explicit zero. Reject changed paid shares, missing source amounts, independent funding and eligible outside-family children."
+    testRef: "tests/engine/forms/shared-marketplace-health.test.ts::rejects an inferred paid share or transferred outside-family advance"
+  - line: "exact-months"
+    description: "Use exact source amounts before existing form rounding"
+    formula: "Multiply original amounts by the actual agreement before reporting. Full and zero agreements conserve originals; original and payment order do not change monthly results. Missing months, changed original snapshots and unsupported methods reject."
+    testRef: "tests/engine/forms/shared-marketplace-health.test.ts::preserves cents actual zero and source order without residual allocation"
+  - line: "canonical"
+    description: "Reuse source-derived monthly PTC and owner health replays once"
+    formula: "2025profit50000 givesSEdeduction3533. Own annual6000/APTC3600 and monthlybenchmark500: W16=2400,X25=975,max3375; Step2MAGI43092,rate.0544,contribution2344/month195,PTC3660; deduction2340. FinalAGI44127 divided by15060 is293.0079%; finali8962Table2 row293 uses.0572,contribution2524/month210,PTC3480,repayment120. Full original gross12000/APTC7200 retained."
+    testRef: "tests/engine/federal-shared-marketplace-health.test.ts::coordinates actual shared health sources through monthly credit and QBI once"
+  - line: "no-credit"
+    description: "Preserve allocated sources in ordinary no-credit re-entry"
+    formula: "High actual income with allocated advances uses only the actual allocated premiums for health, never the original full policy. Source changes after confirmation reject; the input and outside-family payment records are not rewritten by replay."
+    testRef: "tests/engine/federal-shared-marketplace-health.test.ts::preserves original shared payments through no-credit re-entry and rejects stale sources"
+  - line: "source-order"
+    description: "Policy allocation precedes the independently completed health method"
+    formula: "An actual known health-coordination answer permits pure original-policy allocation. Unknown still rejects, and the credit calculator still requires its completed internal Pub974 coordination context; source allocation alone cannot certify a credit or deduction."
+    testRef: "tests/engine/forms/shared-marketplace-health.test.ts::permits source allocation first without certifying a completed health method"
+  - line: "private-review"
+    description: "Revalidate original shared health identities before private rendering"
+    formula: "An opaque server-local original-input token binds the complete return, policy/person/payment sources and calculated8962. Existing independent7206/Pub974 audit reconciliation also remains required. Redacted render inputs cannot certify missing or forged original context. Full original gross/APTC and source-derived family allocations appear separately, with no identifiers."
+    testRef: "tests/pdf/shared-marketplace-health-review.test.ts::renders full and allocated health amounts from a private original context"
+  - line: "stale-review"
+    description: "Reject altered sources or results before loading a form"
+    formula: "Missing or plain-object token, changed original identity/year/payment/profit, and balanced altered calculated health amounts reject before template I/O. The original source context never authorizes a different return."
+    testRef: "tests/pdf/shared-marketplace-health-review.test.ts::rejects missing forged and stale shared health review sources before I/O"
+  - line: "return-review"
+    description: "Forward the original source context through complete return export"
+    formula: "Whole-return redaction and export must forward the prepared PTC token to both Form8962 and Form7206. Saved physical7206 has0nonspecified/0deduction; physical8962 shows3480credit/3600advances/120repayment; health statement transfers2340 once. Every page has the review-only notice."
+    testRef: "tests/pdf/shared-marketplace-health-review.test.ts::exports both physical forms with original context and private source statements"
+  - line: "actual-2026"
+    description: "Preserve allocation-before-health in the separate 2026 calculation"
+    formula: "Actual2026 shared full sources produce the same deduction, AGI and PTC as a separately supplied own-family policy/payment control with500premium/700benchmark/300advance, and actual January500.01 vs full1000.02 requiring monthly reporting in both controls; full12000.02gross remains in the shared record. This invariant does not qualify2026 forms or filing."
+    testRef: "tests/engine/federal-shared-marketplace-health-2026.test.ts::preserves2026 allocated family calculation and full original sources"

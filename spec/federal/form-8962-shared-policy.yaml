@@ -22,8 +22,11 @@ notes: |
   household aggregation in form-8962-overlapping-policies.yaml. The actual no-agreement default
   is separately specified in form-8962-default-allocation.yaml; actual noAPTC
   benchmark allocation is in form-8962-no-advance-allocation.yaml. Methods for
-  other allocation situations, overlapping Situation3 policies, QSEHRA,
-  PartV and self-employed-health coordination remain unimplemented here.
+  other allocation situations, QSEHRA and PartV remain separate methods.
+  Actual overlapping Situation3 is separately source-bound. Policy allocation
+  may precede actual self-employed-health coordination as required by Pub974;
+  shared-marketplace-health.yaml validates independent payment and person sources
+  before health deduction use. Pure allocation never certifies that later method.
   Original source cents are multiplied before each final monthly form amount
   is rounded. No dependent identity, income, fraction or missing zero is inferred.
   2026 uses the same allocation sources with existing2026 credit/repayment law;
