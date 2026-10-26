@@ -48,7 +48,8 @@ notes: |
   https://www.ecfr.gov/current/title-26/section-1.1366-2
   https://www.ecfr.gov/current/title-26/section-1.704-1
   https://www.irs.gov/pub/irs-irbs/irb08-11.pdf
-  General NOL charity-source coordination remains separate; this package cannot
+  General NOL charity-source coordination is specified separately in
+  charitable-original-source-nol.yaml; this original handoff package cannot
   strip original source records to enter an unsupported replay.
   IRC731(a)(1) recognizes money distributed above partnership-interest basis;
   IRC1368(b)(2) similarly addresses excess stock distributions under its stated
@@ -95,7 +96,7 @@ lines:
     testRef: "tests/engine/federal-k1-charitable-sources.test.ts::preserves the actual ordinary QBI history alongside charitable basis"
   - line: "nol-boundary"
     description: "NOL replay cannot discard a new original charity source"
-    formula: "An original K1 charity packet with an actual regular/AMT NOL source, current Form172 origin, COD reduction or positive legacy NOL carry requires the separate source-coordination method before any replay."
+    formula: "An original K1 charity packet with current Form172 origin, COD reduction or positive legacy NOL carry requires its separate source-coordination method. The current single-category regular/AMT NOL extension requires complete independent charitable histories before replay; missing history must still reject. See charitable-original-source-nol.yaml."
     testRef: "tests/engine/federal-k1-charitable-sources.test.ts::preserves the explicit original-source NOL coordination boundary"
   - line: "review-binding"
     description: "Original K1 source and final federal calculation bind before redaction"

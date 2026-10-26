@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.143",
+    ruleVersion: "2025.144",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.ecfr.gov/current/title-26/section-1.170A-10", section: "Actual current K-1 and digital-asset charitable originals in single-category regular and alternative NOL carry coordination", revision: "Original basis/holding/recipient values preserved before section170; independent known-empty histories, internal source-bound comparison, actual guided K-1 handoff and private review; prior basis release, mixed attribution, current-origin and human qualification remain separate; full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p561", section: "Deductions of More Than5000 and Number of Qualified Appraisals; known annual same-asset gifts across recipients", revision: "Final12/2025 and digital-assetFAQ78; exact original tentative contributions aggregate before percentage limits; required actual appraisal sources, legacy unverified status and outside-ledger determinations retained; final human/form qualification remains separate", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.6013-1", section: "Separate deceased and surviving spouse taxable periods under paragraph(d), IRC32(c)(1)(A)(ii)(I)/(e), and IRC443(a)(2)", revision: "Actual death date, each claimant's distinct day records and applicable period, and confirmed survivor remarriage source bound to Form8862 lines9/10; no EIC annualization or proration, accounting-change and legal filing authority remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i8862", section: "Actual current Form8862 EIC Parts I/II after independent disallowance history", revision: "Final December2025 form/instructions; original claimant and child identity, distinct residence days, actual deceased-claimant periods and period-end age, and income-only shortcut bound through canonical calculation, local guide and private review pages; other credit parts remain separate; no filing or human qualification promotion", retrievedAt: "2026-10-26" },
@@ -183,11 +184,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.140-law-integration-draft",
+    ruleVersion: "2026.141-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.ecfr.gov/current/title-26/section-1.170A-10", section: "Actual current K-1 and digital-asset charitable originals in single-category regular and alternative NOL carry coordination", revision: "Original basis/holding/recipient values preserved before section170; independent known-empty histories, internal source-bound comparison, actual guided K-1 handoff and private review; prior basis release, mixed attribution, current-origin and human qualification remain separate; full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p561", section: "Deductions of More Than5000 and Number of Qualified Appraisals; known annual same-asset gifts across recipients", revision: "Final12/2025 and digital-assetFAQ78; exact original tentative contributions aggregate before percentage limits; required actual appraisal sources, legacy unverified status and outside-ledger determinations retained; final human/form qualification remains separate", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.6013-1", section: "Separate deceased and surviving spouse taxable periods under paragraph(d), IRC32(c)(1)(A)(ii)(I)/(e), and IRC443(a)(2)", revision: "Actual death date, each claimant's distinct day records and applicable period, and confirmed survivor remarriage source; no EIC annualization or proration, historical2025 physical review only, full2026 and human qualification gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i8862", section: "Actual current Form8862 EIC source questions and independent disallowance-history reconciliation", revision: "IRC32(k), Reg1.32-3 and final December2025 source instructions; actual owner/child/day records, deceased-claimant periods and local guide implemented without a credit override; historical2025 review only, other credit parts remain separate, full2026 and human qualification gates unchanged", retrievedAt: "2026-10-26" },

@@ -192,7 +192,7 @@ import { calculateIllinoisReturn, type ILStateInput } from "./state/il-orchestra
 import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
 export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
-  if (input.k1CharitableSources && (input.netOperatingLoss || input.form172 || input.form982NolSources
+  if (input.k1CharitableSources && (input.form172 || input.form982NolSources
     || [input.priorYear?.nolCarryforward, input.priorYear?.excessBusinessLossNOL,
       ...(input.scheduleK1Form1041 ?? []).map(row => row.finalYearNOLCarryover)].some(value => !d(value).isZero()))) {
     throw new Error("K1 charitable NOL coordination requires its original source replay method");

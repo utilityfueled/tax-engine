@@ -1,6 +1,7 @@
 /** Canonical Section172 income-context orchestration. Spec: net-operating-loss-return.yaml. */
 import Decimal from "decimal.js";
 import type { CharitableNolContributionLimit } from "@/utils/charitable-nol-source.js";
+import { hasOriginalCharitableNolSources, readCurrentCharitableSourceForNol } from "@/utils/charitable-nol-source.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -68,6 +69,9 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
     actualRegularQbiDeduction?: Decimal) => NolAlternativeIncomeContext): NetOperatingLossReturnResult {
   const facts = input.netOperatingLoss;
   if (!facts) throw new Error("Actual NOL return computation requires the actual carry source packet");
+  // Source completeness cannot depend on whether a small gift creates an
+  // excess. Replays always retain the original K1 basis and crypto receipts.
+  const originalCharitableSource = hasOriginalCharitableNolSources(input) ? readCurrentCharitableSourceForNol(input) : undefined;
   const priorCharitableSources = hasPriorCharitableNolSources(input) ? readPriorCharitableNolSources(input) : undefined;
   const currentOrigin = input.form172 ? calculateForm172Return(input) : undefined;
   if (input.foreignTaxElection?.deductionYearCarryover) {
@@ -205,6 +209,9 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
       computeCarryover: computeAlternativeCharitableComparison });
   }
   const audit = new AuditTrail();
+  if (originalCharitableSource) audit.record("Section170 Original NOL Sources", "qualified-current",
+    "Original qualified K1 and digital-asset contribution value", originalCharitableSource.amount,
+    "Validated current source category and medium after original valuation and entity basis; receipts remain unchanged in each internal NOL comparison");
   if (priorCharitableAlternativeAdjustment) audit.record("Prior Charitable NOL Carry", "alternative:current-adjustment",
     "Independent prior charity current AMT adjustment", priorCharitableAlternativeAdjustment.amount,
     "Actual independent AMT opening at applicable regular AGI, retaining regular deduction choice and199A amount",

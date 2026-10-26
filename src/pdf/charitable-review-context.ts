@@ -7,6 +7,7 @@ import { calculateK1CharitableReturnSources } from "@/engine/forms/k1-charitable
 import { validateCharitableCarryoverSources } from "@/engine/forms/charitable-carryover-source-validation.js";
 import { charitableSourceDigest } from "@/utils/charitable-source-digest.js";
 import { hasPriorCharitableNolSources, readPriorCharitableNolSources } from "@/utils/charitable-prior-nol-source.js";
+import { hasOriginalCharitableNolSources, readCurrentCharitableSourceForNol } from "@/utils/charitable-nol-source.js";
 import { redactReviewIdentifiers } from "./redact-review-identifiers.js";
 
 const brand = Symbol("prepared charitable review");
@@ -30,7 +31,7 @@ function freeze<T>(value: T): T {
 }
 
 function sourceDigest(input: TaxYearInput, redacted = false): string {
-  if (input.k1CharitableSources || input.netOperatingLoss && hasPriorCharitableNolSources(input)) return digest(redacted ? redactReviewIdentifiers(input) : input);
+  if (input.k1CharitableSources || requiresCharitableNolReview(input)) return digest(redacted ? redactReviewIdentifiers(input) : input);
   const projection = { taxpayer: input.taxpayer, charitableCarryoverSources: input.charitableCarryoverSources,
     priorCharitableCarryforward: input.priorYear?.charitableCarryforward,
     priorCharitableCarryforwardByYear: input.priorYear?.charitableCarryforwardByYear,
@@ -46,11 +47,22 @@ export function requiresPriorCharitableNolReview(input: TaxYearInput, result?: T
     || result?.allLines.some(row => row.form === "Prior Charitable NOL Carry"));
 }
 
+function requiresOriginalCharitableNolReview(input: TaxYearInput, result?: TaxReturnResult): boolean {
+  return !!(input.netOperatingLoss && hasOriginalCharitableNolSources(input)
+    || result?.allLines.some(row => row.form === "Section170 Original NOL Sources"));
+}
+
+/** Retained original-source evidence survives removal of an input attachment. */
+export function requiresCharitableNolReview(input: TaxYearInput, result?: TaxReturnResult): boolean {
+  return requiresPriorCharitableNolReview(input, result) || requiresOriginalCharitableNolReview(input, result);
+}
+
 /** Local only; never serialize a token or accept one from a client. */
 export function prepareCharitableReview(input: TaxYearInput): PreparedCharitableReview {
   if (input.charitableCarryoverSources) validateCharitableCarryoverSources(input);
   if (requiresPriorCharitableNolReview(input)) readPriorCharitableNolSources(input);
-  const calculation = input.k1CharitableSources || requiresPriorCharitableNolReview(input) ? calculateFederalTax(input) : undefined;
+  if (requiresOriginalCharitableNolReview(input)) readCurrentCharitableSourceForNol(input);
+  const calculation = input.k1CharitableSources || requiresCharitableNolReview(input) ? calculateFederalTax(input) : undefined;
   const token: PreparedCharitableReview = Object.freeze({ [brand]: true as const });
   prepared.set(token, { originalDigest: sourceDigest(input), redactedDigest: sourceDigest(input, true),
     ...(calculation ? { original: freeze(structuredClone(input)), calculationDigest: calculationDigest(calculation) } : {}),
@@ -63,6 +75,7 @@ export function assertCharitableReviewSource(input: TaxYearInput, token?: Prepar
     if (input.charitableCarryoverSources) validateCharitableCarryoverSources(input);
     if (input.k1CharitableSources) calculateK1CharitableReturnSources(input);
     if (requiresPriorCharitableNolReview(input)) readPriorCharitableNolSources(input);
+    if (requiresOriginalCharitableNolReview(input)) readCurrentCharitableSourceForNol(input);
     return;
   }
   const context = prepared.get(token);
@@ -79,7 +92,10 @@ export function charitableReviewOriginalSourceInput(input: TaxYearInput, result:
   if (requiresPriorCharitableNolReview(input, result) && !input.netOperatingLoss?.alternativeTax?.charitableCarryoverHistory?.alternativeCarryoverSources) {
     throw new Error("Prior charitable review requires its retained original independent history sources");
   }
-  const actual = token ?? (input.k1CharitableSources || requiresPriorCharitableNolReview(input, result) ? prepareCharitableReview(input) : undefined);
+  if (requiresOriginalCharitableNolReview(input, result) && (!input.netOperatingLoss || !hasOriginalCharitableNolSources(input))) {
+    throw new Error("Charitable NOL review requires its retained original contribution sources");
+  }
+  const actual = token ?? (input.k1CharitableSources || requiresCharitableNolReview(input, result) ? prepareCharitableReview(input) : undefined);
   assertCharitableReviewSource(input, actual);
   const context = actual ? prepared.get(actual) : undefined;
   if (context?.calculationDigest !== undefined && calculationDigest(result) !== context.calculationDigest) {

@@ -51,7 +51,7 @@ it('preserves the explicit original-source NOL coordination boundary', () => {
     expect(() => calculateFederalTax(input)).toThrow(/K1 charitable.*NOL/);
     delete input.priorYear;
     input.netOperatingLoss = actualEblNolInput().netOperatingLoss;
-    expect(() => calculateFederalTax(input)).toThrow(/K1 charitable.*NOL/);
+    expect(() => calculateFederalTax(input)).toThrow(/complete independent prior regular and alternative charitable histories/);
 });
 it('preserves prior property basis origin without repeating appreciation or charitable carry', () => {
     const input = fixture(2025, true), s = statement(input), k = input.scheduleK1[0];

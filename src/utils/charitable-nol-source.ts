@@ -8,6 +8,8 @@ import { eligibleCurrentCharitableDonations } from "@/engine/forms/charitable-cu
 import { readCurrentCharitableReceiptAmounts } from "./charitable-current-receipts.js";
 import { charitableSourceDigest } from "./charitable-source-digest.js";
 import type { PriorCharitableNolLimit } from "./charitable-prior-nol-source.js";
+import { calculateK1CharitableReturnSources } from "@/engine/forms/k1-charitable-return-sources.js";
+import { calculateCryptoDonations } from "@/engine/forms/crypto-lot-matching.js";
 
 type AmountKey = keyof CharitableContributionWorksheetInput["amounts"];
 export interface CurrentCharitableNolSource {
@@ -34,7 +36,15 @@ const sourceKinds: Record<AmountKey, readonly [CharitableCategory, "cash" | "non
   noncashPrivate: ["other_30", "noncash"], capitalGainPrivate: ["capital_gain_20", "noncash"],
 };
 
-/** One actual current category/medium; spec charitable-single-category-nol.yaml. */
+/** Presence only; original source validation happens before any NOL benefit test. */
+export function hasOriginalCharitableNolSources(input: TaxYearInput): boolean {
+  return input.k1CharitableSources !== undefined || (input.cryptoIncome?.donations.length ?? 0) > 0
+    || input.scheduleK1.some(row => [row.charitableCash, row.charitableCapitalGain30, row.charitableCapitalGain20,
+      row.priorSuspendedLosses?.charitable].some(value => !d(value).isZero()));
+}
+
+/** One actual current category/medium; specs charitable-single-category-nol.yaml
+ * and charitable-original-source-nol.yaml. Original basis is never capped here. */
 export function readCurrentCharitableSourceForNol(input: TaxYearInput): CurrentCharitableNolSource {
   const taxYear = input.taxpayer.taxYear;
   if (![2025, 2026].includes(taxYear)) throw new Error("Charitable NOL carry supports actual2025 or2026 contributions");
@@ -43,20 +53,39 @@ export function readCurrentCharitableSourceForNol(input: TaxYearInput): CurrentC
     || input.charitableCarryoverSources?.vintages?.some(row => !d(row.openingCarryforward).isZero())) {
     throw new Error("Prior charitable carry requires its separate category and NOL coordination history");
   }
-  if (input.scheduleK1.some(row => [row.charitableCash, row.charitableCapitalGain30, row.charitableCapitalGain20].some(value => !d(value).isZero()))
-    || input.k1CharitableSources !== undefined || (input.cryptoIncome?.donations.length ?? 0) > 0) {
-    throw new Error("Mixed charitable source categories require their separate NOL carry allocation");
-  }
   for (const row of eligibleCurrentCharitableDonations(input)) {
     if (!row.organization.trim()) throw new Error("Charitable carry requires an actual qualified recipient");
   }
   const amounts = readCurrentCharitableReceiptAmounts(input, { capitalStockOnly: true });
+  const originalSources = hasOriginalCharitableNolSources(input);
+  if (originalSources && (input.form172 || input.form982NolSources)) {
+    throw new Error("Original charitable sources with current-origin or COD NOL require their separate source method");
+  }
+  const k1 = calculateK1CharitableReturnSources(input);
+  if (!k1 && input.scheduleK1.some(row => [row.charitableCash, row.charitableCapitalGain30, row.charitableCapitalGain20,
+    row.priorSuspendedLosses?.charitable].some(value => !d(value).isZero()))) {
+    throw new Error("Original K1 charitable NOL sources require their complete attached basis and receipt sources");
+  }
+  if (k1?.statements.some(row => row.basis.charitableSources?.records.some(record => !record.current && record.availableAfterBasis.gt(0)))) {
+    throw new Error("Prior K1 charitable basis releases require their separate NOL contribution-year method");
+  }
+  if (k1) for (const key of Object.keys(amounts) as AmountKey[]) amounts[key] = amounts[key].plus(k1.amounts[key]);
+  if (input.cryptoIncome?.donations.length) {
+    for (const row of input.cryptoIncome.donations) {
+      if (row.isQualifiedOrganization !== false && (!row.charityName.trim() || !row.asset.trim())) {
+        throw new Error("Crypto charitable NOL source requires the actual property and qualified recipient");
+      }
+    }
+    const crypto = calculateCryptoDonations(input.cryptoIncome.donations, taxYear);
+    if (!crypto.sourceFactsVerified) throw new Error("Crypto charitable NOL requires confirmed actual original source facts");
+    for (const key of Object.keys(amounts) as AmountKey[]) amounts[key] = amounts[key].plus(crypto.contributionAmounts[key]);
+  }
   const keys = (Object.keys(amounts) as AmountKey[]).filter(key => amounts[key].gt(0));
   if (keys.length > 1) throw new Error("Mixed charitable categories or contribution media require their separate NOL carry allocation");
   const amountKey = keys[0];
   const [category, medium] = amountKey === undefined ? [undefined, undefined] : sourceKinds[amountKey];
   const history = input.netOperatingLoss?.alternativeTax?.charitableCarryoverHistory;
-  if ((category !== undefined && category !== "cash_60") || history !== undefined) {
+  if (originalSources || (category !== undefined && category !== "cash_60") || history !== undefined) {
     if (history?.sourceTaxYear !== taxYear - 1 || !history.sourceReference?.trim() || history.sourceFactsConfirmed !== true
       || history.allCarryoversIncluded !== true || !Array.isArray(history.priorRegularCarryovers) || !Array.isArray(history.priorAlternativeCarryovers)) {
       throw new Error("Charitable NOL categories require complete independent prior regular and alternative charitable histories");

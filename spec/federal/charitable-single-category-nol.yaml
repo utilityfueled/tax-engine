@@ -14,8 +14,9 @@ notes: |
   qualified value is computed before aggregation; source amounts never change.
   New non-G routes require the existing confirmed independent prior regular
   and AMT charitable histories with both arrays explicitly empty. No inferred
-  missing history, positive prior carry, mixed category, mixed B media, K1,
-  crypto or special tangible-property valuation is admitted by this extension.
+  missing history, positive prior carry, mixed category, mixed B media or
+  special tangible-property valuation is admitted by this direct-gift extension.
+  Original K1 and crypto handoffs are specified in charitable-original-source-nol.yaml.
   The internal comparison binds actual tax year, original source digest,
   category and medium. It changes only the corresponding qualified-value
   component; it is not a taxpayer deduction override. Current regular NOLD

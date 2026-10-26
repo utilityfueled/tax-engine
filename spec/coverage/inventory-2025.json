@@ -299,6 +299,26 @@
       ]
     },
     {
+      "key": "federal/charitable-original-source-nol",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.170A-10",
+      "specPath": "spec/federal/charitable-original-source-nol.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/charitable-prior-net-operating-loss",
       "jurisdiction": "federal",
       "taxYear": 2025,

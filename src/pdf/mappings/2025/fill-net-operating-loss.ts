@@ -24,7 +24,7 @@ import { d, roundDollar, sum } from "@/utils/decimal.js";
 import { assertPdfExportAllowed, markReviewPdf } from "@/pdf/export-policy.js";
 import { form8949ReviewOriginalSourceInput, type PreparedForm8949Review } from "@/pdf/form-8949-review-context.js";
 import { codNolReviewOriginalSourceInput, type PreparedCodNolReview } from "@/pdf/cod-nol-review-context.js";
-import { charitableReviewOriginalSourceInput, requiresPriorCharitableNolReview, type PreparedCharitableReview } from "@/pdf/charitable-review-context.js";
+import { charitableReviewOriginalSourceInput, requiresCharitableNolReview, requiresPriorCharitableNolReview, type PreparedCharitableReview } from "@/pdf/charitable-review-context.js";
 
 function amount(value: Decimal | undefined): Decimal {
   if (!Decimal.isDecimal(value) || !value.isFinite()) throw new Error("NOL review requires complete finite retained amounts");
@@ -132,7 +132,7 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult, capital
  * render path works after identifier redaction and never invents taxpayer IDs. */
 export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, capitalReview?: PreparedForm8949Review, codReview?: PreparedCodNolReview, charitableReview?: PreparedCharitableReview): string[] {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
-  if (requiresPriorCharitableNolReview(input, result) || charitableReview) input = charitableReviewOriginalSourceInput(input, result, charitableReview);
+  if (requiresCharitableNolReview(input, result) || charitableReview) input = charitableReviewOriginalSourceInput(input, result, charitableReview);
   if (input.form982NolSources || result.codNolReduction) input = codNolReviewOriginalSourceInput(input, result, codReview);
   const facts = input.netOperatingLoss; const calculation = result.netOperatingLoss;
   if (!facts || facts.sourceTaxYear !== result.taxYear || facts.sourceFactsConfirmed !== true

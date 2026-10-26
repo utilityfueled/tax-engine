@@ -1,0 +1,84 @@
+form: "Section170 original K1 and digital-asset NOL sources"
+fullName: "Current original contributions through independent regular and alternative NOL carry coordination"
+taxYear: 2025
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.170A-10"
+notes: |
+  Reg1.170A-10(d)(1) Example3 and Form172 line26 coordinate the charitable
+  excess with the succeeding NOL preserved by that excess. This source
+  extension uses the existing single-category and single-medium method;
+  it does not introduce a different charitable or NOL formula.
+  Original K1 gifts first pass the existing actual entity-year, recipient,
+  basis and nonbinding-at-risk source method. Sections704(d)(3)(B) and
+  1366(d)(4) distinguish appreciation from the basis-limited deduction.
+  Reg1.702-1(a)(4)/706 and Reg1.1366-1 preserve the entity-year source and
+  its character. A source from the current included entity year is not
+  rejected merely because its actual payment date was in a fiscal year.
+  No positive prior basis release is converted to a current170 contribution.
+  Digital assets retain their actual dates, receipt and per-gift qualified
+  value under170(e) and Notice2014-21. Confirmed source facts are required,
+  including the recipient and actual appraisal/acknowledgment facts.
+  Both source types require independent regular and alternative prior
+  charitable histories with explicitly empty arrays. Original sources and
+  entity basis results stay unchanged in every internal comparison. Only
+  the already-qualified170 category component is internally capped.
+  Same-category direct gifts may accompany these originals. Mixed categories,
+  mixed B media, positive170 histories, Form172 current-origin, COD and
+  unsupported source methods remain separate. No public input cap exists.
+  Derived literals below are not published IRS numerical examples. The2026
+  year/review gates and separate nonitemizer methods remain unchanged.
+lines:
+  - line: "crypto-values"
+    description: "Reconcile actual digital-asset values before the NOL comparison"
+    formula: "Income100000/post2017NOL100000/public long-term crypto FMV60000 basis20000 gives C60000; claim56000, AGI44000, charity13200, tentative46800, succeedingNOL44000 versus30560, charitycarry33360. Private nonoperating receipt reduces original D value to20000; claim64000, AGI36000, deduction7200, tentative12800, NOL36000 versus25760, charitycarry2560. No sale gain is created."
+    irsRef: "IRC170(e),(d)(1)(B),172; Notice2014-21; Reg1.170A-10(d)(1)"
+    testRef: "tests/engine/federal-charitable-original-source-nol.test.ts::uses original crypto category values without creating a disposition or changing receipts"
+  - line: "basis-first"
+    description: "Keep entity basis suspension separate from the section170 carry"
+    formula: "Current K1 FMV80000/allocated property basis40000/available owner basis20000 gives40000 appreciation plus20000 basis=60000 C; separate basis suspension20000 remains. NOL comparison caps only60000's170 component and leaves original basis calculation unchanged; resulting charity33360 is distinct from the basis carry. Fully basis-allowed current G cash60000 retains its existing32000 NOLD/3840 charity carry; a same-category direct receipt can share that qualified component."
+    irsRef: "IRC704(d)(3)(B),1366(d)(4); Reg1.702-1(a)(4),1.1366-1; IRC170(d)(1)(B)"
+    testRef: "tests/engine/federal-charitable-original-source-nol.test.ts::preserves original partnership and S corporation basis before the charitable NOL comparison"
+  - line: "alternative"
+    description: "Retain independent AMT carry and unchanged current claim"
+    formula: "Actual C60000/income100000/capital-loss3000/known-zero regular NOL/ATNOL100000 gives regular charity30900, alternative charity30090 and unchanged currentATNOLD61110. Known-zero AMT NOL with the regular example retains its own tentative46800, not regular33360."
+    irsRef: "IRC56(d),170(d)(1)(B); Reg1.55-1(b)"
+    testRef: "tests/engine/federal-charitable-original-source-nol.test.ts::keeps original source AMT carry and current claim independent of regular carry"
+  - line: "facts-before-benefit"
+    description: "Validate the actual source contract even when no excess would remain"
+    formula: "Missing original K1 attachment, unconfirmed crypto facts, missing independent history, current/prior basis ambiguity or multiple actual categories cannot bypass source validation through a small gift or fully used NOL. Explicit known false eligibility contributes zero; supplied records remain intact. Fiscal current entity sources retain their real payment dates."
+    irsRef: "IRC170(a),(d),(e),704,1366; actual source completeness"
+    testRef: "tests/engine/federal-charitable-original-source-nol.test.ts::validates original facts before a small or ineligible gift could bypass the replay"
+  - line: "exact-binding"
+    description: "Bind the internal comparison to original receipt and basis evidence"
+    formula: "Exact source cents and per-item valuation precede aggregation. Same-category sources may combine; source order cannot change amounts. Changed basis, recipient, category, tax year or independent history invalidates the retained source digest even where rounded totals coincide. No public deduction override is admitted."
+    irsRef: "IRC6102(c),170(e),(d); original source conservation"
+    testRef: "tests/engine/forms/charitable-original-source-nol.test.ts::binds exact original K1 and crypto receipts to one qualified category"
+  - line: "guided"
+    description: "Reach current K1 coordination through actual existing collectors"
+    formula: "Actual K1 original, basis, receipt, at-risk and independent NOL histories reach the same canonical source method without a calculated carry input. Missing histories remain incomplete, actual edits revoke confirmation, and original receipts are retained. Digital-asset intake is an independently delivered collector using the same core contract."
+    irsRef: "IRC170,172; actual-source intake and confirmation"
+    testRef: "tests/apps/web/guided-charitable-original-source-nol.test.ts::reaches the original K1 NOL method through existing actual source collectors"
+  - line: "review"
+    description: "Reconcile original source and retained carry before redacted output"
+    formula: "Prepare an opaque source context before identifier redaction; bind original receipts, full input, final calculation and independent carries. Stale same-total valuation, removed source, changed NOL input or changed output fails before template access. Saved ScheduleA and NOL references retain actual amounts, one review notice per page and no private identifiers."
+    irsRef: "Form172 recordkeeping; original source and output conservation"
+    testRef: "tests/pdf/charitable-original-source-nol-review.test.ts::binds original sources and both charitable carries before saved redacted review output"
+  - line: "workspace"
+    description: "Export the actual guided K1 and NOL calculation without a bridge mock"
+    formula: "Original80000/40000 K1 property and20000 basis flow through actual existing collectors into60000 qualified source,13200 deduction,33360 regular carry and46800 alternative carry. Prepare original source identity before redaction. The saved packet preserves every-page notice and omits SSNs and private source IDs; the existing basis reference retains explicit business EINs under the unchanged render policy."
+    irsRef: "Form172 and ScheduleA source recordkeeping; review-only export policy"
+    testRef: "tests/apps/web/workspace-charitable-original-source-nol.test.ts::exports the actual guided original K1 and NOL sources through the private workspace packet"
+  - line: "year-floor"
+    description: "Use the existing source-bound floor only in isolated2026 method tests"
+    formula: "The same qualified C60000 source in the isolated2026 itemized method gives NOLD56400,AGI43600,charity12862,tentative47138 and charitycarry33428. Original unmocked2026 calculation and export gates remain closed; no source handoff qualifies the year."
+    irsRef: "IRC170(I),170(d)(1)(C); unchanged qualification policy"
+    testRef: "tests/engine/federal-charitable-original-source-nol.test.ts::reapplies the isolated current year floor to qualified original values"
+  - line: "browser"
+    description: "Retain original receipts and independent history confirmations through the production UI"
+    formula: "The actual K1 and NOL collectors show44000 AGI and30800 taxable income for the source fixture. Editing matching original receipt cents revokes both source and independent-history confirmations. Reconfirming actual records restores the calculation; reload preserves cents, zero and empty histories without a calculated allowance input."
+    irsRef: "IRC170,172; actual source and confirmation conservation"
+    testRef: "apps/web/tests/charitable-original-source-nol.spec.ts::preserves original charitable receipts and independent NOL histories"
+  - line: "confirmation-only"
+    description: "Confirm an existing NOL source without creating unrelated legacy facts"
+    formula: "A source-only saved adjustment section remains source-only when the NOL review flag changes. Display defaults do not become stored fields, and confirmation alone cannot revoke the original K1 or independent charitable history."
+    irsRef: "Actual-source preservation; confirmation is not a new fact"
+    testRef: "tests/apps/web/charitable-original-nol-confirmation.test.tsx::confirms a source-only NOL section without changing the linked original K1 facts"

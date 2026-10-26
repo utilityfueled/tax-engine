@@ -83,6 +83,7 @@ export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefin
     throw new Error('Confirm the separate actual AMT carry history and current source classification. Special-disaster or differing basis/loss-limit methods need their separate worksheet.');
   }
   const history = alternative.charitableCarryoverHistory;
+  const hasOriginalCharitableSources = deductions?.k1CharitableSources !== undefined;
   const hasGifts = [deductions?.charitableContributions, ...(deductions?.donationEntries?.map(row => row.amount) ?? [])]
     .some(value => value?.trim() && !parseGuidedCurrency(value).isZero());
   const positiveAlternative = alternative.vintages?.some(row => row.openingCarryforward?.trim() && parseGuidedCurrency(row.openingCarryforward).gt(0));
@@ -90,7 +91,7 @@ export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefin
   const hasNonPublicCashGift = deductions?.donationEntries?.some(row => row.amount?.trim()
     && parseGuidedCurrency(row.amount).gt(0) && row.qualifiedOrganization !== false
     && (row.type !== 'cash' || resolveCharitableRecipient(row).percentageCategory !== 'fifty-percent'));
-  if (history !== undefined || (positiveAlternative && hasGifts) || (positiveRegular && hasNonPublicCashGift)) {
+  if (history !== undefined || hasOriginalCharitableSources || (positiveAlternative && hasGifts) || (positiveRegular && hasNonPublicCashGift)) {
     if (!history || year(history.sourceTaxYear, 'charitable histories source year') !== taxYear - 1 || !history.sourceReference?.trim()
       || history.sourceFactsConfirmed !== true || history.allCarryoversIncluded !== true
       || (!history.alternativeCarryoverSources && (!Array.isArray(history.priorRegularCarryovers) || !Array.isArray(history.priorAlternativeCarryovers)))) {
@@ -99,7 +100,7 @@ export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefin
     if (((history.priorRegularCarryovers?.length ?? 0) > 0 || (history.priorAlternativeCarryovers?.length ?? 0) > 0) && !history.alternativeCarryoverSources) {
       throw new Error('Retain actual prior charitable carryovers and supply the independent complete regular and AMT source histories.');
     }
-    if (history.alternativeCarryoverSources && hasGifts) throw new Error('Mixed current and prior charitable NOL sources require their separate allocation method.');
+    if (history.alternativeCarryoverSources && (hasGifts || hasOriginalCharitableSources)) throw new Error('Mixed current and prior charitable NOL sources require their separate allocation method.');
   }
   const summaries = (rows: NolCharitableCarryData[] | undefined) => rows?.map(row => {
     if (!row.amount?.trim() || parseGuidedCurrency(row.amount).isNegative()) throw new Error('Enter the actual nonnegative prior charitable opening amount, including known zero.');
