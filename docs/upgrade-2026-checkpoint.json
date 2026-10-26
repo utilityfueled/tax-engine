@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "d153020860157dab99f63de97b55869a001b5dc5",
+    "lastRecordedCommit": "f2d0faa1ccc637681531619aa19ccc35807957b8",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1312,11 +1312,12 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Marketplace ordinary re-entry and adoption review packets await independent review; educator full in-kind coordination and2026 explicit nonitemized charity are in progress.",
-      "Partial mixed charitable media,2026 prior/nonitemizer/floor carries and prior/mixed regular/AMT NOL coordination remain internal implementation work.",
-      "Partial in-kind education/mixed-owner coordination, reduced mixed employee/business tips and non-rental/postEBL QBI character remain named source-method work.",
-      "Final enabled-scenario facts/calculation/review/readiness audit and full current-head checks, remoteCI, native images/SBOM/scans/recovery remain.",
-      "External staging/provider budget/human review/state demand/final-form inputs remain unanswered;240 AIcases are human-unreviewed with zero live results or promotion."
+      "Pure public-cash carry under actual nonitemization is committed. Empty-history itemized/nonitemized candidate coordination is in independent review; positive prior-floor/mixed-NOL and partial mixed-media methods remain.",
+      "Shared-policy core/PDF is committed; its actual guided collector and remaining ordinary Marketplace methods continue.",
+      "QBI pure character helpers are committed; actual K1 source/basis/at-risk/passive/canonical binding remains in progress.",
+      "Actual in-kind tuition credit and educator coordination are committed; remaining partial assistance/category/ESA methods stay distinct.",
+      "Final enabled-scenario audit, regenerated inventory, full current tests/coverage/types/spec/builds/lint/browser, remoteCI and native image/SBOM/scan/recovery evidence remain.",
+      "Qualified mixed-tip/mixed-bond/negative-net1202 interpretations, human review, authorized staging/provider budget/account access, launch-state demand, final physical forms and advisory-owner acceptance remain external."
     ],
     "latestIntegratedCommit": "4aef633349dbb39c2481b914730c309785cc8c41",
     "activeIntegrationRun": {
@@ -1335,21 +1336,20 @@
       "browserOrigin": "http://127.0.0.1:3127"
     },
     "latestCoverageDiagnostic": {
-      "status": "failed-tests-coverage-thresholds-met",
-      "commit": "e8e169a39a4917744c634378628f717af748759b",
-      "workers": 1,
-      "passed": 16888,
+      "commit": "51b71827bbd7b3b4353bb6edc1d242f9e695db64",
+      "status": "failed-one-stale-interaction",
+      "passed": 17895,
       "failed": 1,
-      "skipped": 0,
-      "files": 699,
-      "durationSeconds": "486.06",
-      "branchesPercent": "86.59",
-      "functionsPercent": "92.09",
-      "statementsPercent": "92.78",
-      "linesPercent": "94.48",
-      "evidence": ".local/upgrade-evidence/stable-coverage-e8e169a.log",
-      "evidenceSha256": "e3c1c1c498d4ede818955441f411cd18d16442ee6b1c6ab32174bc9598b8e76a",
-      "limitation": "One ScheduleA audit whitelist omitted dedicated OID/educator worksheets; c721f07 fixes exact zero-entry assertions and passes63 isolated cases. Full command failed; a fresh current-code run is still required."
+      "files": 964,
+      "durationSeconds": "581.83",
+      "inventoryEntries": 419,
+      "workers": 1,
+      "thresholdChanged": false,
+      "coverageResultAvailable": false,
+      "evidence": ".local/upgrade-evidence/full-coverage-51b7182.log",
+      "evidenceSha256": "257fec09a19dc8bef8e42bc6a3f0b352a00ce53f4e04a020c10d861c2b557c3a",
+      "repairCommit": "d96a83a1f439b155e4213cee2afd96cc9ab1b7ab",
+      "limitation": "Full command failed; no current passing coverage percentage inferred. Corrected interaction and all four affected production browser flows pass separately; full integrated rerun remains required."
     },
     "recentPackages": {
       "privacyHeaderRedaction": "2d16a94",
@@ -1638,7 +1638,7 @@
       "thresholdChanged": false,
       "evidence": ".local/upgrade-evidence/full-coverage-1791979.log"
     },
-    "lastPushedCommit": "d153020860157dab99f63de97b55869a001b5dc5",
+    "lastPushedCommit": "f2d0faa1ccc637681531619aa19ccc35807957b8",
     "currentBrowserRun": {
       "commit": "907b6dbb431767cfa64452bfb75151179ff818e2",
       "status": "passed-local-self-hosted",
@@ -1666,8 +1666,8 @@
     },
     "currentPackageAudit": {
       "date": "2026-10-25",
-      "commit": "59eae66434d71c485719795e4528a2f495672c8f",
-      "evidence": ".local/upgrade-evidence/package-audit-59eae66.json",
+      "commit": "f2d0faa1ccc637681531619aa19ccc35807957b8",
+      "evidence": ".local/upgrade-evidence/package-audit-f2d0faa.json",
       "evidenceSha256": "53e7d127130984cae97d554a54f7be42a21478066d94206e519540ab84119635",
       "metadata": {
         "vulnerabilities": {
@@ -2613,19 +2613,19 @@
       "evidenceSha256": "df287c8516aa0838e1719ba5e6e67349b20c0f2bdb1a1a027f9fefb8b55d4e43"
     },
     "currentRemoteRuns": {
-      "commit": "d153020860157dab99f63de97b55869a001b5dc5",
+      "commit": "f2d0faa1ccc637681531619aa19ccc35807957b8",
       "ci": {
-        "run": 40245320622,
+        "run": 40248890638,
         "status": "in_progress-when-observed",
-        "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40245320622"
+        "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40248890638"
       },
       "web": {
-        "run": 40245321550,
+        "run": 40248890706,
         "status": "in_progress-when-observed",
-        "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40245321550"
+        "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40248890706"
       },
       "qualification": false,
-      "limitation": "Preceding998d55a andda7fc1c runs cancelled by subsequent pushes. No completed remote result inferred."
+      "limitation": "Preceding d96a83a, ec05989 and d9cccd5 runs cancelled by subsequent authorized package pushes. No completed current result inferred."
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
@@ -2724,18 +2724,47 @@
         "boundedCharityHistories": [
           "9ce1686",
           "6cf0463"
+        ],
+        "marketplaceReentry": [
+          "0ffaa3d"
+        ],
+        "historicalAdoptionReview": [
+          "6f2b577"
+        ],
+        "educatorInKind": [
+          "08214b9"
+        ],
+        "explicitNonitemization": [
+          "6029f70"
+        ],
+        "qtpExpenseCap": [
+          "51b7182"
+        ],
+        "qbiLossPrerequisite": [
+          "2d1b9bb"
+        ],
+        "sharedPolicyCore": [
+          "d9cccd5"
+        ],
+        "inKindTuitionCredit": [
+          "ec05989"
+        ],
+        "nonitemizerCarry": [
+          "f2d0faa"
         ]
       },
       "owners": {
-        "marketplaceMethods": "federal_law",
-        "adoptionReviewOutput": "complete_facts",
+        "marketplaceMethodsAndIntake": "federal_law",
+        "qbiActualSourceIntegration": "complete_facts",
         "charityMethods": "ai_billing",
-        "educatorInKind": "parent"
+        "educationMethodsAndFinalIntegration": "parent"
       },
       "subsequent": [
-        "mixed reduced employee/business tips-to-QBI allocation",
-        "partial in-kind529 and mixed-owner education coordination",
-        "non-rental suspendedQBI and postEBL character"
+        "guided shared-policy source collector and remaining ordinary Marketplace methods",
+        "Empty-history dual charity candidates, positive prior-floor/mixed-NOL and partial mixed-media methods",
+        "actual nonrental suspendedQBI source/basis/at-risk/passive/canonical binding",
+        "remaining partial assistance/category/ESA education methods",
+        "qualified interpretation for reduced mixed tips/bonds and negative-net1202, with no arbitrary allocation"
       ],
       "unsupportedIsComplete": false
     },
@@ -2791,21 +2820,140 @@
         "intakeIndependentTests": 11,
         "browserPassed": 2,
         "browserRetries": 0,
-        "reviewPdfStatus": "under-independent-review",
+        "reviewPdfStatus": "implemented-independent-agent-review-passed",
         "evidenceDocuments": [
           "docs/upgrade-2026-adoption-history-work.md",
           "docs/upgrade-2026-adoption-intake-work.md"
         ]
       },
-      "boundary": "Package-specific local synthetic source/software evidence and separate agent review only. No human, final form, staging, live provider or final integrated qualification."
+      "boundary": "Package-specific local synthetic source/software evidence and separate agent review only. No human, final form, staging, live provider or final integrated qualification.",
+      "marketplaceReentry": {
+        "commit": "0ffaa3d2cbf701229127d255f84aff6896202baa",
+        "adjacentTests": 249,
+        "files": 30,
+        "finalTests": 40,
+        "independentAgentTests": 13,
+        "evidenceDocument": "docs/upgrade-2026-marketplace-reentry-work.md"
+      },
+      "historicalAdoptionReview": {
+        "commit": "6f2b577b0e2da20f04d68464270ad10e8a6ab10f",
+        "finalTests": 89,
+        "files": 8,
+        "independentAgentTests": 27,
+        "renderedPages": 4,
+        "evidenceDocument": "docs/upgrade-2026-adoption-review-work.md"
+      },
+      "educatorInKind": {
+        "commit": "08214b9d55ff83658518cf6b6e54ff2dc9dc209d",
+        "finalSourceTests": 43,
+        "metadataTests": 38,
+        "independentAgentTests": 14,
+        "evidenceDocument": "docs/upgrade-2026-educator-in-kind-work.md"
+      },
+      "explicitNonitemization": {
+        "commit": "6029f7080c9c3690ab0011e238c2fbe1d429d0d4",
+        "tests": 1845,
+        "files": 130,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "evidenceDocument": "docs/upgrade-2026-nonitemized-charitable-work.md"
+      },
+      "qtpActualExpenseCap": {
+        "commit": "51b71827bbd7b3b4353bb6edc1d242f9e695db64",
+        "finalTests": 49,
+        "files": 7,
+        "independentExtraControls": 5,
+        "evidenceDocument": "docs/upgrade-2026-qtp-expense-cap-work.md"
+      },
+      "qbiLossCharacterPrerequisite": {
+        "commit": "2d1b9bb0c6ab7fac21b92109da6097c1c63852f0",
+        "tests": 262,
+        "files": 9,
+        "independentAgentTests": 14,
+        "canonicalIntegrationComplete": false,
+        "evidenceDocument": "docs/upgrade-2026-qbi-loss-work.md"
+      },
+      "sharedPolicyAllocation": {
+        "commit": "d9cccd5626eea66a1d4a071c844f2e8cf048826a",
+        "tests": 220,
+        "files": 25,
+        "independentAgentTests": 10,
+        "independentExtraControls": 6,
+        "physicalPagesInspected": 2,
+        "referencePagesInspected": 9,
+        "intakeStatus": "in-progress",
+        "evidenceDocument": "docs/upgrade-2026-shared-policy-work.md"
+      },
+      "inKindTuitionCredit": {
+        "commit": "ec05989a67e4eeb53ffeaa6ad13289dc68325640",
+        "finalSourceTree": "78735addf48bfc1e24e97ee37edb5a4842941718",
+        "tests": 178,
+        "files": 23,
+        "independentAgentTests": 39,
+        "independentExtraControls": 9,
+        "specReferences": 4825,
+        "renderedPages": 2,
+        "evidenceDocument": "docs/upgrade-2026-in-kind-credit-work.md"
+      },
+      "donationInteractionRepair": {
+        "commit": "d96a83a1f439b155e4213cee2afd96cc9ab1b7ab",
+        "unitTests": 8,
+        "independentAgentTests": 33,
+        "browserPassed": 4,
+        "browserRetries": 0,
+        "evidenceDocument": "docs/upgrade-2026-donation-interaction-regression.md"
+      },
+      "nonitemizerCarry": {
+        "commit": "f2d0faa1ccc637681531619aa19ccc35807957b8",
+        "finalTree": "d49a4367db643271746e799ef8313c9200514cfd",
+        "tests": 1009,
+        "files": 69,
+        "specReferences": 4833,
+        "rootTypes": "passed",
+        "scopedLint": "passed",
+        "independentFederalCases": 11,
+        "independentFactsCases": 11,
+        "evidenceDocument": "docs/upgrade-2026-nonitemizer-carry-work.md"
+      }
     },
     "currentInventory": {
-      "sourceCommit": "d153020860157dab99f63de97b55869a001b5dc5",
-      "entries": 413,
+      "sourceCommit": "f2d0faa1ccc637681531619aa19ccc35807957b8",
+      "entries": 425,
       "generation": "passed",
       "freshness": "passed",
-      "sha256": "9e75b738a1a9eb3ad5ee93645dd9bbf0731f161b34caf2f22700a5fb8073b2c3",
-      "evidence": ".local/upgrade-evidence/inventory-d153020.log"
+      "sha256": "eed4e0874c7d1fd9fd6f0ad4259a665ba66f0075745928b19234596a4a7517dc",
+      "evidence": ".local/upgrade-evidence/inventory-f2d0faa.log"
+    },
+    "previousCoverageDiagnostic": {
+      "status": "failed-tests-coverage-thresholds-met",
+      "commit": "e8e169a39a4917744c634378628f717af748759b",
+      "workers": 1,
+      "passed": 16888,
+      "failed": 1,
+      "skipped": 0,
+      "files": 699,
+      "durationSeconds": "486.06",
+      "branchesPercent": "86.59",
+      "functionsPercent": "92.09",
+      "statementsPercent": "92.78",
+      "linesPercent": "94.48",
+      "evidence": ".local/upgrade-evidence/stable-coverage-e8e169a.log",
+      "evidenceSha256": "e3c1c1c498d4ede818955441f411cd18d16442ee6b1c6ab32174bc9598b8e76a",
+      "limitation": "One ScheduleA audit whitelist omitted dedicated OID/educator worksheets; c721f07 fixes exact zero-entry assertions and passes63 isolated cases. Full command failed; a fresh current-code run is still required."
+    },
+    "mixedTipsInterpretation": {
+      "status": "qualified-source-method-required",
+      "evidenceDocument": "docs/upgrade-2026-mixed-tips-method-decision.md",
+      "refreshedAt": "2026-10-25",
+      "implemented": false,
+      "noUserTaxArithmeticDecisionExpected": true,
+      "sources": [
+        "https://www.irs.gov/irb/2026-18_IRB",
+        "https://www.irs.gov/instructions/i1040gi",
+        "https://www.irs.gov/instructions/i8995a",
+        "https://www.irs.gov/pub/irs-dft/i8995--dft.pdf"
+      ],
+      "separateAgentResearchReview": "Federal agent independently inspected the cited sources and confirmed that no final reduced mixed-source attribution method was located; not qualified human interpretation."
     }
   },
   "historicalReleaseBlockers": {

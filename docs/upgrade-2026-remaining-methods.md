@@ -52,26 +52,31 @@ supersede its specific missing-route observations, not its qualification limits.
 - Actual refund intake is committed in `2c4ddfe` with strict-spec repair
   `cd08895`: 903 adjacent cases, two browser flows and corrected 11-case
   independent review pass. Actual wagering intake is committed in `fcedf57`.
-- Actual 2025 charitable histories and their collector are committed in
-  `ea2f422`/`4332623`; `9ce1686` adds public-cash carry ordering and `6cf0463`
-  preserves bounded cash/property histories. Partial mixed-medium allocation,
-  2026 prior/nonitemizer/floor carry and prior/mixed NOL coordination remain
-  assigned to `ai_billing`. The explicit 2026 nonitemized election is in progress.
-- Ordinary vehicle refinancing core and actual guided source collector are
-  committed in `2baa03c`/`da7fc1c`, with exact source conservation and independent
-  agent review. Changed borrowers, further advances and unusual timing retain
-  their separately documented method boundaries.
-- Historical foreign-adoption employer-benefit sources, signed canonical
-  transfer and guided collection are committed in `998d55a`/`d153020`.
-  `complete_facts` owns the benefits-only review packet and original-identity
-  context, now under independent review.
-- `federal_law` owns Marketplace ordinary re-entry (under independent review),
-  then historical capped repayment/shared-policy/two-owner/marriage methods.
-- Parent owns full in-kind QTP/educator coordination (under independent review)
-  and subsequent partial in-kind, mixed-owner education, reduced mixed tips and
-  non-rental/post-EBL QBI source-method work. These remain internal work.
-- Inventory regeneration on committed `d153020` passes with 413 entries. The
-  local full browser run at `907b6db` remains 348 passes, five hosted skips,
-  zero failures/retries; later packages are outside that exact run. Human
-  review, staging, provider qualification and final forms remain external
-  requirements. Unsupported guards and agent reviews do not complete them.
+- Actual 2025 charity histories and their collector are committed in
+  `ea2f422`/`4332623`, with cash ordering `9ce1686`, bounded cash/property
+  histories `6cf0463`, explicit 2026 nonitemization `6029f70` and public-cash carry
+  under nonitemization `f2d0faa`. Empty-history dual candidates are in review.
+  Positive prior-floor/mixed-NOL and partial mixed-media methods remain with
+  `ai_billing`.
+- Ordinary vehicle refinancing and actual intake are committed in
+  `2baa03c`/`da7fc1c`; historical foreign-adoption benefits/intake/review are
+  `998d55a`/`d153020`/`6f2b577`.
+- Marketplace ordinary re-entry is `0ffaa3d`; actual shared-policy core and
+  physical review are `d9cccd5`. `federal_law` owns the guided collector and
+  remaining ordinary Marketplace methods documented in the shared-policy ledger.
+- Full in-kind educator coordination is `08214b9`; credit-reduced tuition/actual
+  recipient reconciliation is `ec05989`. The actual QTP expense cap is `51b7182`.
+  Remaining assistance/category/ESA methods stay distinct in the education ledger.
+- Pure QBI loss-character helpers are `2d1b9bb`. `complete_facts` owns actual K1
+  source, basis/at-risk/passive and canonical integration. A helper-only package
+  does not close this ordinary source gap.
+- Fresh official mixed-tip research did not locate a controlling allocation of
+  the final reduced deduction between employee and business tips for QBI. The
+  [source decision](upgrade-2026-mixed-tips-method-decision.md) identifies the
+  precise qualified interpretation needed; no pro-rata election is invented.
+- Full coverage at `51b7182` found one stale interaction among 17,896 cases.
+  `d96a83a` repairs it with focused and four production browser cases passing.
+  Full current integration remains required. Historical browser `907b6db` evidence
+  excludes these additions. Human review, staging, provider qualification,
+  selected-state demand and final forms remain external requirements; guards
+  and agent reviews do not complete them.

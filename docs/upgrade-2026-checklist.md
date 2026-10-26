@@ -7,16 +7,26 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-Current additions through `d153020` complete actual historical refund intake
-(`2c4ddfe`, strict-spec correction `cd08895`), 2025 public-cash carry ordering
-(`9ce1686`), bounded private cash/property histories (`6cf0463`), ordinary vehicle
-refinancing (`2baa03c`) and its guided source collector (`da7fc1c`), plus historical
-foreign-adoption benefits (`998d55a`) and their guided collector (`d153020`).
-Each package has separate source/software review and scoped checks in its ledger.
-The regenerated inventory contains 413 entries and passes freshness validation on
-committed `d153020`. Marketplace re-entry and adoption review packets are under
-independent review; educator in-kind coordination and 2026 nonitemized charity
-are in progress. These are not yet included in the committed evidence.
+Current additions through `f2d0faa` include Marketplace re-entry (`0ffaa3d`),
+historical adoption review packets (`6f2b577`), actual in-kind educator reductions
+(`08214b9`), explicit 2026 nonitemization (`6029f70`), actual QTP expense capacity
+(`51b7182`), pure QBI-loss character prerequisites (`2d1b9bb`), shared Marketplace
+policy calculation/PDF (`d9cccd5`), in-kind tuition credit/recipient coordination
+(`ec05989`), donation interaction repair (`d96a83a`) and public-cash carryovers
+under actual nonitemization (`f2d0faa`). Each package has scoped checks and a
+separate agent source/software review.
+
+Full coverage on committed `51b7182` with a regenerated 419-entry inventory
+completed 17,895 passing cases and one stale donation-label failure across 964
+files. It did not produce a passing coverage result. The repaired unit interaction
+and all four affected production browser flows pass, with zero retries. Full
+current-head integration remains necessary. The last passing full branch coverage
+remains 86.98% on its separately recorded `4aef633` source.
+
+The refreshed `f2d0faa` inventory has 425 entries and passes freshness validation.
+The current package audit reports zero advisories across 521 locked dependencies;
+this does not settle the separate OS image findings. Both current remote workflows
+were still in progress when observed.
 
 The full production browser run on exact `907b6db` passes 348 cases, with five
 hosted skips, zero failures/retries in 13.0 minutes using the default pinned PDF
@@ -25,12 +35,30 @@ The [named method audit](upgrade-2026-remaining-methods.md) records the remainin
 Marketplace, charity, mixed-tip, education and QBI methods and current ownership.
 Unsupported guards do not count as implementation.
 
-`d153020` is the latest confirmed pushed application commit on
+`f2d0faa` is the latest confirmed pushed application commit on
 `upgrade/2026-baseline`. The goal remains active and the upgrade is **not
 release-ready**. External inputs remain unanswered; internal implementation and
 review continue. CI and Web runs for this commit were still in progress when
 observed; no completed remote result is inferred.
 
+- `f2d0faa`: actual public-cash carryovers under nonitemization pass 1,009
+  cases/69 files, root types, 4,833 spec references and scoped lint. Two separate
+  reviewers each pass 11 cases, including exact cents, FIFO/expiry and original
+  identity/history binding. See the [carry ledger](upgrade-2026-nonitemizer-carry-work.md).
+- `ec05989`: actual tuition credit allocation and recipient identity pass178final
+  cases/23files, root types and4,825spec references. Independent review passes39
+  cases plus nine controls; both saved reference pages are inspected. See the
+  [education ledger](upgrade-2026-in-kind-credit-work.md).
+- `d9cccd5`: shared-policy core/PDF passes220cases/25files, all three type checks,
+  4,817references and separate10-case/six-control review. Both physical pages and
+  nine reference pages are inspected. Guided actual-source intake continues.
+- `6029f70`: explicit2026 nonitemization passes1,845cases/130files, types/spec/build,
+  independent review and two browser cases. Pure-G prior-carry integration follows.
+- `2d1b9bb`: QBI-loss helpers pass262cases/9files and separate14-case review.
+  Canonical source integration remains unfinished; helper tests do not complete it.
+- `51b7182`: actual allocated QTP expense capacity passes49final cases/7files,
+  types/spec/lint and five independent controls. Unallocated spending no longer
+  reduces the exclusion on actual distributions.
 - Actual refund intake passes 903 tests in 90 files, root/web types, 4,732 spec
   references, build and both desktop/mobile flows. Independent 11-case review
   includes the corrected prior-recovery and prior-NOL omissions. See
@@ -49,7 +77,7 @@ observed; no completed remote result is inferred.
   separate 15-case canonical review. Guided `d153020` passes 389 final cases,
   root/web types, 4,769 spec references and separate 11-case review; its earlier
   broader snapshot passes 889 cases, build and two browser flows without retries.
-  Benefits-only PDF/context integration remains under review. See the
+  Benefits-only PDF/context integration is committed in`6f2b577` with89final cases and27independent review cases. See the
   [history](upgrade-2026-adoption-history-work.md) and
   [intake](upgrade-2026-adoption-intake-work.md) ledgers.
 - `f006285`: actual debt-cancellation intake passes795tests/84files, both
