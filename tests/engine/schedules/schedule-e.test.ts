@@ -492,12 +492,14 @@ describe("Schedule E - K-1 additional income fields", () => {
     expect(result.partnerships[0].passiveIncome.toNumber()).toBe(12000);
   });
 
-  it("K-1 royalties flow into partnership total", () => {
+  it("K-1 royalties flow into Part I separately from partnership income", () => {
     const input = makeK1Fixture([
       { ...baseK1, isPassiveActivity: false, ordinaryIncome: "5000", royalties: "3000" },
     ]);
     const result = calculateScheduleE(input);
-    expect(result.partnerships[0].nonpassiveIncome.toNumber()).toBe(8000);
+    expect(result.partnerships[0].nonpassiveIncome.toNumber()).toBe(5000);
+    expect(result.totalRentalIncome.toFixed()).toBe("3000");
+    expect(result.totalSupplementalIncome.toFixed()).toBe("8000");
   });
 
   it("K-1 section 1231 amounts stay out of the Schedule E partnership total", () => {
@@ -548,8 +550,10 @@ describe("Schedule E - K-1 additional income fields", () => {
       },
     ]);
     const result = calculateScheduleE(input);
-    // 10K + 5K + 2K + 1K - 4K - 2K = 12K
-    expect(result.totalNonpassiveIncome.toNumber()).toBe(12000);
+    // Part II: 10K + 5K + 1K - 4K - 2K = 10K; portfolio royalties stay in Part I.
+    expect(result.totalNonpassiveIncome.toNumber()).toBe(10000);
+    expect(result.totalRentalIncome.toFixed()).toBe("2000");
+    expect(result.totalSupplementalIncome.toFixed()).toBe("12000");
   });
 
   it("K-1 deductions exceeding income creates loss", () => {

@@ -16,7 +16,7 @@ notes: |
     - Box 4 → Schedule E Part II + Schedule SE (guaranteed payments)
     - Box 5 → Schedule B Part I (interest income)
     - Box 6a/6b → Schedule B Part II / Form 1040 Line 3a (dividends)
-    - Box 7 → Schedule E Part II (royalties)
+    - Box 7 → Schedule E Part I line4 (portfolio royalties)
     - Box 8 → Schedule D Line 5 (short-term capital gain)
     - Box 9a → Schedule D Line 12 (long-term capital gain)
     - Box 9b → QDCG Worksheet / Form 6251 (unrecaptured §1250 gain at 25%)
@@ -125,8 +125,8 @@ lines:
     description: "Royalties"
     formula: "Partner's share of royalty income"
     irsRef: "Form 1065 K-1 Instructions, Box 7"
-    destination: "Schedule E Part II"
-    testRef: "tests/engine/schedules/schedule-e.test.ts::K-1 royalties flow into partnership total"
+    destination: "Schedule E Part I line4; excluded from the passive activity pool"
+    testRef: "tests/engine/schedules/schedule-e.test.ts::K-1 royalties flow into Part I separately from partnership income"
 
   # ── Box 8: Net short-term capital gain (loss) ──────────
   - line: "Box 8"

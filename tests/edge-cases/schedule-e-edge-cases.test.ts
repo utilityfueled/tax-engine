@@ -848,7 +848,7 @@ describe("Schedule E - very high rental income without precision issues", () => 
 // ═══════════════════════════════════════════════════════════
 
 describe("Schedule E - royalty income from K-1 netRentalIncome and 1099-MISC", () => {
-  it("K-1 royalties field flows into Part II totalPartnershipIncome", () => {
+  it("K-1 portfolio royalties stay in Part I outside totalPartnershipIncome", () => {
     const input: TaxYearInput = {
       ...simpleW2Fixture,
       scheduleK1: [{
@@ -860,9 +860,11 @@ describe("Schedule E - royalty income from K-1 netRentalIncome and 1099-MISC", (
       }],
     };
     const result = calculateScheduleE(input);
-    // K-1 royalties included in totalK1Income, nonpassive
-    expect(result.partnerships[0].nonpassiveIncome.toNumber()).toBe(45000);
-    expect(result.totalPartnershipIncome.toNumber()).toBe(45000);
+    // Partner K-1 Box7 belongs on Schedule E Part I line4.
+    expect(result.partnerships[0].nonpassiveIncome.toNumber()).toBe(0);
+    expect(result.totalPartnershipIncome.toNumber()).toBe(0);
+    expect(result.totalRentalIncome.toFixed()).toBe("45000");
+    expect(result.totalSupplementalIncome.toFixed()).toBe("45000");
   });
 
   it("1099-MISC royalties only (no rental properties): Line 4 = Line 26", () => {
@@ -894,9 +896,11 @@ describe("Schedule E - royalty income from K-1 netRentalIncome and 1099-MISC", (
       }],
     };
     const result = calculateScheduleE(input);
-    // K-1 total = ordinary 10K + royalties 30K = 40K nonpassive
-    expect(result.partnerships[0].nonpassiveIncome.toNumber()).toBe(40000);
-    expect(result.totalPartnershipIncome.toNumber()).toBe(40000);
+    // Ordinary 10K remains in Part II; royalty 30K remains in Part I.
+    expect(result.partnerships[0].nonpassiveIncome.toNumber()).toBe(10000);
+    expect(result.totalPartnershipIncome.toNumber()).toBe(10000);
+    expect(result.totalRentalIncome.toFixed()).toBe("30000");
+    expect(result.totalSupplementalIncome.toFixed()).toBe("40000");
   });
 });
 

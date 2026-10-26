@@ -1849,25 +1849,27 @@ export const Form6198Schema = z.object({
   /** Activity name for audit trail */
   activityName: z.string().default(""),
 
+  // Preserve missing source amounts. Actual-source coordinators must require
+  // known values; an omitted entry is not evidence of a printed zero.
   // ── Part I: Current Year Profit (Loss) ──────────────────────
   /** Line 1: Ordinary income (loss) from the activity */
-  ordinaryIncome: optionalDecimal,
+  ordinaryIncome: decimal.optional(),
   /** Line 2: Gain (loss) from sale/disposition of activity assets */
-  gainLossFromDispositions: optionalDecimal,
+  gainLossFromDispositions: decimal.optional(),
   /** Line 3: Other income and gains from the activity */
-  otherIncomeGains: optionalDecimal,
+  otherIncomeGains: decimal.optional(),
   /** Line 4: Other deductions and losses from the activity */
-  otherDeductionsLosses: optionalDecimal,
+  otherDeductionsLosses: decimal.optional(),
 
   // ── Part II: Simplified Computation of Amount At Risk ────────
   /** Line 6: Adjusted basis in the activity at the effective date (first year only; floor at 0) */
-  adjustedBasisAtEffectiveDate: optionalDecimal,
+  adjustedBasisAtEffectiveDate: decimal.optional(),
   /** Line 7: Increases — additional contributions, recourse borrowing, qualified nonrecourse financing */
-  currentYearIncreases: optionalDecimal,
+  currentYearIncreases: decimal.optional(),
   /** Line 9: Decreases — distributions, nonrecourse financing, protected amounts */
-  currentYearDecreases: optionalDecimal,
+  currentYearDecreases: decimal.optional(),
   /** Line 10a: Amount at risk at close of preceding tax year (0 if first year) */
-  priorYearAmountAtRisk: optionalDecimal,
+  priorYearAmountAtRisk: decimal.optional(),
 });
 export type Form6198Input = z.infer<typeof Form6198Schema>;
 

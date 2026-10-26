@@ -59,6 +59,8 @@ export interface ScheduleEResult {
   // Part I: Rental
   rentalProperties: RentalPropertyEntry[];
   totalRentalIncome: Decimal; // Line 26
+  /** Portfolio royalties reported in Part I, excluded from the passive activity pool. */
+  totalRoyaltyIncome: Decimal;
 
   // Part II: Partnerships
   partnerships: PartnershipEntry[];
@@ -153,16 +155,14 @@ function applyBasisLimitation(
     ? rawOtherDeductions
     : findAllowed("otherDeductions");
 
-  // Guaranteed payments and royalties are always income, unaffected by basis limitation
+  // Guaranteed payments remain in Part II; portfolio royalties are reported in Part I.
   const guaranteedPayments = d(k1.guaranteedPayments);
-  const royalties = d(k1.royalties);
 
   const basisAdjustedTotal = sum(
     basisOrdinary,
     guaranteedPayments,
     basisRental,
     basisOtherRental,
-    royalties,
     basisOther,
     basisSection179.negated(),
     basisOtherDeductions.negated(),
@@ -191,7 +191,8 @@ function applyBasisLimitation(
 
 function applyAtRiskLimitation(
   k1: ScheduleK1,
-  rawNetAmount: Decimal
+  rawNetAmount: Decimal,
+  audit: AuditTrail,
 ): {
   netAmount: Decimal;
   atRiskAmount?: Decimal;
@@ -203,6 +204,43 @@ function applyAtRiskLimitation(
   if (k1.form6198) {
     const form6198Result = calculateForm6198(k1.form6198);
     const computedAtRisk = form6198Result.amountAtRisk;
+
+    // Portfolio character under section469 does not determine section465
+    // activity membership. For an actual current ordinary-loss/royalty source,
+    // preserve the separately reported income offset described in i6198 line5.
+    if (rawNetAmount.isNegative() && d(k1.royalties).gt(0)) {
+      const source = k1.form6198;
+      const requiredAmounts = [source.ordinaryIncome, source.gainLossFromDispositions,
+        source.otherIncomeGains, source.otherDeductionsLosses, source.adjustedBasisAtEffectiveDate,
+        source.currentYearIncreases, source.currentYearDecreases, source.priorYearAmountAtRisk];
+      if (!source.activityName.trim() || requiredAmounts.some(value => value === undefined)) {
+        throw new Error('K-1 royalty loss requires all actual Form6198 activity and amount sources, including explicit zeros');
+      }
+      const otherCategories = [k1.netRentalIncome, k1.otherNetRentalIncome, k1.guaranteedPayments,
+        k1.otherIncome, k1.section179Deduction, k1.otherDeductions, k1.netShortTermCapitalGain,
+        k1.netLongTermCapitalGain, k1.section1231Gain, k1.charitableCash, k1.charitableCapitalGain30,
+        k1.charitableCapitalGain20, k1.investmentInterestExpense, k1.excessBusinessInterest,
+        ...Object.values(k1.priorSuspendedLosses ?? {})];
+      if (d(k1.ordinaryIncome).gte(0) || otherCategories.some(value => !d(value).isZero())
+        || !form6198Result.line1.eq(rawNetAmount) || !form6198Result.line2.isZero()
+        || !form6198Result.line4.isZero()
+        || (!form6198Result.line3.isZero() && !form6198Result.line3.eq(d(k1.royalties)))) {
+        throw new Error('K-1 royalty Form6198 sources must reconcile basis-allowed ordinary loss and actual royalty membership; other categories require their separate method');
+      }
+      if (computedAtRisk.isNegative()) throw new Error('K-1 royalty Form6198 recapture requires its separate source method');
+      const deductibleLoss = Decimal.min(rawNetAmount.abs(), form6198Result.line3.plus(computedAtRisk));
+      const netAmount = deductibleLoss.negated();
+      const suspendedAtRiskLoss = rawNetAmount.plus(deductibleLoss);
+      audit.merge(form6198Result.lines);
+      audit.record('Sched E', '28-at-risk-royalty', 'Ordinary loss after actual royalty activity income and at-risk capacity', netAmount,
+        'Allow the actual same-activity income offset before limiting the remaining ordinary loss; preserve portfolio reporting character', {
+          'Basis-allowed ordinary loss': rawNetAmount,
+          'Actual same-activity royalty income': form6198Result.line3,
+          'Actual available at-risk amount': computedAtRisk,
+          'Suspended at-risk loss': suspendedAtRiskLoss,
+        });
+      return { netAmount, atRiskAmount: computedAtRisk, suspendedAtRiskLoss, form6198Result };
+    }
 
     if (!rawNetAmount.isNegative()) {
       return {
@@ -397,23 +435,24 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
     );
   }
 
-  // ── 1099-MISC Royalties (Schedule E Part I, Line 4) ──────
-  // Per IRS instructions, royalties from 1099-MISC Box 2 are reported
-  // on Schedule E Part I, not as "other income" on Schedule 1.
-  const miscRoyalties = input.form1099Misc.reduce(
-    (acc, f) => acc.plus(d(f.royalties)),
-    new Decimal(0)
-  );
-  if (miscRoyalties.greaterThan(0)) {
-    audit.record("Sched E", "4", "Royalty income (1099-MISC)", miscRoyalties,
-      "1099-MISC Box 2 royalties");
+  // ── Portfolio royalties: Schedule E Part I, Line 4 ─────
+  // Partner K-1 box7 and shareholder K-1 box6 are portfolio income;
+  // they must not supply passive income that releases ordinary activity losses.
+  const miscRoyalties = sum(...input.form1099Misc.map(form => d(form.royalties)));
+  const k1Royalties = sum(...input.scheduleK1.map(k1 => d(k1.royalties)));
+  const totalRoyaltyIncome = miscRoyalties.plus(k1Royalties);
+  if (!totalRoyaltyIncome.isZero()) {
+    audit.record("Sched E", "4", "Portfolio royalty income", totalRoyaltyIncome,
+      "Form1099-MISC box2 plus Form1065 K-1 box7 / Form1120S K-1 box6", {
+        "Form1099-MISC royalties": miscRoyalties, "K-1 portfolio royalties": k1Royalties,
+      });
   }
 
   // Line 26: Total rental and royalty income
   const totalRentalIncome = rentalProperties.reduce(
     (acc, p) => acc.plus(p.netRentalIncome),
     new Decimal(0)
-  ).plus(miscRoyalties);
+  ).plus(totalRoyaltyIncome);
   audit.record("Sched E", "26", "Total rental real estate and royalty income or loss",
     totalRentalIncome, "Sum of all properties Line 21 + royalty income");
 
@@ -428,13 +467,13 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
     const guaranteedPayments = d(k1.guaranteedPayments);
     const netRentalIncome = d(k1.netRentalIncome);
     const otherNetRentalIncome = d(k1.otherNetRentalIncome);
-    const royalties = d(k1.royalties);
     const otherIncome = d(k1.otherIncome);
     const section179Deduction = d(k1.section179Deduction);
     const otherDeductions = d(k1.otherDeductions);
 
     // Total K-1 income includes ordinary, guaranteed payments, rental,
-    // royalties, other income, minus §179 and other deductions.
+    // other income, minus §179 and other deductions. Portfolio royalties
+    // remain in Part I, while still increasing basis in the basis worksheet.
     // Capital gains, interest/dividends, and section 1231 amounts are handled
     // by other supported slices.
     const rawTotalK1Income = sum(
@@ -442,7 +481,6 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
       guaranteedPayments,
       netRentalIncome,
       otherNetRentalIncome,
-      royalties,
       otherIncome,
       section179Deduction.negated(),
       otherDeductions.negated()
@@ -465,7 +503,7 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
       netAmount: totalK1Income,
       atRiskAmount,
       suspendedAtRiskLoss,
-    } = applyAtRiskLimitation(k1, basisAdjustedAmount);
+    } = applyAtRiskLimitation(k1, basisAdjustedAmount, audit);
 
     let nonpassiveIncome = new Decimal(0);
     let nonpassiveLoss = new Decimal(0);
@@ -654,6 +692,7 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
   return {
     rentalProperties,
     totalRentalIncome,
+    totalRoyaltyIncome,
     partnerships,
     totalNonpassiveIncome,
     totalNonpassiveLoss,

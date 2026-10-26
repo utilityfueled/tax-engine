@@ -1,0 +1,53 @@
+form: "Schedule E K-1 portfolio royalties"
+fullName: "Route portfolio royalties to Part I before passive-activity limitations"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1065sk1"
+retrievedAt: "2026-10-26"
+notes: |
+  The 2025 partner K-1 instructions classify boxes5–9b as portfolio income
+  outside the passive-activity limitations and direct Box7 royalties to
+  ScheduleE line4. Shareholder K-1 instructions likewise direct Box6 royalties
+  to line4: https://www.irs.gov/instructions/i1120ssk . Form8582 excludes
+  portfolio royalties from its pool. Keep the actual royalty income in partner
+  basis increases, but exclude it from the ScheduleE PartII reporting and
+  passive pool. Section465 activity membership is distinct: actual Form6198
+  lines1-4 must reconcile before using same-activity royalty income to offset
+  an ordinary loss. https://www.irs.gov/instructions/i6198 lines3/5/7 retain
+  full income and permit the income offset before limiting the excess loss.
+  All eight PartI/II source amounts must be supplied, including actual zeros;
+  the activity description must be present. The bounded current-ordinary-loss
+  cohort rejects extra loss/gain categories, prior basis losses, mismatched
+  basis-allowed line1, partial/unreconciled line3 and recapture. Manual at-risk
+  capacity remains legacy input and does not establish royalty membership.
+  No royalty expenses, depletion,
+  property identification or ordinary-course business royalties are inferred.
+  This source-character correction does not qualify final physical forms.
+lines:
+  - line: "part-i"
+    description: "Separate positive portfolio royalties from either activity class"
+    formula: "K1 ordinary5000 plus royalties3000.25 gives PartII5000 and PartI3000.25, total8000.25, whether the ordinary activity is passive or nonpassive."
+    testRef: "tests/engine/k1-royalty-classification.test.ts::routes portfolio royalties to PartI for both entity and activity classes"
+  - line: "passive-loss"
+    description: "Portfolio royalty income cannot release ordinary passive losses"
+    formula: "Ordinary passive loss10000 and royalties12000 yields suspended loss10000 and reportable royalties12000; the royalty is not passive income."
+    testRef: "tests/engine/k1-royalty-classification.test.ts::does not use royalty income to release passive activity losses"
+  - line: "basis"
+    description: "Retain actual royalty basis increases while separating reportable character"
+    formula: "Beginning basis0 plus royalties1000 allows1000 of ordinary loss2000; PartI1000 and nonpassive PartII-1000 net0, with1000 basis-suspended."
+    testRef: "tests/engine/k1-royalty-classification.test.ts::keeps royalty basis increases while transferring only allowed activity loss"
+  - line: "at-risk"
+    description: "Preserve the legacy manual capacity without qualifying an activity allocation"
+    formula: "Legacy ordinary activity loss10000, manual capacity1000 and portfolio royalties12000 gives allowed activity loss1000, at-risk suspended9000 and supplemental total11000. This legacy scalar does not establish the actual section465 royalty source allocation; that requires the complete Form6198 method."
+    testRef: "tests/engine/k1-royalty-classification.test.ts::preserves legacy manual at-risk capacity without inferring royalty membership"
+  - line: "canonical"
+    description: "Carry separated income through the actual Form8582 and EIC pipeline"
+    formula: "Wages2000, passive ordinary loss10000 and portfolio royalties12000 gives AGI14000 and EIC0; all10000 passive loss remains suspended."
+    testRef: "tests/engine/k1-royalty-classification.test.ts::preserves royalty income through canonical passive loss and EIC calculations"
+  - line: "actual-at-risk-income-offset"
+    description: "Preserve actual same-activity income before applying section465"
+    formula: "Actual6198 ordinary-10000/royalty12000/capacity1000 has profit2000: retain PartII-10000 and PartI12000. Ordinary-4600/royalty3100/capacity600 permits3700loss and suspends900. Explicit line3zero instead permits600loss. Passive character remains separate."
+    testRef: "tests/engine/k1-royalty-classification.test.ts::preserves actual Form6198 royalty income offsets without changing passive character"
+  - line: "actual-at-risk-source-binding"
+    description: "Keep missing actual6198 source amounts unknown and reconcile basis first"
+    formula: "All eight actual source amounts must be supplied; omitted line3 is not zero or evidence of a different activity. Basis0/royalty3100/ordinary-4600 requires actual6198 line1-3100 after basis, permits3100loss and preserves1500basis suspension. Reject mismatched or extra categories and recapture pending their actual method."
+    testRef: "tests/engine/k1-royalty-classification.test.ts::requires complete reconciled actual Form6198 sources for royalty loss offsets"
