@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "d83ffe01bfb9be30c6d980b83e65f7ebb85507a5",
+    "lastRecordedCommit": "7c11d1ca6524fe4c83e9fde7e17d7462487f3dae",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1312,11 +1312,11 @@
     ],
     "workInProgress": [
       "Education: common actual per-expense composition, existing-category annual cash limits, bounded actual bond ownership/reissue history and rational reporting.",
-      "Charity: reviewed prior-basis K1 release delivery, ordinary operating K1 current Form172 classification, binding at-risk source allocation, positive benefit COD with modified absorption, changed filing-unit histories.",
-      "Health: original-versus-reported advance cents review/delivery, negative W15 signed worksheet and actual gross-source handoff, finite remaining payer/person and marriage combinations.",
+      "Charity: ordinary operating K1 current Form172 classification, binding at-risk source allocation, positive benefit COD with modified absorption, changed filing-unit histories.",
+      "Health: negative W15 signed worksheet and actual gross-source handoff, finite remaining payer/person and marriage combinations.",
       "Verification: resolve retained remote coverage failures without changing test deadlines, assertions or thresholds; final full integrated/remote/native image/SBOM/scan/recovery checks."
     ],
-    "latestIntegratedCommit": "d83ffe01bfb9be30c6d980b83e65f7ebb85507a5",
+    "latestIntegratedCommit": "7c11d1ca6524fe4c83e9fde7e17d7462487f3dae",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1663,8 +1663,8 @@
     },
     "remainingInternalWork": [
       "Education: common actual per-expense composition, existing-category annual cash limits, bounded actual bond ownership/reissue history and rational reporting.",
-      "Charity: reviewed prior-basis K1 release delivery, ordinary operating K1 current Form172 classification, binding at-risk source allocation, positive benefit COD with modified absorption, changed filing-unit histories.",
-      "Health: original-versus-reported advance cents review/delivery, negative W15 signed worksheet and actual gross-source handoff, finite remaining payer/person and marriage combinations.",
+      "Charity: ordinary operating K1 current Form172 classification, binding at-risk source allocation, positive benefit COD with modified absorption, changed filing-unit histories.",
+      "Health: negative W15 signed worksheet and actual gross-source handoff, finite remaining payer/person and marriage combinations.",
       "Verification: resolve retained remote coverage failures without changing test deadlines, assertions or thresholds; final full integrated/remote/native image/SBOM/scan/recovery checks."
     ],
     "previousStableCoverageRun": {
@@ -1687,7 +1687,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "d83ffe01bfb9be30c6d980b83e65f7ebb85507a5",
+    "lastPushedCommit": "7c11d1ca6524fe4c83e9fde7e17d7462487f3dae",
     "currentBrowserRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -4620,15 +4620,55 @@
         "finalManifestSha256": "e32414b9968aed4b30f3a4b1a127e44dec17ad3909a58bc6d030e3b9b349f6ba",
         "scope": "Bounded failure diagnostics only. Historical images/rehearsals retain their own source boundaries. Remote1e failure remains unresolved; no new runtime qualification.",
         "deliveredAt": "2026-10-26T19:52:10.929912+00:00"
+      },
+      "healthReportedRepaymentCents": {
+        "commit": "2511060a2d36478cfa4acfa67532d1c88ee5da8a",
+        "tree": "fe6a6dd3edeaea05446e647a755573654f43193c",
+        "ledger": "docs/upgrade-2026-health-reported-repayment-work.md",
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-health-cents-delivery-verification.json",
+          "sha256": "abb374de34da9283e38c8d1f438c3350e9cf9e55a66ea3ff27a28602324a9d1a"
+        },
+        "qualification": "Bounded synthetic source/software evidence; no qualified human review, live provider, final forms, staging or release qualification."
+      },
+      "k1PriorCharitableBasisRelease": {
+        "commit": "7c11d1ca6524fe4c83e9fde7e17d7462487f3dae",
+        "tree": "abbbbf9ca82759711db681328193a59bcd29ea49",
+        "ledger": "docs/upgrade-2026-charity-k1-release-work.md",
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-charity-k1-release-delivery-verification.json",
+          "sha256": "68742e0bf4705b39ded1eab19b55a41d7a05a2f67807f77d70fed025ab4496a6"
+        },
+        "qualification": "Bounded synthetic source/software evidence; no qualified human review, live provider, final forms, staging or release qualification."
+      },
+      "aiEvaluationLocalReuse": {
+        "commit": "6d015f1d0c6289464cbdeb468d13121ae09ff45a",
+        "tree": "780e55c88af493b3e2d5c581ad5ba90f8eb07ce2",
+        "ledger": "docs/upgrade-2026-ai-eval-local-reuse-work.md",
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-ai-eval-local-reuse-delivery-verification.json",
+          "sha256": "4128765769f8692b69241fa4ae89a6311f3f732d8a781653fe077d0cdc99009e"
+        },
+        "qualification": "Bounded synthetic source/software evidence; no qualified human review, live provider, final forms, staging or release qualification."
+      },
+      "pdfBoundedBatching": {
+        "commit": "c4c199fb25201bc451cd8b3c79da1631046cb357",
+        "tree": "75be0a468a60b4e15d9b2bfc2ce24a78ea1a49b0",
+        "ledger": "docs/upgrade-2026-pdf-bounded-batching-work.md",
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-pdf-bounded-batching-delivery-verification.json",
+          "sha256": "a64fde5ccce2ac1e2a2726dd168b3238c5f7ec4f895635c2d27d743640535d22"
+        },
+        "qualification": "Bounded synthetic source/software evidence; no qualified human review, live provider, final forms, staging or release qualification."
       }
     },
     "currentInventory": {
-      "entries": 537,
-      "specReferences": 5698,
-      "sourceCommit": "d83ffe01bfb9be30c6d980b83e65f7ebb85507a5",
+      "entries": 539,
+      "specReferences": 5716,
+      "sourceCommit": "7c11d1ca6524fe4c83e9fde7e17d7462487f3dae",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 131,
-      "specOwnedAssociationReferences": 204,
+      "explicitAssociations": 133,
+      "specOwnedAssociationReferences": 208,
       "fullySupportedTraceabilityCount": 69,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
@@ -4815,15 +4855,30 @@
         }
       },
       "healthReportedRepaymentCents": {
-        "status": "private independent source and PDF review in progress; 14 source tests in six files pass, including six private controls; no completed review claimed",
+        "status": "delivered; independent software/source and applicable artifact reviews clear; no human or release qualification",
         "tree": "89df9850d7f5143dded81146eda5641b107505b4",
         "manifest": {
           "path": ".local/upgrade-evidence/health-reported-repayment-review-snapshot.json",
           "sha256": "611fd9d10041c3288f8e7e2a39c6f81226c371cb5a5c979d3bd376f5d2c65531"
+        },
+        "deliveredCommit": "2511060a2d36478cfa4acfa67532d1c88ee5da8a",
+        "finalTree": "fe6a6dd3edeaea05446e647a755573654f43193c",
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-health-cents-delivery-verification.json",
+          "sha256": "abb374de34da9283e38c8d1f438c3350e9cf9e55a66ea3ff27a28602324a9d1a"
+        },
+        "ledger": "docs/upgrade-2026-health-reported-repayment-work.md",
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/parent-health-cents-source-review.json",
+          "sha256": "bdfb0c970b4ef36e87220dc2ebc5304d2d7932433ceb8a2eb8adb668ed96d994"
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/parent-health-cents-pdf-review/checks.json",
+          "sha256": "466710235849ae9d4af2125ed9493bee8da79e8b7f9021e27df7c5d079f615fb"
         }
       },
       "k1PriorCharitableBasisRelease": {
-        "status": "private; independent source review clear, original/PDF review in progress",
+        "status": "delivered; independent software/source and applicable artifact reviews clear; no human or release qualification",
         "tree": "734d415f44fc3e44b3c6bd0bb1cf40f1870b3e5c",
         "artifactManifest": {
           "path": ".local/upgrade-evidence/charity-k1-release-artifacts/manifest.json",
@@ -4835,12 +4890,51 @@
         },
         "testsPassed": 19,
         "files": 6,
-        "independentControls": 6
+        "independentControls": 6,
+        "deliveredCommit": "7c11d1ca6524fe4c83e9fde7e17d7462487f3dae",
+        "finalTree": "abbbbf9ca82759711db681328193a59bcd29ea49",
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-charity-k1-release-delivery-verification.json",
+          "sha256": "68742e0bf4705b39ded1eab19b55a41d7a05a2f67807f77d70fed025ab4496a6"
+        },
+        "ledger": "docs/upgrade-2026-charity-k1-release-work.md",
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/facts-charity-k1-release-artifact-review.json",
+          "sha256": "0737ccaddacfa92e82227a6b2972a6258d717a540179c09be6ea6260c21d9d0b"
+        }
+      },
+      "aiEvaluationLocalReuse": {
+        "status": "delivered; independent software/source and applicable artifact reviews clear; no human or release qualification",
+        "deliveredCommit": "6d015f1d0c6289464cbdeb468d13121ae09ff45a",
+        "finalTree": "780e55c88af493b3e2d5c581ad5ba90f8eb07ce2",
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-ai-eval-local-reuse-delivery-verification.json",
+          "sha256": "4128765769f8692b69241fa4ae89a6311f3f732d8a781653fe077d0cdc99009e"
+        },
+        "ledger": "docs/upgrade-2026-ai-eval-local-reuse-work.md",
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/ai-eval-local-reuse-independent-review.json",
+          "sha256": "f9a025a6a48f9540d1a770599dea4e2c293c14a3d976d9f8ff9f54a1e3fcfba8"
+        }
+      },
+      "pdfBoundedBatching": {
+        "status": "delivered; independent software/source and applicable artifact reviews clear; no human or release qualification",
+        "deliveredCommit": "c4c199fb25201bc451cd8b3c79da1631046cb357",
+        "finalTree": "75be0a468a60b4e15d9b2bfc2ce24a78ea1a49b0",
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-pdf-bounded-batching-delivery-verification.json",
+          "sha256": "a64fde5ccce2ac1e2a2726dd168b3238c5f7ec4f895635c2d27d743640535d22"
+        },
+        "ledger": "docs/upgrade-2026-pdf-bounded-batching-work.md",
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/pdf-bounded-batching-independent-review.json",
+          "sha256": "17c07b61abca04a7465d9cb678ae81f15a1eabd07f8245b56d3a3f8aae82745d"
+        }
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.160",
-      "2026": "2026.157-law-integration-draft"
+      "2025": "2025.162",
+      "2026": "2026.159-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -6850,8 +6944,8 @@
       "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
     },
     "currentFullVerificationRequired": {
-      "sourceCommit": "d83ffe01bfb9be30c6d980b83e65f7ebb85507a5",
-      "reason": "Health complete repayment, annual education aggregation and old/current charitable composition follow the immutable passing 3669b00 run. Remaining finite source and CI performance work is incomplete.",
+      "sourceCommit": "7c11d1ca6524fe4c83e9fde7e17d7462487f3dae",
+      "reason": "Reviewed health cents, 2025 K1 prior basis release and separate AI/PDF performance changes follow the immutable passing 3669b00 run. Remaining finite source work is incomplete; c4c199fb full coverage is running and excludes the later K1 package.",
       "readiness": "Final integrated run required after the finite queue; no later full pass claimed"
     },
     "previousCurrentUnitRunBeforeE91": {
@@ -7077,7 +7171,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-26T20:53:53.536161+00:00",
+    "recordedAt": "2026-10-26T21:25:27.776428+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -7605,6 +7699,18 @@
       "laterSourceExcluded": true,
       "stagingQualified": false,
       "advisoryOwnerAcceptance": "pending; expiry 2026-11-07"
+    },
+    "intermediateCoverageC4c199f": {
+      "status": "running",
+      "sourceCommit": "c4c199fb25201bc451cd8b3c79da1631046cb357",
+      "snapshot": {
+        "path": ".local/upgrade-evidence/c4c199f-coverage/snapshot.json",
+        "sha256": "0106cfde83bf24364c5126b273a18090ab99ad8c7828b05f22c6103308031449"
+      },
+      "command": "pnpm test:coverage --maxWorkers=1",
+      "workers": 1,
+      "thresholdsChanged": false,
+      "scope": "Full-project coverage on immutable intermediate source using existing synthetic PostgreSQL only; later K1 release, browser and runtime qualification excluded."
     }
   },
   "historicalReleaseBlockers": {

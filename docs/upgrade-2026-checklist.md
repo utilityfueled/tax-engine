@@ -7,12 +7,12 @@ complete a checkbox.
 
 ## Current integration — 2026-10-26
 
-The branch is pushed through `d83ffe01`. Rule provenance is `2025.160` /
-`2026.157-law-integration-draft`; the inventory has 537 entries, 5,698
-specification test references and 131 explicit shared-method associations.
-All delivered package file hashes match their independently reviewed final
-candidates. Calculation, filing, human-review and model-promotion gates remain
-unchanged.
+The branch is pushed through `7c11d1ca`. Rule provenance is `2025.162` /
+`2026.159-law-integration-draft`; the inventory has 539 entries, 5,716
+specification test references and 133 explicit shared-method associations.
+Delivered tax packages match their reviewed final trees; the two performance
+runtime files match their independent review hashes. Calculation, filing,
+human-review and model-promotion gates remain unchanged.
 
 | Delivered package | Commit | Bounded verification |
 | --- | --- | --- |
@@ -20,6 +20,10 @@ unchanged.
 | Annual ordinary cash education earnings, with exact aggregation before reporting | `b0746956` | Final source passes 1,724 tests/203 files, types/contracts/spec/inventory/lint and both builds; main 55/9. Parent final checks pass 62/9, preserving nine private controls. Ten merged PDFs/183 pages and 64 component PDFs are independently reopened. The retained first candidate's two half-dollar amounts incorrectly produced 2; the corrected exact sum produces 1. |
 | Old NOL histories composed with a separate current charitable loss | `d83ffe01` | Final source passes 772 tests/93 files and 568 strict-spec checks/5 files, types/spec/inventory/lint and both builds; main 23/8 plus 24 readiness checks/2 files. Separate source review passes 22/7 with six private controls. Independent original-source review reopens 38 PDFs/99 pages/279 populated fields and checks 193 physical and 162 reference values. |
 | Coverage-job execution budget and verified intermediate native runtime record | `03990b87`, `cc4b80d0` | Only the coverage job's total budget changes from 30 to 60 minutes; workers, test deadlines, assertions and coverage thresholds stay unchanged. The runtime record verifies downloaded native amd64 evidence for `fdfeedf57`, not later source. |
+| Reported health repayment with exact original premium cents | `2511060a` | Final source passes 973 tests/113 files; main passes 14/6 plus 25/3. Parent source review passes 14/6 including six private controls. Independent original/PDF review reopens 11 PDFs/72 pages/403 populated fields and checks 56 physical, 43 reference and four workspace values. |
+| Actual 2025 prior K-1 charitable basis release with NOL | `7c11d1ca` | Final author package/readiness checks pass 36/7 with four workers, plus 570 strict-spec checks/5 files; parent main passes 37/7 with one worker and a different readiness selection. Separate source review passes 19/6 with six private controls. Original/PDF review reopens 48 PDFs/105 pages/278 fields and checks 203 physical and 119 reference values. |
+| Reuse validated cases and scores within one evaluation report | `6d015f1d` | Main passes 32 tests/2 files. Independent review passes 35/3 with two workers; changed inputs, review/provenance, costs, privacy and rejection results match the baseline. No provider evaluation or promotion is claimed. |
+| Bounded PDF parse/save batches | `c4c199fb` | Independent review passes 53/3 with one worker; seven representative PDFs spanning 686 fields are byte-identical. The private remaining-PDF cohort passes 1,269/196, with root types and scoped lint. Main utility/new-health consumers pass 5/3. |
 
 Original-source browser and PDF evidence remains attributed to its recorded
 producer. Later source checks do not turn those artifacts into a new integrated
@@ -33,24 +37,28 @@ The finite internal queue is now reconciled against actual source reachability:
   date/category and borrower limits; bounded actual bond reissue/ownership
   history and rational-source reporting. Current refund chronology needs actual
   records, not a netted scalar. See [the education queue](upgrade-2026-education-method-queue.md).
-- **Charity:** prior K-1 basis release is under independent review. Ordinary
+- **Charity:** prior K-1 basis release is delivered. Ordinary
   operating K-1 current Form 172 classification, binding at-risk allocation,
   positive charitable benefit with COD/modified absorption, and changed
   filing-unit ownership histories remain internal work. See [the charity queue](upgrade-2026-charity-method-queue.md).
-- **Health:** reported-versus-original advance cents are under independent
-  source/PDF review; signed negative Worksheet W remaining-capacity treatment
-  and its actual source-gross handoff are being implemented. Remaining actual
+- **Health:** reported-versus-original advance cents are delivered. Signed
+  negative Worksheet W remaining-capacity treatment and its actual business
+  gross-income source handoff are being implemented. Remaining actual
   payer/person and marriage combinations stay in the finite health queue.
 - **Verification:** investigate the retained remote coverage failures, then run
   the complete integrated checks and final native images, SBOM/scans and
-  recovery rehearsal. No private performance candidate is delivered yet.
+  recovery rehearsal. The two reviewed performance changes are delivered;
+  they do not establish that the remote failures are resolved.
 
 The `fdfeedf57` CI coverage job was cancelled after its confirmed 30-minute
 execution limit. Its partial log also reports 16 failed cases in twelve suites;
 there is no completed coverage report. A focused instrumented local run passes
 all 88 tests in those suites, but deliberately retains full-project coverage
 scope and therefore exits below global thresholds. That diagnostic is not a
-coverage pass and does not resolve the remote failures. The last complete local
+coverage pass and does not resolve the remote failures. A full-project coverage
+run is active on immutable `c4c199fb`, with one worker, the existing local
+synthetic PostgreSQL service and unchanged thresholds; no result is claimed.
+That snapshot excludes the later K-1 release. The last complete local
 coverage evidence remains `3669b00`: 19,086 tests/1,216 files, 86.78% branches,
 90.49% functions and every unchanged threshold passing; all eight static checks
 and 434 production browser cases pass with zero retries, with five hosted-only
