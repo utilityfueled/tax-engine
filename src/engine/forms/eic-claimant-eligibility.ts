@@ -13,6 +13,8 @@ export interface EicClaimantEligibilityResult {
   /** Covers these claimant sources, including relevant childless requirements. */
   sourceFactsComplete: boolean;
   childlessAgeEligible: boolean | undefined;
+  /** Completed Rule10/13 fact after its filing exception, never a relationship inference. */
+  qualifyingChildOfAnotherTaxpayer?: boolean;
   disqualificationReason?: string;
   lines: CalculatedLine[];
 }
@@ -131,7 +133,9 @@ export function calculateEicClaimantEligibility(input: EicClaimantInput, childle
   // their own qualifying child. Preserve/reconcile the earlier source spelling.
   const primaryOtherChild = otherTaxpayerChild(facts?.primaryQualifyingChildOfAnotherTaxpayer, facts?.primaryChildless?.qualifyingChildOfAnotherTaxpayer, strict, "primary");
   const spouseOtherChild = joint ? otherTaxpayerChild(facts?.spouseQualifyingChildOfAnotherTaxpayer, facts?.spouseChildless?.qualifyingChildOfAnotherTaxpayer, strict, "spouse") : false;
-  if (primaryOtherChild || spouseOtherChild) disqualificationReason ??= "A claimant is another taxpayer's qualifying child (IRC32(c)(1)(B); Pub596 Rules10/13)";
+  const qualifyingChildOfAnotherTaxpayer = primaryOtherChild === true || spouseOtherChild === true ? true
+    : primaryOtherChild === false && spouseOtherChild === false ? false : undefined;
+  if (qualifyingChildOfAnotherTaxpayer) disqualificationReason ??= "A claimant is another taxpayer's qualifying child (IRC32(c)(1)(B); Pub596 Rules10/13)";
 
   let childlessAgeEligible = true;
   if (childless) {
@@ -152,5 +156,5 @@ export function calculateEicClaimantEligibility(input: EicClaimantInput, childle
       "Known claimant restriction": disqualificationReason ? "Yes" : "No",
       "Childless age test": childless ? childlessAgeEligible ? "Met by a claimant" : "Not met" : "Not applicable",
     });
-  return { sourceFactsComplete: strict, childlessAgeEligible, disqualificationReason, lines: audit.getLines() };
+  return { sourceFactsComplete: strict, childlessAgeEligible, qualifyingChildOfAnotherTaxpayer, disqualificationReason, lines: audit.getLines() };
 }

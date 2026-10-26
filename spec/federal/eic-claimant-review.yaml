@@ -1,0 +1,34 @@
+form: "EIC claimant review checkbox"
+fullName: "Actual qualifying-child restriction on final2025 Form1040 line27c"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p596"
+notes: |
+  Official final2025 Form1040 and Pub596 Rule10 refreshed2026-10-26 UTC.
+  Pub596 explicitly directs a claimant who is another taxpayer's qualifying
+  child to check1040line27c. The physical checkbox also serves a voluntary
+  decision not to claim EIC; this bounded mapper does not infer that election.
+  The source boolean is the completed EIC Rule10/13 answer after the actual
+  nonfiling/refund-only exception, not merely a relationship/dependency fact.
+  Reuse the canonical claimant-source resolver. Unknown stays unmarked; known
+  true requires zero actual calculated EIC. Contradictory source/result rejects
+  before opening a PDF. No source amount or eligibility is inferred from zero.
+  Local official2025 template SHA256:
+  3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982.
+  Physical page2 checkbox c2_13[0] is at [467.2,398,475.2,406], beside27c.
+  This remains a review artifact, with no2026 or filing qualification change.
+lines:
+  - line: "27c"
+    description: "Actual disqualifying claimant fact sets the required printed box"
+    formula: "Check only a source-reconciled true Rule10/13 fact, including a claimant with a qualifying child; actual false after the filing exception and absent historical facts remain unmarked"
+    irsRef: "Final2025 Pub596 Rule10 and child-of-person-not-required-to-file exception; final2025 Form1040 line27c"
+    testRef: "tests/pdf/eic-claimant-review.test.ts::preserves actual Rule10 sources in the saved official checkbox"
+  - line: "sourceBinding"
+    description: "Stale positive credit and conflicting source answers reject before PDF I/O"
+    formula: "Known Rule10 disqualification cannot accompany a positive calculated27a; shared source contradictions retain their error"
+    irsRef: "IRC32(c)(1)(B); original source-to-review conservation"
+    testRef: "tests/pdf/eic-claimant-review.test.ts::rejects conflicting claimant sources and a stale positive credit before PDF access"
+  - line: "yearGate"
+    description: "Final2025 mapping retains the unsupported2026 review gate"
+    formula: "Reject2026 before reading the supplied template path"
+    irsRef: "Existing year-specific review qualification policy"
+    testRef: "tests/pdf/eic-claimant-review.test.ts::keeps the2026 review gate closed"

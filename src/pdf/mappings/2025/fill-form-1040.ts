@@ -12,6 +12,7 @@ import { PDFDocument } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
+import { calculateEicClaimantEligibility } from "@/engine/forms/eic-claimant-eligibility.js";
 import { assertPdfExportAllowed } from "../../export-policy.js";
 import {
   loadReviewTemplate,
@@ -136,6 +137,7 @@ const FIELDS = {
   line25d: p2("f2_20[0]"),
   line26: p2("f2_21[0]"),
   line27a: p2("f2_23[0]"),
+  line27c: p2("c2_13[0]"),
 
   // ── Page 2 Refundable Credits ──
   line28: p2("f2_24[0]"),
@@ -175,6 +177,15 @@ export async function fillForm1040(
   if (input.deductionElection === "nonitemized" || result.deductionUsed === "nonitemized") throw new Error("Nonitemized election is available only for 2026 and has no supported review PDF mapping");
   if (input.taxpayer.dependents.length > 4) {
     throw new Error("Form 1040 dependent attachment mapping is required for more than four dependents.");
+  }
+  // Rule10/13's completed claimant answer applies regardless of child count.
+  // Resolve only that applicable source route; no childless home/age or amount
+  // is recomputed here. Zero credit alone never establishes this checkbox.
+  const otherTaxpayerChild = input.eic?.claimantEligibility === undefined ? undefined
+    : calculateEicClaimantEligibility(input, false).qualifyingChildOfAnotherTaxpayer;
+  if (otherTaxpayerChild === true && (!result.earnedIncomeCredit.isZero()
+    || (getLineValue(result, "1040", "27a")?.isZero() === false))) {
+    throw new Error("Rule10 qualifying-child source conflicts with a positive EIC credit result");
   }
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
@@ -280,6 +291,9 @@ export async function fillForm1040(
   setCurrencyField(form, F.line25d, result.totalWithholding);
   setCurrencyField(form, F.line26, result.estimatedTaxPayments);
   setCurrencyField(form, F.line27a, result.earnedIncomeCredit);
+  // Pub596 Rule10 expressly directs this mark, despite the physical form's
+  // broader voluntary-opt-out label. No voluntary election is inferred.
+  setCheckBox(form, F.line27c, otherTaxpayerChild === true);
 
   // ── Page 2 Totals ──
   for (const line of ["28", "29", "30", "31"] as const) {
