@@ -8,6 +8,7 @@ import { calculateMarketplaceHealthPremiums } from "./marketplace-health-premium
 import type { MarketplaceHealthDeductionResult } from "./marketplace-health-deduction.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { calculateMarketplaceHealthLimit, type MarketplaceHealthLimitResult } from "./marketplace-health-limit.js";
+import { calculateMarketplaceOwnerDeductions } from "./marketplace-health-owners.js";
 
 type Owner = "primary" | "spouse";
 interface Params {
@@ -159,28 +160,42 @@ export function calculateForm7206Return(params: Params) {
     const maximum = historicalLimit?.maximumSpecifiedDeduction ?? uncappedMaximum;
     if (suppliedLimit && (!historicalLimit || !suppliedLimit.maximumSpecifiedDeduction.eq(historicalLimit.maximumSpecifiedDeduction))) throw new Error("Pub974 maximum must reconcile the actual historical worksheet.");
     const attributeSpecified = (amount: Decimal) => {
-      if (amount.isZero()) return;
+      const multipleOwners = new Set(specified.map(row => row.accountHolder)).size > 1;
+      if (amount.isZero() && !multipleOwners) return;
       if (!specified.length) throw new Error("Pub974 health deduction has no attributable earned-income source.");
-      if (new Set(specified.map(row => row.accountHolder)).size > 1) throw new Error("Pub974 multiple-owner deductions require the separate actual owner coordination worksheet.");
-      const gross = specified.map(row => {
-        if (specified.length === 1) return d(1); // One actual income source needs no allocation denominator.
-        const actual = params.businessGrossIncomes?.filter(item => item.sourceId === row.businessSourceId);
-        if (actual?.length !== 1 || !actual[0].amount.isFinite() || actual[0].amount.lt(0)) throw new Error("Pub974 QBI allocation requires actual gross income for every business counted in its deduction.");
-        return actual[0].amount;
-      });
-      const denominator = sum(...gross);
-      if (denominator.lte(0)) throw new Error("Pub974 positive deduction requires actual positive gross income for QBI attribution.");
-      let remaining = amount;
-      specified.forEach((group,index) => {
-        const target = healthSources.find(row => row.sourceId === group.businessSourceId);
-        if (!target) throw new Error("Pub974 QBI deduction has no matching actual business source.");
-        const share = index === specified.length - 1 ? remaining : amount.times(gross[index]).div(denominator);
-        target.amount = target.amount.plus(share); remaining = remaining.minus(share);
-        marketplaceAudit.record("Pub974 QBI Allocation", group.businessSourceId, "Specified deduction attributable to this income source", share,
-          specified.length === 1 ? "Only actual business income used in the deduction" : "Allowed combined specified deduction times actual business gross income / combined gross income;199A only",
-          { "Owner": group.accountHolder, "Combined deduction": amount,
-            ...(specified.length === 1 ? {} : { "Gross income numerator": gross[index], "Gross income denominator": denominator }) });
-      });
+      let allocations = [{ groups: specified, amount }];
+      if (multipleOwners) {
+        const stage = params.marketplace?.stage === "worksheet-w" ? { kind: "worksheet-w" as const }
+          : params.marketplace?.stage === "maximum" ? { kind: "maximum" as const }
+            : result ? { kind: "final" as const, businesses: result.businesses } : undefined;
+        if (!stage) throw new Error("Pub974 owner attribution requires its actual canonical calculation stage.");
+        const ownerCalculation = calculateMarketplaceOwnerDeductions({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups, stage, specifiedDeduction: amount });
+        marketplaceAudit.merge(ownerCalculation.lines);
+        allocations = ownerCalculation.owners.map(row => ({ groups: specified.filter(group => group.accountHolder === row.accountHolder), amount: row.specifiedDeduction }));
+      }
+      for (const allocation of allocations) {
+        if (allocation.amount.isZero()) continue;
+        const ownerGroups = allocation.groups;
+        const gross = ownerGroups.map(row => {
+          if (ownerGroups.length === 1) return d(1); // One actual income source needs no allocation denominator.
+          const actual = params.businessGrossIncomes?.filter(item => item.sourceId === row.businessSourceId);
+          if (actual?.length !== 1 || !actual[0].amount.isFinite() || actual[0].amount.lt(0)) throw new Error("Pub974 QBI allocation requires actual gross income for every business counted in its deduction.");
+          return actual[0].amount;
+        });
+        const denominator = sum(...gross);
+        if (denominator.lte(0)) throw new Error("Pub974 positive deduction requires actual positive gross income for QBI attribution.");
+        let remaining = allocation.amount;
+        ownerGroups.forEach((group,index) => {
+          const target = healthSources.find(row => row.sourceId === group.businessSourceId && row.accountHolder === group.accountHolder);
+          if (!target) throw new Error("Pub974 QBI deduction has no matching actual business source.");
+          const share = index === ownerGroups.length - 1 ? remaining : allocation.amount.times(gross[index]).div(denominator);
+          target.amount = target.amount.plus(share); remaining = remaining.minus(share);
+          marketplaceAudit.record("Pub974 QBI Allocation", group.businessSourceId, "Specified deduction attributable to this income source", share,
+            ownerGroups.length === 1 ? "Only actual business income used in the owner's deduction" : "Owner specified deduction times actual same-owner business gross income / same-owner combined gross income;199A only",
+            { "Owner": group.accountHolder, "Combined deduction": allocation.amount,
+              ...(ownerGroups.length === 1 ? {} : { "Gross income numerator": gross[index], "Gross income denominator": denominator }) });
+        });
+      }
     };
     let specifiedDeduction: Decimal;
     if (params.marketplace?.stage === "maximum" || params.marketplace?.stage === "worksheet-w") {

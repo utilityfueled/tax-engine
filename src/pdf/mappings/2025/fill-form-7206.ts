@@ -151,6 +151,11 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
     const money = (value: Decimal) => value.toDecimalPlaces(2).toFixed();
     write(`Actual completed method: ${marketplace.method}. Step 2 credit: $${marketplace.step2Credit.toFixed()}. Final Form 8962 credit: $${marketplace.finalCredit.toFixed()}.`);
     write(`Return-level Schedule 1 line 17 transfer: $${calculation.deductionToSchedule1.toFixed()}. Specified deduction $${money(marketplace.specifiedDeduction)}; nonspecified deduction $${money(marketplace.nonspecifiedDeduction)}; combined maximum $${money(marketplace.maximumDeduction)}.`);
+    const ownerRows = calculation.lines.filter(row => row.form === "Pub974 Owner Allocation" && row.inputs?.Owner === accountHolder);
+    if (ownerRows.length) {
+      write("SEPARATE OWNER ATTRIBUTION: these amounts identify this owner's portion of the joint calculation. They are already included in the return-level transfer above. Any allocation among this owner's businesses for QBI is separate.");
+      for (const row of ownerRows) write(`${row.form} ${row.line}: $${money(row.value)}. ${row.description}. ${row.formula}.`);
+    }
     if (marketplace.method === "ordinary-no-ptc-2025") write("Interim attempted coordination: the following W/X/Y/Z and Step3 records explain the earlier method only. Final no-credit treatment uses the ordinary Form7206 and recomputed source claims.");
     for (const row of marketplace.historicalLimit?.lines ?? []) {
       const displayed = /percentage/i.test(row.description) ? `${row.value.toFixed()}%` : `$${money(row.value)}`;

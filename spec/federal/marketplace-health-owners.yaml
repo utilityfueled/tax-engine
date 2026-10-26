@@ -1,0 +1,64 @@
+form: "Publication 974 separate owner attribution"
+fullName: "Actual specified-premium deduction for two self-employed spouses"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Source refresh 2026-10-25: IRC162(l)(2)(A); Reg1.162(l)-1(a)(1)-(3);
+  RevProc2014-41 sections3,5.02,5.03; Pub974 WorksheetW and Simplified
+  Step3 separate-business instructions; Reg1.199A-3(b)(1)(vi).
+  The joint credit uses actual household income. The published reasonable
+  enrollment-premium allocation supplies credit attributable to each plan.
+  In this bounded route each owner's combined remaining earned income covers
+  that owner's entire specified premiums. The aggregate maximum also equals
+  total premiums. Thus no earned-income or repayment-cap residual must be
+  assigned between spouses. The derived owner deduction is the owner's
+  actual premiums less the previously calculated attributable Step2 credit.
+  No published IRS two-owner numerical example is claimed. The examples are
+  independently derived from the cited rules. Binding owner-income or joint
+  repayment-cap allocation remains an internal unimplemented method.
+  Within an owner, QBI follows actual gross income under1.199A-3; this is
+  separate from the premium-share credit allocation. Original cents are not
+  changed. The completed joint Schedule1 transfer rounds once; its existing
+  deterministic whole-dollar reconciliation is only a reporting convention.
+  Actual2026 filing/qualification gates remain closed.
+lines:
+  - line: "owner-step3"
+    description: "Retain each actual owner's net specified premiums"
+    formula: "For each owner, sum actual linked specified premiums and previously calculated attributable Step2 credit. Owner specified deduction=sum(max(0,business premiums-business allocated credit)); require its sum exactly equals the canonical combined specified deduction. Do not spread this amount by joint business gross income."
+    testRef: "tests/engine/forms/marketplace-health-owners.test.ts::attributes net premiums to actual owners before any QBI gross-income allocation"
+  - line: "temporary"
+    description: "Keep each intermediate replay on its actual owner sources"
+    formula: "WorksheetW uses each owner's specified premiums minus their actual attributable advances. The uncapped maximum uses each owner's specified premiums. Each sum must equal the canonical temporary deduction; a combined binding repayment cap cannot be allocated by an invented ratio."
+    testRef: "tests/engine/forms/marketplace-health-owners.test.ts::derives temporary W and maximum deductions from exact separate owner sources"
+  - line: "limits"
+    description: "Never borrow the other spouse's earned income or allocate a binding cap"
+    formula: "Require actual joint filing and both owners. Each owner's combined signed remaining earned income must cover that owner's specified premiums. Reject binding owner-income limits and temporary/final amounts reduced by a joint cap until their separate attribution method is implemented."
+    testRef: "tests/engine/forms/marketplace-health-owners.test.ts::rejects cross-owner income borrowing and unresolved combined cap attribution"
+  - line: "source-conservation"
+    description: "Preserve exact original source identity, cents, and known zero"
+    formula: "Require unique canonical business identities, matching owners, unique valid source months, finite nonnegative source premiums/advances, exact monthly-to-business totals, and reconciled final allocated-credit/net-premium amounts. Retain exact Decimal values and reject unknown, stale, duplicated or contradictory computed context."
+    testRef: "tests/engine/forms/marketplace-health-owners.test.ts::retains exact source cents and rejects stale or duplicated computed records"
+  - line: "canonical"
+    description: "Transfer the combined deduction once with separate owner QBI attribution"
+    formula: "Canonical ownerSE deductions and plan-business income produce W limits. Use the two-owner source attribution at every maximum/ordered/final context, then apply gross-income QBI allocation only within that owner. Retain owner audits and the final joint credit; no user allowed-deduction override."
+    testRef: "tests/engine/federal-marketplace-health-owners.test.ts::coordinates actual two-owner2025 policies and preserves their separate QBI deductions"
+  - line: "2026"
+    description: "Use uncapped2026 owner sources without opening full-return qualification"
+    formula: "Actual2026 full-return readiness remains closed. Isolated indexed-method tests retain the same owner-specific premium/PTC allocation for actual zero or full advances, full excess-advance repayment, and final ordinary no-credit treatment."
+    testRef: "tests/engine/federal-marketplace-health-owners-2026.test.ts::keeps each owner's deduction and2026 full repayment separate from the joint credit"
+  - line: "same-owner-qbi"
+    description: "Allocate QBI only among that owner's actual income sources"
+    formula: "Once actual owner net premiums are established, a multiple-business owner's 199A allocation uses that owner's actual business gross-income ratio. The other owner's shareholder wages and health deduction do not enter this denominator."
+    testRef: "tests/engine/federal-marketplace-health-owners.test.ts::keeps same-owner business gross-income allocation separate from spouse premiums"
+  - line: "review"
+    description: "Reconcile and display actual owner amounts in each review appendix"
+    formula: "Fresh source/business recomputation reproduces the retained owner audits in both Form7206 and the return audit. Each business review appendix displays only its owner's actual attribution, clearly distinct from the repeated joint Schedule1 total. Reject missing, duplicated or altered owner amounts and sources; retain the existing redaction and filing gates."
+    testRef: "tests/pdf/form7206-health-owners-review.test.ts::reconciles actual owner deductions and prints them without duplicate joint claims"
+  - line: "guided-sources"
+    description: "Reach both actual owners through existing business and shareholder controls"
+    formula: "The existing guide collects a primary Schedule C and a spouse shareholder W2, independent plans, actual payment/person shares and original policy links. Keep shareholder premiums nonQBI; derive the joint deduction and final credit once. Unknown shareholder status, wrong owner or edited original wages invalidate the source handoff."
+    testRef: "tests/guided-interview/guided-marketplace-health-owners.test.ts::calculates two actual owners from the saved guide without an allowance override"
+  - line: "guided-controls"
+    description: "Preserve editable original owner and policy sources"
+    formula: "Existing controls show each owner and its actual business/policy source. An edit preserves exact original strings and revokes confirmation; it does not infer a shareholder qualification or duplicate either owner's premiums."
+    testRef: "tests/apps/web/marketplace-health-owner-interactions.test.tsx::keeps both owners reachable and invalidates confirmation after source edits"
