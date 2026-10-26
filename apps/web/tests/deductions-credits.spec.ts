@@ -75,7 +75,7 @@ async function addCashDonation(page: Page) {
   await page.getByLabel("Donation date", { exact: true }).fill("2025-06-01");
   for (const [name, value] of [
     ["Recipient is a private foundation / second-category organization", "false"],
-    ["Recipient qualifies under section 170(b)(1)(A) for the 2026 nonitemizer deduction", "true"],
+    ["Recipient qualifies for a charitable contribution deduction", "true"],
     ["Recipient is a supporting organization", "false"],
     ["Gift was to a donor-advised fund", "false"],
   ]) await page.getByRole("combobox", { name, exact: true }).selectOption(value);
