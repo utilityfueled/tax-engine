@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "5489eb6ba2a812c7d0bed63aad79ae45bef5e947",
+    "lastRecordedCommit": "d5d69b8de8dce060cbca67be20fea455bbe1e8ca",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1312,11 +1312,11 @@
     ],
     "workInProgress": [
       "Education: common actual per-expense composition, existing-category annual cash limits, bounded actual bond ownership/reissue history and rational reporting.",
-      "Charity: ordinary operating K1 current Form172 classification, binding at-risk source allocation, positive benefit COD with modified absorption, changed filing-unit histories.",
-      "Health: negative W15 signed worksheet and actual gross-source handoff, finite remaining payer/person and marriage combinations.",
+      "Charity: binding at-risk source allocation, positive benefit COD with modified absorption, changed filing-unit histories.",
+      "Health: finite remaining payer/person and marriage combinations.",
       "Verification: resolve retained remote coverage failures without changing test deadlines, assertions or thresholds; final full integrated/remote/native image/SBOM/scan/recovery checks."
     ],
-    "latestIntegratedCommit": "5489eb6ba2a812c7d0bed63aad79ae45bef5e947",
+    "latestIntegratedCommit": "d5d69b8de8dce060cbca67be20fea455bbe1e8ca",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1663,8 +1663,8 @@
     },
     "remainingInternalWork": [
       "Education: common actual per-expense composition, existing-category annual cash limits, bounded actual bond ownership/reissue history and rational reporting.",
-      "Charity: ordinary operating K1 current Form172 classification, binding at-risk source allocation, positive benefit COD with modified absorption, changed filing-unit histories.",
-      "Health: negative W15 signed worksheet and actual gross-source handoff, finite remaining payer/person and marriage combinations.",
+      "Charity: binding at-risk source allocation, positive benefit COD with modified absorption, changed filing-unit histories.",
+      "Health: finite remaining payer/person and marriage combinations.",
       "Verification: resolve retained remote coverage failures without changing test deadlines, assertions or thresholds; final full integrated/remote/native image/SBOM/scan/recovery checks."
     ],
     "previousStableCoverageRun": {
@@ -1687,7 +1687,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "5489eb6ba2a812c7d0bed63aad79ae45bef5e947",
+    "lastPushedCommit": "d5d69b8de8dce060cbca67be20fea455bbe1e8ca",
     "currentBrowserRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -4670,14 +4670,39 @@
           "sha256": "e902b3bffd8deb37b7cd3dac6e1a0a8e20703f609eaa0dcbbf6c26a4ec3f3d88"
         },
         "qualification": "Bounded synthetic agent-reviewed source, guide and PDFs; no human, final-form filing, staging or live-provider qualification."
+      },
+      "operatingK1CurrentNol": {
+        "commit": "a1fb36b8224d770f7c9b9662e15025f669bdaac2",
+        "ledger": "docs/upgrade-2026-form172-operating-k1-work.md",
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-operating-k1-delivery-verification.json",
+          "sha256": "9d8d34438167c6d85d72de1acb1b388cfb8f65ab8ead992d45be8358d843b3d5"
+        },
+        "finalManifest": {
+          "path": ".local/upgrade-evidence/form172-operating-k1-delivery-snapshot.json",
+          "sha256": "1ad9b8e55af322024bb853049002957e1a7d8465ea27713c4b31d6e0fa77ae05"
+        },
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/facts-form172-operating-k1-source-review.json",
+          "sha256": "a66cb6b8a3a68fff1185ee4a19ffd895e17602adf94b3383635a7b54a4423ca1"
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/facts-form172-operating-k1-artifact-review/checks.json",
+          "sha256": "95edc76d0b7174147c02f3cfd89825778980ebfc12aeaf00ca36d591ec068ae0"
+        },
+        "finalTests": 609,
+        "finalFiles": 14,
+        "mainTests": 10,
+        "mainFiles": 6,
+        "qualification": "Bounded synthetic source and artifact agent reviews; no human, final-form filing or release qualification."
       }
     },
     "currentInventory": {
-      "entries": 542,
-      "specReferences": 5731,
-      "sourceCommit": "5489eb6ba2a812c7d0bed63aad79ae45bef5e947",
+      "entries": 543,
+      "specReferences": 5742,
+      "sourceCommit": "a1fb36b8224d770f7c9b9662e15025f669bdaac2",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 135,
+      "explicitAssociations": 136,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -4954,11 +4979,37 @@
           "path": ".local/upgrade-evidence/parent-negative-w15-pdf-review/checks.json",
           "sha256": "2b19cbea49eb4db5cee6aea32552fe67b907cd3e157522b04354ba5c9231070e"
         }
+      },
+      "operatingK1CurrentNol": {
+        "status": "delivered",
+        "commit": "a1fb36b8224d770f7c9b9662e15025f669bdaac2",
+        "ledger": "docs/upgrade-2026-form172-operating-k1-work.md",
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-operating-k1-delivery-verification.json",
+          "sha256": "9d8d34438167c6d85d72de1acb1b388cfb8f65ab8ead992d45be8358d843b3d5"
+        },
+        "finalManifest": {
+          "path": ".local/upgrade-evidence/form172-operating-k1-delivery-snapshot.json",
+          "sha256": "1ad9b8e55af322024bb853049002957e1a7d8465ea27713c4b31d6e0fa77ae05"
+        },
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/facts-form172-operating-k1-source-review.json",
+          "sha256": "a66cb6b8a3a68fff1185ee4a19ffd895e17602adf94b3383635a7b54a4423ca1"
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/facts-form172-operating-k1-artifact-review/checks.json",
+          "sha256": "95edc76d0b7174147c02f3cfd89825778980ebfc12aeaf00ca36d591ec068ae0"
+        },
+        "finalTests": 609,
+        "finalFiles": 14,
+        "mainTests": 10,
+        "mainFiles": 6,
+        "qualification": "Bounded synthetic source and artifact agent reviews; no human, final-form filing or release qualification."
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.163",
-      "2026": "2026.160-law-integration-draft"
+      "2025": "2025.164",
+      "2026": "2026.161-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -7195,7 +7246,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-26T21:57:00.672127+00:00",
+    "recordedAt": "2026-10-26T22:13:10.768950+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -7814,7 +7865,135 @@
         "path": ".local/upgrade-evidence/remote-456bd43-completed-check-excerpts.json",
         "sha256": "7e3bf6ae43c3580cc6418d22ebaa98241b0a86df6a84543dbe4a714df1e7c4dc"
       },
-      "boundary": "Completed job logs only. Flaky browser result is not zero-retry release evidence; later health source excluded."
+      "boundary": "Completed job logs and hash-verified artifact. Self-host flaky result remains; signed-health, operating-K1 and mobile packages are excluded.",
+      "containerBrowser": {
+        "passed": 464,
+        "hostedSkipped": 5,
+        "configuredRetries": 0,
+        "timeoutMs": 30000,
+        "duration": "17.8m"
+      }
+    },
+    "mobileLayoutMeasurement": {
+      "commit": "d5d69b8de8dce060cbca67be20fea455bbe1e8ca",
+      "ledger": "docs/upgrade-2026-mobile-layout-measurement-work.md",
+      "verification": {
+        "path": ".local/upgrade-evidence/mobile-position-verification.json",
+        "sha256": "63c2c6addf3b01c30ad28885e9952bd6bbdf94987b0322f702336d94c80415bd"
+      },
+      "browserCases": 6,
+      "distinctCases": 2,
+      "retries": 0,
+      "workers": 1,
+      "productCodeChanged": false,
+      "boundary": "Focused private source verification; historical flaky remote run remains recorded; final integrated verification due."
+    },
+    "nativeRuntime456bd432": {
+      "document": "docs/upgrade-2026-runtime-456bd43.json",
+      "documentSha256": "0b4531b4de4cefe7446dc77772b362b413fe50dcb39eb3d7beeda4cbcf1c1683",
+      "sourceCommit": "456bd43250ab0f7133f1c6be84f51d3944a78c40",
+      "laterSourceExcluded": true,
+      "stagingQualified": false,
+      "advisoryOwnerAcceptance": "pending; expiry 2026-11-07"
+    },
+    "remoteCoverage456bd432": {
+      "sourceCommit": "456bd43250ab0f7133f1c6be84f51d3944a78c40",
+      "workflow": 40404307915,
+      "job": 121858613543,
+      "evidence": {
+        "path": ".local/upgrade-evidence/remote-456bd432/coverage-failure-summary.json",
+        "sha256": "96bf4327609d453111d6f364c237ad8ecf8cf03638b1ec77704a740cdc0bd6f4"
+      },
+      "completed": false,
+      "reportedFailedCases": 15,
+      "failedSuites": [
+        {
+          "file": "tests/apps/web/workspace-filled-return.test.ts",
+          "failed": 4,
+          "cases": [
+            "prepares the actual passive distribution context before workspace redaction 5021ms",
+            "binds historical adoption before redacting the actual workspace packet 5147ms",
+            "calculates education using complete identity before redacting every student page 4178ms",
+            "exports actual shared health through the original workspace source context 5826ms"
+          ]
+        },
+        {
+          "file": "tests/pdf/qbi-loss-review.test.ts",
+          "failed": 1,
+          "cases": [
+            "retains a saved zero-deduction QBI packet and separate loss limits 5096ms"
+          ]
+        },
+        {
+          "file": "tests/engine/provider-model-eval.test.ts",
+          "failed": 1,
+          "cases": [
+            "requires reviewed repeated comparisons and a measured benefit, then only permits human promotion review 11043ms"
+          ]
+        },
+        {
+          "file": "tests/pdf/form-8862-review.test.ts",
+          "failed": 1,
+          "cases": [
+            "uses actual current child presence for printed claimant restrictions 5014ms"
+          ]
+        },
+        {
+          "file": "tests/pdf/form8839-history-review.test.ts",
+          "failed": 1,
+          "cases": [
+            "preserves source cents and private identity through redacted review rendering 5205ms"
+          ]
+        },
+        {
+          "file": "tests/pdf/form-8949-digital-reporting.test.ts",
+          "failed": 1,
+          "cases": [
+            "retains all categories and digital continuation rows after reopening 5812ms"
+          ]
+        },
+        {
+          "file": "tests/pdf/schedule-e-passive-distribution-review.test.ts",
+          "failed": 1,
+          "cases": [
+            "saves and reopens the redacted complete passive distribution packet 5404ms"
+          ]
+        },
+        {
+          "file": "tests/pdf/eic-additional-checkboxes.test.ts",
+          "failed": 2,
+          "cases": [
+            "uses actual death and either-spouse ages only on the childless route 5012ms",
+            "prints actual joint homes while preserving false and unknown sources 5061ms"
+          ]
+        },
+        {
+          "file": "tests/pdf/k1-cash-distribution-review.test.ts",
+          "failed": 1,
+          "cases": [
+            "binds and saves the redacted distribution gain with original basis evidence 5024ms"
+          ]
+        },
+        {
+          "file": "tests/pdf/marketplace-business-credit-method-review.test.ts",
+          "failed": 1,
+          "cases": [
+            "binds the chosen method and signed business rows before redacted PDF output 5090ms"
+          ]
+        },
+        {
+          "file": "tests/pdf/shared-owner-marketplace-health-review.test.ts",
+          "failed": 1,
+          "cases": [
+            "renders separate shared-plan owners from the original private context 5714ms"
+          ]
+        }
+      ],
+      "conclusion": "cancelled",
+      "cancellationObservation": "Job log reports operation was canceled at 21:53:52 UTC, before the final test/coverage summary; later branch work had been pushed.",
+      "failureCause": "Unresolved: inline failures have names and durations, but cancellation prevented the final error details. Durations alone do not establish timeout causes.",
+      "failuresRemainUnresolved": true,
+      "logSha256": "f94b58436f4a1d5adfbbb473003296b80d6bed2dd28b09987aeca283a354df58"
     }
   },
   "historicalReleaseBlockers": {

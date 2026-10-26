@@ -177,3 +177,39 @@ retained, and those failures remain separate internal work. Later tax packages
 are excluded from this image. Final-source verification, authorized hosted
 staging and independent human security review are still required. No release
 image was published, and no production, filing or model-promotion gate changed.
+
+
+## Native amd64 refresh at 456bd432 — October 26
+
+[Web 40404307925](https://github.com/utilityfueled/tax-engine/actions/runs/40404307925)
+passes on `456bd43250ab0f7133f1c6be84f51d3944a78c40`. The downloaded
+archive matches GitHub's SHA-256, and the [versioned record](upgrade-2026-runtime-456bd43.json)
+retains source, image, SBOM, scan and job-log hashes. The native amd64 image
+passes actual health, assets, 44 templates, non-root/read-only execution and
+all six synthetic Compose phases. The previous application is the immutable
+`d32cb8cf` source. Nine database tables, two tenants, exact provider cost,
+browser facts and original document bytes survive upgrade, database restart,
+dump/restore, rollback and re-upgrade. Wrong-password, altered-ciphertext and
+deletion/reload recovery checks pass. Raw synthetic-marker observations cover
+407 requests and retain their encoding and binary-data limitation.
+
+The container browser invocation passes 464 cases with zero retries and a
+30-second deadline; five hosted-only cases are skipped. The separate self-host
+job reports 463 passes and one flaky mobile layout case that passes on its
+configured retry. Commit `d5d69b8d` subsequently makes those four position
+measurements synchronous, with six focused zero-retry passes and an independent
+source review. That later fix does not change the historical flaky result.
+
+The 2,930-component SBOM and Grype 0.121.0 scan, using the October 26 06:38:44 UTC
+database, retain exactly the prior 157 package/version/severity/fix tuples across
+67 advisories. No critical, npm or available-fixed-version matches are reported.
+Every advisory disposition, pending owner confirmation and November 7 deadline
+is preserved.
+
+The companion CI passes 19,276 ordinary tests in 1,294 files and all static jobs.
+Its coverage job records fifteen failures in eleven suites before cancellation;
+the final error details and coverage report are absent. Names and durations are
+retained, but duration alone does not establish each cause. These failures remain
+internal work. This intermediate image predates the signed health and operating
+K-1 packages. Final-source verification, staging and independent human review
+remain required. No release image was published or production gate changed.

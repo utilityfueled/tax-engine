@@ -2,9 +2,9 @@
 
 ## Current checkpoint — 2026-10-26
 
-The branch is pushed through `5489eb6b`. Rule provenance is `2025.163` /
-`2026.160-law-integration-draft`; the inventory has 542 entries, 5,731
-specification test references and 135 explicit shared-method associations.
+The branch is pushed through `d5d69b8d`. Rule provenance is `2025.164` /
+`2026.161-law-integration-draft`; the inventory has 543 entries, 5,742
+specification test references and 136 explicit shared-method associations.
 Delivered tax packages match their reviewed final trees; the two performance
 runtime files match their independent review hashes. Calculation, filing,
 human-review and model-promotion gates remain unchanged.
@@ -18,6 +18,8 @@ human-review and model-promotion gates remain unchanged.
 | Reported health repayment with exact original premium cents | `2511060a` | Final source passes 973 tests/113 files; main passes 14/6 plus 25/3. Parent source review passes 14/6 including six private controls. Independent original/PDF review reopens 11 PDFs/72 pages/403 populated fields and checks 56 physical, 43 reference and four workspace values. |
 | Actual 2025 prior K-1 charitable basis release with NOL | `7c11d1ca` | Final author package/readiness checks pass 36/7 with four workers, plus 570 strict-spec checks/5 files; parent main passes 37/7 with one worker and a different readiness selection. Separate source review passes 19/6 with six private controls. Original/PDF review reopens 48 PDFs/105 pages/278 fields and checks 203 physical and 119 reference values. |
 | Signed marketplace remaining capacity and actual partnership gross sources | `5489eb6b` | Final package passes 168 tests/29 files and static/build checks; main passes 12/7. Parent source review passes 22/9 with eight private controls. Independent original/PDF review reopens ten PDFs/69 pages/84 fields and checks 90 physical, 179 reference and ten workspace values. |
+| Actual operating K-1 sources for current Form 172 loss | `a1fb36b8` | Final executable source passes 609 tests/14 files; main passes 10/6. Independent source review passes 16/7 including six private controls. Original/PDF review reopens 33 PDFs/92 pages/191 fields and checks 183 physical, 474 reference and 191 appearance values. |
+| Consistent mobile layout measurement | `d5d69b8d` | Both existing cases pass three runs each, one worker, zero retries. Independent source review and controlled scroll, real-offset and hidden-element probes preserve the original assertions. Production build, web types and focused lint pass. |
 | Reuse validated cases and scores within one evaluation report | `6d015f1d` | Main passes 32 tests/2 files. Independent review passes 35/3 with two workers; changed inputs, review/provenance, costs, privacy and rejection results match the baseline. No provider evaluation or promotion is claimed. |
 | Bounded PDF parse/save batches | `c4c199fb` | Independent review passes 53/3 with one worker; seven representative PDFs spanning 686 fields are byte-identical. The private remaining-PDF cohort passes 1,269/196, with root types and scoped lint. Main utility/new-health consumers pass 5/3. |
 
@@ -33,8 +35,8 @@ The finite internal queue is now reconciled against actual source reachability:
   date/category and borrower limits; bounded actual bond reissue/ownership
   history and rational-source reporting. Current refund chronology needs actual
   records, not a netted scalar. See [the education queue](upgrade-2026-education-method-queue.md).
-- **Charity:** prior K-1 basis release is delivered. Ordinary
-  operating K-1 current Form 172 classification, binding at-risk allocation,
+- **Charity:** prior K-1 basis release and ordinary operating K-1 current
+  Form 172 classification are delivered. Binding at-risk allocation,
   positive charitable benefit with COD/modified absorption, and changed
   filing-unit ownership histories remain internal work. See [the charity queue](upgrade-2026-charity-method-queue.md).
 - **Health:** reported-versus-original advance cents are delivered. Signed
@@ -65,21 +67,24 @@ coverage evidence remains `3669b00`: 19,086 tests/1,216 files, 86.78% branches,
 and 434 production browser cases pass with zero retries, with five hosted-only
 skips. Later packages are excluded.
 
-Remote `456bd432` unit tests pass 19,276 cases in 1,294 files. Its self-host
-browser job reports 463 passed, one flaky case that passed on retry, and five
-hosted skips. The failed mobile layout assertion compared positions sampled
-at different times; its cause is under investigation. This is not zero-retry
-release evidence. Later health delivery is excluded.
+Remote `456bd432` unit tests pass 19,276 cases in 1,294 files and its static
+jobs pass. The self-host browser job reports 463 passes, one flaky mobile case
+and five hosted skips. The later `d5d69b8d` fix samples positions in one browser
+turn; six focused zero-retry cases pass, and a real 30px offset still fails the
+preserved assertion. The exact remote event's cause is not proven. Its coverage
+job records fifteen failures in eleven suites before cancellation, without final
+error details or a coverage report. Those retained failures remain internal work.
 
-The independently inspected [native amd64 record](upgrade-2026-runtime-fdfeedf.json)
-for `fdfeedf57` records image `sha256:dc81ec884ed992d7758163b9096271c9e2c2664ed1fc845577f08a6fdc427fed`,
+The inspected [native amd64 record](upgrade-2026-runtime-456bd43.json) for
+`456bd432` records image `sha256:bc4145e97283b5ffae033bd45e45976cc7e27de1ec3b3504a9c0ef6dd3fa8c04`,
 44 templates, non-root read-only execution and actual health. All six recovery
 phases pass with nine database tables, two tenants, exact provider cost, browser
-facts and original document bytes. Container browser checks pass 454 cases with
-zero configured retries; five hosted-only cases are skipped. The separate
-self-host browser job passes 454 with five skips and zero observed retries,
-but its configured retry allowance remains one. Unit CI passes 19,211 tests in
-1,267 files. None of this qualifies later source or staging.
+facts and original document bytes. Container browser checks pass 464 cases with
+zero retries; five hosted-only cases are skipped. The encrypted recovery checks
+reject a wrong password and tampered ciphertext and preserve deletion/reload.
+Raw-marker observations cover 407 requests with the retained encoding/binary
+limitation. The archive hash is verified. This evidence excludes the subsequent
+signed-health, operating-K1 and mobile packages and does not qualify staging.
 
 The runtime scan has 157 matches across 67 advisories: 54 High, 47 Medium,
 10 Low and 46 Negligible; no Critical, npm or available-fixed-version matches.
