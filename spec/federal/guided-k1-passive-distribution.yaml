@@ -1,0 +1,50 @@
+form: "Guided K1 Passive Distribution"
+fullName: "Actual single passive activity cash distribution source intake"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p925"
+retrievedAt: "2026-10-26"
+notes: |
+  This collector reaches the existing k1-passive-distribution-gain.yaml method.
+  It collects the entity's actual complete activity and asset valuation report,
+  original selected valuation date, beginning-year values, annual event totals,
+  holder-allocable asset values and adjusted asset bases before separate743(b)
+  owner adjustments. It does not
+  collect a gain, allocation ratio, loss allowance, MAGI or calculated basis.
+  Each event row is one actual activity's complete annual total, not an invented
+  event ID. Each asset row retains its actual source ID and reference.
+  Dates, zero, false, unknown and all decimal digits remain distinct. New rows
+  have no fabricated IDs, dates, amounts or confirmations. The underlying
+  activity must link the same original K1 to its actual prior469 and QBI ledger.
+  The ordinary-only Form461 classification is not inferred or erased: a supplied
+  conflicting classification still rejects. Only the validated passive source
+  route can omit that separate classification. Other K1 routes remain unchanged.
+  Every substantive edit revokes nested source confirmations, including the
+  valuation report; confirmation alone does not alter actual source values.
+  Unsupported activities remain saved for their separate method. The original
+  Form6198 amount and source reference are independently entered and reconciled.
+  No filing-year or review qualification gate changes.
+lines:
+  - line: "canonical"
+    description: "Linked actual passive distribution reaches the existing return method"
+    formula: "Original1030cash/30basis creates1000capital gain. Actual1500prior passive loss permits1000ordinary loss and retains500; actual400permits400 and leaves600net income. The source gain never becomes entity basis or QBI income."
+    testRef: "tests/guided-interview/guided-k1-passive-distribution.test.ts::reaches the passive distribution return through actual linked histories"
+  - line: "classification"
+    description: "Source classification and history remain authoritative"
+    formula: "Missing valuation, missing prior history, unlinked original, supplied ordinary-only461 classification and conflicting owner facts reject without source mutation. Ordinary K1 routes retain their existing classification requirement."
+    testRef: "tests/guided-interview/guided-k1-passive-distribution.test.ts::preserves unsupported classification and incomplete original histories"
+  - line: "normalization"
+    description: "Nested actual amounts preserve exact source spelling and uncertainty"
+    formula: "Grouped currency normalizes as decimal strings without numeric conversion; signed743(b) remains signed, blank remains unknown, false and0.00 remain actual. Unknown keys and entered calculated ratios or gains reject."
+    testRef: "tests/guided-interview/guided-k1-passive-distribution.test.ts::normalizes original valuation facts without inventing amounts or identities"
+  - line: "confirmation"
+    description: "Source changes revoke nested valuation confirmation"
+    formula: "Editing asset or event facts revokes outer, basis, risk, distribution and valuation confirmations. Checking only the packet cannot revive them; household changes revoke the same source bindings."
+    testRef: "tests/guided-interview/guided-k1-passive-distribution.test.ts::revokes valuation confirmations while retaining complete actual records"
+  - line: "controls"
+    description: "Actual valuation and annual activity records are editable"
+    formula: "Add creates empty records; actual false, zero, signed adjustment and saved unsupported activity stay visible. Event and asset add/edit/remove preserve unrelated originals and histories, with no calculated gain field."
+    testRef: "tests/apps/web/k1-passive-distribution-interactions.test.tsx::collects original passive valuation and event rows without defaults"
+  - line: "browser"
+    description: "Original source edits and reload preserve the passive route"
+    formula: "Desktop/mobile source-based capital1000 and prior loss1500 retain AGI100000. Missing valuation or stale confirmation blocks the estimate; actual restored records and independent confirmations restore it. Original references remain local and saved zero/false/unknown stay distinct."
+    testRef: "apps/web/tests/k1-passive-distribution.spec.ts::retains linked passive distribution sources through local reload"

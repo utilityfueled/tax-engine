@@ -2,12 +2,14 @@ import { K1CashDistributionSourcesSchema, type K1CashDistributionSources } from 
 import type { K1CharitableReturnInput } from '@/engine/forms/k1-charitable-return-sources';
 import type { GuidedFlowState } from './guided-interview-flow';
 import type { QbiSourceEntry } from './guided-qbi-loss-data';
+import { normalizeGuidedK1PassiveDistribution } from './guided-k1-passive-distribution';
 
 export type K1CashDistributionData = QbiSourceEntry<K1CashDistributionSources>;
 /** Normalize supplied source spelling only; no calculated amount or default fact. */
 export function normalizeGuidedK1CashDistribution(data: K1CashDistributionData | undefined): K1CashDistributionSources | undefined {
   if (data === undefined) return undefined;
   const source = Object.fromEntries(Object.entries(data).map(([key, value]) => {
+    if (key === 'passiveActivity') return [key, normalizeGuidedK1PassiveDistribution(data.passiveActivity)];
     if (value === null || value === undefined || value === '') return [key, undefined];
     if (typeof value !== 'string') return [key, value];
     const text = value.trim();

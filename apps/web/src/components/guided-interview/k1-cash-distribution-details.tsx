@@ -2,6 +2,7 @@
 import type { K1CashDistributionData } from '@/lib/guided-k1-cash-distribution';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
+import { K1PassiveDistributionDetails } from './k1-passive-distribution-details';
 
 type Choices = readonly (readonly [string, string])[];
 type Field = readonly [keyof K1CashDistributionData, string, 'text' | 'money' | 'boolean' | Choices];
@@ -17,7 +18,7 @@ const common: readonly Field[] = [
   ['cashOnlyConfirmed', 'cash only', 'boolean'], ['nonliquidatingConfirmed', 'ownership continued after this distribution', 'boolean'],
   ['noOtherReportingConfirmed', 'this distribution is not reported elsewhere as a capital transaction', 'boolean'],
   ['noSpecialHoldingOrGainElectionConfirmed', 'no special holding-period or gain election applies', 'boolean'],
-  ['activityCharacter', 'actual underlying activity', [['portfolio_investments_only', 'Portfolio investments only'], ['single_passive_business', 'One passive business — separate method'], ['single_nonpassive_business', 'One nonpassive business — separate method'], ['mixed_or_other', 'Mixed or other — separate method']]],
+  ['activityCharacter', 'actual underlying activity', [['portfolio_investments_only', 'Portfolio investments only'], ['single_passive_business', 'One ordinary passive business with original activity report'], ['single_nonpassive_business', 'One nonpassive business — separate method'], ['mixed_or_other', 'Mixed or other — separate method']]],
   ['usIndividualTaxTreatmentConfirmed', 'owner has U.S. citizen or resident tax treatment for this source period', 'boolean'],
   ['sameSingleAtRiskActivityConfirmed', 'the entire gain belongs to the same original Form 6198 activity', 'boolean'],
   ['atRiskSourceReference', 'actual at-risk source reference', 'text'], ['atRiskGainItemSourceReference', 'original Form 6198 gain-item statement reference', 'text'],
@@ -42,7 +43,7 @@ export function K1CashDistributionDetails({ prefix, data, entityType, onChange }
   const fields = [...common, ...(entityType !== 's_corporation' ? partnership : []), ...(entityType !== 'partnership' ? corporation : [])];
   return <fieldset><legend>{prefix} cash distribution attachment</legend>
     <p className="guided-hint">Use the original cash-distribution and acquisition records. Enter dates as YYYY-MM-DD. The calculation derives any gain from these facts and the existing basis records.</p>
-    <p className="guided-hint">This method covers one unchanged investment-only block and a cash distribution. Partnership distributions must actually occur on December 31. Record the exact original Form 6198 activity reference and its gain-item statement; the existing worksheet amounts must reconcile.</p>
+    <p className="guided-hint">This method covers one unchanged ownership block with investment-only assets or a complete single passive business report. Partnership distributions must actually occur on December 31. Record the exact original Form 6198 activity reference and its gain-item statement; the existing worksheet amounts must reconcile.</p>
     <p className="guided-hint">The owner treatment answer includes an effective resident election where applicable. It must cover this source year and relevant holding period without foreign or treaty treatment that changes the calculation. Other methods remain saved for their separate calculation.</p>
     <div className="guided-form-grid">{fields.map(([key, name, kind]) => {
       const label = `${prefix} distribution ${name}`, value = data[key], change = (next: unknown) => onChange({ ...data, [key]: next });
@@ -55,6 +56,7 @@ export function K1CashDistributionDetails({ prefix, data, entityType, onChange }
         {kind.map(([code, text]) => <option key={code} value={code}>{text}</option>)}
       </select></label>;
     })}</div>
+    {(data.activityCharacter === 'single_passive_business' || data.passiveActivity !== undefined) && <K1PassiveDistributionDetails prefix={prefix} data={data.passiveActivity} onChange={passiveActivity => onChange({ ...data, passiveActivity })} />}
     <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Remove {prefix} cash distribution attachment</button>
   </fieldset>;
 }

@@ -3,6 +3,7 @@ import { validateK1QbiLossSources, type K1QbiLossSourceInput } from '@/engine/fo
 import { calculatePartnerBasisSchedule } from '@/engine/forms/partner-basis-schedule';
 import { calculateScheduleE } from '@/engine/schedules/schedule-e';
 import { calculateK1OrdinarySelfEmployment } from '@/engine/forms/k1-ordinary-self-employment';
+import { calculateK1PassiveDistributionSources } from '@/engine/forms/k1-passive-distribution-sources';
 import { calculateQbiEblNol } from '@/engine/forms/qbi-ebl-nol';
 import { d } from '@/utils/decimal';
 import type { GuidedFlowState } from './guided-interview-flow';
@@ -10,6 +11,7 @@ import { parseGuidedQbiLossPacket, qbiSourceValues, type K1LossSourcesData } fro
 import { buildGuidedNetOperatingLoss } from './guided-net-operating-loss';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
 import { parseGuidedK1CharitableSources } from './guided-k1-charitable-data';
+import { k1CashDistributionKnownTreatment } from './guided-k1-cash-distribution';
 const statuses = { single: 'single', mfj: 'married_filing_jointly', mfs: 'married_filing_separately', hoh: 'head_of_household', qss: 'qualifying_surviving_spouse' } as const;
 
 /** Only original facts and canonical source-limit calculations, without an income assumption. */
@@ -68,10 +70,14 @@ export function buildGuidedK1Sources(data: K1LossSourcesData | undefined, state:
     partnershipName: scheduleK1[index].partnershipName, amount: source.priorPassiveLoss ?? '',
     qbiLossTracking: qbiSourceValues(data.activities?.[index]?.passiveHistory) as NonNullable<TaxYearInput['priorYear']>['suspendedPassiveLosses'][number]['qbiLossTracking'],
   }));
-  const sourceInput = { taxpayer, scheduleK1, qbiLossSources: packet, k1CharitableSources: charitable?.packet, priorYear: { suspendedPassiveLosses } };
+  const sourceInput = { taxpayer, scheduleK1, qbiLossSources: packet, k1CharitableSources: charitable?.packet, priorYear: { suspendedPassiveLosses }, ...k1CashDistributionKnownTreatment(state) };
   validateK1QbiLossSources(sourceInput);
-  calculateK1OrdinarySelfEmployment(sourceInput, calculateScheduleE({ ...sourceInput, rentalProperties: [], form1099Misc: [] }));
-  if (scheduleK1.length) {
+  const scheduleE = calculateScheduleE({ ...sourceInput, rentalProperties: [], form1099Misc: [] });
+  calculateK1OrdinarySelfEmployment(sourceInput, scheduleE);
+  // This validated route has actual business capital. It cannot assert the
+  // different ordinary-only461 method; supplied classifications still reject.
+  const passiveDistribution = calculateK1PassiveDistributionSources(sourceInput, scheduleE);
+  if (scheduleK1.length && !passiveDistribution.rows.length) {
     const classification = packet.form461Classification;
     if (!classification || classification.sourceTaxYear !== taxYear || !classification.sourceReference?.trim()
       || classification.sourceFactsConfirmed !== true || classification.method !== 'ordinary_k1_only'
