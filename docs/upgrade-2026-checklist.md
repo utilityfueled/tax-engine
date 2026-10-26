@@ -7,9 +7,9 @@ complete a checkbox.
 
 ## Current integration — 2026-10-26
 
-The branch is pushed through `7c11d1ca`. Rule provenance is `2025.162` /
-`2026.159-law-integration-draft`; the inventory has 539 entries, 5,716
-specification test references and 133 explicit shared-method associations.
+The branch is pushed through `5489eb6b`. Rule provenance is `2025.163` /
+`2026.160-law-integration-draft`; the inventory has 542 entries, 5,731
+specification test references and 135 explicit shared-method associations.
 Delivered tax packages match their reviewed final trees; the two performance
 runtime files match their independent review hashes. Calculation, filing,
 human-review and model-promotion gates remain unchanged.
@@ -22,6 +22,7 @@ human-review and model-promotion gates remain unchanged.
 | Coverage-job execution budget and verified intermediate native runtime record | `03990b87`, `cc4b80d0` | Only the coverage job's total budget changes from 30 to 60 minutes; workers, test deadlines, assertions and coverage thresholds stay unchanged. The runtime record verifies downloaded native amd64 evidence for `fdfeedf57`, not later source. |
 | Reported health repayment with exact original premium cents | `2511060a` | Final source passes 973 tests/113 files; main passes 14/6 plus 25/3. Parent source review passes 14/6 including six private controls. Independent original/PDF review reopens 11 PDFs/72 pages/403 populated fields and checks 56 physical, 43 reference and four workspace values. |
 | Actual 2025 prior K-1 charitable basis release with NOL | `7c11d1ca` | Final author package/readiness checks pass 36/7 with four workers, plus 570 strict-spec checks/5 files; parent main passes 37/7 with one worker and a different readiness selection. Separate source review passes 19/6 with six private controls. Original/PDF review reopens 48 PDFs/105 pages/278 fields and checks 203 physical and 119 reference values. |
+| Signed marketplace remaining capacity and actual partnership gross sources | `5489eb6b` | Final package passes 168 tests/29 files and static/build checks; main passes 12/7. Parent source review passes 22/9 with eight private controls. Independent original/PDF review reopens ten PDFs/69 pages/84 fields and checks 90 physical, 179 reference and ten workspace values. |
 | Reuse validated cases and scores within one evaluation report | `6d015f1d` | Main passes 32 tests/2 files. Independent review passes 35/3 with two workers; changed inputs, review/provenance, costs, privacy and rejection results match the baseline. No provider evaluation or promotion is claimed. |
 | Bounded PDF parse/save batches | `c4c199fb` | Independent review passes 53/3 with one worker; seven representative PDFs spanning 686 fields are byte-identical. The private remaining-PDF cohort passes 1,269/196, with root types and scoped lint. Main utility/new-health consumers pass 5/3. |
 
@@ -43,7 +44,7 @@ The finite internal queue is now reconciled against actual source reachability:
   filing-unit ownership histories remain internal work. See [the charity queue](upgrade-2026-charity-method-queue.md).
 - **Health:** reported-versus-original advance cents are delivered. Signed
   negative Worksheet W remaining-capacity treatment and its actual business
-  gross-income source handoff are being implemented. Remaining actual
+  gross-income source handoff are also delivered. Remaining actual
   payer/person and marriage combinations stay in the finite health queue.
 - **Verification:** investigate the retained remote coverage failures, then run
   the complete integrated checks and final native images, SBOM/scans and
@@ -55,14 +56,25 @@ execution limit. Its partial log also reports 16 failed cases in twelve suites;
 there is no completed coverage report. A focused instrumented local run passes
 all 88 tests in those suites, but deliberately retains full-project coverage
 scope and therefore exits below global thresholds. That diagnostic is not a
-coverage pass and does not resolve the remote failures. A full-project coverage
-run is active on immutable `c4c199fb`, with one worker, the existing local
-synthetic PostgreSQL service and unchanged thresholds; no result is claimed.
-That snapshot excludes the later K-1 release. The last complete local
+coverage pass and does not resolve the remote failures. The immutable `c4c199fb` full-project run completed with 19,264 passing and
+three failing tests in 1,290 files. Each failure is a five-second PDF timeout;
+there is no completed coverage report. Its 3,400 source hashes are unchanged.
+The log and verification are retained in `c4c199f-coverage/`. The three unchanged
+cases pass in isolated instrumented profiles, whose partial selection remains
+below the unchanged global thresholds. Timing varies across runs; a private
+larger-batch experiment gave no consistent benefit and was not integrated.
+These diagnostics do not resolve the full-run failures. That snapshot excludes
+the later K-1 release and health package. The last complete local
 coverage evidence remains `3669b00`: 19,086 tests/1,216 files, 86.78% branches,
 90.49% functions and every unchanged threshold passing; all eight static checks
 and 434 production browser cases pass with zero retries, with five hosted-only
 skips. Later packages are excluded.
+
+Remote `456bd432` unit tests pass 19,276 cases in 1,294 files. Its self-host
+browser job reports 463 passed, one flaky case that passed on retry, and five
+hosted skips. The failed mobile layout assertion compared positions sampled
+at different times; its cause is under investigation. This is not zero-retry
+release evidence. Later health delivery is excluded.
 
 The independently inspected [native amd64 record](upgrade-2026-runtime-fdfeedf.json)
 for `fdfeedf57` records image `sha256:dc81ec884ed992d7758163b9096271c9e2c2664ed1fc845577f08a6fdc427fed`,

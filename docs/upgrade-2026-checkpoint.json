@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "7c11d1ca6524fe4c83e9fde7e17d7462487f3dae",
+    "lastRecordedCommit": "5489eb6ba2a812c7d0bed63aad79ae45bef5e947",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1316,7 +1316,7 @@
       "Health: negative W15 signed worksheet and actual gross-source handoff, finite remaining payer/person and marriage combinations.",
       "Verification: resolve retained remote coverage failures without changing test deadlines, assertions or thresholds; final full integrated/remote/native image/SBOM/scan/recovery checks."
     ],
-    "latestIntegratedCommit": "7c11d1ca6524fe4c83e9fde7e17d7462487f3dae",
+    "latestIntegratedCommit": "5489eb6ba2a812c7d0bed63aad79ae45bef5e947",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1687,7 +1687,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "7c11d1ca6524fe4c83e9fde7e17d7462487f3dae",
+    "lastPushedCommit": "5489eb6ba2a812c7d0bed63aad79ae45bef5e947",
     "currentBrowserRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -4660,16 +4660,24 @@
           "sha256": "a64fde5ccce2ac1e2a2726dd168b3238c5f7ec4f895635c2d27d743640535d22"
         },
         "qualification": "Bounded synthetic source/software evidence; no qualified human review, live provider, final forms, staging or release qualification."
+      },
+      "healthNegativeW15": {
+        "commit": "5489eb6ba2a812c7d0bed63aad79ae45bef5e947",
+        "tree": "50e7b0713b17145d3127328bf6c4bf890291fa80",
+        "ledger": "docs/upgrade-2025-marketplace-negative-w15-work.md",
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-health-negative-w15-delivery-verification.json",
+          "sha256": "e902b3bffd8deb37b7cd3dac6e1a0a8e20703f609eaa0dcbbf6c26a4ec3f3d88"
+        },
+        "qualification": "Bounded synthetic agent-reviewed source, guide and PDFs; no human, final-form filing, staging or live-provider qualification."
       }
     },
     "currentInventory": {
-      "entries": 539,
-      "specReferences": 5716,
-      "sourceCommit": "7c11d1ca6524fe4c83e9fde7e17d7462487f3dae",
+      "entries": 542,
+      "specReferences": 5731,
+      "sourceCommit": "5489eb6ba2a812c7d0bed63aad79ae45bef5e947",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 133,
-      "specOwnedAssociationReferences": 208,
-      "fullySupportedTraceabilityCount": 69,
+      "explicitAssociations": 135,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -4930,11 +4938,27 @@
           "path": ".local/upgrade-evidence/pdf-bounded-batching-independent-review.json",
           "sha256": "17c07b61abca04a7465d9cb678ae81f15a1eabd07f8245b56d3a3f8aae82745d"
         }
+      },
+      "healthNegativeW15": {
+        "status": "delivered",
+        "deliveredCommit": "5489eb6ba2a812c7d0bed63aad79ae45bef5e947",
+        "finalManifest": {
+          "path": ".local/upgrade-evidence/health-negative-w15-final-snapshot.json",
+          "sha256": "c770a40b02fff16a7ffa8cfe23eee630e9ea67d42241c10d8a8879d579816b73"
+        },
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/parent-negative-w15-source-review.json",
+          "sha256": "08f1b4531ad937280440f6a9db3317a21dee140f927b7dad74653f0925487cb0"
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/parent-negative-w15-pdf-review/checks.json",
+          "sha256": "2b19cbea49eb4db5cee6aea32552fe67b907cd3e157522b04354ba5c9231070e"
+        }
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.162",
-      "2026": "2026.159-law-integration-draft"
+      "2025": "2025.163",
+      "2026": "2026.160-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -6944,8 +6968,8 @@
       "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
     },
     "currentFullVerificationRequired": {
-      "sourceCommit": "7c11d1ca6524fe4c83e9fde7e17d7462487f3dae",
-      "reason": "Reviewed health cents, 2025 K1 prior basis release and separate AI/PDF performance changes follow the immutable passing 3669b00 run. Remaining finite source work is incomplete; c4c199fb full coverage is running and excludes the later K1 package.",
+      "sourceCommit": "5489eb6ba2a812c7d0bed63aad79ae45bef5e947",
+      "reason": "Later reviewed health/charity/AI/PDF packages follow3669b00. c4 full coverage failed3 PDF deadlines with no completed report; isolated profiles do not resolve the full-run failures. Remaining finite source work continues.",
       "readiness": "Final integrated run required after the finite queue; no later full pass claimed"
     },
     "previousCurrentUnitRunBeforeE91": {
@@ -7171,7 +7195,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-26T21:25:27.776428+00:00",
+    "recordedAt": "2026-10-26T21:57:00.672127+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -7450,7 +7474,7 @@
       "evidence": ".local/upgrade-evidence/health-finite-remainder-2026-10-26.md",
       "sha256": "90919f70e3420edcb79b82b740ca1d9b3ddf479d6c3feaed1b280c5a1ca128fd",
       "internal": [
-        "Separate business/owner worksheets, applicable early stops, signed intermediates and actual same-owner business-class attribution",
+        "Separate-business/owner worksheets, applicable stops, signed same-owner W15 and actual gross-income attribution delivered; remaining payer/person, payment-share and marriage compositions continue",
         "Actual eligible persons, payer evidence and payment shares separate from PartIV allocation",
         "Determined positive actual noncoverage advances with payment and corresponding-credit bounds",
         "Alternative-marriage composition with preceding original health/shared sources"
@@ -7701,7 +7725,7 @@
       "advisoryOwnerAcceptance": "pending; expiry 2026-11-07"
     },
     "intermediateCoverageC4c199f": {
-      "status": "running",
+      "status": "failed",
       "sourceCommit": "c4c199fb25201bc451cd8b3c79da1631046cb357",
       "snapshot": {
         "path": ".local/upgrade-evidence/c4c199f-coverage/snapshot.json",
@@ -7710,7 +7734,87 @@
       "command": "pnpm test:coverage --maxWorkers=1",
       "workers": 1,
       "thresholdsChanged": false,
-      "scope": "Full-project coverage on immutable intermediate source using existing synthetic PostgreSQL only; later K1 release, browser and runtime qualification excluded."
+      "scope": "Full-project coverage on immutable intermediate source using existing synthetic PostgreSQL only; later K1 release, browser and runtime qualification excluded.",
+      "exitCode": 1,
+      "testsPassed": 19264,
+      "testsFailed": 3,
+      "filesPassed": 1287,
+      "filesFailed": 3,
+      "filesTotal": 1290,
+      "completedCoverageReport": false,
+      "seconds": 1131.67,
+      "verification": {
+        "path": ".local/upgrade-evidence/c4c199f-coverage/verification.json",
+        "sha256": "61efd9bbb1ae2f3c741cb7e999f091a351c0b343ebf676d66a4defd80cf4280d"
+      },
+      "log": {
+        "path": ".local/upgrade-evidence/c4c199f-coverage/coverage.log",
+        "sha256": "d19cbe24a09be5127969c52bb9068a7e06ce1c5e1c0b53f637ebe4d9d6c8117e"
+      },
+      "sourceUnchanged": true,
+      "failures": [
+        {
+          "path": "tests/pdf/marketplace-business-credit-method-review.test.ts",
+          "line": 16
+        },
+        {
+          "path": "tests/apps/web/distinct-qtp-esa-workspace-packet.test.ts",
+          "line": 13
+        },
+        {
+          "path": "tests/apps/web/workspace-filled-return.test.ts",
+          "line": 539
+        }
+      ],
+      "failureType": "Five-second per-test timeout; no assertion failure. Existing deadlines and thresholds preserved."
+    },
+    "pdfTimeoutDiagnostics": {
+      "sourceCommit": "456bd43250ab0f7133f1c6be84f51d3944a78c40",
+      "copy": {
+        "path": ".local/upgrade-evidence/pdf-timeout-profile-copy.json",
+        "sha256": "bdeb45b3bca72785db83dd47e13578b426656b08c313a0f2c898c780aea13cce"
+      },
+      "logs": [
+        {
+          "path": ".local/upgrade-evidence/pdf-timeout-profile-baseline.log",
+          "sha256": "3c499a72cf67b7a535680eab50462b9b6241418f6cfd57ecda2575868e9f23cb"
+        },
+        {
+          "path": ".local/upgrade-evidence/pdf-timeout-profile-save-detail.log",
+          "sha256": "82c3074ec89f927d897661842d303344280efa71ac0401bed1506362b0f77417"
+        },
+        {
+          "path": ".local/upgrade-evidence/pdf-timeout-profile-fast-experiment.log",
+          "sha256": "530b9c9dbe33798f33b19452f2fc7cf37121a88f2073ef295b44a681f25d0733"
+        }
+      ],
+      "casesPassedPerRun": 3,
+      "scope": "Selected instrumented diagnostics, not full coverage. Larger finite-batch private experiment gave no consistent timing improvement and was not integrated. No tests, deadlines, workers or thresholds changed."
+    },
+    "remote456CompletedChecks": {
+      "sourceCommit": "456bd43250ab0f7133f1c6be84f51d3944a78c40",
+      "unit": {
+        "run": 40404307915,
+        "job": 121858613729,
+        "passed": 19276,
+        "files": 1294,
+        "seconds": 848.09
+      },
+      "browser": {
+        "run": 40404307925,
+        "job": 121858555358,
+        "passed": 463,
+        "flaky": 1,
+        "skipped": 5,
+        "configuredRetries": 1,
+        "observedRetryCases": 1,
+        "zeroRetryPass": false
+      },
+      "excerpts": {
+        "path": ".local/upgrade-evidence/remote-456bd43-completed-check-excerpts.json",
+        "sha256": "7e3bf6ae43c3580cc6418d22ebaa98241b0a86df6a84543dbe4a714df1e7c4dc"
+      },
+      "boundary": "Completed job logs only. Flaky browser result is not zero-retry release evidence; later health source excluded."
     }
   },
   "historicalReleaseBlockers": {
