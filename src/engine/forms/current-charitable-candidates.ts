@@ -13,6 +13,7 @@ import {
   type CharitableCarryoverBalance,
 } from './charitable-carryover-source-validation.js';
 import { allocateCharitablePrivateMedia } from './charitable-private-media.js';
+import { calculateCryptoDonations } from './crypto-lot-matching.js';
 import { readCurrentCharitableReceiptAmounts } from '@/utils/charitable-current-receipts.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, sum, zeroFloor } from '@/utils/decimal.js';
@@ -47,6 +48,13 @@ export function calculateCurrentCharitableCandidates(input: TaxYearInput, contex
     throw new Error('Current charitable amounts must be finite with nonnegative contributions');
   }
   const actual = readCurrentCharitableReceiptAmounts(input, { capitalStockOnly: true });
+  if (input.cryptoIncome?.donations.length) {
+    const crypto = calculateCryptoDonations(input.cryptoIncome.donations, input.taxpayer.taxYear);
+    if (!crypto.sourceFactsVerified) throw new Error('Current charitable candidates require verified original crypto donation sources');
+    for (const key of Object.keys(actual) as (keyof typeof actual)[]) {
+      actual[key] = actual[key].plus(crypto.contributionAmounts[key]);
+    }
+  }
   if (Object.entries(actual).some(([key, value]) => !value.eq(current[key as keyof typeof current]))) {
     throw new Error('Current charitable category amounts must reconcile exactly to actual receipts; other source methods remain separate');
   }
@@ -76,10 +84,10 @@ export function calculateCurrentCharitableCandidates(input: TaxYearInput, contex
     { 'Current cash': cash, 'Current ordinary property value': property, 'Cash percentage ceiling': percentageCapacity,
       'Allowed cash before floor': itemized.allowedBeforeFloor.cash_60, 'Allowed property before floor': itemized.allowedBeforeFloor.noncash_50,
       'Current other-recipient cash': otherCash, 'Current other-recipient ordinary property': actual.noncashPrivate,
-      'Current public investment stock': actual.capitalGainPublic, 'Current other-recipient investment stock': actual.capitalGainPrivate,
+      'Current public capital-gain property': actual.capitalGainPublic, 'Current other-recipient capital-gain property': actual.capitalGainPrivate,
       'Allowed other-recipient ordinary gifts before floor': itemized.allowedBeforeFloor.other_30,
-      'Allowed public investment stock before floor': itemized.allowedBeforeFloor.capital_gain_30,
-      'Allowed other-recipient investment stock before floor': itemized.allowedBeforeFloor.capital_gain_20 });
+      'Allowed public capital-gain property before floor': itemized.allowedBeforeFloor.capital_gain_30,
+      'Allowed other-recipient capital-gain property before floor': itemized.allowedBeforeFloor.capital_gain_20 });
   const expandedCategories = actual.capitalGainPublic.gt(0) || actual.noncashPrivate.gt(0) || actual.capitalGainPrivate.gt(0)
     || (property.gt(0) && otherCash.gt(0));
   return { method: expandedCategories ? '2026_current_ordinary_receipts_dual' : otherCash.gt(0) ? '2026_current_public_and_other_cash_dual'

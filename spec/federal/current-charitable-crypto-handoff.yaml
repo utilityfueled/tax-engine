@@ -1,0 +1,48 @@
+form: "Current charitable crypto handoff"
+fullName: "Existing verified digital-asset gifts in current charitable candidates"
+taxYear: 2026
+irsReference: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-digital-asset-transactions"
+references:
+  - "https://www.irs.gov/pub/irs-drop/n-14-21.pdf"
+  - "https://uscode.house.gov/us/usc/119-120/t26/s170/"
+  - "https://www.irs.gov/publications/p526"
+notes: |
+  Sources refreshed2026-10-25. Digital-asset FAQ78 and Notice2014-21 treat
+  digital assets as property. Reuse the existing actual-year crypto donation
+  calculation, including original dates, basis, recipient classification and
+  substantiation. No new valuation, property election or appraisal rule is added.
+  Reconcile its verified six-category vector plus actual direct receipts exactly
+  with the ScheduleA context, before current percentage/floor/carry candidates.
+  Crypto is noncash and cannot create a170(p)cash deduction. Actual confirmed
+  empty prior history and existing NOL, partial-mixed-B and source guards remain.
+  These are derived statutory controls, not published numeric examples. No
+  final2026 PDF or calculation readiness gate is opened by this handoff.
+lines:
+  - line: "source-categories"
+    description: "Use original verified crypto values once in current category candidates"
+    formula: "Base100000/directG10000/B10000 plus short-term public FMV8000/basis5000, long-term public20000/basis1000 and other-recipient15000/basis1000 gives G10000/A5000/B10000/C20000/D15000. Allowed itemized54500, Dcarry5500; nonitemized Dcarry5000. Preserve exact source cents/order and original inputs."
+    testRef: "tests/engine/forms/current-charitable-crypto-handoff.test.ts::reconciles verified crypto and direct receipts once by original category"
+  - line: "unknown-and-partial"
+    description: "Existing source verification and unsupported allocations stay explicit"
+    formula: "Unknown recipient/confirmation/appraisal/year, changed valuation and balanced wrong-category context reject. Known ineligible crypto contributes zero. Private nonoperating appreciated crypto retains basis reduction; it is never assumed to be qualified appreciated stock. Partial B cash/property remains rejected."
+    testRef: "tests/engine/forms/current-charitable-crypto-handoff.test.ts::preserves unknown valuation and partial media guards at the handoff"
+  - line: "canonical"
+    description: "Final election selects the same actual combined source candidates"
+    formula: "Actual100000income with the source-categories packet gives itemized54500 and5500carry; explicitstandard/nonitemized use5000percentage carry and170(p)1000from direct public cash only. Crypto tentative value40000 remains distinct from final deduction. No standard entitlement or new income is inferred."
+    testRef: "tests/engine/federal-current-charitable-crypto-handoff.test.ts::selects verified crypto carry with the actual deduction method"
+  - line: "review-source"
+    description: "Original crypto records remain bound across review redaction and year gates"
+    formula: "Prepared review accepts only the original or fully redacted source projection. Balanced changes to original FMV/basis, actual recipient/date or confirmation reject; forged context rejects. Render-only taxpayer identifiers are removed; original sources remain unchanged. The unmocked2026 calculation/export gates remain closed."
+    testRef: "tests/pdf/current-charitable-crypto-boundary.test.ts::binds original crypto facts while keeping future export unavailable"
+  - line: "crypto-only-public-capital"
+    description: "Dispatch an actual crypto-only C vector through both current candidates"
+    formula: "At base100000, verified long-term public crypto20000 gives itemized19500, no percentage carry and170(p)0; crypto50000 gives itemized29500 and percentage carry20000. Explicit standard/nonitemized select percentage carry only; itemized adds the eligible500 floor to carry when percentage excess exists. No direct receipt is required to activate the source vector."
+    testRef: "tests/engine/federal-current-charitable-crypto-handoff.test.ts::routes crypto-only public capital gifts through actual current candidates"
+  - line: "crypto-only-other-capital"
+    description: "Dispatch an actual crypto-only D vector without inventing public cash"
+    formula: "At base100000, verified long-term other-thirty-percent crypto15000 gives itemized14500 with no carry; crypto50000 gives itemized19500 and percentage carry30000. Section170(p) remains0 and only itemized selection adds an eligible500 floor carry."
+    testRef: "tests/engine/federal-current-charitable-crypto-handoff.test.ts::routes crypto-only other capital gifts through actual current candidates"
+  - line: "crypto-only-other-ordinary"
+    description: "Dispatch an actual crypto-only B noncash vector using original basis"
+    formula: "At base100000, short-term other-thirty-percent cryptoFMV8000/basis5000 gives itemized4500 with no carry; FMV50000/basis40000 gives itemized29500 and percentage carry10000. No current cash deduction or mixed-medium allocation is inferred; itemized selection alone adds an eligible500 floor carry."
+    testRef: "tests/engine/federal-current-charitable-crypto-handoff.test.ts::routes crypto-only other ordinary gifts through actual current candidates"

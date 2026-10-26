@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.102",
+    ruleVersion: "2025.103",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-digital-asset-transactions", section: "Verified original digital-asset donations reconciled once with all current charitable categories, including crypto-only source dispatch and final selected carry", revision: "Current IRS FAQs78-80, Notice2014-21 and IRC170; existing valuation and substantiation retained, exact source controls, prior/NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual current ordinary G/A/B/C/D receipts, per-item original valuation, exact floor and final selected charitable carry with confirmed empty history", revision: "IRC170(b)/(d)/(e)/(p), Reg1.170A-10 and final2025 Pub526; derived source controls, same-category partial media, prior/NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual qualified prepaid K12 benefits under 529(b)(1)(A)(i)/(c)(3)(B)(i), separate cash-only annual limit under (e)(3)(A), and dated expanded expenses under (c)(7)", revision: "Current statute and final 2025 Pub970; original program, redeemed credit, institutional determination and outside cash confirmation; derived controls and private review binding, independent human qualification pending", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 current public and other-recipient cash G/B allowances, floor and final selected carry; confirmed empty prior history and exact source category reconciliation", revision: "IRC170(B)/(G)/(I)/(d)(1)(C), Reg1.170A-10; derived source controls retain historical2025 rules; positive prior, property, NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
@@ -145,11 +146,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.98-law-integration-draft",
+    ruleVersion: "2026.99-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-digital-asset-transactions", section: "Verified original digital-asset donations reconciled once with all current charitable categories, including crypto-only source dispatch and final selected carry", revision: "Current IRS FAQs78-80, Notice2014-21 and IRC170; existing valuation and substantiation retained, exact source controls, prior/NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual current ordinary G/A/B/C/D receipts, per-item original valuation, exact floor and final selected charitable carry with confirmed empty history", revision: "IRC170(b)/(d)/(e)/(p), Reg1.170A-10 and final2025 Pub526; derived source controls, same-category partial media, prior/NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual qualified prepaid K12 benefits under 529(b)(1)(A)(i)/(c)(3)(B)(i), separate cash-only annual limit under (e)(3)(A), and dated expanded expenses under (c)(7)", revision: "Current statute and final 2025 Pub970; original program, redeemed credit, institutional determination and outside cash confirmation; derived controls and private review binding, independent human qualification pending", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 current public and other-recipient cash G/B allowances, floor and final selected carry; confirmed empty prior history and exact source category reconciliation", revision: "IRC170(B)/(G)/(I)/(d)(1)(C), Reg1.170A-10; derived source controls retain historical2025 rules; positive prior, property, NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
