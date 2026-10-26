@@ -2,47 +2,42 @@
 
 ## Current checkpoint
 
-Current additions through `c864287` include current public-cash itemized and
-nonitemized carry candidates (`36cd922`), actual shared Marketplace policy intake
-(`675f5ba`), ordinary public-property carry candidates (`b18e8e9`), the focused
-charitable-heading browser repair (`cb8c139`), and school-limited in-kind
-room-and-board benefits (`c864287`). Each package has scoped checks and
-a separate agent source/software review. Positive-prior charity, ordinary
-Marketplace marriage/two-owner methods, actual QBI handoff and remaining education
-methods continue; guarded methods are not counted as completed.
+Current additions through `dd1ef96` include actual K1/QBI loss character and
+canonical sources (`266aee3`), prior public cash with current ordinary-property
+carry candidates (`c89c81c`), and the pure marriage worksheet prerequisite
+(`dd1ef96`). Each has scoped checks and separate agent review. The QBI guided
+collector and canonical marriage election remain in progress; a helper or a
+source guard does not complete those methods.
 
-Full coverage on exact committed `7523384` passes **17,934 tests in 975 files**,
-with **87.01% branch coverage** against the unchanged 85% threshold. Root,
-contracts and web types, 4,833 specification references, the 425-entry inventory,
-both builds and lint also pass on that source. Pinned Python/pypdf, original
-sample documents and disposable loopback PostgreSQL were present for the passing
-run. An earlier attempt with incomplete prerequisites was explicitly interrupted
-and retained separately. Later packages are excluded from these results.
-
-The full production browser run on `7523384` completed with 359 passes, five
-hosted skips and one ambiguous-selector failure. `cb8c139` changes the charitable
-contribution assertion to the exact existing heading; all eight affected flows
-pass with zero retries on the same production build. The full run remains failed
-evidence and a final current full run is required. See the
+The full unit suite on exact committed `095d5bd` passes **17,960 tests in 987
+files**, with zero failures or skips. Its production browser suite passes
+**362 tests with zero retries**; five hosted-only cases remain skipped. Both
+builds pass. Pinned Node, Python/pypdf, original sample documents and disposable
+loopback PostgreSQL were present. Later packages are excluded from those results.
+The previous `7523384` browser failure and focused `cb8c139` repair remain in the
 [browser repair ledger](upgrade-2026-charity-heading-browser-repair.md).
 
-The refreshed `c864287` inventory has 429 entries and passes freshness checks.
-The last package advisory refresh at `f2d0faa` reports zero advisories across 521
-locked dependencies; the lockfile is unchanged. OS findings and final runtime
-scans remain separate. The current remote CI and Web runs at `cb8c139` were still
-in progress when observed; preceding runs were canceled by later package pushes.
-No completed remote result or hosted evidence is inferred.
+Full coverage on `7523384` passes 17,934 tests in 975 files at **87.01% branches**
+against the unchanged 85% gate. Root/contracts/web types, 4,833 spec references,
+its 425-entry inventory, both builds and lint also pass. Coverage and full
+integration must run again on the final source; no later package inherits that
+qualification.
 
-The goal remains active and the upgrade is **not release-ready**. School-limited
-in-kind benefits now pass 200 cases/27 files, both types, 4,860 references, lint
-and production build. Independent rereview passes 73 cases/12 files, including
-unchanged duplicate-student and rendering-taxpayer probes; both findings were
-fixed before commit. See the [education ledger](upgrade-2026-in-kind-room-board-work.md). The QBI source package is under final
-adjacent review and its actual guided collector remains unfinished. External
-human, provider, staging, selected-state demand, final-form and advisory-owner
-requirements remain open. Resume from this checklist and `ongoingExecution` in
-[the checkpoint](upgrade-2026-checkpoint.json); exact source commits control every
-reported result.
+The inventory is refreshed against `dd1ef96`: all 435 entries pass freshness checks. The latest
+package advisory refresh still reports zero advisories across 521 locked
+dependencies; the lockfile is unchanged. OS findings and final runtime scans
+remain separate. The last observed `c89c81c` remote CI and Web runs were in
+progress; earlier push runs were canceled by subsequent package pushes.
+No completed remote result or hosted staging evidence is inferred.
+
+The goal remains active and the upgrade is **not release-ready**. The assistance
+extension is under separate review on immutable tree `1719150`: 426 cases in 34
+files, root/web types, 4,890 spec references and the production web build pass.
+Both saved reference pages were rendered and inspected. Charity recipient
+classification, remaining Marketplace methods, actual QBI intake and final
+integration continue. Human review, provider access/budget, authorized staging,
+launch-state demand, final forms and advisory-owner requirements remain open.
+Resume here and from `ongoingExecution` in the checkpoint.
 
 Recent packages add actual current-loss intake (`8cf0e8e`), ordinary investment
 capital origins (`3ff896c`), original digital-asset sources (`e7bd6e8`) and all

@@ -2853,6 +2853,46 @@
       ]
     },
     {
+      "key": "federal/form-8962-contribution",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/form-8962-contribution.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-8962-marriage-worksheets",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": "https://www.irs.gov/publications/p974",
+      "specPath": "spec/federal/form-8962-marriage-worksheets.yaml",
+      "enginePath": "src/engine/forms/form-8962-marriage-worksheets.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-8962-shared-policy",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -4032,6 +4072,44 @@
       ]
     },
     {
+      "key": "federal/k1-qbi-loss-return",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/irb/2020-29_IRB",
+      "specPath": "spec/federal/k1-qbi-loss-return.yaml",
+      "enginePath": "src/engine/forms/k1-qbi-loss-return.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/k1-qbi-loss-sources",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1065sk1",
+      "specPath": "spec/federal/k1-qbi-loss-sources.yaml",
+      "enginePath": "src/engine/forms/k1-qbi-loss-sources.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/marketplace-health-deduction",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -4379,6 +4457,25 @@
       ]
     },
     {
+      "key": "federal/prior-cash-current-property",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-120/t26/s170/",
+      "specPath": "spec/federal/prior-cash-current-property.yaml",
+      "enginePath": "src/engine/forms/prior-cash-current-property.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/ptc-source-facts",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -4394,6 +4491,25 @@
       "status": "unsupported",
       "knownGaps": [
         "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/qbi-ebl-nol",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.199A-3; https://www.irs.gov/instructions/i8995",
+      "specPath": "spec/federal/qbi-ebl-nol.yaml",
+      "enginePath": "src/engine/forms/qbi-ebl-nol.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]

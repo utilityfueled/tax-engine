@@ -204,7 +204,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "c864287466800e22bc4b74ef3c8b2ebfac8fe6ba",
+    "lastRecordedCommit": "dd1ef96f884e862ef59c6bd03ee4b48c6ce2cbe7",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1312,36 +1312,33 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Current empty-history cash/property deduction candidates and actual shared-policy intake are committed; positive prior-floor/mixed-NOL charity and ordinary marriage/two-owner Marketplace methods continue.",
-      "Actual K1/basis/at-risk/passive/EBL canonical integration is independently reviewed; adjacent source correction and guided handoff continue.",
-      "School-limited in-kind benefits and private original-student/rendering-taxpayer binding are committed; partial assistance/category/ESA methods remain.",
-      "Final enabled-scenario audit, refreshed inventory, complete current tests/coverage/types/spec/builds/lint/browser, remote CI and final native image/SBOM/scan/recovery remain.",
-      "Qualified tax interpretations, independent human reviews, authorized staging/provider accounts and budget, launch-state demand, final forms and advisory-owner acceptance remain external."
+      "Actual QBI source character and bounded prior-cash/current-property are committed; guided QBI and source-derived Form461 continue.",
+      "Pure marriage worksheets are committed; actual source/canonical/PDF/intake and two-owner Marketplace continue.",
+      "In-kind assistance immutable171915 passes426 cases34files/types/spec/build and is under independent review; no main integration yet.",
+      "Charity recipient classification and remaining documented mixed/prior methods continue privately.",
+      "Final current inventory/full checks, remote CI, native image/SBOM/scan/recovery and artifact/support reconciliation remain.",
+      "Qualified human interpretations/reviews, actual provider access/budget, authorized staging, launch-state demand, final forms and advisory ownership remain external."
     ],
-    "latestIntegratedCommit": "7523384faf0cdaa8583883abd2fb88319552bf92",
+    "latestIntegratedCommit": "dd1ef96f884e862ef59c6bd03ee4b48c6ce2cbe7",
     "activeIntegrationRun": {
-      "commit": "7523384faf0cdaa8583883abd2fb88319552bf92",
-      "status": "coverage-types-spec-inventory-build-lint-passed-browser-locator-failed",
-      "directory": "/private/tmp/tax-engine-checks-exz2o0sy",
+      "commit": "095d5bd8d0d56202e07414f6551033b893d03c27",
+      "status": "unit-root-build-web-build-browser-passed",
+      "directory": "/private/tmp/tax-engine-checks-pqfpz50a",
       "sessionId": null,
       "browserSessionId": null,
-      "browserServerSessionId": null,
-      "coveragePassed": 17934,
-      "coverageFiles": 975,
-      "coverageEvidence": {
-        "path": ".local/upgrade-evidence/full-coverage-7523384.log",
-        "sha256": "e95fecc486133167677bfaa214ff20c6079658d669daa7144bc81ba4b70e4563"
-      },
-      "requiredGates": {
-        "path": ".local/upgrade-evidence/full-gates-7523384-results.json",
-        "sha256": "a1da9b6ba6b5f3368a96bb4344bc2032125d098a67bcf456f07f6aa4ad096a0d"
-      },
-      "browserEvidence": {
-        "path": ".local/upgrade-evidence/full-browser-7523384.log",
-        "sha256": "d03f0f2fac59303de094899b8b509f33894daba9c65ac6460c830367accb767f"
-      },
-      "prerequisites": "Pinned Node24.22.1, Python/pypdf, sample-document symlink, disposable PostgreSQL via TAX_ENGINE_TEST_AI_LEDGER_DATABASE_URL. Initial missing sample/incorrect database-variable run was explicitly interrupted and retained separately; fresh corrected run passed.",
-      "finalCurrentVerificationStillRequired": true
+      "tests": 17960,
+      "files": 987,
+      "browserPassed": 362,
+      "browserSkipped": 5,
+      "browserRetries": 0,
+      "coverageSourceCommit": "7523384faf0cdaa8583883abd2fb88319552bf92",
+      "finalCurrentVerificationStillRequired": true,
+      "evidence": {
+        "full-unit-095d5bd.log": "f54fc188b3554c281f27fc58dad16330be990ef1a73df4d0d0f610af7cf9b068",
+        "full-browser-095d5bd.log": "0d7dba8ae046cfaa47230b890796ab504ef02e6a2701e4c2c086297481eecb86",
+        "full-browser-095d5bd-build.log": "94af71c7dc58b1ce1b5da41aec2f39d838cfb257ce78ceb77b7f6a0cfb569fe1",
+        "full-browser-095d5bd-build-web.log": "89b17891bd5f057354738fc08cb7cc68e902337cf78b85f7ad380e9f19ddceae"
+      }
     },
     "latestCoverageDiagnostic": {
       "commit": "51b71827bbd7b3b4353bb6edc1d242f9e695db64",
@@ -1651,30 +1648,23 @@
       "evidence": ".local/upgrade-evidence/full-coverage-4aef633.log",
       "evidenceSha256": "42656c753f247032fdd96cc5d615c1f03f0b0dc3dc222832037ffab1de57b56f"
     },
-    "lastPushedCommit": "c864287466800e22bc4b74ef3c8b2ebfac8fe6ba",
+    "lastPushedCommit": "dd1ef96f884e862ef59c6bd03ee4b48c6ce2cbe7",
     "currentBrowserRun": {
-      "commit": "7523384faf0cdaa8583883abd2fb88319552bf92",
-      "status": "failed-ambiguous-browser-locator",
-      "directory": "/private/tmp/tax-engine-checks-exz2o0sy",
+      "commit": "095d5bd8d0d56202e07414f6551033b893d03c27",
+      "status": "passed",
+      "directory": "/private/tmp/tax-engine-checks-pqfpz50a",
       "finalCode": false,
       "stagingEvidence": false,
       "retries": 0,
       "workers": 1,
-      "testsPassed": 359,
+      "testsPassed": 362,
       "testsSkipped": 5,
-      "testsFailed": 1,
-      "durationMinutes": "13.3",
-      "evidence": ".local/upgrade-evidence/full-browser-7523384.log",
-      "evidenceSha256": "d03f0f2fac59303de094899b8b509f33894daba9c65ac6460c830367accb767f",
-      "finding": "Current contribution heading and prior carryover summary both match the broad charitable-contributions text selector.",
-      "repairCommit": "cb8c13969cb8c13a8415a8ad21d9a3addc439030",
-      "focusedRerunPassed": 8,
-      "focusedEvidence": {
-        "path": ".local/upgrade-evidence/charity-heading-browser.log",
-        "sha256": "0979f261f1675ae6bdc42cf0f2a867a7d4dd273aede88127a3fcded30d674a8b"
-      },
+      "testsFailed": 0,
+      "durationMinutes": "13.2",
+      "evidence": ".local/upgrade-evidence/full-browser-095d5bd.log",
+      "evidenceSha256": "0d7dba8ae046cfaa47230b890796ab504ef02e6a2701e4c2c086297481eecb86",
       "hostedQualification": false,
-      "limitation": "Focused repaired tests do not make this full run pass; final current full suite remains required."
+      "limitation": "Five hosted-only skips do not establish staging readiness. Later source packages excluded; final current run remains required."
     },
     "currentPackageAudit": {
       "date": "2026-10-25",
@@ -1779,29 +1769,28 @@
       "evidence": ".local/upgrade-evidence/oh-year-ceilings-staged-tests.log"
     },
     "previousBrowserRun": {
-      "commit": "907b6dbb431767cfa64452bfb75151179ff818e2",
-      "status": "passed-local-self-hosted",
-      "directory": "/private/tmp/tax-engine-checks-ap93htqg",
-      "buildSessionId": 70577,
-      "buildEvidence": ".local/upgrade-evidence/browser-build-907b6db.log",
+      "commit": "7523384faf0cdaa8583883abd2fb88319552bf92",
+      "status": "failed-ambiguous-browser-locator",
+      "directory": "/private/tmp/tax-engine-checks-exz2o0sy",
       "finalCode": false,
       "stagingEvidence": false,
-      "purpose": "Verify the corrected pinned PDF-reader prerequisite across the full production browser suite; excludes ongoing charity changes.",
-      "sessionId": null,
-      "serverSessionId": null,
-      "productionBuild": "passed",
-      "productionBuildEvidence": ".local/upgrade-evidence/browser-build-907b6db.log",
-      "evidence": ".local/upgrade-evidence/full-browser-907b6db.log",
-      "readerOverride": false,
       "retries": 0,
       "workers": 1,
-      "testsPassed": 348,
+      "testsPassed": 359,
       "testsSkipped": 5,
-      "testsFailed": 0,
-      "durationMinutes": "13.0",
-      "evidenceSha256": "b0c68536f142a49d315a77828c0c2cbde05db67be10f99dd473989a85ba2cde9",
-      "scope": "Exact907b6db production build with repaired default pinnedPDF launcher; excludes latercharity/wagering/refund work.",
-      "hostedQualification": false
+      "testsFailed": 1,
+      "durationMinutes": "13.3",
+      "evidence": ".local/upgrade-evidence/full-browser-7523384.log",
+      "evidenceSha256": "d03f0f2fac59303de094899b8b509f33894daba9c65ac6460c830367accb767f",
+      "finding": "Current contribution heading and prior carryover summary both match the broad charitable-contributions text selector.",
+      "repairCommit": "cb8c13969cb8c13a8415a8ad21d9a3addc439030",
+      "focusedRerunPassed": 8,
+      "focusedEvidence": {
+        "path": ".local/upgrade-evidence/charity-heading-browser.log",
+        "sha256": "0979f261f1675ae6bdc42cf0f2a867a7d4dd273aede88127a3fcded30d674a8b"
+      },
+      "hostedQualification": false,
+      "limitation": "Focused repaired tests do not make this full run pass; final current full suite remains required."
     },
     "form4952FinalCandidate": {
       "commit": "00bcea1",
@@ -2608,34 +2597,35 @@
       "humanSecurityQualification": false
     },
     "currentUnitRun": {
-      "sourceCommit": "fab31fe2ad1faa176308650ee94d1644c9f400ca",
-      "inventorySha256": "7c21a0eb34ce0759ce0d7ea0e99c829d1ca5ce86be35f015187bc19609f826b3",
+      "sourceCommit": "095d5bd8d0d56202e07414f6551033b893d03c27",
       "status": "passed",
-      "directory": "/private/tmp/tax-engine-checks-50lb65f8",
+      "directory": "/private/tmp/tax-engine-checks-pqfpz50a",
       "sessionId": null,
-      "evidence": ".local/upgrade-evidence/full-unit-fab31fe.log",
-      "scope": "Committed product source plus regenerated396-entry inventory; pinnedPython/pypdf, sample documents, disposable loopbackPostgreSQL. Excludes later charity/COD guided edits.",
-      "tests": 17787,
-      "files": 927,
+      "tests": 17960,
+      "files": 987,
       "failures": 0,
       "skips": 0,
-      "durationSeconds": "473.55",
-      "evidenceSha256": "df287c8516aa0838e1719ba5e6e67349b20c0f2bdb1a1a027f9fefb8b55d4e43"
+      "durationSeconds": "530.53",
+      "evidence": ".local/upgrade-evidence/full-unit-095d5bd.log",
+      "evidenceSha256": "f54fc188b3554c281f27fc58dad16330be990ef1a73df4d0d0f610af7cf9b068",
+      "scope": "Exact committed source with pinned Node/Python/pypdf, original sample PDFs and disposable loopback PostgreSQL. Later packages excluded."
     },
     "currentRemoteRuns": {
-      "commit": "cb8c13969cb8c13a8415a8ad21d9a3addc439030",
+      "commit": "c89c81c063b9ea74fc8fa7c9f793d82a9d1b86d8",
       "ci": {
-        "run": 40251562300,
+        "run": 40253211740,
         "status": "in_progress-when-observed",
-        "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40251562300"
+        "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40253211740"
       },
       "web": {
-        "run": 40251562351,
+        "run": 40253211675,
         "status": "in_progress-when-observed",
-        "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40251562351"
+        "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40253211675"
       },
       "qualification": false,
-      "limitation": "Preceding b18e8e9 and675f5ba workflows canceled after later authorized package pushes; no current completion inferred."
+      "evidence": ".local/upgrade-evidence/remote-runs-c89c81c.json",
+      "evidenceSha256": "1b797ef4533ab7cec68750715ecae55c2961de2e3c7f3a06113b61e514e1bb10",
+      "limitation": "Earlier push workflows canceled after later authorized package pushes; no current completion inferred."
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
@@ -2773,6 +2763,15 @@
         ],
         "inKindRoomBoard": [
           "c864287"
+        ],
+        "qbiActualSource": [
+          "266aee3"
+        ],
+        "priorCashCurrentProperty": [
+          "c89c81c"
+        ],
+        "marriageWorksheetPrerequisite": [
+          "dd1ef96"
         ]
       },
       "owners": {
@@ -2782,11 +2781,11 @@
         "educationMethodsAndFinalIntegration": "parent"
       },
       "subsequent": [
-        "guided shared-policy source collector and remaining ordinary Marketplace methods",
-        "Empty-history dual charity candidates, positive prior-floor/mixed-NOL and partial mixed-media methods",
-        "actual nonrental suspendedQBI source/basis/at-risk/passive/canonical binding",
-        "remaining partial assistance/category/ESA education methods",
-        "qualified interpretation for reduced mixed tips/bonds and negative-net1202, with no arbitrary allocation"
+        "Actual marriage source/canonical/PDF/intake and remaining two-owner Marketplace methods",
+        "Actual charity recipient classification, further mixed/prior-floor/NOL methods",
+        "Actual nonrental K1/history intake and source-derived Form461 classification",
+        "Reviewed in-kind assistance integration and remaining documented education boundaries",
+        "Qualified interpretation for reduced mixed tips/bonds and negative-net1202, with no arbitrary allocation"
       ],
       "unsupportedIsComplete": false
     },
@@ -2988,15 +2987,54 @@
         ],
         "evidenceDocument": "docs/upgrade-2026-in-kind-room-board-work.md",
         "humanQualification": false
+      },
+      "qbiActualSource": {
+        "commit": "266aee349a01a93e38b3969d4c4a6dc8fd151e2b",
+        "tests": 846,
+        "files": 62,
+        "specReferences": 4878,
+        "rootTypes": "passed",
+        "independentAgentCases": 24,
+        "independentSeDeltaCases": 20,
+        "guidedCollectorComplete": false,
+        "evidenceDocument": "docs/upgrade-2026-qbi-loss-work.md"
+      },
+      "priorCashCurrentProperty": {
+        "commit": "c89c81c063b9ea74fc8fa7c9f793d82a9d1b86d8",
+        "reviewedTests": 388,
+        "reviewedFiles": 48,
+        "finalRebaseTests": 55,
+        "finalRebaseFiles": 13,
+        "specReferences": 4883,
+        "rootTypes": "passed",
+        "webTypes": "passed",
+        "independentAgentCases": 9,
+        "evidenceDocument": "docs/upgrade-2026-prior-cash-current-property-work.md"
+      },
+      "marriageWorksheetPrerequisite": {
+        "commit": "dd1ef96f884e862ef59c6bd03ee4b48c6ce2cbe7",
+        "reviewTree": "38d5c2b50d273cde0a7ca7e767b94ce5ce4b6375",
+        "finalTestedTree": "5918fb956c42c7365d5c7557c87504dc09f84966",
+        "tests": 159,
+        "files": 14,
+        "specReferences": 4891,
+        "rootTypes": "passed",
+        "webTypes": "passed",
+        "lintErrors": 0,
+        "lintWarnings": 0,
+        "independentReviewTests": 100,
+        "independentExtraProbes": 3,
+        "canonicalElectionComplete": false,
+        "evidenceDocument": "docs/upgrade-2026-marriage-worksheets-work.md"
       }
     },
     "currentInventory": {
-      "sourceCommit": "c864287466800e22bc4b74ef3c8b2ebfac8fe6ba",
-      "entries": 429,
+      "sourceCommit": "dd1ef96f884e862ef59c6bd03ee4b48c6ce2cbe7",
+      "entries": 435,
       "generation": "passed",
       "freshness": "passed",
-      "sha256": "42641a1bca171c5b2d0852f351f29df2ac80a6279f1895db69abc438b7845bfa",
-      "evidence": ".local/upgrade-evidence/inventory-c864287.log"
+      "sha256": "97aa689b612a8f71ec78abf3795e515967d6bd2f546f68021b08de6b29ed5e5d",
+      "evidence": ".local/upgrade-evidence/inventory-dd1ef96.log"
     },
     "previousCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",
@@ -3028,6 +3066,21 @@
         "https://www.irs.gov/pub/irs-dft/i8995--dft.pdf"
       ],
       "separateAgentResearchReview": "Federal agent independently inspected the cited sources and confirmed that no final reduced mixed-source attribution method was located; not qualified human interpretation."
+    },
+    "previousUnitRun": {
+      "sourceCommit": "fab31fe2ad1faa176308650ee94d1644c9f400ca",
+      "inventorySha256": "7c21a0eb34ce0759ce0d7ea0e99c829d1ca5ce86be35f015187bc19609f826b3",
+      "status": "passed",
+      "directory": "/private/tmp/tax-engine-checks-50lb65f8",
+      "sessionId": null,
+      "evidence": ".local/upgrade-evidence/full-unit-fab31fe.log",
+      "scope": "Committed product source plus regenerated396-entry inventory; pinnedPython/pypdf, sample documents, disposable loopbackPostgreSQL. Excludes later charity/COD guided edits.",
+      "tests": 17787,
+      "files": 927,
+      "failures": 0,
+      "skips": 0,
+      "durationSeconds": "473.55",
+      "evidenceSha256": "df287c8516aa0838e1719ba5e6e67349b20c0f2bdb1a1a027f9fefb8b55d4e43"
     }
   },
   "historicalReleaseBlockers": {
