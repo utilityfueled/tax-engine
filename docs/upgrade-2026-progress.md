@@ -2,7 +2,7 @@
 
 ## Current checkpoint — 2026-10-26
 
-The branch is pushed through `e3dcc3f`. Rule provenance is `2025.145` /
+The branch is pushed through `5b3d6de`. Rule provenance is `2025.145` /
 `2026.142-law-integration-draft`; the regenerated inventory has 517 entries and
 5,486 spec test references. All readiness gates remain unchanged.
 
@@ -38,14 +38,17 @@ passed, with five hosted-only skips, zero retries and two workers. All3155
 tracked source hashes stayed unchanged and the task server port is closed.
 Evidence: `.local/upgrade-evidence/603fc1b-complete/{verification,summary}.json`.
 
-The new immutable `e91d7d7` run passes all eight static checks, 19,025 unit
-tests in 1,197 files, and 428 production browser cases with zero retries and
-five hosted-only skips. Coverage is still running; no current coverage pass is
-claimed. The later inventory-tooling commit has its separate bounded checks.
-Evidence is `.local/upgrade-evidence/e91d7d7-complete/verification.json`. The last
-fully passing historical coverage remains `d898091`: branches86.84% and
-functions90.77%. Current coverage, final-source checks and completed remote
-workflows remain due.
+The immutable `e91d7d7` full run passes all eight static checks and all
+19,025 tests in 1,197 files in both unit and coverage runs. Branch coverage is
+86.84% (49,222/56,676); function coverage is90.59% (10,765/11,883). All unchanged
+thresholds pass. The production browser passes428cases with zero retries and
+five hosted-only skips. All3,187tracked source hashes remain unchanged and
+port3254 is closed. Evidence is
+`.local/upgrade-evidence/e91d7d7-complete/{verification,summary}.json`; coverage
+log SHA256 is `014944ef23b1409e6e909f8aaa377d649396ca2f0dd2e7ee6b01a40713ce7db6`.
+The later inventory tooling has separate bounded checks. Later tax packages,
+final-source integrated checks and completed remote workflows remain due.
+Hosted skips do not establish staging readiness.
 The October26 production dependency audit on603fc1b reports zero advisories
 across425production dependencies. It is separate from the final image/OS scan,
 owner acceptance and recovery requirements.

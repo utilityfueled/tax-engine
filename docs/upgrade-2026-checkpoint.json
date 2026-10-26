@@ -194,7 +194,7 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Final integrated coverage and completed remote verification remain required. Immutable e91d7d7 passes all19025unit tests/1197files, eight static checks and428browsercases with zero retries; five hosted skips do not establish staging readiness. Coverage is running. Later e3dcc3f inventory tooling has scoped checks; final later-source evidence remains due.",
+    "Final later-source integration and completed remote verification remain required. Immutable e91d7d7 passes all19025tests/1197files in unit and coverage, eight static checks,86.84%branches/90.59%functions and428browsercases with zero retries. Five hosted skips do not establish staging readiness; later inventory and tax changes require their own evidence.",
     "The2026 rule pack and finite Marketplace/charitable/education source methods remain incomplete; guards are not counted as implementations. Current EIC/8862 and deceased-claimant source packages are delivered. Full2026 calculation remains blocked.",
     "Independent human tax review, selected-state demand/qualification and final physical forms are outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net \u00a71202/Form172 interpretations remain unresolved.",
     "AI application/scorer bindings are reviewed;240 draft cases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "e3dcc3f7b579f220f08c6c73f436655fd4800669",
+    "lastRecordedCommit": "5b3d6decd04a2805e02ce5e96348314f43c0e0e6",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1315,12 +1315,15 @@
     "activeIntegrationRun": {
       "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
       "tree": "5f4f0279f2d065f766895610e15eef3f22d497ec",
-      "scope": "Immutable e91d7d7 local synthetic evidence only; later inventory tooling excluded. Hosted skips do not establish staging readiness. Coverage is still running.",
-      "status": "static-unit-browser-passed-coverage-running",
+      "scope": "Exact immutable e91d7d7 local synthetic source only; later inventory/tooling and tax changes excluded. Five hosted skips do not establish staging readiness.",
+      "status": "complete-passed-later-source-verification-due",
       "manifest": ".local/upgrade-evidence/e91d7d7-complete/verification.json",
       "snapshot": ".local/upgrade-evidence/e91d7d7-complete/snapshot.json",
       "trackedFiles": 3187,
-      "browserPort": 3254
+      "browserPort": 3254,
+      "summary": ".local/upgrade-evidence/e91d7d7-complete/summary.json",
+      "trackedSourceUnchanged": true,
+      "browserServerStopped": true
     },
     "latestCoverageDiagnostic": {
       "sourceCommit": "2011778674757efee5da2f73e29624c8e36a7099",
@@ -1615,32 +1618,32 @@
       "amd64": "local QEMU Next.js compilation failed with signal11; native CI rehearsal now configured"
     },
     "currentStableCoverageRun": {
-      "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
-      "tree": "23f7a5fe620edbdb43f13b35fbb315fb660a8a89",
+      "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+      "tree": "5f4f0279f2d065f766895610e15eef3f22d497ec",
       "status": "passed",
-      "tests": 18843,
-      "files": 1125,
+      "tests": 19025,
+      "files": 1197,
       "failures": 0,
       "skips": 0,
       "branchesPercent": "86.84",
-      "functionsPercent": "90.77",
-      "statementsPercent": "92.03",
+      "functionsPercent": "90.59",
+      "statementsPercent": "91.95",
       "linesPercent": "94.63",
       "counts": {
         "statements": {
-          "covered": 55721,
-          "total": 60541,
-          "percent": 92.03845327959564
+          "covered": 57049,
+          "total": 62038,
+          "percent": 91.95815467939005
         },
         "functions": {
-          "covered": 10423,
-          "total": 11482,
-          "percent": 90.77686814143877
+          "covered": 10765,
+          "total": 11883,
+          "percent": 90.59160144744592
         },
         "branches": {
-          "covered": 47523,
-          "total": 54722,
-          "percent": 86.84441358137495
+          "covered": 49222,
+          "total": 56676,
+          "percent": 86.8480485567083
         }
       },
       "thresholdsUnchanged": true,
@@ -1653,10 +1656,10 @@
         "--maxWorkers=1"
       ],
       "exitCode": 0,
-      "seconds": 647.24,
-      "evidence": ".local/upgrade-evidence/d898091-complete/coverage.log",
-      "sha256": "6bada3a40ed8b1b995d558cf913307069340a10a46c8ede51e8ee5e5697ab498",
-      "scope": "Exact immutable d898091 local synthetic source only; all later source packages excluded. Five hosted browser skips are not staging evidence."
+      "seconds": 987.38,
+      "evidence": ".local/upgrade-evidence/e91d7d7-complete/coverage.log",
+      "sha256": "014944ef23b1409e6e909f8aaa377d649396ca2f0dd2e7ee6b01a40713ce7db6",
+      "scope": "Exact immutable e91d7d7 local synthetic source only; later inventory/tooling and tax changes excluded. Five hosted skips do not establish staging readiness."
     },
     "remainingInternalWork": [
       "Complete actual partial-coverage-family health premiums and ordinary outside-payer/payment/marriage combinations. Separate actual plans and multiple owners are delivered in9eafb45. Binding joint2025 repayment attribution needs controlling interpretation.",
@@ -1685,7 +1688,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "e3dcc3f7b579f220f08c6c73f436655fd4800669",
+    "lastPushedCommit": "5b3d6decd04a2805e02ce5e96348314f43c0e0e6",
     "currentBrowserRun": {
       "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
       "tree": "5f4f0279f2d065f766895610e15eef3f22d497ec",
@@ -6088,7 +6091,7 @@
     },
     "currentFullVerificationRequired": {
       "sourceCommit": "e3dcc3f7b579f220f08c6c73f436655fd4800669",
-      "reason": "Current e91 coverage is running; later inventory tooling has scoped checks and later tax packages are still in implementation",
+      "reason": "Full immutable e91d7d7 passes. Later inventory tooling has scoped checks; later finite tax packages still require final integrated evidence.",
       "readiness": "No final current pass claimed"
     },
     "previousCurrentUnitRunBeforeE91": {
@@ -6171,7 +6174,92 @@
       ],
       "notMissing": "Ordinary cash QTP with assistance, education-credit allocation and ordinary ESA"
     },
-    "externalActionHandoff": "docs/upgrade-2026-external-actions.md"
+    "externalActionHandoff": "docs/upgrade-2026-external-actions.md",
+    "previousStableCoverageRunD898091": {
+      "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
+      "tree": "23f7a5fe620edbdb43f13b35fbb315fb660a8a89",
+      "status": "passed",
+      "tests": 18843,
+      "files": 1125,
+      "failures": 0,
+      "skips": 0,
+      "branchesPercent": "86.84",
+      "functionsPercent": "90.77",
+      "statementsPercent": "92.03",
+      "linesPercent": "94.63",
+      "counts": {
+        "statements": {
+          "covered": 55721,
+          "total": 60541,
+          "percent": 92.03845327959564
+        },
+        "functions": {
+          "covered": 10423,
+          "total": 11482,
+          "percent": 90.77686814143877
+        },
+        "branches": {
+          "covered": 47523,
+          "total": 54722,
+          "percent": 86.84441358137495
+        }
+      },
+      "thresholdsUnchanged": true,
+      "branchThresholdPercent": "85",
+      "functionThresholdPercent": "90",
+      "id": "coverage",
+      "command": [
+        "pnpm",
+        "test:coverage",
+        "--maxWorkers=1"
+      ],
+      "exitCode": 0,
+      "seconds": 647.24,
+      "evidence": ".local/upgrade-evidence/d898091-complete/coverage.log",
+      "sha256": "6bada3a40ed8b1b995d558cf913307069340a10a46c8ede51e8ee5e5697ab498",
+      "scope": "Exact immutable d898091 local synthetic source only; all later source packages excluded. Five hosted browser skips are not staging evidence."
+    },
+    "fullVerificationE91d7d7": {
+      "commit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+      "tree": "5f4f0279f2d065f766895610e15eef3f22d497ec",
+      "unitTests": 19025,
+      "unitFiles": 1197,
+      "unitFailures": 0,
+      "unitSkipped": 0,
+      "coverageTests": 19025,
+      "coverageFiles": 1197,
+      "coverage": {
+        "statements": {
+          "covered": 57049,
+          "total": 62038,
+          "percent": 91.95815467939005
+        },
+        "functions": {
+          "covered": 10765,
+          "total": 11883,
+          "percent": 90.59160144744592
+        },
+        "branches": {
+          "covered": 49222,
+          "total": 56676,
+          "percent": 86.8480485567083
+        }
+      },
+      "allRequiredChecksPassed": true,
+      "browser": {
+        "passed": 428,
+        "skippedHosted": 5,
+        "failed": 0,
+        "retries": 0,
+        "workers": 2
+      },
+      "trackedSourceFilesVerified": 3187,
+      "trackedSourceChangesAfterVerification": [],
+      "browserPort3254Closed": true,
+      "coverageJsonSha256": "431bca8805c967c259cbbcbbf40665d3a22bdad539603b1a0c4a2c0aa132bea8",
+      "completedAt": "2026-10-26T15:07:45.172407+00:00",
+      "scope": "Exact e91d7d7 snapshot only; later changes require their own checks. Five hosted skips do not establish staging readiness."
+    }
   },
   "historicalReleaseBlockers": {
     "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
