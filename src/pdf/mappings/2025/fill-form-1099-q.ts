@@ -94,9 +94,17 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
         for (const expenseId of expenseIds) {
           const matches = allocations.filter(allocation => allocation.expenseId === expenseId);
           const linked = benefits.filter(benefit => benefit.expenseId === expenseId);
-          if (matches.length !== 1 || !linked.length || !sourceMoney(matches[0]?.amount).eq(linked.reduce((total, benefit) => total.plus(sourceMoney(benefit.amount)), new Decimal(0))) || !sourceMoney(matches[0]?.creditAmount).isZero()) throw new Error("Education reference in-kind benefit allocation source disagrees with the calculation");
+          if (matches.length !== 1 || !linked.length || !sourceMoney(matches[0]?.amount).plus(sourceMoney(matches[0]?.creditAmount)).eq(linked.reduce((total, benefit) => total.plus(sourceMoney(benefit.amount)), new Decimal(0)))) throw new Error("Education reference in-kind benefit allocation source disagrees with the calculation");
+          const allocation = matches[0];
+          const expense = qeeSummary.sourceFacts.expenses?.find(item => item.id === expenseId);
+          if (sourceMoney(allocation?.creditAmount).gt(0) && (expense?.category !== "postsecondary_tuition" || expense.qualificationConfirmed !== true)) throw new Error("Education reference in-kind credit requires its actual qualifying tuition source");
+          const entry = requireAudit("Form1099-Q", `${row.sourceId}:in-kind-allocation:${expenseId}`, sourceMoney(allocation?.amount));
+          const credit = entry.inputs["Education credit expense"];
+          if (!Decimal.isDecimal(credit) || !credit.eq(sourceMoney(allocation?.creditAmount))) throw new Error("Education reference in-kind credit allocation disagrees with its source audit");
+          sourceLines.push(describe(entry, `Statement ${index + 1}: `));
         }
-        if (!benefits.reduce((total, benefit) => benefit.qualificationConfirmed ? total.plus(sourceMoney(benefit.amount)) : total, new Decimal(0)).eq(row.adjustedQEE)) throw new Error("Education reference in-kind qualified cost disagrees with its audit");
+        const qualified = allocations.reduce((total, allocation) => qeeSummary.sourceFacts?.expenses?.find(expense => expense.id === allocation.expenseId)?.qualificationConfirmed === true ? total.plus(sourceMoney(allocation.amount)) : total, new Decimal(0));
+        if (!qualified.eq(row.adjustedQEE)) throw new Error("Education reference in-kind qualified cost disagrees with its audit");
       }
       const correction = result.returnedContributions.find(item => item.sourceId === row.sourceId);
       if (row.treatment === "returned_contribution") {
@@ -203,7 +211,9 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
       for (const [field, label] of [["amount", "Actual paid expense"], ["refundedAmount", "Refund"], ["taxFreeAssistance", "Tax-free assistance"], ["educationCreditAmount", "Expense used for education credit"], ["otherTaxBenefitAmount", "Expense used for another benefit"]] as const) qualifiedEducationExpenseInputs.push({ label: `Expense ${index + 1}: ${label}`, value: knownAmount(expense[field]) });
       const benefits = benefitSources.filter(benefit => benefit.expenseId === expense.id);
       if (benefits.length) {
-        const remaining = sourceMoney(expense.amount).minus(sourceMoney(expense.refundedAmount)).minus(sourceMoney(expense.taxFreeAssistance)).minus(sourceMoney(expense.educationCreditAmount)).minus(sourceMoney(expense.otherTaxBenefitAmount)).minus(benefits.reduce((total, benefit) => total.plus(sourceMoney(benefit.amount)), new Decimal(0)));
+        const inKindSourceIds = new Set(benefits.map(benefit => benefit.sourceId));
+        const allocations = qeeSummary.sourceFacts.allocations?.filter(allocation => allocation.expenseId === expense.id && inKindSourceIds.has(allocation.sourceId)) ?? [];
+        const remaining = sourceMoney(expense.amount).minus(sourceMoney(expense.refundedAmount)).minus(sourceMoney(expense.taxFreeAssistance)).minus(sourceMoney(expense.educationCreditAmount)).minus(sourceMoney(expense.otherTaxBenefitAmount)).minus(allocations.reduce((total, allocation) => total.plus(sourceMoney(allocation.amount)), new Decimal(0)));
         if (remaining.lt(0)) throw new Error("Education reference in-kind benefit costs exceed remaining actual expense");
         sourceLines.push(describe(requireAudit("Form1099-Q", `${expense.id}:after-in-kind`, remaining), `Expense ${index + 1}: `));
       }

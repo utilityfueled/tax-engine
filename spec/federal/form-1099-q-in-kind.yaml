@@ -13,14 +13,14 @@ notes: |
   The actual benefit is separate from the tax allocation. A medium label alone
   does not prove the beneficiary received an eligible benefit.
 
-  This bounded method supports benefits whose entire actual eligible cost is
-  allocated to their supplying statement. Known fully ineligible benefits give
-  no exclusion. It retains other actual cash/ESA/credit allocations only within
+  This method supports full actual benefit allocations and the separately
+  specified actual postsecondary tuition credit split. Known fully ineligible
+  benefits give no exclusion. It retains other actual cash/ESA/credit allocations only within
   the remaining expense, without choosing them for the taxpayer. A partly
-  excluded in-kind benefit caused by credit/assistance/category limits or an
-  election needs a separate supported tax method and is explicitly blocked.
-  Prepaid educator expense reduction remains a separate interpretation; this
-  source method does not choose gross benefits versus earnings for that rule.
+  excluded in-kind benefit caused by assistance/category limits or an ESA
+  election remains separate. See form-1099-q-in-kind-credit.yaml for the
+  actual tuition credit method and educator-in-kind-exclusions.yaml for
+  verified earnings used in the separate recipient educator calculation.
 lines:
   - line: "benefit-source"
     description: "Actual beneficiary benefit records and unknown preservation"
@@ -32,15 +32,15 @@ lines:
     testRef: "tests/engine/forms/form-1099-q-in-kind.test.ts::rejects mismatched benefit identity dates amounts and recipient facts"
   - line: "benefit-ordering"
     description: "Consume actual benefit costs before other distributions"
-    formula: "For each expense/source pair, actual allocation equals the summed benefit costs and credit allocation is0; existing expense conservation then limits cash/ESA allocations to paid-refunds-assistance-credit-other-benefit-in-kind costs; preserve actual source cents and report earnings rounding"
+    formula: "For each expense/source pair, actual allocation plus its explicit tuition credit allocation equals the summed benefit costs; existing expense conservation then limits cash/ESA allocations to paid-refunds-assistance-credit-other-benefit less the in-kind QTP expense allocation; preserve actual source cents and report earnings rounding"
     testRef: "tests/engine/forms/form-1099-q-in-kind.test.ts::excludes actual qualified benefits before cash uses the remaining expense"
   - line: "no-silent-election"
     description: "Do not make unused in-kind costs available to cash"
-    formula: "Reject missing, partial or differently linked benefit allocations even if combined allocations stay below the expense; reject positive credit allocation against the same benefit statement; never reassign costs automatically"
+    formula: "Reject missing, unexplained partial or differently linked benefit allocations even if combined allocations stay below the expense; actual QTP plus credit allocation must equal the benefit cost; never reassign costs automatically"
     testRef: "tests/engine/forms/form-1099-q-in-kind.test.ts::rejects omitted or partial benefit allocations instead of reallocating expenses"
   - line: "known-eligibility"
     description: "Keep known ineligibility distinct from missing or reduced qualification"
-    formula: "Actual benefit and linked expense eligibility must reconcile; both false give0 qualified cost; missing eligibility rejects; true requires final allowed benefit allocation equal actual cost after category caps, otherwise reject the unsupported partial-benefit method"
+    formula: "Actual benefit and linked expense eligibility must reconcile; both false give0 qualified cost; missing eligibility rejects; true requires final allowed QTP allocation equal the actual selected amount after category caps, otherwise reject the unsupported partial-benefit method"
     testRef: "tests/engine/forms/form-1099-q-in-kind.test.ts::preserves known ineligible benefits and blocks unsupported partial exclusions"
   - line: "guided-benefit-sources"
     description: "Collect actual benefit links without defaulting an empty source list"

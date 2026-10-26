@@ -16,7 +16,7 @@
  */
 
 import Decimal from "decimal.js";
-import type { Form1099Q, QualifiedEducationExpenseSummary, EducationExpenses } from "@/models/inputs.js";
+import type { Form1099Q, QualifiedEducationExpenseSummary, EducationExpenses, Taxpayer } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, sum, zeroFloor, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -101,6 +101,8 @@ export interface EducationRecipientResult {
 }
 export interface Form1099QOptions {
   taxYear?: number;
+  /** Actual return identities are required to reconcile canonical in-kind income ownership. */
+  taxpayer?: Taxpayer;
   /** Pass explicit empty education inputs when the return claims no education credit. */
   educationExpenses?: EducationExpenses;
 }
@@ -596,6 +598,20 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   for (const form of inKindSources) {
     if (form.accountType !== "529" || form.recipientNotBeneficiary || form.isTrusteeToTrustee || form.isQtpToRoth
       || form.transfer?.kind !== "none" || isReturnedContribution(form) || form.distributionCode === "6") throw new Error("Form1099Q in-kind benefits require an ordinary QTP benefit to its designated beneficiary without a transfer or correction");
+    if (options.taxpayer) {
+      const taxpayer = options.taxpayer;
+      const identity = (value: string | undefined) => value && /^\d{3}-?\d{2}-?\d{4}$/.test(value) ? value.replaceAll("-", "") : undefined;
+      const beneficiaryIdentity = identity(beneficiaries.get(form.beneficiaryId)?.studentTaxId);
+      const primaryIdentity = identity(taxpayer.primary.ssn);
+      const jointReturn = taxpayer.filingStatus === "married_filing_jointly";
+      const spouseIdentity = jointReturn ? identity(taxpayer.spouse?.ssn) : undefined;
+      if (taxpayer.taxYear !== options.taxYear || !beneficiaryIdentity || !primaryIdentity
+        || (jointReturn && (!spouseIdentity || spouseIdentity === primaryIdentity))) {
+        throw new Error("Form1099Q in-kind recipient requires actual reconciled beneficiary and return identities");
+      }
+      const owner = beneficiaryIdentity === primaryIdentity ? "primary" : beneficiaryIdentity === spouseIdentity ? "spouse" : "other";
+      if (form.recipientOwner !== owner) throw new Error("Form1099Q in-kind recipient owner conflicts with the actual designated beneficiary identity");
+    }
   }
   if (inKindSources.length && facts.inKindBenefits === undefined) throw new Error("Form1099Q actual in-kind benefit source records are required");
   const rawBenefits = facts.inKindBenefits ?? [];
@@ -670,7 +686,9 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   for (const key of inKindPairs) {
     const benefits = inKindBenefits.filter(item => `${item.form.sourceId}\u0000${item.expense.id}` === key);
     const allocation = allocations.find(item => `${item.form.sourceId}\u0000${item.expense.id}` === key);
-    if (!benefits.length || !allocation || !allocation.amount.eq(sum(...benefits.map(item => item.amount))) || !allocation.credit.isZero()) throw new Error("Form1099Q in-kind allocation must consume its actual benefit cost; partial or credit-reduced in-kind allocation requires a separate method");
+    if (!benefits.length || !allocation || !allocation.amount.plus(allocation.credit).eq(sum(...benefits.map(item => item.amount)))) throw new Error("Form1099Q in-kind allocation and actual credit expense must conserve its benefit cost; unexplained partial allocation is unsupported");
+    if (allocation.credit.gt(0) && (allocation.expense.category !== "postsecondary_tuition" || allocation.expense.qualificationConfirmed !== true)) throw new Error("Form1099Q in-kind credit allocation requires actual qualifying postsecondary tuition");
+    audit.record("Form1099-Q", `${allocation.form.sourceId}:in-kind-allocation:${allocation.expense.id}`, "Actual in-kind QTP expense allocation", allocation.amount, "Actual provided benefit cost less the explicitly allocated education-credit expense", { "Education credit expense": allocation.credit });
   }
   for (const expense of expenses.values()) {
     if (!beneficiaries.has(expense.beneficiaryId)) throw new Error("Form1099Q expense beneficiary source is missing");
@@ -685,7 +703,11 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const requested = sum(...linked.map(item => item.amount));
     if (requested.gt(available) || sum(...linked.map(item => item.credit)).gt(credit)) throw new Error("Form1099Q allocations exceed available expense or credit reduction");
     const benefits = inKindBenefits.filter(item => item.expense.id === expense.id);
-    if (benefits.length) audit.record("Form1099-Q", `${expense.id}:after-in-kind`, "Expense remaining after actual in-kind benefit costs", available.minus(sum(...benefits.map(item => item.amount))), "Paid expense less actual reductions and costs supplied as in-kind benefits; other allocations must fit the remainder");
+    if (benefits.length) {
+      const inKindAllocations = linked.filter(item => item.form.distributionMedium === "in_kind_prepaid_tuition");
+      const creditReduced = inKindAllocations.some(item => item.credit.gt(0));
+      audit.record("Form1099-Q", `${expense.id}:after-in-kind`, creditReduced ? "Expense remaining after actual in-kind benefit allocation" : "Expense remaining after actual in-kind benefit costs", available.minus(sum(...inKindAllocations.map(item => item.amount))), "Paid expense less actual reductions and the in-kind QTP expense allocation; other allocations must fit the remainder");
+    }
     if (expense.category === "student_loan" && sum(...linked.map(item => item.loanInterest)).gt(actualAmount(expense.studentLoanInterestAmount, "actual paid loan interest"))) throw new Error("Form1099Q allocations exceed actual paid loan interest");
     const paid = actualDate(expense.paidDate, "expense paid");
     if (paid.getUTCFullYear() !== options.taxYear) throw new Error("Form1099Q expense year must match distribution year");

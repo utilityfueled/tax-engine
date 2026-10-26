@@ -4,6 +4,7 @@ import { buildEducationDistributionInputs, educationDistributionFactErrors, type
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { emptyCreditsData, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
 import { startCompleteInterview, completeEducationClaimant, completeAocEligibility } from "./complete-facts";
+import { inKindCreditFixture } from "../fixtures/education-in-kind-credit.js";
 
 export function actualEducationDistribution(): EducationDistributionData {
   return {
@@ -101,4 +102,26 @@ it("collects linked in-kind benefits without inventing source evidence", () => {
   });
   data.inKindBenefits[0].qualificationConfirmed = null;
   expect(() => buildEducationDistributionInputs(data, 2025, "single")).toThrow(/actual.*qualification/i);
+});
+
+// Spec: spec/federal/form-1099-q-in-kind-credit.yaml.
+it("preserves a source-bound in-kind tuition credit split", () => {
+  const data = actualEducationDistribution(), statement = data.forms?.[0];
+  const expense = data.expenses?.[0], allocation = data.allocations?.[0];
+  if (!statement || !expense || !allocation) throw new Error("Missing actual source");
+  statement.fields.distributionMedium = "in_kind_prepaid_tuition";
+  statement.fields.recipientNotBeneficiary = false;
+  expense.educationCreditAmount = "1000"; allocation.amount = "3000"; allocation.creditAmount = "1000";
+  data.inKindBenefits = [{ id: "actual-benefit", sourceId: "q1", expenseId: "e1", amount: "4000",
+    providedDate: "2025-08-15", qualificationConfirmed: true, sourceReference: "Actual tuition benefit record" }];
+  const creditInput = inKindCreditFixture(2025);
+  if (!data.beneficiaries?.[0]) throw new Error("Missing beneficiary source");
+  data.beneficiaries[0].studentTaxId = creditInput.taxpayer.primary.ssn;
+  const before = JSON.stringify(data), input = buildEducationDistributionInputs(data, 2025, "single", creditInput.educationExpenses);
+  expect(input.form1099Q?.[0]?.grossDistribution).toBe("4000");
+  expect(input.qualifiedEducationExpenses?.sourceFacts?.allocations?.[0]).toMatchObject({ amount: "3000", creditAmount: "1000" });
+  expect(input.qualifiedEducationExpenses?.sourceFacts?.inKindBenefits?.[0]?.amount).toBe("4000");
+  expect(JSON.stringify(data)).toBe(before);
+  data.inKindBenefits = undefined;
+  expect(() => buildEducationDistributionInputs(data, 2025, "single", creditInput.educationExpenses)).toThrow(/actual.*in-kind|benefit/);
 });
