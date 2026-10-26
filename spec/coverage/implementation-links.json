@@ -1,0 +1,401 @@
+{
+  "version": 1,
+  "purpose": "Explicit implementation traceability; not legal review, scenario qualification, filing readiness or e-file support.",
+  "entries": [
+    {
+      "key": "federal/charitable-single-category-nol",
+      "enginePath": "src/engine/forms/charitable-net-operating-loss.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/engine/federal-charitable-single-category-nol.test.ts::reproduces the published capital-property NOL carry difference",
+        "tests/engine/federal-charitable-single-category-nol.test.ts::replays each single current category without converting its carry to public cash"
+      ],
+      "note": "Single-category charitable NOL replay uses the shared regular calculation with independent AMT source handling; the linked packet is the 2025 review mapping."
+    },
+    {
+      "key": "federal/crypto-income",
+      "enginePath": "src/engine/forms/crypto-lot-matching.ts",
+      "testRefs": [
+        "tests/engine/forms/crypto-lot-matching.test.ts::Hobby mining income computed as quantity * FMV",
+        "tests/engine/forms/crypto-lot-matching.test.ts::Crypto hobby income flows to otherIncome (Schedule 1 Line 8z)"
+      ],
+      "note": "Digital-asset income and original donation calculations are exported by the shared lot-matching module; this entry makes no packet or filing claim."
+    },
+    {
+      "key": "federal/crypto-similar-property-appraisal",
+      "enginePath": "src/engine/forms/crypto-lot-matching.ts",
+      "testRefs": [
+        "tests/engine/forms/crypto-similar-property-appraisal.test.ts::checks the known annual asset group across recipients and row order",
+        "tests/engine/forms/crypto-similar-property-appraisal.test.ts::uses exact values and the contribution basis at the threshold"
+      ],
+      "note": "Digital-asset income and original donation calculations are exported by the shared lot-matching module; this entry makes no packet or filing claim."
+    },
+    {
+      "key": "federal/current-charitable-crypto-handoff",
+      "enginePath": "src/engine/forms/current-charitable-candidates.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/engine/forms/current-charitable-crypto-handoff.test.ts::reconciles verified crypto and direct receipts once by original category",
+        "tests/engine/forms/current-charitable-crypto-handoff.test.ts::preserves unknown valuation and partial media guards at the handoff"
+      ],
+      "note": "Original current receipts are validated and classified before ScheduleA calculation; the linked mapping is 2025 review output only."
+    },
+    {
+      "key": "federal/current-charitable-public-property",
+      "enginePath": "src/engine/forms/current-charitable-candidates.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/engine/forms/current-charitable-public-property.test.ts::resolves the enacted reciprocal public gift limits without a source priority election",
+        "tests/engine/forms/current-charitable-public-property.test.ts::requires exact original public property valuation and supported source character"
+      ],
+      "note": "Current recipient/basis candidates share this calculation and the 2025 ScheduleA review mapping; no additional scenario or year is enabled."
+    },
+    {
+      "key": "federal/current-charitable-receipt-categories",
+      "enginePath": "src/engine/forms/current-charitable-candidates.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/engine/forms/current-charitable-receipt-categories.test.ts::conserves the current five category allowances and final carry candidates",
+        "tests/engine/forms/current-charitable-receipt-categories.test.ts::binds exact original stock and ordinary property valuation without invented categories"
+      ],
+      "note": "Current recipient/basis candidates share this calculation and the 2025 ScheduleA review mapping; no additional scenario or year is enabled."
+    },
+    {
+      "key": "federal/current-public-other-cash",
+      "enginePath": "src/engine/forms/current-charitable-candidates.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "testRefs": [
+        "tests/engine/forms/current-public-other-cash.test.ts::keeps current public and other-recipient cash carries in their actual categories",
+        "tests/engine/forms/current-public-other-cash.test.ts::requires actual cash category sources and preserves exact floor boundaries"
+      ],
+      "note": "Current recipient/basis candidates share this calculation and the 2025 ScheduleA review mapping; no additional scenario or year is enabled."
+    },
+    {
+      "key": "federal/defi-advanced",
+      "enginePath": "src/engine/forms/crypto-lot-matching.ts",
+      "testRefs": [
+        "tests/engine/forms/crypto-lot-matching.test.ts::LP entry is non-taxable and establishes LP token lot",
+        "tests/engine/forms/crypto-lot-matching.test.ts::LP exit generates taxable disposition with correct gain/loss"
+      ],
+      "note": "Digital-asset income and original donation calculations are exported by the shared lot-matching module; this entry makes no packet or filing claim."
+    },
+    {
+      "key": "federal/defi-transactions",
+      "enginePath": "src/engine/forms/crypto-lot-matching.ts",
+      "testRefs": [
+        "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap ETH\u2192USDC generates taxable disposition with correct gain/loss",
+        "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap capitalizes gas fee into new token basis"
+      ],
+      "note": "Digital-asset income and original donation calculations are exported by the shared lot-matching module; this entry makes no packet or filing claim."
+    },
+    {
+      "key": "federal/form-1099-q-corrections",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-corrections.test.ts::preserves unknown returned contribution source facts",
+        "tests/engine/forms/form-1099-q-corrections.test.ts::taxes actual returned contribution earnings in their contribution year"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-coverdell-basis",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-coverdell-basis.test.ts::rounds Coverdell worksheet inputs without creating negative basis",
+        "tests/engine/forms/form-1099-q-coverdell-basis.test.ts::aggregates source cents before rounding account distributions"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-disqualification",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-disqualification.test.ts::rejects missing or conflicting disqualification boundaries",
+        "tests/engine/forms/form-1099-q-disqualification.test.ts::calculates the source-bounded whole-account deemed distribution"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-distinct-in-kind-assistance",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-distinct-in-kind-assistance.test.ts::keeps distinct actual tuition expense and statement records",
+        "tests/engine/forms/form-1099-q-distinct-in-kind-assistance.test.ts::keeps exact source rounding and separately supplied credit amounts"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-distinct-qtp-esa",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-distinct-qtp-esa.test.ts::keeps each prepaid source ratio in the actual ESA allocation",
+        "tests/engine/forms/form-1099-q-distinct-qtp-esa.test.ts::rejects conflicting distinct original source groups"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-expense-cap",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-expense-cap.test.ts::uses actual room and board capacity without diluting it by unallocated spending",
+        "tests/engine/forms/form-1099-q-expense-cap.test.ts::conserves the single category cap across actual distributions and source states"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-in-kind",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-in-kind.test.ts::preserves actual in-kind source records and rejects missing benefit evidence",
+        "tests/engine/forms/form-1099-q-in-kind.test.ts::rejects mismatched benefit identity dates amounts and recipient facts"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-in-kind-assistance",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-in-kind-assistance.test.ts::preserves original tuition and exact assistance reductions",
+        "tests/engine/forms/form-1099-q-in-kind-assistance.test.ts::uses only separately supplied additional-tax exception evidence"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-in-kind-coordination",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-in-kind-coordination.test.ts::coordinates actual assistance and credit without inventing an exception",
+        "tests/engine/forms/form-1099-q-in-kind-coordination.test.ts::uses the actual single-expense ESA election without reassigning costs"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-in-kind-credit",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-in-kind-credit.test.ts::coordinates actual tuition credits with the reported in-kind distribution",
+        "tests/engine/forms/form-1099-q-in-kind-credit.test.ts::retains cash capacity after an actual credit-reduced benefit"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-in-kind-k12",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-in-kind-k12.test.ts::binds expanded eligibility to the actual furnished benefit dates",
+        "tests/engine/education-in-kind-k12-return.test.ts::carries cash-limited earnings without taxing the qualified prepaid benefit"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-in-kind-room-board",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-in-kind-room-board.test.ts::limits the original benefit using actual school costs",
+        "tests/engine/forms/form-1099-q-in-kind-room-board.test.ts::preserves enrollment zero and exact monetary boundaries"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-multiple-expense-esa",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-multiple-expense-esa.test.ts::uses the actual multiple-expense election with distinct earnings ratios",
+        "tests/engine/forms/form-1099-q-multiple-expense-esa.test.ts::rejects incomplete or conflicting original expense groups"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-prohibited-source",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-prohibited-source.test.ts::preserves actual prohibited-transaction facts and missing-source status",
+        "tests/engine/forms/form-1099-q-prohibited-source.test.ts::validates the actual deemed-distribution source before blocking unresolved treatment"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-source",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q source contract preserves missing facts and refuses default promotion",
+        "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q source allocations prevent cross-beneficiary and duplicate expense use"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-1099-q-tuition-account-group",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-tuition-account-group.test.ts::uses the beneficiary ESA ratio across distinct tuition account histories",
+        "tests/engine/forms/form-1099-q-tuition-account-group.test.ts::conserves each original benefit in a shared tuition expense"
+      ],
+      "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
+    },
+    {
+      "key": "federal/form-8862-deceased-claimant",
+      "enginePath": "src/engine/forms/form-8862.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8862.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8862-deceased-claimant.test.ts::derives the deceased claimant period without a fixed full-year day threshold",
+        "tests/engine/forms/form-8862-deceased-claimant.test.ts::keeps separate deceased and surviving spouse periods including both-deceased returns"
+      ],
+      "note": "Current EIC requalification and deceased-claimant source methods share Form8862 and its physical 2025 review mapping; this link is not tax or form qualification."
+    },
+    {
+      "key": "federal/form-8862-eic",
+      "enginePath": "src/engine/forms/form-8862.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8862.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8862-eic.test.ts::derives current year and the income-only shortcut from original history",
+        "tests/engine/forms/form-8862-eic.test.ts::preserves known Rule10 and dependency restrictions instead of clearing them with a form"
+      ],
+      "note": "Current EIC requalification and deceased-claimant source methods share Form8862 and its physical 2025 review mapping; this link is not tax or form qualification."
+    },
+    {
+      "key": "federal/form-8862-review",
+      "enginePath": "src/engine/forms/form-8862.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8862.ts",
+      "testRefs": [
+        "tests/pdf/form-8862-review.test.ts::maps the income-only shortcut and both actual claimant rows",
+        "tests/pdf/form-8862-review.test.ts::retains actual birth death days and required evidence alongside the printed child convention"
+      ],
+      "note": "Current EIC requalification and deceased-claimant source methods share Form8862 and its physical 2025 review mapping; this link is not tax or form qualification."
+    },
+    {
+      "key": "federal/form-8962-default-allocation",
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8962-default-allocation.test.ts::requires actual no-agreement and enrollment facts without accepting a supplied fraction",
+        "tests/engine/forms/form-8962-default-allocation.test.ts::matches published no-agreement shares from either actual taxpayer role"
+      ],
+      "note": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced."
+    },
+    {
+      "key": "federal/form-8962-marriage-first-day",
+      "enginePath": "src/engine/forms/form-8962-marriage-worksheets.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8962-marriage-first-day.test.ts::derives every February through December first-day cutoff from actual dates",
+        "tests/engine/forms/form-8962-marriage-first-day.test.ts::uses ordinary July credit for a July first wedding and preserves later-day treatment"
+      ],
+      "note": "The marriage alternative calculation and its current-year review mapping remain subject to the actual source and readiness gates."
+    },
+    {
+      "key": "federal/form-8962-marriage-return",
+      "enginePath": "src/engine/forms/form-8962-marriage-worksheets.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/federal-marriage-return.test.ts::uses actual canonical household income and transfers marriage repayment once",
+        "tests/engine/federal-marriage-return.test.ts::retains actual ordinary credit when there is no excess advance"
+      ],
+      "note": "The marriage alternative calculation and its current-year review mapping remain subject to the actual source and readiness gates."
+    },
+    {
+      "key": "federal/form-8962-no-advance-allocation",
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8962-no-advance-allocation.test.ts::requires actual zero advances and complete independently bound benchmark sources",
+        "tests/engine/forms/form-8962-no-advance-allocation.test.ts::matches the published Situation3 ratio without using the rounded printed share"
+      ],
+      "note": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced."
+    },
+    {
+      "key": "federal/form-8962-no-advance-overlap",
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8962-no-advance-overlap.test.ts::rejects incomplete duplicate and contradictory full-family monthly sources",
+        "tests/engine/forms/form-8962-no-advance-overlap.test.ts::allocates overlapping original premiums from full family benchmarks once"
+      ],
+      "note": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced."
+    },
+    {
+      "key": "federal/form-8962-overlapping-policies",
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8962-overlapping-policies.test.ts::combines overlapping Situation4 rows before monthly rounding",
+        "tests/engine/forms/form-8962-overlapping-policies.test.ts::uses one actual benchmark per unshared coverage group"
+      ],
+      "note": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced."
+    },
+    {
+      "key": "federal/form-8962-shared-policy-review",
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/pdf/form8962-shared-policy-review.test.ts::maps actual PartIV and monthly values in saved independent-reader fields"
+      ],
+      "note": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced."
+    },
+    {
+      "key": "federal/form-8962-shared-unshared",
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/forms/form-8962-shared-unshared.test.ts::combines actual shared and unshared policy months without another allocation",
+        "tests/engine/forms/form-8962-shared-unshared.test.ts::requires actual unshared classification evidence and complete source identity"
+      ],
+      "note": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced."
+    },
+    {
+      "key": "federal/marketplace-health-separate-business",
+      "enginePath": "src/engine/forms/marketplace-health-premiums.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-health-separate-business.test.ts::retains the separate actual business deduction before the historical cap",
+        "tests/engine/forms/marketplace-health-separate-business.test.ts::subtracts the other business deduction without borrowing its earnings"
+      ],
+      "note": "Separate actual plan owners use the shared owner calculation and source-bound 2025 review mapping."
+    },
+    {
+      "key": "federal/shared-marketplace-health-other-allocations",
+      "enginePath": "src/engine/forms/shared-marketplace-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/forms/shared-marketplace-health-other-allocations.test.ts::uses actual default enrollment allocation with independently paid health sources",
+        "tests/engine/forms/shared-marketplace-health-other-allocations.test.ts::uses exact no-advance benchmark allocation without inferring actual cash"
+      ],
+      "note": "Original shared health-plan sources feed the self-employed deduction; the linked 2025 review mapping validates the recorded calculation audit."
+    },
+    {
+      "key": "federal/shared-owner-marketplace-health",
+      "enginePath": "src/engine/forms/shared-marketplace-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/forms/shared-owner-marketplace-health.test.ts::binds each actual plan and original payment group separately",
+        "tests/engine/forms/shared-owner-marketplace-health.test.ts::rejects missing and balanced conflicting separate-plan sources"
+      ],
+      "note": "Separate actual plan owners use the shared owner calculation and source-bound 2025 review mapping."
+    },
+    {
+      "key": "federal/shared-unshared-marketplace-health",
+      "enginePath": "src/engine/forms/shared-marketplace-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/forms/shared-unshared-marketplace-health.test.ts::retains full unshared originals beside actual allocated health sources",
+        "tests/engine/federal-shared-unshared-marketplace-health.test.ts::coordinates shared and unshared health premiums without double counting"
+      ],
+      "note": "Original shared health-plan sources feed the self-employed deduction; the linked 2025 review mapping validates the recorded calculation audit."
+    }
+  ]
+}

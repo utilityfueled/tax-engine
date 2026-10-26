@@ -1,7 +1,8 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "fs";
 import { basename, dirname, extname, join, relative, resolve } from "path";
 import { parse } from "yaml";
 import { collectSpecFilePaths, loadSpecs, validateTestRef } from "../src/spec-validator.js";
+import { validateImplementationLinks, type CoverageImplementationLink } from "./lib/coverage-implementation-links.js";
 
 interface CoverageInventoryEntry {
   key: string;
@@ -11,6 +12,8 @@ interface CoverageInventoryEntry {
   specPath: string | null;
   enginePath: string | null;
   packetPath: string | null;
+  implementationTestRefs?: string[];
+  implementationNote?: string;
   specExists: boolean;
   engineExists: boolean;
   packetGenerationExists: boolean;
@@ -282,16 +285,21 @@ function computeStatus(entry: Pick<
   return "partial" as const;
 }
 
-function createEntryFromSpec(specPath: string): CoverageInventoryEntry {
+function specKey(specPath: string): string {
+  const scope = normalize(relative(projectRoot, specPath)).includes("/state/") ? "state" : "federal";
+  return `${scope}/${basename(specPath).replace(/\.(yaml|yml)$/i, "")}`;
+}
+
+function createEntryFromSpec(specPath: string, implementationLink?: CoverageImplementationLink): CoverageInventoryEntry {
   const relativeSpecPath = normalize(relative(projectRoot, specPath));
   const scope = relativeSpecPath.includes("/state/") ? "state" : "federal";
   const slug = basename(specPath).replace(/\.(yaml|yml)$/i, "");
   const inventoryKey = `${scope}/${slug}`;
   const spec = readYaml(specPath);
   const override = packetOverrides[inventoryKey];
-  const enginePath = findExistingPath(inferEngineCandidates(scope, slug));
+  const enginePath = implementationLink?.enginePath ?? findExistingPath(inferEngineCandidates(scope, slug));
   const inferredPacketPath = findExistingPath(inferPacketCandidates(scope, slug));
-  const packetPath = override?.packetPath ?? inferredPacketPath;
+  const packetPath = implementationLink?.packetPath ?? override?.packetPath ?? inferredPacketPath;
   const packetGenerationExists = override?.packetGenerationExists ?? packetPath !== null;
   const testCoverageExists = inferSpecTestCoverage(specPath);
   const efileBusinessRuleCoverageExists = inferSpecBusinessRuleCoverage(spec);
@@ -309,6 +317,10 @@ function createEntryFromSpec(specPath: string): CoverageInventoryEntry {
     specPath: relativeSpecPath,
     enginePath,
     packetPath,
+    ...(implementationLink ? {
+      implementationTestRefs: implementationLink.testRefs,
+      implementationNote: implementationLink.note,
+    } : {}),
     specExists: true,
     engineExists: enginePath !== null,
     packetGenerationExists,
@@ -358,9 +370,19 @@ function main() {
   const specPaths = collectSpecFilePaths(["spec"])
     .filter((filePath) => !normalize(relative(projectRoot, filePath)).startsWith("spec/coverage/"));
   const entries = new Map<string, CoverageInventoryEntry>();
+  const implementationLinks = validateImplementationLinks(
+    JSON.parse(readFileSync(resolve(projectRoot, "spec/coverage/implementation-links.json"), "utf8")),
+    {
+      specTestRefs: new Map(loadSpecs(specPaths).map(({ filePath, spec }) => [
+        specKey(filePath), new Set(spec.lines.flatMap(line => line.testRef ? [line.testRef] : [])),
+      ])),
+      isFile: path => existsSync(resolve(projectRoot, path)) && statSync(resolve(projectRoot, path)).isFile(),
+      validTestRef: reference => validateTestRef(reference).valid,
+    },
+  );
 
   for (const specPath of specPaths) {
-    const entry = createEntryFromSpec(specPath);
+    const entry = createEntryFromSpec(specPath, implementationLinks.get(specKey(specPath)));
     entries.set(entry.key, entry);
   }
 

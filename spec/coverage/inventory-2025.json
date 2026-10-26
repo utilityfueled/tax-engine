@@ -422,17 +422,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.170A-10",
       "specPath": "spec/federal/charitable-single-category-nol.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/charitable-net-operating-loss.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-charitable-single-category-nol.test.ts::reproduces the published capital-property NOL carry difference",
+        "tests/engine/federal-charitable-single-category-nol.test.ts::replays each single current category without converting its carry to public cash"
+      ],
+      "implementationNote": "Single-category charitable NOL replay uses the shared regular calculation with independent AMT source handling; the linked packet is the 2025 review mapping.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -502,16 +505,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-virtual-currency-transactions",
       "specPath": "spec/federal/crypto-income.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/crypto-lot-matching.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/crypto-lot-matching.test.ts::Hobby mining income computed as quantity * FMV",
+        "tests/engine/forms/crypto-lot-matching.test.ts::Crypto hobby income flows to otherIncome (Schedule 1 Line 8z)"
+      ],
+      "implementationNote": "Digital-asset income and original donation calculations are exported by the shared lot-matching module; this entry makes no packet or filing claim.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -543,16 +550,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/publications/p561",
       "specPath": "spec/federal/crypto-similar-property-appraisal.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/crypto-lot-matching.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/crypto-similar-property-appraisal.test.ts::checks the known annual asset group across recipients and row order",
+        "tests/engine/forms/crypto-similar-property-appraisal.test.ts::uses exact values and the contribution basis at the threshold"
+      ],
+      "implementationNote": "Digital-asset income and original donation calculations are exported by the shared lot-matching module; this entry makes no packet or filing claim.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -582,17 +593,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-digital-asset-transactions",
       "specPath": "spec/federal/current-charitable-crypto-handoff.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/current-charitable-candidates.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/current-charitable-crypto-handoff.test.ts::reconciles verified crypto and direct receipts once by original category",
+        "tests/engine/forms/current-charitable-crypto-handoff.test.ts::preserves unknown valuation and partial media guards at the handoff"
+      ],
+      "implementationNote": "Original current receipts are validated and classified before ScheduleA calculation; the linked mapping is 2025 review output only.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -602,17 +616,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-120/t26/s170/",
       "specPath": "spec/federal/current-charitable-public-property.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/current-charitable-candidates.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/current-charitable-public-property.test.ts::resolves the enacted reciprocal public gift limits without a source priority election",
+        "tests/engine/forms/current-charitable-public-property.test.ts::requires exact original public property valuation and supported source character"
+      ],
+      "implementationNote": "Current recipient/basis candidates share this calculation and the 2025 ScheduleA review mapping; no additional scenario or year is enabled.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -622,17 +639,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-120/t26/s170/",
       "specPath": "spec/federal/current-charitable-receipt-categories.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/current-charitable-candidates.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/current-charitable-receipt-categories.test.ts::conserves the current five category allowances and final carry candidates",
+        "tests/engine/forms/current-charitable-receipt-categories.test.ts::binds exact original stock and ordinary property valuation without invented categories"
+      ],
+      "implementationNote": "Current recipient/basis candidates share this calculation and the 2025 ScheduleA review mapping; no additional scenario or year is enabled.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -642,17 +662,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-120/t26/s170/",
       "specPath": "spec/federal/current-public-other-cash.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/current-charitable-candidates.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/current-public-other-cash.test.ts::keeps current public and other-recipient cash carries in their actual categories",
+        "tests/engine/forms/current-public-other-cash.test.ts::requires actual cash category sources and preserves exact floor boundaries"
+      ],
+      "implementationNote": "Current recipient/basis candidates share this calculation and the 2025 ScheduleA review mapping; no additional scenario or year is enabled.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -662,16 +685,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-virtual-currency-transactions",
       "specPath": "spec/federal/defi-advanced.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/crypto-lot-matching.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/crypto-lot-matching.test.ts::LP entry is non-taxable and establishes LP token lot",
+        "tests/engine/forms/crypto-lot-matching.test.ts::LP exit generates taxable disposition with correct gain/loss"
+      ],
+      "implementationNote": "Digital-asset income and original donation calculations are exported by the shared lot-matching module; this entry makes no packet or filing claim.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -682,16 +709,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-virtual-currency-transactions",
       "specPath": "spec/federal/defi-transactions.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/crypto-lot-matching.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap ETH→USDC generates taxable disposition with correct gain/loss",
+        "tests/engine/forms/crypto-lot-matching.test.ts::DEX swap capitalizes gas fee into new token basis"
+      ],
+      "implementationNote": "Digital-asset income and original donation calculations are exported by the shared lot-matching module; this entry makes no packet or filing claim.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -1742,17 +1773,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i1099q",
       "specPath": "spec/federal/form-1099-q-corrections.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-corrections.test.ts::preserves unknown returned contribution source facts",
+        "tests/engine/forms/form-1099-q-corrections.test.ts::taxes actual returned contribution earnings in their contribution year"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1762,17 +1796,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/publications/p970",
       "specPath": "spec/federal/form-1099-q-coverdell-basis.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-coverdell-basis.test.ts::rounds Coverdell worksheet inputs without creating negative basis",
+        "tests/engine/forms/form-1099-q-coverdell-basis.test.ts::aggregates source cents before rounding account distributions"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1782,17 +1819,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i1099q",
       "specPath": "spec/federal/form-1099-q-disqualification.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-disqualification.test.ts::rejects missing or conflicting disqualification boundaries",
+        "tests/engine/forms/form-1099-q-disqualification.test.ts::calculates the source-bounded whole-account deemed distribution"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1802,17 +1842,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
       "specPath": "spec/federal/form-1099-q-distinct-in-kind-assistance.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-distinct-in-kind-assistance.test.ts::keeps distinct actual tuition expense and statement records",
+        "tests/engine/forms/form-1099-q-distinct-in-kind-assistance.test.ts::keeps exact source rounding and separately supplied credit amounts"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1822,17 +1865,20 @@
       "taxYear": null,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
       "specPath": "spec/federal/form-1099-q-distinct-qtp-esa.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-distinct-qtp-esa.test.ts::keeps each prepaid source ratio in the actual ESA allocation",
+        "tests/engine/forms/form-1099-q-distinct-qtp-esa.test.ts::rejects conflicting distinct original source groups"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1842,17 +1888,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/publications/p970",
       "specPath": "spec/federal/form-1099-q-expense-cap.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-expense-cap.test.ts::uses actual room and board capacity without diluting it by unallocated spending",
+        "tests/engine/forms/form-1099-q-expense-cap.test.ts::conserves the single category cap across actual distributions and source states"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1862,17 +1911,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
       "specPath": "spec/federal/form-1099-q-in-kind.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-in-kind.test.ts::preserves actual in-kind source records and rejects missing benefit evidence",
+        "tests/engine/forms/form-1099-q-in-kind.test.ts::rejects mismatched benefit identity dates amounts and recipient facts"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1882,17 +1934,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
       "specPath": "spec/federal/form-1099-q-in-kind-assistance.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-in-kind-assistance.test.ts::preserves original tuition and exact assistance reductions",
+        "tests/engine/forms/form-1099-q-in-kind-assistance.test.ts::uses only separately supplied additional-tax exception evidence"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1902,17 +1957,20 @@
       "taxYear": null,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
       "specPath": "spec/federal/form-1099-q-in-kind-coordination.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-in-kind-coordination.test.ts::coordinates actual assistance and credit without inventing an exception",
+        "tests/engine/forms/form-1099-q-in-kind-coordination.test.ts::uses the actual single-expense ESA election without reassigning costs"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1922,17 +1980,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
       "specPath": "spec/federal/form-1099-q-in-kind-credit.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-in-kind-credit.test.ts::coordinates actual tuition credits with the reported in-kind distribution",
+        "tests/engine/forms/form-1099-q-in-kind-credit.test.ts::retains cash capacity after an actual credit-reduced benefit"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1942,17 +2003,20 @@
       "taxYear": null,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
       "specPath": "spec/federal/form-1099-q-in-kind-k12.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-in-kind-k12.test.ts::binds expanded eligibility to the actual furnished benefit dates",
+        "tests/engine/education-in-kind-k12-return.test.ts::carries cash-limited earnings without taxing the qualified prepaid benefit"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1962,17 +2026,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
       "specPath": "spec/federal/form-1099-q-in-kind-room-board.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-in-kind-room-board.test.ts::limits the original benefit using actual school costs",
+        "tests/engine/forms/form-1099-q-in-kind-room-board.test.ts::preserves enrollment zero and exact monetary boundaries"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1982,17 +2049,20 @@
       "taxYear": null,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
       "specPath": "spec/federal/form-1099-q-multiple-expense-esa.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-multiple-expense-esa.test.ts::uses the actual multiple-expense election with distinct earnings ratios",
+        "tests/engine/forms/form-1099-q-multiple-expense-esa.test.ts::rejects incomplete or conflicting original expense groups"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -2002,17 +2072,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i1099q",
       "specPath": "spec/federal/form-1099-q-prohibited-source.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-prohibited-source.test.ts::preserves actual prohibited-transaction facts and missing-source status",
+        "tests/engine/forms/form-1099-q-prohibited-source.test.ts::validates the actual deemed-distribution source before blocking unresolved treatment"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -2022,17 +2095,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/publications/p970",
       "specPath": "spec/federal/form-1099-q-source.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q source contract preserves missing facts and refuses default promotion",
+        "tests/engine/forms/form-1099-q-source.test.ts::Form1099Q source allocations prevent cross-beneficiary and duplicate expense use"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -2042,17 +2118,20 @@
       "taxYear": null,
       "sourceAuthority": "https://www.irs.gov/publications/p970",
       "specPath": "spec/federal/form-1099-q-tuition-account-group.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-tuition-account-group.test.ts::uses the beneficiary ESA ratio across distinct tuition account histories",
+        "tests/engine/forms/form-1099-q-tuition-account-group.test.ts::conserves each original benefit in a shared tuition expense"
+      ],
+      "implementationNote": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -3237,17 +3316,20 @@
       "taxYear": 2025,
       "sourceAuthority": null,
       "specPath": "spec/federal/form-8862-deceased-claimant.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-8862.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8862.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-8862-deceased-claimant.test.ts::derives the deceased claimant period without a fixed full-year day threshold",
+        "tests/engine/forms/form-8862-deceased-claimant.test.ts::keeps separate deceased and surviving spouse periods including both-deceased returns"
+      ],
+      "implementationNote": "Current EIC requalification and deceased-claimant source methods share Form8862 and its physical 2025 review mapping; this link is not tax or form qualification.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -3257,17 +3339,20 @@
       "taxYear": 2025,
       "sourceAuthority": null,
       "specPath": "spec/federal/form-8862-eic.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-8862.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8862.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-8862-eic.test.ts::derives current year and the income-only shortcut from original history",
+        "tests/engine/forms/form-8862-eic.test.ts::preserves known Rule10 and dependency restrictions instead of clearing them with a form"
+      ],
+      "implementationNote": "Current EIC requalification and deceased-claimant source methods share Form8862 and its physical 2025 review mapping; this link is not tax or form qualification.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -3277,17 +3362,20 @@
       "taxYear": 2025,
       "sourceAuthority": null,
       "specPath": "spec/federal/form-8862-review.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-8862.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8862.ts",
+      "implementationTestRefs": [
+        "tests/pdf/form-8862-review.test.ts::maps the income-only shortcut and both actual claimant rows",
+        "tests/pdf/form-8862-review.test.ts::retains actual birth death days and required evidence alongside the printed child convention"
+      ],
+      "implementationNote": "Current EIC requalification and deceased-claimant source methods share Form8862 and its physical 2025 review mapping; this link is not tax or form qualification.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -3595,17 +3683,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8962",
       "specPath": "spec/federal/form-8962-default-allocation.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-8962-default-allocation.test.ts::requires actual no-agreement and enrollment facts without accepting a supplied fraction",
+        "tests/engine/forms/form-8962-default-allocation.test.ts::matches published no-agreement shares from either actual taxpayer role"
+      ],
+      "implementationNote": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -3615,17 +3706,20 @@
       "taxYear": null,
       "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.36B-4",
       "specPath": "spec/federal/form-8962-marriage-first-day.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-8962-marriage-worksheets.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-8962-marriage-first-day.test.ts::derives every February through December first-day cutoff from actual dates",
+        "tests/engine/forms/form-8962-marriage-first-day.test.ts::uses ordinary July credit for a July first wedding and preserves later-day treatment"
+      ],
+      "implementationNote": "The marriage alternative calculation and its current-year review mapping remain subject to the actual source and readiness gates.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -3635,17 +3729,20 @@
       "taxYear": null,
       "sourceAuthority": "https://www.irs.gov/publications/p974",
       "specPath": "spec/federal/form-8962-marriage-return.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-8962-marriage-worksheets.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-marriage-return.test.ts::uses actual canonical household income and transfers marriage repayment once",
+        "tests/engine/federal-marriage-return.test.ts::retains actual ordinary credit when there is no excess advance"
+      ],
+      "implementationNote": "The marriage alternative calculation and its current-year review mapping remain subject to the actual source and readiness gates.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -3693,17 +3790,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8962",
       "specPath": "spec/federal/form-8962-no-advance-allocation.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-8962-no-advance-allocation.test.ts::requires actual zero advances and complete independently bound benchmark sources",
+        "tests/engine/forms/form-8962-no-advance-allocation.test.ts::matches the published Situation3 ratio without using the rounded printed share"
+      ],
+      "implementationNote": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -3713,17 +3813,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8962",
       "specPath": "spec/federal/form-8962-no-advance-overlap.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-8962-no-advance-overlap.test.ts::rejects incomplete duplicate and contradictory full-family monthly sources",
+        "tests/engine/forms/form-8962-no-advance-overlap.test.ts::allocates overlapping original premiums from full family benchmarks once"
+      ],
+      "implementationNote": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -3733,17 +3836,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8962",
       "specPath": "spec/federal/form-8962-overlapping-policies.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-8962-overlapping-policies.test.ts::combines overlapping Situation4 rows before monthly rounding",
+        "tests/engine/forms/form-8962-overlapping-policies.test.ts::uses one actual benchmark per unshared coverage group"
+      ],
+      "implementationNote": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -3772,17 +3878,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8962",
       "specPath": "spec/federal/form-8962-shared-policy-review.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "implementationTestRefs": [
+        "tests/pdf/form8962-shared-policy-review.test.ts::maps actual PartIV and monthly values in saved independent-reader fields"
+      ],
+      "implementationNote": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -3792,17 +3900,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8962",
       "specPath": "spec/federal/form-8962-shared-unshared.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-8962-shared-policy.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-8962-shared-unshared.test.ts::combines actual shared and unshared policy months without another allocation",
+        "tests/engine/forms/form-8962-shared-unshared.test.ts::requires actual unshared classification evidence and complete source identity"
+      ],
+      "implementationNote": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -5585,17 +5696,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/publications/p974",
       "specPath": "spec/federal/marketplace-health-separate-business.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/marketplace-health-premiums.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-marketplace-health-separate-business.test.ts::retains the separate actual business deduction before the historical cap",
+        "tests/engine/forms/marketplace-health-separate-business.test.ts::subtracts the other business deduction without borrowing its earnings"
+      ],
+      "implementationNote": "Separate actual plan owners use the shared owner calculation and source-bound 2025 review mapping.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -6926,17 +7040,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/publications/p974",
       "specPath": "spec/federal/shared-marketplace-health-other-allocations.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/shared-marketplace-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/shared-marketplace-health-other-allocations.test.ts::uses actual default enrollment allocation with independently paid health sources",
+        "tests/engine/forms/shared-marketplace-health-other-allocations.test.ts::uses exact no-advance benchmark allocation without inferring actual cash"
+      ],
+      "implementationNote": "Original shared health-plan sources feed the self-employed deduction; the linked 2025 review mapping validates the recorded calculation audit.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -6946,17 +7063,20 @@
       "taxYear": null,
       "sourceAuthority": "https://www.irs.gov/publications/p974",
       "specPath": "spec/federal/shared-owner-marketplace-health.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/shared-marketplace-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/shared-owner-marketplace-health.test.ts::binds each actual plan and original payment group separately",
+        "tests/engine/forms/shared-owner-marketplace-health.test.ts::rejects missing and balanced conflicting separate-plan sources"
+      ],
+      "implementationNote": "Separate actual plan owners use the shared owner calculation and source-bound 2025 review mapping.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -6966,17 +7086,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/publications/p974",
       "specPath": "spec/federal/shared-unshared-marketplace-health.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/shared-marketplace-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/shared-unshared-marketplace-health.test.ts::retains full unshared originals beside actual allocated health sources",
+        "tests/engine/federal-shared-unshared-marketplace-health.test.ts::coordinates shared and unshared health premiums without double counting"
+      ],
+      "implementationNote": "Original shared health-plan sources feed the self-employed deduction; the linked 2025 review mapping validates the recorded calculation audit.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },

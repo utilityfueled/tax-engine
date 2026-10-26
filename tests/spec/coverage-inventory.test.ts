@@ -3,6 +3,10 @@ import { describe, expect, it } from "vitest";
 
 interface CoverageInventoryEntry {
   key: string;
+  enginePath?: string | null;
+  packetPath?: string | null;
+  implementationTestRefs?: string[];
+  efileBusinessRuleCoverageExists?: boolean;
   packetGenerationExists: boolean;
   status: "supported" | "partial" | "unsupported";
   knownGaps: string[];
@@ -19,6 +23,31 @@ const inventory = JSON.parse(
 ) as CoverageInventory;
 
 describe("coverage inventory", () => {
+  it.each([
+    ["federal/form-1099-q-tuition-account-group", "src/engine/forms/form-1099-q.ts", "src/pdf/mappings/2025/fill-form-1099-q.ts"],
+    ["federal/form-8862-deceased-claimant", "src/engine/forms/form-8862.ts", "src/pdf/mappings/2025/fill-form-8862.ts"],
+    ["federal/form-8962-no-advance-overlap", "src/engine/forms/form-8962-shared-policy.ts", "src/pdf/mappings/2025/fill-form-8962.ts"],
+    ["federal/current-charitable-crypto-handoff", "src/engine/forms/current-charitable-candidates.ts", "src/pdf/mappings/2025/fill-schedule-a.ts"],
+  ])("traces the shared implementation for %s without manufacturing e-file coverage", (key, enginePath, packetPath) => {
+    const entry = inventory.entries.find(candidate => candidate.key === key);
+    expect(entry?.enginePath).toBe(enginePath);
+    expect(entry?.packetPath).toBe(packetPath);
+    expect(entry?.implementationTestRefs?.length).toBeGreaterThan(0);
+    expect(entry?.efileBusinessRuleCoverageExists).toBe(false);
+    expect(entry?.status).toBe("partial");
+    expect(entry?.knownGaps).toContain("Missing e-file and business-rule validation coverage");
+  });
+
+  it("keeps packet absence and unsupported forms explicit after implementation linking", () => {
+    const crypto = inventory.entries.find(candidate => candidate.key === "federal/crypto-similar-property-appraisal");
+    expect(crypto?.enginePath).toBe("src/engine/forms/crypto-lot-matching.ts");
+    expect(crypto?.packetGenerationExists).toBe(false);
+    expect(crypto?.knownGaps).toContain("Missing packet generation or inclusion rule");
+    const estimated = inventory.entries.find(candidate => candidate.key === "federal/form-1040-es");
+    expect(estimated?.status).toBe("unsupported");
+    expect(estimated?.enginePath).toBeNull();
+  });
+
   it("loads the regenerated 2025 coverage inventory", () => {
     expect(inventory.inventoryVersion).toBe(1);
     expect(inventory.purpose).toContain("not legal review, filing qualification, or e-file support");
