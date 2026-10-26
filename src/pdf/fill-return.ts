@@ -35,7 +35,7 @@ import { fillForm8863 } from "./fill-form-8863.js";
 import { fillForm6251 } from "./fill-form-6251.js";
 import { form8949ReviewCalculation, prepareForm8949Review, type PreparedForm8949Review } from "./form-8949-review-context.js";
 import { prepareCodNolReview, type PreparedCodNolReview } from "./cod-nol-review-context.js";
-import { prepareCharitableReview, charitableReviewOriginalSourceInput, requiresCharitableNolReview, type PreparedCharitableReview } from "./charitable-review-context.js";
+import { prepareCharitableReview, charitableReviewOriginalSourceInput, requiresCharitableNolReview, requiresK1CharitableReview, type PreparedCharitableReview } from "./charitable-review-context.js";
 import { fillK1CharitableReview, K1_CHARITABLE_REFERENCE_FILENAME } from "./mappings/2025/k1-charitable-review.js";
 import { hasHistoricalAdoptionSources, prepareAdoptionReview, type PreparedAdoptionReview } from "./adoption-review-context.js";
 import { eicReviewChildren, eicReviewOriginalSourceInput, hasEicReviewSources, prepareEicReview, type PreparedEicReview } from "./eic-review-context.js";
@@ -439,7 +439,7 @@ export async function fillReturn(
     ? options.qbiLossReview ?? prepareQbiLossReview(input) : undefined;
   if (qbiLossReview) buildQbiLossReview(input, result, qbiLossReview);
   if (input.deductionElection === "nonitemized" || result.deductionUsed === "nonitemized") throw new Error("Nonitemized election is available only for 2026 and has no supported review PDF mapping");
-  const charitableReview = input.charitableCarryoverSources || input.k1CharitableSources || requiresCharitableNolReview(input, result) || options.charitableReview
+  const charitableReview = input.charitableCarryoverSources || requiresK1CharitableReview(input, result) || requiresCharitableNolReview(input, result) || options.charitableReview
     ? options.charitableReview ?? prepareCharitableReview(input) : undefined;
   if (charitableReview) charitableReviewOriginalSourceInput(input, result, charitableReview);
   const adoptionReview = hasHistoricalAdoptionSources(input)

@@ -1266,6 +1266,16 @@
         "tests/pdf/education-ordinary-expense-composition.test.ts::binds original ordinary receipts and refund chronology before review output"
       ],
       "note": "Actual ordinary postsecondary receipt qualification, retained refund chronology and credit character use the shared original-source calculation and historical 2025 review summary. No final2026 output, filing qualification, scenario expansion beyond the named method or independent human review is claimed."
+    },
+    {
+      "key": "federal/k1-charitable-at-risk",
+      "enginePath": "src/engine/forms/k1-charitable-at-risk.ts",
+      "packetPath": "src/pdf/mappings/2025/k1-charitable-review.ts",
+      "testRefs": [
+        "tests/engine/federal-k1-charitable-at-risk.test.ts::allocates actual activity deductions after basis without merging suspension ledgers",
+        "tests/pdf/k1-charitable-at-risk-review.test.ts::saves separate original basis at-risk and section170 amounts with source binding"
+      ],
+      "note": "Actual current activity membership and original Form6198 sources permit basis-first deduction allocation with independent known-empty prior at-risk history. Original basis, at-risk and charitable balances stay distinct in review output. This does not qualify a 2026 form or replace independent human review."
     }
   ]
 }

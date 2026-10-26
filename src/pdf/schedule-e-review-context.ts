@@ -1,5 +1,6 @@
 /** Preserve original source validation across render-only redaction.
- * Specs: schedule-e-physical-review.yaml and schedule-e-passive-distribution-review.yaml. */
+ * Specs: schedule-e-physical-review.yaml, schedule-e-passive-distribution-review.yaml,
+ * and k1-charitable-at-risk.yaml. */
 import { createHash } from 'node:crypto';
 import Decimal from 'decimal.js';
 import { calculateFederalTax } from '@/engine/federal.js';
@@ -21,19 +22,23 @@ const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(va
 function calculationDigest(result: TaxReturnResult): string {
  return digest(redactReviewIdentifiers({ taxYear: result.taxYear, filingStatus: result.filingStatus, agi: result.agi,
   scheduleE: result.scheduleE, form8582: result.form8582, schedule1: result.schedule1, form8960: result.form8960,
-  scheduleD: result.scheduleD, passiveDistributionLines: result.allLines.filter(row => row.form === 'K1 Passive Distribution') }));
+  scheduleD: result.scheduleD, k1AtRiskByCharacter: result.carryforwards.k1AtRiskByCharacter,
+  passiveDistributionLines: result.allLines.filter(row => row.form === 'K1 Passive Distribution'),
+  charitableAtRiskLines: result.allLines.filter(row => row.form === 'K1 Charitable At Risk') }));
 }
 export function hasScheduleEReviewSources(input: TaxYearInput): boolean {
  return Boolean(input.royaltyPropertySources || input.k1CharitableSources?.statements?.some(
-  row => row.cashDistribution?.activityCharacter === 'single_passive_business'));
+  row => row.cashDistribution?.activityCharacter === 'single_passive_business'
+   || row.atRisk?.activityAllocation !== undefined));
 }
-/** Retained capital/passive evidence cannot bypass validation by losing its attachment. */
+/** Retained original-source evidence cannot bypass validation by losing its attachment. */
 export function requiresScheduleEReview(input: TaxYearInput, result: TaxReturnResult): boolean {
- return hasScheduleEReviewSources(input) || result.allLines.some(row => row.form === 'K1 Passive Distribution');
+ return hasScheduleEReviewSources(input) || result.carryforwards.k1AtRiskByCharacter !== undefined
+  || result.allLines.some(row => row.form === 'K1 Passive Distribution' || row.form === 'K1 Charitable At Risk');
 }
 /** Tokens stay within the request; no original identifiers are exposed by them. */
 export function prepareScheduleEReview(input: TaxYearInput): PreparedScheduleEReview {
- if (!hasScheduleEReviewSources(input)) throw new Error('Schedule E original royalty or passive distribution sources are required');
+ if (!hasScheduleEReviewSources(input)) throw new Error('Schedule E original royalty, passive distribution, or charitable activity sources are required');
  const calculated = calculateFederalTax(input);
  const passiveDistributions = calculated.scheduleE ? calculateK1PassiveDistributionSources(input, calculated.scheduleE).rows : [];
  const token: PreparedScheduleEReview = Object.freeze({ [brand]: true as const });

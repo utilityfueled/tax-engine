@@ -30,8 +30,16 @@ export function buildGuidedK1Sources(data: K1LossSourcesData | undefined, state:
   const scheduleK1 = packet.activities.map((source, index) => {
     const entered = data.activities?.[index];
     const charitableOriginal = charitable?.originals.get(index);
-    const zeroConfirmed = charitableOriginal ? entered?.allOtherNonCharitableAmountsZeroConfirmed === true
-      && entered.allOtherAmountsZeroConfirmed !== true : entered?.allOtherAmountsZeroConfirmed === true;
+    const otherFields = ['netShortTermCapitalGain', 'netLongTermCapitalGain', 'interestIncome', 'ordinaryDividends', 'qualifiedDividends'] as const;
+    const assignedOtherAmounts = charitableOriginal && otherFields.some(field => !d(charitableOriginal[field]).isZero());
+    const assignment = charitable?.packet.statements?.find(row => row.k1SourceId === `scheduleK1:${index}`)?.atRisk?.activityAllocation;
+    // The original collector supplies each actual separate amount and confirms
+    // unlisted boxes. Preserve the older zero answers; never reinterpret true.
+    const zeroConfirmed = charitableOriginal ? assignedOtherAmounts
+      ? entered?.allOtherAmountsZeroConfirmed === false && entered.allOtherNonCharitableAmountsZeroConfirmed === false
+        && assignment?.sourceFactsConfirmed === true
+      : entered?.allOtherNonCharitableAmountsZeroConfirmed === true && entered.allOtherAmountsZeroConfirmed !== true
+      : entered?.allOtherAmountsZeroConfirmed === true;
     if (!zeroConfirmed || entered?.domesticNonPtpConfirmed !== true
       || (source.entityType === 's_corporation' && entered.noScorpDebtBasisOrElectionConfirmed !== true)) {
       throw new Error('Confirm actual zero other K-1 boxes and the continuing domestic non-PTP source. S-corporation loan basis and elections require separate actual facts.');

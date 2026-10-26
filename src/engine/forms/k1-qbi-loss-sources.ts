@@ -101,11 +101,15 @@ export function validateK1QbiLossSources(input:K1QbiLossSourceInput):ValidatedK1
     names.add(entityName);eins.add(ein);
     if(source.ordinaryBusinessOnlyConfirmed!==true||source.continuingActivityConfirmed!==true||original.isPubliclyTradedPartnership
       ||original.ptpFullyDisposedInTaxableTransaction||original.isForeignPartnership||original.section199APTPIsSST||original.election1367) throw new Error('K1 QBI requires continuing ordinary sources; PTP disposal foreign and other methods are separate');
-    const distribution = charitable?.statements.find(row=>row.k1Index===index)?.distributionGain;
+    const charitableSource = charitable?.statements.find(row=>row.k1Index===index);
+    const distribution = charitableSource?.distributionGain;
     const passiveCapitalGain=distribution?.passiveActivity?distribution.gain:d(0);
     for(const field of ordinaryOnlyZeroFields){
       if(field==='distributions'&&distribution?.passiveActivity) continue;
       if ((field==='charitableCash'||field==='charitableCapitalGain30'||field==='charitableCapitalGain20') && charitable?.statements.some(row=>row.k1Index===index)) continue;
+      // These separately stated items have their own source-bound allocation;
+      // only the original ordinary component below enters QBI.
+      if (charitableSource?.atRiskAllocation && (field==='netShortTermCapitalGain'||field==='netLongTermCapitalGain'||field==='interestIncome'||field==='ordinaryDividends'||field==='qualifiedDividends')) continue;
       const value=d(original[field]);
       if(!value.isFinite()||!value.isZero()) throw new Error(`K1 QBI ordinary-only source conflicts with original ${field}; its separate method is required`);
     }
@@ -157,7 +161,7 @@ export function validateK1QbiLossSources(input:K1QbiLossSourceInput):ValidatedK1
       if(!amount(atRisk[field],`at-risk ${field}`,true).eq(amount(original.form6198[field],`original at-risk ${field}`,true))) throw new Error(`K1 QBI original at-risk ${field} must match its source`);
     }
     const riskForm=original.form6198;
-    if(name(riskForm.activityName)!==entityName||!d(riskForm.gainLossFromDispositions).eq(passiveCapitalGain)||(['otherIncomeGains','otherDeductionsLosses'] as const).some(field=>!d(riskForm[field]).isZero())) throw new Error('K1 QBI actual ordinary at-risk activity has other source income or deductions');
+    if(name(riskForm.activityName)!==entityName||(!charitableSource?.atRiskAllocation && (!d(riskForm.gainLossFromDispositions).eq(passiveCapitalGain)||(['otherIncomeGains','otherDeductionsLosses'] as const).some(field=>!d(riskForm[field]).isZero())))) throw new Error('K1 QBI actual ordinary at-risk activity has other source income or deductions');
     if(source.sameRegularAmtTreatmentConfirmed!==true) throw new Error('K1 QBI requires independent same regular/AMT source treatment; differences need their separate method');
     if(source.sameOwnerHistoryConfirmed!==true) throw new Error('K1 QBI actual prior history must retain the same owner');
     const prior=amount(source.priorPassiveLoss,'prior passive opening',true,true);

@@ -512,11 +512,14 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
     }
 
     // ── Tier 2: At-risk limitation (IRC §465) ──
+    const charitableRisk = charitable?.statements.find(row => row.k1Index === k1Index)?.atRiskAllocation;
+    if (charitableRisk) audit.merge(charitableRisk.worksheet.lines);
     const {
       netAmount: totalK1Income,
       atRiskAmount,
       suspendedAtRiskLoss,
-    } = applyAtRiskLimitation(k1, basisAdjustedAmount, audit);
+    } = charitableRisk ? { netAmount: charitableRisk.ordinaryAmount, atRiskAmount: charitableRisk.worksheet.amountAtRisk,
+      suspendedAtRiskLoss: charitableRisk.ordinarySuspended.negated() } : applyAtRiskLimitation(k1, basisAdjustedAmount, audit);
 
     let nonpassiveIncome = new Decimal(0);
     let nonpassiveLoss = new Decimal(0);

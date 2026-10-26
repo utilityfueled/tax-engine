@@ -66,6 +66,12 @@ export function requiresCharitableNolReview(input: TaxYearInput, result?: TaxRet
     || requiresCurrentCharitableOriginReview(input, result);
 }
 
+/** Retained basis/activity allocation cannot be detached from its originals. */
+export function requiresK1CharitableReview(input: TaxYearInput, result?: TaxReturnResult): boolean {
+  return input.k1CharitableSources !== undefined || result?.carryforwards.k1AtRiskByCharacter !== undefined
+    || !!result?.allLines.some(row => row.form === 'K1 Charitable Return' || row.form === 'K1 Charitable At Risk');
+}
+
 /** Local only; never serialize a token or accept one from a client. */
 export function prepareCharitableReview(input: TaxYearInput): PreparedCharitableReview {
   if (input.charitableCarryoverSources) validateCharitableCarryoverSources(input);
@@ -106,6 +112,9 @@ export function assertCharitableReviewSource(input: TaxYearInput, token?: Prepar
 /** A private clone is used only for source validation, never for rendering IDs.
  * The retained output is compared with an independent original calculation. */
 export function charitableReviewOriginalSourceInput(input: TaxYearInput, result: TaxReturnResult, token?: PreparedCharitableReview): TaxYearInput {
+  if (requiresK1CharitableReview(input, result) && !input.k1CharitableSources) {
+    throw new Error('K1 charitable review requires its original source attachment and activity history');
+  }
   if (requiresPriorCharitableNolReview(input, result) && !input.netOperatingLoss?.alternativeTax?.charitableCarryoverHistory?.alternativeCarryoverSources) {
     throw new Error("Prior charitable review requires its retained original independent history sources");
   }

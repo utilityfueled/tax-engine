@@ -6,6 +6,7 @@ import { updateK1CharitableSources } from '@/lib/guided-k1-charitable-sources';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
 import { K1CashDistributionDetails } from './k1-cash-distribution-details';
+import { K1CharitableAtRiskDetails } from './k1-charitable-at-risk-details';
 
 type Field = readonly [string, string, 'text' | 'money' | 'signed' | 'boolean' | readonly (readonly [string, string])[]];
 function Fields<T extends object>({ prefix, data, fields, onChange }: { prefix: string; data?: T; fields: readonly Field[]; onChange: (patch: Partial<T>) => void }) {
@@ -114,7 +115,7 @@ function CharitableStatement({ index, data, activities, onChange }: { index: num
       ['originalSourceReference', 'original statement reference', 'text'], ['allUnlistedAmountsZeroConfirmed', 'all unlisted original amounts are zero', 'boolean'],
       ['domesticContinuingNonPtpConfirmed', 'continuing domestic activity without PTP or disposal', 'boolean'], ['sameRegularAmtTreatmentConfirmed', 'regular and AMT treatment are the same', 'boolean'],
     ]} onChange={change} />
-    {data.link === 'qbi' && <p className="guided-hint">Select the same original activity already recorded in adjustments. Confirm its separate noncharitable-zero answer there; the original all-other-boxes-zero answer cannot describe a positive charitable contribution.</p>}
+    {data.link === 'qbi' && <p className="guided-hint">Select the same original activity already recorded in adjustments. Answer the separate noncharitable-zero question from its original boxes. If the attached original has capital or investment income, record those actual amounts and the activity assignment below and answer that zero question No. The original all-other-boxes-zero answer cannot describe a positive charitable contribution.</p>}
     <Original prefix={prefix} data={data.original} onChange={original => change({ original })} />
     <Basis prefix={prefix} data={data.basis} onChange={basis => change({ basis })} />
     <K1CashDistributionDetails prefix={prefix} data={data.cashDistribution} entityType={data.original?.entityType} onChange={cashDistribution => change({ cashDistribution })} />
@@ -138,7 +139,8 @@ function CharitableStatement({ index, data, activities, onChange }: { index: num
       <Fields prefix={`${prefix} at risk`} data={risk} fields={[...evidence, ['simplifiedMethodEligible', 'simplified method eligibility established', 'boolean'],
         ['allActivityDeductionsIncluded', 'all activity deductions included', 'boolean'], ['computation', 'actual computation', [['first_year', 'First year'], ['subsequent_year', 'Subsequent year']]], ...capacity,
       ]} onChange={patch => change({ atRisk: { ...risk, ...patch } })} />
-      <p className="guided-hint">These four source amounts must match the original Form 6198. The return verifies that the actual capacity covers all required deductions; do not enter a calculated allowance.</p>
+      <p className="guided-hint">These four source amounts must match the original Form 6198. The return verifies capacity against the original items. If capacity does not cover the deductions, the actual activity assignment below is required; do not enter a calculated allowance.</p>
+      <K1CharitableAtRiskDetails prefix={prefix} data={risk?.activityAllocation} onChange={activityAllocation => change({ atRisk: { ...risk, activityAllocation } })} />
       <Fields prefix={`${prefix} prior at-risk history`} data={risk?.priorLossHistory} fields={evidence} onChange={patch => change({ atRisk: { ...risk, priorLossHistory: { ...risk?.priorLossHistory, ...patch } } })} />
       {risk?.priorLossHistory?.vintages === undefined && <p role="status">The preceding-year at-risk vintage list is unknown.</p>}
       {risk?.priorLossHistory?.vintages?.length === 0 && <p>Explicitly recorded: no prior at-risk vintages.</p>}
@@ -154,7 +156,7 @@ export function K1CharitableSourceDetails({ data, activities, onChange }: { data
   const change = (patch: Partial<K1CharitableSourcesData>) => onChange(updateK1CharitableSources(data ?? {}, patch));
   return <details className="guided-expand"><summary className="guided-expand-trigger">Charitable contributions reported on Schedule K-1</summary><div className="guided-expand-body">
     <p className="guided-hint">Use each original partnership or S-corporation K-1, attached gift receipts, basis history and Form 6198 sources. Keep these amounts separate from gifts you made directly and from charitable percentage-limit carryovers. Passive activities and ordinary losses also need the linked activity and independent histories in adjustments.</p>
-    <p className="guided-hint">Current ordinary cash and appreciated-stock gifts are supported with complete sources and nonbinding at-risk capacity. Earlier charitable basis releases use their original histories. A cash distribution above basis needs the original attachment below, with investment-only assets or a complete single passive business report and linked histories. Other property, differing AMT treatment, prior at-risk releases, other business distributions and some 2026 prior-basis timing require separate methods; their entered facts stay saved.</p>
+    <p className="guided-hint">Current ordinary cash and appreciated-stock gifts are supported with complete sources and actual at-risk records. A binding limitation also requires the original activity assignment. Earlier charitable basis releases use their original histories. A cash distribution above basis needs the original attachment below, with investment-only assets or a complete single passive business report and linked histories. Other property, differing AMT treatment, prior at-risk releases, other business distributions and some 2026 prior-basis timing require separate methods; their entered facts stay saved.</p>
     {!data ? <button type="button" className="utility-button" onClick={() => onChange({})}>Add K-1 charitable sources</button> : <>
       <Fields prefix="K-1 charitable packet" data={data} fields={[...evidence, ['allK1CharitableSourcesIncluded', 'all original charitable K-1 attachments included', 'boolean']]} onChange={change} />
       {data.statements === undefined && <p role="status">The original charitable K-1 list is unknown.</p>}

@@ -14,7 +14,7 @@ export function buildK1CharitableReview(input: TaxYearInput, result: TaxReturnRe
         throw new Error('K1 charitable review requires original attached sources');
     const rows = [
         `Tax year ${result.taxYear}. Original K1 charitable contribution review.`,
-        'Basis suspensions are separate from section170 charitable carryovers. Do not add these amounts as deductions.',
+        'Basis and at-risk suspensions are separate from section170 charitable carryovers. Do not add these amounts as deductions.',
         `Schedule A candidate charitable amount: $${result.scheduleA?.charitableTotal.toFixed() ?? '0'}`,
         `Selected deduction method: ${result.deductionUsed}`,
         `Selected section170 charitable carryforward: $${result.carryforwards.charitableContributions.toFixed()}`,
@@ -24,6 +24,16 @@ export function buildK1CharitableReview(input: TaxYearInput, result: TaxReturnRe
         if (!charity)
             throw new Error('K1 charitable review requires completed basis sources');
         rows.push(`Statement ${statement.k1Index + 1}, ${original.scheduleK1[statement.k1Index].accountHolder === 'spouse' ? 'spouse' : 'primary taxpayer'}`, `Conservative at-risk requirement: $${statement.nonbindingRiskRequired.toFixed()}; actual capacity: $${statement.amountAtRisk.toFixed()}`, `Ordinary amount after basis: $${statement.ordinaryAmount.toFixed()}`, `Short-term capital amount after basis: $${statement.shortTermAmount.toFixed()}`, `Long-term capital amount after basis: $${statement.longTermAmount.toFixed()}`);
+        const risk = statement.atRiskAllocation;
+        if (risk) rows.push(
+            'Actual activity assignment verified against the original Form6198 item statement.',
+            `Activity deductions after basis: $${risk.totalDeductions.toFixed()}; retained activity income: $${risk.totalIncome.toFixed()}`,
+            `Disallowed activity loss: $${risk.disallowedLoss.toFixed()}; each deduction retains its proportional share.`,
+            `Ordinary amount after at risk: $${risk.ordinaryAmount.toFixed()}; Ordinary suspended at risk: $${risk.ordinarySuspended.toFixed()}`,
+            `Short-term capital amount after at risk: $${risk.shortTermAmount.toFixed()}; Short-term capital suspended at risk: $${risk.shortTermSuspended.toFixed()}`,
+            `Long-term capital amount after at risk: $${risk.longTermAmount.toFixed()}; Long-term capital suspended at risk: $${risk.longTermSuspended.toFixed()}`,
+            'At-risk suspensions retain their original source and character; these are not new section170 carryovers.',
+        );
         const distribution = statement.distributionGain;
         if (distribution) rows.push(
             `Actual cash distribution: $${distribution.cash.toFixed()}; Basis before distribution: $${distribution.basisBeforeDistribution.toFixed()}`,
@@ -48,6 +58,9 @@ export function buildK1CharitableReview(input: TaxYearInput, result: TaxReturnRe
         for (const [index, record] of charity.records.entries()) {
             const label = record.category === 'cash_60' ? 'public cash' : record.category === 'capital_gain_30' ? 'public capital property' : 'other capital property';
             rows.push(`Contribution ${index + 1}: ${label}; original year ${record.originTaxYear}; ${record.current ? 'current entity-year source' : 'prior basis source'}`, `Original contribution share: $${record.contributionShare.toFixed()}; original allocated basis: $${record.originalBasis.toFixed()}`, `Basis previously allowed: $${record.basisPreviouslyAllowed.toFixed()}; basis allowed this year: $${record.basisAllowed.toFixed()}`, `Current appreciation outside the basis limit: $${record.appreciationExempt.toFixed()}`, `Available after basis: $${record.availableAfterBasis.toFixed()}; Basis suspended: $${record.basisSuspended.toFixed()}`);
+            const allocated = risk?.charitable.find(row => row.sourceId === record.sourceId);
+            if (risk && !allocated) throw new Error('K1 charitable review requires every original at-risk allocation');
+            if (allocated) rows.push(`Available for section170: $${allocated.allowed.toFixed()}; At-risk suspended: $${allocated.suspended.toFixed()}`);
         }
     }
     return rows;

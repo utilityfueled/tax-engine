@@ -23,6 +23,12 @@ export const K1CharitableReturnSourcesSchema = z.object({
             simplifiedMethodEligible: z.boolean().optional(), allActivityDeductionsIncluded: z.boolean().optional(),
             computation: z.enum(['first_year', 'subsequent_year']).optional(),
             adjustedBasisAtEffectiveDate: amount, priorYearAmountAtRisk: amount, currentYearIncreases: amount, currentYearDecreases: amount,
+            /** Original item/activity assignment, not a selected allowance or calculated fraction. */
+            activityAllocation: z.object({
+                sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+                allOriginalItemsBelongToActivityConfirmed: z.boolean().optional(),
+                charitableSourceIds: z.array(z.string()).optional(),
+            }).optional(),
             priorLossHistory: z.object({ sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
                 vintages: z.array(z.object({ taxYear: z.number().int().optional(), amount })).optional() }).optional(),
         }).optional(),

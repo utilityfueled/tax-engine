@@ -94,7 +94,10 @@ export function calculateScheduleD(
 
   // ── Short-term (Line 7) ────────────────────────────────
   const k1ShortTerm = input.scheduleK1.reduce(
-    (acc, k, index) => acc.plus(k1Charitable?.statements.find(row => row.k1Index === index)?.shortTermAmount ?? d(k.netShortTermCapitalGain)),
+    (acc, k, index) => {
+      const source = k1Charitable?.statements.find(row => row.k1Index === index);
+      return acc.plus(source?.atRiskAllocation?.shortTermAmount ?? source?.shortTermAmount ?? d(k.netShortTermCapitalGain));
+    },
     new Decimal(0)
   );
   // K-1 Form 1041 Box 3: short-term capital gain from estates/trusts
@@ -143,7 +146,10 @@ export function calculateScheduleD(
 
   // ── Long-term (Line 15) ────────────────────────────────
   const k1LongTerm = input.scheduleK1.reduce(
-    (acc, k, index) => acc.plus(k1Charitable?.statements.find(row => row.k1Index === index)?.longTermAmount ?? d(k.netLongTermCapitalGain)),
+    (acc, k, index) => {
+      const source = k1Charitable?.statements.find(row => row.k1Index === index);
+      return acc.plus(source?.atRiskAllocation?.longTermAmount ?? source?.longTermAmount ?? d(k.netLongTermCapitalGain));
+    },
     new Decimal(0)
   );
   // K-1 Form 1041 Box 4a: long-term capital gain from estates/trusts

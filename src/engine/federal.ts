@@ -4537,6 +4537,12 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
           ? regularCharity.carryforward.gt(0)
             ? [{ taxYear: regularCharityYear, category: regularCharity.category, medium: regularCharity.medium, amount: regularCharity.carryforward }] : []
           : schedA.charitableTreatment?.carryforwards ?? schedA.charitableCarryforwardByYear,
+        ...(k1CharitableSources?.statements.some(row => row.atRiskAllocation) ? { k1AtRiskByCharacter: k1CharitableSources.statements.flatMap(row => {
+          const risk = row.atRiskAllocation;
+          return risk ? [{ k1SourceId: `scheduleK1:${row.k1Index}`, accountHolder: row.accountHolder, taxYear: year,
+            ordinary: risk.ordinarySuspended, shortTermCapital: risk.shortTermSuspended, longTermCapital: risk.longTermSuspended,
+            charitable: risk.charitable }] : [];
+        }) } : {}),
         ...(determinedAlternativeCharity ? {
           amtCharitableContributions: determinedAlternativeCharity.carryforward,
           amtCharitableContributionsByYear: determinedAlternativeCharity.carryforwards.map(({taxYear, category, medium, amount}) => ({taxYear, category, medium, amount})),

@@ -4,7 +4,7 @@ taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i1065sk1"
 retrievedAt: "2026-10-26"
 notes: |
-  Intake only; the existing source binder computes basis and nonbinding at-risk
+  Intake only; the existing source binder computes basis and source-bound at-risk
   reconciliation, then the canonical return applies charitable limits. Original
   partnership box13 or shareholder box12 A/E/F amounts remain separate from
   direct donations and section170 carryovers. Actual gifts, basis suspensions,
@@ -14,13 +14,18 @@ notes: |
   https://www.irs.gov/instructions/i1120ssk
   https://www.irs.gov/instructions/i6198
   Original cash and appreciated-stock methods use the existing reviewed source
-  contract. Excess distributions, binding465, unsupported activity boxes and
+  contract. Unrepresented distributions, unsupported activity boxes and
   positive2026 prior-basis release remain explicit source-method boundaries;
   actual records stay saved. Unknown fields are not zero or affirmative answers.
   An explicit link to an existing QBI activity retains one original K1/index.
   Its original statements, basis and risk sources must agree. The old assertion
   that all other boxes are zero is never reinterpreted as allowing charity.
   A distinct actual noncharitable-box assertion permits the linked source route.
+  When the original linked attachment records separate capital/investment amounts,
+  both old zero assertions must be explicitly false and the actual activity
+  assignment must be confirmed. Each separate amount and unlisted-box answer is
+  supplied by the original charitable collector; no legacy zero is reinterpreted.
+  See k1-charitable-at-risk.yaml for binding465 source controls and outputs.
   Passive statements use that linked route's independently confirmed prior469
   history; an independent charitable attachment cannot establish no prior469 loss.
   Full2026 and filing readiness remain closed.

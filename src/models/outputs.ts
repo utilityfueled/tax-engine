@@ -183,6 +183,10 @@ export interface TaxReturnResult {
     charitableContributions: Decimal;
     /** Per-year charitable contribution carryforward entries after FIFO reconciliation with 5-year expiration */
     charitableContributionsByYear: Array<{ taxYear: number; category?: import("@/engine/forms/charitable-contribution-worksheet.js").CharitableCategory; medium?: "cash" | "noncash"; amount: Decimal }>;
+    /** Derived section465 suspensions, distinct from entity basis and section170 carry. */
+    k1AtRiskByCharacter?: Array<{ k1SourceId: string; accountHolder: "primary" | "spouse"; taxYear: number;
+      ordinary: Decimal; shortTermCapital: Decimal; longTermCapital: Decimal;
+      charitable: import("@/engine/forms/k1-charitable-at-risk.js").K1CharitableRiskRecord[] }>;
     /** Separately reconciled current charitable carry using actual independent alternative NOL and charity histories. */
     amtCharitableContributions?: Decimal;
     amtCharitableContributionsByYear?: Array<{ taxYear: number; category?: import("@/engine/forms/charitable-contribution-worksheet.js").CharitableCategory; medium?: "cash" | "noncash"; amount: Decimal }>;

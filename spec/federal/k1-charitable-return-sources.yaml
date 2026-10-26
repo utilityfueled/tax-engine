@@ -19,18 +19,24 @@ notes: |
   https://www.irs.gov/instructions/i1120ssk
   https://www.irs.gov/instructions/i6198
   Section469 excludes charity from8582 but does not establish a465 exemption.
-  This source cohort conservatively requires actual simplified6198 capacity
+  Without an actual activity-assignment attachment, this source cohort requires
+  actual simplified6198 capacity
   sufficient for every basis-allowed deduction plus the entire charity, including
   appreciation, with independent known-empty prior465 history. Therefore either
-  activity classification leaves the same allowance. A binding465 allocation,
-  special gain/179/4952 deductions, royalties and unrepresented activity methods
+  activity classification leaves the same allowance. The optional source-bound
+  current activity assignment in k1-charitable-at-risk.yaml reconciles every
+  actual item and gift ID, then allocates a binding465 loss over deductions after
+  basis while retaining all income. Independent prior465 history is still known
+  empty; positive historical character/release is separate internal work.
+  Special gain/179/4952 deductions, royalties and unrepresented activity methods
   remain separate. Positive prior ordinary basis release requires independent
   QBI-history work; original prior charitable/property basis can be retained.
   Actual recipient class, qualification, original stock holding dates, FMV/basis,
   Box13/12 A/E/F and direct source IDs must reconcile. No invented valuation,
   cash source, public recipient, prior history or affirmative confirmation.
   For170(p), current entity-year cash uses actual DAF/supporting answers and only
-  the basis-allowed amount. Reg1.702-1(a)(4) treats partnership-year contributions
+  the amount remaining after basis and any actual activity465 allocation.
+  Reg1.702-1(a)(4) treats partnership-year contributions
   as paid by the partner, with the706 inclusion year; Reg1.1366-1(a)(1)/(2)(iii)
   likewise includes the separately stated corporation-year contribution in the
   shareholder year. This source-derived fiscal-year application is not a

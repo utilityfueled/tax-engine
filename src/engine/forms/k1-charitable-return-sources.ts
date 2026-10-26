@@ -6,6 +6,7 @@ import type { CalculatedLine } from '@/models/outputs.js';
 import type { CharitableContributionWorksheetInput } from './charitable-contribution-worksheet.js';
 import { calculatePartnerBasisSchedule, type PartnerBasisScheduleResult } from './partner-basis-schedule.js';
 import { calculateForm6198 } from './form-6198.js';
+import { calculateK1CharitableAtRisk, type K1CharitableAtRiskResult } from './k1-charitable-at-risk.js';
 import { calculateK1CashDistributionGain, type K1CashDistributionGain } from './k1-cash-distribution-gain.js';
 import { resolveCharitableRecipient } from '@/utils/charitable-recipient.js';
 import { d, sum } from '@/utils/decimal.js';
@@ -28,6 +29,7 @@ export interface K1CharitableReturnInput {
 }
 export interface K1CharitableStatementResult {
     k1Index: number;
+    accountHolder: 'primary' | 'spouse';
     basis: PartnerBasisScheduleResult;
     distributionGain?: K1CashDistributionGain;
     nonbindingRiskRequired: Decimal;
@@ -35,6 +37,7 @@ export interface K1CharitableStatementResult {
     ordinaryAmount: Decimal;
     shortTermAmount: Decimal;
     longTermAmount: Decimal;
+    atRiskAllocation?: K1CharitableAtRiskResult;
 }
 export interface K1CharitableReturnResult {
     sourceFactsVerified: true;
@@ -110,6 +113,8 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
             if (key !== 'charitable' && !d(value).isZero())
                 throw new Error('K1 charitable prior noncharitable basis releases require their independent character and QBI history method');
         const basis = calculatePartnerBasisSchedule(k1, { taxpayer: input.taxpayer, sources: source.basis });
+        if (k1.accountHolder !== 'primary' && k1.accountHolder !== 'spouse')
+            throw new Error('K1 charitable original account holder is unknown');
         if (source.cashDistribution) reconcileDistributionOwnerTreatment(input, k1);
         const distributionGain = calculateK1CashDistributionGain(k1, basis, source.basis, source.cashDistribution);
         if (distributionGain?.passiveActivity && !input.qbiLossSources?.activities?.some(row => row.k1SourceId === source.k1SourceId))
@@ -120,6 +125,7 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
         if (!Array.isArray(source.receipts) || source.receipts.length !== charity.records.length)
             throw new Error('K1 charitable requires every original recipient receipt exactly once');
         const receiptIds = new Set<string>();
+        const receiptTreatment = new Map<string, { key: keyof typeof amounts; eligibleCurrentCash: boolean }>();
         for (const row of charity.records) {
             const receipt: Receipt | undefined = source.receipts.find(item => item.basisSourceId === row.sourceId);
             if (!receipt || receiptIds.has(row.sourceId))
@@ -142,13 +148,14 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
             if (year === 2026 && !row.current && row.availableAfterBasis.gt(0))
                 throw new Error('K1 charitable prior-basis release in2026 requires its separate section170(p) timing and floor/carry-year method');
             if (row.category === 'cash_60') {
-                amounts.cashPublic = amounts.cashPublic.plus(row.availableAfterBasis);
+                let eligibleCurrentCash = false;
                 if (year === 2026) {
                     if (typeof receipt.donorAdvisedFund !== 'boolean' || typeof receipt.supportingOrganization !== 'boolean')
                         throw new Error('K1 charitable cash recipient qualification is unknown');
                     if (row.current && !receipt.donorAdvisedFund && !receipt.supportingOrganization)
-                        nonitemizedEligibleCash = nonitemizedEligibleCash.plus(row.availableAfterBasis);
+                        eligibleCurrentCash = true;
                 }
+                receiptTreatment.set(row.sourceId, { key: 'cashPublic', eligibleCurrentCash });
             }
             else {
                 const acquired = date(receipt.acquisitionDate, 'stock acquisition date');
@@ -168,7 +175,7 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
                 if (!qualifiedValue.eq(row.contributionShare))
                     throw new Error('K1 charitable original property value basis and qualification must reconcile');
                 const key = code === 'E' ? 'capitalGainPublic' : 'capitalGainPrivate';
-                amounts[key] = amounts[key].plus(row.availableAfterBasis);
+                receiptTreatment.set(row.sourceId, { key, eligibleCurrentCash: false });
             }
         }
         if (source.receipts.some(row => !row.basisSourceId || !receiptIds.has(row.basisSourceId)) || new Set(source.receipts.map(row => row.basisSourceId)).size !== source.receipts.length)
@@ -214,17 +221,48 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
             throw new Error('K1 charitable at-risk other deductions contain an unreconciled source');
         const nonbindingRiskRequired = basis.totalAllowedLosses.minus(charity.basisAllowed).plus(allCharity);
         const amountAtRisk = calculateForm6198(form).amountAtRisk;
-        if (amountAtRisk.lt(nonbindingRiskRequired))
+        let atRiskAllocation: K1CharitableAtRiskResult | undefined;
+        if (risk.activityAllocation !== undefined) {
+            const assignment = risk.activityAllocation;
+            if (assignment.sourceTaxYear !== year || assignment.sourceFactsConfirmed !== true || assignment.allOriginalItemsBelongToActivityConfirmed !== true)
+                throw new Error('K1 charitable at-risk allocation requires actual confirmed activity assignment');
+            text(assignment.sourceReference, 'at-risk activity assignment reference');
+            const ids = assignment.charitableSourceIds;
+            if (!Array.isArray(ids) || ids.length !== receiptIds.size || new Set(ids).size !== ids.length || ids.some(id => !receiptIds.has(id)))
+                throw new Error('K1 charitable at-risk activity assignment must identify every original charitable source exactly once');
+            if (!d(form.otherDeductionsLosses).eq(allCharity))
+                throw new Error('K1 charitable at-risk activity line4 must include all assigned charitable deductions after basis');
+            if (!d(k1.guaranteedPayments).isZero())
+                throw new Error('K1 charitable at-risk guaranteed payment assignment requires its separate original activity method');
+            if (k1.isPassiveActivity && (!d(k1.netShortTermCapitalGain).isZero() || !d(k1.netLongTermCapitalGain).isZero()))
+                throw new Error('K1 charitable passive capital items require their separate original character source');
+            atRiskAllocation = calculateK1CharitableAtRisk({ form, ordinaryAmount, shortTermAmount, longTermAmount,
+                distributionGain: distributionGain?.gain ?? d(0), charitable: charity.records.map(row => {
+                    const receipt = source.receipts?.find(item => item.basisSourceId === row.sourceId);
+                    if (!receipt?.contributionDate) throw new Error('K1 charitable at-risk allocation requires the original gift date');
+                    return { sourceId: row.sourceId, basisOriginTaxYear: row.originTaxYear, category: row.category,
+                        contributionDate: receipt.contributionDate, amountAfterBasis: row.availableAfterBasis };
+                }) });
+            audit.merge(atRiskAllocation.lines.map(line => ({ ...line, line: `${line.line}-${index + 1}` })));
+        }
+        else if (amountAtRisk.lt(nonbindingRiskRequired))
             throw new Error('K1 charitable nonbinding at-risk capacity must cover all basis-allowed deductions and full charitable value');
+        for (const row of charity.records) {
+            const treatment = receiptTreatment.get(row.sourceId);
+            if (!treatment) throw new Error('K1 charitable original receipt treatment is missing');
+            const available = atRiskAllocation?.charitable.find(item => item.sourceId === row.sourceId)?.allowed ?? row.availableAfterBasis;
+            amounts[treatment.key] = amounts[treatment.key].plus(available);
+            if (treatment.eligibleCurrentCash) nonitemizedEligibleCash = nonitemizedEligibleCash.plus(available);
+        }
         if (d(k1.ordinaryIncome).lt(0) && !input.qbiLossSources?.activities?.some(row => row.k1SourceId === source.k1SourceId))
             throw new Error('K1 charitable ordinary loss requires its independent actual QBI source history');
-        audit.record('K1 Charitable Return', `source-${index + 1}`, 'Original attached charity after basis and nonbinding activity proof', allCharity, 'Separate charity; no passive-loss deduction or taxpayer-entered final allowance', {
+        audit.record('K1 Charitable Return', `source-${index + 1}`, 'Original attached charity after basis and actual activity proof', allCharity, 'Separate charity; no passive-loss deduction or taxpayer-entered final allowance', {
             'Charitable basis allowed': charity.basisAllowed, 'Appreciation outside basis limit': charity.appreciationExempt, 'Charitable basis suspended': charity.basisSuspended,
             'Conservative at-risk requirement': nonbindingRiskRequired, 'Actual amount at risk': amountAtRisk,
             'Ordinary amount after basis': ordinaryAmount, 'Short-term amount after basis': shortTermAmount, 'Long-term amount after basis': longTermAmount,
         });
         if (distributionGain) audit.merge(distributionGain.lines.map(line => ({ ...line, line: `${line.line}-${index + 1}` })));
-        return { k1Index: index, basis, distributionGain, nonbindingRiskRequired, amountAtRisk, ordinaryAmount, shortTermAmount, longTermAmount };
+        return { k1Index: index, accountHolder: k1.accountHolder, basis, distributionGain, nonbindingRiskRequired, amountAtRisk, ordinaryAmount, shortTermAmount, longTermAmount, atRiskAllocation };
     });
     if (input.scheduleK1.some((row, index) => needsSource(row) && !seen.has(index)))
         throw new Error('K1 charitable complete packet omits an actual current or prior basis source');
