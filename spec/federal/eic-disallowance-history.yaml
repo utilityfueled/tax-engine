@@ -1,0 +1,86 @@
+form: "EIC disallowance history"
+fullName: "Actual separate-filer denial, filing and recertification history"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p596"
+notes: |
+  Retrieved 2026-10-26. IRC32(k), through PL119-124 at
+  https://uscode.house.gov/us/usc/119-124/t26/s32/; 26CFR1.32-3(a)-(f),
+  https://www.ecfr.gov/current/title-26/section-1.32-3; final December2025
+  https://www.irs.gov/instructions/i8862 and Pub596 chapter5 govern this source
+  prerequisite. A return still being prepared uses its actual preparation-as-of
+  date and history reviewed through that date, without inventing a filing. An
+  already-filed claim uses its actual filing date, independently of the later
+  source review date. The two statuses and dates cannot substitute for one
+  another. Both remain separate from the denied return's tax year, original
+  filing date, assessment and final determination.
+  Deficiency assessment triggers recertification. An ordinary math correction
+  does not, but omission of an already-required8862 does not erase its cause.
+  Each joint filer supplies their own identity and complete history, including
+  an explicitly empty list. Reg1.32-3(e) includes unresolved pre-marriage denial.
+  Original notice years are source records, not an eligibility override:
+  https://www.irs.gov/individuals/understanding-your-cp79a-notice says the credit
+  cannot be claimed until the year shown on that notice. The actual notice's
+  first eligible year and statutory2/10-year duration determine the ordered
+  range. Supported ordinary chronology independently reconciles that range.
+  Ordinary chronology here means an original return filed in the following
+  calendar year, a determination in that year or the next, and a complete,
+  consecutive list of intervening original returns filed before determination.
+  This bounded derivation follows Pub596 examples3-5. Later/out-of-order cases
+  require an actual controlling notice; missing/conflicting records and active
+  appeals remain named methods, never inferred ban years. No wall clock is used.
+  A later IRS allowance clears recertification only for actual linked denials,
+  after properly supplied8862 or other IRS-required documents. Active statutory
+  bans remain separate. The child-only exception uses actual qualifying-child
+  presence, not the count of SSN-eligible children used to calculate the credit.
+  This source resolver returns required8862 status, not completed8862 or final
+  EIC eligibility. Current8862 source facts, canonical transfer, guide and PDF
+  are separate follow-through; no readiness gate is opened by this prerequisite.
+  Both actual histories reconcile before current exceptions are considered.
+  An active ban on either filer already bars a joint claim, so an unknown
+  current child-only exception cannot be required to establish that zero.
+lines:
+  - line: "history"
+    description: "Actual complete history is distinct from an omitted saved record"
+    formula: "Bind current year, claim date, each required owner's identity, and confirmed complete denial/allowance lists; omission remains unknown"
+    irsRef: "26CFR1.32-3(a),(e); actual source contract"
+    testRef: "tests/engine/forms/eic-disallowance-history.test.ts::keeps absent history unknown and binds actual empty histories to each filer"
+  - line: "assessment"
+    description: "Recertification starts with actual deficiency assessment before the claim"
+    formula: "Unresolved deficiency assessed on or before claim date requires8862, except actual child-only denial with no qualifying child"
+    irsRef: "26CFR1.32-3(b),(c); Pub596 chapter5 examples1/2"
+    testRef: "tests/engine/forms/eic-disallowance-history.test.ts::matches the published assessment timing and child-only exception examples"
+  - line: "ban"
+    description: "Actual determination and filing chronology determine barred tax years"
+    formula: "Reckless duration2; fraud duration10; reconcile actual notice range with supported complete original-return chronology"
+    irsRef: "IRC32(k)(1); Pub596 chapter5 examples3-5; CP79A guidance"
+    testRef: "tests/engine/forms/eic-disallowance-history.test.ts::matches published two-year and ten-year bans including the later-filed example"
+  - line: "recertification"
+    description: "Actual later IRS allowance and omission-of8862 records stay linked"
+    formula: "Clear only a linked earlier denial after actual required documents and later allowance; math correction or missing8862 never fabricates clearance"
+    irsRef: "26CFR1.32-3(a),(c),(d); i8862 Exceptions; Pub596 omission of Form8862"
+    testRef: "tests/engine/forms/eic-disallowance-history.test.ts::requires actual linked later allowance and preserves the omitted-form requirement"
+  - line: "sourceConflicts"
+    description: "Conflicting or incomplete original source records do not establish eligibility"
+    formula: "Reject duplicate identities/events, unknown confirmations/dates/conduct, conflicting notice years, and unsupported unresolved chronology"
+    irsRef: "26CFR1.32-3(c); source conservation boundary"
+    testRef: "tests/engine/forms/eic-disallowance-history.test.ts::rejects missing chronology and conflicting original notice or owner records without mutation"
+  - line: "joint"
+    description: "A spouse's unresolved pre-marriage history applies to the joint claim"
+    formula: "Combine both individually validated histories; either active ban bars the joint claim and either unresolved denial requires8862"
+    irsRef: "26CFR1.32-3(e); IRC32(k)"
+    testRef: "tests/engine/forms/eic-disallowance-history.test.ts::retains a spouses unresolved denial independently of the other filers allowance"
+  - line: "datedResolution"
+    description: "Known notice and later omitted-form records must reconcile with finality and allowance dates"
+    formula: "An actual ban notice needs actual final determination; an earlier allowance does not resolve a later contradictory omitted8862 record"
+    irsRef: "IRC32(k);26CFR1.32-3(c),(d); actual source chronology"
+    testRef: "tests/engine/forms/eic-disallowance-history.test.ts::requires actual finality and a later resolution of contradictory omitted-form records"
+  - line: "claimStatus"
+    description: "An actual preparation review is distinct from a previously filed claim"
+    formula: "Use the confirmed preparation-as-of date for an unfiled return or the actual filing date for a filed claim; reject missing status, mixed dates and incomplete review periods"
+    irsRef: "26CFR1.32-3(a)-(c); actual preparation and filing source distinction"
+    testRef: "tests/engine/forms/eic-disallowance-history.test.ts::distinguishes an actual preparation review from a previously filed claim"
+  - line: "activeBan"
+    description: "Either actual ban settles the claim before an irrelevant child-only exception"
+    formula: "Validate both actual histories; when either filer is barred, do not demand unknown current child-presence facts that cannot lift the ban"
+    irsRef: "IRC32(k); Reg1.32-3(e); i8862 Exceptions"
+    testRef: "tests/engine/forms/eic-disallowance-history.test.ts::applies either actual ban without inventing irrelevant current child facts"
