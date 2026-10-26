@@ -1,0 +1,50 @@
+form: "Shared and unshared Marketplace health source coordination"
+fullName: "Actual allocated and unallocated original policies in one health plan"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+retrievedAt: "2026-10-26"
+notes: |
+  Pub974 Specified Premiums applies the actual tax-family policy allocation
+  before coverage-family attribution. Final i8962 column (b) combines allocated
+  and unallocated original policy amounts using its applicable benchmark rules.
+  The existing source allocator validates unshared original identities, actual
+  household membership, correct benchmarks and all overlapping coverage groups.
+  A validated not_shared source contributes its full original amounts, without
+  a fabricated Part IV percentage. A plan marked as including an outside
+  family must retain an actual linked outside-family covered person; merely
+  having another shared policy elsewhere on the return does not establish that. The health binder keeps full receipts and
+  independently supplied owner cash, other-family cash and individual advances.
+  This route uses one owner/business, complete coverage-family membership and
+  the existing payment/allocated-share reconciliation; no outside-family cash,
+  partial-family allocation or owner repayment split is inferred. Final 2026
+  filing qualification is separate. These examples are derived statutory
+  controls, not published numerical or human-qualified oracles.
+lines:
+  - line: "original-source"
+    description: "Combine a validated shared source with the full unshared source"
+    formula: "Shared 1000 premium/600 APTC at .50 plus actual unshared 200/50 gives monthly specified premium700/APTC350. Full receipt1200 conserves owner350 + other200 + fullAPTC650. Every original person/source remains independently bound; no unshared percentage is entered."
+    testRef: "tests/engine/forms/shared-unshared-marketplace-health.test.ts::retains full unshared originals beside actual allocated health sources"
+  - line: "canonical"
+    description: "Apply existing Pub974 monthly stages to the combined actual premium"
+    formula: "At50000 profit, earned income after SE half is46467; W1/W2/W3=8400/4200/4200 and X975 cap gives maximum5175. Step2 AGI41292/274%/.0496 gives171 monthly contribution and6348 credit; health2052. FinalAGI44415/294%/.0576 gives213 monthly contribution and5844 credit. At1000000 profit, no-credit result is8400health/4200repayment."
+    testRef: "tests/engine/federal-shared-unshared-marketplace-health.test.ts::coordinates shared and unshared health premiums without double counting"
+  - line: "partial-months"
+    description: "Preserve original partial coverage months and source order"
+    formula: "If the unshared200/50 policy covers July through December only, annual specified premium7200/APTC3900 gives maximum4275, Step2 AGI42192/280%/.0520 and183 monthly contribution. Credit5004 gives2196health; finalAGI44271/293%/.0572 gives211 monthly contribution and4668 credit. Reordering exact links/payment records changes no result."
+    testRef: "tests/engine/federal-shared-unshared-marketplace-health.test.ts::retains actual partial unshared months and source ordering"
+  - line: "no-advance-overlap"
+    description: "Keep complete no-advance family benchmarks once across originals"
+    formula: "Original shared1500 with actual1000/500 benchmarks allocates1000; an overlapping unshared200 policy adds its full200 premium/50 APTC. Complete original family evidence keeps own benchmark1000 once. Full1700 receipt conserves owner1150 + other500 + APTC50. Canonical result3192health/43275AGI/9624PTC."
+    testRef: "tests/engine/forms/shared-unshared-marketplace-health.test.ts::requires the complete family benchmark for shared no-advance and unshared health sources"
+  - line: "guide"
+    description: "Reuse the actual saved source model without inferred confirmations"
+    formula: "A full guided source packet binds both originals, the complete household, actual payment people and monthly records; edits revoke source confirmations and unknown original amounts remain unknown."
+    testRef: "tests/guided-interview/guided-shared-unshared-marketplace-health.test.ts::transfers both original policy kinds through the saved health guide"
+  - line: "output"
+    description: "Retain original source identities privately before rendering"
+    formula: "Saved physical8962 prints5844 credit/4200 advances and only the actual shared PartIV allocation; health review retains full1200/owner350/other200/APTC650 and2052 deduction. Missing, forged or stale original context rejects before PDF I/O."
+    testRef: "tests/pdf/shared-unshared-marketplace-health-review.test.ts::prints combined source amounts with original private context"
+  - line: "browser"
+    description: "Reopen and reconfirm actual shared and unshared source records"
+    formula: "Production guide shows original shared/unshared records and combined44415AGI; source edits revoke confirmations, reconfirmation restores calculation and blank payment sources remain unknown after reload. Source identifiers stay local."
+    testRef: "apps/web/tests/guided-shared-unshared-marketplace-health.spec.ts::retains shared and unshared health sources after reload"

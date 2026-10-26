@@ -56,11 +56,14 @@ export function calculateSharedMarketplaceHealthSources(input: SharedMarketplace
       const index = Number(id.slice('form1095A:'.length)), policy = input.form8962.sharedPolicyAllocations?.policies?.find(row => row.sourceId === id);
       const original = input.form1095A[index];
       // The source allocator above independently validates either the actual
-      // Situation4 agreement/default or the Situation3 benchmark method.
+      // Situation4 agreement/default, Situation3 benchmark or actual unshared source.
       // Its derived amounts never establish the payment facts checked below.
-      if (!original || !policy || !['other_two_tax_families', 'no_advance_credit'].includes(policy.situation ?? '')) throw new Error('Shared Marketplace health requires its actual supported two-family allocation source method.');
+      if (!original || !policy || !['other_two_tax_families', 'no_advance_credit', 'not_shared'].includes(policy.situation ?? '')) throw new Error('Shared Marketplace health requires its actual supported two-family allocation source method.');
       for (const person of original.coveredIndividuals ?? []) {
-        const identity = ssn(person.ssn), own = policy.coveredFamilyAssignments?.find(row => ssn(row.ssn) === identity)?.family === 'this_return';
+        // Unshared membership is established by the source allocator's complete
+        // original/household validation, never by an entered payment share.
+        const identity = ssn(person.ssn), own = policy.situation === 'not_shared'
+          || policy.coveredFamilyAssignments?.find(row => ssn(row.ssn) === identity)?.family === 'this_return';
         const current = originals.get(identity) ?? { name: name(person.name), own, months: new Set<number>() };
         if (current.name !== name(person.name) || current.own !== own) throw new Error('Shared Marketplace health original person family or name differs across linked policies.');
         for (let month = person.firstMonth!; month <= person.lastMonth!; month++) current.months.add(month);
@@ -73,6 +76,7 @@ export function calculateSharedMarketplaceHealthSources(input: SharedMarketplace
         full.premium = full.premium.plus(source.originalPremium); full.advance = full.advance.plus(source.originalAdvance); fullMonths.set(source.month, full);
       }
     }
+    if (![...originals.values()].some(person => !person.own)) throw new Error('Shared Marketplace health outside-family answer conflicts with the actual linked policy people.');
     const linked = new Map<string, { own: boolean; months: Set<number> }>(), identities = new Set<string>();
     if (evidence.persons.length !== originals.size || plan.coveredPersons.length !== originals.size) throw new Error('Shared Marketplace health source links must include every original covered person once.');
     for (const link of evidence.persons) {
