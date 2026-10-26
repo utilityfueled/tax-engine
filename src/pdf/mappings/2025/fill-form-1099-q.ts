@@ -7,6 +7,8 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import { roundDollar } from "@/utils/decimal.js";
 import type { Form1099QResult } from "@/engine/forms/form-1099-q.js";
 import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
+import { assertDistinctEducationBeneficiaries } from "@/utils/education-beneficiary-identity.js";
+import { assertPreparedEducationReview, type PreparedEducationReview } from "../../education-review-context.js";
 
 export const FORM_1099_Q_REFERENCE_FILENAME = "f1099q-reference-filled.pdf";
 export interface Form1099QReferenceSummaryForm {
@@ -40,9 +42,10 @@ function knownAmount(value: string | undefined, absent = "Not provided"): string
 function yesNo(value: boolean | undefined): string { return value === undefined ? "Not provided" : value ? "Yes" : "No"; }
 function shownValue(value: string): string { return /^-?\d+(\.\d+)?$/.test(value) ? `$${value}` : value; }
 
-export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1099QResult, qeeSummary: QualifiedEducationExpenseSummary | undefined): Form1099QReferenceSummary {
+export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1099QResult, qeeSummary: QualifiedEducationExpenseSummary | undefined, prepared?: PreparedEducationReview): Form1099QReferenceSummary {
   if (!result) throw new Error("Education reference requires the calculated result and audit");
   assertPdfExportAllowed(2025, result.taxYear);
+  if (prepared) assertPreparedEducationReview(forms, qeeSummary, result, prepared);
   const audit = new Map<string, CalculatedLine>();
   for (const line of result.lines) {
     const key = `${line.form}\u0000${line.line}`;
@@ -91,6 +94,7 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
         }
         const allocations = qeeSummary.sourceFacts.allocations?.filter(allocation => allocation.sourceId === row.sourceId) ?? [];
         const expenseIds = new Set([...benefits.map(benefit => benefit.expenseId), ...allocations.map(allocation => allocation.expenseId)]);
+        let qualified = new Decimal(0);
         for (const expenseId of expenseIds) {
           const matches = allocations.filter(allocation => allocation.expenseId === expenseId);
           const linked = benefits.filter(benefit => benefit.expenseId === expenseId);
@@ -102,8 +106,39 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
           const credit = entry.inputs["Education credit expense"];
           if (!Decimal.isDecimal(credit) || !credit.eq(sourceMoney(allocation?.creditAmount))) throw new Error("Education reference in-kind credit allocation disagrees with its source audit");
           sourceLines.push(describe(entry, `Statement ${index + 1}: `));
+          let qualifiedAllocation = expense?.qualificationConfirmed === true ? sourceMoney(allocation?.amount) : new Decimal(0);
+          if (expense?.qualificationConfirmed === true && expense.category === "postsecondary_room_board") {
+            if (typeof expense.halfTimeStudent !== "boolean") throw new Error("Education reference actual room-and-board enrollment is missing");
+            const amount = sourceMoney(expense.amount), refund = sourceMoney(expense.refundedAmount);
+            const assistance = sourceMoney(expense.taxFreeAssistance), creditExpense = sourceMoney(expense.educationCreditAmount), other = sourceMoney(expense.otherTaxBenefitAmount);
+            const allowance = sourceMoney(expense.roomBoardAllowance), housing = sourceMoney(expense.schoolOwnedHousingCharge);
+            const category = expense.halfTimeStudent ? Decimal.min(amount.minus(refund), Decimal.max(allowance, housing)) : new Decimal(0);
+            const eligible = Decimal.max(0, category.minus(assistance).minus(creditExpense).minus(other));
+            const requested = (qeeSummary.sourceFacts.allocations ?? []).filter(source => source.expenseId === expense.id)
+              .reduce((total, source) => total.plus(sourceMoney(source.amount)), new Decimal(0));
+            qualifiedAllocation = requested.isZero() ? new Decimal(0) : sourceMoney(allocation?.amount).mul(Decimal.min(1, eligible.div(requested)));
+            if (!qualifiedAllocation.eq(sourceMoney(allocation?.amount))) {
+              if (!prepared) assertDistinctEducationBeneficiaries(forms, qeeSummary.sourceFacts);
+              if (forms.filter(source => source.beneficiaryId === row.beneficiaryId).length !== 1
+                || (qeeSummary.sourceFacts.expenses ?? []).filter(source => source.beneficiaryId === row.beneficiaryId).length !== 1
+                || allocations.length !== 1 || [refund, assistance, creditExpense, other].some(value => !value.isZero())) {
+                throw new Error("Education reference partial room-and-board source group is unsupported");
+              }
+            }
+            const roomBoard = requireAudit("Form1099-Q", `${row.sourceId}:in-kind-room-board:${expense.id}`, qualifiedAllocation);
+            const expected = {
+              "Actual expense": amount, "School allowance": allowance, "School-owned housing charge": housing,
+              "Refund": refund, "Tax-free assistance": assistance, "Education credit expense": creditExpense,
+              "Other tax benefit": other, "Original allocation": sourceMoney(allocation?.amount),
+            };
+            if (roomBoard.inputs["Half-time enrollment"] !== (expense.halfTimeStudent ? "yes" : "no")
+              || Object.entries(expected).some(([key, value]) => !Decimal.isDecimal(roomBoard.inputs[key]) || !(roomBoard.inputs[key] as Decimal).eq(value))) {
+              throw new Error("Education reference room-and-board school sources disagree with the audit");
+            }
+            sourceLines.push(describe(roomBoard, `Statement ${index + 1}: `));
+          }
+          qualified = qualified.plus(qualifiedAllocation);
         }
-        const qualified = allocations.reduce((total, allocation) => qeeSummary.sourceFacts?.expenses?.find(expense => expense.id === allocation.expenseId)?.qualificationConfirmed === true ? total.plus(sourceMoney(allocation.amount)) : total, new Decimal(0));
         if (!qualified.eq(row.adjustedQEE)) throw new Error("Education reference in-kind qualified cost disagrees with its audit");
       }
       const correction = result.returnedContributions.find(item => item.sourceId === row.sourceId);
@@ -209,6 +244,10 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
     if (!ownRecipients.reduce((sum, row) => sum.plus(row.taxableEarnings), new Decimal(0)).eq(result.taxableEarnings) || !ownRecipients.reduce((sum, row) => sum.plus(row.additionalTax), new Decimal(0)).eq(result.netPenalty)) throw new Error("Education recipient audit totals do not reconcile");
     for (const [index, expense] of (qeeSummary.sourceFacts.expenses ?? []).entries()) {
       for (const [field, label] of [["amount", "Actual paid expense"], ["refundedAmount", "Refund"], ["taxFreeAssistance", "Tax-free assistance"], ["educationCreditAmount", "Expense used for education credit"], ["otherTaxBenefitAmount", "Expense used for another benefit"]] as const) qualifiedEducationExpenseInputs.push({ label: `Expense ${index + 1}: ${label}`, value: knownAmount(expense[field]) });
+      if (expense.category === "postsecondary_room_board") {
+        qualifiedEducationExpenseInputs.push({ label: `Expense ${index + 1}: Half-time enrollment`, value: yesNo(expense.halfTimeStudent) });
+        for (const [field, label] of [["roomBoardAllowance", "School allowance"], ["schoolOwnedHousingCharge", "School-owned housing charge"]] as const) qualifiedEducationExpenseInputs.push({ label: `Expense ${index + 1}: ${label}`, value: knownAmount(expense[field]) });
+      }
       const benefits = benefitSources.filter(benefit => benefit.expenseId === expense.id);
       if (benefits.length) {
         const inKindSourceIds = new Set(benefits.map(benefit => benefit.sourceId));
@@ -253,8 +292,8 @@ function wrapped(text: string, font: PDFFont, size: number, width: number): stri
   return result;
 }
 
-export async function fillForm1099QReference(forms: Form1099Q[], result: Form1099QResult, qeeSummary: QualifiedEducationExpenseSummary | undefined, outputDir: string): Promise<string> {
-  const summary = buildForm1099QReferenceSummary(forms, result, qeeSummary);
+export async function fillForm1099QReference(forms: Form1099Q[], result: Form1099QResult, qeeSummary: QualifiedEducationExpenseSummary | undefined, outputDir: string, prepared?: PreparedEducationReview): Promise<string> {
+  const summary = buildForm1099QReferenceSummary(forms, result, qeeSummary, prepared);
   const doc = await PDFDocument.create(); const regular = await doc.embedFont(StandardFonts.Helvetica); const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   let page = doc.addPage([612, 792]), y = 750;
   const draw = (value: string, emphasis = false, size = 10) => {

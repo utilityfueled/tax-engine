@@ -94,6 +94,11 @@ describe("actual in-kind QTP benefit sources", () => {
     expect(calculateForm1099Q([source()], knownFalse, { taxYear: 2026 }).taxableEarnings.toFixed()).toBe("800");
     expect(() => calculateForm1099Q([source()], summary({ inKindBenefits: [benefit({ qualificationConfirmed: false })] }), { taxYear: 2026 })).toThrow(/qualification|eligibility/i);
     const limited = summary({ expenses: [expense({ category: "postsecondary_room_board", halfTimeStudent: true, roomBoardAllowance: "3000", schoolOwnedHousingCharge: "0" })] });
-    expect(() => calculateForm1099Q([source()], limited, { taxYear: 2026 })).toThrow(/partial.*in-kind|in-kind.*partial/i);
+    const capped = calculateForm1099Q([source()], limited, { taxYear: 2026 });
+    expect(capped.adjustedQEE.toFixed()).toBe("3000");
+    expect(capped.taxableEarnings.toFixed()).toBe("200");
+    expect(capped.netPenalty.toFixed()).toBe("20");
+    const otherPartial = summary({ expenses: [expense({ category: "k12_tuition" })], beneficiaries: [{ id: "student", outsideK12QualifiedDistributions: "19000" }] });
+    expect(() => calculateForm1099Q([source()], otherPartial, { taxYear: 2026 })).toThrow(/partial.*in-kind|in-kind.*partial/i);
   });
 });

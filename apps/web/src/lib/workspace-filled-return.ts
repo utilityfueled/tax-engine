@@ -1,3 +1,4 @@
+import { hasInKindRoomBoardSources, prepareEducationReview } from "@/pdf/education-review-context.js";
 import { buildGuidedOhioOverlay, buildGuidedPennsylvaniaOverrides } from "./guided-state-engine-inputs";
 import "server-only";
 import Decimal from "decimal.js";
@@ -619,6 +620,7 @@ export async function buildWorkspaceFilledReturnDownload(
   const charitableReview = resolved.taxInput.charitableCarryoverSources ? prepareCharitableReview(resolved.taxInput) : undefined;
   const adoptionReview = hasHistoricalAdoptionSources(resolved.taxInput) ? prepareAdoptionReview(resolved.taxInput) : undefined;
   const premiumTaxCreditReview = hasSharedPremiumTaxCreditSources(resolved.taxInput) ? preparePremiumTaxCreditReview(resolved.taxInput) : undefined;
+  const educationReview = hasInKindRoomBoardSources(resolved.taxInput) ? prepareEducationReview(resolved.taxInput) : undefined;
   const redactedTaxInput = redactReviewIdentifiers(resolved.taxInput);
   const result = redactReviewIdentifiers(completeResult);
   const blankFormsDir = await resolveBlankFormsDir();
@@ -633,6 +635,7 @@ export async function buildWorkspaceFilledReturnDownload(
       charitableReview,
       adoptionReview,
       premiumTaxCreditReview,
+      educationReview,
       blankFormsDir,
       outputDir,
       flatten: true,

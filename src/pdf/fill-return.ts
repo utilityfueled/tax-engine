@@ -4,6 +4,7 @@
  */
 
 import { join } from "path";
+import { assertPreparedEducationReturn, hasInKindRoomBoardSources, prepareEducationReview, type PreparedEducationReview } from "./education-review-context.js";
 import type { PDFDocument } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
@@ -52,7 +53,7 @@ import { fillForm3903Reference } from "./fill-form-3903.js";
 import { fillForm1099CReference } from "./fill-form-1099-c.js";
 import { fillForm982Reference } from "./fill-form-982.js";
 import { fillForm1099KReference } from "./fill-form-1099-k.js";
-import { fillForm1099QReference } from "./fill-form-1099-q.js";
+import { buildForm1099QReferenceSummary, fillForm1099QReference } from "./fill-form-1099-q.js";
 import { fillForm2555Reference } from "./fill-form-2555.js";
 import {
   fillForm6252Reference,
@@ -390,6 +391,8 @@ export interface FillReturnOptions {
   adoptionReview?: PreparedAdoptionReview;
   /** Actual policy allocation and whole-return income, validated before redaction. */
   premiumTaxCreditReview?: PreparedPremiumTaxCreditReview;
+  /** Original student identities validated privately before render redaction. */
+  educationReview?: PreparedEducationReview;
 }
 
 export interface FillReturnResult {
@@ -417,6 +420,13 @@ export async function fillReturn(
     ? options.premiumTaxCreditReview ?? preparePremiumTaxCreditReview(input) : undefined;
   const premiumTaxCreditContext = premiumTaxCreditReview ? { input, prepared: premiumTaxCreditReview } : undefined;
   if (premiumTaxCreditContext) buildForm8962ReferenceSummary(input.form1095A, result, premiumTaxCreditContext);
+  const educationReview = hasInKindRoomBoardSources(input) || options.educationReview
+    ? options.educationReview ?? prepareEducationReview(input) : undefined;
+  if (educationReview) {
+    if (!result.form1099Q || !input.form1099Q?.length) throw new Error("Education review requires the original distribution calculation");
+    assertPreparedEducationReturn(input, result.form1099Q, educationReview);
+    buildForm1099QReferenceSummary(input.form1099Q, result.form1099Q, input.qualifiedEducationExpenses, educationReview);
+  }
   const capitalGainReview = options.capitalGainReview ?? prepareForm8949Review(input);
   const capitalTransactions = form8949ReviewCalculation(input, capitalGainReview);
   const hasDigitalDispositions = [capitalTransactions.shortTermBoxG, capitalTransactions.shortTermBoxH, capitalTransactions.shortTermBoxI,
@@ -766,7 +776,7 @@ export async function fillReturn(
     ? result.form1099Q.perRecipient.flatMap(row => row.owner !== "other" && row.taxableEarnings.gt(0) ? [row.owner] : []) : [];
   const source5329Owners = [...new Set([...hsa5329Owners, ...education5329Owners])];
   for (const owner of source5329Owners) {
-    const doc5329 = await fillForm5329(input, result, join(blankFormsDir, "f5329.pdf"), owner);
+    const doc5329 = await fillForm5329(input, result, join(blankFormsDir, "f5329.pdf"), owner, educationReview);
     if (flatten) await flattenForm(doc5329.getForm());
     const outputPath5329 = join(outputDir, `f5329-${owner}-filled.pdf`);
     await savePacketPdf(doc5329, outputPath5329);
@@ -774,7 +784,7 @@ export async function fillReturn(
   }
   if (source5329Owners.length === 0 && result.form5329 && result.form5329.totalAdditionalTax.gt(0)) {
     const f5329Path = join(blankFormsDir, "f5329.pdf");
-    const doc5329 = await fillForm5329(input, result, f5329Path);
+    const doc5329 = await fillForm5329(input, result, f5329Path, undefined, educationReview);
     if (flatten) await flattenForm(doc5329.getForm());
     const outputPath5329 = join(outputDir, "f5329-filled.pdf");
     await savePacketPdf(doc5329, outputPath5329);
@@ -916,6 +926,7 @@ export async function fillReturn(
       result.form1099Q,
       input.qualifiedEducationExpenses,
       outputDir,
+      educationReview,
     );
     filledForms.push(outputPath1099QReference);
   }

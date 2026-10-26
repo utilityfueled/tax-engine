@@ -20,6 +20,7 @@ import type { Form1099Q, QualifiedEducationExpenseSummary, EducationExpenses, Ta
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, sum, zeroFloor, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { assertDistinctEducationBeneficiaries } from "@/utils/education-beneficiary-identity.js";
 
 const ZERO = new Decimal(0);
 const PENALTY_RATE = new Decimal("0.10");
@@ -742,7 +743,33 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     audit.record("Form1099-Q", `${borrower.id}:loan-qualified`, "Qualified loan repayments after lifetime borrower limit", sum(...group.map(item => item.allowed)), "10000 lifetime limit less actual prior and other current qualified distributions", { "Remaining limit": remaining });
   }
   for (const item of allocations.filter(item => item.form.distributionMedium === "in_kind_prepaid_tuition")) {
-    if (item.expense.qualificationConfirmed && !item.allowed.eq(item.amount)) throw new Error("Form1099Q partial in-kind exclusion after category limits requires a separate supported allocation method");
+    const expense = item.expense;
+    if (expense.qualificationConfirmed && !item.allowed.eq(item.amount)) {
+      assertDistinctEducationBeneficiaries(verifiedForms, facts);
+      // Spec: form-1099-q-in-kind-room-board.yaml. No shared-cap election is
+      // inferred for other distributions, expenses, credits or assistance.
+      const singleRoomBoardSource = expense.category === "postsecondary_room_board"
+        && verifiedForms.filter(form => form.beneficiaryId === item.form.beneficiaryId).length === 1
+        && [...expenses.values()].filter(source => source.beneficiaryId === expense.beneficiaryId).length === 1
+        && allocations.filter(source => source.form.beneficiaryId === expense.beneficiaryId).length === 1
+        && [expense.refundedAmount, expense.taxFreeAssistance, expense.educationCreditAmount, expense.otherTaxBenefitAmount]
+          .every(value => actualAmount(value, "room-and-board source reduction").isZero());
+      if (!singleRoomBoardSource) throw new Error("Form1099Q partial in-kind exclusion after category limits requires a separate supported allocation method");
+    }
+    if (expense.qualificationConfirmed && expense.category === "postsecondary_room_board") {
+      audit.record("Form1099-Q", `${item.form.sourceId}:in-kind-room-board:${expense.id}`, "Qualified in-kind room-and-board expense after school limit", item.allowed,
+        "Actual half-time enrollment and greater of school allowance or school-owned housing charge; preserve original benefit cost", {
+          "Actual expense": actualAmount(expense.amount, "room-and-board expense"),
+          "Half-time enrollment": actualBoolean(expense.halfTimeStudent, "half-time enrollment") ? "yes" : "no",
+          "School allowance": actualAmount(expense.roomBoardAllowance, "school allowance"),
+          "School-owned housing charge": actualAmount(expense.schoolOwnedHousingCharge, "school-owned housing charge"),
+          "Refund": actualAmount(expense.refundedAmount, "refund"),
+          "Tax-free assistance": actualAmount(expense.taxFreeAssistance, "assistance"),
+          "Education credit expense": actualAmount(expense.educationCreditAmount, "credit expense"),
+          "Other tax benefit": actualAmount(expense.otherTaxBenefitAmount, "other benefit"),
+          "Original allocation": item.amount,
+        });
+    }
   }
   const transferState: TransferState = { capacities: new Map(), baselines: new Map(), rolloverDates: new Map() };
   const transfers = new Map<string, Decimal>();

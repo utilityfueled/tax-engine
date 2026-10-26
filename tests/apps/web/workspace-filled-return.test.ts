@@ -551,6 +551,42 @@ describe("workspace filled return download", () => {
     expect(JSON.stringify(state)).toBe(original);
   });
 
+  // Spec: spec/federal/form-1099-q-in-kind-room-board.yaml.
+  it("binds distinct in-kind students before redacting the actual workspace packet", async () => {
+    const state = createGuidedFlowState(), credits = state.sectionData.credits;
+    if (!credits) throw new Error("Missing credits fixture");
+    credits.educationDistributions = {
+      taxYear: "2025", sourceFactsConfirmed: true, allDistributionsReconciled: true,
+      forms: ["primary", "other"].map(owner => ({ fields: {
+        sourceId: owner, accountId: owner, beneficiaryId: owner, recipientOwner: owner,
+        ...(owner === "other" ? { recipientId: "outside-student" } : {}), taxYear: "2025",
+        accountType: "529", distributionMedium: "in_kind_prepaid_tuition", grossDistribution: "4000", earnings: "800", basis: "3200",
+        isTrusteeToTrustee: false, isQtpToRoth: false, recipientNotBeneficiary: false, sourceFactsConfirmed: true,
+      }, transfer: { kind: "none" } })),
+      beneficiaries: [{ id: "primary", studentTaxId: "111-22-3333", outsideK12QualifiedDistributions: "0" },
+        { id: "other", studentTaxId: "222-33-4444", outsideK12QualifiedDistributions: "0" }],
+      expenses: ["primary", "other"].map(owner => ({ id: owner, beneficiaryId: owner, category: "postsecondary_room_board",
+        paidDate: "2025-08-15", amount: "4000", refundedAmount: "0", taxFreeAssistance: "0", educationCreditAmount: "0",
+        otherTaxBenefitAmount: "0", qualificationConfirmed: true, halfTimeStudent: true,
+        roomBoardAllowance: owner === "primary" ? "3000" : "1000", schoolOwnedHousingCharge: "0" })),
+      allocations: ["primary", "other"].map(owner => ({ sourceId: owner, expenseId: owner, amount: "4000", creditAmount: "0" })),
+      inKindBenefits: ["primary", "other"].map(owner => ({ id: owner, sourceId: owner, expenseId: owner, amount: "4000",
+        providedDate: "2025-08-15", qualificationConfirmed: true, sourceReference: "Actual synthetic provided benefit" })),
+      loanBorrowers: [], coverdellAccounts: [], penaltyExceptions: [],
+    };
+    const before = JSON.stringify(state), download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    expect(download.includedForms).toContain("f1099q-reference-filled.pdf");
+    expect(download.includedForms).toContain("f5329-primary-filled.pdf");
+    expect(download.includedForms.filter(path => path.includes("f5329"))).toHaveLength(1);
+    const text = await extractPdfText(download.contents);
+    expect(text).toContain("Qualified in-kind room-and-board expense after school limit: $3000");
+    expect(text).toContain("Qualified in-kind room-and-board expense after school limit: $1000");
+    expect(text).toContain("Primary taxpayer, Form 5329 line 5: Education distributions included in recipient income: $200");
+    expect(text).toContain("Primary taxpayer, Form 5329 line 8: Additional tax on education distributions: $20");
+    for (const identifier of ["111223333", "222334444"]) expect(text.replace(/\s|-/g, "")).not.toContain(identifier);
+    expect(JSON.stringify(state)).toBe(before);
+  });
+
   it("does not include a blank Schedule E for a simple wage-only return", async () => {
     const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), createGuidedFlowState());
 

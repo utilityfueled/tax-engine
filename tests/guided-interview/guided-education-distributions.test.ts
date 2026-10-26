@@ -125,3 +125,25 @@ it("preserves a source-bound in-kind tuition credit split", () => {
   data.inKindBenefits = undefined;
   expect(() => buildEducationDistributionInputs(data, 2025, "single", creditInput.educationExpenses)).toThrow(/actual.*in-kind|benefit/);
 });
+
+// Spec: spec/federal/form-1099-q-in-kind-room-board.yaml.
+it("preserves actual school facts for a limited in-kind benefit", () => {
+  const data = actualEducationDistribution(), statement = data.forms?.[0], expense = data.expenses?.[0];
+  if (!statement || !expense) throw new Error("Missing source");
+  statement.fields.distributionMedium = "in_kind_prepaid_tuition";
+  statement.fields.recipientNotBeneficiary = false;
+  expense.category = "postsecondary_room_board"; expense.halfTimeStudent = true;
+  expense.roomBoardAllowance = "3000"; expense.schoolOwnedHousingCharge = "0";
+  data.inKindBenefits = [{ id: "actual-benefit", sourceId: "q1", expenseId: "e1", amount: "4000",
+    providedDate: "2025-08-15", qualificationConfirmed: true, sourceReference: "Actual room-and-board benefit" }];
+  const before = JSON.stringify(data), input = buildEducationDistributionInputs(data, 2025, "single");
+  expect(input.form1099Q?.[0]?.grossDistribution).toBe("4000");
+  expect(input.qualifiedEducationExpenses?.sourceFacts?.expenses?.[0]).toMatchObject({ halfTimeStudent: true, roomBoardAllowance: "3000", schoolOwnedHousingCharge: "0" });
+  expect(input.qualifiedEducationExpenses?.sourceFacts?.allocations?.[0]?.amount).toBe("4000");
+  expect(input.qualifiedEducationExpenses?.sourceFacts?.inKindBenefits?.[0]?.amount).toBe("4000");
+  expect(JSON.stringify(data)).toBe(before);
+  expense.schoolOwnedHousingCharge = "";
+  expect(() => buildEducationDistributionInputs(data, 2025, "single")).toThrow(/actual|housing|room|board/);
+  expense.schoolOwnedHousingCharge = "0"; expense.halfTimeStudent = null;
+  expect(() => buildEducationDistributionInputs(data, 2025, "single")).toThrow(/actual|half-time/);
+});

@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.91",
+    ruleVersion: "2025.92",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual in-kind room-and-board benefit limited by half-time enrollment and school allowance or housing cost; distinct original student identities and private redacted review binding", revision: "IRC529(c)(3)/(e)(3)(B), final2025 Pub970 and i1099Q; bounded derived partial method, other assistance/ESA interactions and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 current public cash and ordinary-property G/A candidates; per-item FMV/basis, exact floor, and final selected carry with confirmed empty prior history", revision: "IRC170(G)/(I)/(d)(1)(C)/(e)(1)(A) and Reg1.170A-10; derived source controls, positive-prior and broader mixed/NOL methods remain separate, no human qualification", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 current public-cash itemized and nonitemized carry candidates with confirmed empty prior history; final selected carry retained separately from the ScheduleA comparison", revision: "IRC170(G)/(I)/(d)(1)(C)/(p) and Reg1.170A-10; exact source-backed derived controls, positive prior/mixed/NOL methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 public-cash nonitemizer percentage carry, independent current170(p) deduction and original prior FIFO/fifth-year expiry", revision: "IRC170(G)/(p), Reg1.170A-10 and Pub6196; exact source/history and final-selection guards, ineligible-standard carry is a documented interpretation, itemized/mixed/NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
@@ -134,11 +135,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.87-law-integration-draft",
+    ruleVersion: "2026.88-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual in-kind room-and-board benefit limited by half-time enrollment and school allowance or housing cost; distinct original student identities and private redacted review binding", revision: "IRC529(c)(3)/(e)(3)(B), final2025 Pub970 and i1099Q; bounded derived partial method, other assistance/ESA interactions and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 current public cash and ordinary-property G/A candidates; per-item FMV/basis, exact floor, and final selected carry with confirmed empty prior history", revision: "IRC170(G)/(I)/(d)(1)(C)/(e)(1)(A) and Reg1.170A-10; derived source controls, positive-prior and broader mixed/NOL methods remain separate, no human qualification", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 current public-cash itemized and nonitemized carry candidates with confirmed empty prior history; final selected carry retained separately from the ScheduleA comparison", revision: "IRC170(G)/(I)/(d)(1)(C)/(p) and Reg1.170A-10; exact source-backed derived controls, positive prior/mixed/NOL methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 public-cash nonitemizer percentage carry, independent current170(p) deduction and original prior FIFO/fifth-year expiry", revision: "IRC170(G)/(p), Reg1.170A-10 and Pub6196; exact source/history and final-selection guards, ineligible-standard carry is a documented interpretation, itemized/mixed/NOL and human qualification remain separate", retrievedAt: "2026-10-25" },

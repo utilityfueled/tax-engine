@@ -40,7 +40,7 @@ lines:
     testRef: "tests/engine/forms/form-1099-q-in-kind.test.ts::rejects omitted or partial benefit allocations instead of reallocating expenses"
   - line: "known-eligibility"
     description: "Keep known ineligibility distinct from missing or reduced qualification"
-    formula: "Actual benefit and linked expense eligibility must reconcile; both false give0 qualified cost; missing eligibility rejects; true requires final allowed QTP allocation equal the actual selected amount after category caps, otherwise reject the unsupported partial-benefit method"
+    formula: "Actual benefit and linked expense eligibility must reconcile; both false give0 qualified cost; missing eligibility rejects; true requires final allowed QTP allocation equal the actual selected amount after category caps unless the separately specified single-source room-and-board method applies; unrelated partial methods still reject"
     testRef: "tests/engine/forms/form-1099-q-in-kind.test.ts::preserves known ineligible benefits and blocks unsupported partial exclusions"
   - line: "guided-benefit-sources"
     description: "Collect actual benefit links without defaulting an empty source list"
