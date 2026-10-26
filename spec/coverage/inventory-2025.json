@@ -3211,6 +3211,26 @@
       ]
     },
     {
+      "key": "federal/form-8960-royalty-sources",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8960",
+      "specPath": "spec/federal/form-8960-royalty-sources.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-8962",
       "jurisdiction": "federal",
       "taxYear": null,
@@ -3353,6 +3373,26 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8962",
       "specPath": "spec/federal/form-8962-no-advance-allocation.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-8962-overlapping-policies",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8962",
+      "specPath": "spec/federal/form-8962-overlapping-policies.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,
@@ -3962,6 +4002,26 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8606",
       "specPath": "spec/federal/guided-ira-basis.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/guided-k1-charitable-sources",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1065sk1",
+      "specPath": "spec/federal/guided-k1-charitable-sources.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,

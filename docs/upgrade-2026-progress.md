@@ -818,3 +818,18 @@ six recovery phases; the same 67 distinct OS advisories await owner acceptance.
 No publication, staging, human, provider, filing or release qualification is
 claimed. The durable checklist records the finite source-method queue and exact
 package evidence; autonomous implementation continues.
+
+
+Pushed through `61bad865`: overlapping original Marketplace sources (`029a182`),
+portfolio royalties in NIIT (`14f179a`), unchanged reference checks scheduled by
+spec file (`21478d6`), and actual K1 charitable intake (`61bad865`) are delivered.
+Each package has separate review and scoped checks. Browser verification corrected
+the collector navigation dependency and footer overlay; all four final flows pass.
+The immutable67ce5a5 unit suite passes18,265cases/1,083files with all static/build
+checks; coverage fails one monolithic spec-reference deadline, so no passing
+coverage result is claimed. The repair passes447cases plus independent negative
+controls; a fresh full rerun remains due. Inventory478/5,201refs is refreshed.
+Exact logs, hashes and package limits are in the checklist/checkpoint. Actual
+royalty expenses, separate-business health, distribution gains/intake and the
+remaining finite source methods continue. No human, staging, live-provider,
+filing or release qualification is claimed.

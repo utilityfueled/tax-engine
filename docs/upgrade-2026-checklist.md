@@ -7,75 +7,60 @@ complete a checkbox.
 
 ## Current integration — 2026-10-26
 
-The branch is pushed through `5e1828c`. Since the previous record, delivered
-packages are actual separated-spouse intake (`0871438`) and review PDFs
-(`b2e1dc9`), disjoint shared/unshared Marketplace policies (`0799088`), K1 royalty
-classification with actual at-risk offsets (`8b3daea`), and canonical K1
-charitable sources (`c0dd1eb`). Rule metadata is `2025.121` /
-`2026.118-law-integration-draft`; all readiness gates remain unchanged.
+The branch is pushed through `61bad865`. Current rule metadata is `2025.123` /
+`2026.120-law-integration-draft`; readiness gates remain unchanged. New deliveries
+are overlapping Marketplace policies (`029a182`), portfolio royalties in NIIT
+(`14f179a`), per-file spec-reference checks (`21478d6`) and actual K1 charitable
+intake (`61bad865`). The regenerated inventory has 478 entries and 5,201 references.
 
-The EIC represented royalty/passive worksheet is now committed in `747e37d`:
-801 checks/15 files, 13 separate review checks including five private controls,
-and 35 final integration checks pass. The source method preserves original earned
-income, prior losses and ordinary PTP segregation; the remaining royalty-expense,
-personal-property and mixed-source methods remain explicit gaps. `5e1828c`
-separates full unit and coverage CI runs into one-worker jobs while preserving
-all tests, deadlines and thresholds. Both affected files pass five local cases;
-separate agent review and structural workflow checks pass. Replacement remote
-and full current-source verification remain pending.
+The overlap package reconciles original policies once into household month rows,
+with actual benchmark groups and original-source validation. It passes 1,008
+checks/125 files, two browser cases and 12 separate parent checks, including five
+private controls. Six PDFs/17 pages were reopened with 31 literal fields checked.
+NIIT retains portfolio royalties independently of active/passive business amounts:
+210 checks/13 files and seven independent checks, including three private controls,
+pass; a saved Form8960 was reopened and inspected. Exact sources, original failures,
+reviewed trees and privacy limitations are in the package ledgers.
 
-The EIC guide passes 968 tests/117 files and two production viewport flows;
-its separate review passes nine checks including four private probes. The PDF
-follow-through passes 122 tests/13 files, two viewport downloads and 38 separate
-parent checks including three private probes. Parent review reopened five PDFs
-with 36 review-marked pages and inspected the relevant rendered pages. The
-shared/unshared package passes 1,127 checks/147 files, two browser cases and 20
-parent checks including four private probes; all 11 physical/reference pages
-were reopened with notices, and the relevant source fields were inspected.
+Actual K1 charitable sources now reach the canonical calculation from the guide.
+Browser checks exposed and corrected both a navigation dependency and a footer
+overlay. The source cohort passes 965 checks/114 files; all four final desktop/mobile
+production flows pass with normal clicks and zero retries. Separate source,
+reachability and layout reviews pass. Final integration passes 475 checks/six files,
+root/web types and strict references. These agent reviews are not human qualification.
 
-Royalty review initially reproduced two actual Form6198 income-offset defects.
-The corrected source calculation passes 384 checks/16 files and 48 separate
-review checks/4 files, including the unchanged original failures and three new
-boundary probes. Final integration passes 269 checks/11 files. K1 charitable
-sources pass 975 checks/34 files, both types and 5,172 spec references; separate
-review passes 22 checks/4 files, plus five reopened PDFs/seven pages/27 fields.
-That review found an omitted excess-distribution gain. The package now rejects
-that unsupported source method before handoff; implementing the actual gain
-method remains work. Exact package ledgers retain sources, initial failures,
-review trees and final commits. Agent reviews are not human qualification.
+Immutable `67ce5a5` passes all 18,265 unit tests/1,083 files, all three type checks,
+spec/inventory, both builds and lint (zero errors, 5,148 warnings). Coverage fails
+only the monolithic all-spec reference test: 5,143ms exceeds its unchanged 5,000ms
+deadline; 18,264 other cases pass. No coverage percentage is claimed from that
+failed run. `21478d6` runs the identical validation per spec file; 447 local and
+447 separate review cases pass, and three injected invalid references still fail.
+No parser, assertion, deadline, exclusion or coverage threshold was weakened.
+A complete integrated coverage rerun remains due after the next reviewed package.
 
-Full immutable `817f76f` passes **18,189 tests in 1,067 files**, zero failures or
-skips, using disposable PostgreSQL. Coverage is **87.14% branches** against 85%
-and **90.43% functions** against 90%; statements 92.17%, lines 94.77%. The run
-excludes later tax packages, so final current-source verification remains due.
-The current regenerated inventory has **475 entries and 5,180 references**.
-Remote CI for `b2e1dc9` failed two unchanged five-second PDF deadlines, with
-18,237 other tests passing; those failures are retained; the scheduling repair awaits a completed remote run.
-The `c0dd1eb` CI and Web runs were still in progress when last observed.
+The earlier immutable `817f76f` coverage passes 18,189 tests/1,067 files at 87.14%
+branches and 90.43% functions, against unchanged 85%/90% gates. Later source packages
+are excluded. Historical `76e3538` browser evidence is 374 passing cases with five
+hosted-only skips; its local arm64 six-phase recovery evidence and image scan remain
+scoped to that source. Final source/platform runtime verification and advisory-owner
+acceptance are outstanding. The fresh production package audit has zero advisories
+across 425 dependencies; it has a different scope from the earlier all-package audit.
 
-The broad `76e3538` unit/static/build/browser evidence remains separate: 18,159
-tests and 374 browser cases pass; five hosted-only skips provide no staging
-evidence. Its [runtime evidence](upgrade-2026-runtime-76e3538.json) binds the
-local arm64 image to source, with smoke and all six recovery phases passing.
-The scan reports 157 OS matches/67 advisories, zero critical/npm/available-fix
-matches. Owner acceptance and expiry 2026-11-07 remain unresolved. No image was
-published; final source/platform artifacts still require verification.
+Current `61bad865` remote CI and Web runs were in progress when observed; previous
+pushes cancelled older runs. No current remote pass is claimed. Full exact logs and
+hashes remain in the checkpoint and package ledgers.
 
-Active internal work includes overlapping Marketplace benchmark groups,
-separate-business health ordering, actual K1 charitable guided intake and the
-source-bound excess-distribution gain handoff. Complete EIC royalty-expense,
-personal-property and mixed-source methods remain separate from the represented
-ordinary components now committed.
-Remaining methods include excess-distribution gain, prior charitable floor,
-regular/AMT NOL and partial mixed-media coordination, followed by complete
-current-source checks and support reconciliation. A guard or inactive helper
-does not complete an unsupported method.
+Active internal work is separate-business health ordering, actual direct royalty
+property expenses and intake, and source-bound excess-distribution gain and intake.
+Prior charitable floor, regular/AMT NOL and partial mixed-media coordination, plus
+remaining EIC personal-property/mixed-source methods, are still named methods.
+A guard or inactive helper does not complete an unsupported method.
 
 The goal remains active and the upgrade is **not release-ready**. Human reviews
 and controlling interpretations, provider access and approved budget, authorized
 staging, launch-state demand, final forms and advisory-owner acceptance remain
-outstanding. Normal pushes to this public upgrade branch are expressly approved.
-Production deployment, filing and model promotion remain unauthorized/disabled.
+outstanding. Public upgrade-branch pushes are explicitly approved. Production
+deployment, filing and model promotion remain unauthorized/disabled.
 
 ## Earlier package evidence
 
