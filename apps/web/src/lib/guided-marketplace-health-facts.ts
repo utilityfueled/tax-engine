@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import type { Form7206Input } from "@/models/inputs";
 import { calculateSharedMarketplaceHealthSources } from "@/engine/forms/shared-marketplace-health";
+import { calculateMarketplaceActualCashSources } from "@/engine/forms/marketplace-actual-cash-health";
 import { calculateMarketplaceCoverageFamilyHealth } from "@/engine/forms/marketplace-coverage-family-health";
 import { resolveGuidedSharedPolicy, guidedMarketplaceHousehold } from "./guided-shared-policy";
 import type { GuidedFlowState } from "./guided-interview-flow";
@@ -32,6 +33,10 @@ export function validateMarketplaceHealthSources(state: GuidedFlowState, health:
   const families = normalized?.plans?.some(plan => plan.coverageFamilySources) ? calculateMarketplaceCoverageFamilyHealth({
     ...guidedMarketplaceHousehold(state.sectionData['personal-info'], state.segmentation.filingStatus, state.taxYear), form1095A: coverage.form1095A, form8962: coverage.form8962, form7206: normalized,
   }, 'source-only') : undefined;
+  const actualCash = families ? calculateMarketplaceActualCashSources({
+    ...guidedMarketplaceHousehold(state.sectionData['personal-info'], state.segmentation.filingStatus, state.taxYear),
+    form1095A: coverage.form1095A, form8962: coverage.form8962, form7206: normalized,
+  }) : undefined;
   const used = new Set<string>();
   const totals = new Map<number, { premium: Decimal; advance: Decimal }>();
   for (const plan of plans) {
@@ -52,7 +57,7 @@ export function validateMarketplaceHealthSources(state: GuidedFlowState, health:
     const payments = new Map<number, { premium: Decimal; advance: Decimal }>();
     for (const payment of plan.payments) {
       if (payment.coverageTaxYear !== String(state.taxYear) || !payment.datePaid.startsWith(`${state.taxYear}-`) || !/^(?:[1-9]|1[0-2])$/.test(payment.coverageMonth)) throw new Error("Marketplace health premiums require actual current-year payment and coverage dates; other timing requires a separate worksheet.");
-      if ((!sharedPlan && !amount(payment.otherPersonPaid).isZero()) || payment.personAmounts.some(person => !amount(person.otherTaxFreeFunding).isZero() || !amount(person.excludedPublicSafetyOfficerAmount).isZero())) throw new Error("Marketplace outside-payer or separate tax-free funding requires its actual deduction allocation worksheet.");
+      if ((!sharedPlan && !actualCash?.some(row => row.planId === plan.planId) && !amount(payment.otherPersonPaid).isZero()) || payment.personAmounts.some(person => !amount(person.otherTaxFreeFunding).isZero() || !amount(person.excludedPublicSafetyOfficerAmount).isZero())) throw new Error("Marketplace outside-payer or separate tax-free funding requires its actual deduction allocation worksheet.");
       const month = Number(payment.coverageMonth), sum = payments.get(month) ?? { premium: new Decimal(0), advance: new Decimal(0) };
       sum.premium = sum.premium.plus(amount(payment.grossPremium)); sum.advance = sum.advance.plus(amount(payment.advancePremiumTaxCredit)); payments.set(month, sum);
     }

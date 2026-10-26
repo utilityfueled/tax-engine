@@ -123,7 +123,11 @@ export function calculateSharedMarketplaceHealthSources(input: SharedMarketplace
     if (paidMonths.size !== months.size) throw new Error('Shared Marketplace health requires actual paid sources for every original policy month.');
     for (const [month, own] of months) {
       const paid = paidMonths.get(month)!, full = fullMonths.get(month)!;
-      if (!paid.gross.eq(full.premium) || !paid.advance.eq(full.advance) || !paid.ownAdvance.eq(own.advance) || !paid.ownPaid.plus(paid.ownAdvance).eq(own.premium)
+      // Complete zero-advance cash sources can differ from PartIV premiums.
+      // The separate actual-cash proof checks each coverage component and final
+      // credit; this facts-only binder never supplies the deduction.
+      const actualCashCandidate = Boolean(family) && full.advance.isZero() && paid.ownAdvance.isZero() && paid.ownPaid.lte(own.premium);
+      if (!paid.gross.eq(full.premium) || !paid.advance.eq(full.advance) || !paid.ownAdvance.eq(own.advance) || (!paid.ownPaid.plus(paid.ownAdvance).eq(own.premium) && !actualCashCandidate)
         || [...linked].some(([id, person]) => person.months.has(month) && !paid.people.has(id))) throw new Error('Shared Marketplace health actual paid family shares must reconcile the source-derived allocation; an agreement cannot supply missing payment facts.');
     }
     result.set(planId, { months });
