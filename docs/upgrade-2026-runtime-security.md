@@ -114,3 +114,31 @@ cleanup removed one obsolete task-owned cache chain; an in-use cache was retaine
 The retry passed. All original logs and the failed attempt remain available.
 This intermediate source predates later tax packages and does not establish final
 native-platform, hosted staging, human security or release qualification.
+
+## Native amd64 refresh at 8f1d1ba — October 26
+
+[Web workflow 40347754615](https://github.com/utilityfueled/tax-engine/actions/runs/40347754615)
+completed successfully on exact commit `8f1d1baee66efb28fa1f85bf3eb5a6249c2f3cad`.
+The [versioned evidence](upgrade-2026-runtime-8f1d1ba.json) records the native
+amd64 image, 44-template smoke check, all six Compose recovery phases and both
+428-case browser runs. Each browser run skipped five hosted-only cases; the
+container run explicitly used zero retries. Nine database tables, two tenants,
+exact provider cost, original documents, unknown year and exact cents survived
+upgrade, database restart, dump/restore, rollback and re-upgrade. Encrypted
+browser recovery rejected the wrong password and altered ciphertext and
+preserved deletion/reload behavior. The privacy observation covers raw synthetic
+markers in 411 requests, with the stated encoding/binary limitation retained.
+
+The refreshed scanner database, built October 26 at 06:38:44 UTC, reports the same
+157 package/version/severity/fix tuples and 67 advisories as the existing register.
+There are zero critical, npm or available-fixed-version matches. The SBOM has
+2,930 components. Every advisory's disposition, owner-confirmation requirement
+and November 7 review deadline remains unchanged. The downloaded artifact archive
+and exact SBOM, scan and logs have retained hashes.
+
+The separate CI workflow passed 19,044 unit tests in 1,198 files and its static
+jobs. Its coverage job was cancelled by the subsequent branch push, so no full
+remote CI pass is claimed. This native runtime evidence predates the later
+health and tax methods. Final-source images and recovery, hosted staging and
+independent human security/advisory review are still required. No release image
+was published and no deployment or filing/model gate changed.
