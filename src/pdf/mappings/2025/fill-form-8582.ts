@@ -14,6 +14,7 @@ import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { d, sum, zeroFloor } from "@/utils/decimal.js";
 import { calculateScheduleE } from "@/engine/schedules/schedule-e.js";
+import { calculateK1PassiveDistributionSources } from "@/engine/forms/k1-passive-distribution-sources.js";
 import { calculateForm8582, type Form8582ActivityRow, type Form8582Result, type PassiveActivity } from "@/engine/forms/form-8582.js";
 import {
   loadReviewTemplate,
@@ -241,13 +242,15 @@ export function assertForm8582ReviewSource(input: TaxYearInput, result: TaxRetur
   if (!retained) return undefined;
   if (!Decimal.isDecimal(retained.modifiedAgi) || !retained.modifiedAgi.isFinite()) throw new Error("Form8582 actual modified AGI source is missing");
   const schedule = calculateScheduleE(original);
-  const activities: PassiveActivity[] = schedule.partnerships.filter(row => row.isPassive).map(row => ({
-    name: row.name, reportingFormAndLine: "Schedule E, line 28", income: row.passiveIncome, loss: row.passiveLoss,
+  const distribution = calculateK1PassiveDistributionSources(original, schedule);
+  const activities: PassiveActivity[] = schedule.partnerships.flatMap((row, k1Index) => row.isPassive ? [{
+    name: row.name, reportingFormAndLine: "Schedule E, line 28",
+    income: row.passiveIncome.plus(distribution.rows.find(source => source.k1Index === k1Index)?.gain ?? 0), loss: row.passiveLoss,
     isRentalRealEstate: row.isRentalRealEstate, isActiveParticipant: row.isRentalRealEstate,
     isPubliclyTradedPartnership: row.isPubliclyTradedPartnership,
     ptpFullyDisposedInTaxableTransaction: row.ptpFullyDisposedInTaxableTransaction,
     ptpDispositionGainOrLoss: row.ptpDispositionGainOrLoss,
-  }));
+  }] : []);
   for (const row of schedule.rentalProperties) activities.push({ name: row.description,
     reportingFormAndLine: "Schedule E, line 22", income: zeroFloor(row.netRentalIncome),
     loss: Decimal.min(0, row.netRentalIncome), isRentalRealEstate: true, isActiveParticipant: row.isActiveParticipant });

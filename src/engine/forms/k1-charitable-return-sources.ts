@@ -112,6 +112,8 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
         const basis = calculatePartnerBasisSchedule(k1, { taxpayer: input.taxpayer, sources: source.basis });
         if (source.cashDistribution) reconcileDistributionOwnerTreatment(input, k1);
         const distributionGain = calculateK1CashDistributionGain(k1, basis, source.basis, source.cashDistribution);
+        if (distributionGain?.passiveActivity && !input.qbiLossSources?.activities?.some(row => row.k1SourceId === source.k1SourceId))
+            throw new Error('K1 passive distribution requires linked actual QBI and prior passive histories, including none');
         const charity = basis.charitableSources;
         if (!charity)
             throw new Error('K1 charitable original basis result is missing');

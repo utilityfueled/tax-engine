@@ -77,7 +77,7 @@ export function calculateK1QbiLossReturn(input: K1QbiLossSourceInput & Pick<TaxY
       const allocation = context.form8582.activityAllocations.find(row => row.sourceIndex === passiveSourceIndex);
       if (!row || row.name !== original.partnershipName
         || !row.sourceCurrentLoss.eq(Decimal.min(0, entry.netAmount))
-        || !row.sourceCurrentIncome.eq(Decimal.max(0, entry.netAmount))
+        || !row.sourceCurrentIncome.eq(Decimal.max(0, entry.netAmount).plus(source.passiveCapitalGain))
         || !row.sourcePriorYearSuspendedLoss.eq(source.priorPassiveLoss)
         || ((atRiskLoss.gt(0) || source.priorPassiveLoss.gt(0)) && !allocation)) {
         throw new Error('K1 QBI requires its original-index canonical passive allocation and source balances');

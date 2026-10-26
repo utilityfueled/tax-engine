@@ -28,10 +28,23 @@ export function buildK1CharitableReview(input: TaxYearInput, result: TaxReturnRe
         if (distribution) rows.push(
             `Actual cash distribution: $${distribution.cash.toFixed()}; Basis before distribution: $${distribution.basisBeforeDistribution.toFixed()}`,
             `Basis recovered: $${distribution.recoveredBasis.toFixed()}; Owner capital gain: $${distribution.gain.toFixed()}`,
-            `Acquisition date: ${distribution.acquisitionDate}; distribution date: ${distribution.distributionDate}; ${distribution.holdingPeriod}-term investment gain`,
+            `Acquisition date: ${distribution.acquisitionDate}; distribution date: ${distribution.distributionDate}; ${distribution.holdingPeriod}-term capital gain`,
             `Form8949 proceeds: $${distribution.proceeds.toFixed()}; reported basis: $${distribution.reportedBasis.toFixed()}`,
             'Distribution gain is not another entity income or charitable contribution.',
         );
+        if (distribution?.passiveActivity) {
+            const name = original.scheduleK1[statement.k1Index].partnershipName;
+            const activity = result.form8582?.activityRows.find(row => row.name === name);
+            const allocation = result.form8582?.activityAllocations.find(row => row.name === name);
+            if (!activity || !allocation) throw new Error('K1 passive distribution review requires its original activity and ordinary loss allocation');
+            rows.push(
+                'Distribution character: single passive business; continuing ownership.',
+                `Valuation date: ${distribution.passiveActivity.valuationDate}; holder underlying business FMV: $${distribution.passiveActivity.fairMarketValue.toFixed()}; adjusted basis: $${distribution.passiveActivity.adjustedBasis.toFixed()}`,
+                `Form8582 activity income: $${activity.currentIncome.toFixed()}; owner capital gain remains on Form8949 and Schedule D.`,
+                `Ordinary passive loss allowed: $${allocation.allowedLoss.toFixed()}; Passive loss remaining: $${allocation.suspendedLoss.toFixed()}`,
+                'The owner gain does not restore entity basis or become qualified business income. No full-disposition loss release applies.',
+            );
+        }
         for (const [index, record] of charity.records.entries()) {
             const label = record.category === 'cash_60' ? 'public cash' : record.category === 'capital_gain_30' ? 'public capital property' : 'other capital property';
             rows.push(`Contribution ${index + 1}: ${label}; original year ${record.originTaxYear}; ${record.current ? 'current entity-year source' : 'prior basis source'}`, `Original contribution share: $${record.contributionShare.toFixed()}; original allocated basis: $${record.originalBasis.toFixed()}`, `Basis previously allowed: $${record.basisPreviouslyAllowed.toFixed()}; basis allowed this year: $${record.basisAllowed.toFixed()}`, `Current appreciation outside the basis limit: $${record.appreciationExempt.toFixed()}`, `Available after basis: $${record.availableAfterBasis.toFixed()}; Basis suspended: $${record.basisSuspended.toFixed()}`);

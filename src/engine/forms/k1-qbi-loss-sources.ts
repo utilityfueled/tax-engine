@@ -13,12 +13,14 @@ export interface K1QbiLossSourceInput {
   scheduleK1:ScheduleK1[];
   qbiLossSources?:TaxYearInput['qbiLossSources'];
   k1CharitableSources?:TaxYearInput['k1CharitableSources'];
+  standardDeductionFacts?:TaxYearInput['standardDeductionFacts'];
+  eic?:Pick<NonNullable<TaxYearInput['eic']>,'claimantEligibility'>;
   priorYear?:Pick<NonNullable<TaxYearInput['priorYear']>,'suspendedPassiveLosses'>;
   rentalProperties?:Array<Pick<TaxYearInput['rentalProperties'][number],'description'>>;
 }
 export interface ValidatedK1QbiLossSource {
   sourceId:string;k1Index:number;accountHolder:'primary'|'spouse';
-  ordinaryIncome:Decimal;qualifiedBusinessIncome:Decimal;priorPassiveLoss:Decimal;
+  ordinaryIncome:Decimal;qualifiedBusinessIncome:Decimal;priorPassiveLoss:Decimal;passiveCapitalGain:Decimal;
   basisHistory:QbiLossHistorySource;atRiskHistory:QbiLossHistorySource;passiveHistory:QbiLossHistorySource;
 }
 const ordinaryOnlyZeroFields=[
@@ -99,7 +101,10 @@ export function validateK1QbiLossSources(input:K1QbiLossSourceInput):ValidatedK1
     names.add(entityName);eins.add(ein);
     if(source.ordinaryBusinessOnlyConfirmed!==true||source.continuingActivityConfirmed!==true||original.isPubliclyTradedPartnership
       ||original.ptpFullyDisposedInTaxableTransaction||original.isForeignPartnership||original.section199APTPIsSST||original.election1367) throw new Error('K1 QBI requires continuing ordinary sources; PTP disposal foreign and other methods are separate');
+    const distribution = charitable?.statements.find(row=>row.k1Index===index)?.distributionGain;
+    const passiveCapitalGain=distribution?.passiveActivity?distribution.gain:d(0);
     for(const field of ordinaryOnlyZeroFields){
+      if(field==='distributions'&&distribution?.passiveActivity) continue;
       if ((field==='charitableCash'||field==='charitableCapitalGain30'||field==='charitableCapitalGain20') && charitable?.statements.some(row=>row.k1Index===index)) continue;
       const value=d(original[field]);
       if(!value.isFinite()||!value.isZero()) throw new Error(`K1 QBI ordinary-only source conflicts with original ${field}; its separate method is required`);
@@ -152,7 +157,7 @@ export function validateK1QbiLossSources(input:K1QbiLossSourceInput):ValidatedK1
       if(!amount(atRisk[field],`at-risk ${field}`,true).eq(amount(original.form6198[field],`original at-risk ${field}`,true))) throw new Error(`K1 QBI original at-risk ${field} must match its source`);
     }
     const riskForm=original.form6198;
-    if(name(riskForm.activityName)!==entityName||(['gainLossFromDispositions','otherIncomeGains','otherDeductionsLosses'] as const).some(field=>!d(riskForm[field]).isZero())) throw new Error('K1 QBI actual ordinary at-risk activity has other source income or deductions');
+    if(name(riskForm.activityName)!==entityName||!d(riskForm.gainLossFromDispositions).eq(passiveCapitalGain)||(['otherIncomeGains','otherDeductionsLosses'] as const).some(field=>!d(riskForm[field]).isZero())) throw new Error('K1 QBI actual ordinary at-risk activity has other source income or deductions');
     if(source.sameRegularAmtTreatmentConfirmed!==true) throw new Error('K1 QBI requires independent same regular/AMT source treatment; differences need their separate method');
     if(source.sameOwnerHistoryConfirmed!==true) throw new Error('K1 QBI actual prior history must retain the same owner');
     const prior=amount(source.priorPassiveLoss,'prior passive opening',true,true);
@@ -162,6 +167,6 @@ export function validateK1QbiLossSources(input:K1QbiLossSourceInput):ValidatedK1
     const passiveHistory=history(priorRows[0].qbiLossTracking,year,prior,known(original.qbiMateriallyParticipated,'material participation'));
     const basisHistory:QbiLossHistorySource={...basis,sourceFactsConfirmed:true,vintages:[]};
     const atRiskHistory:QbiLossHistorySource={...atRisk.priorLossHistory,sourceFactsConfirmed:true,vintages:[]};
-    return {sourceId:id,k1Index:index,accountHolder:owner,ordinaryIncome:ordinary,qualifiedBusinessIncome:qualified,priorPassiveLoss:prior,basisHistory,atRiskHistory,passiveHistory};
+    return {sourceId:id,k1Index:index,accountHolder:owner,ordinaryIncome:ordinary,qualifiedBusinessIncome:qualified,priorPassiveLoss:prior,passiveCapitalGain,basisHistory,atRiskHistory,passiveHistory};
   });
 }

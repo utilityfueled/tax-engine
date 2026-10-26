@@ -1,4 +1,4 @@
-/** Original investment-only cash distributions; spec/federal/k1-cash-distribution-gain.yaml. */
+/** Original source-bound cash distributions; spec/federal/k1-cash-distribution-gain.yaml. */
 import Decimal from 'decimal.js';
 import type { ScheduleK1 } from '@/models/inputs.js';
 import type { K1CharitableBasisSources } from '@/models/k1-charitable-basis-sources.js';
@@ -7,10 +7,12 @@ import type { PartnerBasisScheduleResult } from './partner-basis-schedule.js';
 import type { CalculatedLine } from '@/models/outputs.js';
 import { d } from '@/utils/decimal.js';
 import { AuditTrail } from '@/utils/audit.js';
+import { calculateK1PassiveDistributionActivity, type K1PassiveDistributionActivity } from './k1-passive-distribution-activity.js';
 export interface K1CashDistributionGain {
   cash: Decimal; basisBeforeDistribution: Decimal; recoveredBasis: Decimal; gain: Decimal;
   acquisitionDate: string; distributionDate: string; holdingPeriod: 'short' | 'long';
   proceeds: Decimal; reportedBasis: Decimal; lines: CalculatedLine[];
+  passiveActivity?: K1PassiveDistributionActivity;
 }
 function date(value: string | undefined, label: string): string {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)
@@ -58,14 +60,19 @@ export function calculateK1CashDistributionGain(k1: ScheduleK1, basis: PartnerBa
       confirmed(source[key], key);
   }
   // Capital character alone does not prove the 469/1411 underlying activity.
-  if (source.activityCharacter !== 'portfolio_investments_only' || k1.isPassiveActivity !== false)
+  const passiveActivity = source.activityCharacter === 'single_passive_business'
+    ? calculateK1PassiveDistributionActivity(k1, distributionDate, source.passiveActivity) : undefined;
+  if (!passiveActivity && (source.activityCharacter !== 'portfolio_investments_only' || k1.isPassiveActivity !== false || source.passiveActivity !== undefined))
     throw new Error('K1 cash distribution business or passive allocation requires its separate original activity method');
   confirmed(source.sameSingleAtRiskActivityConfirmed, 'same single at-risk activity');
   if (!source.atRiskSourceReference?.trim() || !source.atRiskGainItemSourceReference?.trim())
     throw new Error('K1 cash distribution requires the actual at-risk activity and gain item statement references');
   for (const key of ['ordinaryIncome', 'netRentalIncome', 'otherNetRentalIncome', 'guaranteedPayments', 'royalties', 'otherIncome',
     'section1231Gain', 'section179Deduction', 'section199AQBI', 'selfEmploymentEarnings', 'selfEmploymentNetEarningsAfterAdjustments'] as const)
-    if (!d(k1[key]).isFinite() || !d(k1[key]).isZero()) throw new Error('K1 cash distribution portfolio character conflicts with an actual operating or self-employment source');
+    if (passiveActivity && (key === 'ordinaryIncome' || key === 'section199AQBI')) continue;
+    else if (!d(k1[key]).isFinite() || !d(k1[key]).isZero()) throw new Error('K1 cash distribution portfolio character conflicts with an actual operating or self-employment source');
+  if (passiveActivity && (['interestIncome','ordinaryDividends','qualifiedDividends','netShortTermCapitalGain','netLongTermCapitalGain'] as const).some(key => !d(k1[key]).isZero()))
+    throw new Error('K1 passive distribution original capital/portfolio items require their separate mixed source method');
   if (k1.beginningBasis === undefined || !basis.beginningBasis.eq(k1.beginningBasis) || !basis.basisBeforeDecreases.eq(basis.beginningBasis.plus(basis.totalIncomeItems)))
     throw new Error('K1 cash distribution requires the original completed basis calculation');
   const cash = d(source.cashAmount), basisBeforeDistribution = basis.basisBeforeDecreases;
@@ -83,5 +90,5 @@ export function calculateK1CashDistributionGain(k1: ScheduleK1, basis: PartnerBa
     { 'Actual cash': cash, 'Basis before distribution': basisBeforeDistribution, 'Basis recovered': recoveredBasis,
       'Acquisition date': acquisitionDate, 'Distribution date': distributionDate, 'Holding period': holdingPeriod,
       'Form8949 proceeds': proceeds, 'Form8949 basis': reportedBasis });
-  return { cash, basisBeforeDistribution, recoveredBasis, gain, acquisitionDate, distributionDate, holdingPeriod, proceeds, reportedBasis, lines: audit.getLines() };
+  return { cash, basisBeforeDistribution, recoveredBasis, gain, acquisitionDate, distributionDate, holdingPeriod, proceeds, reportedBasis, passiveActivity, lines: audit.getLines() };
 }

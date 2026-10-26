@@ -63,6 +63,7 @@ import { calculateScheduleD, recomputeCarryforward } from "./schedules/schedule-
 import { calculateK1CharitableReturnSources } from "./forms/k1-charitable-return-sources.js";
 import { calculateScheduleE } from "./schedules/schedule-e.js";
 import { calculateK1Form461Classification } from "./forms/k1-form461-classification.js";
+import { calculateK1PassiveDistributionSources } from "./forms/k1-passive-distribution-sources.js";
 import { calculateK1OrdinarySelfEmployment } from "./forms/k1-ordinary-self-employment.js";
 import { calculateScheduleSE } from "./schedules/schedule-se.js";
 import { calculateHomeMortgageInterest } from "./forms/home-mortgage-interest.js";
@@ -1878,19 +1879,20 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     .minus(sched1.totalAdjustments).minus(k1Form1041Section67eDeductions);
   // ── Form 8582: Passive Activity Loss Limitations ────────
   // Build passive activities from K-1s marked as passive
+  const passiveDistribution = calculateK1PassiveDistributionSources(input, schedE);
+  audit.merge(passiveDistribution.lines);
   const passiveActivities: PassiveActivity[] = schedE.partnerships
-    .filter((partnership) => partnership.isPassive)
-    .map((partnership) => ({
+    .flatMap((partnership, k1Index) => partnership.isPassive ? [{
       name: partnership.name,
       reportingFormAndLine: "Schedule E, line 28",
-      income: partnership.passiveIncome,
+      income: partnership.passiveIncome.plus(passiveDistribution.rows.find(row => row.k1Index === k1Index)?.gain ?? 0),
       loss: partnership.passiveLoss,
       isRentalRealEstate: partnership.isRentalRealEstate,
       isActiveParticipant: partnership.isRentalRealEstate, // simplified assumption
       isPubliclyTradedPartnership: partnership.isPubliclyTradedPartnership,
       ptpFullyDisposedInTaxableTransaction: partnership.ptpFullyDisposedInTaxableTransaction,
       ptpDispositionGainOrLoss: partnership.ptpDispositionGainOrLoss,
-    }));
+    }] : []);
 
   // Add rental properties from Schedule E Part I as passive activities
   for (const rental of schedE.rentalProperties) {
@@ -1929,7 +1931,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     .filter(activity => activity.isPubliclyTradedPartnership && activity.ptpFullyDisposedInTaxableTransaction)
     .map(activity => zeroFloor(activity.income.plus(activity.loss)))));
   const form8582MAGI = eblSources?.passiveLossModifiedAgi !== undefined ? d(eblSources.passiveLossModifiedAgi) : passiveSourceAgi
-    .minus(preliminaryPassiveIncome).plus(zeroFloor(regularPassiveNet)).plus(currentPtpIncome)
+    .minus(preliminaryPassiveIncome).minus(passiveDistribution.gain).plus(zeroFloor(regularPassiveNet)).plus(currentPtpIncome)
     .plus(sched1.iraDeduction).plus(sched1.studentLoanInterest).plus(schedSE.deductibleHalf)
     .plus(adoptionBenefitResult?.allowableExclusion ?? new Decimal(0));
 
@@ -1977,7 +1979,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // A signed replacement handles both suspended current losses and released
   // prior losses, including activities whose current income is positive.
   const allowedPassiveIncome = form8582.rentalIncome.plus(form8582.passiveIncome)
-    .minus(passiveLossForIncome).plus(currentPtpIncome);
+    .minus(passiveLossForIncome).plus(currentPtpIncome).minus(passiveDistribution.ordinaryTransferExclusion);
   const passiveIncomeAdjustment = allowedPassiveIncome.minus(preliminaryPassiveIncome);
   // ── PTP disposition: released losses reduce AGI (IRC §469(g)(1)) ──
   // When a PTP is fully disposed of in a taxable transaction, accumulated
@@ -4080,7 +4082,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Portfolio royalties are outside the section 469 pool but remain investment
   // income under section 1411(c)(1)(A)(i). Line 4b must not remove them along
   // with excluded active business income already included on line 4a.
-  const niitScheduleEIncome = netAllowedPassive.plus(schedE.totalRoyaltyIncome);
+  const niitScheduleEIncome = netAllowedPassive.minus(passiveDistribution.ordinaryTransferExclusion).plus(schedE.totalRoyaltyIncome);
   audit.record("Form8960 Source", "portfolio-royalties", "Portfolio royalties retained in investment income", schedE.totalRoyaltyIncome,
     "Completed Schedule E portfolio royalty component, included once outside the passive activity pool");
   const form8960 = calculateForm8960(

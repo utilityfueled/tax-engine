@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { K1PassiveDistributionSourcesSchema } from './k1-passive-distribution-sources.js';
 /** Original cash/holding/character facts only. There is no calculated gain field. */
 export const K1CashDistributionSourcesSchema = z.object({
   sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
@@ -9,6 +10,7 @@ export const K1CashDistributionSourcesSchema = z.object({
   allAnnualDistributionsIncludedConfirmed: z.boolean().optional(), cashOnlyConfirmed: z.boolean().optional(),
   nonliquidatingConfirmed: z.boolean().optional(), noOtherReportingConfirmed: z.boolean().optional(),
   noSpecialHoldingOrGainElectionConfirmed: z.boolean().optional(), allIncomePrecedesDistributionConfirmed: z.boolean().optional(),
+  passiveActivity: K1PassiveDistributionSourcesSchema.optional(),
   activityCharacter: z.enum(['portfolio_investments_only', 'single_passive_business', 'single_nonpassive_business', 'mixed_or_other']).optional(),
   /** Actual owner has U.S. citizen/resident treatment throughout this source year
    * and relevant holding period (including an effective resident election),

@@ -3,6 +3,7 @@ import Decimal from 'decimal.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import type { ScheduleEResult } from '@/engine/schedules/schedule-e.js';
 import type { Form8582Result } from './form-8582.js';
+import { calculateK1PassiveDistributionSources } from './k1-passive-distribution-sources.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, roundDollar, sum, zeroFloor } from '@/utils/decimal.js';
 
@@ -24,7 +25,12 @@ export function calculateEicScheduleEInvestment({ input, scheduleE, passive, all
     'Completed direct-property expense ledger; no unrelated passive or business loss');
   audit.record('EIC Investment Income Worksheet','10','Represented net royalty investment income',royaltyIncome,
     'Gross portfolio royalties less actual direct-property expenses, floored at zero. Unrepresented property expense and personal-property rental methods remain separate.');
-  let passiveIncome = passive.rentalIncome.plus(passive.passiveIncome);
+  const distribution=calculateK1PassiveDistributionSources(input,scheduleE);
+  for(const source of distribution.rows) {
+    const row=passive.activityRows.find(item=>item.sourceIndex===source.passiveIndex);
+    if(!row||!row.sourceCurrentIncome.eq(source.sourceIncome)) throw new Error('EIC passive distribution source does not match actual Form8582');
+  }
+  let passiveIncome = passive.rentalIncome.plus(passive.passiveIncome).minus(distribution.ordinaryTransferExclusion);
   let passiveLoss = allowedPassiveLoss.negated();
   const unresolved: string[] = [];
   if (section163jDeduction.gt(0) && scheduleE.partnerships.some(row => row.isPassive)) {
@@ -72,7 +78,7 @@ export function calculateEicScheduleEInvestment({ input, scheduleE, passive, all
   if (unresolved.length) return { royaltyIncome, passiveIncome: undefined, unresolved, lines:audit.getLines() };
   const netPassive = zeroFloor(sum(passiveIncome,passiveLoss));
   audit.record('EIC Investment Income Worksheet','11','Regular passive income excluding earned overlap',passiveIncome,
-    'Completed Form8582 current rental and ordinary passive income, excluding amounts already included in earned income');
+    'Completed Form8582 current rental and ordinary passive income, excluding source-bound capital gain already included on line7 and amounts already included in earned income');
   audit.record('EIC Investment Income Worksheet','12','Allowed regular passive losses excluding earned overlap',passiveLoss,
     'Negative final current and prior Form8582 allowance actually transferred into income, excluding losses already included in earned income');
   audit.record('EIC Investment Income Worksheet','13','Net regular passive investment income',netPassive,

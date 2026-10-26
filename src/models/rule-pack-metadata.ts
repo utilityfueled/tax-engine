@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.126",
+    ruleVersion: "2025.127",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.ecfr.gov/current/title-26/section-1.469-2T", section: "Actual single passive activity excess-cash distribution; underlying holder valuation, annual event thresholds, original basis and separate ordinary loss histories", revision: "Reg1.469-2T(e)(3), Pub925 and final i8582/i8960/Pub596; capital stays on8949/D, ordinary loss use and NIIT/EIC/QBI remain separate; actual guide and full ScheduleE packet follow-through, broader activity methods and human qualification remain pending", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Separate-business nonspecified health deductions in the historical2025 optional Marketplace method; Worksheet W13-17 and ordered X/Y/Z limits", revision: "Final Pub974 and Reg1.36B-4(a)(3)(iii)(C): actual own-business deduction first, all allowable nonspecified deductions on W14 without borrowing other-business earnings; source/canonical/guided/private-PDF controls reviewed; multiple specified owners, negative W15, binding joint-cap attribution and human qualification remain separate;2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i1040se", section: "Actual nonbusiness royalty property sources, original MISC allocations and current ordinary expenses; Schedule E net portfolio income once in EIC and NIIT", revision: "Final2025 Schedule E lines4-21, Pub596 Worksheet1 lines8-10 and i8960 lines4a/4b; actual zero and cents preserved, separate source/owner controls; loss, depletion, business, PA, physical forms and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s731/", section: "Actual investment-only cash distributions above original partnership or S-stock basis, separate owner gain through Form8949 and ScheduleD", revision: "IRC731/1368/1222, Reg1.731-1/1.1368-1, final8949 and7203; original cash/holding/exclusions and private source review, business/passive, fiscal/interim and human qualification remain separate", retrievedAt: "2026-10-26" },
@@ -166,11 +167,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.123-law-integration-draft",
+    ruleVersion: "2026.124-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.ecfr.gov/current/title-26/section-1.469-2T", section: "Actual single passive activity excess-cash distribution; underlying holder valuation, annual event thresholds, original basis and separate ordinary loss histories", revision: "Reg1.469-2T(e)(3), Pub925 and final i8582/i8960/Pub596; capital stays on8949/D, ordinary loss use and NIIT/EIC/QBI remain separate; actual guide and full ScheduleE packet follow-through, broader activity methods and human qualification remain pending", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Separate-business nonspecified health deductions in the historical2025 optional Marketplace method; Worksheet W13-17 and ordered X/Y/Z limits", revision: "Final Pub974 and Reg1.36B-4(a)(3)(iii)(C): actual own-business deduction first, all allowable nonspecified deductions on W14 without borrowing other-business earnings; source/canonical/guided/private-PDF controls reviewed; multiple specified owners, negative W15, binding joint-cap attribution and human qualification remain separate;2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i1040se", section: "Actual nonbusiness royalty property sources, original MISC allocations and current ordinary expenses; Schedule E net portfolio income once in EIC and NIIT", revision: "Final2025 Schedule E lines4-21, Pub596 Worksheet1 lines8-10 and i8960 lines4a/4b; actual zero and cents preserved, separate source/owner controls; loss, depletion, business, PA, physical forms and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s731/", section: "Actual investment-only cash distributions above original partnership or S-stock basis, separate owner gain through Form8949 and ScheduleD", revision: "IRC731/1368/1222, Reg1.731-1/1.1368-1, final8949 and7203; original cash/holding/exclusions and private source review, business/passive, fiscal/interim and human qualification remain separate", retrievedAt: "2026-10-26" },
