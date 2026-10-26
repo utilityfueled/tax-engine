@@ -2435,9 +2435,6 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const deductionSelection = calculateFederalDeductionSelection({ taxYear: year, election: deductionElection,
     eligibleForStandardDeduction: standardDeductionWorksheet.eligibleForStandardDeduction, standardDeduction,
     itemizedDeductions, nonitemizerCharitableDeduction: schedA.nonitemizerCharitableDeduction });
-  if (deductionSelection.deductionUsed === "nonitemized" && schedA.charitableCarryforward.gt(0)) {
-    throw new Error("Explicit nonitemized charitable carry coordination requires its separate source method; retained sources cannot use the itemized floor carry amount");
-  }
   let { deductionUsed, deductionAmount } = deductionSelection;
 
   // Section 199A deductions follow the individual and the contributing trade.
@@ -2715,6 +2712,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     }
   }
   const { qbiDeduction, form8995Result, form8995AResult } = qbiCalculation;
+  if (year === 2026 && deductionUsed !== "itemized" && schedA.charitableCarryforward.gt(0) && !schedA.nonitemizedCharitableCarryover) {
+    throw new Error("Nonitemized charitable carry requires the complete supported source method; retained sources cannot use the itemized floor carry amount");
+  }
   audit.merge(calculateFederalDeductionSelection({ taxYear: year, election: deductionElection,
     eligibleForStandardDeduction: standardDeductionWorksheet.eligibleForStandardDeduction, standardDeduction,
     itemizedDeductions, nonitemizerCharitableDeduction: schedA.nonitemizerCharitableDeduction }).lines);

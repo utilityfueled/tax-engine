@@ -16,7 +16,12 @@ export interface SelectedCharitableCarryover {
 export function calculateSelectedCharitableCarryover(input: {
   taxYear: number; deductionMethod: "standard" | "itemized" | "nonitemized"; scheduleA: ScheduleAResult;
 }): SelectedCharitableCarryover {
-  if (input.taxYear !== 2025) throw new Error("Selected charitable history requires its separate2026 floor and nonitemizer method");
+  const nonitemized = input.scheduleA.nonitemizedCharitableCarryover;
+  if (input.taxYear !== 2025 && (input.taxYear !== 2026 || !nonitemized
+    || nonitemized.method !== "2026_nonitemized_public_cash" || input.deductionMethod === "itemized"
+    || nonitemized.deductionMethod !== input.deductionMethod)) {
+    throw new Error("Selected charitable history requires its separate2026 floor and nonitemizer method");
+  }
   const detail = input.scheduleA.charitableCarryforwardDetail.map(row => {
     if (!row.medium || !row.category || row.treatedAsPaid === undefined || !row.treatedAsPaid.isFinite()
       || row.treatedAsPaid.lt(0) || !row.amountAvailable.eq(row.treatedAsPaid.plus(row.amountRemaining).plus(row.amountExpired))) {
@@ -24,12 +29,15 @@ export function calculateSelectedCharitableCarryover(input: {
     }
     return { ...row, amountUsed: input.deductionMethod === "itemized" ? row.treatedAsPaid : d("0") };
   });
-  const deduction = input.deductionMethod === "itemized" ? input.scheduleA.charitableTotal : d("0");
+  const deduction = input.deductionMethod === "itemized" ? input.scheduleA.charitableTotal
+    : input.taxYear === 2026 ? input.scheduleA.nonitemizerCharitableDeduction : d("0");
   const priorDeduction = sum(...detail.map(row => row.amountUsed));
   const priorTreatedAsPaid = sum(...detail.map(row => row.treatedAsPaid ?? d("0")));
   const audit = new AuditTrail();
   audit.record("Charitable Carryover", "selected-deduction", "Charity under the final deduction method", deduction,
-    input.deductionMethod === "itemized" ? "Selected itemized deduction retains actual prior use" : "Standard2025: no charitable deduction, but prior carry capacity is treated as paid",
+    input.deductionMethod === "itemized" ? "Selected itemized deduction retains actual prior use"
+      : input.taxYear === 2026 ? "Selected2026 nonitemization: current section170(p) deduction only; actual prior cash capacity is treated as paid without a deduction"
+      : "Standard2025: no charitable deduction, but prior carry capacity is treated as paid",
     { "Actual prior deduction": priorDeduction, "Prior treated as paid": priorTreatedAsPaid });
   return { deductionMethod: input.deductionMethod, deduction, priorDeduction, priorTreatedAsPaid, detail,
     carryforwards: input.scheduleA.charitableCarryforwardByYear.map(row => ({ ...row })), lines: audit.getLines() };

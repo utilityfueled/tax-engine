@@ -22,6 +22,7 @@ import { calculateCharitableContributionWorksheet, type CharitableCategory, type
 import { charitableSourceDigest } from "@/utils/charitable-source-digest.js";
 import { eligibleCurrentCharitableDonations } from "@/engine/forms/charitable-current-sources.js";
 import { calculateCharitableCarryover } from "@/engine/forms/charitable-carryover.js";
+import { calculateNonitemizedCharitableCarryover, type NonitemizedCharitableCarryoverResult } from "@/engine/forms/nonitemized-charitable-carryover.js";
 import type { SelectedCharitableCarryover } from "@/engine/forms/selected-charitable-carryover.js";
 // calculateDeductibleMortgageInterest is no longer used here — mortgage interest
 // is now computed with aggregate debt limits per IRS Pub 936 (see Lines 8a-8d section).
@@ -94,6 +95,8 @@ export interface ScheduleAResult {
   charitableTotal: Decimal; // Reported line14=sum11–13, transferred to17 and other deduction consumers.
   charitableSourceDigest: string; // Original charitable facts, excluding render-only identifiers.
   charitableTreatment?: SelectedCharitableCarryover; // Set only after canonical deduction selection.
+  /** Derived only for the explicit2026 nonitemizer source method; no itemized charity candidate. */
+  nonitemizedCharitableCarryover?: NonitemizedCharitableCarryoverResult;
   gamblingLossDeduction: Decimal; // Component of line16
   bondPremiumDeduction: Decimal; // Actual allowable section171 excess
   oidOrdinaryLossDeduction: Decimal; // Actual allowable section1.1275-7(f)(1) ordinary loss
@@ -302,6 +305,7 @@ export function calculateScheduleA(
   let charitableCarryforwards: CharitableCarryforwardEntry[];
   let charitableCarryforwardExpired = ZERO;
   let charitableCarryforwardDetail: CharitableCarryforwardYearDetail[] = [];
+  let nonitemizedCharitableCarryover: NonitemizedCharitableCarryoverResult | undefined;
   const crypto = extra?.cryptoCharitableAmounts;
   const amounts = { cashPublic: (extra?.k1CashCharitable ?? ZERO).plus(crypto?.cashPublic ?? ZERO), noncashPublic: crypto?.noncashPublic ?? ZERO,
     capitalGainPublic: (extra?.k1AppreciatedProperty30 ?? ZERO).plus(crypto?.capitalGainPublic ?? ZERO), cashPrivate: crypto?.cashPrivate ?? ZERO,
@@ -336,7 +340,11 @@ export function calculateScheduleA(
   }
   if (nolCashLimit !== undefined) amounts.cashPublic = min(amounts.cashPublic, nolCashLimit);
   if (input.charitableCarryoverSources) {
-    const charitable = calculateCharitableCarryover(input, { contributionBase, current: amounts, itemizes: true });
+    if (input.taxpayer.taxYear === 2026 && (input.deductionElection === "standard" || input.deductionElection === "nonitemized")) {
+      if (nolCashLimit !== undefined) throw new Error("Nonitemized charitable carry requires its separate NOL replay method");
+      nonitemizedCharitableCarryover = calculateNonitemizedCharitableCarryover(input, { contributionBase, current: amounts });
+    }
+    const charitable = nonitemizedCharitableCarryover ?? calculateCharitableCarryover(input, { contributionBase, current: amounts, itemizes: true });
     audit.merge(charitable.lines);
     cashCharitable = charitable.currentCash.plus(charitable.priorCashDeduction);
     nonCashCharitable = charitable.currentNoncash.plus(charitable.priorNoncashDeduction);
@@ -350,7 +358,8 @@ export function calculateScheduleA(
     nonCashCharitable = charitable.exactNonCashDeduction;
     charitableCarryforwards = charitable.carryforwards;
   }
-  const limitDescription = input.taxpayer.taxYear === 2026 ? "2026 category worksheet, including 0.5% floor" : "Final2025 Pub526 Worksheet2 current-contribution category limits";
+  const limitDescription = nonitemizedCharitableCarryover ? "Actual explicit nonitemization: no ScheduleA charity deduction; section170(p) and percentage carry are separate"
+    : input.taxpayer.taxYear === 2026 ? "2026 category worksheet, including 0.5% floor" : "Final2025 Pub526 Worksheet2 current-contribution category limits";
   audit.record("Charitable Computation", "cash", "Cash charitable after applicable limitations", cashCharitable, limitDescription);
   audit.record("Charitable Computation", "noncash", "Noncash charitable after applicable limitations", nonCashCharitable, limitDescription);
 
@@ -444,6 +453,7 @@ export function calculateScheduleA(
     charitablePriorYearUsed,
     charitableTotal,
     charitableSourceDigest: charitableSourceDigest(input),
+    ...(nonitemizedCharitableCarryover ? { nonitemizedCharitableCarryover } : {}),
     gamblingLossDeduction,
     bondPremiumDeduction,
     oidOrdinaryLossDeduction,

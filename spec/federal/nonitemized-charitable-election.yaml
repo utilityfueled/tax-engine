@@ -11,7 +11,8 @@ notes: |
   deduction worksheet establishes ineligibility. It neither grants a standard
   deduction nor changes historical2025 choices or automatic selection.
   Actual charitable qualification/date/amount sources remain required. Prior
-  charity and NOL transition methods retain their separate guards. Final2026
+  charity and NOL transition methods retain their separate guards except the
+  separately specified complete pure-public-cash nonitemized carry method. Final2026
   calculation and export gates remain closed.
 lines:
   - line: "actual-election"

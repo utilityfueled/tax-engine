@@ -90,7 +90,7 @@ it("preserves original cents and requires actual current public-cash carry sourc
   unknownAmt.netOperatingLoss.alternativeTax.vintages = undefined;
   expect(() => calculateFederalTax(unknownAmt)).toThrow(/separate actual complete AMT/i);
   const standard2026 = charitableNolInput("100000", "60000", 2026); standard2026.deductionElection = "standard";
-  expect(() => calculateFederalTax(standard2026)).toThrow(/standard.deduction charitable carry/i);
+  expect(() => calculateFederalTax(standard2026)).toThrow(/nonitemized charitable carry/i);
 });
 it("excludes known ineligible receipts from current charitable NOL coordination", () => {
   const input = charitableNolInput();
