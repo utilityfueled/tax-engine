@@ -153,6 +153,7 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
     const money = (value: Decimal) => value.toDecimalPlaces(2).toFixed();
     write(`Actual completed method: ${marketplace.method}. Step 2 credit: $${marketplace.step2Credit.toFixed()}. Final Form 8962 credit: $${marketplace.finalCredit.toFixed()}.`);
     write(`Return-level Schedule 1 line 17 transfer: $${calculation.deductionToSchedule1.toFixed()}. Specified deduction $${money(marketplace.specifiedDeduction)}; nonspecified deduction $${money(marketplace.nonspecifiedDeduction)}; combined maximum $${money(marketplace.maximumDeduction)}.`);
+    if (marketplace.historicalLimit?.separateBusinessNonspecifiedDeduction.gt(0)) write("SEPARATE BUSINESS ORDERING: each nonspecified claim first uses its own actual Form7206 earnings limit. The other business deduction reduces the published historical limit; its earnings are not borrowed. This optional worksheet method can be conservative; the repeated combined transfer is not another business deduction.");
     const ownerRows = calculation.lines.filter(row => row.form === "Pub974 Owner Allocation" && row.inputs?.Owner === accountHolder);
     if (ownerRows.length) {
       write("SEPARATE OWNER ATTRIBUTION: these amounts identify this owner's portion of the joint calculation. They are already included in the return-level transfer above. Any allocation among this owner's businesses for QBI is separate.");

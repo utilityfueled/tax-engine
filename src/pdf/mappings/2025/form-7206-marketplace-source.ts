@@ -74,10 +74,10 @@ export function assertMarketplaceHealthReviewSources(input: TaxYearInput, result
   if (!historical) throw new Error("Pub9742025 review needs the actual historical source worksheet.");
   const checkedLimit = calculateMarketplaceHealthLimit({ taxYear: 2025, filingStatus: input.taxpayer.filingStatus, groups,
     householdIncomeAfterW: historical.householdIncomeAfterW, federalPovertyLine: historical.federalPovertyLine, orderedDeductions: historical.orderedDeductions });
-  for (const key of ["specifiedPremiums", "specifiedAdvances", "remainingEarnedIncome", "nonspecifiedDeduction", "preliminarySpecifiedDeduction", "maximumSpecifiedDeduction", "maximumHealthDeduction"] as const) same(historical[key], checkedLimit[key]);
+  for (const key of ["specifiedPremiums", "specifiedAdvances", "remainingEarnedIncome", "nonspecifiedDeduction", "specifiedBusinessNonspecifiedDeduction", "separateBusinessNonspecifiedDeduction", "preliminarySpecifiedDeduction", "maximumSpecifiedDeduction", "maximumHealthDeduction"] as const) same(historical[key], checkedLimit[key]);
   if (historical.repaymentLimit?.toFixed() !== checkedLimit.repaymentLimit?.toFixed()) throw new Error("Pub974 review historical repayment source does not reconcile.");
   audits(checkedLimit.lines, historical.lines);
-  audits(historical.lines, result.allLines.filter(row => /^Pub974 Worksheet [WXYZ]/.test(row.form)));
+  audits(historical.lines, result.allLines.filter(row => /^Pub974 Worksheet [WXYZ]/.test(row.form) || row.form === "Pub974 Separate Business Sources"));
   same(marketplace.maximumSpecifiedDeduction, checkedLimit.maximumSpecifiedDeduction);
   same(marketplace.nonspecifiedDeduction, exact(nonspecified.deduction));
   same(marketplace.maximumDeduction, checkedLimit.maximumSpecifiedDeduction.plus(marketplace.nonspecifiedDeduction));

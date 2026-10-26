@@ -34,14 +34,19 @@ export function calculateMarketplaceHealthLimit(params: {
   const seen = new Set<string>();
   const specified = params.groups.filter(row => row.months.length > 0);
   let specifiedPremiums = d(0), specifiedAdvances = d(0), remainingEarnedIncome = d(0), nonspecifiedDeduction = d(0);
+  let specifiedBusinessNonspecifiedDeduction = d(0), separateBusinessNonspecifiedDeduction = d(0);
   for (const group of params.groups) {
     if (seen.has(group.businessSourceId)) throw new Error("Duplicate Marketplace limit business source.");
     seen.add(group.businessSourceId);
     for (const value of [group.specifiedPremiums,group.nonspecifiedDeduction]) if (!Decimal.isDecimal(value) || !value.isFinite() || value.lt(0)) throw new Error("Marketplace limit requires finite nonnegative source amounts.");
     if (!Decimal.isDecimal(group.remainingEarnedIncome) || !group.remainingEarnedIncome.isFinite()) throw new Error("Marketplace limit requires finite signed earned income.");
-    if (!group.months.length && group.nonspecifiedDeduction.gt(0)) throw new Error("Historical W/X needs the separate non-Marketplace-business deduction coordination.");
     nonspecifiedDeduction = nonspecifiedDeduction.plus(group.nonspecifiedDeduction);
-    if (!group.months.length) continue;
+    if (!group.months.length) {
+      if (!group.specifiedPremiums.isZero()) throw new Error("Positive specified premiums require actual source months.");
+      separateBusinessNonspecifiedDeduction = separateBusinessNonspecifiedDeduction.plus(group.nonspecifiedDeduction);
+      continue;
+    }
+    specifiedBusinessNonspecifiedDeduction = specifiedBusinessNonspecifiedDeduction.plus(group.nonspecifiedDeduction);
     const months = new Set<number>();
     let groupPremium = d(0);
     for (const month of group.months) {
@@ -57,9 +62,19 @@ export function calculateMarketplaceHealthLimit(params: {
     remainingEarnedIncome = remainingEarnedIncome.plus(group.remainingEarnedIncome);
   }
   if (!specified.length) throw new Error("Marketplace limit requires actual specified-plan sources.");
+  // Group remaining income already subtracts that business's nonspecified
+  // claim. W13 must restore only those claims, never another business's income.
+  const specifiedBusinessEarnedIncome = remainingEarnedIncome.plus(specifiedBusinessNonspecifiedDeduction);
+  remainingEarnedIncome = remainingEarnedIncome.minus(separateBusinessNonspecifiedDeduction);
+  const multipleOwners = new Set(specified.map(row => row.accountHolder)).size > 1;
+  if (separateBusinessNonspecifiedDeduction.gt(0)) {
+    if (multipleOwners) throw new Error("Separate-business nonspecified deductions with multiple specified-plan owners require their actual owner coordination method.");
+    if (remainingEarnedIncome.lt(0)) throw new Error("Separate-business nonspecified deductions with negative WorksheetW15 require their actual stop-worksheet method.");
+    audit.record("Pub974 Separate Business Sources", "plan-nonspecified", "Nonspecified deductions from specified-plan businesses", specifiedBusinessNonspecifiedDeduction, "Actual completed Form7206 claims already subtracted in the plan-business source limits");
+    audit.record("Pub974 Separate Business Sources", "outside-nonspecified", "Nonspecified deductions from separate businesses", separateBusinessNonspecifiedDeduction, "Actual separate Form7206 deductions; include in W14 once without adding these businesses' earnings to W13");
+  }
   const earnedLimit = zeroFloor(remainingEarnedIncome);
   const taxpayerPaidSpecifiedPremiums = specifiedPremiums.minus(specifiedAdvances);
-  const multipleOwners = new Set(specified.map(row => row.accountHolder)).size > 1;
   const preliminarySpecifiedDeduction = multipleOwners
     ? calculateMarketplaceOwnerDeductions({ taxYear: params.taxYear, filingStatus: params.filingStatus, groups: params.groups, stage: { kind: "worksheet-w" } }).specifiedDeduction
     : min(taxpayerPaidSpecifiedPremiums, earnedLimit);
@@ -68,7 +83,7 @@ export function calculateMarketplaceHealthLimit(params: {
     ["1","Specified premiums",specifiedPremiums,"Actual source total"],
     ["2","Advances attributable to specified premiums",specifiedAdvances,"Actual monthly advance times specified enrollment share"],
     ["3","Specified premiums less advances",taxpayerPaidSpecifiedPremiums,"Line1-line2"],
-    ["13","Combined earned income after attributable deductions",remainingEarnedIncome.plus(nonspecifiedDeduction),"Actual separate canonical business W4-13; preserve signed losses"],
+    ["13","Combined earned income after attributable deductions",specifiedBusinessEarnedIncome,"Actual separate canonical business W4-13; preserve signed losses"],
     ["14","Nonspecified health deduction",nonspecifiedDeduction,"Actual completed nonspecified worksheets"],
     ["15","Remaining combined earned income",remainingEarnedIncome,"Line13-line14"],
     ["16","Initial specified deduction",preliminarySpecifiedDeduction,multipleOwners ? "Sum each owner's min(actual net premiums, nonnegative same-owner line15); no spouse income transfer" : "min(line3,nonnegative line15)"],
@@ -143,7 +158,7 @@ export function calculateMarketplaceHealthLimit(params: {
     });
   }
   return { taxYear: 2025, orderedDeductions: [...orderedDeductions], worksheetXCompleted, requiresWorksheetX, householdIncomeAfterW: params.householdIncomeAfterW, federalPovertyLine: params.federalPovertyLine,
-    specifiedPremiums, specifiedAdvances, remainingEarnedIncome, nonspecifiedDeduction,
+    specifiedPremiums, specifiedAdvances, remainingEarnedIncome, nonspecifiedDeduction, specifiedBusinessNonspecifiedDeduction, separateBusinessNonspecifiedDeduction,
     preliminarySpecifiedDeduction, repaymentLimit, maximumSpecifiedDeduction, maximumHealthDeduction: maximumSpecifiedDeduction.plus(nonspecifiedDeduction), lines: audit.getLines() };
 }
 export type MarketplaceHealthLimitResult = ReturnType<typeof calculateMarketplaceHealthLimit>;

@@ -1,0 +1,51 @@
+form: "Publication 974 separate-business nonspecified premiums"
+fullName: "2025 nonspecified deduction ordering across actual business sources"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Primary sources refreshed 2026-10-26: final 2025 Pub974 Instructions for
+  Worksheet P, Worksheet W4-19/X5-31 and Simplified Step3; final i7206
+  More than one health plan and business; RevProc2014-41 sections2.04,4,5.03;
+  and final Reg1.36B-4(a)(3)(iii)(C). The regulation includes allowable
+  nonspecified deductions in the tentative total deduction before applying
+  the QHP-business earnings limit. Do not move that deduction outside the
+  historical repayment test or add the other business's earnings to W13.
+  Each nonspecified claim is first computed on its own actual Form7206.
+  W13 sums only businesses with a specified QHP, before their own nonspecified
+  deductions; W14 then includes all actual completed nonspecified deductions.
+  This is the publication's optional, potentially conservative method; it
+  does not claim the largest deduction possible under every lawful method.
+  This extension supports one actual specified-plan owner, including binding
+  positive W15, and separately computed same-owner or spouse nonspecified
+  sources. It does not invent attribution when both spouses have specified
+  plans, or a negative-W15/stop-worksheet method. Those combinations remain
+  explicit internal method boundaries, with original source facts retained.
+lines:
+  - line: "separate-forms"
+    description: "Complete the nonspecified business forms first"
+    formula: "Use actual Form7206 business/owner/payment sources. Complete each nonspecified plan's own earnings limit before Pub974. Retain actual allowed amount, including an actual zero. No external business earnings are transferred to the specified business."
+    testRef: "tests/engine/federal-marketplace-health-separate-business.test.ts::retains the separate actual business deduction before the historical cap"
+  - line: "W13-17"
+    description: "Conserve actual QHP earnings and all nonspecified deductions"
+    formula: "W13=sum(specified-group remainingEarnedIncome+specified-group nonspecifiedDeduction). W14=sum(all groups' actual nonspecifiedDeduction). W15=W13-W14. With external positive nonspecified deduction require nonnegative W15 and one specified-plan owner. W16=min(actual specified premiums minus attributable advances,W15). W17=W14+W16. Never reconstruct W13 by adding unrelated nonspecified deductions to specified-group remaining income."
+    testRef: "tests/engine/forms/marketplace-health-separate-business.test.ts::subtracts the other business deduction without borrowing its earnings"
+  - line: "X-Y-Z"
+    description: "Use the completed deduction once in household income and every repayment test"
+    formula: "Canonical household income already deducts W17. Tentative tiers subtract min(W15-W16,tier); X5=W14 and X29=W15. X30=min(W16+cap,specified premiums,W15). X31=X30+W14. Later ordered Y/Z replays retain the same W13/W14 source split and recompute the actual listed deduction in the established order."
+    testRef: "tests/engine/forms/marketplace-health-separate-business.test.ts::retains the separate deduction through ordered repayment tests and exact cents"
+  - line: "binding-final"
+    description: "Apply the published earnings limit before final credit and QBI"
+    formula: "Actual C5000+F20000+W2 25000 yields deductible SE tax1767. C's proportional share353.4 leaves W13 4646.6. F's actual nonspecified deduction3000 leaves W15 1646.6. W16=1646.6, total transfer rounds4647, AGI43586. Step2 and final PTC3577; specified deduction remains1646.6, final repayment23. QBI health attribution is C1647/F3000 once, not a second deduction."
+    testRef: "tests/engine/federal-marketplace-health-separate-business.test.ts::uses the binding published limit with exact original business sources"
+  - line: "source-boundaries"
+    description: "Preserve unknowns and unsupported attribution without fabricated amounts"
+    formula: "Reject empty-month groups with positive specified premiums, duplicate source identities, and invalid amounts. Positive external nonspecified deductions with negative combined W15 or multiple specified-plan owners require their separate method. Existing two-owner positive-advance binding cap guard and final2026 readiness gates stay effective."
+    testRef: "tests/engine/forms/marketplace-health-separate-business.test.ts::rejects contradictory source groups and unrepresented owner or negative-limit combinations"
+  - line: "guided-handoff"
+    description: "Reuse the actual plan and business collector"
+    formula: "Existing actual health-plan controls retain the distinct Marketplace and non-Marketplace plans, exact dates/payment shares and business links. Canonical handoff computes the same deduction once, with no user current-claim or earnings override."
+    testRef: "tests/guided-interview/guided-health-separate-business.test.ts::passes two distinct actual business plans to the canonical historical calculation"
+  - line: "review-output"
+    description: "Retain separate physical forms and nonadditive combined calculation"
+    formula: "Each physical2025 Form7206 prints its own nonspecified source claim. The reference retains actual W13/W14/W15 and combined return transfer, with an explanation that the other business's deduction reduces the published limit but its earnings are not borrowed. Saved/reopened private-context output must reject altered deductions or source amounts."
+    testRef: "tests/pdf/form7206-health-separate-business.test.ts::saves separate nonspecified forms and the conserved historical source trace"
