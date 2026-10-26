@@ -10,6 +10,7 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
 import { PDFDocument } from "pdf-lib";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
+import { eicReviewChildren, eicReviewOriginalSourceInput, hasEicReviewSources, type PreparedEicReview } from "../../eic-review-context.js";
 import {
   loadReviewTemplate,
   setTextField,
@@ -145,15 +146,18 @@ export async function fillScheduleEIC(
   input: TaxYearInput,
   result: TaxReturnResult,
   blankPdfPath: string,
+  eicReview?: PreparedEicReview,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  const actualChildren = hasEicReviewSources(input) || eicReview
+    ? eicReviewChildren(eicReviewOriginalSourceInput(input, result, eicReview)) : undefined;
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = SCHEDULE_EIC_FIELDS;
   const taxYear = input.taxpayer.taxYear;
 
   // ── Header ──
-  const name = input.taxpayer.spouse
+  const name = input.taxpayer.spouse && (!actualChildren || input.taxpayer.filingStatus === 'married_filing_jointly')
     ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
     : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
   setTextField(form, F.name, name);
@@ -161,13 +165,15 @@ export async function fillScheduleEIC(
 
   // ── Qualifying Children ──
   // Filter dependents marked as qualifying for EIC, take up to 3
-  const eicChildren = input.taxpayer.dependents
+  const eicChildren = actualChildren ? actualChildren.map(row => input.taxpayer.dependents[row.dependentIndex]) : input.taxpayer.dependents
     .filter((dep) => dep.qualifiesForEIC)
     .slice(0, 3);
 
   for (let i = 0; i < eicChildren.length; i++) {
     const child = eicChildren[i];
     const fields = CHILD_FIELDS[i];
+    const actual = actualChildren?.[i];
+    if (!child) throw new Error('EIC review rendering child is missing');
 
     // Line 1: Child's name
     setTextField(form, fields.name, `${child.firstName} ${child.lastName}`);
@@ -188,7 +194,10 @@ export async function fillScheduleEIC(
     // Per IRS: if born after 2006 (for TY2025, i.e., under 19), skip lines 4a and 4b
     const under19Cutoff = taxYear - 18; // 2025 - 18 = 2007; born 2007+ = under 19
 
-    if (birthYearNum >= under19Cutoff) {
+    if (actual) {
+      if (actual.line4a !== undefined) setCheckBox(form, actual.line4a ? fields.line4aYes : fields.line4aNo, true);
+      if (actual.line4b !== undefined) setCheckBox(form, actual.line4b ? fields.line4bYes : fields.line4bNo, true);
+    } else if (birthYearNum >= under19Cutoff) {
       // Under 19 at end of year — skip lines 4a and 4b (no checkboxes needed)
     } else if (ageAtYearEnd < 24) {
       // Age 19-23: qualifies as student (4a = Yes)
@@ -204,7 +213,7 @@ export async function fillScheduleEIC(
 
     // Line 6: Months lived with you
     // IRS instruction: if > 6 but < 7, enter "7"; if born/died in year, enter "12"
-    const months = child.monthsLivedWithYou;
+    const months = actual?.months ?? child.monthsLivedWithYou;
     setTextField(form, fields.months, months.toString());
   }
 

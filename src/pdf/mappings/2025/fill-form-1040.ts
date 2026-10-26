@@ -13,6 +13,7 @@ import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { calculateEicReviewCheckboxes } from "../../eic-review-checkboxes.js";
+import { eicReviewOriginalSourceInput, hasEicReviewSources, type PreparedEicReview } from "../../eic-review-context.js";
 import { assertPdfExportAllowed } from "../../export-policy.js";
 import {
   loadReviewTemplate,
@@ -173,6 +174,7 @@ export async function fillForm1040(
   input: TaxYearInput,
   result: TaxReturnResult,
   blankPdfPath: string,
+  eicReview?: PreparedEicReview,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   if (input.deductionElection === "nonitemized" || result.deductionUsed === "nonitemized") throw new Error("Nonitemized election is available only for 2026 and has no supported review PDF mapping");
@@ -181,7 +183,8 @@ export async function fillForm1040(
   }
   // Resolve only the actual conditions expressly printed in the instructions;
   // neither an amount nor another zero-credit reason establishes these boxes.
-  const claimantBoxes = calculateEicReviewCheckboxes(input);
+  const claimantSource = hasEicReviewSources(input) || eicReview ? eicReviewOriginalSourceInput(input, result, eicReview) : input;
+  const claimantBoxes = calculateEicReviewCheckboxes(claimantSource);
   if (claimantBoxes.doNotClaimEic && (!result.earnedIncomeCredit.isZero()
     || (getLineValue(result, "1040", "27a")?.isZero() === false))) {
     throw new Error("EIC claimant source (including Rule10) requiring line27c conflicts with a positive EIC credit result");

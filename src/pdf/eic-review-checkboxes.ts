@@ -1,10 +1,11 @@
 /** Original claimant sources for final2025 printed conditions; no credit calculation. */
 import type { TaxYearInput } from '@/models/inputs.js';
 import { calculateEicClaimantEligibility, type EicClaimantInput } from '@/engine/forms/eic-claimant-eligibility.js';
+import { calculateEicSeparatedSpouseSources, type EicSeparatedSpouseInput } from '@/engine/forms/eic-separated-spouse-sources.js';
 
-type Input = EicClaimantInput & {
+type Input = EicClaimantInput & EicSeparatedSpouseInput & {
   taxpayer: EicClaimantInput['taxpayer'] & {
-    dependents: Array<Pick<TaxYearInput['taxpayer']['dependents'][number], 'qualifiesForEIC'>>;
+    dependents: TaxYearInput['taxpayer']['dependents'];
   };
 };
 type Personal = NonNullable<NonNullable<NonNullable<Input['eic']>['claimantEligibility']>['primaryChildless']>;
@@ -29,7 +30,9 @@ export function calculateEicReviewCheckboxes(input: Input): {
   const facts = input.eic?.claimantEligibility;
   const joint = taxpayer.filingStatus === 'married_filing_jointly';
   // Same actual qualifying-child route used by the canonical EIC call.
-  const childless = !taxpayer.dependents.some(child => child.qualifiesForEIC === true);
+  const childless = input.eic?.separatedSpouseSources !== undefined
+    ? !calculateEicSeparatedSpouseSources(input).qualifyingChildPresent
+    : !taxpayer.dependents.some(child => child.qualifiesForEIC === true);
   const knownAgeSources = standard?.primaryDeathDate !== undefined
     && (!joint || standard.spouseDeathDate !== undefined);
   const resolveChildless = childless && (facts !== undefined || knownAgeSources);

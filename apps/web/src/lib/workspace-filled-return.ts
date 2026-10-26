@@ -29,6 +29,7 @@ import { prepareCodNolReview } from "@/pdf/cod-nol-review-context.js";
 import { prepareCharitableReview } from "@/pdf/charitable-review-context.js";
 import { hasHistoricalAdoptionSources, prepareAdoptionReview } from "@/pdf/adoption-review-context.js";
 import { prepareQbiLossReview } from "@/pdf/qbi-loss-review-context.js";
+import { hasEicReviewSources, prepareEicReview } from "@/pdf/eic-review-context.js";
 import { hasPremiumTaxCreditReviewSources, preparePremiumTaxCreditReview } from "@/pdf/premium-tax-credit-review-context.js";
 import { fillOhioReferenceForms } from "@/pdf/fill-oh-reference-forms.js";
 import { loadPdfDocumentQuietly } from "@/pdf/pdf-utils.js";
@@ -622,6 +623,7 @@ export async function buildWorkspaceFilledReturnDownload(
   const charitableReview = resolved.taxInput.charitableCarryoverSources ? prepareCharitableReview(resolved.taxInput) : undefined;
   const adoptionReview = hasHistoricalAdoptionSources(resolved.taxInput) ? prepareAdoptionReview(resolved.taxInput) : undefined;
   const qbiLossReview = resolved.taxInput.qbiLossSources ? prepareQbiLossReview(resolved.taxInput) : undefined;
+  const eicReview = hasEicReviewSources(resolved.taxInput) ? prepareEicReview(resolved.taxInput) : undefined;
   const premiumTaxCreditReview = hasPremiumTaxCreditReviewSources(resolved.taxInput) ? preparePremiumTaxCreditReview(resolved.taxInput) : undefined;
   const educationReview = hasInKindEducationReviewSources(resolved.taxInput) ? prepareEducationReview(resolved.taxInput) : undefined;
   const redactedTaxInput = redactReviewIdentifiers(resolved.taxInput);
@@ -638,6 +640,7 @@ export async function buildWorkspaceFilledReturnDownload(
       charitableReview,
       adoptionReview,
       qbiLossReview,
+      eicReview,
       premiumTaxCreditReview,
       educationReview,
       blankFormsDir,

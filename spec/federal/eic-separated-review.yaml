@@ -1,0 +1,45 @@
+form: "EIC separated-spouse source review"
+fullName: "Actual qualifying-child Schedule EIC and Form 1040 review"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-pdf/f1040sei.pdf"
+notes: |
+  Retrieved final2025 Schedule EIC and instructions on2026-10-26. Refreshed
+  https://www.irs.gov/publications/p596 and https://www.irs.gov/instructions/i1040gi.
+  Schedule EIC requires the Child1 attachment for a source-qualified child
+  without a timely valid SSN when the parent claims the self-only EIC. Its
+  original ITIN/ATIN/nonwork SSN is retained; an actual blank stays blank.
+  Source-derived child presence also governs the1040 childless checkbox path.
+  The649/3409 controls are independent final2025 EIC table values at10000.
+  This changes review mapping only, not tax computation or public readiness.
+  Special residence periods and contested claims retain existing source gates.
+lines:
+  - line: "attachment"
+    description: "Actual child attachment for the self-only credit"
+    formula: "Use actual canonical qualifying children. If none has a timely valid SSN, complete Child1; otherwise list up to three SSN-counted children. Do not substitute the historical EIC flag."
+    irsRef: "Final2025 Schedule EIC page2 Qualifying child does not have an SSN; i1040 Steps3/4"
+    testRef: "tests/pdf/eic-separated-review.test.ts::retains the actual self-only child attachment and truthful claimant boxes"
+  - line: "1-6"
+    description: "Original child identity and actual qualification determine printed answers"
+    formula: "Render only the supplied rendering identity. Skip4a/4b only for printed born-after2006 and younger condition; otherwise use actual under24/student/disability facts. Print7 for actual6 months and confirmed more-than-half-year; preserve original6."
+    irsRef: "Final2025 Schedule EIC lines1-6"
+    testRef: "tests/pdf/eic-separated-review.test.ts::prints actual student disability and residence answers without changing sources"
+  - line: "original-context"
+    description: "Actual household/child records remain privately bound through redaction"
+    formula: "Recompute complete original input before redaction; bind retained EIC/income audit to an opaque context. Reject changed sources/results, missing original identities and serialized tokens before PDF I/O."
+    irsRef: "Final2025 Schedule EIC identity instructions and Pub596 actual qualifying-child requirements"
+    testRef: "tests/pdf/eic-separated-review.test.ts::rejects stale source result and serialized contexts before PDF IO"
+  - line: "source-privacy"
+    description: "Printed review identities follow the redacted rendering copy"
+    formula: "Use private original sources only for validation. Original identifiers and references must not reappear in saved redacted pages."
+    irsRef: "Review-only application privacy contract; no filing qualification"
+    testRef: "tests/pdf/eic-separated-review.test.ts::keeps source identifiers out of saved review pages"
+  - line: "workspace"
+    description: "The guided packet retains original source binding before redaction"
+    formula: "Complete original guided sources calculate once; the saved redacted review retains Schedule EIC and the actual649 self-only amount without identifiers or source references."
+    irsRef: "Final2025 Schedule EIC page2 self-only child instructions; application review-only contract"
+    testRef: "tests/apps/web/eic-separated-review-download.test.ts::binds guided actual child sources before review redaction"
+  - line: "browser"
+    description: "Desktop and mobile saved review output matches actual local sources"
+    formula: "After reload, preserve original blank identifier and six months locally; the independently reopened flattened Schedule EIC prints seven and the1040 self-only credit649 without a childless27c mark."
+    irsRef: "Final2025 Schedule EIC lines2/6 and i1040 EIC Steps3/4"
+    testRef: "apps/web/tests/eic-separated-review-download.spec.ts::downloads the actual self-only child review after local reload"

@@ -35,6 +35,7 @@ import { form8949ReviewCalculation, prepareForm8949Review, type PreparedForm8949
 import { prepareCodNolReview, type PreparedCodNolReview } from "./cod-nol-review-context.js";
 import { prepareCharitableReview, type PreparedCharitableReview } from "./charitable-review-context.js";
 import { hasHistoricalAdoptionSources, prepareAdoptionReview, type PreparedAdoptionReview } from "./adoption-review-context.js";
+import { eicReviewChildren, eicReviewOriginalSourceInput, hasEicReviewSources, prepareEicReview, type PreparedEicReview } from "./eic-review-context.js";
 import { fillForm8880 } from "./fill-form-8880.js";
 import { fillForm5329 } from "./fill-form-5329.js";
 import { fillForm8606 } from "./fill-form-8606.js";
@@ -392,6 +393,8 @@ export interface FillReturnOptions {
   /** Actual historical benefits and income, checked before identifier redaction. */
   adoptionReview?: PreparedAdoptionReview;
   qbiLossReview?: PreparedQbiLossReview;
+  /** Actual EIC child records, validated before identifier redaction. */
+  eicReview?: PreparedEicReview;
   /** Actual policy allocation and whole-return income, validated before redaction. */
   premiumTaxCreditReview?: PreparedPremiumTaxCreditReview;
   /** Original student identities validated privately before render redaction. */
@@ -414,6 +417,9 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  const eicReview = hasEicReviewSources(input) || options.eicReview
+    ? options.eicReview ?? prepareEicReview(input) : undefined;
+  const actualEicChildren = eicReview ? eicReviewChildren(eicReviewOriginalSourceInput(input, result, eicReview)) : undefined;
   const qbiLossReview = input.qbiLossSources || options.qbiLossReview
     ? options.qbiLossReview ?? prepareQbiLossReview(input) : undefined;
   if (qbiLossReview) buildQbiLossReview(input, result, qbiLossReview);
@@ -474,7 +480,7 @@ export async function fillReturn(
 
   // ── Form 1040 (always filled) ──
   const f1040Path = join(blankFormsDir, "f1040.pdf");
-  const doc1040 = await fillForm1040(input, result, f1040Path);
+  const doc1040 = await fillForm1040(input, result, f1040Path, eicReview);
   if (flatten) await flattenForm(doc1040.getForm());
   const outputPath1040 = join(outputDir, "f1040-filled.pdf");
   await savePacketPdf(doc1040, outputPath1040);
@@ -1091,10 +1097,10 @@ export async function fillReturn(
   // makes draft packets look more filing-ready than they are.
 
   // ── Schedule EIC (if applicable — qualifying children for EIC) ──
-  const eicChildren = input.taxpayer.dependents.filter((dep) => dep.qualifiesForEIC);
+  const eicChildren = actualEicChildren ?? input.taxpayer.dependents.filter((dep) => dep.qualifiesForEIC);
   if (result.scheduleEIC && !result.scheduleEIC.disqualified && eicChildren.length > 0) {
     const seiPath = join(blankFormsDir, "f1040sei.pdf");
-    const docSEI = await fillScheduleEIC(input, result, seiPath);
+    const docSEI = await fillScheduleEIC(input, result, seiPath, eicReview);
     if (flatten) await flattenForm(docSEI.getForm());
     const outputPathSEI = join(outputDir, "f1040sei-filled.pdf");
     await savePacketPdf(docSEI, outputPathSEI);
