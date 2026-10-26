@@ -1,6 +1,6 @@
 "use client";
 
-import { invalidateHealthInsuranceSources, emptyHealthInsuranceAllocation, emptyHealthInsuranceFacts, emptyHealthInsurancePayment, emptyHealthInsurancePerson, emptyHealthInsurancePlan, type HealthInsuranceData, type HealthInsuranceIncomeDeductionsData, type HealthInsurancePlanData, type HealthInsuranceSourceOption } from "@/lib/guided-health-insurance-facts";
+import { invalidateHealthInsuranceSources, emptyHealthInsuranceAllocation, emptyHealthInsuranceFacts, emptyHealthInsurancePayment, emptyHealthInsurancePerson, emptyHealthInsurancePlan, type HealthInsuranceData, type HealthInsuranceIncomeDeductionsData, type HealthInsurancePlanData, type HealthInsuranceSourceOption, type MarketplaceCreditAllocationData } from "@/lib/guided-health-insurance-facts";
 import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
 import { SharedMarketplaceHealthDetails } from "./shared-marketplace-health-details";
 import { CoverageFamilyHealthDetails } from './coverage-family-health-details';
@@ -24,6 +24,9 @@ export function HealthInsuranceSourceDetails({ data, sources = [], marketplacePo
     update({ incomeDeductions: { ...data.incomeDeductions, ...patch, ...(Object.keys(patch).every(key => key === "sourceFactsConfirmed") ? {} : { sourceFactsConfirmed: null }) } });
   };
   const updatePlan = (index: number, patch: Partial<HealthInsurancePlanData>) => update({ plans: data.plans.map((plan, position) => position === index ? { ...plan, ...patch } : plan) });
+  const updateCreditAllocation = (patch: Partial<MarketplaceCreditAllocationData>) => {
+    if (data.marketplaceCreditAllocation) update({ marketplaceCreditAllocation: { ...data.marketplaceCreditAllocation, ...patch } });
+  };
   const people = data.persons.filter(person => person.personId.trim()).map(person => [person.personId, person.name || person.personId] as const);
   const sourceChoices = sources.map(source => [source.sourceId, `${source.label} (${source.accountHolder === "primary" ? "you" : "spouse"})`] as const);
   return <section>
@@ -34,6 +37,17 @@ export function HealthInsuranceSourceDetails({ data, sources = [], marketplacePo
       <TextFact label="Health insurance source reference" value={data.sourceReference} onChange={sourceReference => update({ sourceReference })} />
       <BooleanFact label="All health plans and payments are included" value={data.allPlansIncluded} onChange={allPlansIncluded => update({ allPlansIncluded })} />
     </div>
+    {data.marketplaceCreditAllocation ? <fieldset><legend>Recorded Marketplace credit allocation</legend>
+      <p className="guided-hint">For plans established under more than one business, Publication 974 permits a reasonable credit allocation method used consistently. Enter your recorded choice. This method uses each month's full eligible plan premiums, after any policy allocation, as a share of all household enrollment premiums. Original payment and eligibility records still determine which premiums qualify.</p>
+      <div className="guided-form-grid">
+        <TextFact label="Credit allocation source tax year" value={data.marketplaceCreditAllocation.sourceTaxYear} onChange={sourceTaxYear => updateCreditAllocation({ sourceTaxYear })} />
+        <TextFact label="Credit allocation source reference" value={data.marketplaceCreditAllocation.sourceReference} onChange={sourceReference => updateCreditAllocation({ sourceReference })} />
+        <Choice label="Credit allocation method" value={data.marketplaceCreditAllocation.method} choices={[["monthly_eligible_plan_enrollment", "Monthly share of full eligible plan premiums"]]} onChange={method => updateCreditAllocation({ method: method as MarketplaceCreditAllocationData["method"] })} />
+        <BooleanFact label="Same method used for every calculation" value={data.marketplaceCreditAllocation.sameMethodForAllCalculationsConfirmed} onChange={sameMethodForAllCalculationsConfirmed => updateCreditAllocation({ sameMethodForAllCalculationsConfirmed })} />
+        <BooleanFact label="Credit allocation choice checked after the last edit" value={data.marketplaceCreditAllocation.sourceFactsConfirmed} onChange={sourceFactsConfirmed => updateCreditAllocation({ sourceFactsConfirmed })} />
+      </div>
+      <button type="button" onClick={() => update({ marketplaceCreditAllocation: undefined })}>Remove recorded credit allocation method</button>
+    </fieldset> : <button type="button" onClick={() => update({ marketplaceCreditAllocation: { sourceTaxYear: "", sourceReference: "", sourceFactsConfirmed: null, method: "", sameMethodForAllCalculationsConfirmed: null } })}>Add recorded Marketplace credit allocation method</button>}
     {data.persons.map((person, index) => {
       const prefix = `Person ${index + 1}`;
       const set = (patch: Partial<typeof person>) => update({ persons: data.persons.map((current, position) => position === index ? { ...current, ...patch } : current) });

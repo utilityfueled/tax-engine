@@ -7,6 +7,7 @@ import { AuditTrail } from "@/utils/audit.js";
 import { d, min, roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
 import { calculateMarketplaceHealthLimit, type MarketplaceHealthLimitResult } from "./marketplace-health-limit.js";
 import { calculateMarketplaceOwnerDeductions } from "./marketplace-health-owners.js";
+import { readMarketplaceCreditAllocationSource } from "./marketplace-credit-allocation-source.js";
 
 export interface MarketplaceHealthDeductionAmount {
   businessSourceId: string;
@@ -23,6 +24,7 @@ export function calculateMarketplaceHealthDeduction(params: {
   historicalLimit?: MarketplaceHealthLimitResult;
 }) {
   const { input, groups, credit } = params;
+  const selectedCreditMethod = readMarketplaceCreditAllocationSource(input);
   const year = input.taxpayer.taxYear;
   if (![2025,2026].includes(year) || credit.taxYear !== year || !credit.sourceFactsVerified || (year === 2026 && credit.repaymentCap !== null)) throw new Error("Pub974 requires actual matching-year Form8962 source results.");
   let historicalLimit: MarketplaceHealthLimitResult | undefined;
@@ -65,6 +67,8 @@ export function calculateMarketplaceHealthDeduction(params: {
   for (const month of months) {
     const specified = sum(...groups.flatMap(group => group.months.filter(row => row.month === month.month).map(row => row.specifiedPremium)));
     if (specified.gt(d(month.enrolleePremium))) throw new Error("Pub974 business sources duplicate actual household premiums.");
+    const selectedPremium = sum(...groups.flatMap(group => group.months.filter(row => row.month === month.month).map(row => row.creditAllocationPremium ?? d(0))));
+    if (selectedPremium.gt(d(month.enrolleePremium))) throw new Error("Pub974 chosen method duplicates actual household enrollment premiums.");
   }
   const businesses: MarketplaceHealthDeductionAmount[] = groups.map(group => {
     if (seen.has(group.businessSourceId)) throw new Error("Duplicate Pub974 business source.");
@@ -72,6 +76,8 @@ export function calculateMarketplaceHealthDeduction(params: {
     if (!group.remainingEarnedIncome.isFinite()) throw new Error("Pub974 signed income must be finite.");
     for (const amount of [group.specifiedPremiums, group.nonspecifiedDeduction]) if (!amount.isFinite() || amount.lt(0)) throw new Error("Pub974 source limits must be finite and nonnegative.");
     if (!sum(...group.months.map(month => month.specifiedPremium)).eq(group.specifiedPremiums)) throw new Error("Pub974 specified monthly sources do not reconcile.");
+    if (group.creditAllocationMethod !== undefined && group.creditAllocationMethod !== selectedCreditMethod) throw new Error("Pub974 source method contradicts the actual recorded allocation choice.");
+    if (selectedCreditMethod && group.months.length && group.creditAllocationMethod !== selectedCreditMethod) throw new Error("Pub974 source group is missing the actual selected allocation method.");
     let allocatedCredit = d(0);
     const seenMonths = new Set<number>();
     for (const month of group.months) {
@@ -81,32 +87,34 @@ export function calculateMarketplaceHealthDeduction(params: {
       if (!household || !month.specifiedPremium.isFinite() || month.specifiedPremium.lt(0)) throw new Error("Pub974 requires actual corresponding household month.");
       const premium = d(household.enrolleePremium);
       if (month.specifiedPremium.gt(premium)) throw new Error("Pub974 specified premiums exceed the actual household enrollment source.");
-      if (month.specifiedPremium.isZero()) continue;
+      const allocationPremium = group.creditAllocationMethod ? month.creditAllocationPremium : month.specifiedPremium;
+      if (!allocationPremium || !allocationPremium.isFinite() || allocationPremium.lt(0) || allocationPremium.gt(month.sourcePremium)) throw new Error("Pub974 chosen allocation requires the actual qualified plan enrollment source.");
+      if (allocationPremium.isZero()) continue;
       if (premium.lte(0)) throw new Error("Pub974 positive specified source needs actual enrollment premium.");
       const monthlyCredit = monthlyCredits.get(month.month);
       if (monthlyCredit === undefined) throw new Error("Pub974 source month has no reconciled credit audit.");
       if (!monthlyCredit.isFinite() || monthlyCredit.lt(0)) throw new Error("Pub974 credit allocation must be finite and nonnegative.");
       if (month.fullCorrespondingCredit && groups.filter(row => row.months.length).length !== 1) throw new Error("Coverage-family full credit requires one actual specified business.");
-      allocatedCredit = allocatedCredit.plus(month.fullCorrespondingCredit ? monthlyCredit : monthlyCredit.times(month.specifiedPremium).div(premium));
+      allocatedCredit = allocatedCredit.plus(month.fullCorrespondingCredit ? monthlyCredit : monthlyCredit.times(allocationPremium).div(premium));
     }
     // A partial coverage-family plan subtracts its full corresponding credit
     // before adding nonspecified premiums. Keep that signed intermediate.
     // The established all-covered route caps credit at those same premiums;
     // its zero treatment also reconciles whole-dollar credit with source cents.
-    const signedFamilyCredit = group.months.some(month => month.fullCorrespondingCredit === true);
+    const signedFamilyCredit = group.creditAllocationMethod !== undefined || group.months.some(month => month.fullCorrespondingCredit === true);
     const difference = group.specifiedPremiums.minus(allocatedCredit);
     const netPremiumsAfterCredit = signedFamilyCredit ? difference : zeroFloor(difference);
     const ordinaryDeduction = min(group.specifiedPremiums, zeroFloor(group.remainingEarnedIncome));
     for (const [line, label, amount, formula] of [
       ["1", "Actual specified premiums", group.specifiedPremiums, "Actual linked source ledger"],
-      ["6", "PTC allocated to specified sources", allocatedCredit, signedFamilyCredit ? "Full corresponding monthly credit for the actual one-business coverage-family sources; no health benchmark ratio" : "Actual monthly credit times specified enrollment share; annual unchanged credit divided by12"],
+      ["6", "PTC allocated to specified sources", allocatedCredit, group.creditAllocationMethod ? "Actual recorded consistent method: monthly credit times full eligible plan enrollment / household enrollment; no health benchmark ratio" : signedFamilyCredit ? "Full corresponding monthly credit for the actual one-business coverage-family sources; no health benchmark ratio" : "Actual monthly credit times specified enrollment share; annual unchanged credit divided by12"],
       ["7", "Specified premiums after PTC", netPremiumsAfterCredit, signedFamilyCredit ? "line1-line6; retain the signed Step3 intermediate" : "max(0,line1-line6); credit is bounded by the same coverage premiums"],
     ] as const) audit.record(`Pub974 Simplified ${group.businessSourceId}`, line, label, amount, formula, { "Owner": group.accountHolder });
     return { businessSourceId: group.businessSourceId, accountHolder: group.accountHolder, specifiedPremiums: group.specifiedPremiums,
       remainingEarnedIncome: group.remainingEarnedIncome, allocatedCredit, netPremiumsAfterCredit, ordinaryDeduction, nonspecifiedDeduction: group.nonspecifiedDeduction };
   });
   if (roundDollar(sum(...businesses.map(row => row.allocatedCredit))).gt(credit.ptcAllowed)) throw new Error("Pub974 source allocations duplicate the household credit.");
-  const specifiedBusinesses = businesses.filter(row => groups.find(group => group.businessSourceId === row.businessSourceId)?.months.length);
+  const specifiedBusinesses = businesses.filter(row => groups.some(group => group.businessSourceId === row.businessSourceId && group.months.length && group.includedInEarnedIncomeLimit !== false));
   const multipleOwners = new Set(specifiedBusinesses.map(row => row.accountHolder)).size > 1;
   const ownerMaximum = multipleOwners ? calculateMarketplaceOwnerDeductions({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups, stage: { kind: "maximum" } }) : undefined;
   const maximumSpecifiedDeduction = historicalLimit?.maximumSpecifiedDeduction ?? ownerMaximum?.specifiedDeduction ?? min(sum(...specifiedBusinesses.map(row => row.specifiedPremiums)), zeroFloor(sum(...specifiedBusinesses.map(row => row.remainingEarnedIncome))));

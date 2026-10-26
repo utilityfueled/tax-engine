@@ -32,7 +32,7 @@ export function calculateMarketplaceHealthLimit(params: {
   }
   const audit = new AuditTrail();
   const seen = new Set<string>();
-  const specified = params.groups.filter(row => row.months.length > 0);
+  const specified = params.groups.filter(row => row.months.length > 0 && row.includedInEarnedIncomeLimit !== false);
   let specifiedPremiums = d(0), specifiedAdvances = d(0), remainingEarnedIncome = d(0), nonspecifiedDeduction = d(0);
   let specifiedBusinessNonspecifiedDeduction = d(0), separateBusinessNonspecifiedDeduction = d(0);
   for (const group of params.groups) {
@@ -41,7 +41,7 @@ export function calculateMarketplaceHealthLimit(params: {
     for (const value of [group.specifiedPremiums,group.nonspecifiedDeduction]) if (!Decimal.isDecimal(value) || !value.isFinite() || value.lt(0)) throw new Error("Marketplace limit requires finite nonnegative source amounts.");
     if (!Decimal.isDecimal(group.remainingEarnedIncome) || !group.remainingEarnedIncome.isFinite()) throw new Error("Marketplace limit requires finite signed earned income.");
     nonspecifiedDeduction = nonspecifiedDeduction.plus(group.nonspecifiedDeduction);
-    if (!group.months.length) {
+    if (!group.months.length || group.includedInEarnedIncomeLimit === false) {
       if (!group.specifiedPremiums.isZero()) throw new Error("Positive specified premiums require actual source months.");
       separateBusinessNonspecifiedDeduction = separateBusinessNonspecifiedDeduction.plus(group.nonspecifiedDeduction);
       continue;
@@ -62,7 +62,7 @@ export function calculateMarketplaceHealthLimit(params: {
     specifiedPremiums = specifiedPremiums.plus(groupPremium);
     remainingEarnedIncome = remainingEarnedIncome.plus(group.remainingEarnedIncome);
   }
-  if (!specified.length) throw new Error("Marketplace limit requires actual specified-plan sources.");
+  if (!specified.length && !params.groups.every(group => group.creditAllocationMethod && group.specifiedPremiums.isZero() && group.nonspecifiedDeduction.isZero())) throw new Error("Marketplace limit requires actual specified-plan sources.");
   // Group remaining income already subtracts that business's nonspecified
   // claim. W13 must restore only those claims, never another business's income.
   const specifiedBusinessEarnedIncome = remainingEarnedIncome.plus(specifiedBusinessNonspecifiedDeduction);

@@ -1,5 +1,5 @@
-/** Actual policy, marriage and coverage-family sources stay private after render redaction.
- * Specs: form-8962-shared-policy-review.yaml, form-8962-marriage-return.yaml. */
+/** Actual policy, marriage, coverage-family and recorded business-allocation sources stay private after render redaction.
+ * Specs: form-8962-shared-policy-review.yaml, form-8962-marriage-return.yaml, marketplace-business-credit-method.yaml. */
 import { createHash } from 'node:crypto';
 import { calculateFederalTax } from '@/engine/federal.js';
 import type { TaxYearInput } from '@/models/inputs.js';
@@ -14,9 +14,11 @@ const contexts = new WeakMap<PreparedPremiumTaxCreditReview, {
 const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 function calculationDigest(result: TaxReturnResult): string {
   return digest(redactReviewIdentifiers({ taxYear: result.taxYear, filingStatus: result.filingStatus, agi: result.agi,
-    form8962: result.form8962, coverageFamilyAllocations: result.form7206?.coverageFamilyAllocations,
+    form8962: result.form8962, form7206: result.form7206, marketplaceHealthInsurance: result.marketplaceHealthInsurance, coverageFamilyAllocations: result.form7206?.coverageFamilyAllocations,
     coverageFamilyAudits: result.form7206?.lines.filter(row => row.form === 'Pub974 Coverage Family'),
     transfers: result.allLines.filter(row => /^Form\s?8962/.test(row.form) || row.form === 'Pub974 Coverage Family'
+      || row.form.startsWith('Pub974') || row.form === 'Form 7206'
+      || (/^(Sched|Schedule) 1$/.test(row.form) && row.line === '17')
       || (/^(Sched|Schedule) 2$/.test(row.form) && row.line === '1a') || (/^(Sched|Schedule) 3$/.test(row.form) && row.line === '9')) }));
 }
 function freeze<T>(value: T): T {
@@ -28,14 +30,15 @@ export function hasSharedPremiumTaxCreditSources(input: TaxYearInput): boolean {
 }
 export function hasPremiumTaxCreditReviewSources(input: TaxYearInput): boolean {
   return hasSharedPremiumTaxCreditSources(input) || input.form8962?.alternativeMarriageCalculationElected === true
-    || input.form8962?.marriageSources !== undefined || input.form7206?.plans?.some(plan => plan.coverageFamilySources !== undefined) === true;
+    || input.form8962?.marriageSources !== undefined || input.form7206?.marketplaceCreditAllocation !== undefined || input.form7206?.plans?.some(plan => plan.coverageFamilySources !== undefined) === true;
 }
 /** Full original return income determines the credit. Retained results cannot
  * certify themselves, and a plain source/validation flag cannot create a token. */
 export function preparePremiumTaxCreditReview(input: TaxYearInput): PreparedPremiumTaxCreditReview {
-  if (!hasPremiumTaxCreditReviewSources(input)) throw new Error('Form8962 review requires original policy, marriage or coverage-family sources');
+  if (!hasPremiumTaxCreditReviewSources(input)) throw new Error('Form8962 review requires original policy, marriage, coverage-family or business-allocation sources');
   const calculation = calculateFederalTax(input);
-  if ((!calculation.form8962?.sharedPolicyAllocation && !calculation.form8962?.marriageCalculation && !calculation.form7206?.coverageFamilyAllocations?.length)
+  if ((!calculation.form8962?.sharedPolicyAllocation && !calculation.form8962?.marriageCalculation && !calculation.form7206?.coverageFamilyAllocations?.length
+      && !(input.form7206?.marketplaceCreditAllocation && calculation.marketplaceHealthInsurance))
     || !calculation.form8962?.sourceFactsVerified) throw new Error('Form8962 review requires the actual completed source calculation');
   const token: PreparedPremiumTaxCreditReview = Object.freeze({ [brand]: true as const });
   contexts.set(token, { original: freeze(structuredClone(input)), originalDigest: digest(input),

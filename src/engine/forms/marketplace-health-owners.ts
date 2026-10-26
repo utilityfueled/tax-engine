@@ -28,8 +28,8 @@ function finite(value: Decimal, nonnegative = true): Decimal {
 export function calculateMarketplaceOwnerDeductions(params: Params) {
   if (![2025, 2026].includes(params.taxYear) || params.filingStatus !== "married_filing_jointly") throw new Error("Pub974 two-owner attribution requires the actual 2025 or 2026 joint return.");
   if (params.stage.kind === "worksheet-w" && params.taxYear !== 2025) throw new Error("Pub974 historical Worksheet W attribution requires 2025.");
-  if (params.specifiedDeduction !== undefined) finite(params.specifiedDeduction);
-  const specified = params.groups.filter(row => row.months.length > 0);
+  if (params.specifiedDeduction !== undefined) finite(params.specifiedDeduction, !params.groups.some(row => row.creditAllocationMethod));
+  const specified = params.groups.filter(row => row.months.length > 0 && row.includedInEarnedIncomeLimit !== false);
   if (new Set(specified.map(row => row.accountHolder)).size !== 2 || specified.some(row => !["primary", "spouse"].includes(row.accountHolder))) throw new Error("Pub974 two-owner attribution requires both actual owners.");
   if (new Set(params.groups.map(row => row.businessSourceId)).size !== params.groups.length || params.groups.some(row => !row.businessSourceId.trim())) throw new Error("Pub974 owner attribution requires unique business source identities.");
   const byBusiness = new Map<string, { premiums: Decimal; advances: Decimal; credit: Decimal; deduction: Decimal }>();
@@ -56,10 +56,13 @@ export function calculateMarketplaceOwnerDeductions(params: Params) {
       const row = completed.find(item => item.businessSourceId === group.businessSourceId);
       if (!row || row.accountHolder !== group.accountHolder) throw new Error("Pub974 completed business must match its actual owner.");
       credit = finite(row.allocatedCredit);
-      deduction = finite(row.netPremiumsAfterCredit);
+      deduction = finite(row.netPremiumsAfterCredit, !group.creditAllocationMethod);
       // Rounded Form8962 credit can exceed the exact source premium by cents;
-      // the existing Step3 zero floor is retained, without changing originals.
-      if (roundDollar(credit).gt(roundDollar(premiums)) || !deduction.eq(zeroFloor(premiums.minus(credit)))) throw new Error("Pub974 final owner net premiums do not reconcile the calculated credit.");
+      // preserve the recorded method's signed difference; the legacy path
+      // retains its existing zero floor without changing originals.
+      const sourcePremium = group.creditAllocationMethod ? sum(...group.months.map(month => finite(month.creditAllocationPremium!))) : premiums;
+      const expected = group.creditAllocationMethod ? premiums.minus(credit) : zeroFloor(premiums.minus(credit));
+      if (roundDollar(credit).gt(roundDollar(sourcePremium)) || !deduction.eq(expected)) throw new Error("Pub974 final owner net premiums do not reconcile the calculated credit.");
     }
     byBusiness.set(group.businessSourceId, { premiums, advances, credit, deduction });
   }

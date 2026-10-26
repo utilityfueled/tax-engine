@@ -844,6 +844,16 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/marketplace-business-credit-method",
+      "enginePath": "src/engine/forms/marketplace-health-deduction.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-business-credit-method.test.ts::combines signed business worksheets using the recorded monthly premium method",
+        "tests/pdf/marketplace-business-credit-method-review.test.ts::binds the chosen method and signed business rows before redacted PDF output"
+      ],
+      "note": "Actual recorded consistent monthly full eligible-plan allocation and signed per-business worksheets use the shared health calculation and original-source 2025 review packet; no filing qualification or binding joint repayment-cap ownership method is claimed."
+    },
+    {
       "key": "federal/marketplace-coverage-family-health",
       "enginePath": "src/engine/forms/marketplace-coverage-family-health.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",

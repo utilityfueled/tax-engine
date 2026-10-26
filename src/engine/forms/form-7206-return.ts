@@ -152,7 +152,7 @@ export function calculateForm7206Return(params: Params) {
   let deductionToSchedule1: Decimal;
   if (marketplacePremiums) {
     const groups = marketplacePremiums.groups;
-    const specified = groups.filter(row => row.months.length > 0);
+    const specified = groups.filter(row => row.months.length > 0 && row.includedInEarnedIncomeLimit !== false);
     const multipleOwners = new Set(specified.map(row => row.accountHolder)).size > 1;
     const uncappedMaximum = multipleOwners
       ? calculateMarketplaceOwnerDeductions({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups, stage: { kind: "maximum" } }).specifiedDeduction
@@ -163,7 +163,8 @@ export function calculateForm7206Return(params: Params) {
     const maximum = historicalLimit?.maximumSpecifiedDeduction ?? uncappedMaximum;
     if (suppliedLimit && (!historicalLimit || !suppliedLimit.maximumSpecifiedDeduction.eq(historicalLimit.maximumSpecifiedDeduction))) throw new Error("Pub974 maximum must reconcile the actual historical worksheet.");
     const attributeSpecified = (amount: Decimal) => {
-      if (amount.isZero() && !multipleOwners) return;
+      const selectedAllocation = specified.some(group => group.creditAllocationMethod !== undefined);
+      if (amount.isZero() && !multipleOwners && !selectedAllocation) return;
       if (!specified.length) throw new Error("Pub974 health deduction has no attributable earned-income source.");
       let allocations = [{ groups: specified, amount }];
       if (multipleOwners) {
@@ -176,8 +177,23 @@ export function calculateForm7206Return(params: Params) {
         allocations = ownerCalculation.owners.map(row => ({ groups: specified.filter(group => group.accountHolder === row.accountHolder), amount: row.specifiedDeduction }));
       }
       for (const allocation of allocations) {
-        if (allocation.amount.isZero()) continue;
-        const ownerGroups = allocation.groups;
+        const ownerGroups = allocation.groups.some(group => group.creditAllocationMethod !== undefined)
+          ? [...allocation.groups].sort((left, right) => left.businessSourceId.localeCompare(right.businessSourceId, "en"))
+          : allocation.groups;
+        const combinedClaim = ownerGroups.some(group => group.creditAllocationMethod !== undefined);
+        const attributable = combinedClaim ? allocation.amount.plus(sum(...ownerGroups.map(group => group.nonspecifiedDeduction))) : allocation.amount;
+        if (combinedClaim) {
+          if (roundDollar(attributable).lt(0)) throw new Error("Pub974 actual owner combined deduction needs its separate stop-worksheet method.");
+          for (const group of ownerGroups) {
+            const target = healthSources.find(row => row.sourceId === group.businessSourceId && row.accountHolder === group.accountHolder);
+            if (!target) throw new Error("Pub974 combined QBI deduction has no matching actual business source.");
+            // These businesses' nonspecified claims and signed Step3 amount
+            // form one allowable owner deduction. Do not allocate a negative
+            // intermediate as though it were a separate QBI deduction.
+            target.amount = target.amount.minus(group.nonspecifiedDeduction);
+          }
+        }
+        if (attributable.isZero()) continue;
         const gross = ownerGroups.map(row => {
           if (ownerGroups.length === 1) return d(1); // One actual income source needs no allocation denominator.
           const actual = params.businessGrossIncomes?.filter(item => item.sourceId === row.businessSourceId);
@@ -186,15 +202,15 @@ export function calculateForm7206Return(params: Params) {
         });
         const denominator = sum(...gross);
         if (denominator.lte(0)) throw new Error("Pub974 positive deduction requires actual positive gross income for QBI attribution.");
-        let remaining = allocation.amount;
+        let remaining = attributable;
         ownerGroups.forEach((group,index) => {
           const target = healthSources.find(row => row.sourceId === group.businessSourceId && row.accountHolder === group.accountHolder);
           if (!target) throw new Error("Pub974 QBI deduction has no matching actual business source.");
-          const share = index === ownerGroups.length - 1 ? remaining : allocation.amount.times(gross[index]).div(denominator);
+          const share = index === ownerGroups.length - 1 ? remaining : attributable.times(gross[index]).div(denominator);
           target.amount = target.amount.plus(share); remaining = remaining.minus(share);
-          marketplaceAudit.record("Pub974 QBI Allocation", group.businessSourceId, "Specified deduction attributable to this income source", share,
-            ownerGroups.length === 1 ? "Only actual business income used in the owner's deduction" : "Owner specified deduction times actual same-owner business gross income / same-owner combined gross income;199A only",
-            { "Owner": group.accountHolder, "Combined deduction": allocation.amount,
+          marketplaceAudit.record("Pub974 QBI Allocation", group.businessSourceId, combinedClaim ? "Combined allowable health deduction attributable to this income source" : "Specified deduction attributable to this income source", share,
+            ownerGroups.length === 1 ? "Only actual business income used in the owner's deduction" : combinedClaim ? "Owner combined allowable health deduction times actual same-owner business gross income / same-owner combined gross income;199A only" : "Owner specified deduction times actual same-owner business gross income / same-owner combined gross income;199A only",
+            { "Owner": group.accountHolder, "Combined deduction": attributable,
               ...(ownerGroups.length === 1 ? {} : { "Gross income numerator": gross[index], "Gross income denominator": denominator }) });
         });
       }
@@ -232,9 +248,15 @@ export function calculateForm7206Return(params: Params) {
     // covers the full premium. A zero transfer has no QBI deduction to allocate.
     if (deductionToSchedule1.isZero()) for (const row of healthSources) row.amount = d(0);
     let remainder = deductionToSchedule1;
+    const selectedAllocation = specified.some(group => group.creditAllocationMethod !== undefined);
     const positive = healthSources.filter(row => row.amount.gt(0));
+    // Stable source identity, rather than plan-entry order, assigns the final
+    // printed-dollar residual. Exact source and proportional amounts stay above.
+    if (selectedAllocation) positive.sort((left, right) => `${left.accountHolder}:${left.sourceId}`.localeCompare(`${right.accountHolder}:${right.sourceId}`, "en"));
+    const roundingWeight = selectedAllocation ? sum(...positive.map(row => row.amount)) : exact;
+    if (selectedAllocation) for (const row of healthSources) if (row.amount.lt(0)) row.amount = d(0);
     positive.forEach((row,index) => {
-      row.amount = index === positive.length - 1 ? remainder : Decimal.min(remainder, roundDollar(deductionToSchedule1.times(row.amount).div(exact)));
+      row.amount = index === positive.length - 1 ? remainder : Decimal.min(remainder, roundDollar(deductionToSchedule1.times(row.amount).div(roundingWeight)));
       remainder = remainder.minus(row.amount);
     });
   } else {

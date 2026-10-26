@@ -4191,6 +4191,14 @@ export const Form7206Schema = z.object({
   sourceReference: z.string().optional(),
   sourceFactsConfirmed: z.boolean().optional(),
   allPlansIncluded: z.boolean().optional(),
+  /** Actual recorded Pub974 reasonable-method choice; no credit or percentage override. */
+  marketplaceCreditAllocation: z.object({
+    sourceTaxYear: z.number().int().optional(),
+    sourceReference: z.string().optional(),
+    sourceFactsConfirmed: z.boolean().optional(),
+    method: z.enum(["monthly_eligible_plan_enrollment"]).optional(),
+    sameMethodForAllCalculationsConfirmed: z.boolean().optional(),
+  }).optional(),
   /** Actual attribution of positive already-allowed retirement and Form2555line45 amounts. */
   incomeDeductions: z.object({
     sourceReference: z.string().optional(),

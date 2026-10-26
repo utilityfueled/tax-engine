@@ -5832,6 +5832,29 @@
       ]
     },
     {
+      "key": "federal/marketplace-business-credit-method",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p974",
+      "specPath": "spec/federal/marketplace-business-credit-method.yaml",
+      "enginePath": "src/engine/forms/marketplace-health-deduction.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-marketplace-business-credit-method.test.ts::combines signed business worksheets using the recorded monthly premium method",
+        "tests/pdf/marketplace-business-credit-method-review.test.ts::binds the chosen method and signed business rows before redacted PDF output"
+      ],
+      "implementationNote": "Actual recorded consistent monthly full eligible-plan allocation and signed per-business worksheets use the shared health calculation and original-source 2025 review packet; no filing qualification or binding joint repayment-cap ownership method is claimed.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/marketplace-coverage-family-health",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -5861,6 +5884,27 @@
       "sourceAuthority": null,
       "specPath": null,
       "enginePath": "src/engine/forms/marketplace-coverage-family-sources.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/marketplace-credit-allocation-source",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/marketplace-credit-allocation-source.ts",
       "packetPath": null,
       "specExists": false,
       "engineExists": true,

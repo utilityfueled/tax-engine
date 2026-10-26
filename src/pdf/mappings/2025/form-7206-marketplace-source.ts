@@ -62,7 +62,7 @@ export function assertMarketplaceHealthReviewSources(input: TaxYearInput, result
     for (const key of ["specifiedPremiums", "remainingEarnedIncome", "nonspecifiedDeduction"] as const) same(actual[key], group[key]);
     if (exact(actual.allocatedCredit).lt(0) || roundDollar(actual.allocatedCredit).gt(roundDollar(sum(...group.months.map(row => row.sourcePremium))))) throw new Error("Pub974 review credit allocation exceeds the actual source premium.");
     const difference = group.specifiedPremiums.minus(actual.allocatedCredit);
-    same(actual.netPremiumsAfterCredit, group.months.some(month => month.fullCorrespondingCredit === true) ? difference : Decimal.max(0, difference));
+    same(actual.netPremiumsAfterCredit, group.creditAllocationMethod || group.months.some(month => month.fullCorrespondingCredit === true) ? difference : Decimal.max(0, difference));
     same(actual.ordinaryDeduction, Decimal.min(group.specifiedPremiums, Decimal.max(0, group.remainingEarnedIncome)));
     for (const [number, amount] of [["1", group.specifiedPremiums], ["6", actual.allocatedCredit], ["7", actual.netPremiumsAfterCredit]] as const) {
       line(marketplace.lines, `Pub974 Simplified ${group.businessSourceId}`, number, amount, group.accountHolder);
@@ -83,7 +83,7 @@ export function assertMarketplaceHealthReviewSources(input: TaxYearInput, result
   same(marketplace.nonspecifiedDeduction, exact(nonspecified.deduction));
   same(marketplace.maximumDeduction, checkedLimit.maximumSpecifiedDeduction.plus(marketplace.nonspecifiedDeduction));
   const net = sum(...marketplace.businesses.map(row => row.netPremiumsAfterCredit));
-  const ownerDeduction = !ordinary && new Set(groups.filter(row => row.months.length > 0).map(row => row.accountHolder)).size > 1
+  const ownerDeduction = !ordinary && new Set(groups.filter(row => row.months.length > 0 && row.includedInEarnedIncomeLimit !== false).map(row => row.accountHolder)).size > 1
     ? calculateMarketplaceOwnerDeductions({ taxYear: 2025, filingStatus: input.taxpayer.filingStatus, groups,
       stage: { kind: "final", businesses: marketplace.businesses } }).specifiedDeduction : undefined;
   same(marketplace.specifiedDeduction, ordinary ? sum(...marketplace.businesses.map(row => row.ordinaryDeduction)) : Decimal.min(ownerDeduction ?? net, checkedLimit.maximumSpecifiedDeduction));

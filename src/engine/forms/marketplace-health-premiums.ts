@@ -5,6 +5,7 @@ import type { Form7206Result } from "./form-7206.js";
 import { d, sum } from "@/utils/decimal.js";
 import { calculateMarketplaceCoverageFamilyHealth } from "./marketplace-coverage-family-health.js";
 import { calculateSharedMarketplaceHealthSources } from "./shared-marketplace-health.js";
+import { readMarketplaceCreditAllocationSource } from "./marketplace-credit-allocation-source.js";
 
 export interface MarketplaceHealthPremiumGroup {
   businessSourceId: string;
@@ -12,7 +13,10 @@ export interface MarketplaceHealthPremiumGroup {
   specifiedPremiums: Decimal;
   remainingEarnedIncome: Decimal;
   nonspecifiedDeduction: Decimal;
-  months: { month: number; specifiedPremium: Decimal; sourcePremium: Decimal; advancePremiumTaxCredit: Decimal; specifiedAdvancePremiumTaxCredit?: Decimal; fullCorrespondingCredit?: true }[];
+  creditAllocationMethod?: "monthly_eligible_plan_enrollment";
+  /** Derived only from actual qualified plan sources, never a user override. */
+  includedInEarnedIncomeLimit?: boolean;
+  months: { month: number; specifiedPremium: Decimal; sourcePremium: Decimal; advancePremiumTaxCredit: Decimal; specifiedAdvancePremiumTaxCredit?: Decimal; fullCorrespondingCredit?: true; creditAllocationPremium?: Decimal }[];
 }
 function actual(value: string | undefined): Decimal {
   if (value === undefined || !/^\d+(\.\d+)?$/.test(value) || !d(value).isFinite()) throw new Error("Marketplace premium source amounts must be actual finite nonnegative amounts, including known zero.");
@@ -29,6 +33,7 @@ export function calculateMarketplaceHealthPremiums(params: { input: TaxYearInput
   const { input, healthInsurance } = params;
   if (![2025,2026].includes(input.taxpayer.taxYear) || !input.form7206 || !input.form8962 || !healthInsurance.calculationComplete) throw new Error("Actual Marketplace premium coordination requires completed2025 or2026 source and business worksheets.");
   const facts = input.form8962;
+  const creditAllocationMethod = readMarketplaceCreditAllocationSource(input);
   if (facts.selfEmployedHealthInsuranceCoordinationRequired !== true || facts.coverageFactsConfirmed !== true || typeof facts.allocationRequired !== 'boolean' || facts.qsehraAffected !== false) throw new Error("Marketplace source coordination requires actual coverage facts and separate special allocations when applicable.");
   const families = calculateMarketplaceCoverageFamilyHealth(input);
   const sharedPlans = calculateSharedMarketplaceHealthSources(input);
@@ -63,7 +68,7 @@ export function calculateMarketplaceHealthPremiums(params: { input: TaxYearInput
     let group = groups.get(business.businessSourceId);
     if (!group) {
       group = { businessSourceId: business.businessSourceId, accountHolder: business.accountHolder, specifiedPremiums: d(0),
-        remainingEarnedIncome: remainingIncome(business), nonspecifiedDeduction: business.deduction, months: [] };
+        remainingEarnedIncome: remainingIncome(business), nonspecifiedDeduction: business.deduction, creditAllocationMethod, months: [] };
       groups.set(business.businessSourceId, group);
     } else if (group.accountHolder !== business.accountHolder) throw new Error("Marketplace source business owner contradicts canonical income.");
     const paymentsByMonth = new Map<number, { premium: Decimal; advance: Decimal }>();
@@ -99,7 +104,12 @@ export function calculateMarketplaceHealthPremiums(params: { input: TaxYearInput
       const combined = group.months.find(row => row.month === month);
       if (combined) { combined.specifiedPremium = combined.specifiedPremium.plus(specified); combined.sourcePremium = combined.sourcePremium.plus(attributable.premium); combined.advancePremiumTaxCredit = combined.advancePremiumTaxCredit.plus(attributable.advance); }
       else group.months.push({ month, specifiedPremium: specified, sourcePremium: attributable.premium, advancePremiumTaxCredit: attributable.advance });
-      if (familyMonth) {
+      if (creditAllocationMethod) {
+        const current = group.months.find(row => row.month === month)!;
+        current.creditAllocationPremium = (current.creditAllocationPremium ?? d(0)).plus(qualified ? attributable.premium : d(0));
+        current.specifiedAdvancePremiumTaxCredit = (current.specifiedAdvancePremiumTaxCredit ?? d(0)).plus(qualified ? attributable.advance : d(0));
+      }
+      if (familyMonth && !creditAllocationMethod) {
         const current = group.months.find(row => row.month === month)!;
         current.specifiedAdvancePremiumTaxCredit = (current.specifiedAdvancePremiumTaxCredit ?? d(0)).plus(qualified ? familyMonth.advancePremiumTaxCredit : d(0));
       }
@@ -124,19 +134,24 @@ export function calculateMarketplaceHealthPremiums(params: { input: TaxYearInput
   }
   if (families?.length) {
     const specifiedGroups = [...groups.values()].filter(group => group.months.length);
-    if (specifiedGroups.length !== 1) throw new Error("Coverage-family health with multiple specified businesses requires its actual separate credit-attribution method.");
+    if (specifiedGroups.length !== 1 && !creditAllocationMethod) throw new Error("Coverage-family health with multiple specified businesses requires its actual separate credit-attribution method.");
     for (const [month, source] of recordedMonthly) {
       const row = facts.monthlyReconciliation!.find(row => row.month === month)!;
       if (!actual(row.enrolleePremium).eq(source.premium) || !actual(row.advancePremiumTaxCredit).eq(source.advance)) throw new Error("Coverage-family one-business credit must include all actual household enrollment and advances.");
-      const group = specifiedGroups[0], current = group.months.find(row => row.month === month)!;
       const qualified = qualifiedMonthly.get(month) ?? d(0);
-      if (!qualified.isZero() && !qualified.eq(source.premium)) throw new Error("Coverage-family credit across qualified and health-ineligible plans in one month requires its separate actual attribution method.");
-      current.fullCorrespondingCredit = qualified.isZero() ? undefined : true;
-      current.specifiedAdvancePremiumTaxCredit = qualified.isZero() ? d(0) : current.advancePremiumTaxCredit;
+      if (!creditAllocationMethod) {
+        const group = specifiedGroups[0], current = group.months.find(row => row.month === month)!;
+        if (!qualified.isZero() && !qualified.eq(source.premium)) throw new Error("Coverage-family credit across qualified and health-ineligible plans in one month requires its separate actual attribution method.");
+        current.fullCorrespondingCredit = qualified.isZero() ? undefined : true;
+        current.specifiedAdvancePremiumTaxCredit = qualified.isZero() ? d(0) : current.advancePremiumTaxCredit;
+      }
       const memberMonths = families.filter(row => row.month === month);
       if (memberMonths.some(month => !actual(row.slcsp).eq(month.coverageFamilySlcsp))) throw new Error("Coverage-family benchmark contradicts the actual household reconciliation.");
     }
   }
-  for (const group of groups.values()) group.months.sort((a,b) => a.month - b.month);
+  for (const group of groups.values()) {
+    group.months.sort((a,b) => a.month - b.month);
+    if (group.creditAllocationMethod) group.includedInEarnedIncomeLimit = group.months.some(month => month.creditAllocationPremium?.gt(0));
+  }
   return { groups: [...groups.values()] };
 }

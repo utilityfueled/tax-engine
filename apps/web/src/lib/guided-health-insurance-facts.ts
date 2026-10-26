@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import { Form7206Schema } from "@/models/inputs";
 import { calculateForm7206 } from "@/engine/forms/form-7206";
+import { readMarketplaceCreditAllocationSource } from "@/engine/forms/marketplace-credit-allocation-source";
 import type { AdjustmentData, FilingStatus, GuidedFlowState, SelfEmploymentSectionData, W2EntryData } from "./guided-interview-flow";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import { parseGuidedCurrency } from "./guided-currency";
@@ -33,10 +34,15 @@ export interface HealthInsuranceIncomeDeductionsData {
   sourceReference: string; sourceFactsConfirmed: boolean | null; otherForeignExclusion: string;
   allocations: { businessSourceId: string; accountHolder: "" | Owner; retirementDeduction: string; foreignExclusion: string }[];
 }
+export interface MarketplaceCreditAllocationData {
+  sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null;
+  method: "" | "monthly_eligible_plan_enrollment"; sameMethodForAllCalculationsConfirmed: boolean | null;
+}
 export interface HealthInsuranceData {
   sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null; allPlansIncluded: boolean | null;
   persons: HealthInsurancePersonData[]; plans: HealthInsurancePlanData[];
   incomeDeductions?: HealthInsuranceIncomeDeductionsData;
+  marketplaceCreditAllocation?: MarketplaceCreditAllocationData;
   longTermCareAllocations: { personId: string; accountHolder: "" | Owner; businessSourceId: string; allowedPremium: string }[];
 }
 export interface HealthInsuranceSourceOption { sourceId: string; accountHolder: Owner; kind: "self_employed" | "partnership" | "s_corporation"; label: string }
@@ -44,6 +50,7 @@ export const emptyHealthInsuranceFacts: HealthInsuranceData = { sourceTaxYear: "
 /** Revoke independent confirmations without replacing their actual source values. */
 export function invalidateHealthInsuranceSources(data: HealthInsuranceData): HealthInsuranceData {
   return { ...data, sourceFactsConfirmed: null,
+    ...(data.marketplaceCreditAllocation ? { marketplaceCreditAllocation: { ...data.marketplaceCreditAllocation, sourceFactsConfirmed: null } } : {}),
     ...(data.incomeDeductions ? { incomeDeductions: { ...data.incomeDeductions, sourceFactsConfirmed: null } } : {}),
     plans: data.plans.map(plan => ({ ...plan, ...(plan.sharedMarketplaceSources ? { sharedMarketplaceSources: { ...plan.sharedMarketplaceSources, sourceFactsConfirmed: null } } : {}),
       ...(plan.coverageFamilySources ? { coverageFamilySources: { ...plan.coverageFamilySources, sourceFactsConfirmed: null } } : {}) })),
@@ -91,6 +98,13 @@ export function buildHealthInsuranceInput(data: HealthInsuranceData | undefined,
   const facts = Form7206Schema.parse({
     sourceTaxYear: integer(data.sourceTaxYear, "source tax year"), sourceReference: data.sourceReference, sourceFactsConfirmed: data.sourceFactsConfirmed ?? undefined, allPlansIncluded: data.allPlansIncluded ?? undefined,
     incomeDeductions: buildIncomeDeductions(data.incomeDeductions),
+    marketplaceCreditAllocation: data.marketplaceCreditAllocation ? {
+      sourceTaxYear: integer(data.marketplaceCreditAllocation.sourceTaxYear, "credit allocation source year"),
+      sourceReference: data.marketplaceCreditAllocation.sourceReference.trim(),
+      sourceFactsConfirmed: data.marketplaceCreditAllocation.sourceFactsConfirmed ?? undefined,
+      method: data.marketplaceCreditAllocation.method || undefined,
+      sameMethodForAllCalculationsConfirmed: data.marketplaceCreditAllocation.sameMethodForAllCalculationsConfirmed ?? undefined,
+    } : undefined,
     persons: data.persons?.map(person => ({ ...person, householdRole: person.householdRole || undefined, attainedAgeAtYearEnd: integer(person.attainedAgeAtYearEnd, "year-end age") })),
     plans: data.plans?.map(plan => ({ ...plan, accountHolder: plan.accountHolder || undefined, businessKind: plan.businessKind || undefined, kind: plan.kind || undefined, policyHolder: plan.policyHolder || undefined,
       ...Object.fromEntries((["establishedUnderBusiness", "insuranceQualificationConfirmed", "premiumsIncludedInOwnerIncome", "moreThanTwoPercentShareholder", "marketplaceCoverage", "premiumTaxCreditInvolved", "clergySpecialRules", "allCoveredPersonsInCoverageFamilyConfirmed"] as const).map(field => [field, plan[field] ?? undefined])),
@@ -115,6 +129,7 @@ export function buildHealthInsuranceInput(data: HealthInsuranceData | undefined,
     longTermCareAllocations: data.longTermCareAllocations?.map(allocation => ({ ...allocation, accountHolder: allocation.accountHolder || undefined, allowedPremium: money(allocation.allowedPremium, "actual long-term-care allocation") })),
   });
   const specified = facts.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
+  readMarketplaceCreditAllocationSource({ form7206: facts, taxpayer: { taxYear } });
   // Validate original amounts without inventing a business limit or claiming the
   // final deduction. Canonical Pub974 coordination supplies both later.
   const checked = calculateForm7206({ facts, filingStatus: statuses[filingStatus], taxYear, marketplaceHandling: specified ? "separate-specified-premiums" : undefined });
