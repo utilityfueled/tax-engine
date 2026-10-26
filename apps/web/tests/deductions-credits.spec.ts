@@ -220,7 +220,7 @@ test.describe("Deductions section — itemized deductions", () => {
     await expect(page.getByText(/state and local income taxes/i)).toBeVisible();
     await expect(page.getByRole("textbox", { name: /^Real estate taxes/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Mortgage interest — Form 1098", exact: true })).toBeVisible();
-    await expect(page.getByText(/charitable contributions/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Charitable contributions", exact: true })).toBeVisible();
   });
 
   test("itemized deduction fields have helpful hints", async ({ page }) => {
