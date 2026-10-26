@@ -74,7 +74,11 @@ it("invalidates substantive source changes without cycling confirmations", () =>
   const substantive = updateSectionData(confirmation, "credits", { ...confirmation.sectionData.credits, educationDistributions: { ...confirmation.sectionData.credits?.educationDistributions, allDistributionsReconciled: false } });
   expect(substantive.sectionData.adjustments?.studentLoanFacts?.sourceFactsConfirmed).toBeNull();
   expect(substantive.sectionData.adjustments?.educatorExpenseSources?.[0]?.sourceFactsConfirmed).toBeNull();
-  const reconfirmed = updateSectionData(substantive, "adjustments", { ...substantive.sectionData.adjustments, studentLoanFacts: { ...substantive.sectionData.adjustments?.studentLoanFacts, sourceFactsConfirmed: true } });
+  expect(substantive.sectionData.credits?.educationDistributions?.sourceFactsConfirmed).toBeNull();
+  const educationReconfirmed = updateSectionData(substantive, "credits", { ...substantive.sectionData.credits, educationDistributions: { ...substantive.sectionData.credits?.educationDistributions, sourceFactsConfirmed: true } });
+  expect(educationReconfirmed.sectionData.credits?.educationDistributions?.sourceFactsConfirmed).toBe(true);
+  expect(educationReconfirmed.sectionData.adjustments?.studentLoanFacts?.sourceFactsConfirmed).toBeNull();
+  const reconfirmed = updateSectionData(educationReconfirmed, "adjustments", { ...educationReconfirmed.sectionData.adjustments, studentLoanFacts: { ...educationReconfirmed.sectionData.adjustments?.studentLoanFacts, sourceFactsConfirmed: true } });
   expect(reconfirmed.sectionData.credits?.educationDistributions?.sourceFactsConfirmed).toBe(true);
 });
 

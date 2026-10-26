@@ -18,6 +18,9 @@ notes: |
   conserved as QTP allocation plus actual tax-free assistance. Do not allocate
   assistance across larger expenses, multiple sources or ESA elections, infer
   an exception, or replace any original source amount with a calculated amount.
+  The separately specified form-1099-q-distinct-in-kind-assistance.yaml extends
+  this original method to a complete set of distinct original expenses and
+  benefits, each with its own recorded assistance; unbound extras still reject.
 lines:
   - line: "actual-assistance"
     description: "Reduce prepaid tuition by its actual tax-free assistance"

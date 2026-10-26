@@ -27,7 +27,7 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.131",
+    ruleVersion: "2025.132",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
@@ -171,7 +171,7 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.128-law-integration-draft",
+    ruleVersion: "2026.129-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,

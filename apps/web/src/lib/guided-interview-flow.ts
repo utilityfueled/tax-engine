@@ -1608,7 +1608,8 @@ export function updateSectionData(
   const premiumTaxCreditSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "additional-deductions"].includes(sectionId) && nextCredits?.premiumTaxCredit;
   const educationSourcesChanged = !!nextCredits?.educationDistributions && (
     ((sectionId === "personal-info" || sectionId === "adjustments") && guidedSourceValuesChanged(state.sectionData[sectionId], data)) ||
-    (sectionId === "credits" && (guidedSourceValuesChanged(credits?.education, nextCredits.education) || guidedSourceValuesChanged(credits?.savingsBondEducation, nextCredits.savingsBondEducation)))
+    (sectionId === "credits" && (guidedSourceValuesChanged(credits?.education, nextCredits.education) || guidedSourceValuesChanged(credits?.savingsBondEducation, nextCredits.savingsBondEducation)
+      || guidedSourceValuesChanged(credits?.educationDistributions, nextCredits.educationDistributions)))
   );
   const bondSourcesChanged = !!nextCredits?.savingsBondEducation && (
     (["personal-info", "income-investments", "adjustments"].includes(sectionId) && sourceValuesChanged) ||
