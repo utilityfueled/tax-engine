@@ -13,7 +13,7 @@ No scenario is currently qualified for filing or electronic submission.
 
 - The 2025 federal and state engines provide experimental calculations; dedicated state implementations still require scenario and form review.
 - Tax year 2026 (filed in 2027) has a separate, incomplete rule pack. Full calculation and PDF output remain blocked.
-- PDF downloads are for review only and omit taxpayer IDs. They cannot be used as filing exports.
+- PDF downloads are for review only and omit taxpayer Social Security numbers. Names, tax amounts and explicit business EINs may remain, so the downloads are not anonymous or complete filing exports.
 - The local-first app collects guided facts and saves drafts. New AI profiles remain evaluation candidates.
 
 See the app's `/support` matrix and [implementation evidence and remaining work](docs/upgrade-2026-progress.md).

@@ -18,7 +18,7 @@ const sections = [
   {
     id: "self-hosted",
     title: "Self-Hosted Mode",
-    content: `In self-hosted mode, your return data is stored in browser localStorage on your device by default. The project does not send that local data to a project-operated remote service unless you explicitly use optional features in your deployment that call an external provider. If you enable optional AI helper or document-analysis features, selected prompts, summaries, or document text may be sent transiently to the providers you configured. There are no advertising trackers in the project code, and your local data remains under your control.`,
+    content: `In self-hosted mode, draft answers and workspace records are stored in your browser's localStorage. Original document files are cached in IndexedDB when it is available. The app does not encrypt these browser stores. Password-protected recovery downloads are encrypted separately. The project does not send that local data to a project-operated remote service unless you explicitly use optional features in your deployment that call an external provider. If you enable optional AI helper or document-analysis features, selected prompts, summaries, or document text may be sent transiently to the providers you configured. There are no advertising trackers in the project code, and your local data remains under your control.`,
   },
   {
     id: "hosted-mode",
@@ -38,17 +38,22 @@ const sections = [
   {
     id: "routine-information",
     title: "Collection of Routine Information",
-    content: `Like most web services, we collect routine technical information including IP addresses, device type, browser details, timestamps, and referring pages. This information is used for server administration, security monitoring, and understanding aggregate usage patterns. None of this information personally identifies you on its own.`,
+    content: `Hosting and optional telemetry services may receive technical information such as IP addresses, browser details, timestamps and page requests. This information can be identifying. Collection and retention depend on the deployment and its providers; review the operator's configuration and policies.`,
   },
   {
     id: "cookies",
     title: "Cookies",
-    content: `In self-hosted mode, we use no cookies at all. In hosted mode, we use a single session cookie for authentication — it keeps you logged in. We do not use third-party cookies, advertising cookies, or analytics cookies. That's it.`,
+    content: `Local drafts use browser storage and do not require a hosted sign-in session. Hosted accounts use authentication cookies to maintain their sessions. The project does not add advertising cookies. Separately configured payment or other services have their own cookie policies.`,
   },
   {
     id: "data-retention",
     title: "Data Retention",
-    content: `You can delete your data at any time. In self-hosted mode, clear your browser's localStorage. For the official hosted Viva La Tax service, email ${OFFICIAL_SUPPORT_EMAIL} to request account deletion. If you use another hosted deployment, contact that operator instead. Deletion removes your stored workspace shells, reminder settings, AI usage and budget metadata, and account metadata from hosted storage. Raw uploaded forms are not retained in durable hosted storage after processing completes. Third-party providers may retain transient request or logging data under their own policies.`,
+    content: `Use the return deletion control to remove that return's local answers, workspace records and cached original files from this browser. To remove all locally stored returns, clear all site data for the app, including IndexedDB; clearing only localStorage can leave cached document files behind. Deleting a return does not delete recovery files or review PDFs already downloaded to your device. For the official hosted Viva La Tax service, email ${OFFICIAL_SUPPORT_EMAIL} to request account deletion. If you use another hosted deployment, contact that operator instead. Deletion removes your stored workspace shells, reminder settings, AI usage and budget metadata, and account metadata from hosted storage. Raw uploaded forms are not retained in durable hosted storage after processing completes. Third-party providers may retain transient request or logging data under their own policies.`,
+  },
+  {
+    id: "review-downloads",
+    title: "Review Downloads",
+    content: `Review PDFs omit taxpayer Social Security numbers and are marked for review only. Names, tax amounts and explicit business EINs may remain. These downloads are not anonymous, complete filing exports or full backups of your original records.`,
   },
   {
     id: "third-party",
@@ -63,7 +68,7 @@ const sections = [
   {
     id: "security",
     title: "Security",
-    content: `We use commercially reasonable measures to protect your data, including encryption in transit (HTTPS) and at rest. However, no method of transmission over the Internet and no method of electronic storage is 100% secure. We cannot guarantee absolute security, but we take it seriously and continuously work to improve our protections.`,
+    content: `The app encrypts downloaded recovery backups with the password you choose. Ordinary browser drafts and cached documents are not encrypted by the app. HTTPS and encryption for hosted databases, disks and backups depend on the deployment operator's infrastructure and configuration; they are not established by running the project code. Protect access to your device and keep your recovery password separately from the backup.`,
   },
   {
     id: "open-source",
@@ -103,7 +108,7 @@ export default function PrivacyPage() {
       <section className="hero">
         <h1>Privacy Policy</h1>
         <p className="hero-copy">
-          Last updated: April 6, 2026
+          Last updated: October 26, 2026
         </p>
         <div className="hero-actions">
           <Link href="/" className="utility-button">

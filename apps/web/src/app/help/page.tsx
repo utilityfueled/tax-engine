@@ -44,7 +44,7 @@ const faqItems = [
   },
   {
     q: "Can I file my return electronically?",
-    a: "No. Downloads are privacy-safe review copies with identifiers omitted and a review-only watermark. They cannot be filed or mailed as complete returns. Complete filing exports and electronic submission are unavailable.",
+    a: "No. Downloads are marked for review only and omit taxpayer Social Security numbers. Names, tax amounts and explicit business EINs may remain. These copies are not anonymous and cannot be filed or mailed as complete returns. Complete filing exports and electronic submission are unavailable.",
   },
   {
     q: "Do you support crypto and digital assets?",
