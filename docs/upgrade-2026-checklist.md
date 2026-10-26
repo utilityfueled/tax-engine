@@ -7,65 +7,62 @@ complete a checkbox.
 
 ## Current integration — 2026-10-26
 
-The branch is pushed through `f47cb65`. New delivered packages are the remaining
-source-bound EIC review checkboxes (`fea969d`), corrected S-corporation debt-basis
-ordering (`71f8df0`), actual no-agreement Marketplace allocation (`ea43686`),
-optional K1 charitable basis sources (`ed52792`), all-claimant home/military
-intake (`085eaa7`), absent EIC investment-input preservation (`f98f9ed`) and the
-spec-reference runtime correction (`f47cb65`). Metadata is `2025.113` /
-`2026.110-law-integration-draft`; no readiness gate is promoted.
+The branch is pushed through `b464992`. New delivered packages are actual
+no-advance Marketplace allocation (`cfe5516`), source-bound separated-spouse EIC
+eligibility (`6271a96`), business-gain exclusion from EIC investment capital
+(`7287999`) and the elected-child investment worksheet (`b464992`). Metadata is
+`2025.117` / `2026.114-law-integration-draft`; no readiness gate is promoted.
 
-The S-corporation repair passes 680 tests in 13 files and 85 separate parent
-review tests, including independent stock/debt and category conservation cases.
-Its optional charitable prerequisite passes 687/14 and 117/6 separate review
-checks; it remains an inactive source helper pending canonical coordination.
-Situation4 default allocation passes 1,020/123, four production browser cases,
-17/6 parent review checks and both physical review pages. Final integration passes
-32/9. The EIC review-field package passes 1,271/170, 54/7 parent review and 48/6
-final checks. Home intake passes 863/109, two browser cases, nine independent
-review checks and final 14/4; four flattened PDFs were independently reopened.
-The EIC presence correction has 157/7 scoped tests, 12/3 separate review checks
-and 160/8 final integration checks. Exact ledgers retain source hashes and initial
-failures. Generated cases and agent reviews are not independent human review.
+No-advance allocation passes 1,048 tests in 123 files, four production browser
+cases, 24 separate parent review checks including three private probes, and
+38 final integration checks. Twelve physical/reference PDF pages were inspected.
+Separated-spouse core passes 178 final checks and 13 separate review checks,
+including four private probes. Review found and corrected inconsistent ordinary
+residence and a reused claimant identity before approval. The guided collector
+is a separate reviewed candidate and its actual-source PDF handoff is ongoing.
 
-Full immutable `76e3538` passes **18,159 tests in 1,058 files**, zero failures or
-skips, with actual disposable PostgreSQL checks. Root/contracts/web types,
-spec/inventory, engine build and lint pass. The production bundle works and
-**374 browser cases pass**, zero retries; five hosted-only skips provide no
-staging evidence. Coverage passes 18,158 cases but fails the spec-reference test
-at its unchanged five-second deadline. `f47cb65` removes unused AST parent links;
-the original seven-second timeout is reproduced, the same six checks pass in
-3.41 seconds under V8, and all 13,327 discovered names remain identical. Its final
-34/2 integration checks pass. Full coverage must run again on the new snapshot.
-The prior passing coverage remains `36d5fab`: 87.06% branches and 90.38% functions.
-The refreshed inventory contains **465 entries and 5,090 literal references**.
+The business-gain worksheet passes 199 final checks and 43 separate review
+checks, including four private controls. Elected-child income passes 132 final
+checks and nine separate review checks, including four private controls. Exact
+source deltas preserve the intervening Rule 3 changes. Package ledgers retain
+literal expected results, source links and initial failures. Agent reviews are
+not independent human tax review.
 
-The [versioned runtime evidence](upgrade-2026-runtime-76e3538.json) binds the
-local arm64 image to `76e3538`. Smoke and all six recovery phases pass, including
-actual synthetic database dump/restore and encrypted browser recovery. Its scan
-has 157 OS matches across 67 distinct advisories, zero critical/npm/available-fix
-matches. Owner acceptance and the existing 2026-11-07 expiry remain unresolved.
-No image was published. The first VM storage failure and bounded task-cache
-cleanup are retained. Later tax commits and final native images still require
-verification. Recent remote runs have been superseded by newer pushes; no
-completed current-head result is inferred.
+Full immutable `817f76f` passes **18,189 tests in 1,067 files**, zero failures or
+skips, with actual disposable PostgreSQL checks. Coverage is **87.14% branches**
+against the unchanged 85% gate and **90.43% functions** against 90%; statements
+92.17%, lines 94.77%. This run confirms the spec-reference runtime repair; the
+earlier `76e3538` timeout remains recorded. The run excludes the four later tax
+packages above. Current combined verification remains required. The regenerated
+inventory contains **469 entries and 5,127 literal references**.
 
-Remaining internal work includes actual separated-spouse EIC sources and the
-investment worksheet's income-character components; no-advance and overlapping/
-shared-plus-unshared Marketplace methods; separate-business health ordering;
-canonical K1 charitable basis/history/at-risk handoff; prior-floor, regular/AMT
-NOL and partial mixed-media charity methods. Situation3 no-advance source/guide/
-PDF work passed separate agent review on frozen `3a040111`; it is not committed
-or counted as delivered here. A guard or an inactive helper does not complete
-an unsupported method. Current full verification and support reconciliation
-remain active.
+The broad `76e3538` unit/static/build/browser evidence remains separate: 18,159
+tests and 374 browser cases pass with zero retries; five hosted-only skips
+provide no staging evidence. Its [versioned runtime evidence](upgrade-2026-runtime-76e3538.json)
+binds the local arm64 image to that source. Smoke and all six recovery phases
+pass, including actual synthetic database dump/restore and encrypted browser
+recovery. Its scan has 157 OS matches across 67 distinct advisories, zero
+critical/npm/available-fix matches. Owner acceptance and the 2026-11-07 expiry
+remain unresolved. No image was published. Later source and final native images
+require verification. Recent remote runs have been superseded by newer pushes;
+no completed current-head result is inferred.
+
+Remaining internal work includes separated-spouse intake/PDF follow-through,
+the EIC investment worksheet's royalty/passive components, disjoint shared and
+unshared Marketplace policies, overlapping benchmark groups, separate-business
+health ordering, canonical K1 charitable basis/history/at-risk handoff, and
+prior-floor, regular/AMT NOL and partial mixed-media charity methods. Separate
+review reproduced an at-risk income-offset error in the pending K1 royalty
+candidate; it is not committed or approved. A guard or inactive helper does
+not complete an unsupported method. Current verification and support
+reconciliation remain active.
 
 The goal is active and the upgrade is **not release-ready**. Required human
 reviews and controlling interpretations, provider access and approved budget,
 authorized staging, launch-state demand, final forms and advisory-owner
-acceptance remain outstanding. The user expressly approved normal pushes to the
-public `utilityfueled/tax-engine` upgrade branch. Production deployment, filing
-and model promotion remain unauthorized and disabled.
+acceptance remain outstanding. The user expressly approved normal pushes to
+the public `utilityfueled/tax-engine` upgrade branch. Production deployment,
+filing and model promotion remain unauthorized and disabled.
 
 ## Earlier package evidence
 

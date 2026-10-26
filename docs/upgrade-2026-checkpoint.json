@@ -194,7 +194,7 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Current-head combined verification remains pending after f47cb65. Exact76e3538 unit/static/browser/runtime pass; its spec-reference coverage timeout is corrected separately, but new full coverage is still required.",
+    "Current-head combined verification remains pending after b464992. Exact817f76f coverage passes18189tests with unchanged gates; exact76e3538 unit/static/browser/runtime pass. Later tax packages have scoped checks and separate agent reviews but require final combined verification.",
     "The2026 rule pack and finite Marketplace/EIC/charitable source methods remain incomplete; explicit unsupported methods and inactive helpers are not counted as implemented. Full2026 calculation remains blocked.",
     "Independent human tax review, selected-state demand/qualification and final physical forms are outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net1202/Form172 interpretations remain unresolved.",
     "AI application/scorer bindings are reviewed;240draftcases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "f47cb6596291c21cf0908164b1933c67926500e5",
+    "lastRecordedCommit": "b46499205313796c6dde33a115442d9cdeaff50b",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1310,30 +1310,36 @@
       "hosted staging",
       "final multi-platform release images"
     ],
-    "workInProgress": "Actual separated-spouse EIC sources and investment income character; reviewed no-advance Marketplace integration; shared/unshared and separate-business health methods; canonical K1 charitable source coordination; final verification and external qualification.",
-    "latestIntegratedCommit": "f47cb6596291c21cf0908164b1933c67926500e5",
+    "workInProgress": "Separated-spouse EIC guided/PDF follow-through; royalty at-risk review repair and EIC passive worksheet; shared/unshared and separate-business health methods; canonical K1 charitable source coordination; final verification and external qualification.",
+    "latestIntegratedCommit": "b46499205313796c6dde33a115442d9cdeaff50b",
     "activeIntegrationRun": {
       "sourceCommit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
       "unit": "passed",
       "static": "passed",
       "browser": "374 passed; five hosted skips",
-      "coverage": "one retained spec-reference timeout; corrected f47cb65; new full run pending",
+      "coverage": "Exact817f76f passed18189tests/1067files, branches87.14%, functions90.43%; excludes later tax packages.",
       "currentHeadVerified": false
     },
     "latestCoverageDiagnostic": {
-      "commit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
-      "tree": "651098f2b79840dabbd1c39240398c743284d34c",
-      "exit": 1,
-      "passed": 18158,
-      "failed": 1,
+      "commit": "817f76f5cde968b8f78ea1ebc698343df0b93600",
+      "tree": "1403c3c0fcb8f6350f09bf74c5754946d8d8c749",
+      "exit": 0,
+      "passed": 18189,
+      "files": 1067,
+      "failed": 0,
       "skipped": 0,
-      "files": 1058,
-      "seconds": 882.7,
-      "failure": "Literal spec-reference test exceeded unchanged5000ms deadline at6755ms; no passing coverage claim. Original timeout independently reproduced and corrected in f47cb65.",
-      "evidence": {
-        "path": ".local/upgrade-evidence/full-coverage-76e3538.log",
-        "sha256": "0ddde4f837f81b468ff5b550fcce1c4f2f177fa3a34f4f6a4999861304ec50df"
-      }
+      "seconds": 434.3,
+      "statementsPercent": "92.17",
+      "branchesPercent": "87.14",
+      "functionsPercent": "90.43",
+      "linesPercent": "94.77",
+      "branchGatePercent": "85",
+      "functionGatePercent": "90",
+      "thresholdsChanged": false,
+      "localSyntheticPostgres": true,
+      "evidence": ".local/upgrade-evidence/full-coverage-817f76f.log",
+      "sha256": "f785975f25c12001b54417d38509d7eac1b38b29eeed79c39d27f571ba9298dd",
+      "scope": "Exact817f76f only; later source packages excluded."
     },
     "recentPackages": {
       "privacyHeaderRedaction": "2d16a94",
@@ -1585,6 +1591,33 @@
       "amd64": "local QEMU Next.js compilation failed with signal11; native CI rehearsal now configured"
     },
     "currentStableCoverageRun": {
+      "commit": "817f76f5cde968b8f78ea1ebc698343df0b93600",
+      "tree": "1403c3c0fcb8f6350f09bf74c5754946d8d8c749",
+      "status": "passed",
+      "tests": 18189,
+      "files": 1067,
+      "failures": 0,
+      "skips": 0,
+      "branchesPercent": "87.14",
+      "functionsPercent": "90.43",
+      "statementsPercent": "92.17",
+      "linesPercent": "94.77",
+      "durationSeconds": 434.3,
+      "thresholdChanged": false,
+      "branchThresholdPercent": "85",
+      "functionThresholdPercent": "90",
+      "evidence": ".local/upgrade-evidence/full-coverage-817f76f.log",
+      "evidenceSha256": "f785975f25c12001b54417d38509d7eac1b38b29eeed79c39d27f571ba9298dd",
+      "scope": "Exact817f76f only; later source packages excluded.",
+      "localSyntheticPostgres": true
+    },
+    "remainingInternalWork": [
+      "Complete separated-spouse EIC guided/PDF follow-through and source-character royalty/passive worksheet components. Core Rule3, capital and child-election components are committed; the royalty candidate has an unresolved reproduced review finding.",
+      "Complete disjoint shared/unshared Marketplace policies, overlapping benchmark source groups and historical separate-business health ordering. No-advance allocation is committed; binding joint2025 repayment ownership remains a controlling-interpretation dependency.",
+      "Complete canonical K1 charitable basis/history/at-risk handoff using the reviewed inactive prerequisite; prior-floor, regular/AMT NOL and partial mixed-media methods remain. S-corporation debt ordering is repaired.",
+      "Repeat exact current-source unit/coverage/types/spec/inventory/builds/lint/browser and completed remote CI; final native images/SBOM/scans/recovery, support reconciliation and outstanding external qualification remain."
+    ],
+    "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
       "tree": "244b253149d4a86fe4b855770a2ec9ffdf46cdc2",
       "status": "passed",
@@ -1604,31 +1637,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "remainingInternalWork": [
-      "Complete actual separated-spouse EIC sources and source-character investment worksheet; presence/default-zero defect is repaired.",
-      "Complete no-advance Marketplace allocation (reviewed candidate pending commit), disjoint shared/unshared policies, overlapping benchmark source groups and historical separate-business health ordering. Binding joint2025 repayment ownership remains a controlling-interpretation dependency.",
-      "Complete canonical K1 charitable basis/history/at-risk handoff using the reviewed inactive prerequisite; prior-floor, regular/AMT NOL and partial mixed-media methods remain. S-corporation debt ordering is repaired.",
-      "Repeat exact current-source unit/coverage/types/spec/inventory/builds/lint/browser and completed remote CI; final native images/SBOM/scans/recovery, support reconciliation and outstanding external qualification remain."
-    ],
-    "previousStableCoverageRun": {
-      "commit": "7523384faf0cdaa8583883abd2fb88319552bf92",
-      "status": "passed",
-      "tests": 17934,
-      "files": 975,
-      "failures": 0,
-      "skips": 0,
-      "branchesPercent": "87.01",
-      "statementsPercent": "92.18",
-      "functionsPercent": "90.21",
-      "linesPercent": "94.71",
-      "durationSeconds": "760.66",
-      "thresholdChanged": false,
-      "branchThresholdPercent": "85",
-      "evidence": ".local/upgrade-evidence/full-coverage-7523384.log",
-      "evidenceSha256": "e95fecc486133167677bfaa214ff20c6079658d669daa7144bc81ba4b70e4563",
-      "scope": "Exact committed source with pinned Python/pypdf, original sample PDFs and disposable loopback PostgreSQL; later packages excluded."
-    },
-    "lastPushedCommit": "f47cb6596291c21cf0908164b1933c67926500e5",
+    "lastPushedCommit": "b46499205313796c6dde33a115442d9cdeaff50b",
     "currentBrowserRun": {
       "commit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
       "tree": "651098f2b79840dabbd1c39240398c743284d34c",
@@ -2845,6 +2854,18 @@
         ],
         "specReferenceRuntime": [
           "f47cb6596291c21cf0908164b1933c67926500e5"
+        ],
+        "sharedNoAdvance": [
+          "cfe5516e705a7c380037ca1ce104aeeb9b7ce96a"
+        ],
+        "eicSeparatedSpouseCore": [
+          "6271a96003fb713e6376315ea6486a4677d9ef3e"
+        ],
+        "eicInvestmentCapital": [
+          "7287999afca276820dc2806f3b509c56d16bcf0e"
+        ],
+        "eicChildInvestment": [
+          "b46499205313796c6dde33a115442d9cdeaff50b"
         ]
       },
       "owners": {
@@ -2854,8 +2875,8 @@
         "educationMethodsAndFinalIntegration": "parent"
       },
       "subsequent": [
-        "Complete actual separated-spouse EIC sources and source-character investment worksheet; presence/default-zero defect is repaired.",
-        "Complete no-advance Marketplace allocation (reviewed candidate pending commit), disjoint shared/unshared policies, overlapping benchmark source groups and historical separate-business health ordering. Binding joint2025 repayment ownership remains a controlling-interpretation dependency.",
+        "Complete separated-spouse EIC guided/PDF follow-through and source-character royalty/passive worksheet components. Core Rule3, capital and child-election components are committed; the royalty candidate has an unresolved reproduced review finding.",
+        "Complete disjoint shared/unshared Marketplace policies, overlapping benchmark source groups and historical separate-business health ordering. No-advance allocation is committed; binding joint2025 repayment ownership remains a controlling-interpretation dependency.",
         "Complete canonical K1 charitable basis/history/at-risk handoff using the reviewed inactive prerequisite; prior-floor, regular/AMT NOL and partial mixed-media methods remain. S-corporation debt ordering is repaired.",
         "Repeat exact current-source unit/coverage/types/spec/inventory/builds/lint/browser and completed remote CI; final native images/SBOM/scans/recovery, support reconciliation and outstanding external qualification remain.",
         "Qualified interpretations for reduced mixed tips/bonds and negative-net1202 remain unresolved; no invented allocation or review."
@@ -3578,42 +3599,67 @@
         "deadlinesChanged": false,
         "coverageThresholdsChanged": false,
         "document": "docs/upgrade-2026-spec-reference-runtime.md"
+      },
+      "sharedNoAdvance": {
+        "commit": "cfe5516e705a7c380037ca1ce104aeeb9b7ce96a",
+        "authorTests": 1048,
+        "authorFiles": 123,
+        "browserTests": 4,
+        "parentTests": 24,
+        "parentFiles": 7,
+        "privateProbes": 3,
+        "finalTests": 38,
+        "finalFiles": 10,
+        "ledger": "docs/upgrade-2026-shared-no-advance-work.md"
+      },
+      "eicSeparatedSpouseCore": {
+        "commit": "6271a96003fb713e6376315ea6486a4677d9ef3e",
+        "parentTests": 13,
+        "parentFiles": 2,
+        "privateProbes": 4,
+        "finalTests": 178,
+        "finalFiles": 15,
+        "ledger": "docs/upgrade-2026-eic-separated-spouse-work.md"
+      },
+      "eicInvestmentCapital": {
+        "commit": "7287999afca276820dc2806f3b509c56d16bcf0e",
+        "parentTests": 43,
+        "parentFiles": 3,
+        "privateProbes": 4,
+        "finalTests": 199,
+        "finalFiles": 10,
+        "ledger": "docs/upgrade-2026-eic-capital-work.md"
+      },
+      "eicChildInvestment": {
+        "commit": "b46499205313796c6dde33a115442d9cdeaff50b",
+        "parentTests": 9,
+        "parentFiles": 2,
+        "privateProbes": 4,
+        "finalTests": 132,
+        "finalFiles": 14,
+        "ledger": "docs/upgrade-2026-eic-child-investment-work.md"
       }
     },
     "currentInventory": {
-      "entries": 465,
-      "specReferences": 5090,
-      "sourceCommit": "f47cb6596291c21cf0908164b1933c67926500e5",
+      "entries": 469,
+      "specReferences": 5127,
+      "sourceCommit": "b46499205313796c6dde33a115442d9cdeaff50b",
       "path": "spec/coverage/inventory-2025.json"
     },
     "previousCoverageDiagnostic": {
-      "commit": "9bcf47be7791b268875c6c47704e95b48ed5c5a8",
-      "status": "failed-function-coverage-threshold",
-      "passed": 18079,
-      "failed": 0,
+      "commit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
+      "tree": "651098f2b79840dabbd1c39240398c743284d34c",
+      "exit": 1,
+      "passed": 18158,
+      "failed": 1,
       "skipped": 0,
-      "files": 1028,
-      "durationSeconds": "600.76",
-      "workers": 1,
-      "thresholdChanged": false,
-      "coverageResultAvailable": true,
-      "statementsPercent": "92.07",
-      "statementsCovered": 52410,
-      "statementsTotal": 56924,
-      "branchesPercent": "86.97",
-      "branchesCovered": 44072,
-      "branchesTotal": 50673,
-      "branchThresholdPercent": "85",
-      "functionsPercent": "89.96",
-      "functionsCovered": 9489,
-      "functionsTotal": 10548,
-      "functionThresholdPercent": "90",
-      "linesPercent": "94.68",
-      "linesCovered": 44903,
-      "linesTotal": 47424,
-      "evidence": ".local/upgrade-evidence/full-coverage-9bcf47b.log",
-      "evidenceSha256": "bb67846fc6d6df7be26aa0ecaa44fec4c77ef73af79bdec1ba36ead0f162de53",
-      "limitation": "Full coverage command failed despite all tests passing. Branch threshold passed; function threshold did not. Parent is adding behavioral K1 history interaction coverage; no threshold or exclusions changed."
+      "files": 1058,
+      "seconds": 882.7,
+      "failure": "Literal spec-reference test exceeded unchanged5000ms deadline at6755ms; no passing coverage claim. Original timeout independently reproduced and corrected in f47cb65.",
+      "evidence": {
+        "path": ".local/upgrade-evidence/full-coverage-76e3538.log",
+        "sha256": "0ddde4f837f81b468ff5b550fcce1c4f2f177fa3a34f4f6a4999861304ec50df"
+      }
     },
     "mixedTipsInterpretation": {
       "status": "qualified-source-method-required",
@@ -3684,15 +3730,75 @@
       "boundary": "Fresh base and vulnerability database only; final application image build/SBOM/scan/recovery still required."
     },
     "currentReviewCandidates": {
-      "sharedNoAdvance": {
-        "tree": "3a040111faefef37722c3ecb6b08704d022ceb07",
-        "parentTests": 24,
-        "parentFiles": 7,
-        "privateProbes": 3,
-        "status": "Source/software/PDF review clear; final author evidence and integration pending",
+      "sharedUnshared": {
+        "tree": "d7c53dc900cc795ff45070b409d1c60d471b213e",
+        "status": "Author validation and separate parent review active",
+        "published": false
+      },
+      "eicSeparatedGuide": {
+        "tree": "955b936992b9253b18a28149e29c01a739957c3d",
+        "status": "968 tests/117 files, types/spec/lint/build and 2 browser cases pass; separate review clear with9tests/3files including4private probes; integration pending",
+        "published": false
+      },
+      "k1RoyaltyClassification": {
+        "tree": "4baf3971863026e6358c4edc1e60630a77b21faf",
+        "status": "Review reproduced actual Form6198 income-offset conflict; correction required before approval",
         "published": false
       }
-    }
+    },
+    "currentRuleVersions": {
+      "2025": "2025.117",
+      "2026": "2026.114-law-integration-draft"
+    },
+    "historicalCoverageEvidence": [
+      {
+        "commit": "7523384faf0cdaa8583883abd2fb88319552bf92",
+        "status": "passed",
+        "tests": 17934,
+        "files": 975,
+        "failures": 0,
+        "skips": 0,
+        "branchesPercent": "87.01",
+        "statementsPercent": "92.18",
+        "functionsPercent": "90.21",
+        "linesPercent": "94.71",
+        "durationSeconds": "760.66",
+        "thresholdChanged": false,
+        "branchThresholdPercent": "85",
+        "evidence": ".local/upgrade-evidence/full-coverage-7523384.log",
+        "evidenceSha256": "e95fecc486133167677bfaa214ff20c6079658d669daa7144bc81ba4b70e4563",
+        "scope": "Exact committed source with pinned Python/pypdf, original sample PDFs and disposable loopback PostgreSQL; later packages excluded."
+      },
+      {
+        "commit": "9bcf47be7791b268875c6c47704e95b48ed5c5a8",
+        "status": "failed-function-coverage-threshold",
+        "passed": 18079,
+        "failed": 0,
+        "skipped": 0,
+        "files": 1028,
+        "durationSeconds": "600.76",
+        "workers": 1,
+        "thresholdChanged": false,
+        "coverageResultAvailable": true,
+        "statementsPercent": "92.07",
+        "statementsCovered": 52410,
+        "statementsTotal": 56924,
+        "branchesPercent": "86.97",
+        "branchesCovered": 44072,
+        "branchesTotal": 50673,
+        "branchThresholdPercent": "85",
+        "functionsPercent": "89.96",
+        "functionsCovered": 9489,
+        "functionsTotal": 10548,
+        "functionThresholdPercent": "90",
+        "linesPercent": "94.68",
+        "linesCovered": 44903,
+        "linesTotal": 47424,
+        "evidence": ".local/upgrade-evidence/full-coverage-9bcf47b.log",
+        "evidenceSha256": "bb67846fc6d6df7be26aa0ecaa44fec4c77ef73af79bdec1ba36ead0f162de53",
+        "limitation": "Full coverage command failed despite all tests passing. Branch threshold passed; function threshold did not. Parent is adding behavioral K1 history interaction coverage; no threshold or exclusions changed."
+      }
+    ]
   },
   "historicalReleaseBlockers": {
     "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
