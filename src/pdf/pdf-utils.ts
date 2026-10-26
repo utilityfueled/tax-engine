@@ -3,7 +3,7 @@
  * Formatting and field-setting helpers for IRS fillable PDFs.
  */
 
-import { PDFDocument, PDFForm, PDFTextField, PDFCheckBox, StandardFonts } from "pdf-lib";
+import { PDFDocument, PDFForm, PDFTextField, PDFCheckBox, StandardFonts, ParseSpeeds } from "pdf-lib";
 import { readFile, writeFile, mkdir } from "fs/promises";
 import { basename, dirname } from "path";
 import Decimal from "decimal.js";
@@ -46,7 +46,7 @@ export async function loadPdfDocumentQuietly(bytes: Uint8Array | ArrayBuffer): P
   installPdfLibXfaWarningFilter();
 
   try {
-    return await PDFDocument.load(bytes);
+    return await PDFDocument.load(bytes, { parseSpeed: ParseSpeeds.Medium });
   } finally {
     removePdfLibXfaWarningFilter();
   }
@@ -140,7 +140,7 @@ export async function savePdf(
   outputPath: string,
 ): Promise<void> {
   await mkdir(dirname(outputPath), { recursive: true });
-  const bytes = await doc.save();
+  const bytes = await doc.save({ objectsPerTick: 500 });
   await writeFile(outputPath, bytes);
 }
 
