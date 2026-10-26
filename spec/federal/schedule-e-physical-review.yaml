@@ -1,0 +1,62 @@
+form: "Schedule E"
+fullName: "Printed 2025 property columns and retained allowed income review"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-pdf/f1040se.pdf"
+retrievedAt: "2026-10-26"
+reviewStatus: "source-derived-implementation-independent-review-pending"
+notes: |
+  Final 2025 form created May 6, 2025 and current i1040se Part I/II.
+  Lines23a-e are gross rents, gross royalties, mortgage interest,
+  depreciation/depletion and total expenses. They are not net income/loss.
+  Line24 sums positive property net income; line25 uses royalty losses and
+  the actual allowed rental losses on22. Line26=24-25. Original portfolio
+  receipts without a property attachment are identified separately; missing
+  property/expense facts must not be invented. Actual royalty columns use
+  type6 with no street address or rental days. Extra properties use identical
+  continuation columns; totals on the first schedule include every page once.
+  PartII29a uses(h)/(k),29b(g)/(i)/(j),30=29a(h)+29a(k),
+  31=29b(g)+29b(i)+29b(j),32=30-31. Source-indexed Form8582 allowed losses
+  replace preliminary loss amounts.41 is the final Schedule1line5 amount;
+  42/43 are separate farming and real-estate-professional reconciliations.
+  Loss cells with printed parentheses contain positive magnitudes. All
+  money uses Decimal and the existing nearest-dollar display rule. Source
+  cents stay in calculation and original-source review. Original source
+  preparation precedes identifier redaction and any output I/O. Physical
+  review PDFs remain unqualified for filing and2026 remains unavailable.
+lines:
+  - line: "royalty-property-columns"
+    description: "Print actual royalty property categories and the correct aggregate fields"
+    formula: "Gross12000.25 less legal49.25 and management950.50 produces11000.50; printed gross12000,expenses1000,net11001.23b=12000,23e=1000,26=11001,41=11001,42blank."
+    testRef: "tests/pdf/schedule-e-physical-review.test.ts::reopens actual royalty columns and printed totals without filling farming reconciliation"
+  - line: "allowed-rental-loss"
+    description: "Keep suspended rental losses out of line22 and line25"
+    formula: "Rent10000 less12000insurance=-2000; at200000wages and500 passiveK1income,500rental loss allowed and1500suspended.22=500,25=500,26=-500,PartII32=500,41=0."
+    testRef: "tests/pdf/schedule-e-physical-review.test.ts::prints allowed rental losses and the actual Part II total widgets"
+  - line: "prior-passive-loss"
+    description: "Show prior allowed loss beside positive current income"
+    formula: "PassiveK1income2000 and its prior1000loss produce(g)1000,(h)2000,30=2000,31=1000,32=1000 and41=1000; zero farming reconciliation."
+    testRef: "tests/pdf/schedule-e-physical-review.test.ts::prints a prior passive loss released against positive current income"
+  - line: "continuation"
+    description: "Keep every actual property when more than three are present"
+    formula: "Four separately sourced royalty properties each100.01 gross and10.01expense produce400.04gross,40.04expense,360net; fourth property appears on a continuation and first-page totals include each once."
+    testRef: "tests/pdf/schedule-e-physical-review.test.ts::retains all actual property columns on a continuation page"
+  - line: "source-binding"
+    description: "Reject stale or forged source and calculation context before output I/O"
+    formula: "Prepare original actual sources, then allow only exact original or render-redacted input and matching retained calculation. Changing gross, owner, receipts or calculated net rejects."
+    testRef: "tests/pdf/schedule-e-physical-review.test.ts::binds original royalty facts before redaction and rejects stale retained results"
+  - line: "zero-net-inclusion"
+    description: "Keep actual gross receipts and equal expenses in a complete review packet"
+    formula: "An actual1000gross and1000current expense produces zero net yet still requires its property column and ScheduleE; the packet must not omit it based only on net income."
+    testRef: "tests/pdf/schedule-e-physical-review.test.ts::saves a redacted zero-net property in the full review packet"
+  - line: "partnership-continuation"
+    description: "Retain the fifth original K1 row on a continuation"
+    formula: "Five actual nonpassive sources of1000 each total5000; four print on page2 and the fifth prints on a copied page2 with totals only on the first schedule."
+    testRef: "tests/pdf/schedule-e-physical-review.test.ts::retains the fifth K1 on an independently readable continuation"
+  - line: "rental-calculated-depreciation"
+    description: "Use completed per-property depreciation and amortization rather than stale manual inputs"
+    formula: "At50percent ownership,18000rent becomes9000,2500computed depreciation becomes1250,and100manual other plus200amortization becomes150. Total expenses1400;net7600."
+    testRef: "tests/pdf/schedule-e-physical-review.test.ts::prints completed rental depreciation and amortization at actual ownership"
+  - line: "nonpassive-179-columns"
+    description: "Separate a fully absorbed nonpassive section179 deduction from its positive ordinary income"
+    formula: "Nonpassive ordinary1000 less fully absorbed179amount200 =800; printed(k)1000,(j)200,29a(k)1000,29b(j)200,30=1000,31=200,32=800. Binding source character requires its separate allocation."
+    testRef: "tests/pdf/schedule-e-physical-review.test.ts::separates a fully absorbed nonpassive section179 amount into its actual column"

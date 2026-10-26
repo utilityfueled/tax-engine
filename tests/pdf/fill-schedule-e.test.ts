@@ -256,15 +256,11 @@ describe("Schedule E PDF fill — two rental properties", () => {
     expect(getFieldText(doc, SCHEDULE_E_FIELDS.taxesB)).toBe("4500");
   });
 
-  it("fills Line 23a with total income from profitable properties", () => {
-    const se = result.scheduleE!;
-    // Sum of positive net rental incomes
-    const totalIncome = se.rentalProperties
-      .filter(p => p.netRentalIncome.greaterThan(0))
-      .reduce((acc, p) => acc.plus(p.netRentalIncome), se.rentalProperties[0].netRentalIncome.minus(se.rentalProperties[0].netRentalIncome));
-    if (totalIncome.greaterThan(0)) {
-      expect(getFieldText(doc, SCHEDULE_E_FIELDS.line23a)).toBe(formatCurrency(totalIncome));
-    }
+  it("fills Line 23a with gross rents from every property", () => {
+    // Printed line23a adds line3:24000+36000, not the net profit.
+    expect(getFieldText(doc, SCHEDULE_E_FIELDS.line23a)).toBe("60000");
+    expect(getFieldText(doc, SCHEDULE_E_FIELDS.line23c)).toBe("20000");
+    expect(getFieldText(doc, SCHEDULE_E_FIELDS.line23d)).toBe("12000");
   });
 
   it("fills Line 26 with combined total rental income", () => {
@@ -308,7 +304,7 @@ describe("Schedule E PDF fill — K-1 partnerships", () => {
     expect(getFieldText(doc, SCHEDULE_E_FIELDS.partEinB)).toBe("99-1234567");
   });
 
-  it("fills passive income in column G for passive partnership", () => {
+  it("fills passive income in printed column H for passive partnership", () => {
     const se = result.scheduleE!;
     const passiveP = se.partnerships.find(p => p.name === "Real Estate Fund LP")!;
     expect(passiveP.passiveIncome.toNumber()).toBe(5000);
@@ -317,7 +313,7 @@ describe("Schedule E PDF fill — K-1 partnerships", () => {
     );
   });
 
-  it("fills nonpassive income in column J for nonpassive partnership", () => {
+  it("fills nonpassive income in printed column K for nonpassive partnership", () => {
     const se = result.scheduleE!;
     const nonpassiveP = se.partnerships.find(p => p.name === "Active Business LLC")!;
     expect(nonpassiveP.nonpassiveIncome.toNumber()).toBe(15000);
@@ -328,13 +324,13 @@ describe("Schedule E PDF fill — K-1 partnerships", () => {
 
   it("fills Part II totals", () => {
     const se = result.scheduleE!;
-    expect(getFieldText(doc, SCHEDULE_E_FIELDS.line29a)).toBe(
+    expect(getFieldText(doc, SCHEDULE_E_FIELDS.line29a_h)).toBe(
       formatCurrency(se.totalPassiveIncome),
     );
-    expect(getFieldText(doc, SCHEDULE_E_FIELDS.line30a)).toBe(
+    expect(getFieldText(doc, SCHEDULE_E_FIELDS.line29a_k)).toBe(
       formatCurrency(se.totalNonpassiveIncome),
     );
-    expect(getFieldText(doc, SCHEDULE_E_FIELDS.line31)).toBe(
+    expect(getFieldText(doc, SCHEDULE_E_FIELDS.line32)).toBe(
       formatCurrency(se.totalPartnershipIncome),
     );
   });

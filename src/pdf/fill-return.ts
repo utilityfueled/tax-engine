@@ -18,6 +18,7 @@ import { fillScheduleB } from "./fill-schedule-b.js";
 import { fillScheduleC } from "./fill-schedule-c.js";
 import { fillScheduleD } from "./fill-schedule-d.js";
 import { fillScheduleE } from "./fill-schedule-e.js";
+import { prepareScheduleEReview, assertScheduleEReview, type PreparedScheduleEReview } from "./schedule-e-review-context.js";
 import { fillScheduleSE } from "./fill-schedule-se.js";
 import { fillForm8949 } from "./fill-form-8949.js";
 import { fillForm8959 } from "./fill-form-8959.js";
@@ -185,7 +186,8 @@ function shouldIncludeScheduleE(result: TaxReturnResult["scheduleE"] | undefined
   }
 
   return (
-    result.rentalProperties.length > 0
+    (result.royaltyProperties?.length ?? 0) > 0
+    || result.rentalProperties.length > 0
     || result.partnerships.length > 0
     || !result.totalSupplementalIncome.isZero()
     || result.suspendedPassiveLosses.length > 0
@@ -394,6 +396,7 @@ export interface FillReturnOptions {
   /** Actual historical benefits and income, checked before identifier redaction. */
   adoptionReview?: PreparedAdoptionReview;
   qbiLossReview?: PreparedQbiLossReview;
+  scheduleEReview?: PreparedScheduleEReview;
   /** Actual EIC child records, validated before identifier redaction. */
   eicReview?: PreparedEicReview;
   /** Actual policy allocation and whole-return income, validated before redaction. */
@@ -418,6 +421,9 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  const scheduleEReview = input.royaltyPropertySources || options.scheduleEReview
+    ? options.scheduleEReview ?? prepareScheduleEReview(input) : undefined;
+  if (scheduleEReview) assertScheduleEReview(input, result, scheduleEReview);
   const eicReview = hasEicReviewSources(input) || options.eicReview
     ? options.eicReview ?? prepareEicReview(input) : undefined;
   const actualEicChildren = eicReview ? eicReviewChildren(eicReviewOriginalSourceInput(input, result, eicReview)) : undefined;
@@ -575,7 +581,7 @@ export async function fillReturn(
   // ── Schedule E (if applicable — rental properties or K-1 partnerships) ──
   if (shouldIncludeScheduleE(result.scheduleE)) {
     const sePath = join(blankFormsDir, "f1040se.pdf");
-    const docSE = await fillScheduleE(input, result, sePath);
+    const docSE = await fillScheduleE(input, result, sePath, scheduleEReview);
     if (flatten) await flattenForm(docSE.getForm());
     const outputPathSE = join(outputDir, "f1040se-filled.pdf");
     await savePacketPdf(docSE, outputPathSE);

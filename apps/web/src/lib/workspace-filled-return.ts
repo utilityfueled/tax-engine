@@ -28,6 +28,7 @@ import { prepareForm8949Review } from "@/pdf/form-8949-review-context.js";
 import { prepareCodNolReview } from "@/pdf/cod-nol-review-context.js";
 import { prepareCharitableReview } from "@/pdf/charitable-review-context.js";
 import { hasHistoricalAdoptionSources, prepareAdoptionReview } from "@/pdf/adoption-review-context.js";
+import { prepareScheduleEReview } from "@/pdf/schedule-e-review-context.js";
 import { prepareQbiLossReview } from "@/pdf/qbi-loss-review-context.js";
 import { hasEicReviewSources, prepareEicReview } from "@/pdf/eic-review-context.js";
 import { hasPremiumTaxCreditReviewSources, preparePremiumTaxCreditReview } from "@/pdf/premium-tax-credit-review-context.js";
@@ -623,6 +624,7 @@ export async function buildWorkspaceFilledReturnDownload(
   const charitableReview = resolved.taxInput.charitableCarryoverSources || resolved.taxInput.k1CharitableSources
     ? prepareCharitableReview(resolved.taxInput) : undefined;
   const adoptionReview = hasHistoricalAdoptionSources(resolved.taxInput) ? prepareAdoptionReview(resolved.taxInput) : undefined;
+  const scheduleEReview = resolved.taxInput.royaltyPropertySources ? prepareScheduleEReview(resolved.taxInput) : undefined;
   const qbiLossReview = resolved.taxInput.qbiLossSources ? prepareQbiLossReview(resolved.taxInput) : undefined;
   const eicReview = hasEicReviewSources(resolved.taxInput) ? prepareEicReview(resolved.taxInput) : undefined;
   const premiumTaxCreditReview = hasPremiumTaxCreditReviewSources(resolved.taxInput) ? preparePremiumTaxCreditReview(resolved.taxInput) : undefined;
@@ -641,6 +643,7 @@ export async function buildWorkspaceFilledReturnDownload(
       charitableReview,
       adoptionReview,
       qbiLossReview,
+      scheduleEReview,
       eicReview,
       premiumTaxCreditReview,
       educationReview,

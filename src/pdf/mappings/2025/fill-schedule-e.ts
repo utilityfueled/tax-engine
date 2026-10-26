@@ -1,4 +1,4 @@
-import { assertPdfExportAllowed } from "../../export-policy.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 /**
  * PDF filler for IRS Schedule E (Form 1040) — Supplemental Income and Loss.
  *
@@ -23,7 +23,7 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  *     Line 41:      Total supplemental income/loss
  */
 
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, StandardFonts } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -33,7 +33,8 @@ import {
   setCurrencyField,
   setCheckBox,
 } from "../../pdf-utils.js";
-import { d } from "@/utils/decimal.js";
+import { d, sum, roundDollar, zeroFloor } from "@/utils/decimal.js";
+import { assertScheduleEReview, type PreparedScheduleEReview } from "../../schedule-e-review-context.js";
 
 // ─── PDF Field Name Helpers ────────────────────────────────────────────────
 
@@ -192,15 +193,18 @@ const FIELDS = {
   netB: tblExp("Line21[0]", "f1_72[0]"),
   netC: tblExp("Line21[0]", "f1_73[0]"),
 
-  // ── Part I Totals (Lines 23-26) ──
-  line23a: p1("f1_77[0]"),  // Total income (positive Line 21s)
-  line23b: p1("f1_78[0]"),  // Total losses (negative Line 21s)
-  line23c: p1("f1_79[0]"),  // Combined 23a + 23b
-  line23d: p1("f1_80[0]"),  // Net income from Form 4835 (farm rental)
-  line23e: p1("f1_81[0]"),  // Net farm rental from K-1
-  line24: p1("f1_82[0]"),   // Income: 23a + 23d
-  line25: p1("f1_83[0]"),   // Losses: 23b + 23e (after Form 8582)
-  line26: p1("f1_84[0]"),   // Total rental real estate and royalty income/loss
+  lossA: tblExp("Line22[0]", "f1_74[0]"),
+  lossB: tblExp("Line22[0]", "f1_75[0]"),
+  lossC: tblExp("Line22[0]", "f1_76[0]"),
+  // Actual printed identities, independently inspected against final2025.
+  line23a: p1("f1_77[0]"), // Gross rents, line3.
+  line23b: p1("f1_78[0]"), // Gross royalties, line4.
+  line23c: p1("f1_79[0]"), // Mortgage interest, line12.
+  line23d: p1("f1_80[0]"), // Depreciation/depletion, line18.
+  line23e: p1("f1_81[0]"), // Total expenses, line20.
+  line24: p1("f1_82[0]"),  // Positive property income, line21.
+  line25: p1("f1_83[0]"),  // Allowed losses, positive magnitude.
+  line26: p1("f1_84[0]"),
 
   // ═══════════════════════════════════════════════════════
   // Page 2
@@ -242,8 +246,9 @@ const FIELDS = {
   partCheckD2: tbl28af("RowD[0]", "c2_13[0]"),
 
   // Table_Line28g-k: 5 amount columns per row
-  //   (f) Passive loss allowed, (g) Passive income, (h) Nonpassive loss,
-  //   (i) Section 179, (j) Nonpassive income
+  // Historical key suffixes f-j refer to actual printed columns g-k respectively.
+  //   Printed(g) passive loss, (h) passive income, (i) nonpassive loss,
+  //   (j) Section179, (k) nonpassive income.
   partCol_A_f: tbl28gk("RowA[0]", "f2_15[0]"),
   partCol_A_g: tbl28gk("RowA[0]", "f2_16[0]"),
   partCol_A_h: tbl28gk("RowA[0]", "f2_17[0]"),
@@ -268,16 +273,17 @@ const FIELDS = {
   partCol_D_i: tbl28gk("RowD[0]", "f2_33[0]"),
   partCol_D_j: tbl28gk("RowD[0]", "f2_34[0]"),
 
-  // ── Part II Totals (Lines 29-32) ──
-  line29a: p2("f2_35[0]"),  // Passive income total
-  line29b: p2("f2_36[0]"),  // Passive loss total
-  line30a: p2("f2_37[0]"),  // Nonpassive income total
-  line30b: p2("f2_38[0]"),  // Nonpassive loss total
-  line31: p2("f2_39[0]"),   // Total partnership income/loss
-  line32: p2("f2_40[0]"),   // Total Part II
-
-  // ── Part V: Summary (bottom of Page 2) ──
-  line41: p2("Line42_ReadOrder[0].f2_79[0]"),  // Total supplemental income/loss
+  // 29a has two income cells;29b has three loss/179 cells. Shaded cells stay blank.
+  line29a_h: p2("f2_36[0]"),
+  line29a_k: p2("f2_39[0]"),
+  line29b_g: p2("f2_40[0]"),
+  line29b_i: p2("f2_42[0]"),
+  line29b_j: p2("f2_43[0]"),
+  line30: p2("f2_45[0]"),
+  line31: p2("f2_46[0]"),
+  line32: p2("f2_47[0]"),
+  line41: p2("f2_78[0]"),
+  line42: p2("Line42_ReadOrder[0].f2_79[0]"),
 } as const;
 
 // ─── Per-property expense field arrays (indexed by property 0=A, 1=B, 2=C) ──
@@ -301,6 +307,8 @@ interface PropertyExpenseFields {
   totalExpenses: string;
   net: string;
   rents: string;
+  royalties: string;
+  allowedLoss: string;
   description: string;
   typeCode: string;
   rentalDays: string;
@@ -315,6 +323,8 @@ const PROPERTY_EXPENSE_FIELDS: PropertyExpenseFields[] = [
     rentalDays: FIELDS.rentalDaysA,
     personalDays: FIELDS.personalDaysA,
     rents: FIELDS.rentsA,
+    royalties: FIELDS.royaltiesA,
+    allowedLoss: FIELDS.lossA,
     advertising: FIELDS.advA,
     autoTravel: FIELDS.autoA,
     cleaning: FIELDS.cleanA,
@@ -340,6 +350,8 @@ const PROPERTY_EXPENSE_FIELDS: PropertyExpenseFields[] = [
     rentalDays: FIELDS.rentalDaysB,
     personalDays: FIELDS.personalDaysB,
     rents: FIELDS.rentsB,
+    royalties: FIELDS.royaltiesB,
+    allowedLoss: FIELDS.lossB,
     advertising: FIELDS.advB,
     autoTravel: FIELDS.autoB,
     cleaning: FIELDS.cleanB,
@@ -365,6 +377,8 @@ const PROPERTY_EXPENSE_FIELDS: PropertyExpenseFields[] = [
     rentalDays: FIELDS.rentalDaysC,
     personalDays: FIELDS.personalDaysC,
     rents: FIELDS.rentsC,
+    royalties: FIELDS.royaltiesC,
+    allowedLoss: FIELDS.lossC,
     advertising: FIELDS.advC,
     autoTravel: FIELDS.autoC,
     cleaning: FIELDS.cleanC,
@@ -432,185 +446,162 @@ const PARTNERSHIP_FIELD_SETS: PartnershipFieldSet[] = [
   },
 ];
 
-// ─── Fill Logic ────────────────────────────────────────────────────────────
-
-/**
- * Fill IRS Schedule E PDF from engine calculation results.
- * Returns the filled PDFDocument (caller saves it).
- */
-export async function fillScheduleE(
-  input: TaxYearInput,
-  result: TaxReturnResult,
-  blankPdfPath: string,
-): Promise<PDFDocument> {
-  assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
-  const doc = await loadReviewTemplate(blankPdfPath, 2025);
-  const form = doc.getForm();
-  const se = result.scheduleE;
-
-  // ── Header (Page 1) ──
-  const name = input.taxpayer.spouse
-    ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
-    : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
-  const ssn = input.taxpayer.primary.ssn.replace(/-/g, "");
-  setTextField(form, FIELDS.name, name);
-  setTextField(form, FIELDS.ssn, ssn);
-
-  // ── Header (Page 2) ──
-  setTextField(form, FIELDS.namePg2, name);
-  setTextField(form, FIELDS.ssnPg2, ssn);
-
-  if (!se) return doc;
-
-  // ═══════════════════════════════════════════════════════════
-  // Part I: Rental Real Estate and Royalties (Page 1)
-  // ═══════════════════════════════════════════════════════════
-
-  const rentals = input.rentalProperties ?? [];
-  const rentalResults = se.rentalProperties;
-
-  // Fill up to 3 properties (A, B, C) — IRS form supports 3 per page
-  const propCount = Math.min(rentalResults.length, 3);
-  for (let i = 0; i < propCount; i++) {
-    const propInput = rentals[i];
-    const propResult = rentalResults[i];
-    const fields = PROPERTY_EXPENSE_FIELDS[i];
-
-    // Line 1a: Property description
-    setTextField(form, fields.description, propResult.description);
-
-    // Line 1b: Property type code
-    setTextField(form, fields.typeCode, PROPERTY_TYPE_CODES[propResult.propertyType] ?? "8");
-
-    // Line 2: Fair rental days and personal use days
-    if (propInput) {
-      const rentalDays = propInput.rentalDays ?? 365;
-      const personalDays = propInput.personalUseDays ?? 0;
-      setTextField(form, fields.rentalDays, String(rentalDays));
-      if (personalDays > 0) {
-        setTextField(form, fields.personalDays, String(personalDays));
-      }
+// ─── Source rows and physical pages ───────────────────────────────────────
+type ExpenseKey = 'advertising'|'autoTravel'|'cleaning'|'commissions'|'insurance'|'legalProfessional'|'managementFees'|'mortgageInterest'|'otherInterest'|'repairs'|'supplies'|'taxes'|'utilities'|'depreciation'|'otherExpenses';
+const EXPENSE_KEYS: ExpenseKey[] = ['advertising','autoTravel','cleaning','commissions','insurance','legalProfessional','managementFees','mortgageInterest','otherInterest','repairs','supplies','taxes','utilities','depreciation','otherExpenses'];
+interface PropertyRow {
+  kind: 'rental'|'royalty'; sourceIndex:number; description:string; propertyType:string;
+  rentalDays?:number; personalDays?:number; gross:Decimal; net:Decimal; totalExpenses:Decimal;
+  expenses:Partial<Record<ExpenseKey,Decimal>>; allowedLoss:Decimal;
+}
+interface PartnershipRow {
+  sourceIndex:number; passiveIncome:Decimal; passiveLoss:Decimal; nonpassiveIncome:Decimal; nonpassiveLoss:Decimal; section179?:Decimal;
+}
+function propertyRows(input:TaxYearInput,result:TaxReturnResult):PropertyRow[] {
+  const se=result.scheduleE;if(!se)return [];
+  const k1PassiveCount=se.partnerships.filter(row=>row.isPassive).length;
+  const depreciation=se.lines.filter(row=>row.form==='Sched E'&&row.line==='18');
+  const otherExpenses=se.lines.filter(row=>row.form==='Sched E'&&row.line==='19');
+  const rentals:PropertyRow[]=se.rentalProperties.map((row,index)=>{
+    const source=input.rentalProperties[index];
+    if(!source)throw new Error('Schedule E rental property sources do not reconcile');
+    const ownership=d(source.ownershipPercentage??'100').div(100);
+    const expenses:Partial<Record<ExpenseKey,Decimal>>={};
+    for(const key of EXPENSE_KEYS)expenses[key]=d(source[key]).times(ownership);
+    expenses.depreciation=depreciation[index]?.value??expenses.depreciation;
+    expenses.otherExpenses=otherExpenses[index]?.value??expenses.otherExpenses;
+    const personal=source.personalUseDays,rental=source.rentalDays;
+    if(personal!==undefined&&rental!==undefined&&personal>14&&d(personal).gt(d(rental).times('0.1'))) {
+      const ratio=d(rental).div(d(rental).plus(personal));
+      for(const key of EXPENSE_KEYS)expenses[key]=expenses[key]!.times(ratio);
     }
-
-    // Line 3: Rents received
-    setCurrencyField(form, fields.rents, propResult.rents);
-
-    // Lines 5-19: Individual expense categories (from input, with ownership applied)
-    if (propInput) {
-      const ownershipPct = propInput.ownershipPercentage
-        ? d(propInput.ownershipPercentage).dividedBy(100)
-        : new Decimal(1);
-
-      const applyOwnership = (val: string | number | undefined): Decimal =>
-        d(val).times(ownershipPct);
-
-      setCurrencyField(form, fields.advertising, applyOwnership(propInput.advertising));
-      setCurrencyField(form, fields.autoTravel, applyOwnership(propInput.autoTravel));
-      setCurrencyField(form, fields.cleaning, applyOwnership(propInput.cleaning));
-      setCurrencyField(form, fields.commissions, applyOwnership(propInput.commissions));
-      setCurrencyField(form, fields.insurance, applyOwnership(propInput.insurance));
-      setCurrencyField(form, fields.legalProfessional, applyOwnership(propInput.legalProfessional));
-      setCurrencyField(form, fields.managementFees, applyOwnership(propInput.managementFees));
-      setCurrencyField(form, fields.mortgageInterest, applyOwnership(propInput.mortgageInterest));
-      setCurrencyField(form, fields.otherInterest, applyOwnership(propInput.otherInterest));
-      setCurrencyField(form, fields.repairs, applyOwnership(propInput.repairs));
-      setCurrencyField(form, fields.supplies, applyOwnership(propInput.supplies));
-      setCurrencyField(form, fields.taxes, applyOwnership(propInput.taxes));
-      setCurrencyField(form, fields.utilities, applyOwnership(propInput.utilities));
-      setCurrencyField(form, fields.depreciation, applyOwnership(propInput.depreciation));
-      setCurrencyField(form, fields.otherExpenses, applyOwnership(propInput.otherExpenses));
+    const allocation=result.form8582?.activityAllocations.find(activity=>activity.sourceIndex===k1PassiveCount+index);
+    return {kind:'rental',sourceIndex:index,description:row.description,propertyType:row.propertyType,
+      rentalDays:rental,personalDays:personal,gross:row.rents,net:row.netRentalIncome,totalExpenses:row.totalExpenses,
+      expenses,allowedLoss:allocation?.allowedLoss??d(0)};
+  });
+  const royalties:PropertyRow[]=(se.royaltyProperties??[]).map(row=>({kind:'royalty',sourceIndex:row.sourceIndex,
+    description:'',propertyType:'6',gross:row.grossIncome,net:row.netIncome,totalExpenses:row.totalExpenses,
+    expenses:{commissions:row.commissions,insurance:row.insurance,legalProfessional:row.legalProfessional,managementFees:row.managementFees,taxes:row.taxes},allowedLoss:zeroFloor(row.netIncome.negated())}));
+  return [...rentals,...royalties];
+}
+function partnershipRows(input:TaxYearInput,result:TaxReturnResult):PartnershipRow[] {
+  let passiveIndex=0;
+  return (result.scheduleE?.partnerships??[]).map((row,sourceIndex)=>{
+    const index=row.isPassive?passiveIndex++:undefined;
+    const activity=result.form8582?.activityRows.find(item=>item.sourceIndex===index&&index!==undefined);
+    const allowance=result.form8582?.activityAllocations.find(item=>item.sourceIndex===index&&index!==undefined);
+    if(row.isPassive&&!row.isPubliclyTradedPartnership) return {sourceIndex,
+      passiveIncome:activity?.currentIncome??row.passiveIncome,passiveLoss:allowance?.allowedLoss??d(0),
+      nonpassiveIncome:row.nonpassiveIncome,nonpassiveLoss:row.nonpassiveLoss.abs()};
+    if(row.isPassive&&row.isPubliclyTradedPartnership) {
+      const prior=sum(...(input.priorYear?.suspendedPTPLosses??[]).filter(item=>item.partnershipName===row.name).map(item=>d(item.amount)));
+      const released=result.form8582?.ptpDispositionReleasedLosses.find(item=>item.name===row.name);
+      return {sourceIndex,passiveIncome:d(0),passiveLoss:d(0),
+        nonpassiveIncome:row.nonpassiveIncome.plus(released?row.passiveIncome:zeroFloor(row.passiveIncome.minus(prior))),
+        nonpassiveLoss:row.nonpassiveLoss.abs().plus(released?.totalReleased??d(0))};
     }
-
-    // Line 20: Total expenses (from engine result)
-    setCurrencyField(form, fields.totalExpenses, propResult.totalExpenses);
-
-    // Line 21: Net rental income or loss
-    setCurrencyField(form, fields.net, propResult.netRentalIncome);
+    const source179=d(input.scheduleK1[sourceIndex]?.section179Deduction);
+    // The existing result fully absorbs this current deduction only when its
+    // unchanged net remains nonnegative. A binding character allocation is not inferred.
+    const separate179=source179.gt(0)&&row.rawNetAmount.gte(0)&&row.netAmount.eq(row.rawNetAmount)?source179:d(0);
+    return {sourceIndex,passiveIncome:d(0),passiveLoss:d(0),nonpassiveIncome:row.nonpassiveIncome.plus(separate179),nonpassiveLoss:row.nonpassiveLoss.abs(),section179:separate179};
+  });
+}
+function fillProperties(doc:PDFDocument,rows:PropertyRow[]):void {
+  const form=doc.getForm();
+  rows.forEach((row,index)=>{
+    const fields=PROPERTY_EXPENSE_FIELDS[index];
+    setTextField(form,fields.description,row.description);
+    setTextField(form,fields.typeCode,row.kind==='royalty'?'6':PROPERTY_TYPE_CODES[row.propertyType]??'8');
+    if(row.kind==='rental') {
+      if(row.rentalDays!==undefined)setTextField(form,fields.rentalDays,String(row.rentalDays));
+      if(row.personalDays!==undefined&&row.personalDays>0)setTextField(form,fields.personalDays,String(row.personalDays));
+    }
+    setCurrencyField(form,row.kind==='royalty'?fields.royalties:fields.rents,row.gross);
+    for(const key of EXPENSE_KEYS)setCurrencyField(form,fields[key],row.expenses[key]??d(0));
+    setCurrencyField(form,fields.totalExpenses,row.totalExpenses);setCurrencyField(form,fields.net,row.net);
+    if(row.kind==='rental')setCurrencyField(form,fields.allowedLoss,row.allowedLoss);
+  });
+}
+function fillPartnerships(doc:PDFDocument,input:TaxYearInput,result:TaxReturnResult,rows:PartnershipRow[]):void {
+  const form=doc.getForm();
+  rows.forEach((row,index)=>{
+    const fields=PARTNERSHIP_FIELD_SETS[index],source=input.scheduleK1[row.sourceIndex],value=result.scheduleE!.partnerships[row.sourceIndex];
+    setTextField(form,fields.name,value.name);setTextField(form,fields.ein,value.ein);
+    setTextField(form,fields.entityType,source?.entityType==='s_corporation'?'S':'P');
+    setCurrencyField(form,fields.colF,row.passiveLoss);setCurrencyField(form,fields.colG,row.passiveIncome);
+    setCurrencyField(form,fields.colH,row.nonpassiveLoss);setCurrencyField(form,fields.colI,row.section179??d(0));setCurrencyField(form,fields.colJ,row.nonpassiveIncome);
+    if(source?.entityType==='s_corporation'&&(value.rawNetAmount.lt(0)||d(source.distributions).gt(0)))setCheckBox(form,fields.check1,true);
+    if(value.suspendedAtRiskLoss.lt(0))setCheckBox(form,fields.check2,true);
+  });
+}
+async function appendReference(doc:PDFDocument,lines:string[]):Promise<void> {
+  if(!lines.length)return;
+  const font=await doc.embedFont(StandardFonts.Helvetica);
+  let page=doc.addPage([612,792]),y=742;
+  for(const line of ['Schedule E source reconciliation',...lines]) {
+    let current='';
+    const write=()=>{if(y<65){page=doc.addPage([612,792]);y=742;}page.drawText(current,{x:42,y,size:10,font});y-=16;};
+    for(const word of line.split(' ')) {const next=current?`${current} ${word}`:word;if(current&&font.widthOfTextAtSize(next,10)>528){write();current=word;}else current=next;}
+    if(current)write();y-=7;
   }
-
-  // ── Part I Totals (Lines 23-26) ──
-  const totalIncome = rentalResults
-    .filter(p => p.netRentalIncome.greaterThan(0))
-    .reduce((acc, p) => acc.plus(p.netRentalIncome), new Decimal(0));
-  const totalLosses = rentalResults
-    .filter(p => p.netRentalIncome.lessThan(0))
-    .reduce((acc, p) => acc.plus(p.netRentalIncome), new Decimal(0));
-
-  setCurrencyField(form, FIELDS.line23a, totalIncome);
-  setCurrencyField(form, FIELDS.line23b, totalLosses);
-  // Line 23c: combined
-  const line23c = totalIncome.plus(totalLosses);
-  setCurrencyField(form, FIELDS.line23c, line23c);
-
-  // Lines 23d, 23e: Farm rental (not supported — leave blank)
-
-  // Line 24: Income (23a + 23d = just 23a for now)
-  setCurrencyField(form, FIELDS.line24, totalIncome);
-  // Line 25: Losses (23b + 23e, after Form 8582 = just 23b for now)
-  setCurrencyField(form, FIELDS.line25, totalLosses);
-  // Line 26: Total rental real estate and royalty income/loss
-  setCurrencyField(form, FIELDS.line26, se.totalRentalIncome);
-
-  // ═══════════════════════════════════════════════════════════
-  // Part II: Partnerships and S Corporations (Page 2)
-  // ═══════════════════════════════════════════════════════════
-
-  const partnerships = se.partnerships;
-  const k1s = input.scheduleK1 ?? [];
-  const partCount = Math.min(partnerships.length, 4);
-
-  for (let i = 0; i < partCount; i++) {
-    const p = partnerships[i];
-    const k1 = k1s[i];
-    const flds = PARTNERSHIP_FIELD_SETS[i];
-
-    // Column (a): Name
-    setTextField(form, flds.name, p.name);
-
-    // Column (b): Entity type — "P" for partnership, "S" for S corporation
-    const entityType = k1?.entityType === "s_corporation" ? "S" : "P";
-    setTextField(form, flds.entityType, entityType);
-
-    // Column (d): EIN (keep dashes — field maxLen=10 matches "XX-XXXXXXX")
-    setTextField(form, flds.ein, p.ein);
-
-    // Column (f): Passive loss allowed (from Form 8582, if passive with loss)
-    if (p.isPassive && p.passiveLoss.isNegative()) {
-      setCurrencyField(form, flds.colF, p.passiveLoss);
-    }
-
-    // Column (g): Passive income (from K-1)
-    if (p.passiveIncome.greaterThan(0)) {
-      setCurrencyField(form, flds.colG, p.passiveIncome);
-    }
-
-    // Column (h): Nonpassive loss
-    if (p.nonpassiveLoss.isNegative()) {
-      setCurrencyField(form, flds.colH, p.nonpassiveLoss);
-    }
-
-    // Column (j): Nonpassive income
-    if (p.nonpassiveIncome.greaterThan(0)) {
-      setCurrencyField(form, flds.colJ, p.nonpassiveIncome);
-    }
+}
+/** Fill final2025 review maps; source preparation happens before template I/O. */
+export async function fillScheduleE(input:TaxYearInput,result:TaxReturnResult,blankPdfPath:string,prepared?:PreparedScheduleEReview):Promise<PDFDocument> {
+  assertPdfExportAllowed(input.taxpayer.taxYear,result.taxYear);
+  if(input.royaltyPropertySources||prepared)assertScheduleEReview(input,result,prepared);
+  const supplementalIncome=result.schedule1?.supplementalIncome;
+  if(result.scheduleE&&supplementalIncome===undefined)throw new Error("Schedule E review requires the final Schedule1 source amount");
+  const properties=propertyRows(input,result),partnerships=partnershipRows(input,result);
+  const doc=await loadReviewTemplate(blankPdfPath,2025),form=doc.getForm(),se=result.scheduleE;
+  const name=input.taxpayer.spouse?`${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`:`${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
+  const ssn=input.taxpayer.primary.ssn.replace(/-/g,'');
+  for(const field of [FIELDS.name,FIELDS.namePg2])setTextField(form,field,name);
+  for(const field of [FIELDS.ssn,FIELDS.ssnPg2])setTextField(form,field,ssn);
+  if(!se||supplementalIncome===undefined)return doc;
+  fillProperties(doc,properties.slice(0,3));fillPartnerships(doc,input,result,partnerships.slice(0,4));
+  // Continuations carry actual rows only; all totals occur once on the first schedule.
+  for(let start=3;start<properties.length;start+=3) {
+    const extra=await loadReviewTemplate(blankPdfPath,2025);fillProperties(extra,properties.slice(start,start+3));
+    setTextField(extra.getForm(),FIELDS.name,name);setTextField(extra.getForm(),FIELDS.ssn,ssn);
+    const font=await extra.embedFont(StandardFonts.Helvetica);
+    extra.getPages()[0].drawText(`Continuation: property rows ${start+1}-${Math.min(start+3,properties.length)}; totals on first schedule`,{x:180,y:780,size:8,font});
+    extra.getForm().flatten();const [page]=await doc.copyPages(extra,[0]);doc.addPage(page);
   }
-
-  // ── Part II Totals (Lines 29-32) ──
-  setCurrencyField(form, FIELDS.line29a, se.totalPassiveIncome);
-  setCurrencyField(form, FIELDS.line29b, se.totalPassiveLoss);
-  setCurrencyField(form, FIELDS.line30a, se.totalNonpassiveIncome);
-  setCurrencyField(form, FIELDS.line30b, se.totalNonpassiveLoss);
-  setCurrencyField(form, FIELDS.line31, se.totalPartnershipIncome);
-  setCurrencyField(form, FIELDS.line32, se.totalPartnershipIncome);
-
-  // ═══════════════════════════════════════════════════════════
-  // Part V: Summary
-  // ═══════════════════════════════════════════════════════════
-
-  setCurrencyField(form, FIELDS.line41, se.totalSupplementalIncome);
-
+  for(let start=4;start<partnerships.length;start+=4) {
+    const extra=await loadReviewTemplate(blankPdfPath,2025);fillPartnerships(extra,input,result,partnerships.slice(start,start+4));
+    setTextField(extra.getForm(),FIELDS.namePg2,name);setTextField(extra.getForm(),FIELDS.ssnPg2,ssn);
+    const font=await extra.embedFont(StandardFonts.Helvetica);
+    extra.getPages()[1].drawText(`Continuation: K1 rows ${start+1}-${Math.min(start+4,partnerships.length)}; totals on first schedule`,{x:180,y:780,size:8,font});
+    extra.getForm().flatten();const [page]=await doc.copyPages(extra,[1]);doc.addPage(page);
+  }
+  const total=(read:(row:PropertyRow)=>Decimal)=>sum(...properties.map(read));
+  const unallocatedRoyalty=se.totalRoyaltyIncome.minus(total(row=>row.kind==='royalty'?row.net:d(0)));
+  const line24=total(row=>zeroFloor(row.kind==='rental'?roundDollar(row.net):row.net)).plus(zeroFloor(unallocatedRoyalty));
+  const line25=total(row=>row.allowedLoss).plus(zeroFloor(unallocatedRoyalty.negated()));
+  const line26=line24.minus(line25);
+  setCurrencyField(form,FIELDS.line23a,total(row=>row.kind==='rental'?row.gross:d(0)));
+  setCurrencyField(form,FIELDS.line23b,se.grossRoyaltyIncome);
+  setCurrencyField(form,FIELDS.line23c,total(row=>row.expenses.mortgageInterest??d(0)));
+  setCurrencyField(form,FIELDS.line23d,total(row=>row.expenses.depreciation??d(0)));
+  setCurrencyField(form,FIELDS.line23e,total(row=>row.totalExpenses));
+  setCurrencyField(form,FIELDS.line24,line24);setCurrencyField(form,FIELDS.line25,line25);setCurrencyField(form,FIELDS.line26,line26);
+  const totals={passiveIncome:sum(...partnerships.map(row=>row.passiveIncome)),passiveLoss:sum(...partnerships.map(row=>row.passiveLoss)),
+    nonpassiveIncome:sum(...partnerships.map(row=>row.nonpassiveIncome)),nonpassiveLoss:sum(...partnerships.map(row=>row.nonpassiveLoss))};
+  const section179=sum(...partnerships.map(row=>row.section179??d(0)));
+  const line30=totals.passiveIncome.plus(totals.nonpassiveIncome),line31=totals.passiveLoss.plus(totals.nonpassiveLoss).plus(section179);
+  setCurrencyField(form,FIELDS.line29a_h,totals.passiveIncome);setCurrencyField(form,FIELDS.line29a_k,totals.nonpassiveIncome);
+  setCurrencyField(form,FIELDS.line29b_g,totals.passiveLoss);setCurrencyField(form,FIELDS.line29b_i,totals.nonpassiveLoss);setCurrencyField(form,FIELDS.line29b_j,section179);
+  setCurrencyField(form,FIELDS.line30,line30);setCurrencyField(form,FIELDS.line31,line31);setCurrencyField(form,FIELDS.line32,line30.minus(line31));
+  setCurrencyField(form,FIELDS.line41,supplementalIncome);
+  const notes:string[]=[];
+  for(const row of partnerships)if(d(input.scheduleK1[row.sourceIndex]?.section179Deduction).gt(0)&&!(row.section179?.gt(0)))notes.push(`K1 source ${row.sourceIndex+1} includes a section179 amount within the retained net result. Its separate passive or binding loss character must be allocated before qualifying physical columns(g)-(k); no allowance is inferred.`);
+  if(!unallocatedRoyalty.isZero())notes.push(`Original portfolio royalty amount without property-column detail: $${unallocatedRoyalty.toFixed()}. This known income is included once in Part I totals. Property allocation and expense completeness are unverified; no property or zero expense fact was invented.`);
+  const difference=supplementalIncome.minus(line26.plus(line30).minus(line31));
+  if(!difference.isZero())notes.push(`Retained Schedule1 line5 amount: $${supplementalIncome.toFixed()}. Difference from mapped Part I and II amounts: $${difference.toFixed()}. Separate source allocation is required before qualifying these physical rows. The final retained amount is displayed on line41; no allocation is inferred.`);
+  await appendReference(doc,notes);await markReviewPdf(doc);
   return doc;
 }
-
-/** Exported field map for testing and inspection. */
+/** Physical field map; legacy row suffixes f-j correspond to printed g-k. */
 export { FIELDS as SCHEDULE_E_FIELDS };
