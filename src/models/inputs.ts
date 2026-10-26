@@ -12,6 +12,7 @@ import { IraBasisSourcesSchema } from "@/models/ira-basis-sources.js";
 import { CharitableCarryoverSourcesSchema } from "@/models/charitable-carryover-sources.js";
 import { AdoptionPriorBenefitHistorySchema } from "@/models/adoption-prior-benefits.js";
 import { Form8962SharedPolicySchema, MarketplaceCoveredIndividualSchema } from "@/models/form-8962-shared-policy.js";
+import { MarketplaceCoverageFamilySchema } from "@/models/marketplace-coverage-family.js";
 import { Form8962MarriageSourcesSchema } from "@/models/form-8962-marriage.js";
 import { K1CharitableReturnSourcesSchema } from "@/models/k1-charitable-return-sources.js";
 import { QbiLossSourcesSchema } from "@/models/qbi-loss-sources.js";
@@ -4228,6 +4229,7 @@ export const Form7206Schema = z.object({
     allCoveredPersonsInCoverageFamilyConfirmed: z.boolean().optional(),
     /** Actual identity links between complete payment and shared-policy sources.
      * Neither a paid share nor a health deduction is inferred from the agreement. */
+    coverageFamilySources: MarketplaceCoverageFamilySchema.optional(),
     sharedMarketplaceSources: z.object({
       sourceTaxYear: z.number().int().optional(),
       sourceReference: z.string().optional(),

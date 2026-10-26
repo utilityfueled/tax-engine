@@ -86,14 +86,21 @@ export function calculateMarketplaceHealthDeduction(params: {
       const monthlyCredit = monthlyCredits.get(month.month);
       if (monthlyCredit === undefined) throw new Error("Pub974 source month has no reconciled credit audit.");
       if (!monthlyCredit.isFinite() || monthlyCredit.lt(0)) throw new Error("Pub974 credit allocation must be finite and nonnegative.");
-      allocatedCredit = allocatedCredit.plus(monthlyCredit.times(month.specifiedPremium).div(premium));
+      if (month.fullCorrespondingCredit && groups.filter(row => row.months.length).length !== 1) throw new Error("Coverage-family full credit requires one actual specified business.");
+      allocatedCredit = allocatedCredit.plus(month.fullCorrespondingCredit ? monthlyCredit : monthlyCredit.times(month.specifiedPremium).div(premium));
     }
-    const netPremiumsAfterCredit = zeroFloor(group.specifiedPremiums.minus(allocatedCredit));
+    // A partial coverage-family plan subtracts its full corresponding credit
+    // before adding nonspecified premiums. Keep that signed intermediate.
+    // The established all-covered route caps credit at those same premiums;
+    // its zero treatment also reconciles whole-dollar credit with source cents.
+    const signedFamilyCredit = group.months.some(month => month.fullCorrespondingCredit === true);
+    const difference = group.specifiedPremiums.minus(allocatedCredit);
+    const netPremiumsAfterCredit = signedFamilyCredit ? difference : zeroFloor(difference);
     const ordinaryDeduction = min(group.specifiedPremiums, zeroFloor(group.remainingEarnedIncome));
     for (const [line, label, amount, formula] of [
       ["1", "Actual specified premiums", group.specifiedPremiums, "Actual linked source ledger"],
-      ["6", "PTC allocated to specified sources", allocatedCredit, "Actual monthly credit times specified enrollment share; annual unchanged credit divided by12"],
-      ["7", "Specified premiums after PTC", netPremiumsAfterCredit, "max(0,line1-line6)"],
+      ["6", "PTC allocated to specified sources", allocatedCredit, signedFamilyCredit ? "Full corresponding monthly credit for the actual one-business coverage-family sources; no health benchmark ratio" : "Actual monthly credit times specified enrollment share; annual unchanged credit divided by12"],
+      ["7", "Specified premiums after PTC", netPremiumsAfterCredit, signedFamilyCredit ? "line1-line6; retain the signed Step3 intermediate" : "max(0,line1-line6); credit is bounded by the same coverage premiums"],
     ] as const) audit.record(`Pub974 Simplified ${group.businessSourceId}`, line, label, amount, formula, { "Owner": group.accountHolder });
     return { businessSourceId: group.businessSourceId, accountHolder: group.accountHolder, specifiedPremiums: group.specifiedPremiums,
       remainingEarnedIncome: group.remainingEarnedIncome, allocatedCredit, netPremiumsAfterCredit, ordinaryDeduction, nonspecifiedDeduction: group.nonspecifiedDeduction };
@@ -109,6 +116,7 @@ export function calculateMarketplaceHealthDeduction(params: {
     ? min(ownerFinal?.specifiedDeduction ?? sum(...businesses.map(row => row.netPremiumsAfterCredit)), maximumSpecifiedDeduction)
     : sum(...businesses.map(row => row.ordinaryDeduction));
   const nonspecifiedDeduction = sum(...businesses.map(row => row.nonspecifiedDeduction));
+  if (roundDollar(specifiedDeduction.plus(nonspecifiedDeduction)).lt(0)) throw new Error("Pub974 combined health deduction cannot be negative; reconcile actual source attribution.");
   const method = credit.taxpayerEligible ? (year === 2025 ? "pub974-simplified-2025" as const : "pub974-simplified-2026" as const)
     : (year === 2025 ? "ordinary-no-ptc-2025" as const : "ordinary-no-ptc-2026" as const);
   for (const [line, label, amount, formula] of [

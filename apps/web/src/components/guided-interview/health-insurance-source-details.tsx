@@ -3,6 +3,7 @@
 import { invalidateHealthInsuranceSources, emptyHealthInsuranceAllocation, emptyHealthInsuranceFacts, emptyHealthInsurancePayment, emptyHealthInsurancePerson, emptyHealthInsurancePlan, type HealthInsuranceData, type HealthInsuranceIncomeDeductionsData, type HealthInsurancePlanData, type HealthInsuranceSourceOption } from "@/lib/guided-health-insurance-facts";
 import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
 import { SharedMarketplaceHealthDetails } from "./shared-marketplace-health-details";
+import { CoverageFamilyHealthDetails } from './coverage-family-health-details';
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
 import type { MarketplacePolicyOption } from "@/lib/guided-marketplace-health-facts";
@@ -74,6 +75,7 @@ export function HealthInsuranceSourceDetails({ data, sources = [], marketplacePo
           <BooleanFact label={`${prefix}: All covered people belong to the actual PTC coverage family`} value={plan.allCoveredPersonsInCoverageFamilyConfirmed} onChange={allCoveredPersonsInCoverageFamilyConfirmed => set({ allCoveredPersonsInCoverageFamilyConfirmed })} />
         </fieldset>}
         {(specified || plan.sharedMarketplaceSources) && <SharedMarketplaceHealthDetails prefix={prefix} data={plan.sharedMarketplaceSources} people={people} onChange={sharedMarketplaceSources => set({ sharedMarketplaceSources })} />}
+        {(specified || plan.coverageFamilySources) && <CoverageFamilyHealthDetails prefix={prefix} data={plan.coverageFamilySources} people={people} sourceIds={plan.marketplacePolicySourceIds ?? []} policies={marketplacePolicies} onChange={coverageFamilySources => set({ coverageFamilySources })} />}
         {plan.businessKind === "s_corporation" && <p className="guided-hint">Use the actual shareholder W-2 source. Qualifying premiums must be paid or reimbursed by the corporation and included in Box 1. Medicare wages supply a separate business income limit.</p>}
         {plan.coveredPersons.map((person, personIndex) => {
           const label = `${prefix} person ${personIndex + 1}`;

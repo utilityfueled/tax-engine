@@ -6,7 +6,7 @@ export const MarketplaceCoveredIndividualSchema = z.object({
   name: z.string().optional(), ssn: z.string().optional(),
   firstMonth: z.number().int().optional(), lastMonth: z.number().int().optional(),
 });
-const originalPolicy = z.object({
+export const MarketplaceOriginalPolicySchema = z.object({
   taxYear: z.number().int().optional(), marketplace: z.string().optional(), policyNumber: z.string().optional(),
   recipientName: z.string().optional(), recipientSsn: z.string().optional(),
   coveredIndividuals: z.array(MarketplaceCoveredIndividualSchema).optional(),
@@ -38,7 +38,7 @@ export const Form8962SharedPolicySchema = z.object({
     })).optional() })).optional(),
   }).optional(),
   policies: z.array(z.object({
-    sourceId: z.string().optional(), original: originalPolicy.optional(),
+    sourceId: z.string().optional(), original: MarketplaceOriginalPolicySchema.optional(),
     otherTaxpayerName: z.string().optional(), otherTaxpayerSsn: z.string().optional(),
     situation: z.enum(['other_two_tax_families', 'divorce_during_year', 'married_separate', 'no_advance_credit', 'not_shared']).optional(),
     unsharedSourceReference: z.string().optional(), allCoveredPeopleInThisTaxFamilyConfirmed: z.boolean().optional(),

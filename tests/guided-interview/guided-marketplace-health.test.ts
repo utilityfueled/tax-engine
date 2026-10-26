@@ -101,7 +101,10 @@ it("keeps policy timing and unsupported funding boundaries explicit", () => {
   const changed = guidedMarketplaceHealthState(); changed.sectionData.credits!.premiumTaxCredit!.monthlyReconciliation[0]!.enrolleePremium = "499.99";
   expect(healthInsuranceSourceErrors(changed)).toHaveProperty("healthInsuranceMarketplace");
   expect(marketplacePolicyOptions()).toEqual([]);
-  expect(marketplacePolicyOptions([{ taxYear: "", marketplace: "", policyNumber: "", monthlyPremiums: [] }])).toEqual([{ sourceId: "form1095A:0", label: "Marketplace not entered — policy number not entered (year unknown)" }]);
+  const unknownOriginal = { taxYear: "", marketplace: "", policyNumber: "", monthlyPremiums: [] };
+  const unknownOptions = marketplacePolicyOptions([unknownOriginal]);
+  expect(unknownOptions).toEqual([{ sourceId: "form1095A:0", label: "Marketplace not entered — policy number not entered (year unknown)", original: unknownOriginal }]);
+  expect(unknownOptions[0].original).not.toBe(unknownOriginal);
 });
 
 it("preserves actual multiple-policy and2026 source identities", () => {

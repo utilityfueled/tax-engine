@@ -10,7 +10,8 @@ import { formatCurrency, loadReviewTemplate, setTextField } from "../../pdf-util
 import { assertMarketplaceHealthReviewSources } from "./form-7206-marketplace-source.js";
 import { calculateForm7206ReviewSources } from "./form-7206-business-source.js";
 import { charitableReviewOriginalSourceInput, type PreparedCharitableReview } from "../../charitable-review-context.js";
-import { hasSharedPremiumTaxCreditSources, premiumTaxCreditReviewOriginalSourceInput, type PreparedPremiumTaxCreditReview } from "../../premium-tax-credit-review-context.js";
+import { hasPremiumTaxCreditReviewSources, premiumTaxCreditReviewOriginalSourceInput, type PreparedPremiumTaxCreditReview } from "../../premium-tax-credit-review-context.js";
+import { redactReviewIdentifiers } from "../../redact-review-identifiers.js";
 const field = (number: number) => `topmostSubform[0].Page1[0].f1_${number}[0]`;
 /** Sixteen leaf fields inspected against the registered October2,2025 revision. */
 export const FORM_7206_FIELDS = {
@@ -32,7 +33,12 @@ function reconcileSources(input: TaxYearInput, result: NonNullable<TaxReturnResu
   const marketplace = fullReturn.marketplaceHealthInsurance;
   const hasMarketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage && plan.premiumTaxCreditInvolved);
   if (Boolean(marketplace) !== Boolean(hasMarketplace) || (!marketplace && result.marketplaceHandling !== undefined)) throw new Error("Form7206 Marketplace method requires its actual source coordination.");
-  const actual = calculateForm7206({ taxYear: input.taxpayer.taxYear, filingStatus: input.taxpayer.filingStatus, facts: input.form7206!, marketplaceHandling: result.marketplaceHandling });
+  const actual = calculateForm7206({ taxYear: input.taxpayer.taxYear, filingStatus: input.taxpayer.filingStatus, facts: input.form7206!, marketplaceSourceInput: input, marketplaceHandling: result.marketplaceHandling });
+  const retained = (value: unknown) => JSON.stringify(redactReviewIdentifiers(value));
+  if (retained(actual.coverageFamilyAllocations) !== retained(result.coverageFamilyAllocations)) throw new Error("Form7206 coverage-family allocation does not reconcile its actual original sources.");
+  const familyAudit = actual.lines.filter(row => row.form === "Pub974 Coverage Family");
+  if (retained(familyAudit) !== retained(result.lines.filter(row => row.form === "Pub974 Coverage Family"))
+    || retained(familyAudit) !== retained(fullReturn.allLines.filter(row => row.form === "Pub974 Coverage Family"))) throw new Error("Form7206 coverage-family source audits are stale or conflicting.");
   for (const key of ["grossSourcePremiums", "paidSourcePremiums"] as const) if (!actual[key].eq(exact(result[key], key))) throw new Error("Form7206 source totals do not reconcile with the persisted calculation.");
   if (actual.sourceRecords.length !== result.sourceRecords.length || actual.businesses.length !== result.businesses.length) throw new Error("Form7206 source records do not reconcile with the persisted calculation.");
   for (const [index, source] of actual.sourceRecords.entries()) {
@@ -68,7 +74,7 @@ export function assertForm7206ReviewSource(input: TaxYearInput, result: TaxRetur
   const calculation = result.form7206;
   if (!input.form7206 || !calculation || calculation.sourceFactsVerified !== true || !calculation.calculationComplete) throw new Error("Form7206 requires actual sources and a completed audited calculation.");
   const charitableOriginal = charitableReviewOriginalSourceInput(input, result, charitableReview);
-  const original = hasSharedPremiumTaxCreditSources(input)
+  const original = hasPremiumTaxCreditReviewSources(input) || premiumTaxCreditReview
     ? premiumTaxCreditReviewOriginalSourceInput(charitableOriginal, result, premiumTaxCreditReview) : charitableOriginal;
   reconcileSources(original, calculation, result);
   return calculation;
@@ -139,6 +145,13 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
         if (indexes.has(row.policyIndex)) write(`Shared policy family allocation, original policy ${row.policyIndex + 1}, month ${row.month}: premium $${row.premium.toFixed()}; advances $${row.advance.toFixed()}.`);
       }
     }
+    if (plan.coverageFamilySources) {
+      write("COVERAGE-FAMILY PREMIUM SPLIT: original person cash and advance payments remain unchanged. The monthly benchmark calculation below determines separate specified and nonspecified premiums after any tax-family allocation. It is not a payment or credit allocation percentage.");
+      for (const row of calculation.coverageFamilyAllocations ?? []) if (row.planId === plan.planId) {
+        write(`Coverage-family month ${row.month}: tax-family enrollment premium $${row.taxFamilyPremium.toFixed()}; coverage-family SLCSP $${row.coverageFamilySlcsp.toFixed()}; noncoverage-family SLCSP $${row.nonCoverageFamilySlcsp.toFixed()}; specified premium $${row.specifiedPremium.toFixed()}; nonspecified premium $${row.nonspecifiedPremium.toFixed()}; actual attributable advances $${row.advancePremiumTaxCredit.toFixed()}.`);
+        for (const audit of calculation.lines.filter(line => line.form === "Pub974 Coverage Family" && line.line.startsWith(`${plan.planId}:${row.month}:`))) write(`Actual qualified ${audit.line.endsWith(':nonspecified') ? 'nonspecified' : 'specified'} amount before business limits $${audit.value.toFixed()}.`);
+      }
+    }
     for (const month of plan.months ?? []) {
       write(`Coverage month ${month.month}: eligible for subsidized employer coverage ${String(month.employerSubsidizedPlanEligible)}.`);
       if (month.employerOfferPtcException || month.employerCoverageEnrolled !== undefined || month.employerOfferSourceReference) write(`Actual employer-offer PTC exception ${month.employerOfferPtcException ?? "Unknown"}; employer coverage enrolled ${String(month.employerCoverageEnrolled)}; source ${month.employerOfferSourceReference ?? "Unknown"}.`);
@@ -149,7 +162,9 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
       for (const source of calculation.sourceRecords.filter(row => row.planId === plan.planId && row.sourceId === payment.sourceId)) {
         const person = facts.persons?.find(row => row.personId === source.personId);
         write(`Person ${person?.name ?? source.personId}; payer ${source.payer}; paid share $${source.amountPaid.toFixed()}; distinct excluded funding $${source.excludedFunding.toFixed()}; eligible before annual and business limits $${source.eligiblePremium.toFixed()}.`);
-        if (plan.marketplaceCoverage && plan.premiumTaxCreditInvolved) write(`Person ${person?.name ?? source.personId}: actual advance credit $${source.advancePremiumTaxCredit.toFixed()}; specified premium before coordinated credit $${source.marketplaceSpecifiedPremium.toFixed()}.`);
+        if (plan.marketplaceCoverage && plan.premiumTaxCreditInvolved) write(plan.coverageFamilySources
+          ? `Person ${person?.name ?? source.personId}: actual advance credit $${source.advancePremiumTaxCredit.toFixed()}; legal premium classes are derived separately in the monthly coverage-family ledger above.`
+          : `Person ${person?.name ?? source.personId}: actual advance credit $${source.advancePremiumTaxCredit.toFixed()}; specified premium before coordinated credit $${source.marketplaceSpecifiedPremium.toFixed()}.`);
       }
     }
   }

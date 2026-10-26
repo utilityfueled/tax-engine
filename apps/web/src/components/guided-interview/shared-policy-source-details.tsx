@@ -1,4 +1,5 @@
 "use client";
+import { buildHealthInsuranceInput, type HealthInsuranceData } from "@/lib/guided-health-insurance-facts";
 import { NoAdvanceCoverageFamilyDetails } from "./no-advance-coverage-family-details";
 import { NoAdvanceBenchmarkSourceDetails } from "./no-advance-benchmark-source-details";
 import { OverlappingBenchmarkSourceDetails } from "./overlapping-benchmark-source-details";
@@ -32,8 +33,8 @@ export function SharedPolicyOriginalDetails({ policy, prefix, onChange }: { poli
     <button type="button" onClick={() => onChange({ coveredIndividuals: [...(policy.coveredIndividuals ?? []), { name: "", ssn: "", firstMonth: "", lastMonth: "" }] })}>{prefix}: Add original covered person</button>
   </fieldset>;
 }
-export function SharedPolicySourceDetails({ data, personal, filingStatus, taxYear, onChange }: {
-  data: PremiumTaxCreditData; personal?: PersonalInfoData; filingStatus?: FilingStatus | null; taxYear?: number | null;
+export function SharedPolicySourceDetails({ data, personal, filingStatus, taxYear, healthInsurance, onChange }: {
+  healthInsurance?: HealthInsuranceData; data: PremiumTaxCreditData; personal?: PersonalInfoData; filingStatus?: FilingStatus | null; taxYear?: number | null;
   onChange: (patch: Partial<PremiumTaxCreditData>) => void;
 }) {
   const [error, setError] = useState<string>();
@@ -107,7 +108,7 @@ export function SharedPolicySourceDetails({ data, personal, filingStatus, taxYea
         onCapture={() => perform(() => onChange({ sharedPolicyAllocations: { ...packet, overlappingCoverage: captureOverlappingBenchmarkSources(packet) } }))}
         onChange={overlappingCoverage => onChange({ sharedPolicyAllocations: { ...packet, overlappingCoverage } })} onError={perform} />}
       <BooleanFact label="Allocation sources checked after the last edit" value={packet.sourceFactsConfirmed} onChange={sourceFactsConfirmed => onChange({ sharedPolicyAllocations: { ...packet, sourceFactsConfirmed } })} />
-      <button type="button" onClick={() => perform(() => onChange({ monthlyReconciliation: deriveSharedPolicyMonths(data, taxYear, filingStatus, personal) }))}>{packet.policies.some(policy => policy.agreementConfirmed === false || policy.situation === "no_advance_credit" || policy.situation === "not_shared") ? "Calculate household amounts from allocation" : "Calculate household amounts from agreement"}</button>
+      <button type="button" onClick={() => perform(() => onChange({ monthlyReconciliation: deriveSharedPolicyMonths(data, taxYear, filingStatus, personal, healthInsurance?.plans.some(plan => plan.coverageFamilySources) ? buildHealthInsuranceInput(healthInsurance, filingStatus, taxYear) : undefined) }))}>{packet.policies.some(policy => policy.agreementConfirmed === false || policy.situation === "no_advance_credit" || policy.situation === "not_shared") ? "Calculate household amounts from allocation" : "Calculate household amounts from agreement"}</button>
       <p className="guided-hint">After calculation, check the household monthly amounts and confirm the sources below. Each month's coverage eligibility remains your separate source answer.</p>
       <button type="button" onClick={() => onChange({ sharedPolicyAllocations: undefined })}>Remove allocation worksheet</button>
     </>}

@@ -50,7 +50,7 @@ import { assertForm7206ReviewSource, fillForm7206 } from "./fill-form-7206.js";
 import { fillSEHealthInsuranceWorksheetReference } from "./fill-se-health-insurance-worksheet.js";
 import { fillIraDeductionWorksheetReference } from "./fill-ira-deduction-worksheet.js";
 import { buildNetOperatingLossReview, fillNetOperatingLossReview } from "./fill-net-operating-loss.js";
-import { buildForm8962ReferenceSummary, fillForm8962Reference, fillForm8962SharedPolicy, fillForm8962Marriage } from "./fill-form-8962.js";
+import { buildForm8962ReferenceSummary, fillForm8962Reference, fillForm8962SharedPolicy, fillForm8962Marriage, fillForm8962CoverageFamily } from "./fill-form-8962.js";
 import { hasPremiumTaxCreditReviewSources, preparePremiumTaxCreditReview, type PreparedPremiumTaxCreditReview } from "./premium-tax-credit-review-context.js";
 import {
   fillForm1116Reference,
@@ -923,8 +923,8 @@ export async function fillReturn(
 
   // ── Form 8962 reference summary (if applicable — supported marketplace reconciliation data) ──
   if (input.form1095A.length > 0 && result.form8962) {
-    if (result.form8962.sharedPolicyAllocation || result.form8962.marriageCalculation) {
-      const fill = result.form8962.marriageCalculation ? fillForm8962Marriage : fillForm8962SharedPolicy;
+    if (result.form8962.sharedPolicyAllocation || result.form8962.marriageCalculation || result.form7206?.coverageFamilyAllocations?.length) {
+      const fill = result.form8962.marriageCalculation ? fillForm8962Marriage : result.form8962.sharedPolicyAllocation ? fillForm8962SharedPolicy : fillForm8962CoverageFamily;
       const doc8962 = await fill(input, result, join(blankFormsDir, "f8962.pdf"), premiumTaxCreditReview);
       if (options.flatten) await flattenForm(doc8962.getForm());
       const outputPath8962 = join(outputDir, "f8962-filled.pdf");

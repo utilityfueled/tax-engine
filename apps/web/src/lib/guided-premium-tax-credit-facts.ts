@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
+import { buildHealthInsuranceInput } from "./guided-health-insurance-facts";
 import { bindGuidedMarriageSources, type MarriagePolicyData } from "./guided-marriage-policy";
-import { Form8962Schema, type TaxYearInput } from "@/models/inputs";
+import { Form8962Schema, type TaxYearInput, type Form7206Input } from "@/models/inputs";
 import type { FilingStatus, GuidedFlowState, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { normalizeMarketplacePolicy, resolveGuidedSharedPolicy, type SharedPolicyAllocationData } from "./guided-shared-policy";
@@ -55,7 +56,7 @@ function month(row: MarketplaceMonthData, label: string) {
 }
 
 /** Collect sources without supplying a placeholder MAGI or calculating eligibility. */
-export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData): Partial<Pick<TaxYearInput, "form1095A" | "form8962">> {
+export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, form7206?: Form7206Input): Partial<Pick<TaxYearInput, "form1095A" | "form8962">> {
   if (!data) return {};
   if ((taxYear !== 2025 && taxYear !== 2026) || !filingStatus) throw new Error("Choose the actual return year and filing status for Marketplace coverage.");
   if (integer(data.sourceTaxYear, "coverage worksheet year") !== taxYear) throw new Error("The coverage worksheet year must match the actual return year.");
@@ -85,7 +86,7 @@ export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefin
     fact(data.marketplaceEstimatedIncomeWithinEligibilityRange, "Marketplace income estimate eligibility"); fact(data.marketplaceInformationAccurate, "Marketplace information accuracy");
   }
   const qsehra = fact(data.qsehraAffected, "QSEHRA answer");
-  const shared = allocationRequired || data.sharedPolicyAllocations ? resolveGuidedSharedPolicy(data, taxYear, filingStatus, personal) : undefined;
+  const shared = allocationRequired || data.sharedPolicyAllocations ? resolveGuidedSharedPolicy(data, taxYear, filingStatus, personal, form7206) : undefined;
   const policies = shared?.policies ?? data.policies?.map(policy => normalizeMarketplacePolicy(policy, taxYear));
   if (!policies?.length) throw new Error("Enter the actual original Marketplace policy statements.");
   const identities = new Set<string>();
@@ -133,7 +134,9 @@ export function premiumTaxCreditFactErrors(state: GuidedFlowState): Record<strin
     const data = state.sectionData.credits?.premiumTaxCredit;
     const requiresCoordination = state.sectionData.adjustments?.healthInsuranceFacts?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true) ?? false;
     if (requiresCoordination && !data) throw new Error("Enter the actual Marketplace statements and coverage worksheet for the self-employed health plan.");
-    const inputs = buildPremiumTaxCreditInputs(data, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"]);
+    const health = state.sectionData.adjustments?.healthInsuranceFacts;
+    const familyHealth = health?.plans.some(plan => plan.coverageFamilySources) ? buildHealthInsuranceInput(health, state.segmentation.filingStatus, state.taxYear) : undefined;
+    const inputs = buildPremiumTaxCreditInputs(data, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], familyHealth);
     if (inputs.form8962 && inputs.form8962.selfEmployedHealthInsuranceCoordinationRequired !== requiresCoordination) throw new Error("Reconcile Marketplace health coordination with the actual self-employed plan sources.");
     return {};
   } catch (error) { return { premiumTaxCreditSources: error instanceof Error ? error.message : "Complete the actual Marketplace coverage sources." }; }

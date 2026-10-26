@@ -49,7 +49,7 @@ export interface Form8962Input {
   filingStatus: FilingStatus;
   form1095A: TaxYearInput["form1095A"];
   /** Actual return source identity, not a supplied validation flag or calculated allocation. */
-  allocationHousehold?: Pick<Form8962AllocationInput, "taxpayer" | "standardDeductionFacts">;
+  allocationHousehold?: Pick<Form8962AllocationInput, "taxpayer" | "standardDeductionFacts" | "form7206">;
   /** Canonical engine context; never a TaxYearInput source flag or supplied amount. */
   healthInsuranceCoordination?: "pub974-simplified-2025" | "pub974-simplified-2026" | "pub974-alternative-reentry-2026";
   /** Computed WorksheetX/Y/Z result, never a taxpayer-provided Form8962 fact. */

@@ -1,0 +1,70 @@
+form: "Marketplace coverage-family health premiums"
+fullName: "Actual monthly coverage-family and noncoverage-family premium sources"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Refreshed 2026-10-26: final Pub974, Plan covering individuals not in your
+  coverage family (Gary/Sue), Worksheets P/W and Simplified Step3;
+  26 CFR 1.162(l)-1(a)(1)-(3); i8962 Line10 Mike/Susan and columns(a)/(b).
+  PartIV tax-family allocation precedes this distinct health premium split.
+  The full tax-family enrollment premium stays on Form8962. Applicable SLCSP
+  reflects the actual coverage family. Original policy/payment/APTC facts remain
+  unchanged. An insurer's advance records are independent of the benchmark ratio.
+  This actual-source route requires known zero APTC for noncoverage members;
+  positive such advances require their separate repayment/deduction method.
+  The published single-business Step3 subtracts the corresponding full credit.
+  A health benchmark fraction is not a credit or APTC allocation percentage.
+  Source completeness and this implementation do not establish filing qualification.
+lines:
+  - line: "originals"
+    description: "Bind complete actual original policy and monthly person sources"
+    formula: "Reconcile captured original source index, year, policy, recipient, covered people and months, and all original monetary amounts. Monthly actual full-month coverage and other-MEC facts determine coverage-family membership for the bound tax-family people. Missing differs from false or zero."
+    testRef: "tests/engine/forms/marketplace-coverage-family-health.test.ts::binds original policy identity and actual monthly coverage members without defaults"
+  - line: "gary-sue"
+    description: "Published premium split after tax-family allocation"
+    formula: "specified = actual tax-family enrollment premium * coverage-family SLCSP / (coverage-family SLCSP + noncoverage-family SLCSP); nonspecified = actual tax-family premium - specified. Gary/Sue 15000,12000,6000 yields10000/5000, before earned-income and PTC coordination. Preserve exact Decimal source values; do not replace Form8962 enrollment premium."
+    testRef: "tests/engine/forms/marketplace-coverage-family-health.test.ts::derives the published Gary Sue split and retains full original advances and premiums"
+  - line: "paid-advances"
+    description: "Independent actual payment and advance allocation"
+    formula: "Original full receipts equal original policy premiums and advances. Bound this-return owner cash plus this-return advances equal the separately allocated tax-family premium. All noncoverage-person advances must be explicitly zero for this route; retain actual covered-person advances rather than multiplying by the health benchmark ratio."
+    testRef: "tests/engine/forms/marketplace-coverage-family-health.test.ts::keeps known-zero noncoverage advances distinct from unknown and positive advances"
+  - line: "months"
+    description: "Actual monthly membership and exact benchmark conservation"
+    formula: "Validate each actual original month once, including complete eligible and ineligible person groups, actual benchmark references, and known zero benchmark for an empty group. Sum exact derived monthly premiums only after monthly source reconciliation."
+    testRef: "tests/engine/forms/marketplace-coverage-family-health.test.ts::preserves changing coverage months and exact ratio amounts without changing originals"
+  - line: "shared-first"
+    description: "Allocate policy amounts between tax families first"
+    formula: "The existing source-bound Situation4 or Situation3 allocator establishes this return's premium and APTC. Apply the distinct coverage-family benchmark split only to that result, preserving full other-family receipts and identities. A paid-share mismatch cannot be cured by an agreement."
+    testRef: "tests/engine/forms/marketplace-coverage-family-health.test.ts::splits only the actual tax family allocation of a shared original policy"
+  - line: "all-policies"
+    description: "The actual coverage-family benchmark includes the whole family"
+    formula: "Reconcile each person's monthly eligibility across every actual policy. A person cannot be both eligible and ineligible in the same month. The numerator's member identities include the complete current coverage family, including members enrolled through another linked plan; missing evidence is not eligible coverage. Each original payment date must be a real current-year date."
+    testRef: "tests/engine/forms/marketplace-coverage-family-health.test.ts::rejects conflicting cross-policy membership and invalid actual receipt dates"
+  - line: "return"
+    description: "Current canonical health and credit coordination"
+    formula: "Retain original full tax-family enrollment/APTC on8962. Group the separate nonspecified monthly amount on7206 before earned-income limits; keep source person payments unchanged and a distinct derived monthly ledger. One specified business uses the full corresponding Step3 credit; no health-ratio APTC allocation. Source-only preparation cannot complete a family allocation without original policy/household context."
+    testRef: "tests/engine/federal-coverage-family-health.test.ts::keeps original enrollment and actual advances while deriving separate health premium classes"
+  - line: "signed-step3"
+    description: "Signed Step3 specified component before adding nonspecified premiums"
+    formula: "Pub974 Simplified Step3 line7 = specified minus full corresponding credit and line9 = min(line7, maximum); neither imposes a zero floor. Line11 adds actual W14 nonspecified deduction. Specified10000, credit12000, nonspecified5000 yields signed-2000 then total3000, not5000. The final allowed combined deduction remains nonnegative and credit plus deduction stays within all actual premiums."
+    testRef: "tests/engine/federal-coverage-family-health.test.ts::retains signed Step3 before adding nonspecified premiums and the once-only QBI transfer"
+  - line: "signed-w"
+    description: "Actual specified advances and signed W intermediate"
+    formula: "Known-zero noncoverage advances leave all independently attributed own-family advances on W2, even when they exceed benchmark-derived W1. W3 and W16 retain signed subtraction; W17 adds the nonspecified amount. No inferred ratio reduces actual advance sources. The audit identifies actual source advances and the full corresponding Step3 credit, not an inferred health-ratio allocation."
+    testRef: "tests/engine/federal-coverage-family-health.test.ts::retains actual advances above the specified premium and signed WorksheetW"
+  - line: "signed-final-rounding"
+    description: "Preserve source cents and signed intermediates before the final printed transfer"
+    formula: "Under the1040 whole-dollar convention, retain exact original premium/payment cents and the signed family Step3 result, then round the combined line11 once. A raw14999.88 premium and printed15000 credit gives a signed-0.12 intermediate but zero final health and zero QBI deduction. A combined amount that remains negative after whole-dollar rounding rejects. Existing wholly coverage-family premium allocation keeps its established zero treatment for a credit capped by those same premiums."
+    testRef: "tests/engine/federal-coverage-family-health.test.ts::retains signed premium cents while transferring zero printed health and QBI"
+  - line: "review"
+    description: "Original private context and signed physical review output"
+    formula: "Recompute from the complete original policy, household, receipt and benchmark sources before PDF I/O. Preserve raw payments, separate derived monthly premium classes and signed W/Step3 intermediates. Reopen physical7206/8962 and reconcile exact transfers; removed or changed original sources and balanced retained-result changes cannot certify themselves."
+    testRef: "tests/pdf/coverage-family-health-review.test.ts::prints signed family coordination with original private sources and rejects stale ledgers"
+  - line: "zero-coverage-month"
+    description: "Actual empty coverage family and health-ineligible sources"
+    formula: "A known empty coverage-family month has zero applicable benchmark and zero actual advances, with full original premium retained and all otherwise qualified premium nonspecified. A plan that is not established under a business has no specified premium or attributable advance in W; its full original8962 source remains. Do not subtract that plan's credit from qualified premiums elsewhere without an actual attribution method."
+    testRef: "tests/engine/federal-coverage-family-health.test.ts::preserves actual empty coverage months and excludes known health-ineligible advances"
+  - line: "year-and-known-mec"
+    description: "Current law and known employer enrollment remain source-bound"
+    formula: "An isolated indexed-method control (production2026 remains closed) retains original enrollment/APTC and the independent family split; above400% FPL there is no credit and full actual advance repayment. Known owner employer enrollment cannot coexist with a claimed eligible owner in the same coverage month."
+    testRef: "tests/engine/federal-coverage-family-health-2026.test.ts::retains full2026 repayment and rejects contradictory owner employer enrollment"

@@ -536,7 +536,7 @@ async function fillForm8962SourceReview(input: TaxYearInput, result: TaxReturnRe
   prepared?: PreparedPremiumTaxCreditReview): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const summary = buildForm8962ReferenceSummary(input.form1095A, result, { input, prepared });
-  if ((!summary.allocations?.length && !summary.marriage) || !result.form8962) throw new Error('Form8962 physical review requires actual allocation or marriage sources');
+  if ((!summary.allocations?.length && !summary.marriage && !result.form7206?.coverageFamilyAllocations?.length) || !result.form8962) throw new Error('Form8962 physical review requires actual allocation, marriage or coverage-family sources');
   const values = new Map(summary.lines.map(row => [row.line, row.value]));
   const doc = await loadReviewTemplate(blankPdfPath, 2025), form = doc.getForm(), F = FORM_8962_FIELDS;
   setTextField(form, F.name, [input.taxpayer.primary, ...(input.taxpayer.filingStatus === 'married_filing_jointly' && input.taxpayer.spouse ? [input.taxpayer.spouse] : [])].map(person => `${person.firstName} ${person.lastName}`).join(' & '));
@@ -548,8 +548,12 @@ async function fillForm8962SourceReview(input: TaxYearInput, result: TaxReturnRe
   const region = input.form8962?.fplRegion;
   for (const [index, name] of ['alaska', 'hawaii', 'contiguous'].entries()) setCheckBox(form, F.regions[index], region === name);
   const specialMethod = Boolean(summary.allocations?.length || summary.marriage?.electionApplies);
-  for (const [name, state] of [[F.line9Yes, specialMethod], [F.line9No, !specialMethod], [F.line10Yes, false], [F.line10No, true]] as const) setCheckBox(form, name, state);
-  for (const name of F.annual) setTextField(form, name, '');
+  const annual = result.form8962.calculationMethod === 'annual';
+  for (const [name, state] of [[F.line9Yes, specialMethod], [F.line9No, !specialMethod], [F.line10Yes, annual], [F.line10No, !annual]] as const) setCheckBox(form, name, state);
+  for (const [index, name] of F.annual.entries()) {
+    const value = annual ? values.get(`11${'abcdef'[index]}`) : undefined;
+    setTextField(form, name, value === undefined ? '' : new Decimal(value).toFixed(0));
+  }
   for (const [month, fields] of F.monthly.entries()) for (const [index, name] of fields.entries()) {
     const value = values.get(`${month + 12}${'abcdef'[index]}`); setTextField(form, name, value === undefined ? '' : new Decimal(value).toFixed(0));
   }
@@ -579,5 +583,11 @@ export async function fillForm8962SharedPolicy(input: TaxYearInput, result: TaxR
 export async function fillForm8962Marriage(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string,
   prepared?: PreparedPremiumTaxCreditReview): Promise<PDFDocument> {
   if (!result.form8962?.marriageCalculation) throw new Error('Form8962 physical review requires actual marriage sources');
+  return fillForm8962SourceReview(input, result, blankPdfPath, prepared);
+}
+
+export async function fillForm8962CoverageFamily(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string,
+  prepared?: PreparedPremiumTaxCreditReview): Promise<PDFDocument> {
+  if (!result.form7206?.coverageFamilyAllocations?.length) throw new Error('Form8962 physical review requires actual coverage-family sources');
   return fillForm8962SourceReview(input, result, blankPdfPath, prepared);
 }

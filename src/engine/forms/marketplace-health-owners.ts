@@ -45,8 +45,9 @@ export function calculateMarketplaceOwnerDeductions(params: Params) {
       months.add(month.month);
       for (const value of [month.specifiedPremium, month.sourcePremium, month.advancePremiumTaxCredit]) finite(value);
       if (month.specifiedPremium.gt(month.sourcePremium) || month.advancePremiumTaxCredit.gt(month.sourcePremium)) throw new Error("Pub974 owner amounts exceed their actual source month.");
+      if (month.specifiedAdvancePremiumTaxCredit !== undefined && finite(month.specifiedAdvancePremiumTaxCredit).gt(month.advancePremiumTaxCredit)) throw new Error("Pub974 owner specified advances exceed the actual source advance.");
       monthlyPremiums = monthlyPremiums.plus(month.specifiedPremium);
-      if (month.sourcePremium.gt(0)) advances = advances.plus(month.advancePremiumTaxCredit.times(month.specifiedPremium).div(month.sourcePremium));
+      if (month.sourcePremium.gt(0)) advances = advances.plus((month.specifiedAdvancePremiumTaxCredit ?? month.advancePremiumTaxCredit.times(month.specifiedPremium).div(month.sourcePremium)));
     }
     if (!monthlyPremiums.eq(premiums)) throw new Error("Pub974 owner monthly premiums do not reconcile their business source.");
     let credit = d(0);

@@ -41,7 +41,7 @@ export function calculateForm7206Return(params: Params) {
   const year = input.taxpayer.taxYear, joint = input.taxpayer.filingStatus === "married_filing_jointly";
   if (input.seHealthInsuranceWorksheet || !d(input.adjustments?.selfEmployedHealthInsurance).isZero()) throw new Error("Reconcile legacy health-insurance amounts with actual Form7206; duplicate claim representations are unsupported.");
   const marketplaceHandling = params.marketplace ? "separate-specified-premiums" as const : undefined;
-  const source = calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, marketplaceHandling });
+  const source = calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, marketplaceSourceInput: input, marketplaceHandling });
   if (source.businesses.some(row => row.kind !== "s_corporation") && !params.selfEmploymentSourcesVerified) throw new Error("Actual Form7206 requires verified business and payroll sources for the canonical SE deduction.");
   const householdName = (person: { firstName: string; lastName: string }) => name(`${person.firstName} ${person.lastName}`);
   for (const person of facts.persons ?? []) {
@@ -142,7 +142,7 @@ export function calculateForm7206Return(params: Params) {
       }
     }
   }
-  const form7206 = calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, businesses, marketplaceHandling });
+  const form7206 = calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, marketplaceSourceInput: input, businesses, marketplaceHandling });
   if (form7206.deduction === undefined) throw new Error("Canonical Form7206 deduction is incomplete.");
   const marketplacePremiums = params.marketplace ? calculateMarketplaceHealthPremiums({ input, healthInsurance: form7206 }) : undefined;
   const result = params.marketplace?.stage === "final" || params.marketplace?.stage === "ordered" ? params.marketplace.deduction : undefined;
@@ -214,7 +214,7 @@ export function calculateForm7206Return(params: Params) {
           || !recorded.remainingEarnedIncome.eq(group.remainingEarnedIncome) || !recorded.nonspecifiedDeduction.eq(group.nonspecifiedDeduction)) throw new Error("Pub974 computed deduction contradicts actual business sources.");
       }
       const limit = result.method.startsWith("ordinary-no-ptc-") ? sum(...result.businesses.map(row => row.ordinaryDeduction)) : maximum;
-      if (!result.specifiedDeduction.isFinite() || result.specifiedDeduction.lt(0) || result.specifiedDeduction.gt(limit)) throw new Error("Pub974 specified deduction exceeds the actual method limit.");
+      if (!result.specifiedDeduction.isFinite() || roundDollar(result.specifiedDeduction.plus(form7206.deduction)).lt(0) || result.specifiedDeduction.gt(limit)) throw new Error("Pub974 specified deduction exceeds the actual method limit.");
       specifiedDeduction = result.specifiedDeduction;
       if (result.method.startsWith("ordinary-no-ptc-")) {
         for (const group of result.businesses) {
@@ -228,6 +228,9 @@ export function calculateForm7206Return(params: Params) {
     // Allocate the single printed-dollar transfer without manufacturing another deduction.
     const exact = sum(...healthSources.map(row => row.amount));
     if (!exact.eq(form7206.deduction.plus(specifiedDeduction))) throw new Error("Pub974 QBI sources do not conserve the allowed health deduction.");
+    // Signed source cents can round to a zero total when the printed credit
+    // covers the full premium. A zero transfer has no QBI deduction to allocate.
+    if (deductionToSchedule1.isZero()) for (const row of healthSources) row.amount = d(0);
     let remainder = deductionToSchedule1;
     const positive = healthSources.filter(row => row.amount.gt(0));
     positive.forEach((row,index) => {
@@ -239,7 +242,7 @@ export function calculateForm7206Return(params: Params) {
     deductionToSchedule1 = sum(...healthSources.map(row => row.amount));
   }
   const printed = result?.method.startsWith("ordinary-no-ptc-")
-    ? calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, businesses, marketplaceHandling: "ordinary-no-ptc" }) : form7206;
+    ? calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, marketplaceSourceInput: input, businesses, marketplaceHandling: "ordinary-no-ptc" }) : form7206;
   if (result?.method.startsWith("ordinary-no-ptc-") && (printed.deduction === undefined || !roundDollar(printed.deduction).eq(deductionToSchedule1))) throw new Error("Ordinary no-PTC Form7206 must reconcile the final source deduction.");
   return { form7206: { ...printed, lines: [...printed.lines, ...marketplaceAudit.getLines()], deductionToSchedule1 }, healthSources, retirementSources, marketplacePremiums };
 }

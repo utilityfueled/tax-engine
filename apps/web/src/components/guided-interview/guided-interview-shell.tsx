@@ -653,6 +653,7 @@ function SectionContent({
         />
         {getSectionData(state, "adjustments")?.healthInsuranceFacts?.plans.some(plan => plan.marketplaceCoverage === true) && (
           <PremiumTaxCreditSourceDetails
+            healthInsurance={getSectionData(state, "adjustments")?.healthInsuranceFacts}
             data={getSectionData(state, "credits")?.premiumTaxCredit}
             personal={getSectionData(state, "personal-info")}
             filingStatus={state.segmentation.filingStatus}
@@ -682,6 +683,7 @@ function SectionContent({
       const depCount = Number(personalData?.dependentCount ?? "0");
       return (
         <SectionCredits
+          healthInsurance={getSectionData(state, "adjustments")?.healthInsuranceFacts}
           personalData={personalData}
           careBenefitSources={guidedCareBenefitSources(getSectionData(state, "income-w2")?.entries, getSectionData(state, "income-self-employment")?.businessFacts, getSectionData(state, "income-self-employment")?.expenses)}
           taxYear={state.taxYear}

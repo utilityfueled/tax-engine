@@ -1,4 +1,5 @@
 "use client";
+import type { HealthInsuranceData } from "@/lib/guided-health-insurance-facts";
 
 import { RetroShell } from "@/components/retro-shell";
 import {
@@ -95,7 +96,9 @@ export function SectionCredits({
   onDataChange,
   careBenefitSources,
   personalData,
+  healthInsurance,
 }: {
+  healthInsurance?: HealthInsuranceData;
   personalData?: PersonalInfoData;
   careBenefitSources?: CareBenefitSource[];
   data: CreditsData | undefined;
@@ -139,7 +142,7 @@ export function SectionCredits({
           />
 
           <EducationDistributionDetails data={current.educationDistributions} onChange={educationDistributions => onDataChange({ ...current, educationDistributions })} />
-          <PremiumTaxCreditSourceDetails personal={personalData} filingStatus={filingStatus} taxYear={taxYear} data={current.premiumTaxCredit} onChange={premiumTaxCredit => onDataChange({ ...current, premiumTaxCredit })} />
+          <PremiumTaxCreditSourceDetails healthInsurance={healthInsurance} personal={personalData} filingStatus={filingStatus} taxYear={taxYear} data={current.premiumTaxCredit} onChange={premiumTaxCredit => onDataChange({ ...current, premiumTaxCredit })} />
           <SavingsBondSourceDetails data={current.savingsBondEducation} onChange={savingsBondEducation => onDataChange({ ...current, savingsBondEducation })} />
           <MinimumTaxCreditDetails data={current.minimumTaxCredit} onChange={minimumTaxCredit => onDataChange({ ...current, minimumTaxCredit })} />
 

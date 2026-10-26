@@ -1,4 +1,4 @@
-import { Form1095ASchema, Form8962Schema } from "@/models/inputs";
+import { Form1095ASchema, Form8962Schema, type Form7206Input } from "@/models/inputs";
 import { calculateForm8962SharedPolicy, type Form8962AllocationInput } from "@/engine/forms/form-8962-shared-policy";
 import type { FilingStatus, PersonalInfoData } from "./guided-interview-flow";
 import type { MarketplacePolicyData, PremiumTaxCreditData, MarketplaceCoverageMonthData } from "./guided-premium-tax-credit-facts";
@@ -224,7 +224,15 @@ export function captureNoAdvanceBenchmarkSources(policy: SharedPolicyAgreementDa
         thisReturnCoveredIndividualSsns: own, otherReturnCoveredIndividualSsns: other };
     }) };
 }
-export function resolveGuidedSharedPolicy(data: PremiumTaxCreditData, taxYear: number | null | undefined, filingStatus: FilingStatus | null | undefined, personal?: PersonalInfoData) {
+/** Actual household identity only; no placeholder income or calculated eligibility. */
+export function guidedMarketplaceHousehold(personal: PersonalInfoData | undefined, filingStatus: FilingStatus | null | undefined, taxYear: number | null | undefined): Pick<Form8962AllocationInput, 'taxpayer' | 'standardDeductionFacts'> {
+  if (!personal || !filingStatus || (taxYear !== 2025 && taxYear !== 2026)) throw new Error('Complete actual Marketplace household, filing status and year.');
+  return { taxpayer: { taxYear, filingStatus: statuses[filingStatus], primary: person(personal, 'primary taxpayer'),
+    ...(filingStatus === 'mfj' ? { spouse: person(personal.spouse, 'joint spouse') } : {}), dependents: (personal.dependents ?? []).map(entry => person(entry, 'claimed dependent')) },
+    standardDeductionFacts: { primaryCanBeClaimedAsDependent: personal.standardDeductionFacts?.primaryCanBeClaimedAsDependent ?? undefined,
+      spouseCanBeClaimedAsDependent: personal.standardDeductionFacts?.spouseCanBeClaimedAsDependent ?? undefined } };
+}
+export function resolveGuidedSharedPolicy(data: PremiumTaxCreditData, taxYear: number | null | undefined, filingStatus: FilingStatus | null | undefined, personal?: PersonalInfoData, form7206?: Form7206Input) {
   const packet = data.sharedPolicyAllocations;
   if (!packet || data.allocationRequired !== true) throw new Error("Complete the actual shared-policy allocation worksheet and reconcile its required answer.");
   if ((taxYear !== 2025 && taxYear !== 2026) || !filingStatus || !personal) throw new Error("Complete the actual return household, year and filing status for the allocation.");
@@ -262,14 +270,11 @@ export function resolveGuidedSharedPolicy(data: PremiumTaxCreditData, taxYear: n
     alternativeMarriageCalculationElected: data.alternativeMarriageCalculationElected ?? undefined,
     selfEmployedHealthInsuranceCoordinationRequired: data.selfEmployedHealthInsuranceCoordinationRequired ?? undefined,
     qsehraAffected: data.qsehraAffected ?? undefined, lawfulPresenceReconciliationRequired: data.lawfulPresenceReconciliationRequired ?? undefined });
-  const input: Form8962AllocationInput = { taxpayer: { taxYear, filingStatus: statuses[filingStatus], primary: person(personal, "primary taxpayer"),
-    ...(filingStatus === "mfj" ? { spouse: person(personal.spouse, "joint spouse") } : {}), dependents: (personal.dependents ?? []).map(entry => person(entry, "claimed dependent")) },
-    standardDeductionFacts: { primaryCanBeClaimedAsDependent: personal.standardDeductionFacts?.primaryCanBeClaimedAsDependent ?? undefined,
-      spouseCanBeClaimedAsDependent: personal.standardDeductionFacts?.spouseCanBeClaimedAsDependent ?? undefined }, form1095A: policies, form8962 };
+  const input: Form8962AllocationInput = { ...guidedMarketplaceHousehold(personal, filingStatus, taxYear), form1095A: policies, form8962, form7206 };
   return { policies, packet: form8962.sharedPolicyAllocations, allocation: calculateForm8962SharedPolicy(input), sourceInput: input };
 }
-export function deriveSharedPolicyMonths(data: PremiumTaxCreditData, taxYear: number | null | undefined, filingStatus: FilingStatus | null | undefined, personal?: PersonalInfoData): MarketplaceCoverageMonthData[] {
-  const result = resolveGuidedSharedPolicy(data, taxYear, filingStatus, personal);
+export function deriveSharedPolicyMonths(data: PremiumTaxCreditData, taxYear: number | null | undefined, filingStatus: FilingStatus | null | undefined, personal?: PersonalInfoData, form7206?: Form7206Input): MarketplaceCoverageMonthData[] {
+  const result = resolveGuidedSharedPolicy(data, taxYear, filingStatus, personal, form7206);
   const existingMonths = data.monthlyReconciliation.map(row => whole(row.month, "household coverage month"));
   if (new Set(existingMonths).size !== existingMonths.length) throw new Error("Reconcile duplicate household coverage months before deriving allocations.");
   if (existingMonths.some(month => !result.allocation.householdMonths.some(row => row.month === month))) throw new Error("Reconcile household coverage months without an actual original source before deriving allocations.");

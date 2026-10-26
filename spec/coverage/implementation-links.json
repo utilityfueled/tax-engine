@@ -358,6 +358,16 @@
       "note": "Shared-policy allocation methods use the same calculation and physical 2025 review mapping; only the source method described by each spec is traced."
     },
     {
+      "key": "federal/marketplace-coverage-family-health",
+      "enginePath": "src/engine/forms/marketplace-coverage-family-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/forms/marketplace-coverage-family-health.test.ts::derives the published Gary Sue split and retains full original advances and premiums",
+        "tests/pdf/coverage-family-health-review.test.ts::prints signed family coordination with original private sources and rejects stale ledgers"
+      ],
+      "note": "Actual monthly coverage-family source calculation feeds the source-bound 2025 Form7206 review mapper; this link makes no additional scenario, tax-law or filing qualification claim."
+    },
+    {
       "key": "federal/marketplace-health-separate-business",
       "enginePath": "src/engine/forms/marketplace-health-premiums.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",

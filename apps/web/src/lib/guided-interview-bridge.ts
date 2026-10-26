@@ -752,6 +752,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const cryptoDonations = buildGuidedCryptoDonations(deductionData?.cryptoDonations, state.taxYear);
   const currentCapitalCarry = form172?.capitalSources?.priorCapitalLosses;
 
+  const healthInsurance = buildHealthInsuranceInput(adjustmentData?.healthInsuranceFacts, segmentation.filingStatus, state.taxYear, adjustmentData?.selfEmployedHealthInsurance);
   return {
     taxpayer: {
       taxYear: state.taxYear,
@@ -796,7 +797,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     schedule1A: buildSchedule1AInput(sectionData["additional-deductions"]?.schedule1A, state),
     form4137ByOwner: buildTipIncomeInputs(sectionData["additional-deductions"]?.tipIncomeAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries),
     ...buildHsaInputs(adjustmentData?.hsaAccounts, personalInfo),
-    form7206: buildHealthInsuranceInput(adjustmentData?.healthInsuranceFacts, segmentation.filingStatus, state.taxYear, adjustmentData?.selfEmployedHealthInsurance),
+    form7206: healthInsurance,
     form1099Nec: necs,
     scheduleC: scheduleC ?? undefined,
     form1099Int,
@@ -843,7 +844,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     educationExpenses,
     ...educationDistributions,
     ...savingsBondInputs,
-    ...buildPremiumTaxCreditInputs(creditsData?.premiumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo),
+    ...buildPremiumTaxCreditInputs(creditsData?.premiumTaxCredit, state.taxYear, segmentation.filingStatus, personalInfo, healthInsurance),
     ...studentLoans,
     energyCredits,
     form8936: buildVehicleCreditInput(creditsData?.vehicles, state.taxYear, segmentation.filingStatus),

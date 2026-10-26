@@ -1,4 +1,5 @@
 "use client";
+import type { HealthInsuranceData } from "@/lib/guided-health-insurance-facts";
 
 import { emptyMarketplaceCoverageMonth, emptyMarketplaceMonth, emptyPremiumTaxCreditFacts, type PremiumTaxCreditData } from "@/lib/guided-premium-tax-credit-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
@@ -19,7 +20,7 @@ const coverageFlags = [
   ["selfEmployedHealthInsuranceCoordinationRequired", "Self-employed health insurance coordination is required"], ["qsehraAffected", "QSEHRA affects this coverage"],
   ["lawfulPresenceReconciliationRequired", "Lawful-presence premium allocation is required"], ["coverageFactsConfirmed", "Monthly coverage worksheet checked"],
 ] as const;
-export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, taxYear, onChange }: { data?: PremiumTaxCreditData; personal?: PersonalInfoData; filingStatus?: FilingStatus | null; taxYear?: number | null; onChange: (data: PremiumTaxCreditData | undefined) => void }) {
+export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, taxYear, healthInsurance, onChange }: { healthInsurance?: HealthInsuranceData; data?: PremiumTaxCreditData; personal?: PersonalInfoData; filingStatus?: FilingStatus | null; taxYear?: number | null; onChange: (data: PremiumTaxCreditData | undefined) => void }) {
   if (!data) return <section><h4>Marketplace coverage and premium tax credit</h4><p className="guided-hint">Use your original Forms1095-A and the actual household coverage worksheet. Advance credits must be reconciled even when no additional credit is allowed.</p><button type="button" onClick={() => onChange({ ...emptyPremiumTaxCreditFacts, policies: [], monthlyReconciliation: [] })}>Add Marketplace coverage worksheet</button></section>;
   const update = (patch: Partial<PremiumTaxCreditData>) => {
     const next = { ...data, ...patch };
@@ -56,13 +57,13 @@ export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, ta
         <TextFact label={`${prefix}: Marketplace name`} value={policy.marketplace} onChange={marketplace => set({ marketplace })} />
         <TextFact label={`${prefix}: Policy number`} value={policy.policyNumber} onChange={policyNumber => set({ policyNumber })} />
       </div>
-        {(data.allocationRequired === true || data.alternativeMarriageCalculationElected === true || policy.recipientName !== undefined || policy.recipientSsn !== undefined || policy.coveredIndividuals !== undefined) && <SharedPolicyOriginalDetails policy={policy} prefix={prefix} onChange={set} />}
+        {(data.allocationRequired === true || data.alternativeMarriageCalculationElected === true || data.selfEmployedHealthInsuranceCoordinationRequired === true || policy.recipientName !== undefined || policy.recipientSsn !== undefined || policy.coveredIndividuals !== undefined) && <SharedPolicyOriginalDetails policy={policy} prefix={prefix} onChange={set} />}
         {policy.monthlyPremiums.map((row, rowIndex) => {
           const label = `${prefix} month ${rowIndex + 1}`;
           const setRow = (patch: Partial<typeof row>) => set({ monthlyPremiums: policy.monthlyPremiums.map((current, index) => index === rowIndex ? { ...current, ...patch } : current) });
           return <div className="guided-form-grid" key={rowIndex}><Choice label={`${label}: Month`} value={row.month} choices={months} onChange={month => setRow({ month })} />
             {([["enrolleePremium", "Original enrollment premium"], ["slcsp", "Original SLCSP premium"], ["advancePremiumTaxCredit", "Original advance credit"]] as const).filter(([field]) => field !== "slcsp" || row.slcspReportedBlank !== true).map(([field, text]) => <CurrencyField key={field} label={`${label}: ${text}`} value={row[field]} onChange={value => setRow({ [field]: value })} />)}
-            {(data.allocationRequired === true || row.slcspReportedBlank !== undefined) && <BooleanFact label={`${label}: Original SLCSP box is printed blank`} value={row.slcspReportedBlank} onChange={slcspReportedBlank => setRow({ slcspReportedBlank, ...(slcspReportedBlank === true ? { slcsp: "" } : {}) })} />}
+            {(data.allocationRequired === true || data.selfEmployedHealthInsuranceCoordinationRequired === true || row.slcspReportedBlank !== undefined) && <BooleanFact label={`${label}: Original SLCSP box is printed blank`} value={row.slcspReportedBlank} onChange={slcspReportedBlank => setRow({ slcspReportedBlank, ...(slcspReportedBlank === true ? { slcsp: "" } : {}) })} />}
             <button type="button" onClick={() => set({ monthlyPremiums: policy.monthlyPremiums.filter((_, index) => index !== rowIndex) })}>{label}: Remove original month</button>
           </div>;
         })}
@@ -71,7 +72,7 @@ export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, ta
       </fieldset>;
     })}
     <button type="button" onClick={() => update({ policies: [...data.policies, { taxYear: "", marketplace: "", policyNumber: "", monthlyPremiums: [] }] })}>Add original Marketplace policy</button>
-    {(data.allocationRequired === true || data.sharedPolicyAllocations !== undefined) && <SharedPolicySourceDetails data={data} personal={personal} filingStatus={filingStatus} taxYear={taxYear} onChange={update} />}
+    {(data.allocationRequired === true || data.sharedPolicyAllocations !== undefined) && <SharedPolicySourceDetails healthInsurance={healthInsurance} data={data} personal={personal} filingStatus={filingStatus} taxYear={taxYear} onChange={update} />}
     {(data.alternativeMarriageCalculationElected === true || data.marriageSources !== undefined) && <MarriagePolicySourceDetails data={data} personal={personal} filingStatus={filingStatus} onChange={update} />}
     <h5>Actual household monthly reconciliation</h5><p className="guided-hint">Use one actual household row for each source month. Do not add duplicate benchmark amounts from several policies. Confirm minimum essential coverage, employer offers, paid premiums and other eligibility facts before answering.</p>
     {data.monthlyReconciliation.map((row, rowIndex) => {

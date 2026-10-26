@@ -54,8 +54,9 @@ export function calculateMarketplaceHealthLimit(params: {
       months.add(month.month);
       for (const value of [month.specifiedPremium,month.sourcePremium,month.advancePremiumTaxCredit]) if (!Decimal.isDecimal(value) || !value.isFinite() || value.lt(0)) throw new Error("Marketplace limit requires finite actual monthly amounts.");
       if (month.specifiedPremium.gt(month.sourcePremium) || month.advancePremiumTaxCredit.gt(month.sourcePremium)) throw new Error("Marketplace specified premiums or advances exceed the actual enrollment source.");
+      if (month.specifiedAdvancePremiumTaxCredit !== undefined && (!Decimal.isDecimal(month.specifiedAdvancePremiumTaxCredit) || !month.specifiedAdvancePremiumTaxCredit.isFinite() || month.specifiedAdvancePremiumTaxCredit.lt(0) || month.specifiedAdvancePremiumTaxCredit.gt(month.advancePremiumTaxCredit))) throw new Error("Marketplace specified advances must reconcile the actual original advance source.");
       groupPremium = groupPremium.plus(month.specifiedPremium);
-      if (month.sourcePremium.gt(0)) specifiedAdvances = specifiedAdvances.plus(month.advancePremiumTaxCredit.times(month.specifiedPremium).div(month.sourcePremium));
+      if (month.sourcePremium.gt(0)) specifiedAdvances = specifiedAdvances.plus((month.specifiedAdvancePremiumTaxCredit ?? month.advancePremiumTaxCredit.times(month.specifiedPremium).div(month.sourcePremium)));
     }
     if (!groupPremium.eq(group.specifiedPremiums)) throw new Error("Marketplace monthly specified premiums must reconcile the business total.");
     specifiedPremiums = specifiedPremiums.plus(groupPremium);
@@ -81,7 +82,7 @@ export function calculateMarketplaceHealthLimit(params: {
   const remainingAfterW = earnedLimit.minus(preliminarySpecifiedDeduction);
   for (const [line,label,value,formula] of [
     ["1","Specified premiums",specifiedPremiums,"Actual source total"],
-    ["2","Advances attributable to specified premiums",specifiedAdvances,"Actual monthly advance times specified enrollment share"],
+    ["2","Advances attributable to specified premiums",specifiedAdvances,params.groups.some(group => group.months.some(month => month.specifiedAdvancePremiumTaxCredit !== undefined)) ? "Sum independently attributed actual source advances; no coverage-family benchmark ratio" : "Actual monthly advance times specified enrollment share"],
     ["3","Specified premiums less advances",taxpayerPaidSpecifiedPremiums,"Line1-line2"],
     ["13","Combined earned income after attributable deductions",specifiedBusinessEarnedIncome,"Actual separate canonical business W4-13; preserve signed losses"],
     ["14","Nonspecified health deduction",nonspecifiedDeduction,"Actual completed nonspecified worksheets"],

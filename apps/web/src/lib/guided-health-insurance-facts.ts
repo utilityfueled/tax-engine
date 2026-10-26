@@ -6,6 +6,7 @@ import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import { parseGuidedCurrency } from "./guided-currency";
 import { validateMarketplaceHealthSources } from "./guided-marketplace-health-facts";
 import type { K1LossSourcesData } from "./guided-qbi-loss-data";
+import { buildCoverageFamilyHealthSources, type CoverageFamilyHealthData } from './guided-coverage-family-health';
 
 type Owner = "primary" | "spouse";
 export interface HealthInsurancePersonData { personId: string; name: string; householdRole: "" | Owner | "other"; attainedAgeAtYearEnd: string }
@@ -23,6 +24,7 @@ export interface HealthInsurancePlanData {
   marketplaceCoverage: boolean | null; premiumTaxCreditInvolved: boolean | null; clergySpecialRules: boolean | null;
   marketplacePolicySourceIds?: string[]; allCoveredPersonsInCoverageFamilyConfirmed?: boolean | null;
   sharedMarketplaceSources?: SharedMarketplaceHealthData;
+  coverageFamilySources?: CoverageFamilyHealthData;
   coveredPersons: { personId: string; relationshipToOwner: "" | "self" | "spouse" | "dependent" | "child_under_27" | "other"; dependencyEligibilityConfirmed: boolean | null }[];
   months: { month: string; employerSubsidizedPlanEligible: boolean | null; employerOfferPtcException?: "" | "unaffordable" | "does_not_provide_minimum_value"; employerCoverageEnrolled?: boolean | null; employerOfferSourceReference?: string }[];
   payments: HealthInsurancePaymentData[];
@@ -43,7 +45,8 @@ export const emptyHealthInsuranceFacts: HealthInsuranceData = { sourceTaxYear: "
 export function invalidateHealthInsuranceSources(data: HealthInsuranceData): HealthInsuranceData {
   return { ...data, sourceFactsConfirmed: null,
     ...(data.incomeDeductions ? { incomeDeductions: { ...data.incomeDeductions, sourceFactsConfirmed: null } } : {}),
-    plans: data.plans.map(plan => ({ ...plan, ...(plan.sharedMarketplaceSources ? { sharedMarketplaceSources: { ...plan.sharedMarketplaceSources, sourceFactsConfirmed: null } } : {}) })),
+    plans: data.plans.map(plan => ({ ...plan, ...(plan.sharedMarketplaceSources ? { sharedMarketplaceSources: { ...plan.sharedMarketplaceSources, sourceFactsConfirmed: null } } : {}),
+      ...(plan.coverageFamilySources ? { coverageFamilySources: { ...plan.coverageFamilySources, sourceFactsConfirmed: null } } : {}) })),
   };
 }
 export const emptyHealthInsurancePerson: HealthInsurancePersonData = { personId: "", name: "", householdRole: "", attainedAgeAtYearEnd: "" };
@@ -98,6 +101,7 @@ export function buildHealthInsuranceInput(data: HealthInsuranceData | undefined,
         allThisReturnPersonsInCoverageFamilyConfirmed: plan.sharedMarketplaceSources.allThisReturnPersonsInCoverageFamilyConfirmed ?? undefined,
         persons: plan.sharedMarketplaceSources.persons.map(person => ({ personId: person.personId.trim(), coveredIndividualSsn: person.coveredIndividualSsn.trim() })),
       } : undefined,
+      coverageFamilySources: buildCoverageFamilyHealthSources(plan.coverageFamilySources),
       coveredPersons: plan.coveredPersons?.map(person => ({ ...person, relationshipToOwner: person.relationshipToOwner || undefined, dependencyEligibilityConfirmed: person.dependencyEligibilityConfirmed ?? undefined })),
       months: plan.months?.map(month => ({ month: integer(month.month, "coverage month"), employerSubsidizedPlanEligible: month.employerSubsidizedPlanEligible ?? undefined,
         employerOfferPtcException: month.employerOfferPtcException || undefined, employerCoverageEnrolled: month.employerCoverageEnrolled ?? undefined, employerOfferSourceReference: month.employerOfferSourceReference?.trim() || undefined })),

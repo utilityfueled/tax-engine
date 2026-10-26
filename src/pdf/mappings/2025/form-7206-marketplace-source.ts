@@ -40,7 +40,7 @@ export function assertMarketplaceHealthReviewSources(input: TaxYearInput, result
   if ((!ordinary && marketplace.method !== "pub974-simplified-2025")
     || calculation.marketplaceHandling !== (ordinary ? "ordinary-no-ptc" : "separate-specified-premiums")
     || credit.taxpayerEligible !== !ordinary) throw new Error("Pub974 review method contradicts the final actual calculation.");
-  for (const amount of [marketplace.step2Credit, marketplace.finalCredit, marketplace.specifiedDeduction, marketplace.nonspecifiedDeduction, marketplace.maximumDeduction]) {
+  for (const amount of [marketplace.step2Credit, marketplace.finalCredit, roundDollar(marketplace.specifiedDeduction.plus(marketplace.nonspecifiedDeduction)), marketplace.nonspecifiedDeduction, marketplace.maximumDeduction]) {
     if (exact(amount).lt(0)) throw new Error("Pub974 review requires nonnegative source calculation amounts.");
   }
   same(marketplace.finalCredit, credit.ptcAllowed);
@@ -60,8 +60,9 @@ export function assertMarketplaceHealthReviewSources(input: TaxYearInput, result
     const actual = marketplace.businesses.find(row => row.businessSourceId === group.businessSourceId);
     if (!actual || actual.accountHolder !== group.accountHolder) throw new Error("Pub974 review business source owner does not reconcile.");
     for (const key of ["specifiedPremiums", "remainingEarnedIncome", "nonspecifiedDeduction"] as const) same(actual[key], group[key]);
-    if (exact(actual.allocatedCredit).lt(0) || roundDollar(actual.allocatedCredit).gt(roundDollar(group.specifiedPremiums))) throw new Error("Pub974 review credit allocation exceeds the actual source premium.");
-    same(actual.netPremiumsAfterCredit, Decimal.max(0, group.specifiedPremiums.minus(actual.allocatedCredit)));
+    if (exact(actual.allocatedCredit).lt(0) || roundDollar(actual.allocatedCredit).gt(roundDollar(sum(...group.months.map(row => row.sourcePremium))))) throw new Error("Pub974 review credit allocation exceeds the actual source premium.");
+    const difference = group.specifiedPremiums.minus(actual.allocatedCredit);
+    same(actual.netPremiumsAfterCredit, group.months.some(month => month.fullCorrespondingCredit === true) ? difference : Decimal.max(0, difference));
     same(actual.ordinaryDeduction, Decimal.min(group.specifiedPremiums, Decimal.max(0, group.remainingEarnedIncome)));
     for (const [number, amount] of [["1", group.specifiedPremiums], ["6", actual.allocatedCredit], ["7", actual.netPremiumsAfterCredit]] as const) {
       line(marketplace.lines, `Pub974 Simplified ${group.businessSourceId}`, number, amount, group.accountHolder);
