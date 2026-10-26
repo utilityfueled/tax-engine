@@ -218,6 +218,14 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
     }
     write(`Return-level Schedule 1 line 17 transfer: $${calculation.deductionToSchedule1.toFixed()}. Specified deduction $${money(marketplace.specifiedDeduction)}; nonspecified deduction $${money(marketplace.nonspecifiedDeduction)}; combined maximum $${money(marketplace.maximumDeduction)}.`);
     if (marketplace.historicalLimit?.separateBusinessNonspecifiedDeduction.gt(0)) write("SEPARATE BUSINESS ORDERING: each nonspecified claim first uses its own actual Form7206 earnings limit. The other business deduction reduces the published historical limit; its earnings are not borrowed. This optional worksheet method can be conservative; the repeated combined transfer is not another business deduction.");
+    if (marketplace.historicalLimit?.remainingEarnedIncome.lt(0)) {
+      write("SIGNED COMBINED WORKSHEET LIMIT: the published W15 subtraction is negative. Its signed specified component reduces the completed nonspecified claims to the single allowable return transfer. It is not a separate negative deduction. The physical business forms retain their original nonspecified calculations; adding their line14 amounts does not reproduce this coordinated return transfer.");
+      write("The following QBI allocations divide that combined allowable claim using the actual gross income of every contributing business. They are shared reference amounts, not additional deductions.");
+      for (const row of facts.partnershipGrossIncomeSources?.statements ?? []) if (row.accountHolder === accountHolder) {
+        write(`Original partnership gross-income statement: ${row.businessSourceId}; owner ${row.accountHolder}; original source year ${row.originalK1?.taxYear}; actual business gross income $${row.grossIncome}; reference ${row.sourceReference}. This original gross amount is separate from net ordinary income and Box14 earnings.`);
+      }
+      for (const row of calculation.lines.filter(line => line.form === "Pub974 QBI Allocation")) write(`${row.form} ${row.line}: $${money(row.value)}. ${row.description}. ${row.formula}.`);
+    }
     const ownerRows = calculation.lines.filter(row => row.form === "Pub974 Owner Allocation" && row.inputs?.Owner === accountHolder);
     if (ownerRows.length) {
       write("SEPARATE OWNER ATTRIBUTION: these amounts identify this owner's portion of the joint calculation. They are already included in the return-level transfer above. Any allocation among this owner's businesses for QBI is separate.");

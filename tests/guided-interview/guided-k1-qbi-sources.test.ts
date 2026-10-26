@@ -46,7 +46,8 @@ it('links actual partner health premiums to original K1 sources',()=>{
   source.atRisk!.currentYearIncreases='100000.00';
   const health=actualPartnerHealthInsurance();health.plans[0].businessSourceId='scheduleK1:0';health.plans[0].businessKind='partnership';health.plans[0].policyHolder='business';
   state.sectionData.adjustments!.healthInsuranceFacts=health;
-  expect(healthInsuranceSourceOptions(undefined,[],data)).toContainEqual({sourceId:'scheduleK1:0',accountHolder:'primary',kind:'partnership',label:source.entityName});
+  expect(healthInsuranceSourceOptions(undefined,[],data)).toContainEqual({sourceId:'scheduleK1:0',accountHolder:'primary',kind:'partnership',label:source.entityName,
+    partnershipGrossOriginal:{taxYear:'2025',partnershipName:'Actual ordinary activity',partnershipEIN:'12-3456789',accountHolder:'primary',ordinaryIncome:'100000.00',selfEmploymentEarnings:'100000.00',selfEmploymentIncomeType:'nonfarm'}});
   const input=buildTaxInputFromGuidedData(state);expect(input).not.toBeNull();
   const result=calculateFederalTax(TaxYearInputSchema.parse(input));
   expect(result.schedule1?.seHealthInsurance.toFixed()).toBe('600');expect(result.agi.toFixed()).toBe('192335');

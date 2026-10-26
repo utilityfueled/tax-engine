@@ -46,7 +46,7 @@ it("retains the separate deduction through ordered repayment tests and exact cen
 });
 it("rejects contradictory source groups and unrepresented owner or negative-limit combinations", () => {
   expect(() => calculateMarketplaceHealthLimit({ ...base, groups:[specified(),{...separate(),specifiedPremiums:d(1)}] })).toThrow(/specified.*month|month.*specified/i);
-  expect(() => calculateMarketplaceHealthLimit({ ...base, groups:[specified(),separate("4000.01")] })).toThrow(/separate.*negative|negative.*separate/i);
+  expect(() => calculateMarketplaceHealthLimit({ ...base, groups:[specified(),{...separate("4000.01"),accountHolder:"spouse"}] })).toThrow(/negative.*owner|owner.*negative/i);
   const spouse = { ...specified(),businessSourceId:"scheduleK1:0",accountHolder:"spouse" as const };
   expect(() => calculateMarketplaceHealthLimit({ ...base, filingStatus:"married_filing_jointly",groups:[specified(),spouse,separate()] })).toThrow(/separate.*owner|owner.*separate/i);
   expect(() => calculateMarketplaceHealthLimit({ ...base, groups:[specified(),separate(),separate()] })).toThrow(/duplicate/i);

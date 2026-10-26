@@ -4,6 +4,7 @@ import { invalidateHealthInsuranceSources, emptyHealthInsuranceAllocation, empty
 import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
 import { SharedMarketplaceHealthDetails } from "./shared-marketplace-health-details";
 import { CoverageFamilyHealthDetails } from './coverage-family-health-details';
+import { PartnershipHealthGrossDetails } from './partnership-health-gross-details';
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
 import type { MarketplacePolicyOption } from "@/lib/guided-marketplace-health-facts";
@@ -48,6 +49,7 @@ export function HealthInsuranceSourceDetails({ data, sources = [], marketplacePo
       </div>
       <button type="button" onClick={() => update({ marketplaceCreditAllocation: undefined })}>Remove recorded credit allocation method</button>
     </fieldset> : <button type="button" onClick={() => update({ marketplaceCreditAllocation: { sourceTaxYear: "", sourceReference: "", sourceFactsConfirmed: null, method: "", sameMethodForAllCalculationsConfirmed: null } })}>Add recorded Marketplace credit allocation method</button>}
+    <PartnershipHealthGrossDetails data={data.partnershipGrossIncomeSources} sources={sources} onChange={partnershipGrossIncomeSources => update({ partnershipGrossIncomeSources })} />
     {data.persons.map((person, index) => {
       const prefix = `Person ${index + 1}`;
       const set = (patch: Partial<typeof person>) => update({ persons: data.persons.map((current, position) => position === index ? { ...current, ...patch } : current) });

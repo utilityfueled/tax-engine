@@ -32,7 +32,8 @@ export function hasSharedPremiumTaxCreditSources(input: TaxYearInput): boolean {
 }
 export function hasPremiumTaxCreditReviewSources(input: TaxYearInput): boolean {
   return hasSharedPremiumTaxCreditSources(input) || input.form8962?.alternativeMarriageCalculationElected === true
-    || input.form8962?.marriageSources !== undefined || input.form7206?.marketplaceCreditAllocation !== undefined || input.form7206?.plans?.some(plan => plan.coverageFamilySources !== undefined) === true;
+    || input.form8962?.marriageSources !== undefined || input.form7206?.marketplaceCreditAllocation !== undefined || input.form7206?.plans?.some(plan => plan.coverageFamilySources !== undefined) === true
+    || (input.form7206?.partnershipGrossIncomeSources !== undefined && input.form7206.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true) === true);
 }
 /** Full original return income determines the credit. Retained results cannot
  * certify themselves, and a plain source/validation flag cannot create a token. */
@@ -40,7 +41,7 @@ export function preparePremiumTaxCreditReview(input: TaxYearInput): PreparedPrem
   if (!hasPremiumTaxCreditReviewSources(input)) throw new Error('Form8962 review requires original policy, marriage, coverage-family or business-allocation sources');
   const calculation = calculateFederalTax(input);
   if ((!calculation.form8962?.sharedPolicyAllocation && !calculation.form8962?.marriageCalculation && !calculation.form7206?.coverageFamilyAllocations?.length
-      && !(input.form7206?.marketplaceCreditAllocation && calculation.marketplaceHealthInsurance))
+      && !((input.form7206?.marketplaceCreditAllocation || input.form7206?.partnershipGrossIncomeSources) && calculation.marketplaceHealthInsurance))
     || !calculation.form8962?.sourceFactsVerified) throw new Error('Form8962 review requires the actual completed source calculation');
   const token: PreparedPremiumTaxCreditReview = Object.freeze({ [brand]: true as const });
   contexts.set(token, { original: freeze(structuredClone(input)), originalDigest: digest(input),

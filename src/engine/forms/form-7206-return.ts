@@ -11,6 +11,8 @@ import { AuditTrail } from "@/utils/audit.js";
 import { calculateMarketplaceHealthLimit, type MarketplaceHealthLimitResult } from "./marketplace-health-limit.js";
 import { calculateMarketplaceOwnerDeductions } from "./marketplace-health-owners.js";
 import { calculateMarketplaceNonspecifiedStop } from "./marketplace-nonspecified-stop.js";
+import { calculateMarketplaceNegativeLimit } from "./marketplace-health-negative-limit.js";
+import { readMarketplacePartnershipGrossIncome } from "./marketplace-health-business-gross.js";
 
 type Owner = "primary" | "spouse";
 interface Params {
@@ -40,6 +42,8 @@ export function calculateForm7206Return(params: Params) {
   const { input } = params;
   const facts = input.form7206;
   if (!facts) throw new Error("Canonical Form7206 requires actual source facts.");
+  const partnershipGross = readMarketplacePartnershipGrossIncome(input);
+  const businessGrossIncomes = [...params.businessGrossIncomes ?? [], ...partnershipGross];
   const year = input.taxpayer.taxYear, joint = input.taxpayer.filingStatus === "married_filing_jointly";
   if (input.seHealthInsuranceWorksheet || !d(input.adjustments?.selfEmployedHealthInsurance).isZero()) throw new Error("Reconcile legacy health-insurance amounts with actual Form7206; duplicate claim representations are unsupported.");
   const reportedPayment = params.marketplace?.stage === "full-repayment" ? params.marketplace.reportedPayment : undefined;
@@ -158,6 +162,7 @@ export function calculateForm7206Return(params: Params) {
     const groups = marketplacePremiums.groups;
     const specified = groups.filter(row => row.months.length > 0 && row.includedInEarnedIncomeLimit !== false);
     const nonspecifiedStop = calculateMarketplaceNonspecifiedStop(groups);
+    const negativeLimit = year === 2025 ? calculateMarketplaceNegativeLimit(groups) : undefined;
     const multipleOwners = new Set(specified.map(row => row.accountHolder)).size > 1;
     const uncappedMaximum = nonspecifiedStop ? d(0) : multipleOwners
       ? calculateMarketplaceOwnerDeductions({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups, stage: { kind: "maximum" } }).specifiedDeduction
@@ -178,7 +183,7 @@ export function calculateForm7206Return(params: Params) {
       const selectedAllocation = specified.some(group => group.creditAllocationMethod !== undefined);
       if (amount.isZero() && !multipleOwners && !selectedAllocation) return;
       if (!specified.length) throw new Error("Pub974 health deduction has no attributable earned-income source.");
-      let allocations = [{ groups: specified, amount }];
+      let allocations = [{ groups: negativeLimit ? groups.filter(group => negativeLimit.businessSourceIds.includes(group.businessSourceId)) : specified, amount }];
       if (multipleOwners) {
         const stage = params.marketplace?.stage === "worksheet-w" ? { kind: "worksheet-w" as const }
           : params.marketplace?.stage === "maximum" ? { kind: "maximum" as const }
@@ -189,10 +194,10 @@ export function calculateForm7206Return(params: Params) {
         allocations = ownerCalculation.owners.map(row => ({ groups: specified.filter(group => group.accountHolder === row.accountHolder), amount: row.specifiedDeduction }));
       }
       for (const allocation of allocations) {
-        const ownerGroups = allocation.groups.some(group => group.creditAllocationMethod !== undefined)
+        const ownerGroups = negativeLimit || allocation.groups.some(group => group.creditAllocationMethod !== undefined)
           ? [...allocation.groups].sort((left, right) => left.businessSourceId.localeCompare(right.businessSourceId, "en"))
           : allocation.groups;
-        const combinedClaim = ownerGroups.some(group => group.creditAllocationMethod !== undefined);
+        const combinedClaim = negativeLimit !== undefined || ownerGroups.some(group => group.creditAllocationMethod !== undefined);
         const attributable = combinedClaim ? allocation.amount.plus(sum(...ownerGroups.map(group => group.nonspecifiedDeduction))) : allocation.amount;
         if (combinedClaim) {
           if (roundDollar(attributable).lt(0)) throw new Error("Pub974 actual owner combined deduction needs its separate stop-worksheet method.");
@@ -208,7 +213,7 @@ export function calculateForm7206Return(params: Params) {
         if (attributable.isZero()) continue;
         const gross = ownerGroups.map(row => {
           if (ownerGroups.length === 1) return d(1); // One actual income source needs no allocation denominator.
-          const actual = params.businessGrossIncomes?.filter(item => item.sourceId === row.businessSourceId);
+          const actual = businessGrossIncomes.filter(item => item.sourceId === row.businessSourceId);
           if (actual?.length !== 1 || !actual[0].amount.isFinite() || actual[0].amount.lt(0)) throw new Error("Pub974 QBI allocation requires actual gross income for every business counted in its deduction.");
           return actual[0].amount;
         });
@@ -264,7 +269,7 @@ export function calculateForm7206Return(params: Params) {
     const positive = healthSources.filter(row => row.amount.gt(0));
     // Stable source identity, rather than plan-entry order, assigns the final
     // printed-dollar residual. Exact source and proportional amounts stay above.
-    if (selectedAllocation || nonspecifiedStop) positive.sort((left, right) => `${left.accountHolder}:${left.sourceId}`.localeCompare(`${right.accountHolder}:${right.sourceId}`, "en"));
+    if (selectedAllocation || nonspecifiedStop || negativeLimit) positive.sort((left, right) => `${left.accountHolder}:${left.sourceId}`.localeCompare(`${right.accountHolder}:${right.sourceId}`, "en"));
     const roundingWeight = selectedAllocation ? sum(...positive.map(row => row.amount)) : exact;
     if (selectedAllocation) for (const row of healthSources) if (row.amount.lt(0)) row.amount = d(0);
     positive.forEach((row,index) => {

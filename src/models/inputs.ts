@@ -4197,6 +4197,30 @@ export const Form7206Schema = z.object({
   sourceReference: z.string().optional(),
   sourceFactsConfirmed: z.boolean().optional(),
   allPlansIncluded: z.boolean().optional(),
+  /** Actual partner gross-income attachments, separate from K-1 net income. */
+  partnershipGrossIncomeSources: z.object({
+    sourceTaxYear: z.number().int().optional(),
+    sourceReference: z.string().optional(),
+    sourceFactsConfirmed: z.boolean().optional(),
+    statements: z.array(z.object({
+      businessSourceId: z.string().optional(),
+      accountHolder: z.enum(["primary", "spouse"]).optional(),
+      sourceReference: z.string().optional(),
+      sourceFactsConfirmed: z.boolean().optional(),
+      originalK1: z.object({
+        taxYear: z.number().int().optional(),
+        partnershipName: z.string().optional(),
+        partnershipEIN: z.string().optional(),
+        accountHolder: z.enum(["primary", "spouse"]).optional(),
+        ordinaryIncome: optionalDecimalInput,
+        selfEmploymentEarnings: optionalDecimalInput,
+        selfEmploymentIncomeType: z.enum(["farm", "nonfarm"]).optional(),
+      }).strict().optional(),
+      grossIncome: optionalDecimalInput,
+      ordinaryActivityOnlyConfirmed: z.boolean().optional(),
+      allGrossIncomeIncludedConfirmed: z.boolean().optional(),
+    }).strict()).optional(),
+  }).strict().optional(),
   /** Actual recorded Pub974 reasonable-method choice; no credit or percentage override. */
   marketplaceCreditAllocation: z.object({
     sourceTaxYear: z.number().int().optional(),

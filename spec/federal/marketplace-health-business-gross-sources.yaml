@@ -1,0 +1,50 @@
+form: "Actual partnership gross income for Marketplace health attribution"
+fullName: "Original ordinary partnership gross-income attachment"
+taxYear: 2025
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.199A-3"
+notes: |
+  Reg.1.199A-3(b)(1)(vi) attributes the individual's allowable health deduction
+  proportionately to actual gross income used in calculating it. Section702(c)
+  and Reg.1.702-1(c) distinguish the partner's distributive share of gross income
+  from net ordinary income. A K-1 Box14 net amount is not a gross denominator.
+  This attachment supplies the actual gross amount for the existing ordinary
+  partnership source, with original year, identity, ordinary and Box14 facts.
+  It cannot override the calculated C/F/crypto gross amounts or current health
+  deduction. Wage-source attribution remains a separately determined method.
+lines:
+  - line: "original-gross"
+    description: "Bind original partner gross income before a combined health allocation"
+    formula: "Use the actual attached gross-income statement for each original ordinary domestic non-PTP partnership, with year/index/owner/name/EIN/ordinary/Box14/class reconciliation and confirmed complete gross income. Preserve exact cents; gross cannot be below its original ordinary or Box14 net. Unknown, duplicate, stale and conflicting sources reject before use."
+    testRef: "tests/engine/forms/marketplace-health-business-gross.test.ts::binds actual ordinary partnership gross income without substituting net earnings"
+  - line: "canonical"
+    description: "Apply the signed owner deduction to two actual ordinary partnerships"
+    formula: "Two same-owner partnership sources with ordinary5000/20000 and actual gross10000/40000, first specified6000 and second nonspecified6000, retain W15=-1353.4 and final health4647/AGI43586/PTC3577. Combined gross ratio assigns exact QBI health929.32/3717.28. Missing actual gross never defaults to Box14."
+    testRef: "tests/engine/federal-marketplace-negative-limit.test.ts::uses original partnership gross statements for the signed combined deduction"
+  - line: "changed-original"
+    description: "Reject stale gross sources and preserve calculated source authority"
+    formula: "A changed original K-1, source owner/year, unsupported activity, omitted amount or attempted C gross override cannot be accepted through a retained confirmation. Removing the attachment does not change a single-source ordinary method but cannot enable a multisource gross allocation."
+    testRef: "tests/engine/forms/marketplace-health-business-gross.test.ts::rejects unknown stale duplicate and net-substitution gross sources"
+  - line: "actual-guide"
+    description: "Preserve gross attachments through the existing ordinary K-1 interview"
+    formula: "Two actual ordinary K-1 selections retain raw income, original snapshots and independent gross attachments. A changed attachment or original source revokes confirmation; missing and false remain unknown/ineligible. The canonical return determines W15 and the health/QBI amounts."
+    testRef: "tests/guided-interview/guided-marketplace-negative-limit.test.ts::uses actual gross attachments through the existing two-partnership guide"
+  - line: "editable-gross"
+    description: "Expose original-source gross facts without a deduction or denominator override"
+    formula: "Copy only the selected original K-1 identity and statement amounts. Gross income and source confirmation remain blank until recorded. Editing any actual source revokes nested and root confirmations; retained snapshots must still reconcile to the current original."
+    testRef: "tests/apps/web/marketplace-negative-limit-interactions.test.tsx::edits original partnership gross facts through the health source panel"
+  - line: "private-gross-review"
+    description: "Bind the original partnership gross statements before redacted review output"
+    formula: "The prepared original-input context binds gross-source identity, exact amounts and both QBI audit containers before template I/O. Printed statements show actual source gross amounts and calculated allocations without personal identifiers. Balanced gross edits that preserve the ratio still invalidate the original context."
+    testRef: "tests/pdf/marketplace-health-gross-review.test.ts::retains actual gross attachments in private context and printed source review"
+  - line: "shell-reachability"
+    description: "Use the actual gross controls through the full interview"
+    formula: "The existing ordinary K-1 and health selections expose the saved gross statements in Adjustments. Edits revoke all dependent confirmations; reconfirmed actual statements calculate the original4647/43586/3577 result and a blank amount suppresses the preview."
+    testRef: "tests/apps/web/marketplace-negative-limit-interactions.test.tsx::reconciles actual gross statements through the full shell"
+  - line: "workspace-gross"
+    description: "Prepare original gross and K-1 context before workspace redaction"
+    formula: "The actual guided workspace preserves original K-1/gross/health facts, prepares their original-input contexts, then prints two physical7206 forms and the single signed combined claim with matching QBI allocations. No current deduction input is introduced."
+    testRef: "tests/apps/web/workspace-marketplace-negative-limit.test.ts::exports original partnership gross and the signed claim from the actual workspace"
+  - line: "production-browser"
+    description: "Reconcile original gross statements in the production interview"
+    formula: "Desktop and mobile retain original ordinary5000/20000 and actual gross10000/40000 as distinct facts. An edited attachment revokes dependent original K-1 and health confirmations, and actual reconfirmation restores AGI43586. Reload preserves the source reference; blank gross stays unknown and suppresses the preview. Source identities are not sent in browser requests."
+    testRef: "apps/web/tests/guided-marketplace-negative-limit.spec.ts::retains actual partnership gross and signed health through edits and reload"

@@ -8,6 +8,7 @@ import { parseGuidedCurrency } from "./guided-currency";
 import { validateMarketplaceHealthSources } from "./guided-marketplace-health-facts";
 import type { K1LossSourcesData } from "./guided-qbi-loss-data";
 import { buildCoverageFamilyHealthSources, type CoverageFamilyHealthData } from './guided-coverage-family-health';
+import { assertPartnershipHealthGrossOriginals, buildPartnershipHealthGross, type PartnershipGrossOriginalData, type PartnershipHealthGrossData } from './guided-health-business-gross';
 
 type Owner = "primary" | "spouse";
 export interface HealthInsurancePersonData { personId: string; name: string; householdRole: "" | Owner | "other"; attainedAgeAtYearEnd: string }
@@ -43,13 +44,15 @@ export interface HealthInsuranceData {
   persons: HealthInsurancePersonData[]; plans: HealthInsurancePlanData[];
   incomeDeductions?: HealthInsuranceIncomeDeductionsData;
   marketplaceCreditAllocation?: MarketplaceCreditAllocationData;
+  partnershipGrossIncomeSources?: PartnershipHealthGrossData;
   longTermCareAllocations: { personId: string; accountHolder: "" | Owner; businessSourceId: string; allowedPremium: string }[];
 }
-export interface HealthInsuranceSourceOption { sourceId: string; accountHolder: Owner; kind: "self_employed" | "partnership" | "s_corporation"; label: string }
+export interface HealthInsuranceSourceOption { sourceId: string; accountHolder: Owner; kind: "self_employed" | "partnership" | "s_corporation"; label: string; partnershipGrossOriginal?: PartnershipGrossOriginalData }
 export const emptyHealthInsuranceFacts: HealthInsuranceData = { sourceTaxYear: "", sourceReference: "", sourceFactsConfirmed: null, allPlansIncluded: null, persons: [], plans: [], longTermCareAllocations: [] };
 /** Revoke independent confirmations without replacing their actual source values. */
 export function invalidateHealthInsuranceSources(data: HealthInsuranceData): HealthInsuranceData {
   return { ...data, sourceFactsConfirmed: null,
+    ...(data.partnershipGrossIncomeSources ? { partnershipGrossIncomeSources: { ...data.partnershipGrossIncomeSources, sourceFactsConfirmed: null, statements: data.partnershipGrossIncomeSources.statements.map(row => ({ ...row, sourceFactsConfirmed: null })) } } : {}),
     ...(data.marketplaceCreditAllocation ? { marketplaceCreditAllocation: { ...data.marketplaceCreditAllocation, sourceFactsConfirmed: null } } : {}),
     ...(data.incomeDeductions ? { incomeDeductions: { ...data.incomeDeductions, sourceFactsConfirmed: null } } : {}),
     plans: data.plans.map(plan => ({ ...plan, ...(plan.sharedMarketplaceSources ? { sharedMarketplaceSources: { ...plan.sharedMarketplaceSources, sourceFactsConfirmed: null } } : {}),
@@ -98,6 +101,7 @@ export function buildHealthInsuranceInput(data: HealthInsuranceData | undefined,
   const facts = Form7206Schema.parse({
     sourceTaxYear: integer(data.sourceTaxYear, "source tax year"), sourceReference: data.sourceReference, sourceFactsConfirmed: data.sourceFactsConfirmed ?? undefined, allPlansIncluded: data.allPlansIncluded ?? undefined,
     incomeDeductions: buildIncomeDeductions(data.incomeDeductions),
+    partnershipGrossIncomeSources: buildPartnershipHealthGross(data.partnershipGrossIncomeSources, taxYear),
     marketplaceCreditAllocation: data.marketplaceCreditAllocation ? {
       sourceTaxYear: integer(data.marketplaceCreditAllocation.sourceTaxYear, "credit allocation source year"),
       sourceReference: data.marketplaceCreditAllocation.sourceReference.trim(),
@@ -142,7 +146,9 @@ export function healthInsuranceSourceOptions(business: SelfEmploymentSectionData
   if (facts?.accountHolder === "primary" || facts?.accountHolder === "spouse") options.push({ sourceId: "scheduleC", accountHolder: facts.accountHolder, kind: "self_employed", label: facts.businessName?.trim() || facts.activityDescription?.trim() || "Entered self-employment business" });
   w2s.forEach((w2, index) => { if (w2.accountHolder === "primary" || w2.accountHolder === "spouse") options.push({ sourceId: `formW2:${index}`, accountHolder: w2.accountHolder, kind: "s_corporation", label: w2.employerName?.trim() || `Entered W-2 employer ${index + 1}` }); });
   k1Sources?.activities?.forEach((source, index) => {
-    if (source.entityType === "partnership" && (source.accountHolder === "primary" || source.accountHolder === "spouse")) options.push({ sourceId: `scheduleK1:${index}`, accountHolder: source.accountHolder, kind: "partnership", label: source.entityName?.trim() || `Entered partnership ${index + 1}` });
+    if (source.entityType === "partnership" && (source.accountHolder === "primary" || source.accountHolder === "spouse")) options.push({ sourceId: `scheduleK1:${index}`, accountHolder: source.accountHolder, kind: "partnership", label: source.entityName?.trim() || `Entered partnership ${index + 1}`,
+      partnershipGrossOriginal: { taxYear: source.sourceTaxYear ?? '', partnershipName: source.entityName ?? '', partnershipEIN: source.entityEIN ?? '', accountHolder: source.accountHolder,
+        ordinaryIncome: source.statement?.ordinaryIncome ?? '', selfEmploymentEarnings: source.statement?.selfEmploymentEarnings ?? '', selfEmploymentIncomeType: source.statement?.selfEmploymentIncomeType ?? '' } });
   });
   return options;
 }
@@ -183,7 +189,7 @@ export function healthInsuranceSourceErrors(state: GuidedFlowState): Record<stri
       return { healthInsuranceHouseholdAge: "Reconcile the health plan's attained age with this person's actual household birth date and return year." };
     }
   }
-  try { validateMarketplaceHealthSources(state, data, buildHealthInsuranceInput(data, state.segmentation.filingStatus, state.taxYear)); }
+  try { assertPartnershipHealthGrossOriginals(data.partnershipGrossIncomeSources, sources); validateMarketplaceHealthSources(state, data, buildHealthInsuranceInput(data, state.segmentation.filingStatus, state.taxYear)); }
   catch (error) { return { healthInsuranceMarketplace: error instanceof Error ? error.message : "Reconcile actual Marketplace policy and premium sources." }; }
   return {};
 }

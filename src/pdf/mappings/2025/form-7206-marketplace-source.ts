@@ -53,6 +53,9 @@ export function assertMarketplaceHealthReviewSources(input: TaxYearInput, result
   const ownerAudits = physical.lines.filter(row => row.form === "Pub974 Owner Allocation");
   audits(ownerAudits, calculation.lines.filter(row => row.form === "Pub974 Owner Allocation"));
   audits(ownerAudits, result.allLines.filter(row => row.form === "Pub974 Owner Allocation"));
+  const qbiAudits = physical.lines.filter(row => row.form === "Pub974 QBI Allocation");
+  audits(qbiAudits, calculation.lines.filter(row => row.form === "Pub974 QBI Allocation"));
+  audits(qbiAudits, result.allLines.filter(row => row.form === "Pub974 QBI Allocation"));
   const { groups } = calculateMarketplaceHealthPremiums({ input, healthInsurance: nonspecified });
   if (groups.length !== marketplace.businesses.length || new Set(marketplace.businesses.map(row => row.businessSourceId)).size !== groups.length) {
     throw new Error("Pub974 review business sources are missing or duplicated.");

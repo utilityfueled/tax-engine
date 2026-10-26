@@ -5,6 +5,7 @@ import type { MarketplaceHealthPremiumGroup } from "./marketplace-health-premium
 import { AuditTrail } from "@/utils/audit.js";
 import { d, min, zeroFloor } from "@/utils/decimal.js";
 import { calculateMarketplaceOwnerDeductions } from "./marketplace-health-owners.js";
+import { calculateMarketplaceNegativeLimit } from "./marketplace-health-negative-limit.js";
 
 export type MarketplaceOrderedDeductionKind = "passive" | "ira" | "bond" | "studentLoan";
 export interface MarketplaceOrderedDeduction { kind: MarketplaceOrderedDeductionKind; amount: Decimal }
@@ -68,13 +69,13 @@ export function calculateMarketplaceHealthLimit(params: {
   const specifiedBusinessEarnedIncome = remainingEarnedIncome.plus(specifiedBusinessNonspecifiedDeduction);
   remainingEarnedIncome = remainingEarnedIncome.minus(separateBusinessNonspecifiedDeduction);
   const multipleOwners = new Set(specified.map(row => row.accountHolder)).size > 1;
+  const negativeLimit = calculateMarketplaceNegativeLimit(params.groups);
   if (separateBusinessNonspecifiedDeduction.gt(0)) {
     if (multipleOwners) throw new Error("Separate-business nonspecified deductions with multiple specified-plan owners require their actual owner coordination method.");
-    if (remainingEarnedIncome.lt(0)) throw new Error("Separate-business nonspecified deductions with negative WorksheetW15 require their actual stop-worksheet method.");
     audit.record("Pub974 Separate Business Sources", "plan-nonspecified", "Nonspecified deductions from specified-plan businesses", specifiedBusinessNonspecifiedDeduction, "Actual completed Form7206 claims already subtracted in the plan-business source limits");
     audit.record("Pub974 Separate Business Sources", "outside-nonspecified", "Nonspecified deductions from separate businesses", separateBusinessNonspecifiedDeduction, "Actual separate Form7206 deductions; include in W14 once without adding these businesses' earnings to W13");
   }
-  const earnedLimit = zeroFloor(remainingEarnedIncome);
+  const earnedLimit = negativeLimit?.remainingEarnedIncome ?? zeroFloor(remainingEarnedIncome);
   const taxpayerPaidSpecifiedPremiums = specifiedPremiums.minus(specifiedAdvances);
   const preliminarySpecifiedDeduction = multipleOwners
     ? calculateMarketplaceOwnerDeductions({ taxYear: params.taxYear, filingStatus: params.filingStatus, groups: params.groups, stage: { kind: "worksheet-w" } }).specifiedDeduction
@@ -87,7 +88,7 @@ export function calculateMarketplaceHealthLimit(params: {
     ["13","Combined earned income after attributable deductions",specifiedBusinessEarnedIncome,"Actual separate canonical business W4-13; preserve signed losses"],
     ["14","Nonspecified health deduction",nonspecifiedDeduction,"Actual completed nonspecified worksheets"],
     ["15","Remaining combined earned income",remainingEarnedIncome,"Line13-line14"],
-    ["16","Initial specified deduction",preliminarySpecifiedDeduction,multipleOwners ? "Sum each owner's min(actual net premiums, nonnegative same-owner line15); no spouse income transfer" : "min(line3,nonnegative line15)"],
+    ["16","Initial specified deduction",preliminarySpecifiedDeduction,negativeLimit ? "min(line3,signed line15); combine with actual line14 before claiming a deduction" : multipleOwners ? "Sum each owner's min(actual net premiums, nonnegative same-owner line15); no spouse income transfer" : "min(line3,nonnegative line15)"],
     ["17","Initial total health deduction",nonspecifiedDeduction.plus(preliminarySpecifiedDeduction),"Line14+line16"],
   ] as const) audit.record("Pub974 Worksheet W",line,label,value,formula);
   const requiresWorksheetX = specifiedAdvances.gt(0);
@@ -99,7 +100,7 @@ export function calculateMarketplaceHealthLimit(params: {
     const poverty = params.federalPovertyLine;
     if (!Decimal.isDecimal(income) || !income.isFinite()) throw new Error("WorksheetX requires actual finite canonical household income after W17.");
     if (!Decimal.isDecimal(poverty) || !poverty.isFinite() || poverty.lte(0)) throw new Error("WorksheetX requires the actual positive federal poverty line.");
-    audit.record("Pub974 Worksheet W","19","Remaining earned income after initial deduction",remainingAfterW,"Nonnegative line15-line16");
+    audit.record("Pub974 Worksheet W","19","Remaining earned income after initial deduction",remainingAfterW,negativeLimit ? "Signed line15-line16" : "Nonnegative line15-line16");
     audit.record("Pub974 Worksheet X","5","Nonspecified health deduction",nonspecifiedDeduction,"WorksheetW14");
     audit.record("Pub974 Worksheet X","6","Initial specified deduction",preliminarySpecifiedDeduction,"WorksheetW16");
     audit.record("Pub974 Worksheet X","14","Canonical household income",income,"Actual taxpayer X8 plus required-filing dependent X13, after W17");
@@ -129,7 +130,7 @@ export function calculateMarketplaceHealthLimit(params: {
       ["27","Specified premiums",specifiedPremiums,"WorksheetW1"],
       ["28","Premium-limited maximum",premiumLimit,"min(line26,line27)"],
       ["29","Remaining earned income",remainingEarnedIncome,"WorksheetW15"],
-      ["30","Maximum specified deduction",maximumSpecifiedDeduction,"min(line28,nonnegative line29)"],
+      ["30","Maximum specified deduction",maximumSpecifiedDeduction,negativeLimit ? "min(line28,signed line29)" : "min(line28,nonnegative line29)"],
       ["31","Maximum total health deduction",maximumSpecifiedDeduction.plus(nonspecifiedDeduction),"Line5+line30"],
     ] as const) audit.record("Pub974 Worksheet X",line,label,value,formula);
     let revisedIncome = income;
@@ -152,7 +153,7 @@ export function calculateMarketplaceHealthLimit(params: {
         ["17", "Specified premiums", specifiedPremiums, "WorksheetX27"],
         ["18", "Premium-limited maximum", premiumLimit, "min(line16,line17)"],
         ["19", "Remaining earned income", remainingEarnedIncome, "WorksheetX29"],
-        ["20", "Revised specified maximum", maximumSpecifiedDeduction, "min(line18,nonnegative line19)"],
+        ["20", "Revised specified maximum", maximumSpecifiedDeduction, negativeLimit ? "min(line18,signed line19)" : "min(line18,nonnegative line19)"],
         ["21", "Nonspecified health deduction", nonspecifiedDeduction, "WorksheetX5"],
         ["22", "Revised total maximum", maximumSpecifiedDeduction.plus(nonspecifiedDeduction), "Line20+line21"],
       ] as const) audit.record(form, line, label, value, formula);

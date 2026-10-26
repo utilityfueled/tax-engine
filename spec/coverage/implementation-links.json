@@ -952,6 +952,26 @@
       "note": "Actual zero final credit and full original advance repayment support the ordinary own-business premium deduction. Source-only intake and private original-input review context remain distinct from final method acceptance. Partial/capped repayment, source-cent differences and closed year/filing gates remain explicit."
     },
     {
+      "key": "federal/marketplace-health-business-gross-sources",
+      "enginePath": "src/engine/forms/marketplace-health-business-gross.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/forms/marketplace-health-business-gross.test.ts::binds actual ordinary partnership gross income without substituting net earnings",
+        "tests/pdf/marketplace-health-gross-review.test.ts::retains actual gross attachments in private context and printed source review"
+      ],
+      "note": "Actual original partnership gross statements feed the existing canonical health method and private 2025 review context. No net-income denominator, current deduction override or independent qualification is inferred."
+    },
+    {
+      "key": "federal/marketplace-health-negative-limit",
+      "enginePath": "src/engine/forms/form-7206-return.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-negative-limit.test.ts::uses the signed worksheet claim once with actual same-owner QBI sources",
+        "tests/pdf/marketplace-health-negative-limit.test.ts::preserves original forms and the signed combined claim before review output"
+      ],
+      "note": "Actual same-owner sources retain signed W15 and one nonnegative combined claim with source-bound gross attribution. The linked 2025 review output does not establish human tax-law qualification or filing readiness."
+    },
+    {
       "key": "federal/marketplace-health-ordered",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [

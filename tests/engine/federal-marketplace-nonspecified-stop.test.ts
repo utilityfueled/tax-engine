@@ -46,7 +46,10 @@ it("does not turn one cent of remaining capacity into a stopping election", () =
     payment.ownerOrBusinessPaid = amount;
     for (const person of payment.personAmounts ?? []) person.amountPaid = amount;
   }
-  expect(() => calculateFederalTax(input)).toThrow(/negative WorksheetW15.*stop-worksheet/);
+  const remainingCent = calculateFederalTax(input);
+  expect(remainingCent.marketplaceHealthInsurance?.method).toBe("pub974-simplified-2025");
+  expect(remainingCent.marketplaceHealthInsurance?.historicalLimit?.remainingEarnedIncome.toFixed()).toBe("-2999.99");
+  expect(remainingCent.schedule1?.seHealthInsurance.toFixed()).toBe("4647");
   const last = plan.payments[11];
   last.grossPremium = "387.29"; last.ownerOrBusinessPaid = "387.29";
   for (const person of last.personAmounts ?? []) person.amountPaid = "387.29";
