@@ -194,7 +194,7 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Current-source full and completed remote verification remain required. Immutableee0132c passes18785unit tests/1108files and396browser cases/5hostedskips. Coverage fails unchanged90%functions at89.82%; branches86.71%pass85%. Its inventory check failed stale; inventory is now regenerated on9eb32ba. Later current-source full reruns remain due.",
+    "Current integrated full and completed remote verification remain required. Immutable ee0132c plus reviewed investment-panel candidate7305c69f passes18790 tests/1111files and all unchanged coverage gates (90.64%functions,86.81%branches). Later branch packages through63b4c4f have focused checks; they are not included in that full run. Current493-entry inventory passes freshness.",
     "The 2026 rule pack and finite Marketplace/EIC/charitable source methods remain incomplete; explicit unsupported methods and inactive helpers are not counted as implemented. Full 2026 calculation remains blocked.",
     "Independent human tax review, selected-state demand/qualification and final physical forms are outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net \u00a71202/Form172 interpretations remain unresolved.",
     "AI application/scorer bindings are reviewed;240 draft cases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "9eb32baacf61cd772bf4eeec0bfbb83c6f4cc1a6",
+    "lastRecordedCommit": "63b4c4fc74f811ff47cd070d41ed879d73548938",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1310,15 +1310,35 @@
       "hosted staging",
       "final multi-platform release images"
     ],
-    "workInProgress": "Finish original shared-policy/self-employed-health allocation and other named source combinations; no-advance overlapping full-family benchmarks35b862c are delivered. Binding joint repayment ownership still needs controlling interpretation.; Finish physical ScheduleE ordinary/capital reconciliation and original/redacted complete packets; passive distribution core2669c37 and actual guide9eb32ba are delivered. Parent eight-path candidate5772f719 is privately verified/reviewing, not committed.; Finish actual PA royalty guide and workspace handoff; PA core/referenceb334f19 are delivered. Parent eleven-path candidatedda311af is privately verified/reviewing, not committed. Negative properties and other expense histories remain named methods.; Complete meaningful investment panel interaction coverage, then exact current-source full checks and completed remote workflows. Setup/payment interactions and pending-upload Enter correctionee0132c are delivered; test-only7305c69f is reviewed with full coverage rerun pending after a sandbox localhost failure.; Complete prior-floor, regular/AMT NOL, partial mixed-media and remaining EIC personal-property/mixed-source methods. Actual EIC denial/recertification chronology is assigned to complete_facts. No guard or inactive helper counts as completion.; Rehearse final-source native runtime images/SBOM/scans/recovery and reconcile support. Independent human qualification, live-provider evaluation and authorized staging remain external requirements.",
-    "latestIntegratedCommit": "9eb32baacf61cd772bf4eeec0bfbb83c6f4cc1a6",
+    "workInProgress": "Finish original shared-policy/self-employed-health allocation and actual full-shell source reachability. Joint repayment ownership still needs controlling interpretation.; Finish actual EIC denial/assessment/recertification chronology, canonical source restrictions, guide and actual current Form8862; reviewed prerequisite alone does not complete the route.; Complete current single-category charitable regular/AMT NOL, prior-floor and partial mixed-media methods with actual source-bound selection.; Complete multiple distinct actual in-kind tuition benefits with assistance and credit coordination; remaining shared allocations and named education methods stay explicit.; Run current integrated full checks, coverage and complete remote workflows after delivered source packages. Investment interaction candidate passes all unchanged coverage gates but excludes later packages.; Rehearse final-source native images/SBOM/scans/recovery and reconcile support. Human qualification, live-provider evaluation, authorized staging and final forms remain external requirements.",
+    "latestIntegratedCommit": "63b4c4fc74f811ff47cd070d41ed879d73548938",
     "activeIntegrationRun": {
-      "status": "in-progress",
-      "base": "ee0132c2f493bbd089514e8fad00ec6de7f3128a",
-      "candidateTree": "7305c69fa9022ba634a8fedd7865247162be8f8d",
-      "scope": "Five-path test-only investment panels; main product HEAD is newer",
-      "initialAttempt": "18757pass/7fail/26skip with4unhandled errors; localhost EPERM prevented synthetic PG/outage listeners; no coverage report",
-      "retry": "Same exact candidate and unchanged gates with local networking permission; pending"
+      "status": "candidate-coverage-passed-current-full-run-due",
+      "tree": "7305c69fa9022ba634a8fedd7865247162be8f8d",
+      "archive": "/private/tmp/tax-investment-panel-review-1y9ly5ys",
+      "command": [
+        "pnpm",
+        "test:coverage",
+        "--maxWorkers=1"
+      ],
+      "exitCode": 0,
+      "seconds": 752.4,
+      "completedAt": "2026-10-26T10:12:47.923675+00:00",
+      "log": ".local/upgrade-evidence/investment-panels-complete/investment-panels-full-coverage-network.log",
+      "sha256": "84eaf06b6e6436914ac232262b4f220c0269fbc54cd938acc95a28bc281667a5",
+      "networkScope": "Task-owned loopback PostgreSQL ai_test at 127.0.0.1:55439 plus synthetic test loopback servers; provider/production environment excluded",
+      "passed": 18790,
+      "files": 1111,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "Immutable ee0132c plus five-path candidate7305c69f only; excludes later branch packages",
+      "functionsPercent": "90.64",
+      "branchesPercent": "86.81",
+      "statementsPercent": "92.02",
+      "linesPercent": "94.59",
+      "functionThresholdPercent": "90",
+      "branchThresholdPercent": "85",
+      "thresholdsUnchanged": true
     },
     "latestCoverageDiagnostic": {
       "sourceCommit": "2011778674757efee5da2f73e29624c8e36a7099",
@@ -1570,7 +1590,10 @@
       "passiveDistributionSources": "2669c37f0284286c412a1e22e0ef1042ee97fe01",
       "paRoyaltyPropertySources": "b334f1945c3c7ba07cb25e30aefd5d601d39dfe4",
       "noAdvanceOverlap": "35b862cebe0bafae14f4862ce9967b131ff2cd19",
-      "guidedPassiveDistribution": "9eb32baacf61cd772bf4eeec0bfbb83c6f4cc1a6"
+      "guidedPassiveDistribution": "9eb32baacf61cd772bf4eeec0bfbb83c6f4cc1a6",
+      "guidedPaRoyaltySources": "9173d209715d6b8cca893fdba54acd2fcba6468d",
+      "investmentPanelBehavior": "95e4276f358f957c5f6b1923f9538ffb01598361",
+      "passiveDistributionScheduleE": "63b4c4fc74f811ff47cd070d41ed879d73548938"
     },
     "remoteCi": {
       "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
@@ -1623,12 +1646,12 @@
       "localSyntheticPostgres": true
     },
     "remainingInternalWork": [
-      "Finish original shared-policy/self-employed-health allocation and other named source combinations; no-advance overlapping full-family benchmarks35b862c are delivered. Binding joint repayment ownership still needs controlling interpretation.",
-      "Finish physical ScheduleE ordinary/capital reconciliation and original/redacted complete packets; passive distribution core2669c37 and actual guide9eb32ba are delivered. Parent eight-path candidate5772f719 is privately verified/reviewing, not committed.",
-      "Finish actual PA royalty guide and workspace handoff; PA core/referenceb334f19 are delivered. Parent eleven-path candidatedda311af is privately verified/reviewing, not committed. Negative properties and other expense histories remain named methods.",
-      "Complete meaningful investment panel interaction coverage, then exact current-source full checks and completed remote workflows. Setup/payment interactions and pending-upload Enter correctionee0132c are delivered; test-only7305c69f is reviewed with full coverage rerun pending after a sandbox localhost failure.",
-      "Complete prior-floor, regular/AMT NOL, partial mixed-media and remaining EIC personal-property/mixed-source methods. Actual EIC denial/recertification chronology is assigned to complete_facts. No guard or inactive helper counts as completion.",
-      "Rehearse final-source native runtime images/SBOM/scans/recovery and reconcile support. Independent human qualification, live-provider evaluation and authorized staging remain external requirements."
+      "Finish original shared-policy/self-employed-health allocation and actual full-shell source reachability. Joint repayment ownership still needs controlling interpretation.",
+      "Finish actual EIC denial/assessment/recertification chronology, canonical source restrictions, guide and actual current Form8862; reviewed prerequisite alone does not complete the route.",
+      "Complete current single-category charitable regular/AMT NOL, prior-floor and partial mixed-media methods with actual source-bound selection.",
+      "Complete multiple distinct actual in-kind tuition benefits with assistance and credit coordination; remaining shared allocations and named education methods stay explicit.",
+      "Run current integrated full checks, coverage and complete remote workflows after delivered source packages. Investment interaction candidate passes all unchanged coverage gates but excludes later packages.",
+      "Rehearse final-source native images/SBOM/scans/recovery and reconcile support. Human qualification, live-provider evaluation, authorized staging and final forms remain external requirements."
     ],
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
@@ -1650,7 +1673,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "9eb32baacf61cd772bf4eeec0bfbb83c6f4cc1a6",
+    "lastPushedCommit": "63b4c4fc74f811ff47cd070d41ed879d73548938",
     "currentBrowserRun": {
       "sourceCommit": "ee0132c2f493bbd089514e8fad00ec6de7f3128a",
       "tree": "0d9702209900eab48b797f410a5f8d79c67efe0a",
@@ -2627,63 +2650,90 @@
       "scope": "Immutable ee0132c only; later source packages excluded"
     },
     "currentRemoteRuns": {
-      "retrievedAt": "2026-10-26T09:27:51.842Z",
-      "url": "https://api.github.com/repos/utilityfueled/tax-engine/actions/runs?branch=upgrade%2F2026-baseline&per_page=20",
-      "total_count": 574,
-      "scope": "One read of branch-filtered workflow runs after immutable full checks; no reruns or polling. Branch endpoint rejected by plugin URL validation; latest observed head comes from this run collection.",
-      "branchEndpointError": "HTTPError: 400: GitHub Fetch URL contains an invalid repository path. (Response: None)",
-      "workflowRuns": [
+      "observedAt": "2026-10-26T10:29:20.077083+00:00",
+      "runs": [
         {
-          "id": 40299368778,
-          "name": "Web",
-          "head_sha": "2669c37f0284286c412a1e22e0ef1042ee97fe01",
-          "event": "push",
+          "conclusion": "",
+          "createdAt": "2026-10-26T10:26:09Z",
+          "databaseId": 40307391586,
+          "headSha": "63b4c4fc74f811ff47cd070d41ed879d73548938",
           "status": "in_progress",
-          "conclusion": null,
-          "run_attempt": 1,
-          "created_at": "2026-10-26T09:25:01Z",
-          "updated_at": "2026-10-26T09:25:14Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40299368778"
+          "updatedAt": "2026-10-26T10:26:30Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40307391586",
+          "workflowName": "CI"
         },
         {
-          "id": 40299368921,
-          "name": "CI",
-          "head_sha": "2669c37f0284286c412a1e22e0ef1042ee97fe01",
-          "event": "push",
+          "conclusion": "",
+          "createdAt": "2026-10-26T10:26:09Z",
+          "databaseId": 40307391466,
+          "headSha": "63b4c4fc74f811ff47cd070d41ed879d73548938",
           "status": "in_progress",
-          "conclusion": null,
-          "run_attempt": 1,
-          "created_at": "2026-10-26T09:25:01Z",
-          "updated_at": "2026-10-26T09:25:11Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40299368921"
+          "updatedAt": "2026-10-26T10:27:45Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40307391466",
+          "workflowName": "Web"
         },
         {
-          "id": 40295605005,
-          "name": "CI",
-          "head_sha": "ee0132c2f493bbd089514e8fad00ec6de7f3128a",
-          "event": "push",
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T10:19:25Z",
+          "databaseId": 40306498546,
+          "headSha": "95e4276f358f957c5f6b1923f9538ffb01598361",
           "status": "completed",
-          "conclusion": "failure",
-          "run_attempt": 1,
-          "created_at": "2026-10-26T08:54:57Z",
-          "updated_at": "2026-10-26T09:14:01Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40295605005"
+          "updatedAt": "2026-10-26T10:26:27Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40306498546",
+          "workflowName": "CI"
         },
         {
-          "id": 40295604959,
-          "name": "Web",
-          "head_sha": "ee0132c2f493bbd089514e8fad00ec6de7f3128a",
-          "event": "push",
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T10:19:25Z",
+          "databaseId": 40306498439,
+          "headSha": "95e4276f358f957c5f6b1923f9538ffb01598361",
           "status": "completed",
-          "conclusion": "success",
-          "run_attempt": 1,
-          "created_at": "2026-10-26T08:54:57Z",
-          "updated_at": "2026-10-26T09:18:46Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40295604959"
+          "updatedAt": "2026-10-26T10:27:33Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40306498439",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T10:11:47Z",
+          "databaseId": 40305488634,
+          "headSha": "9173d209715d6b8cca893fdba54acd2fcba6468d",
+          "status": "completed",
+          "updatedAt": "2026-10-26T10:19:44Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40305488634",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T10:11:47Z",
+          "databaseId": 40305488656,
+          "headSha": "9173d209715d6b8cca893fdba54acd2fcba6468d",
+          "status": "completed",
+          "updatedAt": "2026-10-26T10:19:56Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40305488656",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T10:03:15Z",
+          "databaseId": 40304359196,
+          "headSha": "a7c9884c9142b11bf0944718a1a08c128621a411",
+          "status": "completed",
+          "updatedAt": "2026-10-26T10:12:05Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40304359196",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T10:03:15Z",
+          "databaseId": 40304358957,
+          "headSha": "a7c9884c9142b11bf0944718a1a08c128621a411",
+          "status": "completed",
+          "updatedAt": "2026-10-26T10:12:04Z",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40304358957",
+          "workflowName": "Web"
         }
       ],
-      "boundary": "Observed once at2026-10-26T09:27:51Z; not current9eb32ba completion evidence",
-      "fullSnapshot": ".local/upgrade-evidence/ee0132c-complete/remote-ci-snapshot.json"
+      "boundary": "Current63b4c4f CI and Web in progress; earlier three heads cancelled, no completed current remote claim"
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
@@ -2978,6 +3028,15 @@
         ],
         "guidedPassiveDistribution": [
           "9eb32baacf61cd772bf4eeec0bfbb83c6f4cc1a6"
+        ],
+        "guidedPaRoyaltySources": [
+          "9173d209715d6b8cca893fdba54acd2fcba6468d"
+        ],
+        "investmentPanelBehavior": [
+          "95e4276f358f957c5f6b1923f9538ffb01598361"
+        ],
+        "passiveDistributionScheduleE": [
+          "63b4c4fc74f811ff47cd070d41ed879d73548938"
         ]
       },
       "owners": {
@@ -3864,14 +3923,11 @@
       }
     },
     "currentInventory": {
-      "entries": 491,
-      "specReferences": 5292,
-      "sourceCommit": "9eb32baacf61cd772bf4eeec0bfbb83c6f4cc1a6",
+      "entries": 493,
+      "specReferences": 5306,
+      "sourceCommit": "63b4c4fc74f811ff47cd070d41ed879d73548938",
       "path": "spec/coverage/inventory-2025.json",
-      "qualification": "Traceability only; no readiness or human review promotion",
-      "newEntries": 6,
-      "existingEntryChange": "PA royalty source now has its implemented engine path and partial traceability status; no form, e-file or human qualification added",
-      "inventoryTests": 19
+      "qualification": "Traceability only; no readiness or human review promotion"
     },
     "previousCoverageDiagnostic": {
       "commit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
@@ -4728,7 +4784,7 @@
         "independentFiles": 4,
         "directPdfs": 4,
         "directPdfPages": 9,
-        "pending": "PhysicalScheduleE and completepacket follow-through"
+        "pending": "Physical/full-packet follow-through delivered63b4c4f; broader named source combinations remain"
       },
       "paRoyaltyPropertySources": {
         "commit": "b334f1945c3c7ba07cb25e30aefd5d601d39dfe4",
@@ -4741,7 +4797,7 @@
         "independentFiles": 4,
         "savedPdfs": 3,
         "savedPages": 5,
-        "pending": "Actual guided state collector"
+        "pending": "Actual guided collector delivered9173d20; negative properties and other expense histories remain named methods"
       },
       "noAdvanceOverlap": {
         "commit": "35b862cebe0bafae14f4862ce9967b131ff2cd19",
@@ -4771,7 +4827,105 @@
         "independentFiles": 3,
         "browserPassed": 2,
         "browserRetries": 0
+      },
+      "guidedPaRoyaltySources": {
+        "commit": "9173d209715d6b8cca893fdba54acd2fcba6468d",
+        "tree": "790e792db6c7da2d63b81df1241b8d76b72fe785",
+        "reviewedTree": "dda311afc28b950fda24503c90261551fbe2af15",
+        "ledger": "docs/upgrade-2026-guided-pa-royalty-work.md",
+        "tests": 486,
+        "files": 9,
+        "independentTests": 10,
+        "independentFiles": 5,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "productionBuild": "pass",
+        "rootWebTypes": "pass",
+        "boundary": "Actual guide, synthetic local production browser; no state or human qualification"
+      },
+      "investmentPanelBehavior": {
+        "commit": "95e4276f358f957c5f6b1923f9538ffb01598361",
+        "tree": "25bf2e5a550d3e59b8008acb23c5b0d13e4723f6",
+        "reviewedTree": "7305c69fa9022ba634a8fedd7865247162be8f8d",
+        "ledger": "docs/upgrade-2026-investment-panel-behavior-work.md",
+        "integrationTests": 498,
+        "integrationFiles": 10,
+        "fullCandidateCoverage": {
+          "tree": "7305c69fa9022ba634a8fedd7865247162be8f8d",
+          "archive": "/private/tmp/tax-investment-panel-review-1y9ly5ys",
+          "command": [
+            "pnpm",
+            "test:coverage",
+            "--maxWorkers=1"
+          ],
+          "exitCode": 0,
+          "seconds": 752.4,
+          "completedAt": "2026-10-26T10:12:47.923675+00:00",
+          "log": ".local/upgrade-evidence/investment-panels-complete/investment-panels-full-coverage-network.log",
+          "sha256": "84eaf06b6e6436914ac232262b4f220c0269fbc54cd938acc95a28bc281667a5",
+          "networkScope": "Task-owned loopback PostgreSQL ai_test at 127.0.0.1:55439 plus synthetic test loopback servers; provider/production environment excluded",
+          "passed": 18790,
+          "files": 1111,
+          "failed": 0,
+          "skipped": 0,
+          "scope": "Immutable ee0132c plus five-path candidate7305c69f only; excludes later branch packages",
+          "functionsPercent": "90.64",
+          "branchesPercent": "86.81",
+          "statementsPercent": "92.02",
+          "linesPercent": "94.59",
+          "functionThresholdPercent": "90",
+          "branchThresholdPercent": "85",
+          "thresholdsUnchanged": true
+        },
+        "independentPrivateControls": 5,
+        "privateMutantsCaught": 3,
+        "boundary": "Test-only package; current integrated full verification remains due"
+      },
+      "passiveDistributionScheduleE": {
+        "commit": "63b4c4fc74f811ff47cd070d41ed879d73548938",
+        "tree": "b63f79b6790bd1907d4348e93572aa8cf5937f2c",
+        "reviewedTree": "e0f34859c65a66e21a5d786d8807c403116316ec",
+        "ledger": "docs/upgrade-2026-schedule-e-passive-work.md",
+        "tests": 510,
+        "files": 7,
+        "integrationTests": 30,
+        "integrationFiles": 3,
+        "independentTests": 33,
+        "independentFiles": 3,
+        "pdfs": 19,
+        "renderedPages": 35,
+        "literalFields": 30,
+        "rootWebTypes": "pass",
+        "reviewFinding": "Original removed-source bypass reproduced and corrected; all four unchanged private controls pass",
+        "boundary": "Review-only actual source mapping; no engine calculation or qualification change"
       }
+    },
+    "latestPassingCandidateCoverage": {
+      "tree": "7305c69fa9022ba634a8fedd7865247162be8f8d",
+      "archive": "/private/tmp/tax-investment-panel-review-1y9ly5ys",
+      "command": [
+        "pnpm",
+        "test:coverage",
+        "--maxWorkers=1"
+      ],
+      "exitCode": 0,
+      "seconds": 752.4,
+      "completedAt": "2026-10-26T10:12:47.923675+00:00",
+      "log": ".local/upgrade-evidence/investment-panels-complete/investment-panels-full-coverage-network.log",
+      "sha256": "84eaf06b6e6436914ac232262b4f220c0269fbc54cd938acc95a28bc281667a5",
+      "networkScope": "Task-owned loopback PostgreSQL ai_test at 127.0.0.1:55439 plus synthetic test loopback servers; provider/production environment excluded",
+      "passed": 18790,
+      "files": 1111,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "Immutable ee0132c plus five-path candidate7305c69f only; excludes later branch packages",
+      "functionsPercent": "90.64",
+      "branchesPercent": "86.81",
+      "statementsPercent": "92.02",
+      "linesPercent": "94.59",
+      "functionThresholdPercent": "90",
+      "branchThresholdPercent": "85",
+      "thresholdsUnchanged": true
     }
   },
   "historicalReleaseBlockers": {

@@ -6179,6 +6179,26 @@
       ]
     },
     {
+      "key": "federal/schedule-e-passive-distribution-review",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1040se",
+      "specPath": "spec/federal/schedule-e-passive-distribution-review.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/schedule-e-physical-review",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -7281,6 +7301,26 @@
       "taxYear": 2026,
       "sourceAuthority": "https://codes.ohio.gov/ohio-revised-code/section-5747.01",
       "specPath": "spec/state/guided-ohio-interest.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/guided-pa-royalty-sources",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40e.pdf",
+      "specPath": "spec/state/guided-pa-royalty-sources.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,

@@ -2,59 +2,54 @@
 
 ## Current checkpoint
 
-The branch is pushed through `9eb32ba`. Rule provenance is `2025.129` /
-`2026.126-law-integration-draft`; readiness gates remain unchanged. The regenerated
-inventory has491 entries and5,292 test references.
+The branch is pushed through `63b4c4f`. Rule provenance remains `2025.129` /
+`2026.126-law-integration-draft`; the regenerated inventory has 493 entries and
+5,306 test references. All readiness gates remain unchanged.
 
-Since the previous checkpoint, `ee0132c` adds seven real setup/payment panel
-behaviors and fixes Enter during a pending upload. Passive distribution sources
-are `2669c37` and their actual guide is `9eb32ba`; PA original royalty property
-and expense treatment is `b334f19`; full coverage-family benchmarks for overlapping
-no-advance Marketplace policies are `35b862c`. Their separate ledgers retain
-sources, literal controls, original failures, frozen hashes and independent agent
-reviews. Final package checks are23/6,31/9,332/9 and665/29 respectively; the passive
-guide's broader exact cohort passes1,343/120. Both new guided flows pass desktop
-and mobile production checks with zero retries. These are software reviews.
+Actual PA royalty intake and workspace handoff are delivered in `9173d20`.
+Its immutable cohort passes 486 tests in 9 files, root/web types, spec validation,
+lint and production build. Separate review passes 10 cases in 5 files. Both
+desktop and mobile production browser cases pass with zero retries; their
+screenshots were inspected. The package ledger preserves original failures,
+review evidence and the exact tested hashes.
 
-PA source review corrected an omitted MFJ status handoff before delivery; its
-17/4 independent cohort and three saved reference PDFs/five inspected pages pass.
-The overlapping-policy review passes14/5 including five separate controls; six
-saved PDFs/17 pages retain42 checked physical values. Passive source review
-passes16/4, including original-index/order and valuation-threshold controls. Its
-four direct PDFs/nine pages retain separate capital and passive values. Parent is
-finishing its physical Schedule E/full-packet mapping and the PA guided collector;
-those private candidates are not yet counted as delivered.
+`95e4276` adds meaningful actual digital-asset, OID and child-election panel
+interactions. Its immutable candidate on `ee0132c` passes all 18,790 tests in
+1,111 files and the unchanged coverage gates: functions 90.64% (10,240/11,298),
+branches 86.81% (46,994/54,135), statements 92.02%, lines 94.59%. The initial
+sandbox run could not open synthetic localhost services and produced no coverage
+report; the unchanged rerun passed with task-local networking. Separate review
+caught all three stale-confirmation mutations. Final integration passes 498/10.
+Logs and hashes are saved under `.local/upgrade-evidence/investment-panels-complete`.
+This candidate excludes later source packages; current integrated verification
+is still required. No threshold, exclusion, timeout or assertion was relaxed.
 
-Full immutable `ee0132c` passes18,785 tests/1,108 files with zero failures/skips,
-all three type checks, spec validation, both builds and lint (zero errors,5,340
-warnings). Its complete production browser run passes396 cases with zero retries;
-five hosted-only cases remain skipped. Coverage executes the same18,785 passing
-tests but **fails** the unchanged90% function gate at89.82% (10,148/11,298).
-Branches86.71% pass85%; statements91.85%, lines94.46%. Its inventory check also
-correctly failed stale; the current491-entry inventory is regenerated separately.
-The exact logs and hashes are retained under `.local/upgrade-evidence/ee0132c-complete`.
+`63b4c4f` completes passive-distribution Schedule E and full-packet follow-through.
+Capital gain stays on8949/D; it no longer appears as ordinary Schedule E income.
+Review reproduced a removed-source bypass, which is now rejected before PDF I/O.
+The corrected frozen tree passes 510/7 and separate review passes 33/3, including
+all four unchanged private probes. Final main integration passes 30/3. Nineteen
+saved PDFs were independently reopened: 30 literal fields, privacy and one
+review notice per page pass; all 35 rendered pages were inspected. This package
+changes no tax calculation or form qualification.
 
-A reviewed test-only investment-panel package exercises actual digital-asset, OID
-and child-election corrections. Its full coverage rerun is pending; an initial
-sandbox localhost failure produced no coverage report. No coverage threshold,
-exclusion, test deadline or assertion has been relaxed. Earlier coverage passes
-remain evidence for their original commits, not this later branch.
+The previous full `ee0132c` unit and production-browser evidence remains valid
+only for that source: 18,785/1,108 and 396 browser passes, with five hosted-only
+skips. Its function-coverage failure is retained, separately from the newer
+passing candidate. Current63b4c4f CI and Web were observed in progress; the
+preceding three heads were cancelled. No completed current remote result is
+claimed. The earlier package audit and76e3538 local runtime/recovery/scan evidence
+remain separate; final-source artifacts and advisory acceptance are due.
 
-The recorded remote observation at09:27:51UTC shows ee0132c Web passed and CI
-failed; then-current2669c37 workflows were in progress. That observation does not
-claim current9eb32ba completion. Production package audit994d92d reports zero
-advisories across425 dependencies; final-source images and advisory-owner
-acceptance remain outstanding. The76e3538 local arm64 recovery/scan remains
-scoped to that earlier source.
+Shared-policy/self-employed-health source coordination and full-shell source
+reachability, actual EIC history/current8862, single-category charitable NOLs and
+remaining charitable/education source methods continue in private workspaces.
+Their guards and prerequisites do not count as completed end-user methods.
+Current full checks, final images, recovery and support reconciliation follow
+integration. Sources, exact checks and commit references remain in each ledger.
 
-Shared-policy/self-employed-health source coordination, actual EIC denial and
-recertification chronology, prior charitable floor/NOL and partial mixed-media
-methods remain internal work. The durable method queue names these boundaries;
-a guard or inactive helper does not complete a method. Current full checks,
-final native images, recovery and support reconciliation follow integration.
-
-The goal remains active and the upgrade is **not release-ready**. Human reviews
-and controlling interpretations, provider account access and approved budget,
+The goal is active and the upgrade is **not release-ready**. Human reviews and
+controlling interpretations, provider account access and approved budget,
 authorized staging, launch-state demand, final forms and advisory acceptance
 remain unresolved. Public upgrade-branch pushes are expressly approved.
 Production deployment, filing and model promotion remain disabled/unauthorized.
