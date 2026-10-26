@@ -18,6 +18,7 @@ it('reopens the distinct prepaid and ESA guided workspace packet', async () => {
   try {
     const download = await buildWorkspaceFilledReturnDownload(workspace, state), path = join(directory, 'review.pdf');
     await writeFile(path, download.contents);
+    expect(Buffer.from(download.contents).toString('latin1')).toContain('/Type /ObjStm');
     expect(download.includedForms).toContain('f5329-primary-filled.pdf'); expect(download.includedForms).toContain('f1099q-reference-filled.pdf');
     const pages: string[] = JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? 'python3', ['-c',
       'from pypdf import PdfReader\nimport json,sys\nprint(json.dumps([p.extract_text() or "" for p in PdfReader(sys.argv[1]).pages]))', path], { encoding: 'utf8', timeout: 10000 }));

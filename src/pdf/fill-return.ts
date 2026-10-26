@@ -389,6 +389,8 @@ export interface FillReturnOptions {
   outputDir: string;
   /** Whether to flatten form fields (makes PDF non-editable but renders consistently). */
   flatten?: boolean;
+  /** Disable only for temporary merge inputs; downloaded files keep compression. */
+  useObjectStreams?: boolean;
   /** Prepared from complete original facts before review identifiers are cleared. */
   capitalGainReview?: PreparedForm8949Review;
   /** Original COD and loss records, validated before review identifier removal. */
@@ -489,7 +491,7 @@ export async function fillReturn(
     // Finalize the visible notice while the completed form is still in memory.
     // Track only successful writes, scoped to this packet rather than a cache.
     await markReviewPdf(doc);
-    await savePdfDocument(doc, outputPath);
+    await savePdfDocument(doc, outputPath, { useObjectStreams: options.useObjectStreams });
     finalizedPaths.add(outputPath);
   };
   const { outputDir, flatten = false } = options;

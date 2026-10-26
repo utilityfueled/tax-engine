@@ -138,9 +138,10 @@ export async function loadReviewTemplate(pdfPath: string, taxYear: number): Prom
 export async function savePdf(
   doc: PDFDocument,
   outputPath: string,
+  options: { useObjectStreams?: boolean } = {},
 ): Promise<void> {
   await mkdir(dirname(outputPath), { recursive: true });
-  const bytes = await doc.save({ objectsPerTick: 500 });
+  const bytes = await doc.save({ objectsPerTick: 500, useObjectStreams: options.useObjectStreams ?? true });
   await writeFile(outputPath, bytes);
 }
 
