@@ -659,7 +659,7 @@ describe("Charitable AGI limits", () => {
     const input = makeFixtureWithDonations([
       { qualifiedOrganization: true,
         organization: "Smith Private Foundation", type: "appreciated_stock", amount: "25000",
-        dateOfDonation: "2025-06-15", costBasis: "3000", isLongTermCapitalGain: true, isPrivateFoundation: true, qualifiedAppreciatedStock: true,
+        dateOfDonation: "2025-06-15", costBasis: "3000", isLongTermCapitalGain: true, isPrivateFoundation: true, recipientCategory: "private-nonoperating", qualifiedAppreciatedStock: true,
       },
     ]);
     const result = calculateScheduleA(input, d(100000), "single", c);
@@ -679,7 +679,7 @@ describe("Charitable AGI limits", () => {
       },
       { qualifiedOrganization: true,
         organization: "Smith Private Foundation", type: "appreciated_stock", amount: "25000",
-        dateOfDonation: "2025-06-15", costBasis: "3000", isLongTermCapitalGain: true, isPrivateFoundation: true, qualifiedAppreciatedStock: true,
+        dateOfDonation: "2025-06-15", costBasis: "3000", isLongTermCapitalGain: true, isPrivateFoundation: true, recipientCategory: "private-nonoperating", qualifiedAppreciatedStock: true,
       },
     ]);
     const result = calculateScheduleA(input, d(100000), "single", c);

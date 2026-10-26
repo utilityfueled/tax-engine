@@ -23,6 +23,7 @@ describe("ScheduleA actual charity reporting", () => {
       input.donations = [{ ...input.donations[kind === "cash" ? 0 : 1],
         amount: "10000.99", isLongTermCapitalGain: kind.endsWith("Capital"),
         isPrivateFoundation: kind === "privateCapital",
+        recipientCategory: kind === "privateCapital" ? "private-nonoperating" : "fifty-percent",
       }];
       const result = calculateScheduleA(input, d("1000.49"), "single", getConstants(2025));
       expect(result.cashCharitable.plus(result.nonCashCharitable).toString()).toBe(expectedAllowed);

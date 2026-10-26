@@ -74,7 +74,7 @@ async function addCashDonation(page: Page) {
   await page.getByRole("combobox", { name: "Donation type", exact: true }).selectOption("cash");
   await page.getByLabel("Donation date", { exact: true }).fill("2025-06-01");
   for (const [name, value] of [
-    ["Recipient is a private foundation / second-category organization", "false"],
+    ["Recipient tax category", "fifty-percent"],
     ["Recipient qualifies for a charitable contribution deduction", "true"],
     ["Recipient is a supporting organization", "false"],
     ["Gift was to a donor-advised fund", "false"],

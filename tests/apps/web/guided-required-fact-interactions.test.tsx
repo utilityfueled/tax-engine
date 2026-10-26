@@ -269,7 +269,7 @@ describe("required fact interaction boundaries", () => {
     await change("Donation recipient", "Actual Foundation");
     await change("Donation type", "appreciated_stock");
     await change("Donation date", "2025-05-06");
-    await change("Recipient is a private foundation / second-category organization", "true");
+    await change("Recipient tax category", "private-nonoperating");
     await change("Recipient qualifies for a charitable contribution deduction", "true");
     await change("Recipient is a supporting organization", "false");
     await change("Gift was to a donor-advised fund", "false");
@@ -278,7 +278,8 @@ describe("required fact interaction boundaries", () => {
     await change("Gift is qualified appreciated stock", "true");
     expect(latest.mortgageEntries?.[0]).toMatchObject({ lender: "Actual Lender", outstandingPrincipal: "9007199254740993.01", originationDate: "2020-02-03" });
     expect(() => buildForm1098Inputs(latest)).toThrow(); // Actual debt eligibility remains unknown.
-    expect(buildDonationsInput(latest)[0]).toMatchObject({ organization: "Actual Foundation", type: "appreciated_stock", amount: "0.20", costBasis: "0", isPrivateFoundation: true, qualifiedOrganization: true, qualifiedAppreciatedStock: true });
+    expect(buildDonationsInput(latest)[0]).toMatchObject({ organization: "Actual Foundation", type: "appreciated_stock", amount: "0.20", costBasis: "0", recipientCategory: "private-nonoperating", qualifiedOrganization: true, qualifiedAppreciatedStock: true });
+    expect(latest.donationEntries?.[0].isPrivateFoundation).toBeNull();
     await click("Add donation");
     await click("Remove donation #2");
     expect(latest.charitableContributions).toBe("0.2");

@@ -520,7 +520,8 @@ export const CryptoDonationSchema = z.object({
   charityName: z.string(),
   charityEIN: z.string().optional(),
   isQualifiedOrganization: z.boolean().optional(), // Actual IRC170 eligibility, never assumed.
-  recipientCategory: z.enum(["fifty-percent", "other-qualified"]).optional(),
+  // Legacy other-qualified is preserved but cannot establish foundation valuation.
+  recipientCategory: z.enum(["fifty-percent", "private-nonoperating", "other-thirty-percent", "other-qualified"]).optional(),
   capitalAsset: z.boolean().optional(),
   sourceFactsConfirmed: z.boolean().optional(),
   fullOwnershipInterestDonated: z.boolean().optional(),
@@ -2570,7 +2571,10 @@ export const CharitableDonationSchema = z.object({
   costBasis: optionalDecimalInput, // For appreciated property
   dateOfDonation: z.string(),
   isLongTermCapitalGain: z.boolean().optional(),
-  isPrivateFoundation: z.boolean().optional(), // Validated 20%-of-AGI branch for LTCG property donated to a private foundation / second-category organization
+  /** Actual IRC170(b)(1)(A)/(F) recipient category; no default or inference from the legacy flag. */
+  recipientCategory: z.enum(["fifty-percent", "private-nonoperating", "other-thirty-percent"]).optional(),
+  /** Saved legacy foundation/second-category answer. True is ambiguous; preserve it for source migration. */
+  isPrivateFoundation: z.boolean().optional(),
 });
 
 /** Actual filed NOL sources. Unknown history and tax character have no defaults. */

@@ -21,6 +21,7 @@ import { calculateSALTLimit } from "@/utils/tax-math.js";
 import { calculateCharitableContributionWorksheet, type CharitableCategory, type CharitableContributionWorksheetInput } from "@/engine/forms/charitable-contribution-worksheet.js";
 import { charitableSourceDigest } from "@/utils/charitable-source-digest.js";
 import { eligibleCurrentCharitableDonations } from "@/engine/forms/charitable-current-sources.js";
+import { resolveCharitableRecipient } from "@/utils/charitable-recipient.js";
 import { calculateCharitableCarryover } from "@/engine/forms/charitable-carryover.js";
 import { calculateNonitemizedCharitableCarryover, type NonitemizedCharitableCarryoverResult } from "@/engine/forms/nonitemized-charitable-carryover.js";
 import { calculateCurrentCharitableCandidates, type CurrentCharitableCandidates } from "@/engine/forms/current-charitable-candidates.js";
@@ -295,10 +296,10 @@ export function calculateScheduleA(
       const date = new Date(`${donation.dateOfDonation}T00:00:00Z`);
       if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== donation.dateOfDonation) throw new Error("Invalid donation date");
       if (!donation.dateOfDonation.startsWith(`${input.taxpayer.taxYear}-`)) throw new Error("Donation date must be in the return tax year");
-      if (amount.gt(0) && donation.isPrivateFoundation === undefined) throw new Error("Charitable recipient classification is unknown");
+      const recipient = resolveCharitableRecipient(donation);
       if (donation.type !== "cash" || amount.isZero()) continue;
       if (donation.qualifiedOrganization === undefined || donation.supportingOrganization === undefined || donation.donorAdvisedFund === undefined) throw new Error("Nonitemizer charitable recipient qualification is unknown");
-      if (donation.qualifiedOrganization && !donation.supportingOrganization && !donation.donorAdvisedFund && !donation.isPrivateFoundation) eligibleCash = eligibleCash.plus(amount);
+      if (donation.qualifiedOrganization && !donation.supportingOrganization && !donation.donorAdvisedFund && recipient.percentageCategory === "fifty-percent") eligibleCash = eligibleCash.plus(amount);
     }
     if (nolCashLimit !== undefined) eligibleCash = min(eligibleCash, nolCashLimit);
     nonitemizerCharitableDeduction = roundDollar(Decimal.min(eligibleCash, contributionBase.times("0.60"), filingStatus === "married_filing_jointly" ? "2000" : "1000"));
@@ -322,6 +323,8 @@ export function calculateScheduleA(
     if (d(donation.amount).isZero()) continue;
     if (donation.qualifiedOrganization === undefined) throw new Error("Charitable recipient qualification is unknown");
     if (donation.qualifiedOrganization === false) continue;
+    const recipient = resolveCharitableRecipient(donation);
+    const otherRecipient = recipient.percentageCategory === "other-thirty-percent";
     let contributionValue = d(donation.amount);
     if (donation.type !== "cash") {
       if (donation.isLongTermCapitalGain === undefined) throw new Error("Charitable property long-term holding status is unknown");
@@ -331,7 +334,7 @@ export function calculateScheduleA(
           if (!d(donation.costBasis).isFinite() || d(donation.costBasis).lt(0)) throw new Error("Charitable property cost basis is unknown or invalid");
           contributionValue = min(contributionValue, d(donation.costBasis));
         }
-      } else if (donation.isPrivateFoundation && (donation.type !== "appreciated_stock" || donation.qualifiedAppreciatedStock !== true)) {
+      } else if (recipient.privateNonoperating && (donation.type !== "appreciated_stock" || donation.qualifiedAppreciatedStock !== true)) {
         if (donation.type === "appreciated_stock" && donation.qualifiedAppreciatedStock === undefined) {
           throw new Error("Private-foundation qualified appreciated stock status is unknown");
         }
@@ -340,10 +343,10 @@ export function calculateScheduleA(
       }
     }
     const category = donation.type === "cash"
-      ? donation.isPrivateFoundation ? "cashPrivate" : "cashPublic"
+      ? otherRecipient ? "cashPrivate" : "cashPublic"
       : donation.isLongTermCapitalGain
-        ? donation.isPrivateFoundation ? "capitalGainPrivate" : "capitalGainPublic"
-        : donation.isPrivateFoundation ? "noncashPrivate" : "noncashPublic";
+        ? otherRecipient ? "capitalGainPrivate" : "capitalGainPublic"
+        : otherRecipient ? "noncashPrivate" : "noncashPublic";
     amounts[category] = amounts[category].plus(contributionValue);
   }
   if (nolCashLimit !== undefined) amounts.cashPublic = min(amounts.cashPublic, nolCashLimit);

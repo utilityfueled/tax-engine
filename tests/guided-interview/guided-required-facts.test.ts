@@ -19,7 +19,7 @@ describe("required guided source facts", () => {
     const rejectedGift = { ...data, donationEntries: [{ ...donation, qualifiedOrganization: false }] };
     expect(buildDonationsInput(rejectedGift, 2025)[0].qualifiedOrganization).toBe(false);
     expect(buildTaxInputFromGuidedData(stateWith("deductions", rejectedGift))?.donations[0].qualifiedOrganization).toBe(false);
-    const privateStock = { ...data, donationEntries: [{ ...donation, type: "appreciated_stock" as const, amount: "5000", costBasis: "1000", qualifiedOrganization: true, isPrivateFoundation: true, isLongTermCapitalGain: true }] };
+    const privateStock = { ...data, donationEntries: [{ ...donation, type: "appreciated_stock" as const, amount: "5000", costBasis: "1000", qualifiedOrganization: true, isPrivateFoundation: true, recipientCategory: "private-nonoperating" as const, isLongTermCapitalGain: true }] };
     expect(() => buildDonationsInput(privateStock, 2025)).toThrow(/qualified appreciated stock/i);
     expect(buildDonationsInput({ ...privateStock, donationEntries: [{ ...privateStock.donationEntries[0], qualifiedAppreciatedStock: false }] }, 2025)[0].qualifiedAppreciatedStock).toBe(false);
   });

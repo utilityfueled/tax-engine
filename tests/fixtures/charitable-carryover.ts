@@ -27,6 +27,6 @@ export function charitableCarryoverFixture() {
       }],
     },
     donations: [{ organization: "Synthetic public charity", type: "cash", amount: "6000", dateOfDonation: "2025-05-01", qualifiedOrganization: true, isPrivateFoundation: false },
-      { organization: "Synthetic private charity", type: "cash", amount: "3000", dateOfDonation: "2025-05-01", qualifiedOrganization: true, isPrivateFoundation: true }],
+      { organization: "Synthetic private charity", type: "cash", amount: "3000", dateOfDonation: "2025-05-01", qualifiedOrganization: true, isPrivateFoundation: true, recipientCategory: "private-nonoperating" }],
   });
 }

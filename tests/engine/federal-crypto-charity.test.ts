@@ -33,7 +33,7 @@ describe("Crypto charitable source integration", () => {
     expect(anniversary.totalDeduction.toString()).toBe("10000");
     const disqualified = calculateCryptoDonations([CryptoDonationSchema.parse(gift({ isQualifiedOrganization: false }))], 2026);
     expect(disqualified.totalDeduction.toString()).toBe("0");
-    const foundation = calculateFederalTax(input(2026, [gift({ recipientCategory: "other-qualified", costBasis: "25000" })]));
+    const foundation = calculateFederalTax(input(2026, [gift({ recipientCategory: "private-nonoperating", costBasis: "25000" })]));
     expect(foundation.scheduleA?.nonCashCharitable.toString()).toBe("19500"); // Basis-reduced capital property keeps the20% category, then500floor.
     expect(foundation.carryforwards.charitableContributionsByYear).toEqual([{ taxYear: 2026, category: "capital_gain_20", amount: d("5500") }]);
   });

@@ -1,3 +1,4 @@
+import { resolveCharitableRecipient } from "@/utils/charitable-recipient";
 import Decimal from "decimal.js";
 import type { DeductionData, EstimatedPaymentEntry, PaymentData, FilingStatus } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
@@ -58,7 +59,9 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
     if (!isActualDate(entry.date) || (taxYear != null && !entry.date.startsWith(`${taxYear}-`))) errors[`donation-${index}-date`] = "Enter the actual donation date in the selected tax year.";
     if (typeof entry.qualifiedOrganization !== "boolean") errors[`donation-${index}-qualification`] = "Confirm the recipient's actual charitable qualification.";
     if (entry.qualifiedOrganization === false) return;
-    if (typeof entry.isPrivateFoundation !== "boolean") errors[`donation-${index}-classification`] = "Confirm the donation recipient's organization classification.";
+    let privateNonoperating = false;
+    try { privateNonoperating = resolveCharitableRecipient(entry).privateNonoperating; }
+    catch { errors[`donation-${index}-classification`] = "Confirm the actual recipient tax category; the saved foundation answer is ambiguous."; }
     if (taxYear === 2026 && data.method !== "itemized") {
       for (const field of ["qualifiedOrganization", "supportingOrganization", "donorAdvisedFund"] as const) {
         if (typeof entry[field] !== "boolean") errors[`donation-${index}-${field}`] = "Confirm the recipient's eligibility for the 2026 nonitemizer deduction.";
@@ -68,7 +71,7 @@ export function deductionFactErrors(data: DeductionData | undefined, taxYear?: n
       const basisError = amountError(entry.costBasis, "donated property's cost basis");
       if (basisError) errors[`donation-${index}-basis`] = basisError;
       if (typeof entry.isLongTermCapitalGain !== "boolean") errors[`donation-${index}-capital-gain`] = "Confirm whether the donated property is long-term capital gain property.";
-      if (entry.isPrivateFoundation && entry.isLongTermCapitalGain && entry.type === "appreciated_stock"
+      if (privateNonoperating && entry.isLongTermCapitalGain && entry.type === "appreciated_stock"
         && typeof entry.qualifiedAppreciatedStock !== "boolean") errors[`donation-${index}-qualified-stock`] = "Confirm whether this private-foundation gift is qualified appreciated stock.";
     }
   });

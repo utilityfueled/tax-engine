@@ -29,7 +29,9 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
   }
   function setDonations(entries: DonationEntryData[]) {
     const total = sumGuidedDisplayAmounts(entries.map((entry) => entry.amount));
-    onChange({ ...data, donationEntries: entries, charitableContributions: total.isFinite() ? total.toFixed() : data.charitableContributions });
+    const changed = guidedSourceValuesChanged(data.donationEntries, entries);
+    onChange({ ...data, donationEntries: entries, charitableContributions: total.isFinite() ? total.toFixed() : data.charitableContributions,
+      ...(changed && data.charitableCarryoverSources ? { charitableCarryoverSources: { ...data.charitableCarryoverSources, sourceFactsConfirmed: null } } : {}) });
   }
   return <>
     {includeMortgages && <>
@@ -56,14 +58,23 @@ export function DeductionSourceDetails({ data, onChange, includeMortgages = true
         <label className="guided-field"><span className="guided-field-label">Donation type</span><select className="guided-input" value={entry.type} onChange={(event) => update({ type: event.target.value as DonationEntryData["type"] })}><option value="">Choose the actual type</option><option value="cash">Cash</option><option value="appreciated_stock">Appreciated stock</option><option value="property">Property</option><option value="other">Other noncash property</option></select></label>
         <CurrencyField label="Donation amount / fair market value" value={entry.amount} onChange={(amount) => update({ amount })} required />
         <TextFact label="Donation date" value={entry.date} type="date" onChange={(date) => update({ date })} />
-        <BooleanFact label="Recipient is a private foundation / second-category organization" value={entry.isPrivateFoundation} onChange={(isPrivateFoundation) => update({ isPrivateFoundation })} />
+        <label className="guided-field"><span className="guided-field-label">Recipient tax category</span><select className="guided-input"
+          value={entry.recipientCategory === undefined && entry.isPrivateFoundation === false ? "legacy-public" : entry.recipientCategory ?? ""}
+          onChange={(event) => update({ recipientCategory: event.target.value === "" ? null : event.target.value as DonationEntryData["recipientCategory"] })}>
+          <option value="">Confirm from the recipient&apos;s records</option>
+          {entry.recipientCategory === undefined && entry.isPrivateFoundation === false && <option value="legacy-public" disabled>Saved public / 50% limit classification</option>}
+          <option value="fifty-percent">Public charity or qualifying 50% limit foundation</option>
+          <option value="private-nonoperating">Private nonoperating foundation outside the 50% limit category</option>
+          <option value="other-thirty-percent">Other qualified 30% limit organization</option>
+        </select></label>
+        {entry.isPrivateFoundation === true && entry.recipientCategory == null && <p className="guided-hint">The saved foundation / second-category answer is retained. Confirm the actual tax category; qualifying operating foundations can use the public-charity category.</p>}
         <BooleanFact label="Recipient qualifies for a charitable contribution deduction" value={entry.qualifiedOrganization} onChange={(qualifiedOrganization) => update({ qualifiedOrganization })} />
         <BooleanFact label="Recipient is a supporting organization" value={entry.supportingOrganization} onChange={(supportingOrganization) => update({ supportingOrganization })} />
         <BooleanFact label="Gift was to a donor-advised fund" value={entry.donorAdvisedFund} onChange={(donorAdvisedFund) => update({ donorAdvisedFund })} />
         {entry.type && entry.type !== "cash" && <>
           <CurrencyField label="Donated property's cost basis" value={entry.costBasis} onChange={(costBasis) => update({ costBasis })} required />
           <BooleanFact label="Long-term capital gain property" value={entry.isLongTermCapitalGain} onChange={(isLongTermCapitalGain) => update({ isLongTermCapitalGain })} />
-          {entry.isPrivateFoundation && entry.isLongTermCapitalGain && <BooleanFact label="Gift is qualified appreciated stock" value={entry.qualifiedAppreciatedStock} onChange={(qualifiedAppreciatedStock) => update({ qualifiedAppreciatedStock })} />}
+          {entry.recipientCategory === "private-nonoperating" && entry.isLongTermCapitalGain && <BooleanFact label="Gift is qualified appreciated stock" value={entry.qualifiedAppreciatedStock} onChange={(qualifiedAppreciatedStock) => update({ qualifiedAppreciatedStock })} />}
         </>}
       </div><button type="button" className="utility-button" onClick={() => setDonations(donations.filter((_, i) => i !== index))}>Remove donation #{index + 1}</button></fieldset>;
     })}

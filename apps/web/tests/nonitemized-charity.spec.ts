@@ -45,7 +45,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       await amount.fill('1500.10'); await amount.press('Tab');
       await page.getByLabel('Donation date', { exact: true }).fill('2026-05-15');
       for (const [label, answer] of [
-        ['Recipient is a private foundation / second-category organization', 'false'],
+        ['Recipient tax category', 'fifty-percent'],
         ['Recipient qualifies for a charitable contribution deduction', 'true'],
         ['Recipient is a supporting organization', 'false'], ['Gift was to a donor-advised fund', 'false'],
       ]) await page.getByRole('combobox', { name: label, exact: true }).selectOption(answer);
@@ -64,7 +64,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       expect(saved.sectionData.deductions.medicalExpenses).toBe('250.10');
       expect(saved.sectionData['personal-info'].standardDeductionFacts.spouseItemizes).toBe(true);
       expect(saved.sectionData.deductions.donationEntries[0]).toMatchObject({ amount: '1,500.10', date: '2026-05-15',
-        qualifiedOrganization: true, isPrivateFoundation: false, supportingOrganization: false, donorAdvisedFund: false });
+        qualifiedOrganization: true, recipientCategory: 'fifty-percent', isPrivateFoundation: null, supportingOrganization: false, donorAdvisedFund: false });
       expect(saved.sectionData.deductions).not.toHaveProperty('standardDeduction');
       expect(saved.sectionData.deductions).not.toHaveProperty('nonitemizerCharitableDeduction');
       await choice.scrollIntoViewIfNeeded(); await page.screenshot({ path: testInfo.outputPath(`nonitemized-charity-${viewport.width}.png`) });

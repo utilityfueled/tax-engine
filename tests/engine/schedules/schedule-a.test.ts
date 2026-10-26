@@ -523,7 +523,7 @@ describe("Schedule A - Charitable donation categories", () => {
           costBasis: "3000",
           dateOfDonation: "2025-06-15",
           isLongTermCapitalGain: true,
-          isPrivateFoundation: true,
+          isPrivateFoundation: true, recipientCategory: "private-nonoperating",
           qualifiedAppreciatedStock: true,
         },
       ],

@@ -38,9 +38,11 @@ it("uses identical current category limits with no history or a confirmed empty 
     input.charitableCarryoverSources = history;
     input.donations[0].amount = "6000";
     input.donations[0].isPrivateFoundation = true;
+    input.donations[0].recipientCategory = "private-nonoperating";
     expect(calculateScheduleA(input, d("10000"), "single", getConstants(2025)).charitableTotal.toString()).toBe("3000");
     input.donations[0].amount = "40000";
     input.donations[0].isPrivateFoundation = false;
+    input.donations[0].recipientCategory = "fifty-percent";
     input.donations.push({ ...input.donations[0], type: "appreciated_stock", amount: "30000", costBasis: "10000", isLongTermCapitalGain: true });
     const result = calculateScheduleA(input, d("100000"), "single", getConstants(2025));
     expect(result.cashCharitable.toString()).toBe("40000");

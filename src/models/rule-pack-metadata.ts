@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.96",
+    ruleVersion: "2025.97",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual public or qualifying-operating, private-nonoperating, and other qualified recipient categories; distinct capital-property valuation and percentage limits across ordinary and crypto sources", revision: "IRC170(b)(1)(A)/(B)/(C)/(D)/(F) and(e)(1)(B)(ii), final2025 Pub526; ambiguous historical foundation facts preserved, original review binding and actual source controls, broader mixed-carry methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1065sk1", section: "Original ordinary partner Box14A after calculated basis, at-risk and passive limits; source-bound ordinary K1-only Form461 classification without synthetic MAGI", revision: "Final2025 K1 Box14 and i461/i8582, Reg1.1402(a)-2; independently derived source controls, actual prior SE zero, separate-owner and health/review consistency; mixed character and broader business methods remain separate, no human qualification", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual in-kind postsecondary tuition reduced by its source-bound tax-free assistance under529(c)(3)(B)(v)(I) and25A(g)(2); original student, recipient and private review evidence", revision: "Final2025 Pub970 and current statutes; one actual benefit/expense per student, independently sourced additional-tax exceptions, derived numerical controls; shared-source methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual 2026 prior public cash with current ordinary property absorbing the entire floor; original FIFO and expiration, separate final selected carry candidates", revision: "IRC170(G)/(I)/(d)(1)(C), Reg1.170A-10; bounded derived source controls, same-category floor and broader mixed/NOL methods remain separate, no human qualification", retrievedAt: "2026-10-25" },
@@ -139,11 +140,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.92-law-integration-draft",
+    ruleVersion: "2026.93-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual public or qualifying-operating, private-nonoperating, and other qualified recipient categories; distinct capital-property valuation and percentage limits across ordinary and crypto sources", revision: "IRC170(b)(1)(A)/(B)/(C)/(D)/(F) and(e)(1)(B)(ii), final2025 Pub526; ambiguous historical foundation facts preserved, original review binding and actual source controls, broader mixed-carry methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i1065sk1", section: "Original ordinary partner Box14A after calculated basis, at-risk and passive limits; source-bound ordinary K1-only Form461 classification without synthetic MAGI", revision: "Final2025 K1 Box14 and i461/i8582, Reg1.1402(a)-2; independently derived source controls, actual prior SE zero, separate-owner and health/review consistency; mixed character and broader business methods remain separate, no human qualification", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual in-kind postsecondary tuition reduced by its source-bound tax-free assistance under529(c)(3)(B)(v)(I) and25A(g)(2); original student, recipient and private review evidence", revision: "Final2025 Pub970 and current statutes; one actual benefit/expense per student, independently sourced additional-tax exceptions, derived numerical controls; shared-source methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual 2026 prior public cash with current ordinary property absorbing the entire floor; original FIFO and expiration, separate final selected carry candidates", revision: "IRC170(G)/(I)/(d)(1)(C), Reg1.170A-10; bounded derived source controls, same-category floor and broader mixed/NOL methods remain separate, no human qualification", retrievedAt: "2026-10-25" },

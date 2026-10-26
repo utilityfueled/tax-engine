@@ -7,7 +7,7 @@ notes: "Q78/Q79; Pub526 property valuation and recipient categories; IRC170(b)(1
 lines:
   - line: "value"
     description: "Actual property value and holding period"
-    formula: "For a qualified public charity, capital assets held more than one calendar year use FMV. Other property uses min(FMV,basis). Capital gain crypto to second-category foundations requires basis reduction but retains the20% category. Loss property is not capital-gain property. Known unqualified recipients receive zero. No realized capital loss is created. Validate actual dates/year and amounts."
+    formula: "For a qualified public charity, capital assets held more than one calendar year use FMV. Other property uses min(FMV,basis). Capital gain crypto to an actual private nonoperating foundation outside IRC170(b)(1)(F) requires basis reduction but retains the20% category; other qualified30%-limit recipients retain FMV. Actual recipient classification follows charitable-recipient-classification.yaml. Loss property is not capital-gain property. Known unqualified recipients receive zero. No realized capital loss is created. Validate actual dates/year and amounts."
     testRef: "tests/engine/federal-crypto-charity.test.ts::values gifts before limitations using actual property facts"
   - line: "source"
     description: "Missing current-year qualification remains unknown"

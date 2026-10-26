@@ -12,6 +12,7 @@ import {
   type CharitableCarryoverBalance,
 } from './charitable-carryover-source-validation.js';
 import { eligibleCurrentCharitableDonations } from './charitable-current-sources.js';
+import { resolveCharitableRecipient } from '@/utils/charitable-recipient.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, min, sum, zeroFloor } from '@/utils/decimal.js';
 
@@ -46,7 +47,7 @@ export function calculateCurrentCharitableCandidates(input: TaxYearInput, contex
     throw new Error('Current dual candidates require only ordinary public cash and property sources');
   }
   const donations = eligibleCurrentCharitableDonations(input);
-  if (donations.some(row => row.isPrivateFoundation !== false)) {
+  if (donations.some(row => resolveCharitableRecipient(row).percentageCategory !== 'fifty-percent')) {
     throw new Error('Current charitable candidates require actual public recipient sources');
   }
   const cash = sum(...donations.filter(row => row.type === 'cash').map(row => d(row.amount)));

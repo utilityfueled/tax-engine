@@ -1,6 +1,7 @@
 /** Current receipt eligibility; spec/federal/charitable-current-sources.yaml. */
 import type { TaxYearInput } from "@/models/inputs.js";
 import { d } from "@/utils/decimal.js";
+import { resolveCharitableRecipient } from "@/utils/charitable-recipient.js";
 
 export function eligibleCurrentCharitableDonations(input: TaxYearInput): TaxYearInput["donations"] {
   return input.donations.filter(source => {
@@ -15,7 +16,7 @@ export function eligibleCurrentCharitableDonations(input: TaxYearInput): TaxYear
     if (!raw.startsWith(`${input.taxpayer.taxYear}-`)) throw new Error("Current donation date must belong to the return tax year; prior gifts require actual carry history");
     if (typeof source.qualifiedOrganization !== "boolean") throw new Error("Charitable recipient qualification is unknown");
     if (!source.qualifiedOrganization) return false;
-    if (typeof source.isPrivateFoundation !== "boolean") throw new Error("Charitable recipient category classification is unknown");
+    resolveCharitableRecipient(source);
     return true;
   });
 }

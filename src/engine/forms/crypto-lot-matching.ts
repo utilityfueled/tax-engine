@@ -1,3 +1,4 @@
+import { resolveCharitableRecipient } from "@/utils/charitable-recipient.js";
 /**
  * Crypto Lot Matching — Cost Basis Tracking for Digital Assets
  * Spec: spec/federal/crypto-income.yaml, spec/federal/defi-transactions.yaml
@@ -1280,7 +1281,7 @@ export interface CryptoDonationResult {
 /**
  * Process crypto charitable donations.
  *
- * Held >1 year: deduct FMV, no capital gains recognized (IRC §170(e)(1)(A)).
+ * Held >1 year: FMV before applicable foundation reduction; no capital gains recognized.
  * Held ≤1 year: tentative contribution is min(basis, FMV) (IRC §170(e)(1)(A)).
  * Actual category values enter Schedule A before its percentage limits/floor.
  *
@@ -1311,7 +1312,8 @@ export function calculateCryptoDonations(
     }
     if (!don.dateDonated.startsWith(`${taxYear}-`) || don.dateAcquired > don.dateDonated) throw new Error("Crypto donation date must match the return year and follow acquisition");
     if (don.isQualifiedOrganization === false) continue;
-    const strict = taxYear >= 2026 || don.sourceFactsConfirmed === true;
+    const strict = taxYear >= 2026 || don.sourceFactsConfirmed === true
+      || don.recipientCategory === "private-nonoperating" || don.recipientCategory === "other-thirty-percent";
     if (strict) {
       if (don.isQualifiedOrganization !== true || don.recipientCategory === undefined || don.capitalAsset === undefined
         || don.sourceFactsConfirmed !== true || don.fullOwnershipInterestDonated !== true || don.noGoodsOrServicesReceived !== true
@@ -1324,12 +1326,14 @@ export function calculateCryptoDonations(
     const heldLongTerm = taxYear - acquiredYear > 1
       || (taxYear - acquiredYear === 1 && don.dateDonated.slice(5) > don.dateAcquired.slice(5));
     const capitalGainProperty = heldLongTerm && don.capitalAsset !== false && fmv.gt(basis);
-    const privateRecipient = don.recipientCategory === "other-qualified";
-    const contribution = capitalGainProperty && !privateRecipient ? fmv : Decimal.min(fmv, basis);
+    // Historical unconfirmed omissions stay explicitly unverified; a supplied ambiguous category never acquires a guessed valuation.
+    const recipient = don.recipientCategory === undefined && !strict ? undefined : resolveCharitableRecipient(don);
+    const otherRecipient = recipient?.percentageCategory === "other-thirty-percent";
+    const contribution = capitalGainProperty && recipient?.privateNonoperating !== true ? fmv : Decimal.min(fmv, basis);
     if (strict && ((contribution.gt(5000) && don.appraisalRequired !== true)
       || (don.appraisalRequired === true && don.qualifiedAppraisalObtained !== true))) throw new Error("Crypto donation qualified appraisal source is required");
-    const category = capitalGainProperty ? privateRecipient ? "capitalGainPrivate" : "capitalGainPublic"
-      : privateRecipient ? "noncashPrivate" : "noncashPublic";
+    const category = capitalGainProperty ? otherRecipient ? "capitalGainPrivate" : "capitalGainPublic"
+      : otherRecipient ? "noncashPrivate" : "noncashPublic";
     contributionAmounts[category] = contributionAmounts[category].plus(contribution);
     totalDeduction = totalDeduction.plus(contribution);
 

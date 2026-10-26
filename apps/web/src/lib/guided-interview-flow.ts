@@ -913,7 +913,9 @@ export interface DonationEntryData {
   date: string;
   costBasis: string;
   isLongTermCapitalGain: boolean | null;
+  /** Saved legacy provenance; true does not establish a recipient tax category. */
   isPrivateFoundation: boolean | null;
+  recipientCategory?: "fifty-percent" | "private-nonoperating" | "other-thirty-percent" | null;
   qualifiedOrganization?: boolean | null;
   supportingOrganization?: boolean | null;
   donorAdvisedFund?: boolean | null;

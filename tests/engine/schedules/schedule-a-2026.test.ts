@@ -27,7 +27,7 @@ describe("2026 nonitemizer charitable deduction", () => {
   it.each([["single", "1000"], ["married_filing_jointly", "1500"], ["married_filing_separately", "1000"], ["head_of_household", "1000"], ["qualifying_surviving_spouse", "1000"]] as const)("caps current eligible cash for %s", (status, expected) => {
     expect(calc([donation], "100000", status).nonitemizerCharitableDeduction.toString()).toBe(expected);
   });
-  it.each([{ qualifiedOrganization: false }, { supportingOrganization: true }, { donorAdvisedFund: true }, { isPrivateFoundation: true }, { type: "property", costBasis: "1500", isLongTermCapitalGain: false }])("excludes %j", change => {
+  it.each([{ qualifiedOrganization: false }, { supportingOrganization: true }, { donorAdvisedFund: true }, { isPrivateFoundation: true, recipientCategory: "private-nonoperating" }, { type: "property", costBasis: "1500", isLongTermCapitalGain: false }])("excludes %j", change => {
     expect(calc([{ ...donation, ...change }]).nonitemizerCharitableDeduction.toString()).toBe("0");
   });
   it("applies the cash AGI cap without the itemized floor", () => {
@@ -86,7 +86,7 @@ describe("2026 charitable qualification facts", () => {
     expect(() => calc([{ ...property, isLongTermCapitalGain: undefined }])).toThrow(/holding|long.term/i);
   });
   it("requires qualified-stock evidence for private-foundation capital gain FMV gifts", () => {
-    const stock = { ...donation, type: "appreciated_stock", isPrivateFoundation: true, isLongTermCapitalGain: true, amount: "2000", costBasis: "1000" };
+    const stock = { ...donation, type: "appreciated_stock", isPrivateFoundation: true, recipientCategory: "private-nonoperating", isLongTermCapitalGain: true, amount: "2000", costBasis: "1000" };
     expect(() => calc([stock])).toThrow(/qualified.*stock/i);
     expect(calc([{ ...stock, qualifiedAppreciatedStock: true }]).nonCashCharitable.toString()).toBe("1500");
     expect(calc([{ ...stock, qualifiedAppreciatedStock: false }]).nonCashCharitable.toString()).toBe("500");

@@ -1,5 +1,6 @@
 import type { TaxYearInput } from "@/models/inputs.js";
 import { d, sum } from "./decimal.js";
+import { resolveCharitableRecipient } from "./charitable-recipient.js";
 import { eligibleCurrentCharitableDonations } from "@/engine/forms/charitable-current-sources.js";
 
 /** Original current public-cash receipts for the bounded Section170/NOL method. */
@@ -21,7 +22,7 @@ export function readCurrentPublicCashForNol(input: TaxYearInput) {
     if (amount.isZero()) return amount;
     if (row.type !== "cash") throw new Error("Charitable carry currently requires actual current public-cash contributions");
     const date = new Date(`${row.dateOfDonation}T00:00:00Z`);
-    if (row.qualifiedOrganization !== true || row.isPrivateFoundation !== false || !row.organization.trim()
+    if (row.qualifiedOrganization !== true || resolveCharitableRecipient(row).percentageCategory !== "fifty-percent" || !row.organization.trim()
       || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== row.dateOfDonation
       || date.getUTCFullYear() !== taxYear) {
       throw new Error("Charitable carry requires actual current public qualification, recipient and payment date");
