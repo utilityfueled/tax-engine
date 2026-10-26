@@ -104,7 +104,7 @@ jobs:
       - name: Rehearse isolated Compose upgrade, recovery and rollback
         env:
           TAX_ENGINE_TEST_POSTGRES_BIN: /usr/lib/postgresql/16/bin
-        run: node --import tsx scripts/rehearse-self-host-release.mjs tax-engine:previous tax-engine:ci | tee container-recovery.log
+        run: node --import tsx scripts/rehearse-self-host-release.mjs tax-engine:previous tax-engine:ci 2>&1 | tee container-recovery.log
       - name: Start isolated runtime for browser flows
         run: |
           docker run --detach --name tax-engine-browser-ci --read-only --cap-drop ALL \

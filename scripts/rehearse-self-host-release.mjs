@@ -13,6 +13,7 @@ import { promisify } from "node:util";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import { ensureHostedAppSchema, getHostedServerDatabase } from "../apps/web/src/lib/hosted-server-db.ts";
 import { resolveLocalContainerRuntime } from "./local-container-runtime.mjs";
+import { createRehearsalBrowserDiagnostics } from "./rehearsal-browser-diagnostics.mjs";
 
 // Run with node --import tsx. This creates its own local-only Compose project,
 // database volume and browser profile. It never connects to DATABASE_URL or
@@ -34,9 +35,11 @@ const exec = promisify(execFile);
 const hash = value => createHash("sha256").update(value).digest("hex");
 const evidence = { kind: "local-synthetic-compose-release-rehearsal", project, phases: [] };
 let browser;
+let page;
 let db;
 let attemptedStart = false;
 let failure;
+let phase = "image-inspection";
 
 async function command(args, executable = runtime, env = process.env) {
   const runtimeCommand = executable === runtime;
@@ -58,6 +61,7 @@ async function unusedPort() {
 const webPort = await unusedPort();
 const pgPort = await unusedPort();
 const origin = `http://127.0.0.1:${webPort}`;
+const browserDiagnostics = createRehearsalBrowserDiagnostics(origin);
 const databaseUrl = `postgresql://ai_test@127.0.0.1:${pgPort}/postgres`;
 const composeEnv = { ...process.env, WEB_PORT: `127.0.0.1:${webPort}`, POSTGRES_PORT: String(pgPort) };
 const composeArgs = ["compose", "--project-name", project, "--env-file", path.join(root, ".env.docker.example"),
@@ -125,6 +129,7 @@ try {
   evidence.previousDigest = previous.Id;
   evidence.candidateDigest = candidate.Id;
   await configure(previousImage, candidate.Architecture);
+  phase = "start-previous";
   attemptedStart = true;
   console.log(`${project}: start previous image and isolated database`);
   await compose("up", "--detach", "--no-build", "--wait", "--wait-timeout", "120");
@@ -144,8 +149,11 @@ try {
   const beforeDatabase = await databaseSnapshot();
 
   browser = await chromium.launchPersistentContext(path.join(work, "browser"), { headless: true, baseURL: origin });
-  const page = await browser.newPage();
+  page = await browser.newPage();
   page.setDefaultTimeout(15_000);
+  page.on("pageerror", browserDiagnostics.pageError);
+  page.on("requestfailed", browserDiagnostics.requestFailed);
+  page.on("response", browserDiagnostics.response);
   const requests = [];
   page.on("request", request => requests.push(`${request.url()}\n${request.postData() ?? ""}`));
   const pdf = await PDFDocument.create();
@@ -165,6 +173,7 @@ try {
       extension: { zero: "0.00", cents: "9007199254740993.27", unanswered: null } } });
   await page.evaluate(({ id, originalFlow }) => globalThis.localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`, originalFlow), { id, originalFlow });
   const verify = async (label, expectedImage) => {
+    phase = label;
     await ready();
     await page.goto(`/returns/${id}?local=1`);
     await expect(page.getByRole("heading", { name: `Tax Return ${id}`, exact: true })).toBeVisible();
@@ -193,13 +202,16 @@ try {
     console.log(`${project}: ${label} preserves database rows, exact cost, browser facts and original document bytes`);
   };
   await verify("previous", previous.Id);
+  phase = "start-upgrade";
   await configure(candidateImage, candidate.Architecture);
   await compose("up", "--detach", "--no-build", "--no-deps", "--force-recreate", "web");
   await verify("upgrade", candidate.Id);
+  phase = "restart-database";
   await compose("stop", "postgres");
   await assert.rejects(databaseSnapshot());
   await compose("up", "--detach", "--no-build", "--wait", "--wait-timeout", "120", "postgres");
   await verify("database-restart", candidate.Id);
+  phase = "restore-database";
   // Exercise actual application migration/dump/restore in another unique schema
   // on this disposable Compose database, leaving the persistent sentinel intact.
   const restoreOutput = await command(["--import", "tsx", "scripts/rehearse-hosted-recovery.ts"], process.execPath,
@@ -207,13 +219,16 @@ try {
   evidence.databaseRecovery = JSON.parse(restoreOutput.split("\n").at(-1));
   assert.equal(evidence.databaseRecovery.result, "passed");
   await verify("database-dump-restore", candidate.Id);
+  phase = "start-rollback";
   await configure(previousImage, candidate.Architecture);
   await compose("up", "--detach", "--no-build", "--no-deps", "--force-recreate", "web");
   await verify("rollback", previous.Id);
+  phase = "start-re-upgrade";
   await configure(candidateImage, candidate.Architecture);
   await compose("up", "--detach", "--no-build", "--no-deps", "--force-recreate", "web");
   await verify("re-upgrade", candidate.Id);
 
+  phase = "browser-backup-restore-delete";
   await page.goto("/");
   const card = page.getByRole("listitem").filter({ hasText: `Tax Return ${id}` });
   await card.getByText("Back up this return", { exact: true }).click();
@@ -275,6 +290,20 @@ try {
   evidence.result = "passed";
 } catch (error) {
   failure = error;
+  // Keep the original failure, timeout and cleanup behavior. Persist only
+  // bounded classifications and page-state booleans for the failed phase.
+  let pageState = { available: false };
+  if (page) {
+    try {
+      pageState = await Promise.race([page.evaluate(() => ({ available: true,
+        readyState: globalThis.document.readyState,
+        hasHeading: Boolean(globalThis.document.querySelector("h1")),
+        loadingReturn: globalThis.document.body?.textContent?.includes("Loading your return...") ?? false,
+      })), delay(2_000, { available: false, timedOut: true })]);
+    } catch { /* A closed page must not replace the original rehearsal failure. */ }
+  }
+  console.error(JSON.stringify({ ...evidence, result: "failed", failedPhase: phase,
+    browserDiagnostics: browserDiagnostics.snapshot(), pageState }));
 } finally {
   const cleanupFailures = [];
   for (const [label, cleanup] of [
