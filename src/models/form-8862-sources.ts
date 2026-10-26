@@ -27,6 +27,10 @@ export const Form8862SourcesSchema = z.object({
   filers: z.array(z.object({ owner: z.enum(['primary', 'spouse']).optional(), sourceReference: z.string().optional(),
     originalTaxpayer: z.object({ firstName: z.string().optional(), lastName: z.string().optional(), ssn: z.string().optional(), dateOfBirth: z.string().optional() }).optional(),
     applicableYearStart: z.string().optional(), applicableYearEnd: z.string().optional(), homeDays: EicResidenceDaysSchema.optional() })).optional(),
+  jointReturnAfterDeath: z.object({
+    sourceReference: z.string().optional(),
+    survivingSpouseRemarriedBeforeOwnYearEnd: z.boolean().optional(),
+  }).optional(),
   allCandidateChildrenIncluded: z.boolean().optional(),
   children: z.array(EicCurrentChildSourceSchema).optional(),
 });

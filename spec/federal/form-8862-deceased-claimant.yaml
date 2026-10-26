@@ -1,0 +1,73 @@
+form: "8862"
+taxYear: 2025
+title: "Actual deceased-claimant taxable periods for EIC recertification"
+source: "https://uscode.house.gov/us/usc/119-118/t26/s32/"
+notes: |
+  Official authorities refreshed 2026-10-26. IRC32(c)(1)(A)(ii)(I) tests
+  residence for more than half the individual's taxable year; IRC32(e)
+  expressly permits a year closed by death. IRC443(a)(2) and
+  https://www.ecfr.gov/current/title-26/section-1.443-1 paragraph(a)(2)
+  end the decedent's period on the actual death date, without annualizing income.
+  IRC6013(a)(2) and https://www.ecfr.gov/current/title-26/section-1.6013-1
+  paragraph(d)(1) preserve separate spouse periods even in one joint return.
+  Its published calendar-year example has a deceased spouse's Jan1–Aug1 period
+  and the survivor's Jan1–Dec31 period. Paragraph(d)(2) separately excludes
+  survivor remarriage before the survivor's year ends and an accounting change.
+  https://www.irs.gov/publications/p559 confirms the final-return period and
+  EIC availability on an otherwise eligible death-shortened final return.
+  https://www.irs.gov/instructions/i8862 lines9/10 provide actual residence-day
+  printing and the death-age examples. Line7's printed365/366 child convention
+  does not apply to a deceased claimant. The age25 day-before rule and age65
+  birthday rule remain distinct. Each claimant's original identity/death date,
+  actual period and complete distinct-day ledger are independently bound.
+  This method covers actual calendar-year periods, including both spouses dying
+  in the year. It neither annualizes income nor prorates the published EIC table.
+  Fiscal/accounting-change periods and legal authority to file remain separate;
+  no final filing, form-year or human-qualification gate changes.
+  The day-count controls are derived examples, not published IRS numeric oracles.
+lines:
+  - line: "9-single"
+    description: "Actual home days within the deceased individual's own taxable year"
+    formula: "Period=Jan1 through actual death inclusive; eligible home answer=(distinct actual days*2>period days); print actual days"
+    irsRef: "IRC32(c)(1)(A)(ii)(I),32(e),443(a)(2); Reg1.443-1(a)(2); i8862 line9"
+    testRef: "tests/engine/forms/form-8862-deceased-claimant.test.ts::derives the deceased claimant period without a fixed full-year day threshold"
+  - line: "9-joint"
+    description: "Both joint claimants retain their own periods and residence tests"
+    formula: "Each Jan1 period ends at that owner's death or Dec31; require actual joint no-remarriage record and no accounting-period change; do not substitute either owner's days"
+    irsRef: "IRC6013(a)(2); Reg1.6013-1(d)(1)/(2); Pub596 Rule14"
+    testRef: "tests/engine/forms/form-8862-deceased-claimant.test.ts::keeps separate deceased and surviving spouse periods including both-deceased returns"
+  - line: "10-death"
+    description: "Actual printed age and the existing either-spouse eligibility test"
+    formula: "Print completed age at each actual period end, treating age25 as attained the day before that birthday and age65 on the birthday; eligibility still uses either actual spouse"
+    irsRef: "i8862 line10 Examples1/2; Pub596 Rule11"
+    testRef: "tests/engine/forms/form-8862-deceased-claimant.test.ts::matches the published death-age examples without replacing the survivor home test"
+  - line: "source"
+    description: "Unknown death and joint-method facts cannot establish a short period"
+    formula: "Require actual death, original period, distinct-day ledgers and applicable joint conditions; reject contradictory dates, excessive days, unknown or true accounting-change/remarriage answers"
+    irsRef: "Reg1.443-1(a)(2); Reg1.6013-1(d)(2); actual-source conservation"
+    testRef: "tests/engine/forms/form-8862-deceased-claimant.test.ts::rejects unknown or conflicting death-period and joint-return sources without mutation"
+  - line: "canonical"
+    description: "Use actual taxable-year income with the existing EIC table"
+    formula: "A completed death-period source result permits the otherwise eligible actual claim; use canonical earned income and AGI once with no annualization or credit proration"
+    irsRef: "IRC32(a)/(e)/(f); Reg1.443-1(a)(2); Pub559 earned income credit"
+    testRef: "tests/engine/forms/form-8862-deceased-claimant.test.ts::retains the full published credit on actual income and preserves the form shortcut"
+  - line: "guided"
+    description: "Collect the actual independent periods and joint-death facts without defaults"
+    formula: "Preserve blank/false/no-record, original death dates and per-filer residence sources; nested edits revoke current/history/claimant confirmation; never copy survivor days into the deceased period"
+    irsRef: "Reg1.6013-1(d); i8862 lines9/10; actual-source conservation"
+    testRef: "tests/apps/web/form-8862-deceased-interactions.test.tsx::collects joint death-period facts and reconfirms actual separate residence records"
+  - line: "review"
+    description: "Print actual claimant days and ages and retain the applicable period explanation"
+    formula: "Physical9a/9b=actual separate day totals;10a/10b=actual period-end age; append own period dates and denominator, omit private references; bind original dates and joint-source conditions before PDF IO"
+    irsRef: "i8862 lines9/10; original-source private review boundary"
+    testRef: "tests/pdf/form-8862-deceased-review.test.ts::reopens separate deceased and survivor day fields with their original period records"
+  - line: "household-copy"
+    description: "A replacement joint household cannot inherit the prior marriage-period record"
+    formula: "Copy retains actual joint-death facts only when all original filer identities still match; otherwise omit the old joint record and revoke confirmation"
+    irsRef: "Reg1.6013-1(d); actual original-household source binding"
+    testRef: "tests/apps/web/form-8862-deceased-interactions.test.tsx::does not copy a prior household marriage record onto replacement filers"
+  - line: "persistence"
+    description: "Actual death-period guide records persist locally and reach the saved review"
+    formula: "Desktop/mobile retain false/unknown and independent source periods, no source upload before an explicit review request; reopened physical values and review notice match canonical results"
+    irsRef: "Actual-source transport and review-only export policy"
+    testRef: "apps/web/tests/guided-form-8862-deceased.spec.ts::saves separate death periods and downloads the actual claimant review"

@@ -42,8 +42,11 @@ export function updateForm8862Sources(data: Form8862Data, patch: Partial<Form886
 export function copyForm8862Household(personal: PersonalInfoData, status: FilingStatus | null, data: Form8862Data): Form8862Data {
   const owners = [{ owner: 'primary' as const, originalTaxpayer: originalPrimary(personal) },
     ...(status === 'mfj' && personal.spouse ? [{ owner: 'spouse' as const, originalTaxpayer: { firstName: personal.spouse.firstName, lastName: personal.spouse.lastName, ssn: personal.spouse.ssn, dateOfBirth: personal.spouse.dateOfBirth } }] : [])];
+  const sameHousehold = data.filers?.length === owners.length && owners.every(owner =>
+    data.filers?.filter(row => row.owner === owner.owner && equal(row.originalTaxpayer, owner.originalTaxpayer)).length === 1);
   const actualCount = /^\d+$/.test(personal.dependentCount) && Number(personal.dependentCount) === (personal.dependents ?? []).length;
   return { ...data, sourceFactsConfirmed: null, allCandidateChildrenIncluded: null,
+    jointReturnAfterDeath: sameHousehold ? data.jointReturnAfterDeath : undefined,
     filers: owners.map(owner => {
       const matches = data.filers?.filter(row => row.owner === owner.owner && equal(row.originalTaxpayer, owner.originalTaxpayer)) ?? [];
       return { ...(matches.length === 1 ? matches[0] : {}), ...owner };

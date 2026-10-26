@@ -63,7 +63,10 @@ export async function fillForm8862(input: TaxYearInput, result: TaxReturnResult,
       line('The source record confirms availability; no certificate is created here.');
     }
   }
-  for (const row of physical.claimantRows ?? []) line(`${row.owner === 'primary' ? 'Primary filer' : 'Spouse'}: ${row.line9Days} home days; age ${row.line10Age}; dependent answer ${row.line11Dependent ? 'Yes' : 'No'}.`);
+  for (const row of physical.claimantRows ?? []) {
+    line(`${row.owner === 'primary' ? 'Primary filer' : 'Spouse'}: ${row.line9Days} home days; age ${row.line10Age}; dependent answer ${row.line11Dependent ? 'Yes' : 'No'}.`);
+    line(`Actual period: ${row.applicableYearStart} through ${row.applicableYearEnd}; ${row.applicableYearDays} days.`);
+  }
   y -= 8; line('Original identifiers and source reference text are omitted from this summary.');
   line('This review record does not qualify the return for filing.');
   await markReviewPdf(doc); return doc;

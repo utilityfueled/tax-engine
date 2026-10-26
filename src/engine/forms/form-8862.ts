@@ -23,7 +23,8 @@ export interface Form8862Result {
     line1: number; line2Eic: true; line3IncomeOnly: boolean;
     line4OtherTaxpayerChild?: boolean; line6QualifyingChild?: boolean;
     childRows?: Array<{ sourceId: string; actualResidenceDays: number; line7Days: number; line8Birth?: string; line8Death?: string }>;
-    claimantRows?: Array<{ owner: 'primary' | 'spouse'; line9Days: number; line10Age: number; line11Dependent: boolean }>;
+    claimantRows?: Array<{ owner: 'primary' | 'spouse'; line9Days: number; line10Age: number; line11Dependent: boolean;
+      applicableYearStart: string; applicableYearEnd: string; applicableYearDays: number }>;
   };
   lines: CalculatedLine[];
 }
@@ -33,9 +34,10 @@ function actualDate(value: string | undefined, label: string): Date {
   if (!Number.isFinite(result.getTime()) || result.toISOString().slice(0, 10) !== value) throw new Error(`Form8862 ${label} needs an actual calendar date`);
   return result;
 }
-function ageAtEnd(birth: string, year: number): number {
-  const born = actualDate(birth, 'claimant birth'); const end = new Date(Date.UTC(year, 11, 31));
-  let age = year - born.getUTCFullYear();
+function ageAtEnd(birth: string, end: Date): number {
+  const born = actualDate(birth, 'claimant birth');
+  let age = end.getUTCFullYear() - born.getUTCFullYear();
+  if (end < new Date(Date.UTC(end.getUTCFullYear(), born.getUTCMonth(), born.getUTCDate()))) age--;
   const twentyFive = new Date(Date.UTC(born.getUTCFullYear() + 25, born.getUTCMonth(), born.getUTCDate()));
   twentyFive.setUTCDate(twentyFive.getUTCDate() - 1);
   if (age === 24 && end >= twentyFive) age = 25;
@@ -53,6 +55,11 @@ export function calculateForm8862(input: Form8862Input): Form8862Result | undefi
   if (!facts.sourceReference?.trim() || facts.sourceFactsConfirmed !== true) throw new Error('Form8862 actual current source reference and confirmation are required');
   if (joint && !taxpayer.spouse) throw new Error('Form8862 actual joint spouse is missing');
   const owners = [{ owner: 'primary' as const, person: taxpayer.primary }, ...(joint && taxpayer.spouse ? [{ owner: 'spouse' as const, person: taxpayer.spouse }] : [])];
+  const deathFor = (owner: 'primary' | 'spouse') => owner === 'primary' ? input.standardDeductionFacts?.primaryDeathDate : input.standardDeductionFacts?.spouseDeathDate;
+  const hasDeath = owners.some(({ owner }) => typeof deathFor(owner) === 'string');
+  if (facts.jointReturnAfterDeath !== undefined && (!joint || !hasDeath
+    || !facts.jointReturnAfterDeath.sourceReference?.trim()
+    || typeof facts.jointReturnAfterDeath.survivingSpouseRemarriedBeforeOwnYearEnd !== 'boolean')) throw new Error('Form8862 joint death-period record needs the applicable actual household, reference and remarriage answer');
   if (!facts.filers || facts.filers.length !== owners.length) throw new Error('Form8862 each actual filer needs exactly one original source record');
   const seen = new Set<string>();
   for (const row of facts.filers) {
@@ -110,15 +117,21 @@ export function calculateForm8862(input: Form8862Input): Form8862Result | undefi
     });
     return finish(!claimant.disqualificationReason);
   }
-  const yearDays = (Date.UTC(year + 1, 0, 1) - Date.UTC(year, 0, 1)) / 86400000;
+  if (input.standardDeductionFacts?.shortTaxYear === true || (hasDeath && input.standardDeductionFacts?.shortTaxYear !== false)) throw new Error('Form8862 death-period method needs an actual no-accounting-period-change answer; fiscal or changed periods require a separate method');
+  if (hasDeath && joint && (!facts.jointReturnAfterDeath?.sourceReference?.trim()
+    || facts.jointReturnAfterDeath.survivingSpouseRemarriedBeforeOwnYearEnd !== false)) throw new Error('Form8862 joint death-period method needs actual no-remarriage sources through the survivor\'s own year end');
   physical.claimantRows = owners.map(({ owner, person }) => {
     const row = facts.filers?.find(value => value.owner === owner);
-    const death = owner === 'primary' ? input.standardDeductionFacts?.primaryDeathDate : input.standardDeductionFacts?.spouseDeathDate;
-    if (death !== null) throw new Error('Form8862 deceased or unknown claimant period requires actual short-year home-day method sources');
-    if (row?.applicableYearStart !== `${year}-01-01` || row.applicableYearEnd !== `${year}-12-31`) throw new Error('Form8862 actual ordinary claimant period must match the full current year');
-    const total = calculateEicResidenceDays({ taxYear: year, sources: row.homeDays });
+    const death = deathFor(owner);
+    if (death === undefined) throw new Error('Form8862 actual claimant death status and applicable period are unknown');
+    const periodStart = `${year}-01-01`, periodEnd = death ?? `${year}-12-31`;
+    const end = actualDate(periodEnd, 'claimant period end');
+    if (end.getUTCFullYear() !== year || end < actualDate(person.dateOfBirth, 'claimant birth')) throw new Error('Form8862 claimant death period must be in the current year and on or after birth');
+    if (row?.applicableYearStart !== periodStart || row.applicableYearEnd !== periodEnd) throw new Error('Form8862 actual claimant period must match January1 through that filer\'s death or year end');
+    const periodDays = (end.getTime() - Date.UTC(year, 0, 1)) / 86400000 + 1;
+    const total = calculateEicResidenceDays({ taxYear: year, sources: row.homeDays, maximumDays: periodDays });
     const claimantFacts = owner === 'primary' ? input.eic?.claimantEligibility?.primaryChildless : input.eic?.claimantEligibility?.spouseChildless;
-    if (claimantFacts?.mainHomeInUnitedStatesMoreThanHalfYear !== (total * 2 > yearDays)) throw new Error('Form8862 home days conflict with the actual claimant main-home answer');
+    if (claimantFacts?.mainHomeInUnitedStatesMoreThanHalfYear !== (total * 2 > periodDays)) throw new Error('Form8862 home days conflict with the actual claimant main-home answer for that filer\'s applicable period');
     const military = (row.homeDays?.militaryOutsideUnitedStatesDays ?? 0) > 0;
     if (claimantFacts.countedMilitaryDutyOutsideUnitedStates !== military) throw new Error('Form8862 actual military day records conflict with the claimant source answer');
     if (military && (claimantFacts.militaryDutySourceReference !== row.homeDays?.extendedActiveDuty?.sourceReference
@@ -127,7 +140,10 @@ export function calculateForm8862(input: Form8862Input): Form8862Result | undefi
     if (typeof dependent !== 'boolean') throw new Error('Form8862 actual claimant dependency answer is unknown');
     const exception = claimantFacts.dependentException;
     const effectiveDependent = dependent && !(exception?.allPotentialClaimantsNotRequiredToFile === true && exception.allPotentialClaimantsDidNotFileOrRefundOnly === true);
-    return { owner, line9Days: total, line10Age: ageAtEnd(person.dateOfBirth, year), line11Dependent: effectiveDependent };
+    audit.record('8862', `claimantPeriod.${owner}`, 'Actual claimant taxable-period residence days', new Decimal(total),
+      `${periodStart} through ${periodEnd} inclusive: ${periodDays} days; actual home days * 2 > own period days`);
+    return { owner, line9Days: total, line10Age: ageAtEnd(person.dateOfBirth, end), line11Dependent: effectiveDependent,
+      applicableYearStart: periodStart, applicableYearEnd: periodEnd, applicableYearDays: periodDays };
   });
   return finish(!claimant.disqualificationReason && claimant.childlessAgeEligible === true);
 }

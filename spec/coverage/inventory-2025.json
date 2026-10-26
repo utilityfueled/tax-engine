@@ -3212,6 +3212,26 @@
       ]
     },
     {
+      "key": "federal/form-8862-deceased-claimant",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/form-8862-deceased-claimant.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-8862-eic",
       "jurisdiction": "federal",
       "taxYear": 2025,

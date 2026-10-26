@@ -64,6 +64,9 @@ function CurrentChild({ data, index, onChange }: { data: Form8862ChildData; inde
 export function Form8862Details({ personal, filingStatus, onChange }: { personal: PersonalInfoData; filingStatus: FilingStatus | null; onChange: (next: Form8862Data | undefined) => void }) {
   const data = personal.eicRecertificationSources;
   const update = (patch: Partial<Form8862Data>) => onChange(updateForm8862Sources(data ?? {}, patch));
+  const jointDeath = data?.jointReturnAfterDeath;
+  const showJointDeath = jointDeath !== undefined || (filingStatus === 'mfj'
+    && (personal.standardDeductionFacts?.primaryDeceased === true || personal.standardDeductionFacts?.spouseDeceased === true));
   return <details className="guided-card"><summary>Current Form 8862 EIC recertification records</summary>
     <p className="guided-hint">Use these records when the actual EIC denial history requires a current Form 8862. Prior history determines whether the income-only shortcut applies. Record actual answers here and in the EIC claimant panel; a completed-form checkbox cannot replace them.</p>
     {!data ? <button type="button" className={buttonClass} onClick={() => onChange({})}>Add actual current Form 8862 records</button> : <div className="panel-stack">
@@ -73,6 +76,12 @@ export function Form8862Details({ personal, filingStatus, onChange }: { personal
       </div>
       <button type="button" className={buttonClass} onClick={() => onChange(copyForm8862Household(personal, filingStatus, data))}>Copy current Form 8862 household originals</button>
       <p className="guided-hint">Copy the actual names, identifiers, birth dates, relationships and residence months already entered above. This records a known empty candidate list only when the household count is explicitly zero. Unchanged recorded answers are retained; a replacement person cannot inherit another person’s records.</p>
+      {showJointDeath && (!jointDeath ? <button type="button" className={buttonClass} onClick={() => update({ jointReturnAfterDeath: {} })}>Add actual joint-return-after-death records</button> : <fieldset className="guided-card"><legend>Joint return after a spouse’s death</legend>
+        <p className="guided-hint">Each filer retains their own tax-year period. Use the original death dates above and actual January 1 through death or December 31 records below. If both spouses died, the surviving spouse’s own period ends at their later death. Fiscal years, accounting-period changes and remarriage require separate return treatment; this record does not establish legal authority to file.</p>
+        <TextFact label="Form 8862 joint death-period source reference" value={jointDeath.sourceReference ?? ''} onChange={sourceReference => update({ jointReturnAfterDeath: { ...jointDeath, sourceReference } })} />
+        <BooleanFact label="Did the surviving spouse remarry before the end of their own tax year?" value={jointDeath.survivingSpouseRemarriedBeforeOwnYearEnd} onChange={survivingSpouseRemarriedBeforeOwnYearEnd => update({ jointReturnAfterDeath: { ...jointDeath, survivingSpouseRemarriedBeforeOwnYearEnd } })} />
+        <button type="button" className="guided-card-remove" onClick={() => update({ jointReturnAfterDeath: undefined })}>Remove joint-return-after-death records</button>
+      </fieldset>)}
       {data.filers?.map((filer, index) => {
         const prefix = `Form 8862 ${filer.owner ?? 'unassigned'} filer`;
         const edit = (patch: Partial<typeof filer>) => update({ filers: data.filers?.map((row, i) => i === index ? { ...row, ...patch } : row) });
@@ -88,7 +97,7 @@ export function Form8862Details({ personal, filingStatus, onChange }: { personal
       {data.children?.map((child, index) => <CurrentChild key={child.sourceId ?? index} data={child} index={index} onChange={next => update({ children: data.children?.map((row, i) => i === index ? next : row) })} />)}
       <BooleanFact label="Form 8862 all candidate children recorded" value={data.allCandidateChildrenIncluded} onChange={allCandidateChildrenIncluded => update({ allCandidateChildrenIncluded })} />
       <BooleanFact label="Form 8862 current sources checked after the last edit" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed => update({ sourceFactsConfirmed })} />
-      <p className="guided-hint">These records remain in the local workspace. Source edits revoke confirmations; check the current records, history and claimant facts again. <a href="https://www.irs.gov/instructions/i8862" target="_blank" rel="noreferrer">IRS Form 8862 instructions</a>. The current childless numeric-day method supports a complete calendar year; a deceased claimant’s short-year calculation is a separate method.</p>
+      <p className="guided-hint">These records remain in the local workspace. Source edits revoke confirmations; check the current records, history and claimant facts again. <a href="https://www.irs.gov/instructions/i8862" target="_blank" rel="noreferrer">IRS Form 8862 instructions</a>. Claimant days are tested against each actual calendar-year period ending at death or December 31. Use the recorded death date and exact period; a spouse’s full-year days do not replace the deceased filer’s record.</p>
       <button type="button" className="guided-card-remove" onClick={() => onChange(undefined)}>Remove current Form 8862 records</button>
     </div>}
   </details>;
