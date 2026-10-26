@@ -19,6 +19,9 @@ import { TaxYearInputSchema } from "../../../src/models/inputs";
 import { calculateFederalTax } from "../../../src/engine/federal";
 import * as federalEngine from "../../../src/engine/federal";
 import { actualGuidedAdoptionHistory } from "../../fixtures/guided-adoption-prior-benefits";
+import { actualGuidedK1PassiveDistribution } from "../../fixtures/guided-k1-passive-distribution";
+import { startCompleteInterview, completeW2Entry } from "../../guided-interview/complete-facts";
+import { emptyDeductionData } from "../../../apps/web/src/lib/guided-interview-flow";
 import { actualGuidedK1Sources } from "../../fixtures/guided-k1-qbi-sources";
 
 vi.mock("server-only", () => ({}));
@@ -526,6 +529,27 @@ describe("workspace filled return download", () => {
       expect(text).toContain('Current QBI after loss limits: $-48000');
       expect(text).toContain('465, origin 2025: suspended $40000; qualified $32000');
       for (const secret of ['111223333', 'Original K1 and199A attachment', 'Actual year-end outside-basis worksheet']) expect(text).not.toContain(secret);
+      expect(JSON.stringify(state)).toBe(before);
+    } finally { calculate.mockRestore(); }
+  });
+
+  // Spec: spec/federal/schedule-e-passive-distribution-review.yaml.
+  it("prepares the actual passive distribution context before workspace redaction", async () => {
+    const source = actualGuidedK1PassiveDistribution();
+    const state = startCompleteInterview({ filingStatus: 'single', incomeTypes: ['w2-wages'], lifeEvents: ['k1-loss-sources'], stateCode: null });
+    state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '100000' }] };
+    state.sectionData.adjustments = { k1LossSources: source.qualifiedLoss };
+    state.sectionData.deductions = { ...emptyDeductionData, method: 'itemized', medicalExpenses: '0', stateLocalTaxes: '0', realEstateTaxes: '0', mortgageInterest: '0', charitableContributions: '0', casualtyLosses: '0', otherItemized: '0', gamblingWinnings: '0', nonW2IncomeTaxesDeductedElsewhere: '0', donationEntries: [], k1CharitableSources: source.charity };
+    const before = JSON.stringify(state), calculate = vi.spyOn(federalEngine, 'calculateFederalTax');
+    try {
+      const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+      for (const name of ['f1040se-filled.pdf', 'f1040sd-filled.pdf', 'f8582-filled.pdf', 'f8949-filled.pdf', 'qbi-loss-reference-filled.pdf']) expect(download.includedForms).toContain(name);
+      expect(calculate.mock.calls.length).toBeGreaterThan(0);
+      expect(calculate.mock.calls.every(([input]) => input.taxpayer.primary.ssn === state.sectionData['personal-info']!.ssn)).toBe(true);
+      const text = await extractPdfText(download.contents);
+      expect(text).toContain('Ordinary passive loss allowed: $1000');
+      expect(text).toContain('Passive loss remaining: $500');
+      for (const secret of ['111223333', 'asset-1', 'activity-1', 'Fictional complete entity activity and valuation report']) expect(text).not.toContain(secret);
       expect(JSON.stringify(state)).toBe(before);
     } finally { calculate.mockRestore(); }
   });

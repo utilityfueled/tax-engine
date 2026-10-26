@@ -34,7 +34,7 @@ import {
   setCheckBox,
 } from "../../pdf-utils.js";
 import { d, sum, roundDollar, zeroFloor } from "@/utils/decimal.js";
-import { assertScheduleEReview, type PreparedScheduleEReview } from "../../schedule-e-review-context.js";
+import { requiresScheduleEReview, scheduleEReviewPassiveDistributionSources, type PreparedScheduleEReview, type ScheduleEPassiveDistributionSource } from "../../schedule-e-review-context.js";
 
 // ─── PDF Field Name Helpers ────────────────────────────────────────────────
 
@@ -485,15 +485,22 @@ function propertyRows(input:TaxYearInput,result:TaxReturnResult):PropertyRow[] {
     expenses:{commissions:row.commissions,insurance:row.insurance,legalProfessional:row.legalProfessional,managementFees:row.managementFees,taxes:row.taxes},allowedLoss:zeroFloor(row.netIncome.negated())}));
   return [...rentals,...royalties];
 }
-function partnershipRows(input:TaxYearInput,result:TaxReturnResult):PartnershipRow[] {
+function partnershipRows(input:TaxYearInput,result:TaxReturnResult,passiveDistributions:ScheduleEPassiveDistributionSource[]):PartnershipRow[] {
   let passiveIndex=0;
   return (result.scheduleE?.partnerships??[]).map((row,sourceIndex)=>{
     const index=row.isPassive?passiveIndex++:undefined;
     const activity=result.form8582?.activityRows.find(item=>item.sourceIndex===index&&index!==undefined);
     const allowance=result.form8582?.activityAllocations.find(item=>item.sourceIndex===index&&index!==undefined);
-    if(row.isPassive&&!row.isPubliclyTradedPartnership) return {sourceIndex,
-      passiveIncome:activity?.currentIncome??row.passiveIncome,passiveLoss:allowance?.allowedLoss??d(0),
-      nonpassiveIncome:row.nonpassiveIncome,nonpassiveLoss:row.nonpassiveLoss.abs()};
+    if(row.isPassive&&!row.isPubliclyTradedPartnership) {
+      const distribution=passiveDistributions.find(source=>source.k1Index===sourceIndex);
+      if(distribution&&(!activity||distribution.passiveIndex!==index||!activity.sourceCurrentIncome.eq(distribution.sourceIncome)))
+        throw new Error('Schedule E passive distribution source does not reconcile with original-index Form8582');
+      // Capital income can release an ordinary loss without becoming ordinary
+      // income itself. Keep its validated original rounded component separate.
+      const passiveIncome=distribution?activity!.currentIncome.minus(distribution.ordinaryTransferExclusion):activity?.currentIncome??row.passiveIncome;
+      return {sourceIndex,passiveIncome,passiveLoss:allowance?.allowedLoss??d(0),
+        nonpassiveIncome:row.nonpassiveIncome,nonpassiveLoss:row.nonpassiveLoss.abs()};
+    }
     if(row.isPassive&&row.isPubliclyTradedPartnership) {
       const prior=sum(...(input.priorYear?.suspendedPTPLosses??[]).filter(item=>item.partnershipName===row.name).map(item=>d(item.amount)));
       const released=result.form8582?.ptpDispositionReleasedLosses.find(item=>item.name===row.name);
@@ -550,10 +557,11 @@ async function appendReference(doc:PDFDocument,lines:string[]):Promise<void> {
 /** Fill final2025 review maps; source preparation happens before template I/O. */
 export async function fillScheduleE(input:TaxYearInput,result:TaxReturnResult,blankPdfPath:string,prepared?:PreparedScheduleEReview):Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear,result.taxYear);
-  if(input.royaltyPropertySources||prepared)assertScheduleEReview(input,result,prepared);
+  const passiveDistributions=requiresScheduleEReview(input,result)||prepared?
+    scheduleEReviewPassiveDistributionSources(input,result,prepared):[];
   const supplementalIncome=result.schedule1?.supplementalIncome;
   if(result.scheduleE&&supplementalIncome===undefined)throw new Error("Schedule E review requires the final Schedule1 source amount");
-  const properties=propertyRows(input,result),partnerships=partnershipRows(input,result);
+  const properties=propertyRows(input,result),partnerships=partnershipRows(input,result,passiveDistributions);
   const doc=await loadReviewTemplate(blankPdfPath,2025),form=doc.getForm(),se=result.scheduleE;
   const name=input.taxpayer.spouse?`${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`:`${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
   const ssn=input.taxpayer.primary.ssn.replace(/-/g,'');

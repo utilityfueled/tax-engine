@@ -19,7 +19,7 @@ import { fillScheduleB } from "./fill-schedule-b.js";
 import { fillScheduleC } from "./fill-schedule-c.js";
 import { fillScheduleD } from "./fill-schedule-d.js";
 import { fillScheduleE } from "./fill-schedule-e.js";
-import { prepareScheduleEReview, assertScheduleEReview, type PreparedScheduleEReview } from "./schedule-e-review-context.js";
+import { requiresScheduleEReview, prepareScheduleEReview, assertScheduleEReview, type PreparedScheduleEReview } from "./schedule-e-review-context.js";
 import { fillScheduleSE } from "./fill-schedule-se.js";
 import { fillForm8949 } from "./fill-form-8949.js";
 import { fillForm8959 } from "./fill-form-8959.js";
@@ -423,7 +423,7 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
-  const scheduleEReview = input.royaltyPropertySources || options.scheduleEReview
+  const scheduleEReview = requiresScheduleEReview(input, result) || options.scheduleEReview
     ? options.scheduleEReview ?? prepareScheduleEReview(input) : undefined;
   if (scheduleEReview) assertScheduleEReview(input, result, scheduleEReview);
   const paRoyaltyReview = (input.royaltyPropertySources && result.stateReturns?.pennsylvania) || options.paRoyaltyReview

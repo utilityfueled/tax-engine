@@ -1,0 +1,48 @@
+form: "Schedule E"
+fullName: "Source-bound passive distribution gain in printed ordinary income columns"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040se"
+retrievedAt: "2026-10-26"
+reviewStatus: "source-derived-implementation-independent-review-pending"
+notes: |
+  Final 2025 Schedule E Part II and Form8582 instructions, reporting allowed
+  losses from Parts VIII and IX and Form4797/Form8949. Passive character does not change the
+  reporting form for capital gain. The actual excess cash-distribution gain
+  remains on8949/D, supplies8582 passive income, and can release a separately
+  reported ordinary loss. It is not another Schedule E column(h) amount.
+  Use the validated original-index canonical passive handoff, preserving the
+  existing independently rounded ordinary component when combined8582 income
+  crosses a dollar. No new taxpayer allocation or monetary override is accepted.
+  A private original-source context binds exact input, source calculations and
+  retained results before identifier redaction or template/output I/O. Context
+  transfers expose only copied monetary values and source indexes. Every page
+  remains review-only. This does not qualify a2026 form or enable filing.
+lines:
+  - line: "ordinary-loss-separate-capital"
+    description: "Print released ordinary loss without the capital income on Schedule E"
+    formula: "Cash1030 minus basis30 yields capital1000. Prior ordinary loss1500 allows1000 and retains500. E28(g)=1000,(h)=blank,32=41=-1000; D=1000;8582income=1000. Prior400 instead prints E=-400; prior0 prints no ordinary amount."
+    testRef: "tests/pdf/schedule-e-passive-distribution-review.test.ts::keeps released ordinary losses separate from capital distribution income"
+  - line: "ordinary-rounding"
+    description: "Retain ordinary income rounding independently from combined passive income"
+    formula: "Actual ordinary50.40 or50.60 and capital1000.25 both produce8582income1051. E(h)=50 or51,allowedloss400,32=-350 or-349; D retains1000.25 until its physical rounding."
+    testRef: "tests/pdf/schedule-e-passive-distribution-review.test.ts::prints the independently rounded ordinary component at a combined-income boundary"
+  - line: "source-index"
+    description: "Bind the capital exclusion to its actual K1 despite other statements"
+    formula: "An earlier nonpassive25 source stays on rowA(k); the passive distribution source on rowB has(g)400 and no(h);32=-375. Neither K1 position nor passive position is inferred from the other."
+    testRef: "tests/pdf/schedule-e-passive-distribution-review.test.ts::keeps original K1 and passive indexes distinct in physical rows"
+  - line: "source-context"
+    description: "Reject changed original sources or retained capital and passive results before I/O"
+    formula: "Changing actual valuations, recipient, prior losses or result amounts invalidates the private context. A forged token rejects. Redacted facts alone cannot reconstruct original source identity."
+    testRef: "tests/pdf/schedule-e-passive-distribution-review.test.ts::rejects stale passive distribution context before template access"
+  - line: "complete-packet"
+    description: "Save an ordinary loss and capital gain in their respective redacted review forms"
+    formula: "The full packet includes E,8582,8949,D and private-source reference pages with every page marked for review. Exact original identifiers and source references stay absent."
+    testRef: "tests/pdf/schedule-e-passive-distribution-review.test.ts::saves and reopens the redacted complete passive distribution packet"
+  - line: "removed-source"
+    description: "Retained passive distribution evidence cannot lose its source-validation requirement"
+    formula: "Removing the original cash distribution or its entire packet while retaining calculated passive capital evidence rejects before direct-template or complete-packet I/O, even without a prepared token. It never restores capital gain to ordinary income."
+    testRef: "tests/pdf/schedule-e-passive-distribution-review.test.ts::rejects removed passive source attachments against retained results before output access"
+  - line: "workspace-context"
+    description: "Prepare the private Schedule E context from the actual guided original records"
+    formula: "The workspace packet calculates on original identifiers, then renders only redacted copies. Actual linked guide histories yield one separate ordinary-loss Schedule E and capital Schedule D without guessing recipient identity."
+    testRef: "tests/apps/web/workspace-filled-return.test.ts::prepares the actual passive distribution context before workspace redaction"
