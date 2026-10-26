@@ -3,6 +3,9 @@ const amount=z.string().regex(/^-?\d+(\.\d+)?$/).optional();
 const evidence={sourceTaxYear:z.number().int().optional(),sourceReference:z.string().optional(),sourceFactsConfirmed:z.boolean().optional()};
 /** Actual original records and opening histories; never a current loss/QBI override. */
 export const QbiLossSourcesSchema=z.object({
+  form461Classification:z.object({...evidence,method:z.enum(['ordinary_k1_only']).optional(),
+    allNonEmployeeBusinessSourcesIncluded:z.boolean().optional(),capitalIncomeIsNonbusiness:z.boolean().optional(),
+    otherBusinessIncome:amount,otherBusinessDeductions:amount}).optional(),
   ...evidence,allK1ActivitiesIncluded:z.boolean().optional(),
   allExcessBusinessLossHistoriesIncluded:z.boolean().optional(),
   excessBusinessLossHistories:z.array(z.object({
@@ -25,6 +28,9 @@ export const QbiLossSourcesSchema=z.object({
     accountHolder:z.enum(['primary','spouse']).optional(),entityType:z.enum(['partnership','s_corporation']).optional(),
     entityName:z.string().optional(),entityEIN:z.string().optional(),recipientName:z.string().optional(),recipientTaxpayerIdLast4:z.string().optional(),
     ordinaryBusinessOnlyConfirmed:z.boolean().optional(),continuingActivityConfirmed:z.boolean().optional(),
+    selfEmploymentTreatment:z.object({...evidence,method:z.enum(['ordinary_current']).optional(),
+      noOtherPartnerAdjustmentsConfirmed:z.boolean().optional(),
+      priorLossHistory:z.object({...evidence,amount}).optional()}).optional(),
     statement:z.object({ordinaryIncome:amount,section199AQBI:amount,section199AW2Wages:amount,section199AUBIA:amount,
       selfEmploymentEarnings:amount,selfEmploymentNetEarningsAfterAdjustments:amount,selfEmploymentIncomeType:z.enum(['farm','nonfarm']).optional(),
       section199AIsSST:z.boolean().optional(),isPassiveActivity:z.boolean().optional(),qbiMateriallyParticipated:z.boolean().optional()}).optional(),

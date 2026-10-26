@@ -106,8 +106,18 @@ export function validateK1QbiLossSources(input:K1QbiLossSourceInput):ValidatedK1
       if(original.selfEmploymentFactsConfirmed!==true||original.selfEmploymentIncomeType===undefined
         ||statement.selfEmploymentIncomeType!==original.selfEmploymentIncomeType) throw new Error('K1 QBI requires confirmed actual partnership self-employment classification');
       for(const field of ['selfEmploymentEarnings','selfEmploymentNetEarningsAfterAdjustments'] as const){
+        if(field==='selfEmploymentNetEarningsAfterAdjustments'&&source.selfEmploymentTreatment!==undefined) continue;
         if(!amount(statement[field],`self-employment ${field}`).eq(amount(original[field],`original self-employment ${field}`))) {
           throw new Error('K1 QBI self-employment Box14A and adjusted partner earnings must match the original sources');
+        }
+      }
+      if(source.selfEmploymentTreatment!==undefined){
+        const treatment=source.selfEmploymentTreatment;
+        evidence(treatment,year,'self-employment adjustment facts');
+        evidence(treatment.priorLossHistory,year-1,'prior self-employment loss history');
+        if(treatment.method!=='ordinary_current'||treatment.noOtherPartnerAdjustmentsConfirmed!==true
+          ||!amount(treatment.priorLossHistory?.amount,'prior self-employment loss',true,true).isZero()) {
+          throw new Error('K1 QBI ordinary self-employment requires actual no-other-adjustments and independent zero prior SE history');
         }
       }
     } else if((['selfEmploymentEarnings','selfEmploymentNetEarningsAfterAdjustments'] as const)

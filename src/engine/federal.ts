@@ -61,6 +61,8 @@ import { calculateScheduleB } from "./schedules/schedule-b.js";
 import { calculateScheduleC } from "./schedules/schedule-c.js";
 import { calculateScheduleD, recomputeCarryforward } from "./schedules/schedule-d.js";
 import { calculateScheduleE } from "./schedules/schedule-e.js";
+import { calculateK1Form461Classification } from "./forms/k1-form461-classification.js";
+import { calculateK1OrdinarySelfEmployment } from "./forms/k1-ordinary-self-employment.js";
 import { calculateScheduleSE } from "./schedules/schedule-se.js";
 import { calculateHomeMortgageInterest } from "./forms/home-mortgage-interest.js";
 import { calculateScheduleA } from "./schedules/schedule-a.js";
@@ -1503,7 +1505,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Schedule SE for SE tax deduction
   // Pass Schedule C net profit (Line 31) and Schedule F net profit (Line 34)
   // so SE tax is assessed on net, not gross amounts.
-  const schedSE = calculateScheduleSE(input, constants, schedC.netProfit, schedFNetProfit, {
+  const ordinaryK1SelfEmployment = calculateK1OrdinarySelfEmployment(input, schedE);
+  audit.merge(ordinaryK1SelfEmployment.lines);
+  const seSourceInput = ordinaryK1SelfEmployment.scheduleK1 === input.scheduleK1 ? input
+    : { ...input, scheduleK1: ordinaryK1SelfEmployment.scheduleK1 };
+  const schedSE = calculateScheduleSE(seSourceInput, constants, schedC.netProfit, schedFNetProfit, {
     additionalNonfarmIncome: cryptoBusinessNet,
     additionalNonfarmOwner: input.cryptoIncome?.businessAccountHolder,
   });
@@ -1524,7 +1530,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   let seHealthInsuranceWorksheetResult: SEHealthInsuranceWorksheetResult | undefined;
   let actualHealthInsurance: ReturnType<typeof calculateForm7206Return> | undefined;
   if (input.form7206) {
-    actualHealthInsurance = calculateForm7206Return({ input, scheduleCProfit: schedC.netProfit,
+    actualHealthInsurance = calculateForm7206Return({ input: seSourceInput, scheduleCProfit: schedC.netProfit,
       scheduleFProfit: schedFNetProfit, cryptoBusinessProfit: cryptoBusinessNet,
       selfEmploymentDeductions: schedSE.perTaxpayer.map(row => ({ accountHolder: row.accountHolder, amount: row.deductibleHalf })),
       foreignIncomeExclusion: form2555IncomeReduction, selfEmploymentSourcesVerified: schedSE.sourceFactsVerified, marketplace,
@@ -1654,6 +1660,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Computed after Schedule 1 so SE deductions are known. The excess
   // is added back to other income on Schedule 1 Line 8p.
   const eblSources = input.form461;
+  const k1Form461Classification = calculateK1Form461Classification(input, {
+    scheduleE: schedE, capitalGainOrLoss: capitalGainLoss, deductibleSETax: schedSE.deductibleHalf,
+    seHealthInsurance: sched1.seHealthInsurance, seRetirementContributions: sched1.seRetirementContributions,
+  }, constants);
   if (eblSources) {
     if (eblSources.sourceTaxYear !== year || eblSources.sourceFactsConfirmed !== true
       || !eblSources.sourceReference?.trim() || eblSources.atRiskAndPassiveLimitationsApplied !== true) {
@@ -1671,7 +1681,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const eblHasPassiveOrRentalSources = schedE.rentalProperties.length > 0 || schedE.partnerships.some(partnership => partnership.isPassive)
     || (input.priorYear?.suspendedPassiveLosses ?? []).some(loss => d(loss.amount).gt(0))
     || (input.priorYear?.suspendedPTPLosses ?? []).some(loss => d(loss.amount).gt(0));
-  const form461 = calculateForm461(
+  const form461 = k1Form461Classification?.form461 ?? calculateForm461(
     {
       totalWages,
       scheduleCNetProfit: schedCNetProfit,
@@ -1700,7 +1710,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     filingStatus,
     constants
   );
-  if (!eblSources && eblHasPassiveOrRentalSources
+  if (!eblSources && !k1Form461Classification && eblHasPassiveOrRentalSources
     && (form461.requiresForm461 || adjustedScheduleETotal.lt(constants.excessBusinessLoss.threshold.single.div(2).negated()))) {
     throw new Error("Form461 material supplemental business loss requires actual post-passive source classification");
   }
@@ -1932,6 +1942,19 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     throw new Error("Pub974 passive ordering requires separate actual K1 participation, disposition or business-loss source coordination.");
   }
   const form8582 = ordered?.passive ?? calculatedForm8582;
+  for (const earlier of [k1Form461Classification?.passive, ordinaryK1SelfEmployment.passive]) {
+    if (!earlier) continue;
+    const sourceRows = (value: typeof earlier) => value.activityRows.map(row => [row.sourceIndex, row.name,
+      row.sourceCurrentIncome.toFixed(), row.sourceCurrentLoss.toFixed(), row.sourcePriorYearSuspendedLoss.toFixed()]);
+    const allocations = (value: typeof earlier) => value.activityAllocations.map(row => [row.sourceIndex, row.name,
+      row.allowedLoss.toFixed(), row.suspendedLoss.toFixed(), row.specialAllowance.toFixed()]);
+    if (!form8582.allowedLoss.eq(earlier.allowedLoss) || !form8582.suspendedLoss.eq(earlier.suspendedLoss)
+      || !form8582.passiveIncome.eq(earlier.passiveIncome) || !form8582.rentalAllowance.isZero()
+      || JSON.stringify(sourceRows(form8582)) !== JSON.stringify(sourceRows(earlier))
+      || JSON.stringify(allocations(form8582)) !== JSON.stringify(allocations(earlier))) {
+      throw new Error("K1 calculated source classification must reconcile with final actual Form8582 sources and allowances");
+    }
+  }
   // The first W/X/Simplified pass excludes losses, retaining positive rental
   // income. Subsequent passes use the allowance fixed at preceding Step3.
   const passiveLossForIncome = passiveSpecialRequired && !calculateOrdered("passive") ? new Decimal(0) : form8582.allowedLoss;
@@ -2154,7 +2177,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   let agi = totalIncome.minus(adjustments);
 
-  if (eblSources && !form461.line5ScheduleE.eq(roundDollar(adjustedScheduleETotal.plus(passiveIncomeAdjustment).minus(ptpReleasedTotal)))) {
+  if ((eblSources || k1Form461Classification) && !form461.line5ScheduleE.eq(roundDollar(adjustedScheduleETotal.plus(passiveIncomeAdjustment).minus(ptpReleasedTotal)))) {
     throw new Error("Form461 actual supplemental income must reconcile with final post-passive Schedule1 line5");
   }
 
@@ -2460,7 +2483,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     qbi:schedFNetProfit,netSEEarnings:schedFNetProfit,accountHolder:ownerOf(input.scheduleF?.accountHolder),materiallyParticipated:input.scheduleF?.qbiMateriallyParticipated});
   if (!cryptoBusinessNet.isZero()) deductionSources.push({id:"cryptoBusiness",name:"Cryptocurrency business",
     qbi:cryptoBusinessNet,netSEEarnings:cryptoBusinessNet,accountHolder:ownerOf(input.cryptoIncome?.businessAccountHolder)});
-  input.scheduleK1.forEach((k1,index)=>{
+  seSourceInput.scheduleK1.forEach((k1,index)=>{
     const qbi=k1QbiLosses.activities.find(source=>source.k1Index===index)?.currentQbi ?? d(k1.section199AQBI);
     const netSEEarnings=k1.entityType === "s_corporation" ? d("0") : d(k1.selfEmploymentNetEarningsAfterAdjustments ?? k1.selfEmploymentEarnings);
     if (!qbi.isZero() || !netSEEarnings.isZero()) deductionSources.push({id:`scheduleK1:${index}`,name:k1.partnershipName,

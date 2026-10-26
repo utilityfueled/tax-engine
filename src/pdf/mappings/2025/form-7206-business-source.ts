@@ -9,6 +9,8 @@ import { calculateCryptoIncome, processNFTTransactions } from "@/engine/forms/cr
 import { calculateScheduleC } from "@/engine/schedules/schedule-c.js";
 import { calculateScheduleF } from "@/engine/schedules/schedule-f.js";
 import { calculateScheduleSE } from "@/engine/schedules/schedule-se.js";
+import { calculateScheduleE } from "@/engine/schedules/schedule-e.js";
+import { calculateK1OrdinarySelfEmployment } from "@/engine/forms/k1-ordinary-self-employment.js";
 import { calculateForm2555 } from "@/engine/forms/form-2555.js";
 import { calculateForm7206Return } from "@/engine/forms/form-7206-return.js";
 import { d, sum } from "@/utils/decimal.js";
@@ -29,7 +31,9 @@ export function calculateForm7206ReviewSources(input: TaxYearInput, result: TaxR
   const cryptoNet = cryptoGross.minus(sum(crypto?.businessMiningExpenses ?? d(0), crypto?.businessStakingExpenses ?? d(0)));
   // ScheduleSE itself binds actual owner W2 Boxes3/7, Forms4137/8919 and K1
   // earnings. It does not use a taxpayer identifier or a saved SE-half scalar.
-  const scheduleSE = calculateScheduleSE(input, constants, scheduleC.netProfit, scheduleF.netFarmProfit, {
+  const ordinaryK1 = calculateK1OrdinarySelfEmployment(input, calculateScheduleE(input));
+  const seSourceInput = ordinaryK1.scheduleK1 === input.scheduleK1 ? input : { ...input, scheduleK1: ordinaryK1.scheduleK1 };
+  const scheduleSE = calculateScheduleSE(seSourceInput, constants, scheduleC.netProfit, scheduleF.netFarmProfit, {
     additionalNonfarmIncome: cryptoNet, additionalNonfarmOwner: input.cryptoIncome?.businessAccountHolder,
   });
   const savedSE = result.scheduleSE;
@@ -48,7 +52,7 @@ export function calculateForm7206ReviewSources(input: TaxYearInput, result: TaxR
   same(savedSE.deductibleHalf, scheduleSE.deductibleHalf);
   if (input.form2555?.taxYear !== undefined && input.form2555.taxYear !== input.taxpayer.taxYear) throw new Error("Form7206 foreign source year does not match the return.");
   const foreign = input.form2555 ? calculateForm2555({ ...input.form2555, taxYear: input.taxpayer.taxYear }, constants) : undefined;
-  const params = { input, scheduleCProfit: scheduleC.netProfit, scheduleFProfit: scheduleF.netFarmProfit,
+  const params = { input: seSourceInput, scheduleCProfit: scheduleC.netProfit, scheduleFProfit: scheduleF.netFarmProfit,
     cryptoBusinessProfit: cryptoNet, selfEmploymentDeductions: scheduleSE.perTaxpayer.map(row => ({ accountHolder: row.accountHolder, amount: row.deductibleHalf })),
     foreignIncomeExclusion: foreign?.totalIncomeReduction ?? d(0), selfEmploymentSourcesVerified: scheduleSE.sourceFactsVerified,
     businessGrossIncomes: [{ sourceId: "scheduleC", amount: scheduleC.grossIncome }, { sourceId: "scheduleF", amount: scheduleF.grossFarmIncome }, { sourceId: "cryptoBusiness", amount: cryptoGross }] };

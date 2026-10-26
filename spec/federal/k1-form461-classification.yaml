@@ -1,0 +1,63 @@
+form: "K1 Form461 Classification"
+fullName: "Actual ordinary K-1 classification after basis, at-risk and passive limits"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i461"
+retrievedAt: "2026-10-25"
+notes: |
+  Form461 Ordering Rules applies at-risk then passive then excess business
+  losses. Line5 is actual ScheduleE income/loss after those limits. Form8582
+  PartII and its MAGI apply to active rental real estate, not ordinary nonrental
+  PartI. The scoped PartI computation accepts no AGI and emits no MAGI source
+  or audit. Its results must equal the later full canonical passive computation.
+  This source method requires every K1, ordinary continuing activity, explicit
+  current-year classification and known-zero other business amounts. Actual
+  capital items are nonbusiness. No taxpayer enters current allowance, QBI,
+  Form461 net business income or an allocation of the excess loss.
+  The method derives SE/health/retirement deductions from calculated context.
+  Existing unique-loss-pool and mixed-origin Form461 boundaries still apply.
+  i1065sk1 Box14 directs a negative amount to the deductible loss after the
+  linked basis/at-risk/passive limitations, and excludes a health-insurance
+  reduction from partner SE earnings. Reg1.1402(a)-2(a),(d) links the deduction
+  and section704 partnership computation. The new ordinary-current SE method
+  requires no other partner adjustments and an independent preceding-year
+  zero suspended-SE record. A negative original Box14 must equal the original
+  ordinary loss, with no prior passive loss to allocate; no fraction is guessed.
+  The calculated pre-461 income remains the existing ScheduleSE source basis;
+  positive461 mixed-source SE coordination is not broadened by this method.
+lines:
+  - line: "passive-part-i"
+    description: "Calculate ordinary nonrental passive allowances without synthetic MAGI"
+    formula: "Current passive loss30000 plus filed prior20000 and separate passive income15000 allow15000 and suspend35000; the same actual rows with any finite full-return MAGI yield identical PartI and allocation totals. No MAGI property or line6 is created by the scoped route."
+    testRef: "tests/engine/forms/k1-form461-classification.test.ts::calculates ordinary nonrental Part I without inventing MAGI"
+  - line: "passive-boundary"
+    description: "Reject rental, PTP and unmatched prior-source paths in the scoped route"
+    formula: "Actual nonrental activity identity must bind every prior source; any rental/active-rental/PTP/disposition or supplied MAGI requires the full corresponding source method. Unknown or unmatched classification is not treated as ordinary."
+    testRef: "tests/engine/forms/k1-form461-classification.test.ts::rejects every rental PTP and unexplained prior source in the no-MAGI path"
+  - line: "derived-current"
+    description: "Derive Form461 from actual K1 records rather than an entered worksheet result"
+    formula: "Current ordinary330000/QBI264000 with sufficient actual basis/risk and nonpassive classification gives313000 allowance,17000EBL and250400current qualified loss. No form461 input or passive MAGI input is supplied."
+    testRef: "tests/engine/federal-k1-form461-classification.test.ts::derives the unique current loss from source classification without entered Form461 totals"
+  - line: "passive-before-ebl"
+    description: "Apply actual passive allowances before the aggregate business limit"
+    formula: "Passive ordinary330000 loss and10000 passive income allow10000 current loss, suspend320000 under469 and yield0ScheduleE/EBL/AGI. Final8582 source rows and every allowance reconcile with the preceding scoped calculation."
+    testRef: "tests/engine/federal-k1-form461-classification.test.ts::uses calculated passive allowances before Form461 without a MAGI override"
+  - line: "source-boundaries"
+    description: "Preserve unknown classification and reject conflicting source methods"
+    formula: "Missing/false source confirmation, absent/false nonbusiness capital classification, wrong year, nonzero other business sources, known ScheduleC/F/rental/PTP/1041/business asset/crypto conflicts and a simultaneous entered Form461 require their separately reconciled source method."
+    testRef: "tests/engine/federal-k1-form461-classification.test.ts::rejects unknown and conflicting ordinary-only classification sources"
+  - line: "original-se"
+    description: "Reject actual NFT creator business sources from ordinary K1-only classification"
+    formula: "A known NFT creator business remains a separate business source even when its receipts are computed without a scheduleC input. Actual10000 mint-sale proceeds with ordinaryK1 loss100000/risk60000 cannot produce a source-verified Form461 with ScheduleC0. Preserve the original source and require its separate classification method."
+    testRef: "tests/engine/federal-k1-form461-classification.test.ts::rejects actual NFT creator business sources from ordinary K1 classification"
+  - line: "original-se-loss"
+    description: "Derive ordinary current partner SE earnings from actual original sources"
+    formula: "Original Box14A equals ordinary loss100000; actual basis100000/risk60000 permits60000 current SE loss. Another same-owner ordinary/SE100000 gives40000 combined SE earnings and5652SEtax. Keep raw-100000 unchanged; do not request an allowed-loss field. Original positive or zero Box14 is retained after explicit no-other-adjustments facts."
+    testRef: "tests/engine/federal-k1-form461-classification.test.ts::derives matching current Box14 loss from actual limits and preserves the original"
+  - line: "se-character"
+    description: "Reject unexplained partner deductions and mismatched SE loss character"
+    formula: "Unknown current adjustment facts, absent/wrong-year/nonzero prior SE history, a differing negative Box14/ordinary loss, positive prior passive loss in the negative-current route or a conflicting supplied adjusted amount reject. Separate SE histories cannot be inferred from QBI or regular passive history."
+    testRef: "tests/engine/federal-k1-form461-classification.test.ts::rejects missing SE history and unsupported negative Box14 characterization"
+  - line: "se-consumers"
+    description: "Use identical source-derived earnings for health deductions and review validation"
+    formula: "Actual positive partnership100000 yields92350net earnings: rounded11451Social Security plus2678Medicare =14129SEtax/7065half. Actual owner-paid600.10 medical costs transfer600 once; AGI92335. The review recalculates the same original source limits and rejects changed sources."
+    testRef: "tests/engine/federal-k1-form461-classification.test.ts::uses calculated partner earnings consistently in health and review sources"

@@ -49,6 +49,17 @@ export interface Form8582Input {
   priorYearPTPSuspendedLosses?: Array<{ name: string; amount: Decimal }>;
 }
 
+/** Completed ordinary nonrental Part I; no rental special allowance or MAGI source. */
+export interface Form8582NonRentalInput {
+  scope: "ordinary_nonrental_part_i";
+  activities: PassiveActivity[];
+  filingStatus: FilingStatus;
+  priorYearSuspendedLosses?: Array<{ name: string; amount: Decimal }>;
+  agi?: never;
+  mfsLivedApartFromSpouseAllYear?: never;
+  priorYearPTPSuspendedLosses?: never;
+}
+
 export interface Form8582ActivityRow {
   sourceIndex?: number;
   name: string;
@@ -119,6 +130,8 @@ export interface Form8582Result {
   lines: CalculatedLine[];
 }
 
+export type Form8582NonRentalResult = Omit<Form8582Result, "modifiedAgi">;
+
 /** Dollar rounding only: conserve the printed total using largest remainders.
  * The IRS prescribes the proportional formula and matching totals, not this tie rule.
  */
@@ -139,7 +152,9 @@ function allocateDollars(total: Decimal, weights: Decimal[]): Decimal[] {
   return amounts;
 }
 
-export function calculateForm8582(input: Form8582Input): Form8582Result {
+export function calculateForm8582(input: Form8582NonRentalInput): Form8582NonRentalResult;
+export function calculateForm8582(input: Form8582Input): Form8582Result;
+export function calculateForm8582(input: Form8582Input | Form8582NonRentalInput): Form8582Result | Form8582NonRentalResult {
   const audit = new AuditTrail();
 
   // ═══════════════════════════════════════════════════════════
@@ -148,7 +163,20 @@ export function calculateForm8582(input: Form8582Input): Form8582Result {
   // PTP net gains are nonpassive; neither income nor losses enter this form.
   // ═══════════════════════════════════════════════════════════
 
-  if (!input.agi.isFinite()) throw new Error("Form8582 requires finite actual modified AGI.");
+  const scoped = "scope" in input;
+  if (scoped) {
+    if (input.scope !== "ordinary_nonrental_part_i" || "agi" in input || "mfsLivedApartFromSpouseAllYear" in input
+      || "priorYearPTPSuspendedLosses" in input || input.activities.some(activity => activity.isRentalRealEstate !== false
+        || activity.isActiveParticipant !== false || activity.isPubliclyTradedPartnership === true
+        || activity.ptpFullyDisposedInTaxableTransaction === true || activity.ptpDispositionGainOrLoss !== undefined)) {
+      throw new Error("Form8582 ordinary nonrental Part I scope excludes AGI, rental, PTP and disposition source methods.");
+    }
+    const names = new Set(input.activities.map(activity => activity.name));
+    if (names.size !== input.activities.length || (input.priorYearSuspendedLosses ?? []).some(row => !names.has(row.name))
+      || new Set(input.priorYearSuspendedLosses?.map(row => row.name)).size !== (input.priorYearSuspendedLosses?.length ?? 0)) {
+      throw new Error("Form8582 ordinary Part I requires unique actual activity identity for every prior source.");
+    }
+  } else if (!input.agi.isFinite()) throw new Error("Form8582 requires finite actual modified AGI.");
   const sourceActivities = input.activities.map((activity, sourceIndex) => {
     if (typeof activity.name !== "string" || !activity.name.trim() || !activity.income.isFinite() || activity.income.lt(0)
       || !activity.loss.isFinite() || activity.loss.gt(0)) throw new Error("Form8582 requires actual finite signed activity amounts and names.");
@@ -353,6 +381,7 @@ export function calculateForm8582(input: Form8582Input): Form8582Result {
 
   let rentalAllowance = new Decimal(0);
   if (combinedNet.lt(0) && netRental.lt(0) && !mfsIneligible) {
+    if (scoped) throw new Error("Form8582 ordinary nonrental Part I cannot compute a rental special allowance.");
     const line4 = Decimal.min(netRental.abs(), combinedNet.abs());
     const line5 = new Decimal(input.filingStatus === "married_filing_separately" ? 75000 : 150000);
     const line6 = roundDollar(zeroFloor(input.agi));
@@ -394,7 +423,8 @@ export function calculateForm8582(input: Form8582Input): Form8582Result {
       unallowedRatio: remainingTotal.isZero() ? new Decimal(0) : remainingLosses[index].div(remainingTotal),
       allowedLoss: totalLoss.abs().minus(unallowed[index]), suspendedLoss: unallowed[index] };
   });
-  return { modifiedAgi: input.agi, passiveIncome, passiveLoss, netPassive, rentalIncome, rentalLoss, netRental, combinedLoss, rentalAllowance,
+  const result = { passiveIncome, passiveLoss, netPassive, rentalIncome, rentalLoss, netRental, combinedLoss, rentalAllowance,
     allowedLoss, suspendedLoss, requiresForm8582: grossLoss.gt(0), activityRows, activityAllocations,
     ptpNetIncome: ptpNetIncomeTotal, ptpSuspendedLosses, ptpDispositionReleasedLosses, lines: audit.getLines() };
+  return scoped ? result : { ...result, modifiedAgi: input.agi };
 }

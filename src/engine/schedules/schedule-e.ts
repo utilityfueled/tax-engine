@@ -245,7 +245,7 @@ function applyAtRiskLimitation(
   };
 }
 
-export function calculateScheduleE(input: TaxYearInput): ScheduleEResult {
+export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'rentalProperties' | 'form1099Misc'>): ScheduleEResult {
   const audit = new AuditTrail();
 
   // ═══════════════════════════════════════════════════════════

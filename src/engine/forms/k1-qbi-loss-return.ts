@@ -100,8 +100,8 @@ export function calculateK1QbiLossReturn(input: K1QbiLossSourceInput & Pick<TaxY
     const form = context.form461;
     // This ordinary method identifies every loss before applying the aggregate
     // limit. A net unexplained difference is never assigned to the K-1.
-    if (!form.sourceFactsVerified || !input.form461
-      || !d(input.form461.noncapitalNonbusinessIncome).isZero() || !d(input.form461.noncapitalNonbusinessLoss).isZero()
+    if (!form.sourceFactsVerified || (!input.form461 && !input.qbiLossSources?.form461Classification)
+      || !d(input.form461?.noncapitalNonbusinessIncome).isZero() || !d(input.form461?.noncapitalNonbusinessLoss).isZero()
       || (input.rentalProperties?.length ?? 0) > 0 || (input.scheduleK1Form1041?.length ?? 0) > 0) {
       throw new Error('K1 QBI Form461 other supplemental or nonbusiness sources require their separate loss-pool allocation method');
     }
