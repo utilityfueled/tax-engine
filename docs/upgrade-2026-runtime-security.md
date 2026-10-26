@@ -142,3 +142,38 @@ remote CI pass is claimed. This native runtime evidence predates the later
 health and tax methods. Final-source images and recovery, hosted staging and
 independent human security/advisory review are still required. No release image
 was published and no deployment or filing/model gate changed.
+
+
+## Native amd64 refresh at fdfeedf — October 26
+
+[Web 40390607499](https://github.com/utilityfueled/tax-engine/actions/runs/40390607499)
+passed on `fdfeedf575a4cda8a51bccd8d0b419a60c294796`. The
+[versioned record](upgrade-2026-runtime-fdfeedf.json) binds the downloaded
+artifact and raw job logs to that source. Its native amd64 image passes the
+44-template smoke check with Docker health, a read-only filesystem, uid 1001,
+Node 24.22.1 and no provider keys or package tools. All six synthetic Compose
+phases pass, preserving nine database tables, two tenants, exact billed cost,
+browser facts and original document bytes. Encrypted browser recovery rejects
+the wrong password and altered ciphertext and preserves deletion/reload. The
+raw synthetic-marker network observation covers 410 requests; its encoding
+and binary-data limitation remains explicit.
+
+Both browser jobs pass 454 cases and skip five hosted-only cases. The actual
+container invocation uses zero retries and a 30-second per-case deadline.
+The separate self-host job retains its configured one retry, with no retry
+markers observed. These are distinct configurations, not two zero-retry claims.
+
+The refreshed SBOM contains 2,930 components. Grype 0.121.0 with the October 26
+06:38:44 UTC database finds the same 157 package/version/severity/fix tuples
+and 67 advisories as the prior inspected native image: 54 high, 47 medium,
+ten low and 46 negligible matches; zero critical, npm or available-fixed-version
+matches. Existing advisory dispositions, pending owner confirmations and the
+November 7 review deadline remain unchanged.
+
+The companion CI run passes 19,211 ordinary tests in 1,267 files but is not
+fully green. Its coverage job exceeds its 30-minute limit, with sixteen failed
+cases already recorded in twelve suites. The canceled coverage evidence is
+retained, and those failures remain separate internal work. Later tax packages
+are excluded from this image. Final-source verification, authorized hosted
+staging and independent human security review are still required. No release
+image was published, and no production, filing or model-promotion gate changed.

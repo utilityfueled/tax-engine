@@ -1,0 +1,253 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-26T20:37:34.340006+00:00",
+  "sourceCommit": "fdfeedf575a4cda8a51bccd8d0b419a60c294796",
+  "releaseReady": false,
+  "published": false,
+  "scope": {
+    "environment": "GitHub-hosted runner, isolated synthetic native Compose and browser checks",
+    "platform": "linux/amd64",
+    "historicalHostedSchemaDowngradeVerified": false,
+    "hostedAuthenticationVerified": false,
+    "stagingVerified": false,
+    "limitation": "Intermediate source excludes subsequent health, education and charity packages. Current-schema fixtures prove synthetic data retention/restore, not a historical hosted schema downgrade. Raw-marker network checks do not prove general encoded or binary PII absence."
+  },
+  "workflow": {
+    "runId": 40390607499,
+    "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40390607499",
+    "conclusion": "success",
+    "artifactId": 12685374426,
+    "archiveSha256": "be6b18439993f51ecafa3a0ea12ceec7f3da4375430fc812590375cf10fb972c"
+  },
+  "smoke": {
+    "result": "passed",
+    "image": "sha256:dc81ec884ed992d7758163b9096271c9e2c2664ed1fc845577f08a6fdc427fed",
+    "readOnly": true,
+    "healthy": true,
+    "assets": true,
+    "imageCacheWritten": true,
+    "selfHostAuth": true,
+    "uid": 1001,
+    "node": "v24.22.1",
+    "architecture": "x64",
+    "imageCacheFilesystem": 16914836,
+    "imageCacheLimitBytes": 67108864,
+    "packageTools": false,
+    "providerKeys": false,
+    "templates": 44
+  },
+  "rehearsal": {
+    "kind": "local-synthetic-compose-release-rehearsal",
+    "project": "tax-rehearsal-f1c66cf6",
+    "phases": [
+      {
+        "phase": "previous",
+        "imageDigest": "sha256:02b5548e38d67f2dab726f69c8fbe1bd495912067b5cbf611cf7c5dd8119c235",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "550b46f803b924d1a098399a8cff28a4fcb97d8a4fc7e94f9fe69f97101aca19",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "upgrade",
+        "imageDigest": "sha256:dc81ec884ed992d7758163b9096271c9e2c2664ed1fc845577f08a6fdc427fed",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "550b46f803b924d1a098399a8cff28a4fcb97d8a4fc7e94f9fe69f97101aca19",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-restart",
+        "imageDigest": "sha256:dc81ec884ed992d7758163b9096271c9e2c2664ed1fc845577f08a6fdc427fed",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "550b46f803b924d1a098399a8cff28a4fcb97d8a4fc7e94f9fe69f97101aca19",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-dump-restore",
+        "imageDigest": "sha256:dc81ec884ed992d7758163b9096271c9e2c2664ed1fc845577f08a6fdc427fed",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "550b46f803b924d1a098399a8cff28a4fcb97d8a4fc7e94f9fe69f97101aca19",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "rollback",
+        "imageDigest": "sha256:02b5548e38d67f2dab726f69c8fbe1bd495912067b5cbf611cf7c5dd8119c235",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "550b46f803b924d1a098399a8cff28a4fcb97d8a4fc7e94f9fe69f97101aca19",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "re-upgrade",
+        "imageDigest": "sha256:dc81ec884ed992d7758163b9096271c9e2c2664ed1fc845577f08a6fdc427fed",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "550b46f803b924d1a098399a8cff28a4fcb97d8a4fc7e94f9fe69f97101aca19",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "x64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      }
+    ],
+    "platform": "linux/amd64",
+    "previousDigest": "sha256:02b5548e38d67f2dab726f69c8fbe1bd495912067b5cbf611cf7c5dd8119c235",
+    "candidateDigest": "sha256:dc81ec884ed992d7758163b9096271c9e2c2664ed1fc845577f08a6fdc427fed",
+    "databaseRecovery": {
+      "result": "passed",
+      "evidence": "local-synthetic-postgresql-dump-restore",
+      "tables": 9,
+      "tenantWorkspaces": 2,
+      "exactCostRestored": true,
+      "metadataCleanupReapplied": true,
+      "metadataCleanupIdempotent": true,
+      "checksum": "10069f863079303c6fbc7e26618b7109b5bd9ebc15561e2516c2f53ed2bbea05"
+    },
+    "browserRecovery": {
+      "passed": true,
+      "encrypted": true,
+      "wrongPasswordRejected": true,
+      "tamperRejected": true,
+      "originalBytes": true,
+      "unknownYearPreserved": true,
+      "exactCents": true,
+      "deletion": true,
+      "networkObservation": {
+        "requests": 410,
+        "startsBeforeUpload": true,
+        "rawPrivateMarkersAbsent": true,
+        "limitation": "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof."
+      }
+    },
+    "result": "passed"
+  },
+  "browser": {
+    "container": {
+      "passed": 454,
+      "hostedSkipped": 5,
+      "configuredRetries": 0,
+      "timeoutMs": 30000,
+      "duration": "18.1m"
+    },
+    "selfHost": {
+      "passed": 454,
+      "hostedSkipped": 5,
+      "configuredRetries": 1,
+      "observedRetryMarkers": 0,
+      "duration": "19.9m"
+    }
+  },
+  "otherCi": {
+    "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40390607615",
+    "conclusion": "cancelled",
+    "unit": {
+      "passed": 19211,
+      "files": 1267
+    },
+    "coverage": {
+      "completed": false,
+      "cancellationReason": "The job has exceeded the maximum execution time of 30m0s",
+      "reportedFailedCases": 16,
+      "failedSuites": 12,
+      "failuresRemainUnresolved": true,
+      "evidenceSha256": "406c80e6888e813970f8b6253835b0dbe9f73b4ad7c7f87192a898d60bb2f4f3"
+    }
+  },
+  "runtimeScan": {
+    "sbomComponents": 2930,
+    "scanner": "grype 0.121.0",
+    "databaseBuilt": "2026-10-26T06:38:44Z",
+    "matches": 157,
+    "distinctAdvisories": 67,
+    "critical": 0,
+    "matchSeverities": {
+      "High": 54,
+      "Negligible": 46,
+      "Medium": 47,
+      "Low": 10
+    },
+    "npmMatches": 0,
+    "fixedVersionMatches": 0,
+    "advisoryRegisterTuplesUnchanged": true,
+    "ownerConfirmation": "pending",
+    "reviewBy": "2026-11-07"
+  },
+  "artifacts": {
+    "container-smoke.log": {
+      "path": ".local/upgrade-evidence/remote-fdfeedf/artifact/container-smoke.log",
+      "sha256": "31e26b1da91911e86a022c6e9c993bcd526b5caccb917b49af97bb0513746531"
+    },
+    "container.cdx.json": {
+      "path": ".local/upgrade-evidence/remote-fdfeedf/artifact/container.cdx.json",
+      "sha256": "12168b04c680ae5ebda3fd0bab15549b1c9734930b40292f27848c6d0f73a66f"
+    },
+    "container-recovery.log": {
+      "path": ".local/upgrade-evidence/remote-fdfeedf/artifact/container-recovery.log",
+      "sha256": "60ea0f6cc09491104adde3a75b60c3cacd811043ea4befe549bd5081e5d3af60"
+    },
+    "container-vulnerabilities.json": {
+      "path": ".local/upgrade-evidence/remote-fdfeedf/artifact/container-vulnerabilities.json",
+      "sha256": "0e173cc4090d03ab3f0c40736c5df4d69bf29c899a2fde7b943418a1950a604a"
+    }
+  },
+  "jobLogHashes": {
+    "remote-fdfeedf-container.log": "431278cbe3789fa1d95f302345277d2dda0dff946c931ab4943de6110423ac0a",
+    "remote-fdfeedf-browser.log": "5458caf5e5a3d5c7d0f250e1195d004b778998fb2c5e985e407c5f9c1899bdc3",
+    "remote-fdfeedf-unit.log": "858ee0ee24f72dac12f81c993fc2178e56df6dedb987117c704c78554f022723",
+    "remote-fdfeedf-coverage-canceled.log": "db1f7c453adca9a0de2f6f171a54483aaae2d0bd2c8e2e0f561756332496cecc"
+  },
+  "independentHumanSecurityReview": false
+}

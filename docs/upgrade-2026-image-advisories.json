@@ -2882,14 +2882,14 @@
     "scope": "Runtime component observations use arm64 image sha256:c018a5100f6553355472519c05694d4cd54a40e974abef62431d5e9eaafe6598 at da3e0fc; tracked-source search and official advisory reviews retain their recorded evidence. The new4aef633 scan has an identical157-entry package/advisory/fix-state set; final images still require fresh exposure verification."
   },
   "additionalPlatformEvidence": {
-    "commit": "8f1d1baee66efb28fa1f85bf3eb5a6249c2f3cad",
+    "commit": "fdfeedf575a4cda8a51bccd8d0b419a60c294796",
     "platform": "linux/amd64",
-    "image": "sha256:2beb1ef98943d84e2f3a7213dc4dc60be56fdee8ce663b10339db6bad6579fb1",
-    "workflowRun": "https://github.com/utilityfueled/tax-engine/actions/runs/40347754615",
-    "artifactId": 12664076244,
-    "archiveSha256": "7ac0f8bea61588afe52fb57041974afcac8db47858f90185840284b72a9bee07",
-    "sbomSha256": "5da72979894fa11d8a2607367807ffa235508b56b28f8a123f7efe8b2ceb61a7",
-    "scanSha256": "efc8a84a373bf6ba6e2eb21814732c64de45275fbcac1c5e87cd364393691b20",
+    "image": "sha256:dc81ec884ed992d7758163b9096271c9e2c2664ed1fc845577f08a6fdc427fed",
+    "workflowRun": "https://github.com/utilityfueled/tax-engine/actions/runs/40390607499",
+    "artifactId": 12685374426,
+    "archiveSha256": "be6b18439993f51ecafa3a0ea12ceec7f3da4375430fc812590375cf10fb972c",
+    "sbomSha256": "12168b04c680ae5ebda3fd0bab15549b1c9734930b40292f27848c6d0f73a66f",
+    "scanSha256": "0e173cc4090d03ab3f0c40736c5df4d69bf29c899a2fde7b943418a1950a604a",
     "databaseBuilt": "2026-10-26T06:38:44Z",
     "matches": 157,
     "distinctAdvisories": 67,
@@ -2898,7 +2898,7 @@
     "fixedVersionMatches": 0,
     "packageSeverityFixTuplesUnchanged": true,
     "qualification": "intermediate-native-CI-evidence-not-final-release",
-    "record": "docs/upgrade-2026-runtime-8f1d1ba.json"
+    "record": "docs/upgrade-2026-runtime-fdfeedf.json"
   },
   "previousRuntimeScans": [
     {
@@ -2924,6 +2924,25 @@
       "distinctAdvisories": 67,
       "critical": 0,
       "qualification": "intermediate-native-CI-evidence-not-final-release"
+    },
+    {
+      "commit": "8f1d1baee66efb28fa1f85bf3eb5a6249c2f3cad",
+      "platform": "linux/amd64",
+      "image": "sha256:2beb1ef98943d84e2f3a7213dc4dc60be56fdee8ce663b10339db6bad6579fb1",
+      "workflowRun": "https://github.com/utilityfueled/tax-engine/actions/runs/40347754615",
+      "artifactId": 12664076244,
+      "archiveSha256": "7ac0f8bea61588afe52fb57041974afcac8db47858f90185840284b72a9bee07",
+      "sbomSha256": "5da72979894fa11d8a2607367807ffa235508b56b28f8a123f7efe8b2ceb61a7",
+      "scanSha256": "efc8a84a373bf6ba6e2eb21814732c64de45275fbcac1c5e87cd364393691b20",
+      "databaseBuilt": "2026-10-26T06:38:44Z",
+      "matches": 157,
+      "distinctAdvisories": 67,
+      "critical": 0,
+      "npmMatches": 0,
+      "fixedVersionMatches": 0,
+      "packageSeverityFixTuplesUnchanged": true,
+      "qualification": "intermediate-native-CI-evidence-not-final-release",
+      "record": "docs/upgrade-2026-runtime-8f1d1ba.json"
     }
   ]
 }
