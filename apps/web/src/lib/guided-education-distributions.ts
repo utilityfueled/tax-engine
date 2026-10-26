@@ -19,12 +19,15 @@ export interface EducationDistributionData {
   loanBorrowers?: EducationSourceRecord[];
   coverdellAccounts?: EducationSourceRecord[];
   penaltyExceptions?: EducationSourceRecord[];
+  roomBoardPeriods?: EducationSourceRecord[];
+  roomBoardPeriodExpenses?: EducationSourceRecord[];
+  roomBoardEsaAllocations?: EducationSourceRecord[];
 }
-export type EducationSourceCollection = "beneficiaries" | "expenses" | "allocations" | "inKindBenefits" | "loanBorrowers" | "coverdellAccounts" | "penaltyExceptions";
+export type EducationSourceCollection = "beneficiaries" | "expenses" | "allocations" | "inKindBenefits" | "loanBorrowers" | "coverdellAccounts" | "penaltyExceptions" | "roomBoardPeriods" | "roomBoardPeriodExpenses" | "roomBoardEsaAllocations";
 export interface EducationSourceField {
   key: string; label: string; kind: "text" | "date" | "money" | "integer" | "boolean" | "choice";
   choices?: ReadonlyArray<readonly [string, string]>; signed?: boolean;
-  link?: "beneficiary" | "expense" | "source" | "borrower";
+  link?: "beneficiary" | "expense" | "source" | "borrower" | "period";
   when?: (record: EducationSourceRecord) => boolean;
 }
 const text = (key: string, label: string): EducationSourceField => ({ key, label, kind: "text" });
@@ -90,6 +93,21 @@ export const educationCollectionFields: Record<EducationSourceCollection, Educat
     ...[bool("prepaidInstitutionQualifiedTrustConfirmed", "Institutional prepaid program has its required qualified trust"), text("prepaidInstitutionDeterminationReference", "Institutional prepaid program IRS ruling or determination reference")].map(field => only(field, record => record.prepaidPlanSponsor === "eligible_educational_institutions"))],
   loanBorrowers: [text("name", "Loan borrower label"), choice("owner", "Loan borrower on this return", owners), money("priorQualifiedDistributions", "Prior qualified 529 payments toward this borrower's loans"), money("otherCurrentQualifiedDistributions", "Other current qualified 529 payments toward this borrower's loans")],
   coverdellAccounts: [text("accountId", "Coverdell account label (must match statements)"), money("priorYearBasis", "Actual prior-year account basis"), money("currentYearContributions", "Current-year contributions, excluding rollovers and returned excess"), money("yearEndValue", "Actual year-end account value"), money("outstandingRollovers", "Outstanding year-end rollovers"), money("rolloverBasisReceived", "Actual basis received in rollovers (0 if none)")],
+  roomBoardPeriods: [link("beneficiaryId", "Academic-period beneficiary", "beneficiary"), integer("sourceTaxYear", "Academic-period source tax year"),
+    text("sourceReference", "Academic-period source reference"), text("institutionId", "Institution source label"), text("institutionName", "Institution name"),
+    bool("institutionEligible", "Institution eligibility checked for this period"), date("academicPeriodStart", "Academic-period start date"), date("academicPeriodEnd", "Academic-period end date"),
+    choice("livingArrangement", "Actual living arrangement for this allowance", [["with_parent", "Living with a parent"], ["off_campus", "Off-campus housing"], ["institution_housing", "Institution-owned or operated housing"]]),
+    bool("halfTimeStudent", "Student enrolled at least half time for this period"), money("roomBoardAllowance", "Actual period room-and-board allowance"),
+    bool("allowanceApplicableConfirmed", "Allowance matches the actual period and living arrangement"), bool("schoolOwnedHousing", "Housing is owned or operated by the institution"),
+    money("schoolOwnedHousingCharge", "Actual period institution housing charge (0 if none)"), text("schoolHousingInvoiceReference", "Institution housing invoice reference (when applicable)"),
+    bool("allReceiptsIncludedConfirmed", "Every room-and-board receipt for this period is included"),
+    bool("esaAllocationConfirmed", "Actual ESA allocation choice recorded (only with an ESA)"), text("esaAllocationSourceReference", "Actual ESA allocation source reference (only with an ESA)"),
+    bool("sourceFactsConfirmed", "Actual academic-period records checked")],
+  roomBoardPeriodExpenses: [link("periodId", "Receipt academic period", "period"), link("expenseId", "Actual room-and-board receipt", "expense"),
+    date("coveredStart", "Receipt service start date"), date("coveredEnd", "Receipt service end date"), text("sourceReference", "Receipt source reference"),
+    bool("sourceFactsConfirmed", "Receipt and period link checked")],
+  roomBoardEsaAllocations: [link("periodId", "ESA allocation academic period", "period"), link("sourceId", "Original distribution in ESA allocation", "source"),
+    money("amount", "Actual coordinated room-and-board expense allocated to this original")],
   penaltyExceptions: [link("sourceId", "Distribution with an additional-tax exception", "source"), choice("kind", "Exception reason", [["scholarship", "Scholarship or other eligible assistance"], ["military_academy", "Eligible military academy attendance"], ["death", "Beneficiary death"], ["disability", "Beneficiary disability"]]), money("qualifyingAmount", "Actual qualifying source amount"), money("distributionAmount", "Distinct nonqualified distribution allocated to this exception"), bool("eligibilityConfirmed", "Exception eligibility checked"), only(date("eventDate", "Beneficiary death date"), record => record.kind === "death"), only(bool("paidToBeneficiaryOrEstate", "Death distribution paid to an eligible beneficiary or estate"), record => record.kind === "death")],
 };
 const allFields = [...educationStatementFields, ...educationTransferFields, ...Object.values(educationCollectionFields).flat()];
@@ -130,4 +148,13 @@ export function educationDistributionFactErrors(data?: EducationDistributionData
 export function buildEducationDistributionInputs(data?: EducationDistributionData, year?: number | null, status?: FilingStatus | null, educationExpenses?: EducationExpenses): Partial<Pick<TaxYearInput, "form1099Q" | "qualifiedEducationExpenses">> {
   if (!data) return {};
   return collect(data, year, status, educationExpenses);
+}
+
+/** Period and linked receipt checks must be renewed after an original source edit. */
+export function invalidateEducationPeriodSources(data?: EducationDistributionData): EducationDistributionData | undefined {
+  if (!data) return data;
+  return { ...data, sourceFactsConfirmed: null,
+    ...(data.roomBoardPeriods !== undefined ? { roomBoardPeriods: data.roomBoardPeriods.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
+    ...(data.roomBoardPeriodExpenses !== undefined ? { roomBoardPeriodExpenses: data.roomBoardPeriodExpenses.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
+  };
 }

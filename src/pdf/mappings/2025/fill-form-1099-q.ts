@@ -8,6 +8,7 @@ import { roundDollar } from "@/utils/decimal.js";
 import type { Form1099QResult } from "@/engine/forms/form-1099-q.js";
 import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 import { assertDistinctEducationBeneficiaries } from "@/utils/education-beneficiary-identity.js";
+import { calculateRoomBoardPeriods } from "@/utils/education-room-board-periods.js";
 import { readInKindTuitionEsaSource } from "@/utils/in-kind-tuition-esa-source.js";
 import { readInKindTuitionAssistanceSource } from "@/utils/in-kind-tuition-assistance-source.js";
 import { readInKindK12PlanSource } from "@/utils/in-kind-k12-plan-source.js";
@@ -69,6 +70,25 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
   const qualifiedEducationExpenseInputs: Form1099QReferenceSummaryValue[] = [];
   if (result.sourceFactsVerified) {
     if (!qeeSummary?.sourceFacts || qeeSummary.sourceFacts.sourceFactsConfirmed !== true || qeeSummary.sourceFacts.allDistributionsReconciled !== true || qeeSummary.sourceFacts.taxYear !== result.taxYear || forms.length !== result.perDistribution.length) throw new Error("Education reference source confirmation, year or statement count is inconsistent");
+    if (qeeSummary.sourceFacts.roomBoardPeriods !== undefined && !prepared) assertDistinctEducationBeneficiaries(forms, qeeSummary.sourceFacts);
+    const roomBoard = calculateRoomBoardPeriods(forms, qeeSummary.sourceFacts, result.taxYear);
+    const periodAuditIds = new Set<string>();
+    for (const [periodIndex, period] of roomBoard.periods.entries()) {
+      for (const [sourceId, amount] of period.qualifiedBySource) {
+        const line = `${sourceId}:room-board-period:${period.id}`;
+        const entry = requireAudit("Form1099-Q", line, amount); periodAuditIds.add(line);
+        if (Object.entries(period.inputs).some(([key,value]) => Decimal.isDecimal(value)
+          ? !Decimal.isDecimal(entry.inputs[key]) || !(entry.inputs[key] as Decimal).eq(value)
+          : entry.inputs[key] !== value)) throw new Error("Education reference academic-period sources disagree with the audit");
+        const statementIndex = forms.findIndex(form=>form.sourceId===sourceId);
+        sourceLines.push(describe(entry, `Statement ${statementIndex+1}, academic period ${periodIndex+1}: `));
+      }
+      for (const key of ["Period start","Period end","Living arrangement","Half-time enrollment","Institution eligible","Actual period costs","Applicable institutional allowance","Actual institutional housing invoice","Period assistance","Derived period capacity"]) {
+        const value=period.inputs[key];
+        if(value!==undefined) qualifiedEducationExpenseInputs.push({label:`Academic period ${periodIndex+1}: ${key}`,value:Decimal.isDecimal(value)?value.toFixed():value});
+      }
+    }
+    if(result.lines.some(line=>line.form==="Form1099-Q"&&line.line.includes(":room-board-period:")&&!periodAuditIds.has(line.line))) throw new Error("Education reference original academic-period sources are missing");
     const benefitSources = qeeSummary.sourceFacts.inKindBenefits ?? [];
     if (new Set(benefitSources.map(benefit => benefit.id)).size !== benefitSources.length || benefitSources.some(benefit => !forms.some(form => form.sourceId === benefit.sourceId && form.distributionMedium === "in_kind_prepaid_tuition"))) throw new Error("Education reference in-kind benefit sources are duplicated or unlinked");
     const sourceMoney = (value: string | undefined): Decimal => {
@@ -106,13 +126,20 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
         }
         const allocations = qeeSummary.sourceFacts.allocations?.filter(allocation => allocation.sourceId === row.sourceId) ?? [];
         const expenseIds = new Set([...benefits.map(benefit => benefit.expenseId), ...allocations.map(allocation => allocation.expenseId)]);
-        let qualified = new Decimal(0);
+        let qualified = roomBoard.qualifiedBySource.get(row.sourceId) ?? new Decimal(0);
         for (const expenseId of expenseIds) {
           const matches = allocations.filter(allocation => allocation.expenseId === expenseId);
           const linked = benefits.filter(benefit => benefit.expenseId === expenseId);
           if (matches.length !== 1 || !linked.length) throw new Error("Education reference in-kind benefit allocation source disagrees with the calculation");
           const allocation = matches[0];
           const expense = qeeSummary.sourceFacts.expenses?.find(item => item.id === expenseId);
+          if(roomBoard.expenseIds.has(expenseId)) {
+            const entry=requireAudit("Form1099-Q",`${row.sourceId}:in-kind-allocation:${expenseId}`,sourceMoney(allocation?.amount));
+            const credit=entry.inputs["Education credit expense"];
+            if(!Decimal.isDecimal(credit)||!credit.eq(sourceMoney(allocation?.creditAmount)))throw new Error("Education reference original period allocation disagrees with the audit");
+            sourceLines.push(describe(entry,`Statement ${index+1}: `));
+            continue;
+          }
           const assistance = sourceMoney(expense?.taxFreeAssistance);
           const providedCost = linked.reduce((total, benefit) => total.plus(sourceMoney(benefit.amount)), new Decimal(0));
           const exactBenefit = sourceMoney(allocation?.amount).plus(sourceMoney(allocation?.creditAmount)).plus(assistance).eq(providedCost);
@@ -291,7 +318,7 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
     if (!ownRecipients.reduce((sum, row) => sum.plus(row.taxableEarnings), new Decimal(0)).eq(result.taxableEarnings) || !ownRecipients.reduce((sum, row) => sum.plus(row.additionalTax), new Decimal(0)).eq(result.netPenalty)) throw new Error("Education recipient audit totals do not reconcile");
     for (const [index, expense] of (qeeSummary.sourceFacts.expenses ?? []).entries()) {
       for (const [field, label] of [["amount", "Actual paid expense"], ["refundedAmount", "Refund"], ["taxFreeAssistance", "Tax-free assistance"], ["educationCreditAmount", "Expense used for education credit"], ["otherTaxBenefitAmount", "Expense used for another benefit"]] as const) qualifiedEducationExpenseInputs.push({ label: `Expense ${index + 1}: ${label}`, value: knownAmount(expense[field]) });
-      if (expense.category === "postsecondary_room_board") {
+      if (expense.category === "postsecondary_room_board" && !roomBoard.expenseIds.has(expense.id)) {
         qualifiedEducationExpenseInputs.push({ label: `Expense ${index + 1}: Half-time enrollment`, value: yesNo(expense.halfTimeStudent) });
         for (const [field, label] of [["roomBoardAllowance", "School allowance"], ["schoolOwnedHousingCharge", "School-owned housing charge"]] as const) qualifiedEducationExpenseInputs.push({ label: `Expense ${index + 1}: ${label}`, value: knownAmount(expense[field]) });
       }

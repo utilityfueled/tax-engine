@@ -21,6 +21,7 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import { d, sum, zeroFloor, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { assertDistinctEducationBeneficiaries } from "@/utils/education-beneficiary-identity.js";
+import { calculateRoomBoardPeriods } from "@/utils/education-room-board-periods.js";
 import { readInKindTuitionEsaSource } from "@/utils/in-kind-tuition-esa-source.js";
 import { readInKindTuitionAssistanceSource } from "@/utils/in-kind-tuition-assistance-source.js";
 import { readInKindK12PlanSource } from "@/utils/in-kind-k12-plan-source.js";
@@ -684,6 +685,12 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     if (loanInterest.gt(amount)) throw new Error("Form1099Q allocated loan interest exceeds the payment allocation");
     return { expense, form, amount, credit: actualAmount(item.creditAmount, "credit expense allocation"), allowed: ZERO, loanInterest };
   });
+  if (facts.roomBoardPeriods !== undefined) assertDistinctEducationBeneficiaries(verifiedForms, facts);
+  const roomBoardPeriods = calculateRoomBoardPeriods(verifiedForms, facts, options.taxYear);
+  for (const period of roomBoardPeriods.periods) {
+    for (const [sourceId, amount] of period.qualifiedBySource) audit.record("Form1099-Q", `${sourceId}:room-board-period:${period.id}`, "Qualified room-and-board costs after one actual academic-period limit", amount,
+      "IRC529(e)(3)(B) period limit once; actual ESA choice or determined prepaid/cash source order, without inferred time proration", period.inputs);
+  }
   const inKindPairs = new Set(inKindBenefits.map(item => `${item.form.sourceId}\u0000${item.expense.id}`));
   for (const item of allocations.filter(item => item.form.distributionMedium === "in_kind_prepaid_tuition")) inKindPairs.add(`${item.form.sourceId}\u0000${item.expense.id}`);
   for (const key of inKindPairs) {
@@ -694,6 +701,11 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const expense = allocation.expense;
     const assistance = actualAmount(expense.taxFreeAssistance, "in-kind expense assistance");
     const exactBenefit = allocation.amount.plus(allocation.credit).plus(assistance).eq(provided);
+    if (roomBoardPeriods.expenseIds.has(expense.id)) {
+      audit.record("Form1099-Q", `${allocation.form.sourceId}:in-kind-allocation:${expense.id}`, "Actual prepaid room-and-board allocation before the period limit", allocation.amount,
+        "Original cost allocation preserved; one separately calculated academic-period allowance", { "Education credit expense": allocation.credit });
+      continue;
+    }
     const group = verifiedForms.filter(form => form.beneficiaryId === allocation.form.beneficiaryId);
     const esaCoordination = group.some(form => form.accountType === "coverdell_esa") && (!exactBenefit || assistance.gt(0));
     const cashTuitionCoordination = assistance.gt(0) && expense.category === "postsecondary_tuition"
@@ -743,6 +755,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const paid = actualDate(expense.paidDate, "expense paid");
     if (paid.getUTCFullYear() !== options.taxYear) throw new Error("Form1099Q expense year must match distribution year");
     actualBoolean(expense.qualificationConfirmed, "expense qualification");
+    if (roomBoardPeriods.expenseIds.has(expense.id)) continue;
     for (const item of linked) {
       const eligible = eligibleExpenseAmount(expense, options.taxYear, item.form.accountType);
       if (expense.category === "qtp_contribution") {
@@ -776,6 +789,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   }
   for (const item of allocations.filter(item => item.form.distributionMedium === "in_kind_prepaid_tuition")) {
     const expense = item.expense;
+    if (roomBoardPeriods.expenseIds.has(expense.id)) continue;
     const providedDates = inKindBenefits.filter(benefit => benefit.form.sourceId === item.form.sourceId && benefit.expense.id === expense.id).map(benefit => benefit.providedDate);
     const datedK12Ineligible = expense.category.startsWith("k12_") && !isExpandedEducationDistributionAllowed(item.form, expense.category, options.taxYear, providedDates);
     if (expense.qualificationConfirmed && !datedK12Ineligible && !item.allowed.eq(item.amount)) {
@@ -844,7 +858,8 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const allBeneficiaryForms = ordinaryForms.filter(item => item.accountType === "coverdell_esa" && item.beneficiaryId === first.beneficiaryId);
     const allGross = roundDollar(sum(...allBeneficiaryForms.map(item => actualAmount(item.grossDistribution, "Coverdell distribution").minus(transfers.get(item.sourceId) ?? ZERO))));
     const allAllocations = allocations.filter(item => item.form.accountType === "coverdell_esa" && item.form.beneficiaryId === first.beneficiaryId);
-    const allAQEE = roundDollar(sum(...allAllocations.map(item => item.allowed)));
+    const allAQEE = roundDollar(sum(...allAllocations.map(item => item.allowed),
+      ...allBeneficiaryForms.map(form => roomBoardPeriods.qualifiedBySource.get(form.sourceId) ?? ZERO)));
     const allCredit = roundDollar(sum(...allAllocations.map(item => item.credit)));
     const ratio = allGross.isZero() ? ZERO : Decimal.min(1, allAQEE.div(allGross));
     const beforeCreditRatio = allGross.isZero() ? ZERO : Decimal.min(1, allAQEE.plus(allCredit).div(allGross));
@@ -914,7 +929,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     if (derivedAmounts && form.earnings !== undefined && (!roundDollar(d(form.earnings)).eq(earnings) || !roundDollar(d(form.basis)).eq(basis))) throw new Error("Form1099Q reported Coverdell earnings/basis do not reconcile to actual account worksheet");
     if (earnings.lt(0) && form.finalDistribution !== true) throw new Error("Form1099Q negative Box2 requires actual final-distribution confirmation");
     const transfer = transfers.get(form.sourceId) ?? ZERO;
-    const allocated = derivedAmounts?.allocated ?? sum(...allocations.filter(item => item.form.sourceId === form.sourceId).map(item => item.allowed));
+    const allocated = derivedAmounts?.allocated ?? sum(...allocations.filter(item => item.form.sourceId === form.sourceId).map(item => item.allowed), roomBoardPeriods.qualifiedBySource.get(form.sourceId) ?? ZERO);
     const positiveEarnings = roundDollar(zeroFloor(earnings));
     const exemptGross = Decimal.min(gross, transfer.plus(allocated));
     const taxFree = derivedAmounts?.taxFree ?? (gross.isZero() ? ZERO : roundDollar(positiveEarnings.mul(exemptGross).div(gross)));

@@ -1,20 +1,24 @@
 /** Source conservation; in-kind-coordination, tuition-account-group and mixed-tuition specs. */
 import Decimal from 'decimal.js';
+import { calculateRoomBoardPeriods } from './education-room-board-periods.js';
 import type { Form1099Q, QualifiedEducationExpenseSummary } from '@/models/inputs.js';
 
 type Facts = NonNullable<QualifiedEducationExpenseSummary['sourceFacts']>;
 
 /** Validate a supplied allocation, without selecting it or calculating tax. */
 export function readInKindTuitionEsaSource(forms: readonly Form1099Q[], facts: Facts, sourceId: string, expenseId: string): Record<string, Decimal> {
+  const roomBoard = calculateRoomBoardPeriods(forms, facts, facts.taxYear);
   const qtp = forms.find(source => source.sourceId === sourceId);
   const group = forms.filter(source => source.beneficiaryId === qtp?.beneficiaryId);
   const esas = group.filter(source => source.accountType === 'coverdell_esa');
   const qtps = group.filter(source => source.accountType === '529');
   const prepaidQtps = qtps.filter(source => source.distributionMedium === 'in_kind_prepaid_tuition');
   const cashQtps = qtps.filter(source => source.distributionMedium === 'cash');
-  const expenses = (facts.expenses ?? []).filter(source => source.beneficiaryId === qtp?.beneficiaryId);
-  const benefits = (facts.inKindBenefits ?? []).filter(source => group.some(form => form.sourceId === source.sourceId));
-  const allocations = (facts.allocations ?? []).filter(source => group.some(form => form.sourceId === source.sourceId));
+  const expenses = (facts.expenses ?? []).filter(source => source.beneficiaryId === qtp?.beneficiaryId && !roomBoard.expenseIds.has(source.id));
+  const annualBenefits = (facts.inKindBenefits ?? []).filter(source => group.some(form => form.sourceId === source.sourceId));
+  const annualAllocations = (facts.allocations ?? []).filter(source => group.some(form => form.sourceId === source.sourceId));
+  const benefits = annualBenefits.filter(source => !roomBoard.expenseIds.has(source.expenseId));
+  const allocations = annualAllocations.filter(source => !roomBoard.expenseIds.has(source.expenseId));
   // Source conservation precedes the separate whole-dollar worksheets. Keep
   // each original decimal place without changing global calculation precision.
   const originals = [...group.map(source => source.grossDistribution), ...benefits.map(source => source.amount),
@@ -100,16 +104,15 @@ export function readInKindTuitionEsaSource(forms: readonly Form1099Q[], facts: F
   const qtpGross = qtps.reduce((value, source) => {
     const gross = amount(source.grossDistribution, 'QTP gross');
     const linked = rows.flatMap(row => row.accountRows.filter(account => account.sourceId === source.sourceId));
-    const provided = linked.reduce((value, row) => value.plus(row.provided), new SourceDecimal(0));
-    const allocated = linked.reduce((value, row) => value.plus(row.allocated).plus(row.credit), new SourceDecimal(0));
-    if (linked.length === 0 || (source.distributionMedium === 'in_kind_prepaid_tuition' && !provided.eq(gross)) || allocated.gt(gross)) {
+    const provided = annualBenefits.filter(row=>row.sourceId===source.sourceId).reduce((value,row)=>value.plus(amount(row.amount,'annual provided benefit')),new SourceDecimal(0));
+    const allocated = annualAllocations.filter(row=>row.sourceId===source.sourceId).reduce((value,row)=>value.plus(amount(row.amount,'annual allocation')).plus(amount(row.creditAmount,'annual credit')),new SourceDecimal(0));
+    if ((linked.length === 0 && !roomBoard.qualifiedBySource.has(source.sourceId??'')) || (source.distributionMedium === 'in_kind_prepaid_tuition' && !provided.eq(gross)) || allocated.gt(gross)) {
       throw new Error('In-kind tuition ESA actual allocations must conserve each original QTP distribution');
     }
     return value.plus(gross);
   }, new SourceDecimal(0));
   for (const esa of esas) {
-    const allocated = rows.flatMap(row => row.accountRows.filter(account => account.sourceId === esa.sourceId))
-      .reduce((value, row) => value.plus(row.allocated).plus(row.credit), new SourceDecimal(0));
+    const allocated = annualAllocations.filter(row=>row.sourceId===esa.sourceId).reduce((value,row)=>value.plus(amount(row.amount,'annual ESA allocation')).plus(amount(row.creditAmount,'annual ESA credit')),new SourceDecimal(0));
     if (allocated.gt(amount(esa.grossDistribution, 'ESA gross'))) {
       throw new Error('In-kind tuition ESA actual allocations exceed an original ESA distribution');
     }

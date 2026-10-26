@@ -1,5 +1,6 @@
 /** Original source conservation; distinct-in-kind and cash-assistance specs. */
 import Decimal from 'decimal.js';
+import { calculateRoomBoardPeriods } from './education-room-board-periods.js';
 import type { Form1099Q, QualifiedEducationExpenseSummary } from '@/models/inputs.js';
 
 type Facts = NonNullable<QualifiedEducationExpenseSummary['sourceFacts']>;
@@ -7,13 +8,16 @@ const unique = (ids: readonly string[]): boolean => ids.every(id => id.trim().le
 
 /** Read each recorded expense's allocation; never select or spread assistance. */
 export function readInKindTuitionAssistanceSource(forms: readonly Form1099Q[], facts: Facts, sourceId: string, expenseId: string): Record<string, Decimal> {
+  const roomBoard = calculateRoomBoardPeriods(forms, facts, facts.taxYear);
   const original = forms.find(form => form.sourceId === sourceId);
   const group = forms.filter(form => form.beneficiaryId === original?.beneficiaryId);
   const sourceIds = new Set(group.map(form => form.sourceId));
-  const expenses = (facts.expenses ?? []).filter(expense => expense.beneficiaryId === original?.beneficiaryId);
+  const expenses = (facts.expenses ?? []).filter(expense => expense.beneficiaryId === original?.beneficiaryId && !roomBoard.expenseIds.has(expense.id));
   const expenseIds = new Set(expenses.map(expense => expense.id));
-  const benefits = (facts.inKindBenefits ?? []).filter(benefit => sourceIds.has(benefit.sourceId) || expenseIds.has(benefit.expenseId));
-  const allocations = (facts.allocations ?? []).filter(allocation => sourceIds.has(allocation.sourceId) || expenseIds.has(allocation.expenseId));
+  const annualBenefits = (facts.inKindBenefits ?? []).filter(benefit => sourceIds.has(benefit.sourceId) || expenseIds.has(benefit.expenseId));
+  const annualAllocations = (facts.allocations ?? []).filter(allocation => sourceIds.has(allocation.sourceId) || expenseIds.has(allocation.expenseId));
+  const benefits = annualBenefits.filter(row=>!roomBoard.expenseIds.has(row.expenseId));
+  const allocations = annualAllocations.filter(row=>!roomBoard.expenseIds.has(row.expenseId));
   const prepaid = group.filter(form => form.distributionMedium === 'in_kind_prepaid_tuition');
   const cash = group.filter(form => form.distributionMedium === 'cash');
   // Source equality must retain all supplied decimal places. This local context
@@ -82,8 +86,8 @@ export function readInKindTuitionAssistanceSource(forms: readonly Form1099Q[], f
     };
   }
   for (const form of group) {
-    const linked = benefits.filter(benefit => benefit.sourceId === form.sourceId);
-    const assigned = allocations.filter(row => row.sourceId === form.sourceId);
+    const linked = annualBenefits.filter(benefit => benefit.sourceId === form.sourceId);
+    const assigned = annualAllocations.filter(row => row.sourceId === form.sourceId);
     const gross = amount(form.grossDistribution, 'original Box1');
     if (!assigned.length || (form.distributionMedium === 'in_kind_prepaid_tuition'
       && (!linked.length || !sum(linked.map(benefit => amount(benefit.amount, 'provided benefit'))).eq(gross)))

@@ -4,6 +4,7 @@
  */
 
 import { z } from "zod";
+import { EducationRoomBoardPeriodSchema, EducationRoomBoardPeriodExpenseSchema, EducationRoomBoardEsaAllocationSchema } from "@/models/education-room-board-periods.js";
 import { VehicleRefinancingSourcesSchema } from "@/models/vehicle-refinancing-sources.js";
 import { getNYIT201ResidentConstants } from "@/models/constants.js";
 import { d } from "@/utils/decimal.js";
@@ -889,6 +890,9 @@ const EducationDistributionSourceFactsSchema = z.object({
     outsideK12CashOnlyConfirmed: z.boolean().optional(),
   })).max(100).optional(),
   expenses: z.array(EducationDistributionExpenseSchema).max(500).optional(),
+  roomBoardPeriods: z.array(EducationRoomBoardPeriodSchema).max(100).optional(),
+  roomBoardPeriodExpenses: z.array(EducationRoomBoardPeriodExpenseSchema).max(500).optional(),
+  roomBoardEsaAllocations: z.array(EducationRoomBoardEsaAllocationSchema).max(1000).optional(),
   allocations: z.array(z.object({
     expenseId: z.string().trim().min(1), sourceId: z.string().trim().min(1),
     /** Actual expense allocation after all reductions, before category caps. */

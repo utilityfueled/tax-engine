@@ -17,6 +17,9 @@ const collections: ReadonlyArray<{ key: EducationSourceCollection; singular: str
   { key: "expenses", singular: "expense", plural: "expenses", hint: "Record actual payments and the amounts used for assistance, refunds, credits or another deduction. A statement withdrawal is not evidence of an eligible expense." },
   { key: "allocations", singular: "expense allocation", plural: "expense allocations", hint: "Link each distribution to its actual net eligible expenses. Record credit expenses separately; do not assign the same expense twice. For loan payments, identify the interest within the allocated payment." },
   { key: "inKindBenefits", singular: "in-kind benefit", plural: "in-kind benefits", hint: "Link each provided benefit to its statement and expense. Record its actual cost and the expense allocations, including assistance and credits. K-12 benefits also require the qualified prepaid program records and confirmation that outside-plan amounts include only cash distributions." },
+  { key: "roomBoardPeriods", singular: "academic period", plural: "academic periods", hint: "Use one actual institutional allowance for each period and living arrangement. Link all original room-and-board receipts to that period; do not repeat its allowance for each receipt. Leave these lists unused for a legacy single-receipt record. Cross-year periods require their prior-use history method." },
+  { key: "roomBoardPeriodExpenses", singular: "period receipt link", plural: "period receipt links", hint: "Link each original room-and-board expense to exactly one academic period, with its actual service dates and source record. Confirm an empty list only when no period records apply." },
+  { key: "roomBoardEsaAllocations", singular: "period ESA allocation", plural: "period ESA allocations", hint: "When coordinating an actual ESA with other distributions, record the actual taxpayer expense allocation after the period limit, including zero for every applicable original. The calculation checks the limit and original source capacity. Without an ESA, confirm no allocation records; do not enter an inferred allocation." },
   { key: "loanBorrowers", singular: "loan borrower", plural: "loan borrowers", hint: "Enter the borrower's actual lifetime and current-year qualified 529 loan-payment history. Only tax-free earnings used for interest reduce the student-loan interest deduction." },
   { key: "coverdellAccounts", singular: "Coverdell account history", plural: "Coverdell account histories", hint: "Use the actual account-basis worksheet and year-end records. A blank statement earnings box does not mean zero earnings." },
   { key: "penaltyExceptions", singular: "additional-tax exception", plural: "additional-tax exceptions", hint: "Identify the actual qualifying event and the distinct distribution covered by it. A source code alone does not establish the exception." },
@@ -28,8 +31,8 @@ function stringValue(value: EducationSourceRecord[string]): string {
 
 function linkChoices(data: EducationDistributionData, link: EducationSourceField["link"]): ReadonlyArray<readonly [string, string]> {
   if (link === "source") return (data.forms ?? []).map((entry, index) => [stringValue(entry.fields.sourceId), stringValue(entry.fields.payerName) || `Statement ${index + 1}`]);
-  const rows = link === "beneficiary" ? data.beneficiaries : link === "expense" ? data.expenses : data.loanBorrowers;
-  return (rows ?? []).map((entry, index) => [stringValue(entry.id), stringValue(entry.name) || `${link === "expense" ? "Expense" : link === "borrower" ? "Borrower" : "Beneficiary"} ${index + 1}`]);
+  const rows = link === "beneficiary" ? data.beneficiaries : link === "expense" ? data.expenses : link === "period" ? data.roomBoardPeriods : data.loanBorrowers;
+  return (rows ?? []).map((entry, index) => [stringValue(entry.id), stringValue(entry.name) || (link === "period" ? stringValue(entry.institutionName) : "") || `${link === "expense" ? "Expense" : link === "borrower" ? "Borrower" : link === "period" ? "Academic period" : "Beneficiary"} ${index + 1}`]);
 }
 
 function SourceFields({ fields, record, data, onChange }: {

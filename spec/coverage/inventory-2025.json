@@ -2252,6 +2252,29 @@
       ]
     },
     {
+      "key": "federal/form-1099-q-room-board-periods",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
+      "specPath": "spec/federal/form-1099-q-room-board-periods.yaml",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-q-room-board-periods.test.ts::applies one actual period allowance across distinct receipts",
+        "tests/pdf/form-1099-q-room-board-periods.test.ts::binds original period records before writing the review summary"
+      ],
+      "implementationNote": "Actual institutional periods, uniquely linked receipts and determined allocations feed the shared Form1099-Q calculation and source-bound historical 2025 review summary. Unresolved allocation methods remain explicit; this association does not qualify 2026 output or promote filing, human-review or release readiness.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-1099-q-source",
       "jurisdiction": "federal",
       "taxYear": 2026,

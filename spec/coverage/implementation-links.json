@@ -483,6 +483,16 @@
       "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
     },
     {
+      "key": "federal/form-1099-q-room-board-periods",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-room-board-periods.test.ts::applies one actual period allowance across distinct receipts",
+        "tests/pdf/form-1099-q-room-board-periods.test.ts::binds original period records before writing the review summary"
+      ],
+      "note": "Actual institutional periods, uniquely linked receipts and determined allocations feed the shared Form1099-Q calculation and source-bound historical 2025 review summary. Unresolved allocation methods remain explicit; this association does not qualify 2026 output or promote filing, human-review or release readiness."
+    },
+    {
       "key": "federal/form-1099-q-source",
       "enginePath": "src/engine/forms/form-1099-q.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",

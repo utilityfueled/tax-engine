@@ -59,7 +59,7 @@ import type { GuidedIraBasisData, GuidedIraBasisContext } from "./guided-ira-bas
 import { vehicleFactErrors, type VehicleCreditData } from "./guided-vehicle-facts";
 import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-facts";
 import { invalidateAdoptionHistories } from "./guided-adoption-prior-benefits";
-import { educationDistributionFactErrors, type EducationDistributionData } from "./guided-education-distributions";
+import { educationDistributionFactErrors, invalidateEducationPeriodSources, type EducationDistributionData } from "./guided-education-distributions";
 import { savingsBondFactErrors, type SavingsBondEducationData } from "./guided-savings-bond-facts";
 import { buildActualEducationInput } from "./guided-education-facts";
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
@@ -1665,7 +1665,7 @@ export function updateSectionData(
         ...(adoptionHistoryChanged ? { adoption: invalidateAdoptionHistories(adoptionHistoryChanged) } : {}),
         ...(minimumTaxCreditSourcesChanged ? { minimumTaxCredit: { ...minimumTaxCreditSourcesChanged, sourceFactsConfirmed: null } } : {}),
         ...(benefitSourcesChanged ? { dependentCareBenefits: { ...nextCredits.dependentCareBenefits, sourceFactsConfirmed: null, earnedIncomeWorksheetConfirmed: null, creditExpenseCoordinationConfirmed: null } } : {}),
-        ...(educationSourcesChanged ? { educationDistributions: { ...nextCredits.educationDistributions, sourceFactsConfirmed: null } } : {}),
+        ...(educationSourcesChanged ? { educationDistributions: invalidateEducationPeriodSources(nextCredits.educationDistributions) } : {}),
         ...(premiumTaxCreditSourcesChanged ? { premiumTaxCredit: { ...premiumTaxCreditSourcesChanged, sourceFactsConfirmed: null, ...(premiumTaxCreditSourcesChanged.sharedPolicyAllocations ? { sharedPolicyAllocations: invalidateSharedPolicySources(premiumTaxCreditSourcesChanged.sharedPolicyAllocations) } : {}), ...(premiumTaxCreditSourcesChanged.marriageSources ? { marriageSources: invalidateMarriageSources(premiumTaxCreditSourcesChanged.marriageSources) } : {}) } } : {}),
         ...(bondSourcesChanged ? { savingsBondEducation: { ...nextCredits.savingsBondEducation, sourceFactsConfirmed: null } } : {}),
       } } : {}),

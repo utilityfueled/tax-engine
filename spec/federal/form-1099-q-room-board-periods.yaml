@@ -1,0 +1,109 @@
+form: "Form1099Q room and board period sources"
+fullName: "Actual institutional academic-period room-and-board limits"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+sources:
+  - "https://www.irs.gov/publications/p970"
+  - "https://uscode.house.gov/us/usc/119-118/t26/s530/"
+  - "https://www.irs.gov/irb/2016-07_IRB#NOT-2016-13"
+notes: |
+  Official sources refreshed October 26, 2026. IRC529(e)(3)(B) applies one
+  allowance for the actual academic period, or the larger actual institutional
+  housing invoice, to reasonable costs of the eligible half-time student.
+  Pub970 chapters6/7 identify the student's actual period and living arrangement.
+  Original receipts have unique period membership; no date-based proration or
+  duplicate allowance is inferred. Actual paid-year and service-period records,
+  institution eligibility, enrollment, known zero housing/assistance and original
+  distribution identities remain distinct. Overlapping periods require source
+  reconciliation rather than separate caps. This bounded method uses periods
+  contained in the return year and actual room-and-board costs with known zero
+  education-credit/other-benefit amounts.
+  Original receipt/distribution allocations remain before the category cap.
+  One original source is determinate. For one prepaid source plus one cash
+  source, IRC529(c)(3)(B)(i)/(ii) uses qualified prepaid benefits before remaining
+  cash costs. Multiple original sources with no binding cap need no split.
+  Where actual ESA distributions require coordination, a separately confirmed
+  source election allocates the derived adjusted expense under529(c)(3)(B)(vi)
+  and530(d)(2)(C); no entered taxable amount or invented ESA basis is allowed.
+  A binding cap shared by multiple prepaid originals without ESA, or multiple
+  cash originals competing for a reduced residual, remains an exact internal
+  allocation method question. This does not label the taxpayer ineligible.
+  Literal controls below are independently derived, not published IRS examples.
+  Existing final-year, human-review and filing qualification gates stay closed.
+lines:
+  - line: "one-period-cap"
+    description: "Conserve one actual institutional limit across original receipts"
+    formula: "Two actual5000receipts, original10000QTP/2000earnings and one6000allowance give6000AQEE,1200excluded,800taxable and80additional tax; source order and original amounts remain unchanged."
+    testRef: "tests/engine/forms/form-1099-q-room-board-periods.test.ts::applies one actual period allowance across distinct receipts"
+  - line: "separate-periods"
+    description: "Apply independently sourced nonoverlapping periods without time proration"
+    formula: "Original5000spring/5000fall costs and actual3000/4000period allowances give7000AQEE,1400excluded,600taxable and60additional tax. A qualifying institutional invoice7000 replaces one6000allowance once; false half-time and actual zero cap produce0exclusion."
+    testRef: "tests/engine/forms/form-1099-q-room-board-periods.test.ts::keeps separate academic periods housing and explicit zero facts"
+  - line: "source-boundary"
+    description: "Require unique actual receipt membership and consistent original records"
+    formula: "Missing confirmations, dates, year, allowance, housing or receipt records reject. Duplicated membership, overlapping periods, changed beneficiary and a housing charge without institutional residence reject without source mutation."
+    testRef: "tests/engine/forms/form-1099-q-room-board-periods.test.ts::rejects missing conflicting and duplicated period sources"
+  - line: "actual-esa-allocation"
+    description: "Validate actual ESA coordination against the derived group expense"
+    formula: "One6000period capacity allocated2000to original10000QTP/2000earnings and4000to original5000ESA/1000earnings gives400+800excluded,1800taxable and180additional tax; missing, over-cap or over-original choices reject. Original ESA basis remains4000."
+    testRef: "tests/engine/forms/form-1099-q-room-board-periods.test.ts::uses actual ESA coordination without inferring an allocation"
+  - line: "prepaid-priority"
+    description: "Derive only determined original source amounts"
+    formula: "Prepaid4000 then cash6000 under6000period cap gives4000prepaid+2000cash AQEE. Two distinct prepaid originals under a nonbinding10000cap retain each5000; a binding6000cap without actual ESA coordination rejects the unresolved original allocation method."
+    testRef: "tests/engine/forms/form-1099-q-room-board-periods.test.ts::preserves determined prepaid priority and unresolved shared methods"
+  - line: "original-qualification"
+    description: "Preserve actual ineligible receipts and full provided benefit records"
+    formula: "Only one of two5000receipts qualifies: original10000QTP/2000earnings has5000AQEE,1000excluded and1000taxable. A reduced original prepaid allocation without ESA or an actual corresponding reduction rejects; a category cap never edits original benefit amounts. Exact source conservation precedes whole-dollar tax rounding."
+    testRef: "tests/engine/forms/form-1099-q-room-board-periods.test.ts::retains each original receipt qualification and exact source allocation"
+  - line: "tuition-composition"
+    description: "Use actual tuition and capped period sources in one annual ESA calculation"
+    formula: "Original12000QTP/2400earnings and7000ESA/1400earnings; room period6000 allocated2000QTP/4000ESA plus actual2000tuition allocated1000each give8000AQEE,1600excluded,2200taxable and220additional tax. No original is copied or its gross capacity reused."
+    testRef: "tests/engine/forms/form-1099-q-room-board-periods.test.ts::combines actual tuition with the separately capped room and board period"
+  - line: "canonical-recipient"
+    description: "Carry independently calculated taxable earnings to the actual recipient once"
+    formula: "Actual50000wages and period-limited800earnings produce50800AGI and80additional tax; a separately identified outside beneficiary preserves own50000AGI and records the outside earnings separately."
+    testRef: "tests/engine/education-room-board-period-return.test.ts::carries the academic period result to the actual recipient once"
+  - line: "assistance-composition"
+    description: "Combine distinct adjusted tuition with one actual room-and-board cap"
+    formula: "Original14000prepaid/2800earnings includes10000room benefits and4000tuition benefit, plus cash8000/2000earnings. Room6000capacity and tuition10000 less1000assistance and1000credit yield prepaid9500/cash4500AQEE,3025excluded,1775taxable,225exception and155additional tax. Each original annual gross and every receipt must reconcile independently."
+    testRef: "tests/engine/forms/form-1099-q-room-board-periods.test.ts::combines period costs with distinct tuition assistance without reusing sources"
+  - line: "guide-period-sources"
+    description: "Retain actual academic-period records through save and source edits"
+    formula: "Saved period6000 and original10000 distribution retain50800AGI. Editing allowance to7000 revokes annual, period and receipt confirmations; only explicit reconfirmation produces50600AGI. Blank remains unknown; actual0 gives52000AGI. Actual ESA choices and independent account basis remain source inputs."
+    testRef: "tests/guided-interview/guided-room-board-periods.test.ts::retains actual period records and revokes dependent confirmations"
+  - line: "guide-period-controls"
+    description: "Reach actual period allowances and receipt links through the education panel"
+    formula: "Real controls edit allowance6000 to7000 and then blank/0, retaining explicit false enrollment and receipt source values. Source edits block calculation until each actual confirmation is renewed; changing confirmations alone preserves other answers."
+    testRef: "tests/apps/web/room-board-period-interactions.test.tsx::edits actual institutional periods through the education source panel"
+  - line: "review-binding"
+    description: "Bind original period sources and independently reopen the review summary"
+    formula: "Show original10000distribution, one6000period allowance,1200excluded,800taxable and80additional tax. Changed allowance, institutional source, receipt membership or equal-total source dates cannot reuse the earlier audit or private context. Render ordinal source labels without original identifiers."
+    testRef: "tests/pdf/form-1099-q-room-board-periods.test.ts::binds original period records before writing the review summary"
+  - line: "receipt-source-capacity"
+    description: "Reconcile each original receipt before grouping its allowable cost"
+    formula: "Balanced annual totals cannot hide an allocation6000to one5000receipt and4000to another5000receipt. Original room-board allocation credit must be explicit0 because that receipt is not an education-credit expense. Direct source validation preserves exact cents and rejects missing amounts."
+    testRef: "tests/engine/forms/form-1099-q-room-board-periods.test.ts::checks original receipt capacity before the academic period total"
+  - line: "workspace-review"
+    description: "Prepare original period identity before workspace redaction"
+    formula: "Both actual cash and prepaid10000/2000 distributions retain the one6000period allowance and800taxable/80additional tax in the saved review packet. Original institution/account/reference identifiers are absent;2026 historical output remains closed."
+    testRef: "tests/apps/web/workspace-room-board-periods.test.ts::binds actual cash and prepaid period records before workspace redaction"
+  - line: "browser-period-records"
+    description: "Reach and retain actual period sources at desktop and mobile widths"
+    formula: "Edit6000allowance to7000, verify every dependent confirmation clears, preserve blank versus0 through reload, then restore actual7000and download600taxable/60additional tax. Original receipt/benefit amounts remain5000each; source identifiers stay local until the same-origin review download."
+    testRef: "apps/web/tests/guided-room-board-periods.spec.ts::preserves original academic periods through edits reload and review"
+  - line: "inactive-cash-original"
+    description: "Never assign a period allowance to an unallocated cash original"
+    formula: "Actual10000cash/2000earnings allocated10000to one6000period gives6000AQEE/800taxable. A separate5000cash/1000earnings original with no period allocation stays0AQEE/1000taxable, including after original reordering."
+    testRef: "tests/engine/forms/form-1099-q-room-board-periods.test.ts::keeps an unused cash original outside another period allowance"
+  - line: "inactive-prepaid-original"
+    description: "Never copy the active prepaid allowance onto an inactive original"
+    formula: "Actual10000prepaid/2000earnings allocated10000to one6000period gives6000AQEE/800taxable. A separate5000prepaid/1000earnings original with no period allocation stays0AQEE/1000taxable; source identity and original gross are conserved."
+    testRef: "tests/engine/forms/form-1099-q-room-board-periods.test.ts::keeps an unused prepaid original outside another period allowance"
+  - line: "separate-cash-originals"
+    description: "Keep each cash statement inside its actual academic-period membership"
+    formula: "Two5000cash/1000earnings originals separately fund spring and fall receipts. Actual spring2000/fall3000caps produce respective2000/3000AQEE and600/400taxable, total1000taxable and100additional tax; neither source receives the other period allowance."
+    testRef: "tests/engine/forms/form-1099-q-room-board-periods.test.ts::keeps separate cash originals within their own academic periods"
+  - line: "separate-prepaid-originals"
+    description: "Keep each original prepaid benefit inside its actual period"
+    formula: "Two5000prepaid/1000earnings originals and separately dated5000benefits bind spring2000/fall3000caps. Source-local2000/3000AQEE yields600/400taxable, total1000taxable and100additional tax; each derived amount is bounded by its own original allocation."
+    testRef: "tests/engine/forms/form-1099-q-room-board-periods.test.ts::keeps separate prepaid originals within their own academic periods"
