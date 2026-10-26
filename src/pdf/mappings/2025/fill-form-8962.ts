@@ -13,6 +13,8 @@ import {
 import type { Form1095A, TaxYearInput } from "@/models/inputs.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import { calculateForm8962SharedPolicy, type Form8962SharedPolicyResult } from "@/engine/forms/form-8962-shared-policy.js";
+import { calculateForm8962MarriageSources } from "@/engine/forms/form-8962-marriage-sources.js";
+import { calculateForm8962MarriageWorksheets, type Form8962MarriageWorksheetResult } from "@/engine/forms/form-8962-marriage-worksheets.js";
 import { premiumTaxCreditReviewOriginalSourceInput, type PreparedPremiumTaxCreditReview } from "../../premium-tax-credit-review-context.js";
 import { loadReviewTemplate, setCheckBox, setTextField } from "../../pdf-utils.js";
 
@@ -26,7 +28,7 @@ const WARNING_COLOR = rgb(0.62, 0.19, 0.14);
 const INCLUDED_FORM_8962_LINES: readonly string[] = [
   "1", "2a", "2b", "3", "4", "5", "7", "8a", "8b",
   ...Array.from({ length: 13 }, (_, index) => ["a", "b", "c", "d", "e", "f"].map(column => `${index + 11}${column}`)).flat(),
-  "24", "25", "26", "27", "28", "29",
+  "24", "25", "26", "27", "28", "29", "35a", "35b", "35c", "35d", "36a", "36b", "36c", "36d",
 ];
 const INCLUDED_FORM_8962_LINE_SET = new Set(INCLUDED_FORM_8962_LINES);
 const REQUIRED_LINES = ["1", "2a", "2b", "3", "4", "5", "24", "25", "26", "27", "29"] as const;
@@ -59,6 +61,7 @@ export interface Form8962ReferenceSummary {
   lines: Form8962ReferenceSummaryLine[];
   allocations?: { policyNumber: string; firstMonth: number; lastMonth: number; fraction: string }[];
   allocatedMonths?: { month: number; originalPremium: string; originalSlcsp: string; originalAdvance: string; premium: string; slcsp: string; advance: string }[];
+  marriage?: { electionApplies: boolean; worksheets: (Form8962ReferenceSummaryLine & { form: string })[] };
 }
 
 function wrapText(text: string, font: PDFFont, size: number, maxWidth: number) {
@@ -163,10 +166,16 @@ export function buildForm8962ReferenceSummary(
     throw new Error("Form 8962 reference summary requires result.form8962");
   }
   let allocation: Form8962SharedPolicyResult | undefined;
-  if (summary.sharedPolicyAllocation || context) {
-    if (!context || JSON.stringify(forms) !== JSON.stringify(context.input.form1095A)) throw new Error("Form8962 shared-policy review requires matching original policy source context");
+  let marriage: Form8962MarriageWorksheetResult | undefined;
+  if (summary.sharedPolicyAllocation || summary.marriageCalculation || context) {
+    if (!context || JSON.stringify(forms) !== JSON.stringify(context.input.form1095A)) throw new Error("Form8962 review requires matching original policy source context");
     const original = premiumTaxCreditReviewOriginalSourceInput(context.input, result, context.prepared);
-    allocation = calculateForm8962SharedPolicy(original);
+    if (summary.sharedPolicyAllocation) allocation = calculateForm8962SharedPolicy(original);
+    if (summary.marriageCalculation) {
+      const sources = calculateForm8962MarriageSources(original), region = original.form8962?.fplRegion;
+      if (!region) throw new Error("Form8962 marriage review requires the actual poverty region");
+      marriage = calculateForm8962MarriageWorksheets({ ...sources, taxYear: original.taxpayer.taxYear, fplRegion: region, householdIncome: summary.modifiedAGI });
+    }
   }
 
   const byLine = new Map<string, (typeof summary.lines)[number]>();
@@ -175,11 +184,19 @@ export function buildForm8962ReferenceSummary(
     if (byLine.has(line.line) || !line.value.isFinite()) throw new Error(`Form 8962 reference requires unique finite audit line ${line.line}`);
     byLine.set(line.line, line);
   }
-  for (const line of REQUIRED_LINES) if (!byLine.has(line)) throw new Error(`Form 8962 reference is missing audit line ${line}`);
+  const blankRepayment = marriage?.electionApplies === true && summary.excessAPTC.isZero();
+  for (const line of REQUIRED_LINES) {
+    if (blankRepayment && (line === "27" || line === "29")) continue;
+    if (!byLine.has(line)) throw new Error(`Form 8962 reference is missing audit line ${line}`);
+  }
+  if (blankRepayment && ["27", "28", "29"].some(line => byLine.has(line))) throw new Error("Form8962 marriage Step8 requires blank repayment lines without excess advances");
   for (const [line, total] of [
     ["3", summary.modifiedAGI], ["4", summary.federalPovertyLine], ["5", summary.fplPercentageForTable],
     ["24", summary.ptcAllowed], ["25", summary.advancePTCTotal], ["26", summary.netPTC], ["27", summary.excessAPTC], ["29", summary.excessAPTCRepayment],
-  ] as const) if (!byLine.get(line)?.value.eq(total)) throw new Error(`Form 8962 audit line ${line} disagrees with its calculated total`);
+  ] as const) {
+    if (blankRepayment && (line === "27" || line === "29") && total.isZero()) continue;
+    if (!byLine.get(line)?.value.eq(total)) throw new Error(`Form 8962 audit line ${line} disagrees with its calculated total`);
+  }
   const sourceAdvances = new Map<number, Decimal>();
   for (const form of forms) for (const month of form.monthlyPremiums) {
     if (month.advancePremiumTaxCredit === undefined) throw new Error("Form 8962 source advance amount is missing");
@@ -201,7 +218,7 @@ export function buildForm8962ReferenceSummary(
     auditedAdvances = auditedAdvances.plus(advance.value);
     if (["a", "b", "c", "d", "e"].some(column => byLine.has(`${row}${column}`))) {
       for (const column of ["a", "b", "c", "d", "e"]) if (!byLine.has(`${row}${column}`)) throw new Error(`Form 8962 reference is missing audit line ${row}${column}`);
-      for (const line of ["7", "8a", "8b"]) if (!byLine.has(line)) throw new Error(`Form 8962 reference is missing contribution audit ${line}`);
+      if (!marriage?.electionApplies || summary.taxpayerEligible) for (const line of ["7", "8a", "8b"]) if (!byLine.has(line)) throw new Error(`Form 8962 reference is missing contribution audit ${line}`);
       auditedCredit = auditedCredit.plus(byLine.get(`${row}e`)?.value ?? 0);
     }
   }
@@ -254,6 +271,9 @@ export function buildForm8962ReferenceSummary(
     allocatedMonths: allocation?.months.map(month => ({ month: month.month, originalPremium: month.originalPremium.toFixed(),
       originalSlcsp: month.originalSlcsp.toFixed(), originalAdvance: month.originalAdvance.toFixed(),
       premium: month.premium.toFixed(), slcsp: month.slcsp.toFixed(), advance: month.advance.toFixed() })),
+    marriage: marriage ? { electionApplies: marriage.electionApplies, worksheets: marriage.lines.filter(row => row.form.startsWith('Pub974 Marriage Worksheet')).map(row => ({
+      form: row.form, line: row.line, description: row.description, value: row.value.toFixed(), formula: normalizeFormula(row.formula),
+    })) } : undefined,
   };
 }
 
@@ -406,6 +426,26 @@ export async function fillForm8962Reference(
     }
   }
 
+  if (summary.marriage) {
+    newPage();
+    const write = (text: string, heading = false) => {
+      for (const row of wrapText(text, regular, BODY_FONT_SIZE, PAGE_WIDTH - PAGE_MARGIN * 2)) {
+        if (y < 54) newPage();
+        page.drawText(row, { x: PAGE_MARGIN, y, size: BODY_FONT_SIZE, font: heading ? bold : regular }); y -= 14;
+      }
+      y -= 4;
+    };
+    write('FORM 8962 MARRIAGE - COMPLETED WORKSHEETS I-V', true);
+    write(summary.marriage.electionApplies ? 'The source-verified alternative calculation is applied. Actual joint household income remains unchanged; the elected method cannot create additional net credit.'
+      : 'The completed comparison retains the ordinary monthly calculation. No alternative election or Part V amount is applied.');
+    write('Private person identifiers and source references are omitted. The actual original policies remain in the source record.');
+    let previous = '';
+    for (const row of summary.marriage.worksheets) {
+      if (previous !== row.form) { write(row.form, true); previous = row.form; }
+      write(`${row.line}: ${row.description} = ${row.value}. ${row.formula}`);
+    }
+  }
+
   if (y < 120) {
     newPage();
   }
@@ -476,13 +516,12 @@ export const FORM_8962_FIELDS = {
   line34Yes: check(2, 1, 0), line34No: check(2, 1, 1), marriage: Array.from({ length: 8 }, (_, index) => field(2, index + 29)),
 } as const;
 
-/** Actual PartIV map only. Other supported historical methods retain their
- * existing reference output; all source facts are checked before loading bytes. */
-export async function fillForm8962SharedPolicy(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string,
+/** Source-backed Part IV/V map; validate the private original context before loading bytes. */
+async function fillForm8962SourceReview(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string,
   prepared?: PreparedPremiumTaxCreditReview): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const summary = buildForm8962ReferenceSummary(input.form1095A, result, { input, prepared });
-  if (!summary.allocations?.length || !result.form8962) throw new Error('Form8962 physical review requires actual shared-policy allocations');
+  if ((!summary.allocations?.length && !summary.marriage) || !result.form8962) throw new Error('Form8962 physical review requires actual allocation or marriage sources');
   const values = new Map(summary.lines.map(row => [row.line, row.value]));
   const doc = await loadReviewTemplate(blankPdfPath, 2025), form = doc.getForm(), F = FORM_8962_FIELDS;
   setTextField(form, F.name, [input.taxpayer.primary, ...(input.taxpayer.filingStatus === 'married_filing_jointly' && input.taxpayer.spouse ? [input.taxpayer.spouse] : [])].map(person => `${person.firstName} ${person.lastName}`).join(' & '));
@@ -493,21 +532,37 @@ export async function fillForm8962SharedPolicy(input: TaxYearInput, result: TaxR
   }
   const region = input.form8962?.fplRegion;
   for (const [index, name] of ['alaska', 'hawaii', 'contiguous'].entries()) setCheckBox(form, F.regions[index], region === name);
-  for (const [name, state] of [[F.line9Yes, true], [F.line9No, false], [F.line10Yes, false], [F.line10No, true]] as const) setCheckBox(form, name, state);
+  const specialMethod = Boolean(summary.allocations?.length || summary.marriage?.electionApplies);
+  for (const [name, state] of [[F.line9Yes, specialMethod], [F.line9No, !specialMethod], [F.line10Yes, false], [F.line10No, true]] as const) setCheckBox(form, name, state);
   for (const name of F.annual) setTextField(form, name, '');
   for (const [month, fields] of F.monthly.entries()) for (const [index, name] of fields.entries()) {
     const value = values.get(`${month + 12}${'abcdef'[index]}`); setTextField(form, name, value === undefined ? '' : new Decimal(value).toFixed(0));
   }
   const excess = result.form8962.excessAPTC.gt(0);
-  setTextField(form, F.line26, excess ? '' : result.form8962.netPTC.toFixed(0));
+  setTextField(form, F.line26, summary.marriage?.electionApplies ? '0' : excess ? '' : result.form8962.netPTC.toFixed(0));
   for (const line of ['27', '28', '29'] as const) setTextField(form, F[`line${line}`], excess && values.has(line) ? new Decimal(values.get(line)!).toFixed(0) : '');
   for (const [index, fields] of F.allocations.entries()) {
-    const period = summary.allocations[index];
+    const period = summary.allocations?.[index];
     const row = period ? [period.policyNumber, '', String(period.firstMonth).padStart(2, '0'), String(period.lastMonth).padStart(2, '0'), period.fraction, period.fraction, period.fraction] : Array<string>(7).fill('');
     fields.forEach((name, column) => setTextField(form, name, row[column]));
   }
-  setCheckBox(form, F.line34Yes, summary.allocations.length <= 4); setCheckBox(form, F.line34No, summary.allocations.length > 4);
-  F.marriage.forEach(name => setTextField(form, name, ''));
+  setCheckBox(form, F.line34Yes, Boolean(summary.allocations?.length && summary.allocations.length <= 4)); setCheckBox(form, F.line34No, Boolean(summary.allocations && summary.allocations.length > 4));
+  F.marriage.forEach((name, index) => {
+    const column = index % 4, value = values.get(`${index < 4 ? '35' : '36'}${'abcd'[column]}`);
+    setTextField(form, name, value === undefined ? '' : column >= 2 ? new Decimal(value).toFixed(0).padStart(2, '0') : new Decimal(value).toFixed(0));
+  });
   await markReviewPdf(doc);
   return doc;
+}
+
+export async function fillForm8962SharedPolicy(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string,
+  prepared?: PreparedPremiumTaxCreditReview): Promise<PDFDocument> {
+  if (!result.form8962?.sharedPolicyAllocation) throw new Error('Form8962 physical review requires actual shared-policy allocations');
+  return fillForm8962SourceReview(input, result, blankPdfPath, prepared);
+}
+
+export async function fillForm8962Marriage(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string,
+  prepared?: PreparedPremiumTaxCreditReview): Promise<PDFDocument> {
+  if (!result.form8962?.marriageCalculation) throw new Error('Form8962 physical review requires actual marriage sources');
+  return fillForm8962SourceReview(input, result, blankPdfPath, prepared);
 }

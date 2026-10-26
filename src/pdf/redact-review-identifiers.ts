@@ -12,6 +12,7 @@ export function redactReviewIdentifiers<T>(value: T): T {
   return Object.fromEntries(Object.entries(value).map(([key, item]) => [
     key,
     typeof item === "string" && /(?:ssn(?:last4)?|tin|taxid|taxpayerIdLast4|identifyingnumber(?:last4)?|accountReference)$/i.test(key)
-      ? "" : redactReviewIdentifiers(item),
+      ? "" : Array.isArray(item) && /ssns$/i.test(key)
+        ? item.map(value => typeof value === "string" ? "" : redactReviewIdentifiers(value)) : redactReviewIdentifiers(item),
   ])) as T;
 }

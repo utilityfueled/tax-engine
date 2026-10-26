@@ -1,5 +1,5 @@
-/** Actual shared-policy sources stay private and verifiable after render redaction.
- * Spec: form-8962-shared-policy-review.yaml. */
+/** Actual shared-policy and marriage sources stay private after render redaction.
+ * Specs: form-8962-shared-policy-review.yaml, form-8962-marriage-return.yaml. */
 import { createHash } from 'node:crypto';
 import { calculateFederalTax } from '@/engine/federal.js';
 import type { TaxYearInput } from '@/models/inputs.js';
@@ -15,7 +15,7 @@ const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(va
 function calculationDigest(result: TaxReturnResult): string {
   return digest(redactReviewIdentifiers({ taxYear: result.taxYear, filingStatus: result.filingStatus, agi: result.agi,
     form8962: result.form8962, transfers: result.allLines.filter(row => /^Form\s?8962/.test(row.form)
-      || (row.form === 'Schedule 2' && row.line === '1a') || (row.form === 'Schedule 3' && row.line === '9')) }));
+      || (/^(Sched|Schedule) 2$/.test(row.form) && row.line === '1a') || (/^(Sched|Schedule) 3$/.test(row.form) && row.line === '9')) }));
 }
 function freeze<T>(value: T): T {
   if (value !== null && typeof value === 'object') { for (const child of Object.values(value)) freeze(child); Object.freeze(value); }
@@ -24,12 +24,17 @@ function freeze<T>(value: T): T {
 export function hasSharedPremiumTaxCreditSources(input: TaxYearInput): boolean {
   return input.form8962?.allocationRequired === true || input.form8962?.sharedPolicyAllocations !== undefined;
 }
+export function hasPremiumTaxCreditReviewSources(input: TaxYearInput): boolean {
+  return hasSharedPremiumTaxCreditSources(input) || input.form8962?.alternativeMarriageCalculationElected === true
+    || input.form8962?.marriageSources !== undefined;
+}
 /** Full original return income determines the credit. Retained results cannot
  * certify themselves, and a plain source/validation flag cannot create a token. */
 export function preparePremiumTaxCreditReview(input: TaxYearInput): PreparedPremiumTaxCreditReview {
-  if (!hasSharedPremiumTaxCreditSources(input)) throw new Error('Form8962 review requires original shared-policy sources');
+  if (!hasPremiumTaxCreditReviewSources(input)) throw new Error('Form8962 review requires original shared-policy or marriage sources');
   const calculation = calculateFederalTax(input);
-  if (!calculation.form8962?.sharedPolicyAllocation || !calculation.form8962.sourceFactsVerified) throw new Error('Form8962 review requires the actual completed shared-policy calculation');
+  if ((!calculation.form8962?.sharedPolicyAllocation && !calculation.form8962?.marriageCalculation)
+    || !calculation.form8962.sourceFactsVerified) throw new Error('Form8962 review requires the actual completed source calculation');
   const token: PreparedPremiumTaxCreditReview = Object.freeze({ [brand]: true as const });
   contexts.set(token, { original: freeze(structuredClone(input)), originalDigest: digest(input),
     redactedDigest: digest(redactReviewIdentifiers(input)), calculationDigest: calculationDigest(calculation) });

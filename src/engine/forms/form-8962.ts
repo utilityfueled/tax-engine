@@ -7,6 +7,8 @@ import { min, roundDollar, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { calculateForm8962SharedPolicy, type Form8962AllocationInput, type Form8962SharedPolicyResult } from "./form-8962-shared-policy.js";
 import { calculateForm8962Contribution } from "./form-8962-contribution.js";
+import { calculateForm8962MarriageSources, type Form8962MarriageSourceResult } from "./form-8962-marriage-sources.js";
+import { calculateForm8962MarriageWorksheets, type Form8962MarriageWorksheetResult } from "./form-8962-marriage-worksheets.js";
 
 /** Actual completed household and coverage worksheets; never inferred from AGI alone. */
 export interface Form8962Facts {
@@ -60,8 +62,9 @@ export interface Form8962Result {
   taxYear: number;
   sourceFactsVerified: boolean;
   sharedPolicyAllocation?: Form8962SharedPolicyResult;
-  /** Derived eligibility explains officially skipped credit columns. */
+  /** Actual ordinary joint eligibility; the separately validated marriage method may allow pre-marriage columns. */
   taxpayerEligible: boolean;
+  marriageCalculation?: Form8962MarriageWorksheetResult;
   /** True only for the separately identified auxiliary Pub974 worksheet. */
   orderedDeductionInterim?: true;
   calculationMethod: "annual" | "monthly";
@@ -106,15 +109,22 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   if (year === 2026 && !facts) throw new Error("Form 8962 2026 requires actual household and monthly coverage facts");
   const verified = facts !== undefined;
   let sharedPolicyAllocation: Form8962SharedPolicyResult | undefined;
+  let marriageSources: Form8962MarriageSourceResult | undefined;
   if (facts?.allocationRequired === true || facts?.sharedPolicyAllocations !== undefined) {
     if (!input.allocationHousehold) throw new Error("Form8962 allocation requires actual household source context and allocation worksheet");
     if (input.allocationHousehold.taxpayer.taxYear !== year || input.allocationHousehold.taxpayer.filingStatus !== input.filingStatus) throw new Error("Form8962 allocation household source context conflicts with the return year or status");
     sharedPolicyAllocation = calculateForm8962SharedPolicy({ ...input.allocationHousehold, form1095A: input.form1095A, form8962: facts });
   }
+  if (facts?.alternativeMarriageCalculationElected === true || facts?.marriageSources !== undefined) {
+    if (!input.allocationHousehold) throw new Error("Form8962 marriage requires actual household source context and completed worksheets");
+    if (input.allocationHousehold.taxpayer.taxYear !== year || input.allocationHousehold.taxpayer.filingStatus !== input.filingStatus) throw new Error("Form8962 marriage household source context conflicts with the return year or status");
+    marriageSources = calculateForm8962MarriageSources({ ...input.allocationHousehold, form1095A: input.form1095A, form8962: facts });
+  }
   if (facts) {
     if (facts.householdFactsConfirmed !== true || facts.coverageFactsConfirmed !== true) throw new Error("Form 8962 household and coverage facts must be confirmed");
     for (const flag of ["allocationRequired", "alternativeMarriageCalculationElected", "selfEmployedHealthInsuranceCoordinationRequired", "lawfulPresenceReconciliationRequired"] as const) {
       if (flag === "allocationRequired" && sharedPolicyAllocation) continue;
+      if (flag === "alternativeMarriageCalculationElected" && marriageSources) continue;
       if (flag === "selfEmployedHealthInsuranceCoordinationRequired" && facts[flag] === true
         && (input.healthInsuranceCoordination === `pub974-simplified-${year}`
           || (year === 2026 && input.healthInsuranceCoordination === "pub974-alternative-reentry-2026"))) continue;
@@ -215,7 +225,7 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
       new Decimal(row.enrolleePremium).eq(firstMonth.enrolleePremium) && new Decimal(row.slcsp).eq(firstMonth.slcsp));
   })
     && months.length === 12 && first !== undefined && months.every(month => month.premium.eq(first.premium) && month.slcsp.eq(first.slcsp) && month.eligible === first.eligible);
-  const calculationMethod = fullYearUnchanged && !sharedPolicyAllocation ? "annual" : "monthly";
+  const calculationMethod = fullYearUnchanged && !sharedPolicyAllocation && !marriageSources ? "annual" : "monthly";
   const audit = new AuditTrail();
   if (sharedPolicyAllocation) audit.merge(sharedPolicyAllocation.lines);
   const record = (line: string, description: string, amount: Decimal, formula: string) => audit.record("Form 8962", line, description, amount, formula);
@@ -282,8 +292,26 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   record("27", "Excess advance premium tax credit before limitation", excessAPTC, "max(0, line 25 - line 24)");
   if (repaymentCap !== null && excessAPTC.gt(0)) record("28", "Historical repayment limitation", repaymentCap, worksheetLimit === undefined ? "2025 Table 5; no repayment limitation applies in 2026" : "Actual Pub974 WorksheetX/Y/Z limitation replaces Table5");
   record("29", "Excess advance premium tax credit repayment", excessAPTCRepayment, "Line 27 limited by line 28 where applicable -> Schedule 2 line 1a");
-  return { taxYear: year, sourceFactsVerified: verified, sharedPolicyAllocation, taxpayerEligible, orderedDeductionInterim: input.orderedDeductionInterim ? true : undefined, calculationMethod, familySize, modifiedAGI,
+  const marriageCalculation = marriageSources ? calculateForm8962MarriageWorksheets({
+    ...marriageSources, taxYear: year, fplRegion: region, householdIncome: modifiedAGI,
+  }) : undefined;
+  if (marriageCalculation && (!marriageCalculation.ordinaryCredit.eq(ptcAllowed)
+    || !marriageCalculation.ordinaryRepayment.eq(excessAPTCRepayment)
+    || !marriageCalculation.advancePTCTotal.eq(advancePTCTotal))) throw new Error("Form8962 marriage comparison does not reconcile to the actual ordinary monthly calculation");
+  // Retain actual joint Part I. Worksheets I-V replace only the completed monthly
+  // calculation and transfers, including Step 8's zero additional credit rule.
+  const lines = marriageCalculation && marriageSources ? [
+    ...audit.getLines().filter(row => row.form !== "Form 8962" || /^(1|2a|2b|3|4|5|7|8a|8b)$/.test(row.line)),
+    ...marriageSources.lines,
+    ...marriageCalculation.lines,
+    ...audit.getLines().filter(row => row.form === "Form 8962" && /^\d+f$/.test(row.line)
+      && !marriageCalculation.lines.some(candidate => candidate.form === row.form && candidate.line === row.line)),
+  ] : audit.getLines();
+  return { taxYear: year, sourceFactsVerified: verified, sharedPolicyAllocation, taxpayerEligible, marriageCalculation, orderedDeductionInterim: input.orderedDeductionInterim ? true : undefined, calculationMethod, familySize, modifiedAGI,
     federalPovertyLine, fplPercentage, fplPercentageForTable, contributionRate: rate, expectedContribution, monthlyContribution,
     annualPremium, annualSLCSP, annualAdvancePTC, ptcAllowed, advancePTCTotal, netPTC, excessAPTC, repaymentCap, excessAPTCRepayment,
-    lines: audit.getLines() };
+    ...(marriageCalculation ? { ptcAllowed: marriageCalculation.ptcAllowed, advancePTCTotal: marriageCalculation.advancePTCTotal,
+      netPTC: marriageCalculation.netPTC, excessAPTC: marriageCalculation.excessAPTC, repaymentCap: marriageCalculation.repaymentCap,
+      excessAPTCRepayment: marriageCalculation.excessAPTCRepayment } : {}),
+    lines };
 }
