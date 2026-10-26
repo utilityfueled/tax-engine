@@ -1,0 +1,84 @@
+form: "Prior charitable NOL carry coordination"
+fullName: "One actual prior charitable category and vintage with independent regular and alternative histories"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+retrievedAt: "2026-10-26"
+notes: |
+  IRC170(d)(1)(B), Reg1.170A-10(c)/(d), Reg1.172-5(a)(2)(ii) and
+  Form172 instructions line26 reach an actual charitable carry, including a
+  prior contribution year. The excess is reduced only by the succeeding NOL
+  preserved because that excess is allowed in the modified-income calculation.
+  The originating contribution year and five-year expiration do not restart.
+  This bounded method has no current gifts and at most one actual category,
+  medium and vintage in each independently sourced regular and AMT ledger.
+  Where both have records, original year/category/medium must agree; source
+  balances and intervening use are never copied between the ledgers.
+  Actual sources retain cents. Completed tax/NOL lines follow their ordinary
+  whole-dollar reporting rules. The modified comparison retains only the
+  normal-year amount treated as paid from that original vintage, using an
+  internal year/identity/category/medium/source-bound tag, never a user override.
+  Reg1.55-1(a)/(b) retains actual regular AGI for AMT percentage limits. The
+  independent AMT charity amount changes current AMTI and related non-AGI
+  limits before the current ATNOLD calculation, even when ATNOL is known zero.
+  The modified AMT comparison keeps that actual current ATNOLD unchanged.
+  Actual regular deduction selection remains fixed in the AMT replays.
+  Reg1.199A-1(e)(5) expressly retains the actual regular199A deduction for
+  current AMTI; changing the AMT charity opening cannot re-limit that deduction.
+  The modified carry context still removes199A under the NOL modification rules.
+  Official2025 CFR: https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol4/pdf/CFR-2025-title26-vol4-sec1-199A-1.pdf
+  These numerical controls are derived from the cited rules, not a matching
+  published example or human tax qualification. Positive2026 prior-floor,
+  mixed-category/vintage allocation and current-plus-prior NOL remain separate.
+lines:
+  - line: "independent-sources"
+    description: "Validate complete original regular and AMT charitable histories"
+    formula: "Existing regular full source packet and independent alternativeCarryoverSources each reconcile identity, original year/category/medium, intervening treated-paid/NOL reductions, opening balance and all-history confirmation. Legacy summary rows, when retained, must agree. Missing, contradictory or crossover facts reject."
+    testRef: "tests/engine/forms/charitable-prior-net-operating-loss.test.ts::preserves independent complete prior charity histories and rejects source crossover"
+  - line: "regular-prior"
+    description: "Reduce an original prior carry by the NOL preserved by its excess"
+    formula: "Base100000/prior2024C50000/regularNOL100000 gives preNOL charity30000 and NOLD56000; regularAGI44000 permits13200 use. Actual succeedingNOL44000 minus comparison30560 reduces36800 charitable excess by13440, leaving23360 in2024."
+    testRef: "tests/engine/federal-charitable-prior-nol.test.ts::coordinates an actual prior charitable vintage without changing its contribution year"
+  - line: "category-expiry-cents"
+    description: "Preserve each actual percentage category, cents and original expiry"
+    formula: "With no other gifts, G/A/B/C/D use their60/50/30/30/20 percent capacities. Original opening equals normal treated-paid plus NOL reduction plus original expiry plus remaining. Source50000.49 retains exact cents; an already expired vintage has no current use or NOL reduction."
+    testRef: "tests/engine/forms/charitable-prior-net-operating-loss.test.ts::conserves prior category capacity exact cents and original expiration"
+  - line: "current-amt"
+    description: "Use the independent AMT history in current AMTI"
+    formula: "Regular priorC50000 and independentAMTC10000 with regularAGI44000 use13200/10000 respectively. With known-zeroATNOL, source charity adjustment is+3200 before related nonAGI limits; regular claim andAGI remain unchanged."
+    testRef: "tests/engine/federal-charitable-prior-nol.test.ts::replays the actual independent alternative charity amount before current AMT"
+  - line: "alternative-prior"
+    description: "Keep actual current ATNOLD separate from modified carry absorption"
+    formula: "Income100000 with actual3000capital loss, regularC50000/AMTC40000 and independentATNOL100000 gives regularAGI97000/use29100; currentAMTI67900/ATNOLD61110. ModifiedAMTI70000 gives37000 succeedingNOL, comparison70900 gives36190, so originalAMTcharity10900 reduces810 to10090."
+    testRef: "tests/engine/federal-charitable-prior-nol.test.ts::coordinates the independent prior AMT carry while retaining the actual current claim"
+  - line: "actual-regular-qbi"
+    description: "Retain the actual regular QBI deduction when AMT charity differs"
+    formula: "Wages50000 plus ordinaryREIT50000, regularNOLD56000 and charity13200 gives regularTIbeforeQBI30800 andQBI6160. IndependentAMTcharity10000 changes AMTI by3200 to83840; it must not recompute QBI6800 from AMT-adjusted charity."
+    testRef: "tests/engine/federal-charitable-prior-nol.test.ts::retains actual regular QBI when the independent AMT charity deduction differs"
+  - line: "canonical-category-choice"
+    description: "Conserve each original category through actual choice and expiration"
+    formula: "At100000income and60000prior opening, G/A/B/C/D regular succeeding charitable carry is3840/14000/33360/33360/42560. Automatic standard selection withC50000 retains13200 treated-paid use but zero charity deduction,25400 regular carry and unchanged100000AMTI. Fifth-year balances expire in their original vintage."
+    testRef: "tests/engine/federal-charitable-prior-nol.test.ts::conserves original categories expiry and actual standard selection in canonical replays"
+  - line: "comparison-tag"
+    description: "Keep the capped prior use internal and tied to original evidence"
+    formula: "A prior comparison contains original source identity/year/category/medium, ledger, source digest and normal use. Wrong/missing/stale tags or a current-versus-prior crossover reject; TaxYearInput accepts no calculated deduction override."
+    testRef: "tests/engine/forms/charitable-prior-net-operating-loss.test.ts::rejects stale or cross-ledger prior comparison tags"
+  - line: "private-reference"
+    description: "Reconcile original prior and independent AMT records before render"
+    formula: "Original source preparation precedes identifier redaction; original and exact redacted inputs bind the retained calculation. Printed prior carry keeps original year/category/medium and shows exact use/reduction/expiry/balance without private identifiers. Stale/removed records and changed AMT6251 amounts reject before template I/O."
+    testRef: "tests/pdf/charitable-prior-nol-review.test.ts::reconciles original prior regular and AMT charity before private review output"
+  - line: "actual-guide"
+    description: "Collect independent prior charity histories without calculated overrides"
+    formula: "Actual original regular sources remain in the charity collector; the NOL panel independently retains the AMT source/history packet. Unknown/false/zero survive, source and household edits revoke nested confirmations, and the real bridge reaches the same canonical prior-vintage result."
+    testRef: "tests/apps/web/guided-charitable-prior-nol.test.ts::transfers independently confirmed prior charity histories through the actual guide"
+  - line: "interactive-guide"
+    description: "Edit the independent AMT original history without copying regular balances"
+    formula: "The existing original-history controls are reused under an explicit AMT heading. Missing/empty/positive history stays distinct; changes revoke inner and outer confirmations; confirmation-only edits preserve facts."
+    testRef: "tests/apps/web/charitable-prior-nol-interactions.test.tsx::edits the independent prior AMT history and requires renewed confirmations"
+  - line: "production-guide"
+    description: "Retain independent prior AMT history in the actual browser"
+    formula: "Desktop/mobile production controls edit exact original amounts, revoke and restore confirmations, persist on reload, preserve unknowns, and keep private source references out of requests. At390px the nested source panel retains at least220px for the whole currency control, including its dollar prefix, and at least180px for the editable input, with no horizontal overflow. No deduction or contribution base is entered."
+    testRef: "apps/web/tests/charitable-prior-nol.spec.ts::preserves the independent prior AMT charitable history"
+  - line: "workspace-packet"
+    description: "Carry original independent histories through the actual workspace export"
+    formula: "The actual guided bridge, canonical calculation, original private context and redacted PDF packet retain2024 carry23360 and currentAMT adjustment3200. Every page has one review notice and no taxpayer/source identifiers."
+    testRef: "tests/apps/web/workspace-charitable-prior-nol.test.ts::exports the actual guided prior charity calculation through the private workspace packet"

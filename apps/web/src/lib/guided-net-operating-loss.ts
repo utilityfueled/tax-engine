@@ -7,6 +7,8 @@ import { guidedSourceValuesChanged } from './guided-source-confirmation';
 import { parseGuidedQbiLossPacket, type K1LossSourcesData } from './guided-qbi-loss-data';
 import { calculateQbiEblNol } from '@/engine/forms/qbi-ebl-nol';
 import { resolveCharitableRecipient } from '@/utils/charitable-recipient';
+import { validatePriorCharitableNolHistories } from '@/utils/charitable-prior-nol-source';
+import { buildGuidedCharitableCarryover, type CharitableCarryoverData } from './guided-charitable-carryover';
 
 export interface NolHistoryData { taxYear?: string; nolUsed?: string; attributeReduction?: string; sourceReference?: string }
 export interface NolVintageData {
@@ -31,6 +33,7 @@ export interface NolCharitableCarryData {
 export interface NolCharitableHistoryData {
   sourceTaxYear?: string; sourceReference?: string; sourceFactsConfirmed?: boolean | null; allCarryoversIncluded?: boolean | null;
   priorRegularCarryovers?: NolCharitableCarryData[]; priorAlternativeCarryovers?: NolCharitableCarryData[];
+  alternativeCarryoverSources?: CharitableCarryoverData;
 }
 export interface NetOperatingLossData {
   sourceTaxYear?: string; sourceReference?: string; sourceFactsConfirmed?: boolean | null;
@@ -90,13 +93,19 @@ export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefin
   if (history !== undefined || (positiveAlternative && hasGifts) || (positiveRegular && hasNonPublicCashGift)) {
     if (!history || year(history.sourceTaxYear, 'charitable histories source year') !== taxYear - 1 || !history.sourceReference?.trim()
       || history.sourceFactsConfirmed !== true || history.allCarryoversIncluded !== true
-      || !Array.isArray(history.priorRegularCarryovers) || !Array.isArray(history.priorAlternativeCarryovers)) {
+      || (!history.alternativeCarryoverSources && (!Array.isArray(history.priorRegularCarryovers) || !Array.isArray(history.priorAlternativeCarryovers)))) {
       throw new Error('Confirm the complete independent prior regular and AMT charitable histories, including each explicitly empty list when none.');
     }
-    if (history.priorRegularCarryovers.length || history.priorAlternativeCarryovers.length) {
-      throw new Error('Retain actual prior charitable carryovers; their separate category and vintage coordination method is required before calculating this return.');
+    if (((history.priorRegularCarryovers?.length ?? 0) > 0 || (history.priorAlternativeCarryovers?.length ?? 0) > 0) && !history.alternativeCarryoverSources) {
+      throw new Error('Retain actual prior charitable carryovers and supply the independent complete regular and AMT source histories.');
     }
+    if (history.alternativeCarryoverSources && hasGifts) throw new Error('Mixed current and prior charitable NOL sources require their separate allocation method.');
   }
+  const summaries = (rows: NolCharitableCarryData[] | undefined) => rows?.map(row => {
+    if (!row.amount?.trim() || parseGuidedCurrency(row.amount).isNegative()) throw new Error('Enter the actual nonnegative prior charitable opening amount, including known zero.');
+    return { ...row, taxYear: year(row.taxYear, 'original charitable contribution year'), category: row.category || undefined,
+      amount: row.amount.trim().replaceAll(',', ''), sourceReference: row.sourceReference?.trim() };
+  });
   const facts = NetOperatingLossSourcesSchema.parse({
     sourceTaxYear: year(data.sourceTaxYear, 'carry source tax year'), sourceReference: data.sourceReference?.trim(), sourceFactsConfirmed: data.sourceFactsConfirmed ?? undefined,
     allCarryoversIncluded: data.allCarryoversIncluded ?? undefined, calendarYearTaxpayer: data.calendarYearTaxpayer ?? undefined,
@@ -108,12 +117,15 @@ export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefin
       ...(history ? { charitableCarryoverHistory: { sourceTaxYear: year(history.sourceTaxYear, 'charitable histories source year'),
         sourceReference: history.sourceReference?.trim(), sourceFactsConfirmed: history.sourceFactsConfirmed ?? undefined,
         allCarryoversIncluded: history.allCarryoversIncluded ?? undefined,
-        priorRegularCarryovers: history.priorRegularCarryovers, priorAlternativeCarryovers: history.priorAlternativeCarryovers } } : {}) },
+        priorRegularCarryovers: summaries(history.priorRegularCarryovers), priorAlternativeCarryovers: summaries(history.priorAlternativeCarryovers),
+        ...(history.alternativeCarryoverSources ? { alternativeCarryoverSources: buildGuidedCharitableCarryover(history.alternativeCarryoverSources, taxYear, filingStatus, personal) } : {}) } } : {}) },
   });
   const middle = personal.middleName?.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase();
   const taxpayer = { primary: { firstName: [personal.firstName.trim(), middle].filter(Boolean).join(' '), lastName: personal.lastName, ssn: personal.ssn },
     spouse: filingStatus === 'mfj' && personal.spouse ? { firstName: personal.spouse.firstName, lastName: personal.spouse.lastName, ssn: personal.spouse.ssn } : undefined };
   const context = { taxYear, filingStatus: statuses[filingStatus], taxpayer };
+  if (history?.alternativeCarryoverSources) validatePriorCharitableNolHistories({ taxpayer: { ...taxpayer, taxYear, filingStatus: statuses[filingStatus] },
+    netOperatingLoss: facts, charitableCarryoverSources: buildGuidedCharitableCarryover(deductions?.charitableCarryoverSources, taxYear, filingStatus, personal) });
   calculateNetOperatingLoss({ ...context, facts });
   calculateNetOperatingLoss({ ...context, facts: { ...facts, ...facts.alternativeTax } });
   if (qbiSources) calculateQbiEblNol({ taxpayer: { ...taxpayer, taxYear, filingStatus: statuses[filingStatus] },
@@ -130,5 +142,6 @@ export function updateNetOperatingLossSources(previous: NetOperatingLossData, pa
   const next = { ...previous, ...patch };
   return guidedSourceValuesChanged(previous, next) ? { ...next, sourceFactsConfirmed: null,
     ...(next.alternativeTax ? { alternativeTax: { ...next.alternativeTax, sourceFactsConfirmed: null,
-      ...(next.alternativeTax.charitableCarryoverHistory ? { charitableCarryoverHistory: { ...next.alternativeTax.charitableCarryoverHistory, sourceFactsConfirmed: null } } : {}) } } : {}) } : next;
+      ...(next.alternativeTax.charitableCarryoverHistory ? { charitableCarryoverHistory: { ...next.alternativeTax.charitableCarryoverHistory, sourceFactsConfirmed: null,
+        ...(next.alternativeTax.charitableCarryoverHistory.alternativeCarryoverSources ? { alternativeCarryoverSources: { ...next.alternativeTax.charitableCarryoverHistory.alternativeCarryoverSources, sourceFactsConfirmed: null } } : {}) } } : {}) } } : {}) } : next;
 }

@@ -2622,6 +2622,8 @@ export const NetOperatingLossSourcesSchema = z.object({
     charitableCarryoverHistory: z.object({
       sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
       sourceFactsConfirmed: z.boolean().optional(), allCarryoversIncluded: z.boolean().optional(),
+      /** Independent full AMT origin/use history. Never inferred from regular charity sources. */
+      alternativeCarryoverSources: CharitableCarryoverSourcesSchema.optional(),
       priorRegularCarryovers: z.array(z.object({ taxYear: z.number().int().optional(),
         category: z.enum(["cash_60", "noncash_50", "capital_gain_30", "other_30", "capital_gain_20"]).optional(),
         amount: optionalDecimalInput, sourceReference: z.string().optional() })).optional(),

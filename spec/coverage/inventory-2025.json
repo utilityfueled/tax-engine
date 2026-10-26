@@ -299,6 +299,25 @@
       ]
     },
     {
+      "key": "federal/charitable-prior-net-operating-loss",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i172",
+      "specPath": "spec/federal/charitable-prior-net-operating-loss.yaml",
+      "enginePath": "src/engine/forms/charitable-prior-net-operating-loss.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/charitable-prior-other-capacity",
       "jurisdiction": "federal",
       "taxYear": 2025,

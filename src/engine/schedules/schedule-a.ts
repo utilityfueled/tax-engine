@@ -21,6 +21,7 @@ import { calculateSALTLimit } from "@/utils/tax-math.js";
 import { calculateCharitableContributionWorksheet, type CharitableCategory, type CharitableContributionWorksheetInput } from "@/engine/forms/charitable-contribution-worksheet.js";
 import { calculateK1CharitableReturnSources } from "@/engine/forms/k1-charitable-return-sources.js";
 import { readCurrentCharitableSourceForNol, validateCharitableNolContributionLimit, type CharitableNolContributionLimit } from "@/utils/charitable-nol-source.js";
+import { validatePriorCharitableNolLimit } from "@/utils/charitable-prior-nol-source.js";
 import { validateCharitableCarryoverSources } from "@/engine/forms/charitable-carryover-source-validation.js";
 import { charitableSourceDigest } from "@/utils/charitable-source-digest.js";
 import { eligibleCurrentCharitableDonations } from "@/engine/forms/charitable-current-sources.js";
@@ -298,7 +299,16 @@ export function calculateScheduleA(
   let nonitemizerCharitableDeduction = ZERO;
   const contributionBase = zeroFloor(agi);
   const nolLimit = extra?.nolContributionLimit;
-  const nolSource = nolLimit === undefined ? undefined : validateCharitableNolContributionLimit(input, nolLimit);
+  const priorNolLimit = nolLimit?.method === "prior_vintage" ? nolLimit : undefined;
+  if (priorNolLimit) validatePriorCharitableNolLimit(input, priorNolLimit);
+  const nolSource = nolLimit === undefined || nolLimit.method === "prior_vintage" ? undefined : validateCharitableNolContributionLimit(input, nolLimit);
+  // The alternative replay selects its independently validated full ledger.
+  // Only this internal calculation view changes; original sources and regular
+  // AGI are retained by the caller and no input deduction amount is accepted.
+  const alternativePriorCharity = input.netOperatingLoss?.alternativeTax?.charitableCarryoverHistory?.alternativeCarryoverSources;
+  if (priorNolLimit?.ledger === "alternative" && !alternativePriorCharity) throw new Error("Prior alternative charitable history is required");
+  const priorCharityInput = priorNolLimit?.ledger === "alternative" ? { ...input, priorYear: undefined,
+    charitableCarryoverSources: alternativePriorCharity } : input;
   if (input.taxpayer.taxYear === 2026) {
     let eligibleCash = k1Charitable?.nonitemizedEligibleCash ?? ZERO;
     for (const donation of eligibleDonations) {
@@ -368,7 +378,9 @@ export function calculateScheduleA(
       nonCashCharitable = currentCharitableCandidates.itemized.exactNonCashDeduction;
       charitableCarryforwards = currentCharitableCandidates.itemized.carryforwards;
     } else {
-      const charitable = priorCashCurrentProperty ?? nonitemizedCharitableCarryover ?? calculateCharitableCarryover(input, { contributionBase, current: amounts, itemizes: true });
+      const charitable = priorCashCurrentProperty ?? nonitemizedCharitableCarryover ?? calculateCharitableCarryover(priorCharityInput, {
+        contributionBase, current: amounts, itemizes: true, priorTreatmentLimit: priorNolLimit?.amount,
+      });
       audit.merge(charitable.lines);
       cashCharitable = charitable.currentCash.plus(charitable.priorCashDeduction);
       nonCashCharitable = charitable.currentNoncash.plus(charitable.priorNoncashDeduction);

@@ -7,6 +7,7 @@ import { d, roundDollar } from "./decimal.js";
 import { eligibleCurrentCharitableDonations } from "@/engine/forms/charitable-current-sources.js";
 import { readCurrentCharitableReceiptAmounts } from "./charitable-current-receipts.js";
 import { charitableSourceDigest } from "./charitable-source-digest.js";
+import type { PriorCharitableNolLimit } from "./charitable-prior-nol-source.js";
 
 type AmountKey = keyof CharitableContributionWorksheetInput["amounts"];
 export interface CurrentCharitableNolSource {
@@ -18,13 +19,15 @@ export interface CurrentCharitableNolSource {
   sourceDigest: string;
 }
 /** Derived internally from original sources; never part of TaxYearInput. */
-export interface CharitableNolContributionLimit {
+export interface CurrentCharitableNolContributionLimit {
+  method?: undefined;
   category?: CharitableCategory;
   medium?: "cash" | "noncash";
   amount: Decimal;
   sourceDigest: string;
   ledger: "regular" | "alternative";
 }
+export type CharitableNolContributionLimit = CurrentCharitableNolContributionLimit | PriorCharitableNolLimit;
 const sourceKinds: Record<AmountKey, readonly [CharitableCategory, "cash" | "noncash"]> = {
   cashPublic: ["cash_60", "cash"], noncashPublic: ["noncash_50", "noncash"],
   capitalGainPublic: ["capital_gain_30", "noncash"], cashPrivate: ["other_30", "cash"],
@@ -68,9 +71,9 @@ export function readCurrentCharitableSourceForNol(input: TaxYearInput): CurrentC
   return { category, medium, amountKey, amount: amountKey === undefined ? d("0") : amounts[amountKey], sourceDigest };
 }
 
-export function validateCharitableNolContributionLimit(input: TaxYearInput, limit: CharitableNolContributionLimit): CurrentCharitableNolSource {
+export function validateCharitableNolContributionLimit(input: TaxYearInput, limit: CurrentCharitableNolContributionLimit): CurrentCharitableNolSource {
   const source = readCurrentCharitableSourceForNol(input);
-  if (!limit || !Decimal.isDecimal(limit.amount) || !limit.amount.isFinite() || limit.amount.lt(0)
+  if (!limit || limit.method !== undefined || !Decimal.isDecimal(limit.amount) || !limit.amount.isFinite() || limit.amount.lt(0)
     || limit.amount.gt(roundDollar(source.amount)) || limit.sourceDigest !== source.sourceDigest
     || limit.category !== source.category || limit.medium !== source.medium
     || !["regular", "alternative"].includes(limit.ledger)) {

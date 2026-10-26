@@ -8,6 +8,7 @@ import type { TaxReturnResult } from "@/models/outputs.js";
 import type { NetOperatingLossResult } from "@/engine/forms/net-operating-loss.js";
 import { calculateCharitableNolCarryover } from "@/engine/forms/charitable-net-operating-loss.js";
 import { calculateAlternativeCharitableNolCarryover } from "@/engine/forms/alternative-charitable-net-operating-loss.js";
+import { calculatePriorCharitableNolCarryover } from "@/engine/forms/charitable-prior-net-operating-loss.js";
 import { calculateAlternativeTaxNol } from "@/engine/forms/alternative-tax-net-operating-loss.js";
 import { calculateForm172Return } from "@/engine/forms/form-172-return.js";
 import { calculateCodNolReduction } from "@/engine/forms/cod-nol-reductions.js";
@@ -23,6 +24,7 @@ import { d, roundDollar, sum } from "@/utils/decimal.js";
 import { assertPdfExportAllowed, markReviewPdf } from "@/pdf/export-policy.js";
 import { form8949ReviewOriginalSourceInput, type PreparedForm8949Review } from "@/pdf/form-8949-review-context.js";
 import { codNolReviewOriginalSourceInput, type PreparedCodNolReview } from "@/pdf/cod-nol-review-context.js";
+import { charitableReviewOriginalSourceInput, requiresPriorCharitableNolReview, type PreparedCharitableReview } from "@/pdf/charitable-review-context.js";
 
 function amount(value: Decimal | undefined): Decimal {
   if (!Decimal.isDecimal(value) || !value.isFinite()) throw new Error("NOL review requires complete finite retained amounts");
@@ -128,8 +130,9 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult, capital
 
 /** Source amounts and retained canonical contexts are checked separately. This
  * render path works after identifier redaction and never invents taxpayer IDs. */
-export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, capitalReview?: PreparedForm8949Review, codReview?: PreparedCodNolReview): string[] {
+export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, capitalReview?: PreparedForm8949Review, codReview?: PreparedCodNolReview, charitableReview?: PreparedCharitableReview): string[] {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  if (requiresPriorCharitableNolReview(input, result) || charitableReview) input = charitableReviewOriginalSourceInput(input, result, charitableReview);
   if (input.form982NolSources || result.codNolReduction) input = codNolReviewOriginalSourceInput(input, result, codReview);
   const facts = input.netOperatingLoss; const calculation = result.netOperatingLoss;
   if (!facts || facts.sourceTaxYear !== result.taxYear || facts.sourceFactsConfirmed !== true
@@ -182,9 +185,9 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
   audit("Form 6251", "2f", calculation.alternativeTax.deduction.negated());
   eq(roundDollar(amount(result.form6251?.amti)), calculation.alternativeTax.amtiBeforeAtnol.minus(calculation.alternativeTax.deduction));
   const charityRows: string[] = [];
-  const carryYears = (rows: TaxReturnResult["carryforwards"]["amtCharitableContributionsByYear"], expected: Decimal, source: { category?: string; medium?: string }) => {
+  const carryYears = (rows: TaxReturnResult["carryforwards"]["amtCharitableContributionsByYear"], expected: Decimal, source: { category?: string; medium?: string; contributionYear?: number }) => {
     if (!rows || rows.length !== (expected.gt(0) ? 1 : 0)
-      || rows.some(row => row.taxYear !== result.taxYear || row.category !== source.category || row.medium !== source.medium)) throw new Error("Charitable NOL carry years do not reconcile");
+      || rows.some(row => row.taxYear !== (source.contributionYear ?? result.taxYear) || row.category !== source.category || row.medium !== source.medium)) throw new Error("Charitable NOL carry years do not reconcile");
     eq(sum(...rows.map(row => row.amount)), expected);
   };
   const charity = calculation.charitableCarryover;
@@ -218,14 +221,39 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
     charityRows.push(`Counterfactual modified regular limit income: ${comparison.income.taxableIncome}`,
       ...comparison.modifiedVintageIncome.map(row => `${comparison.calculation.vintages.find(vintage => vintage.sourceId === row.sourceId)?.lossTaxYear}: counterfactual earlier modified deduction ${row.retainedEarlierDeduction}; refigured AGI ${row.income.agi}; charity ${row.income.charitableDeduction}; modified income ${row.income.taxableIncome}`),
       ...ledger(facts.vintages, comparison.calculation, "Counterfactual NOL comparison (actual current claim unchanged)"));
-  } else {
+  } else if (!calculation.priorCharitableCarryover) {
     eq(result.carryforwards.charitableContributions, calculation.finalIncome.charitableCarryforward);
   }
   const alternativeCharity = calculation.alternativeCharitableCarryover;
-  if (!alternativeCharity && calculation.alternativeTaxSources.availableCarryforward.gt(0)
+  if (!alternativeCharity && !calculation.priorAlternativeCharitableCarryover && calculation.alternativeTaxSources.availableCarryforward.gt(0)
     && (input.donations.some(row => !d(row.amount).isZero()) || calculation.finalIncome.charitableCarryforward.gt(0)
       || facts.alternativeTax.charitableCarryoverHistory !== undefined)) {
     throw new Error("Alternative charitable review requires its complete independent carry calculation");
+  }
+  if (requiresPriorCharitableNolReview(input, result)) {
+    for (const [key, ledgerName, carry, years] of [
+      ["priorCharitableCarryover", "regular", result.carryforwards.charitableContributions, result.carryforwards.charitableContributionsByYear],
+      ["priorAlternativeCharitableCarryover", "alternative", result.carryforwards.amtCharitableContributions, result.carryforwards.amtCharitableContributionsByYear],
+    ] as const) {
+      const retained = calculation[key];
+      if (!retained) throw new Error("Prior charitable review requires both independent original histories and calculations");
+      const checked = calculatePriorCharitableNolCarryover({ input, ledger: ledgerName, normalContributionBase: calculation.finalIncome.agi,
+        normalDeductionUsed: result.deductionUsed, nolCarryforward: ledgerName === "regular" ? calculation.carryforward : calculation.alternativeTax.carryforward,
+        computeCarryover: () => retained.counterfactualNolCarryforward });
+      for (const field of ["returnTaxYear", "contributionYear", "sourceId", "category", "medium", "ledger", "sourceDigest"] as const) {
+        if (checked[field] !== retained[field]) throw new Error("Prior charitable original category vintage and source history do not reconcile");
+      }
+      for (const field of ["opening", "normalTreatedAsPaid", "normalDeduction", "tentativeExcess", "nolCarryforward", "counterfactualNolCarryforward", "reduction", "expired", "carryforward"] as const) eq(retained[field], checked[field]);
+      eq(carry, checked.carryforward); carryYears(years, checked.carryforward, checked);
+      for (const line of checked.lines) audit(line.form, line.line, line.value);
+      charityRows.push(`Prior ${ledgerName} charitable carry from ${checked.contributionYear ?? "no recorded vintage"}: category ${checked.category ?? "none"}; medium ${checked.medium ?? "none"}; opening ${checked.opening}; treated as paid ${checked.normalTreatedAsPaid}; NOL-related reduction ${checked.reduction}; expired ${checked.expired}; remaining ${checked.carryforward}`,
+        `${ledgerName} actual charity deduction ${checked.normalDeduction}; succeeding NOL ${checked.nolCarryforward}; comparison succeeding NOL ${checked.counterfactualNolCarryforward}. Original contribution year and expiration are unchanged.`);
+    }
+    const adjustment = calculation.priorCharitableAlternativeAdjustment;
+    if (!adjustment) throw new Error("Prior charitable review requires its independent current AMT source comparison");
+    eq(adjustment.amount, adjustment.independentIncome.amti.minus(adjustment.regularLedgerIncome.amti));
+    eq(adjustment.independentIncome.qbiDeduction, adjustment.regularLedgerIncome.qbiDeduction);
+    charityRows.push(`Current AMT charity adjustment ${adjustment.amount}; regular-history AMTI ${adjustment.regularLedgerIncome.amti}; independent AMT-history AMTI ${adjustment.independentIncome.amti}; actual regular QBI deduction retained ${adjustment.independentIncome.qbiDeduction}.`);
   }
   if (alternativeCharity) {
     const comparison = calculation.alternativeCharitableCounterfactual;
@@ -313,12 +341,12 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
     result.codNolReduction
       ? "The original source packet was recalculated before identifier removal. The before-COD loss calculations and final after-COD balances are shown separately."
       : "Amounts explain the retained canonical income contexts; this statement does not independently replay every upstream income source.",
-    "Original loss and history documents must be retained. Prior or mixed charitable carry, special alternative loss sources and other debt-cancellation methods require their separate worksheets.",
+    "Original loss and history documents must be retained. Mixed charitable categories or vintages, current-plus-prior contributions, special alternative loss sources and other debt-cancellation methods require their separate worksheets.",
     "This statement and the accompanying Form6251 are review material, not filing qualification."];
 }
 
-export async function fillNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, outputDir: string, capitalReview?: PreparedForm8949Review, codReview?: PreparedCodNolReview): Promise<string> {
-  const paragraphs = buildNetOperatingLossReview(input, result, capitalReview, codReview);
+export async function fillNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, outputDir: string, capitalReview?: PreparedForm8949Review, codReview?: PreparedCodNolReview, charitableReview?: PreparedCharitableReview): Promise<string> {
+  const paragraphs = buildNetOperatingLossReview(input, result, capitalReview, codReview, charitableReview);
   const doc = await PDFDocument.create(); const font = await doc.embedFont(StandardFonts.Helvetica);
   let page = doc.addPage([612, 792]); let y = 738;
   for (const paragraph of paragraphs) {

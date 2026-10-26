@@ -76,7 +76,7 @@ import { calculateItemizedDeductionLimit } from "./forms/itemized-deduction-limi
 import { calculateStandardDeduction } from "./forms/standard-deduction.js";
 import { calculateStateLocalIncomeTaxDeduction } from "./forms/state-local-income-tax-deduction.js";
 import { calculateForm1099OID } from "./forms/form-1099-oid.js";
-import { calculateForm6251, type Form6251Input, type Form6251IncomeInput, type Form6251IncomeResult } from "./forms/form-6251.js";
+import { calculateForm6251, type Form6251Input, type Form6251IncomeInput } from "./forms/form-6251.js";
 import { calculateForm8801 } from "./forms/form-8801.js";
 import { calculateForm8582 } from "./forms/form-8582.js";
 import { calculatePassiveLossQBI, type PassiveLossQBIResult } from "./forms/passive-loss-qbi.js";
@@ -159,7 +159,7 @@ import { calculateScheduleJ } from "./forms/schedule-j.js";
 import { calculateForm8915F, type Form8915FResult } from "./forms/form-8915-f.js";
 import { calculateTaxableRefundWorksheet, type TaxableRefundWorksheetResult } from "./forms/taxable-refund-worksheet.js";
 import { calculateStudentLoanInterestDeduction } from "./forms/student-loan-interest.js";
-import { calculateNetOperatingLossReturn, type NetOperatingLossReturnResult, type NolIncomeContext } from "./forms/net-operating-loss-return.js";
+import { calculateNetOperatingLossReturn, type NetOperatingLossReturnResult, type NolIncomeContext, type NolAlternativeIncomeContext } from "./forms/net-operating-loss-return.js";
 import { calculateQbiEblNol } from "./forms/qbi-ebl-nol.js";
 import { calculateForm1098E, type Form1098EResult } from "./forms/form-1098-e.js";
 import { calculateSalesTaxDeduction, type SalesTaxDeductionResult } from "./forms/state-sales-tax-deduction-worksheet.js";
@@ -316,22 +316,23 @@ function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: Marketpla
     retained[kind] === undefined && retained.calculating !== kind) } } : marketplace;
   const worksheet = calculateNetOperatingLossReturn(input, (deduction, modified, purpose, charitableContributionLimit) =>
     calculateFederalTaxCore(input, purpose === "final" ? marketplace : refigured, undefined, { stage: "income", deduction, modified, charitableContributionLimit }),
-  (deduction, modified, charitableContributionLimit, actualRegularNol) => calculateFederalTaxCore(input, modified ? refigured : marketplace, undefined,
-    { stage: "alternative-income", deduction, modified, charitableContributionLimit, actualRegularNol }));
+  (deduction, modified, charitableContributionLimit, actualRegularNol, actualRegularDeductionMethod, actualRegularQbiDeduction) => calculateFederalTaxCore(input, modified ? refigured : marketplace, undefined,
+    { stage: "alternative-income", deduction, modified, charitableContributionLimit, actualRegularNol, actualRegularDeductionMethod, actualRegularQbiDeduction }));
   if (!worksheet.calculationComplete || worksheet.deduction === undefined) throw new Error("Actual NOL calculation is incomplete");
   return complete(worksheet);
 }
 type ForeignTaxHypotheticalRequest = { purpose: "foreign-deduction-carryover" };
 type NolReturnContext = { stage: "income" | "alternative-income"; deduction: Decimal; modified: boolean; charitableContributionLimit?: CharitableNolContributionLimit;
-  actualRegularNol?: import("./forms/net-operating-loss.js").NetOperatingLossResult }
+  actualRegularNol?: import("./forms/net-operating-loss.js").NetOperatingLossResult;
+  actualRegularDeductionMethod?: NolIncomeContext["deductionUsed"]; actualRegularQbiDeduction?: Decimal }
   | { stage: "final"; deduction: Decimal; modified: false; worksheet: NetOperatingLossReturnResult };
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "income" }): NolIncomeContext;
-function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "alternative-income" }): Form6251IncomeResult;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "alternative-income" }): NolAlternativeIncomeContext;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: (MarketplaceContext & { stage: "final" }) | undefined, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }): TaxReturnResult;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: undefined, hypothetical: ForeignTaxHypotheticalRequest): ForeignTaxHypotheticalContext;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }): MarketplaceInterim;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" }): TaxReturnResult;
-function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext, hypothetical?: ForeignTaxHypotheticalRequest, nol?: NolReturnContext): TaxReturnResult | MarketplaceInterim | ForeignTaxHypotheticalContext | NolIncomeContext | Form6251IncomeResult {
+function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext, hypothetical?: ForeignTaxHypotheticalRequest, nol?: NolReturnContext): TaxReturnResult | MarketplaceInterim | ForeignTaxHypotheticalContext | NolIncomeContext | NolAlternativeIncomeContext {
   validateForeignTaxDeductionScope(input);
   const ordered = marketplace?.ordered;
   const calculateOrdered = (kind: MarketplaceOrderedKind) => !ordered?.kinds.includes(kind) || ordered.calculating === kind || ordered[kind] !== undefined;
@@ -2266,7 +2267,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   });
   audit.merge(standardDeductionWorksheet.lines);
   const standardDeduction = standardDeductionWorksheet.standardDeduction;
-  const deductionElection = input.deductionElection ?? "automatic";
+  const deductionElection = nol?.stage === "alternative-income" && nol.actualRegularDeductionMethod
+    ? nol.actualRegularDeductionMethod : input.deductionElection ?? "automatic";
   if (deductionElection === "standard" && !standardDeductionWorksheet.eligibleForStandardDeduction) {
     throw new Error("Standard deduction election is ineligible for the actual taxpayer facts");
   }
@@ -2648,6 +2650,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     let form8995Result: import("./forms/form-8995.js").Form8995Result | undefined;
     let form8995AResult: import("./forms/form-8995-a.js").Form8995AResult | undefined;
     if (nol?.stage === "income" || (nol?.stage === "alternative-income" && nol.modified)) return { qbiDeduction, form8995Result, form8995AResult };
+    if (nol?.stage === "alternative-income" && nol.actualRegularQbiDeduction !== undefined) {
+      if (!nol.actualRegularQbiDeduction.isFinite() || nol.actualRegularQbiDeduction.lt(0)) throw new Error("Actual AMT replay requires the completed nonnegative regular199A deduction");
+      return { qbiDeduction: nol.actualRegularQbiDeduction, form8995Result, form8995AResult };
+    }
 
     const hasQBISources = qbiSources.length > 0 || qualifiedReitDividends.greaterThan(0) || !qualifiedPTPIncome.isZero()
       || d(input.priorYear?.qbiLossCarryforward).gt(0) || releasedPriorQualifiedRentalLoss.gt(0);
@@ -2862,6 +2868,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     dispositionAdjustment: k1Agg.amtAdjustedGainOrLoss,
     depreciationAdjustment: k1Agg.amtDepreciationAdjustment,
     otherAdjustments: k1Agg.amtOtherItems.plus(k1Form1041AmtAdjustment)
+      .plus(nol?.stage === "final" ? nol.worksheet.priorCharitableAlternativeAdjustment?.amount ?? d("0") : d("0"))
       .minus(deductionUsed === "itemized" ? itemizedDeductionReduction : d("0")),
     filingStatus, isItemizing: deductionUsed === "itemized",
   });
@@ -2875,7 +2882,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     capitalLossModification: nolCapitalLossModification, section1202Modification: nolSection1202Modification,
     lines: audit.getLines(),
   };
-  if (nol?.stage === "alternative-income") return calculateForm6251(amtIncomeInput(rawTaxableIncome, nol.deduction, d("0")), constants, { incomeOnly: true });
+  if (nol?.stage === "alternative-income") return {
+    ...calculateForm6251(amtIncomeInput(rawTaxableIncome, nol.deduction, d("0")), constants, { incomeOnly: true }), qbiDeduction,
+  };
   if (marketplace && marketplace.stage !== "final") throw new Error("Interim Marketplace income must return before final tax calculations.");
 
   // ── IRC §172: Net Operating Loss Deduction ──────────────
@@ -4427,10 +4436,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         }
       }
 
-      const regularCharity = nol?.stage === "final" ? nol.worksheet.charitableCarryover : undefined;
-      const alternativeCharity = nol?.stage === "final" ? nol.worksheet.alternativeCharitableCarryover ?? regularCharity : undefined;
+      const regularCharity = nol?.stage === "final" ? nol.worksheet.priorCharitableCarryover ?? nol.worksheet.charitableCarryover : undefined;
+      const alternativeCharity = nol?.stage === "final" ? nol.worksheet.priorAlternativeCharitableCarryover ?? nol.worksheet.alternativeCharitableCarryover ?? regularCharity : undefined;
       const alternativeCharityCarry = nol?.stage === "final"
-        ? nol.worksheet.alternativeCharitableCarryover?.carryforward ?? regularCharity?.alternativeTaxCarryforward : undefined;
+        ? nol.worksheet.priorAlternativeCharitableCarryover?.carryforward ?? nol.worksheet.alternativeCharitableCarryover?.carryforward
+          ?? nol.worksheet.charitableCarryover?.alternativeTaxCarryforward : undefined;
+      const regularCharityYear = nol?.stage === "final" ? nol.worksheet.priorCharitableCarryover?.contributionYear ?? year : year;
+      const alternativeCharityYear = nol?.stage === "final" ? nol.worksheet.priorAlternativeCharitableCarryover?.contributionYear ?? year : year;
       if ((regularCharity?.carryforward.gt(0) && (!regularCharity.category || !regularCharity.medium))
         || (alternativeCharityCarry?.gt(0) && (!alternativeCharity?.category || !alternativeCharity.medium))) {
         throw new Error("Positive charitable NOL carry requires the actual category and medium");
@@ -4461,17 +4473,17 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         ]) } : {}),
         investmentInterestExpense: form4952?.disallowedCarryforward ?? new Decimal(0),
         minimumTaxCredit: cfMtc,
-        charitableContributions: nol?.stage === "final" && nol.worksheet.charitableCarryover
-          ? nol.worksheet.charitableCarryover.carryforward
+        charitableContributions: regularCharity
+          ? regularCharity.carryforward
           : schedA.charitableTreatment ? sum(...schedA.charitableTreatment.carryforwards.map(row => row.amount)) : schedA.charitableCarryforward,
-        charitableContributionsByYear: nol?.stage === "final" && nol.worksheet.charitableCarryover
-          ? nol.worksheet.charitableCarryover.carryforward.gt(0)
-            ? [{ taxYear: input.taxpayer.taxYear, category: nol.worksheet.charitableCarryover.category, medium: nol.worksheet.charitableCarryover.medium, amount: nol.worksheet.charitableCarryover.carryforward }] : []
+        charitableContributionsByYear: regularCharity
+          ? regularCharity.carryforward.gt(0)
+            ? [{ taxYear: regularCharityYear, category: regularCharity.category, medium: regularCharity.medium, amount: regularCharity.carryforward }] : []
           : schedA.charitableTreatment?.carryforwards ?? schedA.charitableCarryforwardByYear,
         ...(alternativeCharityCarry !== undefined ? {
           amtCharitableContributions: alternativeCharityCarry,
           amtCharitableContributionsByYear: alternativeCharityCarry.gt(0)
-            ? [{ taxYear: input.taxpayer.taxYear, category: alternativeCharity?.category, medium: alternativeCharity?.medium, amount: alternativeCharityCarry }] : [],
+            ? [{ taxYear: alternativeCharityYear, category: alternativeCharity?.category, medium: alternativeCharity?.medium, amount: alternativeCharityCarry }] : [],
         } : {}),
         excessBusinessLossNOL: form461.nolCarryforward,
         nolCarryforward: cfNol,

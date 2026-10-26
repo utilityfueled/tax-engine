@@ -22,17 +22,25 @@ export interface CharitableCarryoverResult {
 /** Current amounts already reflect actual qualification and valuation, not prior contributions. */
 export function calculateCharitableCarryover(input: TaxYearInput, context: {
   contributionBase: Decimal; current: CharitableContributionWorksheetInput["amounts"]; itemizes: boolean;
+  /** Internal source-validated single-vintage NOL comparison, never a return input. */
+  priorTreatmentLimit?: Decimal;
 }): CharitableCarryoverResult {
   const records = validateCharitableCarryoverSources(input).map(row => ({ ...row, used: ZERO }));
   if (input.taxpayer.taxYear !== 2025) throw new Error("Charitable carryover 2026 floor/nonitemizer transition requires its separate source method");
   if (!context.contributionBase.isFinite() || Object.values(context.current).some(value => !Decimal.isDecimal(value) || !value.isFinite() || value.lt(0))) {
     throw new Error("Current charitable amounts and contribution base must be finite with nonnegative contributions");
   }
+  if (context.priorTreatmentLimit !== undefined && (records.length > 1 || !Decimal.isDecimal(context.priorTreatmentLimit)
+    || !context.priorTreatmentLimit.isFinite() || context.priorTreatmentLimit.lt(0)
+    || Object.values(context.current).some(value => !value.isZero()))) {
+    throw new Error("Prior charitable comparison requires one original vintage, no current gifts and a nonnegative internal limit");
+  }
   const taxYear = input.taxpayer.taxYear;
   const base = zeroFloor(context.contributionBase), fifty = base.times("0.50"), thirty = base.times("0.30"), twenty = base.times("0.20");
   const raw = context.current;
   const consume = (category: CharitableCategory, capacity: Decimal): Decimal => {
-    let remaining = zeroFloor(capacity), used = ZERO;
+    let remaining = context.priorTreatmentLimit === undefined ? zeroFloor(capacity)
+      : Decimal.min(zeroFloor(capacity), context.priorTreatmentLimit), used = ZERO;
     const eligible = records.filter(record => record.category === category && record.taxYear + 5 >= taxYear);
     // Source validation permits one row per actual year/category/medium. The
     // shared B cap applies to a year's group before FIFO advances to another year.
