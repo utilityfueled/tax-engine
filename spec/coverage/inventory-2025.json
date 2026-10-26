@@ -378,6 +378,26 @@
       ]
     },
     {
+      "key": "federal/charitable-single-category-nol",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.170A-10",
+      "specPath": "spec/federal/charitable-single-category-nol.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/child-credit-eligibility",
       "jurisdiction": "federal",
       "taxYear": null,
@@ -905,6 +925,25 @@
       "sourceAuthority": "https://www.irs.gov/publications/p596",
       "specPath": "spec/federal/eic-credit-table.yaml",
       "enginePath": "src/engine/forms/eic-credit-table.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/eic-disallowance-history",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p596",
+      "specPath": "spec/federal/eic-disallowance-history.yaml",
+      "enginePath": "src/engine/forms/eic-disallowance-history.ts",
       "packetPath": null,
       "specExists": true,
       "engineExists": true,
@@ -1622,6 +1661,26 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i1099q",
       "specPath": "spec/federal/form-1099-q-disqualification.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-1099-q-distinct-in-kind-assistance",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
+      "specPath": "spec/federal/form-1099-q-distinct-in-kind-assistance.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,
@@ -4517,6 +4576,26 @@
       ]
     },
     {
+      "key": "federal/guided-shared-marketplace-health",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p974",
+      "specPath": "spec/federal/guided-shared-marketplace-health.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-shared-policy",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -6498,6 +6577,25 @@
         "Missing spec coverage",
         "Missing packet generation or inclusion rule",
         "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/shared-marketplace-health",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p974",
+      "specPath": "spec/federal/shared-marketplace-health.yaml",
+      "enginePath": "src/engine/forms/shared-marketplace-health.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },

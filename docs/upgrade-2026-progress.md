@@ -822,3 +822,18 @@ The current checkpoint above records the immutable2011778 full checks and the
 seven subsequent commits, with original failures retained. Exact run metadata is
 in `upgrade-2026-checkpoint.json`; form and source ledgers remain authoritative
 for each package boundary. Useful internal implementation remains active.
+
+
+## Integration through374e117
+
+All required local checks on immutable `d898091` pass: 18,843 tests/1,125 files,
+86.84% branch and 90.77% function coverage against unchanged gates, all static
+checks/builds, and 402 production browser cases with zero retries. Five hosted
+cases remain skipped. Original source hashes, commands and log hashes are in
+the checkpoint. Four later reviewed packages are pushed: actual EIC history
+prerequisite (`60611f3`), shared health sources/guide/review (`0b65e34`), current
+single-category charitable NOL (`360f340`) and distinct tuition assistance
+(`374e117`). Their narrower tests do not extend that full-run boundary.
+Inventory is refreshed to 498 entries/5,355 references. The finite internal
+source-method queue continues; no human, live-provider, staging, filing,
+final-form or release qualification is claimed.

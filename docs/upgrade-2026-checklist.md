@@ -7,51 +7,45 @@ complete a checkbox.
 
 ## Current integration — 2026-10-26
 
-The branch is pushed through `63b4c4f`. Rule provenance remains `2025.129` /
-`2026.126-law-integration-draft`; the regenerated inventory has 493 entries and
-5,306 test references. All readiness gates remain unchanged.
+The branch is pushed through `374e117`. Rule provenance is `2025.132` /
+`2026.129-law-integration-draft`; the regenerated inventory has 498 entries and
+5,355 test references. All readiness gates remain unchanged.
 
-Actual PA royalty intake and workspace handoff are delivered in `9173d20`.
-Its immutable cohort passes 486 tests in 9 files, root/web types, spec validation,
-lint and production build. Separate review passes 10 cases in 5 files. Both
-desktop and mobile production browser cases pass with zero retries; their
-screenshots were inspected. The package ledger preserves original failures,
-review evidence and the exact tested hashes.
+All required local checks pass on immutable `d898091` (tree `23f7a5fe`):
+18,843 tests in 1,125 files, root/contracts/web types, spec and inventory checks,
+engine/web builds and lint. Coverage passes the unchanged thresholds: branches
+86.84% (47,523/54,722), functions 90.77% (10,423/11,482), statements 92.03% and
+lines 94.63%. Production browser checks pass 402 cases with zero retries; five
+hosted-only cases remain skipped. The task server was stopped, and all 3,009
+tracked source hashes remained unchanged. Exact commands, timestamps and hashes
+are in `.local/upgrade-evidence/d898091-complete/verification.json`. This source
+excludes the four subsequent packages below.
 
-`95e4276` adds meaningful actual digital-asset, OID and child-election panel
-interactions. Its immutable candidate on `ee0132c` passes all 18,790 tests in
-1,111 files and the unchanged coverage gates: functions 90.64% (10,240/11,298),
-branches 86.81% (46,994/54,135), statements 92.02%, lines 94.59%. The initial
-sandbox run could not open synthetic localhost services and produced no coverage
-report; the unchanged rerun passed with task-local networking. Separate review
-caught all three stale-confirmation mutations. Final integration passes 498/10.
-Logs and hashes are saved under `.local/upgrade-evidence/investment-panels-complete`.
-This candidate excludes later source packages; current integrated verification
-is still required. No threshold, exclusion, timeout or assertion was relaxed.
+| Delivered package | Commit | Exact bounded verification |
+| --- | --- | --- |
+| Actual EIC denial/allowance chronology prerequisite | `60611f3` | Corrected source 576/7; integration 601/10; separate unchanged review controls 15/2. Canonical, guide and current Form8862 remain unfinished follow-through. |
+| Shared Marketplace health payment/person sources, actual guide and review | `0b65e34` | Wider 948/53; final 516/11; separate review 55/11; desktop/mobile 2/2; six PDFs and 34 pages. Review exposed and corrected source-reconfirmation reachability. |
+| Current single-category regular/AMT charitable NOL carry | `360f340` | Wider 379/81; final 34/14; separate review 25/9; 27 PDFs and 48 pages. Original categories and distinct regular/AMT sources remain bound. |
+| Distinct actual prepaid tuition benefits, assistance and credits | `374e117` | Final 1,081/156 plus 25 readiness cases; separate source review 11/6 and corrected-delta review 11/3; 18 PDFs, 38 visually inspected pages and 21 literal fields. |
 
-`63b4c4f` completes passive-distribution Schedule E and full-packet follow-through.
-Capital gain stays on8949/D; it no longer appears as ordinary Schedule E income.
-Review reproduced a removed-source bypass, which is now rejected before PDF I/O.
-The corrected frozen tree passes 510/7 and separate review passes 33/3, including
-all four unchanged private probes. Final main integration passes 30/3. Nineteen
-saved PDFs were independently reopened: 30 literal fields, privacy and one
-review notice per page pass; all 35 rendered pages were inspected. This package
-changes no tax calculation or form qualification.
+The package ledgers retain original failures, exact snapshots and scoped review
+limits. Tuition edits now revoke their own stale confirmation; the neighboring
+loan test preserves all its original assertions and adds explicit reconfirmation.
+The earlier coverage failures and passing investment-panel candidate remain
+separate historical evidence. No threshold, exclusion or deadline was relaxed.
 
-The previous full `ee0132c` unit and production-browser evidence remains valid
-only for that source: 18,785/1,108 and 396 browser passes, with five hosted-only
-skips. Its function-coverage failure is retained, separately from the newer
-passing candidate. Current63b4c4f CI and Web were observed in progress; the
-preceding three heads were cancelled. No completed current remote result is
-claimed. The earlier package audit and76e3538 local runtime/recovery/scan evidence
-remain separate; final-source artifacts and advisory acceptance are due.
+Current `374e117` CI and Web were observed in progress; preceding heads were
+cancelled by later pushes. No completed current remote result is claimed. The
+earlier package audit and `76e3538` local runtime/recovery/scan evidence remain
+separate; final-source artifacts and advisory acceptance are due.
 
-Shared-policy/self-employed-health source coordination and full-shell source
-reachability, actual EIC history/current8862, single-category charitable NOLs and
-remaining charitable/education source methods continue in private workspaces.
-Their guards and prerequisites do not count as completed end-user methods.
-Current full checks, final images, recovery and support reconciliation follow
-integration. Sources, exact checks and commit references remain in each ledger.
+The active internal queue is default/no-advance shared-health follow-through and
+other named health source combinations; actual EIC history/current Form8862;
+single-prior-vintage charitable NOL and remaining mixed/floor source methods;
+and actual multiple-expense tuition/ESA coordination. Corrected EIC canonical
+review passes the original independent controls, but its guide/form work is
+still private. Guards and prerequisites do not complete those end-user methods.
+Final integrated, runtime and recovery checks follow these deliveries.
 
 The goal is active and the upgrade is **not release-ready**. Human reviews and
 controlling interpretations, provider account access and approved budget,

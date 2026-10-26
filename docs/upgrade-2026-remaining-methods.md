@@ -171,3 +171,23 @@ single-category regular/AMT charitable NOL sources before the remaining prior
 floor and partial-media methods. Parent continues distinct in-kind tuition
 benefits with actual assistance/credit sources and independent package review.
 No inactive prerequisite completes its canonical, guide or physical output.
+
+
+## Follow-through through374e117 — October26
+
+The agreed shared-health/payment/person method and actual full-shell controls
+are `0b65e34`; the existing default/no-advance allocation extension is separately
+under review. Current single-category regular/AMT charitable NOL is `360f340`;
+actual single-prior-vintage replay and collector/review follow-through remain
+active. Distinct original tuition benefits with their own assistance/credit
+records are `374e117`; actual multiple-expense ESA coordination is the next
+bounded source-group extension. Other interpretations remain in the education
+method ledger.
+
+Actual EIC history prerequisite is `60611f3`. Its private canonical review
+reproduced a conflicting child-status answer; the correction passes all four
+unchanged reviewer controls. Actual guided history, current Form8862 sources
+and original-source physical/review output are still unfinished software work.
+The full immutable `d898091` run passes all required local checks and coverage
+gates, but excludes these four later packages and all private candidates.
+Final integrated, remote, image and recovery evidence remains due.
