@@ -732,3 +732,27 @@ active. No human, live-provider, staging, filing or release qualification is
 claimed. A normal-push approval rejection was resolved using the original
 explicit human authorization and verified existing destination; remote HEAD
 was checked after the normal push.
+
+
+Pushed through `6e58929`: actual K1/history intake (`e586f87`), marriage canonical/
+review (`55acc15`) and guided sources (`31a1c4a`), current public/other cash carry
+(`b153a91`), original-source QBI loss review (`d777a68`) and actual K12 prepaid
+plan/cash-cap treatment (`6e58929`) are delivered. Independent review drove the
+marriage workspace-context and K12 furnished-date corrections; physical review
+corrected8995 zero-floor displays. Final K12 source passes456 tests/41files,
+all scoped types/builds,4973 references, both production browser widths and10
+independent cases; eight PDFs are retained. Detailed package ledgers and the
+checkpoint record exact source hashes and initial failures. Two-owner health,
+finite charitable source/history methods and final integrated/runtime verification
+continue. No human, live-provider, staging, filing or release qualification is
+claimed.
+
+
+Current direct charitable category carry (`0b5e881`) and the separate K1 semantic
+label correction (`3b93d69`) are committed/pushed. Final checks pass646 cases/67
+files and565 cases/5 files respectively, with separate parent review and preserved
+source blobs. The earlier broader counts included25 unrelated runner/runtime cases
+from an extra filename filter; the ledgers explain the difference. Inventory and
+all4,979 literal references are refreshed. A new full immutable integration run
+follows; prior/floor/NOL charity, actual crypto handoff and two-owner health remain
+active. Public source refresh has not created human, provider or staging evidence.

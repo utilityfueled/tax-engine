@@ -194,17 +194,16 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Final current-head verification remains pending after source packages. Historical4aef633 full coverage passes86.98percent against unchanged85percent gate;907b6db browser passes348 with five hosted skips. Later packages require integrated checks.",
-    "The2026 rule pack and named Marketplace, charity, education, mixed-tip and QBI source methods remain incomplete; full2026 calculation stays blocked.",
-    "Adoption review output is under review. Actual ordinary refund, vehicle refinancing, historical adoption, wagering, DA, capital-origin and COD intake are committed. Remaining partial/prior/mixed methods must be implemented or explicitly resolved; guards are not completion.",
-    "Independent human tax review, selected-state demand/qualification and final versioned forms are outstanding; filing stays disabled and PDFs are review-only. Negative-net1202/Form172 controlling interpretation remains unresolved.",
-    "AI application/scorer bindings are reviewed and corrected;240draftcases have zero human reviews/live results, unverified provider account availability and no model promotion.",
+    "Final current-head full verification remains pending after source packages. Exact095d5bd unit/browser and7523384 coverage are historical, not later-code evidence.",
+    "The2026 rule pack and ordinary two-owner Marketplace and finite charitable methods remain incomplete. Other explicitly named unsupported methods are not counted as implemented; full2026 calculation remains blocked.",
+    "Independent human tax review, selected-state demand/qualification and final physical forms are outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net1202/Form172 interpretations remain unresolved.",
+    "AI application/scorer bindings are reviewed;240draftcases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
     "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence; local synthetic checks do not establish staging readiness.",
-    "Final native release images, SBOMs/scans/rollback/recovery and advisory owner acceptance remain pending; full-fidelity local backup/import is implemented and needs final artifact rehearsal."
+    "Final native release images, SBOMs/scans/rollback/recovery and advisory owner acceptance remain pending. Full-fidelity local backup/import exists and requires final artifact rehearsal."
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "dd1ef96f884e862ef59c6bd03ee4b48c6ce2cbe7",
+    "lastRecordedCommit": "3b93d69a3ca43b53c119a23eb32863182209afcf",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1311,15 +1310,8 @@
       "hosted staging",
       "final multi-platform release images"
     ],
-    "workInProgress": [
-      "Actual tuition assistance/credit/ESA coordination is committed0517691; K12 cash-only cap and actual prepaid-program sources are in spec-first implementation privately.",
-      "QBI ordinary source-derived461/SE classification is committed3e9164; guided collector correction for selected-event/missing-packet omission passes independent re-review12cases, final integration pending; original-context/negative8995 review continues.",
-      "Marriage pure worksheets and actual source prerequisite are committeddd1ef96/b2f3796; canonical/PDF, actual guide and ordinary two-owner health/PTC remain active.",
-      "Charity actual recipient classification is committed6a90c81. Finite remaining ordinary blocks: current five-category candidates, actual prior-vintage/floor/nonitemized coordination, regular/AMT NOL mixed-history coordination and partial same-category B cash/property allocation.",
-      "Final current full checks/coverage, remote CI, native image/SBOM/scans/recovery and artifact/support reconciliation remain after final internal integration.",
-      "Qualified human interpretations/reviews, provider account access/approved live budget, authorized staging, launch-state demand, final forms and advisory ownership remain external; no qualification is inferred."
-    ],
-    "latestIntegratedCommit": "0517691f29494a6d36b6ae8353b0f88ea8de206d",
+    "workInProgress": "Two-owner health/PTC and finite charitable methods; final exact-source integration/release checks. Full upgrade remains incomplete.",
+    "latestIntegratedCommit": "3b93d69a3ca43b53c119a23eb32863182209afcf",
     "activeIntegrationRun": {
       "commit": "095d5bd8d0d56202e07414f6551033b893d03c27",
       "status": "unit-root-build-web-build-browser-passed",
@@ -1624,12 +1616,10 @@
       "scope": "Exact committed source with pinned Python/pypdf, original sample PDFs and disposable loopback PostgreSQL; later packages excluded."
     },
     "remainingInternalWork": [
-      "Finish remaining canonical federal source/method tasks listed in federal-work and education-method-decisions; completed source gates are not substitutes for implementation.",
-      "Finish advanced source intake and actual review-PDF handoffs; preserve unknowns, exact Decimal and year/readiness gates.",
-      "Finish selected-state candidate integration and support matrix within documented demand/final-form boundaries.",
-      "Regenerate inventory and run all current full tests/coverage/types/spec/builds/lint/browser checks; repair integration failures.",
-      "Inspect current remote CI and verify final native amd64/arm64 runtime images, SBOMs/current scans, upgrades and recovery.",
-      "Reconcile actual artifact/support claims and advisory ownership/disposition while external human, provider, staging and final-form evidence remains pending."
+      "Ordinary two-owner Marketplace health and actual QBI-owner allocation, including controlling treatment where combined caps bind.",
+      "Actual prior-vintage/floor/nonitemizer and regular/AMT NOL coordination, partial B cash/property allocation, reproduced existing-crypto source handoff and actual pass-through classification boundary.",
+      "Fresh independent remaining-scope and official form/provider review, then final current full tests/coverage/types/spec/inventory/builds/lint/browser/CI/runtime/recovery.",
+      "Reconcile actual hosted/self-hosted support and release evidence without substituting local synthetic or agent review for external qualification."
     ],
     "previousStableCoverageRun": {
       "commit": "4aef633349dbb39c2481b914730c309785cc8c41",
@@ -1648,7 +1638,7 @@
       "evidence": ".local/upgrade-evidence/full-coverage-4aef633.log",
       "evidenceSha256": "42656c753f247032fdd96cc5d615c1f03f0b0dc3dc222832037ffab1de57b56f"
     },
-    "lastPushedCommit": "dd1ef96f884e862ef59c6bd03ee4b48c6ce2cbe7",
+    "lastPushedCommit": "3b93d69a3ca43b53c119a23eb32863182209afcf",
     "currentBrowserRun": {
       "commit": "095d5bd8d0d56202e07414f6551033b893d03c27",
       "status": "passed",
@@ -1667,25 +1657,21 @@
       "limitation": "Five hosted-only skips do not establish staging readiness. Later source packages excluded; final current run remains required."
     },
     "currentPackageAudit": {
-      "date": "2026-10-25",
-      "commit": "f2d0faa1ccc637681531619aa19ccc35807957b8",
-      "evidence": ".local/upgrade-evidence/package-audit-f2d0faa.json",
-      "evidenceSha256": "53e7d127130984cae97d554a54f7be42a21478066d94206e519540ab84119635",
-      "metadata": {
-        "vulnerabilities": {
-          "info": 0,
-          "low": 0,
-          "moderate": 0,
-          "high": 0,
-          "critical": 0
-        },
-        "dependencies": 521,
-        "devDependencies": 0,
-        "optionalDependencies": 0,
-        "totalDependencies": 521
+      "sourceCommit": "6e589290ebf31dba23f73a42e706bd29ae4f87b1",
+      "retrievedAt": "2026-10-25",
+      "status": "passed",
+      "vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0
       },
-      "limitation": "Zero package advisories across521 locked entries; OS findings and final image scans remain separate.",
-      "lockfileSha256": "5e31bdcf01a1b632f84baba785c5ff901c63a9e60bd54276bb55c3f2853607be"
+      "dependencies": 521,
+      "evidence": ".local/upgrade-evidence/package-audit-6e58929.json",
+      "evidenceSha256": "53e7d127130984cae97d554a54f7be42a21478066d94206e519540ab84119635",
+      "lockfileSha256": "5e31bdcf01a1b632f84baba785c5ff901c63a9e60bd54276bb55c3f2853607be",
+      "scope": "Registry package advisories only; image/native advisories and owner decisions are separate."
     },
     "ohioInterestSoftwareReview": {
       "commit": "7a337a0",
@@ -1729,16 +1715,16 @@
       "limitation": "Actual React DOM callback checks; final production browser rerun required."
     },
     "remoteCiLatestObserved": {
-      "commit": "9015b41a87f16c9b4d698f6c146a37c9da679581",
+      "commit": "31a1c4a43bd85d0797d1a753e42f16dd57e2c3a6",
       "ci": {
-        "runId": 40238664517,
+        "runId": 40260571429,
         "status": "in_progress"
       },
       "web": {
-        "runId": 40238664520,
+        "runId": 40260571523,
         "status": "in_progress"
       },
-      "limitation": "Observed before later package pushes; no final remote green claimed."
+      "limitation": "Observed before later push; older runs were cancelled by branch concurrency. No final remote pass claimed."
     },
     "remoteCi6b07529": {
       "run": 40176974652,
@@ -2772,20 +2758,41 @@
         ],
         "marriageWorksheetPrerequisite": [
           "dd1ef96"
+        ],
+        "guidedK1History": [
+          "e586f87"
+        ],
+        "marriageCanonicalAndIntake": [
+          "55acc15",
+          "31a1c4a"
+        ],
+        "currentPublicOtherCash": [
+          "b153a91"
+        ],
+        "qbiOriginalReview": [
+          "d777a68"
+        ],
+        "inKindK12CashCap": [
+          "6e58929"
+        ],
+        "currentFiveCharitableCategories": [
+          "0b5e881"
+        ],
+        "k1SemanticLabels": [
+          "3b93d69"
         ]
       },
       "owners": {
         "marketplaceMethodsAndIntake": "federal_law",
-        "qbiActualSourceIntegration": "complete_facts",
+        "qbiActualSourceIntegration": "delivered bounded ordinary source/guide/review; exclusions remain explicit",
         "charityMethods": "ai_billing",
         "educationMethodsAndFinalIntegration": "parent"
       },
       "subsequent": [
-        "Actual marriage source/canonical/PDF/intake and remaining two-owner Marketplace methods",
-        "Actual charity recipient classification, further mixed/prior-floor/NOL methods",
-        "Actual nonrental K1/history intake and source-derived Form461 classification",
-        "Reviewed in-kind assistance integration and remaining documented education boundaries",
-        "Qualified interpretation for reduced mixed tips/bonds and negative-net1202, with no arbitrary allocation"
+        "Ordinary two-owner Marketplace health and actual QBI-owner allocation, including controlling treatment where combined caps bind.",
+        "Actual prior-vintage/floor/nonitemizer and regular/AMT NOL coordination, partial B cash/property allocation, reproduced existing-crypto source handoff and actual pass-through classification boundary.",
+        "Fresh independent remaining-scope and official form/provider review, then final current full tests/coverage/types/spec/inventory/builds/lint/browser/CI/runtime/recovery.",
+        "Qualified interpretations for reduced mixed tips/bonds and negative-net1202; no invented allocations or human approval."
       ],
       "unsupportedIsComplete": false
     },
@@ -2892,7 +2899,12 @@
         "files": 9,
         "independentAgentTests": 14,
         "canonicalIntegrationComplete": false,
-        "evidenceDocument": "docs/upgrade-2026-qbi-loss-work.md"
+        "evidenceDocument": "docs/upgrade-2026-qbi-loss-work.md",
+        "deliveredFollowups": [
+          "266aee3",
+          "e586f87",
+          "d777a68"
+        ]
       },
       "sharedPolicyAllocation": {
         "commit": "d9cccd5626eea66a1d4a071c844f2e8cf048826a",
@@ -2903,7 +2915,10 @@
         "physicalPagesInspected": 2,
         "referencePagesInspected": 9,
         "intakeStatus": "in-progress",
-        "evidenceDocument": "docs/upgrade-2026-shared-policy-work.md"
+        "evidenceDocument": "docs/upgrade-2026-shared-policy-work.md",
+        "deliveredFollowups": [
+          "675f5ba"
+        ]
       },
       "inKindTuitionCredit": {
         "commit": "ec05989a67e4eeb53ffeaa6ad13289dc68325640",
@@ -2997,7 +3012,11 @@
         "independentAgentCases": 24,
         "independentSeDeltaCases": 20,
         "guidedCollectorComplete": false,
-        "evidenceDocument": "docs/upgrade-2026-qbi-loss-work.md"
+        "evidenceDocument": "docs/upgrade-2026-qbi-loss-work.md",
+        "deliveredFollowups": [
+          "e586f87",
+          "d777a68"
+        ]
       },
       "priorCashCurrentProperty": {
         "commit": "c89c81c063b9ea74fc8fa7c9f793d82a9d1b86d8",
@@ -3025,7 +3044,11 @@
         "independentReviewTests": 100,
         "independentExtraProbes": 3,
         "canonicalElectionComplete": false,
-        "evidenceDocument": "docs/upgrade-2026-marriage-worksheets-work.md"
+        "evidenceDocument": "docs/upgrade-2026-marriage-worksheets-work.md",
+        "deliveredFollowups": [
+          "55acc15",
+          "31a1c4a"
+        ]
       },
       "inKindAssistance": {
         "commit": "b56402c6711f537f0bfbe964e5f1c0be40b629a2",
@@ -3077,7 +3100,11 @@
         "specReferences": 4905,
         "independentPrivateProbes": 4,
         "canonicalElectionComplete": false,
-        "evidenceDocument": "docs/upgrade-2026-marriage-sources-work.md"
+        "evidenceDocument": "docs/upgrade-2026-marriage-sources-work.md",
+        "deliveredFollowups": [
+          "55acc15",
+          "31a1c4a"
+        ]
       },
       "inKindCoordination": {
         "commit": "0517691f29494a6d36b6ae8353b0f88ea8de206d",
@@ -3097,16 +3124,152 @@
         "renderedReferencePages": 3,
         "rendered5329Pages": 3,
         "evidenceDocument": "docs/upgrade-2026-in-kind-coordination-work.md"
+      },
+      "guidedK1QualifiedHistory": {
+        "commit": "e586f87a65708927e63c616707a10274176de61c",
+        "reviewTree": "678274ef714289dbf068fdb1e6c096d3221178bd",
+        "tests": 853,
+        "files": 99,
+        "specReferences": 4936,
+        "rootTypes": "passed",
+        "webTypes": "passed",
+        "productionBuild": "passed",
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "independentReviewCases": 12,
+        "findingFixed": "Selected K1 route without actual packet now rejects rather than omitting it.",
+        "evidenceDocument": "docs/upgrade-2026-qbi-loss-work.md"
+      },
+      "marriageCanonicalReview": {
+        "commit": "55acc1590b3cc4a1a6c7e48110c102ab5c21264d",
+        "reviewTree": "b6a2bab15aa744c8e050ef9158c13c6c5b1177ad",
+        "tests": 251,
+        "files": 25,
+        "specReferences": 4944,
+        "rootTypes": "passed",
+        "webTypes": "passed",
+        "independentReviewCases": 32,
+        "renderedPages": 14,
+        "findingFixed": "Workspace prepares original marriage source context before redaction.",
+        "evidenceDocument": "docs/upgrade-2026-marriage-return-work.md"
+      },
+      "currentPublicOtherCash": {
+        "commit": "b153a913df50c0ff7cc05faae99cf2f093f60fa1",
+        "reviewTree": "4497918cc900a51ebd55a687f3ada77d87ae2ac6",
+        "tests": 666,
+        "files": 67,
+        "specReferences": 4949,
+        "rootTypes": "passed",
+        "webTypes": "passed",
+        "independentReviewCases": 8,
+        "evidenceDocument": "docs/upgrade-2026-current-other-cash-work.md"
+      },
+      "qbiOriginalReview": {
+        "commit": "d777a6855d52948ded7aedc563c1c747da422412",
+        "reviewTree": "6e8243b836502ce1771ad40fc0948ef56dc56a27",
+        "tests": 104,
+        "files": 12,
+        "specReferences": 4958,
+        "rootTypes": "passed",
+        "webTypes": "passed-with-production-build",
+        "productionBuild": "passed",
+        "independentSourceCases": 33,
+        "independentFinalCorrectionCases": 12,
+        "findingsFixed": [
+          "Retain completed zero-deduction8995 including prior-carry-only returns without inventing K1 appendix.",
+          "Print zero on physical8995 lines4/8 when nonpositive while preserving signed2/6 and carry16/17.",
+          "Preserve missing regular/AMT history as unknown in the appendix."
+        ],
+        "evidenceDocument": "docs/upgrade-2026-qbi-loss-work.md"
+      },
+      "guidedMarriageSources": {
+        "commit": "31a1c4a43bd85d0797d1a753e42f16dd57e2c3a6",
+        "reviewTree": "1d7dcc64973d122a07de6717bd349a26e72b3b62",
+        "tests": 2447,
+        "files": 267,
+        "skipped": 33,
+        "skipBoundary": "Existing skips in three files; no staging or skipped-test evidence claimed.",
+        "specReferences": 4965,
+        "rootTypes": "passed",
+        "webTypes": "passed",
+        "productionBuild": "passed",
+        "lintErrors": 0,
+        "lintWarnings": 0,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "independentReviewCases": 9,
+        "evidenceDocument": "docs/upgrade-2026-guided-marriage-work.md"
+      },
+      "inKindK12CashCap": {
+        "commit": "6e589290ebf31dba23f73a42e706bd29ae4f87b1",
+        "reviewTree": "a37aa6da5f139f8d5baacb29ddd64951521609fa",
+        "tests": 456,
+        "files": 41,
+        "specReferences": 4973,
+        "rootTypes": "passed",
+        "webTypes": "passed",
+        "rootBuild": "passed",
+        "webBuild": "passed",
+        "lintErrors": 0,
+        "lintWarnings": 1,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "independentReviewCases": 10,
+        "independentReviewFiles": 6,
+        "renderedReferencePages": 2,
+        "rendered5329Pages": 3,
+        "retainedPdfCount": 8,
+        "findingFixed": "Actual furnished dates determine expanded2025 eligibility; later statement date cannot replace them. Unknown/conflicting/mixed timing rejects.",
+        "evidenceDocument": "docs/upgrade-2026-in-kind-k12-work.md",
+        "logs": {
+          "in-kind-k12-final-exact-tests.log": "99dd5b8724061fe10de230a0b091ec249a117ca9273deedbeb7a9897dc92ca07",
+          "in-kind-k12-final-exact-static.log": "e30c9636623ff747604afb39228d2ec53d02d56b9da4466a582a30201f3aac21",
+          "in-kind-k12-final-web-types.log": "cdeaf83f41308981f0f46a19e69a6d224a30e72e5e4da05c8d6a198e07e54605",
+          "in-kind-k12-final-web-build.log": "f9c1ab1cebfb11447377d0abb0ead978eb1c7b01aea45d0f75883416d42d118c",
+          "in-kind-k12-final-browser.log": "9721b2e60dc00c62e7e035d1e0f140abab28e63a35f2cafb7379e3b3eeac7712",
+          "complete-facts-k12-final-review.log": "1c46061281dbbb9de335f7242fe2c963921a38d69e9aacbc6147daf9623accf5"
+        }
+      },
+      "currentFiveCharitableCategories": {
+        "commit": "0b5e881f665e9ce33cf1a66a63d92bd0cfc62b04",
+        "reviewTree": "497b7c94d6151970aeef8ad5d2913b7abefd7215",
+        "finalTree": "4a791a21b153e0c33d00384042af857d8da3d19c",
+        "tests": 646,
+        "files": 67,
+        "specReferences": 4978,
+        "rootTypes": "passed",
+        "webTypes": "passed",
+        "independentReviewCases": 11,
+        "independentPrivateProbes": 3,
+        "lintErrors": 0,
+        "lintWarnings": 0,
+        "evidenceDocument": "docs/upgrade-2026-current-charitable-categories-work.md",
+        "cohortNote": "Earlier671/70 included25 passing unrelated runtime tests due to an extra literal run filename filter; final retains all67 intended paths."
+      },
+      "k1SemanticLabels": {
+        "commit": "3b93d69a3ca43b53c119a23eb32863182209afcf",
+        "reviewTree": "cb88c2647531880b905c101b77dd828739f39e73",
+        "finalTree": "98bd50a1c4f2d3fd78f7cebe61225a966c20a079",
+        "tests": 565,
+        "files": 5,
+        "specReferences": 4979,
+        "rootTypes": "passed",
+        "independentReviewCases": 531,
+        "lintErrors": 0,
+        "unchangedLintWarnings": 276,
+        "evidenceDocument": "docs/upgrade-2026-k1-semantic-labels-work.md",
+        "scope": "Comments/audit descriptions/spec labels only; saved semantic amounts and calculation expressions unchanged; no raw parser claim."
       }
     },
     "currentInventory": {
-      "sourceCommit": "0517691f29494a6d36b6ae8353b0f88ea8de206d",
-      "entries": 442,
+      "sourceCommit": "3b93d69a3ca43b53c119a23eb32863182209afcf",
+      "entries": 449,
       "generation": "passed",
       "freshness": "passed",
-      "sha256": "9a7b5ed5f22fbac2444fb5fb359c177076c2c294d1ad0289e9e10528237940d6",
-      "evidence": ".local/upgrade-evidence/inventory-0517691.log",
-      "evidenceSha256": "45d3394d7c50a8cadad10d374de6b692308a098af458081af82dde4c9c4d528d"
+      "specReferences": 4979,
+      "sha256": "5952c12e8594e190d6be97088fb2afa23c0a1ed71c8be3ed4dccebf079d34912",
+      "evidence": ".local/upgrade-evidence/inventory-3b93d69.log",
+      "evidenceSha256": "747c40e5285080999aba4024345205a66f48d547758173575a9fd2deb954ddfe"
     },
     "previousCoverageDiagnostic": {
       "status": "failed-tests-coverage-thresholds-met",

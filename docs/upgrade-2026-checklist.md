@@ -7,40 +7,51 @@ complete a checkbox.
 
 ## Current integration — 2026-10-25
 
-Current additions are pushed through `0517691`: actual tuition assistance
-(`b56402c`), source-derived ordinary K1 loss/SE classification (`3e9164`), actual
-charitable recipient categories (`6a90c81`), marriage-year source validation
-(`b2f3796`), and combined tuition assistance/credit/ESA allocations (`0517691`).
-Each package has immutable checks, spec-linked controls and a separate agent
-review. These are software/source checks; human tax qualification remains open.
+Current additions are pushed through `3b93d69`: actual K1/qualified-history
+intake (`e586f87`), marriage-year canonical/PDF integration (`55acc15`) and
+collector (`31a1c4a`), current public/other-recipient cash carry (`b153a91`),
+original-source QBI loss review (`d777a68`), and actual prepaid K12 sources with
+the cash-only annual cap (`6e58929`), current five-category charitable carry
+(`0b5e881`) and corrected K1 semantic source labels (`3b93d69`). Each has exact-source checks and separate
+agent review. Human tax qualification remains open.
 
-The tuition coordination package passes 433 tests in 38 files, root/web types,
-4,927 spec references, lint with zero warnings, both builds and 27 separate
-readiness/export cases. Its three reference and three physical Form 5329 pages
-were rendered and inspected. Independent unequal-ratio, source identity and
-stale-review probes pass. Original choices and exact amounts remain intact.
-The [package ledger](upgrade-2026-in-kind-coordination-work.md) records hashes.
+The K12 package passes 456 tests in 41 files, root/web types, 4,973 spec references,
+both builds and desktop/mobile Chromium with zero retries. Separate review passes
+10 cases, including the original failing furnished-date probe. That review found
+and drove a correction: an early furnished benefit cannot qualify through a
+later statement date. Eight review PDFs are retained and the five relevant pages
+were rendered and inspected. Its ledger records all initial failures, the final
+source tree and one scoped lint warning with no errors. Filing gates remain closed.
+
+Marriage integration passes 251 cases and 32 separate review cases; its workspace
+now creates the private original context before redaction. The collector passes
+2,447 cases (33 existing skips), both browser widths and nine independent cases.
+QBI output retains completed zero-deduction Form8995, prints the required zero on
+physical lines4/8, and labels unknown NOL histories as unknown. It passes104 cases
+and separate source/physical-field reviews. Package ledgers carry exact evidence.
 
 The last complete unit run is exact `095d5bd`: **17,960 tests in 987 files**,
 zero failures/skips; its production browser suite passes **362 cases with zero
 retries** and five hosted-only skips. Both builds pass. The latest complete
-coverage remains `7523384`: **87.01% branches**, against the unchanged 85% gate,
-with 17,934 tests in 975 files passing. Later packages are excluded. Final
-current full checks and coverage must run after internal integration.
+coverage remains `7523384`: **87.01% branches**, against the unchanged85% gate,
+with17,934 tests in975 files passing. Later packages are excluded. Final current
+full checks and coverage must run after internal integration.
 
-The inventory is refreshed against `0517691`: 442 entries pass freshness checks.
-The latest package advisory refresh reports zero advisories across 521 locked dependencies with the lockfile
-unchanged. Final image scans and owned OS advisory decisions remain separate.
-The last observed remote workflows were still running; no current remote success
-or hosted staging evidence is inferred from a push.
+The inventory now covers `3b93d69`: 449 entries pass generation/freshness
+and all4,979 spec references pass. The refreshed package audit has zero
+advisories across521 locked dependencies, with the lockfile unchanged. Final image scans and owned OS advisory decisions remain
+separate. Most intermediate remote runs were cancelled by later branch pushes;
+last observed31a1 CI/Web were in progress. A push is not current remote success.
 
-Active internal work is the K12 cash-cap/source correction; actual QBI guide
-and original-source review; marriage canonical/guide and ordinary two-owner
-health/PTC; and the finite charity category/history/NOL/media packages in the
-checkpoint. A reproduced missing K1 packet on a selected life event is fixed in
-the private guide candidate and passes independent re-review; main integration
-is pending. Unsupported guards do not complete these methods. Final current tests,
-runtime images, recovery and support reconciliation follow their integration.
+Active internal work is ordinary two-owner health/PTC and the finite charitable
+history/NOL/media queue, including the reproduced existing-crypto source
+handoff. An independent scope/source refresh is underway. Actual K1 and marriage
+source/guide/review and this K12 correction are delivered. Specialized excluded
+methods are explicitly named in their ledgers and not counted as implemented.
+Final current tests, runtime images, recovery and support reconciliation follow.
+The current direct-receipt category package passes646 cases/67 files and11
+independent cases. The K1 label repair passes565 cases/5 files and531 parent
+cases, preserving all saved amounts and calculation expressions.
 
 The goal stays active and the upgrade is **not release-ready**. Human reviews
 and controlling interpretations, provider access/approved budget, authorized
