@@ -75,6 +75,7 @@ import { calculateForm6251, type Form6251Input, type Form6251IncomeInput, type F
 import { calculateForm8801 } from "./forms/form-8801.js";
 import { calculateForm8582 } from "./forms/form-8582.js";
 import { calculatePassiveLossQBI, type PassiveLossQBIResult } from "./forms/passive-loss-qbi.js";
+import { calculateK1QbiLossReturn } from "./forms/k1-qbi-loss-return.js";
 import type { PassiveActivity } from "./forms/form-8582.js";
 import { calculateForm2441 } from "./forms/form-2441.js";
 import { calculateForm2441Benefits } from "./forms/form-2441-benefits.js";
@@ -151,6 +152,7 @@ import { calculateForm8915F, type Form8915FResult } from "./forms/form-8915-f.js
 import { calculateTaxableRefundWorksheet, type TaxableRefundWorksheetResult } from "./forms/taxable-refund-worksheet.js";
 import { calculateStudentLoanInterestDeduction } from "./forms/student-loan-interest.js";
 import { calculateNetOperatingLossReturn, type NetOperatingLossReturnResult, type NolIncomeContext } from "./forms/net-operating-loss-return.js";
+import { calculateQbiEblNol } from "./forms/qbi-ebl-nol.js";
 import { calculateForm1098E, type Form1098EResult } from "./forms/form-1098-e.js";
 import { calculateSalesTaxDeduction, type SalesTaxDeductionResult } from "./forms/state-sales-tax-deduction-worksheet.js";
 import { calculateForm8824Aggregate } from "./forms/form-8824.js";
@@ -301,13 +303,14 @@ function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: Marketpla
     retained[kind] === undefined && retained.calculating !== kind) } } : marketplace;
   const worksheet = calculateNetOperatingLossReturn(input, (deduction, modified, purpose, charitableContributionLimit) =>
     calculateFederalTaxCore(input, purpose === "final" ? marketplace : refigured, undefined, { stage: "income", deduction, modified, charitableContributionLimit }),
-  (deduction, modified, charitableContributionLimit) => calculateFederalTaxCore(input, modified ? refigured : marketplace, undefined,
-    { stage: "alternative-income", deduction, modified, charitableContributionLimit }));
+  (deduction, modified, charitableContributionLimit, actualRegularNol) => calculateFederalTaxCore(input, modified ? refigured : marketplace, undefined,
+    { stage: "alternative-income", deduction, modified, charitableContributionLimit, actualRegularNol }));
   if (!worksheet.calculationComplete || worksheet.deduction === undefined) throw new Error("Actual NOL calculation is incomplete");
   return complete(worksheet);
 }
 type ForeignTaxHypotheticalRequest = { purpose: "foreign-deduction-carryover" };
-type NolReturnContext = { stage: "income" | "alternative-income"; deduction: Decimal; modified: boolean; charitableContributionLimit?: Decimal }
+type NolReturnContext = { stage: "income" | "alternative-income"; deduction: Decimal; modified: boolean; charitableContributionLimit?: Decimal;
+  actualRegularNol?: import("./forms/net-operating-loss.js").NetOperatingLossResult }
   | { stage: "final"; deduction: Decimal; modified: false; worksheet: NetOperatingLossReturnResult };
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "income" }): NolIncomeContext;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "alternative-income" }): Form6251IncomeResult;
@@ -2438,6 +2441,15 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   let { deductionUsed, deductionAmount } = deductionSelection;
 
   // Section 199A deductions follow the individual and the contributing trade.
+  const k1QbiLosses = calculateK1QbiLossReturn(input, { scheduleE: schedE, form8582, form461 });
+  audit.merge(k1QbiLosses.lines);
+  const actualRegularNolForQbi = nol?.stage === "final" ? nol.worksheet
+    : nol?.stage === "alternative-income" && !nol.modified ? nol.actualRegularNol : undefined;
+  const eblQbi = calculateQbiEblNol(input, actualRegularNolForQbi ? { regular: actualRegularNolForQbi } : undefined);
+  if (nol?.stage === "alternative-income" && !nol.modified) {
+    if (eblQbi.vintages.length && !eblQbi.calculationComplete) throw new Error("Actual AMT QBI replay requires the completed regular EBL deduction by vintage");
+    audit.merge(eblQbi.lines);
+  }
   const ownerOf = (owner?: "primary" | "spouse") => owner ?? (filingStatus !== "married_filing_jointly" ? "primary" : undefined);
   const necOwnersForQBI = new Set(input.form1099Nec.filter(f => !d(f.nonemployeeCompensation).isZero()).map(f => f.accountHolder));
   const cOwnerForQBI = input.scheduleC?.accountHolder ?? (necOwnersForQBI.size === 1 ? [...necOwnersForQBI][0] : undefined);
@@ -2449,7 +2461,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (!cryptoBusinessNet.isZero()) deductionSources.push({id:"cryptoBusiness",name:"Cryptocurrency business",
     qbi:cryptoBusinessNet,netSEEarnings:cryptoBusinessNet,accountHolder:ownerOf(input.cryptoIncome?.businessAccountHolder)});
   input.scheduleK1.forEach((k1,index)=>{
-    const qbi=d(k1.section199AQBI);
+    const qbi=k1QbiLosses.activities.find(source=>source.k1Index===index)?.currentQbi ?? d(k1.section199AQBI);
     const netSEEarnings=k1.entityType === "s_corporation" ? d("0") : d(k1.selfEmploymentNetEarningsAfterAdjustments ?? k1.selfEmploymentEarnings);
     if (!qbi.isZero() || !netSEEarnings.isZero()) deductionSources.push({id:`scheduleK1:${index}`,name:k1.partnershipName,
       qbi,netSEEarnings,accountHolder:ownerOf(k1.accountHolder),materiallyParticipated:k1.qbiMateriallyParticipated,
@@ -2503,10 +2515,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Prior released qualified losses retain their origin-year character and
   // enter the separate prior-loss amount, not the current rental's QBI.
   const rentalLossQbi = new Map<number, PassiveLossQBIResult>();
-  let releasedPriorQualifiedRentalLoss = d("0");
-  let releasedPriorActiveRentalLoss: Decimal | undefined = d("0");
+  let releasedPriorQualifiedRentalLoss = k1QbiLosses.priorQualifiedLoss.plus(eblQbi.currentQualifiedDeduction ?? 0);
+  let releasedPriorActiveRentalLoss: Decimal | undefined = (eblQbi.currentQualifiedDeduction?.gt(0) && eblQbi.currentActiveQualifiedDeduction === undefined)
+    || k1QbiLosses.priorActiveQualifiedLoss === undefined ? undefined
+    : k1QbiLosses.priorActiveQualifiedLoss.plus(eblQbi.currentActiveQualifiedDeduction ?? 0);
   for (const prior of input.priorYear?.suspendedPassiveLosses ?? []) {
-    if (prior.qbiLossTracking && !schedE.rentalProperties.some(rental => rental.description === prior.partnershipName)) {
+    if (prior.qbiLossTracking && !schedE.rentalProperties.some(rental => rental.description === prior.partnershipName)
+      && !k1QbiLosses.activities.some(source => input.scheduleK1[source.k1Index].partnershipName === prior.partnershipName)) {
       throw new Error("Actual passive QBI tracking requires its supported rental source; partnership loss character needs its separate source method");
     }
   }
@@ -2591,7 +2606,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
     const hasQBISources = qbiSources.length > 0 || qualifiedReitDividends.greaterThan(0) || !qualifiedPTPIncome.isZero()
       || d(input.priorYear?.qbiLossCarryforward).gt(0) || releasedPriorQualifiedRentalLoss.gt(0);
-    if (hasQBISources && (year === 2026 || taxableIncomeBeforeQBI.greaterThan(0))) {
+    if (hasQBISources && (year === 2026 || taxableIncomeBeforeQBI.greaterThan(0) || input.qbiLossSources !== undefined)) {
       const qbiThreshold = constants.qbi.simplifiedThreshold[filingStatus];
       const priorQBILoss = d(input.priorYear?.qbiLossCarryforward).plus(releasedPriorQualifiedRentalLoss);
       const priorYearActiveQBILoss = releasedPriorActiveRentalLoss !== undefined
@@ -2745,6 +2760,33 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
           "Original loss": vintage.originalLoss, "Qualified loss remaining": qualifiedRemainingLoss });
       return { ...vintage, qualifiedOriginalLoss, qualifiedRemainingLoss };
     });
+  }
+  for (const activity of k1QbiLosses.activities) {
+    if (!input.scheduleK1[activity.k1Index].section199AIsSST) continue;
+    for (const stage of activity.stages) {
+      stage.remainingVintages = stage.remainingVintages.map(vintage => {
+        if (vintage.taxYear !== year || stage.sourceCurrentLoss.isZero()) return vintage;
+        const rawSuspendedLoss = stage.sourceCurrentLoss.minus(stage.currentAllowedLoss);
+        const qualifiedOriginalLoss = roundDollar(rawSuspendedLoss.times(stage.sourceCurrentQualifiedLoss)
+          .div(stage.sourceCurrentLoss).times(originatingSstPercentage));
+        audit.record("QBI Loss Character", `${activity.sourceId}:${stage.limitation}:originating-SSTB`,
+          "Originating-year suspended SSTB qualified loss", qualifiedOriginalLoss,
+          "Actual original source fraction and originating taxable-income percentage; fixed character retained for future release",
+          { "Taxable income before QBI": originatingQbiTaxableIncome, "Applicable percentage": originatingSstPercentage,
+            "Original loss": vintage.originalLoss });
+        return { ...vintage, qualifiedOriginalLoss, qualifiedRemainingLoss: qualifiedOriginalLoss };
+      });
+    }
+    if (activity.excessBusinessLossVintage && activity.excessBusinessLossCurrentOrigin) {
+      const original = input.scheduleK1[activity.k1Index];
+      const vintage = activity.excessBusinessLossVintage;
+      const qualifiedOriginalLoss = roundDollar(vintage.originalLoss.times(d(original.section199AQBI).abs())
+        .div(d(original.ordinaryIncome).abs()).times(originatingSstPercentage));
+      activity.excessBusinessLossVintage = { ...vintage, qualifiedOriginalLoss, qualifiedRemainingLoss: qualifiedOriginalLoss };
+      audit.record("QBI EBL Character", `${activity.sourceId}:originating-SSTB`, "Originating-year EBL suspended SSTB character", qualifiedOriginalLoss,
+        "Actual current EBL source fraction and originating taxable-income percentage; prior released character is never requalified",
+        { "Original loss": vintage.originalLoss, "Applicable percentage": originatingSstPercentage });
+    }
   }
   if (form8995Result) audit.merge(form8995Result.lines);
   if (form8995AResult) audit.merge(form8995AResult.lines);
@@ -4170,10 +4212,15 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const codNolReduction = input.form982NolSources && nol?.stage === "final"
     ? calculateCodNolReduction(input, { priorLoss: nol.worksheet, currentOrigin: form172 }) : undefined;
   if (codNolReduction) audit.merge(codNolReduction.lines);
+  const finalEblQbi = codNolReduction?.regular && nol?.stage === "final"
+    ? calculateQbiEblNol(input, { regular: nol.worksheet, codVintages: codNolReduction.regular.vintages }) : eblQbi;
+  if (finalEblQbi.currentQualifiedDeduction?.eq(eblQbi.currentQualifiedDeduction ?? 0) === false) throw new Error("After-tax EBL character reduction cannot change current QBI");
+  audit.merge(finalEblQbi.lines);
   const baseResult: TaxReturnResult = {
     taxYear: year,
     filingStatus,
     digitalAssetQuestion,
+    ...(input.qbiLossSources ? { qbiEblNol: finalEblQbi } : {}),
 
     totalWages,
     totalInterest: totalTaxableInterest,
@@ -4301,7 +4348,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         suspendedPassiveLosses: form8582.activityAllocations
           .filter((a) => a.suspendedLoss.greaterThan(0))
           .map((a) => ({ partnershipName: a.name, amount: a.suspendedLoss,
-            qbiVintages: a.sourceIndex === undefined ? undefined : rentalLossQbi.get(a.sourceIndex)?.remainingVintages })),
+            qbiVintages: a.sourceIndex === undefined ? undefined : rentalLossQbi.get(a.sourceIndex)?.remainingVintages
+              ?? k1QbiLosses.activities.find(source => source.passiveSourceIndex === a.sourceIndex)?.stages.find(stage => stage.limitation === "469")?.remainingVintages })),
         suspendedPTPLosses: form8582.ptpSuspendedLosses
           .filter((p) => p.netSuspended.greaterThan(0))
           .map((p) => ({ partnershipName: p.name, amount: p.netSuspended })),
@@ -4310,6 +4358,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         ...(foreignTaxDirectCredit ? { amtForeignTaxCreditCarryforwardByCategory: foreignTaxDirectCredit.amtCarryforwardByCategory } : {}),
         ...(foreignTaxOrdinaryCredit ? { amtForeignTaxCreditCarryforwardByCategory: foreignTaxOrdinaryCredit.amt.carryforwardByCategory } : {}),
         qbiLossCarryforward: form8995Result?.qbiLossCarryforward ?? form8995AResult?.qbiLossCarryforward ?? new Decimal(0),
+        ...(input.qbiLossSources ? { qbiSuspendedLosses: k1QbiLosses.activities.flatMap(activity => [
+          ...activity.stages.filter(stage => stage.remainingVintages.length > 0).map(stage => ({
+            sourceId: activity.sourceId, accountHolder: activity.accountHolder, limitation: stage.limitation,
+            vintages: stage.remainingVintages,
+          })), ...(activity.excessBusinessLossVintage ? [{ sourceId: activity.sourceId, accountHolder: activity.accountHolder,
+            limitation: "461(l)" as const, vintages: [activity.excessBusinessLossVintage] }] : []),
+        ]) } : {}),
         investmentInterestExpense: form4952?.disallowedCarryforward ?? new Decimal(0),
         minimumTaxCredit: cfMtc,
         charitableContributions: nol?.stage === "final" && nol.worksheet.charitableCarryover

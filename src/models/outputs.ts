@@ -104,6 +104,7 @@ export interface TaxReturnResult {
   otherIncome: Decimal;
   nolDeduction: Decimal;
   netOperatingLoss?: import("@/engine/forms/net-operating-loss-return.js").NetOperatingLossReturnResult;
+  qbiEblNol?: import("@/engine/forms/qbi-ebl-nol.js").QbiEblNolResult;
   form172?: import("@/engine/forms/form-172-return.js").Form172ReturnResult;
   totalIncome: Decimal;
 
@@ -173,6 +174,10 @@ export interface TaxReturnResult {
     foreignTaxCreditCarryforwardByCategory: Record<string, Array<{ taxYear: number; amount: Decimal }>>;
     amtForeignTaxCreditCarryforwardByCategory?: Record<string, Array<{ taxYear: number; amount: Decimal }>>;
     qbiLossCarryforward: Decimal;
+    /** Character remaining under each separate loss limit; never an ordinary/AMT NOL override. */
+    qbiSuspendedLosses?: Array<{ sourceId: string; accountHolder: "primary" | "spouse";
+      limitation: import("@/engine/forms/qbi-loss-character.js").QbiLossLimitation;
+      vintages: import("@/engine/forms/qbi-loss-character.js").QbiLossCharacterVintage[] }>;
     investmentInterestExpense: Decimal;
     minimumTaxCredit: Decimal;
     charitableContributions: Decimal;

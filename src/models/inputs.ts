@@ -12,6 +12,7 @@ import { IraBasisSourcesSchema } from "@/models/ira-basis-sources.js";
 import { CharitableCarryoverSourcesSchema } from "@/models/charitable-carryover-sources.js";
 import { AdoptionPriorBenefitHistorySchema } from "@/models/adoption-prior-benefits.js";
 import { Form8962SharedPolicySchema, MarketplaceCoveredIndividualSchema } from "@/models/form-8962-shared-policy.js";
+import { QbiLossSourcesSchema } from "@/models/qbi-loss-sources.js";
 
 // Custom Zod type for decimal strings (validated as numbers, stored as strings for Decimal.js)
 const decimal = z.string().regex(/^-?\d+(\.\d+)?$/, "Must be a decimal number");
@@ -2166,6 +2167,8 @@ export const PANonresidentReturnSchema = z.object({
 });
 
 export const ScheduleK1Schema = z.object({
+  /** Original statement tax year; omission does not establish the return year. */
+  taxYear: z.number().int().optional(),
   /** Actual federal tax withheld shown on Schedule K-1; not state withholding. */
   federalIncomeTaxWithheld: optionalDecimalInput,
   partnershipName: z.string(),
@@ -2744,7 +2747,7 @@ export const PriorYearCarryforwardSchema = z.object({
   /** General business credit carryforward from prior years (IRC §39, 20-year limit) */
   generalBusinessCreditCarryforward: optionalDecimal,
   /** NOL carryforward from prior-year excess business losses under IRC §461(l) */
-  excessBusinessLossNOL: optionalDecimal,
+  excessBusinessLossNOL: optionalDecimalInput,
   /** General NOL carryforward available for deduction under IRC §172.
    *  When provided, takes precedence over excessBusinessLossNOL for the
    *  Schedule 1 Line 8a NOL deduction. When absent, the engine defaults
@@ -5941,6 +5944,7 @@ export const TaxYearInputSchema = z.object({
   priorYear: PriorYearCarryforwardSchema.optional(),
   netOperatingLoss: NetOperatingLossSourcesSchema.optional(),
   charitableCarryoverSources: CharitableCarryoverSourcesSchema.optional(),
+  qbiLossSources: QbiLossSourcesSchema.optional(),
   form172: Form172OriginSourcesSchema.optional(),
   adjustments: AdjustmentsSchema.optional(),
   form2210: Form2210Schema.optional(),

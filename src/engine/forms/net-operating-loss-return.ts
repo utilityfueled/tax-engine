@@ -10,6 +10,7 @@ import type { Form6251IncomeResult } from "./form-6251.js";
 import { calculateCharitableNolCarryover, type CharitableNolCarryoverResult } from "./charitable-net-operating-loss.js";
 import { calculateAlternativeCharitableNolCarryover, type AlternativeCharitableNolCarryoverResult } from "./alternative-charitable-net-operating-loss.js";
 import { calculateForm172Return } from "./form-172-return.js";
+import { calculateQbiEblNol } from "./qbi-ebl-nol.js";
 
 export interface NolIncomeContext {
   agi: Decimal;
@@ -52,7 +53,7 @@ export interface NetOperatingLossReturnResult extends NetOperatingLossResult {
 
 export function calculateNetOperatingLossReturn(input: TaxYearInput,
   computeIncome: (deduction: Decimal, modified: boolean, purpose: "current-limit" | "modified" | "final", charitableContributionLimit?: Decimal) => NolIncomeContext,
-  computeAlternativeIncome: (deduction: Decimal, modified: boolean, charitableContributionLimit?: Decimal) => Form6251IncomeResult): NetOperatingLossReturnResult {
+  computeAlternativeIncome: (deduction: Decimal, modified: boolean, charitableContributionLimit?: Decimal, actualRegularNol?: NetOperatingLossResult) => Form6251IncomeResult): NetOperatingLossReturnResult {
   const facts = input.netOperatingLoss;
   if (!facts) throw new Error("Actual NOL return computation requires the actual carry source packet");
   const currentOrigin = input.form172 ? calculateForm172Return(input) : undefined;
@@ -72,7 +73,7 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
     throw new Error("Legacy EBL carry must reconcile with the actual EBL source vintages");
   }
   if (input.scheduleK1Form1041?.some(row => d(row.finalYearNOLCarryover).gt(0))) throw new Error("Estate NOL carry requires its actual vintage and origin binding");
-  if (facts.vintages?.some(row => row.originKind === "excess_business_loss")) throw new Error("Actual prior EBL NOL requires its originating QBI loss character worksheet");
+  calculateQbiEblNol(input);
   const alternative = facts.alternativeTax;
   if (alternative?.sourceFactsConfirmed !== true || !alternative.sourceReference?.trim()
     || alternative.allCarryoversIncluded !== true || alternative.specialDisasterCarryIncluded !== false
@@ -138,8 +139,8 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   // Reg1.55-1(b): individual AMT income keeps the applicable regular-tax AGI
   // basis. Restore the actual regular deduction on6251line2e; never substitute
   // an alternative-tax deduction into regular AGI-dependent worksheets.
-  const actualAlternativeIncome = computeAlternativeIncome(result.deduction, false);
-  const modifiedAlternativeIncome = computeAlternativeIncome(result.deduction, true);
+  const actualAlternativeIncome = computeAlternativeIncome(result.deduction, false, undefined, result);
+  const modifiedAlternativeIncome = computeAlternativeIncome(result.deduction, true, undefined, result);
   const alternativeTax = calculateAlternativeTaxNol({ taxYear: input.taxpayer.taxYear, sources: alternativeTaxSources,
     amtiBeforeAtnol: actualAlternativeIncome.amti, modifiedAmtiBeforeAtnol: modifiedAlternativeIncome.amti });
   let alternativeCharitableCarryover: AlternativeCharitableNolCarryoverResult | undefined;
@@ -158,7 +159,7 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
       computeCarryover: charitableContributionLimit => {
         // Only the modified absorption context removes excess gifts. The actual
         // regular NOLD and current AMTI/ATNOLD remain unchanged (Reg1.55-1(b)).
-        const income = computeAlternativeIncome(actualRegularDeduction, true, charitableContributionLimit);
+        const income = computeAlternativeIncome(actualRegularDeduction, true, charitableContributionLimit, result);
         const comparison = calculateAlternativeTaxNol({ taxYear: input.taxpayer.taxYear, sources: alternativeTaxSources,
           amtiBeforeAtnol: actualAlternativeIncome.amti, modifiedAmtiBeforeAtnol: income.amti });
         if (!comparison.deduction.eq(alternativeTax.deduction)) throw new Error("Alternative charitable comparison must preserve the actual current ATNOLD");
