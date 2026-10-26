@@ -1,3 +1,4 @@
+import { buildGuidedRoyaltySources, royaltySourceFactErrors } from "./guided-royalty-sources";
 import { buildGuidedQofFacts } from "./guided-qof-facts";
 import { buildGuidedScheduleDInputs } from "./guided-schedule-d-sources";
 import { buildGuidedQsbsSources } from "./guided-qsbs-sources";
@@ -638,6 +639,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const careBenefitSources = guidedCareBenefitSources(w2Data?.entries, seData?.businessFacts, seData?.expenses);
   let loanEducation: StudentLoanEducationSources = [];
   try {
+    assertKnownFacts(royaltySourceFactErrors(state));
     assertKnownFacts(tipIncomeFactErrors(state));
     assertKnownFacts(schedule1AFactErrors(state));
     assertKnownFacts(w2FactErrors(w2Data?.entries, segmentation.filingStatus, state.taxYear));
@@ -702,6 +704,8 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const form1099G = buildUnemploymentInputs(unemploymentData, { taxYear: state.taxYear, filingStatus: segmentation.filingStatus, personalInfo, stateData: stateReturnData, deductions: deductionData });
   const scheduleA = buildScheduleAInput(deductionData, stateReturnData);
   const mortgageInputs = buildGuidedMortgageInputs(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse);
+  let royaltyInputs: ReturnType<typeof buildGuidedRoyaltySources>;
+  try { royaltyInputs = buildGuidedRoyaltySources(state, "form1099Misc" in mortgageInputs ? mortgageInputs.form1099Misc : undefined); } catch { return null; }
   const donations = buildDonationsInput(deductionData, state.taxYear);
   const adjustments = buildAdjustmentsInput(adjustmentData, state.segmentation.filingStatus, state.taxYear, loanEducation);
   const studentLoans = buildStudentLoanInputs(adjustmentData?.studentLoanFacts, segmentation.filingStatus, state.taxYear, loanEducation, adjustmentData?.studentLoanInterest);
@@ -815,6 +819,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     rentalProperties,
     scheduleA,
     ...mortgageInputs,
+    ...royaltyInputs,
     donations,
     charitableCarryoverSources: buildGuidedCharitableCarryover(deductionData?.charitableCarryoverSources, state.taxYear, segmentation.filingStatus, personalInfo),
     childTaxCredit: personalInfo.childTaxCredit ? {

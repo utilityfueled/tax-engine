@@ -649,6 +649,10 @@ export function SectionReview({
         return <CreditsSummary data={getSectionData(state, "credits")} />;
       case "payments":
         return <PaymentsSummary data={getSectionData(state, "payments")} />;
+      case "income-royalties": {
+        const royalty = getSectionData(state, "income-royalties");
+        return <div><p>{royalty?.sourceFactsConfirmed === true ? "Royalty sources checked" : "Royalty sources need confirmation"}</p><p>{royalty?.statements?.length ?? 0} original statements; {royalty?.properties?.length ?? 0} properties.</p>{royalty?.statements?.map((source, index) => <div className="guided-review-row" key={index}><span className="guided-review-label">Original statement {index + 1}: gross royalties before expenses</span><span className="guided-review-value">{source.royalties?.trim() ? formatCurrency(source.royalties) : "Not supplied"}</span></div>)}</div>;
+      }
       case "income-rental":
         return <RentalIncomeSummary entries={getSectionData(state, "income-rental")?.entries} />;
       case "other-taxes":

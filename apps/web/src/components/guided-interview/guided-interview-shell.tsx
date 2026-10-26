@@ -1,5 +1,7 @@
 "use client";
 
+import { invalidateRoyaltySources } from "@/lib/guided-royalty-sources";
+import { SectionRoyaltyIncome } from "./section-royalty-income";
 import { foreignIncomeSourceOptions } from "@/lib/guided-foreign-income";
 import { marketplacePolicyOptions } from "@/lib/guided-marketplace-health-facts";
 
@@ -579,6 +581,8 @@ function SectionContent({
         />
       );
     }
+    case "income-royalties":
+      return <SectionRoyaltyIncome data={getSectionData(state, "income-royalties")} taxYear={state.taxYear} stateCode={state.segmentation.stateCode} onDataChange={data => onStateChange(updateSectionData(state, "income-royalties", data))} />;
     case "income-rental": {
       const rentalData = getSectionData(state, "income-rental");
       const rentalEntries = rentalData?.entries ?? [emptyRentalPropertyEntry];
@@ -680,7 +684,7 @@ function SectionContent({
         <SectionOtherTaxes
           data={getSectionData(state, "other-taxes")}
           hasSelfEmployment={state.segmentation.incomeTypes.includes("self-employment")}
-          hasInvestments={state.segmentation.incomeTypes.some(type => ["investments", "retirement", "rental"].includes(type))}
+          hasInvestments={state.segmentation.incomeTypes.some(type => ["investments", "retirement", "rental", "royalties"].includes(type))}
           retirementEntries={getSectionData(state, "income-retirement")?.entries}
           investment={getSectionData(state, "income-investments")}
           guidedPreview={guidedPreview}
@@ -1234,7 +1238,7 @@ export function GuidedInterviewShell({
 
       <label className="guided-field">
         <span className="guided-field-label">Tax year for this interview</span>
-        <select className="guided-input" value={flowState.taxYear ?? ""} onChange={(event) => handleFlowStateChange({ ...flowState, taxYear: event.target.value ? Number(event.target.value) : null })}>
+        <select className="guided-input" value={flowState.taxYear ?? ""} onChange={(event) => { const taxYear = event.target.value ? Number(event.target.value) : null; const sources = flowState.sectionData["income-royalties"]; handleFlowStateChange({ ...flowState, taxYear, ...(taxYear !== flowState.taxYear && sources ? { sectionData: { ...flowState.sectionData, "income-royalties": invalidateRoyaltySources(sources) } } : {}) }); }}>
           <option value="">Confirm the tax year</option>
           <option value="2025">2025 — filed in 2026</option>
           <option value="2026">2026 — calculation not yet available</option>

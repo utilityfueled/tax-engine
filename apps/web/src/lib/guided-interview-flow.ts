@@ -1,3 +1,4 @@
+import { royaltySourceFactErrors, invalidateRoyaltySources, type RoyaltyIncomeData } from "./guided-royalty-sources";
 import { invalidateSharedPolicySources } from "./guided-shared-policy";
 import { invalidateMarriageSources } from "./guided-marriage-policy";
 import { foreignIncomeFactErrors, type ForeignIncomeData } from "./guided-foreign-income";
@@ -83,6 +84,7 @@ export type IncomeType =
   | "self-employment"
   | "investments"
   | "rental"
+  | "royalties"
   | "retirement"
   | "social-security"
   | "unemployment";
@@ -91,6 +93,7 @@ export const incomeTypeOptions: { value: IncomeType; label: string; hint: string
   { value: "w2-wages", label: "W-2 wages or salary", hint: "Most common — you received a W-2 from an employer" },
   { value: "self-employment", label: "Self-employment or freelance", hint: "1099-NEC, Schedule C business income" },
   { value: "investments", label: "Investment income", hint: "Stocks, bonds, crypto — 1099-B, 1099-DIV, 1099-INT" },
+  { value: "royalties", label: "Royalty income", hint: "Original 1099-MISC and actual nonbusiness property expenses" },
   { value: "rental", label: "Rental property income", hint: "Schedule E rental income and expenses" },
   { value: "retirement", label: "Retirement distributions", hint: "IRA, 401(k), pension — 1099-R" },
   { value: "social-security", label: "Social Security benefits", hint: "SSA-1099" },
@@ -283,6 +286,7 @@ export type InterviewSectionId =
   | "income-self-employment"
   | "income-investments"
   | "income-rental"
+  | "income-royalties"
   | "income-retirement"
   | "income-social-security"
   | "income-unemployment"
@@ -334,6 +338,7 @@ const allSections: InterviewSectionDefinition[] = [
     description: "Stocks, dividends, and interest",
     groupLabel: "Income",
   },
+  { id: "income-royalties", label: "Royalty Income", eyebrow: "INCOME", description: "Original royalty statements and property expenses", groupLabel: "Income" },
   {
     id: "income-rental",
     label: "Rental Income",
@@ -427,6 +432,7 @@ const incomeTypeToSection: Record<IncomeType, InterviewSectionId> = {
   "self-employment": "income-self-employment",
   "investments": "income-investments",
   "rental": "income-rental",
+  "royalties": "income-royalties",
   "retirement": "income-retirement",
   "social-security": "income-social-security",
   "unemployment": "income-unemployment",
@@ -477,7 +483,7 @@ export function buildSectionRoute(segmentation: SegmentationAnswers): InterviewS
   if (credits) sections.push(credits);
 
   // Actual retirement and investment sources may need the NIIT worksheet.
-  if (segmentation.lifeEvents.includes("k1-loss-sources") || segmentation.incomeTypes.some(type => ["self-employment", "investments", "rental", "retirement"].includes(type))) {
+  if (segmentation.lifeEvents.includes("k1-loss-sources") || segmentation.incomeTypes.some(type => ["self-employment", "investments", "rental", "royalties", "retirement"].includes(type))) {
     const otherTaxes = allSections.find((s) => s.id === "other-taxes");
     if (otherTaxes) sections.push(otherTaxes);
   }
@@ -1323,6 +1329,7 @@ export interface SectionDataMap {
   "income-investments"?: InvestmentData;
   "income-retirement"?: { entries: RetirementEntryData[]; basisSources?: GuidedIraBasisData };
   "income-rental"?: { entries: RentalPropertyEntryData[] };
+  "income-royalties"?: RoyaltyIncomeData;
   "income-social-security"?: SocialSecurityData;
   "income-unemployment"?: UnemploymentData;
   "deductions"?: DeductionData;
@@ -1559,44 +1566,46 @@ export function updateSectionData(
   const refundSourcesChanged = sourceValuesChanged && ["personal-info", "income-unemployment", "deductions"].includes(sectionId) && nextGovernment?.taxRefund;
   const nextRetirement = sectionId === "income-retirement" ? data as SectionDataMap["income-retirement"] : state.sectionData["income-retirement"];
   const iraBasisSourcesChanged = sourceValuesChanged && ["income-retirement", "personal-info", "adjustments"].includes(sectionId) && nextRetirement?.basisSources;
+  const nextRoyalties = sectionId === "income-royalties" ? data as RoyaltyIncomeData : state.sectionData["income-royalties"];
+  const royaltySourcesChanged = sourceValuesChanged && ["personal-info", "income-royalties"].includes(sectionId) && nextRoyalties;
   const nextRentals = sectionId === "income-rental" ? data as SectionDataMap["income-rental"] : state.sectionData["income-rental"];
   const rentalCarrySourcesChanged = sourceValuesChanged && sectionId !== "final-review" && nextRentals?.entries.some(entry => entry.priorLossSources);
   const nextPayments = sectionId === "payments" ? data as PaymentData : state.sectionData.payments;
-  const estimatedTaxSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "payments", "additional-deductions", "other-taxes"].includes(sectionId) && nextPayments?.estimatedTaxFacts;
+  const estimatedTaxSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "payments", "additional-deductions", "other-taxes"].includes(sectionId) && nextPayments?.estimatedTaxFacts;
   const nextInvestments = sectionId === "income-investments" ? data as InvestmentData : state.sectionData["income-investments"];
   const digitalAssetHouseholdChanged = sourceValuesChanged && sectionId === "personal-info" && nextInvestments?.digitalAssetEntries?.length;
   const qofSourcesChanged = sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment"].includes(sectionId) && nextInvestments?.qofDispositionFacts;
-  const capitalSourcesChanged = sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment", "income-rental", "adjustments"].includes(sectionId) && nextInvestments?.scheduleDSources;
-  const qsbsSourcesChanged = sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment", "income-rental", "adjustments"].includes(sectionId) && nextInvestments?.section1202Sources;
-  const childElectionSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "payments", "additional-deductions", "other-taxes"].includes(sectionId) && nextInvestments?.childElections?.length;
+  const capitalSourcesChanged = sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment", "income-rental", "income-royalties", "adjustments"].includes(sectionId) && nextInvestments?.scheduleDSources;
+  const qsbsSourcesChanged = sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment", "income-rental", "income-royalties", "adjustments"].includes(sectionId) && nextInvestments?.section1202Sources;
+  const childElectionSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "payments", "additional-deductions", "other-taxes"].includes(sectionId) && nextInvestments?.childElections?.length;
   const niitOtherTaxes = state.sectionData["other-taxes"];
   const nextOtherTaxes = sectionId === "other-taxes" ? data as OtherTaxesData : niitOtherTaxes;
   const foreignElectionChanged = sectionId === "other-taxes" && guidedSourceValuesChanged(niitOtherTaxes?.foreignTaxElection, nextOtherTaxes?.foreignTaxElection);
-  const niitSourcesChanged = (foreignElectionChanged || (sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "payments", "state-return", "additional-deductions"].includes(sectionId))) && nextOtherTaxes?.niitSources;
+  const niitSourcesChanged = (foreignElectionChanged || (sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "payments", "state-return", "additional-deductions"].includes(sectionId))) && nextOtherTaxes?.niitSources;
   const foreignTaxSourcesChanged = sourceValuesChanged && ["personal-info", "income-investments", "income-self-employment", "adjustments", "credits"].includes(sectionId) && nextOtherTaxes?.foreignTaxElection;
   const tipSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2"].includes(sectionId) && state.sectionData["additional-deductions"];
   const nextAdditional = sectionId === "additional-deductions" ? data as AdditionalDeductionsData : state.sectionData["additional-deductions"];
   const additionalSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-social-security", "adjustments", "credits", "deductions", "additional-deductions"].includes(sectionId) && nextAdditional?.schedule1A;
   const nextAdjustments = sectionId === "adjustments" ? data as AdjustmentData : adjustments;
   const k1LossSourcesChanged = sourceValuesChanged && sectionId !== "final-review" && nextAdjustments?.k1LossSources;
-  const codSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId) && nextAdjustments?.codNolSources;
-  const currentLossSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes", "state-return"].includes(sectionId) && nextAdjustments?.currentLossOrigin;
-  const nolSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId) && nextAdjustments?.netOperatingLossSources;
+  const codSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId) && nextAdjustments?.codNolSources;
+  const currentLossSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes", "state-return"].includes(sectionId) && nextAdjustments?.currentLossOrigin;
+  const nolSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId) && nextAdjustments?.netOperatingLossSources;
   const foreignIncomeSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "adjustments", "credits", "deductions"].includes(sectionId) && nextAdjustments?.foreignIncome;
-  const healthSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "credits", "adjustments"].includes(sectionId) && nextAdjustments?.healthInsuranceFacts;
+  const healthSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "credits", "adjustments"].includes(sectionId) && nextAdjustments?.healthInsuranceFacts;
   const mortgageSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && state.sectionData.deductions?.mortgageEntries?.length ? state.sectionData.deductions : undefined;
   const nextDeductions = sectionId === "deductions" ? data as DeductionData : state.sectionData.deductions;
   const k1CharitableSourcesChanged = sourceValuesChanged && ["personal-info", "adjustments", "deductions"].includes(sectionId) && nextDeductions?.k1CharitableSources;
-  const charitableCarryoverChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes", "state-return"].includes(sectionId) && nextDeductions?.charitableCarryoverSources;
-  const investmentInterestSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId) && nextDeductions?.investmentInterestSources;
+  const charitableCarryoverChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes", "state-return"].includes(sectionId) && nextDeductions?.charitableCarryoverSources;
+  const investmentInterestSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId) && nextDeductions?.investmentInterestSources;
   const educatorSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits", "income-investments"].includes(sectionId) && adjustments?.educatorExpenseSources;
   const studentLoanSourcesChanged = sourceValuesChanged && ["income-w2", "personal-info", "credits"].includes(sectionId) && adjustments?.studentLoanFacts;
   const benefitSourcesChanged = (sectionId === "income-w2" || sectionId === "income-self-employment") && credits?.dependentCareBenefits;
   const nextCredits = sectionId === "credits" ? data as CreditsData : credits;
-  const adoptionHistoryChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId)
+  const adoptionHistoryChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId)
     && nextCredits?.adoption?.children.some(child => child.priorYearForeignBenefitHistory) ? nextCredits?.adoption : undefined;
   const minimumTaxCreditSourcesChanged = sourceValuesChanged && ["personal-info", "credits"].includes(sectionId) && nextCredits?.minimumTaxCredit;
-  const premiumTaxCreditSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "additional-deductions"].includes(sectionId) && nextCredits?.premiumTaxCredit;
+  const premiumTaxCreditSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-royalties", "income-social-security", "income-unemployment", "adjustments", "credits", "additional-deductions"].includes(sectionId) && nextCredits?.premiumTaxCredit;
   const educationSourcesChanged = !!nextCredits?.educationDistributions && (
     ((sectionId === "personal-info" || sectionId === "adjustments") && guidedSourceValuesChanged(state.sectionData[sectionId], data)) ||
     (sectionId === "credits" && (guidedSourceValuesChanged(credits?.education, nextCredits.education) || guidedSourceValuesChanged(credits?.savingsBondEducation, nextCredits.savingsBondEducation)))
@@ -1612,6 +1621,7 @@ export function updateSectionData(
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
+      ...(royaltySourcesChanged ? { "income-royalties": invalidateRoyaltySources(royaltySourcesChanged) } : {}),
       ...((eicClaimantSourcesChanged || eicSeparatedSourcesChanged) && nextPersonal ? { "personal-info": { ...nextPersonal,
         ...(eicClaimantSourcesChanged ? { eicClaimantEligibility: { ...eicClaimantSourcesChanged, sourceFactsConfirmed: null } } : {}),
         ...(eicSeparatedSourcesChanged ? { eicSeparatedSpouseSources: { ...eicSeparatedSourcesChanged, sourceFactsConfirmed: null } } : {}),
@@ -1955,6 +1965,8 @@ export function validateSection(
       return validateSelfEmploymentSection(getSectionData(state, "income-self-employment"), state.segmentation.filingStatus, getSectionData(state, "income-w2")?.entries, getSectionData(state, "state-return"), state.taxYear);
     case "income-investments":
       return validateInvestmentSection(getSectionData(state, "income-investments"), state.segmentation.filingStatus, state.taxYear, getSectionData(state, "state-return"), state.segmentation.stateCode, getSectionData(state, "personal-info"));
+    case "income-royalties":
+      return validateRequiredFacts(royaltySourceFactErrors(state));
     case "income-rental":
       return validateRentalSection(getSectionData(state, "income-rental"), state.segmentation.filingStatus, state.taxYear, state.segmentation.stateCode, state.sectionData["personal-info"]);
     case "income-retirement":

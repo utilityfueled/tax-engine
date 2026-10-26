@@ -18,7 +18,7 @@ import {
   type GenericStateReturnResult,
 } from "@/engine/state/generic-resident-return";
 import { STATE_CONSTANTS } from "@/models/state-constants";
-import { TaxYearInputSchema } from "@/models/inputs";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs";
 import type { TaxReturnResult } from "@/models/outputs";
 import type { FilingStatus as EngineFilingStatus } from "@/models/constants";
 import type {
@@ -74,7 +74,7 @@ export function extractMetricsFromResult(
 
 // ── State withholding / estimated payments ──────────────────────────────────
 
-function collectStateWithholding(state: GuidedFlowState): Decimal {
+function collectStateWithholding(state: GuidedFlowState, input: TaxYearInput): Decimal {
   const w2Data = state.sectionData["income-w2"] as { entries: W2EntryData[] } | undefined;
   const stateReturnData = state.sectionData["state-return"] as StateReturnData | undefined;
 
@@ -96,6 +96,9 @@ function collectStateWithholding(state: GuidedFlowState): Decimal {
     if (entry.stateTaxReporting === "single" && entry.state?.trim().toUpperCase() === state.segmentation.stateCode?.trim().toUpperCase()) total = total.plus(parseGuidedCurrency(entry.stateWithheld));
   }
 
+  for (const source of input.form1099Misc) {
+    if (source.state?.trim().toUpperCase() === state.segmentation.stateCode?.trim().toUpperCase()) total = total.plus(new Decimal(source.stateWithheld));
+  }
   total = total.plus(sumAdditionalStateWithholding(stateReturnData));
 
   return total;
@@ -164,7 +167,7 @@ export function computeGuidedPreview(state: GuidedFlowState | null | undefined):
       if (!state.segmentation.filingStatus) return null;
       const filingStatus = mapFilingStatus(state.segmentation.filingStatus) as EngineFilingStatus;
       const hasSpouse = filingStatus === "married_filing_jointly" || filingStatus === "married_filing_separately";
-      const stateWithholding = collectStateWithholding(state);
+      const stateWithholding = collectStateWithholding(state, taxInput);
       const stateEstimatedPayments = collectStateEstimatedPayments(state);
 
       try {

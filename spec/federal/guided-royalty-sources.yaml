@@ -1,0 +1,50 @@
+form: "Schedule E"
+fullName: "Guided actual direct royalty statements and property expenses"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040se"
+retrievedAt: "2026-10-26"
+notes: |
+  Final Schedule E Part I line4 and lines5-21 preserve actual gross royalties,
+  property classification and current expenses separately. MISC Box2 is gross,
+  before commissions and expenses; the applicable original form revision and
+  other boxes must remain actual source facts. This collector calls the shared
+  source calculator without fabricated AGI, income, expense or allowance values.
+  A draft omission is unknown, including an absent expense list. Explicit zero,
+  false and a confirmed empty list remain distinct. The recovery-only MISC
+  specialization is preserved; its originals precede direct royalty originals
+  so existing recovery links stay stable. Full-year2026/public filing gates are
+  unchanged. Derived literal controls are not published IRS examples or human
+  qualification. PA expense treatment remains bound to its independent method.
+lines:
+  - line: "original-property-handoff"
+    description: "Retain actual originals and compute direct property income once"
+    formula: "Original12000.25 minus legal49.25 and management950.50 =11000.50. Wages200000 yields211000.50AGI and418NIIT. Original withholding remains100.10."
+    testRef: "tests/guided-interview/guided-royalty-sources.test.ts::preserves actual direct royalty originals and property expense handoff"
+  - line: "unknown-zero"
+    description: "Reject absent source facts without fabricating zero or nonbusiness classification"
+    formula: "Selected route with no packet, original blank, unknown owner/year/classification/expenses or unconfirmed sources blocks. Explicit zero and a complete empty expense ledger are usable source facts."
+    testRef: "tests/guided-interview/guided-royalty-sources.test.ts::keeps missing royalty facts distinct from actual zero and false"
+  - line: "source-merge"
+    description: "Preserve recovery links and conserve actual statement allocations"
+    formula: "Existing recovery originals retain indexes. Each direct original appends once, identity collisions reject, and actual sourceId resolves the property link without an inferred duplicate statement."
+    testRef: "tests/guided-interview/guided-royalty-sources.test.ts::merges original royalty and recovery statements once with exact property links"
+  - line: "invalidation"
+    description: "Revoke confirmations after actual source edits and preserve the saved original snapshot"
+    formula: "Statement, property, expense, household or year edits preserve entered values and invalidate dependent confirmations. Reconfirming stale copied originals cannot repair a source mismatch."
+    testRef: "tests/guided-interview/guided-royalty-sources.test.ts::invalidates royalty confirmations without replacing actual saved source facts"
+  - line: "state-withholding"
+    description: "Use combined canonical MISC withholding exactly once"
+    formula: "Selected-state direct0.40 plus recovery0.10 gives0.50; other-state0.30 is excluded. Dedicated state handling remains independent."
+    testRef: "tests/guided-interview/guided-royalty-sources.test.ts::includes combined actual MISC state withholding once"
+  - line: "source-controls"
+    description: "Expose original and property controls without invented values"
+    formula: "The actual royalties income route renders statement, property, allocation and receipt controls. New rows contain no affirmative facts or zero amounts; explicit source-copy and known-empty actions remain visible."
+    testRef: "tests/apps/web/royalty-source-interactions.test.tsx::collects original royalty properties and preserves unknown answers"
+  - line: "route-and-year"
+    description: "Reach the actual source collector from the selected income route"
+    formula: "The selected royalty route with no packet blocks calculation but exposes the collector. Changing the interview year revokes the saved royalty confirmations without replacing original source years."
+    testRef: "tests/apps/web/royalty-source-interactions.test.tsx::reaches royalty records from the actual interview and revokes changed year confirmations"
+  - line: "persistence"
+    description: "Save and reload source records locally at desktop and mobile widths"
+    formula: "Actual cents, source links, unknown and false values survive reload; edits block stale calculation until reviewed. Source identities and receipts stay out of request bodies."
+    testRef: "apps/web/tests/royalty-sources.spec.ts::retains actual royalty statements and property records through local reload"
