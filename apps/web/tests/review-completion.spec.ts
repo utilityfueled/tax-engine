@@ -353,7 +353,7 @@ test.describe("Filing status — Head of Household", () => {
     await expect(page.getByText(/let's start with the basics/i)).toBeVisible();
 
     // Filing status should show as HoH
-    await expect(page.getByText(/head of household/i)).toBeVisible();
+    await expect(page.getByText("Head of Household", { exact: true })).toBeVisible();
   });
 });
 
