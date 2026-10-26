@@ -4,7 +4,7 @@
  */
 
 import { join } from "path";
-import { assertPreparedEducationReturn, hasInKindRoomBoardSources, prepareEducationReview, type PreparedEducationReview } from "./education-review-context.js";
+import { assertPreparedEducationReturn, hasInKindEducationReviewSources, prepareEducationReview, type PreparedEducationReview } from "./education-review-context.js";
 import type { PDFDocument } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
@@ -420,7 +420,7 @@ export async function fillReturn(
     ? options.premiumTaxCreditReview ?? preparePremiumTaxCreditReview(input) : undefined;
   const premiumTaxCreditContext = premiumTaxCreditReview ? { input, prepared: premiumTaxCreditReview } : undefined;
   if (premiumTaxCreditContext) buildForm8962ReferenceSummary(input.form1095A, result, premiumTaxCreditContext);
-  const educationReview = hasInKindRoomBoardSources(input) || options.educationReview
+  const educationReview = hasInKindEducationReviewSources(input) || options.educationReview
     ? options.educationReview ?? prepareEducationReview(input) : undefined;
   if (educationReview) {
     if (!result.form1099Q || !input.form1099Q?.length) throw new Error("Education review requires the original distribution calculation");

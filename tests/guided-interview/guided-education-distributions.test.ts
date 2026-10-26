@@ -147,3 +147,23 @@ it("preserves actual school facts for a limited in-kind benefit", () => {
   expense.schoolOwnedHousingCharge = "0"; expense.halfTimeStudent = null;
   expect(() => buildEducationDistributionInputs(data, 2025, "single")).toThrow(/actual|half-time/);
 });
+
+// Spec: spec/federal/form-1099-q-in-kind-assistance.yaml.
+it("preserves actual assistance against a single prepaid tuition source", () => {
+  const data = actualEducationDistribution(), statement = data.forms?.[0], expense = data.expenses?.[0], allocation = data.allocations?.[0];
+  if (!statement || !expense || !allocation) throw new Error("Missing source");
+  statement.fields.distributionMedium = "in_kind_prepaid_tuition"; statement.fields.recipientNotBeneficiary = false;
+  expense.taxFreeAssistance = "1000"; allocation.amount = "3000";
+  data.inKindBenefits = [{ id: "actual-benefit", sourceId: "q1", expenseId: "e1", amount: "4000",
+    providedDate: "2025-08-15", qualificationConfirmed: true, sourceReference: "Actual prepaid tuition benefit" }];
+  const before = JSON.stringify(data), input = buildEducationDistributionInputs(data, 2025, "single");
+  expect(input.form1099Q?.[0]?.grossDistribution).toBe("4000");
+  expect(input.qualifiedEducationExpenses?.sourceFacts?.expenses?.[0]?.taxFreeAssistance).toBe("1000");
+  expect(input.qualifiedEducationExpenses?.sourceFacts?.allocations?.[0]?.amount).toBe("3000");
+  expect(input.qualifiedEducationExpenses?.sourceFacts?.inKindBenefits?.[0]?.amount).toBe("4000");
+  expect(JSON.stringify(data)).toBe(before);
+  expense.taxFreeAssistance = "";
+  expect(() => buildEducationDistributionInputs(data, 2025, "single")).toThrow(/actual|assistance/);
+  expense.taxFreeAssistance = "1000"; data.sourceFactsConfirmed = false;
+  expect(() => buildEducationDistributionInputs(data, 2025, "single")).toThrow(/confirm|source/);
+});

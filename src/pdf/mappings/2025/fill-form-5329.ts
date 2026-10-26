@@ -1,4 +1,4 @@
-import { assertPreparedEducationReturn, hasInKindRoomBoardSources, prepareEducationReview, type PreparedEducationReview } from "../../education-review-context.js";
+import { assertPreparedEducationReturn, hasInKindEducationReviewSources, prepareEducationReview, type PreparedEducationReview } from "../../education-review-context.js";
 import { assertPdfExportAllowed } from "../../export-policy.js";
 /**
  * PDF filler for IRS Form 5329 — Additional Taxes on Qualified Plans
@@ -164,7 +164,7 @@ export async function fillForm5329(
   if (owner && input.taxpayer.filingStatus === "married_filing_jointly" && unassignedLegacyPart) throw new Error("Form5329 joint review cannot assign unassigned legacy parts without actual ownership");
   if (education?.length && result.form5329 && (result.form5329.line5.gt(0) || result.form5329.line6.gt(0))) throw new Error("Form5329 education source conflicts with unassigned legacy PartII amounts");
   const educationLines: Array<{ line: "5" | "6" | "7" | "8"; value: Decimal }> = [];
-  const preparedEducation = hasInKindRoomBoardSources(input) || educationReview
+  const preparedEducation = hasInKindEducationReviewSources(input) || educationReview
     ? educationReview ?? prepareEducationReview(input) : undefined;
   if (preparedEducation) {
     if (!sourceEducation) throw new Error("Education review requires the original distribution calculation");

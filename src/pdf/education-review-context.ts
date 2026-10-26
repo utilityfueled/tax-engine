@@ -1,5 +1,5 @@
 /** Private original education evidence survives render-only identity removal.
- * Spec: form-1099-q-in-kind-room-board.yaml. */
+ * Specs: form-1099-q-in-kind-room-board.yaml; form-1099-q-in-kind-assistance.yaml. */
 import { createHash } from 'node:crypto';
 import { calculateFederalTax } from '@/engine/federal.js';
 import type { Form1099Q, QualifiedEducationExpenseSummary, TaxYearInput } from '@/models/inputs.js';
@@ -10,13 +10,12 @@ const brand = Symbol('prepared actual education review');
 export interface PreparedEducationReview { readonly [brand]: true }
 const contexts = new WeakMap<PreparedEducationReview, { original: string; redacted: string; calculation: string; taxpayer: string; redactedTaxpayer: string }>();
 const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
-export function hasInKindRoomBoardSources(input: TaxYearInput): boolean {
-  return (input.form1099Q ?? []).some(form => form.distributionMedium === 'in_kind_prepaid_tuition'
-    && input.qualifiedEducationExpenses?.sourceFacts?.expenses?.some(expense => expense.beneficiaryId === form.beneficiaryId && expense.category === 'postsecondary_room_board'));
+export function hasInKindEducationReviewSources(input: TaxYearInput): boolean {
+  return (input.form1099Q ?? []).some(form => form.distributionMedium === 'in_kind_prepaid_tuition');
 }
 /** Recompute from original facts; caller-supplied flags/results cannot certify themselves. */
 export function prepareEducationReview(input: TaxYearInput): PreparedEducationReview {
-  if (!hasInKindRoomBoardSources(input)) throw new Error('Education review requires actual in-kind room-and-board sources');
+  if (!hasInKindEducationReviewSources(input)) throw new Error('Education review requires actual in-kind education sources');
   const result = calculateFederalTax(input).form1099Q;
   if (!result?.sourceFactsVerified) throw new Error('Education review requires the original source calculation');
   const sources = { forms: input.form1099Q, summary: input.qualifiedEducationExpenses };

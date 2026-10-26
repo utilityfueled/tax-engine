@@ -1,0 +1,47 @@
+form: "Form1099Q in-kind tuition assistance"
+fullName: "Actual tax-free assistance applied to a single prepaid tuition benefit"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+sources:
+  - "https://uscode.house.gov/us/usc/119-118/t26/s25A/"
+  - "https://www.irs.gov/publications/p970"
+notes: |
+  Sources refreshed October25,2026. IRC529(c)(3)(B)(v)(I) applies25A(g)(2)
+  assistance reductions; Pub970 chapter7 gives the AQEE earnings fraction and
+  separately sourced additional-tax exceptions. This bounded derived in-kind
+  interpretation is not a published IRS numerical example or human qualification.
+  Require one actual distribution, tuition expense and allocation per actual
+  student, original provided benefit equal to the expense, and known zero
+  refunds, credit and other-benefit reductions. The original provided cost is
+  conserved as QTP allocation plus actual tax-free assistance. Do not allocate
+  assistance across larger expenses, multiple sources or ESA elections, infer
+  an exception, or replace any original source amount with a calculated amount.
+lines:
+  - line: "actual-assistance"
+    description: "Reduce prepaid tuition by its actual tax-free assistance"
+    formula: "Original benefit4000, earnings800, basis3200, tuition4000 and assistance1000 leave actual QTPallocation3000; excluded earnings600, taxable200, additional tax20. Known assistance0 retains full800exclusion; unknown assistance rejects. Assistance1002.50/1002.51 yields600/599excluded earnings."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-assistance.test.ts::preserves original tuition and exact assistance reductions"
+  - line: "separate-exception"
+    description: "Require actual exception evidence independently of the assistance reduction"
+    formula: "The1000assistance does not itself create an exception. An actual eligible1000scholarship distribution linked to this source exempts the200taxable earnings from additional tax; known false eligibility retains20additional tax, while missing eligibility rejects. Unknown or inconsistent expense allocations reject."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-assistance.test.ts::uses only separately supplied additional-tax exception evidence"
+  - line: "original-source-boundary"
+    description: "Reject invented allocation and duplicate actual-student aliases"
+    formula: "Benefit/tuition mismatch, multiple distributions/expenses for one student, positive credit/refund/other benefit, unknown assistance, and two opaque beneficiary IDs for one actual student reject. Distinct actual students retain separate source groups and outside-recipient tax. Actual original amounts and identities remain unchanged."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-assistance.test.ts::rejects unbound or mixed assistance source groups"
+  - line: "canonical-recipient"
+    description: "Route final earnings to the actual recipient without inferring an owner"
+    formula: "Actual primary wages50000 plus200taxable earnings gives50200AGI and20additional tax in2025 and isolated2026 law tests; false outside-owner labels reject. An actual separately qualified exception changes only the additional tax. General2026 and filing gates remain closed."
+    testRef: "tests/engine/education-in-kind-assistance-return.test.ts::carries assistance-reduced earnings to the actual return recipient"
+  - line: "source-bound-review"
+    description: "Preserve assistance and private recipient evidence through review downloads"
+    formula: "Saved review output preserves benefit4000, assistance1000, QTPallocation3000, excluded600, taxable200 and additionaltax20. Balanced changes to original benefit and assistance that preserve calculated earnings still reject. Private context binds original or exact redacted sources and taxpayer before PDF I/O."
+    testRef: "tests/pdf/form-1099-q-in-kind-assistance.test.ts::binds original assistance before producing a redacted review"
+  - line: "guided-assistance"
+    description: "Preserve actual assistance through the existing guided source collector"
+    formula: "The collector keeps provided4000, assistance1000 and QTPallocation3000 separately; missing assistance or changed confirmation blocks the bridge. No current allowable earnings amount is accepted as a fact."
+    testRef: "tests/guided-interview/guided-education-distributions.test.ts::preserves actual assistance against a single prepaid tuition source"
+  - line: "workspace-review"
+    description: "Prepare original assistance and recipient evidence before the actual workspace download"
+    formula: "The guided workspace preserves4000provided,1000assistance,3000allocation and primary Form5329 income200/additionaltax20, while removing the actual identifier from every saved page."
+    testRef: "tests/apps/web/workspace-filled-return.test.ts::preserves actual tuition assistance in the redacted workspace packet"

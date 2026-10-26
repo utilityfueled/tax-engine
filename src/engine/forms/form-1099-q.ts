@@ -687,9 +687,37 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   for (const key of inKindPairs) {
     const benefits = inKindBenefits.filter(item => `${item.form.sourceId}\u0000${item.expense.id}` === key);
     const allocation = allocations.find(item => `${item.form.sourceId}\u0000${item.expense.id}` === key);
-    if (!benefits.length || !allocation || !allocation.amount.plus(allocation.credit).eq(sum(...benefits.map(item => item.amount)))) throw new Error("Form1099Q in-kind allocation and actual credit expense must conserve its benefit cost; unexplained partial allocation is unsupported");
+    if (!benefits.length || !allocation) throw new Error("Form1099Q actual in-kind benefit and allocation sources must be linked");
+    const provided = sum(...benefits.map(item => item.amount));
+    const expense = allocation.expense;
+    const assistance = actualAmount(expense.taxFreeAssistance, "in-kind expense assistance");
+    if (assistance.gt(0)) {
+      // Spec: form-1099-q-in-kind-assistance.yaml. The assistance belongs to
+      // one complete actual tuition benefit; no shared-source split is inferred.
+      assertDistinctEducationBeneficiaries(verifiedForms, facts);
+      if (expense.category !== "postsecondary_tuition" || expense.qualificationConfirmed !== true || benefits.length !== 1
+        || !actualAmount(expense.amount, "in-kind tuition expense").eq(provided)
+        || verifiedForms.filter(form => form.beneficiaryId === allocation.form.beneficiaryId).length !== 1
+        || [...expenses.values()].filter(source => source.beneficiaryId === expense.beneficiaryId).length !== 1
+        || allocations.filter(source => source.form.beneficiaryId === expense.beneficiaryId).length !== 1
+        || !allocation.credit.isZero()
+        || [expense.refundedAmount, expense.educationCreditAmount, expense.otherTaxBenefitAmount]
+          .some(value => !actualAmount(value, "in-kind assistance other reduction").isZero())) {
+        throw new Error("Form1099Q in-kind assistance requires one actual tuition benefit and expense with known zero other reductions");
+      }
+      audit.record("Form1099-Q", `${allocation.form.sourceId}:in-kind-assistance:${expense.id}`, "Actual tax-free assistance against the in-kind tuition benefit", assistance,
+        "IRC529(c)(3)(B)(v)(I) and25A(g)(2); actual source reduction, not an additional-tax exception", {
+          "Actual expense": actualAmount(expense.amount, "in-kind tuition expense"), "Provided benefit": provided,
+          "Refund": actualAmount(expense.refundedAmount, "refund"), "Tax-free assistance": assistance,
+          "Education credit expense": actualAmount(expense.educationCreditAmount, "credit expense"),
+          "Other tax benefit": actualAmount(expense.otherTaxBenefitAmount, "other benefit"), "Original allocation": allocation.amount,
+        });
+    }
+    if (!allocation.amount.plus(allocation.credit).plus(assistance).eq(provided)) throw new Error("Form1099Q in-kind allocation, actual credit expense and supported assistance must conserve its benefit cost; unexplained partial allocation is unsupported");
     if (allocation.credit.gt(0) && (allocation.expense.category !== "postsecondary_tuition" || allocation.expense.qualificationConfirmed !== true)) throw new Error("Form1099Q in-kind credit allocation requires actual qualifying postsecondary tuition");
-    audit.record("Form1099-Q", `${allocation.form.sourceId}:in-kind-allocation:${allocation.expense.id}`, "Actual in-kind QTP expense allocation", allocation.amount, "Actual provided benefit cost less the explicitly allocated education-credit expense", { "Education credit expense": allocation.credit });
+    audit.record("Form1099-Q", `${allocation.form.sourceId}:in-kind-allocation:${allocation.expense.id}`, "Actual in-kind QTP expense allocation", allocation.amount,
+      assistance.gt(0) ? "Actual provided benefit cost less its actual tax-free assistance" : "Actual provided benefit cost less the explicitly allocated education-credit expense",
+      { "Education credit expense": allocation.credit });
   }
   for (const expense of expenses.values()) {
     if (!beneficiaries.has(expense.beneficiaryId)) throw new Error("Form1099Q expense beneficiary source is missing");

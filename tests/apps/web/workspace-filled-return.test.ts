@@ -595,6 +595,36 @@ describe("workspace filled return download", () => {
     });
   });
 
+  // Spec: spec/federal/form-1099-q-in-kind-assistance.yaml.
+  it("preserves actual tuition assistance in the redacted workspace packet", async () => {
+    const state = createGuidedFlowState(), credits = state.sectionData.credits;
+    if (!credits) throw new Error("Missing credits fixture");
+    credits.educationDistributions = {
+      taxYear: "2025", sourceFactsConfirmed: true, allDistributionsReconciled: true,
+      forms: [{ fields: { sourceId: "prepaid", accountId: "prepaid-account", beneficiaryId: "student", recipientOwner: "primary", taxYear: "2025",
+        accountType: "529", distributionMedium: "in_kind_prepaid_tuition", grossDistribution: "4000", earnings: "800", basis: "3200",
+        isTrusteeToTrustee: false, isQtpToRoth: false, recipientNotBeneficiary: false, sourceFactsConfirmed: true }, transfer: { kind: "none" } }],
+      beneficiaries: [{ id: "student", studentTaxId: "111-22-3333", outsideK12QualifiedDistributions: "0" }],
+      expenses: [{ id: "tuition", beneficiaryId: "student", category: "postsecondary_tuition", paidDate: "2025-08-15", amount: "4000",
+        refundedAmount: "0", taxFreeAssistance: "1000", educationCreditAmount: "0", otherTaxBenefitAmount: "0", qualificationConfirmed: true }],
+      allocations: [{ sourceId: "prepaid", expenseId: "tuition", amount: "3000", creditAmount: "0" }],
+      inKindBenefits: [{ id: "benefit", sourceId: "prepaid", expenseId: "tuition", amount: "4000", providedDate: "2025-08-15",
+        qualificationConfirmed: true, sourceReference: "Actual synthetic provided benefit" }],
+      loanBorrowers: [], coverdellAccounts: [], penaltyExceptions: [],
+    };
+    const before = JSON.stringify(state), download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    expect(download.includedForms).toContain("f1099q-reference-filled.pdf");
+    expect(download.includedForms).toContain("f5329-primary-filled.pdf");
+    const text = await extractPdfText(download.contents);
+    expect(text).toContain("Tax-free assistance: $1000");
+    expect(text).toContain("Actual in-kind QTP expense allocation: $3000");
+    expect(text).toContain("Primary taxpayer, Form 5329 line 5: Education distributions included in recipient income: $200");
+    expect(text).toContain("Primary taxpayer, Form 5329 line 8: Additional tax on education distributions: $20");
+    expect(text.replace(/\s|-/g, "")).not.toContain("111223333");
+    expect(text).not.toContain("prepaid-account");
+    expect(JSON.stringify(state)).toBe(before);
+  });
+
   it("does not auto-attach Form 2210 even when the engine computes an estimated tax penalty and keeps business-rule validation disclosed as not-validated", async () => {
     const guidedFlowState = createGuidedFlowStateWithUnderpayment();
     const taxInput = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(guidedFlowState));
