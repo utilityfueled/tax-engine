@@ -12,7 +12,7 @@ export function SharedMarketplaceHealthDetails({ prefix, data, people, onChange 
   const label = `${prefix} shared health`;
   const update = (patch: Partial<SharedMarketplaceHealthData>) => onChange({ ...data, ...patch });
   return <fieldset><legend>{label}: Original people and payment records</legend>
-    <p className="guided-hint">For a policy shared with another tax family, keep the full original premiums, advances and payment records. Link every covered person to the original Form 1095-A. The actual payment records must separately establish each person's paid share and advances.</p>
+    <p className="guided-hint">Keep each plan's full original premiums, advances and payment records. If this return includes a shared policy, link every covered person for each plan, including a separate plan covering only your family, to its original Form 1095-A. The actual payment records must separately establish each person's paid share and advances.</p>
     <div className="guided-form-grid">
       <TextFact label={`${label}: Source tax year`} value={data.sourceTaxYear} onChange={sourceTaxYear => update({ sourceTaxYear })} />
       <TextFact label={`${label}: Source reference`} value={data.sourceReference} onChange={sourceReference => update({ sourceReference })} />

@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.138",
+    ruleVersion: "2025.139",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p974", section: "Separate actual owners and businesses with complete shared and household-only Marketplace policies, independent person payments and source-conserved specified premiums", revision: "Final2025 Specified Premiums, W/X and monthly credit attribution; original plan identities, same-owner income limits, QBI, guide and private PDF review retained; partial coverage-family, unequal paid/allocation, marriage and binding joint repayment methods remain separate; full2026 and human qualification gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.170A-10", section: "Actual single prior charitable category, medium and original vintage with independent regular and AMT NOL histories", revision: "2025 no-current-gift method: original normal use, succeeding NOL reduction and expiry conserved; independent current AMT charity and original private review/guide sources retained; 2026 prior-floor, mixed attribution and human qualification remain separate, full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol4/pdf/CFR-2025-title26-vol4-sec1-199A-1.pdf", section: "Reg1.199A-1(e)(5): actual regular QBI deduction retained in current AMTI despite an independent prior charitable amount", revision: "Official2025 CFR; modified NOL carry contexts separately remove199A, actual regular AGI and deduction choice retained", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/irb/2016-07_IRB#NOT-2016-13", section: "Distinct original prepaid QTP statements with actual expense and credit allocations coordinated with one ordinary Coverdell ESA", revision: "IRC529(c)(3)(B)(v)/(vi), Notice2016-13 section2 and final Pub970; separate earnings ratios and each original benefit preserved through actual guide, source-bound PDFs and independent agent controls; broader source groups and qualified human review remain separate; no filing/year promotion", retrievedAt: "2026-10-26" },
@@ -178,11 +179,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.135-law-integration-draft",
+    ruleVersion: "2026.136-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p974", section: "Separate actual owners and businesses with complete shared and household-only Marketplace policies, independent person payments and source-conserved specified premiums", revision: "Final2025 Specified Premiums, W/X and monthly credit attribution; original plan identities, same-owner income limits, QBI, guide and private PDF review retained; partial coverage-family, unequal paid/allocation, marriage and binding joint repayment methods remain separate; full2026 and human qualification gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.170A-10", section: "Actual single prior charitable category, medium and original vintage with independent regular and AMT NOL histories", revision: "2025 no-current-gift method: original normal use, succeeding NOL reduction and expiry conserved; independent current AMT charity and original private review/guide sources retained; 2026 prior-floor, mixed attribution and human qualification remain separate, full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol4/pdf/CFR-2025-title26-vol4-sec1-199A-1.pdf", section: "Reg1.199A-1(e)(5): actual regular QBI deduction retained in current AMTI despite an independent prior charitable amount", revision: "Official2025 CFR; modified NOL carry contexts separately remove199A, actual regular AGI and deduction choice retained", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/irb/2016-07_IRB#NOT-2016-13", section: "Distinct original prepaid QTP statements with actual expense and credit allocations coordinated with one ordinary Coverdell ESA", revision: "IRC529(c)(3)(B)(v)/(vi), Notice2016-13 section2 and final Pub970; separate earnings ratios and each original benefit preserved through actual guide, source-bound PDFs and independent agent controls; broader source groups and qualified human review remain separate; no filing/year promotion", retrievedAt: "2026-10-26" },

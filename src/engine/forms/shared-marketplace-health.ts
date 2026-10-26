@@ -1,5 +1,6 @@
 /** Pub974 policy allocation precedes actual coverage-family/payment attribution.
- * Spec: spec/federal/shared-marketplace-health.yaml. No source values are replaced. */
+ * Specs: spec/federal/shared-marketplace-health.yaml and
+ * spec/federal/shared-owner-marketplace-health.yaml. No source values are replaced. */
 import type Decimal from 'decimal.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import { calculateForm8962SharedPolicy, type Form8962AllocationInput } from './form-8962-shared-policy.js';
@@ -34,7 +35,6 @@ export function calculateSharedMarketplaceHealthSources(input: SharedMarketplace
     return undefined;
   }
   if (!plans.length || input.form8962.selfEmployedHealthInsuranceCoordinationRequired !== true || input.form8962.coverageFactsConfirmed !== true) throw new Error('Shared Marketplace health requires actual completed coverage and payment sources.');
-  if (new Set(plans.map(plan => `${plan.accountHolder}:${plan.businessSourceId}`)).size !== 1) throw new Error('Shared Marketplace health with separate owners or businesses requires its separate actual source method.');
   const allocated = calculateForm8962SharedPolicy(input);
   const result = new Map<string, SharedMarketplaceHealthPlan>(), usedPolicies = new Set<string>();
   const primary = ssn(input.taxpayer.primary.ssn), spouse = input.taxpayer.spouse ? ssn(input.taxpayer.spouse.ssn) : undefined;
@@ -45,7 +45,6 @@ export function calculateSharedMarketplaceHealthSources(input: SharedMarketplace
     if (!evidence || evidence.sourceTaxYear !== input.taxpayer.taxYear || evidence.sourceFactsConfirmed !== true
       || evidence.allCoveredPersonsLinkedConfirmed !== true || evidence.allThisReturnPersonsInCoverageFamilyConfirmed !== true) throw new Error('Shared Marketplace health requires confirmed actual source year and complete covered-person links.');
     text(evidence.sourceReference, 'policy/payment link reference');
-    if (plan.allCoveredPersonsInCoverageFamilyConfirmed !== false) throw new Error('Shared Marketplace health full policy includes another family; reconcile the actual complete coverage-family answer.');
     if (!plan.marketplacePolicySourceIds?.length || !plan.coveredPersons?.length || !evidence.persons?.length) throw new Error('Shared Marketplace health requires complete actual policy and person links.');
     const originals = new Map<string, { name: string; own: boolean; months: Set<number> }>();
     const months = new Map<number, { premium: Decimal; advance: Decimal }>();
@@ -76,7 +75,11 @@ export function calculateSharedMarketplaceHealthSources(input: SharedMarketplace
         full.premium = full.premium.plus(source.originalPremium); full.advance = full.advance.plus(source.originalAdvance); fullMonths.set(source.month, full);
       }
     }
-    if (![...originals.values()].some(person => !person.own)) throw new Error('Shared Marketplace health outside-family answer conflicts with the actual linked policy people.');
+    // A separate plan can cover only this return's family while another plan
+    // is shared. Its complete original/person/payment evidence is still required;
+    // the family checkbox cannot substitute for those independent sources.
+    const includesOutsideFamily = [...originals.values()].some(person => !person.own);
+    if (plan.allCoveredPersonsInCoverageFamilyConfirmed !== !includesOutsideFamily) throw new Error('Shared Marketplace health coverage-family answer conflicts with the actual linked policy people.');
     const linked = new Map<string, { own: boolean; months: Set<number> }>(), identities = new Set<string>();
     if (evidence.persons.length !== originals.size || plan.coveredPersons.length !== originals.size) throw new Error('Shared Marketplace health source links must include every original covered person once.');
     for (const link of evidence.persons) {

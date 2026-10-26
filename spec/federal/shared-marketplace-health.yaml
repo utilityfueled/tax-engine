@@ -11,15 +11,16 @@ notes: |
   an agreement does not establish which person paid a premium.
   This derived source method supports actual Situation4 agreement/default or
   Situation3 benchmark sources (see shared-marketplace-health-other-allocations)
-  and one
-  owner/business for the linked shared health plans. Actual validated unshared
+  for the linked shared health plans. Separate actual owners and businesses
+  use the complete independent attachments and existing owner limits described
+  in shared-owner-marketplace-health. Actual validated unshared
   originals can be linked beside them (shared-unshared-marketplace-health);
   their full amounts and household membership come from original source checks. Complete full receipts
   remain unchanged. Their actual person paid/APTC allocations are independently
   linked to original covered identities and family assignments. All this-return
   persons must be in its actual coverage family. Outside-family eligible
   children, owner-paid outside-person amounts, partial coverage-family methods,
-  other allocation situations and multiple-owner shared health remain separate
+  other allocation situations and binding joint capped-repayment ownership remain separate
   implementation methods. No current allowance or repayment-owner override.
   Pure policy allocation may precede health validation, but cannot itself
   enable a credit or health deduction. Final2026 filing remains closed.
