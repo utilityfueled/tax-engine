@@ -98,3 +98,24 @@ charity endpoint and ordinary two-owner health remain active implementation.
 All later full checks, final image/recovery evidence and external qualification
 requirements remain open; the older audit findings above are historical where a
 specific delivered follow-through supersedes them.
+
+
+## Source and implementation follow-through at01c98e3
+
+The crypto handoff is delivered in `d1d1ff0`, including crypto-only C/D/B-noncash
+selection under explicit nonitemization. Nonbinding two-owner health is
+`01c98e3`; binding owner earned-income limits and joint2025 capped-repayment
+attribution remain internal method work. Official source refresh `5a9cf6b`
+retains55 hashes and distinguishes the prospective Schedule3-A proposal from
+current law. It does not enable forms or model routes.
+
+A fresh current-law EIC check reproduced ignored explicit invalid/late work
+SSNs, ignored known nonresident status, and a childless joint return rejected
+when only the spouse meets the age requirement. `complete_facts` owns the
+spec-first correction and actual guided eligibility sources. The charity agent
+reproduced prior-B capacity incorrectly reserving the allowed public-capital
+amount instead of the current contribution; that prerequisite correction is
+separate from the broader2026nonitemized ledger. Parent owns K1 history DOM
+coverage after full9bcf47b coverage failed89.96% functions despite86.97% branches.
+These are active software tasks, not external-review excuses. All final current
+checks, image scans and recovery still follow the finite implementation work.

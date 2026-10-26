@@ -756,3 +756,16 @@ from an extra filename filter; the ledgers explain the difference. Inventory and
 all4,979 literal references are refreshed. A new full immutable integration run
 follows; prior/floor/NOL charity, actual crypto handoff and two-owner health remain
 active. Public source refresh has not created human, provider or staging evidence.
+
+
+Pushed through `01c98e3`: official source refresh (`5a9cf6b`), corrected verified
+crypto carry handoff (`d1d1ff0`) and actual nonbinding two-owner health attribution
+(`01c98e3`) have exact source evidence and separate agent review. Full immutable
+`9bcf47b` passes18,079 tests/1,028 files, types/spec/inventory/builds/lint and368
+production browser cases with zero retries; five hosted-only cases remain
+skipped. Coverage fails its unchanged90% function gate at89.96%, while branches
+pass85% at86.97%. Parent is adding actual K1 history interaction coverage;
+current-law EIC, binding-owner health and finite charity methods continue.
+The451-entry inventory,55 source-response hashes, refreshed local base and Grype
+DB are recorded. Later final-source checks/runtime/recovery remain due. No
+human, live-provider, staging, filing or release qualification is claimed.

@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "3b93d69a3ca43b53c119a23eb32863182209afcf",
+    "lastRecordedCommit": "01c98e3fc9ba5354305b65be00d36120a885d1a2",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1310,43 +1310,62 @@
       "hosted staging",
       "final multi-platform release images"
     ],
-    "workInProgress": "Two-owner health/PTC and finite charitable methods; final exact-source integration/release checks. Full upgrade remains incomplete.",
-    "latestIntegratedCommit": "3b93d69a3ca43b53c119a23eb32863182209afcf",
+    "workInProgress": "Current-law EIC source eligibility, binding owner Marketplace income, finite charitable prior/nonitemized/NOL/media methods and actual K1 handoff; coverage function gate and final exact-source release checks remain active.",
+    "latestIntegratedCommit": "01c98e3fc9ba5354305b65be00d36120a885d1a2",
     "activeIntegrationRun": {
-      "commit": "095d5bd8d0d56202e07414f6551033b893d03c27",
-      "status": "unit-root-build-web-build-browser-passed",
-      "directory": "/private/tmp/tax-engine-checks-pqfpz50a",
-      "sessionId": null,
-      "browserSessionId": null,
-      "tests": 17960,
-      "files": 987,
-      "browserPassed": 362,
+      "commit": "9bcf47be7791b268875c6c47704e95b48ed5c5a8",
+      "tree": "8511eebeccbdd5825760c12a03ecd80ca8b8d948",
+      "status": "unit-static-builds-browser-passed-coverage-function-gate-failed",
+      "directory": "/private/tmp/tax-integration-9bcf47b-raj__jvm",
+      "tests": 18079,
+      "files": 1028,
+      "failures": 0,
+      "skips": 0,
+      "browserPassed": 368,
       "browserSkipped": 5,
       "browserRetries": 0,
-      "coverageSourceCommit": "7523384faf0cdaa8583883abd2fb88319552bf92",
+      "specReferences": 4979,
+      "inventoryEntries": 449,
+      "lintErrors": 0,
+      "lintWarnings": 4790,
       "finalCurrentVerificationStillRequired": true,
       "evidence": {
-        "full-unit-095d5bd.log": "f54fc188b3554c281f27fc58dad16330be990ef1a73df4d0d0f610af7cf9b068",
-        "full-browser-095d5bd.log": "0d7dba8ae046cfaa47230b890796ab504ef02e6a2701e4c2c086297481eecb86",
-        "full-browser-095d5bd-build.log": "94af71c7dc58b1ce1b5da41aec2f39d838cfb257ce78ceb77b7f6a0cfb569fe1",
-        "full-browser-095d5bd-build-web.log": "89b17891bd5f057354738fc08cb7cc68e902337cf78b85f7ad380e9f19ddceae"
-      }
+        "full-unit-9bcf47b.log": "6bb2175166944c27fcd4155dde0aac0a5ae0b9ec6b9a9cf4526240b05bb76b02",
+        "full-coverage-9bcf47b.log": "bb67846fc6d6df7be26aa0ecaa44fec4c77ef73af79bdec1ba36ead0f162de53",
+        "full-static-9bcf47b.log": "e616db4b3008a1946f81bc3555579e76fde953fa1f91e0b95c82b034610c9a74",
+        "full-web-build-9bcf47b.log": "632351e27351bdecf5306d04d537ce54da0c6e67720579db703966d6c18dacce",
+        "full-browser-9bcf47b.log": "5c04dc6d6dff2e86730c04d4a2fade72aa956d3fc5333859b1fa5923643e0beb"
+      },
+      "scope": "Immutable tracked9bcf47b source with pinned Node/Python/pypdf, original sample PDFs and disposable loopback PostgreSQL. Later packages excluded. Hosted skips are not staging evidence."
     },
     "latestCoverageDiagnostic": {
-      "commit": "51b71827bbd7b3b4353bb6edc1d242f9e695db64",
-      "status": "failed-one-stale-interaction",
-      "passed": 17895,
-      "failed": 1,
-      "files": 964,
-      "durationSeconds": "581.83",
-      "inventoryEntries": 419,
+      "commit": "9bcf47be7791b268875c6c47704e95b48ed5c5a8",
+      "status": "failed-function-coverage-threshold",
+      "passed": 18079,
+      "failed": 0,
+      "skipped": 0,
+      "files": 1028,
+      "durationSeconds": "600.76",
       "workers": 1,
       "thresholdChanged": false,
-      "coverageResultAvailable": false,
-      "evidence": ".local/upgrade-evidence/full-coverage-51b7182.log",
-      "evidenceSha256": "257fec09a19dc8bef8e42bc6a3f0b352a00ce53f4e04a020c10d861c2b557c3a",
-      "repairCommit": "d96a83a1f439b155e4213cee2afd96cc9ab1b7ab",
-      "limitation": "Full command failed; no current passing coverage percentage inferred. Corrected interaction and all four affected production browser flows pass separately; full integrated rerun remains required."
+      "coverageResultAvailable": true,
+      "statementsPercent": "92.07",
+      "statementsCovered": 52410,
+      "statementsTotal": 56924,
+      "branchesPercent": "86.97",
+      "branchesCovered": 44072,
+      "branchesTotal": 50673,
+      "branchThresholdPercent": "85",
+      "functionsPercent": "89.96",
+      "functionsCovered": 9489,
+      "functionsTotal": 10548,
+      "functionThresholdPercent": "90",
+      "linesPercent": "94.68",
+      "linesCovered": 44903,
+      "linesTotal": 47424,
+      "evidence": ".local/upgrade-evidence/full-coverage-9bcf47b.log",
+      "evidenceSha256": "bb67846fc6d6df7be26aa0ecaa44fec4c77ef73af79bdec1ba36ead0f162de53",
+      "limitation": "Full coverage command failed despite all tests passing. Branch threshold passed; function threshold did not. Parent is adding behavioral K1 history interaction coverage; no threshold or exclusions changed."
     },
     "recentPackages": {
       "privacyHeaderRedaction": "2d16a94",
@@ -1616,10 +1635,11 @@
       "scope": "Exact committed source with pinned Python/pypdf, original sample PDFs and disposable loopback PostgreSQL; later packages excluded."
     },
     "remainingInternalWork": [
-      "Ordinary two-owner Marketplace health and actual QBI-owner allocation, including controlling treatment where combined caps bind.",
-      "Actual prior-vintage/floor/nonitemizer and regular/AMT NOL coordination, partial B cash/property allocation, reproduced existing-crypto source handoff and actual pass-through classification boundary.",
-      "Fresh independent remaining-scope and official form/provider review, then final current full tests/coverage/types/spec/inventory/builds/lint/browser/CI/runtime/recovery.",
-      "Reconcile actual hosted/self-hosted support and release evidence without substituting local synthetic or agent review for external qualification."
+      "Close the unchanged90% function coverage gate with meaningful source-history interactions, then rerun full current coverage.",
+      "Complete current-law EIC actual SSN/residency and either-spouse age eligibility plus guided source controls; preserve historical unknowns and closed2026 gate.",
+      "Complete binding owner Marketplace earned-income methods; joint2025 capped-repayment attribution still needs controlling treatment.",
+      "Correct prior-B/current-C charitable capacity, then finish ordinary actual prior/current nonitemized ledger, prior-floor and regular/AMT NOL coordination, partial B media allocation and actual K1 source handoff.",
+      "Run final exact-source tests/types/spec/inventory/builds/lint/browser/remoteCI, native runtime images/SBOM/scans/recovery and support reconciliation without substituting local synthetic evidence for staging or human qualification."
     ],
     "previousStableCoverageRun": {
       "commit": "4aef633349dbb39c2481b914730c309785cc8c41",
@@ -1638,23 +1658,23 @@
       "evidence": ".local/upgrade-evidence/full-coverage-4aef633.log",
       "evidenceSha256": "42656c753f247032fdd96cc5d615c1f03f0b0dc3dc222832037ffab1de57b56f"
     },
-    "lastPushedCommit": "3b93d69a3ca43b53c119a23eb32863182209afcf",
+    "lastPushedCommit": "01c98e3fc9ba5354305b65be00d36120a885d1a2",
     "currentBrowserRun": {
-      "commit": "095d5bd8d0d56202e07414f6551033b893d03c27",
+      "commit": "9bcf47be7791b268875c6c47704e95b48ed5c5a8",
       "status": "passed",
-      "directory": "/private/tmp/tax-engine-checks-pqfpz50a",
+      "directory": "/private/tmp/tax-integration-9bcf47b-raj__jvm",
       "finalCode": false,
       "stagingEvidence": false,
       "retries": 0,
-      "workers": 1,
-      "testsPassed": 362,
+      "workers": 2,
+      "testsPassed": 368,
       "testsSkipped": 5,
       "testsFailed": 0,
-      "durationMinutes": "13.2",
-      "evidence": ".local/upgrade-evidence/full-browser-095d5bd.log",
-      "evidenceSha256": "0d7dba8ae046cfaa47230b890796ab504ef02e6a2701e4c2c086297481eecb86",
+      "durationMinutes": "7.9",
+      "evidence": ".local/upgrade-evidence/full-browser-9bcf47b.log",
+      "evidenceSha256": "5c04dc6d6dff2e86730c04d4a2fade72aa956d3fc5333859b1fa5923643e0beb",
       "hostedQualification": false,
-      "limitation": "Five hosted-only skips do not establish staging readiness. Later source packages excluded; final current run remains required."
+      "limitation": "Five hosted-only skips do not establish staging readiness. Later packages excluded; final current run required."
     },
     "currentPackageAudit": {
       "sourceCommit": "6e589290ebf31dba23f73a42e706bd29ae4f87b1",
@@ -1715,16 +1735,29 @@
       "limitation": "Actual React DOM callback checks; final production browser rerun required."
     },
     "remoteCiLatestObserved": {
-      "commit": "31a1c4a43bd85d0797d1a753e42f16dd57e2c3a6",
-      "ci": {
-        "runId": 40260571429,
-        "status": "in_progress"
-      },
-      "web": {
-        "runId": 40260571523,
-        "status": "in_progress"
-      },
-      "limitation": "Observed before later push; older runs were cancelled by branch concurrency. No final remote pass claimed."
+      "commit": "01c98e3fc9ba5354305b65be00d36120a885d1a2",
+      "observedAt": "2026-10-26T03:32:27.599953+00:00",
+      "runs": [
+        {
+          "conclusion": "",
+          "databaseId": 40264107151,
+          "headSha": "01c98e3fc9ba5354305b65be00d36120a885d1a2",
+          "status": "in_progress",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40264107151",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "",
+          "databaseId": 40264107208,
+          "headSha": "01c98e3fc9ba5354305b65be00d36120a885d1a2",
+          "status": "in_progress",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40264107208",
+          "workflowName": "CI"
+        }
+      ],
+      "evidence": ".local/upgrade-evidence/remote-runs-01c98e3.json",
+      "evidenceSha256": "47e0804b3fcacaf1787a123e74bd68335f831f0865a8413354e4de4bb6bdd699",
+      "limitation": "CI/Web in progress when observed. Prior source/crypto runs cancelled by later branch pushes; no final current remote pass claimed."
     },
     "remoteCi6b07529": {
       "run": 40176974652,
@@ -1755,28 +1788,21 @@
       "evidence": ".local/upgrade-evidence/oh-year-ceilings-staged-tests.log"
     },
     "previousBrowserRun": {
-      "commit": "7523384faf0cdaa8583883abd2fb88319552bf92",
-      "status": "failed-ambiguous-browser-locator",
-      "directory": "/private/tmp/tax-engine-checks-exz2o0sy",
+      "commit": "095d5bd8d0d56202e07414f6551033b893d03c27",
+      "status": "passed",
+      "directory": "/private/tmp/tax-engine-checks-pqfpz50a",
       "finalCode": false,
       "stagingEvidence": false,
       "retries": 0,
       "workers": 1,
-      "testsPassed": 359,
+      "testsPassed": 362,
       "testsSkipped": 5,
-      "testsFailed": 1,
-      "durationMinutes": "13.3",
-      "evidence": ".local/upgrade-evidence/full-browser-7523384.log",
-      "evidenceSha256": "d03f0f2fac59303de094899b8b509f33894daba9c65ac6460c830367accb767f",
-      "finding": "Current contribution heading and prior carryover summary both match the broad charitable-contributions text selector.",
-      "repairCommit": "cb8c13969cb8c13a8415a8ad21d9a3addc439030",
-      "focusedRerunPassed": 8,
-      "focusedEvidence": {
-        "path": ".local/upgrade-evidence/charity-heading-browser.log",
-        "sha256": "0979f261f1675ae6bdc42cf0f2a867a7d4dd273aede88127a3fcded30d674a8b"
-      },
+      "testsFailed": 0,
+      "durationMinutes": "13.2",
+      "evidence": ".local/upgrade-evidence/full-browser-095d5bd.log",
+      "evidenceSha256": "0d7dba8ae046cfaa47230b890796ab504ef02e6a2701e4c2c086297481eecb86",
       "hostedQualification": false,
-      "limitation": "Focused repaired tests do not make this full run pass; final current full suite remains required."
+      "limitation": "Five hosted-only skips do not establish staging readiness. Later source packages excluded; final current run remains required."
     },
     "form4952FinalCandidate": {
       "commit": "00bcea1",
@@ -2583,18 +2609,18 @@
       "humanSecurityQualification": false
     },
     "currentUnitRun": {
-      "sourceCommit": "095d5bd8d0d56202e07414f6551033b893d03c27",
+      "sourceCommit": "9bcf47be7791b268875c6c47704e95b48ed5c5a8",
       "status": "passed",
-      "directory": "/private/tmp/tax-engine-checks-pqfpz50a",
+      "directory": "/private/tmp/tax-integration-9bcf47b-raj__jvm",
       "sessionId": null,
-      "tests": 17960,
-      "files": 987,
+      "tests": 18079,
+      "files": 1028,
       "failures": 0,
       "skips": 0,
-      "durationSeconds": "530.53",
-      "evidence": ".local/upgrade-evidence/full-unit-095d5bd.log",
-      "evidenceSha256": "f54fc188b3554c281f27fc58dad16330be990ef1a73df4d0d0f610af7cf9b068",
-      "scope": "Exact committed source with pinned Node/Python/pypdf, original sample PDFs and disposable loopback PostgreSQL. Later packages excluded."
+      "durationSeconds": "405.45",
+      "evidence": ".local/upgrade-evidence/full-unit-9bcf47b.log",
+      "evidenceSha256": "6bb2175166944c27fcd4155dde0aac0a5ae0b9ec6b9a9cf4526240b05bb76b02",
+      "scope": "Exact tracked source; later crypto, health and subsequent packages excluded."
     },
     "currentRemoteRuns": {
       "commit": "c89c81c063b9ea74fc8fa7c9f793d82a9d1b86d8",
@@ -2780,6 +2806,15 @@
         ],
         "k1SemanticLabels": [
           "3b93d69"
+        ],
+        "verifiedCryptoCurrentCarry": [
+          "d1d1ff0"
+        ],
+        "nonbindingOwnerHealth": [
+          "01c98e3"
+        ],
+        "officialReleaseSourceRefresh": [
+          "5a9cf6b"
         ]
       },
       "owners": {
@@ -2789,10 +2824,12 @@
         "educationMethodsAndFinalIntegration": "parent"
       },
       "subsequent": [
-        "Ordinary two-owner Marketplace health and actual QBI-owner allocation, including controlling treatment where combined caps bind.",
-        "Actual prior-vintage/floor/nonitemizer and regular/AMT NOL coordination, partial B cash/property allocation, reproduced existing-crypto source handoff and actual pass-through classification boundary.",
-        "Fresh independent remaining-scope and official form/provider review, then final current full tests/coverage/types/spec/inventory/builds/lint/browser/CI/runtime/recovery.",
-        "Qualified interpretations for reduced mixed tips/bonds and negative-net1202; no invented allocations or human approval."
+        "Close the unchanged90% function coverage gate with meaningful source-history interactions, then rerun full current coverage.",
+        "Complete current-law EIC actual SSN/residency and either-spouse age eligibility plus guided source controls; preserve historical unknowns and closed2026 gate.",
+        "Complete binding owner Marketplace earned-income methods; joint2025 capped-repayment attribution still needs controlling treatment.",
+        "Correct prior-B/current-C charitable capacity, then finish ordinary actual prior/current nonitemized ledger, prior-floor and regular/AMT NOL coordination, partial B media allocation and actual K1 source handoff.",
+        "Run final exact-source tests/types/spec/inventory/builds/lint/browser/remoteCI, native runtime images/SBOM/scans/recovery and support reconciliation without substituting local synthetic evidence for staging or human qualification.",
+        "Qualified interpretations for reduced mixed tips/bonds and negative-net1202 remain separate; no invented allocation or human approval."
       ],
       "unsupportedIsComplete": false
     },
@@ -3259,34 +3296,87 @@
         "unchangedLintWarnings": 276,
         "evidenceDocument": "docs/upgrade-2026-k1-semantic-labels-work.md",
         "scope": "Comments/audit descriptions/spec labels only; saved semantic amounts and calculation expressions unchanged; no raw parser claim."
+      },
+      "verifiedCryptoCurrentCarry": {
+        "commit": "d1d1ff04c46236afb45acaf6df8dc58e12ef6317",
+        "reviewTree": "6dd259b5b2f4e320ad25e47e95e84e3f403d8f31",
+        "tests": 653,
+        "files": 70,
+        "independentReviewTests": 10,
+        "independentReviewFiles": 4,
+        "specReferences": 4986,
+        "rootTypes": "passed",
+        "webTypes": "passed",
+        "lintErrors": 0,
+        "lintWarnings": 0,
+        "findingFixed": "Crypto-only C/D/B-noncash dispatch must consider the full actual category vector; direct receipt counts are insufficient.",
+        "evidenceDocument": "docs/upgrade-2026-current-charitable-crypto-work.md",
+        "humanQualification": false
+      },
+      "nonbindingOwnerHealth": {
+        "commit": "01c98e3fc9ba5354305b65be00d36120a885d1a2",
+        "reviewTree": "3358091cc06fa1cea1f88ee6629f3d338ba4fad7",
+        "finalTree": "e8dd2294895d8f083ef57a73205cc881c1dd95f8",
+        "tests": 260,
+        "files": 36,
+        "independentReviewTests": 15,
+        "independentReviewFiles": 7,
+        "finalRebaseTests": 21,
+        "finalRebaseFiles": 8,
+        "specReferences": 4996,
+        "rootTypes": "passed",
+        "webTypes": "passed",
+        "webBuild": "passed",
+        "lintErrors": 0,
+        "unchangedLintWarnings": 5,
+        "savedReviewPdfs": [
+          {
+            "file": ".local/upgrade-evidence/health-owners-render/primary.pdf",
+            "sha256": "b4ebe4eea8664f997c5b16bd8e4e1107885666ed9193a52e3d881a155f4a0b37",
+            "pages": 4,
+            "fields": 18,
+            "allPagesHaveNotice": true,
+            "syntheticSsnRemoved": true
+          },
+          {
+            "file": ".local/upgrade-evidence/health-owners-render/spouse.pdf",
+            "sha256": "d42ffb038c38934cc7e860b0981b6e52d1a18e0ac15265a3e37cd143c53a8702",
+            "pages": 4,
+            "fields": 18,
+            "allPagesHaveNotice": true,
+            "syntheticSsnRemoved": true
+          }
+        ],
+        "evidenceDocument": "docs/upgrade-2026-marketplace-health-owners-work.md",
+        "humanQualification": false,
+        "remaining": "Binding owner income and joint2025 repayment-cap attribution are separate active methods."
       }
     },
     "currentInventory": {
-      "sourceCommit": "3b93d69a3ca43b53c119a23eb32863182209afcf",
-      "entries": 449,
+      "sourceCommit": "01c98e3fc9ba5354305b65be00d36120a885d1a2",
+      "entries": 451,
       "generation": "passed",
       "freshness": "passed",
-      "specReferences": 4979,
-      "sha256": "5952c12e8594e190d6be97088fb2afa23c0a1ed71c8be3ed4dccebf079d34912",
-      "evidence": ".local/upgrade-evidence/inventory-3b93d69.log",
-      "evidenceSha256": "747c40e5285080999aba4024345205a66f48d547758173575a9fd2deb954ddfe"
+      "specReferences": 4996,
+      "sha256": "d61bb859cf94452d13d6fce08c3c7a93b2724e02685b3df08cf5b70716597893",
+      "evidence": ".local/upgrade-evidence/inventory-01c98e3.log",
+      "evidenceSha256": "87aae79eef72cd277411ee863af537a1b8ecba4f8a67bb213510f0c11f8b4017"
     },
     "previousCoverageDiagnostic": {
-      "status": "failed-tests-coverage-thresholds-met",
-      "commit": "e8e169a39a4917744c634378628f717af748759b",
-      "workers": 1,
-      "passed": 16888,
+      "commit": "51b71827bbd7b3b4353bb6edc1d242f9e695db64",
+      "status": "failed-one-stale-interaction",
+      "passed": 17895,
       "failed": 1,
-      "skipped": 0,
-      "files": 699,
-      "durationSeconds": "486.06",
-      "branchesPercent": "86.59",
-      "functionsPercent": "92.09",
-      "statementsPercent": "92.78",
-      "linesPercent": "94.48",
-      "evidence": ".local/upgrade-evidence/stable-coverage-e8e169a.log",
-      "evidenceSha256": "e3c1c1c498d4ede818955441f411cd18d16442ee6b1c6ab32174bc9598b8e76a",
-      "limitation": "One ScheduleA audit whitelist omitted dedicated OID/educator worksheets; c721f07 fixes exact zero-entry assertions and passes63 isolated cases. Full command failed; a fresh current-code run is still required."
+      "files": 964,
+      "durationSeconds": "581.83",
+      "inventoryEntries": 419,
+      "workers": 1,
+      "thresholdChanged": false,
+      "coverageResultAvailable": false,
+      "evidence": ".local/upgrade-evidence/full-coverage-51b7182.log",
+      "evidenceSha256": "257fec09a19dc8bef8e42bc6a3f0b352a00ce53f4e04a020c10d861c2b557c3a",
+      "repairCommit": "d96a83a1f439b155e4213cee2afd96cc9ab1b7ab",
+      "limitation": "Full command failed; no current passing coverage percentage inferred. Corrected interaction and all four affected production browser flows pass separately; full integrated rerun remains required."
     },
     "mixedTipsInterpretation": {
       "status": "qualified-source-method-required",
@@ -3303,25 +3393,57 @@
       "separateAgentResearchReview": "Federal agent independently inspected the cited sources and confirmed that no final reduced mixed-source attribution method was located; not qualified human interpretation."
     },
     "previousUnitRun": {
-      "sourceCommit": "fab31fe2ad1faa176308650ee94d1644c9f400ca",
-      "inventorySha256": "7c21a0eb34ce0759ce0d7ea0e99c829d1ca5ce86be35f015187bc19609f826b3",
+      "sourceCommit": "095d5bd8d0d56202e07414f6551033b893d03c27",
       "status": "passed",
-      "directory": "/private/tmp/tax-engine-checks-50lb65f8",
+      "directory": "/private/tmp/tax-engine-checks-pqfpz50a",
       "sessionId": null,
-      "evidence": ".local/upgrade-evidence/full-unit-fab31fe.log",
-      "scope": "Committed product source plus regenerated396-entry inventory; pinnedPython/pypdf, sample documents, disposable loopbackPostgreSQL. Excludes later charity/COD guided edits.",
-      "tests": 17787,
-      "files": 927,
+      "tests": 17960,
+      "files": 987,
       "failures": 0,
       "skips": 0,
-      "durationSeconds": "473.55",
-      "evidenceSha256": "df287c8516aa0838e1719ba5e6e67349b20c0f2bdb1a1a027f9fefb8b55d4e43"
+      "durationSeconds": "530.53",
+      "evidence": ".local/upgrade-evidence/full-unit-095d5bd.log",
+      "evidenceSha256": "f54fc188b3554c281f27fc58dad16330be990ef1a73df4d0d0f610af7cf9b068",
+      "scope": "Exact committed source with pinned Node/Python/pypdf, original sample PDFs and disposable loopback PostgreSQL. Later packages excluded."
     },
     "pushAuthorizationReview": {
       "status": "resolved-and-normal-push-verified",
       "publishedHead": "0517691f29494a6d36b6ae8353b0f88ea8de206d",
       "destination": "utilityfueled/tax-engine refs/heads/upgrade/2026-baseline",
       "detail": "Automatic review initially rejected the recipient push because explicit public source publication was not established in its view. A retry supplied the original direct human instruction to commit and push this branch plus verified existing public origin and ADMIN access. Normal push succeeded; no approval bypass, force push, main merge or deployment."
+    },
+    "officialReleaseSourceRefresh": {
+      "commit": "5a9cf6b3d3ac509e0e4d23e3aa86f7395dee4b7e",
+      "evidenceDocument": "docs/upgrade-2026-release-source-refresh.md",
+      "manifest": "docs/upgrade-2026-release-source-refresh.json",
+      "manifestSha256": "2952d6a6e6d755c223425a7479b8af4edd2907ba67d2dfe5523d0aee191d24b5",
+      "independentlyRehashedResponses": 55,
+      "federalFinalPdfEndpoints": 48,
+      "annual2026Finals": 1,
+      "annual2025Finals": 45,
+      "separateRevisionedForms": 2,
+      "previousPdfHashesUnchanged": 37,
+      "authenticatedProviderCalls": 0,
+      "modelPromotion": false,
+      "filingQualification": false,
+      "prospectiveRuleBoundary": "Schedule3-A/PRWORA proposal is not enacted tax treatment; hearing cancellation is not final-rule publication."
+    },
+    "runtimePrerequisiteRefresh": {
+      "base": {
+        "checkedAt": "2026-10-26T03:01:08.529Z",
+        "scope": "local Podman base refresh; no application image built or published",
+        "id": "9eda3a1599206db0753a87c46cc52f3fa4ffc3e1aa34b85460172d4052215771",
+        "digest": "sha256:401346cb1fc12bb388a82ed58ea72eeed2fe8530804d2964bcddce63a4eda4d8",
+        "architecture": "arm64",
+        "os": "linux"
+      },
+      "grypeSchema": "v6.1.10",
+      "grypeBuilt": "2026-10-25T06:27:34Z",
+      "grypeDatabaseValid": true,
+      "grypeDatabaseChecksum": "4bdb42924659936a80a73f5df039603dc01734ed6032575b9879745216a713ea",
+      "evidence": ".local/upgrade-evidence/grype-final-db-refresh.log",
+      "evidenceSha256": "c7b4223d373ec352807b8acc11eb7e7406fdde188ecab4cafe351eec1decfe54",
+      "boundary": "Fresh base and vulnerability database only; final application image build/SBOM/scan/recovery still required."
     }
   },
   "historicalReleaseBlockers": {
