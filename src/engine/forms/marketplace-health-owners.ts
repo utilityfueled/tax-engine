@@ -3,7 +3,7 @@ import Decimal from "decimal.js";
 import type { FilingStatus } from "@/models/inputs.js";
 import type { MarketplaceHealthPremiumGroup } from "./marketplace-health-premiums.js";
 import { AuditTrail } from "@/utils/audit.js";
-import { d, roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
+import { d, min, roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
 
 type Owner = "primary" | "spouse";
 interface CompletedBusiness {
@@ -18,7 +18,8 @@ interface Params {
   groups: readonly MarketplaceHealthPremiumGroup[];
   /** These stages and amounts come from the canonical calculation, never input. */
   stage: { kind: "worksheet-w" | "maximum" } | { kind: "final"; businesses: readonly CompletedBusiness[] };
-  specifiedDeduction: Decimal;
+  /** Optional independently calculated total to reconcile, never an override. */
+  specifiedDeduction?: Decimal;
 }
 function finite(value: Decimal, nonnegative = true): Decimal {
   if (!Decimal.isDecimal(value) || !value.isFinite() || (nonnegative && value.lt(0))) throw new Error("Pub974 owner attribution requires actual finite calculation amounts.");
@@ -27,7 +28,7 @@ function finite(value: Decimal, nonnegative = true): Decimal {
 export function calculateMarketplaceOwnerDeductions(params: Params) {
   if (![2025, 2026].includes(params.taxYear) || params.filingStatus !== "married_filing_jointly") throw new Error("Pub974 two-owner attribution requires the actual 2025 or 2026 joint return.");
   if (params.stage.kind === "worksheet-w" && params.taxYear !== 2025) throw new Error("Pub974 historical Worksheet W attribution requires 2025.");
-  finite(params.specifiedDeduction);
+  if (params.specifiedDeduction !== undefined) finite(params.specifiedDeduction);
   const specified = params.groups.filter(row => row.months.length > 0);
   if (new Set(specified.map(row => row.accountHolder)).size !== 2 || specified.some(row => !["primary", "spouse"].includes(row.accountHolder))) throw new Error("Pub974 two-owner attribution requires both actual owners.");
   if (new Set(params.groups.map(row => row.businessSourceId)).size !== params.groups.length || params.groups.some(row => !row.businessSourceId.trim())) throw new Error("Pub974 owner attribution requires unique business source identities.");
@@ -62,6 +63,7 @@ export function calculateMarketplaceOwnerDeductions(params: Params) {
     byBusiness.set(group.businessSourceId, { premiums, advances, credit, deduction });
   }
   const audit = new AuditTrail();
+  const hasHistoricalAdvances = params.taxYear === 2025 && sum(...[...byBusiness.values()].map(row => row.advances)).gt(0);
   const owners = (["primary", "spouse"] as const).map(accountHolder => {
     const groups = specified.filter(row => row.accountHolder === accountHolder);
     const records = groups.map(row => {
@@ -71,20 +73,21 @@ export function calculateMarketplaceOwnerDeductions(params: Params) {
     });
     const specifiedPremiums = sum(...records.map(row => row.premiums));
     const remainingEarnedIncome = sum(...groups.map(row => row.remainingEarnedIncome));
-    if (remainingEarnedIncome.lt(specifiedPremiums)) throw new Error("Pub974 binding owner earned-income limits require the separate owner coordination method.");
+    if (hasHistoricalAdvances && remainingEarnedIncome.lt(specifiedPremiums)) throw new Error("Pub974 binding owner earned-income limits with historical advances require the separate capped-repayment coordination method.");
     const specifiedAdvances = sum(...records.map(row => row.advances));
     const allocatedCredit = sum(...records.map(row => row.credit));
-    const specifiedDeduction = sum(...records.map(row => row.deduction));
+    const specifiedDeduction = min(sum(...records.map(row => row.deduction)), zeroFloor(remainingEarnedIncome));
     for (const [line, description, value, formula] of [
       ["premiums", "Actual owner specified premiums", specifiedPremiums, "Sum actual plan premiums bound to this owner"],
       ["earned-income", "Actual owner remaining earned income", remainingEarnedIncome, "Sum same-owner completed business limits; no spouse income transfer"],
       ["deduction", "Specified deduction attributable to this owner", specifiedDeduction,
-        params.stage.kind === "worksheet-w" ? "Owner specified premiums minus actual attributable advances"
-          : params.stage.kind === "maximum" ? "Owner specified premiums; neither owner income nor combined maximum binds"
-            : "Sum owner plan premiums after calculated Step2 credit; no combined cap reduction"],
+        params.stage.kind === "worksheet-w" ? "min(owner premiums minus actual attributable advances, nonnegative same-owner remaining earned income)"
+          : params.stage.kind === "maximum" ? "min(owner specified premiums, nonnegative same-owner remaining earned income)"
+            : "min(sum owner plan premiums after calculated Step2 credit, nonnegative same-owner remaining earned income); no combined cap allocation"],
     ] as const) audit.record("Pub974 Owner Allocation", `${accountHolder}:${line}`, description, value, formula, { "Owner": accountHolder, "Stage": params.stage.kind });
     return { accountHolder, specifiedPremiums, remainingEarnedIncome, specifiedAdvances, allocatedCredit, specifiedDeduction };
   });
-  if (!sum(...owners.map(row => row.specifiedDeduction)).eq(params.specifiedDeduction)) throw new Error("Pub974 binding combined repayment-cap deduction requires a separate actual owner attribution method.");
-  return { owners, lines: audit.getLines() };
+  const specifiedDeduction = sum(...owners.map(row => row.specifiedDeduction));
+  if (params.specifiedDeduction !== undefined && !specifiedDeduction.eq(params.specifiedDeduction)) throw new Error("Pub974 combined deduction must reconcile actual owner limits; a binding repayment-cap deduction requires its separate owner attribution method.");
+  return { owners, specifiedDeduction, lines: audit.getLines() };
 }

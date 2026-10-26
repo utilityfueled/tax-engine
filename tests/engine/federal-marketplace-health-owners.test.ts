@@ -27,8 +27,8 @@ it("coordinates actual two-owner2025 policies and preserves their separate QBI d
   expect(result.allLines.filter(row => row.form === "Form 8962" && row.line === "24")).toHaveLength(1);
   expect(JSON.stringify(input)).toBe(before);
 });
-it("keeps binding owner income and capped joint repayments as explicit methods", () => {
-  const poorOwner = twoOwnerMarketplaceHealthInput();
+it("keeps binding2025 owner income with advances and capped joint repayments as explicit methods", () => {
+  const poorOwner = twoOwnerMarketplaceHealthInput(2025, "full");
   if (!poorOwner.scheduleC) throw new Error("Missing synthetic business");
   poorOwner.scheduleC.grossReceipts = "5000";
   expect(() => calculateFederalTax(poorOwner)).toThrow(/owner.*earned.income/i);

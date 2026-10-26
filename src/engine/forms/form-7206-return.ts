@@ -153,14 +153,16 @@ export function calculateForm7206Return(params: Params) {
   if (marketplacePremiums) {
     const groups = marketplacePremiums.groups;
     const specified = groups.filter(row => row.months.length > 0);
-    const uncappedMaximum = Decimal.min(sum(...specified.map(row => row.specifiedPremiums)), Decimal.max(0,sum(...specified.map(row => row.remainingEarnedIncome))));
+    const multipleOwners = new Set(specified.map(row => row.accountHolder)).size > 1;
+    const uncappedMaximum = multipleOwners
+      ? calculateMarketplaceOwnerDeductions({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups, stage: { kind: "maximum" } }).specifiedDeduction
+      : Decimal.min(sum(...specified.map(row => row.specifiedPremiums)), Decimal.max(0,sum(...specified.map(row => row.remainingEarnedIncome))));
     const suppliedLimit = params.marketplace?.stage === "maximum" ? params.marketplace.historicalLimit : result?.historicalLimit;
     const historicalLimit = year === 2025 ? calculateMarketplaceHealthLimit({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups,
       stage: params.marketplace?.stage === "worksheet-w" ? "w" : "complete", householdIncomeAfterW: suppliedLimit?.householdIncomeAfterW, federalPovertyLine: suppliedLimit?.federalPovertyLine, orderedDeductions: suppliedLimit?.orderedDeductions }) : undefined;
     const maximum = historicalLimit?.maximumSpecifiedDeduction ?? uncappedMaximum;
     if (suppliedLimit && (!historicalLimit || !suppliedLimit.maximumSpecifiedDeduction.eq(historicalLimit.maximumSpecifiedDeduction))) throw new Error("Pub974 maximum must reconcile the actual historical worksheet.");
     const attributeSpecified = (amount: Decimal) => {
-      const multipleOwners = new Set(specified.map(row => row.accountHolder)).size > 1;
       if (amount.isZero() && !multipleOwners) return;
       if (!specified.length) throw new Error("Pub974 health deduction has no attributable earned-income source.");
       let allocations = [{ groups: specified, amount }];

@@ -6,6 +6,7 @@ import type { Form7206Result } from "@/engine/forms/form-7206.js";
 import { calculateMarketplaceHealthPremiums } from "@/engine/forms/marketplace-health-premiums.js";
 import { calculateMarketplaceHealthLimit } from "@/engine/forms/marketplace-health-limit.js";
 import { calculateMarketplaceHealthDeduction } from "@/engine/forms/marketplace-health-deduction.js";
+import { calculateMarketplaceOwnerDeductions } from "@/engine/forms/marketplace-health-owners.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
 
 function exact(value: unknown): Decimal {
@@ -81,7 +82,10 @@ export function assertMarketplaceHealthReviewSources(input: TaxYearInput, result
   same(marketplace.nonspecifiedDeduction, exact(nonspecified.deduction));
   same(marketplace.maximumDeduction, checkedLimit.maximumSpecifiedDeduction.plus(marketplace.nonspecifiedDeduction));
   const net = sum(...marketplace.businesses.map(row => row.netPremiumsAfterCredit));
-  same(marketplace.specifiedDeduction, ordinary ? sum(...marketplace.businesses.map(row => row.ordinaryDeduction)) : Decimal.min(net, checkedLimit.maximumSpecifiedDeduction));
+  const ownerDeduction = !ordinary && new Set(groups.filter(row => row.months.length > 0).map(row => row.accountHolder)).size > 1
+    ? calculateMarketplaceOwnerDeductions({ taxYear: 2025, filingStatus: input.taxpayer.filingStatus, groups,
+      stage: { kind: "final", businesses: marketplace.businesses } }).specifiedDeduction : undefined;
+  same(marketplace.specifiedDeduction, ordinary ? sum(...marketplace.businesses.map(row => row.ordinaryDeduction)) : Decimal.min(ownerDeduction ?? net, checkedLimit.maximumSpecifiedDeduction));
   const combined = marketplace.specifiedDeduction.plus(marketplace.nonspecifiedDeduction);
   for (const [number, amount] of [["7", net], ["8", marketplace.maximumSpecifiedDeduction], ["9", marketplace.specifiedDeduction], ["10", marketplace.nonspecifiedDeduction], ["11", combined]] as const) line(marketplace.lines, "Pub974 Simplified", number, amount);
   if (marketplace.lines.length !== groups.length * 3 + 5) throw new Error("Pub974 review has unexpected or duplicated business audits.");

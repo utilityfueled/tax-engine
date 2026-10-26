@@ -4,6 +4,7 @@ import type { FilingStatus } from "@/models/inputs.js";
 import type { MarketplaceHealthPremiumGroup } from "./marketplace-health-premiums.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, min, zeroFloor } from "@/utils/decimal.js";
+import { calculateMarketplaceOwnerDeductions } from "./marketplace-health-owners.js";
 
 export type MarketplaceOrderedDeductionKind = "passive" | "ira" | "bond" | "studentLoan";
 export interface MarketplaceOrderedDeduction { kind: MarketplaceOrderedDeductionKind; amount: Decimal }
@@ -58,7 +59,10 @@ export function calculateMarketplaceHealthLimit(params: {
   if (!specified.length) throw new Error("Marketplace limit requires actual specified-plan sources.");
   const earnedLimit = zeroFloor(remainingEarnedIncome);
   const taxpayerPaidSpecifiedPremiums = specifiedPremiums.minus(specifiedAdvances);
-  const preliminarySpecifiedDeduction = min(taxpayerPaidSpecifiedPremiums, earnedLimit);
+  const multipleOwners = new Set(specified.map(row => row.accountHolder)).size > 1;
+  const preliminarySpecifiedDeduction = multipleOwners
+    ? calculateMarketplaceOwnerDeductions({ taxYear: params.taxYear, filingStatus: params.filingStatus, groups: params.groups, stage: { kind: "worksheet-w" } }).specifiedDeduction
+    : min(taxpayerPaidSpecifiedPremiums, earnedLimit);
   const remainingAfterW = earnedLimit.minus(preliminarySpecifiedDeduction);
   for (const [line,label,value,formula] of [
     ["1","Specified premiums",specifiedPremiums,"Actual source total"],
@@ -67,7 +71,7 @@ export function calculateMarketplaceHealthLimit(params: {
     ["13","Combined earned income after attributable deductions",remainingEarnedIncome.plus(nonspecifiedDeduction),"Actual separate canonical business W4-13; preserve signed losses"],
     ["14","Nonspecified health deduction",nonspecifiedDeduction,"Actual completed nonspecified worksheets"],
     ["15","Remaining combined earned income",remainingEarnedIncome,"Line13-line14"],
-    ["16","Initial specified deduction",preliminarySpecifiedDeduction,"min(line3,nonnegative line15)"],
+    ["16","Initial specified deduction",preliminarySpecifiedDeduction,multipleOwners ? "Sum each owner's min(actual net premiums, nonnegative same-owner line15); no spouse income transfer" : "min(line3,nonnegative line15)"],
     ["17","Initial total health deduction",nonspecifiedDeduction.plus(preliminarySpecifiedDeduction),"Line14+line16"],
   ] as const) audit.record("Pub974 Worksheet W",line,label,value,formula);
   const requiresWorksheetX = specifiedAdvances.gt(0);

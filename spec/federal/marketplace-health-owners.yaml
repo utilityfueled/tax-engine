@@ -14,8 +14,10 @@ notes: |
   assigned between spouses. The derived owner deduction is the owner's
   actual premiums less the previously calculated attributable Step2 credit.
   No published IRS two-owner numerical example is claimed. The examples are
-  independently derived from the cited rules. Binding owner-income or joint
-  repayment-cap allocation remains an internal unimplemented method.
+  independently derived from the cited rules. Binding owner-income for2026
+  and2025 with zero advances follows marketplace-health-owner-income.yaml.
+  Binding2025 owner income with advances and joint repayment-cap allocation
+  remain separate internal methods.
   Within an owner, QBI follows actual gross income under1.199A-3; this is
   separate from the premium-share credit allocation. Original cents are not
   changed. The completed joint Schedule1 transfer rounds once; its existing
@@ -32,7 +34,7 @@ lines:
     testRef: "tests/engine/forms/marketplace-health-owners.test.ts::derives temporary W and maximum deductions from exact separate owner sources"
   - line: "limits"
     description: "Never borrow the other spouse's earned income or allocate a binding cap"
-    formula: "Require actual joint filing and both owners. Each owner's combined signed remaining earned income must cover that owner's specified premiums. Reject binding owner-income limits and temporary/final amounts reduced by a joint cap until their separate attribution method is implemented."
+    formula: "Require actual joint filing and both owners. For2025 positive attributable advances, each owner's combined signed remaining earned income must cover its specified premiums. Reject binding owner income with historical advances and temporary/final amounts reduced by a joint cap until their separate attribution method is implemented. Other binding owner-income cases follow marketplace-health-owner-income.yaml."
     testRef: "tests/engine/forms/marketplace-health-owners.test.ts::rejects cross-owner income borrowing and unresolved combined cap attribution"
   - line: "source-conservation"
     description: "Preserve exact original source identity, cents, and known zero"
