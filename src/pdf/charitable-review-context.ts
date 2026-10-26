@@ -8,6 +8,7 @@ import { validateCharitableCarryoverSources } from "@/engine/forms/charitable-ca
 import { charitableSourceDigest } from "@/utils/charitable-source-digest.js";
 import { hasPriorCharitableNolSources, readPriorCharitableNolSources } from "@/utils/charitable-prior-nol-source.js";
 import { hasOriginalCharitableNolSources, readCurrentCharitableSourceForNol } from "@/utils/charitable-nol-source.js";
+import { calculateForm172CharitableSources } from "@/engine/forms/form-172-charitable-sources.js";
 import { redactReviewIdentifiers } from "./redact-review-identifiers.js";
 
 const brand = Symbol("prepared charitable review");
@@ -52,9 +53,15 @@ function requiresOriginalCharitableNolReview(input: TaxYearInput, result?: TaxRe
     || result?.allLines.some(row => row.form === "Section170 Original NOL Sources"));
 }
 
+function requiresCurrentCharitableOriginReview(input: TaxYearInput, result?: TaxReturnResult): boolean {
+  return !!(input.form172 && input.donations.length || result?.form172?.charitableSources
+    || result?.allLines.some(row => row.form === "Current Form172 charitable sources"));
+}
+
 /** Retained original-source evidence survives removal of an input attachment. */
 export function requiresCharitableNolReview(input: TaxYearInput, result?: TaxReturnResult): boolean {
-  return requiresPriorCharitableNolReview(input, result) || requiresOriginalCharitableNolReview(input, result);
+  return requiresPriorCharitableNolReview(input, result) || requiresOriginalCharitableNolReview(input, result)
+    || requiresCurrentCharitableOriginReview(input, result);
 }
 
 /** Local only; never serialize a token or accept one from a client. */
@@ -62,6 +69,7 @@ export function prepareCharitableReview(input: TaxYearInput): PreparedCharitable
   if (input.charitableCarryoverSources) validateCharitableCarryoverSources(input);
   if (requiresPriorCharitableNolReview(input)) readPriorCharitableNolSources(input);
   if (requiresOriginalCharitableNolReview(input)) readCurrentCharitableSourceForNol(input);
+  if (requiresCurrentCharitableOriginReview(input)) calculateForm172CharitableSources(input);
   const calculation = input.k1CharitableSources || requiresCharitableNolReview(input) ? calculateFederalTax(input) : undefined;
   const token: PreparedCharitableReview = Object.freeze({ [brand]: true as const });
   prepared.set(token, { originalDigest: sourceDigest(input), redactedDigest: sourceDigest(input, true),
@@ -76,6 +84,7 @@ export function assertCharitableReviewSource(input: TaxYearInput, token?: Prepar
     if (input.k1CharitableSources) calculateK1CharitableReturnSources(input);
     if (requiresPriorCharitableNolReview(input)) readPriorCharitableNolSources(input);
     if (requiresOriginalCharitableNolReview(input)) readCurrentCharitableSourceForNol(input);
+    if (requiresCurrentCharitableOriginReview(input)) calculateForm172CharitableSources(input);
     return;
   }
   const context = prepared.get(token);
@@ -94,6 +103,9 @@ export function charitableReviewOriginalSourceInput(input: TaxYearInput, result:
   }
   if (requiresOriginalCharitableNolReview(input, result) && (!input.netOperatingLoss || !hasOriginalCharitableNolSources(input))) {
     throw new Error("Charitable NOL review requires its retained original contribution sources");
+  }
+  if (requiresCurrentCharitableOriginReview(input, result) && (!input.form172 || !input.donations.length)) {
+    throw new Error("Current charitable origin review requires its retained original contribution and origin sources");
   }
   const actual = token ?? (input.k1CharitableSources || requiresCharitableNolReview(input, result) ? prepareCharitableReview(input) : undefined);
   assertCharitableReviewSource(input, actual);

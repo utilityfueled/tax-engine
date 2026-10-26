@@ -4489,6 +4489,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
           amtCharitableContributions: alternativeCharityCarry,
           amtCharitableContributionsByYear: alternativeCharityCarry.gt(0)
             ? [{ taxYear: alternativeCharityYear, category: alternativeCharity?.category, medium: alternativeCharity?.medium, amount: alternativeCharityCarry }] : [],
+        } : form172?.charitableSources ? {
+          // Only a validated same-basis current source with independently empty
+          // histories supplies this amount. An old-NOL comparison takes priority.
+          amtCharitableContributions: form172.charitableSources.percentageCarryforward,
+          amtCharitableContributionsByYear: form172.charitableSources.percentageCarryforwards,
         } : {}),
         excessBusinessLossNOL: form461.nolCarryforward,
         nolCarryforward: cfNol,

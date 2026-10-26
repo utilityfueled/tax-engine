@@ -7,6 +7,7 @@ import type { ScheduleAResult } from "@/engine/schedules/schedule-a.js";
 import { calculateScheduleA } from "@/engine/schedules/schedule-a.js";
 import { calculateForm4952 } from "./form-4952.js";
 import { calculateStateLocalIncomeTaxDeduction } from "./state-local-income-tax-deduction.js";
+import { calculateForm172CharitableSources } from "./form-172-charitable-sources.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
 
@@ -25,6 +26,7 @@ export function calculateForm172ItemizedSources(input: TaxYearInput, context: {
   alternativeTaxPrivateActivityInterest: Decimal;
 }): Form172ItemizedSourceResult {
   const year = input.taxpayer.taxYear;
+  calculateForm172CharitableSources(input);
   const nonnegative = (value: string | undefined, label: string): Decimal => {
     const amount = d(value);
     if (!amount.isFinite() || amount.lt(0)) throw new Error(`Form172 ${label} must be finite and nonnegative`);
@@ -74,7 +76,7 @@ export function calculateForm172ItemizedSources(input: TaxYearInput, context: {
     throw new Error("Form172 state/local income-tax business and nonbusiness classification requires actual source attribution");
   }
   if ([fresh.foreignIncomeTaxDeduction, fresh.mortgageInsurancePremiums, fresh.casualtyLossDeduction,
-    fresh.cashCharitable, fresh.nonCashCharitable, fresh.charitablePriorYearUsed, fresh.otherItemizedDeductions].some(value => !value.isZero())) {
+    fresh.charitablePriorYearUsed, fresh.otherItemizedDeductions].some(value => !value.isZero())) {
     throw new Error("Form172 other itemized deduction classifications require their separate regular and AMT source methods");
   }
   const mortgage = fresh.mortgageInterest.plus(fresh.mortgageWorksheet.deductiblePoints);
@@ -94,7 +96,7 @@ export function calculateForm172ItemizedSources(input: TaxYearInput, context: {
   }
   const components = ["medicalDeduction", "saltDeduction", "foreignIncomeTaxDeduction", "mortgageInterest",
     "mortgageInsurancePremiums", "investmentInterestDeduction", "casualtyLossDeduction", "cashCharitable",
-    "nonCashCharitable", "otherItemizedDeductions", "totalItemized"] as const;
+    "nonCashCharitable", "charitablePriorYearUsed", "charitableTotal", "otherItemizedDeductions", "totalItemized"] as const;
   if (!context.scheduleA || components.some(key => !Decimal.isDecimal(context.scheduleA?.[key])
     || !fresh[key].eq(context.scheduleA[key])) || fresh.salesTaxElected !== context.scheduleA.salesTaxElected
     || !fresh.mortgageWorksheet.deductiblePoints.eq(context.scheduleA.mortgageWorksheet.deductiblePoints)
@@ -109,15 +111,15 @@ export function calculateForm172ItemizedSources(input: TaxYearInput, context: {
       throw new Error("Form172 itemized source lines must reconcile before limitation");
     }
   }
-  const regular = sum(fresh.medicalDeduction, fresh.saltDeduction, mortgage, fresh.investmentInterestDeduction);
+  const regular = sum(fresh.medicalDeduction, fresh.saltDeduction, mortgage, fresh.investmentInterestDeduction, fresh.charitableTotal);
   if (!regular.eq(fresh.totalItemized)) throw new Error("Form172 ordinary itemized source components do not reconcile");
-  const alternative = sum(fresh.medicalDeduction, mortgage, alternativeInterest?.deductibleAmount ?? d("0"));
+  const alternative = sum(fresh.medicalDeduction, mortgage, alternativeInterest?.deductibleAmount ?? d("0"), fresh.charitableTotal);
   const investment = fresh.investmentInterestDeduction;
   const audit = new AuditTrail();
   audit.record("Current Form172 itemized sources", "regular", "Regular nonbusiness itemized deductions", regular,
-    "Actual medical, personal taxes, principal-residence interest/points and allowed ordinary investment interest");
+    "Actual medical, personal taxes, principal-residence interest/points, ordinary investment interest and selected current charity");
   audit.record("Current Form172 itemized sources", "alternative", "Alternative nonbusiness itemized deductions", alternative,
-    "Same regular-AGI medical and verified principal-residence costs plus separate AMT investment interest; personal taxes excluded");
+    "Same regular-AGI medical/current charity and verified principal-residence costs plus separate AMT investment interest; personal taxes excluded");
   audit.record("Current Form172 itemized sources", "investment", "Investment-origin itemized deductions", investment,
     "Actual allowed ordinary investment interest; active nontrading business and personal costs excluded");
   return { regular, alternative, investment, lines: audit.getLines() };

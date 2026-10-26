@@ -1,0 +1,84 @@
+form: "Current Form172 charitable sources"
+fullName: "Current charitable receipts in regular and alternative loss origins"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  IRC172(c),(d)(4) and Reg1.172-3(a)(3) classify an actual allowed personal
+  section170 deduction as nonbusiness. Form172PartI6-9 limits the selected
+  nonbusiness deductions to actual nonbusiness income. Only the deduction
+  selected on the return enters that computation; percentage excess remains
+  the original charitable carry. A newly created NOL does not by itself reduce
+  that excess. Any old-NOL absorption still uses its separate170(d)(1)(B)
+  comparison, rather than attributing part of the new current loss to a gift.
+  Current regular and AMT charity histories must independently establish no
+  prior charitable balances. The existing current-origin source packet must
+  establish the actual current AMT basis and loss-limit treatment. Personal
+  taxes remain excluded from alternative deductions; regular AGI controls the
+  current charitable percentage limit under Reg1.55-1(b). Source values remain
+  exact before the existing form reporting boundary. Current K1 business/loss
+  classifications, trading crypto, prior charity and nonitemizer origin
+  methods remain separate. An already validated direct-current-only COD packet
+  retains the existing after-tax reduction of new NOL; original K1/crypto COD
+  and unresolved modified-absorption methods are not established here. These numerical controls are derived, not published
+  matching IRS examples.
+lines:
+  - line: "selected-nonbusiness"
+    description: "Use actual allowed charity in each current origin"
+    formula: "Wages20000 + activeCloss-40000 + interest30000 givesAGI10000. Actual publiccash20000 allows6000; propertytax20000 makes regular itemized26000. PartI1=-16000,6=26000,7=30000,9=0 givesNOL16000. AMT allows charity6000 but no personaltaxes, yielding no newATNOL. Each charity ledger retains14000."
+    irsRef: "IRC172(c),(d)(4); i172PartI6-9; Reg1.172-3(a)(3),1.55-1; IRC56(b)(1)(A)"
+    testRef: "tests/engine/federal-form-172-charitable-origin.test.ts::uses selected charitable deductions in separate regular and alternative origins"
+  - line: "nonbusiness-limit"
+    description: "Limit the whole selected nonbusiness group without an invented charity allocation"
+    formula: "The same actual income and gift with medical30000 gives allowedmedical29250 plus charity6000. PartI1=-25250; nonbusiness35250 minus income30000 yields5250addback and20000NOL. Current charity excess14000 is preserved. Without the gift, newNOL19250; this750 difference is not subtracted from the excess because it came from the6000 already deducted."
+    irsRef: "IRC172(d)(4); i172PartI1,6-9; IRC170(d); Reg1.170A-10(d)"
+    testRef: "tests/engine/federal-form-172-charitable-origin.test.ts::applies the nonbusiness limit without reducing undeducted charitable excess"
+  - line: "actual-current-values"
+    description: "Preserve each actual current category and known-zero origin"
+    formula: "At base10000, G20000 allows6000; A ordinarypropertyFMV20000/basis4000 allows4000; C20000 allows3000; B20000 allows3000; D20000 allows2000. With personaltax20000 the regular origins are16000,14000,13000,13000,12000 and alternative origins0. Negative contribution base allows no charity and retains the whole qualified gift. Unknown recipient/basis/history never becomes zero."
+    irsRef: "IRC170(b),(e); IRC172(d)(4); Reg1.55-1(b)"
+    testRef: "tests/engine/federal-form-172-charitable-origin.test.ts::preserves qualified current categories histories and negative-base carry"
+  - line: "independent-percentage-carry"
+    description: "Retain the independently established AMT excess without replacing prior-NOL coordination"
+    formula: "Known-empty regular and alternative histories, same-basis current cash20000 and regularAGI10000 establish6000 allowed and14000 percentage carry in each ledger even when no prior ATNOL exists. Unknown history rejects. With actual C60000/AGI97000/prior nonbusiness capital loss3000 and priorATNOL100000, the completed AMT carry30090 takes precedence over tentative30900; new Form172 origin remains0 and does not overwrite it. Old regular comparison likewise retains33360 instead of46800."
+    irsRef: "IRC170(d),56(d); Reg1.55-1(b),1.170A-10(d); i172PartII26"
+    testRef: "tests/engine/federal-form-172-charitable-origin.test.ts::retains independent current percentage carry and prior NOL replay precedence"
+  - line: "review-source-binding"
+    description: "Retain original current receipts and both selected carries through private review"
+    formula: "Original source and completed federal result digests bind actual current year, recipient, valuation, independent histories and each category/medium. Equal-allowance edits, removed receipts or origin packet, changed wages and altered carry output reject before template I/O. A local opaque original context supports exact render-only identifier redaction."
+    irsRef: "IRC170/172; i172PartI/II; original-source review integrity"
+    testRef: "tests/pdf/form-172-charitable-origin-review.test.ts::binds actual current charity and selected carries before review I/O"
+  - line: "review-record"
+    description: "Show original qualified value, selected deductions and distinct percentage excess"
+    formula: "Saved reference states original qualified current20000, selected regular6000, alternative6000 and percentage excess14000, alongside actual newNOL16000/newATNOL0. It labels the new current loss separately from prior-NOL carry adjustments; every page retains the review notice and omits taxpayer/source identifiers."
+    irsRef: "i172PartI6-9 and PartII26; source-conservation review record"
+    testRef: "tests/pdf/form-172-charitable-origin-review.test.ts::saves separate current charity and loss-origin review amounts"
+  - line: "guided-current-sources"
+    description: "Reach the method using actual current receipts and independently confirmed histories"
+    formula: "The original ScheduleC, interest, wages, current gift and current-origin packet reach the canonical method without entered loss/deduction values. Source amounts retain cents. Even with no prior NOL, a current charitable receipt requires explicitly known-empty regular and AMT charity histories; missing/unknown is incomplete. An original receipt edit revokes the current-origin and carry confirmations."
+    irsRef: "IRC170/172; current original source and independent history contract"
+    testRef: "tests/guided-interview/guided-form-172-charitable-origin.test.ts::reaches current charitable origins and requires independent known-empty histories"
+  - line: "workspace-current-sources"
+    description: "Export actual guided sources through the private current-origin review context"
+    formula: "An unmocked guided workspace computes the original20000.49 gift, selected6000 deduction, newregularNOL16000/newATNOL0 and14000.49 independent percentage carry; output retains notices and omits private source identities. Missing history blocks export, not only the tax preview."
+    irsRef: "Current source conservation and review-only output contract"
+    testRef: "tests/apps/web/workspace-form-172-charitable-origin.test.ts::exports actual guided charitable origins without inventing source history"
+  - line: "selected-standard"
+    description: "Use the actual 2025 standard choice without treating unclaimed charity as new excess"
+    formula: "With AGI10000 and actual standard15750, PartI has5750 regular loss and0 alternative loss. The selected charitable deduction is0; a20000 cash gift retains only14000 percentage excess, while a2000 gift creates no carry merely because it was not deducted. Actual false qualification yields0 qualified contribution; unknown source history still rejects."
+    irsRef: "IRC172(d)(4),170(d); Reg1.170A-10(a)(2); i172PartI6"
+    testRef: "tests/engine/federal-form-172-charitable-origin.test.ts::uses the actual standard choice without inventing charitable excess"
+  - line: "isolated-2026-floor"
+    description: "Preserve the existing current itemized floor before the loss-origin calculation"
+    formula: "Isolated2026 actualAGI10000/currentcash20000 gives6000 before floor50, currentcharity5950 and carry14050. Propertytax20000 makes selected25950 and newregularNOL15950; newATNOL0. The standard/nonitemized2026 origin method remains separately guarded and the unmocked year/export gates remain closed."
+    irsRef: "IRC170(b)(1)(G)/(I),(d)(1)(C),172(d)(4); isolated statutory method only"
+    testRef: "tests/engine/federal-form-172-charitable-origin-2026.test.ts::retains the isolated current floor without opening the nonitemized origin method"
+  - line: "browser-independent-history"
+    description: "Collect both actual empty histories before showing a current charitable origin preview"
+    formula: "Desktop and mobile start with the same original20000.49 receipt but unknown charitable histories. Enter the actual prior year/reference, separately record no regular and no AMT carry, and confirm the original loss sources; only then does the preview resume at actualAGI10000. Reload preserves original cents and independent empty arrays without calculated-loss inputs. Removing history blocks the preview again."
+    irsRef: "Current original-source and independent-history contract; review-only preview"
+    testRef: "apps/web/tests/form-172-charitable-origin.spec.ts::requires actual independent histories for current charitable origins"
+  - line: "source-only-confirmation"
+    description: "Confirm a saved current-origin packet without inventing unrelated aggregate inputs"
+    formula: "A source-only saved adjustment section retains exactly its actual prior-NOL and current-origin packets. Confirming the current packet changes only its confirmation; it must not append absent display-default amounts or revoke already checked independent charitable histories. Substantive source edits retain the existing invalidation behavior."
+    irsRef: "Actual original-source confirmation and persistence contract"
+    testRef: "tests/apps/web/current-charitable-origin-confirmation.test.tsx::confirms current origin sources without replacing independent charity history"

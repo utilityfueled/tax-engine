@@ -104,6 +104,31 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult, capital
   }
   for (const key of ["section1411OriginalLoss", "currentExcessBusinessLoss", "alternativeExcessBusinessLoss", "newRegularCarryforward",
     "newAlternativeCarryforward", "regularClosingCarryforward", "alternativeClosingCarryforward"] as const) eq(current[key], checked[key]);
+  const charity = checked.charitableSources, retainedCharity = current.charitableSources;
+  if (Boolean(charity) !== Boolean(retainedCharity)) throw new Error("Current charitable origin sources do not reconcile");
+  if (charity && retainedCharity) {
+    if (charity.sourceDigest !== retainedCharity.sourceDigest) throw new Error("Current charitable origin source digest does not reconcile");
+    for (const field of ["qualifiedValue", "regularCurrentDeduction", "alternativeCurrentDeduction", "percentageCarryforward"] as const) {
+      eq(retainedCharity[field], charity[field]);
+    }
+    const checkRows = (rows: typeof charity.percentageCarryforwards | undefined): void => {
+      if (!rows || rows.length !== charity.percentageCarryforwards.length) throw new Error("Current charitable origin carry rows do not reconcile");
+      charity.percentageCarryforwards.forEach((expected, index) => {
+        const row = rows[index];
+        if (row.taxYear !== expected.taxYear || row.category !== expected.category || row.medium !== expected.medium) {
+          throw new Error("Current charitable origin carry category, medium and year do not reconcile");
+        }
+        eq(row.amount, expected.amount);
+      });
+    };
+    checkRows(retainedCharity.percentageCarryforwards);
+    const alternativeCarry = prior.priorAlternativeCharitableCarryover?.carryforward
+      ?? prior.alternativeCharitableCarryover?.carryforward ?? prior.charitableCarryover?.alternativeTaxCarryforward;
+    if (alternativeCarry === undefined) {
+      eq(result.carryforwards.amtCharitableContributions, charity.percentageCarryforward);
+      checkRows(result.carryforwards.amtCharitableContributionsByYear);
+    }
+  }
   for (const line of checked.lines) {
     eq(savedLine(line.form, line.line), line.value);
     const saved = current.lines.filter(row => row.form === line.form && row.line === line.line);
@@ -121,7 +146,8 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult, capital
     `Current regular PartI loss ${checked.regular.netOperatingLoss}; current EBL carry ${checked.currentExcessBusinessLoss}; total regular closing carry ${checked.regularClosingCarryforward}`,
     `Current alternative PartI loss ${checked.alternativeTax.netOperatingLoss}; current EBL carry ${checked.alternativeExcessBusinessLoss}; total alternative closing carry ${checked.alternativeClosingCarryforward}`,
     `Current section1411 original loss ${checked.section1411OriginalLoss}`,
-    ...checked.lines.filter(line => line.form === "Current Form172 itemized sources" || line.form === "Current Form172 capital sources")
+    ...checked.lines.filter(line => line.form === "Current Form172 itemized sources" || line.form === "Current Form172 capital sources"
+      || line.form === "Current Form172 charitable sources")
       .map(line => `${line.description}: ${line.value}`),
     ...([ ["Regular", checked.regular], ["Alternative", checked.alternativeTax], ["Investment", checked.investment] ] as const)
       .flatMap(([label, form]) => form.lines.map(line => `${label} current Form172 line${line.line}: ${line.value}`)),

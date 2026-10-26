@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.146",
+    ruleVersion: "2025.147",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i172", section: "Current direct charitable receipts in actual regular and alternative Form172 origins; selected nonbusiness deductions and independent percentage carry", revision: "IRC172(d)(4), Reg1.172-3 and1.55-1; source-confirmed current receipts, known-empty regular/AMT charity histories, actual current loss and existing COD composition, prior NOL replay precedence, guided confirmation and private review retained; original K1/crypto, prior charity, nonitemized origin and human qualification remain separate; full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual monthly coverage-family and noncoverage-family SLCSP allocation after original tax-family allocation; signed Simplified Step3 and Worksheets W/X", revision: "Final2025 Gary/Sue and worksheet instructions; full original enrollment and independent advances, one actual specified business, actual person payments, guided source conservation and private review retained; broader business/person/marriage and binding joint repayment methods remain separate; no human or filing qualification promotion", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-digital-asset-transactions", section: "FAQ78-79; original gift source facts and holding period with Publication561 similar-property appraisal grouping", revision: "Actual guided asset, quantity, dates, FMV, basis, recipient and substantiation records; separate confirmed regular and AMT charitable histories with NOL sources; review-only output, human and final-form qualification pending", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.170A-10", section: "Actual current K-1 and digital-asset charitable originals in single-category regular and alternative NOL carry coordination", revision: "Original basis/holding/recipient values preserved before section170; independent known-empty histories, internal source-bound comparison, actual guided K-1 handoff and private review; prior basis release, mixed attribution, current-origin and human qualification remain separate; full2026 gates unchanged", retrievedAt: "2026-10-26" },
@@ -186,11 +187,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.143-law-integration-draft",
+    ruleVersion: "2026.144-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i172", section: "Current direct charitable receipts in actual regular and alternative Form172 origins; selected nonbusiness deductions and independent percentage carry", revision: "IRC172(d)(4), Reg1.172-3 and1.55-1; source-confirmed current receipts, known-empty regular/AMT charity histories, actual current loss and existing COD composition, prior NOL replay precedence, guided confirmation and private review retained; original K1/crypto, prior charity, nonitemized origin and human qualification remain separate; full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual monthly coverage-family and noncoverage-family SLCSP allocation after original tax-family allocation; signed Simplified Step3 and Worksheets W/X", revision: "Final2025 Gary/Sue and worksheet instructions; full original enrollment and independent advances, one actual specified business, actual person payments, guided source conservation and private review retained; broader business/person/marriage and binding joint repayment methods remain separate; no human or filing qualification promotion", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-digital-asset-transactions", section: "FAQ78-79; original gift source facts and holding period with Publication561 similar-property appraisal grouping", revision: "Actual guided asset, quantity, dates, FMV, basis, recipient and substantiation records; separate confirmed regular and AMT charitable histories with NOL sources; review-only output, human and final-form qualification pending", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.170A-10", section: "Actual current K-1 and digital-asset charitable originals in single-category regular and alternative NOL carry coordination", revision: "Original basis/holding/recipient values preserved before section170; independent known-empty histories, internal source-bound comparison, actual guided K-1 handoff and private review; prior basis release, mixed attribution, current-origin and human qualification remain separate; full2026 gates unchanged", retrievedAt: "2026-10-26" },

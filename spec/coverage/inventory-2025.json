@@ -2225,6 +2225,50 @@
       ]
     },
     {
+      "key": "federal/form-172-charitable-origin",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i172",
+      "specPath": "spec/federal/form-172-charitable-origin.yaml",
+      "enginePath": "src/engine/forms/form-172-charitable-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-form-172-charitable-origin.test.ts::uses selected charitable deductions in separate regular and alternative origins",
+        "tests/pdf/form-172-charitable-origin-review.test.ts::saves separate current charity and loss-origin review amounts"
+      ],
+      "implementationNote": "Actual direct current charitable sources, independent histories and selected loss-origin amounts; linked2025 reference is review-only and does not establish human or filing qualification.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/form-172-charitable-sources",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/form-172-charitable-sources.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-172-itemized-origin",
       "jurisdiction": "federal",
       "taxYear": 2025,

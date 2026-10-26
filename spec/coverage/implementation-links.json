@@ -249,6 +249,16 @@
       "note": "Original education distribution methods share the Form1099-Q calculation and 2025 review summary. Each spec retains its own bounded source method and test references."
     },
     {
+      "key": "federal/form-172-charitable-origin",
+      "enginePath": "src/engine/forms/form-172-charitable-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-form-172-charitable-origin.test.ts::uses selected charitable deductions in separate regular and alternative origins",
+        "tests/pdf/form-172-charitable-origin-review.test.ts::saves separate current charity and loss-origin review amounts"
+      ],
+      "note": "Actual direct current charitable sources, independent histories and selected loss-origin amounts; linked2025 reference is review-only and does not establish human or filing qualification."
+    },
+    {
       "key": "federal/form-8862-deceased-claimant",
       "enginePath": "src/engine/forms/form-8862.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-8862.ts",
