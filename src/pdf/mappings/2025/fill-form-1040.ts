@@ -12,7 +12,7 @@ import { PDFDocument } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
-import { calculateEicClaimantEligibility } from "@/engine/forms/eic-claimant-eligibility.js";
+import { calculateEicReviewCheckboxes } from "../../eic-review-checkboxes.js";
 import { assertPdfExportAllowed } from "../../export-policy.js";
 import {
   loadReviewTemplate,
@@ -53,6 +53,7 @@ const FIELDS = {
   city: p1Addr("f1_22[0]"),
   state: p1Addr("f1_23[0]"),
   zip: p1Addr("f1_24[0]"),
+  mainHomeInUnitedStates: p1("c1_5[0]"),
 
   // ── Filing Status ──
   single: p1("Checkbox_ReadOrder[0].c1_8[0]"),
@@ -178,14 +179,12 @@ export async function fillForm1040(
   if (input.taxpayer.dependents.length > 4) {
     throw new Error("Form 1040 dependent attachment mapping is required for more than four dependents.");
   }
-  // Rule10/13's completed claimant answer applies regardless of child count.
-  // Resolve only that applicable source route; no childless home/age or amount
-  // is recomputed here. Zero credit alone never establishes this checkbox.
-  const otherTaxpayerChild = input.eic?.claimantEligibility === undefined ? undefined
-    : calculateEicClaimantEligibility(input, false).qualifyingChildOfAnotherTaxpayer;
-  if (otherTaxpayerChild === true && (!result.earnedIncomeCredit.isZero()
+  // Resolve only the actual conditions expressly printed in the instructions;
+  // neither an amount nor another zero-credit reason establishes these boxes.
+  const claimantBoxes = calculateEicReviewCheckboxes(input);
+  if (claimantBoxes.doNotClaimEic && (!result.earnedIncomeCredit.isZero()
     || (getLineValue(result, "1040", "27a")?.isZero() === false))) {
-    throw new Error("Rule10 qualifying-child source conflicts with a positive EIC credit result");
+    throw new Error("EIC claimant source (including Rule10) requiring line27c conflicts with a positive EIC credit result");
   }
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
@@ -210,6 +209,7 @@ export async function fillForm1040(
   setTextField(form, F.city, taxpayer.address.city);
   setTextField(form, F.state, taxpayer.address.state);
   setTextField(form, F.zip, taxpayer.address.zip);
+  setCheckBox(form, F.mainHomeInUnitedStates, claimantBoxes.mainHomeInUnitedStatesMoreThanHalfYear === true);
 
   // ── Filing Status ──
   const status = taxpayer.filingStatus;
@@ -291,9 +291,9 @@ export async function fillForm1040(
   setCurrencyField(form, F.line25d, result.totalWithholding);
   setCurrencyField(form, F.line26, result.estimatedTaxPayments);
   setCurrencyField(form, F.line27a, result.earnedIncomeCredit);
-  // Pub596 Rule10 expressly directs this mark, despite the physical form's
-  // broader voluntary-opt-out label. No voluntary election is inferred.
-  setCheckBox(form, F.line27c, otherTaxpayerChild === true);
+  // Pub596 and i1040gi expressly direct these marks despite the physical
+  // form's broader voluntary-opt-out label. No voluntary election is inferred.
+  setCheckBox(form, F.line27c, claimantBoxes.doNotClaimEic);
 
   // ── Page 2 Totals ──
   for (const line of ["28", "29", "30", "31"] as const) {

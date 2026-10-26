@@ -1,0 +1,45 @@
+form: "EIC additional review checkboxes"
+fullName: "Actual final2025 claimant conditions on Form1040"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1040gi"
+notes: |
+  Refreshed final2025 i1040gi line27a Steps1/4, Nonresident aliens, line27c
+  and2025 Residency; Pub596 Rules2/4/11/14 on2026-10-26 UTC.
+  This is a separate printed-source follow-through after Rule10. It changes
+  neither eligibility arithmetic nor the filing/year gates. Use actual known
+  work-valid SSN and nonresident/election answers; reuse the canonical age and
+  death source method only when the applicable actual dates are known. Never
+  infer an alive/deceased answer or home from residencyMonths or zero credit.
+  The home checkbox requires actual confirmed primary and, on joint returns,
+  spouse home answers. Military time needs its actual qualifying order source.
+  Existing childless source fields may carry a known home answer for page1,
+  but a false home disqualifies EIC only on the childless route. Unknown home
+  answers remain unmarked. A source-required27c mark and positive result reject
+  before PDF I/O. A dependency restriction or income-based zero alone does not
+  establish an instruction to mark27c. No voluntary opt-out is inferred.
+lines:
+  - line: "27c-SSN"
+    description: "Known absence of a timely work-valid claimant SSN"
+    formula: "Mark if either required claimant has an actual false employmentValidSsnIssuedByDueDate; omission is unknown"
+    irsRef: "Final2025 i1040gi line27a Step1 question2; Pub596 Rule2"
+    testRef: "tests/pdf/eic-additional-checkboxes.test.ts::prints known SSN restrictions without inferring from omitted identities"
+  - line: "27c-NRA"
+    description: "Actual nonresident restriction and joint-election exception"
+    formula: "Mark a known nonresident claimant without an applicable actual joint resident election; retain source reconciliation"
+    irsRef: "Final2025 i1040gi Nonresident aliens under27a; Pub596 Rule4"
+    testRef: "tests/pdf/eic-additional-checkboxes.test.ts::keeps the actual joint resident election distinct from nonresident disqualification"
+  - line: "27c-age"
+    description: "Known failed childless age test with actual death context"
+    formula: "For no qualifying EIC children, use the canonical either-spouse age result with known applicable death answers; never apply to a childful claimant"
+    irsRef: "Final2025 Pub596 Rule11 and death examples"
+    testRef: "tests/pdf/eic-additional-checkboxes.test.ts::uses actual death and either-spouse ages only on the childless route"
+  - line: "home"
+    description: "Actual page1 home mark and childless27c restriction"
+    formula: "Page1 is checked only when all required actual home answers are true; a known false marks27c only for childless EIC, and unknown never becomes false"
+    irsRef: "Final2025 i1040gi2025 Residency and Step4 question3; Pub596 Rule14"
+    testRef: "tests/pdf/eic-additional-checkboxes.test.ts::prints actual joint homes while preserving false and unknown sources"
+  - line: "sourceBinding"
+    description: "Military order, stale result and irrelevant zero controls"
+    formula: "Retain actual military and source-year validation; reject positive EIC with a required27c mark before I/O; do not mark merely because dependency or income gives zero"
+    irsRef: "Final2025 i1040gi Members of the military and line27c; Pub596 Rules12/14"
+    testRef: "tests/pdf/eic-additional-checkboxes.test.ts::binds military and source conditions without treating every zero as an opt-out"
