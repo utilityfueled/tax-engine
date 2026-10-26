@@ -29,7 +29,7 @@ export function buildCurrentLossOrigin(data: CurrentLossOriginData | undefined, 
   if ((taxYear !== 2025 && taxYear !== 2026) || data.sourceTaxYear !== String(taxYear)
     || !segmentation.filingStatus || !data.sourceReference?.trim() || data.sourceFactsConfirmed !== true
     || data.allCurrentYearSourcesIncluded !== true) throw new Error('Confirm the actual current loss source year, reference and complete current records.');
-  const prior = buildGuidedNetOperatingLoss(sectionData.adjustments?.netOperatingLossSources, taxYear, segmentation.filingStatus, sectionData['personal-info']);
+  const prior = buildGuidedNetOperatingLoss(sectionData.adjustments?.netOperatingLossSources, taxYear, segmentation.filingStatus, sectionData['personal-info'], sectionData.deductions, sectionData.adjustments?.k1LossSources);
   if (!prior) throw new Error('Enter the complete actual prior regular and independent AMT carry histories, including explicit empty lists when none.');
   if (data.farmingLossIncluded !== false || data.estateOrTrustLossIncluded !== false) {
     throw new Error('Confirm the actual farming and estate facts. Those positive origin methods require separate source calculations.');

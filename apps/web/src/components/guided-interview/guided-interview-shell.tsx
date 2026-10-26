@@ -635,7 +635,7 @@ function SectionContent({
           filingStatus={state.segmentation.filingStatus}
           educationDistributions={getSectionData(state, "credits")?.educationDistributions}
           foreignIncomeSources={foreignIncomeSourceOptions(state)}
-          healthInsuranceSources={healthInsuranceSourceOptions(getSectionData(state, "income-self-employment"), getSectionData(state, "income-w2")?.entries)}
+          healthInsuranceSources={healthInsuranceSourceOptions(getSectionData(state, "income-self-employment"), getSectionData(state, "income-w2")?.entries, getSectionData(state, "adjustments")?.k1LossSources)}
           marketplacePolicies={marketplacePolicyOptions(getSectionData(state, "credits")?.premiumTaxCredit?.policies)}
           onDataChange={(data: AdjustmentData) =>
             onStateChange(updateSectionData(state, "adjustments", data))

@@ -5,6 +5,7 @@ import type { AdjustmentData, FilingStatus, GuidedFlowState, SelfEmploymentSecti
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import { parseGuidedCurrency } from "./guided-currency";
 import { validateMarketplaceHealthSources } from "./guided-marketplace-health-facts";
+import type { K1LossSourcesData } from "./guided-qbi-loss-data";
 
 type Owner = "primary" | "spouse";
 export interface HealthInsurancePersonData { personId: string; name: string; householdRole: "" | Owner | "other"; attainedAgeAtYearEnd: string }
@@ -30,7 +31,7 @@ export interface HealthInsuranceData {
   incomeDeductions?: HealthInsuranceIncomeDeductionsData;
   longTermCareAllocations: { personId: string; accountHolder: "" | Owner; businessSourceId: string; allowedPremium: string }[];
 }
-export interface HealthInsuranceSourceOption { sourceId: string; accountHolder: Owner; kind: "self_employed" | "s_corporation"; label: string }
+export interface HealthInsuranceSourceOption { sourceId: string; accountHolder: Owner; kind: "self_employed" | "partnership" | "s_corporation"; label: string }
 export const emptyHealthInsuranceFacts: HealthInsuranceData = { sourceTaxYear: "", sourceReference: "", sourceFactsConfirmed: null, allPlansIncluded: null, persons: [], plans: [], longTermCareAllocations: [] };
 export const emptyHealthInsurancePerson: HealthInsurancePersonData = { personId: "", name: "", householdRole: "", attainedAgeAtYearEnd: "" };
 export const emptyHealthInsurancePlan: HealthInsurancePlanData = { planId: "", policyReference: "", accountHolder: "", businessSourceId: "", businessKind: "", kind: "", policyHolder: "", establishedUnderBusiness: null, insuranceQualificationConfirmed: null, premiumsIncludedInOwnerIncome: null, moreThanTwoPercentShareholder: null, marketplaceCoverage: null, premiumTaxCreditInvolved: null, clergySpecialRules: null, coveredPersons: [], months: [], payments: [] };
@@ -96,11 +97,14 @@ export function buildHealthInsuranceInput(data: HealthInsuranceData | undefined,
   if (legacy && !legacy.eq(checked.paidSourcePremiums)) throw new Error("Reconcile saved health insurance premiums with actual owner and business paid source shares.");
   return facts;
 }
-export function healthInsuranceSourceOptions(business: SelfEmploymentSectionData | undefined, w2s: W2EntryData[] = []): HealthInsuranceSourceOption[] {
+export function healthInsuranceSourceOptions(business: SelfEmploymentSectionData | undefined, w2s: W2EntryData[] = [], k1Sources?: K1LossSourcesData): HealthInsuranceSourceOption[] {
   const options: HealthInsuranceSourceOption[] = [];
   const facts = business?.businessFacts;
   if (facts?.accountHolder === "primary" || facts?.accountHolder === "spouse") options.push({ sourceId: "scheduleC", accountHolder: facts.accountHolder, kind: "self_employed", label: facts.businessName?.trim() || facts.activityDescription?.trim() || "Entered self-employment business" });
   w2s.forEach((w2, index) => { if (w2.accountHolder === "primary" || w2.accountHolder === "spouse") options.push({ sourceId: `formW2:${index}`, accountHolder: w2.accountHolder, kind: "s_corporation", label: w2.employerName?.trim() || `Entered W-2 employer ${index + 1}` }); });
+  k1Sources?.activities?.forEach((source, index) => {
+    if (source.entityType === "partnership" && (source.accountHolder === "primary" || source.accountHolder === "spouse")) options.push({ sourceId: `scheduleK1:${index}`, accountHolder: source.accountHolder, kind: "partnership", label: source.entityName?.trim() || `Entered partnership ${index + 1}` });
+  });
   return options;
 }
 export function healthInsuranceFactErrors(data: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null): Record<string, string> {
@@ -119,7 +123,7 @@ export function healthInsuranceSourceErrors(state: GuidedFlowState): Record<stri
   const data = state.sectionData.adjustments?.healthInsuranceFacts;
   if (!data && state.segmentation.lifeEvents.includes("self-employed-health-insurance")) return { healthInsuranceSources: "Enter the actual health insurance worksheet for this selection, including confirmed empty records if no premiums apply." };
   if (!data) return {};
-  const sources = healthInsuranceSourceOptions(state.sectionData["income-self-employment"], state.sectionData["income-w2"]?.entries);
+  const sources = healthInsuranceSourceOptions(state.sectionData["income-self-employment"], state.sectionData["income-w2"]?.entries, state.sectionData.adjustments?.k1LossSources);
   if ((data.plans ?? []).some(plan => !sources.some(source => source.sourceId === plan.businessSourceId && source.accountHolder === plan.accountHolder && source.kind === plan.businessKind))) return { healthInsuranceBusiness: "Link every health plan to its actual business or shareholder W-2 on this return. Other business sources require their source worksheets before this interview can use them." };
   if ((data.incomeDeductions?.allocations ?? []).some(row => !sources.some(source => source.sourceId === row.businessSourceId && source.accountHolder === row.accountHolder))) return { healthInsuranceBusiness: "Link each deduction attribution to its actual business and owner on this return." };
   const personal = state.sectionData["personal-info"];

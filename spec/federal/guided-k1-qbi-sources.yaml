@@ -1,0 +1,53 @@
+form: "Guided K1 QBI Sources"
+fullName: "Original K-1 amounts and independently dated suspended-loss character"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1065sk1"
+retrievedAt: "2026-10-25"
+notes: |
+  Collect original source year, owner, recipient, entity identity and 199A/Box14
+  statement, actual opening basis, simplified465 source movements, independently
+  dated prior basis/465/SE records and filed469 qualified vintages. No current
+  allowed loss or461/QBI result is entered. The original ordinary-only contract
+  requires actual zero other boxes and a continuing domestic non-PTP source.
+  Current6198 ordinary income is derived by the existing basis calculation.
+  Historical461 origins bind independent regular NOL records and actual qualified
+  histories. Independent AMT and1411 source records stay in their existing intake.
+  Source edits revoke every affected confirmation. Saved unknowns remain unknown.
+  Calendar2026 source validation does not open the closed full-return year gate.
+lines:
+  - line: "current"
+    description: "Bind actual current K1 sources and derive every allowance canonically"
+    formula: "Original ordinary100000/QBI80000 loss, basis100000/risk60000 and known-zero prior records yields60000current allowed loss/48000qualified;100000wages yields40000AGI. Raw-100000.00 remains exact with no entered Form461 or adjusted SE result."
+    testRef: "tests/guided-interview/guided-k1-qbi-sources.test.ts::builds original K1 sources and computes loss limits without an entered allowance"
+  - line: "unknown"
+    description: "Reject missing or conflicting actual classifications without changing sources"
+    formula: "Missing original amount/year/recipient, false ordinary completeness, positive prior basis/465, unknown independent AMT and changed owner reject. Known zero and false retain their own meaning."
+    testRef: "tests/guided-interview/guided-k1-qbi-sources.test.ts::preserves unknown and conflicting original K1 facts"
+  - line: "history"
+    description: "Bind historical qualified EBL character to actual regular NOL origins"
+    formula: "Actual prior100000regular EBL with80000qualified and independent zero AMT carry uses67400regular deduction/53920current qualified with84250taxable-before-NOL; opening qualified history remains separate from modified absorption and current qualified carry. Missing or stale source snapshot rejects."
+    testRef: "tests/guided-interview/guided-k1-qbi-sources.test.ts::binds EBL character to its actual regular history without using AMT amounts"
+  - line: "confirmation"
+    description: "Revoke nested confirmations after actual source or household edits"
+    formula: "Changing any source amount/reference/identity revokes current packet, classification, prior basis/465/469/SE and EBL source confirmations; confirmation-only edits remain possible."
+    testRef: "tests/guided-interview/guided-k1-qbi-sources.test.ts::invalidates all changed source histories while preserving actual values"
+  - line: "controls"
+    description: "Link actual partnership health premiums to the original source owner"
+    formula: "Original partnership100000 income/Box14 plus100000 wages yields14129SEtax/7065half; actual600.10 medical premium transfers600 and leaves192335AGI. The source option uses the actual original K1 index and owner, without inventing partner profit. Changed or missing owner rejects."
+    testRef: "tests/guided-interview/guided-k1-qbi-sources.test.ts::links actual partner health premiums to original K1 sources"
+  - line: "source-controls"
+    description: "Expose original sources and explicit empty histories without hidden defaults"
+    formula: "New source lists begin unknown. Explicit none creates an empty list. Original signed cents and known false remain visible after editing; no allowed-loss field is rendered."
+    testRef: "tests/apps/web/k1-qbi-source-interactions.test.tsx::edits original K1 records and independently confirmed histories"
+  - line: "persistence"
+    description: "Persist locally on desktop and mobile without source transmission"
+    formula: "Both viewport workflows calculate40000AGI, edit original cents, revoke confirmations, reconfirm, reload and preserve unknown values; request bodies omit original source reference and taxpayer identifier."
+    testRef: "apps/web/tests/guided-k1-qbi-sources.spec.ts::preserves original K1 histories and local source privacy"
+  - line: "reachability"
+    description: "Reach actual K1 source controls directly from setup"
+    formula: "An explicit K1 income/loss choice opens Adjustments and Other Taxes without requiring an unrelated ScheduleC or debt answer; the ordinary wage-only route remains unchanged."
+    testRef: "tests/guided-interview/guided-k1-qbi-sources.test.ts::routes actual K1 sources from their own setup choice"
+  - line: "selected-source"
+    description: "A selected K1 source route cannot silently omit its records"
+    formula: "The selected route with an absent or incomplete packet blocks section completion and preview; the user must enter actual sources or remove that setup choice."
+    testRef: "tests/guided-interview/guided-k1-qbi-sources.test.ts::requires the selected K1 packet before completing a preview"

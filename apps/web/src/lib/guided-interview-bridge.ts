@@ -6,6 +6,7 @@ import { buildBrokerageWithholdingSource } from "./guided-brokerage-withholding"
 import { buildForeignIncomeInput, foreignIncomeFactErrors } from "./guided-foreign-income";
 import { buildGuidedNetOperatingLoss, netOperatingLossFactErrors } from "./guided-net-operating-loss";
 import { buildCurrentLossOrigin, currentLossOriginFactErrors } from "./guided-current-loss-origin";
+import { buildGuidedK1Sources, k1LossSourceFactErrors } from "./guided-k1-qbi-sources";
 import { buildGuidedCodNol, codNolFactErrors } from "./guided-cod-nol";
 import { buildGuidedCharitableCarryover, charitableCarryoverFactErrors } from "./guided-charitable-carryover";
 import { buildEstimatedTaxFacts, estimatedTaxFactErrors } from "./guided-estimated-tax-facts";
@@ -658,7 +659,8 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(studentLoanFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation, segmentation.lifeEvents.includes("student-loans")));
     assertKnownFacts(healthInsuranceSourceErrors(state));
     assertKnownFacts(foreignIncomeFactErrors(state));
-    assertKnownFacts(netOperatingLossFactErrors(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, segmentation.lifeEvents.includes("net-operating-loss"), deductionData));
+    assertKnownFacts(netOperatingLossFactErrors(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, segmentation.lifeEvents.includes("net-operating-loss"), deductionData, adjustmentData?.k1LossSources));
+    assertKnownFacts(k1LossSourceFactErrors(state));
     assertKnownFacts(currentLossOriginFactErrors(state));
     assertKnownFacts(codNolFactErrors(state));
     assertKnownFacts(premiumTaxCreditFactErrors(state));
@@ -732,6 +734,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const paymentAdjustments = { estimatedTaxPayments: estimatedPayments, extensionPayments, priorYearAppliedCredits };
   const form172 = buildCurrentLossOrigin(adjustmentData?.currentLossOrigin, state);
   const codSources = buildGuidedCodNol(adjustmentData?.codNolSources, state);
+  const k1Sources = buildGuidedK1Sources(adjustmentData?.k1LossSources, state);
   const currentCapitalCarry = form172?.capitalSources?.priorCapitalLosses;
 
   return {
@@ -766,7 +769,9 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     w2s,
     form2210: buildEstimatedTaxFacts(paymentData, state.taxYear),
     form2555: buildForeignIncomeInput(adjustmentData?.foreignIncome, state),
-    netOperatingLoss: buildGuidedNetOperatingLoss(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, deductionData),
+    netOperatingLoss: buildGuidedNetOperatingLoss(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, deductionData, adjustmentData?.k1LossSources),
+    scheduleK1: k1Sources?.scheduleK1,
+    qbiLossSources: k1Sources?.qbiLossSources,
     form172,
     ...codSources,
     section1202Sources: buildGuidedQsbsSources(investData, state.taxYear, segmentation.filingStatus, personalInfo),
@@ -781,10 +786,10 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     form8814: buildGuidedChildElections(investData?.childElections, state.taxYear),
     qofDispositionFacts: buildGuidedQofFacts(investData?.qofDispositionFacts, state.taxYear),
     ...scheduleDInputs,
-    priorYear: scheduleDInputs.priorYear || currentCapitalCarry || rentalCarryovers.length ? {
+    priorYear: scheduleDInputs.priorYear || currentCapitalCarry || rentalCarryovers.length || k1Sources?.suspendedPassiveLosses.length ? {
       ...scheduleDInputs.priorYear,
       ...(currentCapitalCarry ? { shortTermCapitalLoss: currentCapitalCarry.shortTermCapitalLoss, longTermCapitalLoss: currentCapitalCarry.longTermCapitalLoss } : {}),
-      ...(rentalCarryovers.length ? { suspendedPassiveLosses: rentalCarryovers } : {}),
+      ...(rentalCarryovers.length || k1Sources?.suspendedPassiveLosses.length ? { suspendedPassiveLosses: [...rentalCarryovers, ...(k1Sources?.suspendedPassiveLosses ?? [])] } : {}),
     } : undefined,
     form1099OID,
     paResidentReturn: stateCode === "PA" && form1099OID.length ? { scheduleA: { oidSources: buildPaOidSources(investData?.oidEntries) } } : undefined,

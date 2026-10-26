@@ -2,6 +2,8 @@ import { foreignIncomeFactErrors, type ForeignIncomeData } from "./guided-foreig
 import { netOperatingLossFactErrors, type NetOperatingLossData } from "./guided-net-operating-loss";
 import { currentLossOriginFactErrors, invalidateCurrentLossOrigin, type CurrentLossOriginData } from "./guided-current-loss-origin";
 import { codNolFactErrors, invalidateGuidedCodNol, type CodNolData } from "./guided-cod-nol";
+import { k1LossSourceFactErrors, invalidateK1LossSources } from "./guided-k1-qbi-sources";
+import type { K1LossSourcesData } from "./guided-qbi-loss-data";
 import { charitableCarryoverFactErrors, type CharitableCarryoverData } from "./guided-charitable-carryover";
 import { estimatedTaxFactErrors, type EstimatedTaxFactsData } from "./guided-estimated-tax-facts";
 import { minimumTaxCreditFactErrors, type MinimumTaxCreditData } from "./guided-minimum-tax-credit";
@@ -93,6 +95,7 @@ export const incomeTypeOptions: { value: IncomeType; label: string; hint: string
 // ── Life events ────────────────────────────────────────────────────────────
 
 export type LifeEvent =
+  | "k1-loss-sources"
   | "bought-home"
   | "sold-home"
   | "had-baby"
@@ -110,6 +113,7 @@ export type LifeEvent =
   | "foreign-earned-income";
 
 export const lifeEventOptions: { value: LifeEvent; label: string; hint: string }[] = [
+  { value: "k1-loss-sources", label: "Have K-1 income or suspended business losses", hint: "Original partnership or S corporation statements, basis and loss histories" },
   { value: "cancelled-debt", label: "Had personal debt canceled while insolvent", hint: "Original debt statements, complete asset and liability records, and actual loss carry histories" },
   { value: "current-year-loss", label: "Calculate a current-year net operating loss", hint: "Actual current business, deduction and independent AMT source records" },
   { value: "net-operating-loss", label: "Have a net operating loss carryforward", hint: "Actual filed regular and AMT loss worksheets and complete carry history" },
@@ -439,6 +443,7 @@ export function buildSectionRoute(segmentation: SegmentationAnswers): InterviewS
 
   // Adjustments — include when the taxpayer selects a supported source route.
   const needsAdjustments =
+    segmentation.lifeEvents.includes("k1-loss-sources") ||
     segmentation.incomeTypes.includes("self-employment") ||
     segmentation.lifeEvents.includes("student-loans") ||
     segmentation.lifeEvents.includes("hsa-contributions") ||
@@ -467,7 +472,7 @@ export function buildSectionRoute(segmentation: SegmentationAnswers): InterviewS
   if (credits) sections.push(credits);
 
   // Actual retirement and investment sources may need the NIIT worksheet.
-  if (segmentation.incomeTypes.some(type => ["self-employment", "investments", "rental", "retirement"].includes(type))) {
+  if (segmentation.lifeEvents.includes("k1-loss-sources") || segmentation.incomeTypes.some(type => ["self-employment", "investments", "rental", "retirement"].includes(type))) {
     const otherTaxes = allSections.find((s) => s.id === "other-taxes");
     if (otherTaxes) sections.push(otherTaxes);
   }
@@ -960,6 +965,7 @@ export const emptyDeductionData: DeductionData = {
 // ── Adjustments data ──────────────────────────────────────────────────────
 
 export interface AdjustmentData {
+  k1LossSources?: K1LossSourcesData;
   codNolSources?: CodNolData;
   currentLossOrigin?: CurrentLossOriginData;
   netOperatingLossSources?: NetOperatingLossData;
@@ -1561,6 +1567,7 @@ export function updateSectionData(
   const nextAdditional = sectionId === "additional-deductions" ? data as AdditionalDeductionsData : state.sectionData["additional-deductions"];
   const additionalSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-social-security", "adjustments", "credits", "deductions", "additional-deductions"].includes(sectionId) && nextAdditional?.schedule1A;
   const nextAdjustments = sectionId === "adjustments" ? data as AdjustmentData : adjustments;
+  const k1LossSourcesChanged = sourceValuesChanged && sectionId !== "final-review" && nextAdjustments?.k1LossSources;
   const codSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId) && nextAdjustments?.codNolSources;
   const currentLossSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes", "state-return"].includes(sectionId) && nextAdjustments?.currentLossOrigin;
   const nolSourcesChanged = sourceValuesChanged && ["personal-info", "income-w2", "income-self-employment", "income-retirement", "income-investments", "income-rental", "income-social-security", "income-unemployment", "adjustments", "credits", "deductions", "additional-deductions", "other-taxes"].includes(sectionId) && nextAdjustments?.netOperatingLossSources;
@@ -1606,7 +1613,8 @@ export function updateSectionData(
         ...(investmentInterestSourcesChanged ? { investmentInterestSources: Object.fromEntries(Object.entries(investmentInterestSourcesChanged).map(([key, worksheet]) => [key, worksheet ? { ...worksheet, sourceFactsConfirmed: null, ...(worksheet.childIncomeSources ? { childIncomeSources: { ...worksheet.childIncomeSources, sourceFactsConfirmed: null } } : {}) } : worksheet])) } : {}),
       } } : {}),
       ...(ohioInterestChanged && ohioStateReturn ? { "state-return": { ...ohioStateReturn, ohioInterestAllocation: { ...ohioInterestChanged, sourceFactsConfirmed: null } } } : {}),
-      ...((iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged || healthSourcesChanged || foreignIncomeSourcesChanged || nolSourcesChanged || currentLossSourcesChanged || codSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments,
+      ...((iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged || healthSourcesChanged || foreignIncomeSourcesChanged || nolSourcesChanged || currentLossSourcesChanged || codSourcesChanged || k1LossSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments,
+        ...(k1LossSourcesChanged ? { k1LossSources: invalidateK1LossSources(k1LossSourcesChanged) } : {}),
         ...(codSourcesChanged ? { codNolSources: invalidateGuidedCodNol(codSourcesChanged) } : {}),
         ...(currentLossSourcesChanged ? { currentLossOrigin: invalidateCurrentLossOrigin(currentLossSourcesChanged) } : {}),
         ...(nolSourcesChanged ? { netOperatingLossSources: { ...nolSourcesChanged, sourceFactsConfirmed: null, ...(nolSourcesChanged.alternativeTax ? { alternativeTax: { ...nolSourcesChanged.alternativeTax, sourceFactsConfirmed: null,
@@ -1899,7 +1907,7 @@ function validateAdjustmentsSection(data: AdjustmentData | undefined, filingStat
   if (!data) return EMPTY_SECTION("adjustments info", true);
   const errors = adjustmentFactErrors(data, filingStatus, taxYear, education);
   if (Object.keys(errors).length) return validateRequiredFacts(errors);
-  if (data.iraContributions || data.hsaAccounts?.length || data.educatorExpenseSources?.length || data.studentLoanFacts || data.healthInsuranceFacts || data.foreignIncome || data.netOperatingLossSources || data.currentLossOrigin || data.codNolSources) return VALID_SECTION;
+  if (data.iraContributions || data.hsaAccounts?.length || data.educatorExpenseSources?.length || data.studentLoanFacts || data.healthInsuranceFacts || data.foreignIncome || data.netOperatingLossSources || data.currentLossOrigin || data.codNolSources || data.k1LossSources) return VALID_SECTION;
   const hasAny = Object.values(data).some((v) => typeof v === "string" && hasNumericValue(v));
   if (!hasAny) return EMPTY_SECTION("adjustments info", true);
   return VALID_SECTION;
@@ -1946,7 +1954,8 @@ export function validateSection(
       const errors = { ...foreignIncomeFactErrors(state), ...healthInsuranceSourceErrors(state), ...hsaFactErrors(getSectionData(state, "adjustments")?.hsaAccounts, state.segmentation.filingStatus, state.taxYear, getSectionData(state, "income-w2")?.entries ?? [], getSectionData(state, "personal-info"), state.segmentation.lifeEvents.includes("hsa-contributions")), ...educatorFactErrors(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear, state.segmentation.lifeEvents.includes("educator-expenses")) };
       Object.assign(errors, currentLossOriginFactErrors(state));
       Object.assign(errors, codNolFactErrors(state));
-      Object.assign(errors, netOperatingLossFactErrors(state.sectionData.adjustments?.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], state.segmentation.lifeEvents.includes("net-operating-loss"), state.sectionData.deductions));
+      Object.assign(errors, k1LossSourceFactErrors(state));
+      Object.assign(errors, netOperatingLossFactErrors(state.sectionData.adjustments?.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], state.segmentation.lifeEvents.includes("net-operating-loss"), state.sectionData.deductions, state.sectionData.adjustments?.k1LossSources));
       let loanEducation: StudentLoanEducationSources = [];
       try {
         if (state.sectionData.adjustments?.studentLoanFacts) loanEducation = studentLoanEducationSources(state.sectionData.credits, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments.studentLoanFacts);
