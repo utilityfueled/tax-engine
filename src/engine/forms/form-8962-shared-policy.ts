@@ -21,6 +21,7 @@ export interface Form8962AllocationMonth {
 }
 export interface Form8962AllocationPeriod {
   policyIndex: number; firstMonth: number; lastMonth: number; fraction: Decimal;
+  method?: 'agreement' | 'default_enrollee_count';
 }
 export interface Form8962SharedPolicyResult {
   months: Form8962AllocationMonth[]; periods: Form8962AllocationPeriod[]; lines: CalculatedLine[];
@@ -127,8 +128,23 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
     if (policy.situation !== 'other_two_tax_families' || policy.noCurrentYearMarriageOrDivorceConfirmed !== true
       || policy.twoTaxFamiliesConfirmed !== true || policy.allCoveredPeopleAssignedConfirmed !== true) throw new Error('Form8962 allocation requires actual Situation4 and two-family source facts');
     if (policy.originalSlcspCorrectConfirmed !== true) throw new Error('Form8962 allocation requires the actual correct original SLCSP source');
-    if (policy.agreementConfirmed !== true) throw new Error('Form8962 allocation requires the actual agreed-percentage method');
-    text(policy.agreementReference, 'allocation agreement reference');
+    if (typeof policy.agreementConfirmed !== 'boolean') throw new Error('Form8962 allocation requires a known actual agreement answer');
+    const method = policy.agreementConfirmed ? 'agreement' : 'default_enrollee_count';
+    let enrollingFamily: 'this_return' | 'other_return' | undefined;
+    if (policy.agreementConfirmed) {
+      text(policy.agreementReference, 'allocation agreement reference');
+      if (policy.defaultAllocation !== undefined) throw new Error('Form8962 agreed allocation conflicts with supplied no-agreement enrollment facts');
+    } else {
+      const evidence = policy.defaultAllocation;
+      if (policy.agreementReference?.trim()) throw new Error('Form8962 no-agreement default conflicts with a supplied agreement reference');
+      text(evidence?.sourceReference, 'default allocation enrollment reference');
+      const enrollingSsn = ssn(evidence?.enrollingTaxpayerSsn, 'actual enrolling taxpayer SSN');
+      const returnFilers = [ssn(primary.ssn, 'primary SSN'), ...(input.taxpayer.filingStatus === 'married_filing_jointly' && input.taxpayer.spouse ? [ssn(input.taxpayer.spouse.ssn, 'spouse SSN')] : [])];
+      if (enrollingSsn !== otherSsn && !returnFilers.includes(enrollingSsn)) throw new Error('Form8962 default enrolling taxpayer must match an actual taxpayer in one of the two returns');
+      if (evidence?.allCoveredPeopleEnrolledByTaxpayerConfirmed !== true) throw new Error('Form8962 default allocation requires actual confirmation of who enrolled every covered person');
+      enrollingFamily = enrollingSsn === otherSsn ? 'other_return' : 'this_return';
+      if (policy.monthlyAllocations?.some(row => row.fraction !== undefined && row.fraction !== '')) throw new Error('Form8962 no-agreement default cannot use supplied agreement fractions');
+    }
     if (sum(...original.monthlyPremiums.map(row => d(row.advancePremiumTaxCredit))).lte(0)) throw new Error('Form8962 no-APTC allocation requires its separate source method');
     const assignments = new Map<string, 'this_return' | 'other_return'>();
     for (const assigned of policy.coveredFamilyAssignments ?? []) {
@@ -143,9 +159,9 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
       if (assignments.get(person.ssn) === 'this_return' ? ownName !== person.name : ownName !== undefined) throw new Error('Form8962 allocation covered person conflicts with the actual return household');
       if (person.ssn === otherSsn && person.name !== otherName) throw new Error('Form8962 allocation other taxpayer name conflicts with the original covered person');
     }
-    if (policy.monthlyAllocations?.length !== original.monthlyPremiums.length) throw new Error('Form8962 allocation requires each original month agreement');
+    if (policy.agreementConfirmed && policy.monthlyAllocations?.length !== original.monthlyPremiums.length) throw new Error('Form8962 allocation requires each original month agreement');
     const fractions = new Map<number, Decimal>();
-    for (const row of policy.monthlyAllocations) {
+    for (const row of policy.agreementConfirmed ? policy.monthlyAllocations! : []) {
       const m = month(row.month);
       if (fractions.has(m) || !original.monthlyPremiums.some(sourceMonth => sourceMonth.month === m)) throw new Error('Form8962 allocation agreement month is duplicated or has no original source');
       if (row.fraction === undefined || !/^(?:0|1|0?\.\d{1,2}|1\.0{1,2})$/.test(row.fraction) || d(row.fraction).lt(0) || d(row.fraction).gt(1)) throw new Error('Form8962 allocation needs an actual agreed fraction from0 through1 with at most two decimal places');
@@ -156,26 +172,33 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
       usedMonths.add(row.month);
       const covered = original.coveredIndividuals.filter(person => person.firstMonth <= row.month && person.lastMonth >= row.month);
       if (!covered.some(person => assignments.get(person.ssn) === 'this_return') || !covered.some(person => assignments.get(person.ssn) === 'other_return')) throw new Error('Form8962 allocation month must have actual enrollees in both tax families');
-      const fraction = fractions.get(row.month)!;
+      const claimingCount = covered.filter(person => assignments.get(person.ssn) !== enrollingFamily).length;
+      const claimingFraction = policy.agreementConfirmed ? undefined : d(claimingCount).div(covered.length).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+      // The enrolling taxpayer retains the remainder after the claiming share
+      // is rounded, including exact half-percentage ties. Source amounts do not
+      // supply a residual or a user-entered calculated fraction.
+      const fraction = policy.agreementConfirmed ? fractions.get(row.month)!
+        : enrollingFamily === 'this_return' ? d(1).minus(claimingFraction!) : claimingFraction!;
       const originalPremium = d(row.enrolleePremium), originalSlcsp = d(row.slcsp), originalAdvance = d(row.advancePremiumTaxCredit);
       months.push({ month: row.month, policyIndex: index, originalPremium, originalSlcsp, originalAdvance,
         premium: originalPremium.times(fraction), slcsp: originalSlcsp.times(fraction), advance: originalAdvance.times(fraction) });
       const last = periods.at(-1);
       if (last?.policyIndex === index && last.lastMonth + 1 === row.month && last.fraction.eq(fraction)) last.lastMonth = row.month;
-      else periods.push({ policyIndex: index, firstMonth: row.month, lastMonth: row.month, fraction });
+      else periods.push({ policyIndex: index, firstMonth: row.month, lastMonth: row.month, fraction, method });
     }
   }
   months.sort((a, b) => a.month - b.month);
   periods.sort((a, b) => a.policyIndex - b.policyIndex || a.firstMonth - b.firstMonth);
   const audit = new AuditTrail();
   for (const [index, period] of periods.entries()) for (const column of ['e', 'f', 'g']) {
-    audit.record('Form8962 PartIV', `allocation-${index + 1}${column}`, 'Actual agreed allocation fraction', period.fraction,
-      `Situation4 actual original policy${period.policyIndex + 1},months${period.firstMonth}-${period.lastMonth}; same agreed fraction for all three amounts`);
+    const defaultMethod = period.method === 'default_enrollee_count';
+    audit.record('Form8962 PartIV', `allocation-${index + 1}${column}`, defaultMethod ? 'Default allocation fraction from actual enrollees' : 'Actual agreed allocation fraction', period.fraction,
+      `Situation4 actual original policy${period.policyIndex + 1},months${period.firstMonth}-${period.lastMonth}; ${defaultMethod ? 'rounded claiming-family enrollee share and enrolling complement' : 'actual agreed fraction'} for all three amounts`);
   }
   for (const row of months) {
-    audit.record('Form8962 PartIV', `month-${row.month}:premium`, 'Allocated enrollment premiums before form rounding', row.premium, 'Exact original monthly premium times actual agreed fraction');
-    audit.record('Form8962 PartIV', `month-${row.month}:slcsp`, 'Allocated SLCSP before form rounding', row.slcsp, 'Exact correct original monthly benchmark times actual agreed fraction');
-    audit.record('Form8962 PartIV', `month-${row.month}:advance`, 'Allocated advance credit before form rounding', row.advance, 'Exact original monthly advance credit times actual agreed fraction');
+    audit.record('Form8962 PartIV', `month-${row.month}:premium`, 'Allocated enrollment premiums before form rounding', row.premium, 'Exact original monthly premium times source-derived allocation fraction');
+    audit.record('Form8962 PartIV', `month-${row.month}:slcsp`, 'Allocated SLCSP before form rounding', row.slcsp, 'Exact correct original monthly benchmark times source-derived allocation fraction');
+    audit.record('Form8962 PartIV', `month-${row.month}:advance`, 'Allocated advance credit before form rounding', row.advance, 'Exact original monthly advance credit times source-derived allocation fraction');
   }
   return { months, periods, lines: audit.getLines() };
 }

@@ -59,7 +59,7 @@ export interface Form8962ReferenceSummary {
   introduction: string;
   policies: Form8962ReferenceSummaryPolicy[];
   lines: Form8962ReferenceSummaryLine[];
-  allocations?: { policyNumber: string; firstMonth: number; lastMonth: number; fraction: string }[];
+  allocations?: { policyNumber: string; firstMonth: number; lastMonth: number; fraction: string; method: 'agreement' | 'default_enrollee_count' }[];
   allocatedMonths?: { month: number; originalPremium: string; originalSlcsp: string; originalAdvance: string; premium: string; slcsp: string; advance: string }[];
   marriage?: { electionApplies: boolean; worksheets: (Form8962ReferenceSummaryLine & { form: string })[] };
 }
@@ -231,7 +231,7 @@ export function buildForm8962ReferenceSummary(
     title: "Form 8962 Premium Tax Credit Reference Summary",
     warningLabel: "REFERENCE SUMMARY ONLY",
     policyCount: forms.length,
-    introduction: `Computed from ${forms.length} Form 1095-A statement${forms.length === 1 ? "" : "s"} using the ${summary.calculationMethod} method. ${summary.sourceFactsVerified ? "Actual household and coverage facts were supplied." : "This is an unverified historical preview; dependent income, regional residence and coverage eligibility have not been established."} Policy totals below are raw statement amounts; ${allocation ? "the separate actual Part IV agreement determines this return's allocated monthly amounts." : "the calculation uses the corrected household benchmark."}`,
+    introduction: `Computed from ${forms.length} Form 1095-A statement${forms.length === 1 ? "" : "s"} using the ${summary.calculationMethod} method. ${summary.sourceFactsVerified ? "Actual household and coverage facts were supplied." : "This is an unverified historical preview; dependent income, regional residence and coverage eligibility have not been established."} Policy totals below are raw statement amounts; ${allocation ? "the separate actual Part IV allocation determines this return's monthly amounts." : "the calculation uses the corrected household benchmark."}`,
     policies: forms.map((form) => {
       const annualEnrollmentPremium = form.monthlyPremiums.reduce(
         (total, month) => total.plus(month.enrolleePremium),
@@ -267,7 +267,7 @@ export function buildForm8962ReferenceSummary(
         formula: normalizeFormula(line.formula),
       })),
     allocations: allocation?.periods.map(period => ({ policyNumber: forms[period.policyIndex].policyNumber.slice(-15),
-      firstMonth: period.firstMonth, lastMonth: period.lastMonth, fraction: period.fraction.toFixed(2) })),
+      firstMonth: period.firstMonth, lastMonth: period.lastMonth, fraction: period.fraction.toFixed(2), method: period.method ?? 'agreement' })),
     allocatedMonths: allocation?.months.map(month => ({ month: month.month, originalPremium: month.originalPremium.toFixed(),
       originalSlcsp: month.originalSlcsp.toFixed(), originalAdvance: month.originalAdvance.toFixed(),
       premium: month.premium.toFixed(), slcsp: month.slcsp.toFixed(), advance: month.advance.toFixed() })),
@@ -418,8 +418,8 @@ export async function fillForm8962Reference(
       y -= 5;
     };
     write("FORM 8962 PART IV - COMPLETE ALLOCATION STATEMENT", true);
-    write("All actual allocation periods are retained below. Taxpayer identifiers and private agreement references are omitted from this review copy. Policy numbers use the final 15 characters required by Part IV.");
-    summary.allocations.forEach((period, index) => write(`Allocation ${index + 1}: policy ${period.policyNumber}; months ${period.firstMonth}-${period.lastMonth}; premium, SLCSP and advance fractions ${period.fraction}.`));
+    write("All actual allocation periods are retained below. Taxpayer identifiers and private source references are omitted from this review copy. Policy numbers use the final 15 characters required by Part IV.");
+    summary.allocations.forEach((period, index) => write(`Allocation ${index + 1}: policy ${period.policyNumber}; months ${period.firstMonth}-${period.lastMonth}; premium, SLCSP and advance fractions ${period.fraction}. ${period.method === 'default_enrollee_count' ? 'Default allocation from actual enrollees.' : 'Actual agreed allocation.'}`));
     for (const row of summary.allocatedMonths ?? []) {
       write(`Month ${row.month}. Original monthly source: premium $${row.originalPremium}; SLCSP $${row.originalSlcsp}; advance $${row.originalAdvance}.`);
       write(`Actual allocated amounts before form rounding: premium $${row.premium}; SLCSP $${row.slcsp}; advance $${row.advance}.`);

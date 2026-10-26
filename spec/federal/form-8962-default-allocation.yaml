@@ -1,0 +1,57 @@
+form: "Form 8962 Part IV"
+fullName: "Situation 4 default allocation from actual enrollment and family sources"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8962"
+retrievedAt: "2026-10-26"
+reviewStatus: "source-derived-implementation-independent-review-pending"
+notes: |
+  Final2025 i8962 Situation4 Example2 and Reg1.36B-4(a)(4) Example11
+  establish the no-agreement default: one shifting enrollee among three
+  enrolled people gives33% to the claiming taxpayer and the remaining67%
+  to the enrolling taxpayer. Reg1.36B-4(a)(1)(ii)(B)(1),(3)-(5) distinguishes
+  the actual taxpayer expected at enrollment from the taxpayer who claims
+  the person on the filed return. The original recipient alone does not
+  establish who enrolled every person. An actual enrollment record is required.
+  Lines30-33(e)-(g) require a decimal rounded to two places. Compute the
+  claiming share with Decimal rounding-half-up, then its enrolling complement;
+  do not independently round both sides at an exact half-percentage tie.
+  Apply that one fraction to exact original monthly premiums, correct original
+  SLCSP and advances before the established monthly whole-dollar reporting.
+  The source form remains unchanged. No-agreement is an explicit false answer,
+  never inferred from blank. The same source identity/year/coverage controls
+  as the existing agreement method continue. NoAPTC is Situation3 and remains
+  a separate method; overlapping/unshared policies and other coordination
+  methods are not activated by this change. Full2026 readiness remains closed.
+lines:
+  - line: "default-source"
+    description: "Bind an explicit absent agreement to the actual enrolling taxpayer"
+    formula: "Require agreementConfirmed=false, defaultAllocation source reference, actual enrolling taxpayer SSN belonging to one of the two filers, and actual confirmation that this taxpayer enrolled every original covered person. Derive shifting people from actual filed tax-family assignments and original covered months. Reject unknowns, contradictory supplied agreement references/fractions and substituted enrollment identity."
+    testRef: "tests/engine/forms/form-8962-default-allocation.test.ts::requires actual no-agreement and enrollment facts without accepting a supplied fraction"
+  - line: "30-33e-g"
+    description: "Default share and exact complementary source allocation"
+    formula: "claimingFraction=round2(claiming-family covered people / all covered people); enrollingFraction=1-claimingFraction. Use this return's actual role. Published1/3 gives.33/.67; exact original13000/12000/6345 gives4290/3960/2093.85 and8710/8040/4251.15."
+    testRef: "tests/engine/forms/form-8962-default-allocation.test.ts::matches published no-agreement shares from either actual taxpayer role"
+  - line: "monthly-source"
+    description: "Recompute actual covered-person default shares for each original month"
+    formula: "Count only original people covered in that month, preserve both-family membership and explicit policy rows, group only consecutive equal derived fractions; do not reuse an annual count across changing coverage."
+    testRef: "tests/engine/forms/form-8962-default-allocation.test.ts::derives changing monthly counts and preserves complementary rounding at one of eight"
+  - line: "canonical"
+    description: "Use the default allocation in ordinary canonical credit and Part IV"
+    formula: "The canonical calculation consumes only source-derived monthly amounts, with unchanged source reconciliation and credit-law gates. An actual missing agreement is a supported method; a missing answer is still unknown."
+    testRef: "tests/engine/forms/form-8962-default-allocation.test.ts::uses actual default sources canonically and retains isolated year gates"
+  - line: "guided-sources"
+    description: "Preserve explicit no-agreement and original enrollment evidence through guided calculation"
+    formula: "Copying leaves the agreement answer unknown. Explicit false requires original enrollment reference, actual enrolling taxpayer and all-enrollee confirmation; normalize unknown confirmation without supplying false. Derive exact original amounts and keep independent eligibility answers. Current 30000 wages and allocated330/297/165 monthly produce2976 credit,1980 advances and996 net once."
+    testRef: "tests/guided-interview/guided-default-allocation.test.ts::preserves actual enrollment evidence and derives a default allocation once"
+  - line: "guided-controls"
+    description: "Expose no-agreement enrollment controls in the actual credits component"
+    formula: "Choosing no agreement clears incompatible entered agreement fractions but never original records; collect actual enrolling taxpayer evidence instead of a computed share. Every source edit invalidates confirmations; missing evidence blocks and original amounts remain unchanged."
+    testRef: "tests/apps/web/shared-policy-interactions.test.tsx::reaches no-agreement enrollment controls without an entered allocation share"
+  - line: "review"
+    description: "Retain the actual default method in Part IV and private review output"
+    formula: "Physical columns e/f/g contain the same source-derived two-place fraction. Reference statement identifies default enrollee-count allocation. Original enrollment identity/reference remain private, and altered enrollment or original amounts invalidate the prepared source token."
+    testRef: "tests/pdf/form8962-shared-policy-review.test.ts::saves the actual default allocation method and rejects replaced enrollment sources"
+  - line: "browser"
+    description: "Retain source evidence and unknown answers on desktop and mobile"
+    formula: "The real production guide saves and reloads explicit no-agreement and actual enrollment evidence, derives original amounts once, revokes confirmation on edits and does not send private identifiers or references in network requests."
+    testRef: "apps/web/tests/guided-default-allocation.spec.ts::preserves actual no-agreement enrollment sources"

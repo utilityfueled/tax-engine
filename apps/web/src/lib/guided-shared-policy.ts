@@ -15,6 +15,7 @@ export interface SharedPolicyAgreementData {
   noCurrentYearMarriageOrDivorceConfirmed: boolean | null; twoTaxFamiliesConfirmed: boolean | null;
   allCoveredPeopleAssignedConfirmed: boolean | null; originalSlcspCorrectConfirmed: boolean | null;
   agreementConfirmed: boolean | null; agreementReference: string;
+  defaultAllocation?: { sourceReference: string; enrollingTaxpayerSsn: string; allCoveredPeopleEnrolledByTaxpayerConfirmed: boolean | null };
   coveredFamilyAssignments: { ssn: string; family: "" | "this_return" | "other_return" }[];
   monthlyAllocations: { month: string; fraction: string }[];
 }
@@ -86,6 +87,7 @@ export function resolveGuidedSharedPolicy(data: PremiumTaxCreditData, taxYear: n
       situation: policy.situation || undefined, noCurrentYearMarriageOrDivorceConfirmed: policy.noCurrentYearMarriageOrDivorceConfirmed ?? undefined,
       twoTaxFamiliesConfirmed: policy.twoTaxFamiliesConfirmed ?? undefined, allCoveredPeopleAssignedConfirmed: policy.allCoveredPeopleAssignedConfirmed ?? undefined,
       originalSlcspCorrectConfirmed: policy.originalSlcspCorrectConfirmed ?? undefined, agreementConfirmed: policy.agreementConfirmed ?? undefined,
+      defaultAllocation: policy.defaultAllocation ? { ...policy.defaultAllocation, allCoveredPeopleEnrolledByTaxpayerConfirmed: policy.defaultAllocation.allCoveredPeopleEnrolledByTaxpayerConfirmed ?? undefined } : undefined,
       coveredFamilyAssignments: policy.coveredFamilyAssignments.map(entry => ({ ...entry, family: entry.family || undefined })),
       monthlyAllocations: policy.monthlyAllocations.map(row => ({ month: whole(row.month, "agreement month"), fraction: row.fraction.trim() })) })) };
   const form8962 = Form8962Schema.parse({ sharedPolicyAllocations, taxFamilySize: whole(data.taxFamilySize, "actual tax family size"), allocationRequired: data.allocationRequired,

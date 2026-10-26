@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.111",
+    ruleVersion: "2025.112",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8962", section: "Actual Situation4 no-agreement allocation from covered-family counts and the original enrolling taxpayer; claiming fraction rounded to two places and enrolling remainder", revision: "Final2025 Situation4 Example2, Reg1.36B-4(a)(1)(ii)(B)/(a)(4) Example11; exact source/guide/PartIV review controls, derived tie example, broader methods and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i7203", section: "Actual S corporation nondeductible costs reduce direct debt before losses, or after losses under the actual Reg. 1.1367-1(g) election; separate final unabsorbed costs and election carry", revision: "Form 7203 lines 23/28/30/31 and Reg. 1.1367-1/-2; exact source controls and saved reference audits, separate charitable appreciation handoff and human qualification remain pending", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.36B-4", section: "Actual February–December day1 marriage ends the alternative calculation before the first fully married month; January1 remains ineligible", revision: "Reg1.36B-4(b)(2)(ii)(B)/(C), final2025 i8962 Table4 and Pub974; original date, source/guide/monthly/PartV boundaries and derived controls, full2026 and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Final2025 EIC table and independent earned-income/AGI lookups; IRC32(a)(2) maximum-credit phase-out ceiling and exact2026 indexed maximum rounding", revision: "Final2025 WorksheetsA/B,1374 published rows and8 partial-row footnotes, IRC32(a)/(f), RevProc2025-32; independent source/software controls, final2026 table and human qualification remain separate", retrievedAt: "2026-10-26" },
@@ -154,11 +155,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.108-law-integration-draft",
+    ruleVersion: "2026.109-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8962", section: "Actual Situation4 no-agreement allocation from covered-family counts and the original enrolling taxpayer; claiming fraction rounded to two places and enrolling remainder", revision: "Final2025 Situation4 Example2, Reg1.36B-4(a)(1)(ii)(B)/(a)(4) Example11; exact source/guide/PartIV review controls, derived tie example, broader methods and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i7203", section: "Actual S corporation nondeductible costs reduce direct debt before losses, or after losses under the actual Reg. 1.1367-1(g) election; separate final unabsorbed costs and election carry", revision: "Form 7203 lines 23/28/30/31 and Reg. 1.1367-1/-2; exact source controls and saved reference audits, separate charitable appreciation handoff and human qualification remain pending", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.36B-4", section: "Actual February–December day1 marriage ends the alternative calculation before the first fully married month; January1 remains ineligible", revision: "Reg1.36B-4(b)(2)(ii)(B)/(C), final2025 i8962 Table4 and Pub974; original date, source/guide/monthly/PartV boundaries and derived controls, full2026 and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Final2025 EIC table and independent earned-income/AGI lookups; IRC32(a)(2) maximum-credit phase-out ceiling and exact2026 indexed maximum rounding", revision: "Final2025 WorksheetsA/B,1374 published rows and8 partial-row footnotes, IRC32(a)/(f), RevProc2025-32; independent source/software controls, final2026 table and human qualification remain separate", retrievedAt: "2026-10-26" },

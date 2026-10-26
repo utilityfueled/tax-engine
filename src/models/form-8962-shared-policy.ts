@@ -25,6 +25,10 @@ export const Form8962SharedPolicySchema = z.object({
     allCoveredPeopleAssignedConfirmed: z.boolean().optional(), originalSlcspCorrectConfirmed: z.boolean().optional(),
     coveredFamilyAssignments: z.array(z.object({ ssn: z.string().optional(), family: z.enum(['this_return', 'other_return']).optional() })).optional(),
     agreementConfirmed: z.boolean().optional(), agreementReference: z.string().optional(),
+    defaultAllocation: z.object({
+      sourceReference: z.string().optional(), enrollingTaxpayerSsn: z.string().optional(),
+      allCoveredPeopleEnrolledByTaxpayerConfirmed: z.boolean().optional(),
+    }).optional(),
     monthlyAllocations: z.array(z.object({ month: z.number().int().optional(), fraction: z.string().optional() })).optional(),
   })).optional(),
 });

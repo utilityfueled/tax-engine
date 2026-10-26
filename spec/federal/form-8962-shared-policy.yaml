@@ -18,8 +18,9 @@ notes: |
   not used as a monthly-rounding oracle; the form explicitly rounds8a/8b.
   Initial coverage is Situation4 with documented agreement, two tax families,
   positive policy APTC, no current-year marriage/divorce, known correct original
-  SLCSP, and nonoverlapping policy months. Separate-source methods for no
-  agreement, noAPTC, other allocation situations, overlapping policies, QSEHRA,
+  SLCSP, and nonoverlapping policy months. The actual no-agreement default
+  is separately specified in form-8962-default-allocation.yaml. Methods for
+  noAPTC, other allocation situations, overlapping policies, QSEHRA,
   PartV and self-employed-health coordination remain unimplemented here.
   Original source cents are multiplied before each final monthly form amount
   is rounded. No dependent identity, income, fraction or missing zero is inferred.

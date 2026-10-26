@@ -111,3 +111,27 @@ it('retains year and filing gates for shared-policy review', async () => {
   await expect(fillForm8962SharedPolicy({ ...input, taxpayer: { ...input.taxpayer, taxYear: 2026 } }, { ...result, taxYear: 2026 }, blank)).rejects.toThrow(/2026|year/i);
   await expect(fillReturn(input, result, { purpose: 'filing', blankFormsDir: 'forms/blank/2025', outputDir: '/unused' })).rejects.toThrow(/filing/i);
 });
+
+it('saves the actual default allocation method and rejects replaced enrollment sources', async () => {
+  const input=sharedPolicyFixture(), original=input.form1095A[0], policy=input.form8962!.sharedPolicyAllocations!.policies![0];
+  original.coveredIndividuals!.push({name:'Pat Other',ssn:'345-67-8901',firstMonth:1,lastMonth:12});policy.original=structuredClone(original);
+  policy.coveredFamilyAssignments!.push({ssn:'345-67-8901',family:'other_return'});policy.agreementConfirmed=false;policy.agreementReference=undefined;policy.monthlyAllocations=undefined;
+  policy.defaultAllocation={sourceReference:'Private original enrollment reference',enrollingTaxpayerSsn:'123-45-6789',allCoveredPeopleEnrolledByTaxpayerConfirmed:true};
+  input.form8962!.monthlyReconciliation!.forEach(row=>Object.assign(row,{enrolleePremium:'330',slcsp:'297',advancePremiumTaxCredit:'165'}));
+  const result=calculateFederalTax(input),prepared=preparePremiumTaxCreditReview(input),redacted=redactReviewIdentifiers(input),hidden=redactReviewIdentifiers(result);
+  const context={input:redacted,prepared},summary=buildForm8962ReferenceSummary(redacted.form1095A,hidden,context);
+  expect(summary.allocations?.[0]).toMatchObject({fraction:'0.33',method:'default_enrollee_count'});
+  expect(summary.introduction).not.toContain('Part IV agreement');
+  const dir=mkdtempSync(join(tmpdir(),'tax-default-allocation-review-'));
+  try{
+    const doc=await fillForm8962SharedPolicy(redacted,hidden,blank,prepared),path=join(dir,'default.pdf');writeFileSync(path,await doc.save());
+    const saved=inspect(path);for(const field of F.allocations[0].slice(4))expect(saved.fields[field]).toBe('0.33');
+    expect(saved.fields[F.line24]).toBe('2976');expect(saved.fields[F.line25]).toBe('1980');expect(saved.fields[F.line26]).toBe('996');
+    const reference=inspect(await fillForm8962Reference(redacted.form1095A,hidden,dir,context)),text=reference.pages.join(' ');
+    expect(text.replace(/\s+/g,' ')).toContain('Default allocation from actual enrollees');
+    for(const secret of ['Private original enrollment reference','123-45-6789','234-56-7890','345-67-8901'])expect(text).not.toContain(secret);
+    for(const page of [...saved.pages,...reference.pages])expect(page).toContain(REVIEW_PDF_NOTICE);
+    const changed=structuredClone(input);changed.form8962!.sharedPolicyAllocations!.policies![0].defaultAllocation!.enrollingTaxpayerSsn='234-56-7890';
+    await expect(fillForm8962SharedPolicy(changed,result,blank,prepared)).rejects.toThrow(/stale|conflict/i);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
