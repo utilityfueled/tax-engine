@@ -52,12 +52,12 @@ notes: |
   strip original source records to enter an unsupported replay.
   IRC731(a)(1) recognizes money distributed above partnership-interest basis;
   IRC1368(b)(2) similarly addresses excess stock distributions under its stated
-  conditions. This attachment does not contain the original interest/stock
-  holding period and distribution treatment. A positive calculated excess
-  distribution gain therefore rejects before return handoff rather than losing
-  the gain or inventing its character. Zero excess remains supported; the
-  original actual distribution is retained. The source-bound gain handoff is
-  separate internal work, not a conclusion that the distribution is ineligible.
+  conditions. A positive calculated excess without the optional original
+  cashDistribution holding/treatment attachment rejects before return handoff.
+  The separate k1-cash-distribution-gain specification supports the bounded
+  investment-only actual cash method. Zero excess without an attachment keeps
+  its original behavior. Business/passive and other distribution methods remain
+  separate work; no unsupported source is assigned an invented gain character.
   https://uscode.house.gov/us/usc/119-120/t26/s731/
   https://uscode.house.gov/us/usc/119-120/t26/s1368/
 lines:

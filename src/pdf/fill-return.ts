@@ -441,7 +441,9 @@ export async function fillReturn(
     assertPreparedEducationReturn(input, result.form1099Q, educationReview);
     buildForm1099QReferenceSummary(input.form1099Q, result.form1099Q, input.qualifiedEducationExpenses, educationReview);
   }
-  const capitalGainReview = options.capitalGainReview ?? prepareForm8949Review(input);
+  const capitalGainReview = options.capitalGainReview ?? prepareForm8949Review(
+    charitableReview ? charitableReviewOriginalSourceInput(input, result, charitableReview) : input,
+  );
   const capitalTransactions = form8949ReviewCalculation(input, capitalGainReview);
   const hasDigitalDispositions = [capitalTransactions.shortTermBoxG, capitalTransactions.shortTermBoxH, capitalTransactions.shortTermBoxI,
     capitalTransactions.longTermBoxJ, capitalTransactions.longTermBoxK, capitalTransactions.longTermBoxL].some(category => category.transactions.length > 0);
@@ -450,7 +452,8 @@ export async function fillReturn(
       throw new Error("QSBS review source exclusion does not reconcile with ScheduleD");
     }
   }
-  if (capitalTransactions.section1202 || hasDigitalDispositions) {
+  const hasK1CashDistribution = input.k1CharitableSources?.statements?.some(source => source.cashDistribution !== undefined);
+  if (capitalTransactions.section1202 || hasDigitalDispositions || hasK1CashDistribution) {
     for (const entry of capitalTransactions.lines.filter(row => row.form === "Form 8949")) {
       const canonical = result.allLines.filter(row => row.form === entry.form && row.line === entry.line);
       if (canonical.length !== 1 || !canonical[0].value.eq(entry.value)) throw new Error("Form8949 original source audit does not reconcile");

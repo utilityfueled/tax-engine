@@ -27,11 +27,13 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.123",
+    ruleVersion: "2025.124",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-120/t26/s731/", section: "Actual investment-only cash distributions above original partnership or S-stock basis, separate owner gain through Form8949 and ScheduleD", revision: "IRC731/1368/1222, Reg1.731-1/1.1368-1, final8949 and7203; original cash/holding/exclusions and private source review, business/passive, fiscal/interim and human qualification remain separate", retrievedAt: "2026-10-26" },
+      { url: "https://www.irs.gov/instructions/i6198", section: "Actual same-single-activity and gain-item statement for original owner distribution gain; exact PartI reconciliation with independently nonbinding capacity", revision: "Final2025 source instructions and Pub925; bounded activity-source interpretation, no inferred gain allocation or entity basis increase; broader activity methods remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i8960", section: "Lines 4a-4c retain completed Schedule E portfolio royalties once alongside allowed passive income; excluded active business income remains separate", revision: "Final 2025 instructions and IRC 1411(c)(1)(A)(i); represented MISC and K1 sources, exact cents and final tax rounding. Expense and business-character methods, full 2026 and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Worksheet1 represented royalties and final ordinary passive income; exclude nonpassive/PTP and actual complete ordinary earned overlap", revision: "Final2025 lines8-13 plus i8582 PTP instructions; royalty expenses, personal-property rental, mixed SE/disposition methods, final2026 and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i1065sk1", section: "Original K-1 A/E/F charitable attachments through actual owner basis, separate ordinary/capital character and source-confirmed nonbinding at-risk capacity; original facts retained in private review contexts", revision: "IRC702/706/704(d)/1366(d)/170, RevRul2008-16 and i6198; derived fiscal cash treatment, positive2026 prior-basis floor timing, distribution gains, binding465, NOL and human qualification remain separately bounded", retrievedAt: "2026-10-26" },
@@ -162,11 +164,13 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.120-law-integration-draft",
+    ruleVersion: "2026.121-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-120/t26/s731/", section: "Actual investment-only cash distributions above original partnership or S-stock basis, separate owner gain through Form8949 and ScheduleD", revision: "IRC731/1368/1222, Reg1.731-1/1.1368-1, final8949 and7203; original cash/holding/exclusions and private source review, business/passive, fiscal/interim and human qualification remain separate", retrievedAt: "2026-10-26" },
+      { url: "https://www.irs.gov/instructions/i6198", section: "Actual same-single-activity and gain-item statement for original owner distribution gain; exact PartI reconciliation with independently nonbinding capacity", revision: "Final2025 source instructions and Pub925; bounded activity-source interpretation, no inferred gain allocation or entity basis increase; broader activity methods remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i8960", section: "Lines 4a-4c retain completed Schedule E portfolio royalties once alongside allowed passive income; excluded active business income remains separate", revision: "Final 2025 instructions and IRC 1411(c)(1)(A)(i); represented MISC and K1 sources, exact cents and final tax rounding. Expense and business-character methods, full 2026 and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Worksheet1 represented royalties and final ordinary passive income; exclude nonpassive/PTP and actual complete ordinary earned overlap", revision: "Final2025 lines8-13 plus i8582 PTP instructions; royalty expenses, personal-property rental, mixed SE/disposition methods, final2026 and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i1065sk1", section: "Original K-1 A/E/F charitable attachments through actual owner basis, separate ordinary/capital character and source-confirmed nonbinding at-risk capacity; original facts retained in private review contexts", revision: "IRC702/706/704(d)/1366(d)/170, RevRul2008-16 and i6198; derived fiscal cash treatment, positive2026 prior-basis floor timing, distribution gains, binding465, NOL and human qualification remain separately bounded", retrievedAt: "2026-10-26" },

@@ -6,6 +6,7 @@ import type { CalculatedLine } from '@/models/outputs.js';
 import type { CharitableContributionWorksheetInput } from './charitable-contribution-worksheet.js';
 import { calculatePartnerBasisSchedule, type PartnerBasisScheduleResult } from './partner-basis-schedule.js';
 import { calculateForm6198 } from './form-6198.js';
+import { calculateK1CashDistributionGain, type K1CashDistributionGain } from './k1-cash-distribution-gain.js';
 import { resolveCharitableRecipient } from '@/utils/charitable-recipient.js';
 import { d, sum } from '@/utils/decimal.js';
 import { AuditTrail } from '@/utils/audit.js';
@@ -22,10 +23,13 @@ export interface K1CharitableReturnInput {
     scheduleK1: ScheduleK1[];
     k1CharitableSources?: K1CharitableReturnSources;
     qbiLossSources?: TaxYearInput['qbiLossSources'];
+    standardDeductionFacts?: TaxYearInput['standardDeductionFacts'];
+    eic?: Pick<NonNullable<TaxYearInput['eic']>, 'claimantEligibility'>;
 }
 export interface K1CharitableStatementResult {
     k1Index: number;
     basis: PartnerBasisScheduleResult;
+    distributionGain?: K1CashDistributionGain;
     nonbindingRiskRequired: Decimal;
     amountAtRisk: Decimal;
     ordinaryAmount: Decimal;
@@ -57,6 +61,27 @@ function date(value: string | undefined, label: string): string {
     return value;
 }
 const needsSource = (source: ScheduleK1) => [source.charitableCash, source.charitableCapitalGain30, source.charitableCapitalGain20, source.priorSuspendedLosses?.charitable].some(value => !d(value).isZero());
+function reconcileDistributionOwnerTreatment(input: K1CharitableReturnInput, k1: ScheduleK1): void {
+    const standard = input.standardDeductionFacts;
+    const supplied = input.eic?.claimantEligibility;
+    const claimant = supplied?.sourceTaxYear === input.taxpayer.taxYear && supplied.sourceFactsConfirmed === true && supplied.sourceReference?.trim() ? supplied : undefined;
+    // The standard-deduction interview asks the primary person's status. The
+    // confirmed EIC packet has separate owner facts; a spouse is not the owner
+    // merely because both people file this return.
+    const primaryKnown = standard?.nonresidentAlien === true || standard?.dualStatusAlien === true ? true
+        : standard?.nonresidentAlien === false && standard.dualStatusAlien === false ? false : undefined;
+    const ownerKnown = k1.accountHolder === 'spouse' ? claimant?.spouseNonresidentAlienDuringYear : claimant?.primaryNonresidentAlienDuringYear;
+    if (k1.accountHolder === 'primary' && ownerKnown !== undefined && primaryKnown !== undefined && ownerKnown !== primaryKnown)
+        throw new Error('K1 cash distribution actual owner residency sources conflict');
+    if (claimant?.residentJointElection !== undefined && standard?.residentJointElection !== undefined
+        && claimant.residentJointElection !== standard.residentJointElection)
+        throw new Error('K1 cash distribution actual resident election sources conflict');
+    const election = claimant?.residentJointElection ?? standard?.residentJointElection;
+    const married = input.taxpayer.filingStatus === 'married_filing_jointly' || input.taxpayer.filingStatus === 'married_filing_separately';
+    const effectiveElection = married && input.taxpayer.spouse !== undefined && election === true;
+    if ((ownerKnown === true || (k1.accountHolder === 'primary' && primaryKnown === true)) && !effectiveElection)
+        throw new Error('K1 cash distribution actual owner residency conflicts with confirmed ordinary U.S. individual tax treatment');
+}
 export function calculateK1CharitableReturnSources(input: K1CharitableReturnInput): K1CharitableReturnResult | undefined {
     const packet = input.k1CharitableSources;
     if (packet === undefined)
@@ -85,8 +110,8 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
             if (key !== 'charitable' && !d(value).isZero())
                 throw new Error('K1 charitable prior noncharitable basis releases require their independent character and QBI history method');
         const basis = calculatePartnerBasisSchedule(k1, { taxpayer: input.taxpayer, sources: source.basis });
-        if (basis.excessDistributionGain.gt(0))
-            throw new Error('K1 charitable excess distribution gain requires original holding-period and distribution-treatment sources');
+        if (source.cashDistribution) reconcileDistributionOwnerTreatment(input, k1);
+        const distributionGain = calculateK1CashDistributionGain(k1, basis, source.basis, source.cashDistribution);
         const charity = basis.charitableSources;
         if (!charity)
             throw new Error('K1 charitable original basis result is missing');
@@ -150,6 +175,8 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
         if (!risk || !form || risk.sourceTaxYear !== year || risk.sourceFactsConfirmed !== true || risk.simplifiedMethodEligible !== true || risk.allActivityDeductionsIncluded !== true)
             throw new Error('K1 charitable requires complete actual eligible at-risk source facts');
         text(risk.sourceReference, 'at-risk source reference');
+        if (distributionGain && source.cashDistribution?.atRiskSourceReference !== risk.sourceReference)
+            throw new Error('K1 cash distribution must bind the same original at-risk activity source');
         for (const key of ['ordinaryIncome', 'gainLossFromDispositions', 'otherIncomeGains', 'otherDeductionsLosses'] as const) {
             const value = form[key];
             if (typeof value !== 'string' || !/^-?\d+(\.\d+)?$/.test(value) || !d(value).isFinite()) {
@@ -177,7 +204,7 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
         const ordinaryAmount = Decimal.max(0, d(k1.ordinaryIncome)).minus(allowed('ordinary'));
         const shortTermAmount = Decimal.max(0, d(k1.netShortTermCapitalGain)).minus(allowed('shortTermCapital'));
         const longTermAmount = Decimal.max(0, d(k1.netLongTermCapitalGain)).minus(allowed('longTermCapital'));
-        if (!d(form.ordinaryIncome).eq(ordinaryAmount) || !d(form.gainLossFromDispositions).eq(shortTermAmount.plus(longTermAmount))
+        if (!d(form.ordinaryIncome).eq(ordinaryAmount) || !d(form.gainLossFromDispositions).eq(shortTermAmount.plus(longTermAmount).plus(distributionGain?.gain ?? 0))
             || !d(form.otherIncomeGains).eq(sum(d(k1.interestIncome), d(k1.ordinaryDividends))))
             throw new Error('K1 charitable original at-risk income sources must reconcile to basis-allowed character');
         const allCharity = sum(...Object.values(charity.availableAfterBasis));
@@ -194,7 +221,8 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
             'Conservative at-risk requirement': nonbindingRiskRequired, 'Actual amount at risk': amountAtRisk,
             'Ordinary amount after basis': ordinaryAmount, 'Short-term amount after basis': shortTermAmount, 'Long-term amount after basis': longTermAmount,
         });
-        return { k1Index: index, basis, nonbindingRiskRequired, amountAtRisk, ordinaryAmount, shortTermAmount, longTermAmount };
+        if (distributionGain) audit.merge(distributionGain.lines.map(line => ({ ...line, line: `${line.line}-${index + 1}` })));
+        return { k1Index: index, basis, distributionGain, nonbindingRiskRequired, amountAtRisk, ordinaryAmount, shortTermAmount, longTermAmount };
     });
     if (input.scheduleK1.some((row, index) => needsSource(row) && !seen.has(index)))
         throw new Error('K1 charitable complete packet omits an actual current or prior basis source');

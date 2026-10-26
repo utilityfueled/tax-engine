@@ -13,6 +13,7 @@ import { d } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { calculateSection1202Sources, type Section1202SourceResult } from "./section-1202-sources.js";
 import { normalizeDigitalAssetCapitalInput } from './digital-asset-capital-input.js';
+import { calculateK1CharitableReturnSources } from './k1-charitable-return-sources.js';
 
 export interface TransactionSummary {
   description: string;
@@ -148,6 +149,22 @@ export function calculateForm8949(input: TaxYearInput): Form8949Result {
   };
   for (const { transaction, sourceId } of allTransactions) {
     transactions[reportingBox(transaction)].push(processTransaction(transaction, brokerExclusions.get(sourceId)));
+  }
+  // Owner-level distribution gains are separate from the entity's reported
+  // capital amounts and basis income. Original source validation determines
+  // character and reported columns; no synthetic1099-B statement is created.
+  if (input.k1CharitableSources?.statements?.some(source => source.cashDistribution !== undefined)) {
+    const source = calculateK1CharitableReturnSources(input);
+    for (const statement of source?.statements ?? []) {
+      const distribution = statement.distributionGain;
+      if (!distribution?.gain.gt(0)) continue;
+      transactions[distribution.holdingPeriod === 'short' ? 'C' : 'F'].push({
+        description: `${input.scheduleK1[statement.k1Index].partnershipName} - cash distribution`,
+        dateAcquired: distribution.acquisitionDate, dateSold: distribution.distributionDate,
+        proceeds: distribution.proceeds, costBasis: distribution.reportedBasis,
+        adjustment: new Decimal(0), adjustmentCode: '', gainLoss: distribution.gain,
+      });
+    }
   }
   const shortTermBoxA = aggregateCategory(transactions.A);
   const shortTermBoxB = aggregateCategory(transactions.B);

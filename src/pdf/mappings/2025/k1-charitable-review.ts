@@ -24,6 +24,14 @@ export function buildK1CharitableReview(input: TaxYearInput, result: TaxReturnRe
         if (!charity)
             throw new Error('K1 charitable review requires completed basis sources');
         rows.push(`Statement ${statement.k1Index + 1}, ${original.scheduleK1[statement.k1Index].accountHolder === 'spouse' ? 'spouse' : 'primary taxpayer'}`, `Conservative at-risk requirement: $${statement.nonbindingRiskRequired.toFixed()}; actual capacity: $${statement.amountAtRisk.toFixed()}`, `Ordinary amount after basis: $${statement.ordinaryAmount.toFixed()}`, `Short-term capital amount after basis: $${statement.shortTermAmount.toFixed()}`, `Long-term capital amount after basis: $${statement.longTermAmount.toFixed()}`);
+        const distribution = statement.distributionGain;
+        if (distribution) rows.push(
+            `Actual cash distribution: $${distribution.cash.toFixed()}; Basis before distribution: $${distribution.basisBeforeDistribution.toFixed()}`,
+            `Basis recovered: $${distribution.recoveredBasis.toFixed()}; Owner capital gain: $${distribution.gain.toFixed()}`,
+            `Acquisition date: ${distribution.acquisitionDate}; distribution date: ${distribution.distributionDate}; ${distribution.holdingPeriod}-term investment gain`,
+            `Form8949 proceeds: $${distribution.proceeds.toFixed()}; reported basis: $${distribution.reportedBasis.toFixed()}`,
+            'Distribution gain is not another entity income or charitable contribution.',
+        );
         for (const [index, record] of charity.records.entries()) {
             const label = record.category === 'cash_60' ? 'public cash' : record.category === 'capital_gain_30' ? 'public capital property' : 'other capital property';
             rows.push(`Contribution ${index + 1}: ${label}; original year ${record.originTaxYear}; ${record.current ? 'current entity-year source' : 'prior basis source'}`, `Original contribution share: $${record.contributionShare.toFixed()}; original allocated basis: $${record.originalBasis.toFixed()}`, `Basis previously allowed: $${record.basisPreviouslyAllowed.toFixed()}; basis allowed this year: $${record.basisAllowed.toFixed()}`, `Current appreciation outside the basis limit: $${record.appreciationExempt.toFixed()}`, `Available after basis: $${record.availableAfterBasis.toFixed()}; Basis suspended: $${record.basisSuspended.toFixed()}`);

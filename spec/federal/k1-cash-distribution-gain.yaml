@@ -1,0 +1,135 @@
+form: "K1 Cash Distribution Gain"
+fullName: "Original cash distribution gain from an investment-only partnership interest or S corporation stock"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p541"
+retrievedAt: "2026-10-26"
+notes: |
+  IRC731(a)(1), Reg1.731-1(a)(1)/(3) recognize money above adjusted outside
+  basis immediately before distribution as interest sale/exchange gain.
+  IRC1368(b)/(d), Reg1.1368-1(c)/(e)(2) apply stock basis (not debt basis),
+  increased by the actual corporation-year income items, before distributions
+  for an S corporation with no accumulated earnings and profits at year end.
+  Reg1.1368-3 Example2 establishes that ordering; no AAA amount replaces basis.
+  https://uscode.house.gov/us/usc/119-120/t26/s731/
+  https://uscode.house.gov/us/usc/119-120/t26/s1368/
+  https://www.ecfr.gov/current/title-26/section-1.731-1
+  https://www.ecfr.gov/current/title-26/section-1.1368-1
+  https://www.ecfr.gov/current/title-26/section-1.1368-3
+  https://www.irs.gov/instructions/i7203
+  Source cohort: original confirmed complete K1 charitable/basis packet plus
+  one actual cash-only nonliquidating distribution, one unchanged investment
+  block held before the calendar tax year, no additional contribution or other
+  basis changes. For partnership, an actual December31 distribution and all
+  income earned before it establish the immediately-before basis from the
+  existing year-end source calculation. A cash advance against distributive
+  income has a separate deemed-date rule in1.731-1(a)(1)(ii); no such inference
+  is made here. S corporation may use its actual distribution date within the
+  calendar year, with the statutory annual income increases. Actual debt is not
+  stock distribution basis. The original stock/interest remains outstanding.
+  https://www.ecfr.gov/current/title-26/section-1.705-1
+  IRC1222 and final8949 instructions count from the day after acquisition
+  through disposition. More than the one-year calendar anniversary is long;
+  the anniversary itself is short. Reg1.1223-3(a)/(d)(2) requires split holding
+  periods for multiple acquisition blocks, so this source method requires one
+  actual unchanged cash-acquired block and rejects inherited/gift/tacked/service
+  interests and special holding/exclusion elections. The gain is never another
+  entity income basis increase, and never creates a new cash charitable gift.
+  https://uscode.house.gov/us/usc/119-120/t26/s1222/
+  https://www.ecfr.gov/current/title-26/section-1.1223-3
+  https://www.irs.gov/instructions/i8949
+  Partnership reports actual money and recovered outside basis in8949(d)/(e),
+  giving the statutory excess in(h); S corporation follows the nondividend
+  instruction, reporting only taxable distribution in(d)/(h), zero remaining
+  basis. Neither original source has1099B/DA/S reporting; C/F feed D3/D10.
+  Actual original cash/basis stay separately audited, including exact cents.
+  This bounded source method supports only actual portfolio-investment-only
+  entities, confirmed against original zero operating/QBI/SE boxes and no
+  passive activity. Pub925 expressly allocates excess distribution gain to
+  passive activities; section1411(c)(4) can adjust nonpassive business ownership
+  gain. Those business/passive allocations remain separate internal work. No
+  active or passive classification is inferred from a capital-gain label.
+  https://www.irs.gov/publications/p925
+  https://uscode.house.gov/us/usc/119-120/t26/s1411/
+  Form6198 lines2a-2c include disposition gains from the actual activity or the
+  taxpayer's interest in it, but each nonbusiness investment is a separate
+  activity. Require original confirmation that this whole owner gain and the
+  accompanying K1 items belong to the same single at-risk activity, an exact
+  link to the original at-risk source reference, and the original gain-item
+  statement reference. The supplied PartI amount must reconcile to the derived
+  owner gain plus basis-allowed pass-through capital amounts. There is no free
+  zero/full allocation election. Unclassified or multiple activity attribution
+  remains separate. Capacity stays independently sufficient for every deduction
+  without using this gain to invent capacity or a basis increase. This narrow
+  activity-source interpretation is not a published distribution worked example.
+  https://www.irs.gov/instructions/i6198
+  The owner-specific U.S.-individual confirmation means actual U.S. citizen or
+  resident treatment throughout this source year and relevant holding period,
+  including an effective resident election; it does not mean an SSN, mailing
+  address, or permission to ignore known foreign/treaty treatment. IRC1361(b)(1)(C)
+  excludes an NRA shareholder. Reg1.1361-1(g)(1)(ii) Example2 expressly preserves
+  S status with an effective6013(g) election. Reconcile the primary owner's
+  actual standard-deduction residency answers and a confirmed current-year EIC
+  packet's actual primary/spouse residency answer with this source confirmation.
+  Use the actual K1 owner; never assign the other spouse's status to that owner.
+  A valid married resident election remains supported; a single-filer election
+  flag cannot cure conflicting owner facts. Unresolved foreign/dual-status
+  distribution treatment stays outside this bounded method, rather than being
+  inferred from capital gain. Bind all consumed residency/election sources in
+  the private capital review context, including original and exact redacted copies.
+  https://uscode.house.gov/us/usc/119-120/t26/s1361/
+  https://www.ecfr.gov/current/title-26/section-1.1361-1
+  https://www.irs.gov/individuals/international-taxpayers/nonresident-spouse
+  Mixed/property/marketable-security/deemed-liability money,731(c),751,707,736,
+  API1061,redemption/liquidation,accumulatedE&P,stock/debt repayment,split basis,
+  fiscal or interim partnership basis, and duplicate reporting remain explicit
+  boundaries. Unknown answers are not zero or affirmative confirmations.
+  Existing known-zero distribution attachments retain their original behavior;
+  supplied positive attachments require all facts and matching original cash.
+  Source support does not open2026 calculation/export gates or establish human
+  tax qualification. Review context keeps original identity private and accepts
+  only original or exact redacted sources; forged/stale contexts reject before I/O.
+lines:
+  - line: "partnership"
+    description: "Original cash less immediately-before outside basis"
+    formula: "Reg1.731-1(a)(1)(i) published cash11000/basis10000 produces1000 gain. Separate synthetic cash31/basis30 produces1; basis closes0, charitable appreciation100 remains100 and basis50 remains suspended. Added entity interest10 makes basis40:cash41 still produces1, never11."
+    testRef: "tests/engine/forms/k1-cash-distribution-gain.test.ts::derives partnership excess from actual cash and original basis without recycling gain"
+  - line: "s-corporation"
+    description: "Distribution basis excludes direct debt"
+    formula: "Actual stock30 and debt100 with cash31 create1 capital gain despite debt. Stock0; charitable basis50 may use debt, closing50, without treating gain as stock income."
+    testRef: "tests/engine/forms/k1-cash-distribution-gain.test.ts::uses annual stock income and excludes debt from S corporation distributions"
+  - line: "holding-period"
+    description: "Actual calendar anniversary and original holding method"
+    formula: "Acquired2024-12-31/distributed2025-12-31 is short;2024-12-30 is long. For S stock2024-02-29,2025-02-28 is within one year and2025-03-01 is long. No365-day shortcut."
+    testRef: "tests/engine/forms/k1-cash-distribution-gain.test.ts::uses actual acquisition anniversaries and preserves unknown holding sources"
+  - line: "source-boundary"
+    description: "Complete original identity character timing and reporting"
+    formula: "Source box/code/amount/date/year and complete basis reconcile. Unknown or changed exclusions, missing facts, E&P, property, multiple blocks, activity ambiguity and duplicate reporting reject. Known-zero without attachment remains supported."
+    testRef: "tests/engine/forms/k1-cash-distribution-gain.test.ts::rejects missing conflicting and unsupported original distribution facts"
+  - line: "canonical"
+    description: "Owner-level gain transfers once through capital reporting"
+    formula: "Original31/30 gives Form8949F1, D10/D15/D16/1040capital1 and AGI100001, not ScheduleE ordinary income. S nondividend proceeds1/basis0; partnership proceeds31/basis30."
+    testRef: "tests/engine/federal-k1-cash-distribution.test.ts::transfers actual distribution gain once through Form8949 ScheduleD and AGI"
+  - line: "at-risk-source"
+    description: "Owner disposition gain belongs to the actual original activity"
+    formula: "Actual single-activity confirmation, exact original at-risk reference and item statement are required; missing or different references and an omitted one-dollar gain reject. Sufficient capacity alone does not establish allocation."
+    testRef: "tests/engine/forms/k1-cash-distribution-gain.test.ts::requires original single-activity evidence for the owner gain"
+  - line: "niit"
+    description: "Portfolio source and exact gain remain investment income"
+    formula: "Actual high-income portfolio-only return includes the derived1 in ordinary net investment gain; known business/passive character cannot enter this portfolio method."
+    testRef: "tests/engine/federal-k1-cash-distribution.test.ts::preserves exact source cents and portfolio tax character"
+  - line: "owner-tax-treatment"
+    description: "Actual owner residency and effective election reconcile"
+    formula: "Known single S-corp NRA owner rejects despite an affirmative ordinary-treatment flag. Confirmed current-year owner-specific EIC status also reconciles on joint returns; the other spouse's status is not attributed to the owner. Actual valid resident-election treatment remains supported."
+    testRef: "tests/engine/federal-k1-cash-distribution.test.ts::reconciles actual owner residency without assigning the other spouse status"
+  - line: "review"
+    description: "Original source and calculation bind before redacted rendering"
+    formula: "Saved8949 and ScheduleD contain the gain and source-derived dates; separate basis appendix retains original cash/basis without private IDs. Changed dates/source/owner/amount or forged contexts reject before template access; encrypted original remains unchanged."
+    testRef: "tests/pdf/k1-cash-distribution-review.test.ts::binds and saves the redacted distribution gain with original basis evidence"
+  - line: "review-source"
+    description: "Every consumed K1 source remains bound in the private capital context"
+    formula: "Changed acquisition date, actual cash, source reference, taxpayer owner, basis identity or deleted attachment rejects before template I/O; a token cannot validate changed source facts merely because original capital arrays did not change."
+    testRef: "tests/pdf/k1-cash-distribution-review.test.ts::rejects replaced distribution sources before capital template access"
+  - line: "future-gate"
+    description: "Actual source support preserves future year boundaries"
+    formula: "Standalone2026 source amounts work without qualifying the year; canonical calculation and historical PDF gates remain closed."
+    testRef: "tests/engine/federal-k1-cash-distribution.test.ts::keeps future calculation and review gates closed"

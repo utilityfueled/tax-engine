@@ -11,9 +11,10 @@ const prepared = new WeakMap<PreparedForm8949Review, { originalDigest: string; r
   calculation: Form8949Result; originalSources: ReturnType<typeof capitalSources> }>();
 
 function capitalSources(input: TaxYearInput) {
-  return { taxpayer: input.taxpayer, form1099B: input.form1099B,
+  return { taxpayer: input.taxpayer, standardDeductionFacts: input.standardDeductionFacts, eic: input.eic, form1099B: input.form1099B,
     form1099Div: input.form1099Div, section1202Sources: input.section1202Sources,
     form1099DA: input.form1099DA, cryptoIncome: input.cryptoIncome,
+    scheduleK1: input.scheduleK1, k1CharitableSources: input.k1CharitableSources, qbiLossSources: input.qbiLossSources,
     scheduleDSpecialGainSources: input.scheduleDSpecialGainSources, amtCapitalGains: input.amtCapitalGains,
     priorYear: input.priorYear, form172CapitalSources: input.form172?.capitalSources };
 }

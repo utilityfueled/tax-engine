@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { K1CharitableBasisSourcesSchema } from './k1-charitable-basis-sources.js';
+import { K1CashDistributionSourcesSchema } from './k1-cash-distribution-sources.js';
 const amount = z.string().regex(/^\d+(\.\d+)?$/).optional();
 /** Actual attachments only. No calculated allowance, recipient default, or inferred history. */
 export const K1CharitableReturnSourcesSchema = z.object({
@@ -8,6 +9,7 @@ export const K1CharitableReturnSourcesSchema = z.object({
     statements: z.array(z.object({
         k1SourceId: z.string().optional(), sameRegularAmtTreatmentConfirmed: z.boolean().optional(),
         basis: K1CharitableBasisSourcesSchema.optional(),
+        cashDistribution: K1CashDistributionSourcesSchema.optional(),
         receipts: z.array(z.object({
             basisSourceId: z.string().optional(), originalBox: z.enum(['12', '13']).optional(), originalCode: z.enum(['A', 'E', 'F']).optional(),
             recipientName: z.string().optional(), recipientCategory: z.enum(['fifty-percent', 'private-nonoperating', 'other-thirty-percent']).optional(),
