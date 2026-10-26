@@ -11,10 +11,12 @@ export interface SharedPolicyAllocationData {
 }
 export interface SharedPolicyAgreementData {
   sourceId: string; original?: MarketplacePolicyData; otherTaxpayerName: string; otherTaxpayerSsn: string;
-  situation: "" | "other_two_tax_families" | "divorce_during_year" | "married_separate" | "no_advance_credit";
+  situation: "" | "other_two_tax_families" | "divorce_during_year" | "married_separate" | "no_advance_credit" | "not_shared";
   noCurrentYearMarriageOrDivorceConfirmed: boolean | null; twoTaxFamiliesConfirmed: boolean | null;
   allCoveredPeopleAssignedConfirmed: boolean | null; originalSlcspCorrectConfirmed: boolean | null;
   agreementConfirmed: boolean | null; agreementReference: string;
+  unsharedSourceReference?: string;
+  allCoveredPeopleInThisTaxFamilyConfirmed?: boolean | null;
   noAdvanceAllocation?: NoAdvanceBenchmarkData;
   defaultAllocation?: { sourceReference: string; enrollingTaxpayerSsn: string; allCoveredPeopleEnrolledByTaxpayerConfirmed: boolean | null };
   coveredFamilyAssignments: { ssn: string; family: "" | "this_return" | "other_return" }[];
@@ -86,7 +88,8 @@ export function captureSharedPolicySources(data: PremiumTaxCreditData, personal:
     normalizeMarketplacePolicy(source, year, true);
     return { sourceId: `form1095A:${index}`, original: structuredClone(source), otherTaxpayerName: "", otherTaxpayerSsn: "", situation: "",
       noCurrentYearMarriageOrDivorceConfirmed: null, twoTaxFamiliesConfirmed: null, allCoveredPeopleAssignedConfirmed: null, originalSlcspCorrectConfirmed: null,
-      agreementConfirmed: null, agreementReference: "", coveredFamilyAssignments: (source.coveredIndividuals ?? []).map(entry => ({ ssn: entry.ssn, family: "" })),
+      agreementConfirmed: null, agreementReference: "", unsharedSourceReference: "", allCoveredPeopleInThisTaxFamilyConfirmed: null,
+      coveredFamilyAssignments: (source.coveredIndividuals ?? []).map(entry => ({ ssn: entry.ssn, family: "" })),
       monthlyAllocations: source.monthlyPremiums.map(row => ({ month: row.month, fraction: "" })) };
   });
   return { sourceTaxYear: data.sourceTaxYear, sourceReference: "", sourceFactsConfirmed: null, allSharedPoliciesIncluded: null,
@@ -129,6 +132,7 @@ export function resolveGuidedSharedPolicy(data: PremiumTaxCreditData, taxYear: n
       situation: policy.situation || undefined, noCurrentYearMarriageOrDivorceConfirmed: policy.noCurrentYearMarriageOrDivorceConfirmed ?? undefined,
       twoTaxFamiliesConfirmed: policy.twoTaxFamiliesConfirmed ?? undefined, allCoveredPeopleAssignedConfirmed: policy.allCoveredPeopleAssignedConfirmed ?? undefined,
       originalSlcspCorrectConfirmed: policy.originalSlcspCorrectConfirmed ?? undefined, agreementConfirmed: policy.agreementConfirmed ?? undefined,
+      allCoveredPeopleInThisTaxFamilyConfirmed: policy.allCoveredPeopleInThisTaxFamilyConfirmed ?? undefined,
       noAdvanceAllocation: policy.noAdvanceAllocation ? { ...policy.noAdvanceAllocation,
         sourceTaxYear: whole(policy.noAdvanceAllocation.sourceTaxYear, "benchmark source year"), sourceFactsConfirmed: policy.noAdvanceAllocation.sourceFactsConfirmed ?? undefined,
         allCoveredPeopleInCoverageFamiliesConfirmed: policy.noAdvanceAllocation.allCoveredPeopleInCoverageFamiliesConfirmed ?? undefined,

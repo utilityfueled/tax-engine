@@ -20,7 +20,8 @@ export const Form8962SharedPolicySchema = z.object({
   policies: z.array(z.object({
     sourceId: z.string().optional(), original: originalPolicy.optional(),
     otherTaxpayerName: z.string().optional(), otherTaxpayerSsn: z.string().optional(),
-    situation: z.enum(['other_two_tax_families', 'divorce_during_year', 'married_separate', 'no_advance_credit']).optional(),
+    situation: z.enum(['other_two_tax_families', 'divorce_during_year', 'married_separate', 'no_advance_credit', 'not_shared']).optional(),
+    unsharedSourceReference: z.string().optional(), allCoveredPeopleInThisTaxFamilyConfirmed: z.boolean().optional(),
     noCurrentYearMarriageOrDivorceConfirmed: z.boolean().optional(), twoTaxFamiliesConfirmed: z.boolean().optional(),
     allCoveredPeopleAssignedConfirmed: z.boolean().optional(), originalSlcspCorrectConfirmed: z.boolean().optional(),
     coveredFamilyAssignments: z.array(z.object({ ssn: z.string().optional(), family: z.enum(['this_return', 'other_return']).optional() })).optional(),

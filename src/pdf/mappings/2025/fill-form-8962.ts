@@ -60,7 +60,7 @@ export interface Form8962ReferenceSummary {
   policies: Form8962ReferenceSummaryPolicy[];
   lines: Form8962ReferenceSummaryLine[];
   allocations?: { policyNumber: string; firstMonth: number; lastMonth: number; fraction: string; method: 'agreement' | 'default_enrollee_count' | 'no_advance_benchmark' }[];
-  allocatedMonths?: { month: number; originalPremium: string; originalSlcsp: string | null; originalAdvance: string; premium: string; slcsp: string; advance: string; benchmarkRatio?: { numerator: string; denominator: string } }[];
+  allocatedMonths?: { month: number; originalPremium: string; originalSlcsp: string | null; originalAdvance: string; premium: string; slcsp: string; advance: string; unshared?: true; benchmarkRatio?: { numerator: string; denominator: string } }[];
   marriage?: { electionApplies: boolean; worksheets: (Form8962ReferenceSummaryLine & { form: string })[] };
 }
 
@@ -269,7 +269,7 @@ export function buildForm8962ReferenceSummary(
     allocations: allocation?.periods.map(period => ({ policyNumber: forms[period.policyIndex].policyNumber.slice(-15),
       firstMonth: period.firstMonth, lastMonth: period.lastMonth, fraction: period.fraction.toFixed(2), method: period.method ?? 'agreement' })),
     allocatedMonths: allocation?.months.map(month => ({ month: month.month, originalPremium: month.originalPremium.toFixed(),
-      originalSlcsp: month.originalSlcsp?.toFixed() ?? null, originalAdvance: month.originalAdvance.toFixed(),
+      originalSlcsp: month.originalSlcsp?.toFixed() ?? null, originalAdvance: month.originalAdvance.toFixed(), ...(month.unshared ? { unshared: true as const } : {}),
       premium: month.premium.toFixed(), slcsp: month.slcsp.toFixed(), advance: month.advance.toFixed(),
       ...(month.benchmarkRatio ? { benchmarkRatio: { numerator: month.benchmarkRatio.numerator.toFixed(), denominator: month.benchmarkRatio.denominator.toFixed() } } : {}) })),
     marriage: marriage ? { electionApplies: marriage.electionApplies, worksheets: marriage.lines.filter(row => row.form.startsWith('Pub974 Marriage Worksheet')).map(row => ({
@@ -426,7 +426,7 @@ export async function fillForm8962Reference(
     for (const row of summary.allocatedMonths ?? []) {
       write(`Month ${row.month}. Original monthly source: premium $${row.originalPremium}; SLCSP ${row.originalSlcsp === null ? "printed blank" : `$${row.originalSlcsp}`}; advance $${row.originalAdvance}.`);
       if (row.benchmarkRatio) write(`Actual benchmark ratio before printed rounding: ${row.benchmarkRatio.numerator} / ${row.benchmarkRatio.denominator}.`);
-      write(`Actual allocated amounts before form rounding: premium $${row.premium}; SLCSP $${row.slcsp}; advance $${row.advance}.`);
+      write(`Actual ${row.unshared ? "unallocated" : "allocated"} amounts before form rounding: premium $${row.premium}; SLCSP $${row.slcsp}; advance $${row.advance}.`);
     }
   }
 

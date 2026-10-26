@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.117",
+    ruleVersion: "2025.118",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8962", section: "Actual shared and household-only policies in disjoint months; full unallocated original amounts combined with actual Part IV allocations", revision: "Final2025 monthly columns (a)/(b)/(f) and line34; exact original family/source binding, guided controls and private review; overlapping benchmarks, full2026 and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Actual Rule3 separated-spouse alternatives and original qualifying-child sources; actual child presence distinct from timely valid-SSN amount count", revision: "IRC32(c)(3)(D)/(d)(2)(B), final2025 Rules3/8/9 and EIC Steps3/4; source/identity/residence conservation and literal table controls, guided/PDF follow-through and human qualification separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i8962", section: "Actual Situation3 no-advance policy allocation using both coverage-family benchmarks; exact monthly ratios distinct from printed PartIV shares and known printed-blank originals", revision: "Final2025 Gary/Jim example and Reg1.36B-3(h); source, guide and private review controls; broader allocation methods, full2026 and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Rule6 and Worksheet1: omitted EIC investment override stays absent; opening claimant facts cannot bypass the actual investment-income ceiling", revision: "Final2025 source and preserved legacy input presence; full Worksheet1 classification and human qualification remain separate", retrievedAt: "2026-10-26" },
@@ -158,11 +159,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.114-law-integration-draft",
+    ruleVersion: "2026.115-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8962", section: "Actual shared and household-only policies in disjoint months; full unallocated original amounts combined with actual Part IV allocations", revision: "Final2025 monthly columns (a)/(b)/(f) and line34; exact original family/source binding, guided controls and private review; overlapping benchmarks, full2026 and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Actual Rule3 separated-spouse alternatives and original qualifying-child sources; actual child presence distinct from timely valid-SSN amount count", revision: "IRC32(c)(3)(D)/(d)(2)(B), effective after2020; source-only2026 validation and actual unknowns retained; final2026 calculation, forms and human qualification remain closed", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i8962", section: "Actual Situation3 no-advance policy allocation using both coverage-family benchmarks; exact monthly ratios distinct from printed PartIV shares and known printed-blank originals", revision: "Final2025 Gary/Jim example and Reg1.36B-3(h); source, guide and private review controls; broader allocation methods, full2026 and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Rule6 and Worksheet1: omitted EIC investment override stays absent; opening claimant facts cannot bypass the actual investment-income ceiling", revision: "Final2025 source and preserved legacy input presence; full Worksheet1 classification and human qualification remain separate", retrievedAt: "2026-10-26" },

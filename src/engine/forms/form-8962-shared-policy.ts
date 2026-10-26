@@ -19,6 +19,8 @@ export interface Form8962AllocationMonth {
   month: number; policyIndex: number; premium: Decimal; slcsp: Decimal; advance: Decimal;
   originalPremium: Decimal; originalSlcsp: Decimal | null; originalAdvance: Decimal;
   benchmarkRatio?: { numerator: Decimal; denominator: Decimal };
+  /** Full actual unallocated source; no Part IV percentage is created. */
+  unshared?: true;
 }
 export interface Form8962AllocationPeriod {
   policyIndex: number; firstMonth: number; lastMonth: number; fraction: Decimal;
@@ -156,6 +158,27 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
     const identity = JSON.stringify([original.marketplace, original.policyNumber]);
     if (seenIdentities.has(identity)) throw new Error('Form8962 allocation policy identity is duplicated');
     seenIdentities.add(identity);
+    if (policy.situation === 'not_shared') {
+      text(policy.unsharedSourceReference, 'unshared policy source reference');
+      if (policy.allCoveredPeopleInThisTaxFamilyConfirmed !== true || policy.originalSlcspCorrectConfirmed !== true) throw new Error('Form8962 unshared policy requires actual household coverage and correct original benchmark confirmation');
+      if (policy.otherTaxpayerName?.trim() || policy.otherTaxpayerSsn?.trim() || policy.twoTaxFamiliesConfirmed === true
+        || policy.agreementConfirmed === true || policy.agreementReference?.trim() || policy.defaultAllocation !== undefined
+        || policy.noAdvanceAllocation !== undefined || policy.coveredFamilyAssignments?.length
+        || policy.monthlyAllocations?.some(row => row.fraction !== undefined && row.fraction !== '')) throw new Error('Form8962 unshared classification conflicts with actual shared-policy source facts');
+      const filerIds = [ssn(primary.ssn, 'primary SSN'), ...(input.taxpayer.filingStatus === 'married_filing_jointly' && input.taxpayer.spouse ? [ssn(input.taxpayer.spouse.ssn, 'spouse SSN')] : [])];
+      if (!filerIds.includes(original.recipientSsn) || household.get(original.recipientSsn) !== original.recipientName) throw new Error('Form8962 unshared original recipient does not match an actual return filer');
+      if (original.coveredIndividuals.some(person => household.get(person.ssn) !== person.name)) throw new Error('Form8962 unshared covered person does not match this actual tax family');
+      for (const row of original.monthlyPremiums) {
+        if (usedMonths.has(row.month)) throw new Error('Form8962 overlapping-policy allocation requires its actual household benchmark method');
+        if (!original.coveredIndividuals.some(person => person.firstMonth <= row.month && person.lastMonth >= row.month)) throw new Error('Form8962 unshared original month has no actual covered tax-family person');
+        usedMonths.add(row.month);
+        const premium = money(row.enrolleePremium), slcsp = money(row.slcsp), advance = money(row.advancePremiumTaxCredit);
+        months.push({ month: row.month, policyIndex: index, premium, slcsp, advance,
+          originalPremium: premium, originalSlcsp: slcsp, originalAdvance: advance, unshared: true });
+      }
+      continue;
+    }
+    if (policy.unsharedSourceReference?.trim() || policy.allCoveredPeopleInThisTaxFamilyConfirmed === true) throw new Error('Form8962 shared classification conflicts with unshared source facts');
     const otherSsn = ssn(policy.otherTaxpayerSsn, 'other taxpayer SSN'), otherName = name(policy.otherTaxpayerName, 'other taxpayer name');
     if (household.has(otherSsn)) throw new Error('Form8962 allocation other taxpayer is in this return household');
     const recipientName = household.get(original.recipientSsn) ?? (original.recipientSsn === otherSsn ? otherName : undefined);
@@ -235,6 +258,7 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
       else periods.push({ policyIndex: index, firstMonth: row.month, lastMonth: row.month, fraction, method });
     }
   }
+  if (periods.length === 0) throw new Error('Form8962 allocationRequired needs at least one actual shared-policy allocation');
   months.sort((a, b) => a.month - b.month);
   periods.sort((a, b) => a.policyIndex - b.policyIndex || a.firstMonth - b.firstMonth);
   const audit = new AuditTrail();
@@ -246,6 +270,13 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
         : `Situation4 actual original policy${period.policyIndex + 1},months${period.firstMonth}-${period.lastMonth}; ${defaultMethod ? 'rounded claiming-family enrollee share and enrolling complement' : 'actual agreed fraction'} for all three amounts`);
   }
   for (const row of months) {
+    if (row.unshared) {
+      for (const [column, value, label] of [['premium', row.premium, 'enrollment premium'], ['slcsp', row.slcsp, 'correct original benchmark'], ['advance', row.advance, 'advance credit']] as const) {
+        audit.record('Form8962 PartIV', `month-${row.month}:${column}`, `Unallocated ${label} before form rounding`, value,
+          `Actual complete unshared original policy${row.policyIndex + 1}; full source amount without a PartIV percentage`);
+      }
+      continue;
+    }
     audit.record('Form8962 PartIV', `month-${row.month}:premium`, 'Allocated enrollment premiums before form rounding', row.premium,
       row.benchmarkRatio ? 'Original monthly premium times actual own benchmark divided by both actual family benchmarks; no printed-fraction rounding'
         : 'Exact original monthly premium times source-derived allocation fraction', row.benchmarkRatio ? { 'Own family benchmark': row.benchmarkRatio.numerator, 'Both family benchmarks': row.benchmarkRatio.denominator } : undefined);

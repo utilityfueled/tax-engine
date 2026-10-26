@@ -1,0 +1,52 @@
+form: "Form 8962 Part IV"
+fullName: "Actual shared and unshared policy sources in different months"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8962"
+retrievedAt: "2026-10-26"
+reviewStatus: "source-derived-implementation-independent-review-pending"
+notes: |
+  Physical Form8962 line34 requires combining allocated policy amounts with
+  nonallocated amounts. Monthly instructions12-23(a)/(f) sum the relevant
+  premiums/advances; column(b) separately prohibits duplicating a same-state
+  household benchmark. This bounded package supports shared and unshared
+  policies in disjoint months, so no overlapping benchmark is inferred.
+  Each original is classified explicitly. Unshared sources require actual
+  complete original year/recipient/covered people/amounts, matching snapshot,
+  household membership, a worksheet reference and explicit confirmation of
+  the correct numeric original benchmark. Unknown is not zero. Original printed
+  blank remains retained but needs its separate corrected-benchmark method.
+  At least one policy must actually be shared; PartIV periods include only
+  those policies. Full2026 and independent human qualification remain closed.
+lines:
+  - line: "34-monthly"
+    description: "Combine actual disjoint shared and unshared policy months"
+    formula: "First6 shared months premium500/benchmark450/advance250 plus last6 unshared700/650/300, at actual30k household income and49 monthly contribution, produce2406+3606=6012credit,3300advances and2712netcredit. Transfer unshared amounts at100% without inventing a PartIV allocation."
+    testRef: "tests/engine/forms/form-8962-shared-unshared.test.ts::combines actual shared and unshared policy months without another allocation"
+  - line: "source-classification"
+    description: "Bind each actual unshared source and reject unknown or conflicting facts"
+    formula: "Require explicit classification, source reference, correct original benchmark and all covered people in this tax family. Reconcile exact snapshot/year/owner/name/month/amount values. Reject outside people, duplicate or replaced originals, omitted sources and stale shared-method inputs."
+    testRef: "tests/engine/forms/form-8962-shared-unshared.test.ts::requires actual unshared classification evidence and complete source identity"
+  - line: "source-order"
+    description: "Retain source precision and original policy indices"
+    formula: "Calculate with original source cents and stable original indices; changing packet order alone does not change output, while stale original indices or equal-money identity replacements reject. Preserve input immutability and no duplicate month consumption."
+    testRef: "tests/engine/forms/form-8962-shared-unshared.test.ts::preserves exact original cents source order and immutability"
+  - line: "method-boundary"
+    description: "Keep overlapping benchmarks and missing shared allocation distinct"
+    formula: "Reject overlapping source months until actual benchmark-group method is completed. Reject all-unshared packets with allocationRequired=true, unknown or printed-blank unshared benchmark and unsupported health/marriage coordination. Existing no-advance shared method may precede actual unshared months."
+    testRef: "tests/engine/forms/form-8962-shared-unshared.test.ts::retains overlapping benchmark and actual allocation boundaries"
+  - line: "guided-source"
+    description: "Capture actual unshared sources without inventing an agreement"
+    formula: "The collector copies original policies and leaves classification and its confirmations unknown. An explicitly unshared source binds its original household, reference and correct benchmark, transfers its full monthly amounts once, and revokes confirmations after edits. The canonical 6012/3300/2712 result is unchanged."
+    testRef: "tests/guided-interview/guided-shared-unshared.test.ts::preserves actual unshared classifications and canonical monthly amounts"
+  - line: "guided-controls"
+    description: "Reach unshared classification from the real credits component"
+    formula: "Selecting this-return-only coverage clears incompatible shared agreement, family assignment and benchmark-ratio inputs; collect the actual source reference and both confirmations. No other taxpayer or calculated fraction is requested for that source. Original records remain unchanged."
+    testRef: "tests/apps/web/shared-policy-interactions.test.tsx::reaches actual unshared source controls without another taxpayer or fraction"
+  - line: "review"
+    description: "Keep unshared originals out of Part IV allocation periods"
+    formula: "Save one 01-06 shared allocation and no unshared Part IV row, while actual 07-12 amounts enter monthly columns and annual totals once. Reference output labels full unallocated amounts; original tokens bind classification, reference, people and exact amounts before redaction."
+    testRef: "tests/pdf/form8962-shared-policy-review.test.ts::saves unshared monthly sources without inventing a PartIV period"
+  - line: "browser-source-persistence"
+    description: "Retain actual classifications and unknown answers after reload"
+    formula: "The production credits flow exposes the unshared source controls at desktop and mobile widths. Changes invalidate confirmations, source-backed calculation retains full amounts once, and clearing a required answer persists as unknown without leaking original identities in requests."
+    testRef: "apps/web/tests/guided-shared-unshared.spec.ts::preserves actual unshared coverage sources"
