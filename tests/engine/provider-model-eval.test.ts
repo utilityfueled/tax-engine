@@ -11,6 +11,10 @@ import { PROVIDER_EVAL_BINDING_VERSION, validateProviderEvalOutput } from "../..
 import type { ProviderEvalFixture } from "../../packages/engine/src/provider-eval-fixtures";
 import { providerEvalCorpusDigest, providerEvalFixtureDigest } from "../../packages/engine/src/provider-eval-provenance";
 
+// Every synthetic entry uses this same unmodified corpus. Hash it once when
+// preparing the test fixtures; the production report still validates provenance.
+const syntheticCorpusDigest = providerEvalCorpusDigest();
+
 function run(fixture: ProviderEvalFixture, profileId = "luna-high", repeat = 1): ProviderModelLiveEvalEntry {
   // Test-only payloads are built from literal test oracles. Never written to a run artifact.
   const applicationOutput = { disposition: fixture.expected.disposition, sourceIds: fixture.sourceIds,
@@ -23,7 +27,7 @@ function run(fixture: ProviderEvalFixture, profileId = "luna-high", repeat = 1):
   return {
     profileId, fixtureId: fixture.id, fixtureVersion: 1, repeat, elapsedMs: 1000,
     applicationSchemaValid: validated.applicationSchemaValid, output: validated.output,
-    measurement: { runPurpose: "qualification", planDigest: "0".repeat(64), corpusDigest: providerEvalCorpusDigest(), fixtureDigest: providerEvalFixtureDigest(fixture), bindingVersion: PROVIDER_EVAL_BINDING_VERSION,
+    measurement: { runPurpose: "qualification", planDigest: "0".repeat(64), corpusDigest: syntheticCorpusDigest, fixtureDigest: providerEvalFixtureDigest(fixture), bindingVersion: PROVIDER_EVAL_BINDING_VERSION,
       promptVersion: AI_TASKS[fixture.task].promptVersion, schemaVersion: AI_TASKS[fixture.task].schemaVersion,
       normalizationStatus: validated.normalizationStatus, applicationOutput, privacyFailure: false, responseReference: "test-only", reportedModel: profile.model },
     independentReview: { method: "human", reviewer: "independent-test-reviewer", grounded: true, qualityAccepted: true, piiLeak: false },
