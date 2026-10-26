@@ -2,6 +2,63 @@
 
 ## Current checkpoint — 2026-10-26
 
+The branch is pushed through `4932a83`. Rule provenance is `2025.152` /
+`2026.149-law-integration-draft`; the inventory has 529 entries, 5,574
+specification test references and 123 explicit shared-method associations.
+Readiness gates are unchanged.
+
+| Delivered package | Commit | Bounded verification |
+| --- | --- | --- |
+| Signed Marketplace health deductions across actual businesses | `24f2f921` | Exact final and main cohorts pass 616 tests in 28 files. Separate source review passes 19 tests in six files, including four private controls. Parent reopened 17 PDFs/109 pages/344 populated fields, checked twelve literal Form 8962 fields and inspected rendered output. Two production browser cases pass with zero retries. |
+| Determined current-year charitable floor with original prior sources | `c08a005b` | Final candidate passes 1,129 tests in 108 files; main passes 563 in ten. Separate source review passes 24 in six, including six private controls. All 15 reviewed executable/spec/test blobs remain unchanged; all 527 prior inventory rows and 122 links are preserved. Actual 2026 calculation and PDF gates remain closed. |
+| Accurate public storage, deletion and review-download descriptions | `4932a83` | The same 20 existing tests in three files pass on the private and integrated sources, with web types and lint. Separate technical-copy review traces the actual storage, recovery, deletion, PDF and authentication paths. No runtime privacy control or legal approval changes. |
+
+The health method records an explicit reasonable allocation using actual
+eligible-plan premiums; it is a source-backed interpretation, not a published
+numerical example. Signed amounts and separate owner income limits survive the
+original-source replay. The charitable method only admits source combinations
+whose positive floor has a determined current-year origin. Missing source
+allocation rules are not replaced with inferred taxpayer choices. Package
+ledgers retain the original failures, exact source hashes and review limits.
+These agent reviews do not supply qualified human tax or security approval.
+
+The new room-and-board package remains private. Independent review reproduced
+an allowance assigned to an original distribution with no expenses in that
+period. The author retained the failed source and added cash/prepaid and
+separate-period regressions before correcting it. The corrected source passes
+23 independently run tests in five files, including all seven unchanged private
+controls; the original three failures now pass. Original-input PDFs and browser
+downloads still require rechecking before integration.
+Cross-year academic-period usage remains internal implementation work, not an
+external interpretation blocker.
+
+The most recent complete local run remains immutable `3669b00`: 19,086 tests
+in 1,216 files pass in both unit and coverage runs, branches are 86.78% and
+functions 90.49%, and all unchanged thresholds pass. All eight static checks
+and 434 production browser cases pass with zero retries; five hosted-only
+cases remain skipped. Later packages are excluded from that evidence. Final
+integrated checks, exact native images, scans and recovery verification remain
+due after the finite source queue. The last completed native amd64 evidence
+remains scoped to `8f1d1ba`; no latest-source remote or staging pass is claimed.
+
+The internal queue is bounded: remaining health worksheet, actual payer and
+person, determined positive-advance and marriage combinations; zero/unique-
+origin charitable NOL attribution; corrected academic-period room-and-board
+routing and original cross-year usage; and final integrated/runtime checks.
+Precise competing-source interpretation questions remain separate. The
+October 26 production dependency audit still records zero advisories across
+425 dependencies; the image advisory register separately awaits owner acceptance.
+
+The active goal remains **not complete or release-ready**. The
+[external-action handoff](upgrade-2026-external-actions.md) identifies the
+missing qualified reviewers, launch-state demand, authorized staging,
+provider account access and approved evaluation funds, final official forms
+and advisory acceptance. Implementation continues while those inputs remain
+unavailable. No production deployment, filing enablement or model promotion
+has occurred.
+
+## Previous checkpoint through e26a7aa
+
 The branch is pushed through `e26a7aa`. Rule provenance is `2025.150` /
 `2026.147-law-integration-draft`. The regenerated inventory has 525 entries and
 5,545 specification test references. Readiness gates are unchanged.

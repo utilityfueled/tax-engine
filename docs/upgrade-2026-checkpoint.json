@@ -195,7 +195,7 @@
   },
   "releaseBlockers": [
     "Immutable 3669b00 passes all required local checks: 19,086 tests/1,216 files, 86.78% branches/90.49% functions and 434 browser cases. Five hosted skips do not establish staging readiness. Later-source integrated and final remote evidence remains due.",
-    "The 2026 pack and remaining finite health/charitable/education methods remain incomplete. Original charitable source closure and actual prepaid/cash tuition assistance are delivered; traceability is reconciled without new qualification. Full 2026 calculation remains blocked.",
+    "The2026 pack and finite health/charitable/education methods remain incomplete. Signed health business sources, determined current-year charitable floor and corrected public technical disclosures are delivered; room-board source correction and cross-year usage are still internal. Full2026 calculation remains blocked.",
     "Independent human tax review, selected-state demand/qualification and final physical forms are outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net \u00a71202/Form172 interpretations remain unresolved.",
     "AI application/scorer bindings are reviewed;240 draft cases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
     "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence; local synthetic checks do not establish staging readiness.",
@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "e26a7aaadcbcd37252f74444f8af2bf904e831c5",
+    "lastRecordedCommit": "4932a8392caf166b1389e6b4a5bbc9d1fd054508",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1310,8 +1310,8 @@
       "hosted staging",
       "final multi-platform release images"
     ],
-    "workInProgress": "Finish the reviewed health multi-business method and determined charity floor integrations; continue ordinary health payment/marriage methods, zero/unique-origin charitable NOL attribution and actual academic-period room-board groups. Preserve precise controlling-interpretation questions. Complete final integrated/remote/native-image/recovery verification. Human reviews, live-provider qualification, authorized staging, selected-state demand, final forms and advisory acceptance remain external requirements.",
-    "latestIntegratedCommit": "e26a7aaadcbcd37252f74444f8af2bf904e831c5",
+    "workInProgress": "Complete remaining bounded health worksheet/payer/person/positive-advance/marriage sources, zero/unique-origin charitable NOL attribution, corrected room-board source membership and original cross-year period use. Then run final integrated/remote/native-image/security/recovery checks. Preserve exact controlling-interpretation questions and external qualified human, staging, provider/funds, state-demand, final-form and advisory requirements.",
+    "latestIntegratedCommit": "4932a8392caf166b1389e6b4a5bbc9d1fd054508",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1656,7 +1656,7 @@
       "branchThresholdPercent": "85",
       "functionThresholdPercent": "90"
     },
-    "remainingInternalWork": "Finish the reviewed health multi-business method and determined charity floor integrations; continue ordinary health payment/marriage methods, zero/unique-origin charitable NOL attribution and actual academic-period room-board groups. Preserve precise controlling-interpretation questions. Complete final integrated/remote/native-image/recovery verification. Human reviews, live-provider qualification, authorized staging, selected-state demand, final forms and advisory acceptance remain external requirements.",
+    "remainingInternalWork": "Complete remaining bounded health worksheet/payer/person/positive-advance/marriage sources, zero/unique-origin charitable NOL attribution, corrected room-board source membership and original cross-year period use. Then run final integrated/remote/native-image/security/recovery checks. Preserve exact controlling-interpretation questions and external qualified human, staging, provider/funds, state-demand, final-form and advisory requirements.",
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
       "tree": "244b253149d4a86fe4b855770a2ec9ffdf46cdc2",
@@ -1677,7 +1677,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "e26a7aaadcbcd37252f74444f8af2bf904e831c5",
+    "lastPushedCommit": "4932a8392caf166b1389e6b4a5bbc9d1fd054508",
     "currentBrowserRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -4421,15 +4421,70 @@
         "reviewFinding": "Removed one guard-only packet-generation association; unchanged independent control now passes.",
         "deliveryReceipt": ".local/upgrade-evidence/inventory-reconciliation-delivery-receipt.json",
         "reviewKind": "Separate agent software/source review; no qualified human review or readiness promotion"
+      },
+      "marketplaceBusinessCreditMethod": {
+        "commit": "24f2f921c1cc615052ec094975f9754be9312d6b",
+        "tree": "7c7ce0dca465caa0464e51380067e641f7401d87",
+        "ledger": "docs/upgrade-2026-health-business-method-work.md",
+        "finalCandidateTests": 616,
+        "finalCandidateFiles": 28,
+        "integrationTests": 616,
+        "integrationFiles": 28,
+        "independentTests": 19,
+        "independentFiles": 6,
+        "privateControls": 4,
+        "pdfs": 17,
+        "pdfPages": 109,
+        "populatedFields": 344,
+        "literal8962Fields": 12,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "deliveryReceipt": ".local/upgrade-evidence/marketplace-business-method-delivery.json",
+        "parentDeliveryVerification": ".local/upgrade-evidence/parent-health-business-delivery-verification.json",
+        "deliveryReceiptSha256": "8f81b50636e2984f4ec23dba6e8e15db8bac5f220d04923cc5cab2a9595d5db6",
+        "reviewKind": "Separate agent review only; qualified human review and readiness promotion remain outstanding"
+      },
+      "charitableDeterminedCurrentFloor": {
+        "commit": "c08a005b42d33325e2c4af2f6164c23baf2660c4",
+        "tree": "8f17338e93f954614138f07d5689ae21320d4108",
+        "ledger": "docs/upgrade-2026-charity-determined-floor-work.md",
+        "finalCandidateTests": 1129,
+        "finalCandidateFiles": 108,
+        "integrationTests": 563,
+        "integrationFiles": 10,
+        "independentTests": 24,
+        "independentFiles": 6,
+        "privateControls": 6,
+        "reviewedExecutableSpecTestBlobsUnchanged": 15,
+        "priorInventoryRowsUnchanged": 527,
+        "priorLinksPreserved": 122,
+        "deliveryReceipt": ".local/upgrade-evidence/charity-determined-floor-delivery.json",
+        "parentDeliveryVerification": ".local/upgrade-evidence/parent-charity-determined-floor-delivery-verification.json",
+        "deliveryReceiptSha256": "9429e84118120ec93761b983a0a1bd2bacd65d0e477008cbf86682eaf9fb15d1",
+        "reviewKind": "Separate agent review only; qualified human review and readiness promotion remain outstanding"
+      },
+      "publicPrivacyCopy": {
+        "commit": "4932a8392caf166b1389e6b4a5bbc9d1fd054508",
+        "tree": "4c3315f3001e8b8dee5f4b049a190e3795e23a72",
+        "ledger": "docs/upgrade-2026-public-privacy-copy.md",
+        "finalCandidateTests": 20,
+        "finalCandidateFiles": 3,
+        "integrationTests": 20,
+        "integrationFiles": 3,
+        "independentReview": "Read-only technical-copy source review; no new reviewer tests or human legal/deployed-security approval",
+        "runtimeChanges": false,
+        "deliveryReceipt": ".local/upgrade-evidence/public-privacy-copy-delivery-receipt.json",
+        "deliveryReceiptSha256": "b412d2bbbe5fb670a6d1f51fa9adab396106ea577b71edc2e953b53d72b76ffd",
+        "reviewKind": "Separate agent review only; qualified human review and readiness promotion remain outstanding"
       }
     },
     "currentInventory": {
-      "entries": 525,
-      "specReferences": 5545,
-      "sourceCommit": "e26a7aaadcbcd37252f74444f8af2bf904e831c5",
+      "entries": 529,
+      "specReferences": 5574,
+      "sourceCommit": "4932a8392caf166b1389e6b4a5bbc9d1fd054508",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 121,
-      "specOwnedAssociationReferences": 185,
+      "explicitAssociations": 123,
+      "specOwnedAssociationReferences": 189,
       "fullySupportedTraceabilityCount": 69,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
@@ -4535,8 +4590,8 @@
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.150",
-      "2026": "2026.147-law-integration-draft"
+      "2025": "2025.152",
+      "2026": "2026.149-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -5862,6 +5917,61 @@
         "reviewFinding": "Removed one guard-only packet-generation association; unchanged independent control now passes.",
         "deliveryReceipt": ".local/upgrade-evidence/inventory-reconciliation-delivery-receipt.json",
         "reviewKind": "Separate agent software/source review; no qualified human review or readiness promotion"
+      },
+      "marketplaceBusinessCreditMethod": {
+        "commit": "24f2f921c1cc615052ec094975f9754be9312d6b",
+        "tree": "7c7ce0dca465caa0464e51380067e641f7401d87",
+        "ledger": "docs/upgrade-2026-health-business-method-work.md",
+        "finalCandidateTests": 616,
+        "finalCandidateFiles": 28,
+        "integrationTests": 616,
+        "integrationFiles": 28,
+        "independentTests": 19,
+        "independentFiles": 6,
+        "privateControls": 4,
+        "pdfs": 17,
+        "pdfPages": 109,
+        "populatedFields": 344,
+        "literal8962Fields": 12,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "deliveryReceipt": ".local/upgrade-evidence/marketplace-business-method-delivery.json",
+        "parentDeliveryVerification": ".local/upgrade-evidence/parent-health-business-delivery-verification.json",
+        "deliveryReceiptSha256": "8f81b50636e2984f4ec23dba6e8e15db8bac5f220d04923cc5cab2a9595d5db6",
+        "reviewKind": "Separate agent review only; qualified human review and readiness promotion remain outstanding"
+      },
+      "charitableDeterminedCurrentFloor": {
+        "commit": "c08a005b42d33325e2c4af2f6164c23baf2660c4",
+        "tree": "8f17338e93f954614138f07d5689ae21320d4108",
+        "ledger": "docs/upgrade-2026-charity-determined-floor-work.md",
+        "finalCandidateTests": 1129,
+        "finalCandidateFiles": 108,
+        "integrationTests": 563,
+        "integrationFiles": 10,
+        "independentTests": 24,
+        "independentFiles": 6,
+        "privateControls": 6,
+        "reviewedExecutableSpecTestBlobsUnchanged": 15,
+        "priorInventoryRowsUnchanged": 527,
+        "priorLinksPreserved": 122,
+        "deliveryReceipt": ".local/upgrade-evidence/charity-determined-floor-delivery.json",
+        "parentDeliveryVerification": ".local/upgrade-evidence/parent-charity-determined-floor-delivery-verification.json",
+        "deliveryReceiptSha256": "9429e84118120ec93761b983a0a1bd2bacd65d0e477008cbf86682eaf9fb15d1",
+        "reviewKind": "Separate agent review only; qualified human review and readiness promotion remain outstanding"
+      },
+      "publicPrivacyCopy": {
+        "commit": "4932a8392caf166b1389e6b4a5bbc9d1fd054508",
+        "tree": "4c3315f3001e8b8dee5f4b049a190e3795e23a72",
+        "ledger": "docs/upgrade-2026-public-privacy-copy.md",
+        "finalCandidateTests": 20,
+        "finalCandidateFiles": 3,
+        "integrationTests": 20,
+        "integrationFiles": 3,
+        "independentReview": "Read-only technical-copy source review; no new reviewer tests or human legal/deployed-security approval",
+        "runtimeChanges": false,
+        "deliveryReceipt": ".local/upgrade-evidence/public-privacy-copy-delivery-receipt.json",
+        "deliveryReceiptSha256": "b412d2bbbe5fb670a6d1f51fa9adab396106ea577b71edc2e953b53d72b76ffd",
+        "reviewKind": "Separate agent review only; qualified human review and readiness promotion remain outstanding"
       }
     },
     "latestPassingCandidateCoverage": {
@@ -6481,8 +6591,8 @@
       "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
     },
     "currentFullVerificationRequired": {
-      "sourceCommit": "e26a7aaadcbcd37252f74444f8af2bf904e831c5",
-      "reason": "The charitable source closure, tuition assistance, inventory reconciliation and pending finite source methods follow the passing 3669b00 run.",
+      "sourceCommit": "4932a8392caf166b1389e6b4a5bbc9d1fd054508",
+      "reason": "Health business sources, determined charitable floor, public privacy wording and further finite source methods follow the immutable passing3669b00 run.",
       "readiness": "Final integrated run required after the finite queue; no later full pass claimed"
     },
     "previousCurrentUnitRunBeforeE91": {
@@ -6559,7 +6669,9 @@
       "privateControlsPassed": 6,
       "report": ".local/upgrade-evidence/facts-education-partial-inventory.json",
       "remaining": [
-        "Actual academic-period and living-arrangement room-board cap groups; preserve unresolved cross-year and competing-source interpretation gates"
+        "Correct and independently recheck actual academic-period/living-arrangement room-board groups, source membership and saved output.",
+        "Implement original cross-year academic-period usage without inferred time splits or repeated cap; this is internal work.",
+        "Keep precise unresolved competing-source and reduced joint-bond/disqualification interpretations unavailable until controlling treatment."
       ],
       "notMissing": "Ordinary cash QTP with assistance, education-credit allocation and ordinary ESA",
       "mixedTuitionDelivered": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
@@ -6706,7 +6818,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-26T17:12:34.900021+00:00",
+    "recordedAt": "2026-10-26T17:44:50.494874+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -6957,6 +7069,40 @@
       "retries": 0,
       "workers": 2,
       "serverCleanupVerification": "pending runner completion"
+    },
+    "roomBoardPeriodIndependentFinding": {
+      "sourceTree": "52774032c4fc7f195ae2d26f46465ab8ae8315eb",
+      "report": ".local/upgrade-evidence/federal-room-board-source-review.json",
+      "sha256": "fbf8f07c1e0a04a3d1f5a729f349e38aad4581b234afc67a66897a0fda773981",
+      "cases": 19,
+      "files": 5,
+      "passed": 16,
+      "failed": 3,
+      "privateControls": 7,
+      "finding": "One confirmed defect: inactive same-medium originals receive another source period allowance. Original source and unchanged private controls preserved; corrected V3 requires independent recheck and fresh source-bound artifacts.",
+      "delivered": false,
+      "correctedSourceReview": {
+        "sourceTree": "3392d958fb513587a428ad339028ab75303e5321",
+        "report": ".local/upgrade-evidence/federal-room-board-v3-source-rereview.json",
+        "sha256": "82ee5d31ad5634cd847a25178e8934bfaa68a7ea385d530752f09930eb08f3e8",
+        "cases": 23,
+        "files": 5,
+        "privateControlsUnchanged": 7,
+        "originalFailuresNowPass": 3,
+        "ownedHashesVerified": 22,
+        "artifactsAndFinalIntegration": "pending"
+      }
+    },
+    "healthFiniteRemainder": {
+      "evidence": ".local/upgrade-evidence/health-finite-remainder-2026-10-26.md",
+      "sha256": "90919f70e3420edcb79b82b740ca1d9b3ddf479d6c3feaed1b280c5a1ca128fd",
+      "internal": [
+        "Separate business/owner worksheets, applicable early stops, signed intermediates and actual same-owner business-class attribution",
+        "Actual eligible persons, payer evidence and payment shares separate from PartIV allocation",
+        "Determined positive actual noncoverage advances with payment and corresponding-credit bounds",
+        "Alternative-marriage composition with preceding original health/shared sources"
+      ],
+      "interpretation": "Binding2025 joint capped-repayment attribution among competing owners or qualified/nonqualified source groups; no guessed split"
     }
   },
   "historicalReleaseBlockers": {
