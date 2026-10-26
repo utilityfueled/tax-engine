@@ -1,11 +1,12 @@
 "use client";
+import { NoAdvanceCoverageFamilyDetails } from "./no-advance-coverage-family-details";
 import { NoAdvanceBenchmarkSourceDetails } from "./no-advance-benchmark-source-details";
 import { OverlappingBenchmarkSourceDetails } from "./overlapping-benchmark-source-details";
 
 import { useState } from "react";
 import type { FilingStatus, PersonalInfoData } from "@/lib/guided-interview-flow";
 import type { MarketplacePolicyData, PremiumTaxCreditData } from "@/lib/guided-premium-tax-credit-facts";
-import { captureSharedPolicySources, captureNoAdvanceBenchmarkSources, captureOverlappingBenchmarkSources, deriveSharedPolicyMonths, type SharedPolicyAgreementData } from "@/lib/guided-shared-policy";
+import { captureSharedPolicySources, captureNoAdvanceBenchmarkSources, captureOverlappingBenchmarkSources, captureNoAdvanceCoverageFamilies, deriveSharedPolicyMonths, type SharedPolicyAgreementData } from "@/lib/guided-shared-policy";
 import { BooleanFact, TextFact } from "./fact-fields";
 
 function Choice({ label, value, choices, onChange }: { label: string; value: string; choices: readonly (readonly [string, string])[]; onChange: (value: string) => void }) {
@@ -37,9 +38,13 @@ export function SharedPolicySourceDetails({ data, personal, filingStatus, taxYea
 }) {
   const [error, setError] = useState<string>();
   const packet = data.sharedPolicyAllocations;
+  const unsharedOverlap = packet?.policies.some(policy => policy.situation === "not_shared" && policy.original?.monthlyPremiums.some(month => {
+    const active = packet.policies.filter(source => source.original?.monthlyPremiums.some(row => Number(row.month) === Number(month.month)));
+    return active.filter(source => source.situation === "not_shared").length > 1 && !active.some(source => source.situation === "no_advance_credit");
+  }));
   function perform(action: () => void) { try { action(); setError(undefined); } catch (caught) { setError(caught instanceof Error ? caught.message : "Check the actual shared-policy sources."); } }
   return <section><h5>Shared policy allocation</h5>
-    <p className="guided-hint">For two tax families with advance credits, enter the actual agreement or original enrollment facts when there is no agreement. If no advance credit was paid, use both families&apos; actual benchmark premiums. Identify policies covering only this return&apos;s family from their actual enrollment records. Overlapping unshared policies need the coverage-group sources below. Overlapping no-advance allocations, marriage, divorce and self-employed health coordination require their separate methods.</p>
+    <p className="guided-hint">For two tax families with advance credits, enter the actual agreement or original enrollment facts when there is no agreement. If no advance credit was paid, use both families&apos; actual benchmark premiums. Identify policies covering only this return&apos;s family from their actual enrollment records. Overlapping unshared policies need the coverage-group sources below. Overlapping no-advance policies use complete monthly coverage families below. Marriage, divorce and self-employed health coordination require their separate methods.</p>
     <button type="button" onClick={() => perform(() => onChange({ sharedPolicyAllocations: captureSharedPolicySources(data, personal, filingStatus) }))}>Copy original policies and household</button>
     <p className="guided-hint">Copy again after replacing an original policy or changing the return household. Copying clears the previous agreement answers.</p>
     {error && <p role="alert">{error}</p>}
@@ -88,14 +93,17 @@ export function SharedPolicySourceDetails({ data, personal, filingStatus, taxYea
           </>}</>}
         </div>
           {!unshared && policy.coveredFamilyAssignments.map((person, personIndex) => <Choice key={personIndex} label={`${prefix}: Covered person ${personIndex + 1} tax family`} value={person.family} choices={[["this_return", "This return's tax family"], ["other_return", "Other taxpayer's tax family"]]} onChange={family => set({ coveredFamilyAssignments: policy.coveredFamilyAssignments.map((current, i) => i === personIndex ? { ...current, family: family as typeof person.family } : current) })} />)}
-          {policy.situation === "no_advance_credit" && <NoAdvanceBenchmarkSourceDetails prefix={prefix} value={policy.noAdvanceAllocation} onCapture={() => perform(() => set({ noAdvanceAllocation: captureNoAdvanceBenchmarkSources(policy) }))} onChange={noAdvanceAllocation => set({ noAdvanceAllocation })} />}
+          {policy.situation === "no_advance_credit" && <NoAdvanceBenchmarkSourceDetails prefix={prefix} value={policy.noAdvanceAllocation} onCapture={() => perform(() => set({ noAdvanceAllocation: captureNoAdvanceBenchmarkSources(policy, packet) }))} onChange={noAdvanceAllocation => set({ noAdvanceAllocation })} />}
           {!unshared && policy.situation !== "no_advance_credit" && policy.agreementConfirmed === true ? <>
             <p className="guided-hint">Use the covered-person order on the copied original. Enter a fraction from 0 to 1, with at most two decimal places: for example, 0.50 for 50%. The same agreed fraction applies to all three monthly amounts.</p>
             <div className="guided-form-grid">{policy.monthlyAllocations.map((row, rowIndex) => <TextFact key={rowIndex} label={`${prefix}: Month ${row.month} agreed fraction`} value={row.fraction} onChange={fraction => set({ monthlyAllocations: policy.monthlyAllocations.map((current, i) => i === rowIndex ? { ...current, fraction } : current) })} />)}</div>
           </> : !unshared && policy.situation !== "no_advance_credit" && policy.agreementConfirmed === false && <p className="guided-hint">Use the covered-person order on the copied original. The enrolling taxpayer is the person who expected to claim these people when enrolling them. The default share uses their actual coverage months and tax-family assignments; the enrolling taxpayer keeps the remaining share.</p>}
         </fieldset>;
       })}
-      {(packet.overlappingCoverage || packet.policies.filter(policy => policy.situation === "not_shared").length > 1) && <OverlappingBenchmarkSourceDetails packet={packet}
+      {(packet.noAdvanceCoverageFamilies || (packet.policies.length > 1 && packet.policies.some(policy => policy.situation === "no_advance_credit"))) && <NoAdvanceCoverageFamilyDetails value={packet.noAdvanceCoverageFamilies}
+        onCapture={() => perform(() => onChange({ sharedPolicyAllocations: { ...packet, noAdvanceCoverageFamilies: captureNoAdvanceCoverageFamilies(packet) } }))}
+        onChange={noAdvanceCoverageFamilies => onChange({ sharedPolicyAllocations: { ...packet, noAdvanceCoverageFamilies } })} />}
+      {(packet.overlappingCoverage || unsharedOverlap) && <OverlappingBenchmarkSourceDetails packet={packet}
         onCapture={() => perform(() => onChange({ sharedPolicyAllocations: { ...packet, overlappingCoverage: captureOverlappingBenchmarkSources(packet) } }))}
         onChange={overlappingCoverage => onChange({ sharedPolicyAllocations: { ...packet, overlappingCoverage } })} onError={perform} />}
       <BooleanFact label="Allocation sources checked after the last edit" value={packet.sourceFactsConfirmed} onChange={sourceFactsConfirmed => onChange({ sharedPolicyAllocations: { ...packet, sourceFactsConfirmed } })} />

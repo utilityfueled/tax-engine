@@ -17,6 +17,17 @@ export const Form8962SharedPolicySchema = z.object({
   sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
   sourceFactsConfirmed: z.boolean().optional(), allSharedPoliciesIncluded: z.boolean().optional(),
   primaryName: z.string().optional(), primarySsn: z.string().optional(), spouseName: z.string().optional(), spouseSsn: z.string().optional(),
+  noAdvanceCoverageFamilies: z.object({
+    sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    allBenchmarkMonthsIncluded: z.boolean().optional(),
+    months: z.array(z.object({ month: z.number().int().optional(), families: z.array(z.object({
+      taxpayerName: z.string().optional(), taxpayerSsn: z.string().optional(), sourceReference: z.string().optional(),
+      allCoverageFamilyMembersIncludedConfirmed: z.boolean().optional(), allCoveragePoliciesIncludedConfirmed: z.boolean().optional(),
+      groups: z.array(z.object({ sourceId: z.string().optional(), sourceReference: z.string().optional(), ratingArea: z.string().optional(),
+        coveredIndividualSsns: z.array(z.string()).optional(), slcsp: amount, allCoveredPeopleShareRatingAreaConfirmed: z.boolean().optional(),
+      })).optional(),
+    })).optional() })).optional(),
+  }).optional(),
   overlappingCoverage: z.object({
     sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
     allBenchmarkMonthsIncluded: z.boolean().optional(),

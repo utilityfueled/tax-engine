@@ -33,6 +33,8 @@ export interface Form8962SharedPolicyResult {
 export interface Form8962HouseholdMonth {
   month: number; policyIndexes: number[]; premium: Decimal; slcsp: Decimal; advance: Decimal;
   unsharedBenchmarkGroups: { policyIndexes: number[]; slcsp: Decimal }[];
+  /** Complete own-family location groups, counted once for overlapping Situation3. */
+  noAdvanceBenchmarkGroups?: { policyIndexes: number[]; slcsp: Decimal }[];
 }
 function text(value: string | undefined, label: string): string {
   if (!value?.trim()) throw new Error(`Form8962 allocation requires actual ${label}`);
@@ -83,8 +85,90 @@ function normalizedOriginal(original: Original, year: number) {
     coveredIndividuals: covered, monthlyPremiums: rows };
 }
 
+type ValidatedPolicySource = { policy: NonNullable<Packet['policies']>[number]; index: number; original: ReturnType<typeof normalizedOriginal> };
+type CoverageFamily = {
+  people: string[]; slcsp: Decimal;
+  groups: { people: string[]; policyIndexes: number[]; slcsp: Decimal }[];
+};
+type CoverageFamilyMonths = Map<number, Map<string, CoverageFamily>>;
+
+/** Full coverage families are monthly source facts. The original statements and
+ * actual family assignments establish their people; no income or credit value
+ * can replace the complete Marketplace benchmark records. */
+function noAdvanceCoverageFamilies(sources: ValidatedPolicySource[], packet: Packet, year: number,
+  primaryId: string, primaryName: string): CoverageFamilyMonths {
+  const byMonth = new Map<number, ValidatedPolicySource[]>();
+  for (const source of sources) for (const row of source.original.monthlyPremiums) {
+    byMonth.set(row.month, [...(byMonth.get(row.month) ?? []), source]);
+  }
+  const required = [...byMonth.entries()].filter(([, rows]) => rows.length > 1 && rows.some(row => row.policy.situation === 'no_advance_credit')).map(([m]) => m);
+  const evidence = packet.noAdvanceCoverageFamilies;
+  const result: CoverageFamilyMonths = new Map();
+  if (!required.length && evidence === undefined) return result;
+  if (!evidence || evidence.sourceTaxYear !== year || evidence.sourceFactsConfirmed !== true || evidence.allBenchmarkMonthsIncluded !== true
+    || evidence.months?.length !== required.length) throw new Error('Form8962 overlapping Situation3 policies require complete actual coverage-family benchmark sources for every overlapping month');
+  text(evidence.sourceReference, 'full coverage-family benchmark source reference');
+  for (const row of evidence.months) {
+    const m = month(row.month), active = byMonth.get(m);
+    if (!required.includes(m) || result.has(m) || !active) throw new Error('Form8962 full coverage-family benchmark month is duplicated or does not match overlapping original policies');
+    if (active.some(source => !['no_advance_credit', 'not_shared'].includes(source.policy.situation ?? ''))) throw new Error('Form8962 overlapping Situation3 and Situation4 policies require their separate complete source method');
+    const expected = new Map<string, { name: string; people: Map<string, string> }>();
+    expected.set(primaryId, { name: primaryName, people: new Map() });
+    const assignedPeople = new Map<string, { family: string; name: string }>();
+    for (const source of active) {
+      const unshared = source.policy.situation === 'not_shared';
+      const otherId = unshared ? undefined : ssn(source.policy.otherTaxpayerSsn, 'other coverage-family taxpayer SSN');
+      if (otherId) {
+        const otherName = name(source.policy.otherTaxpayerName, 'other coverage-family taxpayer name');
+        if (otherId === primaryId || (expected.has(otherId) && expected.get(otherId)!.name !== otherName)) throw new Error('Form8962 original policies have contradictory coverage-family taxpayer identities');
+        if (!expected.has(otherId)) expected.set(otherId, { name: otherName, people: new Map() });
+      }
+      for (const person of source.original.coveredIndividuals.filter(person => person.firstMonth <= m && person.lastMonth >= m)) {
+        const assignments = source.policy.coveredFamilyAssignments?.filter(entry => ssn(entry.ssn, 'coverage-family assignment SSN') === person.ssn);
+        if (!unshared && (assignments?.length !== 1 || !['this_return', 'other_return'].includes(assignments[0].family ?? ''))) throw new Error('Form8962 full coverage family requires each unique original enrollee assignment');
+        const family = unshared || assignments?.[0].family === 'this_return' ? primaryId : otherId!;
+        const existing = assignedPeople.get(person.ssn);
+        if (existing && (existing.family !== family || existing.name !== person.name)) throw new Error('Form8962 covered person has contradictory names or tax families across original policies');
+        assignedPeople.set(person.ssn, { family, name: person.name });
+        expected.get(family)!.people.set(person.ssn, person.name);
+      }
+    }
+    if (row.families?.length !== expected.size) throw new Error('Form8962 full coverage benchmark sources omit or duplicate an actual tax family');
+    const families = new Map<string, CoverageFamily>();
+    for (const family of row.families) {
+      const id = ssn(family.taxpayerSsn, 'coverage-family taxpayer SSN'), actual = expected.get(id);
+      if (!actual || families.has(id) || name(family.taxpayerName, 'coverage-family taxpayer name') !== actual.name) throw new Error('Form8962 benchmark family identity does not match the original policy assignments');
+      text(family.sourceReference, 'coverage-family source reference');
+      if (family.allCoverageFamilyMembersIncludedConfirmed !== true || family.allCoveragePoliciesIncludedConfirmed !== true || !family.groups?.length) throw new Error('Form8962 coverage-family benchmark requires complete actual family and policy confirmations');
+      const seenPeople = new Set<string>(), seenAreas = new Set<string>(), seenIds = new Set<string>();
+      const groups: CoverageFamily['groups'] = [];
+      for (const group of family.groups) {
+        const sourceId = text(group.sourceId, 'coverage-family group source ID'), area = name(group.ratingArea, 'coverage-family rating area');
+        text(group.sourceReference, 'coverage-family group benchmark reference');
+        if (seenIds.has(sourceId) || seenAreas.has(area) || group.allCoveredPeopleShareRatingAreaConfirmed !== true) throw new Error('Form8962 coverage-family benchmark groups require unique source/rating areas and actual location confirmation');
+        seenIds.add(sourceId); seenAreas.add(area);
+        const people = group.coveredIndividualSsns?.map(value => ssn(value, 'coverage-family group person SSN')).sort();
+        if (!people?.length || new Set(people).size !== people.length) throw new Error('Form8962 coverage-family benchmark group requires unique actual covered people');
+        for (const person of people) {
+          if (!actual.people.has(person) || seenPeople.has(person)) throw new Error('Form8962 coverage-family benchmark person is missing from original coverage or duplicated across groups');
+          seenPeople.add(person);
+        }
+        const indexes = active.filter(source => source.original.coveredIndividuals.some(person => person.firstMonth <= m && person.lastMonth >= m && people.includes(person.ssn))).map(source => source.index).sort((a, b) => a - b);
+        groups.push({ people, policyIndexes: indexes, slcsp: money(group.slcsp) });
+      }
+      if (seenPeople.size !== actual.people.size) throw new Error('Form8962 coverage-family benchmark groups omit actual monthly covered people');
+      const slcsp = monthlySum(groups.map(group => group.slcsp));
+      if (slcsp.lte(0)) throw new Error('Form8962 ordinary full coverage-family benchmarks must be positive');
+      families.set(id, { people: [...seenPeople].sort(), slcsp, groups });
+    }
+    result.set(m, families);
+  }
+  return result;
+}
+
 function noAdvanceBenchmarks(evidence: NonNullable<Packet['policies']>[number]['noAdvanceAllocation'], year: number,
-  original: ReturnType<typeof normalizedOriginal>, assignments: Map<string, 'this_return' | 'other_return'>) {
+  original: ReturnType<typeof normalizedOriginal>, assignments: Map<string, 'this_return' | 'other_return'>,
+  coverageFamilies: CoverageFamilyMonths, primaryId: string, otherId: string) {
   if (!evidence || evidence.sourceTaxYear !== year || evidence.sourceFactsConfirmed !== true
     || evidence.allCoveredPeopleInCoverageFamiliesConfirmed !== true) throw new Error('Form8962 no-advance allocation requires actual complete coverage-family benchmark sources');
   text(evidence.sourceReference, 'no-advance benchmark worksheet reference');
@@ -94,12 +178,14 @@ function noAdvanceBenchmarks(evidence: NonNullable<Packet['policies']>[number]['
     const m = month(row.month);
     if (result.has(m) || !original.monthlyPremiums.some(entry => entry.month === m)) throw new Error('Form8962 no-advance benchmark month is duplicated or not on the original policy');
     const own = money(row.thisReturnSlcsp), other = money(row.otherReturnSlcsp);
+    const full = coverageFamilies.get(m);
+    if (full && (!full.get(primaryId)?.slcsp.eq(own) || !full.get(otherId)?.slcsp.eq(other))) throw new Error('Form8962 policy benchmarks do not reconcile with actual complete monthly coverage-family sources');
     if (own.lte(0) || other.lte(0)) throw new Error('Form8962 no-advance ordinary two-family method requires positive actual benchmarks for both coverage families');
     text(row.thisReturnSourceReference, 'this-return benchmark source reference');
     text(row.otherReturnSourceReference, 'other-return benchmark source reference');
     for (const [family, ids] of [['this_return', row.thisReturnCoveredIndividualSsns], ['other_return', row.otherReturnCoveredIndividualSsns]] as const) {
       const actual = ids?.map(id => ssn(id, 'benchmark covered-person SSN')).sort();
-      const expected = original.coveredIndividuals.filter(person => person.firstMonth <= m && person.lastMonth >= m && assignments.get(person.ssn) === family).map(person => person.ssn).sort();
+      const expected = full?.get(family === 'this_return' ? primaryId : otherId)?.people ?? original.coveredIndividuals.filter(person => person.firstMonth <= m && person.lastMonth >= m && assignments.get(person.ssn) === family).map(person => person.ssn).sort();
       if (!actual?.length || new Set(actual).size !== actual.length || JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error('Form8962 no-advance benchmark coverage family does not match original monthly people and actual return assignments');
     }
     result.set(m, { own, other });
@@ -125,10 +211,10 @@ function monthlySum(values: Decimal[]): Decimal {
   return new Decimal(values.reduce((total, value) => total.plus(value.toFixed()), new SourceDecimal(0)).toFixed());
 }
 
-function householdMonths(rows: Form8962AllocationMonth[], originals: Map<number, ReturnType<typeof normalizedOriginal>>, packet: Packet, year: number): Form8962HouseholdMonth[] {
+function householdMonths(rows: Form8962AllocationMonth[], originals: Map<number, ReturnType<typeof normalizedOriginal>>, packet: Packet, year: number, coverageFamilies: CoverageFamilyMonths, primaryId: string): Form8962HouseholdMonth[] {
   const byMonth = new Map<number, Form8962AllocationMonth[]>();
   for (const row of rows) byMonth.set(row.month, [...(byMonth.get(row.month) ?? []), row]);
-  const required = [...byMonth.entries()].filter(([, sources]) => sources.filter(row => row.unshared).length > 1).map(([m]) => m);
+  const required = [...byMonth.entries()].filter(([m, sources]) => !coverageFamilies.has(m) && sources.filter(row => row.unshared).length > 1).map(([m]) => m);
   const evidence = packet.overlappingCoverage;
   const sourceMonths = new Map<number, NonNullable<NonNullable<Packet['overlappingCoverage']>['months']>[number]>();
   if (required.length || evidence !== undefined) {
@@ -142,6 +228,17 @@ function householdMonths(rows: Form8962AllocationMonth[], originals: Map<number,
     }
   }
   return [...byMonth.entries()].map(([m, sources]) => {
+    const completeFamily = coverageFamilies.get(m)?.get(primaryId);
+    if (completeFamily) {
+      for (const source of sources.filter(row => row.unshared)) {
+        const original = originals.get(source.policyIndex)!;
+        const groups = completeFamily.groups.filter(group => original.coveredIndividuals.some(person => person.firstMonth <= m && person.lastMonth >= m && group.people.includes(person.ssn)));
+        if (!source.slcsp.eq(monthlySum(groups.map(group => group.slcsp)))) throw new Error('Form8962 unshared correct benchmark does not reconcile with actual full coverage-family location groups');
+      }
+      return { month: m, policyIndexes: sources.map(row => row.policyIndex).sort((a, b) => a - b),
+        premium: monthlySum(sources.map(row => row.premium)), advance: monthlySum(sources.map(row => row.advance)), slcsp: completeFamily.slcsp,
+        unsharedBenchmarkGroups: [], noAdvanceBenchmarkGroups: completeFamily.groups.map(group => ({ policyIndexes: group.policyIndexes, slcsp: group.slcsp })) };
+    }
     if (sources.length > 1 && sources.some(row => row.benchmarkRatio)) throw new Error('Form8962 overlapping Situation3 policies require their complete coverage-family benchmark coordination method');
     const unshared = sources.filter(row => row.unshared), groups: Form8962HouseholdMonth['unsharedBenchmarkGroups'] = [];
     if (unshared.length <= 1) {
@@ -218,7 +315,7 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
   if (!packet.policies?.length || packet.policies.length !== input.form1095A.length) throw new Error('Form8962 allocation requires a complete source policy ledger');
   const seenPolicies = new Set<number>(), seenIdentities = new Set<string>();
   const originals = new Map<number, ReturnType<typeof normalizedOriginal>>();
-  const months: Form8962AllocationMonth[] = [], periods: Form8962AllocationPeriod[] = [];
+  const validated: ValidatedPolicySource[] = [];
   for (const policy of packet.policies) {
     if (!/^form1095A:(0|[1-9]\d*)$/.test(policy.sourceId ?? '')) throw new Error('Form8962 allocation requires the actual original policy index');
     const index = Number(policy.sourceId!.slice('form1095A:'.length));
@@ -231,6 +328,12 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
     const identity = JSON.stringify([original.marketplace, original.policyNumber]);
     if (seenIdentities.has(identity)) throw new Error('Form8962 allocation policy identity is duplicated');
     seenIdentities.add(identity);
+    validated.push({ policy, index, original });
+  }
+  const primaryId = ssn(primary.ssn, 'return primary SSN');
+  const coverageFamilies = noAdvanceCoverageFamilies(validated, packet, year, primaryId, name(`${primary.firstName} ${primary.lastName}`, 'return primary name'));
+  const months: Form8962AllocationMonth[] = [], periods: Form8962AllocationPeriod[] = [];
+  for (const { policy, index, original } of validated) {
     if (policy.situation === 'not_shared') {
       text(policy.unsharedSourceReference, 'unshared policy source reference');
       if (policy.allCoveredPeopleInThisTaxFamilyConfirmed !== true || policy.originalSlcspCorrectConfirmed !== true) throw new Error('Form8962 unshared policy requires actual household coverage and correct original benchmark confirmation');
@@ -295,7 +398,7 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
       if (assignments.get(person.ssn) === 'this_return' ? ownName !== person.name : ownName !== undefined) throw new Error('Form8962 allocation covered person conflicts with the actual return household');
       if (person.ssn === otherSsn && person.name !== otherName) throw new Error('Form8962 allocation other taxpayer name conflicts with the original covered person');
     }
-    const benchmarks = noAdvance ? noAdvanceBenchmarks(policy.noAdvanceAllocation, year, original, assignments) : undefined;
+    const benchmarks = noAdvance ? noAdvanceBenchmarks(policy.noAdvanceAllocation, year, original, assignments, coverageFamilies, primaryId, otherSsn) : undefined;
     if (policy.agreementConfirmed && policy.monthlyAllocations?.length !== original.monthlyPremiums.length) throw new Error('Form8962 allocation requires each original month agreement');
     const fractions = new Map<number, Decimal>();
     for (const row of policy.agreementConfirmed ? policy.monthlyAllocations! : []) {
@@ -329,7 +432,7 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
   }
   if (periods.length === 0) throw new Error('Form8962 allocationRequired needs at least one actual shared-policy allocation');
   months.sort((a, b) => a.month - b.month || a.policyIndex - b.policyIndex);
-  const combinedMonths = householdMonths(months, originals, packet, year);
+  const combinedMonths = householdMonths(months, originals, packet, year, coverageFamilies, primaryId);
   periods.sort((a, b) => a.policyIndex - b.policyIndex || a.firstMonth - b.firstMonth);
   const audit = new AuditTrail();
   for (const [index, period] of periods.entries()) for (const column of period.method === 'no_advance_benchmark' ? ['e'] : ['e', 'f', 'g']) {
@@ -357,7 +460,7 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
   }
   for (const row of combinedMonths.filter(row => row.policyIndexes.length > 1)) {
     for (const [column, value] of [['premium', row.premium], ['slcsp', row.slcsp], ['advance', row.advance]] as const) audit.record('Form8962 PartIV', `household-month-${row.month}:${column}`,
-      'Combined household month before form rounding', value, column === 'slcsp' ? 'Allocated benchmarks plus each actual unshared coverage-group benchmark once' : 'Sum actual allocated and unallocated policy amounts once');
+      'Combined household month before form rounding', value, column === 'slcsp' ? row.noAdvanceBenchmarkGroups ? 'Complete own coverage-family benchmark from each actual location group once; no per-policy duplication' : 'Allocated benchmarks plus each actual unshared coverage-group benchmark once' : 'Sum actual allocated and unallocated policy amounts once');
   }
   return { months, householdMonths: combinedMonths, periods, lines: audit.getLines() };
 }

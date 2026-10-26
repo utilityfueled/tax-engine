@@ -61,7 +61,7 @@ export interface Form8962ReferenceSummary {
   lines: Form8962ReferenceSummaryLine[];
   allocations?: { policyNumber: string; firstMonth: number; lastMonth: number; fraction: string; method: 'agreement' | 'default_enrollee_count' | 'no_advance_benchmark' }[];
   allocatedMonths?: { month: number; policyOrdinal: number; originalPremium: string; originalSlcsp: string | null; originalAdvance: string; premium: string; slcsp: string; advance: string; unshared?: true; benchmarkRatio?: { numerator: string; denominator: string } }[];
-  householdMonths?: { month: number; policyOrdinals: number[]; premium: string; slcsp: string; advance: string; unsharedBenchmarkGroups: { policyOrdinals: number[]; slcsp: string }[] }[];
+  householdMonths?: { month: number; policyOrdinals: number[]; premium: string; slcsp: string; advance: string; unsharedBenchmarkGroups: { policyOrdinals: number[]; slcsp: string }[]; noAdvanceBenchmarkGroups?: { policyOrdinals: number[]; slcsp: string }[] }[];
   marriage?: { electionApplies: boolean; worksheets: (Form8962ReferenceSummaryLine & { form: string })[] };
 }
 
@@ -275,7 +275,8 @@ export function buildForm8962ReferenceSummary(
       ...(month.benchmarkRatio ? { benchmarkRatio: { numerator: month.benchmarkRatio.numerator.toFixed(), denominator: month.benchmarkRatio.denominator.toFixed() } } : {}) })),
     householdMonths: allocation?.householdMonths.filter(row => row.policyIndexes.length > 1).map(row => ({ month: row.month, policyOrdinals: row.policyIndexes.map(index => index + 1),
       premium: row.premium.toFixed(), slcsp: row.slcsp.toFixed(), advance: row.advance.toFixed(),
-      unsharedBenchmarkGroups: row.unsharedBenchmarkGroups.map(group => ({ policyOrdinals: group.policyIndexes.map(index => index + 1), slcsp: group.slcsp.toFixed() })) })),
+      unsharedBenchmarkGroups: row.unsharedBenchmarkGroups.map(group => ({ policyOrdinals: group.policyIndexes.map(index => index + 1), slcsp: group.slcsp.toFixed() })),
+      ...(row.noAdvanceBenchmarkGroups ? { noAdvanceBenchmarkGroups: row.noAdvanceBenchmarkGroups.map(group => ({ policyOrdinals: group.policyIndexes.map(index => index + 1), slcsp: group.slcsp.toFixed() })) } : {}) })),
     marriage: marriage ? { electionApplies: marriage.electionApplies, worksheets: marriage.lines.filter(row => row.form.startsWith('Pub974 Marriage Worksheet')).map(row => ({
       form: row.form, line: row.line, description: row.description, value: row.value.toFixed(), formula: normalizeFormula(row.formula),
     })) } : undefined,
@@ -435,6 +436,7 @@ export async function fillForm8962Reference(
     for (const row of summary.householdMonths ?? []) {
       write(`Combined household month ${row.month}: policies ${row.policyOrdinals.join(', ')}; premium $${row.premium}; SLCSP $${row.slcsp}; advance $${row.advance}.`, true);
       for (const group of row.unsharedBenchmarkGroups) write(`Actual unshared coverage group: policies ${group.policyOrdinals.join(', ')}; benchmark $${group.slcsp}, counted once.`);
+      for (const group of row.noAdvanceBenchmarkGroups ?? []) write(`Complete own coverage-family group: policies ${group.policyOrdinals.join(', ')}; benchmark $${group.slcsp}, counted once.`);
       write('This combined row supplies the monthly calculation once. Original policy rows above remain separate source records.');
     }
   }

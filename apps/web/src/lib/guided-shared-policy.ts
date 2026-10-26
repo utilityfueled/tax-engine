@@ -9,6 +9,7 @@ export interface SharedPolicyAllocationData {
   primaryName: string; primarySsn: string; spouseName?: string; spouseSsn?: string;
   policies: SharedPolicyAgreementData[];
   overlappingCoverage?: OverlappingBenchmarkData;
+  noAdvanceCoverageFamilies?: NoAdvanceCoverageFamiliesData;
 }
 export interface OverlappingBenchmarkGroupData {
   sourceId: string; sourceReference: string; ratingArea: string; slcsp: string;
@@ -37,8 +38,69 @@ export interface NoAdvanceBenchmarkData {
   monthlyBenchmarks: { month: string; thisReturnSlcsp: string; otherReturnSlcsp: string; thisReturnSourceReference: string; otherReturnSourceReference: string;
     thisReturnCoveredIndividualSsns: string[]; otherReturnCoveredIndividualSsns: string[] }[];
 }
+export interface CoverageFamilyGroupData {
+  sourceId: string; sourceReference: string; ratingArea: string; slcsp: string;
+  coveredIndividualSsns: string[]; allCoveredPeopleShareRatingAreaConfirmed: boolean | null;
+}
+export interface CoverageFamilyData {
+  taxpayerName: string; taxpayerSsn: string; sourceReference: string;
+  /** Copied originals for choosing source groups, not an eligibility inference. */
+  coveredIndividuals: { name: string; ssn: string }[];
+  allCoverageFamilyMembersIncludedConfirmed: boolean | null; allCoveragePoliciesIncludedConfirmed: boolean | null;
+  groups: CoverageFamilyGroupData[];
+}
+export interface NoAdvanceCoverageFamiliesData {
+  sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null; allBenchmarkMonthsIncluded: boolean | null;
+  months: { month: string; families: CoverageFamilyData[] }[];
+}
+/** Copy only original monthly identities and actual assignments. Source groups,
+ * amounts, references and completeness answers are never supplied by capture. */
+function completeCoverageFamilyMonths(packet: SharedPolicyAllocationData): NoAdvanceCoverageFamiliesData['months'] {
+  const year = whole(packet.sourceTaxYear, "coverage-family source year"), ownId = identity(packet.primarySsn, "return primary SSN").replaceAll("-", "");
+  const sources = packet.policies.map(policy => {
+    if (!policy.original) throw new Error("Copy the actual original policies before grouping complete coverage families.");
+    return { policy, original: normalizeMarketplacePolicy(policy.original, year, true) };
+  });
+  const months = [...new Set(sources.flatMap(source => source.original.monthlyPremiums.map(row => row.month)))].sort((a, b) => a - b);
+  return months.flatMap(m => {
+    const active = sources.filter(source => source.original.monthlyPremiums.some(row => row.month === m));
+    if (active.length <= 1 || !active.some(source => source.policy.situation === "no_advance_credit")) return [];
+    if (active.some(source => !["no_advance_credit", "not_shared"].includes(source.policy.situation))) throw new Error("Reconcile each original policy's actual no-advance or unshared situation before copying full families.");
+    const families = new Map<string, CoverageFamilyData>();
+    const family = (taxpayerName: string, taxpayerSsn: string) => ({ taxpayerName: text(taxpayerName, "coverage-family taxpayer name"), taxpayerSsn: identity(taxpayerSsn, "coverage-family taxpayer SSN"), sourceReference: "", coveredIndividuals: [], allCoverageFamilyMembersIncludedConfirmed: null, allCoveragePoliciesIncludedConfirmed: null, groups: [] } satisfies CoverageFamilyData);
+    families.set(ownId, family(packet.primaryName, packet.primarySsn));
+    const people = new Map<string, { family: string; name: string }>();
+    for (const { policy, original } of active) {
+      const unshared = policy.situation === "not_shared", otherId = unshared ? undefined : identity(policy.otherTaxpayerSsn, "other taxpayer SSN").replaceAll("-", "");
+      if (otherId) {
+        if (otherId === ownId) throw new Error("The other tax family must have its own actual taxpayer identity.");
+        const next = family(policy.otherTaxpayerName, policy.otherTaxpayerSsn), previous = families.get(otherId);
+        if (previous && previous.taxpayerName.toLocaleLowerCase() !== next.taxpayerName.toLocaleLowerCase()) throw new Error("The original policies have contradictory other-family taxpayer names.");
+        if (!previous) families.set(otherId, next);
+      }
+      for (const person of original.coveredIndividuals ?? []) if (person.firstMonth! <= m && person.lastMonth! >= m) {
+        const id = identity(person.ssn, "original covered-person SSN").replaceAll("-", "");
+        const assigned = policy.coveredFamilyAssignments.filter(row => identity(row.ssn, "assignment SSN").replaceAll("-", "") === id);
+        if (!unshared && (assigned.length !== 1 || !["this_return", "other_return"].includes(assigned[0].family))) throw new Error("Complete each original covered-person assignment before copying full families.");
+        const familyId = unshared || assigned[0]?.family === "this_return" ? ownId : otherId!;
+        const actualName = text(person.name, "covered-person name"), previous = people.get(id);
+        if (previous && (previous.family !== familyId || previous.name.toLocaleLowerCase() !== actualName.toLocaleLowerCase())) throw new Error("An original person has contradictory names or family assignments.");
+        if (!previous) families.get(familyId)!.coveredIndividuals.push({ name: actualName, ssn: person.ssn! });
+        people.set(id, { family: familyId, name: actualName });
+      }
+    }
+    return [{ month: String(m), families: [...families.values()] }];
+  });
+}
+export function captureNoAdvanceCoverageFamilies(packet: SharedPolicyAllocationData): NoAdvanceCoverageFamiliesData {
+  const months = completeCoverageFamilyMonths(packet);
+  if (!months.length) throw new Error("There are no overlapping no-advance source months to group.");
+  return { sourceTaxYear: packet.sourceTaxYear, sourceReference: "", sourceFactsConfirmed: null, allBenchmarkMonthsIncluded: null, months };
+}
+
 export function invalidateSharedPolicySources(packet: SharedPolicyAllocationData): SharedPolicyAllocationData {
   return { ...packet, sourceFactsConfirmed: null,
+    ...(packet.noAdvanceCoverageFamilies ? { noAdvanceCoverageFamilies: { ...packet.noAdvanceCoverageFamilies, sourceFactsConfirmed: null } } : {}),
     ...(packet.overlappingCoverage ? { overlappingCoverage: { ...packet.overlappingCoverage, sourceFactsConfirmed: null } } : {}), policies: packet.policies.map(policy => ({ ...policy,
     ...(policy.noAdvanceAllocation ? { noAdvanceAllocation: { ...policy.noAdvanceAllocation, sourceFactsConfirmed: null } } : {}) })) };
 }
@@ -49,7 +111,8 @@ export function captureOverlappingBenchmarkSources(packet: SharedPolicyAllocatio
     if (!policy.original) throw new Error("Copy the actual original unshared policies first.");
     for (const row of normalizeMarketplacePolicy(policy.original, year, true).monthlyPremiums) counts.set(row.month, (counts.get(row.month) ?? 0) + 1);
   }
-  const months = [...counts.entries()].filter(([, count]) => count > 1).sort(([a], [b]) => a - b).map(([month]) => ({ month: String(month), groups: [] }));
+  const noAdvanceMonths = new Set(packet.policies.filter(row => row.situation === "no_advance_credit").flatMap(row => row.original?.monthlyPremiums.map(month => whole(month.month, "no-advance source month")) ?? []));
+  const months = [...counts.entries()].filter(([month, count]) => count > 1 && !noAdvanceMonths.has(month)).sort(([a], [b]) => a - b).map(([month]) => ({ month: String(month), groups: [] }));
   if (!months.length) throw new Error("There are no overlapping unshared source months to group.");
   return { sourceTaxYear: packet.sourceTaxYear, sourceReference: "", sourceFactsConfirmed: null, allBenchmarkMonthsIncluded: null, months };
 }
@@ -134,7 +197,7 @@ export function captureSharedPolicySources(data: PremiumTaxCreditData, personal:
     ...(spouse ? { spouseName: `${spouse.firstName} ${spouse.lastName}`, spouseSsn: spouse.ssn } : {}), policies };
 }
 /** Copy only actual original month/person facts. Benchmark values remain unknown. */
-export function captureNoAdvanceBenchmarkSources(policy: SharedPolicyAgreementData): NoAdvanceBenchmarkData {
+export function captureNoAdvanceBenchmarkSources(policy: SharedPolicyAgreementData, packet?: SharedPolicyAllocationData): NoAdvanceBenchmarkData {
   if (policy.situation !== "no_advance_credit" || !policy.original) throw new Error("Select the actual no-advance situation and copy its original policy first.");
   const year = whole(policy.original.taxYear, "original statement year"), original = normalizeMarketplacePolicy(policy.original, year, true);
   const assignments = new Map<string, string>();
@@ -148,11 +211,14 @@ export function captureNoAdvanceBenchmarkSources(policy: SharedPolicyAgreementDa
     firstMonth: whole(person.firstMonth?.toString(), "original first covered month"),
     lastMonth: whole(person.lastMonth?.toString(), "original last covered month") }));
   if (assignments.size !== people.length || people.some(person => !assignments.has(person.ssn.replaceAll("-", "")))) throw new Error("Reconcile every original covered person before copying benchmark rows.");
+  const fullMonths = packet ? completeCoverageFamilyMonths(packet) : [];
   return { sourceTaxYear: policy.original.taxYear, sourceReference: "", sourceFactsConfirmed: null, allCoveredPeopleInCoverageFamiliesConfirmed: null,
     monthlyBenchmarks: original.monthlyPremiums.map(row => {
       const covered = people.filter(person => person.firstMonth <= row.month && person.lastMonth >= row.month);
-      const own = covered.filter(person => assignments.get(person.ssn.replaceAll("-", "")) === "this_return").map(person => person.ssn);
-      const other = covered.filter(person => assignments.get(person.ssn.replaceAll("-", "")) === "other_return").map(person => person.ssn);
+      const full = fullMonths.find(month => Number(month.month) === row.month);
+      const fullPeople = (id: string | undefined) => full?.families.find(family => family.taxpayerSsn.replaceAll("-", "") === id?.replaceAll("-", ""))?.coveredIndividuals.map(person => person.ssn);
+      const own = fullPeople(packet?.primarySsn) ?? covered.filter(person => assignments.get(person.ssn.replaceAll("-", "")) === "this_return").map(person => person.ssn);
+      const other = fullPeople(policy.otherTaxpayerSsn) ?? covered.filter(person => assignments.get(person.ssn.replaceAll("-", "")) === "other_return").map(person => person.ssn);
       if (!own.length || !other.length) throw new Error("Each actual shared month needs people in both coverage families.");
       return { month: String(row.month), thisReturnSlcsp: "", otherReturnSlcsp: "", thisReturnSourceReference: "", otherReturnSourceReference: "",
         thisReturnCoveredIndividualSsns: own, otherReturnCoveredIndividualSsns: other };
@@ -165,6 +231,13 @@ export function resolveGuidedSharedPolicy(data: PremiumTaxCreditData, taxYear: n
   const policies = data.policies.map(policy => normalizeMarketplacePolicy(policy, taxYear, true));
   const sharedPolicyAllocations = {
     ...packet, sourceTaxYear: whole(packet.sourceTaxYear, "allocation source year"), sourceFactsConfirmed: packet.sourceFactsConfirmed ?? undefined, allSharedPoliciesIncluded: packet.allSharedPoliciesIncluded ?? undefined,
+    noAdvanceCoverageFamilies: packet.noAdvanceCoverageFamilies ? { ...packet.noAdvanceCoverageFamilies,
+      sourceTaxYear: whole(packet.noAdvanceCoverageFamilies.sourceTaxYear, "complete coverage-family source year"), sourceFactsConfirmed: packet.noAdvanceCoverageFamilies.sourceFactsConfirmed ?? undefined,
+      allBenchmarkMonthsIncluded: packet.noAdvanceCoverageFamilies.allBenchmarkMonthsIncluded ?? undefined,
+      months: packet.noAdvanceCoverageFamilies.months.map(row => ({ month: whole(row.month, "complete coverage-family month"), families: row.families.map(family => ({ ...family,
+        allCoverageFamilyMembersIncludedConfirmed: family.allCoverageFamilyMembersIncludedConfirmed ?? undefined,
+        allCoveragePoliciesIncludedConfirmed: family.allCoveragePoliciesIncludedConfirmed ?? undefined,
+        groups: family.groups.map(group => ({ ...group, slcsp: money(group.slcsp, "coverage-family group benchmark"), allCoveredPeopleShareRatingAreaConfirmed: group.allCoveredPeopleShareRatingAreaConfirmed ?? undefined })) })) })) } : undefined,
     overlappingCoverage: packet.overlappingCoverage ? { ...packet.overlappingCoverage,
       sourceTaxYear: whole(packet.overlappingCoverage.sourceTaxYear, "overlapping benchmark source year"), sourceFactsConfirmed: packet.overlappingCoverage.sourceFactsConfirmed ?? undefined,
       allBenchmarkMonthsIncluded: packet.overlappingCoverage.allBenchmarkMonthsIncluded ?? undefined,

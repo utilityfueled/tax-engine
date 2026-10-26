@@ -1,0 +1,64 @@
+form: "Form 8962"
+fullName: "Actual full coverage-family benchmarks for overlapping Situation 3 policies"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8962"
+retrievedAt: "2026-10-26"
+reviewStatus: "source-derived-implementation-independent-review-pending"
+notes: |
+  Reg1.36B-3(b)(2),(f)(2)/(4)/(5),(h)(1) defines each monthly coverage family,
+  its applicable complete benchmark, and premium allocation between taxpayers.
+  Final i8962 Situation3 uses each full family benchmark; columns(f)/(g) stay
+  blank. Instructions for monthly column(b) forbid adding repeated benchmarks
+  for one coverage family; distinct actual location-group benchmarks are summed.
+  These rules are combined here as a derived method, not a published overlapping
+  policy example. Each policy premium uses its own two participating families'
+  full monthly benchmarks. This return's benchmark enters the household month
+  once, including concurrent unshared policies. Exact premium products are added
+  before form-dollar reporting; a printed PartIV(e) ratio is never the calculation
+  precision. Source records, including printed blank original B, remain unchanged.
+  The packet binds complete monthly original coverage, actual tax-family
+  membership, taxpayer identities, independently sourced rating-area benchmarks,
+  and full-family/policy completeness confirmations. It neither supplies a
+  computed allowance nor invents people or a zero. Other-family coverage outside
+  the actual original ledger requires its separate supporting-source method;
+  a contradictory or unknown completeness answer cannot take this route.
+  Simultaneous Situation4, marriage, health, QSEHRA and special eligibility
+  combinations remain separate methods. No2026 release or human qualification.
+lines:
+  - line: "coverage-family-source"
+    description: "Bind full monthly coverage-family sources across actual policies"
+    formula: "Require exactly every overlap month containing Situation3; bind source year/reference/confirmation. Each named taxpayer family must equal the union of original covered people assigned to it across active policies, with consistent actual names/assignments. Every group has an actual unique source/rating-area identity, complete people and benchmark; each person belongs to exactly one group within a month. Require actual complete coverage-family and coverage-policy confirmations."
+    testRef: "tests/engine/forms/form-8962-no-advance-overlap.test.ts::rejects incomplete duplicate and contradictory full-family monthly sources"
+  - line: "monthly-premium"
+    description: "Allocate each original premium with the full family ratio"
+    formula: "For each Situation3 source i: premium_i=originalPremium_i*ownFullBenchmark/(ownFullBenchmark+otherParticipatingFamilyFullBenchmark). Add exact allocated premiums and actual unshared premiums once. Two source premiums600+900 with full benchmarks1200/600 yield400+600=1000; printed.67 is not used for money."
+    testRef: "tests/engine/forms/form-8962-no-advance-overlap.test.ts::allocates overlapping original premiums from full family benchmarks once"
+  - line: "monthly-benchmark"
+    description: "Count the complete current-return benchmark once"
+    formula: "The month benchmark is the sum of this return's independently sourced distinct rating-area group benchmarks once, not one full benchmark per original policy. Separate own500+700 and other600+300 benchmarks produce own1200/other900;2100 total premium allocates1200. Original duplicate amounts and original statement B do not create extra benchmarks."
+    testRef: "tests/engine/forms/form-8962-no-advance-overlap.test.ts::uses actual location groups and exact source cents without a printed-ratio residual"
+  - line: "mixed-unshared"
+    description: "Retain ordinary concurrent unshared original coverage"
+    formula: "Unshared original premiums and APTC remain unallocated. A correct original unshared benchmark must match the full applicable own location groups covering its active original people. Derive the complete own benchmark once with the Situation3 family ledger; never add it again as an unshared-policy amount."
+    testRef: "tests/engine/forms/form-8962-no-advance-overlap.test.ts::combines no-advance and actual unshared coverage without duplicating the benchmark"
+  - line: "canonical"
+    description: "Transfer source-derived household months without amount overrides"
+    formula: "Actual MFJ wages30000, original one-month premiums600+900, own1200/other600 give1000 allowedPTC and0APTC. Reconcile retained monthly premium/benchmark/advance against this source calculation; stale equal-net or rounded-share replacements reject."
+    testRef: "tests/engine/forms/form-8962-no-advance-overlap.test.ts::reconciles the canonical household month to complete original sources"
+
+  - line: "guided-source-copy"
+    description: "Copy original monthly family members without inventing benchmarks"
+    formula: "Explicit capture copies actual covered people, taxpayers and months. Location groups, benchmarks and confirmations remain unknown; per-policy benchmark source rows retain the full monthly family members."
+    testRef: "tests/guided-interview/guided-no-advance-overlap.test.ts::copies full coverage families and preserves unknown sources through canonical intake"
+  - line: "guided-confirmation"
+    description: "Keep complete family source controls reachable and revoke edited confirmations"
+    formula: "Actual family/group edits revoke nested, allocation and Marketplace confirmations. Complete original sources derive one household month while retaining independent eligibility answers."
+    testRef: "tests/apps/web/no-advance-overlap-interactions.test.tsx::captures actual monthly families and groups through the complete Marketplace panel"
+  - line: "review-source-binding"
+    description: "Show exact policy allocations and the complete benchmark once"
+    formula: "Physical Part IV prints each two-place fraction in column e only. The private original-source context validates all consumed full-family source facts and retained rows before rendering; output omits taxpayer identifiers and private references."
+    testRef: "tests/pdf/form8962-no-advance-overlap.test.ts::saves complete family benchmark groups and rejects stale source or retained calculation"
+  - line: "counterpart-and-partial-periods"
+    description: "Bind each original policy to its own actual counterpart family and month"
+    formula: "Two different counterparts with full benchmarks600 and300 use1200/1800 and1200/1500 respectively:600*2/3+900*4/5=1120. Source ordering cannot change this. A later single-policy month retains its own actual family membership and benchmark, without inheriting the overlap month's sources."
+    testRef: "tests/engine/forms/form-8962-no-advance-overlap.test.ts::preserves distinct counterpart families and later single-policy months"
