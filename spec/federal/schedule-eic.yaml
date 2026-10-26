@@ -25,9 +25,14 @@ notes: |
     of the year and have a qualifying child may claim EIC as MFS
     (IRC §32(d)(2), made permanent by subsequent legislation)
   - MFS filers using the exception apply single/HoH thresholds
+  - Only married filing jointly uses the increased joint phase-out threshold;
+    qualifying surviving spouse uses the same threshold as single/HoH.
 
   Age requirement for childless filers:
-  - Must be age 25-64 (inclusive) by end of tax year (IRC §32(c)(1)(A)(ii))
+  - Either spouse on a joint return can meet the age25-64 test.
+  - Actual date/death convention and claimant SSN/residency source checks are
+    specified in eic-claimant-eligibility.yaml. Standalone source-free calls
+    preserve their historical primaryAge fallback; canonical calls use dates.
 
   Investment income disqualification:
   - If investment income exceeds $11,950 for 2025, EIC = $0
@@ -35,6 +40,11 @@ notes: |
     capital gain net income (≥ $0), net rental/royalty income (if positive)
 
 lines:
+  - line: "filingStatusThreshold"
+    description: "Only a married joint return uses the joint phase-out threshold"
+    formula: "MFJ threshold if filingStatus=married_filing_jointly; otherwise single/HoH threshold, including qualifying surviving spouse"
+    irsRef: "IRC32(b)(2)(B); Pub596 Rule1 and EIC Table heading"
+    testRef: "tests/engine/forms/schedule-eic.test.ts::EIC - qualifying surviving spouse uses nonjoint thresholds"
   - line: "earnedIncome"
     description: "Earned income for EIC purposes"
     formula: "W-2 wages + net self-employment earnings − deductible half of SE tax (per IRC §32(c)(2))"

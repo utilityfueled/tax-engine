@@ -296,9 +296,9 @@ describe("EIC - filing status comparison at same income", () => {
     const mfj = eic({ filingStatus: "married_filing_jointly", qualifyingChildren: 1, earnedIncome: 25000 });
     expect(mfj.credit.toNumber()).toBe(4328);
 
-    // QSS: same as MFJ → $4,328
+    // QSS: nonjoint thresholds, same as single/HoH → $4,064
     const qss = eic({ filingStatus: "qualifying_surviving_spouse", qualifyingChildren: 1, earnedIncome: 25000 });
-    expect(qss.credit.toNumber()).toBe(4328);
+    expect(qss.credit.toNumber()).toBe(4064);
 
     // MFS without exception: disqualified → $0
     const mfs = eic({ filingStatus: "married_filing_separately", qualifyingChildren: 1, earnedIncome: 25000 });
@@ -489,24 +489,25 @@ describe("EIC - earned income amount boundaries", () => {
 });
 
 // ═══════════════════════════════════════════════════════════
-// QSS Uses MFJ Thresholds (Not Single/HoH)
+// QSS Uses Nonjoint Thresholds (Same as Single/HoH)
 // ═══════════════════════════════════════════════════════════
 
-describe("EIC - QSS uses MFJ thresholds", () => {
-  it("EIC - QSS 0 children at MFJ phase-out start ($17,730) gets max $649", () => {
+describe("EIC - QSS uses nonjoint thresholds", () => {
+  it("EIC - QSS 0 children at $17,730 uses the nonjoint phase-out", () => {
     const result = eic({
       filingStatus: "qualifying_surviving_spouse",
       qualifyingChildren: 0,
       earnedIncome: 17730,
       primaryAge: 35,
     });
-    expect(result.credit.toNumber()).toBe(649);
-    expect(result.phaseOutReduction.toNumber()).toBe(0);
+    // floor(649.485 − 0.0765 × (17,730 − 10,620)) = 105.
+    expect(result.credit.toNumber()).toBe(105);
+    expect(result.phaseOutReduction.toString()).toBe("543.915");
   });
 
   it("EIC - QSS 2 children on plateau ($20,000) gets max $7,152", () => {
     // phase-in = 40% × $17,880 = $7,152 (earned > amount)
-    // phase-out start $30,470 (MFJ), $20,000 < $30,470 → $0
+    // phase-out start $23,350 (nonjoint), $20,000 < $23,350 → $0
     const result = eic({
       filingStatus: "qualifying_surviving_spouse",
       qualifyingChildren: 2,

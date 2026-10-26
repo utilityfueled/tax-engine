@@ -3398,6 +3398,16 @@ export const IraDeductionWorksheetSchema = z.object({
 });
 
 export const EicConfigSchema = z.object({
+  /** Actual claimant facts for IRC32. Omission preserves unknown historical sources. */
+  claimantEligibility: z.object({
+    sourceTaxYear: z.number().int().optional(),
+    sourceReference: z.string().optional(),
+    sourceFactsConfirmed: z.boolean().optional(),
+    primaryNonresidentAlienDuringYear: z.boolean().optional(),
+    spouseNonresidentAlienDuringYear: z.boolean().optional(),
+    /** Actual valid IRC6013(g)/(h) election, not an inferred residency answer. */
+    residentJointElection: z.boolean().optional(),
+  }).optional(),
   /** Whether the MFS filer qualifies for the separated-spouse EIC exception
    *  (lived apart from spouse for the last 6 months of the year + qualifying child) */
   mfsEligible: z.boolean().default(false),

@@ -15,6 +15,7 @@ import {
 } from "@/lib/guided-interview-flow";
 import { BooleanFact } from "./fact-fields";
 import { StandardDeductionSourceDetails } from "./standard-deduction-source-details";
+import { EicClaimantSourceDetails } from "./eic-claimant-source-details";
 import { CurrencyField } from "./currency-field";
 
 function DependentCard({
@@ -277,11 +278,11 @@ export function SectionPersonalInfo({
           <span className="guided-field-hint" id="ssn-hint">Your taxpayer ID is sensitive. Review downloads omit it; complete filing exports are not yet available.</span>
         </label>
 
-        {claimsDependentCredit && <fieldset className="guided-fieldset"><legend className="guided-fieldset-legend">Your credit identification requirements</legend>
+        <fieldset className="guided-fieldset"><legend className="guided-fieldset-legend">Your credit identification requirements</legend>
           <BooleanFact label="Was your employment-valid SSN issued by the return due date, including extensions?" value={current.employmentValidSsnIssuedByDueDate} onChange={(value) => onDataChange({ ...current, employmentValidSsnIssuedByDueDate: value })} />
-          <BooleanFact label="Was your SSN or ITIN issued by the return due date, including extensions?" value={current.tinIssuedByDueDate} onChange={(value) => onDataChange({ ...current, tinIssuedByDueDate: value })} />
+          {claimsDependentCredit && <BooleanFact label="Was your SSN or ITIN issued by the return due date, including extensions?" value={current.tinIssuedByDueDate} onChange={(value) => onDataChange({ ...current, tinIssuedByDueDate: value })} />}
           <p className="guided-hint">Review the actual identification requirements and issuance date. A timely employment-valid SSN establishes the timely taxpayer ID requirement.</p>
-        </fieldset>}
+        </fieldset>
 
         <div className="guided-form-grid">
           <label className="guided-field"><span className="guided-field-label">Your date of birth</span>
@@ -305,10 +306,8 @@ export function SectionPersonalInfo({
                   onChange={(event) => onDataChange({ ...current, spouse: { ...(current.spouse ?? emptySpouseInfo), [field]: event.target.value } })} />
               </label>
             ))}
-            {claimsDependentCredit && <>
               <BooleanFact label="Was your spouse's employment-valid SSN issued by the return due date, including extensions?" value={current.spouse?.employmentValidSsnIssuedByDueDate} onChange={(value) => onDataChange({ ...current, spouse: { ...(current.spouse ?? emptySpouseInfo), employmentValidSsnIssuedByDueDate: value } })} />
-              <BooleanFact label="Was your spouse's SSN or ITIN issued by the return due date, including extensions?" value={current.spouse?.tinIssuedByDueDate} onChange={(value) => onDataChange({ ...current, spouse: { ...(current.spouse ?? emptySpouseInfo), tinIssuedByDueDate: value } })} />
-            </>}
+              {claimsDependentCredit && <BooleanFact label="Was your spouse's SSN or ITIN issued by the return due date, including extensions?" value={current.spouse?.tinIssuedByDueDate} onChange={(value) => onDataChange({ ...current, spouse: { ...(current.spouse ?? emptySpouseInfo), tinIssuedByDueDate: value } })} />}
             <label className="guided-field"><span className="guided-field-label">Did you live with your spouse at any time during the year?</span>
               <select className="guided-input" value={current.livedWithSpouseAtAnyTimeDuringYear == null ? "" : String(current.livedWithSpouseAtAnyTimeDuringYear)} onChange={(event) => onDataChange({ ...current, livedWithSpouseAtAnyTimeDuringYear: event.target.value === "" ? undefined : event.target.value === "true" })} aria-required="true">
                 <option value="">Choose an answer</option><option value="true">Yes</option><option value="false">No</option>
@@ -421,6 +420,7 @@ export function SectionPersonalInfo({
           </div>
         )}
         <StandardDeductionSourceDetails data={current.standardDeductionFacts} filingStatus={filingStatus} onChange={standardDeductionFacts => onDataChange({ ...current, standardDeductionFacts })} />
+        <EicClaimantSourceDetails data={current.eicClaimantEligibility} filingStatus={filingStatus} onChange={eicClaimantEligibility => onDataChange({ ...current, eicClaimantEligibility })} />
         {claimsDependentCredit && <fieldset className="guided-fieldset"><legend className="guided-fieldset-legend">Dependent credit worksheet</legend>
           {dependents.some((entry) => entry.qualifiesForCTC) && <BooleanFact label="Were you a bona fide resident of Puerto Rico during the tax year?" value={current.childTaxCredit?.bonaFidePuertoRicoResident} onChange={(value) => onDataChange({ ...current, childTaxCredit: { ...current.childTaxCredit, bonaFidePuertoRicoResident: value } })} />}
           <CurrencyField label="Puerto Rico income excluded from federal income" hint="Schedule 8812 line 2a. Enter the actual exclusion, including zero." value={current.childTaxCredit?.puertoRicoExcludedIncome ?? ""} onChange={(value) => onDataChange({ ...current, childTaxCredit: { ...current.childTaxCredit, puertoRicoExcludedIncome: value } })} />

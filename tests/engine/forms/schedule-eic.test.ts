@@ -217,12 +217,17 @@ describe("EIC", () => {
     expect(hoh.credit.toNumber()).toBe(single.credit.toNumber());
   });
 
-  // ── QSS uses MFJ thresholds ────────────────────────────────
+  // ── QSS uses nonjoint thresholds ──────────────────────────
 
-  it("EIC - qualifying surviving spouse uses MFJ thresholds", () => {
-    const mfj = eic({ filingStatus: "married_filing_jointly", qualifyingChildren: 1, earnedIncome: 30000 });
-    const qss = eic({ filingStatus: "qualifying_surviving_spouse", qualifyingChildren: 1, earnedIncome: 30000 });
-    expect(qss.credit.toNumber()).toBe(mfj.credit.toNumber());
+  it("EIC - qualifying surviving spouse uses nonjoint thresholds", () => {
+    // Pub596 Rule1: one-child nonjoint limit50,434; joint limit57,554.
+    const mfj = eic({ filingStatus: "married_filing_jointly", qualifyingChildren: 1, earnedIncome: 55000 });
+    const qss = eic({ filingStatus: "qualifying_surviving_spouse", qualifyingChildren: 1, earnedIncome: 55000 });
+    const single = eic({ filingStatus: "single", qualifyingChildren: 1, earnedIncome: 55000 });
+    expect(single.credit.toNumber()).toBe(0);
+    expect(qss.credit.toNumber()).toBe(0);
+    // Existing formula: floor(4,328.20−.1598×(55,000−30,470))=408.
+    expect(mfj.credit.toNumber()).toBe(408);
   });
 
   // ── Disqualifications ──────────────────────────────────────

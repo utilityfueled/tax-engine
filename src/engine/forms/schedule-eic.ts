@@ -15,6 +15,7 @@ import Decimal from "decimal.js";
 import type { FilingStatus, YearConstants } from "@/models/constants.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { calculateEicClaimantEligibility, type EicClaimantInput } from "./eic-claimant-eligibility.js";
 
 const ZERO = new Decimal(0);
 
@@ -28,8 +29,9 @@ export interface EicInput {
   agi: Decimal;
   /** Investment income for the disqualification test */
   investmentIncome: Decimal;
-  /** Primary filer's age at end of tax year (needed for childless age test) */
-  primaryAge: number;
+  /** Historical standalone fallback; canonical returns supply actual claimant sources. */
+  primaryAge?: number;
+  claimantInput?: EicClaimantInput;
   /** Whether the MFS filer qualifies for the separated-spouse exception */
   mfsEicEligible: boolean;
 }
@@ -51,6 +53,15 @@ export function calculateEic(input: EicInput, constants: YearConstants): EicResu
   // Cap qualifying children at 3 for rate lookup
   const childKey = Math.min(input.qualifyingChildren, 3);
 
+  if (input.claimantInput && (input.claimantInput.taxpayer.taxYear !== constants.taxYear || input.claimantInput.taxpayer.filingStatus !== input.filingStatus)) throw new Error("EIC claimant year and filing status must match the calculation");
+  // Supplied sources must reconcile even when income rules produce no credit.
+  // With no packet, determine whether any credit is possible before requiring
+  // unrelated claimant facts; a zero amount does not verify those facts.
+  let claimant = input.claimantInput?.eic?.claimantEligibility !== undefined
+    ? calculateEicClaimantEligibility(input.claimantInput, childKey === 0) : undefined;
+  if (claimant) audit.merge(claimant.lines);
+  if (claimant?.disqualificationReason) return disqualified(audit, claimant.disqualificationReason);
+
   // ── Disqualification checks ──────────────────────────────
 
   // MFS: cannot claim EIC unless the separated-spouse exception applies
@@ -71,16 +82,6 @@ export function calculateEic(input: EicInput, constants: YearConstants): EicResu
     );
   }
 
-  // Age requirement for childless filers: must be age 25–64 inclusive at end of tax year
-  if (childKey === 0) {
-    if (input.primaryAge < 25 || input.primaryAge > 64) {
-      return disqualified(
-        audit,
-        `Childless filer must be age 25–64 (age ${input.primaryAge} at year end)`,
-      );
-    }
-  }
-
   // ── Credit calculation ───────────────────────────────────
 
   const creditRate = eitc.creditRate[childKey];
@@ -88,9 +89,8 @@ export function calculateEic(input: EicInput, constants: YearConstants): EicResu
   const earnedIncomeAmount = eitc.earnedIncomeAmount[childKey];
 
   // Determine phase-out start based on filing status
-  const isMfj = input.filingStatus === "married_filing_jointly" ||
-                input.filingStatus === "qualifying_surviving_spouse";
-  // MFS with exception uses single/HoH thresholds per IRS rules
+  const isMfj = input.filingStatus === "married_filing_jointly";
+  // QSS and MFS with the exception use nonjoint thresholds (Pub596 Rule1).
   const phaseOutStart = isMfj
     ? eitc.phaseOutStartMFJ[childKey]
     : eitc.phaseOutStartSingleHoH[childKey];
@@ -106,6 +106,23 @@ export function calculateEic(input: EicInput, constants: YearConstants): EicResu
   // Credit = max(0, floor(phase_in - phase_out_reduction))
   const rawCredit = phaseInCredit.minus(phaseOutReduction);
   const credit = Decimal.max(ZERO, rawCredit.floor());
+
+  if (credit.greaterThan(ZERO)) {
+    if (!claimant && input.claimantInput) {
+      claimant = calculateEicClaimantEligibility(input.claimantInput, childKey === 0);
+      audit.merge(claimant.lines);
+      if (claimant.disqualificationReason) return disqualified(audit, claimant.disqualificationReason);
+    }
+    if (childKey === 0) {
+      if (!claimant && (input.primaryAge === undefined || !Number.isFinite(input.primaryAge))) throw new Error("Historical EIC calculation requires a known age or actual claimant sources");
+      if (claimant ? !claimant.childlessAgeEligible : (input.primaryAge ?? 0) < 25 || (input.primaryAge ?? 0) > 64) {
+        return disqualified(
+          audit,
+          claimant ? "Childless claimant age test is not met by either relevant filer at year end or actual death (Pub596 Rule11)" : `Childless filer must be age 25–64 (age ${input.primaryAge} at year end)`,
+        );
+      }
+    }
+  }
 
   // Maximum credit for reference
   const maxCredit = creditRate.times(earnedIncomeAmount).floor();

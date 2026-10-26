@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.105",
+    ruleVersion: "2025.106",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p596", section: "Actual claimant timely work-authorized SSNs, separate nonresident histories and joint election, either-spouse childless age/death, and nonjoint QSS phase-out threshold", revision: "Final2025 Rules1/2/4/11 and IRC32; original source/guide checks and literal controls, historical omissions unverified, other EIC requirements and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.170A-8", section: "Actual2025 current and prior other-charity share one B capacity; current public capital property remains unreduced by its30% cap", revision: "Historical2025 IRC170(B), final2025 Pub526 and Reg1.170A-10; published current-source reservation and derived prior controls,2026 carry methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual two-owner specified health deductions with nonbinding owner income and joint maximum; same-owner gross-income QBI attribution and retained original-source review", revision: "IRC162(l), Reg1.162(l)-1/1.199A-3 and RevProc2014-41; bounded derived2025/isolated2026 controls, binding owner/capped-repayment methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-digital-asset-transactions", section: "Verified original digital-asset donations reconciled once with all current charitable categories, including crypto-only source dispatch and final selected carry", revision: "Current IRS FAQs78-80, Notice2014-21 and IRC170; existing valuation and substantiation retained, exact source controls, prior/NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
@@ -148,11 +149,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.100-law-integration-draft",
+    ruleVersion: "2026.101-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p596", section: "Actual claimant timely work-authorized SSNs, separate nonresident histories and joint election, either-spouse childless age/death, and nonjoint QSS phase-out threshold", revision: "Final2025 Rules1/2/4/11 and IRC32; original source/guide checks and literal controls, historical omissions unverified, other EIC requirements and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual two-owner specified health deductions with nonbinding owner income and joint maximum; same-owner gross-income QBI attribution and retained original-source review", revision: "IRC162(l), Reg1.162(l)-1/1.199A-3 and RevProc2014-41; bounded derived2025/isolated2026 controls, binding owner/capped-repayment methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-digital-asset-transactions", section: "Verified original digital-asset donations reconciled once with all current charitable categories, including crypto-only source dispatch and final selected carry", revision: "Current IRS FAQs78-80, Notice2014-21 and IRC170; existing valuation and substantiation retained, exact source controls, prior/NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual current ordinary G/A/B/C/D receipts, per-item original valuation, exact floor and final selected charitable carry with confirmed empty history", revision: "IRC170(b)/(d)/(e)/(p), Reg1.170A-10 and final2025 Pub526; derived source controls, same-category partial media, prior/NOL and human qualification remain separate", retrievedAt: "2026-10-25" },

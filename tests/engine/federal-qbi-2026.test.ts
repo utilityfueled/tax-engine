@@ -12,7 +12,15 @@ import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 const make = (participation?:boolean,wages="0") => TaxYearInputSchema.parse({...simpleW2Fixture,taxpayer:{...simpleW2Fixture.taxpayer,taxYear:2026},w2s:[{...simpleW2Fixture.w2s[0],wages,socialSecurityWages:wages,socialSecurityTips:"0"}],scheduleC:{businessName:"Actual trade",grossReceipts:"1200",qbiMateriallyParticipated:participation}});
 describe("2026 QBI minimum integration",()=>{
   it("computes minimum even when standard deduction eliminates taxable income",()=>{
-    const r=calculateFederalTax(make(true));
+    const input = make(true);
+    // This positive-earned-income synthetic2026 return also needs actual EIC
+    // claimant facts. No eligibility fact is inferred from the QBI source.
+    input.taxpayer.primary.employmentValidSsnIssuedByDueDate = true;
+    input.eic = { mfsEligible: false, primaryIsFullTimeStudent: false, claimantEligibility: {
+      sourceTaxYear: 2026, sourceReference: "Synthetic claimant identity and residency records",
+      sourceFactsConfirmed: true, primaryNonresidentAlienDuringYear: false,
+    } };
+    const r=calculateFederalTax(input);
     expect(r.form8995?.qbiDeduction.toString()).toBe("400");
     expect(r.taxableIncome.toString()).toBe("0");
   });

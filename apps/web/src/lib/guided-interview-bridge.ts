@@ -41,6 +41,7 @@ import Decimal from "decimal.js";
 import { buildGuidedNiitSources, guidedNiitFactErrors } from "./guided-niit-facts";
 import { parseGuidedCurrency, hasGuidedCurrency, formatGuidedDollars, sumGuidedDisplayAmounts } from "./guided-currency";
 import { childCreditExclusionValues, dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts";
+import { buildGuidedEicClaimantEligibility } from "./guided-eic-eligibility";
 import { buildVehicleCreditInput, vehicleFactErrors } from "./guided-vehicle-facts";
 import { buildAdoptionInput, adoptionFactErrors } from "./guided-adoption-facts";
 import { allPaymentFactErrors, assertKnownFacts, deductionFactErrors, educationFactErrors, hasEnteredAmount, paymentFactErrors, retirementFactErrors } from "./guided-required-facts";
@@ -818,6 +819,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     } : undefined,
     dependentCare,
     dependentCareBenefits,
+    eic: buildGuidedEicClaimantEligibility(personalInfo, segmentation.filingStatus, state.taxYear),
     standardDeductionFacts: buildStandardDeductionFacts(personalInfo?.standardDeductionFacts, segmentation.filingStatus, state.taxYear, personalInfo),
     deductionElection: deductionData?.method ?? "automatic",
     ...buildGuidedInvestmentInterestInputs(deductionData, investData?.childElections, state.taxYear),

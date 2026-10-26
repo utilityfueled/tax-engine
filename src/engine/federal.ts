@@ -3260,13 +3260,6 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Qualifying EIC children from dependents
   const qualifyingEicChildren = input.taxpayer.dependents.filter((dep) => dep.qualifiesForEIC).length;
 
-  // Compute primary filer's age at end of tax year
-  const primaryBirth = new Date(input.taxpayer.primary.dateOfBirth);
-  const eicYearEnd = new Date(year, 11, 31);
-  const primaryAgeRaw = eicYearEnd.getFullYear() - primaryBirth.getFullYear();
-  const primaryBirthdayThisYear = new Date(year, primaryBirth.getMonth(), primaryBirth.getDate());
-  const primaryAge = primaryBirthdayThisYear <= eicYearEnd ? primaryAgeRaw : primaryAgeRaw - 1;
-
   // IRC §32(c)(1)(C): Filing Form 2555 disqualifies the taxpayer from EIC
   let eic: Decimal;
   let scheduleEIC: ReturnType<typeof calculateEic> | undefined;
@@ -3281,7 +3274,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       earnedIncome: eicEarnedIncome,
       agi,
       investmentIncome: eicInvestmentIncome,
-      primaryAge,
+      claimantInput: input,
       mfsEicEligible: input.eic?.mfsEligible ?? false,
     }, constants);
     audit.merge(scheduleEIC.lines);

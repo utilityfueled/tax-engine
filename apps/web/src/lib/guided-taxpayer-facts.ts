@@ -1,4 +1,5 @@
 import { standardDeductionFactErrors } from "./guided-standard-deduction-facts";
+import { eicClaimantFactErrors } from "./guided-eic-eligibility";
 import type { DependentEntryData, FilingStatus, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 
@@ -99,5 +100,6 @@ export function personalFactErrors(data: PersonalInfoData | undefined, status: F
     .filter((value): value is string => !!value).map((value) => value.replace(/-/g, ""));
   if (new Set(taxIds).size !== taxIds.length) errors.taxIds = "Each taxpayer, spouse and dependent must have a different taxpayer ID";
   Object.assign(errors, standardDeductionFactErrors(data?.standardDeductionFacts, status, taxYear, data));
+  Object.assign(errors, eicClaimantFactErrors(data, status, taxYear));
   return errors;
 }
