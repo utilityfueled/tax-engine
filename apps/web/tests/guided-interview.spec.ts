@@ -277,15 +277,23 @@ test.describe("Guided interview flow", () => {
 
     const sectionHeading = page.getByRole("heading", { name: /about you/i });
     const ticker = page.locator(".guided-refund-ticker-sticky");
-    const progressSteps = page.locator(".guided-progress-step");
 
     await expect(sectionHeading).toBeVisible();
     await expect(ticker).toBeVisible();
 
-    const sectionBox = await sectionHeading.boundingBox();
-    const tickerBox = await ticker.boundingBox();
-    const firstStepBox = await progressSteps.first().boundingBox();
-    const secondStepBox = await progressSteps.nth(1).boundingBox();
+    // Compare every position in one browser turn: scrolling or reflow between
+    // separate protocol calls would mix different viewport coordinate systems.
+    const { sectionBox, tickerBox, firstStepBox, secondStepBox } = await sectionHeading.evaluate((section) => {
+      const box = (element: Element | null | undefined) => element?.getClientRects().length
+        ? element.getBoundingClientRect().toJSON() : null;
+      const steps = document.querySelectorAll(".guided-progress-step");
+      return {
+        sectionBox: box(section),
+        tickerBox: box(document.querySelector(".guided-refund-ticker-sticky")),
+        firstStepBox: box(steps[0]),
+        secondStepBox: box(steps[1]),
+      };
+    });
 
     expect(sectionBox).not.toBeNull();
     expect(tickerBox).not.toBeNull();
