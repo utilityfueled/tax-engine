@@ -329,6 +329,29 @@
       ]
     },
     {
+      "key": "federal/charitable-determined-nol",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i172",
+      "specPath": "spec/federal/charitable-determined-nol.yaml",
+      "enginePath": "src/engine/forms/charitable-determined-nol.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-charitable-determined-nol.test.ts::replays a unique current charitable origin through the actual canonical return",
+        "tests/apps/web/workspace-charitable-determined-nol.test.ts::exports determined original charity from actual guided sources"
+      ],
+      "implementationNote": "Original current and independent prior sources determine zero-benefit or one-affected-excess NOL carry, with actual guided sources and a source-bound 2025 review reference. Positive multiple-origin attribution and closed year/filing gates remain distinct.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/charitable-net-operating-loss",
       "jurisdiction": "federal",
       "taxYear": 2025,

@@ -15,6 +15,8 @@ import { calculateForm172Return } from "./form-172-return.js";
 import { calculateQbiEblNol } from "./qbi-ebl-nol.js";
 import { createPriorCharitableNolLimit, hasPriorCharitableNolSources, readPriorCharitableNolSources } from "@/utils/charitable-prior-nol-source.js";
 import { calculatePriorCharitableNolCarryover, type PriorCharitableNolCarryoverResult } from "./charitable-prior-net-operating-loss.js";
+import { createCharitableNolOriginLimit, usesDeterminedCharitableNolOrigins } from "@/utils/charitable-nol-origins.js";
+import { calculateDeterminedCharitableNol, type DeterminedCharitableNolResult } from "./charitable-determined-nol.js";
 
 export interface NolIncomeContext {
   agi: Decimal;
@@ -51,6 +53,8 @@ export interface NetOperatingLossReturnResult extends NetOperatingLossResult {
   alternativeCharitableCarryover?: AlternativeCharitableNolCarryoverResult;
   priorCharitableCarryover?: PriorCharitableNolCarryoverResult;
   priorAlternativeCharitableCarryover?: PriorCharitableNolCarryoverResult;
+  determinedCharitableCarryover?: DeterminedCharitableNolResult;
+  determinedAlternativeCharitableCarryover?: DeterminedCharitableNolResult;
   priorCharitableAlternativeAdjustment?: {
     regularLedgerIncome: NolAlternativeIncomeContext; independentIncome: NolAlternativeIncomeContext; amount: Decimal;
   };
@@ -71,8 +75,10 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   if (!facts) throw new Error("Actual NOL return computation requires the actual carry source packet");
   // Source completeness cannot depend on whether a small gift creates an
   // excess. Replays always retain the original K1 basis and crypto receipts.
-  const originalCharitableSource = hasOriginalCharitableNolSources(input) ? readCurrentCharitableSourceForNol(input) : undefined;
-  const priorCharitableSources = hasPriorCharitableNolSources(input) ? readPriorCharitableNolSources(input) : undefined;
+  const determinedOrigins = usesDeterminedCharitableNolOrigins(input);
+  const regularOriginLimit = determinedOrigins ? createCharitableNolOriginLimit(input, "regular") : undefined;
+  const originalCharitableSource = !determinedOrigins && hasOriginalCharitableNolSources(input) ? readCurrentCharitableSourceForNol(input) : undefined;
+  const priorCharitableSources = !determinedOrigins && hasPriorCharitableNolSources(input) ? readPriorCharitableNolSources(input) : undefined;
   const currentOrigin = input.form172 ? calculateForm172Return(input) : undefined;
   if (input.foreignTaxElection?.deductionYearCarryover) {
     throw new Error("Actual NOL and foreign deduction-year carry require the coupled foreign-source hypothetical worksheet");
@@ -105,8 +111,8 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   if (input.scheduleK1.some(row => !d(row.amtDepreciationAdjustment).isZero() || !d(row.amtAdjustedGainOrLoss).isZero())) {
     throw new Error("Actual AMT basis differences contradict the confirmed same-basis NOL method");
   }
-  const actualIncome = computeIncome(d("0"), false, "current-limit");
-  const modifiedIncome = computeIncome(d("0"), true, "modified");
+  const actualIncome = computeIncome(d("0"), false, "current-limit", regularOriginLimit);
+  const modifiedIncome = computeIncome(d("0"), true, "modified", regularOriginLimit);
   if (!currentOrigin && (modifiedIncome.agi.lt(0) || actualIncome.currentExcessBusinessLoss.gt(0))) {
     throw new Error("Existing NOL carry with a potential current-year original loss requires its separate original-loss worksheet");
   }
@@ -116,7 +122,7 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   const modifiedVintageIncome = claims.vintages.filter(row => row.openingCarryforward.gt(row.expiredBeforeYear)).map(row => {
     const retained = row.earlierModifiedNolDeductions;
     if (retained === undefined) throw new Error("Canonical NOL earlier-vintage amount is incomplete");
-    return { sourceId: row.sourceId, retainedEarlierDeduction: retained, income: retained.isZero() ? modifiedIncome : computeIncome(retained, true, "modified") };
+    return { sourceId: row.sourceId, retainedEarlierDeduction: retained, income: retained.isZero() ? modifiedIncome : computeIncome(retained, true, "modified", regularOriginLimit) };
   });
   const result = calculateNetOperatingLoss({ ...params, context: { ...bases, carryoverContexts: modifiedVintageIncome.map(row => ({
     sourceId: row.sourceId, priorNolDeductions: row.retainedEarlierDeduction,
@@ -124,10 +130,11 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   })) } });
   if (!result.calculationComplete || result.deduction === undefined || result.carryforward === undefined
     || result.absorbed === undefined || result.expired === undefined) throw new Error("Actual NOL income and carry computations are incomplete");
-  const finalIncome = computeIncome(result.deduction, false, "final");
+  const finalIncome = computeIncome(result.deduction, false, "final", regularOriginLimit);
   const actualRegularDeduction = result.deduction;
   let charitableCarryover: CharitableNolCarryoverResult | undefined;
   let priorCharitableCarryover: PriorCharitableNolCarryoverResult | undefined;
+  let determinedCharitableCarryover: DeterminedCharitableNolResult | undefined;
   let charitableCounterfactual: NetOperatingLossReturnResult["charitableCounterfactual"];
   const computeCharitableComparison = (charitableContributionLimit: CharitableNolContributionLimit): Decimal => {
     const counterfactual = computeIncome(d("0"), true, "modified", charitableContributionLimit);
@@ -146,7 +153,13 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
     charitableCounterfactual = { income: counterfactual, modifiedVintageIncome: modifiedContexts, calculation: comparison };
     return comparison.carryforward;
   };
-  if (priorCharitableSources) {
+  if (determinedOrigins) {
+    determinedCharitableCarryover = calculateDeterminedCharitableNol({ input, ledger: "regular", normalContributionBase: finalIncome.agi,
+      normalDeductionUsed: finalIncome.deductionUsed, nolCarryforward: result.carryforward, computeCarryover: computeCharitableComparison });
+    if (finalIncome.deductionUsed === "itemized" && !determinedCharitableCarryover.normalReportedDeduction.eq(finalIncome.charitableDeduction)) {
+      throw new Error("Determined charitable normal use must reconcile the actual selected ScheduleA deduction");
+    }
+  } else if (priorCharitableSources) {
     priorCharitableCarryover = calculatePriorCharitableNolCarryover({ input, ledger: "regular", normalContributionBase: finalIncome.agi,
       normalDeductionUsed: finalIncome.deductionUsed, nolCarryforward: result.carryforward, computeCarryover: computeCharitableComparison });
     if (!roundDollar(priorCharitableCarryover.normalTreatedAsPaid).eq(finalIncome.charitableDeduction)) {
@@ -164,10 +177,10 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   // Reg1.55-1(b): individual AMT income keeps the applicable regular-tax AGI
   // basis. Restore the actual regular deduction on6251line2e; never substitute
   // an alternative-tax deduction into regular AGI-dependent worksheets.
-  const actualRegularDeductionMethod = priorCharitableSources ? finalIncome.deductionUsed : undefined;
-  const alternativePriorSourceLimit = priorCharitableSources
+  const actualRegularDeductionMethod = priorCharitableSources || determinedOrigins ? finalIncome.deductionUsed : undefined;
+  const alternativePriorSourceLimit = determinedOrigins ? createCharitableNolOriginLimit(input, "alternative") : priorCharitableSources
     ? createPriorCharitableNolLimit(input, "alternative", priorCharitableSources.alternative[0]?.amount ?? d("0")) : undefined;
-  const regularLedgerIncome = priorCharitableSources
+  const regularLedgerIncome = priorCharitableSources || determinedOrigins
     ? computeAlternativeIncome(result.deduction, false, undefined, result, actualRegularDeductionMethod) : undefined;
   const actualAlternativeIncome = computeAlternativeIncome(result.deduction, false, alternativePriorSourceLimit, result,
     actualRegularDeductionMethod, regularLedgerIncome?.qbiDeduction);
@@ -182,6 +195,7 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
     amtiBeforeAtnol: actualAlternativeIncome.amti, modifiedAmtiBeforeAtnol: modifiedAlternativeIncome.amti });
   let alternativeCharitableCarryover: AlternativeCharitableNolCarryoverResult | undefined;
   let priorAlternativeCharitableCarryover: PriorCharitableNolCarryoverResult | undefined;
+  let determinedAlternativeCharitableCarryover: DeterminedCharitableNolResult | undefined;
   let alternativeCharitableCounterfactual: NetOperatingLossReturnResult["alternativeCharitableCounterfactual"];
   const hasCharitableSources = input.donations.some(row => !d(row.amount).isZero())
     || input.scheduleK1.some(row => [row.charitableCash, row.charitableCapitalGain30, row.charitableCapitalGain20].some(value => !d(value).isZero()))
@@ -195,7 +209,11 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
     alternativeCharitableCounterfactual = { income, calculation: comparison };
     return comparison.carryforward;
   };
-  if (priorCharitableSources) {
+  if (determinedOrigins) {
+    determinedAlternativeCharitableCarryover = calculateDeterminedCharitableNol({ input, ledger: "alternative", normalContributionBase: finalIncome.agi,
+      normalDeductionUsed: finalIncome.deductionUsed, nolCarryforward: alternativeTax.carryforward,
+      computeCarryover: computeAlternativeCharitableComparison });
+  } else if (priorCharitableSources) {
     priorAlternativeCharitableCarryover = calculatePriorCharitableNolCarryover({ input, ledger: "alternative", normalContributionBase: finalIncome.agi,
       normalDeductionUsed: finalIncome.deductionUsed, nolCarryforward: alternativeTax.carryforward,
       computeCarryover: computeAlternativeCharitableComparison });
@@ -244,7 +262,9 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
     alternativeTaxSources, alternativeTax, charitableCarryover, charitableCounterfactual,
     alternativeCharitableCarryover, alternativeCharitableCounterfactual,
     priorCharitableCarryover, priorAlternativeCharitableCarryover, priorCharitableAlternativeAdjustment,
+    determinedCharitableCarryover, determinedAlternativeCharitableCarryover,
     lines: [...result.lines, ...alternativeTax.lines, ...(charitableCarryover?.lines ?? []),
       ...(alternativeCharitableCarryover?.lines ?? []), ...(priorCharitableCarryover?.lines ?? []),
+      ...(determinedCharitableCarryover?.lines ?? []), ...(determinedAlternativeCharitableCarryover?.lines ?? []),
       ...(priorAlternativeCharitableCarryover?.lines ?? []), ...audit.getLines()] };
 }

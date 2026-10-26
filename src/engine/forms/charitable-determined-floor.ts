@@ -9,6 +9,7 @@ import { allocateCharitablePrivateMedia } from './charitable-private-media.js';
 import { charitableSourceDigest } from '@/utils/charitable-source-digest.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, sum } from '@/utils/decimal.js';
+import type { CharitableNolOriginLimit } from '@/utils/charitable-nol-origins.js';
 
 export interface CharitableDeterminedFloorResult extends CharitableCarryoverResult {
   method: '2026_determined_current_category_floor';
@@ -22,9 +23,10 @@ export interface CharitableDeterminedFloorResult extends CharitableCarryoverResu
 /** Both candidates are internal source-derived results, never an input election about floor attribution. */
 export function calculateCharitableDeterminedFloor(input: TaxYearInput, context: {
   contributionBase: Decimal; current: CharitableContributionWorksheetInput['amounts'];
+  nolOriginLimit?: CharitableNolOriginLimit;
 }): CharitableDeterminedFloorResult {
   const use = calculateCharitableCategoryUse(input, context);
-  if (use.detail.length === 0) throw new Error('Determined prior charitable floor requires actual original prior history');
+  if (use.detail.length === 0 && !context.nolOriginLimit) throw new Error('Determined prior charitable floor requires actual original prior history');
   const zero = d('0'), currentBeforeFloor = use.currentWithinPercentageLimit;
   const currentAfterFloor = { ...currentBeforeFloor };
   const currentFloorByCategory = { cash_60:zero, noncash_50:zero, other_30:zero, capital_gain_30:zero, capital_gain_20:zero };

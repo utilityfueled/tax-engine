@@ -8,6 +8,7 @@ import { eligibleCurrentCharitableDonations } from "@/engine/forms/charitable-cu
 import { readCurrentCharitableReceiptAmounts } from "./charitable-current-receipts.js";
 import { charitableSourceDigest } from "./charitable-source-digest.js";
 import type { PriorCharitableNolLimit } from "./charitable-prior-nol-source.js";
+import type { CharitableNolOriginLimit } from "./charitable-nol-origins.js";
 import { calculateK1CharitableReturnSources } from "@/engine/forms/k1-charitable-return-sources.js";
 import { calculateCryptoDonations } from "@/engine/forms/crypto-lot-matching.js";
 import { calculateForm172CharitableSources } from "@/engine/forms/form-172-charitable-sources.js";
@@ -30,7 +31,7 @@ export interface CurrentCharitableNolContributionLimit {
   sourceDigest: string;
   ledger: "regular" | "alternative";
 }
-export type CharitableNolContributionLimit = CurrentCharitableNolContributionLimit | PriorCharitableNolLimit;
+export type CharitableNolContributionLimit = CurrentCharitableNolContributionLimit | PriorCharitableNolLimit | CharitableNolOriginLimit;
 const sourceKinds: Record<AmountKey, readonly [CharitableCategory, "cash" | "noncash"]> = {
   cashPublic: ["cash_60", "cash"], noncashPublic: ["noncash_50", "noncash"],
   capitalGainPublic: ["capital_gain_30", "noncash"], cashPrivate: ["other_30", "cash"],

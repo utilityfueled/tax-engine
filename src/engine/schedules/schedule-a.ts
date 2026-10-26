@@ -23,6 +23,7 @@ import { calculateK1CharitableReturnSources } from "@/engine/forms/k1-charitable
 import { calculateForm172CharitableSources } from "@/engine/forms/form-172-charitable-sources.js";
 import { readCurrentCharitableSourceForNol, validateCharitableNolContributionLimit, type CharitableNolContributionLimit } from "@/utils/charitable-nol-source.js";
 import { validatePriorCharitableNolLimit } from "@/utils/charitable-prior-nol-source.js";
+import { createCharitableNolOriginLimit, resolveCharitableNolOriginLimit, usesDeterminedCharitableNolOrigins } from "@/utils/charitable-nol-origins.js";
 import { validateCharitableCarryoverSources } from "@/engine/forms/charitable-carryover-source-validation.js";
 import { charitableSourceDigest } from "@/utils/charitable-source-digest.js";
 import { eligibleCurrentCharitableDonations } from "@/engine/forms/charitable-current-sources.js";
@@ -301,10 +302,13 @@ export function calculateScheduleA(
   }
   let nonitemizerCharitableDeduction = ZERO;
   const contributionBase = zeroFloor(agi);
-  const nolLimit = extra?.nolContributionLimit;
+  const nolLimit = extra?.nolContributionLimit ?? (usesDeterminedCharitableNolOrigins(input) ? createCharitableNolOriginLimit(input, "regular") : undefined);
+  const originLimit = nolLimit?.method === "determined_origins" ? nolLimit : undefined;
+  const originView = originLimit ? resolveCharitableNolOriginLimit(input, originLimit) : undefined;
+  const currentNolLimit = nolLimit?.method === undefined ? nolLimit : undefined;
   const priorNolLimit = nolLimit?.method === "prior_vintage" ? nolLimit : undefined;
   if (priorNolLimit) validatePriorCharitableNolLimit(input, priorNolLimit);
-  const nolSource = nolLimit === undefined || nolLimit.method === "prior_vintage" ? undefined : validateCharitableNolContributionLimit(input, nolLimit);
+  const nolSource = currentNolLimit ? validateCharitableNolContributionLimit(input, currentNolLimit) : undefined;
   // The alternative replay selects its independently validated full ledger.
   // Only this internal calculation view changes; original sources and regular
   // AGI are retained by the caller and no input deduction amount is accepted.
@@ -325,8 +329,24 @@ export function calculateScheduleA(
       if (donation.qualifiedOrganization === undefined || donation.supportingOrganization === undefined || donation.donorAdvisedFund === undefined) throw new Error("Nonitemizer charitable recipient qualification is unknown");
       if (donation.qualifiedOrganization && !donation.supportingOrganization && !donation.donorAdvisedFund && recipient.percentageCategory === "fifty-percent") eligibleCash = eligibleCash.plus(amount);
     }
-    if (nolLimit?.category === "cash_60") eligibleCash = min(eligibleCash, nolLimit.amount);
-    nonitemizerCharitableDeduction = roundDollar(Decimal.min(eligibleCash, contributionBase.times("0.60"), filingStatus === "married_filing_jointly" ? "2000" : "1000"));
+    if (currentNolLimit?.category === "cash_60") eligibleCash = min(eligibleCash, currentNolLimit.amount);
+    const nonitemizerCap = Decimal.min(contributionBase.times("0.60"), filingStatus === "married_filing_jointly" ? "2000" : "1000");
+    let determinedNonitemizerDeduction: Decimal | undefined;
+    if (originView && originLimit && input.deductionElection !== "itemized") {
+      const originalCash = createCharitableNolOriginLimit(input, originLimit.ledger).rows.find(row => row.kind === "current" && row.category === "cash_60")?.retainedAmount ?? ZERO;
+      const minimumEligible = zeroFloor(originView.current.cashPublic.minus(originalCash.minus(eligibleCash)));
+      const maximumEligible = min(eligibleCash, originView.current.cashPublic);
+      const minimumDeduction = roundDollar(min(minimumEligible, nonitemizerCap));
+      const maximumDeduction = roundDollar(min(maximumEligible, nonitemizerCap));
+      if (!minimumDeduction.eq(maximumDeduction)) {
+        throw new Error("Charitable NOL cash comparison requires the separate mixed170(p) recipient attribution method");
+      }
+      determinedNonitemizerDeduction = minimumDeduction;
+      audit.record("Determined Charitable NOL Cash", "nonitemizer-bounds", "Source-determined current cash deduction", minimumDeduction,
+        "Every retained eligible-cash amount consistent with original receipts gives the same reported deduction; no receipt allocation is chosen",
+        { "Original eligible cash": eligibleCash, "Minimum retained eligible cash": minimumEligible, "Maximum retained eligible cash": maximumEligible });
+    }
+    nonitemizerCharitableDeduction = determinedNonitemizerDeduction ?? roundDollar(min(eligibleCash, nonitemizerCap));
     audit.record("Charitable WS", "nonitemizer", "Nonitemizer charitable deduction candidate", nonitemizerCharitableDeduction,
       "2026 current eligible cash only: min(cash, 60% AGI, 1000 [2000 MFJ]); no floor or carryover");
   }
@@ -345,23 +365,36 @@ export function calculateScheduleA(
     noncashPrivate: crypto?.noncashPrivate ?? ZERO, capitalGainPrivate: (k1Charitable?.amounts.capitalGainPrivate ?? extra?.k1AppreciatedProperty20 ?? ZERO).plus(crypto?.capitalGainPrivate ?? ZERO) };
   const receiptAmounts = readCurrentCharitableReceiptAmounts(input);
   for (const category of Object.keys(receiptAmounts) as (keyof typeof amounts)[]) amounts[category] = amounts[category].plus(receiptAmounts[category]);
-  if (nolLimit !== undefined && nolSource?.amountKey !== undefined) {
+  if (currentNolLimit !== undefined && nolSource?.amountKey !== undefined) {
     if (!amounts[nolSource.amountKey].eq(nolSource.amount)) throw new Error("Charitable NOL original source amounts do not reconcile");
-    amounts[nolSource.amountKey] = min(amounts[nolSource.amountKey], nolLimit.amount);
+    amounts[nolSource.amountKey] = min(amounts[nolSource.amountKey], currentNolLimit.amount);
+  }
+  if (originView && originLimit) {
+    const originalView = resolveCharitableNolOriginLimit(input, createCharitableNolOriginLimit(input, originLimit.ledger));
+    if (Object.entries(amounts).some(([key, value]) => !value.eq(originalView.current[key as keyof typeof amounts]))) {
+      throw new Error("Determined charitable NOL handoff must reconcile every original source category");
+    }
+    Object.assign(amounts, originView.current);
   }
   let currentCharitableNol: ScheduleAResult["currentCharitableNol"];
   const currentOrigin = input.taxpayer.taxYear === 2026 && input.form172 && input.netOperatingLoss?.vintages?.length === 0
     && input.netOperatingLoss.alternativeTax?.vintages?.length === 0 && !input.form982NolSources && nolLimit === undefined
     ? calculateForm172CharitableSources(input) : undefined;
   if (input.taxpayer.taxYear === 2026 && input.netOperatingLoss && input.charitableCarryoverSources?.vintages?.length === 0
-    && currentOrigin?.sourceKind !== "current") {
+    && currentOrigin?.sourceKind !== "current" && !originLimit) {
     if (input.deductionElection !== "itemized") throw new Error("Current charitable NOL history requires the explicit itemized method; nonitemized coordination remains separate");
     if (validateCharitableCarryoverSources(input).length !== 0) throw new Error("Current charitable NOL requires actual empty prior history");
     if (!nolSource) readCurrentCharitableSourceForNol(input);
     currentCharitableNol = { method: "2026_current_single_category_nol_itemized", sourceDigest: charitableSourceDigest(input) };
   }
   if (input.charitableCarryoverSources && !currentCharitableNol) {
-    if (currentOrigin?.sourceKind === "current") {
+    if (originLimit && input.taxpayer.taxYear === 2026) {
+      if (input.deductionElection === "standard" || input.deductionElection === "nonitemized") {
+        nonitemizedCharitableCarryover = calculateNonitemizedCharitableCategories(input, { contributionBase, current: amounts, nolOriginLimit: originLimit });
+      } else {
+        determinedCharitableFloor = calculateCharitableDeterminedFloor(input, { contributionBase, current: amounts, nolOriginLimit: originLimit });
+      }
+    } else if (currentOrigin?.sourceKind === "current") {
       currentCharitableCandidates = calculateCurrentCharitableCandidates(input, { contributionBase, current: amounts, originSourceDigest: currentOrigin.sourceDigest });
     } else if (input.taxpayer.taxYear === 2026 && ((input.deductionElection !== "standard" && input.deductionElection !== "nonitemized")
       || Object.entries(amounts).some(([category, amount]) => category !== "cashPublic" && amount.gt(0))
@@ -387,7 +420,7 @@ export function calculateScheduleA(
       charitableCarryforwards = currentCharitableCandidates.itemized.carryforwards;
     } else {
       const charitable = determinedCharitableFloor ?? nonitemizedCharitableCarryover ?? calculateCharitableCarryover(priorCharityInput, {
-        contributionBase, current: amounts, itemizes: true, priorTreatmentLimit: priorNolLimit?.amount,
+        contributionBase, current: amounts, itemizes: true, priorTreatmentLimit: priorNolLimit?.amount, nolOriginLimit: originLimit,
       });
       audit.merge(charitable.lines);
       cashCharitable = charitable.currentCash.plus(charitable.priorCashDeduction);

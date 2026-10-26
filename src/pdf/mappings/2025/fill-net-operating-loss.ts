@@ -9,6 +9,8 @@ import type { NetOperatingLossResult } from "@/engine/forms/net-operating-loss.j
 import { calculateCharitableNolCarryover } from "@/engine/forms/charitable-net-operating-loss.js";
 import { calculateAlternativeCharitableNolCarryover } from "@/engine/forms/alternative-charitable-net-operating-loss.js";
 import { calculatePriorCharitableNolCarryover } from "@/engine/forms/charitable-prior-net-operating-loss.js";
+import { calculateDeterminedCharitableNol } from "@/engine/forms/charitable-determined-nol.js";
+import { usesDeterminedCharitableNolOrigins } from "@/utils/charitable-nol-origins.js";
 import { calculateAlternativeTaxNol } from "@/engine/forms/alternative-tax-net-operating-loss.js";
 import { calculateForm172Return } from "@/engine/forms/form-172-return.js";
 import { calculateCodNolReduction } from "@/engine/forms/cod-nol-reductions.js";
@@ -247,16 +249,44 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
     charityRows.push(`Counterfactual modified regular limit income: ${comparison.income.taxableIncome}`,
       ...comparison.modifiedVintageIncome.map(row => `${comparison.calculation.vintages.find(vintage => vintage.sourceId === row.sourceId)?.lossTaxYear}: counterfactual earlier modified deduction ${row.retainedEarlierDeduction}; refigured AGI ${row.income.agi}; charity ${row.income.charitableDeduction}; modified income ${row.income.taxableIncome}`),
       ...ledger(facts.vintages, comparison.calculation, "Counterfactual NOL comparison (actual current claim unchanged)"));
-  } else if (!calculation.priorCharitableCarryover) {
+  } else if (!calculation.priorCharitableCarryover && !calculation.determinedCharitableCarryover) {
     eq(result.carryforwards.charitableContributions, calculation.finalIncome.charitableCarryforward);
   }
   const alternativeCharity = calculation.alternativeCharitableCarryover;
-  if (!alternativeCharity && !calculation.priorAlternativeCharitableCarryover && calculation.alternativeTaxSources.availableCarryforward.gt(0)
+  if (!alternativeCharity && !calculation.priorAlternativeCharitableCarryover && !calculation.determinedAlternativeCharitableCarryover && calculation.alternativeTaxSources.availableCarryforward.gt(0)
     && (input.donations.some(row => !d(row.amount).isZero()) || calculation.finalIncome.charitableCarryforward.gt(0)
       || facts.alternativeTax.charitableCarryoverHistory !== undefined)) {
     throw new Error("Alternative charitable review requires its complete independent carry calculation");
   }
-  if (requiresPriorCharitableNolReview(input, result)) {
+  const determinedOrigins = usesDeterminedCharitableNolOrigins(input);
+  if (determinedOrigins) {
+    for (const [key, ledgerName, carry, years] of [
+      ["determinedCharitableCarryover", "regular", result.carryforwards.charitableContributions, result.carryforwards.charitableContributionsByYear],
+      ["determinedAlternativeCharitableCarryover", "alternative", result.carryforwards.amtCharitableContributions, result.carryforwards.amtCharitableContributionsByYear],
+    ] as const) {
+      const retained = calculation[key];
+      if (!retained) throw new Error("Determined charitable review requires both original ledgers");
+      const checked = calculateDeterminedCharitableNol({ input, ledger: ledgerName, normalContributionBase: calculation.finalIncome.agi,
+        normalDeductionUsed: result.deductionUsed, nolCarryforward: ledgerName === "regular" ? calculation.carryforward : calculation.alternativeTax.carryforward,
+        computeCarryover: () => retained.counterfactualNolCarryforward });
+      if (JSON.stringify(checked) !== JSON.stringify(retained)) throw new Error("Determined charitable original source and retained calculation do not reconcile");
+      eq(carry, checked.carryforward);
+      if (!years || years.length !== checked.carryforwards.length || years.some((row, index) => {
+        const original = checked.carryforwards[index];
+        return row.taxYear !== original.taxYear || row.category !== original.category || row.medium !== original.medium
+          || !row.amount.eq(original.amount);
+      })) throw new Error("Determined charitable original carry years do not reconcile");
+      for (const line of checked.lines) audit(line.form, line.line, line.value);
+      const comparison = ledgerName === "regular" ? calculation.charitableCounterfactual?.calculation : calculation.alternativeCharitableCounterfactual?.calculation;
+      if (comparison) {
+        eq(comparison.carryforward, checked.counterfactualNolCarryforward);
+        eq(comparison.deduction, ledgerName === "regular" ? calculation.deduction : calculation.alternativeTax.deduction);
+      } else eq(checked.counterfactualNolCarryforward, checked.nolCarryforward);
+      charityRows.push(`Determined ${ledgerName} charitable origins: actual deduction ${checked.normalReportedDeduction}; succeeding NOL ${checked.nolCarryforward}; comparison succeeding NOL ${checked.counterfactualNolCarryforward}; reduction ${checked.reduction}; remaining ${checked.carryforward}.`,
+        ...checked.rows.map(row => `${row.contributionYear} ${row.category} ${row.medium}: opening ${row.amount}; normal use ${row.normalUse}; not carried ${row.notCarried}; NOL-related reduction ${row.reduction}; expired ${row.expired}; remaining ${row.carryforward}`));
+    }
+  }
+  if (requiresPriorCharitableNolReview(input, result) && !determinedOrigins) {
     for (const [key, ledgerName, carry, years] of [
       ["priorCharitableCarryover", "regular", result.carryforwards.charitableContributions, result.carryforwards.charitableContributionsByYear],
       ["priorAlternativeCharitableCarryover", "alternative", result.carryforwards.amtCharitableContributions, result.carryforwards.amtCharitableContributionsByYear],
@@ -275,6 +305,8 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
       charityRows.push(`Prior ${ledgerName} charitable carry from ${checked.contributionYear ?? "no recorded vintage"}: category ${checked.category ?? "none"}; medium ${checked.medium ?? "none"}; opening ${checked.opening}; treated as paid ${checked.normalTreatedAsPaid}; NOL-related reduction ${checked.reduction}; expired ${checked.expired}; remaining ${checked.carryforward}`,
         `${ledgerName} actual charity deduction ${checked.normalDeduction}; succeeding NOL ${checked.nolCarryforward}; comparison succeeding NOL ${checked.counterfactualNolCarryforward}. Original contribution year and expiration are unchanged.`);
     }
+  }
+  if (requiresPriorCharitableNolReview(input, result)) {
     const adjustment = calculation.priorCharitableAlternativeAdjustment;
     if (!adjustment) throw new Error("Prior charitable review requires its independent current AMT source comparison");
     eq(adjustment.amount, adjustment.independentIncome.amti.minus(adjustment.regularLedgerIncome.amti));
@@ -367,7 +399,7 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
     result.codNolReduction
       ? "The original source packet was recalculated before identifier removal. The before-COD loss calculations and final after-COD balances are shown separately."
       : "Amounts explain the retained canonical income contexts; this statement does not independently replay every upstream income source.",
-    "Original loss and history documents must be retained. Mixed charitable categories or vintages, current-plus-prior contributions, special alternative loss sources and other debt-cancellation methods require their separate worksheets.",
+    "Original loss and history documents must be retained. Unresolved allocations across charitable categories or vintages, special alternative loss sources and other debt-cancellation methods require their separate worksheets.",
     "This statement and the accompanying Form6251 are review material, not filing qualification."];
 }
 

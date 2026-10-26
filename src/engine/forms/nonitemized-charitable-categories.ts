@@ -5,6 +5,7 @@ import type { CharitableContributionWorksheetInput } from './charitable-contribu
 import type { CharitableCarryoverResult } from './charitable-carryover.js';
 import { calculateCharitableCategoryUse, type CharitableCategoryUseResult } from './charitable-category-use.js';
 import { d } from '@/utils/decimal.js';
+import type { CharitableNolOriginLimit } from '@/utils/charitable-nol-origins.js';
 
 export interface NonitemizedCharitableCategoriesResult extends CharitableCarryoverResult, CharitableCategoryUseResult {
   method: '2026_nonitemized_ordinary_categories';
@@ -14,6 +15,7 @@ export interface NonitemizedCharitableCategoriesResult extends CharitableCarryov
 /** Actual nonitemization uses the same original percentage ledger without the itemized floor. */
 export function calculateNonitemizedCharitableCategories(input: TaxYearInput, context: {
   contributionBase: Decimal; current: CharitableContributionWorksheetInput['amounts'];
+  nolOriginLimit?: CharitableNolOriginLimit;
 }): NonitemizedCharitableCategoriesResult {
   if (input.deductionElection !== 'standard' && input.deductionElection !== 'nonitemized') {
     throw new Error('Nonitemized ordinary category carry requires an explicit standard or nonitemized selection');

@@ -7,7 +7,7 @@ import { guidedSourceValuesChanged } from './guided-source-confirmation';
 import { parseGuidedQbiLossPacket, type K1LossSourcesData } from './guided-qbi-loss-data';
 import { calculateQbiEblNol } from '@/engine/forms/qbi-ebl-nol';
 import { resolveCharitableRecipient } from '@/utils/charitable-recipient';
-import { validatePriorCharitableNolHistories } from '@/utils/charitable-prior-nol-source';
+import { validateCharitableNolOriginHistories } from '@/utils/charitable-nol-origins';
 import { buildGuidedCharitableCarryover, type CharitableCarryoverData } from './guided-charitable-carryover';
 
 export interface NolHistoryData { taxYear?: string; nolUsed?: string; attributeReduction?: string; sourceReference?: string }
@@ -100,7 +100,6 @@ export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefin
     if (((history.priorRegularCarryovers?.length ?? 0) > 0 || (history.priorAlternativeCarryovers?.length ?? 0) > 0) && !history.alternativeCarryoverSources) {
       throw new Error('Retain actual prior charitable carryovers and supply the independent complete regular and AMT source histories.');
     }
-    if (history.alternativeCarryoverSources && (hasGifts || hasOriginalCharitableSources)) throw new Error('Mixed current and prior charitable NOL sources require their separate allocation method.');
   }
   const summaries = (rows: NolCharitableCarryData[] | undefined) => rows?.map(row => {
     if (!row.amount?.trim() || parseGuidedCurrency(row.amount).isNegative()) throw new Error('Enter the actual nonnegative prior charitable opening amount, including known zero.');
@@ -125,7 +124,7 @@ export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefin
   const taxpayer = { primary: { firstName: [personal.firstName.trim(), middle].filter(Boolean).join(' '), lastName: personal.lastName, ssn: personal.ssn },
     spouse: filingStatus === 'mfj' && personal.spouse ? { firstName: personal.spouse.firstName, lastName: personal.spouse.lastName, ssn: personal.spouse.ssn } : undefined };
   const context = { taxYear, filingStatus: statuses[filingStatus], taxpayer };
-  if (history?.alternativeCarryoverSources) validatePriorCharitableNolHistories({ taxpayer: { ...taxpayer, taxYear, filingStatus: statuses[filingStatus] },
+  if (history?.alternativeCarryoverSources) validateCharitableNolOriginHistories({ taxpayer: { ...taxpayer, taxYear, filingStatus: statuses[filingStatus] },
     netOperatingLoss: facts, charitableCarryoverSources: buildGuidedCharitableCarryover(deductions?.charitableCarryoverSources, taxYear, filingStatus, personal) });
   calculateNetOperatingLoss({ ...context, facts });
   calculateNetOperatingLoss({ ...context, facts: { ...facts, ...facts.alternativeTax } });

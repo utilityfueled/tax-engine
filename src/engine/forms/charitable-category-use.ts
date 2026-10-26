@@ -10,6 +10,7 @@ import { calculateCryptoDonations } from './crypto-lot-matching.js';
 import { readCurrentCharitableReceiptAmounts } from '@/utils/charitable-current-receipts.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, sum, zeroFloor } from '@/utils/decimal.js';
+import { resolveCharitableNolOriginLimit, type CharitableNolOriginLimit } from '@/utils/charitable-nol-origins.js';
 
 export interface CharitableCategoryUseResult {
   contributionBase: Decimal;
@@ -26,9 +27,11 @@ export interface CharitableCategoryUseResult {
 /** Only canonical actual amounts are accepted; no external calculated carry override. */
 export function calculateCharitableCategoryUse(input: TaxYearInput, context: {
   contributionBase: Decimal; current: CharitableContributionWorksheetInput['amounts'];
+  nolOriginLimit?: CharitableNolOriginLimit;
 }): CharitableCategoryUseResult {
   if (input.taxpayer.taxYear !== 2026) throw new Error('Charitable category use requires actual 2026 sources');
-  if (input.netOperatingLoss || input.form172 || input.form982NolSources || !d(input.priorYear?.nolCarryforward).isZero()) {
+  const originView=context.nolOriginLimit ? resolveCharitableNolOriginLimit(input,context.nolOriginLimit) : undefined;
+  if (!originView && (input.netOperatingLoss || input.form172 || input.form982NolSources || !d(input.priorYear?.nolCarryforward).isZero())) {
     throw new Error('Charitable category use with NOL sources requires its separate loss method');
   }
   if (!Decimal.isDecimal(context.contributionBase) || !context.contributionBase.isFinite()
@@ -39,8 +42,8 @@ export function calculateCharitableCategoryUse(input: TaxYearInput, context: {
     .some(value => !d(value).isZero()))) {
     throw new Error('Nonitemized K-1 charitable sources require their actual attached-statement and basis method');
   }
-  const raw = readCurrentCharitableReceiptAmounts(input, { capitalStockOnly: true, includeK1: true });
-  if (input.cryptoIncome?.donations.length) {
+  const raw = originView?.current ?? readCurrentCharitableReceiptAmounts(input, { capitalStockOnly: true, includeK1: true });
+  if (!originView && input.cryptoIncome?.donations.length) {
     const crypto = calculateCryptoDonations(input.cryptoIncome.donations, input.taxpayer.taxYear);
     if (!crypto.sourceFactsVerified) throw new Error('Nonitemized category carry requires verified original crypto sources');
     for (const key of Object.keys(raw) as (keyof typeof raw)[]) raw[key] = raw[key].plus(crypto.contributionAmounts[key]);
@@ -49,7 +52,7 @@ export function calculateCharitableCategoryUse(input: TaxYearInput, context: {
     throw new Error('Nonitemized categories must reconcile exactly to actual receipts; other source methods remain separate');
   }
   const zero = d('0'), taxYear = input.taxpayer.taxYear;
-  const records = validateCharitableCarryoverSources(input).map(row => ({ ...row, treatedAsPaid: zero }));
+  const records = (originView?.prior ?? validateCharitableCarryoverSources(input)).map(row => ({ ...row, treatedAsPaid: zero }));
   const base = zeroFloor(context.contributionBase), fifty = base.times('0.50'), thirty = base.times('0.30');
   const consume = (category: CharitableCategory, capacity: Decimal): Decimal => {
     let remaining = zeroFloor(capacity), used = zero;

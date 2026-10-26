@@ -7,6 +7,7 @@ import { AuditTrail } from "@/utils/audit.js";
 import { d, sum, zeroFloor } from "@/utils/decimal.js";
 import { validateCharitableCarryoverSources, type CharitableCarryoverBalance } from "./charitable-carryover-source-validation.js";
 import { allocateCharitablePrivateMedia } from "./charitable-private-media.js";
+import { resolveCharitableNolOriginLimit, type CharitableNolOriginLimit } from "@/utils/charitable-nol-origins.js";
 const ZERO = d("0");
 type Medium = "cash" | "noncash";
 export type { CharitableCarryoverBalance } from "./charitable-carryover-source-validation.js";
@@ -24,8 +25,14 @@ export function calculateCharitableCarryover(input: TaxYearInput, context: {
   contributionBase: Decimal; current: CharitableContributionWorksheetInput["amounts"]; itemizes: boolean;
   /** Internal source-validated single-vintage NOL comparison, never a return input. */
   priorTreatmentLimit?: Decimal;
+  /** Internal complete original-source comparison; never supplied by the return. */
+  nolOriginLimit?: CharitableNolOriginLimit;
 }): CharitableCarryoverResult {
-  const records = validateCharitableCarryoverSources(input).map(row => ({ ...row, used: ZERO }));
+  const originView=context.nolOriginLimit ? resolveCharitableNolOriginLimit(input,context.nolOriginLimit) : undefined;
+  if(originView && (context.priorTreatmentLimit!==undefined || Object.entries(originView.current).some(([key,value])=>!value.eq(context.current[key as keyof typeof context.current])))) {
+    throw new Error('Charitable NOL comparison must reconcile all original current and prior sources');
+  }
+  const records = (originView?.prior ?? validateCharitableCarryoverSources(input)).map(row => ({ ...row, used: ZERO }));
   if (input.taxpayer.taxYear !== 2025) throw new Error("Charitable carryover 2026 floor/nonitemizer transition requires its separate source method");
   if (!context.contributionBase.isFinite() || Object.values(context.current).some(value => !Decimal.isDecimal(value) || !value.isFinite() || value.lt(0))) {
     throw new Error("Current charitable amounts and contribution base must be finite with nonnegative contributions");

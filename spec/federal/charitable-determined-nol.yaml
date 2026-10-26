@@ -1,0 +1,124 @@
+form: "Determined charitable NOL origins"
+fullName: "Original-source charitable carry with zero or uniquely attributable succeeding NOL benefit"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+retrievedAt: "2026-10-26"
+notes: |
+  IRC170(d)(1)(B), Reg1.170A-10(d)(1), Reg1.172-5(a)(2)(ii) and
+  Form172 line26 require reducing charitable excess only to the extent it
+  preserves a succeeding NOL. Each actual current category/medium and each
+  original prior vintage remains a separate source. Normal percentage use,
+  original expiry and the current deduction are not an entered allocation.
+  One internal comparison removes all normal-year carry excess simultaneously.
+  A zero aggregate benefit requires no attribution. A positive benefit is
+  admitted only when exactly one eligible original source has excess; a
+  positive benefit with multiple excess origins remains an explicit method
+  boundary. No marginal replay order, pro-rata allocation or new vintage is
+  inferred. The regulation's public-before-other order remains in the ordinary
+  category calculation, but does not supply an unstated within-category order.
+  Original regular and AMT histories are independently complete and validated,
+  including known-empty packets. Current qualified amounts retain original
+  direct/K1/crypto valuation and entity basis. The AMT ledger uses regular AGI,
+  actual regular selection and actual regular199A under Reg1.55-1 and
+  Reg1.199A-1(e)(5). The AMT comparison preserves actual current ATNOLD.
+  Source values, category capacities, normal use and excess remain exact under
+  IRC6102(c). Completed ScheduleA and Form172 lines keep their existing reporting
+  rules; no source value is rounded before the charitable carry computation.
+  In2026 only the independently established current-category floor condition
+  is admitted. A positive floor hit involving prior use, partial B cash/property
+  attribution and the amended prior-C treated-paid offset remain separate.
+  These controls are derived from primary sources, not a matching published
+  numeric oracle, independent human qualification or an opening of2026 gates.
+lines:
+  - line: "complete-sources"
+    description: "Bind all original current and independent prior charitable sources"
+    formula: "Validate original recipient/year/value and each regular/AMT identity/history before any zero-benefit shortcut. The internal vector includes every current category/medium and original prior source exactly once; missing, changed, duplicate, cross-ledger or stale entries reject."
+    testRef: "tests/engine/forms/charitable-determined-nol.test.ts::binds complete independent charitable origins and internal comparison limits"
+  - line: "unique-current"
+    description: "Reduce only the sole current excess origin"
+    formula: "2025 income100000,currentA10000,currentC60000,priorNOL100000: NOLD48000,regularAGI52000,currentA10000/currentC15600. SoleCexcess44400 minus (actualNOL52000-comparison40480)=32880; originalA remains fully used."
+    testRef: "tests/engine/forms/charitable-determined-nol.test.ts::reduces one current excess without assigning benefit to fully used categories"
+  - line: "unique-prior"
+    description: "Preserve the original prior year through a unique excess reduction"
+    formula: "Replacing currentC60000 with actual2024C60000 keeps A10000/C15600 and reduction11520, leaving32880 in2024. IndependentAMTC5000 is fully used with currentA10000; it is not copied from regularC. Fifth-year remainder expires after its own reduction."
+    testRef: "tests/engine/forms/charitable-determined-nol.test.ts::retains original prior expiry and independent alternative use"
+  - line: "zero-benefit"
+    description: "Conserve multiple actual excess origins when no succeeding NOL is preserved"
+    formula: "2025 normalbase60000/currentG80000/C60000 gives Guse36000/Cuse0 and exact excess44000/60000. A completed succeedingNOL0 proves no reduction; a positive actual succeedingNOL with equal simultaneous comparison also has zero benefit. Source validation still runs."
+    testRef: "tests/engine/forms/charitable-determined-nol.test.ts::preserves all original excess when the simultaneous NOL benefit is zero"
+  - line: "positive-multiple"
+    description: "Reject a positive aggregate benefit requiring an unstated attribution"
+    formula: "If more than one eligible origin has positive normal excess and actual succeedingNOL exceeds the simultaneous comparison, reject before publishing any per-origin carry. Original source order cannot select which origin loses carry."
+    testRef: "tests/engine/forms/charitable-determined-nol.test.ts::rejects positive multiple-origin attribution and contradictory comparisons"
+  - line: "exact-values"
+    description: "Preserve exact original amounts before reported line rounding"
+    formula: "CurrentA10000.01/C60000.49 atbase52000 uses10000.01/15600, leavingC44400.49 before a11520 reduction and32880.49 after; splitting or reversing equivalent current sources changes no monetary result."
+    testRef: "tests/engine/forms/charitable-determined-nol.test.ts::keeps exact origin cents and rejects stale balanced source changes"
+  - line: "canonical-replay"
+    description: "Use original-source limits only inside actual canonical income replays"
+    formula: "CurrentA10000/C60000 and actual2021NOL100000 give claim48000,AGI52000,charity25600,regularcarry32880 and independent known-zeroATNOL charitablecarry44400. Retain full original receipts and count each carry once."
+    testRef: "tests/engine/federal-charitable-determined-nol.test.ts::replays a unique current charitable origin through the actual canonical return"
+  - line: "canonical-independent-amt"
+    description: "Recompute the actual independent AMT deduction without changing regular AGI or QBI"
+    formula: "CurrentA10000 plus priorC60000 regular andC5000 alternative gives regularuse25600,AMTuse15000 and signed currentAMT adjustment10600. With wages50000/REIT50000, actual regularQBI5280 remains fixed andAMTI79720."
+    testRef: "tests/engine/federal-charitable-determined-nol.test.ts::keeps independent prior AMT use and actual regular QBI during mixed-source replay"
+  - line: "expiring-nol"
+    description: "Keep multiple charity excesses when the original NOL expires"
+    formula: "Actual2005NOL100000 carried to2025 with income100000,currentG80000/C60000: regular claim100000,AGI0,modifiedabsorption40000,expiredNOL60000,succeedingNOL0. Charitable G80000/C60000 remain separate and no reduction is invented."
+    testRef: "tests/engine/federal-charitable-determined-nol.test.ts::retains multiple original charity excesses when the actual old NOL expires"
+  - line: "actual-guide"
+    description: "Reach the determined original-source method from existing actual collectors"
+    formula: "CurrentA10000 plus independently confirmed priorC60000/5000 reaches actual NOLD48000 and regularcarry32880. Unknown, conflicting or revoked independent history blocks the bridge; no income or computed allocation is collected."
+    testRef: "tests/apps/web/guided-charitable-determined-nol.test.ts::binds mixed current and prior original charity through the actual guide"
+  - line: "private-output"
+    description: "Bind source, calculation, exact origins and comparison before reference output"
+    formula: "Original private preparation precedes identifier redaction. Both ledgers retain original year/category/medium, normal use, noncarryable floor, NOL reduction, expiry and carry. Removed histories, balanced carry swaps, changed original values, forged tokens and stale audit results reject before template I/O. Reference notes distinguish unresolved allocations from the supported mixed-category and current-plus-prior method."
+    testRef: "tests/pdf/charitable-determined-nol-review.test.ts::binds both determined ledgers before private review output"
+  - line: "actual-workspace"
+    description: "Export the original guided calculation through the unmocked private packet"
+    formula: "The existing guide and workspace produce actual ScheduleA25600, regularcarry32880 and independent AMT current deduction15000. Preserve sources, suppress personal identifiers and print one review-only notice on every page."
+    testRef: "tests/apps/web/workspace-charitable-determined-nol.test.ts::exports determined original charity from actual guided sources"
+  - line: "determined-2026-floor"
+    description: "Use only the established current-category floor during original-source NOL replay"
+    formula: "Actual2026A10000/C60000 at preNOLbase100000 gives charity39500/NOLD48400. NormalAGI51600 gives A10000+C15480-floor258=25222 and Cexcess44778. Simultaneous retainedC15222 gives modifiedcharity24722 and absorption60222, so actualNOL51600-comparison39778=11822 and Ccarry32956. Known-zeroATNOL preserves independent44778."
+    testRef: "tests/engine/federal-charitable-determined-nol-2026.test.ts::preserves determined current floor and the actual NOL claim"
+  - line: "determined-2026-choice"
+    description: "Preserve percentage excess without itemized floor under actual nonitemization"
+    formula: "With actual G80000/C60000, income100000, MFS spouse not itemizing, explicit standard16100 plus170(p)1000 gives NOLD66320, AGI33680. Guse20208 leaves G59792 and C60000; the simultaneous comparison does not change170(p), so both origins retain zero NOL reduction. Actual MFS spouse itemizes: explicit nonitemization has standard0, claim79200, AGI20800, Gcarry67520/C60000. No standard entitlement is invented."
+    testRef: "tests/engine/federal-charitable-determined-nol-2026.test.ts::keeps actual nonitemized choice and zero-benefit multiple origins distinct"
+  - line: "nonitemizer-source-attribution"
+    description: "Retain the actual current cash eligibility in a capped comparison"
+    formula: "If a partial current-G comparison includes both170(p)-eligible and ineligible receipts and the retained eligibility is not determined, reject rather than invent a recipient allocation. Actual eligible and ineligible receipt facts are never rewritten."
+    testRef: "tests/engine/federal-charitable-determined-nol-2026.test.ts::rejects an undetermined cash-recipient comparison and prior floor attribution"
+  - line: "nonitemizer-determined-cap"
+    description: "Admit a mixed-receipt comparison when every possible allocation gives the same reported deduction"
+    formula: "Actual eligible cash70000 and ineligible DAF10000, retained G20208: eligible retained cash is between10208 and20208. Both bounds give the same170(p)1000, so the comparison is determined without choosing receipts. If the bounds produce different deductions, retain the existing positive-benefit attribution boundary."
+    testRef: "tests/engine/federal-charitable-determined-nol-2026.test.ts::preserves a determined cash cap without choosing eligible recipients"
+  - line: "itemized-recipient-choice"
+    description: "Do not demand an unused nonitemizer allocation under an actual itemized election"
+    formula: "Actual eligible G10000 plus DAF G70000 with itemized election: both are section170 G receipts, so no170(p) recipient allocation affects the deduction. Modified charity59500 gives NOLD32400; normalAGI67600 gives charity40222 and exact excess39778. The current cash origin remains the sole candidate for the simultaneous NOL reduction; no170(p) deduction is claimed."
+    testRef: "tests/engine/federal-charitable-determined-nol-2026.test.ts::does not allocate unused nonitemizer eligibility under actual itemization"
+  - line: "positive-independent-atnol"
+    description: "Remove the capital-loss modification only in the independent alternative comparison"
+    formula: "No regular NOL, actual priorSTloss3000, A10000/C60000 and independentATNOL100000: regularAGI97000 permits39100 charity and30900 excess. ActualAMTI57900 givesATNOLD52110; modifiedAMTI60000 gives absorption54000 and carry46000. RetainedC29100 yields modifiedAMTI60900 and absorption54810/carry45190, so only AMT C excess is reduced810 to30090. The current52110 claim remains fixed."
+    testRef: "tests/engine/federal-charitable-determined-nol.test.ts::replays positive alternative carry with an actual capital-loss modification"
+  - line: "independent-qbi-atnol"
+    description: "Retain actual regular QBI for current ATNOLD and remove it only for modified absorption"
+    formula: "Regular priorC60000 and independentAMTC5000, currentA10000, wages50000/REIT50000: actualNOLD48000 andAGI52000, QBI5280. IndependentAMTI79720 givesATNOLD71748; modifiedAMTI85000 gives absorption76500 and carry23500. Regular charity carry32880 remains distinct from known-zero AMT charity carry."
+    testRef: "tests/engine/federal-charitable-determined-nol.test.ts::retains current regular QBI while independently absorbing a positive ATNOL"
+  - line: "positive-multiple-origin-canonical"
+    description: "Keep positive benefit across multiple excess origins outside the determined method"
+    formula: "CurrentA80000/C60000 produces two original excess origins and a positive simultaneous succeeding-NOL benefit. Reject before canonical output rather than assigning the benefit in source order. The same original order never serves as a taxpayer election."
+    testRef: "tests/engine/federal-charitable-determined-nol.test.ts::rejects a positive canonical benefit across multiple original excesses"
+  - line: "interactive-original-histories"
+    description: "Edit the actual independent history beside current receipts without collecting calculated use"
+    formula: "The existing original-history controls retain an entered10000.49 AMT balance, revoke nested reviews on edits, and restore readiness only after actual source confirmations. Current property and regular prior60000 remain original facts; blank is not zero."
+    testRef: "tests/apps/web/charitable-determined-nol-interactions.test.tsx::edits independent history beside current receipts without inventing a carry result"
+  - line: "production-original-histories"
+    description: "Preserve source-only mixed current and prior charity in the production guide"
+    formula: "Desktop and mobile edit/reconfirm/reload actual independent AMT history while regular AGI52000 and taxable income26400 come from the original currentA10000/priorC60000 sources. Blank history blocks preview; no calculation result is persisted as a source, and personal/source identifiers are absent from request bodies."
+    testRef: "apps/web/tests/charitable-determined-nol.spec.ts::preserves current receipts and independent prior histories through the production guide"
+  - line: "original-entity-and-crypto"
+    description: "Retain original valuation and entity basis in the sole current section170 excess"
+    formula: "Actual currentA10000 plus cryptoC60000 and K1FMV80000/basis40000/availablebasis20000 gives section170C120000 and separate entitybasis suspension20000. NOLD48000/AGI52000/charity25600 is unchanged by the larger original excess; C104400 minus11520 leaves92880, independentAMTC104400. Both entity types preserve actual originals and count each source once."
+    testRef: "tests/engine/federal-charitable-determined-nol.test.ts::retains original entity basis and crypto value in one current excess category"

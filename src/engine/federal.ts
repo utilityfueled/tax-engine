@@ -13,6 +13,7 @@ import { validateQofDispositionFacts } from "./forms/qof-disposition-facts.js";
 
 import Decimal from "decimal.js";
 import type { CharitableNolContributionLimit } from "@/utils/charitable-nol-source.js";
+import { usesDeterminedCharitableNolOrigins } from "@/utils/charitable-nol-origins.js";
 import type {
   Form1099B,
   Form1099Div,
@@ -199,6 +200,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     throw new Error("K1 charitable NOL coordination requires its original source replay method");
   }
   if (input.deductionElection === "nonitemized" && (input.netOperatingLoss || input.form172)
+    && !usesDeterminedCharitableNolOrigins(input)
     && !(input.form172 && input.netOperatingLoss?.vintages?.length === 0
       && input.netOperatingLoss.alternativeTax?.vintages?.length === 0 && !input.form982NolSources
       && calculateForm172CharitableSources(input)?.sourceKind === "current")) {
@@ -4446,6 +4448,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       }
 
       const regularCharity = nol?.stage === "final" ? nol.worksheet.priorCharitableCarryover ?? nol.worksheet.charitableCarryover : undefined;
+      const determinedRegularCharity = nol?.stage === "final" ? nol.worksheet.determinedCharitableCarryover : undefined;
+      const determinedAlternativeCharity = nol?.stage === "final" ? nol.worksheet.determinedAlternativeCharitableCarryover : undefined;
       const alternativeCharity = nol?.stage === "final" ? nol.worksheet.priorAlternativeCharitableCarryover ?? nol.worksheet.alternativeCharitableCarryover ?? regularCharity : undefined;
       const alternativeCharityCarry = nol?.stage === "final"
         ? nol.worksheet.priorAlternativeCharitableCarryover?.carryforward ?? nol.worksheet.alternativeCharitableCarryover?.carryforward
@@ -4482,14 +4486,17 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         ]) } : {}),
         investmentInterestExpense: form4952?.disallowedCarryforward ?? new Decimal(0),
         minimumTaxCredit: cfMtc,
-        charitableContributions: regularCharity
+        charitableContributions: determinedRegularCharity ? determinedRegularCharity.carryforward : regularCharity
           ? regularCharity.carryforward
           : schedA.charitableTreatment ? sum(...schedA.charitableTreatment.carryforwards.map(row => row.amount)) : schedA.charitableCarryforward,
-        charitableContributionsByYear: regularCharity
+        charitableContributionsByYear: determinedRegularCharity ? determinedRegularCharity.carryforwards.map(({taxYear, category, medium, amount}) => ({taxYear, category, medium, amount})) : regularCharity
           ? regularCharity.carryforward.gt(0)
             ? [{ taxYear: regularCharityYear, category: regularCharity.category, medium: regularCharity.medium, amount: regularCharity.carryforward }] : []
           : schedA.charitableTreatment?.carryforwards ?? schedA.charitableCarryforwardByYear,
-        ...(alternativeCharityCarry !== undefined ? {
+        ...(determinedAlternativeCharity ? {
+          amtCharitableContributions: determinedAlternativeCharity.carryforward,
+          amtCharitableContributionsByYear: determinedAlternativeCharity.carryforwards.map(({taxYear, category, medium, amount}) => ({taxYear, category, medium, amount})),
+        } : alternativeCharityCarry !== undefined ? {
           amtCharitableContributions: alternativeCharityCarry,
           amtCharitableContributionsByYear: alternativeCharityCarry.gt(0)
             ? [{ taxYear: alternativeCharityYear, category: alternativeCharity?.category, medium: alternativeCharity?.medium, amount: alternativeCharityCarry }] : [],

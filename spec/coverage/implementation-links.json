@@ -32,6 +32,16 @@
       "note": "The shared canonical calculation selects the source-bound determined 2026 floor and its actual carry. The guide regression preserves the closed year and PDF gates; no 2026 physical form, filing support or human qualification is claimed."
     },
     {
+      "key": "federal/charitable-determined-nol",
+      "enginePath": "src/engine/forms/charitable-determined-nol.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-charitable-determined-nol.test.ts::replays a unique current charitable origin through the actual canonical return",
+        "tests/apps/web/workspace-charitable-determined-nol.test.ts::exports determined original charity from actual guided sources"
+      ],
+      "note": "Original current and independent prior sources determine zero-benefit or one-affected-excess NOL carry, with actual guided sources and a source-bound 2025 review reference. Positive multiple-origin attribution and closed year/filing gates remain distinct."
+    },
+    {
       "key": "federal/charitable-original-source-nol",
       "enginePath": "src/engine/federal.ts",
       "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
