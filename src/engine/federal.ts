@@ -129,6 +129,7 @@ import { calculateIraReturnWorksheet } from "./forms/ira-return-worksheet.js";
 import { calculateScheduleR } from "./forms/schedule-r.js";
 import { calculateForm8839 } from "./forms/form-8839.js";
 import { calculateEic } from "./forms/schedule-eic.js";
+import { calculateEicScheduleEInvestment } from "./forms/eic-schedule-e-investment.js";
 import { calculateEicSeparatedSpouseSources } from "./forms/eic-separated-spouse-sources.js";
 import { calculateForm8936 } from "./forms/form-8936.js";
 import { calculateScheduleH } from "./forms/schedule-h.js";
@@ -3281,17 +3282,16 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   audit.record("EIC Investment Income Worksheet", "4", "Child ordinary investment income", eicChildOrdinaryIncome,
     "Child Form 8814 line 12 after each applicable Publication 596 Worksheet 2 Alaska allocation");
 
-  // Remaining investment-income components are kept separate from capital gain.
+  const eicScheduleEInvestment = calculateEicScheduleEInvestment({ input: seSourceInput, scheduleE: schedE,
+    passive: form8582, allowedPassiveLoss: passiveLossForIncome, section163jDeduction: totalSection163jDeduction });
+  audit.merge(eicScheduleEInvestment.lines);
+  // Every known component is nonnegative. This is only a lower bound when
+  // an actual earned/passive source partition remains unresolved.
+  const eicKnownInvestmentIncome = sum(totalTaxableInterest, eicTaxExemptInterest, totalDividends,
+    eicChildOrdinaryIncome, eicInvestmentCapitalGain, eicScheduleEInvestment.royaltyIncome);
   const eicInvestmentIncome = input.eic?.investmentIncomeOverride !== undefined
     ? d(input.eic.investmentIncomeOverride)
-    : sum(
-        totalTaxableInterest,
-        eicTaxExemptInterest,
-        totalDividends,
-        eicChildOrdinaryIncome,
-        eicInvestmentCapitalGain,
-        Decimal.max(new Decimal(0), adjustedScheduleETotal),
-      );
+    : eicKnownInvestmentIncome.plus(eicScheduleEInvestment.passiveIncome ?? new Decimal(0));
 
   // Actual Rule3 child qualification precedes the separate SSN amount count.
   const eicSeparated = calculateEicSeparatedSpouseSources(input);
@@ -3317,6 +3317,18 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       claimantInput: input,
       mfsEicEligible: eicSeparated.separatedSpouseEligible ?? false,
     }, constants);
+    if (input.eic?.investmentIncomeOverride === undefined && eicScheduleEInvestment.unresolved.length) {
+      if (scheduleEIC.credit.gt(0)) {
+        throw new Error(`EIC investment income requires a complete source method: ${eicScheduleEInvestment.unresolved.join('; ')}`);
+      }
+      // A zero from the known lower bound cannot become positive by adding
+      // unknown nonnegative investment income. Do not publish that bound as
+      // a completed worksheet or a made-up actual investment amount.
+      const unresolvedAudit = new AuditTrail();
+      unresolvedAudit.record('EIC','investmentSourceUnresolved','No credit independently of unresolved investment sources',new Decimal(0),
+        `Known eligibility/income rules produce zero; investment classification remains unresolved: ${eicScheduleEInvestment.unresolved.join('; ')}`);
+      scheduleEIC = { ...scheduleEIC, lines: unresolvedAudit.getLines() };
+    }
     audit.merge(scheduleEIC.lines);
     eic = scheduleEIC.credit;
   }
