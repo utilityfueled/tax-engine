@@ -7,7 +7,7 @@ complete a checkbox.
 
 ## Current integration — 2026-10-26
 
-The branch is pushed through `e91d7d7`. Rule provenance is `2025.145` /
+The branch is pushed through `e3dcc3f`. Rule provenance is `2025.145` /
 `2026.142-law-integration-draft`; the regenerated inventory has 517 entries and
 5,486 spec test references. All readiness gates remain unchanged.
 
@@ -17,6 +17,13 @@ The branch is pushed through `e91d7d7`. Rule provenance is `2025.145` /
 | Deceased claimant residence and separate spouse periods | `5702c78` | Original1581/154; final569/14, all types/spec/inventory/builds/lint0; separate12/4 including4private controls; final browser2/2. Two independently reopened PDFs,32pages/eight literal fields, rendered review and source controls inspected. |
 | Original K1 and crypto sources in charitable NOL replay | `8d97c0f` | Original867/92; final872/93 plus43readiness controls; separate14/7 including4private controls; browser2/2.54PDFs/118pages/253fields including15literal ScheduleA fields, with separate visual review. |
 | Actual digital-asset gift interview, saved return and NOL history connection | `e91d7d7` | Wider733/53; final795/63, all types/spec/inventory/builds; separate20/9 including9private controls; final browser2/2. Seven independently reviewed PDFs/91pages/21literal fields plus two final browser downloads. Missing basis remains unknown and explicit zero survives. |
+
+The shared-method inventory correction is `e3dcc3f`: 544 tests in five files,
+types/spec/inventory and lint pass; separate review passes 328 tests in 44 files
+and checks all 40 associations and 79 spec-owned references. Invalid manifests
+fail without overwriting output. Exactly 40 of 517 inventory rows change, with
+no new fully-supported status or qualification flag. The
+[package ledger](upgrade-2026-inventory-links-work.md) retains the exact evidence.
 
 All browser cases above use zero retries. Package ledgers retain original
 failures, exact source hashes, artifact evidence and review limits. The guide's
@@ -36,9 +43,14 @@ passed, with five hosted-only skips, zero retries and two workers. All3155
 tracked source hashes stayed unchanged and the task server port is closed.
 Evidence: `.local/upgrade-evidence/603fc1b-complete/{verification,summary}.json`.
 
-The last fully passing historical coverage remains `d898091`: branches86.84%,
-functions90.77%,18,843tests and402browser passes. Current integrated full checks
-and completed remote workflows remain due after these later source changes.
+The new immutable `e91d7d7` run passes all eight static checks, 19,025 unit
+tests in 1,197 files, and 428 production browser cases with zero retries and
+five hosted-only skips. Coverage is still running; no current coverage pass is
+claimed. The later inventory-tooling commit has its separate bounded checks.
+Evidence is `.local/upgrade-evidence/e91d7d7-complete/verification.json`. The last
+fully passing historical coverage remains `d898091`: branches86.84% and
+functions90.77%. Current coverage, final-source checks and completed remote
+workflows remain due.
 The October26 production dependency audit on603fc1b reports zero advisories
 across425production dependencies. It is separate from the final image/OS scan,
 owner acceptance and recovery requirements.
@@ -46,9 +58,13 @@ owner acceptance and recovery requirements.
 Active internal work: actual partial-coverage-family health and remaining
 ordinary payment/marriage methods; current-loss-origin charity and determined
 floor/current-prior methods; remaining bounded cash/category education methods;
-explicit spec-to-implementation links; and final integrated, remote, image,
+remaining traceability reconciliation; and final integrated, remote, image,
 security and recovery verification. Known controlling-interpretation questions
 remain explicit and are not replaced with guessed allocations.
+
+The [external-action handoff](upgrade-2026-external-actions.md) identifies the
+required people, access, decisions and evidence without asking the owner to
+choose tax formulas. Internal work continues while those inputs are pending.
 
 The active goal is **not complete or release-ready**. Qualified human reviews,
 provider account access and approved funds, authorized staging, launch-state

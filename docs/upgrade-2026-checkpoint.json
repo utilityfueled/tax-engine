@@ -194,8 +194,8 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Final integrated and completed remote verification remains required. Exact immutable d898091 passes all18843 tests/1125files, all static checks/builds, unchanged86.84%branch/90.77%function coverage and402 browser cases with zero retries; five hosted skips do not establish staging readiness. Four later packages through374e117 have scoped reviewed evidence and are excluded from that full run. Current498-entry inventory is refreshed.",
-    "The 2026 rule pack and finite Marketplace/EIC/charitable source methods remain incomplete; explicit unsupported methods and inactive helpers are not counted as implemented. Full 2026 calculation remains blocked.",
+    "Final integrated coverage and completed remote verification remain required. Immutable e91d7d7 passes all19025unit tests/1197files, eight static checks and428browsercases with zero retries; five hosted skips do not establish staging readiness. Coverage is running. Later e3dcc3f inventory tooling has scoped checks; final later-source evidence remains due.",
+    "The2026 rule pack and finite Marketplace/charitable/education source methods remain incomplete; guards are not counted as implementations. Current EIC/8862 and deceased-claimant source packages are delivered. Full2026 calculation remains blocked.",
     "Independent human tax review, selected-state demand/qualification and final physical forms are outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net \u00a71202/Form172 interpretations remain unresolved.",
     "AI application/scorer bindings are reviewed;240 draft cases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
     "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence; local synthetic checks do not establish staging readiness.",
@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+    "lastRecordedCommit": "e3dcc3f7b579f220f08c6c73f436655fd4800669",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1311,14 +1311,16 @@
       "final multi-platform release images"
     ],
     "workInProgress": "Complete actual partial-coverage-family health premiums and ordinary outside-payer/payment/marriage combinations. Separate actual plans and multiple owners are delivered in9eafb45. Binding joint2025 repayment attribution needs controlling interpretation. Complete current-loss-origin charity and determined floor/current-prior methods. Original current K1/crypto regular-AMT NOL sources are8d97c0f and actual crypto donation intake/history binding ise91d7d7; prior category/vintage replay is405d914. Mixed attribution and partial B remain exact source-method questions. Reconcile and implement remaining bounded partial-cash/category education methods against the completed ordinary account-group route. Distinct QTP and multiple ESA sources sharing actual tuition arec6df682/74bf948. Mixed-owner bond and broader code6 interpretations remain unresolved. Complete explicit spec-to-shared-implementation inventory links and current integrated/remote verification. Full603fc1b had one stale template count failure fixed ineca2e6a; the failed archive is preserved. Current source has later scoped packages and requires a fresh complete run. Rehearse final-source native images, SBOMs/scans and full recovery; reconcile artifacts and support evidence. Qualified human review, live-provider qualification, authorized staging, final forms and advisory acceptance remain external requirements.",
-    "latestIntegratedCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+    "latestIntegratedCommit": "e3dcc3f7b579f220f08c6c73f436655fd4800669",
     "activeIntegrationRun": {
-      "status": "d898091-complete-passed-later-integrated-full-run-due",
-      "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
-      "tree": "23f7a5fe620edbdb43f13b35fbb315fb660a8a89",
-      "manifest": ".local/upgrade-evidence/d898091-complete/verification.json",
-      "summary": ".local/upgrade-evidence/d898091-complete/summary.json",
-      "scope": "Exact immutable d898091 local synthetic source only; all later source packages excluded. Five hosted browser skips are not staging evidence."
+      "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+      "tree": "5f4f0279f2d065f766895610e15eef3f22d497ec",
+      "scope": "Immutable e91d7d7 local synthetic evidence only; later inventory tooling excluded. Hosted skips do not establish staging readiness. Coverage is still running.",
+      "status": "static-unit-browser-passed-coverage-running",
+      "manifest": ".local/upgrade-evidence/e91d7d7-complete/verification.json",
+      "snapshot": ".local/upgrade-evidence/e91d7d7-complete/snapshot.json",
+      "trackedFiles": 3187,
+      "browserPort": 3254
     },
     "latestCoverageDiagnostic": {
       "sourceCommit": "2011778674757efee5da2f73e29624c8e36a7099",
@@ -1660,7 +1662,7 @@
       "Complete actual partial-coverage-family health premiums and ordinary outside-payer/payment/marriage combinations. Separate actual plans and multiple owners are delivered in9eafb45. Binding joint2025 repayment attribution needs controlling interpretation.",
       "Complete current-loss-origin charity and determined floor/current-prior methods. Original current K1/crypto regular-AMT NOL sources are8d97c0f and actual crypto donation intake/history binding ise91d7d7; prior category/vintage replay is405d914. Mixed attribution and partial B remain exact source-method questions.",
       "Reconcile and implement remaining bounded partial-cash/category education methods against the completed ordinary account-group route. Distinct QTP and multiple ESA sources sharing actual tuition arec6df682/74bf948. Mixed-owner bond and broader code6 interpretations remain unresolved.",
-      "Complete explicit spec-to-shared-implementation inventory links and current integrated/remote verification. Full603fc1b had one stale template count failure fixed ineca2e6a; the failed archive is preserved. Current source has later scoped packages and requires a fresh complete run.",
+      "Forty explicit shared-implementation associations are delivered in e3dcc3f; reconcile remaining traceability and current integrated/remote verification. Immutable e91d7d7 static/unit/browser checks pass, with19025tests and428browserpasses; coverage is running. Later tax packages remain in implementation.",
       "Rehearse final-source native images, SBOMs/scans and full recovery; reconcile artifacts and support evidence. Qualified human review, live-provider qualification, authorized staging, final forms and advisory acceptance remain external requirements."
     ],
     "previousStableCoverageRun": {
@@ -1683,16 +1685,11 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+    "lastPushedCommit": "e3dcc3f7b579f220f08c6c73f436655fd4800669",
     "currentBrowserRun": {
-      "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
-      "tree": "23f7a5fe620edbdb43f13b35fbb315fb660a8a89",
-      "status": "passed",
-      "passed": 402,
-      "failed": 0,
-      "skipped": 5,
-      "retries": 0,
-      "workers": 2,
+      "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+      "tree": "5f4f0279f2d065f766895610e15eef3f22d497ec",
+      "scope": "Immutable e91d7d7 local synthetic evidence only; later inventory tooling excluded. Hosted skips do not establish staging readiness. Coverage is still running.",
       "id": "browser",
       "command": [
         "pnpm",
@@ -1701,11 +1698,16 @@
         "--workers=2"
       ],
       "exitCode": 0,
-      "seconds": 599.03,
-      "evidence": ".local/upgrade-evidence/d898091-complete/browser.log",
-      "sha256": "227d98fb018c6945812f55872f2fdd10d2bbfdccd567b59bfeddefc19a4b947d",
-      "serverStopped": true,
-      "scope": "Exact immutable d898091 local synthetic source only; all later source packages excluded. Five hosted browser skips are not staging evidence."
+      "seconds": 697.82,
+      "evidence": ".local/upgrade-evidence/e91d7d7-complete/browser.log",
+      "sha256": "3ea055ffb2a399e56acb1c62d6b9542943f64e2e3408fc54e35e1b9a2cc39477",
+      "status": "passed",
+      "passed": 428,
+      "failed": 0,
+      "skipped": 5,
+      "retries": 0,
+      "workers": 2,
+      "serverCleanupVerification": "pending runner completion"
     },
     "currentPackageAudit": {
       "sourceCommit": "6e589290ebf31dba23f73a42e706bd29ae4f87b1",
@@ -2737,13 +2739,9 @@
       "humanSecurityQualification": false
     },
     "currentUnitRun": {
-      "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
-      "tree": "23f7a5fe620edbdb43f13b35fbb315fb660a8a89",
-      "status": "passed",
-      "passed": 18843,
-      "files": 1125,
-      "failed": 0,
-      "skipped": 0,
+      "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+      "tree": "5f4f0279f2d065f766895610e15eef3f22d497ec",
+      "scope": "Immutable e91d7d7 local synthetic evidence only; later inventory tooling excluded. Hosted skips do not establish staging readiness. Coverage is still running.",
       "id": "unit",
       "command": [
         "pnpm",
@@ -2751,10 +2749,14 @@
         "--maxWorkers=1"
       ],
       "exitCode": 0,
-      "seconds": 503.6,
-      "evidence": ".local/upgrade-evidence/d898091-complete/unit.log",
-      "sha256": "3c370a08b5161058c736fe1bb67e1f4db35ec448ca5b6132de87586fda11721a",
-      "scope": "Exact immutable d898091 local synthetic source only; all later source packages excluded. Five hosted browser skips are not staging evidence."
+      "seconds": 824.72,
+      "evidence": ".local/upgrade-evidence/e91d7d7-complete/unit.log",
+      "sha256": "fc4b2fdf79c531d61a657e4377d338677579aa8823e788773c4613e1fc8e75c2",
+      "status": "passed",
+      "passed": 19025,
+      "files": 1197,
+      "failed": 0,
+      "skipped": 0
     },
     "currentRemoteRuns": {
       "observedAt": "2026-10-26T14:32:06.519876+00:00",
@@ -4357,9 +4359,12 @@
     "currentInventory": {
       "entries": 517,
       "specReferences": 5486,
-      "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+      "sourceCommit": "e3dcc3f7b579f220f08c6c73f436655fd4800669",
       "path": "spec/coverage/inventory-2025.json",
-      "qualification": "Traceability only; no readiness or human review promotion"
+      "explicitAssociations": 40,
+      "specOwnedAssociationReferences": 79,
+      "fullySupportedTraceabilityCount": 69,
+      "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
       "commit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
@@ -6082,10 +6087,91 @@
       "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
     },
     "currentFullVerificationRequired": {
-      "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
-      "reason": "Four later source packages plus template count repair; full integrated current suite remains due",
-      "readiness": "No full current pass claimed"
-    }
+      "sourceCommit": "e3dcc3f7b579f220f08c6c73f436655fd4800669",
+      "reason": "Current e91 coverage is running; later inventory tooling has scoped checks and later tax packages are still in implementation",
+      "readiness": "No final current pass claimed"
+    },
+    "previousCurrentUnitRunBeforeE91": {
+      "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
+      "tree": "23f7a5fe620edbdb43f13b35fbb315fb660a8a89",
+      "status": "passed",
+      "passed": 18843,
+      "files": 1125,
+      "failed": 0,
+      "skipped": 0,
+      "id": "unit",
+      "command": [
+        "pnpm",
+        "test",
+        "--maxWorkers=1"
+      ],
+      "exitCode": 0,
+      "seconds": 503.6,
+      "evidence": ".local/upgrade-evidence/d898091-complete/unit.log",
+      "sha256": "3c370a08b5161058c736fe1bb67e1f4db35ec448ca5b6132de87586fda11721a",
+      "scope": "Exact immutable d898091 local synthetic source only; all later source packages excluded. Five hosted browser skips are not staging evidence."
+    },
+    "previousCurrentBrowserRunBeforeE91": {
+      "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
+      "tree": "23f7a5fe620edbdb43f13b35fbb315fb660a8a89",
+      "status": "passed",
+      "passed": 402,
+      "failed": 0,
+      "skipped": 5,
+      "retries": 0,
+      "workers": 2,
+      "id": "browser",
+      "command": [
+        "pnpm",
+        "test:web",
+        "--retries=0",
+        "--workers=2"
+      ],
+      "exitCode": 0,
+      "seconds": 599.03,
+      "evidence": ".local/upgrade-evidence/d898091-complete/browser.log",
+      "sha256": "227d98fb018c6945812f55872f2fdd10d2bbfdccd567b59bfeddefc19a4b947d",
+      "serverStopped": true,
+      "scope": "Exact immutable d898091 local synthetic source only; all later source packages excluded. Five hosted browser skips are not staging evidence."
+    },
+    "previousActiveIntegrationRunBeforeE91": {
+      "status": "d898091-complete-passed-later-integrated-full-run-due",
+      "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
+      "tree": "23f7a5fe620edbdb43f13b35fbb315fb660a8a89",
+      "manifest": ".local/upgrade-evidence/d898091-complete/verification.json",
+      "summary": ".local/upgrade-evidence/d898091-complete/summary.json",
+      "scope": "Exact immutable d898091 local synthetic source only; all later source packages excluded. Five hosted browser skips are not staging evidence."
+    },
+    "inventoryImplementationLinks": {
+      "commit": "e3dcc3f7b579f220f08c6c73f436655fd4800669",
+      "reviewTree": "803102071509194e03fd669995df64d5d983ebf7",
+      "tests": {
+        "passed": 544,
+        "files": 5
+      },
+      "independentAgentReview": {
+        "passed": 328,
+        "files": 44,
+        "privateControls": 4
+      },
+      "ledger": "docs/upgrade-2026-inventory-links-work.md",
+      "receipt": ".local/upgrade-evidence/inventory-source-links-delivery.json",
+      "flagsUnchanged": true,
+      "newFullySupportedEntries": 0
+    },
+    "educationFiniteReconciliation": {
+      "sourceCommit": "8d97c0f2a4895d43f85c725078863eaa4934c6fd",
+      "unchangedBlobs": 11,
+      "privateControlsPassed": 6,
+      "report": ".local/upgrade-evidence/facts-education-partial-inventory.json",
+      "remaining": [
+        "mixed actual prepaid and cash QTP plus ordinary ESA tuition",
+        "mixed prepaid and cash with actual assistance without ESA",
+        "actual academic-period and living-arrangement room-board cap groups"
+      ],
+      "notMissing": "Ordinary cash QTP with assistance, education-credit allocation and ordinary ESA"
+    },
+    "externalActionHandoff": "docs/upgrade-2026-external-actions.md"
   },
   "historicalReleaseBlockers": {
     "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",

@@ -259,3 +259,24 @@ failure in both unit and coverage; eca2e6a fixes it without changing byte checks
 Its422browserpasses/fivehostedskips do not establish hosted readiness. Current
 source requires another complete run. External interpretation, final-form,
 human-review, provider, staging and advisory decisions remain unresolved.
+
+
+## Bounded education reconciliation and shared-method inventory
+
+The October26 read-only education audit checked eleven unchanged relevant blobs
+at8d97c0f and passed six private controls. Ordinary cash QTP with assistance,
+credit allocation and an ordinary ESA already works. The concrete remaining
+source-method queue is mixed actual prepaid/cash QTP with ordinary ESA, mixed
+prepaid/cash with assistance but no ESA, and room/board amounts grouped by actual
+institution, academic period and living arrangement. The first package is in
+implementation. The latter cap-group facts must be represented explicitly;
+repeated allowances or inferred pro-rata rows cannot supply them. Evidence is
+`.local/upgrade-evidence/facts-education-partial-inventory.{md,json}`. The six-case
+log SHA256 is `3fc555a2aceab6167b3245e1d92f70ed699df8554bcaae30aca225575982a82a`.
+
+Shared implementation links for forty education, EIC, crypto, charity and
+Marketplace specs are delivered in e3dcc3f with separate328-case review. This
+corrects filename-based missing-code labels, not tax or form qualification.
+Other unmapped paths are not proof of missing code. The external review inputs
+are collected in [the handoff](upgrade-2026-external-actions.md); the remaining
+ordinary software packages and final verification continue.
