@@ -12,6 +12,7 @@ import { calculateAnnualCashQtpPools, roundEducationSourceAmounts } from "@/util
 import { calculateRoomBoardPeriods } from "@/utils/education-room-board-periods.js";
 import { readInKindTuitionEsaSource } from "@/utils/in-kind-tuition-esa-source.js";
 import { readInKindTuitionAssistanceSource } from "@/utils/in-kind-tuition-assistance-source.js";
+import { isOrdinaryEducationExpense, readOrdinaryEducationExpense } from "@/utils/education-ordinary-expense-source.js";
 import { readInKindK12PlanSource } from "@/utils/in-kind-k12-plan-source.js";
 import { isExpandedEducationDistributionAllowed } from "@/utils/education-distribution-date.js";
 import { assertPreparedEducationReview, type PreparedEducationReview } from "../../education-review-context.js";
@@ -196,10 +197,11 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
             continue;
           }
           const assistance = sourceMoney(expense?.taxFreeAssistance);
+          const refund = sourceMoney(expense?.refundedAmount);
           const providedCost = linked.reduce((total, benefit) => total.plus(sourceMoney(benefit.amount)), new Decimal(0));
           const exactBenefit = sourceMoney(allocation?.amount).plus(sourceMoney(allocation?.creditAmount)).plus(assistance).eq(providedCost);
-          const esaCoordination = forms.some(source => source.beneficiaryId === row.beneficiaryId && source.accountType === "coverdell_esa") && (!exactBenefit || assistance.gt(0));
-          const cashTuitionCoordination = assistance.gt(0) && expense?.category === "postsecondary_tuition"
+          const esaCoordination = forms.some(source => source.beneficiaryId === row.beneficiaryId && source.accountType === "coverdell_esa") && (!exactBenefit || assistance.gt(0) || refund.gt(0));
+          const cashTuitionCoordination = (assistance.gt(0) || refund.gt(0)) && !!expense && isOrdinaryEducationExpense(expense)
             && !forms.some(source => source.beneficiaryId === row.beneficiaryId && source.accountType === "coverdell_esa")
             && forms.some(source => source.beneficiaryId === row.beneficiaryId && source.distributionMedium === "cash");
           if (esaCoordination) {
@@ -211,8 +213,8 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
             }
             sourceLines.push(describe(entry, `Statement ${index + 1}: `));
           }
-          if (!esaCoordination && !cashTuitionCoordination && !exactBenefit) throw new Error("Education reference in-kind benefit allocation and assistance source disagree with the calculation");
-          if ((assistance.gt(0) || cashTuitionCoordination) && !esaCoordination) {
+          if (!esaCoordination && !cashTuitionCoordination && !refund.gt(0) && !exactBenefit) throw new Error("Education reference in-kind benefit allocation and assistance source disagree with the calculation");
+          if ((assistance.gt(0) || refund.gt(0) || cashTuitionCoordination) && !esaCoordination) {
             if (!prepared) assertDistinctEducationBeneficiaries(forms, qeeSummary.sourceFacts);
             const expected = readInKindTuitionAssistanceSource(forms, qeeSummary.sourceFacts, row.sourceId, expenseId);
             const assistanceLine = requireAudit("Form1099-Q", `${row.sourceId}:in-kind-assistance:${expenseId}`, assistance);
@@ -221,7 +223,10 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
             }
             sourceLines.push(describe(assistanceLine, `Statement ${index + 1}: `));
           }
-          if (sourceMoney(allocation?.creditAmount).gt(0) && (expense?.category !== "postsecondary_tuition" || expense.qualificationConfirmed !== true)) throw new Error("Education reference in-kind credit requires its actual qualifying tuition source");
+          if (sourceMoney(allocation?.creditAmount).gt(0)) {
+            if (!expense || !isOrdinaryEducationExpense(expense) || expense.qualificationConfirmed !== true) throw new Error("Education reference in-kind credit requires its actual qualified ordinary expense source");
+            readOrdinaryEducationExpense(qeeSummary.sourceFacts, expense, result.taxYear);
+          }
           const entry = requireAudit("Form1099-Q", `${row.sourceId}:in-kind-allocation:${expenseId}`, sourceMoney(allocation?.amount));
           const credit = entry.inputs["Education credit expense"];
           if (!Decimal.isDecimal(credit) || !credit.eq(sourceMoney(allocation?.creditAmount))) throw new Error("Education reference in-kind credit allocation disagrees with its source audit");
@@ -376,6 +381,10 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
       || !reportedSourceTotal(result.perDistribution, "taxFreeEarnings").eq(result.taxFreeEarnings)
       || !ownRecipients.reduce((sum, row) => sum.plus(row.additionalTax), new Decimal(0)).eq(result.netPenalty)) throw new Error("Education recipient audit totals do not reconcile");
     for (const [index, expense] of (qeeSummary.sourceFacts.expenses ?? []).entries()) {
+      const ordinary = isOrdinaryEducationExpense(expense) ? readOrdinaryEducationExpense(qeeSummary.sourceFacts, expense, result.taxYear) : undefined;
+      qualifiedEducationExpenseInputs.push({ label: `Expense ${index + 1}: Category`, value: expense.category },
+        { label: `Expense ${index + 1}: Actual qualification`, value: yesNo(expense.qualificationConfirmed) });
+      if (ordinary?.credit.gt(0) && expense.category !== "postsecondary_tuition") qualifiedEducationExpenseInputs.push({ label: `Expense ${index + 1}: Actual credit treatment`, value: expense.creditExpenseTreatment ?? "Not provided" });
       for (const [field, label] of [["amount", "Actual paid expense"], ["refundedAmount", "Refund"], ["taxFreeAssistance", "Tax-free assistance"], ["educationCreditAmount", "Expense used for education credit"], ["otherTaxBenefitAmount", "Expense used for another benefit"]] as const) qualifiedEducationExpenseInputs.push({ label: `Expense ${index + 1}: ${label}`, value: knownAmount(expense[field]) });
       if (expense.category === "postsecondary_room_board" && !roomBoard.expenseIds.has(expense.id)) {
         qualifiedEducationExpenseInputs.push({ label: `Expense ${index + 1}: Half-time enrollment`, value: yesNo(expense.halfTimeStudent) });
@@ -385,11 +394,24 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
       if (benefits.length) {
         const inKindSourceIds = new Set(benefits.map(benefit => benefit.sourceId));
         const allocations = qeeSummary.sourceFacts.allocations?.filter(allocation => allocation.expenseId === expense.id && inKindSourceIds.has(allocation.sourceId)) ?? [];
-        const remaining = sourceMoney(expense.amount).minus(sourceMoney(expense.refundedAmount)).minus(sourceMoney(expense.taxFreeAssistance)).minus(sourceMoney(expense.educationCreditAmount)).minus(sourceMoney(expense.otherTaxBenefitAmount)).minus(allocations.reduce((total, allocation) => total.plus(sourceMoney(allocation.amount)), new Decimal(0)));
+        const available = ordinary?.available ?? sourceMoney(expense.amount).minus(sourceMoney(expense.refundedAmount)).minus(sourceMoney(expense.taxFreeAssistance)).minus(sourceMoney(expense.educationCreditAmount)).minus(sourceMoney(expense.otherTaxBenefitAmount));
+        const remaining = available.minus(allocations.reduce((total, allocation) => total.plus(sourceMoney(allocation.amount)), available.minus(available)));
         if (remaining.lt(0)) throw new Error("Education reference in-kind benefit costs exceed remaining actual expense");
         sourceLines.push(describe(requireAudit("Form1099-Q", `${expense.id}:after-in-kind`, remaining), `Expense ${index + 1}: `));
       }
     }
+    const refundIds = new Set<string>();
+    for (const [index, refund] of (qeeSummary.sourceFacts.expenseRefunds ?? []).entries()) {
+      if (!refund.id || refundIds.has(refund.id) || !(qeeSummary.sourceFacts.expenses ?? []).some(expense => expense.id === refund.expenseId)) throw new Error("Education reference refund source is missing or duplicated");
+      refundIds.add(refund.id);
+      const entry = requireAudit("Form1099-Q", `expense-refund:${refund.id}`, sourceMoney(refund.amount));
+      if (entry.inputs["Expense source"] !== refund.expenseId || entry.inputs["Received date"] !== refund.receivedDate
+        || entry.inputs["Disposition"] !== refund.disposition || entry.inputs["Source reference"] !== refund.sourceReference?.trim()) throw new Error("Education reference original refund chronology disagrees with the audit");
+      sourceLines.push(describe(entry, `Refund ${index + 1}: `));
+      qualifiedEducationExpenseInputs.push({ label: `Refund ${index + 1}: Actual received date`, value: refund.receivedDate ?? "Not provided" },
+        { label: `Refund ${index + 1}: Actual disposition`, value: refund.disposition ?? "Not provided" });
+    }
+    if (result.lines.some(entry => entry.form === "Form1099-Q" && entry.line.startsWith("expense-refund:") && !refundIds.has(entry.line.slice("expense-refund:".length)))) throw new Error("Education reference original refund source was removed");
     for (const [index, row] of result.loanInterestSourceAdjustments.entries()) sourceLines.push(describe(requireAudit("Form1099-Q", `loan-expense:${row.expenseId}:loan-interest-reduction`, row.taxFreeEarningsUsedForInterest), `Loan expense ${index + 1}: `));
   } else {
     for (const [field, label] of [["totalQualifiedExpenses", "Total qualified education expenses"], ["taxFreeEducationalAssistance", "Tax-free educational assistance"], ["amountsUsedForEducationCredits", "Amounts used for education credits"], ["penaltyExceptionScholarshipAmount", "Scholarship penalty exception amount"], ["penaltyExceptionMilitaryAcademyAmount", "Military academy penalty exception amount"]] as const) qualifiedEducationExpenseInputs.push({ label, value: knownAmount(qeeSummary?.[field]) });

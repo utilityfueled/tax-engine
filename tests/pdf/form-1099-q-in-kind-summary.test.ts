@@ -64,6 +64,6 @@ it("rejects changed allocation and remaining expense source records", () => {
     { expenses: facts.expenses?.map(row => ({ ...row, refundedAmount: "1" })) },
   ]) {
     const changed = QualifiedEducationExpenseSummarySchema.parse({ sourceFacts: { ...facts, ...changes } });
-    expect(() => buildForm1099QReferenceSummary([form], result, changed)).toThrow(/in-kind|benefit|audit/i);
+    expect(() => buildForm1099QReferenceSummary([form], result, changed)).toThrow(/in-kind|benefit|audit|^Ordinary education actual complete refund history is required$/i);
   }
 });

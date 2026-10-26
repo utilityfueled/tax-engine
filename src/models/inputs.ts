@@ -869,6 +869,12 @@ const EducationDistributionExpenseSchema = z.object({
   taxFreeAssistance: optionalDecimalInput, educationCreditAmount: optionalDecimalInput,
   otherTaxBenefitAmount: optionalDecimalInput,
   qualificationConfirmed: z.boolean().optional(),
+  /** Actual same-year refund records are separate from the unchanged original benefit/statement. */
+  refundHistoryCompleteConfirmed: z.boolean().optional(),
+  /** Non-tuition credit character must come from the actual course/institution records. */
+  creditExpenseTreatment: z.enum(["aotc_required_course_materials", "llc_required_institution_charge", "none"]).optional(),
+  creditExpenseSourceReference: z.string().trim().optional(),
+  creditExpenseQualificationConfirmed: z.boolean().optional(),
   halfTimeStudent: z.boolean().optional(), roomBoardAllowance: optionalDecimalInput,
   schoolOwnedHousingCharge: optionalDecimalInput,
   tutorUnrelated: z.boolean().optional(), tutoringOutsideHome: z.boolean().optional(), tutorQualified: z.boolean().optional(),
@@ -890,6 +896,13 @@ const EducationDistributionSourceFactsSchema = z.object({
     outsideK12CashOnlyConfirmed: z.boolean().optional(),
   })).max(100).optional(),
   expenses: z.array(EducationDistributionExpenseSchema).max(500).optional(),
+  expenseRefunds: z.array(z.object({
+    id: z.string().trim().min(1), expenseId: z.string().trim().min(1),
+    amount: optionalDecimalInput, receivedDate: z.string().optional(),
+    receivedByBeneficiary: z.boolean().optional(),
+    disposition: z.enum(["cash_retained", "qtp_recontribution", "benefit_correction", "other"]).optional(),
+    sourceReference: z.string().trim().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  })).max(1000).optional(),
   roomBoardPeriods: z.array(EducationRoomBoardPeriodSchema).max(100).optional(),
   roomBoardPeriodExpenses: z.array(EducationRoomBoardPeriodExpenseSchema).max(500).optional(),
   roomBoardEsaAllocations: z.array(EducationRoomBoardEsaAllocationSchema).max(1000).optional(),

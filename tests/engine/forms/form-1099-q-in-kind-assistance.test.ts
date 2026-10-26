@@ -34,7 +34,8 @@ it('rejects unbound or mixed assistance source groups', () => {
   for (const field of ['refundedAmount','educationCreditAmount','otherTaxBenefitAmount'] as const) {
     const input = inKindAssistanceFixture(), expense = input.qualifiedEducationExpenses?.sourceFacts?.expenses?.[0];
     if (!expense) throw new Error('Missing source'); expense[field] = '1';
-    expect(() => calculate(input)).toThrow(/in-kind|assistance|allocation/);
+    expect(() => calculate(input)).toThrow(field === 'refundedAmount'
+      ? 'Ordinary education actual complete refund history is required' : /in-kind|assistance|allocation/);
   }
   const missing = inKindAssistanceFixture(), missingExpense = missing.qualifiedEducationExpenses?.sourceFacts?.expenses?.[0];
   if (!missingExpense) throw new Error('Missing source'); missingExpense.taxFreeAssistance = undefined;
@@ -46,13 +47,14 @@ it('rejects unbound or mixed assistance source groups', () => {
     const changed = inKindAssistanceFixture(), group = changed.qualifiedEducationExpenses?.sourceFacts;
     const source = changed.form1099Q[0], expense = group?.expenses?.[0], benefit = group?.inKindBenefits?.[0];
     if (!group || !source || !expense || !benefit) throw new Error('Missing source');
-    if (mutation === 'extra-expense') group.expenses?.push({...expense,id:'second',amount:'0',taxFreeAssistance:'0'});
+    if (mutation === 'extra-expense') group.expenses?.push({...expense,id:'second',amount:'1',taxFreeAssistance:'0'});
     if (mutation === 'cash-source' || mutation === 'esa-source') changed.form1099Q.push({...source,sourceId:'second',accountId:'second',
       distributionMedium:'cash',accountType:mutation === 'cash-source' ? '529' : 'coverdell_esa'});
     if (mutation === 'duplicate-benefit') { benefit.amount = '2000'; group.inKindBenefits?.push({...benefit,id:'second'}); }
     if (mutation === 'unknown-refund') expense.refundedAmount = undefined;
     if (mutation === 'unqualified') { expense.qualificationConfirmed = false; benefit.qualificationConfirmed = false; }
-    expect(() => calculate(changed)).toThrow(/in-kind|assistance|allocation/);
+    expect(() => calculate(changed)).toThrow(mutation === 'unknown-refund'
+      ? 'Ordinary education actual refund amount is missing' : /in-kind|assistance|allocation/);
   }
   const alias = inKindAssistanceFixture(), facts = alias.qualifiedEducationExpenses?.sourceFacts;
   const form = alias.form1099Q[0], student = facts?.beneficiaries?.[0], expense = facts?.expenses?.[0], benefit = facts?.inKindBenefits?.[0];

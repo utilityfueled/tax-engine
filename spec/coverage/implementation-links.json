@@ -1256,6 +1256,16 @@
         "tests/engine/federal-student-loan-sources.test.ts::routes actual loan sources once and preserves eligibility and unknown distinctions"
       ],
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/education-ordinary-expense-composition",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/education-ordinary-expense-composition.test.ts::qualifies ordinary receipts without inventing prepaid membership",
+        "tests/pdf/education-ordinary-expense-composition.test.ts::binds original ordinary receipts and refund chronology before review output"
+      ],
+      "note": "Actual ordinary postsecondary receipt qualification, retained refund chronology and credit character use the shared original-source calculation and historical 2025 review summary. No final2026 output, filing qualification, scenario expansion beyond the named method or independent human review is claimed."
     }
   ]
 }

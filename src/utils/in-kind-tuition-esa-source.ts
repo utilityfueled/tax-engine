@@ -1,6 +1,7 @@
 /** Source conservation; in-kind-coordination, tuition-account-group and mixed-tuition specs. */
 import Decimal from 'decimal.js';
 import { calculateRoomBoardPeriods } from './education-room-board-periods.js';
+import { isOrdinaryEducationExpense, readOrdinaryEducationExpense } from './education-ordinary-expense-source.js';
 import type { Form1099Q, QualifiedEducationExpenseSummary } from '@/models/inputs.js';
 
 type Facts = NonNullable<QualifiedEducationExpenseSummary['sourceFacts']>;
@@ -47,7 +48,7 @@ export function readInKindTuitionEsaSource(forms: readonly Form1099Q[], facts: F
     || esas.some(source => source.distributionMedium === 'in_kind_prepaid_tuition')
     || expenses.length === 0 || !expenses.some(source => source.id === expenseId)
     || new Set(expenses.map(source => source.id)).size !== expenses.length
-    || expenses.some(source => !source.id || source.category !== 'postsecondary_tuition' || source.qualificationConfirmed !== true)
+    || expenses.some(source => !source.id || !isOrdinaryEducationExpense(source) || typeof source.qualificationConfirmed !== 'boolean')
     || benefits.length === 0 || new Set(benefits.map(source => source.id)).size !== benefits.length
     || benefits.some(source => !source.id || !prepaidQtps.some(form => form.sourceId === source.sourceId)
       || !expenses.some(expense => expense.id === source.expenseId) || source.qualificationConfirmed !== true)
@@ -60,7 +61,7 @@ export function readInKindTuitionEsaSource(forms: readonly Form1099Q[], facts: F
     const linkedQtps = prepaidQtps.filter(source => linkedBenefits.some(benefit => benefit.sourceId === source.sourceId));
     const linkedSources = [...linkedQtps, ...cashQtps, ...esas];
     const expenseAllocations = allocations.filter(source => source.expenseId === expense.id);
-    if (linkedQtps.length === 0 || expenseAllocations.length !== linkedSources.length) {
+    if (expenseAllocations.length !== linkedSources.length) {
       throw new Error('In-kind tuition ESA actual expense requires its original benefits and every explicit account allocation');
     }
     const accountRows = linkedSources.map(source => {
@@ -81,13 +82,10 @@ export function readInKindTuitionEsaSource(forms: readonly Form1099Q[], facts: F
     const esaRows = accountRows.filter(row => row.accountType === 'coverdell_esa');
     const total = (selected: typeof accountRows, key: 'allocated' | 'credit' | 'provided') => selected.reduce((value, row) => value.plus(row[key]), new SourceDecimal(0));
     const provided = total(qtpRows, 'provided');
-    const expenseAmount = amount(expense.amount, 'tuition expense');
-    const refund = amount(expense.refundedAmount, 'refund'), assistance = amount(expense.taxFreeAssistance, 'assistance');
-    const credit = amount(expense.educationCreditAmount, 'credit expense'), other = amount(expense.otherTaxBenefitAmount, 'other benefit');
+    const { cost: expenseAmount, refund, assistance, credit, other, adjusted } = readOrdinaryEducationExpense(facts, expense, facts.taxYear);
     const qtpAmount = total(qtpRows, 'allocated'), esaAmount = total(esaRows, 'allocated');
     const qtpCredit = total(qtpRows, 'credit'), esaCredit = total(esaRows, 'credit');
-    const adjusted = expenseAmount.minus(assistance).minus(credit);
-    if (!refund.isZero() || !other.isZero() || provided.gt(expenseAmount) || adjusted.lt(0)
+    if (!other.isZero() || provided.gt(expenseAmount) || adjusted.lt(0)
       || !qtpAmount.plus(esaAmount).eq(adjusted) || !qtpCredit.plus(esaCredit).eq(credit)
       || total(prepaidRows, 'allocated').plus(total(prepaidRows, 'credit')).gt(provided)) {
       throw new Error('In-kind tuition ESA actual allocations must conserve each adjusted tuition expense and credit within its benefit');

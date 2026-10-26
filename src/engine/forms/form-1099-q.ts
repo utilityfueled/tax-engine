@@ -25,6 +25,7 @@ import { calculateAnnualCashQtpPools, roundEducationSourceAmounts, type AnnualCa
 import { calculateRoomBoardPeriods } from "@/utils/education-room-board-periods.js";
 import { readInKindTuitionEsaSource } from "@/utils/in-kind-tuition-esa-source.js";
 import { readInKindTuitionAssistanceSource } from "@/utils/in-kind-tuition-assistance-source.js";
+import { isOrdinaryEducationExpense, readOrdinaryEducationExpense, validateOrdinaryEducationSources } from "@/utils/education-ordinary-expense-source.js";
 import { readInKindK12PlanSource } from "@/utils/in-kind-k12-plan-source.js";
 import { isExpandedEducationDistributionAllowed } from "@/utils/education-distribution-date.js";
 
@@ -574,6 +575,12 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   if (summary && Object.entries(summary).some(([key, value]) => key !== "sourceFacts" && value !== undefined)) throw new Error("Form1099Q legacy aggregate fields require explicit source reconciliation and removal before using the source ledger");
   const beneficiaries = uniqueBy(requireList(facts.beneficiaries, "beneficiaries"), item => item.id, "beneficiary");
   const expenses = uniqueBy(requireList(facts.expenses, "expenses"), item => item.id, "expense");
+  validateOrdinaryEducationSources(facts, options.taxYear, options.educationExpenses);
+  for (const refund of facts.expenseRefunds ?? []) {
+    audit.record("Form1099-Q", `expense-refund:${refund.id}`, "Actual current-year cash refund retained by the beneficiary", actualAmount(refund.amount, "receipt refund"),
+      "Original receipt reduction; preserve the reported benefit and distribution", { "Expense source": refund.expenseId,
+        "Received date": refund.receivedDate ?? "", "Disposition": refund.disposition ?? "", "Source reference": refund.sourceReference?.trim() ?? "" });
+  }
   const rawAllocations = requireList(facts.allocations, "expense allocations");
   const borrowers = uniqueBy(requireList(facts.loanBorrowers, "loan borrowers"), item => item.id, "loan borrower");
   const coverdellFacts = uniqueBy(requireList(facts.coverdellAccounts, "Coverdell account history"), item => item.accountId, "Coverdell account");
@@ -708,6 +715,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const provided = sum(...benefits.map(item => item.amount));
     const expense = allocation.expense;
     const assistance = actualAmount(expense.taxFreeAssistance, "in-kind expense assistance");
+    const refund = actualAmount(expense.refundedAmount, "in-kind expense refunds");
     const exactBenefit = allocation.amount.plus(allocation.credit).plus(assistance).eq(provided);
     if (roomBoardPeriods.expenseIds.has(expense.id)) {
       audit.record("Form1099-Q", `${allocation.form.sourceId}:in-kind-allocation:${expense.id}`, "Actual prepaid room-and-board allocation before the period limit", allocation.amount,
@@ -715,26 +723,29 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
       continue;
     }
     const group = verifiedForms.filter(form => form.beneficiaryId === allocation.form.beneficiaryId);
-    const esaCoordination = group.some(form => form.accountType === "coverdell_esa") && (!exactBenefit || assistance.gt(0));
-    const cashTuitionCoordination = assistance.gt(0) && expense.category === "postsecondary_tuition"
+    const esaCoordination = group.some(form => form.accountType === "coverdell_esa") && (!exactBenefit || assistance.gt(0) || refund.gt(0));
+    const cashTuitionCoordination = (assistance.gt(0) || refund.gt(0)) && isOrdinaryEducationExpense(expense)
       && !group.some(form => form.accountType === "coverdell_esa") && group.some(form => form.distributionMedium === "cash");
     if (esaCoordination) {
       assertDistinctEducationBeneficiaries(verifiedForms, facts);
       const sourceInputs = readInKindTuitionEsaSource(verifiedForms, facts, allocation.form.sourceId, expense.id);
-      audit.record("Form1099-Q", `${allocation.form.sourceId}:in-kind-esa:${expense.id}`, "Actual tuition allocation between in-kind QTP and ESA", allocation.amount,
+      audit.record("Form1099-Q", `${allocation.form.sourceId}:in-kind-esa:${expense.id}`, "Actual expense allocation between in-kind QTP and ESA", allocation.amount,
         "IRC529(c)(3)(B)(vi): taxpayer supplied expense allocation after actual assistance and credit; no inferred election", sourceInputs);
     }
-    if ((assistance.gt(0) || cashTuitionCoordination) && !esaCoordination) {
+    if ((assistance.gt(0) || refund.gt(0) || cashTuitionCoordination) && !esaCoordination) {
       // Each distinct original expense supplies its own assistance and credit.
       // No shared-source split or current allowable amount is inferred.
       assertDistinctEducationBeneficiaries(verifiedForms, facts);
       const sourceInputs = readInKindTuitionAssistanceSource(verifiedForms, facts, allocation.form.sourceId, expense.id);
-      audit.record("Form1099-Q", `${allocation.form.sourceId}:in-kind-assistance:${expense.id}`, "Actual tax-free assistance against the in-kind tuition benefit", assistance,
+      audit.record("Form1099-Q", `${allocation.form.sourceId}:in-kind-assistance:${expense.id}`, "Actual tax-free assistance against the in-kind QTP benefit", assistance,
         cashTuitionCoordination ? "IRC529(c)(3)(B)(i),(ii),(v): actual adjusted tuition; qualified prepaid cost before cash remainder"
           : "IRC529(c)(3)(B)(v)(I) and25A(g)(2); actual source reduction, not an additional-tax exception", sourceInputs);
     }
-    if (!esaCoordination && !cashTuitionCoordination && !exactBenefit) throw new Error("Form1099Q in-kind allocation, actual credit expense and supported assistance must conserve its benefit cost; unexplained partial allocation is unsupported");
-    if (allocation.credit.gt(0) && (allocation.expense.category !== "postsecondary_tuition" || allocation.expense.qualificationConfirmed !== true)) throw new Error("Form1099Q in-kind credit allocation requires actual qualifying postsecondary tuition");
+    if (!esaCoordination && !cashTuitionCoordination && !refund.gt(0) && !exactBenefit) throw new Error("Form1099Q in-kind allocation, actual credit expense and supported assistance must conserve its benefit cost; unexplained partial allocation is unsupported");
+    if (allocation.credit.gt(0)) {
+      if (!isOrdinaryEducationExpense(expense) || expense.qualificationConfirmed !== true) throw new Error("Form1099Q in-kind credit allocation requires its actual qualified ordinary postsecondary source");
+      readOrdinaryEducationExpense(facts, expense, options.taxYear);
+    }
     audit.record("Form1099-Q", `${allocation.form.sourceId}:in-kind-allocation:${allocation.expense.id}`, "Actual in-kind QTP expense allocation", allocation.amount,
       esaCoordination ? "Actual taxpayer allocation after assistance, credit and ESA coordination"
         : cashTuitionCoordination ? "Qualified prepaid cost after actual tuition reductions, before the cash QTP remainder"
@@ -748,16 +759,19 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const assistance = actualAmount(expense.taxFreeAssistance, "expense assistance");
     const credit = actualAmount(expense.educationCreditAmount, "expense credit allocation");
     const other = actualAmount(expense.otherTaxBenefitAmount, "expense other-benefit allocation");
-    const available = amount.minus(sum(refunds, assistance, credit, other));
+    const ordinary = isOrdinaryEducationExpense(expense) ? readOrdinaryEducationExpense(facts, expense, options.taxYear) : undefined;
+    const available = ordinary?.available ?? amount.minus(sum(refunds, assistance, credit, other));
     if (available.lt(0)) throw new Error("Form1099Q expense reductions exceed actual expense");
     const linked = allocations.filter(item => item.expense.id === expense.id);
-    const requested = sum(...linked.map(item => item.amount));
-    if (requested.gt(available) || sum(...linked.map(item => item.credit)).gt(credit)) throw new Error("Form1099Q allocations exceed available expense or credit reduction");
+    const sourceSum = (values: Decimal[]) => ordinary
+      ? values.reduce((total, value) => total.plus(value), ordinary.cost.minus(ordinary.cost)) : sum(...values);
+    const requested = sourceSum(linked.map(item => item.amount));
+    if (requested.gt(available) || sourceSum(linked.map(item => item.credit)).gt(credit)) throw new Error("Form1099Q allocations exceed available expense or credit reduction");
     const benefits = inKindBenefits.filter(item => item.expense.id === expense.id);
     if (benefits.length) {
       const inKindAllocations = linked.filter(item => item.form.distributionMedium === "in_kind_prepaid_tuition");
       const creditReduced = inKindAllocations.some(item => item.credit.gt(0));
-      audit.record("Form1099-Q", `${expense.id}:after-in-kind`, creditReduced ? "Expense remaining after actual in-kind benefit allocation" : "Expense remaining after actual in-kind benefit costs", available.minus(sum(...inKindAllocations.map(item => item.amount))), "Paid expense less actual reductions and the in-kind QTP expense allocation; other allocations must fit the remainder");
+      audit.record("Form1099-Q", `${expense.id}:after-in-kind`, creditReduced ? "Expense remaining after actual in-kind benefit allocation" : "Expense remaining after actual in-kind benefit costs", available.minus(sourceSum(inKindAllocations.map(item => item.amount))), "Paid expense less actual reductions and the in-kind QTP expense allocation; other allocations must fit the remainder");
     }
     if (expense.category === "student_loan" && sum(...linked.map(item => item.loanInterest)).gt(actualAmount(expense.studentLoanInterestAmount, "actual paid loan interest"))) throw new Error("Form1099Q allocations exceed actual paid loan interest");
     const paid = actualDate(expense.paidDate, "expense paid");
@@ -765,7 +779,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     actualBoolean(expense.qualificationConfirmed, "expense qualification");
     if (roomBoardPeriods.expenseIds.has(expense.id)) continue;
     for (const item of linked) {
-      const eligible = eligibleExpenseAmount(expense, options.taxYear, item.form.accountType);
+      const eligible = ordinary?.adjusted ?? eligibleExpenseAmount(expense, options.taxYear, item.form.accountType);
       if (expense.category === "qtp_contribution") {
         const transfer = item.form.transfer;
         if (item.form.accountType !== "coverdell_esa" || transfer?.kind !== "qtp" || !expense.destinationAccountId || transfer.destinationAccountId !== expense.destinationAccountId || transfer.receivedDate !== expense.paidDate || !actualAmount(transfer.amount, "QTP contribution source amount").eq(amount)) throw new Error("Form1099Q QTP contribution expense must match its actual transfer source");
@@ -773,7 +787,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
       }
       // The actual allocation group shares the qualified category capacity.
       // Other paid spending not assigned to a distribution cannot dilute it.
-      item.allowed = requested.isZero() ? ZERO : item.amount.mul(Decimal.min(1, eligible.div(requested)));
+      item.allowed = requested.isZero() ? ZERO : ordinary && eligible.gte(requested) ? item.amount : item.amount.mul(Decimal.min(1, eligible.div(requested)));
       const providedDates = inKindBenefits.filter(benefit => benefit.form.sourceId === item.form.sourceId && benefit.expense.id === expense.id).map(benefit => benefit.providedDate);
       if (!isExpandedEducationDistributionAllowed(item.form, expense.category, options.taxYear, providedDates)) item.allowed = ZERO;
     }

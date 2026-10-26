@@ -1,6 +1,7 @@
 /** Original source conservation; distinct-in-kind and cash-assistance specs. */
 import Decimal from 'decimal.js';
 import { calculateRoomBoardPeriods } from './education-room-board-periods.js';
+import { readOrdinaryEducationExpense } from './education-ordinary-expense-source.js';
 import type { Form1099Q, QualifiedEducationExpenseSummary } from '@/models/inputs.js';
 
 type Facts = NonNullable<QualifiedEducationExpenseSummary['sourceFacts']>;
@@ -40,7 +41,6 @@ export function readInKindTuitionAssistanceSource(forms: readonly Form1099Q[], f
     || original.distributionMedium !== 'in_kind_prepaid_tuition' || !prepaid.length || prepaid.length + cash.length !== group.length
     || !expenses.length || !unique(group.map(form => form.sourceId ?? '')) || !unique(expenses.map(expense => expense.id))
     || !unique(group.map(form => form.accountId ?? '')) || !unique(benefits.map(benefit => benefit.id))
-    || benefits.length !== expenses.length || allocations.length !== expenses.length * (1 + cash.length)
     || group.some(form => !form.accountId || form.accountType !== '529'
       || form.taxYear !== facts.taxYear || form.sourceFactsConfirmed !== true || form.sourceFactsComplete === false
       || form.recipientNotBeneficiary !== false || form.isTrusteeToTrustee !== false || form.isQtpToRoth !== false
@@ -56,29 +56,29 @@ export function readInKindTuitionAssistanceSource(forms: readonly Form1099Q[], f
     const assigned = allocations.filter(allocation => allocation.expenseId === expense.id);
     const benefit = linked[0];
     const allocation = assigned.find(row => row.sourceId === benefit?.sourceId);
-    if (linked.length !== 1 || assigned.length !== 1 + cash.length || !benefit || !allocation
+    if (linked.length > 1 || assigned.length !== linked.length + cash.length || (benefit && !allocation)
       || new Set(assigned.map(row => row.sourceId)).size !== assigned.length
       || cash.some(form => !assigned.some(row => row.sourceId === form.sourceId))
-      || expense.category !== 'postsecondary_tuition' || expense.qualificationConfirmed !== true || benefit.qualificationConfirmed !== true) {
-      throw new Error('In-kind tuition assistance requires one distinct actual benefit and every original cash allocation per qualified tuition expense');
+      || (benefit && (expense.qualificationConfirmed !== true || benefit.qualificationConfirmed !== true))) {
+      throw new Error('In-kind expense assistance requires each actual benefit and every original cash allocation per ordinary receipt');
     }
-    const provided = amount(benefit.amount, 'provided benefit'), tuition = amount(expense.amount, 'tuition');
-    const refund = amount(expense.refundedAmount, 'refund'), assistance = amount(expense.taxFreeAssistance, 'assistance');
-    const credit = amount(expense.educationCreditAmount, 'credit expense'), other = amount(expense.otherTaxBenefitAmount, 'other benefit');
-    const allocated = amount(allocation.amount, 'allocation'), allocatedCredit = amount(allocation.creditAmount, 'allocated credit');
+    const source = readOrdinaryEducationExpense(facts, expense, facts.taxYear);
+    const { cost: tuition, refund, assistance, credit, other, adjusted } = source;
+    const provided = benefit ? amount(benefit.amount, 'provided benefit') : new SourceDecimal(0);
+    const allocated = allocation ? amount(allocation.amount, 'allocation') : new SourceDecimal(0);
+    const allocatedCredit = allocation ? amount(allocation.creditAmount, 'allocated credit') : new SourceDecimal(0);
     const cashRows = assigned.filter(row => cash.some(form => form.sourceId === row.sourceId));
     const cashAmount = sum(cashRows.map(row => amount(row.amount, 'cash allocation')));
     const cashCredit = sum(cashRows.map(row => amount(row.creditAmount, 'cash credit allocation')));
-    const adjusted = tuition.minus(assistance).minus(credit);
     const prepaidCapacity = provided.minus(allocatedCredit);
     const qualifiedPrepaid = SourceDecimal.min(prepaidCapacity, adjusted);
-    if (provided.gt(tuition) || (!cash.length && !provided.eq(tuition)) || !refund.isZero() || !other.isZero()
+    if (provided.gt(tuition) || (!cash.length && !provided.eq(tuition)) || !other.isZero()
       || adjusted.lt(0) || prepaidCapacity.lt(0) || cashCredit.gt(tuition.minus(provided))
       || !allocatedCredit.plus(cashCredit).eq(credit) || !allocated.eq(qualifiedPrepaid)
       || !allocated.plus(cashAmount).eq(adjusted)) {
       throw new Error('In-kind tuition assistance actual expense, benefit, assistance and credit allocation must reconcile independently');
     }
-    if (benefit.sourceId === sourceId && expense.id === expenseId) selected = {
+    if (benefit?.sourceId === sourceId && expense.id === expenseId) selected = {
       'Actual expense': tuition, 'Provided benefit': provided, 'Refund': refund, 'Tax-free assistance': assistance,
       'Education credit expense': credit, 'Other tax benefit': other, 'Original allocation': allocated,
       ...(cash.length ? { 'Adjusted tuition': adjusted, 'Qualified prepaid tuition': qualifiedPrepaid,

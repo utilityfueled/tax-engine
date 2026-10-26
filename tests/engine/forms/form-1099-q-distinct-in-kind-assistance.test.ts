@@ -33,7 +33,7 @@ it('keeps exact source rounding and separately supplied credit amounts', () => {
 it('rejects incomplete or shared tuition source groups without inventing allocations', () => {
   for (const mutation of ['extra-expense','duplicate-benefit','cross-allocation','cash','esa','wrong-year','wrong-owner','unknown-assistance','unknown-refund','unconfirmed','unreconciled-box1']) {
     const input = distinctInKindFixture(), facts = input.qualifiedEducationExpenses!.sourceFacts!, second = input.form1099Q[1]!;
-    if (mutation === 'extra-expense') facts.expenses!.push({...facts.expenses![0]!,id:'unbound',amount:'0',taxFreeAssistance:'0'});
+    if (mutation === 'extra-expense') facts.expenses!.push({...facts.expenses![0]!,id:'unbound',amount:'1',taxFreeAssistance:'0'});
     if (mutation === 'duplicate-benefit') { facts.inKindBenefits![0]!.amount = '2000'; facts.inKindBenefits!.push({...facts.inKindBenefits![0]!,id:'duplicate'}); }
     if (mutation === 'cross-allocation') facts.allocations![1]!.expenseId = 'tuition';
     if (mutation === 'cash' || mutation === 'esa') { second.distributionMedium = 'cash'; if (mutation === 'esa') second.accountType = 'coverdell_esa'; }
@@ -43,9 +43,16 @@ it('rejects incomplete or shared tuition source groups without inventing allocat
     if (mutation === 'unknown-refund') facts.expenses![1]!.refundedAmount = undefined;
     if (mutation === 'unconfirmed') second.sourceFactsConfirmed = false;
     if (mutation === 'unreconciled-box1') { second.grossDistribution = '6001'; second.basis = '5101'; }
-    expect(() => calculate(input),mutation).toThrow(/source|in-kind|assistance|allocation|identity|year|Box1|benefit/);
+    expect(() => calculate(input),mutation).toThrow(mutation === 'unknown-refund'
+      ? 'Ordinary education actual refund amount is missing' : /source|in-kind|assistance|allocation|identity|year|Box1|benefit/);
   }
   const knownZero = distinctInKindFixture(), facts = knownZero.qualifiedEducationExpenses!.sourceFacts!;
   facts.expenses![1]!.taxFreeAssistance = '0'; facts.allocations![1]!.amount = '6000';
   expect(calculate(knownZero).perDistribution.map(row => row.taxableEarnings.toFixed())).toEqual(['200','0']);
+  // Spec: education-ordinary-expense-composition ordinary-receipts: an actual zero receipt needs no invented benefit.
+  const zeroReceipt = distinctInKindFixture(), zeroFacts = zeroReceipt.qualifiedEducationExpenses?.sourceFacts;
+  const zeroTemplate = zeroFacts?.expenses?.[0];
+  if (!zeroFacts?.expenses || !zeroTemplate) throw new Error('Missing zero source fixture');
+  zeroFacts.expenses.push({...zeroTemplate,id:'actual-zero',amount:'0',taxFreeAssistance:'0'});
+  expect([calculate(zeroReceipt).taxFreeEarnings, calculate(zeroReceipt).taxableEarnings].map(value => value.toFixed())).toEqual(['1275','425']);
 });

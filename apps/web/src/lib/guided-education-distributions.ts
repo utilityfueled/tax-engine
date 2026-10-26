@@ -14,6 +14,7 @@ export interface EducationDistributionData {
   forms?: EducationStatementDraft[];
   beneficiaries?: EducationSourceRecord[];
   expenses?: EducationSourceRecord[];
+  expenseRefunds?: EducationSourceRecord[];
   allocations?: EducationSourceRecord[];
   inKindBenefits?: EducationSourceRecord[];
   loanBorrowers?: EducationSourceRecord[];
@@ -25,7 +26,7 @@ export interface EducationDistributionData {
   roomBoardPriorUses?: EducationSourceRecord[];
   roomBoardPriorUseExpenses?: EducationSourceRecord[];
 }
-export type EducationSourceCollection = "beneficiaries" | "expenses" | "allocations" | "inKindBenefits" | "loanBorrowers" | "coverdellAccounts" | "penaltyExceptions" | "roomBoardPeriods" | "roomBoardPeriodExpenses" | "roomBoardEsaAllocations" | "roomBoardPriorUses" | "roomBoardPriorUseExpenses";
+export type EducationSourceCollection = "beneficiaries" | "expenses" | "expenseRefunds" | "allocations" | "inKindBenefits" | "loanBorrowers" | "coverdellAccounts" | "penaltyExceptions" | "roomBoardPeriods" | "roomBoardPeriodExpenses" | "roomBoardEsaAllocations" | "roomBoardPriorUses" | "roomBoardPriorUseExpenses";
 export interface EducationSourceField {
   key: string; label: string; kind: "text" | "date" | "money" | "integer" | "boolean" | "choice";
   choices?: ReadonlyArray<readonly [string, string]>; signed?: boolean;
@@ -80,12 +81,19 @@ export const educationExpenseCategories = [
 export const educationCollectionFields: Record<EducationSourceCollection, EducationSourceField[]> = {
   beneficiaries: [text("name", "Beneficiary name"), text("studentTaxId", "Beneficiary tax ID (for education credits and prepaid benefits)"), money("outsideK12QualifiedDistributions", "Qualified K-12 cash distributions from plans outside these records"), bool("outsideK12CashOnlyConfirmed", "Outside K-12 amount includes only cash distributions (required for prepaid benefits)")],
   expenses: [link("beneficiaryId", "Expense beneficiary", "beneficiary"), choice("category", "Expense category", educationExpenseCategories), date("paidDate", "Expense paid date"), money("amount", "Actual expense paid"), money("refundedAmount", "Refunded expense amount"), money("taxFreeAssistance", "Tax-free assistance allocated to this expense"), money("educationCreditAmount", "Expense allocated to AOTC or lifetime learning credit"), money("otherTaxBenefitAmount", "Expense used for another tax benefit"), bool("qualificationConfirmed", "Applicable expense eligibility checked"),
+    only(bool("refundHistoryCompleteConfirmed", "Every refund for this receipt is recorded"), record => Boolean(record.refundedAmount) && record.refundedAmount !== "0"),
+    ...[choice("creditExpenseTreatment", "Actual non-tuition credit expense treatment", [["aotc_required_course_materials", "AOTC required course materials"], ["llc_required_institution_charge", "LLC required charge paid to the institution"], ["none", "Does not qualify for an education credit"]]),
+      text("creditExpenseSourceReference", "Course or institution credit source reference"), bool("creditExpenseQualificationConfirmed", "Actual credit expense requirements checked, excluding personal or medical costs")]
+      .map(field => only(field, record => ["postsecondary_books", "postsecondary_computer", "postsecondary_special_needs"].includes(String(record.category)) && Boolean(record.educationCreditAmount) && record.educationCreditAmount !== "0")),
     ...[bool("halfTimeStudent", "Student enrolled at least half time"), money("roomBoardAllowance", "Institution's applicable room-and-board allowance"), money("schoolOwnedHousingCharge", "Actual institution-owned housing charge (0 if none)")].map(field => only(field, category("postsecondary_room_board"))),
     ...[bool("tutorUnrelated", "Tutor is unrelated to the student"), bool("tutoringOutsideHome", "Tutoring takes place outside the home"), bool("tutorQualified", "Tutor meets the statutory credential requirements")].map(field => only(field, category("k12_tutoring"))),
     ...[bool("studentHasDisability", "Student has a disability"), bool("providerLicensedOrAccredited", "Therapy provider is licensed or accredited")].map(field => only(field, category("k12_disability_therapy"))),
     ...[bool("credentialRecognized", "Credential meets the recognized-program rules"), bool("requiredForCredential", "Expense is required for the credential")].map(field => only(field, record => String(record.category).startsWith("credential_"))),
     only(text("destinationAccountId", "Destination 529 account label"), category("qtp_contribution")),
     ...[link("borrowerId", "Loan borrower", "borrower"), bool("beneficiaryOrSibling", "Borrower is the beneficiary or an eligible sibling"), money("studentLoanInterestAmount", "Actual interest included in this loan payment"), money("studentLoanInterestDeducted", "Interest claimed for deduction before income phase-out")].map(field => only(field, category("student_loan")))],
+  expenseRefunds: [link("expenseId", "Original expense refunded", "expense"), money("amount", "Actual refund received"), date("receivedDate", "Actual refund received date"),
+    bool("receivedByBeneficiary", "The designated beneficiary received this refund"), choice("disposition", "Actual refund disposition", [["cash_retained", "Cash retained by the beneficiary"], ["qtp_recontribution", "Recontributed to a QTP"], ["benefit_correction", "Original benefit corrected"], ["other", "Another disposition"]]),
+    text("sourceReference", "Refund source record reference"), bool("sourceFactsConfirmed", "Refund records checked after the last edit")],
   allocations: [link("expenseId", "Expense to allocate", "expense"), link("sourceId", "Distribution funding this expense", "source"), money("amount", "Net expense allocated to this distribution"), money("creditAmount", "Separate credit expense affecting this distribution"), money("loanInterestAmount", "Actual interest in this loan-payment allocation (loans only)")],
   inKindBenefits: [link("sourceId", "Statement providing this benefit", "source"), link("expenseId", "Expense supplied by this benefit", "expense"), money("amount", "Actual benefit cost"), date("providedDate", "Benefit provided date"), bool("qualificationConfirmed", "Benefit qualifies as the linked education expense"), text("sourceReference", "Benefit source record reference"),
     choice("prepaidPlanSponsor", "K-12 prepaid program sponsor", [["state", "State or state agency"], ["eligible_educational_institutions", "Eligible educational institutions"]]),
@@ -172,6 +180,7 @@ export function buildEducationDistributionInputs(data?: EducationDistributionDat
 export function invalidateEducationPeriodSources(data?: EducationDistributionData): EducationDistributionData | undefined {
   if (!data) return data;
   return { ...data, sourceFactsConfirmed: null,
+    ...(data.expenseRefunds !== undefined ? { expenseRefunds: data.expenseRefunds.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
     ...(data.roomBoardPeriods !== undefined ? { roomBoardPeriods: data.roomBoardPeriods.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
     ...(data.roomBoardPeriodExpenses !== undefined ? { roomBoardPeriodExpenses: data.roomBoardPeriodExpenses.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
     ...(data.roomBoardPriorUses !== undefined ? { roomBoardPriorUses: data.roomBoardPriorUses.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
