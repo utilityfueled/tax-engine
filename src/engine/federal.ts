@@ -128,6 +128,7 @@ import { calculateIraReturnWorksheet } from "./forms/ira-return-worksheet.js";
 import { calculateScheduleR } from "./forms/schedule-r.js";
 import { calculateForm8839 } from "./forms/form-8839.js";
 import { calculateEic } from "./forms/schedule-eic.js";
+import { calculateEicSeparatedSpouseSources } from "./forms/eic-separated-spouse-sources.js";
 import { calculateForm8936 } from "./forms/form-8936.js";
 import { calculateScheduleH } from "./forms/schedule-h.js";
 import { calculateForm2555 } from "./forms/form-2555.js";
@@ -3257,8 +3258,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         Decimal.max(new Decimal(0), adjustedScheduleETotal),
       );
 
-  // Qualifying EIC children from dependents
-  const qualifyingEicChildren = input.taxpayer.dependents.filter((dep) => dep.qualifiesForEIC).length;
+  // Actual Rule3 child qualification precedes the separate SSN amount count.
+  const eicSeparated = calculateEicSeparatedSpouseSources(input);
+  const qualifyingEicChildren = eicSeparated.ssnCountedChildSourceIds.length;
+  audit.merge(eicSeparated.lines);
 
   // IRC §32(c)(1)(C): Filing Form 2555 disqualifies the taxpayer from EIC
   let eic: Decimal;
@@ -3271,11 +3274,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     scheduleEIC = calculateEic({
       filingStatus,
       qualifyingChildren: qualifyingEicChildren,
+      qualifyingChildPresent: eicSeparated.qualifyingChildPresent,
+      marriedNonjoint: eicSeparated.sourceFactsComplete,
       earnedIncome: eicEarnedIncome,
       agi,
       investmentIncome: eicInvestmentIncome,
       claimantInput: input,
-      mfsEicEligible: input.eic?.mfsEligible ?? false,
+      mfsEicEligible: eicSeparated.separatedSpouseEligible ?? false,
     }, constants);
     audit.merge(scheduleEIC.lines);
     eic = scheduleEIC.credit;

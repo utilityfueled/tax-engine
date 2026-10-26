@@ -14,6 +14,7 @@ import { AdoptionPriorBenefitHistorySchema } from "@/models/adoption-prior-benef
 import { Form8962SharedPolicySchema, MarketplaceCoveredIndividualSchema } from "@/models/form-8962-shared-policy.js";
 import { Form8962MarriageSourcesSchema } from "@/models/form-8962-marriage.js";
 import { QbiLossSourcesSchema } from "@/models/qbi-loss-sources.js";
+import { EicSeparatedSpouseSourcesSchema } from "@/models/eic-separated-spouse-sources.js";
 
 // Custom Zod type for decimal strings (validated as numbers, stored as strings for Decimal.js)
 const decimal = z.string().regex(/^-?\d+(\.\d+)?$/, "Must be a decimal number");
@@ -3430,13 +3431,14 @@ export const EicConfigSchema = z.object({
     primaryChildless: EicChildlessClaimantSchema.optional(),
     spouseChildless: EicChildlessClaimantSchema.optional(),
   }).optional(),
-  /** Whether the MFS filer qualifies for the separated-spouse EIC exception
-   *  (lived apart from spouse for the last 6 months of the year + qualifying child) */
-  mfsEligible: z.boolean().default(false),
+  /** Actual Rule3 records; eligibility and SSN-counted children are derived. */
+  separatedSpouseSources: EicSeparatedSpouseSourcesSchema.optional(),
+  /** Unverified legacy2025 eligibility input; omitted is unknown, not a confirmed false. */
+  mfsEligible: z.boolean().optional(),
   /** Explicit legacy total only; absence must use computed income, never a default zero. */
   investmentIncomeOverride: decimal.refine(value => d(value).isFinite() && d(value).gte(0),
     "EIC investment income must be finite and nonnegative").optional(),
-  /** Whether the primary filer is a full-time student (disqualifies childless EIC) */
+  /** Preserved historical fact; full-time study alone is not an EIC disqualifier. */
   primaryIsFullTimeStudent: z.boolean().default(false),
 });
 
