@@ -7,6 +7,65 @@ complete a checkbox.
 
 ## Current integration — 2026-10-26
 
+The branch is pushed through `568c853`. Rule provenance is `2025.157` /
+`2026.154-law-integration-draft`; the inventory has 534 entries, 5,651
+specification test references and 128 explicit shared-method associations.
+Each delivered package matches its reviewed tree and owned file hashes.
+Readiness gates remain unchanged.
+
+| Delivered package | Commit | Bounded verification |
+| --- | --- | --- |
+| Actual room-and-board allowance use across return years | `f6f9d06` | Final candidate passes 1,703 tests in 197 files; main passes 66 in ten. Separate source review passes 30 in eight, including five private controls. Parent reopens 49 PDFs/246 pages/215 fields, checks 25 physical and twelve browser values, and inspects the rendered output. |
+| Published health Worksheet P/Form 7206 stop after actual nonspecified premiums | `27f95f9` | Final candidate passes 937 tests in 95 files; main passes 547 in twelve. Separate source review passes thirteen in seven; final integration controls pass 25 in nine. Parent reopens ten PDFs/54 pages/78 fields and checks eighteen physical, 21 reference and four workspace amounts. |
+| Current Form 172 loss with separate regular/AMT charitable histories | `31c3794` | Final candidate passes 870 tests in 119 files plus 48 readiness/inventory cases; main passes 59 in nine. Separate source review passes seventeen in seven, including six private controls. Parent reopens 22 PDFs/67 pages/121 fields, checks 35 physical, 55 reference and three workspace values, and inspects all rendered review selections. |
+
+The original-source browser and PDF evidence retains its exact producer boundary.
+The package ledgers distinguish those freezes from final integration checks.
+These agent software/source reviews do not supply qualified human tax approval.
+
+The remaining internal source queue is annual ordinary cash education treatment,
+positive old-NOL/current-origin charitable composition, and the finite health
+payment, payer/person and marriage combinations. Independent review of the first
+annual cash candidate found premature rounding: two exact taxable amounts of
+$0.50 became $2 instead of the combined $1. That failed candidate and its artifacts
+remain private; the author is correcting exact aggregation before another review.
+The charitable composition and full actual-advance repayment candidates remain
+private pending source/artifact review. Source-cents differences are still internal
+health work, not an invented external interpretation blocker.
+
+The native amd64 Web run for `1e04964` failed its first-upgrade return-heading
+assertion while the page was loading. The unchanged exact-source rehearsal then
+passed all six phases locally on native arm64, preserving nine database tables,
+two tenant records, exact provider cost, browser facts and original document bytes.
+That local pass does not resolve the remote failure. Its reproduction images used
+OCI format without Dockerfile HEALTHCHECK; the rehearsal separately polled API
+health. Final release images still require Docker-format health verification.
+The separate diagnostics commit `568c853` preserves failed-phase and bounded
+browser error/asset evidence without changing assertions, timeouts, retries or
+cleanup. Its historical-image six-phase run and deliberate failing-image control
+passed their respective checks. Independent review passes 21 tests in four files,
+including five private controls for privacy, failure propagation and probe bounds;
+main passes sixteen in three. No current-image qualification is inferred.
+
+The most recent complete local run remains immutable `3669b00`: 19,086 tests in
+1,216 files pass in unit and coverage runs, branches are 86.78% and functions 90.49%,
+and all unchanged thresholds pass. All eight static checks and 434 production
+browser cases pass with zero retries; five hosted-only cases remain skipped.
+Later packages are excluded. Final integrated, remote, native-image, scan and
+recovery checks remain due after the finite source queue. The last fully inspected
+native amd64 runtime evidence remains scoped to `8f1d1ba`.
+
+The October 26 production dependency audit records zero advisories across 425
+dependencies; the image advisory register still needs owner acceptance. The
+active goal remains **not complete or release-ready**. The
+[external-action handoff](upgrade-2026-external-actions.md) lists missing qualified
+reviewers, launch-state demand, authorized staging, provider account access and
+approved evaluation funds, final official forms and advisory acceptance. Work
+continues on the independent packages. No production deployment, filing enablement
+or model promotion has occurred.
+
+## Previous checkpoint through a71c561
+
 The branch is pushed through `a71c561`. Rule provenance is `2025.154` /
 `2026.151-law-integration-draft`; the inventory has 531 entries, 5,616
 specification test references and 125 explicit shared-method associations.
