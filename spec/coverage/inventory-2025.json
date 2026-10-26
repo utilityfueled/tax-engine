@@ -958,6 +958,26 @@
       ]
     },
     {
+      "key": "federal/eic-separated-review",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f1040sei.pdf",
+      "specPath": "spec/federal/eic-separated-review.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/eic-separated-spouse-sources",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -3368,6 +3388,26 @@
       ]
     },
     {
+      "key": "federal/form-8962-shared-unshared",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8962",
+      "specPath": "spec/federal/form-8962-shared-unshared.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-8995",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -3643,6 +3683,26 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i1040gi",
       "specPath": "spec/federal/guided-eic-home-sources.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/guided-eic-separated-spouse",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p596",
+      "specPath": "spec/federal/guided-eic-separated-spouse.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,
@@ -4587,6 +4647,25 @@
       ]
     },
     {
+      "key": "federal/k1-charitable-return-sources",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1065sk1",
+      "specPath": "spec/federal/k1-charitable-return-sources.yaml",
+      "enginePath": "src/engine/forms/k1-charitable-return-sources.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/k1-form461-classification",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -4681,6 +4760,26 @@
       "efileBusinessRuleCoverageExists": false,
       "status": "partial",
       "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/k1-royalty-classification",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i1065sk1",
+      "specPath": "spec/federal/k1-royalty-classification.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]

@@ -194,7 +194,7 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Current-head combined verification remains pending after b464992. Exact817f76f coverage passes18189tests with unchanged gates; exact76e3538 unit/static/browser/runtime pass. Later tax packages have scoped checks and separate agent reviews but require final combined verification.",
+    "Current-source combined verification remains pending afterc0dd1eb; b2e1dc9 remote unit run failed two five-second PDF deadlines (18237other tests passed). Exact817f76f coverage passes18189tests with unchanged gates. Later packages have scoped checks and separate agent reviews but need final combined verification.",
     "The2026 rule pack and finite Marketplace/EIC/charitable source methods remain incomplete; explicit unsupported methods and inactive helpers are not counted as implemented. Full2026 calculation remains blocked.",
     "Independent human tax review, selected-state demand/qualification and final physical forms are outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net1202/Form172 interpretations remain unresolved.",
     "AI application/scorer bindings are reviewed;240draftcases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "b46499205313796c6dde33a115442d9cdeaff50b",
+    "lastRecordedCommit": "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1310,8 +1310,8 @@
       "hosted staging",
       "final multi-platform release images"
     ],
-    "workInProgress": "Separated-spouse EIC guided/PDF follow-through; royalty at-risk review repair and EIC passive worksheet; shared/unshared and separate-business health methods; canonical K1 charitable source coordination; final verification and external qualification.",
-    "latestIntegratedCommit": "b46499205313796c6dde33a115442d9cdeaff50b",
+    "workInProgress": "EIC investment source review; remote PDF deadline repair; overlapping Marketplace and separate-business health methods; actual K1 charitable intake and remaining source methods; current verification and external qualification.",
+    "latestIntegratedCommit": "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8",
     "activeIntegrationRun": {
       "sourceCommit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
       "unit": "passed",
@@ -1612,10 +1612,10 @@
       "localSyntheticPostgres": true
     },
     "remainingInternalWork": [
-      "Complete separated-spouse EIC guided/PDF follow-through and source-character royalty/passive worksheet components. Core Rule3, capital and child-election components are committed; the royalty candidate has an unresolved reproduced review finding.",
-      "Complete disjoint shared/unshared Marketplace policies, overlapping benchmark source groups and historical separate-business health ordering. No-advance allocation is committed; binding joint2025 repayment ownership remains a controlling-interpretation dependency.",
-      "Complete canonical K1 charitable basis/history/at-risk handoff using the reviewed inactive prerequisite; prior-floor, regular/AMT NOL and partial mixed-media methods remain. S-corporation debt ordering is repaired.",
-      "Repeat exact current-source unit/coverage/types/spec/inventory/builds/lint/browser and completed remote CI; final native images/SBOM/scans/recovery, support reconciliation and outstanding external qualification remain."
+      "Complete represented EIC royalty/passive components and remaining royalty-expense, mixed earned/passive and disposition source methods. Actual separated-spouse intake/PDF, royalty classification, capital and child-election components are committed.",
+      "Complete overlapping Marketplace benchmark source groups and historical separate-business health ordering. Disjoint shared/unshared and no-advance allocation are committed. Binding joint2025 repayment ownership still needs a controlling interpretation.",
+      "Complete actual K1 charitable guided intake and excess-distribution gain sources, prior-floor, regular/AMT NOL and partial mixed-media methods. Canonical A/E/F source/basis/nonbinding-risk handoff is committed; its guard does not finish the remaining methods.",
+      "Repair remote PDF deadline failures without weakening assertions/deadlines; repeat exact current-source unit/coverage/types/spec/inventory/builds/lint/browser and completed remote CI; final native images/SBOM/scans/recovery, support reconciliation and external qualification remain."
     ],
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
@@ -1637,7 +1637,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "b46499205313796c6dde33a115442d9cdeaff50b",
+    "lastPushedCommit": "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8",
     "currentBrowserRun": {
       "commit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
       "tree": "651098f2b79840dabbd1c39240398c743284d34c",
@@ -1715,29 +1715,37 @@
       "limitation": "Actual React DOM callback checks; final production browser rerun required."
     },
     "remoteCiLatestObserved": {
-      "commit": "01c98e3fc9ba5354305b65be00d36120a885d1a2",
-      "observedAt": "2026-10-26T03:32:27.599953+00:00",
-      "runs": [
+      "observedDate": "2026-10-26",
+      "failedUnitRun": {
+        "commit": "b2e1dc9d2870a87eaabef8b5e23d84eb8f4789c2",
+        "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40279473394",
+        "status": "failed",
+        "testsPassed": 18237,
+        "testsFailed": 2,
+        "filesPassed": 1077,
+        "filesFailed": 2,
+        "seconds": 507.45,
+        "failures": [
+          "tests/pdf/form-8949-digital-reporting.test.ts:41 -5000ms deadline",
+          "tests/apps/web/workspace-marriage-return.test.ts:16 -5000ms deadline"
+        ],
+        "evidence": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/ci-b2e1dc9-failed.log",
+        "sha256": "7305295f43b3d751356c33fdc14fd450cec9b991814741b4fbfecebe719ca7bf"
+      },
+      "currentRuns": [
         {
-          "conclusion": "",
-          "databaseId": 40264107151,
-          "headSha": "01c98e3fc9ba5354305b65be00d36120a885d1a2",
-          "status": "in_progress",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40264107151",
-          "workflowName": "Web"
+          "commit": "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8",
+          "workflow": "CI",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40280499693",
+          "status": "in_progress"
         },
         {
-          "conclusion": "",
-          "databaseId": 40264107208,
-          "headSha": "01c98e3fc9ba5354305b65be00d36120a885d1a2",
-          "status": "in_progress",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40264107208",
-          "workflowName": "CI"
+          "commit": "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8",
+          "workflow": "Web",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40280499638",
+          "status": "in_progress"
         }
-      ],
-      "evidence": ".local/upgrade-evidence/remote-runs-01c98e3.json",
-      "evidenceSha256": "47e0804b3fcacaf1787a123e74bd68335f831f0865a8413354e4de4bb6bdd699",
-      "limitation": "CI/Web in progress when observed. Prior source/crypto runs cancelled by later branch pushes; no final current remote pass claimed."
+      ]
     },
     "remoteCi6b07529": {
       "run": 40176974652,
@@ -2866,6 +2874,21 @@
         ],
         "eicChildInvestment": [
           "b46499205313796c6dde33a115442d9cdeaff50b"
+        ],
+        "eicSeparatedGuide": [
+          "0871438a7b27a846e94bea24cecc0bbc4d30d8ae"
+        ],
+        "sharedUnsharedMarketplace": [
+          "0799088396f2e5d103c2762bc18e81f1dc2e3937"
+        ],
+        "k1RoyaltyClassification": [
+          "8b3daea89c87e625c2d3146d84b34a6045e50799"
+        ],
+        "eicSeparatedReview": [
+          "b2e1dc9d2870a87eaabef8b5e23d84eb8f4789c2"
+        ],
+        "k1CharitableCanonical": [
+          "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8"
         ]
       },
       "owners": {
@@ -2875,10 +2898,10 @@
         "educationMethodsAndFinalIntegration": "parent"
       },
       "subsequent": [
-        "Complete separated-spouse EIC guided/PDF follow-through and source-character royalty/passive worksheet components. Core Rule3, capital and child-election components are committed; the royalty candidate has an unresolved reproduced review finding.",
-        "Complete disjoint shared/unshared Marketplace policies, overlapping benchmark source groups and historical separate-business health ordering. No-advance allocation is committed; binding joint2025 repayment ownership remains a controlling-interpretation dependency.",
-        "Complete canonical K1 charitable basis/history/at-risk handoff using the reviewed inactive prerequisite; prior-floor, regular/AMT NOL and partial mixed-media methods remain. S-corporation debt ordering is repaired.",
-        "Repeat exact current-source unit/coverage/types/spec/inventory/builds/lint/browser and completed remote CI; final native images/SBOM/scans/recovery, support reconciliation and outstanding external qualification remain.",
+        "Complete represented EIC royalty/passive components and remaining royalty-expense, mixed earned/passive and disposition source methods. Actual separated-spouse intake/PDF, royalty classification, capital and child-election components are committed.",
+        "Complete overlapping Marketplace benchmark source groups and historical separate-business health ordering. Disjoint shared/unshared and no-advance allocation are committed. Binding joint2025 repayment ownership still needs a controlling interpretation.",
+        "Complete actual K1 charitable guided intake and excess-distribution gain sources, prior-floor, regular/AMT NOL and partial mixed-media methods. Canonical A/E/F source/basis/nonbinding-risk handoff is committed; its guard does not finish the remaining methods.",
+        "Repair remote PDF deadline failures without weakening assertions/deadlines; repeat exact current-source unit/coverage/types/spec/inventory/builds/lint/browser and completed remote CI; final native images/SBOM/scans/recovery, support reconciliation and external qualification remain.",
         "Qualified interpretations for reduced mixed tips/bonds and negative-net1202 remain unresolved; no invented allocation or review."
       ],
       "unsupportedIsComplete": false
@@ -3638,12 +3661,71 @@
         "finalTests": 132,
         "finalFiles": 14,
         "ledger": "docs/upgrade-2026-eic-child-investment-work.md"
+      },
+      "eicSeparatedGuide": {
+        "commit": "0871438a7b27a846e94bea24cecc0bbc4d30d8ae",
+        "authorTests": 968,
+        "authorFiles": 117,
+        "browserTests": 2,
+        "independentTests": 9,
+        "privateProbes": 4,
+        "ledger": "docs/upgrade-2026-guided-eic-separated-work.md"
+      },
+      "sharedUnsharedMarketplace": {
+        "commit": "0799088396f2e5d103c2762bc18e81f1dc2e3937",
+        "authorTests": 1127,
+        "authorFiles": 147,
+        "browserTests": 2,
+        "parentTests": 20,
+        "parentFiles": 5,
+        "privateProbes": 4,
+        "pdfPages": 11,
+        "finalTests": 33,
+        "finalFiles": 8,
+        "ledger": "docs/upgrade-2026-shared-unshared-work.md"
+      },
+      "k1RoyaltyClassification": {
+        "commit": "8b3daea89c87e625c2d3146d84b34a6045e50799",
+        "authorTests": 384,
+        "authorFiles": 16,
+        "independentTests": 48,
+        "independentFiles": 4,
+        "newPrivateProbes": 3,
+        "originalFailedProbesRetained": 2,
+        "finalTests": 269,
+        "finalFiles": 11,
+        "ledger": "docs/upgrade-2026-k1-royalty-work.md"
+      },
+      "eicSeparatedReview": {
+        "commit": "b2e1dc9d2870a87eaabef8b5e23d84eb8f4789c2",
+        "authorTests": 122,
+        "authorFiles": 13,
+        "browserTests": 2,
+        "parentTests": 38,
+        "parentFiles": 4,
+        "privateProbes": 3,
+        "parentReopenedPdfs": 5,
+        "parentReopenedPages": 36,
+        "ledger": "docs/upgrade-2026-eic-separated-review-work.md"
+      },
+      "k1CharitableCanonical": {
+        "commit": "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8",
+        "authorTests": 975,
+        "authorFiles": 34,
+        "independentTests": 22,
+        "independentFiles": 4,
+        "privateProbes": 4,
+        "independentPdfs": 5,
+        "independentPdfPages": 7,
+        "independentFields": 27,
+        "remainingGainSourceMethod": "Positive excess-distribution gain now rejects; original holding period and full distribution gain handoff still required",
+        "ledger": "docs/upgrade-2026-k1-charitable-return-work.md"
       }
     },
     "currentInventory": {
-      "entries": 469,
-      "specReferences": 5127,
-      "sourceCommit": "b46499205313796c6dde33a115442d9cdeaff50b",
+      "entries": 474,
+      "specReferences": 5172,
+      "sourceCommit": "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8",
       "path": "spec/coverage/inventory-2025.json"
     },
     "previousCoverageDiagnostic": {
@@ -3730,25 +3812,18 @@
       "boundary": "Fresh base and vulnerability database only; final application image build/SBOM/scan/recovery still required."
     },
     "currentReviewCandidates": {
-      "sharedUnshared": {
-        "tree": "d7c53dc900cc795ff45070b409d1c60d471b213e",
-        "status": "Author validation and separate parent review active",
-        "published": false
-      },
-      "eicSeparatedGuide": {
-        "tree": "955b936992b9253b18a28149e29c01a739957c3d",
-        "status": "968 tests/117 files, types/spec/lint/build and 2 browser cases pass; separate review clear with9tests/3files including4private probes; integration pending",
-        "published": false
-      },
-      "k1RoyaltyClassification": {
-        "tree": "4baf3971863026e6358c4edc1e60630a77b21faf",
-        "status": "Review reproduced actual Form6198 income-offset conflict; correction required before approval",
+      "eicScheduleEInvestment": {
+        "tree": "6a47e2b60bd629087002088bc53d483add9ef97e",
+        "base": "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8",
+        "authorTests": 801,
+        "authorFiles": 15,
+        "status": "Separate source review underway; eight new source controls; no publication or qualification",
         "published": false
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.117",
-      "2026": "2026.114-law-integration-draft"
+      "2025": "2025.120",
+      "2026": "2026.117-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
