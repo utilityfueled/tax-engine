@@ -7,6 +7,81 @@ complete a checkbox.
 
 ## Current integration — 2026-10-26
 
+The branch is pushed through `d83ffe01`. Rule provenance is `2025.160` /
+`2026.157-law-integration-draft`; the inventory has 537 entries, 5,698
+specification test references and 131 explicit shared-method associations.
+All delivered package file hashes match their independently reviewed final
+candidates. Calculation, filing, human-review and model-promotion gates remain
+unchanged.
+
+| Delivered package | Commit | Bounded verification |
+| --- | --- | --- |
+| Actual zero credit and complete advance repayment for eligible health payments | `496f6444` | Final source passes 962 tests/108 files; main 49/9. Parent source and final-delta reviews pass, including six private controls. Parent independently derives five original inputs, reopens 12 PDFs/76 pages/345 populated fields and checks 61 physical, 25 reference and four workspace values. |
+| Annual ordinary cash education earnings, with exact aggregation before reporting | `b0746956` | Final source passes 1,724 tests/203 files, types/contracts/spec/inventory/lint and both builds; main 55/9. Parent final checks pass 62/9, preserving nine private controls. Ten merged PDFs/183 pages and 64 component PDFs are independently reopened. The retained first candidate's two half-dollar amounts incorrectly produced 2; the corrected exact sum produces 1. |
+| Old NOL histories composed with a separate current charitable loss | `d83ffe01` | Final source passes 772 tests/93 files and 568 strict-spec checks/5 files, types/spec/inventory/lint and both builds; main 23/8 plus 24 readiness checks/2 files. Separate source review passes 22/7 with six private controls. Independent original-source review reopens 38 PDFs/99 pages/279 populated fields and checks 193 physical and 162 reference values. |
+| Coverage-job execution budget and verified intermediate native runtime record | `03990b87`, `cc4b80d0` | Only the coverage job's total budget changes from 30 to 60 minutes; workers, test deadlines, assertions and coverage thresholds stay unchanged. The runtime record verifies downloaded native amd64 evidence for `fdfeedf57`, not later source. |
+
+Original-source browser and PDF evidence remains attributed to its recorded
+producer. Later source checks do not turn those artifacts into a new integrated
+browser run. These software/source reviews are agent reviews, not qualified
+human tax or security approval.
+
+The finite internal queue is now reconciled against actual source reachability:
+
+- **Education:** common per-expense composition for already enabled ordinary
+  receipts, assistance and supplied ESA choices; annual cash with existing
+  date/category and borrower limits; bounded actual bond reissue/ownership
+  history and rational-source reporting. Current refund chronology needs actual
+  records, not a netted scalar. See [the education queue](upgrade-2026-education-method-queue.md).
+- **Charity:** prior K-1 basis release is under independent review. Ordinary
+  operating K-1 current Form 172 classification, binding at-risk allocation,
+  positive charitable benefit with COD/modified absorption, and changed
+  filing-unit ownership histories remain internal work. See [the charity queue](upgrade-2026-charity-method-queue.md).
+- **Health:** reported-versus-original advance cents are under independent
+  source/PDF review; signed negative Worksheet W remaining-capacity treatment
+  and its actual source-gross handoff are being implemented. Remaining actual
+  payer/person and marriage combinations stay in the finite health queue.
+- **Verification:** investigate the retained remote coverage failures, then run
+  the complete integrated checks and final native images, SBOM/scans and
+  recovery rehearsal. No private performance candidate is delivered yet.
+
+The `fdfeedf57` CI coverage job was cancelled after its confirmed 30-minute
+execution limit. Its partial log also reports 16 failed cases in twelve suites;
+there is no completed coverage report. A focused instrumented local run passes
+all 88 tests in those suites, but deliberately retains full-project coverage
+scope and therefore exits below global thresholds. That diagnostic is not a
+coverage pass and does not resolve the remote failures. The last complete local
+coverage evidence remains `3669b00`: 19,086 tests/1,216 files, 86.78% branches,
+90.49% functions and every unchanged threshold passing; all eight static checks
+and 434 production browser cases pass with zero retries, with five hosted-only
+skips. Later packages are excluded.
+
+The independently inspected [native amd64 record](upgrade-2026-runtime-fdfeedf.json)
+for `fdfeedf57` records image `sha256:dc81ec884ed992d7758163b9096271c9e2c2664ed1fc845577f08a6fdc427fed`,
+44 templates, non-root read-only execution and actual health. All six recovery
+phases pass with nine database tables, two tenants, exact provider cost, browser
+facts and original document bytes. Container browser checks pass 454 cases with
+zero configured retries; five hosted-only cases are skipped. The separate
+self-host browser job passes 454 with five skips and zero observed retries,
+but its configured retry allowance remains one. Unit CI passes 19,211 tests in
+1,267 files. None of this qualifies later source or staging.
+
+The runtime scan has 157 matches across 67 advisories: 54 High, 47 Medium,
+10 Low and 46 Negligible; no Critical, npm or available-fixed-version matches.
+The exact advisory/package/version/fix tuples equal the prior inspected image.
+Owner acceptance and its November 7 expiry remain pending. The October 26
+production dependency audit records zero advisories across 425 dependencies.
+
+The goal remains **active, incomplete and not release-ready**. The
+[external-action handoff](upgrade-2026-external-actions.md) retains missing
+qualified reviewers, launch-state demand, authorized staging, provider account
+access and approved evaluation funds, final official forms and advisory
+acceptance. Precise controlling tax interpretations remain separate from the
+internal methods above. No production deployment, filing enablement or model
+promotion has occurred.
+
+## Previous checkpoint through 568c853
+
 The branch is pushed through `568c853`. Rule provenance is `2025.157` /
 `2026.154-law-integration-draft`; the inventory has 534 entries, 5,651
 specification test references and 128 explicit shared-method associations.

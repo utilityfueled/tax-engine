@@ -1,5 +1,7 @@
 # Named federal requirements: remaining implementation audit
 
+**Current reconciliation through `d83ffe01`, October 26:** the original audit and dated follow-through below are historical. Use the [durable checklist](upgrade-2026-checklist.md), [education queue](upgrade-2026-education-method-queue.md), and [charity queue](upgrade-2026-charity-method-queue.md) for current source reachability and remaining work. Health cents, signed worksheet capacity, actual payer/person/marriage methods, remote coverage repairs and final integrated/runtime checks remain active. Later deliveries do not imply tax, final-form, human, provider or staging qualification.
+
 Read-only audit, October 25, 2026, committed base `907b6dbb431767cfa64452bfb75151179ff818e2`. The uncommitted charity work is excluded. Scope is section 3 of `docs/upgrade-2026-execution-brief.md` and the actual-facts requirement that makes its ordinary calculations usable. This is a code/spec reachability assessment, not fresh numerical qualification of every formula.
 
 The brief is not fully implemented merely because unsupported paths throw. Two ordinary guided-source omissions are confirmed, and several named forms still have explicitly unfinished methods. Conversely, a named form does not imply implementing every specialized IRS election before its bounded ordinary scenario can be qualified.

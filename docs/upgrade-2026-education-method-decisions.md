@@ -1,4 +1,6 @@
-# Remaining education method decisions
+# Historical education method decisions
+
+**Current queue, October 26:** [the source reconciliation](upgrade-2026-education-method-queue.md) supersedes the older unfinished-route descriptions below. Actual ESA, assistance, shared room/board and annual ordinary cash packages are delivered. Ordinary receipt composition, existing-category annual cash limits and bounded bond history/rational reporting remain internal implementation. Only the precisely identified competing-source interpretations remain separate; guards are not completion.
 
 Source review: 2026-10-25. These boundaries do not qualify a tax year, filing
 artifact or human review. Missing source facts must be supplied from actual
