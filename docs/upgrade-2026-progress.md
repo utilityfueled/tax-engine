@@ -2,9 +2,9 @@
 
 ## Current checkpoint — 2026-10-26
 
-The branch is pushed through `d5d69b8d`. Rule provenance is `2025.164` /
-`2026.161-law-integration-draft`; the inventory has 543 entries, 5,742
-specification test references and 136 explicit shared-method associations.
+The branch is pushed through `771c638a`. Rule provenance is `2025.165` /
+`2026.162-law-integration-draft`; the inventory has 544 entries, 5,757
+specification test references and 137 explicit shared-method associations.
 Delivered tax packages match their reviewed final trees; the two performance
 runtime files match their independent review hashes. Calculation, filing,
 human-review and model-promotion gates remain unchanged.
@@ -22,6 +22,8 @@ human-review and model-promotion gates remain unchanged.
 | Consistent mobile layout measurement | `d5d69b8d` | Both existing cases pass three runs each, one worker, zero retries. Independent source review and controlled scroll, real-offset and hidden-element probes preserve the original assertions. Production build, web types and focused lint pass. |
 | Reuse validated cases and scores within one evaluation report | `6d015f1d` | Main passes 32 tests/2 files. Independent review passes 35/3 with two workers; changed inputs, review/provenance, costs, privacy and rejection results match the baseline. No provider evaluation or promotion is claimed. |
 | Bounded PDF parse/save batches | `c4c199fb` | Independent review passes 53/3 with one worker; seven representative PDFs spanning 686 fields are byte-identical. The private remaining-PDF cohort passes 1,269/196, with root types and scoped lint. Main utility/new-health consumers pass 5/3. |
+| Ordinary education receipt qualification, actual refunds and supplied allocations | `771c638a` | Final source passes 1,751 tests/217 files, static checks and both builds; main 20/9. Independent source review and original/PDF review cover 77 PDFs/328 pages/422 fields. Final desktop/mobile browser passes 2/2 with zero retries. |
+| Reuse the unchanged synthetic corpus digest in evaluation fixtures | `5b1b57cc` | Main 23/1 and private cohort 35/3 pass. Independent review freezes the entire corpus and confirms all 23 cases pass without mutation. All twelve profiled comparison outcomes match; no production provider or qualification code changes. |
 
 Original-source browser and PDF evidence remains attributed to its recorded
 producer. Later source checks do not turn those artifacts into a new integrated
@@ -30,11 +32,10 @@ human tax or security approval.
 
 The finite internal queue is now reconciled against actual source reachability:
 
-- **Education:** common per-expense composition for already enabled ordinary
-  receipts, assistance and supplied ESA choices; annual cash with existing
-  date/category and borrower limits; bounded actual bond reissue/ownership
-  history and rational-source reporting. Current refund chronology needs actual
-  records, not a netted scalar. See [the education queue](upgrade-2026-education-method-queue.md).
+- **Education:** common per-expense composition and actual current-year retained
+  refund records are delivered. Annual cash with existing date/category and
+  borrower limits, then bounded actual bond reissue/ownership history and
+  rational-source reporting remain. See [the education queue](upgrade-2026-education-method-queue.md).
 - **Charity:** prior K-1 basis release and ordinary operating K-1 current
   Form 172 classification are delivered. Binding at-risk allocation,
   positive charitable benefit with COD/modified absorption, and changed

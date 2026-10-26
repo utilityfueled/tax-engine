@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "d5d69b8de8dce060cbca67be20fea455bbe1e8ca",
+    "lastRecordedCommit": "771c638a6d5386f64c8bbc0f2abcbc84f1dc7be7",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1311,12 +1311,12 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Education: common actual per-expense composition, existing-category annual cash limits, bounded actual bond ownership/reissue history and rational reporting.",
+      "Education: annual cash with existing date/category and borrower limits, then bounded actual bond ownership/reissue history and rational reporting. Ordinary receipt composition and actual current-year retained refund records delivered.",
       "Charity: binding at-risk source allocation, positive benefit COD with modified absorption, changed filing-unit histories.",
       "Health: finite remaining payer/person and marriage combinations.",
       "Verification: resolve retained remote coverage failures without changing test deadlines, assertions or thresholds; final full integrated/remote/native image/SBOM/scan/recovery checks."
     ],
-    "latestIntegratedCommit": "d5d69b8de8dce060cbca67be20fea455bbe1e8ca",
+    "latestIntegratedCommit": "771c638a6d5386f64c8bbc0f2abcbc84f1dc7be7",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1662,7 +1662,7 @@
       "functionThresholdPercent": "90"
     },
     "remainingInternalWork": [
-      "Education: common actual per-expense composition, existing-category annual cash limits, bounded actual bond ownership/reissue history and rational reporting.",
+      "Education: annual cash with existing date/category and borrower limits, then bounded actual bond ownership/reissue history and rational reporting. Ordinary receipt composition and actual current-year retained refund records delivered.",
       "Charity: binding at-risk source allocation, positive benefit COD with modified absorption, changed filing-unit histories.",
       "Health: finite remaining payer/person and marriage combinations.",
       "Verification: resolve retained remote coverage failures without changing test deadlines, assertions or thresholds; final full integrated/remote/native image/SBOM/scan/recovery checks."
@@ -1687,7 +1687,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "d5d69b8de8dce060cbca67be20fea455bbe1e8ca",
+    "lastPushedCommit": "771c638a6d5386f64c8bbc0f2abcbc84f1dc7be7",
     "currentBrowserRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -4698,11 +4698,11 @@
       }
     },
     "currentInventory": {
-      "entries": 543,
-      "specReferences": 5742,
-      "sourceCommit": "a1fb36b8224d770f7c9b9662e15025f669bdaac2",
+      "entries": 544,
+      "specReferences": 5757,
+      "sourceCommit": "771c638a6d5386f64c8bbc0f2abcbc84f1dc7be7",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 136,
+      "explicitAssociations": 137,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -5005,11 +5005,18 @@
         "mainTests": 10,
         "mainFiles": 6,
         "qualification": "Bounded synthetic source and artifact agent reviews; no human, final-form filing or release qualification."
+      },
+      "ordinaryEducationExpenseComposition": {
+        "status": "delivered; independent agent source and original/PDF reviews clear; no human tax qualification",
+        "deliveredCommit": "771c638a6d5386f64c8bbc0f2abcbc84f1dc7be7",
+        "deliveryTree": "86732f7b145ed0e948ce286ece3eed47f5f93c9f",
+        "deliveryReceipt": ".local/upgrade-evidence/parent-education-expense-delivery-verification.json",
+        "receiptSha256": "3d7d26bdd103e889b30e568294dbc6c21b4e94843f56fe3a2200a2997f4a713a"
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.164",
-      "2026": "2026.161-law-integration-draft"
+      "2025": "2025.165",
+      "2026": "2026.162-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -7638,7 +7645,8 @@
         "sourceReport": {
           "path": ".local/upgrade-evidence/facts-education-scope-reconciliation.md",
           "sha256": "51b479c5841ede1f41661ef95d19ffbe32116a72b83f0597515f15cc4be6cf18"
-        }
+        },
+        "deliveredOrdinaryComposition": "771c638a6d5386f64c8bbc0f2abcbc84f1dc7be7"
       },
       "charity": {
         "document": "docs/upgrade-2026-charity-method-queue.md",
@@ -7994,6 +8002,37 @@
       "failureCause": "Unresolved: inline failures have names and durations, but cancellation prevented the final error details. Durations alone do not establish timeout causes.",
       "failuresRemainUnresolved": true,
       "logSha256": "f94b58436f4a1d5adfbbb473003296b80d6bed2dd28b09987aeca283a354df58"
+    },
+    "ordinaryEducationExpenseComposition": {
+      "commit": "771c638a6d5386f64c8bbc0f2abcbc84f1dc7be7",
+      "ledger": "docs/upgrade-2026-education-expense-composition-work.md",
+      "deliveryManifestSha256": "8dfc6b132ba73f95a63f4fe95517efade3abb0fbbb7e5541ba50b385433df331",
+      "testedTree": "3f7ab544bb91610499274dc0f2f06bff17aa1501",
+      "deliveryTree": "86732f7b145ed0e948ce286ece3eed47f5f93c9f",
+      "tests": 1751,
+      "files": 217,
+      "workers": 1,
+      "mainTests": 20,
+      "mainFiles": 9,
+      "productionBrowserPassed": 2,
+      "browserRetries": 0,
+      "independentPdfReportSha256": "3909015136e0e893d0449c0f8bfda0870cd5a872c27285f0c8fb74f508430bc8",
+      "pdfs": 77,
+      "pages": 328,
+      "populatedFields": 422,
+      "qualification": "Agent source/software/output reviews, no independent human tax qualification or readiness promotion"
+    },
+    "evaluationFixtureDigestReuse": {
+      "commit": "5b1b57cc44f25fc729ee472fd090762ea0038734",
+      "ledger": "docs/upgrade-2026-eval-fixture-reuse-work.md",
+      "mainTests": 23,
+      "files": 1,
+      "privateCohortTests": 35,
+      "privateCohortFiles": 3,
+      "independentReviewSha256": "b2ba1aed91c44dbe22d0acb90e28a1416bb74e1919f966a8893581aada879a7a",
+      "corpusDeepFrozenAndUnchanged": true,
+      "comparisonOutcomesUnchanged": 12,
+      "qualification": "Test setup only; no provider results or full-coverage claim"
     }
   },
   "historicalReleaseBlockers": {

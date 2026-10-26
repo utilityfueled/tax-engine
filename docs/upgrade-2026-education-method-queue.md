@@ -20,7 +20,11 @@ The old `docs/upgrade-2026-education-method-decisions.md` and early Education/52
 
 The final annual check cohort passed 1,724 tests in 203 files, root/web/contracts types, 5,681 references, inventory, scoped lint and both builds. This audit does not recast that scoped cohort as full current-main release verification.
 
-## Confirmed internal compositions still missing
+## Delivery update — ordinary receipt composition
+
+Commit `771c638a` delivers item 1 below, including independent ordinary receipt qualification, supplied ESA/cash allocations, actual non-tuition credit character and complete current-year beneficiary-retained cash refund records. The [package ledger](upgrade-2026-education-expense-composition-work.md) records the original failures, exact source and PDF reviews, 1,751 tests/217 files, final production desktop/mobile checks and parent integration. Other refund recipients, prior years, recontributions and corrected benefits remain separately identified methods. The descriptions below retain the original audit evidence; item 1 is no longer pending. Items 2 and 3 remain the finite internal queue.
+
+## Original confirmed internal compositions
 
 1. **Use one actual per-expense qualification/composition path for ordinary non-tuition sources.** The guide exposes required postsecondary books/supplies, computers and special-needs services, and retains actual assistance and ESA allocations. Both tuition source helpers currently include every non-room/board receipt for that beneficiary, require every receipt to be tuition and require a linked prepaid benefit for every receipt. Three private original-record probes confirm rejection of prepaid required books with assistance, otherwise valid prepaid tuition assistance beside an unrelated cash book receipt, and actual prepaid-book/ESA choices. Direct calculation and the real guided converter both reject. These are internal enabled compositions, not an authority gap or justification to select a new election. Scope the follow-up around the common receipt/source qualification boundary, then carry its result through educator, canonical and private review consumers; do not create separate arbitrary category-pair packages.
 
