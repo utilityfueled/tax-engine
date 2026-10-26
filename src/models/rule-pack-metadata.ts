@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.141",
+    ruleVersion: "2025.142",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p561", section: "Deductions of More Than5000 and Number of Qualified Appraisals; known annual same-asset gifts across recipients", revision: "Final12/2025 and digital-assetFAQ78; exact original tentative contributions aggregate before percentage limits; required actual appraisal sources, legacy unverified status and outside-ledger determinations retained; final human/form qualification remains separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i8862", section: "Actual current Form8862 EIC Parts I/II after independent disallowance history", revision: "Final December2025 form/instructions; original claimant and child identity, distinct residence days, birth/death evidence and income-only shortcut bound through canonical calculation, local guide and private review pages; deceased-claimant numeric short-year method and other credit parts remain separate; no filing or human qualification promotion", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p970", section: "Chapter6 Worksheet6-3 beneficiary ratio and separate account histories; actual shared tuition QTP and multiple Coverdell source allocations", revision: "IRC529(c)(3)(B)(v)/(vi),530(d)(2)(C), Notice2016-13; each original benefit, account basis, expense and credit conserved with Decimal; source-bound guide/review and independent agent controls, with final human/form qualification still pending", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Separate actual owners and businesses with complete shared and household-only Marketplace policies, independent person payments and source-conserved specified premiums", revision: "Final2025 Specified Premiums, W/X and monthly credit attribution; original plan identities, same-owner income limits, QBI, guide and private PDF review retained; partial coverage-family, unequal paid/allocation, marriage and binding joint repayment methods remain separate; full2026 and human qualification gates unchanged", retrievedAt: "2026-10-26" },
@@ -181,11 +182,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.138-law-integration-draft",
+    ruleVersion: "2026.139-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p561", section: "Deductions of More Than5000 and Number of Qualified Appraisals; known annual same-asset gifts across recipients", revision: "Final12/2025 and digital-assetFAQ78; exact original tentative contributions aggregate before percentage limits; required actual appraisal sources, legacy unverified status and outside-ledger determinations retained; final human/form qualification remains separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i8862", section: "Actual current Form8862 EIC source questions and independent disallowance-history reconciliation", revision: "IRC32(k), Reg1.32-3 and final December2025 source instructions; actual owner/child/day records and local guide implemented without a credit override; historical2025 review only, deceased-claimant numeric short-year method and other credit parts remain separate, full2026 and human qualification gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p970", section: "Chapter6 Worksheet6-3 beneficiary ratio and separate account histories; actual shared tuition QTP and multiple Coverdell source allocations", revision: "IRC529(c)(3)(B)(v)/(vi),530(d)(2)(C), Notice2016-13; each original benefit, account basis, expense and credit conserved with Decimal; source-bound guide/review and independent agent controls, with final human/form qualification still pending", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Separate actual owners and businesses with complete shared and household-only Marketplace policies, independent person payments and source-conserved specified premiums", revision: "Final2025 Specified Premiums, W/X and monthly credit attribution; original plan identities, same-owner income limits, QBI, guide and private PDF review retained; partial coverage-family, unequal paid/allocation, marriage and binding joint repayment methods remain separate; full2026 and human qualification gates unchanged", retrievedAt: "2026-10-26" },

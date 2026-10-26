@@ -1,0 +1,28 @@
+form: "Digital-asset similar-property appraisal sources"
+fullName: "Known annual same-asset contributions across recipients"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p561"
+retrievedAt: "2026-10-26"
+notes: |
+  Publication561 (12/2025), Deductions of More Than $5,000 and Number of
+  Qualified Appraisals: similar property is combined across recipients in the
+  same tax year. Digital-asset FAQ78 requires an appraisal above $5,000.
+  This consistency check uses original contribution values before ScheduleA
+  percentage limits and the known same asset identifier (trimmed, case-folded).
+  It does not infer equivalence between different asset names or decide that
+  other supplied property is dissimilar. Actual appraisal determinations must
+  still consider all similar gifts, including originals outside this ledger.
+  Historical unconfirmed inputs stay unverified; no new filing qualification.
+lines:
+  - line: "aggregate"
+    description: "Known same-asset gifts cannot each claim a small-gift exemption"
+    formula: "Two positive BTC gifts valued4000 each total8000 across recipients. For source-confirmed2025 and all2026 inputs, each represented positive contribution requires appraisalRequired=true and qualifiedAppraisalObtained=true. Unknown or false answers reject; originals and tentative values remain unchanged."
+    testRef: "tests/engine/forms/crypto-similar-property-appraisal.test.ts::checks the known annual asset group across recipients and row order"
+  - line: "threshold"
+    description: "Use exact tentative contribution values at the statutory threshold"
+    formula: "Two2500 same-asset contributions total5000 and do not alone force an appraisal. Increasing one by0.01 crosses the threshold. Short-term or basis-reduced gifts use their actual contribution value, not unreduced FMV."
+    testRef: "tests/engine/forms/crypto-similar-property-appraisal.test.ts::uses exact values and the contribution basis at the threshold"
+  - line: "source-boundary"
+    description: "Preserve actual outside-ledger requirements and historical unknown status"
+    formula: "Do not discard an original requirement because this ledger is small. Known unqualified or zero-valued gifts add zero to the claimed group. Distinct asset identifiers are not guessed equivalent. Legacy unconfirmed2025 sources remain explicitly unverified."
+    testRef: "tests/engine/forms/crypto-similar-property-appraisal.test.ts::retains external appraisal facts zero and historical uncertainty"

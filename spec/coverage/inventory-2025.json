@@ -518,6 +518,26 @@
       ]
     },
     {
+      "key": "federal/crypto-similar-property-appraisal",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p561",
+      "specPath": "spec/federal/crypto-similar-property-appraisal.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/current-charitable-candidates",
       "jurisdiction": "federal",
       "taxYear": 2026,

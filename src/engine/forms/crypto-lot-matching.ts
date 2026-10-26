@@ -1301,6 +1301,7 @@ export function calculateCryptoDonations(
   const contributionAmounts = { cashPublic: d("0"), noncashPublic: d("0"), capitalGainPublic: d("0"), cashPrivate: d("0"), noncashPrivate: d("0"), capitalGainPrivate: d("0") };
   const longTermDonations: CryptoDonationResult["longTermDonations"] = [];
   const shortTermDonations: CryptoDonationResult["shortTermDonations"] = [];
+  const similarProperty = new Map<string, { value: Decimal; confirmed: CryptoDonation[] }>();
 
   for (const don of donations) {
     const fmv = d(don.fairMarketValueAtDonation);
@@ -1332,6 +1333,15 @@ export function calculateCryptoDonations(
     const contribution = capitalGainProperty && recipient?.privateNonoperating !== true ? fmv : Decimal.min(fmv, basis);
     if (strict && ((contribution.gt(5000) && don.appraisalRequired !== true)
       || (don.appraisalRequired === true && don.qualifiedAppraisalObtained !== true))) throw new Error("Crypto donation qualified appraisal source is required");
+    if (contribution.gt(0)) {
+      // Known identical assets are similar property even across recipients.
+      // Other names and outside-ledger gifts still need the actual source review.
+      const key = don.asset.trim().toUpperCase();
+      const group = similarProperty.get(key) ?? { value: d("0"), confirmed: [] };
+      group.value = group.value.plus(contribution);
+      if (strict) group.confirmed.push(don);
+      similarProperty.set(key, group);
+    }
     const category = capitalGainProperty ? otherRecipient ? "capitalGainPrivate" : "capitalGainPublic"
       : otherRecipient ? "noncashPrivate" : "noncashPublic";
     contributionAmounts[category] = contributionAmounts[category].plus(contribution);
@@ -1357,6 +1367,13 @@ export function calculateCryptoDonations(
       audit.record("Crypto Donation", "short-term", `${don.asset} donated to ${don.charityName}`,
         contribution,
         `Held one year or less: tentative min(FMV ${fmv}, basis ${basis}) before ScheduleA limits`);
+    }
+  }
+
+  for (const group of similarProperty.values()) {
+    if (group.value.gt(5000) && group.confirmed.some(don => don.appraisalRequired !== true
+      || don.qualifiedAppraisalObtained !== true)) {
+      throw new Error("Crypto donations of similar property exceed $5,000; reconcile each gift's qualified appraisal sources");
     }
   }
 
