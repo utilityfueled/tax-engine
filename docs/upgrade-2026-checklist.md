@@ -5,66 +5,55 @@ progress log and checkpoint are evidence for their recorded commits, not current
 qualification. Resume here after compaction. Do not remove release gates to
 complete a checkbox.
 
-## Current integration — 2026-10-25
+## Current integration — 2026-10-26
 
-Current additions are pushed through `01c98e3`: official final-form/provider
-source refresh (`5a9cf6b`), verified crypto gift carry handoff and corrected
-crypto-only dispatch (`d1d1ff0`), and actual nonbinding two-owner Marketplace
-health/QBI attribution (`01c98e3`). Earlier current five-category charitable
-carry (`0b5e881`), K1 semantic labels (`3b93d69`), source/guide/review, marriage
-and K12 packages remain recorded below. Each delivery has exact-source checks
-and separate agent review. Human tax qualification remains open.
+Current additions are pushed through `010879a`: actual claimant EIC sources
+and joint age eligibility (`dbd7db5`), separate-owner Marketplace income limits
+(`9dff0ad`), prior other-charity capacity (`9ade041`), the shared capital-gift
+ceiling (`329b26f`) and explicit nonitemized charitable category carry
+(`010879a`). Each package has scoped checks and separate agent review. Human
+tax and final-form qualification remain open.
 
-The latest complete immutable integration run is `9bcf47b`: **18,079 tests in
-1,028 files**, zero failures/skips, all three type checks, spec/inventory, both
-builds and lint pass (zero errors, 4,790 warnings). Production Chromium passes
-**368 cases with zero retries**; five hosted-only skips provide no staging
-evidence. The full coverage command **fails** because functions are **89.96%**
-against the unchanged90% threshold. Branches pass at **86.97%** against85%;
-statements92.07% and lines94.68% pass. Parent is adding meaningful K1 history
-editing/confirmation coverage. No threshold, exclusion or privacy gate changes.
-Later packages are excluded from these results; final current checks remain due.
+Full coverage on immutable `36d5fab` passes **18,101 tests in 1,038 files**, with
+zero failures or skips. Branches are **87.06%** against the unchanged 85% gate;
+functions are **90.38%** against 90%, statements 92.16% and lines 94.76%.
+The new K1 history interaction tests exercise actual editing and confirmation;
+no thresholds or exclusions changed. This supersedes the earlier `9bcf47b`
+function-coverage failure. Later source packages are excluded and require a
+fresh integrated run.
 
-Crypto's corrected source passes653 cases/70 files, root/web types,4,986 spec
-references and lint with no errors/warnings. Separate parent review passes10
-cases, including holding-date, basis and crypto-only controls. The initial
-mixed-source tests had hidden a real dispatch error; it is fixed with dedicated
-regressions. The package reuses existing actual-year crypto valuation and
-substantiation, adds no election and cannot create a cash deduction.
+The last complete build/browser integration remains `9bcf47b`: 18,079 unit
+tests, all three type checks, spec/inventory, both builds and lint pass.
+Production Chromium passes 368 cases with zero retries; five hosted-only skips
+provide no staging evidence. The latest remote CI and Web runs for `010879a`
+were still in progress when read. Earlier health/charity runs were cancelled by
+subsequent pushes; no completed remote result is inferred.
 
-Two-owner health passes260 cases/36 files, root/web types and production build.
-Separate review passes15 cases/7 files; final rebase passes21 cases/8 files and
-4,996 references. Both four-page review PDFs were saved, reopened and inspected;
-all pages retain review notices and redact synthetic taxpayer identifiers.
-This bounded delivery covers owner income sufficient for each owner's specified
-premiums. Binding owner limits and joint2025 capped-repayment attribution remain
-separate active methods; one spouse cannot borrow the other's earned income.
+The inventory is regenerated from `010879a`: **455 entries and 5,033 literal
+spec references pass**. The last package audit reports zero advisories across
+521 locked dependencies. The official refresh retains 55 source-response
+hashes; final 2026 forms, authenticated provider availability and human review
+remain separate gates. The refreshed local base and Grype database are ready
+for the final application image/SBOM/scan/recovery run.
 
-The source refresh retains55 hashed responses. All48 federal final-form PDF
-endpoints returned PDFs: one annual2026 Form4952,45 annual2025 forms and two
-separately revisioned forms.37 earlier hashes remain unchanged. Parent rehashed
-all55 and checked page counts. The proposed Schedule3-A/PRWORA rule remains a
-proposal; cancelling a hearing does not make it effective law. Public model and
-price pages were refreshed without authenticated calls, paid use or promotion.
+The EIC table and statutory ceiling correction, complete claimant dependency
+and abode sources, and the marriage first-full-month correction are frozen for
+independent review and full checks. Ordinary K1 charitable source/basis and the
+finite Marketplace and charitable history methods continue. A guard or a
+reviewed helper does not complete an unsupported method.
 
-The inventory now covers `01c98e3`:451 entries pass generation/freshness. The
-package audit still reports zero advisories across521 locked dependencies and
-the lockfile is unchanged. The local arm64 base and Grype database are refreshed;
-final application image/SBOM/scans/recovery are still due. Exact remote health
-HEAD was verified; CI/Web were in progress when read. Prior crypto/source runs
-were cancelled by subsequent pushes. A push is not a remote passing result.
+The goal remains active and the upgrade is **not release-ready**. Required
+human reviews and controlling interpretations, provider access and approved
+budget, authorized staging, launch-state demand, final forms and advisory-owner
+acceptance remain outstanding. The user explicitly approved pushes to the
+existing public `utilityfueled/tax-engine` upgrade branch after automatic review
+requested that destination approval. No production, filing or model promotion
+is authorized by that approval.
 
-Active internal work is current-law EIC eligibility and actual guide facts,
-binding-owner health, prior-B/current-C charitable capacity and the finite
-prior/nonitemized/floor/NOL/media queue, actual K1 handoff, coverage repair and
-final integrated/runtime verification. Specialized excluded methods remain
-named in their ledgers and are not counted as implemented.
+## Earlier package evidence
 
-The goal stays active and the upgrade is **not release-ready**. Human reviews
-and controlling interpretations, provider access/approved budget, authorized
-staging, launch-state demand, final forms and advisory-owner decisions remain
-external. No tax arithmetic decision is expected from the user. Resume here
-and from `ongoingExecution` in the checkpoint.
+These records retain the scope known at each package. Later delivery references
+and the current method queue supersede older work-in-progress labels.
 
 - `b56402c`: actual assistance passes 426 cases/34 files, 26 readiness cases,
   root/web types, 4,898 references and both builds; separate source review passes.

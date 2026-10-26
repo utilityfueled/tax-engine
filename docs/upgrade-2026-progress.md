@@ -2,42 +2,50 @@
 
 ## Current checkpoint
 
-Current additions through `dd1ef96` include actual K1/QBI loss character and
-canonical sources (`266aee3`), prior public cash with current ordinary-property
-carry candidates (`c89c81c`), and the pure marriage worksheet prerequisite
-(`dd1ef96`). Each has scoped checks and separate agent review. The QBI guided
-collector and canonical marriage election remain in progress; a helper or a
-source guard does not complete those methods.
+Current additions are pushed through `010879a`: actual claimant EIC sources
+and joint age eligibility (`dbd7db5`), separate-owner Marketplace income limits
+(`9dff0ad`), prior other-charity capacity (`9ade041`), the shared capital-gift
+ceiling (`329b26f`) and explicit nonitemized charitable category carry
+(`010879a`). Each package has scoped checks and separate agent review. Human
+tax and final-form qualification remain open.
 
-The full unit suite on exact committed `095d5bd` passes **17,960 tests in 987
-files**, with zero failures or skips. Its production browser suite passes
-**362 tests with zero retries**; five hosted-only cases remain skipped. Both
-builds pass. Pinned Node, Python/pypdf, original sample documents and disposable
-loopback PostgreSQL were present. Later packages are excluded from those results.
-The previous `7523384` browser failure and focused `cb8c139` repair remain in the
-[browser repair ledger](upgrade-2026-charity-heading-browser-repair.md).
+Full coverage on immutable `36d5fab` passes **18,101 tests in 1,038 files**, with
+zero failures or skips. Branches are **87.06%** against the unchanged 85% gate;
+functions are **90.38%** against 90%, statements 92.16% and lines 94.76%.
+The new K1 history interaction tests exercise actual editing and confirmation;
+no thresholds or exclusions changed. This supersedes the earlier `9bcf47b`
+function-coverage failure. Later source packages are excluded and require a
+fresh integrated run.
 
-Full coverage on `7523384` passes 17,934 tests in 975 files at **87.01% branches**
-against the unchanged 85% gate. Root/contracts/web types, 4,833 spec references,
-its 425-entry inventory, both builds and lint also pass. Coverage and full
-integration must run again on the final source; no later package inherits that
-qualification.
+The last complete build/browser integration remains `9bcf47b`: 18,079 unit
+tests, all three type checks, spec/inventory, both builds and lint pass.
+Production Chromium passes 368 cases with zero retries; five hosted-only skips
+provide no staging evidence. The latest remote CI and Web runs for `010879a`
+were still in progress when read. Earlier health/charity runs were cancelled by
+subsequent pushes; no completed remote result is inferred.
 
-The inventory is refreshed against `dd1ef96`: all 435 entries pass freshness checks. The latest
-package advisory refresh still reports zero advisories across 521 locked
-dependencies; the lockfile is unchanged. OS findings and final runtime scans
-remain separate. The last observed `c89c81c` remote CI and Web runs were in
-progress; earlier push runs were canceled by subsequent package pushes.
-No completed remote result or hosted staging evidence is inferred.
+The inventory is regenerated from `010879a`: **455 entries and 5,033 literal
+spec references pass**. The last package audit reports zero advisories across
+521 locked dependencies. The official refresh retains 55 source-response
+hashes; final 2026 forms, authenticated provider availability and human review
+remain separate gates. The refreshed local base and Grype database are ready
+for the final application image/SBOM/scan/recovery run.
 
-The goal remains active and the upgrade is **not release-ready**. The assistance
-extension is under separate review on immutable tree `1719150`: 426 cases in 34
-files, root/web types, 4,890 spec references and the production web build pass.
-Both saved reference pages were rendered and inspected. Charity recipient
-classification, remaining Marketplace methods, actual QBI intake and final
-integration continue. Human review, provider access/budget, authorized staging,
-launch-state demand, final forms and advisory-owner requirements remain open.
-Resume here and from `ongoingExecution` in the checkpoint.
+The EIC table and statutory ceiling correction, complete claimant dependency
+and abode sources, and the marriage first-full-month correction are frozen for
+independent review and full checks. Ordinary K1 charitable source/basis and the
+finite Marketplace and charitable history methods continue. A guard or a
+reviewed helper does not complete an unsupported method.
+
+The goal remains active and the upgrade is **not release-ready**. Required
+human reviews and controlling interpretations, provider access and approved
+budget, authorized staging, launch-state demand, final forms and advisory-owner
+acceptance remain outstanding. The user explicitly approved pushes to the
+existing public `utilityfueled/tax-engine` upgrade branch after automatic review
+requested that destination approval. No production, filing or model promotion
+is authorized by that approval.
+
+## Prior execution evidence
 
 Recent packages add actual current-loss intake (`8cf0e8e`), ordinary investment
 capital origins (`3ff896c`), original digital-asset sources (`e7bd6e8`) and all

@@ -299,6 +299,26 @@
       ]
     },
     {
+      "key": "federal/charitable-prior-other-capacity",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p526",
+      "specPath": "spec/federal/charitable-prior-other-capacity.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/charitable-private-media",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -775,6 +795,25 @@
       "status": "unsupported",
       "knownGaps": [
         "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/eic-claimant-eligibility",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p596",
+      "specPath": "spec/federal/eic-claimant-eligibility.yaml",
+      "enginePath": "src/engine/forms/eic-claimant-eligibility.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -4448,6 +4487,26 @@
       ]
     },
     {
+      "key": "federal/marketplace-health-owner-income",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-drop/rp-14-41.pdf",
+      "specPath": "spec/federal/marketplace-health-owner-income.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/marketplace-health-owners",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -4608,6 +4667,25 @@
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-120/t26/s170/",
       "specPath": "spec/federal/nonitemized-charitable-carryover.yaml",
       "enginePath": "src/engine/forms/nonitemized-charitable-carryover.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/nonitemized-charitable-categories",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-120/t26/s170/",
+      "specPath": "spec/federal/nonitemized-charitable-categories.yaml",
+      "enginePath": "src/engine/forms/nonitemized-charitable-categories.ts",
       "packetPath": null,
       "specExists": true,
       "engineExists": true,
