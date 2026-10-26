@@ -16,6 +16,9 @@ export interface SelectedCharitableCarryover {
 export function calculateSelectedCharitableCarryover(input: {
   taxYear: number; deductionMethod: "standard" | "itemized" | "nonitemized"; scheduleA: ScheduleAResult;
 }): SelectedCharitableCarryover {
+  const currentNol = input.taxYear === 2026 && input.scheduleA.currentCharitableNol?.method === "2026_current_single_category_nol_itemized"
+    && input.scheduleA.currentCharitableNol.sourceDigest === input.scheduleA.charitableSourceDigest
+    && input.deductionMethod === "itemized" && input.scheduleA.charitableCarryforwardDetail.length === 0;
   const nonitemized = input.scheduleA.nonitemizedCharitableCarryover;
   const current = input.scheduleA.currentCharitableCandidates;
   const priorCashProperty = input.scheduleA.priorCashCurrentProperty;
@@ -25,7 +28,7 @@ export function calculateSelectedCharitableCarryover(input: {
     || current?.method === "2026_current_public_and_other_cash_dual"
     || current?.method === "2026_current_ordinary_receipts_dual")
     && input.scheduleA.charitableCarryforwardDetail.length === 0;
-  if (input.taxYear !== 2025 && !currentOnly && !separatePriorFloor && (input.taxYear !== 2026 || !nonitemized
+  if (input.taxYear !== 2025 && !currentOnly && !separatePriorFloor && !currentNol && (input.taxYear !== 2026 || !nonitemized
     || (nonitemized.method !== "2026_nonitemized_public_cash" && nonitemized.method !== "2026_nonitemized_ordinary_categories") || input.deductionMethod === "itemized"
     || nonitemized.deductionMethod !== input.deductionMethod)) {
     throw new Error("Selected charitable history requires its separate2026 floor and nonitemizer method");

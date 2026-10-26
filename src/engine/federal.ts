@@ -11,6 +11,7 @@ import { validateQofDispositionFacts } from "./forms/qof-disposition-facts.js";
  */
 
 import Decimal from "decimal.js";
+import type { CharitableNolContributionLimit } from "@/utils/charitable-nol-source.js";
 import type {
   Form1099B,
   Form1099Div,
@@ -320,7 +321,7 @@ function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: Marketpla
   return complete(worksheet);
 }
 type ForeignTaxHypotheticalRequest = { purpose: "foreign-deduction-carryover" };
-type NolReturnContext = { stage: "income" | "alternative-income"; deduction: Decimal; modified: boolean; charitableContributionLimit?: Decimal;
+type NolReturnContext = { stage: "income" | "alternative-income"; deduction: Decimal; modified: boolean; charitableContributionLimit?: CharitableNolContributionLimit;
   actualRegularNol?: import("./forms/net-operating-loss.js").NetOperatingLossResult }
   | { stage: "final"; deduction: Decimal; modified: false; worksheet: NetOperatingLossReturnResult };
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "income" }): NolIncomeContext;
@@ -2409,9 +2410,12 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Schedule A for itemized deductions
   const form4952DeductibleAmount = form4952?.deductibleAmount;
   const form4684DeductibleLoss = form4684?.deductibleLoss;
-  const nolPublicCashContributionLimit = nol?.stage === "income" || nol?.stage === "alternative-income" ? nol.charitableContributionLimit : undefined;
+  const nolContributionLimit = nol?.stage === "income" || nol?.stage === "alternative-income" ? nol.charitableContributionLimit : undefined;
+  if (nolContributionLimit && nolContributionLimit.ledger !== (nol?.stage === "alternative-income" ? "alternative" : "regular")) {
+    throw new Error("Charitable NOL comparison ledger must match the actual regular or alternative context");
+  }
   const hasScheduleAExtra = input.scheduleA !== undefined
-    || nolPublicCashContributionLimit !== undefined
+    || nolContributionLimit !== undefined
     || input.form2555 !== undefined
     || form4952DeductibleAmount !== undefined
     || form4684DeductibleLoss !== undefined
@@ -2438,7 +2442,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         k1AppreciatedProperty30: hasK1Charitable ? k1AppreciatedProperty30 : undefined,
         k1AppreciatedProperty20: hasK1Charitable ? k1AppreciatedProperty20 : undefined,
         cryptoCharitableAmounts: donationResult?.contributionAmounts,
-        nolPublicCashContributionLimit,
+        nolContributionLimit,
         salesTaxDeduction: salesTaxElectedForLine5a ? salesTaxDeductionAmount : undefined,
         salesTaxElected: salesTaxElectedForLine5a,
       }
@@ -4417,9 +4421,14 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         }
       }
 
+      const regularCharity = nol?.stage === "final" ? nol.worksheet.charitableCarryover : undefined;
+      const alternativeCharity = nol?.stage === "final" ? nol.worksheet.alternativeCharitableCarryover ?? regularCharity : undefined;
       const alternativeCharityCarry = nol?.stage === "final"
-        ? nol.worksheet.alternativeCharitableCarryover?.carryforward ?? nol.worksheet.charitableCarryover?.alternativeTaxCarryforward
-        : undefined;
+        ? nol.worksheet.alternativeCharitableCarryover?.carryforward ?? regularCharity?.alternativeTaxCarryforward : undefined;
+      if ((regularCharity?.carryforward.gt(0) && (!regularCharity.category || !regularCharity.medium))
+        || (alternativeCharityCarry?.gt(0) && (!alternativeCharity?.category || !alternativeCharity.medium))) {
+        throw new Error("Positive charitable NOL carry requires the actual category and medium");
+      }
       return {
         capitalLoss: cfCapitalLoss,
         shortTermCapitalLoss: adjustedCarryforward.carryforwardShortTerm,
@@ -4451,12 +4460,12 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
           : schedA.charitableTreatment ? sum(...schedA.charitableTreatment.carryforwards.map(row => row.amount)) : schedA.charitableCarryforward,
         charitableContributionsByYear: nol?.stage === "final" && nol.worksheet.charitableCarryover
           ? nol.worksheet.charitableCarryover.carryforward.gt(0)
-            ? [{ taxYear: input.taxpayer.taxYear, category: "cash_60", amount: nol.worksheet.charitableCarryover.carryforward }] : []
+            ? [{ taxYear: input.taxpayer.taxYear, category: nol.worksheet.charitableCarryover.category, medium: nol.worksheet.charitableCarryover.medium, amount: nol.worksheet.charitableCarryover.carryforward }] : []
           : schedA.charitableTreatment?.carryforwards ?? schedA.charitableCarryforwardByYear,
         ...(alternativeCharityCarry !== undefined ? {
           amtCharitableContributions: alternativeCharityCarry,
           amtCharitableContributionsByYear: alternativeCharityCarry.gt(0)
-            ? [{ taxYear: input.taxpayer.taxYear, category: "cash_60" as const, amount: alternativeCharityCarry }] : [],
+            ? [{ taxYear: input.taxpayer.taxYear, category: alternativeCharity?.category, medium: alternativeCharity?.medium, amount: alternativeCharityCarry }] : [],
         } : {}),
         excessBusinessLossNOL: form461.nolCarryforward,
         nolCarryforward: cfNol,

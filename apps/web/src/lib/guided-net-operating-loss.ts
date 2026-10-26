@@ -6,6 +6,7 @@ import { parseGuidedCurrency } from './guided-currency';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
 import { parseGuidedQbiLossPacket, type K1LossSourcesData } from './guided-qbi-loss-data';
 import { calculateQbiEblNol } from '@/engine/forms/qbi-ebl-nol';
+import { resolveCharitableRecipient } from '@/utils/charitable-recipient';
 
 export interface NolHistoryData { taxYear?: string; nolUsed?: string; attributeReduction?: string; sourceReference?: string }
 export interface NolVintageData {
@@ -82,7 +83,11 @@ export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefin
   const hasGifts = [deductions?.charitableContributions, ...(deductions?.donationEntries?.map(row => row.amount) ?? [])]
     .some(value => value?.trim() && !parseGuidedCurrency(value).isZero());
   const positiveAlternative = alternative.vintages?.some(row => row.openingCarryforward?.trim() && parseGuidedCurrency(row.openingCarryforward).gt(0));
-  if (history !== undefined || (positiveAlternative && hasGifts)) {
+  const positiveRegular = data.vintages?.some(row => row.openingCarryforward?.trim() && parseGuidedCurrency(row.openingCarryforward).gt(0));
+  const hasNonPublicCashGift = deductions?.donationEntries?.some(row => row.amount?.trim()
+    && parseGuidedCurrency(row.amount).gt(0) && row.qualifiedOrganization !== false
+    && (row.type !== 'cash' || resolveCharitableRecipient(row).percentageCategory !== 'fifty-percent'));
+  if (history !== undefined || (positiveAlternative && hasGifts) || (positiveRegular && hasNonPublicCashGift)) {
     if (!history || year(history.sourceTaxYear, 'charitable histories source year') !== taxYear - 1 || !history.sourceReference?.trim()
       || history.sourceFactsConfirmed !== true || history.allCarryoversIncluded !== true
       || !Array.isArray(history.priorRegularCarryovers) || !Array.isArray(history.priorAlternativeCarryovers)) {

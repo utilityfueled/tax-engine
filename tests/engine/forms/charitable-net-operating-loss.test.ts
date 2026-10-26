@@ -11,7 +11,7 @@ it("applies the published historical carry difference without importing its rate
   for (const [actual, comparison, expected] of [["25000", "0", "5000"], ["25000", "25000", "30000"], ["35000", "0", "0"]]) {
     const result = calculateCharitableNolCarryover({ input, tentativeCarryforward: d("30000"), nolCarryforward: d(actual),
       alternativeTaxNolAvailable: d("0"),
-      computeCarryover: amount => { expect(amount.toFixed()).toBe("0"); return d(comparison); } });
+      computeCarryover: limit => { expect(limit.amount.toFixed()).toBe("0"); return d(comparison); } });
     expect(result.carryforward.toFixed()).toBe(expected);
     expect(result.carryforward.plus(result.reduction).toFixed()).toBe("30000");
   }

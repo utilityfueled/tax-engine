@@ -1,0 +1,74 @@
+form: "Section170 single-category NOL carry coordination"
+fullName: "Actual current direct gifts and independent regular and alternative NOL carry"
+taxYear: 2025
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.170A-10"
+notes: |
+  Section170(d)(1)(B) reduces a tentative contribution-year carry only by the
+  succeeding NOL carry preserved by that excess. Reg1.170A-10(d)(1) Example3
+  explicitly applies this to30percent capital property. Current170(B),(C),(D)
+  and(G)(ii) retain their category carry rules. Historical Example2 predates
+  other-recipient carry availability; its no-B-carry outcome is not imported.
+  This extension supports one actual current direct category and one medium:
+  G cash, A ordinary public property, B cash OR ordinary other property,
+  C public investment stock, or D other investment stock. Original per-receipt
+  qualified value is computed before aggregation; source amounts never change.
+  New non-G routes require the existing confirmed independent prior regular
+  and AMT charitable histories with both arrays explicitly empty. No inferred
+  missing history, positive prior carry, mixed category, mixed B media, K1,
+  crypto or special tangible-property valuation is admitted by this extension.
+  The internal comparison binds actual tax year, original source digest,
+  category and medium. It changes only the corresponding qualified-value
+  component; it is not a taxpayer deduction override. Current regular NOLD
+  and ATNOLD stay unchanged. AMT keeps the regular AGI of each statutory
+  context under Reg1.55-1(b), with its independent NOL and charity histories.
+  Under170(d)(1)(C), eligible2026 floor excess is included before the NOL
+  adjustment and the comparison reapplies the floor. Explicit nonitemized
+  and automatic nonitemized carry remain separate methods; the actual2026
+  year/review gates remain closed. Derived current examples are not published
+  IRS numeric oracles or human qualification.
+lines:
+  - line: "published-capital"
+    description: "Preserve the published capital-property carry difference"
+    formula: "Reg1.170A-10(d)(1) Example3:50000 income/50000 fully deductible prior NOL/30000 C gift leaves tentative30000, modified15000 deduction, succeeding NOL15000 and charity15000. A2025 pre2018 vintage with explicit itemization reproduces the same still-applicable30percent arithmetic."
+    irsRef: "Reg1.170A-10(d)(1) Example3; IRC170(C),172 pre2018 method"
+    testRef: "tests/engine/federal-charitable-single-category-nol.test.ts::reproduces the published capital-property NOL carry difference"
+  - line: "current-categories"
+    description: "Use each actual category in the internal regular NOL comparison"
+    formula: "2025 income100000/gift60000/NOL100000: A claim40000, tentative30000, NOLcarry60000, comparison44000, charity14000; B and C claim56000, tentative46800, NOLcarry44000, comparison30560, charity33360; D claim64000, tentative52800, NOLcarry36000, comparison25760, charity42560. B cash and B property retain different media with the same limit."
+    irsRef: "IRC170(A)-(D),170(d)(1)(B),172(a),(b); Reg1.170A-10(d)(1)"
+    testRef: "tests/engine/federal-charitable-single-category-nol.test.ts::replays each single current category without converting its carry to public cash"
+  - line: "alternative"
+    description: "Preserve separate regular AGI and the actual alternative NOL claim"
+    formula: "2025 wages100000/capital loss3000/no regular NOL/ATNOL100000/C gift60000: AGI97000/charity29100/tentative30900; actualAMTI67900/currentATNOLD61110; modifiedAMTI70000/absorption63000/carry37000. Comparison retained29100 givesAMTI70900/absorption63810/carry36190. Reduce alternative charity810 to30090; regular charity stays30900."
+    irsRef: "Reg1.55-1(b); IRC56(a)(4),(d),170(d)(1)(B)"
+    testRef: "tests/engine/federal-charitable-single-category-nol.test.ts::keeps the property charity carry and current AMT claim independent"
+  - line: "floor"
+    description: "Reapply the isolated year-specific floor to retained qualified property value"
+    formula: "Isolated2026 C gift60000/income100000/NOL100000: claim56400, finalAGI43600, charity12862, tentative47138, NOLcarry43600. Retained12862 minus500 modified floor gives12362 deduction; comparison NOLcarry29890, reduction13710, charity33428. Original actual2026 calculation gate stays closed."
+    irsRef: "IRC170(I),170(d)(1)(C) before(B); Reg1.170A-10(d)(1)"
+    testRef: "tests/engine/federal-charitable-single-category-nol.test.ts::reapplies the isolated property floor with a confirmed empty history"
+  - line: "source-binding"
+    description: "Bind exact qualified source value and category to the internal comparison"
+    formula: "Per-item min(FMV,basis) precedes aggregation. Same-total replacement, tax-year change, category/medium crossover and changed history invalidate a retained comparison. Positive prior histories, mixed categories and partial mixed B media remain explicit method boundaries. No comparison field is read from TaxYearInput."
+    irsRef: "IRC170(a),(e),(d); actual source conservation"
+    testRef: "tests/engine/forms/charitable-single-category-nol.test.ts::binds the replay to original valuation year category medium and empty histories"
+  - line: "review"
+    description: "Keep actual category and independent carries on the redacted review statement"
+    formula: "The saved reference identifies actual category/medium and reconciles exact qualified source value, original digest, tentative/reduced carry and independent regular/AMT year rows. Reject stale equal-amount category/medium/source substitutions before output; preserve original encrypted sources and omit private identifiers from the review."
+    irsRef: "Form172 source recordkeeping; IRC170(d)(1)(B)"
+    testRef: "tests/pdf/charitable-single-category-nol-review.test.ts::reconciles category and medium on the saved independent NOL charity reference"
+  - line: "selected-method"
+    description: "Require the source-bound internal itemized method before final selection"
+    formula: "An absent, unrecognized or stale original-source tag cannot qualify the2026 NOL carry selection. The tag is produced only after actual empty-history and single-category validation. Nonitemized selection still requires its separate method."
+    irsRef: "IRC170(I),(p),(d); internal selected-source conservation"
+    testRef: "tests/engine/forms/charitable-single-category-nol.test.ts::requires the original current-only itemized tag before selecting the 2026 NOL history"
+  - line: "alternative-cents"
+    description: "Preserve source cents before the completed alternative carry worksheet is rounded"
+    formula: "C receipts60000.49 and60000.50 with the independent AMT example retain regular exact carry30900.49/30900.50. Completed tentative AMT excess rounds30900/30901 and produces30090/30091 after the same810 adjustment; actual current ATNOLD61110 is unchanged. Do not reject source cents or round the percentage capacity early."
+    irsRef: "IRC6102(c),170(d)(1)(B); Reg1.55-1(b); whole-dollar completed NOL carry worksheet"
+    testRef: "tests/engine/federal-charitable-single-category-nol.test.ts::retains exact property receipts before rounding the completed alternative carry worksheet"
+  - line: "guided-sources"
+    description: "Reach the method through actual existing gift and NOL history controls"
+    formula: "A positive regular NOL with a property or other-recipient gift requires the existing separate prior regular/AMT charity histories even when the AMT NOL is zero. Missing histories stay incomplete; explicit checked empty arrays and original property facts reach canonical33360 carry without an income or carry override. Editing actual gifts revokes the history confirmation."
+    irsRef: "IRC170(a),(d); actual source/history completeness"
+    testRef: "tests/apps/web/guided-charitable-single-category-nol.test.ts::requires independent histories before actual property sources reach the NOL calculation"

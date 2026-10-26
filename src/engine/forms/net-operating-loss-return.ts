@@ -1,5 +1,6 @@
 /** Canonical Section172 income-context orchestration. Spec: net-operating-loss-return.yaml. */
 import Decimal from "decimal.js";
+import type { CharitableNolContributionLimit } from "@/utils/charitable-nol-source.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -52,8 +53,8 @@ export interface NetOperatingLossReturnResult extends NetOperatingLossResult {
 }
 
 export function calculateNetOperatingLossReturn(input: TaxYearInput,
-  computeIncome: (deduction: Decimal, modified: boolean, purpose: "current-limit" | "modified" | "final", charitableContributionLimit?: Decimal) => NolIncomeContext,
-  computeAlternativeIncome: (deduction: Decimal, modified: boolean, charitableContributionLimit?: Decimal, actualRegularNol?: NetOperatingLossResult) => Form6251IncomeResult): NetOperatingLossReturnResult {
+  computeIncome: (deduction: Decimal, modified: boolean, purpose: "current-limit" | "modified" | "final", charitableContributionLimit?: CharitableNolContributionLimit) => NolIncomeContext,
+  computeAlternativeIncome: (deduction: Decimal, modified: boolean, charitableContributionLimit?: CharitableNolContributionLimit, actualRegularNol?: NetOperatingLossResult) => Form6251IncomeResult): NetOperatingLossReturnResult {
   const facts = input.netOperatingLoss;
   if (!facts) throw new Error("Actual NOL return computation requires the actual carry source packet");
   const currentOrigin = input.form172 ? calculateForm172Return(input) : undefined;

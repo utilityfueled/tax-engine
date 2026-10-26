@@ -80,7 +80,7 @@ it("preserves original cents and requires actual current public-cash carry sourc
   expect(() => calculateFederalTax(prior)).toThrow(/prior.*charit|charit.*prior/i);
   const property = charitableNolInput(); property.donations[0].type = "property";
   property.donations[0].isLongTermCapitalGain = false; property.donations[0].costBasis = property.donations[0].amount;
-  expect(() => calculateFederalTax(property)).toThrow(/current public.cash|mixed.*charit/i);
+  expect(() => calculateFederalTax(property)).toThrow(/independent prior regular and alternative charitable histories/i);
   const amt = charitableNolInput();
   if (!amt.netOperatingLoss?.alternativeTax || !amt.netOperatingLoss.vintages?.[0]) throw new Error("Missing synthetic loss");
   amt.netOperatingLoss.alternativeTax.vintages = [{ ...amt.netOperatingLoss.vintages[0], section1411OriginalLoss: undefined }];

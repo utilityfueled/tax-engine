@@ -14,8 +14,10 @@ notes: |
   Current and comparison ATNOL ledgers use the same actual source vintages,
   90-percent modified-income capacity and expiry. The examples below are derived
   statutory controls, not published IRS numeric examples or human qualification.
-  Scope:2025/2026 current public cash, actual separate empty prior regular/AMT
-  charity histories and existing same-basis ordinary NOL sources. Prior/mixed
+  The public-cash examples below extend through charitable-single-category-nol
+  to actual single-category current property and other-recipient gifts. Both
+  require separate empty prior regular/AMT charity histories and existing
+  same-basis ordinary NOL sources. Prior/mixed
   charitable categories, special ATNOL sources and2026 standard-deduction170(p)
   coordination remain separate methods. Never infer an empty AMT history from
   regular zero, and never alter original receipts or accept computed-income overrides.
@@ -47,7 +49,7 @@ lines:
     testRef: "tests/engine/federal-alternative-charitable-nol.test.ts::reapplies the isolated2026 floor without replacing the actual AMT deduction"
   - line: "conservation"
     description: "Validate canonical amounts and carry conservation"
-    formula: "Aggregate exact original cash then round once; nonexcess=contributions-tentative; reduction=min(tentative,actualATNOLcarry-comparisonATNOLcarry); remaining=tentative-reduction. Reject nonfinite/negative/fractional calculated carry, comparison exceeding actual carry, unsupported sources or changed current deduction."
+    formula: "Aggregate exact original qualified value and retain exact tentative source excess before rounding each completed carry worksheet amount; nonexcess=contributions-tentative; reduction=min(tentative,actualATNOLcarry-comparisonATNOLcarry); remaining=tentative-reduction. Reject nonfinite/negative tentative excess, noninteger canonical ATNOL carry, comparison exceeding actual carry, unsupported sources or changed current deduction."
     irsRef: "IRC170(d)(1)(B); Reg1.170A-10(d)(1); Form172 recordkeeping"
     testRef: "tests/engine/forms/alternative-charitable-net-operating-loss.test.ts::conserves the separate alternative carry and rejects invalid comparison amounts"
   - line: "intake"

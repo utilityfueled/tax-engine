@@ -3,11 +3,14 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
-import { readCurrentPublicCashForNol } from "@/utils/charitable-nol-source.js";
+import { readCurrentCharitableSourceForNol, type CharitableNolContributionLimit, type CurrentCharitableNolSource } from "@/utils/charitable-nol-source.js";
 import { roundDollar } from "@/utils/decimal.js";
 
 export interface AlternativeCharitableNolCarryoverResult {
   taxYear: number;
+  category: CurrentCharitableNolSource["category"];
+  medium: CurrentCharitableNolSource["medium"];
+  sourceDigest: string;
   sourceContributions: Decimal;
   contributions: Decimal;
   tentativeCarryforward: Decimal;
@@ -24,7 +27,7 @@ export function calculateAlternativeCharitableNolCarryover(params: {
   tentativeCarryforward: Decimal;
   alternativeTaxNolAvailable: Decimal;
   nolCarryforward: Decimal;
-  computeCarryover: (nonexcessContributions: Decimal) => Decimal;
+  computeCarryover: (limit: CharitableNolContributionLimit) => Decimal;
 }): AlternativeCharitableNolCarryoverResult {
   const { input } = params; const taxYear = input.taxpayer.taxYear;
   const history = input.netOperatingLoss?.alternativeTax?.charitableCarryoverHistory;
@@ -35,8 +38,12 @@ export function calculateAlternativeCharitableNolCarryover(params: {
   if (history.priorRegularCarryovers.length || history.priorAlternativeCarryovers.length) {
     throw new Error("Prior regular or alternative charitable histories require their separate category and vintage coordination method");
   }
-  const sourceContributions = readCurrentPublicCashForNol(input);
-  for (const value of [params.tentativeCarryforward, params.nolCarryforward, params.alternativeTaxNolAvailable]) {
+  const source = readCurrentCharitableSourceForNol(input);
+  const sourceContributions = source.amount;
+  if (!Decimal.isDecimal(params.tentativeCarryforward) || !params.tentativeCarryforward.isFinite() || params.tentativeCarryforward.lt(0)) {
+    throw new Error("Alternative charitable carry requires the actual finite nonnegative completed tentative excess");
+  }
+  for (const value of [params.nolCarryforward, params.alternativeTaxNolAvailable]) {
     if (!Decimal.isDecimal(value) || !value.isFinite() || value.lt(0) || !value.isInteger()) {
       throw new Error("Alternative charitable carry requires finite nonnegative canonical whole-dollar amounts");
     }
@@ -45,11 +52,11 @@ export function calculateAlternativeCharitableNolCarryover(params: {
     throw new Error("Alternative charitable carry requires the actual positive independent ATNOL source balance");
   }
   const contributions = roundDollar(sourceContributions);
-  const tentativeCarryforward = params.tentativeCarryforward;
+  const tentativeCarryforward = roundDollar(params.tentativeCarryforward);
   if (tentativeCarryforward.gt(contributions)) throw new Error("Tentative alternative charitable carry exceeds actual contributions");
   const nonexcessContributions = contributions.minus(tentativeCarryforward);
   const nolCarryforward = params.nolCarryforward;
-  const counterfactualNolCarryforward = params.computeCarryover(nonexcessContributions);
+  const counterfactualNolCarryforward = params.computeCarryover({ category: source.category, medium: source.medium, sourceDigest: source.sourceDigest, amount: nonexcessContributions, ledger: "alternative" });
   if (!Decimal.isDecimal(counterfactualNolCarryforward) || !counterfactualNolCarryforward.isFinite()
     || !counterfactualNolCarryforward.isInteger() || counterfactualNolCarryforward.lt(0) || counterfactualNolCarryforward.gt(nolCarryforward)) {
     throw new Error("Alternative charitable comparison must reconcile with actual succeeding ATNOL carry");
@@ -57,15 +64,15 @@ export function calculateAlternativeCharitableNolCarryover(params: {
   const reduction = Decimal.min(tentativeCarryforward, nolCarryforward.minus(counterfactualNolCarryforward));
   const carryforward = tentativeCarryforward.minus(reduction);
   const audit = new AuditTrail(); const form = "Section170 Alternative NOL Carry Worksheet";
-  audit.record(form, "nonexcess", "Current public cash retained in the alternative comparison", nonexcessContributions,
-    "Rounded original cash less tentative current charity carry, including eligible2026 floor; keep regular AGI and actual NOLD in the AMT replay",
-    { "Original source cash": sourceContributions, "Form-dollar cash": contributions, "Tentative alternative excess": tentativeCarryforward });
+  audit.record(form, "nonexcess", "Current qualified contribution value retained in the alternative comparison", nonexcessContributions,
+    "Rounded original qualified contribution value less tentative current charity carry, including eligible2026 floor; keep regular AGI and actual NOLD in the AMT replay",
+    { "Original source value": sourceContributions, "Form-dollar qualified value": contributions, "Tentative alternative excess": tentativeCarryforward });
   audit.record(form, "reduction", "Alternative charitable carry used to preserve succeeding ATNOL", reduction,
     "Smaller of tentative carry or actual succeeding ATNOL carry less carry without excess gifts; retain actual current deduction and apply expiry",
     { "Actual ATNOL carry": nolCarryforward, "ATNOL carry without excess": counterfactualNolCarryforward });
   audit.record(form, "remaining", "Remaining alternative charitable carry", carryforward,
     "Tentative alternative carry less its independent170(d)(1)(B) reduction; never copy regular charity carry",
     { "Tentative alternative carry": tentativeCarryforward, "Reduction": reduction });
-  return { taxYear, sourceContributions, contributions, tentativeCarryforward, nonexcessContributions,
+  return { taxYear, category: source.category, medium: source.medium, sourceDigest: source.sourceDigest, sourceContributions, contributions, tentativeCarryforward, nonexcessContributions,
     nolCarryforward, counterfactualNolCarryforward, reduction, carryforward, lines: audit.getLines() };
 }

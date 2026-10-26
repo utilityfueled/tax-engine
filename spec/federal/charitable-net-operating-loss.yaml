@@ -12,8 +12,10 @@ notes: |
   adds eligible floor disallowance before(B); the counterfactual removes source
   contributions, not merely a post-floor deduction. No original receipt is
   edited. Counterfactual amounts are internal calculation data, not user inputs.
-  This bounded route requires actual current public cash gifts and no prior or
-  mixed-category carry. Positive independent AMT carry uses the separate
+  The original public-cash examples below remain applicable. The separately
+  specified charitable-single-category-nol extension supports actual current
+  single-category property and other-recipient gifts with independent empty
+  histories; prior and mixed-category carry remain separate. Positive independent AMT carry uses the separate
   alternative-charitable-net-operating-loss method and actual independent
   charity histories. Actual2026 standard-deduction carry remains a separate method.
   Current-year formulas below are derived statutory examples, not published IRS
@@ -42,7 +44,7 @@ lines:
     testRef: "tests/engine/federal-charitable-nol.test.ts::reapplies the isolated2026 floor to the nonexcess source contribution"
   - line: "sources"
     description: "Preserve receipts and reject unknown carry character"
-    formula: "Aggregate source cents before form-dollar carry reconciliation. Require known current date, actual public qualification, explicit non-private classification and no prior/pass-through/property gifts. Do not copy regular carry to an unknown or positive independent AMT-charity ledger."
+    formula: "Aggregate source cents before form-dollar carry reconciliation. These public-cash controls require known current date, qualification and actual recipient classification. Property and other-recipient gifts require the independent histories and method in charitable-single-category-nol; prior and pass-through methods remain separate. Do not copy regular carry to an unknown or positive independent AMT-charity ledger."
     irsRef: "IRC170(a),(b),(d); Reg1.170A-10(d); Form172 recordkeeping"
     testRef: "tests/engine/federal-charitable-nol.test.ts::preserves original cents and requires actual current public-cash carry sources"
   - line: "alternative-carry"
