@@ -21,7 +21,8 @@ export function calculateSelectedCharitableCarryover(input: {
   const priorCashProperty = input.scheduleA.priorCashCurrentProperty;
   const separatePriorFloor = input.taxYear === 2026 && priorCashProperty?.method === "2026_prior_cash_current_property";
   const currentOnly = input.taxYear === 2026 && (current?.method === "2026_current_public_cash_dual"
-    || current?.method === "2026_current_public_cash_and_property_dual")
+    || current?.method === "2026_current_public_cash_and_property_dual"
+    || current?.method === "2026_current_public_and_other_cash_dual")
     && input.scheduleA.charitableCarryforwardDetail.length === 0;
   if (input.taxYear !== 2025 && !currentOnly && !separatePriorFloor && (input.taxYear !== 2026 || !nonitemized
     || nonitemized.method !== "2026_nonitemized_public_cash" || input.deductionMethod === "itemized"
