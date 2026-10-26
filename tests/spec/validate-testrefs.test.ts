@@ -43,7 +43,9 @@ function parseSpecFiles(dir: string): Array<{ file: string; spec: SpecFile }> {
 
 function literalTestNames(content: string): Set<string> {
   const names = new Set<string>();
-  const source = ts.createSourceFile("spec-linked.test.ts", content, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  // Only child traversal is needed. Parent links substantially increase V8
+  // coverage overhead without changing which literal test calls are found.
+  const source = ts.createSourceFile("spec-linked.test.ts", content, ts.ScriptTarget.Latest, false, ts.ScriptKind.TSX);
   function baseName(expression: ts.Expression): string | undefined {
     if (ts.isIdentifier(expression)) return expression.text;
     if (ts.isPropertyAccessExpression(expression) || ts.isCallExpression(expression)) return baseName(expression.expression);
