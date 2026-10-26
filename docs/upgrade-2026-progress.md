@@ -2,6 +2,61 @@
 
 ## Current checkpoint — 2026-10-26
 
+The branch is pushed through `3669b00`. Rule provenance is `2025.148` /
+`2026.145-law-integration-draft`. The regenerated inventory has 523
+entries and 5,526 spec test references. Readiness gates are unchanged.
+
+| Delivered package | Commit | Bounded verification |
+| --- | --- | --- |
+| Actual covered-family premiums, original persons/payments and health deduction | `f25a2b7` | Final integration: 611 tests in 15 files. Separate source review: 23 tests in 7 files, including four private controls. Eight saved PDFs, 83 pages and 252 active fields were reopened; rendered pages and nine literal Form 8962 values were reviewed. Two production browser cases pass with zero retries. |
+| Current charitable sources in regular and AMT loss origins | `3f2e80a` | Final candidate: 595 tests in 28 files; integrated checks: 551 in 6. Separate source review: 16 in 7, including five private controls. Forty saved PDFs, 95 pages and 235 populated fields were checked, including six literal Schedule A values; two production browser cases pass with zero retries. |
+| Actual prepaid and cash QTP sources sharing tuition with ordinary ESAs | `3669b00` | Final candidate: 777 tests in 58 files, all types/spec/inventory checks, both builds and scoped lint. Separate source review: 12 tests in 7 files, including four private controls. Parent reopened six PDFs covering 124 pages and checked sixteen literal retained fields; physical browser outputs were also inspected. Both production browser widths pass with zero retries. |
+
+Each package has its own specification, original failing cases, Decimal source
+calculations, actual guided facts, saved review output and exact delivery
+hashes. Final integration preserves the reviewed executable blobs and records
+any upstream merges separately. Agent reviews do not supply qualified human
+tax approval. The package ledgers retain all original failures and boundaries.
+
+The most recent completed full local run remains immutable `e91d7d7`: 19,025
+tests in 1,197 files pass in both unit and coverage runs; branches are 86.84%
+and functions 90.59%, above the unchanged gates. All eight static checks and
+428 production browser cases pass; five hosted-only cases remain skipped.
+That source excludes these later packages. A new immutable integrated run is
+running on `3669b00`; no later full pass is claimed before it finishes. The earlier
+failed `603fc1b` run and its separate template-count repair remain recorded.
+
+Native amd64 Web workflow
+[40347754615](https://github.com/utilityfueled/tax-engine/actions/runs/40347754615)
+passed on `8f1d1ba`; its [versioned evidence](upgrade-2026-runtime-8f1d1ba.json)
+was committed in `cd5e4c7`. Smoke, six recovery phases and both 428-case browser
+runs passed; each browser run skipped five hosted-only cases. The separate CI
+workflow passed 19,044 unit tests, but coverage was cancelled by the next push.
+Its SBOM has 2,930 components. The refreshed scan's 157 matches across 67 OS
+advisories exactly match the existing register; owner confirmation remains
+pending. This evidence predates the later tax packages and is not final-source
+or hosted-staging qualification. No image was published or deployed.
+
+The October 26 afternoon production dependency audit reports zero advisories
+across 425 dependencies, with the unchanged lockfile. Audit and image findings
+remain separate evidence. Exact response, log and artifact hashes are recorded
+in the checkpoint and package ledgers.
+
+The finite internal queue is: the remaining ordinary health payment, business
+and marriage combinations; determined charitable floor/history attribution;
+actual tuition-assistance and academic-period room-and-board groups; traceability
+reconciliation; and final integrated, native image and recovery checks. Missing
+controlling interpretations remain explicit. No arbitrary source allocation or
+inferred fact is used to remove a gate.
+
+The goal remains active and **not release-ready**. The
+[external-action handoff](upgrade-2026-external-actions.md) records the missing
+qualified reviewers, launch-state demand, authorized staging, provider account
+access and approved evaluation funds, final official forms and advisory owner
+acceptance. Work continues on the independent software packages.
+
+## Previous checkpoint through5b3d6de
+
 The branch is pushed through `5b3d6de`. Rule provenance is `2025.145` /
 `2026.142-law-integration-draft`; the regenerated inventory has 517 entries and
 5,486 spec test references. All readiness gates remain unchanged.
