@@ -6,6 +6,7 @@ import { expect, it } from 'vitest';
 import { SectionCredits } from '@/components/guided-interview/section-credits';
 import { emptyCreditsData, type CreditsData } from '@/lib/guided-interview-flow';
 import { actualSharedPolicyData } from '../../fixtures/guided-shared-policy';
+import { actualNoAdvanceAllocationData } from '../../fixtures/guided-no-advance-allocation';
 import { actualDefaultAllocationData } from '../../fixtures/guided-default-allocation';
 import { completePersonalInfo } from '../../guided-interview/complete-facts';
 import { buildPremiumTaxCreditInputs } from '@/lib/guided-premium-tax-credit-facts';
@@ -65,5 +66,28 @@ it('reaches no-agreement enrollment controls without an entered allocation share
   await change('Allocation policy 1: Enrolling taxpayer SSN','');expect(latest.premiumTaxCredit!.sourceFactsConfirmed).toBeNull();expect(latest.premiumTaxCredit!.sharedPolicyAllocations!.sourceFactsConfirmed).toBeNull();
   expect(JSON.stringify(latest.premiumTaxCredit!.policies)).toBe(originals);
   await change('Allocation policy 1: Both taxpayers agreed to these fractions','true');expect(latest.premiumTaxCredit!.sharedPolicyAllocations!.policies[0]!.defaultAllocation).toBeUndefined();
+ }finally{await act(async()=>root.unmount());container.remove();}
+});
+
+
+it('reaches no-advance benchmark controls without supplying a computed fraction',async()=>{
+ (globalThis as {IS_REACT_ACT_ENVIRONMENT?:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
+ const container=document.createElement('div');document.body.appendChild(container);const root=createRoot(container);
+ const source=actualNoAdvanceAllocationData();const policy=source.sharedPolicyAllocations!.policies[0]!;policy.situation='other_two_tax_families';policy.agreementConfirmed=true;policy.agreementReference='Prior agreement';delete policy.noAdvanceAllocation;policy.monthlyAllocations.forEach(row=>{row.fraction='.50';});
+ let latest:CreditsData={...emptyCreditsData,premiumTaxCredit:source};const originals=JSON.stringify(source.policies);
+ function Harness(){const [data,setData]=useState(latest);return <SectionCredits data={data} hasDependents={false} filingStatus="single" taxYear={2025} personalData={completePersonalInfo} onDataChange={next=>{latest=next;setData(next)}}/>;}
+ const control=(label:string)=>[...container.querySelectorAll('label')].find(e=>e.querySelector('.guided-field-label')?.textContent===label)?.querySelector<HTMLInputElement|HTMLSelectElement>('input,select');
+ async function change(label:string,value:string){const c=control(label);if(!c)throw new Error(`Missing ${label}`);await act(async()=>{Object.getOwnPropertyDescriptor(c.tagName==='SELECT'?HTMLSelectElement.prototype:HTMLInputElement.prototype,'value')!.set!.call(c,value);c.dispatchEvent(new Event(c.tagName==='SELECT'?'change':'input',{bubbles:true}));});}
+ async function click(label:string){const button=[...container.querySelectorAll('button')].find(e=>e.textContent===label);if(!button)throw new Error(`Missing ${label}`);await act(async()=>button.click());}
+ try{
+  await act(async()=>root.render(<Harness/>));expect(control('Policy 1 month 1: Original SLCSP box is printed blank')?.value).toBe('true');
+  await change('Allocation policy 1: Allocation situation','no_advance_credit');expect(control('Allocation policy 1: Month 1 agreed fraction')).toBeUndefined();expect(control('Allocation policy 1: Both taxpayers agreed to these fractions')).toBeUndefined();
+  expect(latest.premiumTaxCredit!.sharedPolicyAllocations!.policies[0]!.agreementReference).toBe('');expect(latest.premiumTaxCredit!.sharedPolicyAllocations!.policies[0]!.monthlyAllocations.every(row=>row.fraction==='')).toBe(true);
+  await click('Allocation policy 1: Copy actual coverage-family months');expect(control('Allocation policy 1: Benchmark worksheet year')?.value).toBe('2025');expect(control('Allocation policy 1: Month 1 this-return benchmark')?.value).toBe('');
+  await change('Allocation policy 1: Benchmark worksheet reference','Actual family benchmark lookup');await change('Allocation policy 1: All covered people belong to the two coverage families','true');
+  for(let m=1;m<=12;m++){await change(`Allocation policy 1: Month ${m} this-return benchmark`,'1200');await change(`Allocation policy 1: Month ${m} other-return benchmark`,'600');await change(`Allocation policy 1: Month ${m} this-return benchmark reference`,'Actual own lookup');await change(`Allocation policy 1: Month ${m} other-return benchmark reference`,'Actual other lookup');}
+  await change('Allocation policy 1: Benchmark sources checked after the last edit','true');await change('Allocation sources checked after the last edit','true');await click('Calculate household amounts from allocation');expect(container.querySelector('[role="alert"]')).toBeNull();expect(latest.premiumTaxCredit!.monthlyReconciliation[0]).toMatchObject({enrolleePremium:'1000',slcsp:'1200',advancePremiumTaxCredit:'0'});
+  await change('Allocation policy 1: Benchmark sources checked after the last edit','true');await change('Allocation sources checked after the last edit','true');await change('Marketplace sources checked after the last edit','true');expect(buildPremiumTaxCreditInputs(latest.premiumTaxCredit,2025,'single',completePersonalInfo).form1095A?.[0]?.monthlyPremiums[0]?.slcsp).toBeNull();
+  await change('Allocation policy 1: Month 1 other-return benchmark','');expect(latest.premiumTaxCredit!.sharedPolicyAllocations!.policies[0]!.noAdvanceAllocation!.sourceFactsConfirmed).toBeNull();expect(latest.premiumTaxCredit!.sourceFactsConfirmed).toBeNull();expect(JSON.stringify(latest.premiumTaxCredit!.policies)).toBe(originals);
  }finally{await act(async()=>root.unmount());container.remove();}
 });

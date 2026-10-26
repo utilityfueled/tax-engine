@@ -32,13 +32,13 @@ function month(value: number | undefined): number {
   if (value === undefined || !Number.isInteger(value) || value < 1 || value > 12) throw new Error('Marriage sources require actual months 1 through 12');
   return value;
 }
-function money(value: string | undefined): Decimal {
-  if (value === undefined || !/^\d+(?:\.\d+)?$/.test(value)) throw new Error('Marriage source amount is unknown or invalid');
+function money(value: string | null | undefined): Decimal {
+  if (value == null || !/^\d+(?:\.\d+)?$/.test(value)) throw new Error('Marriage source amount is unknown or invalid');
   const amount = d(value);
   if (!amount.isFinite()) throw new Error('Marriage source amount must be finite');
   return amount;
 }
-function original(source: Original, year: number) {
+function original(source: Original | TaxYearInput['form1095A'][number], year: number) {
   if (source.taxYear !== year) throw new Error('Marriage original policy year does not reconcile');
   if (!source.coveredIndividuals?.length || !source.monthlyPremiums?.length) throw new Error('Marriage requires all original covered people and months');
   const seenPeople = new Set<string>(), seenMonths = new Set<number>();

@@ -41,7 +41,7 @@ export interface Form8962ReferenceSummaryPolicy {
   policyNumber: string;
   coveredMonths: string;
   annualEnrollmentPremium: string;
-  annualSLCSP: string;
+  annualSLCSP: string | null;
   annualAdvancePTC: string;
 }
 
@@ -59,8 +59,8 @@ export interface Form8962ReferenceSummary {
   introduction: string;
   policies: Form8962ReferenceSummaryPolicy[];
   lines: Form8962ReferenceSummaryLine[];
-  allocations?: { policyNumber: string; firstMonth: number; lastMonth: number; fraction: string; method: 'agreement' | 'default_enrollee_count' }[];
-  allocatedMonths?: { month: number; originalPremium: string; originalSlcsp: string; originalAdvance: string; premium: string; slcsp: string; advance: string }[];
+  allocations?: { policyNumber: string; firstMonth: number; lastMonth: number; fraction: string; method: 'agreement' | 'default_enrollee_count' | 'no_advance_benchmark' }[];
+  allocatedMonths?: { month: number; originalPremium: string; originalSlcsp: string | null; originalAdvance: string; premium: string; slcsp: string; advance: string; benchmarkRatio?: { numerator: string; denominator: string } }[];
   marriage?: { electionApplies: boolean; worksheets: (Form8962ReferenceSummaryLine & { form: string })[] };
 }
 
@@ -237,9 +237,9 @@ export function buildForm8962ReferenceSummary(
         (total, month) => total.plus(month.enrolleePremium),
         summary.annualPremium.minus(summary.annualPremium),
       );
-      const annualSLCSP = form.monthlyPremiums.reduce(
-        (total, month) => total.plus(month.slcsp),
-        summary.annualPremium.minus(summary.annualPremium),
+      const annualSLCSP = form.monthlyPremiums.reduce<Decimal | null>(
+        (total, month) => month.slcsp === null || total === null ? null : total.plus(month.slcsp),
+        new Decimal(0),
       );
       const annualAdvancePTC = form.monthlyPremiums.reduce(
         (total, month) => total.plus(month.advancePremiumTaxCredit ?? 0),
@@ -251,7 +251,7 @@ export function buildForm8962ReferenceSummary(
         policyNumber: form.policyNumber,
         coveredMonths: summarizeMonths(form.monthlyPremiums.map((month) => month.month)),
         annualEnrollmentPremium: annualEnrollmentPremium.toString(),
-        annualSLCSP: annualSLCSP.toString(),
+        annualSLCSP: annualSLCSP?.toString() ?? null,
         annualAdvancePTC: annualAdvancePTC.toString(),
       };
     }),
@@ -269,8 +269,9 @@ export function buildForm8962ReferenceSummary(
     allocations: allocation?.periods.map(period => ({ policyNumber: forms[period.policyIndex].policyNumber.slice(-15),
       firstMonth: period.firstMonth, lastMonth: period.lastMonth, fraction: period.fraction.toFixed(2), method: period.method ?? 'agreement' })),
     allocatedMonths: allocation?.months.map(month => ({ month: month.month, originalPremium: month.originalPremium.toFixed(),
-      originalSlcsp: month.originalSlcsp.toFixed(), originalAdvance: month.originalAdvance.toFixed(),
-      premium: month.premium.toFixed(), slcsp: month.slcsp.toFixed(), advance: month.advance.toFixed() })),
+      originalSlcsp: month.originalSlcsp?.toFixed() ?? null, originalAdvance: month.originalAdvance.toFixed(),
+      premium: month.premium.toFixed(), slcsp: month.slcsp.toFixed(), advance: month.advance.toFixed(),
+      ...(month.benchmarkRatio ? { benchmarkRatio: { numerator: month.benchmarkRatio.numerator.toFixed(), denominator: month.benchmarkRatio.denominator.toFixed() } } : {}) })),
     marriage: marriage ? { electionApplies: marriage.electionApplies, worksheets: marriage.lines.filter(row => row.form.startsWith('Pub974 Marriage Worksheet')).map(row => ({
       form: row.form, line: row.line, description: row.description, value: row.value.toFixed(), formula: normalizeFormula(row.formula),
     })) } : undefined,
@@ -384,7 +385,7 @@ export async function fillForm8962Reference(
       lineHeight: 13,
     });
 
-    y = drawWrappedText(page, `Annual SLCSP: ${formatAmountString(policy.annualSLCSP)}`, {
+    y = drawWrappedText(page, `Annual SLCSP: ${policy.annualSLCSP === null ? "not totaled; original includes a printed blank" : formatAmountString(policy.annualSLCSP)}`, {
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN + 12,
@@ -419,9 +420,12 @@ export async function fillForm8962Reference(
     };
     write("FORM 8962 PART IV - COMPLETE ALLOCATION STATEMENT", true);
     write("All actual allocation periods are retained below. Taxpayer identifiers and private source references are omitted from this review copy. Policy numbers use the final 15 characters required by Part IV.");
-    summary.allocations.forEach((period, index) => write(`Allocation ${index + 1}: policy ${period.policyNumber}; months ${period.firstMonth}-${period.lastMonth}; premium, SLCSP and advance fractions ${period.fraction}. ${period.method === 'default_enrollee_count' ? 'Default allocation from actual enrollees.' : 'Actual agreed allocation.'}`));
+    summary.allocations.forEach((period, index) => write(`Allocation ${index + 1}: policy ${period.policyNumber}; months ${period.firstMonth}-${period.lastMonth}; ${period.method === 'no_advance_benchmark'
+      ? `premium fraction printed in column e ${period.fraction}; columns f and g blank. No advance credit; actual family benchmark ratio determines premiums before reporting.`
+      : `premium, SLCSP and advance fractions ${period.fraction}. ${period.method === 'default_enrollee_count' ? 'Default allocation from actual enrollees.' : 'Actual agreed allocation.'}`}`));
     for (const row of summary.allocatedMonths ?? []) {
-      write(`Month ${row.month}. Original monthly source: premium $${row.originalPremium}; SLCSP $${row.originalSlcsp}; advance $${row.originalAdvance}.`);
+      write(`Month ${row.month}. Original monthly source: premium $${row.originalPremium}; SLCSP ${row.originalSlcsp === null ? "printed blank" : `$${row.originalSlcsp}`}; advance $${row.originalAdvance}.`);
+      if (row.benchmarkRatio) write(`Actual benchmark ratio before printed rounding: ${row.benchmarkRatio.numerator} / ${row.benchmarkRatio.denominator}.`);
       write(`Actual allocated amounts before form rounding: premium $${row.premium}; SLCSP $${row.slcsp}; advance $${row.advance}.`);
     }
   }
@@ -543,7 +547,7 @@ async function fillForm8962SourceReview(input: TaxYearInput, result: TaxReturnRe
   for (const line of ['27', '28', '29'] as const) setTextField(form, F[`line${line}`], excess && values.has(line) ? new Decimal(values.get(line)!).toFixed(0) : '');
   for (const [index, fields] of F.allocations.entries()) {
     const period = summary.allocations?.[index];
-    const row = period ? [period.policyNumber, '', String(period.firstMonth).padStart(2, '0'), String(period.lastMonth).padStart(2, '0'), period.fraction, period.fraction, period.fraction] : Array<string>(7).fill('');
+    const row = period ? [period.policyNumber, '', String(period.firstMonth).padStart(2, '0'), String(period.lastMonth).padStart(2, '0'), period.fraction, period.method === 'no_advance_benchmark' ? '' : period.fraction, period.method === 'no_advance_benchmark' ? '' : period.fraction] : Array<string>(7).fill('');
     fields.forEach((name, column) => setTextField(form, name, row[column]));
   }
   setCheckBox(form, F.line34Yes, Boolean(summary.allocations?.length && summary.allocations.length <= 4)); setCheckBox(form, F.line34No, Boolean(summary.allocations && summary.allocations.length > 4));

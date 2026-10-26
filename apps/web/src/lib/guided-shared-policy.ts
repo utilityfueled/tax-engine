@@ -15,9 +15,26 @@ export interface SharedPolicyAgreementData {
   noCurrentYearMarriageOrDivorceConfirmed: boolean | null; twoTaxFamiliesConfirmed: boolean | null;
   allCoveredPeopleAssignedConfirmed: boolean | null; originalSlcspCorrectConfirmed: boolean | null;
   agreementConfirmed: boolean | null; agreementReference: string;
+  noAdvanceAllocation?: NoAdvanceBenchmarkData;
   defaultAllocation?: { sourceReference: string; enrollingTaxpayerSsn: string; allCoveredPeopleEnrolledByTaxpayerConfirmed: boolean | null };
   coveredFamilyAssignments: { ssn: string; family: "" | "this_return" | "other_return" }[];
   monthlyAllocations: { month: string; fraction: string }[];
+}
+export interface NoAdvanceBenchmarkData {
+  sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null; allCoveredPeopleInCoverageFamiliesConfirmed: boolean | null;
+  monthlyBenchmarks: { month: string; thisReturnSlcsp: string; otherReturnSlcsp: string; thisReturnSourceReference: string; otherReturnSourceReference: string;
+    thisReturnCoveredIndividualSsns: string[]; otherReturnCoveredIndividualSsns: string[] }[];
+}
+export function invalidateSharedPolicySources(packet: SharedPolicyAllocationData): SharedPolicyAllocationData {
+  return { ...packet, sourceFactsConfirmed: null, policies: packet.policies.map(policy => ({ ...policy,
+    ...(policy.noAdvanceAllocation ? { noAdvanceAllocation: { ...policy.noAdvanceAllocation, sourceFactsConfirmed: null } } : {}) })) };
+}
+function originalSlcsp(row: MarketplacePolicyData["monthlyPremiums"][number]): string | null {
+  if (row.slcspReportedBlank === true) {
+    if (row.slcsp?.trim()) throw new Error("The original SLCSP printed-blank answer contradicts a supplied amount.");
+    return null;
+  }
+  return money(row.slcsp, "original SLCSP premium");
 }
 function text(value: string | undefined, label: string): string {
   if (!value?.trim()) throw new Error(`Enter the actual ${label}.`);
@@ -57,7 +74,7 @@ export function normalizeMarketplacePolicy(policy: MarketplacePolicyData, taxYea
     recipientSsn: shared ? identity(policy.recipientSsn, "original recipient SSN") : policy.recipientSsn,
     coveredIndividuals: covered,
     monthlyPremiums: policy.monthlyPremiums.map(row => ({ month: whole(row.month, "original statement month"),
-      enrolleePremium: money(row.enrolleePremium, "original enrollment premium"), slcsp: money(row.slcsp, "original SLCSP premium"), advancePremiumTaxCredit: money(row.advancePremiumTaxCredit, "original advance credit") })) });
+      enrolleePremium: money(row.enrolleePremium, "original enrollment premium"), slcsp: originalSlcsp(row), advancePremiumTaxCredit: money(row.advancePremiumTaxCredit, "original advance credit") })) });
 }
 /** Explicit copy of entered sources; unknown agreement answers stay unknown. */
 export function captureSharedPolicySources(data: PremiumTaxCreditData, personal: PersonalInfoData | undefined, filingStatus: FilingStatus | null | undefined): SharedPolicyAllocationData {
@@ -76,6 +93,31 @@ export function captureSharedPolicySources(data: PremiumTaxCreditData, personal:
     primaryName: `${primary.firstName} ${primary.lastName}`, primarySsn: primary.ssn,
     ...(spouse ? { spouseName: `${spouse.firstName} ${spouse.lastName}`, spouseSsn: spouse.ssn } : {}), policies };
 }
+/** Copy only actual original month/person facts. Benchmark values remain unknown. */
+export function captureNoAdvanceBenchmarkSources(policy: SharedPolicyAgreementData): NoAdvanceBenchmarkData {
+  if (policy.situation !== "no_advance_credit" || !policy.original) throw new Error("Select the actual no-advance situation and copy its original policy first.");
+  const year = whole(policy.original.taxYear, "original statement year"), original = normalizeMarketplacePolicy(policy.original, year, true);
+  const assignments = new Map<string, string>();
+  for (const row of policy.coveredFamilyAssignments) {
+    const id = identity(row.ssn, "assigned covered-person SSN").replaceAll("-", "");
+    if (assignments.has(id) || !["this_return", "other_return"].includes(row.family)) throw new Error("Complete each actual covered-person family assignment before copying benchmark rows.");
+    assignments.set(id, row.family);
+  }
+  const people = (original.coveredIndividuals ?? []).map(person => ({ ...person,
+    ssn: identity(person.ssn, "original covered-person SSN"),
+    firstMonth: whole(person.firstMonth?.toString(), "original first covered month"),
+    lastMonth: whole(person.lastMonth?.toString(), "original last covered month") }));
+  if (assignments.size !== people.length || people.some(person => !assignments.has(person.ssn.replaceAll("-", "")))) throw new Error("Reconcile every original covered person before copying benchmark rows.");
+  return { sourceTaxYear: policy.original.taxYear, sourceReference: "", sourceFactsConfirmed: null, allCoveredPeopleInCoverageFamiliesConfirmed: null,
+    monthlyBenchmarks: original.monthlyPremiums.map(row => {
+      const covered = people.filter(person => person.firstMonth <= row.month && person.lastMonth >= row.month);
+      const own = covered.filter(person => assignments.get(person.ssn.replaceAll("-", "")) === "this_return").map(person => person.ssn);
+      const other = covered.filter(person => assignments.get(person.ssn.replaceAll("-", "")) === "other_return").map(person => person.ssn);
+      if (!own.length || !other.length) throw new Error("Each actual shared month needs people in both coverage families.");
+      return { month: String(row.month), thisReturnSlcsp: "", otherReturnSlcsp: "", thisReturnSourceReference: "", otherReturnSourceReference: "",
+        thisReturnCoveredIndividualSsns: own, otherReturnCoveredIndividualSsns: other };
+    }) };
+}
 export function resolveGuidedSharedPolicy(data: PremiumTaxCreditData, taxYear: number | null | undefined, filingStatus: FilingStatus | null | undefined, personal?: PersonalInfoData) {
   const packet = data.sharedPolicyAllocations;
   if (!packet || data.allocationRequired !== true) throw new Error("Complete the actual shared-policy allocation worksheet and reconcile its required answer.");
@@ -87,6 +129,11 @@ export function resolveGuidedSharedPolicy(data: PremiumTaxCreditData, taxYear: n
       situation: policy.situation || undefined, noCurrentYearMarriageOrDivorceConfirmed: policy.noCurrentYearMarriageOrDivorceConfirmed ?? undefined,
       twoTaxFamiliesConfirmed: policy.twoTaxFamiliesConfirmed ?? undefined, allCoveredPeopleAssignedConfirmed: policy.allCoveredPeopleAssignedConfirmed ?? undefined,
       originalSlcspCorrectConfirmed: policy.originalSlcspCorrectConfirmed ?? undefined, agreementConfirmed: policy.agreementConfirmed ?? undefined,
+      noAdvanceAllocation: policy.noAdvanceAllocation ? { ...policy.noAdvanceAllocation,
+        sourceTaxYear: whole(policy.noAdvanceAllocation.sourceTaxYear, "benchmark source year"), sourceFactsConfirmed: policy.noAdvanceAllocation.sourceFactsConfirmed ?? undefined,
+        allCoveredPeopleInCoverageFamiliesConfirmed: policy.noAdvanceAllocation.allCoveredPeopleInCoverageFamiliesConfirmed ?? undefined,
+        monthlyBenchmarks: policy.noAdvanceAllocation.monthlyBenchmarks.map(row => ({ ...row, month: whole(row.month, "benchmark source month"),
+          thisReturnSlcsp: money(row.thisReturnSlcsp, "this-return benchmark"), otherReturnSlcsp: money(row.otherReturnSlcsp, "other-return benchmark") })) } : undefined,
       defaultAllocation: policy.defaultAllocation ? { ...policy.defaultAllocation, allCoveredPeopleEnrolledByTaxpayerConfirmed: policy.defaultAllocation.allCoveredPeopleEnrolledByTaxpayerConfirmed ?? undefined } : undefined,
       coveredFamilyAssignments: policy.coveredFamilyAssignments.map(entry => ({ ...entry, family: entry.family || undefined })),
       monthlyAllocations: policy.monthlyAllocations.map(row => ({ month: whole(row.month, "agreement month"), fraction: row.fraction.trim() })) })) };

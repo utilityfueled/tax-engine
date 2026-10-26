@@ -7,6 +7,7 @@ import type { FilingStatus, PersonalInfoData } from "@/lib/guided-interview-flow
 import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
 import { SharedPolicyOriginalDetails, SharedPolicySourceDetails } from "./shared-policy-source-details";
 import { MarriagePolicySourceDetails } from "./marriage-policy-source-details";
+import { invalidateSharedPolicySources } from "@/lib/guided-shared-policy";
 import { invalidateMarriageSources } from "@/lib/guided-marriage-policy";
 
 function Choice({ label, value, choices, onChange }: { label: string; value: string; choices: readonly (readonly [string, string])[]; onChange: (value: string) => void }) {
@@ -25,7 +26,7 @@ export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, ta
     if (guidedSourceValuesChanged(data, next)) {
       next.sourceFactsConfirmed = null;
       if (next.marriageSources) next.marriageSources = invalidateMarriageSources(next.marriageSources);
-      if (next.sharedPolicyAllocations) next.sharedPolicyAllocations = { ...next.sharedPolicyAllocations, sourceFactsConfirmed: null };
+      if (next.sharedPolicyAllocations) next.sharedPolicyAllocations = invalidateSharedPolicySources(next.sharedPolicyAllocations);
     }
     onChange(next);
   };
@@ -46,7 +47,7 @@ export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, ta
       <BooleanFact label="Household eligibility worksheet checked" value={data.householdFactsConfirmed} onChange={householdFactsConfirmed => update({ householdFactsConfirmed })} />
       {coverageFlags.map(([field, label]) => <BooleanFact key={field} label={label} value={data[field]} onChange={value => update({ [field]: value })} />)}
     </div>
-    <p className="guided-hint">An agreed shared-policy allocation has its own source worksheet below. The marriage-year alternative has its own source worksheet below. Other allocation methods and lawful-presence allocation retain their separate calculation requirements.</p>
+    <p className="guided-hint">Shared-policy allocations have their own source worksheet below. The marriage-year alternative has its own source worksheet below. Other allocation combinations and lawful-presence allocation retain their separate calculation requirements.</p>
     {data.policies.map((policy, policyIndex) => {
       const prefix = `Policy ${policyIndex + 1}`;
       const set = (patch: Partial<typeof policy>) => update({ policies: data.policies.map((current, index) => index === policyIndex ? { ...current, ...patch } : current) });
@@ -60,7 +61,8 @@ export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, ta
           const label = `${prefix} month ${rowIndex + 1}`;
           const setRow = (patch: Partial<typeof row>) => set({ monthlyPremiums: policy.monthlyPremiums.map((current, index) => index === rowIndex ? { ...current, ...patch } : current) });
           return <div className="guided-form-grid" key={rowIndex}><Choice label={`${label}: Month`} value={row.month} choices={months} onChange={month => setRow({ month })} />
-            {([["enrolleePremium", "Original enrollment premium"], ["slcsp", "Original SLCSP premium"], ["advancePremiumTaxCredit", "Original advance credit"]] as const).map(([field, text]) => <CurrencyField key={field} label={`${label}: ${text}`} value={row[field]} onChange={value => setRow({ [field]: value })} />)}
+            {([["enrolleePremium", "Original enrollment premium"], ["slcsp", "Original SLCSP premium"], ["advancePremiumTaxCredit", "Original advance credit"]] as const).filter(([field]) => field !== "slcsp" || row.slcspReportedBlank !== true).map(([field, text]) => <CurrencyField key={field} label={`${label}: ${text}`} value={row[field]} onChange={value => setRow({ [field]: value })} />)}
+            {(data.allocationRequired === true || row.slcspReportedBlank !== undefined) && <BooleanFact label={`${label}: Original SLCSP box is printed blank`} value={row.slcspReportedBlank} onChange={slcspReportedBlank => setRow({ slcspReportedBlank, ...(slcspReportedBlank === true ? { slcsp: "" } : {}) })} />}
             <button type="button" onClick={() => set({ monthlyPremiums: policy.monthlyPremiums.filter((_, index) => index !== rowIndex) })}>{label}: Remove original month</button>
           </div>;
         })}

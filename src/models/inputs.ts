@@ -2534,7 +2534,9 @@ export const Form1095ASchema = z.preprocess(value => {
   monthlyPremiums: z.array(z.object({
     month: z.number().int().min(1).max(12),
     enrolleePremium: nonnegativePremium,
-    slcsp: nonnegativePremium,
+    // Explicit null records an actually printed blank; omitted remains unknown.
+    // Only a source-backed method with separate actual benchmarks may use it.
+    slcsp: nonnegativePremium.nullable(),
     advancePremiumTaxCredit: nonnegativePremium.optional().default("0"),
   })).min(1).refine(uniqueCoverageMonths, "Duplicate1095A source months must be reconciled"),
 }));

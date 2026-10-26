@@ -7,7 +7,7 @@ import { normalizeMarketplacePolicy, resolveGuidedSharedPolicy, type SharedPolic
 
 export interface MarketplaceMonthData { month: string; enrolleePremium: string; slcsp: string; advancePremiumTaxCredit: string }
 export interface MarketplacePolicyData {
-  taxYear: string; marketplace: string; policyNumber: string; monthlyPremiums: MarketplaceMonthData[];
+  taxYear: string; marketplace: string; policyNumber: string; monthlyPremiums: (MarketplaceMonthData & { slcspReportedBlank?: boolean | null })[];
   recipientName?: string; recipientSsn?: string;
   coveredIndividuals?: { name: string; ssn: string; firstMonth: string; lastMonth: string }[];
 }
@@ -107,7 +107,7 @@ export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefin
     const actual = month(row, "household coverage"); const source = sourceMonths.get(actual.month);
     if (!source) throw new Error("The household month has no actual original statement.");
     const allocated = shared?.allocation.months.find(entry => entry.month === actual.month);
-    if (allocated && (!allocated.premium.eq(actual.enrolleePremium) || !allocated.slcsp.eq(actual.slcsp) || !allocated.advance.eq(actual.advancePremiumTaxCredit))) throw new Error("Reconcile shared household amounts to the actual original sources and agreed allocation.");
+    if (allocated && (!allocated.premium.eq(actual.enrolleePremium) || !allocated.slcsp.eq(actual.slcsp) || !allocated.advance.eq(actual.advancePremiumTaxCredit))) throw new Error("Reconcile shared household amounts to the actual original sources and allocation.");
     if (!source.advance.eq(actual.advancePremiumTaxCredit)) throw new Error("Reconcile household advance credit to the exact original monthly total.");
     if (new Decimal(actual.enrolleePremium).gt(source.premium)) throw new Error("Eligible enrollment premium cannot exceed the original monthly premiums.");
     const qsehraBenefit = row.qsehraMonthlyPermittedBenefit?.trim() ? money(row.qsehraMonthlyPermittedBenefit, "QSEHRA monthly permitted benefit") : undefined;

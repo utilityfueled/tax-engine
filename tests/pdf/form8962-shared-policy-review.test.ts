@@ -11,6 +11,7 @@ import { fillForm8962SharedPolicy, FORM_8962_FIELDS as F, buildForm8962Reference
 import { preparePremiumTaxCreditReview, type PreparedPremiumTaxCreditReview } from '@/pdf/premium-tax-credit-review-context.js';
 import { redactReviewIdentifiers } from '@/pdf/redact-review-identifiers.js';
 import { REVIEW_PDF_NOTICE } from '@/pdf/export-policy.js';
+import { sharedNoAdvanceFixture } from '../fixtures/shared-no-advance-policy.js';
 import { sharedPolicyFixture } from '../fixtures/shared-policy.js';
 
 const blank = 'forms/blank/2025/f8962.pdf';
@@ -134,4 +135,20 @@ it('saves the actual default allocation method and rejects replaced enrollment s
     const changed=structuredClone(input);changed.form8962!.sharedPolicyAllocations!.policies![0].defaultAllocation!.enrollingTaxpayerSsn='234-56-7890';
     await expect(fillForm8962SharedPolicy(changed,result,blank,prepared)).rejects.toThrow(/stale|conflict/i);
   }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+
+it('retains no-advance ratio columns and actual blank original in private review',async()=>{
+ const input=sharedNoAdvanceFixture();input.form1095A[0].monthlyPremiums.forEach(row=>{row.slcsp=null;});input.form8962!.sharedPolicyAllocations!.policies![0].original=structuredClone(input.form1095A[0]);
+ const result=calculateFederalTax(input),prepared=preparePremiumTaxCreditReview(input),redacted=redactReviewIdentifiers(input),hidden=redactReviewIdentifiers(result),context={input:redacted,prepared};
+ const summary=buildForm8962ReferenceSummary(redacted.form1095A,hidden,context);expect(summary.policies[0].annualSLCSP).toBeNull();expect(summary.allocatedMonths?.[0]?.originalSlcsp).toBeNull();expect(summary.allocations?.[0]).toMatchObject({fraction:'0.67',method:'no_advance_benchmark'});
+ const dir=mkdtempSync(join(tmpdir(),'tax-no-advance-review-'));
+ try{
+  const packet=await fillReturn(input,result,{blankFormsDir:'forms/blank/2025',outputDir:dir,flatten:false,premiumTaxCreditReview:prepared});const path=packet.filledForms.find(file=>file.endsWith('/f8962-filled.pdf'));if(!path)throw new Error('Missing physical8962');const saved=inspect(path);
+  expect(saved.fields[F.allocations[0][4]]).toBe('0.67');expect(saved.fields[F.allocations[0][5]]).toBe('');expect(saved.fields[F.allocations[0][6]]).toBe('');expect(saved.fields[F.monthly[0][0]]).toBe('1000');expect(saved.fields[F.monthly[0][1]]).toBe('1200');expect(saved.fields[F.line24]).toBe('12000');expect(saved.fields[F.line25]).toBe('0');
+  const reference=inspect(await fillForm8962Reference(redacted.form1095A,hidden,dir,context)),text=reference.pages.join(' ').replace(/\s+/g,' ');expect(text).toContain('printed blank');expect(text).toContain('No advance credit');expect(text).toContain('1200 / 1800');expect(text).not.toContain('SLCSP and advance fractions 0.67');
+  for(const secret of ['Actual Jane benchmark lookup','Actual Robin benchmark lookup','123-45-6789','234-56-7890'])expect(text).not.toContain(secret);for(const page of [...saved.pages,...reference.pages])expect(page).toContain(REVIEW_PDF_NOTICE);
+  const changed=structuredClone(input);changed.form8962!.sharedPolicyAllocations!.policies![0].noAdvanceAllocation!.monthlyBenchmarks![0].otherReturnSlcsp='600.01';await expect(fillForm8962SharedPolicy(changed,result,blank,prepared)).rejects.toThrow(/stale|conflict/i);
+  await expect(fillForm8962SharedPolicy(redacted,hidden,blank)).rejects.toThrow();const originalBlankChanged=structuredClone(input);originalBlankChanged.form1095A[0].monthlyPremiums[0].slcsp='0';await expect(fillForm8962SharedPolicy(originalBlankChanged,result,blank,prepared)).rejects.toThrow(/stale|conflict/i);
+ }finally{rmSync(dir,{recursive:true,force:true});}
 });

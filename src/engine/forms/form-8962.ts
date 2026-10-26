@@ -88,8 +88,8 @@ export interface Form8962Result {
   lines: CalculatedLine[];
 }
 
-function dollars(value: string | Decimal | undefined, label: string, signed = false): Decimal {
-  if (value === undefined || value === "") throw new Error(`Form 8962 requires actual ${label}`);
+function dollars(value: string | Decimal | null | undefined, label: string, signed = false): Decimal {
+  if (value == null || value === "") throw new Error(`Form 8962 requires actual ${label}`);
   const amount = new Decimal(value);
   if (!amount.isFinite() || (!signed && amount.isNegative())) throw new Error(`Form 8962 ${label} must be finite${signed ? "" : " and nonnegative"}`);
   return amount;
@@ -162,6 +162,9 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
       assertMonth(row.month);
       if (seen.has(row.month)) throw new Error("Form 8962 duplicate month in source statement");
       seen.add(row.month);
+      // Original allocation sources were independently validated above. Their
+      // printed blank benchmark never becomes a made-up numeric zero here.
+      if (sharedPolicyAllocation) continue;
       const premium = dollars(row.enrolleePremium, "source enrollment premium");
       const slcsp = dollars(row.slcsp, "source SLCSP premium");
       const advance = dollars(row.advancePremiumTaxCredit, "source advance PTC");
@@ -219,10 +222,10 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
     && (fplPercentageForTable.gte(100) || belowPovertyEligible)
     && (year !== 2026 || fplPercentageForTable.lte(400));
   const first = months[0];
-  const fullYearUnchanged = input.form1095A.length > 0 && input.form1095A.every(form => {
+  const fullYearUnchanged = !sharedPolicyAllocation && input.form1095A.length > 0 && input.form1095A.every(form => {
     const firstMonth = form.monthlyPremiums[0];
     return firstMonth !== undefined && form.monthlyPremiums.length === 12 && form.monthlyPremiums.every(row =>
-      new Decimal(row.enrolleePremium).eq(firstMonth.enrolleePremium) && new Decimal(row.slcsp).eq(firstMonth.slcsp));
+      new Decimal(row.enrolleePremium).eq(firstMonth.enrolleePremium) && row.slcsp !== null && firstMonth.slcsp !== null && new Decimal(row.slcsp).eq(firstMonth.slcsp));
   })
     && months.length === 12 && first !== undefined && months.every(month => month.premium.eq(first.premium) && month.slcsp.eq(first.slcsp) && month.eligible === first.eligible);
   const calculationMethod = fullYearUnchanged && !sharedPolicyAllocation && !marriageSources ? "annual" : "monthly";

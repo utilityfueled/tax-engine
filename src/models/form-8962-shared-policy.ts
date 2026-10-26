@@ -11,7 +11,7 @@ const originalPolicy = z.object({
   recipientName: z.string().optional(), recipientSsn: z.string().optional(),
   coveredIndividuals: z.array(MarketplaceCoveredIndividualSchema).optional(),
   monthlyPremiums: z.array(z.object({ month: z.number().int().optional(),
-    enrolleePremium: amount, slcsp: amount, advancePremiumTaxCredit: amount })).optional(),
+    enrolleePremium: amount, slcsp: amount.nullable(), advancePremiumTaxCredit: amount })).optional(),
 });
 export const Form8962SharedPolicySchema = z.object({
   sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
@@ -28,6 +28,15 @@ export const Form8962SharedPolicySchema = z.object({
     defaultAllocation: z.object({
       sourceReference: z.string().optional(), enrollingTaxpayerSsn: z.string().optional(),
       allCoveredPeopleEnrolledByTaxpayerConfirmed: z.boolean().optional(),
+    }).optional(),
+    noAdvanceAllocation: z.object({
+      sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+      allCoveredPeopleInCoverageFamiliesConfirmed: z.boolean().optional(),
+      monthlyBenchmarks: z.array(z.object({
+        month: z.number().int().optional(), thisReturnSlcsp: amount, otherReturnSlcsp: amount,
+        thisReturnSourceReference: z.string().optional(), otherReturnSourceReference: z.string().optional(),
+        thisReturnCoveredIndividualSsns: z.array(z.string()).optional(), otherReturnCoveredIndividualSsns: z.array(z.string()).optional(),
+      })).optional(),
     }).optional(),
     monthlyAllocations: z.array(z.object({ month: z.number().int().optional(), fraction: z.string().optional() })).optional(),
   })).optional(),

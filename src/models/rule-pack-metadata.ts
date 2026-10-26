@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.113",
+    ruleVersion: "2025.114",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8962", section: "Actual Situation3 no-advance policy allocation using both coverage-family benchmarks; exact monthly ratios distinct from printed PartIV shares and known printed-blank originals", revision: "Final2025 Gary/Jim example and Reg1.36B-3(h); source, guide and private review controls; broader allocation methods, full2026 and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Rule6 and Worksheet1: omitted EIC investment override stays absent; opening claimant facts cannot bypass the actual investment-income ceiling", revision: "Final2025 source and preserved legacy input presence; full Worksheet1 classification and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i8962", section: "Actual Situation4 no-agreement allocation from covered-family counts and the original enrolling taxpayer; claiming fraction rounded to two places and enrolling remainder", revision: "Final2025 Situation4 Example2, Reg1.36B-4(a)(1)(ii)(B)/(a)(4) Example11; exact source/guide/PartIV review controls, derived tie example, broader methods and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i7203", section: "Actual S corporation nondeductible costs reduce direct debt before losses, or after losses under the actual Reg. 1.1367-1(g) election; separate final unabsorbed costs and election carry", revision: "Form 7203 lines 23/28/30/31 and Reg. 1.1367-1/-2; exact source controls and saved reference audits, separate charitable appreciation handoff and human qualification remain pending", retrievedAt: "2026-10-26" },
@@ -156,11 +157,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.110-law-integration-draft",
+    ruleVersion: "2026.111-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8962", section: "Actual Situation3 no-advance policy allocation using both coverage-family benchmarks; exact monthly ratios distinct from printed PartIV shares and known printed-blank originals", revision: "Final2025 Gary/Jim example and Reg1.36B-3(h); source, guide and private review controls; broader allocation methods, full2026 and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Rule6 and Worksheet1: omitted EIC investment override stays absent; opening claimant facts cannot bypass the actual investment-income ceiling", revision: "Final2025 source and preserved legacy input presence; full Worksheet1 classification and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i8962", section: "Actual Situation4 no-agreement allocation from covered-family counts and the original enrolling taxpayer; claiming fraction rounded to two places and enrolling remainder", revision: "Final2025 Situation4 Example2, Reg1.36B-4(a)(1)(ii)(B)/(a)(4) Example11; exact source/guide/PartIV review controls, derived tie example, broader methods and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i7203", section: "Actual S corporation nondeductible costs reduce direct debt before losses, or after losses under the actual Reg. 1.1367-1(g) election; separate final unabsorbed costs and election carry", revision: "Form 7203 lines 23/28/30/31 and Reg. 1.1367-1/-2; exact source controls and saved reference audits, separate charitable appreciation handoff and human qualification remain pending", retrievedAt: "2026-10-26" },
