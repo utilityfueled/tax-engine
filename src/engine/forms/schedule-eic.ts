@@ -17,6 +17,7 @@ import { AuditTrail } from "@/utils/audit.js";
 import { roundDollar } from "@/utils/decimal.js";
 import { calculateEicCreditTable } from "./eic-credit-table.js";
 import { calculateEicClaimantEligibility, type EicClaimantInput } from "./eic-claimant-eligibility.js";
+import { calculateEicDisallowanceHistory, type EicDisallowanceInput } from "./eic-disallowance-history.js";
 
 const ZERO = new Decimal(0);
 
@@ -35,6 +36,8 @@ export interface EicInput {
   /** Historical standalone fallback; canonical returns supply actual claimant sources. */
   primaryAge?: number;
   claimantInput?: EicClaimantInput;
+  /** Actual history and independently established child presence, never amount-count inference. */
+  disallowanceInput?: EicDisallowanceInput;
   /** Whether the MFS filer qualifies for the separated-spouse exception */
   mfsEicEligible: boolean;
   /** Source-established marriage on a nonjoint return, including actual married HOH. */
@@ -61,12 +64,22 @@ export function calculateEic(input: EicInput, constants: YearConstants): EicResu
   if (input.qualifyingChildPresent === false && childKey > 0) throw new Error('EIC counted children conflict with actual qualifying-child absence');
 
   if (input.claimantInput && (input.claimantInput.taxpayer.taxYear !== constants.taxYear || input.claimantInput.taxpayer.filingStatus !== input.filingStatus)) throw new Error("EIC claimant year and filing status must match the calculation");
+  if (input.disallowanceInput && (input.disallowanceInput.taxpayer.taxYear !== constants.taxYear || input.disallowanceInput.taxpayer.filingStatus !== input.filingStatus)) throw new Error('EIC history year and filing status must match the calculation');
+  if (input.disallowanceInput?.qualifyingChildPresent !== undefined
+    && input.disallowanceInput.qualifyingChildPresent !== input.qualifyingChildPresent) {
+    throw new Error('EIC history actual-child presence must match the calculation actual-child source answer');
+  }
+  const history = input.disallowanceInput ? calculateEicDisallowanceHistory({
+    ...input.disallowanceInput, qualifyingChildPresent: input.qualifyingChildPresent,
+  }) : undefined;
+  if (history) audit.merge(history.lines);
   // Supplied sources must reconcile even when income rules produce no credit.
   // With no packet, determine whether any credit is possible before requiring
   // unrelated claimant facts; a zero amount does not verify those facts.
   let claimant = input.claimantInput?.eic?.claimantEligibility !== undefined
     ? calculateEicClaimantEligibility(input.claimantInput, childless) : undefined;
   if (claimant) audit.merge(claimant.lines);
+  if (history?.barred) return disqualified(audit, 'Actual final IRS determination bars EIC for this tax year (IRC32(k))');
   if (claimant?.disqualificationReason) return disqualified(audit, claimant.disqualificationReason);
 
   // ── Disqualification checks ──────────────────────────────
@@ -139,6 +152,13 @@ export function calculateEic(input: EicInput, constants: YearConstants): EicResu
           claimant ? "Childless claimant age test is not met by either relevant filer at year end or actual death (Pub596 Rule11)" : `Childless filer must be age 25–64 (age ${input.primaryAge} at year end)`,
         );
       }
+    }
+    const historyRequired = constants.taxYear === 2026 || input.claimantInput?.eic?.claimantEligibility !== undefined;
+    if (!history?.sourceFactsComplete && historyRequired) throw new Error('EIC actual complete denial and allowance history is unknown for this positive source-confirmed claim');
+    if (history?.form8862Required) throw new Error('EIC requires actual current Form8862 sources; a completed checkbox does not establish recertification');
+    if (input.disallowanceInput && !history?.sourceFactsComplete) {
+      audit.record('EIC', 'disallowanceHistoryUnverified', 'Historical EIC denial history remains unverified', ZERO,
+        'No actual history supplied; this result does not establish no prior denial or Form8862 qualification');
     }
   }
 

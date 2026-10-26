@@ -1,3 +1,4 @@
+import { fictionalEmptyEicHistory } from '../fixtures/eic-disallowance.js';
 import { describe, expect, it } from 'vitest';
 import { calculateFederalTax } from '@/engine/federal.js';
 import { calculateEicSeparatedSpouseSources } from '@/engine/forms/eic-separated-spouse-sources.js';
@@ -13,7 +14,7 @@ function source(validSsn = true) {
     relationship: 'child', monthsLivedWithYou: 12, qualifiesForCTC: false, qualifiesForODC: false, qualifiesForEIC: false };
   return { ...base, taxpayer: { ...base.taxpayer, filingStatus: 'married_filing_separately' as const, primary, dependents: [child] },
     w2s: [{ ...required(base.w2s[0]), wages: '10000', federalWithheld: '0', socialSecurityWages: '10000', socialSecurityWithheld: '620', medicareWages: '10000', medicareWithheld: '145' }],
-    eic: { primaryIsFullTimeStudent: false, claimantEligibility: { sourceTaxYear: 2025, sourceReference: 'actual claimant source', sourceFactsConfirmed: true,
+    eic: { primaryIsFullTimeStudent: false, disallowanceSources: fictionalEmptyEicHistory({ ...base.taxpayer, filingStatus: 'married_filing_separately', primary }), claimantEligibility: { sourceTaxYear: 2025, sourceReference: 'actual claimant source', sourceFactsConfirmed: true,
       primaryNonresidentAlienDuringYear: false, primaryQualifyingChildOfAnotherTaxpayer: false,
       primaryChildless: { mainHomeInUnitedStatesMoreThanHalfYear: true, countedMilitaryDutyOutsideUnitedStates: false } },
     separatedSpouseSources: { sourceTaxYear: 2025, sourceReference: 'actual separation and child sources', sourceFactsConfirmed: true,

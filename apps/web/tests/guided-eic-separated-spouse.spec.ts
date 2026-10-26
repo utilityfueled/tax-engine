@@ -1,10 +1,11 @@
 // Spec: spec/federal/guided-eic-separated-spouse.yaml. Fictional local source records.
 import { expect, test } from '@playwright/test';
 import { taxpayerFacts2025 } from './guided-fixtures';
+import { fictionalEicHistory2025 } from './eic-history-fixtures';
 
 const child = { firstName: 'Alex', lastName: 'Example', ssn: '', dateOfBirth: '2015-06-01', relationship: 'child', monthsLivedWithYou: '12',
   qualifiesForCTC: false, qualifiesForODC: false, qualifiesForEIC: false };
-const personal = { ...taxpayerFacts2025, firstName: 'Jordan', ssn: '111-22-3333', dateOfBirth: '2003-02-15',
+const personal = { ...taxpayerFacts2025, eicDisallowanceHistory: fictionalEicHistory2025(false), firstName: 'Jordan', ssn: '111-22-3333', dateOfBirth: '2003-02-15',
   employmentValidSsnIssuedByDueDate: true, tinIssuedByDueDate: true, livedWithSpouseAtAnyTimeDuringYear: true,
   spouse: { firstName: 'Taylor', lastName: 'Example', ssn: '222-33-4444', dateOfBirth: '1990-02-01', usResidencyMonths: '12' },
   standardDeductionFacts: { ...taxpayerFacts2025.standardDeductionFacts, spouseItemizes: false, claimSpouseAdditionalDeduction: false },
@@ -44,12 +45,17 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       const open = async () => {
         await page.getByText('Earned Income Credit claimant records', { exact: true }).click();
         await page.getByText('Separated-spouse Earned Income Credit records', { exact: true }).click();
+        await page.getByText('Prior Earned Income Credit decisions', { exact: true }).click();
       };
       await open();
       const field = (name: string) => page.getByRole('combobox', { name, exact: true });
       const apart = field('Principal homes were apart throughout the last six months');
       const checked = field('Separated-spouse sources checked after the last edit');
       const claimantChecked = field('EIC claimant sources checked after the last edit');
+      const confirmHistory = async () => {
+        await field('Primary filer: history checked after the last edit').selectOption('true');
+        await field('EIC history checked after the last edit').selectOption('true');
+      };
       const validSsn = field('Child 1: timely valid employment-authorized SSN');
       await expect(validSsn).toHaveValue('false');
       await expect(field('Legally separated under a qualifying state-law agreement or decree')).toHaveValue('');
@@ -63,13 +69,13 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       await page.getByRole('textbox', { name: 'Separation instrument state abbreviation', exact: true }).fill('OH');
       await page.getByLabel('Separation instrument effective date', { exact: true }).fill('2025-11-01');
       await page.getByRole('textbox', { name: 'Separation instrument source reference', exact: true }).fill('synthetic-private-rule3-instrument');
-      await checked.selectOption('true'); await claimantChecked.selectOption('true'); await expect(hero).toHaveText('$649');
+      await checked.selectOption('true'); await confirmHistory(); await claimantChecked.selectOption('true'); await expect(hero).toHaveText('$649');
       await page.reload(); await open();
       await expect(apart).toHaveValue('false'); await expect(validSsn).toHaveValue('false'); await expect(checked).toHaveValue('true');
       await validSsn.selectOption(''); await expect(checked).toHaveValue(''); await expect(hero).toHaveText('Enter more info for an estimate');
       await expect.poll(() => page.evaluate(id => JSON.parse(localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`) ?? '{}').sectionData?.['personal-info']?.eicSeparatedSpouseSources?.children?.[0]?.validSsnIssuedByDueDate, id)).toBeNull();
       await page.reload(); await open(); await expect(validSsn).toHaveValue('');
-      await validSsn.selectOption('false'); await checked.selectOption('true'); await claimantChecked.selectOption('true');
+      await validSsn.selectOption('false'); await checked.selectOption('true'); await confirmHistory(); await claimantChecked.selectOption('true');
       await expect(hero).toHaveText('$649');
       const saved = await page.evaluate(id => JSON.parse(localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`) ?? '{}').sectionData?.['personal-info'], id);
       expect(saved.dependents[0].ssn).toBe(''); expect(saved.eicSeparatedSpouseSources.children[0].original.ssn).toBe('');

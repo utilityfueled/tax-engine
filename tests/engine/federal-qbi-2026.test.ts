@@ -9,6 +9,7 @@ vi.mock("@/models/constants.js", async (importOriginal) => {
 import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { fictionalEmptyEicHistory } from "../fixtures/eic-disallowance.js";
 const make = (participation?:boolean,wages="0") => TaxYearInputSchema.parse({...simpleW2Fixture,taxpayer:{...simpleW2Fixture.taxpayer,taxYear:2026},w2s:[{...simpleW2Fixture.w2s[0],wages,socialSecurityWages:wages,socialSecurityTips:"0"}],scheduleC:{businessName:"Actual trade",grossReceipts:"1200",qbiMateriallyParticipated:participation}});
 describe("2026 QBI minimum integration",()=>{
   it("computes minimum even when standard deduction eliminates taxable income",()=>{
@@ -16,7 +17,7 @@ describe("2026 QBI minimum integration",()=>{
     // This positive-earned-income synthetic2026 return also needs actual EIC
     // claimant facts. No eligibility fact is inferred from the QBI source.
     input.taxpayer.primary.employmentValidSsnIssuedByDueDate = true;
-    input.eic = { mfsEligible: false, primaryIsFullTimeStudent: false, claimantEligibility: {
+    input.eic = { disallowanceSources: fictionalEmptyEicHistory(input.taxpayer), mfsEligible: false, primaryIsFullTimeStudent: false, claimantEligibility: {
       sourceTaxYear: 2026, sourceReference: "Synthetic claimant identity and residency records",
       sourceFactsConfirmed: true, primaryNonresidentAlienDuringYear: false,
       primaryChildless: { mainHomeInUnitedStatesMoreThanHalfYear: true, countedMilitaryDutyOutsideUnitedStates: false, qualifyingChildOfAnotherTaxpayer: false },

@@ -1,4 +1,5 @@
 import { simpleW2Fixture } from './simple-w2.js';
+import { fictionalEmptyEicHistory } from './eic-disallowance.js';
 function required<T>(v: T | undefined): T { if (v === undefined) throw new Error('Missing synthetic source'); return v; }
 export function eicSeparatedReviewInput(validSsn = true) {
   const base = structuredClone(simpleW2Fixture);
@@ -7,7 +8,8 @@ export function eicSeparatedReviewInput(validSsn = true) {
     relationship: 'child', monthsLivedWithYou: 12, qualifiesForCTC: false, qualifiesForODC: false, qualifiesForEIC: false };
   return { ...base, taxpayer: { ...base.taxpayer, filingStatus: 'married_filing_separately' as const, primary, dependents: [child] },
     w2s: [{ ...required(base.w2s[0]), wages: '10000', federalWithheld: '0', socialSecurityWages: '10000', socialSecurityWithheld: '620', medicareWages: '10000', medicareWithheld: '145' }],
-    eic: { primaryIsFullTimeStudent: false, claimantEligibility: { sourceTaxYear: 2025, sourceReference: 'actual claimant source', sourceFactsConfirmed: true,
+    eic: { disallowanceSources: fictionalEmptyEicHistory({ ...base.taxpayer, filingStatus: 'married_filing_separately', primary }),
+      primaryIsFullTimeStudent: false, claimantEligibility: { sourceTaxYear: 2025, sourceReference: 'actual claimant source', sourceFactsConfirmed: true,
       primaryNonresidentAlienDuringYear: false, primaryQualifyingChildOfAnotherTaxpayer: false,
       primaryChildless: { mainHomeInUnitedStatesMoreThanHalfYear: true, countedMilitaryDutyOutsideUnitedStates: false } },
     separatedSpouseSources: { sourceTaxYear: 2025, sourceReference: 'actual separation and child sources', sourceFactsConfirmed: true,

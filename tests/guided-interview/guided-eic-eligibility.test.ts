@@ -1,5 +1,6 @@
 // Spec: spec/federal/eic-claimant-eligibility.yaml. Synthetic actual source answers.
 import { expect, it } from 'vitest';
+import { fictionalGuidedEmptyEicHistory } from '../fixtures/guided-eic-history';
 import { buildTaxInputFromGuidedData } from '@/lib/guided-interview-bridge';
 import { updateSectionData, validateSection } from '@/lib/guided-interview-flow';
 import { computeGuidedPreview } from '@/lib/guided-preview-compute';
@@ -18,6 +19,8 @@ function fixture() {
       primaryNonresidentAlienDuringYear: false, spouseNonresidentAlienDuringYear: false, primaryChildless: { ...childless }, spouseChildless: { ...childless } },
   };
   state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '10000', socialSecurityWages: '10000', socialSecurityWithheld: '620', medicareWages: '10000', medicareWithheld: '145' }] };
+  const sourcePersonal = required(state.sectionData['personal-info']);
+  sourcePersonal.eicDisallowanceHistory = fictionalGuidedEmptyEicHistory(sourcePersonal, 'mfj', 2025);
   return state;
 }
 it('forwards actual claimant facts and invalidates edited confirmations', () => {
@@ -46,6 +49,7 @@ it('keeps actual claimant unknowns distinct from false and historical omissions'
   expect(known.taxpayer.spouse?.employmentValidSsnIssuedByDueDate).toBe(false);
   expect(calculateFederalTax(known).allLines.find(line => line.form === '1040' && line.line === '27a')?.value.toFixed()).toBe('0');
   const legacy = fixture(); delete required(legacy.sectionData['personal-info']).eicClaimantEligibility;
+  delete required(legacy.sectionData['personal-info']).eicDisallowanceHistory;
   delete required(required(legacy.sectionData['personal-info']).spouse).employmentValidSsnIssuedByDueDate;
   expect(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(legacy)).eic).toBeUndefined();
   const wrongYear = fixture(); required(required(wrongYear.sectionData['personal-info']).eicClaimantEligibility).sourceTaxYear = '2026';

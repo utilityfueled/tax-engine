@@ -1,0 +1,36 @@
+form: "Guided EIC denial and allowance history"
+fullName: "Actual separate-filer history sources before a current EIC claim"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p596"
+notes: |
+  Retrieved2026-10-26. Pub596 chapter5, Reg1.32-3 and i8862 require actual
+  denial and later-allowance records. A joint return binds each filer's own
+  history, including before marriage. The collector forwards source facts to
+  the shared pure resolver, never a user-entered credit, ban or eligibility
+  override. Explicit empty histories differ from missing records. Current
+  Form8862 remains a separate source-complete form method, not a checkbox.
+lines:
+  - line: "originals"
+    description: "Copy only actual household identities"
+    formula: "Copy current primary and actual joint-spouse identity; do not invent history, chronology or confirmations. A replaced identity receives unknown history rather than relabeled prior records."
+    testRef: "tests/guided-interview/guided-eic-disallowance-history.test.ts::copies actual filer identities without inventing history or reassigning records"
+  - line: "history"
+    description: "Actual complete histories reach the canonical EIC calculation"
+    formula: "Retain each original denial, known date or known-not-occurred answer, later allowance and actual linked denial IDs; shared source resolver derives the restriction."
+    testRef: "tests/guided-interview/guided-eic-disallowance-history.test.ts::forwards actual separate histories and derives current bans without a credit override"
+  - line: "unknown"
+    description: "No-history and unknown remain distinct"
+    formula: "Omitted records stay omitted; empty lists need actual confirmation. Missing years, stale identities and duplicate owners cannot become a confirmed source packet."
+    testRef: "tests/guided-interview/guided-eic-disallowance-history.test.ts::preserves missing and known-negative history facts and rejects stale originals"
+  - line: "invalidation"
+    description: "Substantive edits revoke source confirmations"
+    formula: "History or consumed household identity/child-source edits clear packet and filer confirmations plus linked claimant confirmation; unrelated claimant home answers do not alter an unchanged IRS history. Reconfirming unchanged records does not create a confirmation cycle."
+    testRef: "tests/guided-interview/guided-eic-disallowance-history.test.ts::revokes edited history and household confirmations without cycling explicit reconfirmation"
+  - line: "controls"
+    description: "The actual personal section exposes separate filer records"
+    formula: "Start blank, copy actual identities, explicitly record empty histories and reconfirm both filers; actual notice edits preserve dates, known false and unknown values."
+    testRef: "tests/apps/web/eic-history-interactions.test.tsx::collects actual separate EIC histories through the personal section"
+  - line: "persistence"
+    description: "Actual history survives desktop and mobile reloads locally"
+    formula: "Enter explicit empty histories through the real personal panel, retain actual spouse denial chronology and known false answers, derive a two-year ban, then preserve a cleared history as unknown across reloads without transmitting source records."
+    testRef: "apps/web/tests/guided-eic-disallowance-history.spec.ts::saves separate actual EIC histories and derived bans locally"

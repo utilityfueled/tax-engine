@@ -131,6 +131,7 @@ import { calculateIraReturnWorksheet } from "./forms/ira-return-worksheet.js";
 import { calculateScheduleR } from "./forms/schedule-r.js";
 import { calculateForm8839 } from "./forms/form-8839.js";
 import { calculateEic } from "./forms/schedule-eic.js";
+import { calculateEicDisallowanceHistory } from "./forms/eic-disallowance-history.js";
 import { calculateEicScheduleEInvestment } from "./forms/eic-schedule-e-investment.js";
 import { calculateEicSeparatedSpouseSources } from "./forms/eic-separated-spouse-sources.js";
 import { calculateForm8936 } from "./forms/form-8936.js";
@@ -3303,11 +3304,15 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const eicSeparated = calculateEicSeparatedSpouseSources(input);
   const qualifyingEicChildren = eicSeparated.ssnCountedChildSourceIds.length;
   audit.merge(eicSeparated.lines);
+  const eicDisallowanceInput = { taxpayer: input.taxpayer, sources: input.eic?.disallowanceSources,
+    qualifyingChildPresent: eicSeparated.sourceFactsComplete ? eicSeparated.qualifyingChildPresent : undefined };
 
   // IRC §32(c)(1)(C): Filing Form 2555 disqualifies the taxpayer from EIC
   let eic: Decimal;
   let scheduleEIC: ReturnType<typeof calculateEic> | undefined;
   if (form2555) {
+    // A zero credit does not discard contradictory supplied source records.
+    audit.merge(calculateEicDisallowanceHistory(eicDisallowanceInput).lines);
     eic = new Decimal(0);
     audit.record("1040", "27a", "Earned Income Credit", eic,
       "Disqualified: taxpayer filed Form 2555 (IRC §32(c)(1)(C))");
@@ -3315,12 +3320,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     scheduleEIC = calculateEic({
       filingStatus,
       qualifyingChildren: qualifyingEicChildren,
-      qualifyingChildPresent: eicSeparated.qualifyingChildPresent,
+      qualifyingChildPresent: eicSeparated.sourceFactsComplete ? eicSeparated.qualifyingChildPresent : undefined,
       marriedNonjoint: eicSeparated.sourceFactsComplete,
       earnedIncome: eicEarnedIncome,
       agi,
       investmentIncome: eicInvestmentIncome,
       claimantInput: input,
+      disallowanceInput: eicDisallowanceInput,
       mfsEicEligible: eicSeparated.separatedSpouseEligible ?? false,
     }, constants);
     if (input.eic?.investmentIncomeOverride === undefined && eicScheduleEInvestment.unresolved.length) {

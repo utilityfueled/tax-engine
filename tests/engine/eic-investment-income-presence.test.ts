@@ -1,3 +1,4 @@
+import { fictionalEmptyEicHistory } from '../fixtures/eic-disallowance.js';
 import { expect, it } from 'vitest';
 import { EicConfigSchema, TaxYearInputSchema } from '@/models/inputs.js';
 import { calculateFederalTax } from '@/engine/federal.js';
@@ -28,7 +29,7 @@ it('keeps the actual investment ceiling when an EIC record is opened', () => {
   expect(JSON.stringify(opened)).toBe(before);
 });
 it('keeps claimant and investment sources independent through save and reopen', () => {
-  const facts = { claimantEligibility: { sourceTaxYear: 2025, sourceReference: 'Synthetic confirmed claimant records', sourceFactsConfirmed: true,
+  const facts = { disallowanceSources: fictionalEmptyEicHistory(simpleW2Fixture.taxpayer), claimantEligibility: { sourceTaxYear: 2025, sourceReference: 'Synthetic confirmed claimant records', sourceFactsConfirmed: true,
     primaryNonresidentAlienDuringYear: false, primaryQualifyingChildOfAnotherTaxpayer: false,
     primaryChildless: { mainHomeInUnitedStatesMoreThanHalfYear: true, countedMilitaryDutyOutsideUnitedStates: false, qualifyingChildOfAnotherTaxpayer: false } } };
   const saved = JSON.stringify(input('12000', facts));

@@ -2,6 +2,7 @@ import { calculateEicClaimantEligibility, type EicClaimantInput } from '../../..
 import type { FilingStatus, PersonalInfoData } from './guided-interview-flow';
 import { buildStandardDeductionFacts } from './guided-standard-deduction-facts';
 import { buildGuidedEicSeparatedSpouseSources } from './guided-eic-separated-spouse';
+import { buildGuidedEicDisallowanceHistory } from './guided-eic-disallowance-history';
 
 export interface EicChildlessClaimantData {
   mainHomeInUnitedStatesMoreThanHalfYear?: boolean | null;
@@ -48,10 +49,11 @@ const childlessSource = (data: EicChildlessClaimantData | undefined, currentOthe
 
 export function buildGuidedEicClaimantEligibility(personal: PersonalInfoData | undefined, status: FilingStatus | null, taxYear: number | null | undefined) {
   const data = personal?.eicClaimantEligibility;
+  const history = buildGuidedEicDisallowanceHistory(personal, status, taxYear);
   const separated = buildGuidedEicSeparatedSpouseSources(personal, status, taxYear);
   if (!data) {
     if (separated) throw new Error('Complete the actual EIC claimant records for the separated-spouse source route');
-    return undefined;
+    return history ? { primaryIsFullTimeStudent: false, disallowanceSources: history.source } : undefined;
   }
   if (!status || !taxYear || !personal?.dateOfBirth) throw new Error('EIC claimant sources need the actual return year, filing status and household dates');
   if (!/^\d{4}$/.test(data.sourceTaxYear?.trim() ?? '')) throw new Error('Enter the actual EIC claimant source tax year');
@@ -85,6 +87,7 @@ export function buildGuidedEicClaimantEligibility(personal: PersonalInfoData | u
   calculateEicClaimantEligibility(input, separated ? !separated.result.qualifyingChildPresent : !personal.dependents?.some(child => child.qualifiesForEIC === true));
   // Forward actual records; the canonical source resolver derives Rule3 eligibility.
   return { primaryIsFullTimeStudent: false, claimantEligibility,
+    ...(history ? { disallowanceSources: history.source } : {}),
     ...(separated ? { separatedSpouseSources: separated.source } : {}) };
 }
 

@@ -1,5 +1,6 @@
 // Spec: spec/federal/guided-eic-home-sources.yaml.
 import { expect, it } from 'vitest';
+import { fictionalGuidedEmptyEicHistory } from '../fixtures/guided-eic-history';
 import { buildTaxInputFromGuidedData } from '@/lib/guided-interview-bridge';
 import { updateSectionData } from '@/lib/guided-interview-flow';
 import { calculateFederalTax } from '@/engine/federal';
@@ -17,6 +18,8 @@ function sourceState() {
       primaryChildless: { mainHomeInUnitedStatesMoreThanHalfYear: true, countedMilitaryDutyOutsideUnitedStates: false },
       spouseChildless: { mainHomeInUnitedStatesMoreThanHalfYear: false, countedMilitaryDutyOutsideUnitedStates: false } } };
   state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '10000', socialSecurityWages: '10000', socialSecurityWithheld: '620', medicareWages: '10000', medicareWithheld: '145' }] };
+  const sourcePersonal = required(state.sectionData['personal-info']);
+  sourcePersonal.eicDisallowanceHistory = fictionalGuidedEmptyEicHistory(sourcePersonal, 'mfj', 2025);
   return state;
 }
 function required<T>(value: T | null | undefined): T { if (value == null) throw new Error('Missing synthetic source'); return value; }

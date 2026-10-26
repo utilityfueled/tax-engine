@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.133",
+    ruleVersion: "2025.134",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.ecfr.gov/current/title-26/section-1.32-3", section: "Actual separate-filer EIC denial, filing chronology and later IRS allowance sources before a positive claim", revision: "IRC32(k), final Pub596 chapter5 and i8862; active bans derive from original records, unknown history stays unknown and supplied contradictions reject even at zero; actual guide and independent source review, current Form8862 facts/output, contested chronology and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual shared-policy enrollment-default and no-advance benchmark allocation before independent owner/person paid premiums and health-credit coordination", revision: "Final2025 Specified Premiums, W/X and i8962 Situations3/4; exact source ratios distinct from printed fractions, complete overlapping benchmarks once, guided and private review retained; shared/unshared health links, outside-family payments, multiple owners and human qualification remain separate; full2026 gate unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.170A-10", section: "Actual current single-category and medium charitable excess coordinated with separate regular and alternative NOL carry; original receipts and current claims preserved", revision: "Reg1.170A-10(d), Reg1.55-1, IRC170 and6102; published Example3 and derived original-value/expiry/cents controls, internal source-bound replay and private review; prior/mixed histories, nonitemized NOL, partial B media and human qualification remain separate; actual2026 gates stay closed", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual Situation4 shared-policy agreement allocation before independent owner/person paid premiums and existing self-employed health credit coordination", revision: "Final2025 Specified Premiums, W/X and i8962; full originals and independent payment conservation retained through guide, QBI and private review; default/no-advance, outside-family, partial-family, multiple-owner methods and human qualification remain separate; full2026 gate unchanged", retrievedAt: "2026-10-26" },
@@ -172,11 +173,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.130-law-integration-draft",
+    ruleVersion: "2026.131-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.ecfr.gov/current/title-26/section-1.32-3", section: "Actual separate-filer EIC denial, filing chronology and later IRS allowance sources before a positive claim", revision: "IRC32(k), final Pub596 chapter5 and i8862; active bans derive from original records, unknown history stays unknown and supplied contradictions reject even at zero; actual guide and independent source review, current Form8862 facts/output, contested chronology and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual shared-policy enrollment-default and no-advance benchmark allocation before independent owner/person paid premiums and health-credit coordination", revision: "Final2025 Specified Premiums, W/X and i8962 Situations3/4; exact source ratios distinct from printed fractions, complete overlapping benchmarks once, guided and private review retained; shared/unshared health links, outside-family payments, multiple owners and human qualification remain separate; full2026 gate unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.170A-10", section: "Actual current single-category and medium charitable excess coordinated with separate regular and alternative NOL carry; original receipts and current claims preserved", revision: "Reg1.170A-10(d), Reg1.55-1, IRC170 and6102; published Example3 and derived original-value/expiry/cents controls, internal source-bound replay and private review; prior/mixed histories, nonitemized NOL, partial B media and human qualification remain separate; actual2026 gates stay closed", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual Situation4 shared-policy agreement allocation before independent owner/person paid premiums and existing self-employed health credit coordination", revision: "Final2025 Specified Premiums, W/X and i8962; full originals and independent payment conservation retained through guide, QBI and private review; default/no-advance, outside-family, partial-family, multiple-owner methods and human qualification remain separate; full2026 gate unchanged", retrievedAt: "2026-10-26" },

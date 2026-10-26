@@ -3,8 +3,9 @@ import { expect, test } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { taxpayerFacts2025 } from './guided-fixtures';
+import { fictionalEicHistory2025 } from './eic-history-fixtures';
 
-const personal = { ...taxpayerFacts2025, firstName: 'Jordan', ssn: '111-22-3333', dateOfBirth: '1990-02-01',
+const personal = { ...taxpayerFacts2025, eicDisallowanceHistory: fictionalEicHistory2025(true), firstName: 'Jordan', ssn: '111-22-3333', dateOfBirth: '1990-02-01',
   employmentValidSsnIssuedByDueDate: true, tinIssuedByDueDate: true, livedWithSpouseAtAnyTimeDuringYear: true,
   spouse: { firstName: 'Taylor', lastName: 'Example', ssn: '222-33-4444', dateOfBirth: '1990-02-01', usResidencyMonths: '12', employmentValidSsnIssuedByDueDate: true, tinIssuedByDueDate: true },
   standardDeductionFacts: { ...taxpayerFacts2025.standardDeductionFacts, spouseBlind: false, spouseCanBeClaimedAsDependent: false, spouseDeceased: false },

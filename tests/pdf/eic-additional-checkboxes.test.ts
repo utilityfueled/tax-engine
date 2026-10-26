@@ -6,13 +6,14 @@ import { calculateFederalTax } from '@/engine/federal.js';
 import { TaxYearInputSchema } from '@/models/inputs.js';
 import { fillForm1040 } from '@/pdf/fill-form-1040.js';
 import { simpleW2Fixture } from '../fixtures/simple-w2.js';
+import { fictionalEmptyEicHistory } from '../fixtures/eic-disallowance.js';
 
 const noEicBox = 'topmostSubform[0].Page2[0].c2_13[0]';
 const homeBox = 'topmostSubform[0].Page1[0].c1_5[0]';
 function required<T>(value: T | undefined | null): T { if (value == null) throw new Error('Missing synthetic source'); return value; }
 function source(joint = false) {
   const home = { mainHomeInUnitedStatesMoreThanHalfYear: true, countedMilitaryDutyOutsideUnitedStates: false };
-  return TaxYearInputSchema.parse({ ...structuredClone(simpleW2Fixture),
+  const input = TaxYearInputSchema.parse({ ...structuredClone(simpleW2Fixture),
     taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: joint ? 'married_filing_jointly' : 'single',
       primary: { ...simpleW2Fixture.taxpayer.primary, employmentValidSsnIssuedByDueDate: true, usResidencyMonths: 12 },
       spouse: joint ? { ...simpleW2Fixture.taxpayer.primary, firstName: 'John', ssn: '321-54-9876', employmentValidSsnIssuedByDueDate: true, usResidencyMonths: 12 } : undefined },
@@ -20,6 +21,9 @@ function source(joint = false) {
     eic: { claimantEligibility: { sourceTaxYear: 2025, sourceReference: 'Actual EIC claimant records', sourceFactsConfirmed: true,
       primaryNonresidentAlienDuringYear: false, primaryQualifyingChildOfAnotherTaxpayer: false, primaryChildless: { ...home },
       ...(joint ? { spouseNonresidentAlienDuringYear: false, spouseQualifyingChildOfAnotherTaxpayer: false, spouseChildless: { ...home } } : {}) } } });
+  if (!input.eic) throw new Error('Missing fictional claimant source');
+  input.eic.disallowanceSources = fictionalEmptyEicHistory(input.taxpayer);
+  return input;
 }
 async function saved(input: ReturnType<typeof source>) {
   const original = JSON.stringify(input);

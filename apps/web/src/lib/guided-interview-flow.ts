@@ -33,6 +33,7 @@ import Decimal from "decimal.js";
 import { parseGuidedCurrency, hasGuidedCurrency } from "./guided-currency";
 import { personalFactErrors } from "./guided-taxpayer-facts";
 import type { EicClaimantEligibilityData } from "./guided-eic-eligibility";
+import { eicHistorySourceValuesChanged, invalidateEicHistorySources } from "./guided-eic-disallowance-history";
 import { allPaymentFactErrors, deductionFactErrors, educationFactErrors, retirementFactErrors } from "./guided-required-facts";
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import { adjustmentFactErrors, householdFactErrors } from "./guided-adjustment-facts";
@@ -572,6 +573,7 @@ export interface SpouseInfoData {
 export const emptySpouseInfo: SpouseInfoData = { firstName: "", lastName: "", ssn: "", dateOfBirth: "", usResidencyMonths: "" };
 
 export interface PersonalInfoData {
+  eicDisallowanceHistory?: import('./guided-eic-disallowance-history').EicDisallowanceHistoryData;
   eicSeparatedSpouseSources?: import('./guided-eic-separated-spouse').EicSeparatedSpouseData;
   eicClaimantEligibility?: EicClaimantEligibilityData;
   standardDeductionFacts?: StandardDeductionData;
@@ -1562,6 +1564,8 @@ export function updateSectionData(
   const nextPersonal = sectionId === "personal-info" ? data as PersonalInfoData : state.sectionData["personal-info"];
   const eicClaimantSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && nextPersonal?.eicClaimantEligibility;
   const eicSeparatedSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && nextPersonal?.eicSeparatedSpouseSources;
+  const eicHistorySourcesChanged = sectionId === "personal-info" && nextPersonal?.eicDisallowanceHistory
+    && eicHistorySourceValuesChanged(state.sectionData["personal-info"], nextPersonal) ? nextPersonal.eicDisallowanceHistory : undefined;
   const nextGovernment = sectionId === "income-unemployment" ? data as UnemploymentData : state.sectionData["income-unemployment"];
   const refundSourcesChanged = sourceValuesChanged && ["personal-info", "income-unemployment", "deductions"].includes(sectionId) && nextGovernment?.taxRefund;
   const nextRetirement = sectionId === "income-retirement" ? data as SectionDataMap["income-retirement"] : state.sectionData["income-retirement"];
@@ -1623,9 +1627,10 @@ export function updateSectionData(
       ...state.sectionData,
       [sectionId]: data,
       ...(royaltySourcesChanged ? { "income-royalties": invalidateRoyaltySources(royaltySourcesChanged) } : {}),
-      ...((eicClaimantSourcesChanged || eicSeparatedSourcesChanged) && nextPersonal ? { "personal-info": { ...nextPersonal,
+      ...((eicClaimantSourcesChanged || eicSeparatedSourcesChanged || eicHistorySourcesChanged) && nextPersonal ? { "personal-info": { ...nextPersonal,
         ...(eicClaimantSourcesChanged ? { eicClaimantEligibility: { ...eicClaimantSourcesChanged, sourceFactsConfirmed: null } } : {}),
         ...(eicSeparatedSourcesChanged ? { eicSeparatedSpouseSources: { ...eicSeparatedSourcesChanged, sourceFactsConfirmed: null } } : {}),
+        ...(eicHistorySourcesChanged ? { eicDisallowanceHistory: invalidateEicHistorySources(eicHistorySourcesChanged) } : {}),
       } } : {}),
       ...(refundSourcesChanged && nextGovernment ? { "income-unemployment": { ...nextGovernment, taxRefund: { ...refundSourcesChanged, sourceFactsConfirmed: null } } } : {}),
       ...(iraBasisSourcesChanged && nextRetirement ? { "income-retirement": { ...nextRetirement, basisSources: { ...iraBasisSourcesChanged, sourceFactsConfirmed: null } } } : {}),

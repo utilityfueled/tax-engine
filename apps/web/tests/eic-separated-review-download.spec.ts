@@ -3,10 +3,11 @@ import { expect, test } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { taxpayerFacts2025 } from './guided-fixtures';
+import { fictionalEicHistory2025 } from './eic-history-fixtures';
 
 const child = { firstName: 'Alex', lastName: 'Example', ssn: '', dateOfBirth: '2015-06-01', relationship: 'child', monthsLivedWithYou: '6',
   qualifiesForCTC: false, qualifiesForODC: false, qualifiesForEIC: false };
-const personal = { ...taxpayerFacts2025, firstName: 'Jordan', ssn: '111-22-3333', dateOfBirth: '2003-02-15',
+const personal = { ...taxpayerFacts2025, eicDisallowanceHistory: fictionalEicHistory2025(false), firstName: 'Jordan', ssn: '111-22-3333', dateOfBirth: '2003-02-15',
   employmentValidSsnIssuedByDueDate: true, tinIssuedByDueDate: true, livedWithSpouseAtAnyTimeDuringYear: true,
   spouse: { firstName: 'Taylor', lastName: 'Example', ssn: '222-33-4444', dateOfBirth: '1990-02-01', usResidencyMonths: '12' },
   standardDeductionFacts: { ...taxpayerFacts2025.standardDeductionFacts, spouseItemizes: false, claimSpouseAdditionalDeduction: false },

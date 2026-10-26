@@ -6,6 +6,7 @@ import { calculateEic } from "@/engine/forms/schedule-eic.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
 import { FEDERAL_2026_CONSTANTS } from "@/models/federal-2026-indexed.js";
 import { d } from "@/utils/decimal.js";
+import { fictionalEmptyEicHistory } from "../../fixtures/eic-disallowance.js";
 
 const published: { rows: string[][] } = JSON.parse(readFileSync(new URL("../../fixtures/eic-table-2025.json", import.meta.url), "utf8"));
 const limits = [["19104", "50434", "57310", "61555"], ["26214", "57554", "64430", "68675"]];
@@ -58,11 +59,12 @@ it("preserves cents and applies every final interval cutoff", () => {
 
 it("applies the independent statutory ceiling in isolated2026", () => {
   const claimantInput = { taxpayer: { taxYear: 2026, filingStatus: "single" as const,
-    primary: { dateOfBirth: "1990-01-02", employmentValidSsnIssuedByDueDate: true } },
+    primary: { firstName: "Fictional", lastName: "Claimant", ssn: "111-22-3333", dateOfBirth: "1990-01-02", employmentValidSsnIssuedByDueDate: true } },
     eic: { claimantEligibility: { sourceTaxYear: 2026, sourceReference: "Actual synthetic claimant record", sourceFactsConfirmed: true,
       primaryNonresidentAlienDuringYear: false, primaryQualifyingChildOfAnotherTaxpayer: false } } };
   const base = { filingStatus: "single" as const, qualifyingChildren: 1, earnedIncome: d("1000"), agi: d("30000"),
-    investmentIncome: d(0), mfsEicEligible: false, claimantInput };
+    investmentIncome: d(0), mfsEicEligible: false, claimantInput,
+    disallowanceInput: { taxpayer: claimantInput.taxpayer, sources: fictionalEmptyEicHistory(claimantInput.taxpayer) } };
   expect(calculateEic(base, FEDERAL_2026_CONSTANTS).credit.toFixed()).toBe("340");
   const maximum = calculateEic({ ...base, qualifyingChildren: 3, earnedIncome: d("20000"), agi: d("20000") }, FEDERAL_2026_CONSTANTS);
   expect(maximum.credit.toFixed()).toBe("8231");

@@ -1,3 +1,4 @@
+import { fictionalEmptyEicHistory } from '../fixtures/eic-disallowance.js';
 import { describe, expect, it } from 'vitest';
 import { calculateFederalTax } from '@/engine/federal.js';
 import { TaxYearInputSchema } from '@/models/inputs.js';
@@ -40,7 +41,7 @@ describe('actual EIC claimant eligibility', () => {
     nonresident.deductionElection = 'itemized';
     expect(credit(nonresident)).toBe('0');
     const joint = source(true);
-    joint.eic = {mfsEligible:false,primaryIsFullTimeStudent:false,claimantEligibility:{...packet(true),spouseNonresidentAlienDuringYear:true,residentJointElection:false}};
+    joint.eic = {mfsEligible:false,primaryIsFullTimeStudent:false,disallowanceSources:fictionalEmptyEicHistory(joint.taxpayer),claimantEligibility:{...packet(true),spouseNonresidentAlienDuringYear:true,residentJointElection:false}};
     expect(credit(joint)).toBe('0');
     required(joint.eic.claimantEligibility).residentJointElection = true;
     required(joint.standardDeductionFacts).residentJointElection = true;
@@ -71,7 +72,7 @@ describe('actual EIC claimant eligibility', () => {
   it('preserves legacy unknowns while rejecting incomplete or contradictory actual sources', () => {
     const legacy = source(); delete legacy.taxpayer.primary.employmentValidSsnIssuedByDueDate;
     expect(credit(legacy)).toBe('649');
-    const actual = source(true); actual.eic = {mfsEligible:false,primaryIsFullTimeStudent:false,claimantEligibility:packet(true)};
+    const actual = source(true); actual.eic = {mfsEligible:false,primaryIsFullTimeStudent:false,disallowanceSources:fictionalEmptyEicHistory(actual.taxpayer),claimantEligibility:packet(true)};
     expect(credit(actual)).toBe('649');
     delete required(actual.taxpayer.spouse).employmentValidSsnIssuedByDueDate;
     expect(() => credit(actual)).toThrow(/SSN.*unknown|known.*SSN/i);
@@ -85,10 +86,10 @@ describe('actual EIC claimant eligibility', () => {
   it('requires actual 2026 claimant sources without opening the full-year gate', () => {
     const input = source(true); input.taxpayer.taxYear = 2026;
     expect(() => calculateEicClaimantEligibility(input, true)).toThrow(/source year/i);
-    input.eic = { mfsEligible: false, primaryIsFullTimeStudent: false, claimantEligibility: { ...packet(true), sourceTaxYear: 2026 } };
+    input.eic = { mfsEligible: false, primaryIsFullTimeStudent: false, disallowanceSources: fictionalEmptyEicHistory(input.taxpayer), claimantEligibility: { ...packet(true), sourceTaxYear: 2026 } };
     expect(calculateEicClaimantEligibility(input, true)).toMatchObject({ sourceFactsComplete: true, childlessAgeEligible: true, disqualificationReason: undefined });
     // Indexed source-only control: floor(.0765×8,680)=664 at the plateau.
-    expect(calculateEic({ claimantInput: input, filingStatus: 'married_filing_jointly', qualifyingChildren: 0,
+    expect(calculateEic({ claimantInput: input, disallowanceInput: { taxpayer: input.taxpayer, sources: input.eic.disallowanceSources }, filingStatus: 'married_filing_jointly', qualifyingChildren: 0,
       earnedIncome: new Decimal(10000), agi: new Decimal(10000), investmentIncome: new Decimal(0), mfsEicEligible: false }, FEDERAL_2026_CONSTANTS).credit.toFixed()).toBe('664');
     const before = JSON.stringify(input);
     expect(() => calculateFederalTax(input)).toThrow(/2026/);

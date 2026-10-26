@@ -1,5 +1,6 @@
 // Spec: spec/federal/eic-childless-sources.yaml. Synthetic actual sources.
 import { expect, it } from 'vitest';
+import { fictionalGuidedEmptyEicHistory } from '../fixtures/guided-eic-history';
 import { buildTaxInputFromGuidedData } from '@/lib/guided-interview-bridge';
 import { updateSectionData } from '@/lib/guided-interview-flow';
 import { computeGuidedPreview } from '@/lib/guided-preview-compute';
@@ -16,6 +17,8 @@ it('binds both childless claimant sources through the actual guide', () => {
       primaryNonresidentAlienDuringYear: false, spouseNonresidentAlienDuringYear: false,
       primaryChildless: { ...childless }, spouseChildless: { ...childless } } };
   state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '10000', socialSecurityWages: '10000', socialSecurityWithheld: '620', medicareWages: '10000', medicareWithheld: '145' }] };
+  const historyPersonal = required(state.sectionData['personal-info']);
+  historyPersonal.eicDisallowanceHistory = fictionalGuidedEmptyEicHistory(historyPersonal, 'mfj', 2025);
   const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
   expect(input.eic?.claimantEligibility?.spouseChildless?.countedMilitaryDutyOutsideUnitedStates).toBe(false);
   expect(calculateFederalTax(input).allLines.find(line => line.form === '1040' && line.line === '27a')?.value.toFixed()).toBe('649');

@@ -1,4 +1,5 @@
 import { completeDependent, completePersonalInfo, completeW2Entry, startCompleteInterview } from '../guided-interview/complete-facts';
+import { fictionalGuidedEmptyEicHistory } from './guided-eic-history';
 export function guidedEicSeparatedReviewState(validSsn = true) {
   const state = startCompleteInterview({ filingStatus: 'mfs', incomeTypes: ['w2-wages'], lifeEvents: [], stateCode: null });
   const child = { ...completeDependent, qualifiesForCTC: false, qualifiesForODC: false, qualifiesForEIC: false };
@@ -15,7 +16,7 @@ export function guidedEicSeparatedReviewState(validSsn = true) {
         livedWithTaxpayerInUnitedStatesMoreThanHalfYear: true, specialResidencePeriodClaimed: false,
         marriedAtYearEnd: false, jointReturnFiled: false, validSsnIssuedByDueDate: validSsn,
         allOtherEligibleClaimantsIncluded: true, otherEligibleClaimants: [] }] } };
-  state.sectionData['personal-info'] = personal;
+  state.sectionData['personal-info'] = { ...personal, eicDisallowanceHistory: fictionalGuidedEmptyEicHistory(personal, 'mfs', 2025) };
   state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '10000', socialSecurityWages: '10000', socialSecurityWithheld: '620', medicareWages: '10000', medicareWithheld: '145' }] };
   return state;
 }

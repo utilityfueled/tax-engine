@@ -6,17 +6,21 @@ import { calculateFederalTax } from '@/engine/federal.js';
 import { TaxYearInputSchema } from '@/models/inputs.js';
 import { fillForm1040 } from '@/pdf/fill-form-1040.js';
 import { simpleW2Fixture } from '../fixtures/simple-w2.js';
+import { fictionalEmptyEicHistory } from '../fixtures/eic-disallowance.js';
 
 const box = 'topmostSubform[0].Page2[0].c2_13[0]';
 const blank = 'forms/blank/2025/f1040.pdf';
 function source(otherChild: boolean) {
-  return TaxYearInputSchema.parse({ ...structuredClone(simpleW2Fixture),
+  const input = TaxYearInputSchema.parse({ ...structuredClone(simpleW2Fixture),
     taxpayer: { ...simpleW2Fixture.taxpayer,
       primary: { ...simpleW2Fixture.taxpayer.primary, employmentValidSsnIssuedByDueDate: true } },
     w2s: [{ ...simpleW2Fixture.w2s[0], wages: '10000', federalWithheld: '0', socialSecurityWages: '10000', socialSecurityWithheld: '620', medicareWages: '10000', medicareWithheld: '145' }],
     eic: { claimantEligibility: { sourceTaxYear: 2025, sourceReference: 'Actual Rule10 relationship and other-person filing records', sourceFactsConfirmed: true,
       primaryNonresidentAlienDuringYear: false, primaryQualifyingChildOfAnotherTaxpayer: otherChild,
       primaryChildless: { mainHomeInUnitedStatesMoreThanHalfYear: true, countedMilitaryDutyOutsideUnitedStates: false } } } });
+  if (!input.eic) throw new Error('Missing fictional claimant source');
+  input.eic.disallowanceSources = fictionalEmptyEicHistory(input.taxpayer);
+  return input;
 }
 
 it('preserves actual Rule10 sources in the saved official checkbox', async () => {

@@ -17,6 +17,7 @@ import { K1CharitableReturnSourcesSchema } from "@/models/k1-charitable-return-s
 import { QbiLossSourcesSchema } from "@/models/qbi-loss-sources.js";
 import { EicSeparatedSpouseSourcesSchema } from "@/models/eic-separated-spouse-sources.js";
 import { RoyaltyPropertySourcesSchema } from "@/models/royalty-property-sources.js";
+import { EicDisallowanceSourcesSchema } from "@/models/eic-disallowance-sources.js";
 
 // Custom Zod type for decimal strings (validated as numbers, stored as strings for Decimal.js)
 const decimal = z.string().regex(/^-?\d+(\.\d+)?$/, "Must be a decimal number");
@@ -3437,6 +3438,8 @@ export const EicConfigSchema = z.object({
   }).optional(),
   /** Actual Rule3 records; eligibility and SSN-counted children are derived. */
   separatedSpouseSources: EicSeparatedSpouseSourcesSchema.optional(),
+  /** Actual independent filer denial/allowance history; omission remains unknown. */
+  disallowanceSources: EicDisallowanceSourcesSchema.optional(),
   /** Unverified legacy2025 eligibility input; omitted is unknown, not a confirmed false. */
   mfsEligible: z.boolean().optional(),
   /** Explicit legacy total only; absence must use computed income, never a default zero. */

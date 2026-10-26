@@ -1,5 +1,6 @@
 // Spec: spec/federal/guided-eic-separated-spouse.yaml.
 import { expect, it } from 'vitest';
+import { fictionalGuidedEmptyEicHistory } from '../fixtures/guided-eic-history';
 import { buildTaxInputFromGuidedData } from '@/lib/guided-interview-bridge';
 import { calculateFederalTax } from '@/engine/federal';
 import { TaxYearInputSchema } from '@/models/inputs';
@@ -26,6 +27,8 @@ function sourceState(validSsn = true) {
         allOtherEligibleClaimantsIncluded: true, otherEligibleClaimants: [] }] } };
   state.sectionData['personal-info'] = personal;
   state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '10000', socialSecurityWages: '10000', socialSecurityWithheld: '620', medicareWages: '10000', medicareWithheld: '145' }] };
+  const sourcePersonal = required(state.sectionData['personal-info']);
+  sourcePersonal.eicDisallowanceHistory = fictionalGuidedEmptyEicHistory(sourcePersonal, 'mfs', 2025);
   return state;
 }
 function credit(state: ReturnType<typeof sourceState>) {
@@ -56,7 +59,9 @@ it('rejects unknown or stale separation and child records without inventing sour
   required(required(facts.children)[0]).otherEligibleClaimants = [];
   facts.sourceTaxYear = '2024'; expect(buildTaxInputFromGuidedData(state)).toBeNull();
   facts.sourceTaxYear = '2025'; person.middleName = 'Quinn'; expect(buildTaxInputFromGuidedData(state)).toBeNull();
-  required(facts.taxpayer).firstName = 'Jordan Q'; expect(credit(state)).toBe('3409');
+  required(facts.taxpayer).firstName = 'Jordan Q';
+  required(required(person.eicDisallowanceHistory?.filers?.[0]).originalTaxpayer).firstName = 'Jordan Q';
+  expect(credit(state)).toBe('3409');
   required(required(facts.children)[0]).validSsnIssuedByDueDate = null; expect(buildTaxInputFromGuidedData(state)).toBeNull();
 });
 
@@ -89,6 +94,8 @@ it('copies only actual household source fields and revokes nested confirmations'
   expect(buildTaxInputFromGuidedData(edited)).toBeNull();
   const current = required(edited.sectionData['personal-info']);
   const confirmed = updateSectionData(edited, 'personal-info', { ...current,
+    eicDisallowanceHistory: { ...current.eicDisallowanceHistory, sourceFactsConfirmed: true,
+      filers: current.eicDisallowanceHistory?.filers?.map(row => ({ ...row, sourceFactsConfirmed: true })) },
     eicClaimantEligibility: { ...current.eicClaimantEligibility, sourceFactsConfirmed: true },
     eicSeparatedSpouseSources: { ...current.eicSeparatedSpouseSources, sourceFactsConfirmed: true } });
   expect(credit(confirmed)).toBe('3409');

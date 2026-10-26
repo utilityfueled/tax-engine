@@ -1,3 +1,4 @@
+import { fictionalEmptyEicHistory } from '../fixtures/eic-disallowance.js';
 // Spec: spec/federal/eic-childless-sources.yaml. Synthetic original facts only.
 import { expect, it } from 'vitest';
 import { calculateEicClaimantEligibility } from '@/engine/forms/eic-claimant-eligibility.js';
@@ -11,7 +12,7 @@ import { TAX_CONSTANTS } from '@/models/constants.js';
 
 const personal = { mainHomeInUnitedStatesMoreThanHalfYear: true, countedMilitaryDutyOutsideUnitedStates: false, qualifyingChildOfAnotherTaxpayer: false };
 function source(joint = false, primary: Record<string, unknown> = {}, spouse: Record<string, unknown> = {}) {
-  return TaxYearInputSchema.parse({ ...structuredClone(simpleW2Fixture),
+  const result = TaxYearInputSchema.parse({ ...structuredClone(simpleW2Fixture),
     taxpayer: { ...simpleW2Fixture.taxpayer, filingStatus: joint ? 'married_filing_jointly' : 'single',
       primary: { ...simpleW2Fixture.taxpayer.primary, employmentValidSsnIssuedByDueDate: true, usResidencyMonths: 12 },
       spouse: joint ? { ...simpleW2Fixture.taxpayer.primary, firstName: 'John', ssn: '321-54-9876', employmentValidSsnIssuedByDueDate: true, usResidencyMonths: 12 } : undefined },
@@ -20,6 +21,9 @@ function source(joint = false, primary: Record<string, unknown> = {}, spouse: Re
       primaryNonresidentAlienDuringYear: false, spouseNonresidentAlienDuringYear: joint ? false : undefined,
       primaryChildless: { ...personal, ...primary }, spouseChildless: joint ? { ...personal, ...spouse } : undefined } },
   });
+  if (!result.eic) throw new Error('Missing fictional EIC source');
+  result.eic.disallowanceSources = fictionalEmptyEicHistory(result.taxpayer);
+  return result;
 }
 function credit(input: ReturnType<typeof source>) {
   return calculateFederalTax(input).allLines.find(line => line.form === '1040' && line.line === '27a')?.value.toFixed();
@@ -93,7 +97,7 @@ it('preserves historical unknowns and requires actual positive childless sources
   delete actual.standardDeductionFacts.primaryCanBeClaimedAsDependent;
   expect(() => calculateEicClaimantEligibility(actual, true)).toThrow(/dependency.*unknown/);
   actual.standardDeductionFacts.primaryCanBeClaimedAsDependent = false;
-  expect(calculateEic({ claimantInput: actual, filingStatus: 'single', qualifyingChildren: 0,
+  expect(calculateEic({ claimantInput: actual, disallowanceInput: { taxpayer: actual.taxpayer, sources: fictionalEmptyEicHistory(actual.taxpayer) }, filingStatus: 'single', qualifyingChildren: 0,
     earnedIncome: new Decimal(10000), agi: new Decimal(10000), investmentIncome: new Decimal(0), mfsEicEligible: false }, FEDERAL_2026_CONSTANTS).credit.toFixed()).toBe('664');
   delete actual.eic.claimantEligibility.primaryChildless;
   expect(() => calculateEicClaimantEligibility(actual, true)).toThrow(/qualifying child.*unknown/);
