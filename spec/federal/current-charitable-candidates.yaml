@@ -14,8 +14,9 @@ notes: |
   no positive prior vintages or NOL sources. It retains both candidates and
   selects the matching carry only after the final canonical deduction choice.
   Current ordinary public property is separately source-bound under
-  current-charitable-public-property.yaml. Positive prior itemized, other
-  mixed-category and loss methods remain separate.
+  current-charitable-public-property.yaml; the complete current ordinary
+  receipt categories are in current-charitable-receipt-categories.yaml.
+  Positive prior itemized and loss methods remain separate.
   Numerical cases are literal statutory derivations, not published IRS examples.
 lines:
   - line: "two-current-candidates"
@@ -24,7 +25,7 @@ lines:
     testRef: "tests/engine/forms/current-charitable-candidates.test.ts::retains both exact current cash carry candidates without prior attribution"
   - line: "actual-empty-history"
     description: "Require an actual reconciled empty history rather than assume no carry"
-    formula: "Validate actual return identity, year, history confirmation and explicit empty vintages. Reject positive prior sources, missing/changed identity, mixed current categories, pass-through discrepancies and NOL sources without converting them into zero."
+    formula: "Validate actual return identity, year, history confirmation and explicit empty vintages. Reject positive prior sources, missing/changed identity, unreconciled current categories, pass-through discrepancies and NOL sources without converting them into zero."
     testRef: "tests/engine/forms/current-charitable-candidates.test.ts::requires actual empty prior history and original ordinary public cash sources"
   - line: "final-selection"
     description: "Bind final carry to the actual selected deduction method"

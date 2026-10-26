@@ -22,6 +22,7 @@ import { calculateCharitableContributionWorksheet, type CharitableCategory, type
 import { charitableSourceDigest } from "@/utils/charitable-source-digest.js";
 import { eligibleCurrentCharitableDonations } from "@/engine/forms/charitable-current-sources.js";
 import { resolveCharitableRecipient } from "@/utils/charitable-recipient.js";
+import { readCurrentCharitableReceiptAmounts } from "@/utils/charitable-current-receipts.js";
 import { calculateCharitableCarryover } from "@/engine/forms/charitable-carryover.js";
 import { calculateNonitemizedCharitableCarryover, type NonitemizedCharitableCarryoverResult } from "@/engine/forms/nonitemized-charitable-carryover.js";
 import { calculateCurrentCharitableCandidates, type CurrentCharitableCandidates } from "@/engine/forms/current-charitable-candidates.js";
@@ -319,36 +320,8 @@ export function calculateScheduleA(
   const amounts = { cashPublic: (extra?.k1CashCharitable ?? ZERO).plus(crypto?.cashPublic ?? ZERO), noncashPublic: crypto?.noncashPublic ?? ZERO,
     capitalGainPublic: (extra?.k1AppreciatedProperty30 ?? ZERO).plus(crypto?.capitalGainPublic ?? ZERO), cashPrivate: crypto?.cashPrivate ?? ZERO,
     noncashPrivate: crypto?.noncashPrivate ?? ZERO, capitalGainPrivate: (extra?.k1AppreciatedProperty20 ?? ZERO).plus(crypto?.capitalGainPrivate ?? ZERO) };
-  for (const donation of eligibleDonations) {
-    if (d(donation.amount).isZero()) continue;
-    if (donation.qualifiedOrganization === undefined) throw new Error("Charitable recipient qualification is unknown");
-    if (donation.qualifiedOrganization === false) continue;
-    const recipient = resolveCharitableRecipient(donation);
-    const otherRecipient = recipient.percentageCategory === "other-thirty-percent";
-    let contributionValue = d(donation.amount);
-    if (donation.type !== "cash") {
-      if (donation.isLongTermCapitalGain === undefined) throw new Error("Charitable property long-term holding status is unknown");
-      if (!donation.isLongTermCapitalGain) {
-        if (donation.costBasis === undefined) throw new Error("Charitable property cost basis is unknown or invalid");
-        if (donation.costBasis !== undefined) {
-          if (!d(donation.costBasis).isFinite() || d(donation.costBasis).lt(0)) throw new Error("Charitable property cost basis is unknown or invalid");
-          contributionValue = min(contributionValue, d(donation.costBasis));
-        }
-      } else if (recipient.privateNonoperating && (donation.type !== "appreciated_stock" || donation.qualifiedAppreciatedStock !== true)) {
-        if (donation.type === "appreciated_stock" && donation.qualifiedAppreciatedStock === undefined) {
-          throw new Error("Private-foundation qualified appreciated stock status is unknown");
-        }
-        if (donation.costBasis === undefined || !d(donation.costBasis).isFinite() || d(donation.costBasis).lt(0)) throw new Error("Private-foundation capital gain gift requires qualified appreciated stock or actual basis-reduction qualification");
-        contributionValue = min(contributionValue, d(donation.costBasis));
-      }
-    }
-    const category = donation.type === "cash"
-      ? otherRecipient ? "cashPrivate" : "cashPublic"
-      : donation.isLongTermCapitalGain
-        ? otherRecipient ? "capitalGainPrivate" : "capitalGainPublic"
-        : otherRecipient ? "noncashPrivate" : "noncashPublic";
-    amounts[category] = amounts[category].plus(contributionValue);
-  }
+  const receiptAmounts = readCurrentCharitableReceiptAmounts(input);
+  for (const category of Object.keys(receiptAmounts) as (keyof typeof amounts)[]) amounts[category] = amounts[category].plus(receiptAmounts[category]);
   if (nolCashLimit !== undefined) amounts.cashPublic = min(amounts.cashPublic, nolCashLimit);
   if (input.charitableCarryoverSources) {
     if (input.taxpayer.taxYear === 2026 && ((input.deductionElection !== "standard" && input.deductionElection !== "nonitemized")

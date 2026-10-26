@@ -1,0 +1,48 @@
+form: "Current charitable receipt categories"
+fullName: "Actual current ordinary G A B C D receipts and both selected carry candidates"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s170/"
+references:
+  - "https://www.irs.gov/publications/p526"
+  - "https://www.ecfr.gov/current/title-26/section-1.170A-10"
+notes: |
+  Sources refreshed2026-10-25. Apply actual current receipt valuation and the
+  enacted170(b)(1)G/A/B/C/D limitations, I floor order, and d(1)(C) eligible floor
+  carry. This source route uses an identity-bound confirmed empty prior history.
+  It does not place prior gifts into the current worksheet. Source amounts are
+  kept exact; whole-dollar reporting remains at completed ScheduleA groups.
+  G is public cash; A ordinary public property; B other-recipient cash/ordinary
+  property; C public capital-gain investment stock; D other-recipient capital-
+  gain investment stock. Ordinary property uses min(FMV,basis). Nonoperating
+  foundation capital stock uses basis unless actual qualified-appreciated-stock
+  status establishes the statutory exception. Other30percent recipients do not
+  inherit that private-foundation reduction. Unknown source character is not zero.
+  Both itemized and nonitemized candidates use the same percentage allowances.
+  Only itemization can add eligible current floor carry. Section170(p) still
+  uses qualifying current public cash only. No current election or source
+  priority allocation is invented. Single-medium B and known zero/full mixed
+  B are supported; a partial cash/noncash B allowance remains separate.
+  Long-term tangible-property/unrelated-use, appreciation election, pass-through,
+  crypto, positive prior and NOL coordination need their own original source
+  methods. These literals are statutory derivations, not published examples.
+lines:
+  - line: "five-current-categories"
+    description: "Conserve all five actual current categories through floor and carry"
+    formula: "Base100000 G10000 A5000 B10000 C20000 D15000 yields before-floor G10000 A5000 B10000 C20000 D10000. Floor500 reduces D: cash20000/noncash34500; itemized Dcarry5500 and nonitemized Dcarry5000. G40000 A10000 B30000 C20000 D10000 gives59500 and carries B20500 C20000 D10000."
+    testRef: "tests/engine/forms/current-charitable-receipt-categories.test.ts::conserves the current five category allowances and final carry candidates"
+  - line: "original-valuations"
+    description: "Reconcile original per-receipt property values and source character"
+    formula: "Private nonoperating capital stock FMV50000 basis10000: actual qualified stock uses D50000 before limits; actualfalse uses D10000. Other30percent stock retains50000. Ordinary B FMV50000 basis30000 remains B30000, with noncash medium. Missing source category/basis/stock qualification, unknown holding status, wrong amounts, unimplemented tangible LTCG, prior or NOL facts reject."
+    testRef: "tests/engine/forms/current-charitable-receipt-categories.test.ts::binds exact original stock and ordinary property valuation without invented categories"
+  - line: "media-and-cents"
+    description: "Retain source media and exact floor boundaries"
+    formula: "Known zero or full B allowance preserves original cash/noncash rows. Partial mixed B rejects until its allocation method is established. Exact source cents and per-item min(FMV,basis) precede percentage/floor limits; source order and current category presentation cannot alter either candidate."
+    testRef: "tests/engine/forms/current-charitable-receipt-categories.test.ts::keeps media and exact current receipt values distinct from unsupported partial allocation"
+  - line: "selection"
+    description: "Choose category carries after the final actual deduction method"
+    formula: "Base10000 G1000 A500 B1000 C2000 D1500 yields itemized cash2000/noncash3450 and Dcarry550. Automatic eligible standard or explicit nonitemization selects Dcarry500; current170(p)1000 is distinct. No standard entitlement is inferred."
+    testRef: "tests/engine/federal-current-charitable-receipt-categories.test.ts::selects the complete ordinary current category carry without changing source facts"
+  - line: "guide"
+    description: "Existing actual receipt controls preserve the five source categories"
+    formula: "Actual publiccash, publicordinaryproperty, othercash, publicstock and otherstock plus confirmed empty history survive guided conversion. Changed category/basis/unknown status blocks incomplete facts; actual2026 calculation/preview/PDF gates remain closed."
+    testRef: "tests/guided-interview/guided-current-charitable-receipt-categories.test.ts::preserves the full ordinary receipt packet and closed year boundaries"

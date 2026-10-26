@@ -86,5 +86,8 @@ it('retains historical cash capacity and the separate mixed-property method', ()
   mixed.donations.push({ organization:'Actual public property recipient', type:'property', amount:'1', costBasis:'1',
     isLongTermCapitalGain:false, dateOfDonation:'2026-05-15', qualifiedOrganization:true, recipientCategory:'fifty-percent' });
   const mixedContext = context('40000','30000');mixedContext.current.noncashPublic = d('1');
+  expect(rows(calculateCurrentCharitableCandidates(mixed,mixedContext).itemized.carryforwards)).toEqual([['other_30','10501']]);
+  mixed.donations[2].isLongTermCapitalGain = true;
+  mixedContext.current.noncashPublic = d('0');mixedContext.current.capitalGainPublic = d('1');
   expect(()=>calculateCurrentCharitableCandidates(mixed,mixedContext)).toThrow(/separate|categories/);
 });

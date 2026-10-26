@@ -10,8 +10,9 @@ notes: |
   Actual recipientCategory uses the shared classification resolver. Qualifying
   operating foundations belong to A/G; private nonoperating foundations and
   other qualified thirty-percent recipients use B for cash. Ambiguous legacy
-  true and crypto other-qualified remain unknown. Current A/C/D,
-  noncash B, pass-through sources and NOL methods remain separate here.
+  true and crypto other-qualified remain unknown. Current ordinary A/C/D and
+  noncash B source coordination is specified in current-charitable-receipt-categories.yaml;
+  pass-through sources and NOL methods remain separate here.
   Under current170B(i)/(ii), with no A/C/D, B is min(actual B cash,30% base,
   max(0,50% base minus allowed G plus min(G,10% base))). This revised offset
   applies after2025 and is not applied to historical2025. I applies the floor
@@ -27,7 +28,7 @@ lines:
     testRef: "tests/engine/forms/current-public-other-cash.test.ts::keeps current public and other-recipient cash carries in their actual categories"
   - line: "actual-source-boundary"
     description: "Require actual category and receipt reconciliation without inventing prior history"
-    formula: "Missing category, stale source amount or prior history rejects. Known nonqualified private cash is excluded. Positive private noncash or public property with private cash remains guarded. At base10000.49/G4000.11/B3000.99, exact Bcapacity2000.184 and floor50.00245 yield itemized Bcarry1050.80845 or nonitemized1000.806. At G40000/B20000 no floor-only carry; B20000.01 adds500.01 itemized or.01 nonitemized."
+    formula: "Missing category, stale source amount or prior history rejects. Known nonqualified private cash is excluded. Changing a cash receipt to property without reconciling the actual category amounts rejects. At base10000.49/G4000.11/B3000.99, exact Bcapacity2000.184 and floor50.00245 yield itemized Bcarry1050.80845 or nonitemized1000.806. At G40000/B20000 no floor-only carry; B20000.01 adds500.01 itemized or.01 nonitemized."
     testRef: "tests/engine/forms/current-public-other-cash.test.ts::requires actual cash category sources and preserves exact floor boundaries"
   - line: "canonical-selection"
     description: "Choose actual carry after the deduction method and exclude private cash from170p"
@@ -38,6 +39,6 @@ lines:
     formula: "Actual public/private cash and confirmed empty history survive bridging; unknown recipient classification blocks it. The wording identifies the second category rather than all private foundations. Full2026 calculation, preview and export gates remain closed."
     testRef: "tests/guided-interview/guided-current-public-other-cash.test.ts::preserves actual cash recipient categories without changing the closed year gates"
   - line: "historical-and-mixed-boundary"
-    description: "Retain historical2025 capacity and the separate mixed-property source method"
-    formula: "Base100000/G40000/B30000 allows50000 and carries20000 in2025, versus59500 and10500 current itemized carry in2026. The2026 B10%-offset and floor must not change2025. Current public property combined with B cash remains explicitly guarded even when original source amounts reconcile."
+    description: "Retain historical2025 capacity and the separate special-property source method"
+    formula: "Base100000/G40000/B30000 allows50000 and carries20000 in2025, versus59500 and10500 current itemized carry in2026. The2026 B10%-offset and floor must not change2025. Actual current ordinary public property1 with G40000/B30000 gives Bcarry10501; changing that receipt to tangible long-term property requires its distinct source method."
     testRef: "tests/engine/forms/current-public-other-cash.test.ts::retains historical cash capacity and the separate mixed-property method"
