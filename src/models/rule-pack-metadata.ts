@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.85",
+    ruleVersion: "2025.86",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8962", section: "Actual two-family Situation4 policy agreement, original recipient/enrollee identity and monthly same-percentage allocation; physical PartIV and source-bound review", revision: "Final2025 instructions and Form8962 created2025-03-25; exact sources and derived2026 credit tests, additional allocation/health methods and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p970", section: "Chapter7 actual allocated room-and-board expenses within section529(e)(3)(B) capacity; unallocated spending does not dilute the source allocation", revision: "Final2025 publication and current section529; original sources, exact Decimal conservation and partial in-kind guard retained, independently derived controls are not human qualification", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/p6196.pdf", section: "Explicit2026 nonitemization with actual zero standard entitlement, current eligible cash under170(p), and final selected-deduction audit", revision: "October2026 Publication6196 and IRC170(p)/63(c)(6); historical elections retained, actual source/UI/PDF boundaries verified, positive carry/NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s62/", section: "Section62(d)(2) actual recipient educator reduction for verified earnings excluded from fully qualified in-kind529 benefits; section529(c)(3)(A)/(B)(i)/(iv)", revision: "Final2025 Schedule1line11 and historical Pub529 earnings explanation; documented statutory interpretation, actual source/recipient/year conservation, partial allocations and human qualification remain separate", retrievedAt: "2026-10-25" },
@@ -129,11 +130,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.81-law-integration-draft",
+    ruleVersion: "2026.82-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8962", section: "Actual two-family Situation4 policy agreement, original recipient/enrollee identity and monthly same-percentage allocation; physical PartIV and source-bound review", revision: "Final2025 instructions and Form8962 created2025-03-25; exact sources and derived2026 credit tests, additional allocation/health methods and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p970", section: "Chapter7 actual allocated room-and-board expenses within section529(e)(3)(B) capacity; unallocated spending does not dilute the source allocation", revision: "Final2025 publication and current section529; original sources, exact Decimal conservation and partial in-kind guard retained, independently derived controls are not human qualification", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/pub/irs-pdf/p6196.pdf", section: "Explicit2026 nonitemization with actual zero standard entitlement, current eligible cash under170(p), and final selected-deduction audit", revision: "October2026 Publication6196 and IRC170(p)/63(c)(6); historical elections retained, actual source/UI/PDF boundaries verified, positive carry/NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s62/", section: "Section62(d)(2) actual recipient educator reduction for verified earnings excluded from fully qualified in-kind529 benefits; section529(c)(3)(A)/(B)(i)/(iv)", revision: "Final2025 Schedule1line11 and historical Pub529 earnings explanation; documented statutory interpretation, actual source/recipient/year conservation, partial allocations and human qualification remain separate", retrievedAt: "2026-10-25" },

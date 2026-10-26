@@ -1,0 +1,52 @@
+form: "Form 8962 Part IV"
+fullName: "Actual agreed policy allocations between two tax families"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8962"
+retrievedAt: "2026-10-25"
+reviewStatus: "bounded-agent-source-review-complete-human-qualification-pending"
+notes: |
+  Instructions Allocation Situation4 permit two taxpayers to agree on a
+  monthly allocation and require the same percentage for policy columnsA/B/C.
+  Lines30-33 require a separate row for each policy/percentage period; the
+  entered decimal is rounded to two places. This first source method requires
+  an actual agreed percentage already expressible at that precision, so no
+  election is fabricated by rounding an unsupported agreement.
+  Original1095A amounts, recipient and covered people remain source records.
+  PartIV line34 requires monthly PartII even when the amounts are unchanged.
+  The published Joe/Alice example independently supports annual allocated
+  source totals10400/9600/5076 and2600/2400/1269. Its narrative3386 credit is
+  not used as a monthly-rounding oracle; the form explicitly rounds8a/8b.
+  Initial coverage is Situation4 with documented agreement, two tax families,
+  positive policy APTC, no current-year marriage/divorce, known correct original
+  SLCSP, and nonoverlapping policy months. Separate-source methods for no
+  agreement, noAPTC, other allocation situations, overlapping policies, QSEHRA,
+  PartV and self-employed-health coordination remain unimplemented here.
+  Original source cents are multiplied before each final monthly form amount
+  is rounded. No dependent identity, income, fraction or missing zero is inferred.
+  2026 uses the same allocation sources with existing2026 credit/repayment law;
+  full2026 calculation and export readiness remain separately closed.
+lines:
+  - line: "source"
+    description: "Bind the allocation to the actual complete original statement and tax families"
+    formula: "Require actual year/reference/confirmation, current primary/joint-spouse identity and known unclaimable filers; familySize equals the actual household. Each policy sourceId, original recipient, covered people, month amounts and tax-year snapshot must exactly match the original1095A. Every original covered person belongs to exactly one of the two actual families, including at least one in each for every allocated month; no unrelated or duplicate assignment."
+    testRef: "tests/engine/forms/form-8962-shared-policy.test.ts::binds original source identity year households and every covered enrollee"
+  - line: "30-33e-g"
+    description: "Multiply all three original policy amounts by the same actual agreed fraction"
+    formula: "For each actual month,allocatedA=sourceA*f,allocatedB=sourceB*f,allocatedC=sourceC*f;0<=f<=1 and f has at most2decimal places. Actual0 and1 remain valid. Preserve original cents and allocations; sort periods by month,group only consecutive equal fractions for one policy."
+    testRef: "tests/engine/forms/form-8962-shared-policy.test.ts::matches published Joe Alice allocation totals without changing original sources"
+  - line: "source-conservation"
+    description: "Every month and agreement is explicit and conserved"
+    formula: "Reject missing/duplicate months, changed equal-total originals, substituted recipient/policy/person, missing agreement, unsupported precision, conflicting original SLCSP, overlap and unknown family assignment. Exact amounts above Number safe-integer range remain Decimal."
+    testRef: "tests/engine/forms/form-8962-shared-policy.test.ts::preserves zero full and varying agreements with exact cents and explicit method gates"
+  - line: "34"
+    description: "Complete monthly PartII after actual PartIV"
+    formula: "Skip annual11; at30000single2025,rate.0196,8a588,8b49. Original monthly1000/900/500 allocated.50 gives500/450/250; monthlycredit401,annual4812,APTC3000,net1812. No supplied reconciliation amount can override the source-derived allocation."
+    testRef: "tests/engine/federal-shared-policy.test.ts::transfers actual monthly allocated amounts and retains original policy totals"
+  - line: "canonical-context"
+    description: "Use actual canonical household identity and income"
+    formula: "A positive source packet requires the actual source household context, not a true validation flag or supplied computed allocation. Canonical MAGI still derives from the whole return; no source allocation can bypass the historical or2026 law gates."
+    testRef: "tests/engine/federal-shared-policy.test.ts::rejects a missing or conflicting allocation context and retains closed year gates"
+  - line: "2026-source"
+    description: "Use actual2026 contribution and full-repayment rules with allocated amounts"
+    formula: "Isolated30000single2026:line5=191,rate.0617,8a1851,8b154;allocated500/450/250 gives296monthlycredit,3552annual,552net. At100000actualMAGIabove400,credit0andfull3000allocatedAPTCrepayment. Fullreturn2026gate remains closed."
+    testRef: "tests/engine/federal-shared-policy.test.ts::applies isolated2026 law to actual allocations and rejects absent original policies"

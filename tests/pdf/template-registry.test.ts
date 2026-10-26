@@ -18,7 +18,7 @@ describe("physically versioned review template packs", () => {
 
   it("pins every historical blank to exact bytes and rejects an unreviewed revision", async () => {
     const pack = REVIEW_TEMPLATE_PACKS[2025];
-    expect(Object.keys(pack.templates)).toHaveLength(42);
+    expect(Object.keys(pack.templates)).toHaveLength(43);
     for (const [filename, template] of Object.entries(pack.templates)) {
       const bytes = await readFile(`forms/blank/2025/${filename}`);
       expect(assertReviewTemplateBytes(filename, bytes, 2025).sha256).toBe(template.sha256);

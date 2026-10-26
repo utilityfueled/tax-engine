@@ -41,6 +41,7 @@ export function calculatePremiumTaxCreditReturn(params: {
     modifiedAGI: input.taxpayer.taxYear === 2025 && !input.form8962 ? taxpayerMagi : undefined,
     filingStatus: input.taxpayer.filingStatus,
     form1095A: input.form1095A,
+    allocationHousehold: { taxpayer: input.taxpayer, standardDeductionFacts: input.standardDeductionFacts },
     healthInsuranceCoordination: coordination?.method,
     healthInsuranceRepaymentLimit: coordination?.repaymentLimit,
     orderedDeductionInterim: coordination?.orderedDeductionInterim,

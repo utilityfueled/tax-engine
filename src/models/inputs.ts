@@ -11,6 +11,7 @@ import { Form982NolSourcesSchema } from "@/models/cod-nol-sources.js";
 import { IraBasisSourcesSchema } from "@/models/ira-basis-sources.js";
 import { CharitableCarryoverSourcesSchema } from "@/models/charitable-carryover-sources.js";
 import { AdoptionPriorBenefitHistorySchema } from "@/models/adoption-prior-benefits.js";
+import { Form8962SharedPolicySchema, MarketplaceCoveredIndividualSchema } from "@/models/form-8962-shared-policy.js";
 
 // Custom Zod type for decimal strings (validated as numbers, stored as strings for Decimal.js)
 const decimal = z.string().regex(/^-?\d+(\.\d+)?$/, "Must be a decimal number");
@@ -2512,6 +2513,9 @@ export const Form1095ASchema = z.preprocess(value => {
   taxYear: z.number().int().optional(),
   marketplace: z.string(),
   policyNumber: z.string(),
+  recipientName: z.string().optional(),
+  recipientSsn: z.string().optional(),
+  coveredIndividuals: z.array(MarketplaceCoveredIndividualSchema).optional(),
   monthlyPremiums: z.array(z.object({
     month: z.number().int().min(1).max(12),
     enrolleePremium: nonnegativePremium,
@@ -2534,6 +2538,7 @@ export const Form8962Schema = z.object({
   marketplaceInformationAccurate: z.boolean().optional(),
   coverageFactsConfirmed: z.boolean().optional(),
   allocationRequired: z.boolean().optional(),
+  sharedPolicyAllocations: Form8962SharedPolicySchema.optional(),
   alternativeMarriageCalculationElected: z.boolean().optional(),
   selfEmployedHealthInsuranceCoordinationRequired: z.boolean().optional(),
   qsehraAffected: z.boolean().optional(),

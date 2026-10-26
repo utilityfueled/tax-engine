@@ -5,6 +5,7 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import type { FilingStatus } from "@/models/constants.js";
 import { min, roundDollar, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { calculateForm8962SharedPolicy, type Form8962AllocationInput, type Form8962SharedPolicyResult } from "./form-8962-shared-policy.js";
 
 /** Actual completed household and coverage worksheets; never inferred from AGI alone. */
 export interface Form8962Facts {
@@ -44,6 +45,8 @@ export interface Form8962Input {
   modifiedAGI?: Decimal;
   filingStatus: FilingStatus;
   form1095A: TaxYearInput["form1095A"];
+  /** Actual return source identity, not a supplied validation flag or calculated allocation. */
+  allocationHousehold?: Pick<Form8962AllocationInput, "taxpayer" | "standardDeductionFacts">;
   /** Canonical engine context; never a TaxYearInput source flag or supplied amount. */
   healthInsuranceCoordination?: "pub974-simplified-2025" | "pub974-simplified-2026" | "pub974-alternative-reentry-2026";
   /** Computed WorksheetX/Y/Z result, never a taxpayer-provided Form8962 fact. */
@@ -55,6 +58,7 @@ export interface Form8962Input {
 export interface Form8962Result {
   taxYear: number;
   sourceFactsVerified: boolean;
+  sharedPolicyAllocation?: Form8962SharedPolicyResult;
   /** Derived eligibility explains officially skipped credit columns. */
   taxpayerEligible: boolean;
   /** True only for the separately identified auxiliary Pub974 worksheet. */
@@ -117,9 +121,16 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   const facts = input.facts;
   if (year === 2026 && !facts) throw new Error("Form 8962 2026 requires actual household and monthly coverage facts");
   const verified = facts !== undefined;
+  let sharedPolicyAllocation: Form8962SharedPolicyResult | undefined;
+  if (facts?.allocationRequired === true || facts?.sharedPolicyAllocations !== undefined) {
+    if (!input.allocationHousehold) throw new Error("Form8962 allocation requires actual household source context and allocation worksheet");
+    if (input.allocationHousehold.taxpayer.taxYear !== year || input.allocationHousehold.taxpayer.filingStatus !== input.filingStatus) throw new Error("Form8962 allocation household source context conflicts with the return year or status");
+    sharedPolicyAllocation = calculateForm8962SharedPolicy({ ...input.allocationHousehold, form1095A: input.form1095A, form8962: facts });
+  }
   if (facts) {
     if (facts.householdFactsConfirmed !== true || facts.coverageFactsConfirmed !== true) throw new Error("Form 8962 household and coverage facts must be confirmed");
     for (const flag of ["allocationRequired", "alternativeMarriageCalculationElected", "selfEmployedHealthInsuranceCoordinationRequired", "lawfulPresenceReconciliationRequired"] as const) {
+      if (flag === "allocationRequired" && sharedPolicyAllocation) continue;
       if (flag === "selfEmployedHealthInsuranceCoordinationRequired" && facts[flag] === true
         && (input.healthInsuranceCoordination === `pub974-simplified-${year}`
           || (year === 2026 && input.healthInsuranceCoordination === "pub974-alternative-reentry-2026"))) continue;
@@ -169,6 +180,11 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
       });
     }
   }
+  // PartIV amounts replace only the calculation sources; original statements
+  // remain intact for identity and source reconciliation and review.
+  if (sharedPolicyAllocation) for (const row of sharedPolicyAllocation.months) {
+    sourceMonths.set(row.month, { premium: row.premium, slcsp: row.slcsp, advance: row.advance, policyCount: 1 });
+  }
   const months: Month[] = [];
   if (facts) {
     const seen = new Set<number>();
@@ -184,6 +200,7 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
       const advance = dollars(row.advancePremiumTaxCredit, "monthly advance PTC");
       if (!advance.eq(original.advance)) throw new Error("Form 8962 monthly APTC does not reconcile to source statements");
       if (premium.gt(original.premium)) throw new Error("Form 8962 eligible premium exceeds source enrollment premiums");
+      if (sharedPolicyAllocation && (!premium.eq(original.premium) || !slcsp.eq(original.slcsp))) throw new Error("Form8962 shared-policy reconciliation must equal the actual source-derived allocation");
       if (typeof row.coverageEligible !== "boolean" || typeof row.incomeBasedSepEnrollment !== "boolean") throw new Error("Form 8962 monthly coverage eligibility facts must be confirmed");
       if (facts.qsehraAffected && typeof row.qsehraAffordable !== "boolean") throw new Error("Form 8962 requires actual monthly QSEHRA affordability");
       const qsehraBenefit = facts.qsehraAffected ? dollars(row.qsehraMonthlyPermittedBenefit, "monthly QSEHRA permitted benefit") : new Decimal(0);
@@ -219,8 +236,9 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
       new Decimal(row.enrolleePremium).eq(firstMonth.enrolleePremium) && new Decimal(row.slcsp).eq(firstMonth.slcsp));
   })
     && months.length === 12 && first !== undefined && months.every(month => month.premium.eq(first.premium) && month.slcsp.eq(first.slcsp) && month.eligible === first.eligible);
-  const calculationMethod = fullYearUnchanged ? "annual" : "monthly";
+  const calculationMethod = fullYearUnchanged && !sharedPolicyAllocation ? "annual" : "monthly";
   const audit = new AuditTrail();
+  if (sharedPolicyAllocation) audit.merge(sharedPolicyAllocation.lines);
   const record = (line: string, description: string, amount: Decimal, formula: string) => audit.record("Form 8962", line, description, amount, formula);
   record("1", "Tax family size", new Decimal(familySize), verified ? "Actual confirmed tax-family worksheet" : "Unverified historical family-size input");
   record("2a", "Taxpayer modified AGI", taxpayerMAGI, verified ? "Actual Worksheet 1-1" : "Unverified historical modified AGI");
@@ -285,7 +303,7 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   record("27", "Excess advance premium tax credit before limitation", excessAPTC, "max(0, line 25 - line 24)");
   if (repaymentCap !== null && excessAPTC.gt(0)) record("28", "Historical repayment limitation", repaymentCap, worksheetLimit === undefined ? "2025 Table 5; no repayment limitation applies in 2026" : "Actual Pub974 WorksheetX/Y/Z limitation replaces Table5");
   record("29", "Excess advance premium tax credit repayment", excessAPTCRepayment, "Line 27 limited by line 28 where applicable -> Schedule 2 line 1a");
-  return { taxYear: year, sourceFactsVerified: verified, taxpayerEligible, orderedDeductionInterim: input.orderedDeductionInterim ? true : undefined, calculationMethod, familySize, modifiedAGI,
+  return { taxYear: year, sourceFactsVerified: verified, sharedPolicyAllocation, taxpayerEligible, orderedDeductionInterim: input.orderedDeductionInterim ? true : undefined, calculationMethod, familySize, modifiedAGI,
     federalPovertyLine, fplPercentage, fplPercentageForTable, contributionRate: rate, expectedContribution, monthlyContribution,
     annualPremium, annualSLCSP, annualAdvancePTC, ptcAllowed, advancePTCTotal, netPTC, excessAPTC, repaymentCap, excessAPTCRepayment,
     lines: audit.getLines() };

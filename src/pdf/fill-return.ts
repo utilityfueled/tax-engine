@@ -42,7 +42,8 @@ import { assertForm7206ReviewSource, fillForm7206 } from "./fill-form-7206.js";
 import { fillSEHealthInsuranceWorksheetReference } from "./fill-se-health-insurance-worksheet.js";
 import { fillIraDeductionWorksheetReference } from "./fill-ira-deduction-worksheet.js";
 import { buildNetOperatingLossReview, fillNetOperatingLossReview } from "./fill-net-operating-loss.js";
-import { fillForm8962Reference } from "./fill-form-8962.js";
+import { buildForm8962ReferenceSummary, fillForm8962Reference, fillForm8962SharedPolicy } from "./fill-form-8962.js";
+import { hasSharedPremiumTaxCreditSources, preparePremiumTaxCreditReview, type PreparedPremiumTaxCreditReview } from "./premium-tax-credit-review-context.js";
 import {
   fillForm1116Reference,
   shouldIncludeForm1116ReferenceSummary,
@@ -387,6 +388,8 @@ export interface FillReturnOptions {
   charitableReview?: PreparedCharitableReview;
   /** Actual historical benefits and income, checked before identifier redaction. */
   adoptionReview?: PreparedAdoptionReview;
+  /** Actual policy allocation and whole-return income, validated before redaction. */
+  premiumTaxCreditReview?: PreparedPremiumTaxCreditReview;
 }
 
 export interface FillReturnResult {
@@ -410,6 +413,10 @@ export async function fillReturn(
     ? options.charitableReview ?? prepareCharitableReview(input) : undefined;
   const adoptionReview = hasHistoricalAdoptionSources(input)
     ? options.adoptionReview ?? prepareAdoptionReview(input) : undefined;
+  const premiumTaxCreditReview = hasSharedPremiumTaxCreditSources(input) || result.form8962?.sharedPolicyAllocation || options.premiumTaxCreditReview
+    ? options.premiumTaxCreditReview ?? preparePremiumTaxCreditReview(input) : undefined;
+  const premiumTaxCreditContext = premiumTaxCreditReview ? { input, prepared: premiumTaxCreditReview } : undefined;
+  if (premiumTaxCreditContext) buildForm8962ReferenceSummary(input.form1095A, result, premiumTaxCreditContext);
   const capitalGainReview = options.capitalGainReview ?? prepareForm8949Review(input);
   const capitalTransactions = form8949ReviewCalculation(input, capitalGainReview);
   const hasDigitalDispositions = [capitalTransactions.shortTermBoxG, capitalTransactions.shortTermBoxH, capitalTransactions.shortTermBoxI,
@@ -867,7 +874,14 @@ export async function fillReturn(
 
   // ── Form 8962 reference summary (if applicable — supported marketplace reconciliation data) ──
   if (input.form1095A.length > 0 && result.form8962) {
-    const outputPath8962Reference = await fillForm8962Reference(input.form1095A, result, outputDir);
+    if (result.form8962.sharedPolicyAllocation) {
+      const doc8962 = await fillForm8962SharedPolicy(input, result, join(blankFormsDir, "f8962.pdf"), premiumTaxCreditReview);
+      if (options.flatten) await flattenForm(doc8962.getForm());
+      const outputPath8962 = join(outputDir, "f8962-filled.pdf");
+      await savePacketPdf(doc8962, outputPath8962);
+      filledForms.push(outputPath8962);
+    }
+    const outputPath8962Reference = await fillForm8962Reference(input.form1095A, result, outputDir, premiumTaxCreditContext);
     filledForms.push(outputPath8962Reference);
   }
 
