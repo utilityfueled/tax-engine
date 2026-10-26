@@ -61,6 +61,15 @@ export function buildGuidedEicClaimantEligibility(personal: PersonalInfoData | u
     primaryChildless: childlessSource(data.primaryChildless, data.primaryQualifyingChildOfAnotherTaxpayer),
     spouseChildless: childlessSource(data.spouseChildless, data.spouseQualifyingChildOfAnotherTaxpayer),
   };
+  // Form1040's home question applies even with qualifying children. Validate
+  // supplied military evidence without imposing the childless home restriction
+  // or manufacturing an answer for an older saved record.
+  for (const home of [claimantEligibility.primaryChildless, ...(status === 'mfj' ? [claimantEligibility.spouseChildless] : [])]) {
+    if (home?.countedMilitaryDutyOutsideUnitedStates === true
+      && (!home.militaryDutySourceReference?.trim() || home.extendedActiveDutyOrderOver90DaysOrIndefinite !== true)) {
+      throw new Error('Counted foreign military duty needs its actual source reference and an extended active-duty order for more than 90 days or indefinite duty');
+    }
+  }
   const input: EicClaimantInput = {
     taxpayer: { taxYear, filingStatus: statuses[status],
       primary: { dateOfBirth: personal.dateOfBirth, employmentValidSsnIssuedByDueDate: bool(personal.employmentValidSsnIssuedByDueDate), tinIssuedByDueDate: bool(personal.tinIssuedByDueDate) },

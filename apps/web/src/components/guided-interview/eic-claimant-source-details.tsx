@@ -3,9 +3,10 @@ import type { FilingStatus } from '@/lib/guided-interview-flow';
 import { updateEicClaimantSources, type EicClaimantEligibilityData, type EicChildlessClaimantData } from '@/lib/guided-eic-eligibility';
 import { BooleanFact, TextFact } from './fact-fields';
 
-function ChildlessSourceFields({ data, spouse, dependent, onChange }: {
+function HomeSourceFields({ data, spouse, childless, dependent, onChange }: {
   data: EicChildlessClaimantData | undefined;
   spouse: boolean;
+  childless: boolean;
   dependent: boolean | null | undefined;
   onChange: (data: EicChildlessClaimantData) => void;
 }) {
@@ -13,7 +14,7 @@ function ChildlessSourceFields({ data, spouse, dependent, onChange }: {
   const update = (patch: Partial<EicChildlessClaimantData>) => onChange({ ...data, ...patch });
   const exception = data?.dependentException;
   return <fieldset className="guided-card">
-    <legend>{spouse ? "Your spouse's childless EIC sources" : 'Your childless EIC sources'}</legend>
+    <legend>{spouse ? "Your spouse's main-home records" : 'Your main-home records'}</legend>
     <div className="guided-form-grid">
       <BooleanFact label={`${whose} main home was in the United States for more than half of the applicable tax year`} value={data?.mainHomeInUnitedStatesMoreThanHalfYear} onChange={mainHomeInUnitedStatesMoreThanHalfYear => update({ mainHomeInUnitedStatesMoreThanHalfYear })} />
       <BooleanFact label={`${whose} main-home answer counts military duty outside the United States`} value={data?.countedMilitaryDutyOutsideUnitedStates} onChange={countedMilitaryDutyOutsideUnitedStates => update({ countedMilitaryDutyOutsideUnitedStates })} />
@@ -22,7 +23,7 @@ function ChildlessSourceFields({ data, spouse, dependent, onChange }: {
         <BooleanFact label={`${whose} active-duty order was for more than 90 days or indefinite`} value={data?.extendedActiveDutyOrderOver90DaysOrIndefinite} onChange={extendedActiveDutyOrderOver90DaysOrIndefinite => update({ extendedActiveDutyOrderOver90DaysOrIndefinite })} />
       </>}
     </div>
-    {(dependent === true || exception !== undefined) && <>
+    {childless && (dependent === true || exception !== undefined) && <>
       <p className="guided-hint">The household record says this filer may be claimed as a dependent. The narrow filing exception needs actual records for every person who could claim this filer.</p>
       {exception === undefined ? <button type="button" className="guided-add-button" onClick={() => update({ dependentException: {} })}>{spouse ? "Add your spouse's dependency filing-exception records" : 'Add your dependency filing-exception records'}</button> : <div className="guided-form-grid">
         <TextFact label={`${whose} dependency filing-exception source reference`} value={exception.sourceReference ?? ''} onChange={sourceReference => update({ dependentException: { ...exception, sourceReference } })} />
@@ -64,11 +65,10 @@ export function EicClaimantSourceDetails({ data, filingStatus, childless, primar
         {filingStatus === 'mfj' && <BooleanFact label="Your spouse is another taxpayer’s qualifying child for EIC" value={data.spouseQualifyingChildOfAnotherTaxpayer !== undefined ? data.spouseQualifyingChildOfAnotherTaxpayer : data.spouseChildless?.qualifyingChildOfAnotherTaxpayer} onChange={value => updateOtherChild(true, value)} />}
       </div>
       <p className="guided-hint">For another taxpayer’s qualifying-child answer, apply the EIC relationship, age, home and joint-return rules, including the exception for a person not required to file who does not file or files only for a withholding or estimated-tax refund. A dependency answer alone does not settle this question. This restriction also applies when you have a qualifying child of your own.</p>
-      {childless && <>
-        <p className="guided-hint">Both joint filers need their own qualifying main home and dependency answers. The United States means the 50 states and District of Columbia. Use the EIC main-home test for the applicable taxable year, including a decedent’s final return; general residency months do not answer it. Keep the actual home and period records with your source reference. No day count is inferred.</p>
-        <ChildlessSourceFields data={data.primaryChildless} spouse={false} dependent={primaryDependent} onChange={primaryChildless => update({ primaryChildless })} />
-        {filingStatus === 'mfj' && <ChildlessSourceFields data={data.spouseChildless} spouse dependent={spouseDependent} onChange={spouseChildless => update({ spouseChildless })} />}
-      </>}
+      <p className="guided-hint">Form 1040 asks about your main home even when you have qualifying children. Both joint filers need their own answer. The United States means the 50 states and District of Columbia. Use the applicable tax-year period, including a decedent’s final return; general residency months do not answer this question. Keep actual home and period records with your source reference. Unknown answers leave the review checkbox unmarked.</p>
+      {childless && <p className="guided-hint">For EIC without a qualifying child, both joint filers must also meet the main-home and dependency requirements. No day count is inferred.</p>}
+      <HomeSourceFields data={data.primaryChildless} spouse={false} childless={childless} dependent={primaryDependent} onChange={primaryChildless => update({ primaryChildless })} />
+      {filingStatus === 'mfj' && <HomeSourceFields data={data.spouseChildless} spouse childless={childless} dependent={spouseDependent} onChange={spouseChildless => update({ spouseChildless })} />}
       <BooleanFact label="EIC claimant sources checked after the last edit" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed => update({ sourceFactsConfirmed })} />
       <p className="guided-hint">Use the birth dates and actual death-status answers in your household records. Residency months are not an answer to the nonresident-alien question. If a joint resident election applies, keep that answer consistent with the standard-deduction records.</p>
       <button type="button" className="guided-card-remove" onClick={() => onChange(undefined)}>Remove EIC claimant sources</button>
