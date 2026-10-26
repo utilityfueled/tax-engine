@@ -165,17 +165,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i6251",
       "specPath": "spec/federal/amt-investment-interest.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-6251.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-amt-investment.test.ts::uses separate actual deductions and preserves both signs on line2c",
+        "tests/pdf/form-6251-audit.test.ts::prints actual AMT investment adjustment and complete capital-gain worksheet"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -227,17 +230,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/publications/p526",
       "specPath": "spec/federal/charitable-carryover-sources.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "implementationTestRefs": [
+        "tests/engine/schedules/schedule-a-charity-history.test.ts::retains actual standard-year absorption after the final deduction choice",
+        "tests/pdf/schedule-a-charity-history.test.ts::maps prior noncash to line13 and rejects stale source grouping"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -304,17 +310,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.170A-10",
       "specPath": "spec/federal/charitable-original-source-nol.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-charitable-original-source-nol.test.ts::uses original crypto category values without creating a disposition or changing receipts",
+        "tests/pdf/charitable-original-source-nol-review.test.ts::binds original sources and both charitable carries before saved redacted review output"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -343,17 +352,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/publications/p526",
       "specPath": "spec/federal/charitable-prior-other-capacity.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-charitable-prior-other-capacity.test.ts::uses the original prior other ceiling under final deduction selection",
+        "tests/pdf/charitable-prior-other-capacity.test.ts::prints corrected current property and prior other use with original source binding"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -382,17 +394,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partVI-sec170.htm",
       "specPath": "spec/federal/charitable-public-cash-carry-2025.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "implementationTestRefs": [
+        "tests/pdf/charitable-public-cash-carry-2025.test.ts::preserves the mixed cash and property sources through canonical review output"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -402,16 +416,19 @@
       "taxYear": null,
       "sourceAuthority": "https://www.irs.gov/publications/p526",
       "specPath": "spec/federal/charitable-recipient-classification.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/schedules/schedule-a.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/charitable-recipient-classification.test.ts::separates actual recipient limits and foundation valuation without rewriting legacy facts"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -485,16 +502,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-digital-asset-transactions",
       "specPath": "spec/federal/crypto-charitable-integration.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-crypto-charity.test.ts::values gifts before limitations using actual property facts"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -775,16 +795,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/publications/p970",
       "specPath": "spec/federal/education-distribution-return.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-education-distribution.test.ts::uses actual return year for the2026 K12 cap and preserves unknown sources"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -795,16 +818,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s62/",
       "specPath": "spec/federal/educator-2026-itemized.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/educator-2026-itemized.test.ts::routes actual educator excess through the year-specific itemized candidate"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -895,16 +921,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s62/",
       "specPath": "spec/federal/educator-in-kind-exclusions.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/educator-education-exclusions.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/educator-in-kind-exclusions.test.ts::reconciles actual in-kind earnings without deducting basis or another recipients benefit"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -915,17 +944,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i1040gi",
       "specPath": "spec/federal/eic-additional-review-checkboxes.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1040.ts",
+      "implementationTestRefs": [
+        "tests/pdf/eic-additional-checkboxes.test.ts::prints known SSN restrictions without inferring from omitted identities"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -935,16 +966,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/publications/p596",
       "specPath": "spec/federal/eic-child-investment-income.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/eic-child-investment-income.test.ts::includes child ordinary income on both sides of the investment ceiling"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -955,16 +989,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/publications/p596",
       "specPath": "spec/federal/eic-childless-sources.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/eic-childless-sources.test.ts::uses actual dependency and the separately confirmed filing exception"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -994,17 +1031,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/publications/p596",
       "specPath": "spec/federal/eic-claimant-review.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1040.ts",
+      "implementationTestRefs": [
+        "tests/pdf/eic-claimant-review.test.ts::preserves actual Rule10 sources in the saved official checkbox"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1033,16 +1072,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.32-3",
       "specPath": "spec/federal/eic-disallowance-canonical.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/eic-disallowance-canonical.test.ts::applies actual individual and joint bans before claiming a canonical credit"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -1072,16 +1114,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/publications/p596",
       "specPath": "spec/federal/eic-investment-capital.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/eic-investment-capital.test.ts::excludes section1231 business gain from the investment ceiling"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -1092,16 +1137,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/publications/p596",
       "specPath": "spec/federal/eic-investment-income-presence.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/eic-investment-income-presence.test.ts::keeps the actual investment ceiling when an EIC record is opened"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -1173,17 +1221,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f1040sei.pdf",
       "specPath": "spec/federal/eic-separated-review.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-eic.ts",
+      "implementationTestRefs": [
+        "tests/pdf/eic-separated-review.test.ts::retains the actual self-only child attachment and truthful claimant boxes"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1212,16 +1262,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i5695",
       "specPath": "spec/federal/energy-return-sources.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-energy-source.test.ts::retains actual joint filing status through both energy computations"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -1251,16 +1304,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i2210",
       "specPath": "spec/federal/estimated-tax-integration.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-2210-dated.test.ts::Federal dated estimated-tax integration"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -1332,17 +1388,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/publications/p514",
       "specPath": "spec/federal/foreign-tax-deduction-carryover-pdf.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1116.ts",
+      "implementationTestRefs": [
+        "tests/pdf/foreign-tax-carryover-reference.test.ts::labels the deduction-year record separately from a current credit"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1432,17 +1490,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.861-8",
       "specPath": "spec/federal/foreign-tax-multiple-state.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1116.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-foreign-tax-carryover.test.ts::uses the aggregate state method once in the canonical hypothetical return",
+        "tests/pdf/foreign-state-allocation-reference.test.ts::preserves multiple-state source aggregation in the saved review record"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1530,16 +1591,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i1040",
       "specPath": "spec/federal/form-1040.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": "src/pdf/fill-form-1040.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-income-exclusion-addbacks.test.ts::restores actual foreign and adoption exclusions for savings bond MAGI"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1622,16 +1686,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/forms-pubs/about-form-1099-da",
       "specPath": "spec/federal/form-1099-da.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/crypto-lot-matching.test.ts::1099-DA transactions flow through Form 8949 to Schedule D"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -1682,17 +1749,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/publications/p525",
       "specPath": "spec/federal/form-1099-g-return.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-1.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-government-source-integration.test.ts::routes actual repayment and contribution recovery without reducing withholding",
+        "tests/engine/federal-government-source-integration.test.ts::prints the actual repayment alongside canonical unemployment"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -1702,16 +1772,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i1099g",
       "specPath": "spec/federal/form-1099-g-sources.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/form-1099-g.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/form-1099-g-sources.test.ts::retains unverified historical absent-box compatibility without bypassing actual facts"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -2235,17 +2308,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i172",
       "specPath": "spec/federal/form-172-capital-origin.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-form-172-capital-origin.test.ts::conserves exact investment capital sources in regular AMT and investment origins",
+        "tests/pdf/form-172-capital-origin-review.test.ts::reconciles original capital sources and exact amounts in the redacted NOL review"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -2343,17 +2419,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i172",
       "specPath": "spec/federal/form-172-itemized-origin.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-form-172-itemized-origin.test.ts::computes medical and property deductions independently for regular and alternative origins",
+        "tests/pdf/form-172-itemized-origin-review.test.ts::revalidates itemized sources even when their changes leave the current loss unchanged"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -2403,17 +2482,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-120/t26/s6102/",
       "specPath": "spec/federal/form-172-origin-precision.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "implementationTestRefs": [
+        "tests/pdf/form-172-origin-precision-review.test.ts::rejects altered exact origin amounts hidden by identical printed totals"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -2442,17 +2523,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i172",
       "specPath": "spec/federal/form-172-section-1202-origin.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/form-172-origin.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-form-172-section-1202-origin.test.ts::restores positive QSBS once when statutory and printed origin traces agree",
+        "tests/pdf/form-172-section-1202-origin-review.test.ts::rechecks original QSBS exclusion and separate origin traces in the review statement"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -2513,16 +2597,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i2441",
       "specPath": "spec/federal/form-2441-return-integration.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-care-benefits-integration.test.ts::rejects missing and contradictory original benefit sources"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -2570,16 +2657,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i2555",
       "specPath": "spec/federal/form-2555-rounding.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/form-2555.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/form-2555-rounding.test.ts::derives printed income from reconciled original PartIV amounts"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -2657,17 +2747,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f4137.pdf",
       "specPath": "spec/federal/form-4137-return.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-4137.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-form4137-sources.test.ts::keeps each actual owner's tip tax and wage-base usage separate",
+        "tests/pdf/fill-form-4137-source.test.ts::prints both owners and all source rows without substituting tax totals"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -2820,17 +2913,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i5329",
       "specPath": "spec/federal/form-5329-education-owner.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-5329.ts",
+      "implementationTestRefs": [
+        "tests/pdf/form-5329-education-owner.test.ts::copies each education recipient audit and merges only the same owners HSA part"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -2861,17 +2956,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i5329",
       "specPath": "spec/federal/form-5329-hsa-owner.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-5329.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-hsa-excess-owner.test.ts::keeps actual prior tax and missing source facts distinct",
+        "tests/pdf/form-5329-hsa-owner.test.ts::prints separate owner forms and rejects altered source results"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -2899,17 +2997,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i5695",
       "specPath": "spec/federal/form-5695-source.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-5695.ts",
+      "implementationTestRefs": [
+        "tests/pdf/form-5695-source-mapping.test.ts::fills actual physical source fields and preserves saved widgets"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -3024,17 +3124,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f7206.pdf",
       "specPath": "spec/federal/form-7206-pdf.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "implementationTestRefs": [
+        "tests/pdf/fill-form-7206.test.ts::preserves cleared review identifiers and closed year gates"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -3099,16 +3201,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8606",
       "specPath": "spec/federal/form-8606-roth-history.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/form-8606.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/form-8606-roth-history.test.ts::depletes contribution history using line19 before the homebuyer exclusion"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -3119,16 +3224,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f8606.pdf",
       "specPath": "spec/federal/form-8606-rounding.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/form-8606.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/form-8606-rounding.test.ts::aggregates source cents before rounding each traditional line"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -3262,16 +3370,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f8814.pdf",
       "specPath": "spec/federal/form-8814-rounding.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/form-8814.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/form-8814-rounding.test.ts::rounds each preferential ratio without truncating the dollar transfer"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -3350,17 +3461,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f8839.pdf",
       "specPath": "spec/federal/form-8839-history-review.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8839.ts",
+      "implementationTestRefs": [
+        "tests/pdf/form8839-history-review.test.ts::retains a saved benefits-only packet and distinct physical and signed lines"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -3389,16 +3502,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i8839",
       "specPath": "spec/federal/form-8839-prior-benefits-return.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-adoption-prior-benefits.test.ts::transfers prior-only current and mixed benefits once with actual identity"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -3572,16 +3688,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i8889",
       "specPath": "spec/federal/form-8889-source.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/form-8889.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/form-8889-source.test.ts::honors the actual monthly-method choice and preserves it through distribution merging"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -3662,17 +3781,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8949",
       "specPath": "spec/federal/form-8949-digital-reporting.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8949.ts",
+      "implementationTestRefs": [
+        "tests/pdf/form-8949-digital-reporting.test.ts::prints combined digital and other categories in the six ScheduleD rows",
+        "tests/pdf/form-8949-digital-reporting.test.ts::retains all categories and digital continuation rows after reopening"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -3737,17 +3859,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8960",
       "specPath": "spec/federal/form-8960-royalty-sources.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8960.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-niit-royalty.test.ts::retains MISC and K1 royalties independently of ordinary activity character",
+        "tests/pdf/form-8960-royalty-sources.test.ts::reopens the retained royalty source and business adjustment fields"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -4070,16 +4195,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8995a",
       "specPath": "spec/federal/form-8995-a-loss-netting.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/form-8995-a.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/form-8995-a-loss-netting.test.ts::qualifies current SSTB income before applying a prior qualified loss"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -4106,16 +4234,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/forms-pubs/about-form-w-2g",
       "specPath": "spec/federal/form-w2g.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/form-w2g.test.ts::W-2G gambling income - single W-2G reports winnings as income"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -5341,16 +5472,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i1040sd",
       "specPath": "spec/federal/investment-interest-return.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-investment-interest.test.ts::uses actual combined sources once and preserves source year and missingness"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -5396,16 +5530,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/publications/p590a",
       "specPath": "spec/federal/ira-return-integration.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-ira-sources.test.ts::uses complete interest and farm income in one canonical IRA worksheet"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -5595,17 +5732,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/publications/p925",
       "specPath": "spec/federal/k1-passive-distribution-gain.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8582.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-k1-passive-distribution.test.ts::routes positive zero and loss outcomes without duplicating capital gain",
+        "tests/pdf/k1-passive-distribution-review.test.ts::saves original passive distribution character and separate capital and loss amounts"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -5674,16 +5814,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i1065sk1",
       "specPath": "spec/federal/k1-royalty-classification.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/schedules/schedule-e.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/k1-royalty-classification.test.ts::routes portfolio royalties to PartI for both entity and activity classes"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -5776,16 +5919,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/publications/p974",
       "specPath": "spec/federal/marketplace-health-ordered.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-marketplace-health-ordered.test.ts::uses the prior Step3 health amount for the actual student loan worksheet"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -5796,17 +5942,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/pub/irs-drop/rp-14-41.pdf",
       "specPath": "spec/federal/marketplace-health-owner-income.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-marketplace-health-owner-income.test.ts::applies zero-advance2025 owner limits to the joint credit and separate QBI",
+        "tests/pdf/form7206-health-owner-income-review.test.ts::binds the review owner deduction to its actual earned-income limit"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -5896,16 +6045,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/publications/p974",
       "specPath": "spec/federal/marketplace-net-operating-loss.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-marketplace-nol.test.ts::recomputes actual NOL at each capped health step and retains only final carry"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -5916,16 +6068,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/publications/p974",
       "specPath": "spec/federal/marketplace-passive-ordering.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-marketplace-passive.test.ts::retains the actual rental allowance from the preceding health step"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -5973,16 +6128,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s172/",
       "specPath": "spec/federal/net-operating-loss-vintages.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/net-operating-loss.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/net-operating-loss-vintages.test.ts::requires reconciled actual loss history and continuous return identity"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -6031,16 +6189,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/p6196.pdf",
       "specPath": "spec/federal/nonitemized-charitable-election.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-nonitemized-charity.test.ts::claims only actual current eligible cash when the standard deduction is unavailable",
+        "tests/pdf/nonitemized-charity-boundary.test.ts::keeps the new election out of unsupported historical and future export paths"
+      ],
+      "implementationNote": "The named method is exercised through the shared federal calculator by this specification's own regression references. Its PDF regression proves rejection, not packet generation; no packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -6067,16 +6229,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8582",
       "specPath": "spec/federal/passive-income-ordering.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-passive-income-ordering.test.ts::calculates taxable benefits from allowed rental losses rather than suspended losses"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -6262,17 +6427,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8995",
       "specPath": "spec/federal/qbi-loss-review.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8995.ts",
+      "implementationTestRefs": [
+        "tests/pdf/qbi-loss-review.test.ts::prints the physical REIT and PTP zero floor without losing its carry"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -6456,16 +6623,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f8815.pdf",
       "specPath": "spec/federal/2026/savings-bond-return-integration.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-bond-source-integration.test.ts::uses actual source facts and the return year for bond exclusion"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -6552,16 +6722,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i1040gi",
       "specPath": "spec/federal/schedule-1-a-sources.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/schedules/schedule-1-a-sources.test.ts::binds senior eligibility to the canonical household death record"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -6645,16 +6818,20 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/publications/p505",
       "specPath": "spec/federal/schedule-a-2026.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/schedules/schedule-a.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/schedules/schedule-a-2026.test.ts::2026 mortgage insurance",
+        "tests/engine/schedules/schedule-a-2026.test.ts::2026 itemized charitable integration"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -6665,17 +6842,20 @@
       "taxYear": 2025,
       "sourceAuthority": null,
       "specPath": "spec/federal/schedule-a-charity-reporting.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/schedules/schedule-a.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "implementationTestRefs": [
+        "tests/engine/schedules/schedule-a-charity-reporting.test.ts::reports current and prior charity groups separately after exact computation",
+        "tests/pdf/schedule-a-charity-reporting.test.ts::rejects missing conflicting and stale same-total charity sources before rendering"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -6685,17 +6865,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i1040sca",
       "specPath": "spec/federal/schedule-a-review-election.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "implementationTestRefs": [
+        "tests/pdf/schedule-a-election.test.ts::maps only the actual election to itemize below the standard deduction"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -6759,16 +6941,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i1040sd",
       "specPath": "spec/federal/schedule-d-digital-sources.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/schedules/schedule-d-digital-sources.test.ts::binds original long-term DA sources in direct and canonical capital worksheets"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -6779,17 +6964,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f1040sd.pdf",
       "specPath": "spec/federal/schedule-d-review-mapping.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-d.ts",
+      "implementationTestRefs": [
+        "tests/pdf/schedule-d-actual-subtotals.test.ts::routes actual Form8949 categories and adjustments to the printed rows"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -6875,17 +7062,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i1040se",
       "specPath": "spec/federal/schedule-e-passive-distribution-review.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-e.ts",
+      "implementationTestRefs": [
+        "tests/pdf/schedule-e-passive-distribution-review.test.ts::keeps released ordinary losses separate from capital distribution income"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -6895,17 +7084,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f1040se.pdf",
       "specPath": "spec/federal/schedule-e-physical-review.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-e.ts",
+      "implementationTestRefs": [
+        "tests/pdf/schedule-e-physical-review.test.ts::reopens actual royalty columns and printed totals without filling farming reconciliation"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -6987,16 +7178,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i1065sk1",
       "specPath": "spec/federal/schedule-k-1.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/k1-semantic-labels.test.ts::retains semantic K1 amounts without asserting invented mixed-entity source codes"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -7007,17 +7201,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i1041sk1",
       "specPath": "spec/federal/schedule-k-1-1041.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-schedule-a.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/schedule-k-1-1041.test.ts::combines estate tax and gambling in one canonical ScheduleA16",
+        "tests/pdf/schedule-a-estate-deduction.test.ts::prints estate and gambling deductions exactly once"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -7063,17 +7260,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i7203",
       "specPath": "spec/federal/scorp-debt-nondeductible-order.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-partner-basis-schedule.ts",
+      "implementationTestRefs": [
+        "tests/pdf/scorp-debt-nondeductible-reference.test.ts::retains nondeductible debt reductions and actual carry status in the review record"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -7118,16 +7317,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/instructions/i1040sd",
       "specPath": "spec/federal/section-1202-return.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-section-1202.test.ts::applies the verified Q adjustment once to the original broker row"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -7138,17 +7340,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i8949",
       "specPath": "spec/federal/section-1202-review-pdf.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8949.ts",
+      "implementationTestRefs": [
+        "tests/pdf/section-1202-review.test.ts::includes fund-only issuer rows and their ScheduleD10 transfer in the review packet",
+        "tests/pdf/section-1202-review.test.ts::retains every category and overflow transaction in interactive continuation pages"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },
@@ -7302,16 +7507,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/publications/p915",
       "specPath": "spec/federal/social-security-source-facts.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-income-exclusion-addbacks.test.ts::adds actual possession exclusions once and reconciles lump-sum aggregates"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -7362,16 +7570,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/instructions/i1040sca",
       "specPath": "spec/federal/state-sales-tax-deduction.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/state-sales-tax-deduction-worksheet.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/state-sales-tax-deduction-worksheet.test.ts::Actual total replaces table lookup"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -7445,16 +7656,19 @@
       "taxYear": 2026,
       "sourceAuthority": "https://www.irs.gov/publications/p970",
       "specPath": "spec/federal/student-loan-interest-return.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/federal.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-student-loan-sources.test.ts::routes actual loan sources once and preserves eligibility and unknown distinctions"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
