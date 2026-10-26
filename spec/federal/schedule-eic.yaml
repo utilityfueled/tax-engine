@@ -11,8 +11,10 @@ notes: |
 
   Schedule EIC itself is only the qualifying-child attachment. The
   actual credit calculation is the EIC Worksheet in the Form 1040
-  instructions (or the EIC Table for manual filers). This module
-  implements the worksheet formula.
+  instructions. The 2025 worksheet requires the final EIC Table for both
+  software and paper returns. This module retains statutory intermediates
+  for audit and applies the published earned-income/AGI table lookups to
+  the final credit. See eic-credit-table.yaml for the complete table checks.
 
   For 2025 the credit rates and phase-out rates are set by statute
   (IRC §32(b)(1)); the earned income amounts, phase-out start amounts,
@@ -79,8 +81,8 @@ lines:
 
   - line: "credit"
     description: "Final Earned Income Credit (1040 Line 27a)"
-    formula: "max(0, floor(phase_in_credit − phase_out_reduction))"
-    irsRef: "IRC §32; Form 1040 Line 27a"
+    formula: "2025: min(published_table(earned_income), published_table(max(earned_income,AGI))); statutory ceiling is min(phase_in_credit,maximum_credit_before_rounding-phase_out_reduction)"
+    irsRef: "IRC §32(a)(1)-(2); Pub596 EIC Table/Worksheet A/B; Form1040 line27a"
     inputs:
       - "Filing status"
       - "Number of qualifying EIC children (0-3+)"
@@ -88,12 +90,12 @@ lines:
       - "AGI"
       - "Investment income"
     edgeCases:
-      - "Credit is floored (rounded down) to the nearest dollar"
+      - "Use the published dollar table amount, including final partial-row footnotes"
       - "Investment income > $11,950: credit = $0"
       - "MFS without exception: credit = $0"
       - "Childless filer under 25 or 65+: credit = $0"
       - "Credit cannot be negative"
-      - "At exact phase-out start: full maximum credit"
+      - "A phase-out start at a table interval boundary uses that interval's published amount"
       - "At exact phase-out end (income limit): credit = $0"
       - "0 children single at $19,104: credit = $0"
       - "1 child single at $50,434: credit = $0"
@@ -107,7 +109,7 @@ lines:
 
   - line: "maximumCredits"
     description: "Maximum EIC amounts by number of qualifying children"
-    formula: "credit_rate × earned_income_amount"
+    formula: "roundDollar(credit_rate × earned_income_amount)"
     irsRef: "IRC §32(b)(2); Rev. Proc. 2024-40 §3.06"
     edgeCases:
       - "0 children: $649"

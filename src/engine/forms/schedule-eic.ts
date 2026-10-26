@@ -2,10 +2,9 @@
  * Earned Income Credit (EIC) — EIC Worksheet from Form 1040 Instructions.
  * Spec: spec/federal/schedule-eic.yaml
  *
- * Computes the Earned Income Credit per IRC §32 and Rev. Proc. 2024-40 §3.06
- * for tax year 2025. The credit phases in with earned income, plateaus at the
- * maximum, then phases out as the greater of earned income or AGI rises above
- * the phase-out threshold.
+ * Uses the final2025 Pub596 table and worksheet, retaining the statutory
+ * IRC32(a) intermediates. Isolated2026 uses its own indexed statutory values
+ * while the final table and public readiness remain unqualified.
  *
  * Schedule EIC itself is the qualifying-child attachment. This module implements
  * the credit calculation (the EIC Worksheet in the 1040 instructions).
@@ -15,6 +14,8 @@ import Decimal from "decimal.js";
 import type { FilingStatus, YearConstants } from "@/models/constants.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { roundDollar } from "@/utils/decimal.js";
+import { calculateEicCreditTable } from "./eic-credit-table.js";
 import { calculateEicClaimantEligibility, type EicClaimantInput } from "./eic-claimant-eligibility.js";
 
 const ZERO = new Decimal(0);
@@ -103,9 +104,20 @@ export function calculateEic(input: EicInput, constants: YearConstants): EicResu
   const phaseOutExcess = Decimal.max(ZERO, phaseOutIncome.minus(phaseOutStart));
   const phaseOutReduction = phaseOutRate.times(phaseOutExcess);
 
-  // Credit = max(0, floor(phase_in - phase_out_reduction))
-  const rawCredit = phaseInCredit.minus(phaseOutReduction);
-  const credit = Decimal.max(ZERO, rawCredit.floor());
+  // IRC32(a)(2) limits phase-in by the MAXIMUM less phaseout. A low-earned,
+  // higher-AGI return must not subtract phaseout from its smaller phase-in.
+  // Final2025 uses the actual published table; isolated2026 uses the corrected
+  // statutory formula until that year's own final table is qualified.
+  const rawMaximum = creditRate.times(earnedIncomeAmount);
+  const rawCredit = Decimal.max(ZERO, Decimal.min(phaseInCredit, rawMaximum.minus(phaseOutReduction)));
+  let credit = roundDollar(rawCredit);
+  if (constants.taxYear === 2025) {
+    const earned = calculateEicCreditTable({ income: input.earnedIncome, filingStatus: input.filingStatus, qualifyingChildren: input.qualifyingChildren, lookup: "earned" }, constants);
+    const agi = calculateEicCreditTable({ income: phaseOutIncome, filingStatus: input.filingStatus, qualifyingChildren: input.qualifyingChildren, lookup: "agi" }, constants);
+    credit = Decimal.min(earned.credit, agi.credit);
+    audit.merge(earned.lines);
+    audit.merge(agi.lines);
+  }
 
   if (credit.greaterThan(ZERO)) {
     if (!claimant && input.claimantInput) {
@@ -125,7 +137,7 @@ export function calculateEic(input: EicInput, constants: YearConstants): EicResu
   }
 
   // Maximum credit for reference
-  const maxCredit = creditRate.times(earnedIncomeAmount).floor();
+  const maxCredit = roundDollar(rawMaximum);
 
   // ── Audit trail ──────────────────────────────────────────
 
@@ -149,7 +161,8 @@ export function calculateEic(input: EicInput, constants: YearConstants): EicResu
     });
 
   audit.record("EIC", "27a", "Earned Income Credit", credit,
-    `max(0, floor($${phaseInCredit} − $${phaseOutReduction}))`,
+    constants.taxYear === 2025 ? "Smaller of the final2025 earned-income and applicable AGI table amounts"
+      : `Isolated statutory result: roundDollar(max(0,min($${phaseInCredit},$${rawMaximum} − $${phaseOutReduction}))); final table unqualified`,
     {
       "Filing status": input.filingStatus,
       "Qualifying EIC children": input.qualifyingChildren.toString(),

@@ -1,0 +1,65 @@
+form: "EIC Table and statutory credit limitation"
+fullName: "Published 2025 EIC worksheet lookups and isolated 2026 statutory calculation"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p596"
+notes: |
+  The final 2025 Publication 596 EIC table applies to software as well as paper
+  worksheets. The previous spec's manual-only distinction was unsupported.
+  Worksheet A/B takes the smaller of the earned-income lookup and the applicable
+  AGI lookup. An AGI below earned income cannot impose an extra phase-in limit.
+  IRC32(a)(2) limits credit by maximum credit less the phase-out reduction; it
+  does not subtract that reduction from a smaller phase-in credit.
+  The 2025 table fixture is transcribed from all 1,374 official rows and eight
+  columns, including eight partial-row footnotes. Dollar lookup amounts use the
+  existing whole-dollar return convention. Original source cents remain intact.
+  Table amounts use the published rounded maximum, a $50 interval midpoint,
+  full maximum in an interval containing the phase-in ceiling or straddling
+  (but not starting at) the phase-out start, and the shortened midpoint in
+  each last eligible interval. All 10,992
+  published cells must match, not only selected examples. This reproduces the
+  final 2025 table; it does not assume an unpublished 2026 table is qualified.
+  Isolated 2026 uses the correctly limited statutory formula rounded to dollars
+  and the independently indexed constants. Public 2026 availability stays gated
+  until final table/form and human qualification. No 2025 table is reused in2026.
+lines:
+  - line: "publishedTable"
+    description: "Final 2025 table amount for the applicable filing-status and child column"
+    formula: "Published 2025 EIC table lookup, including the last partial-row footnote"
+    irsRef: "Publication596 (2025), EIC Table; Worksheet A/B; IRC32(a)"
+    edgeCases:
+      - "All1374 rows and eight child/status columns match at the first and last eligible integer in each interval"
+      - "Single/HOH/QSS and eligible MFS share the nonjoint columns"
+      - "At the exact published income limit no credit is allowed"
+    testRef: "tests/engine/forms/eic-credit-table.test.ts::matches every published2025 EIC table cell and final footnote"
+  - line: "worksheetMinimum"
+    description: "Apply the earned-income and AGI constraints independently"
+    formula: "min(table(earned income), table(max(earned income,AGI)))"
+    irsRef: "Publication596 (2025), Grey example; EIC Worksheet A lines2/5/6; IRC32(a)(1)-(2)"
+    edgeCases:
+      - "Earned1000 and AGI30000 with one child retains349 in2025"
+      - "IRS Grey example earned33030 and AGI33555, joint/two children gives6498"
+      - "Negative or lower AGI does not lower a phase-in credit"
+    testRef: "tests/engine/forms/eic-credit-table.test.ts::uses independent earned and AGI limits and the published Grey example"
+  - line: "roundingAndBounds"
+    description: "Preserve exact source amounts and apply dollar table boundaries once"
+    formula: "Lookup roundDollar(source), retaining source Decimal in audit"
+    irsRef: "Form1040 instructions rounding; Publication596 table income intervals and footnotes"
+    edgeCases:
+      - "4999.49 and4999.50 straddle the rounded5000 interval"
+      - "Positive cents rounding to zero produce zero, never a fabricated first-row amount"
+      - "Published completed-phaseout thresholds take precedence over a bucket value"
+    testRef: "tests/engine/forms/eic-credit-table.test.ts::preserves cents and applies every final interval cutoff"
+  - line: "isolated2026Statute"
+    description: "Correct the statutory phase-out ceiling without claiming a final2026 table"
+    formula: "roundDollar(max(0,min(rate*min(earned,earned ceiling),rate*earned ceiling-phaseout reduction)))"
+    irsRef: "IRC32(a)(1)-(2); RevProc2025-32 section3.06"
+    edgeCases:
+      - "Earned1000 and AGI30000 with one child retains340 under the statutory formula"
+      - "Three-child maximum8230.50 rounds8231, matching indexed maximum"
+      - "No public readiness or final table qualification is enabled"
+    testRef: "tests/engine/forms/eic-credit-table.test.ts::applies the independent statutory ceiling in isolated2026"
+  - line: "tableSourceBounds"
+    description: "Keep the final2025 table isolated from other years and preserve source cents"
+    formula: "Reject an unavailable table year or invalid finite income/child count; retain the exact original income in the audit"
+    irsRef: "Publication596 (2025), final EIC Table; original Form1040 source conventions"
+    testRef: "tests/engine/forms/eic-credit-table.test.ts::rejects unavailable years and invalid table inputs without modifying original cents"

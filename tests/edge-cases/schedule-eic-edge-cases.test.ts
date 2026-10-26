@@ -78,16 +78,14 @@ describe("EIC - MFJ 0 children boundaries", () => {
   });
 
   it("EIC - 0 children MFJ mid-phase-out ($22,000)", () => {
-    // phase-in = 7.65% × $8,490 = $649.485
-    // phase-out = 7.65% × ($22,000 − $17,730) = 7.65% × $4,270 = $326.655
-    // credit = floor($649.485 − $326.655) = floor($322.83) = $322
+    // Final2025 Pub596 table: 22000/joint/0 children=320.
     const result = eic({
       filingStatus: "married_filing_jointly",
       qualifyingChildren: 0,
       earnedIncome: 22000,
       primaryAge: 35,
     });
-    expect(result.credit.toNumber()).toBe(322);
+    expect(result.credit.toNumber()).toBe(320);
   });
 });
 
@@ -108,15 +106,13 @@ describe("EIC - MFJ 2+ children boundaries", () => {
   });
 
   it("EIC - 3 children MFJ mid-phase-out ($50,000)", () => {
-    // phase-in = 45% × $17,880 = $8,046
-    // phase-out = 21.06% × ($50,000 − $30,470) = 21.06% × $19,530 = $4,113.018
-    // credit = floor($8,046 − $4,113.018) = floor($3,932.982) = $3,932
+    // Final2025 Pub596 table: 50000/joint/3 children=3928.
     const result = eic({
       filingStatus: "married_filing_jointly",
       qualifyingChildren: 3,
       earnedIncome: 50000,
     });
-    expect(result.credit.toNumber()).toBe(3932);
+    expect(result.credit.toNumber()).toBe(3928);
   });
 });
 
@@ -126,11 +122,9 @@ describe("EIC - MFJ 2+ children boundaries", () => {
 
 describe("EIC - 3 children single", () => {
   it("EIC - 3 children single mid-phase-out ($40,000)", () => {
-    // phase-in = 45% × $17,880 = $8,046
-    // phase-out = 21.06% × ($40,000 − $23,350) = 21.06% × $16,650 = $3,506.49
-    // credit = floor($8,046 − $3,506.49) = floor($4,539.51) = $4,539
+    // Final2025 Pub596 table: 40000/nonjoint/3 children=4534.
     const result = eic({ qualifyingChildren: 3, earnedIncome: 40000 });
-    expect(result.credit.toNumber()).toBe(4539);
+    expect(result.credit.toNumber()).toBe(4534);
   });
 });
 
@@ -140,32 +134,24 @@ describe("EIC - 3 children single", () => {
 
 describe("EIC - AGI vs earned income divergence", () => {
   it("EIC - 0 children: AGI higher than earned income drives phase-out", () => {
-    // earned $9,000, AGI $15,000 (AGI higher from other income)
-    // phase-in = 7.65% × $8,490 = $649.485 (earned > $8,490 cap)
-    // phase-out income = max($9,000, $15,000) = $15,000
-    // phase-out = 7.65% × ($15,000 − $10,620) = 7.65% × $4,380 = $335.07
-    // credit = floor($649.485 − $335.07) = floor($314.415) = $314
+    // Final2025 Pub596 table: 15000/nonjoint/0 children=312.
     const result = eic({
       qualifyingChildren: 0,
       earnedIncome: 9000,
       agi: 15000,
       primaryAge: 35,
     });
-    expect(result.credit.toNumber()).toBe(314);
+    expect(result.credit.toNumber()).toBe(312);
   });
 
   it("EIC - 2 children: AGI higher than earned income drives phase-out", () => {
-    // earned $20,000, AGI $50,000
-    // phase-in = 40% × $17,880 = $7,152
-    // phase-out income = max($20,000, $50,000) = $50,000
-    // phase-out = 21.06% × ($50,000 − $23,350) = 21.06% × $26,650 = $5,612.49
-    // credit = floor($7,152 − $5,612.49) = floor($1,539.51) = $1,539
+    // Final2025 Pub596 table: 50000/nonjoint/2 children=1534.
     const result = eic({
       qualifyingChildren: 2,
       earnedIncome: 20000,
       agi: 50000,
     });
-    expect(result.credit.toNumber()).toBe(1539);
+    expect(result.credit.toNumber()).toBe(1534);
   });
 });
 
@@ -175,17 +161,14 @@ describe("EIC - AGI vs earned income divergence", () => {
 
 describe("EIC - MFS separated-spouse exception", () => {
   it("EIC - MFS with exception uses single/HoH thresholds at mid-phase-out", () => {
-    // MFS eligible, 1 child, earned $45,000
-    // phase-in = 34% × $12,730 = $4,328.20
-    // phase-out = 15.98% × ($45,000 − $23,350) = 15.98% × $21,650 = $3,459.67
-    // credit = floor($4,328.20 − $3,459.67) = floor($868.53) = $868
+    // Final2025 Pub596 table: 45000/nonjoint/1 children=864.
     const result = eic({
       filingStatus: "married_filing_separately",
       qualifyingChildren: 1,
       earnedIncome: 45000,
       mfsEicEligible: true,
     });
-    expect(result.credit.toNumber()).toBe(868);
+    expect(result.credit.toNumber()).toBe(864);
     expect(result.disqualified).toBe(false);
   });
 
@@ -204,10 +187,7 @@ describe("EIC - MFS separated-spouse exception", () => {
   });
 
   it("EIC - MFS with exception 0 children age 25 qualifies", () => {
-    // MFS eligible, 0 children, earned $8,000, age 25 → uses single/HoH thresholds
-    // phase-in = 7.65% × $8,000 = $612 (earned < $8,490)
-    // phase-out = 7.65% × max(0, $8,000 − $10,620) = $0 (below phase-out start)
-    // credit = floor($612) = $612
+    // Final2025 Pub596 table: 8000/nonjoint/0 children=614.
     const result = eic({
       filingStatus: "married_filing_separately",
       qualifyingChildren: 0,
@@ -215,7 +195,7 @@ describe("EIC - MFS separated-spouse exception", () => {
       primaryAge: 25,
       mfsEicEligible: true,
     });
-    expect(result.credit.toNumber()).toBe(612);
+    expect(result.credit.toNumber()).toBe(614);
     expect(result.disqualified).toBe(false);
   });
 });
@@ -225,13 +205,11 @@ describe("EIC - MFS separated-spouse exception", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("EIC - phase-in ceiling boundary", () => {
-  it("EIC - 2 children earned $17,879 ($1 below ceiling) gets $7,151", () => {
-    // phase-in = 40% × $17,879 = $7,151.60
-    // credit = floor($7,151.60) = $7,151
-    // vs at $17,880: floor($7,152.00) = $7,152 → the $1 matters
+  it("EIC - 2 children within the ceiling interval get the table maximum", () => {
+    // Final2025 Pub596 table: 17879/nonjoint/2 children=7152; 17880/nonjoint/2 children=7152.
     const below = eic({ qualifyingChildren: 2, earnedIncome: 17879 });
     const atCeiling = eic({ qualifyingChildren: 2, earnedIncome: 17880 });
-    expect(below.credit.toNumber()).toBe(7151);
+    expect(below.credit.toNumber()).toBe(7152);
     expect(atCeiling.credit.toNumber()).toBe(7152);
   });
 });
@@ -283,36 +261,25 @@ describe("EIC - age restriction applies only to childless filers", () => {
 
 describe("EIC - filing status comparison at same income", () => {
   it("EIC - 1 child at $25,000: single, HoH, MFJ, QSS, MFS produce correct brackets", () => {
-    // Single: phase-out = 15.98% × ($25,000 − $23,350) = 15.98% × $1,650 = $263.67
-    //   credit = floor($4,328.20 − $263.67) = floor($4,064.53) = $4,064
+    // Final2025 Pub596 table: 25000/nonjoint/1 children=4060; 25000/nonjoint/1 children=4060; 25000/nonjoint/1 children=4060; 25000/joint/1 children=4328; 25000/nonjoint/1 children=4060.
     const single = eic({ filingStatus: "single", qualifyingChildren: 1, earnedIncome: 25000 });
-    expect(single.credit.toNumber()).toBe(4064);
-
-    // HoH: same thresholds as single → $4,064
+    expect(single.credit.toNumber()).toBe(4060);
     const hoh = eic({ filingStatus: "head_of_household", qualifyingChildren: 1, earnedIncome: 25000 });
-    expect(hoh.credit.toNumber()).toBe(4064);
-
-    // MFJ: phase-out start $30,470, $25,000 < $30,470 → no phase-out → max $4,328
+    expect(hoh.credit.toNumber()).toBe(4060);
     const mfj = eic({ filingStatus: "married_filing_jointly", qualifyingChildren: 1, earnedIncome: 25000 });
     expect(mfj.credit.toNumber()).toBe(4328);
-
-    // QSS: nonjoint thresholds, same as single/HoH → $4,064
     const qss = eic({ filingStatus: "qualifying_surviving_spouse", qualifyingChildren: 1, earnedIncome: 25000 });
-    expect(qss.credit.toNumber()).toBe(4064);
-
-    // MFS without exception: disqualified → $0
+    expect(qss.credit.toNumber()).toBe(4060);
     const mfs = eic({ filingStatus: "married_filing_separately", qualifyingChildren: 1, earnedIncome: 25000 });
     expect(mfs.credit.toNumber()).toBe(0);
     expect(mfs.disqualified).toBe(true);
-
-    // MFS with exception: same as single → $4,064
     const mfsExc = eic({
       filingStatus: "married_filing_separately",
       qualifyingChildren: 1,
       earnedIncome: 25000,
       mfsEicEligible: true,
     });
-    expect(mfsExc.credit.toNumber()).toBe(4064);
+    expect(mfsExc.credit.toNumber()).toBe(4060);
   });
 });
 
@@ -322,17 +289,13 @@ describe("EIC - filing status comparison at same income", () => {
 
 describe("EIC - combined boundary conditions", () => {
   it("EIC - investment income at exact limit combined with mid-phase-out", () => {
-    // 1 child, earned $35,000, investment income exactly $11,950
-    // Investment income ≤ $11,950 → allowed
-    // phase-in = 34% × $12,730 = $4,328.20
-    // phase-out = 15.98% × ($35,000 − $23,350) = $1,861.67
-    // credit = floor($4,328.20 − $1,861.67) = floor($2,466.53) = $2,466
+    // Final2025 Pub596 table: 35000/nonjoint/1 children=2462.
     const result = eic({
       qualifyingChildren: 1,
       earnedIncome: 35000,
       investmentIncome: 11950,
     });
-    expect(result.credit.toNumber()).toBe(2466);
+    expect(result.credit.toNumber()).toBe(2462);
     expect(result.disqualified).toBe(false);
   });
 
@@ -386,9 +349,9 @@ describe("EIC - childless age upper boundary", () => {
   });
 
   it("EIC - childless age 25 qualifies (exact lower limit)", () => {
-    // 7.65% × $8,000 = $612
+    // Final2025 Pub596 table: 8000/nonjoint/0 children=614.
     const result = eic({ qualifyingChildren: 0, earnedIncome: 8000, primaryAge: 25 });
-    expect(result.credit.toNumber()).toBe(612);
+    expect(result.credit.toNumber()).toBe(614);
     expect(result.disqualified).toBe(false);
   });
 });
@@ -424,18 +387,16 @@ describe("EIC - single 0 children phase-out boundaries", () => {
     expect(result.credit.toNumber()).toBe(649);
   });
 
-  it("EIC - 0 children single at $19,096 gets last $1 of credit", () => {
-    // phase-out = 7.65% × ($19,096 − $10,620) = 7.65% × $8,476 = $648.414
-    // raw = $649.485 − $648.414 = $1.071 → floor = $1
+  it("EIC - 0 children single at $19,096 stays in the published $2 interval", () => {
+    // Final2025 Pub596 table: 19096/nonjoint/0 children=2.
     const result = eic({ qualifyingChildren: 0, earnedIncome: 19096, primaryAge: 35 });
-    expect(result.credit.toNumber()).toBe(1);
+    expect(result.credit.toNumber()).toBe(2);
   });
 
-  it("EIC - 0 children single at $19,097 credit drops to $0", () => {
-    // phase-out = 7.65% × $8,477 = $648.4905
-    // raw = $649.485 − $648.4905 = $0.9945 → floor = $0
+  it("EIC - 0 children single at $19,097 stays in the published $2 interval", () => {
+    // Final2025 Pub596 table: 19097/nonjoint/0 children=2.
     const result = eic({ qualifyingChildren: 0, earnedIncome: 19097, primaryAge: 35 });
-    expect(result.credit.toNumber()).toBe(0);
+    expect(result.credit.toNumber()).toBe(2);
   });
 });
 
@@ -444,25 +405,23 @@ describe("EIC - single 0 children phase-out boundaries", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("EIC - single 1 child phase-out completion", () => {
-  it("EIC - 1 child single at phase-out start ($23,350) gets max $4,328", () => {
-    // phase-in = 34% × $12,730 = $4,328.20, phase-out = $0
+  it("EIC - 1 child single at phase-out start uses the published $4,324 interval", () => {
+    // Final2025 Pub596 table: 23350/nonjoint/1 children=4324.
     const result = eic({ qualifyingChildren: 1, earnedIncome: 23350 });
-    expect(result.credit.toNumber()).toBe(4328);
+    expect(result.credit.toNumber()).toBe(4324);
     expect(result.phaseOutReduction.toNumber()).toBe(0);
   });
 
-  it("EIC - 1 child single at $50,428 gets last $1 of credit", () => {
-    // phase-out = 15.98% × ($50,428 − $23,350) = 15.98% × $27,078 = $4,327.0644
-    // raw = $4,328.20 − $4,327.0644 = $1.1356 → floor = $1
+  it("EIC - 1 child single at $50,428 uses the final $3 footnote", () => {
+    // Final2025 Pub596 table: 50428/nonjoint/1 children=3.
     const result = eic({ qualifyingChildren: 1, earnedIncome: 50428 });
-    expect(result.credit.toNumber()).toBe(1);
+    expect(result.credit.toNumber()).toBe(3);
   });
 
-  it("EIC - 1 child single at $50,429 credit drops to $0", () => {
-    // phase-out = 15.98% × $27,079 = $4,327.2242
-    // raw = $4,328.20 − $4,327.2242 = $0.9758 → floor = $0
+  it("EIC - 1 child single at $50,429 uses the final $3 footnote", () => {
+    // Final2025 Pub596 table: 50429/nonjoint/1 children=3.
     const result = eic({ qualifyingChildren: 1, earnedIncome: 50429 });
-    expect(result.credit.toNumber()).toBe(0);
+    expect(result.credit.toNumber()).toBe(3);
   });
 });
 
@@ -523,27 +482,24 @@ describe("EIC - QSS uses nonjoint thresholds", () => {
 // ═══════════════════════════════════════════════════════════
 
 describe("EIC - 3 children MFJ phase-out completion", () => {
-  it("EIC - 3 children MFJ at $68,670 gets last $1 of credit", () => {
-    // max = floor(45% × $17,880) = $8,046
-    // phase-out = 21.06% × ($68,670 − $30,470) = 21.06% × $38,200 = $8,044.92
-    // raw = $8,046 − $8,044.92 = $1.08 → floor = $1
+  it("EIC - 3 children MFJ at $68,670 uses the final $3 footnote", () => {
+    // Final2025 Pub596 table: 68670/joint/3 children=3.
     const result = eic({
       filingStatus: "married_filing_jointly",
       qualifyingChildren: 3,
       earnedIncome: 68670,
     });
-    expect(result.credit.toNumber()).toBe(1);
+    expect(result.credit.toNumber()).toBe(3);
   });
 
-  it("EIC - 3 children MFJ at $68,671 credit drops to $0", () => {
-    // phase-out = 21.06% × $38,201 = $8,045.1306
-    // raw = $8,046 − $8,045.1306 = $0.8694 → floor = $0
+  it("EIC - 3 children MFJ at $68,671 uses the final $3 footnote", () => {
+    // Final2025 Pub596 table: 68671/joint/3 children=3.
     const result = eic({
       filingStatus: "married_filing_jointly",
       qualifyingChildren: 3,
       earnedIncome: 68671,
     });
-    expect(result.credit.toNumber()).toBe(0);
+    expect(result.credit.toNumber()).toBe(3);
   });
 });
 

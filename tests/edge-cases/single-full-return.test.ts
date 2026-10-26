@@ -1096,8 +1096,9 @@ describe("Single filer - very low income ($15K, near filing threshold)", () => {
   });
 
   it("Form 1040 Line 34 - full refund of withholding plus childless EIC", () => {
-    // $500 withholding + $314 childless EIC (7.65% phase-in/out, $15K income, age 35)
-    expect(result.refund.toNumber()).toBe(814);
+    // Final2025 Pub596 $15,000–$15,050 nonjoint/no-child column: $312.
+    // $500 actual withholding + $312 published EIC = $812.
+    expect(result.refund.toFixed()).toBe("812");
     expect(result.amountOwed.toNumber()).toBe(0);
   });
 });

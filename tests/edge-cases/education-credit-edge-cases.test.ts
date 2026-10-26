@@ -790,12 +790,12 @@ describe("Education Credit — reduces federal tax liability (federal pipeline)"
     };
     const result = calculateFederalTax(lowWageFiler);
 
-    // $5K wages: standard deduction ($15,000) wipes out all taxable income → $0 income tax
+    // $5K wages are below the standard deduction, so income tax is $0.
     // AOC credit: MAGI $5K << $80K → full $2,500; refundable 40% = $1,000
-    // Childless EIC: 7.65% × $5,000 = $382 (below phase-out start, age 35)
-    // With $0 tax and $0 withholding, refund = $1,000 + $382 = $1,382
+    // Final2025 Pub596 EIC Table, $5,000–$5,050 nonjoint/no-child column: $384.
+    // With $0 tax and withholding, refund = $1,000 AOC + $384 EIC = $1,384.
     expect(result.totalTax.toNumber()).toBe(0);
-    expect(result.refund.toNumber()).toBe(1382);
+    expect(result.refund.toFixed()).toBe("1384");
   });
 });
 
