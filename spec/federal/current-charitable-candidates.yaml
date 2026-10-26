@@ -13,7 +13,9 @@ notes: |
   current deduction. This method supports only actual ordinary public cash,
   no positive prior vintages or NOL sources. It retains both candidates and
   selects the matching carry only after the final canonical deduction choice.
-  Positive prior itemized, mixed-category and loss methods remain separate.
+  Current ordinary public property is separately source-bound under
+  current-charitable-public-property.yaml. Positive prior itemized, other
+  mixed-category and loss methods remain separate.
   Numerical cases are literal statutory derivations, not published IRS examples.
 lines:
   - line: "two-current-candidates"

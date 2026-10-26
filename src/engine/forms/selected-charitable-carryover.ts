@@ -18,7 +18,8 @@ export function calculateSelectedCharitableCarryover(input: {
 }): SelectedCharitableCarryover {
   const nonitemized = input.scheduleA.nonitemizedCharitableCarryover;
   const current = input.scheduleA.currentCharitableCandidates;
-  const currentOnly = input.taxYear === 2026 && current?.method === "2026_current_public_cash_dual"
+  const currentOnly = input.taxYear === 2026 && (current?.method === "2026_current_public_cash_dual"
+    || current?.method === "2026_current_public_cash_and_property_dual")
     && input.scheduleA.charitableCarryforwardDetail.length === 0;
   if (input.taxYear !== 2025 && !currentOnly && (input.taxYear !== 2026 || !nonitemized
     || nonitemized.method !== "2026_nonitemized_public_cash" || input.deductionMethod === "itemized"

@@ -344,7 +344,8 @@ export function calculateScheduleA(
   }
   if (nolCashLimit !== undefined) amounts.cashPublic = min(amounts.cashPublic, nolCashLimit);
   if (input.charitableCarryoverSources) {
-    if (input.taxpayer.taxYear === 2026 && input.deductionElection !== "standard" && input.deductionElection !== "nonitemized"
+    if (input.taxpayer.taxYear === 2026 && ((input.deductionElection !== "standard" && input.deductionElection !== "nonitemized")
+      || amounts.noncashPublic.gt(0) || eligibleDonations.some(source => source.type !== "cash"))
       && input.charitableCarryoverSources.vintages?.length === 0) {
       if (nolCashLimit !== undefined) throw new Error("Current charitable candidates require their separate NOL replay method");
       currentCharitableCandidates = calculateCurrentCharitableCandidates(input, { contributionBase, current: amounts });
