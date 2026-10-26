@@ -222,6 +222,19 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
   if (fixtures.length !== taxProviderModelEvalFixtures.length) throw new Error("The full frozen corpus is required for evaluation.");
   const reviewedCount = fixtures.filter(independentlyReviewed).length;
   const currentCorpusDigest = providerEvalCorpusDigest();
+  // These computations depend on this call's already checked fixture/entry
+  // objects, not the profile being summarized. Keep reuse local to this report
+  // so changed payloads, review evidence and source contexts are always checked
+  // again by a subsequent report.
+  const preparedCases = new Map(fixtures.map(fixture => [fixture.id, prepareProviderEvalCase(fixture)]));
+  const entryScores = new Map<ProviderModelLiveEvalEntry, ReturnType<typeof scoreForCorpus>>();
+  const scoreEntry = (entry: ProviderModelLiveEvalEntry, fixture: ProviderEvalFixture) => {
+    const previous = entryScores.get(entry);
+    if (previous) return previous;
+    const score = scoreForCorpus(entry, fixture, currentCorpusDigest);
+    entryScores.set(entry, score);
+    return score;
+  };
   const groups = providerModelCandidates.flatMap(profile => (Object.keys(AI_TASKS) as AiTask[]).map(task => {
     const filingSeasonLifecycle = publicModelLifecycle(profile.model, providerModelPricingSnapshot.filingSeasonDate);
     const cases = fixtures.filter(fixture => fixture.task === task);
@@ -230,7 +243,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const scored = entries.map(entry => {
       const fixture = cases.find(item => item.id === entry.fixtureId);
       if (!fixture) throw new Error("Evaluation case is missing.");
-      return { entry, result: scoreForCorpus(entry, fixture, currentCorpusDigest) };
+      return { entry, result: scoreEntry(entry, fixture) };
     });
     const complete = scored.filter(item => item.result.complete);
     const fields = scored.reduce((sum, item) => sum + item.result.requiredFields, 0);
@@ -240,7 +253,7 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     const measuredCost = scored.reduce((sum, item) => sum.plus(item.result.actualCostUsd ?? "0"), new Money(0));
     const filingCost = scored.reduce((sum, item) => sum.plus(item.result.filingSeasonCostUsd ?? "0"), new Money(0));
     const costKnown = scored.length > 0 && scored.every(item => item.result.actualCostUsd !== null);
-    const preflightCases = cases.filter(fixture => prepareProviderEvalCase(fixture).kind === "preflight");
+    const preflightCases = cases.filter(fixture => preparedCases.get(fixture.id)?.kind === "preflight");
     const preflightEntries = (validated.preflightEntries ?? []).filter(entry => entry.profileId === profile.id && preflightCases.some(fixture => fixture.id === entry.fixtureId));
     const preflightPassed = preflightEntries.filter(entry => { const fixture = preflightCases.find(item => item.id === entry.fixtureId);
       return entry.runPurpose === "qualification" && entry.bindingVersion === PROVIDER_EVAL_BINDING_VERSION && fixture?.expected.disposition === "abstain" && hasCurrentProviderEvalProvenance(entry, fixture, currentCorpusDigest) && Object.keys(fixture.expected.fields).length === 0
@@ -290,9 +303,9 @@ export function summarizeProviderModelLiveEvalTemplate(template: ProviderModelLi
     for (const entry of candidateEntries) {
       const fixture = fixtures.find(item => item.id === entry.fixtureId);
       if (!fixture) throw new Error("Evaluation case is missing.");
-      const score = scoreForCorpus(entry, fixture, currentCorpusDigest);
+      const score = scoreEntry(entry, fixture);
       if (!score.criticalCorrect && validated.entries.some(other => candidate(other.profileId).role === "baseline"
-        && other.fixtureId === entry.fixtureId && other.repeat === entry.repeat && scoreForCorpus(other, fixture, currentCorpusDigest).criticalCorrect)) {
+        && other.fixtureId === entry.fixtureId && other.repeat === entry.repeat && scoreEntry(other, fixture).criticalCorrect)) {
         group.blockers.push("critical-field-regression"); break;
       }
     }
