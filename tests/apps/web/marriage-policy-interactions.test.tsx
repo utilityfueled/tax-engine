@@ -35,3 +35,23 @@ it('reaches marriage controls and preserves unknown source answers',async()=>{
     await click('Copy alternative benchmark coverage groups');expect(container.querySelector('[role="alert"]')?.textContent).toMatch(/marriage date/i);
   }finally{await act(async()=>root.unmount());container.remove();}
 });
+
+// Spec: spec/federal/form-8962-marriage-first-day.yaml.
+it('recopies first-day marriage groups through June after an actual date edit',async()=>{
+  (globalThis as {IS_REACT_ACT_ENVIRONMENT?:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
+  const container=document.createElement('div');document.body.appendChild(container);const root=createRoot(container);
+  let latest:CreditsData={...emptyCreditsData,premiumTaxCredit:actualMarriagePolicyData()};
+  const coverage=()=>present(latest.premiumTaxCredit),marriage=()=>present(coverage().marriageSources);
+  function Harness(){const [data,setData]=useState(latest);return <SectionCredits data={data} hasDependents filingStatus="mfj" taxYear={2025} personalData={actualMarriagePersonal()} onDataChange={next=>{latest=next;setData(next)}}/>;}
+  async function date(value:string){const control=[...container.querySelectorAll('label')].find(row=>row.querySelector('.guided-field-label')?.textContent==='Actual marriage date (YYYY-MM-DD)')?.querySelector('input');if(!control)throw new Error('Missing actual date control');await act(async()=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')?.set?.call(control,value);control.dispatchEvent(new Event('input',{bubbles:true}));});}
+  async function copy(){const button=[...container.querySelectorAll('button')].find(row=>row.textContent==='Copy alternative benchmark coverage groups');if(!button)throw new Error('Missing copy control');await act(async()=>button.click());}
+  try{
+    await act(async()=>root.render(<Harness/>));await date('2025-07-01');
+    expect(coverage().sourceFactsConfirmed).toBeNull();expect(marriage().sourceFactsConfirmed).toBeNull();
+    await copy();expect(container.querySelector('[role="alert"]')).toBeNull();
+    expect(marriage().marriageDate).toBe('2025-07-01');expect(marriage().benchmarks).toHaveLength(12);
+    expect(marriage().benchmarks.every(row=>Number(row.month)<=6&&row.slcsp===''&&row.sourceFactsConfirmed===null)).toBe(true);
+    expect(container.textContent).not.toContain('Marriage on the first day of a month,');
+    await date('2025-01-01');await copy();expect(container.querySelector('[role="alert"]')?.textContent).toMatch(/January 1.*not eligible|not eligible.*January 1/i);
+  }finally{await act(async()=>root.unmount());container.remove();}
+});

@@ -9,6 +9,8 @@ type Owner = 'primary' | 'spouse';
 interface CoverageMonth { month: number; premium: Decimal; slcsp: Decimal; coverageEligible: boolean }
 export interface Form8962MarriageWorksheetInput {
   taxYear: number; fplRegion: Form8962FplRegion; householdIncome: Decimal; familySize: number; marriageMonth: number;
+  /** Derived from the actual date: preceding month for day1; wedding month otherwise. */
+  lastPreMarriageMonth: number;
   /** Validated ordinary coverage amounts. Policy/household source binding is a separate prerequisite. */
   months: Array<CoverageMonth & { advance: Decimal }>;
   families: Array<{ owner: Owner; familySize: number; months: CoverageMonth[] }>;
@@ -45,6 +47,10 @@ function coverage(row: CoverageMonth): void {
 /** Pure completed-worksheet arithmetic. Never accepts an entered current PTC or repayment override. */
 export function calculateForm8962MarriageWorksheets(input: Form8962MarriageWorksheetInput): Form8962MarriageWorksheetResult {
   month(input.marriageMonth);
+  month(input.lastPreMarriageMonth);
+  if (input.lastPreMarriageMonth > input.marriageMonth || input.lastPreMarriageMonth < input.marriageMonth - 1) {
+    throw new Error('Marriage worksheet requires the actual first-full-married-month boundary');
+  }
   const joint = calculateForm8962Contribution(input);
   if (input.familySize < 2 || joint.fplPercentageForTable.lt(100)) throw new Error('Marriage worksheet requires an actual joint family and its separate below-poverty method when applicable');
   const owners = new Set<Owner>();
@@ -86,7 +92,7 @@ export function calculateForm8962MarriageWorksheets(input: Form8962MarriageWorks
       coverage(row);
       if (seen.has(row.month)) throw new Error('Marriage worksheet has duplicate owner coverage months');
       seen.add(row.month);
-      if (row.month > input.marriageMonth || !sourceMonths.has(row.month)) throw new Error('Marriage worksheet owner month must have actual joint sources in a pre-marriage month');
+      if (row.month > input.lastPreMarriageMonth || !sourceMonths.has(row.month)) throw new Error('Marriage worksheet owner month must have actual joint sources in a pre-marriage month');
       if (row.coverageEligible && sourceMonths.get(row.month)?.coverageEligible !== true) throw new Error('Marriage worksheet owner eligibility conflicts with actual ordinary coverage');
     }
     const rows = [...family.months].sort((a, b) => a.month - b.month);
@@ -104,7 +110,7 @@ export function calculateForm8962MarriageWorksheets(input: Form8962MarriageWorks
         audit.record(form, '6', 'Alternative annual contribution', alternative.expectedContribution, 'round(line2 times line5)');
         audit.record(form, '7', 'Alternative monthly contribution', alternative.monthlyContribution, 'round(line6 /12)');
         audit.record(form, '8', 'First actual alternative coverage month', d(String(startMonth)), 'First full actual QHP coverage month');
-        audit.record(form, '9', 'Last actual alternative coverage month', d(String(stopMonth)), 'Last coverage month, no later than marriage month');
+        audit.record(form, '9', 'Last actual alternative coverage month', d(String(stopMonth)), 'Last actual coverage month before the first full married month');
       }
     }
     const months = rows.map(row => {
@@ -127,7 +133,7 @@ export function calculateForm8962MarriageWorksheets(input: Form8962MarriageWorks
       ...(incomeWithinLimit && startMonth !== undefined ? { contributionRate: alternative.contributionRate, annualContribution: alternative.expectedContribution,
         monthlyContribution: alternative.monthlyContribution, startMonth, stopMonth } : {}), months };
   });
-  const preMonths = ordinaryMonths.filter(row => row.month <= input.marriageMonth);
+  const preMonths = ordinaryMonths.filter(row => row.month <= input.lastPreMarriageMonth);
   for (const row of preMonths) {
     const original = sourceMonths.get(row.month);
     const sources = input.families.flatMap(family => family.months.filter(value => value.month === row.month));
@@ -144,7 +150,7 @@ export function calculateForm8962MarriageWorksheets(input: Form8962MarriageWorks
   audit.record('Pub974 Marriage Worksheet V', '13A', 'Total alternative comparison assistance', alternativePreMarriageCredit, 'Sum monthly columnA');
   audit.record('Pub974 Marriage Worksheet V', '13B', 'Total ordinary comparison assistance', ordinaryPreMarriageCredit, 'Sum matching columnB only');
   const alternativeMonths = ordinaryMonths.map(row => {
-    if (row.month > input.marriageMonth) return row;
+    if (row.month > input.lastPreMarriageMonth) return row;
     const sourceRows = families.filter(family => family.incomeWithinLimit).flatMap(family => family.months.filter(value => value.month === row.month));
     const contribution = sum(...sourceRows.map(value => value.contribution));
     return { ...row, contribution, maximumCredit: zeroFloor(row.slcsp.minus(contribution)), credit: sum(...sourceRows.map(value => value.credit)) };
@@ -174,10 +180,10 @@ export function calculateForm8962MarriageWorksheets(input: Form8962MarriageWorks
   }
   for (const row of months) {
     const line = String(row.month + 11);
-    if ((electionApplies && row.month <= input.marriageMonth) || (jointIncomeEligible && row.coverageEligible)) {
+    if ((electionApplies && row.month <= input.lastPreMarriageMonth) || (jointIncomeEligible && row.coverageEligible)) {
       for (const [column, description, value] of [['a', 'Enrollment premium', row.premium], ['b', 'Corrected benchmark', row.slcsp], ['c', 'Contribution', row.contribution],
         ['d', 'Maximum assistance', row.maximumCredit], ['e', 'Monthly allowed assistance', row.credit]] as const) {
-        audit.record('Form 8962', `${line}${column}`, description, value, electionApplies && row.month <= input.marriageMonth ? 'Pub974 Step7; columnE comes from separate owner calculations' : 'Ordinary monthly calculation');
+        audit.record('Form 8962', `${line}${column}`, description, value, electionApplies && row.month <= input.lastPreMarriageMonth ? 'Pub974 Step7; columnE comes from separate owner calculations' : 'Ordinary monthly calculation');
       }
     }
     audit.record('Form 8962', `${line}f`, 'Monthly actual advance payments', row.advance, 'Original monthly source amount, rounded once');

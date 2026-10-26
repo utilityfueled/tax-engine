@@ -39,7 +39,7 @@ lines:
     testRef: "tests/engine/forms/form-8962-marriage-worksheets.test.ts::matches the published2025 aggregate marriage example with a declared compatible source split"
   - line: "I/III.5-9"
     description: "Alternative contributions and actual pre-marriage months"
-    formula: "Use actual-year applicable rate at the whole percentage; annual=round(halfIncome*rate); monthly=round(annual/12). First and last actual coverage rows determine the interval, capped by marriage month. Each month in the interval needs known source values, including explicit zero if coverage stops temporarily. Above400 individual percentage produces no2026 alternative credit."
+    formula: "Use actual-year applicable rate at the whole percentage; annual=round(halfIncome*rate); monthly=round(annual/12). First and last actual coverage rows determine the interval, capped by the separately derived last month before the first full married month. Each month in the interval needs known source values, including explicit zero if coverage stops temporarily. Above400 individual percentage produces no2026 alternative credit."
     testRef: "tests/engine/forms/form-8962-marriage-worksheets.test.ts::keeps the restored2026 cliff separate for joint and individual calculations"
   - line: "II/IV.A-E"
     description: "Separate owner monthly assistance"

@@ -16,7 +16,7 @@ export function MarriagePolicySourceDetails({data,personal,filingStatus,onChange
   function perform(action:()=>void){try{action();setError(undefined);}catch(caught){setError(caught instanceof Error?caught.message:'Check the actual marriage sources.');}}
   return <section><h5>Marriage-year Marketplace worksheet</h5>
     <p className="guided-hint">Use actual marriage records, dependent qualifications and corrected monthly benchmarks. The return compares the ordinary and alternative calculations to determine whether the alternative reduces advance-credit repayment.</p>
-    <p className="guided-hint">This worksheet supports a joint return with full-month eligible coverage on policies issued to either spouse. Marriage on the first day of a month, shared-policy allocations and self-employed health coordination require their separate methods.</p>
+    <p className="guided-hint">This worksheet supports a joint return with full-month eligible coverage on policies issued to either spouse. For a wedding on the first day of February through December, alternative months stop before the wedding month. January 1 marriages cannot use this election. Shared-policy allocations and self-employed health coordination require their separate methods.</p>
     <button type="button" onClick={()=>perform(()=>onChange({marriageSources:captureMarriageSources(data,personal,filingStatus)}))}>Copy marriage household and original policies</button>
     <p className="guided-hint">Copy again after replacing the household or original statements. Copying clears the previous marriage answers and benchmarks.</p>
     {error&&<p role="alert">{error}</p>}

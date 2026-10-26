@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.109",
+    ruleVersion: "2025.110",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.ecfr.gov/current/title-26/section-1.36B-4", section: "Actual February–December day1 marriage ends the alternative calculation before the first fully married month; January1 remains ineligible", revision: "Reg1.36B-4(b)(2)(ii)(B)/(C), final2025 i8962 Table4 and Pub974; original date, source/guide/monthly/PartV boundaries and derived controls, full2026 and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Final2025 EIC table and independent earned-income/AGI lookups; IRC32(a)(2) maximum-credit phase-out ceiling and exact2026 indexed maximum rounding", revision: "Final2025 WorksheetsA/B,1374 published rows and8 partial-row footnotes, IRC32(a)/(f), RevProc2025-32; independent source/software controls, final2026 table and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Actual claimant qualifying-child restriction with or without a child; separate childless dependency, applicable-year U.S. home and extended military duty sources", revision: "Final2025 Rules10/12/13/14, IRC32(c), Pub559 final-return rule; original source and guide controls, unknown historical facts retained, formula/table and human qualification separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual separate-owner health deductions constrained by each owner income in ordered credit, IRA and QBI replays;2025 zero specified advances and2026 full repayment", revision: "IRC162(l), Reg1.162(l)-1/1.199A-3 and RevProc2014-41; derived source and private review controls, binding joint2025 repayment ownership and human qualification remain separate", retrievedAt: "2026-10-26" },
@@ -152,11 +153,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.106-law-integration-draft",
+    ruleVersion: "2026.107-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.ecfr.gov/current/title-26/section-1.36B-4", section: "Actual February–December day1 marriage ends the alternative calculation before the first fully married month; January1 remains ineligible", revision: "Reg1.36B-4(b)(2)(ii)(B)/(C), final2025 i8962 Table4 and Pub974; original date, source/guide/monthly/PartV boundaries and derived controls, full2026 and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Final2025 EIC table and independent earned-income/AGI lookups; IRC32(a)(2) maximum-credit phase-out ceiling and exact2026 indexed maximum rounding", revision: "Final2025 WorksheetsA/B,1374 published rows and8 partial-row footnotes, IRC32(a)/(f), RevProc2025-32; independent source/software controls, final2026 table and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Actual claimant qualifying-child restriction with or without a child; separate childless dependency, applicable-year U.S. home and extended military duty sources", revision: "Final2025 Rules10/12/13/14, IRC32(c), Pub559 final-return rule; original source and guide controls, unknown historical facts retained, formula/table and human qualification separate", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.170A-10", section: "Actual 2026 explicit nonitemized current/prior ordinary category carry, current-before-prior FIFO, original fifth-year expiry and shared B/D capacity", revision: "IRC170(B)/(C)/(D)/(G)/(p), final2025 Pub526 and derived 2026 limits; exact source/category/history conservation, prior-C offset, itemized floor, NOL and partial mixed media remain separate", retrievedAt: "2026-10-26" },

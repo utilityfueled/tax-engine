@@ -4,7 +4,7 @@ import { d } from '@/utils/decimal.js';
 import { calculateForm8962MarriageWorksheets, type Form8962MarriageWorksheetInput } from '@/engine/forms/form-8962-marriage-worksheets.js';
 
 function example(): Form8962MarriageWorksheetInput {
-  return { taxYear: 2025, fplRegion: 'contiguous', householdIncome: d('117000'), familySize: 4, marriageMonth: 7,
+  return { taxYear: 2025, fplRegion: 'contiguous', householdIncome: d('117000'), familySize: 4, marriageMonth: 7, lastPreMarriageMonth: 7,
     months: Array.from({ length: 12 }, (_, i) => ({ month: i + 1, premium: d(i < 7 ? '1500' : '1350'), slcsp: d(i < 7 ? '1266' : '1167'), advance: d(i < 7 ? '794' : '573'), coverageEligible: true })),
     families: [
       { owner: 'primary', familySize: 1, months: Array.from({ length: 7 }, (_, i) => ({ month: i + 1, premium: d('500'), slcsp: d('433'), coverageEligible: true })) },
@@ -26,7 +26,7 @@ it('matches the published2025 aggregate marriage example with a declared compati
   expect(JSON.stringify(input)).toBe(before);
 });
 it('keeps the restored2026 cliff separate for joint and individual calculations', () => {
-  const input = example(); Object.assign(input, { taxYear: 2026, householdIncome: d('90000'), familySize: 2, marriageMonth: 9 });
+  const input = example(); Object.assign(input, { taxYear: 2026, householdIncome: d('90000'), familySize: 2, marriageMonth: 9, lastPreMarriageMonth: 9 });
   input.months = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, premium: d('1000'), slcsp: d('1000'), advance: d(i < 9 ? '400' : '300'), coverageEligible: true }));
   input.families = ['primary', 'spouse'].map(owner => ({ owner: owner as 'primary' | 'spouse', familySize: 1, months: Array.from({ length: 9 }, (_, i) => ({ month: i + 1, premium: d('500'), slcsp: d('500'), coverageEligible: true })) }));
   const result = calculateForm8962MarriageWorksheets(input);
@@ -102,7 +102,7 @@ it('rejects missing duplicated and inconsistent original monthly amounts', () =>
   expect(() => calculateForm8962MarriageWorksheets(owners)).toThrow(/owner|once/i);
 });
 it('does not lose ordinary credit hidden by an excluded alternative owner month', () => {
-  const input: Form8962MarriageWorksheetInput = { taxYear: 2026, fplRegion: 'contiguous', householdIncome: d('126000'), familySize: 4, marriageMonth: 7,
+  const input: Form8962MarriageWorksheetInput = { taxYear: 2026, fplRegion: 'contiguous', householdIncome: d('126000'), familySize: 4, marriageMonth: 7, lastPreMarriageMonth: 7,
     months: [
       { month: 1, premium: d('1500'), slcsp: d('1500'), advance: d('1500'), coverageEligible: true },
       { month: 2, premium: d('500'), slcsp: d('450'), advance: d('500'), coverageEligible: true },

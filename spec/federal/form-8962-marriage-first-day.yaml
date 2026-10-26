@@ -1,0 +1,46 @@
+form: "Form 8962 Marriage First Full Month"
+fullName: "Actual first-day marriage and full-month credit boundary"
+taxYear: [2025, 2026]
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.36B-4"
+references:
+  - "https://www.irs.gov/instructions/i8962"
+  - "https://www.irs.gov/publications/p974"
+notes: |
+  Refreshed2026-10-26. Reg1.36B-4(b)(2)(ii)(B) uses each "full or partial
+  month the taxpayers are unmarried"; (C) instead uses each "full month
+  the taxpayers are married". Thus a day1 wedding makes that entire month
+  an ordinary married month. Final2025 i8962 Table4 Q1 requires both
+  spouses unmarried onJanuary1 and Q4 requires QHP enrollment before
+  the first full month of marriage. January1 cannot qualify.
+  Pub974 TableA's generic footnote includes the wedding month, but does
+  not address a first-day wedding. Apply the regulation and Table4's
+  specific full-month boundary; keep Pub974's separate-family arithmetic.
+  The actual date and wedding month remain unchanged. A separate derived
+  lastPreMarriageMonth is required by the completed worksheet contract;
+  no root input field or current credit override is added. Current final
+  forms remain2025; isolated2026 tests do not open full-return gates.
+lines:
+  - line: "date-boundary"
+    description: "Determine the first full married month from the actual date"
+    formula: "For Feb-Dec day1, lastPreMarriageMonth=actual marriageMonth-1. For day2 or later, lastPreMarriageMonth=actual marriageMonth. January1 rejects with an ineligibility explanation. The internal cutoff must be an actual month and either the wedding month or its immediately preceding month."
+    testRef: "tests/engine/forms/form-8962-marriage-first-day.test.ts::derives every February through December first-day cutoff from actual dates"
+  - line: "I-V/12-29"
+    description: "Keep full married months on the ordinary joint calculation"
+    formula: "Constructed117000 joint-income source, July1 wedding: six months718 alternative + July498 ordinary + five months399 ordinary=6801 credit; actual advances8423 yield1622 repayment and zero netPTC. July2 retains7021/1402. No original policy amount or actual joint income changes."
+    testRef: "tests/engine/forms/form-8962-marriage-first-day.test.ts::uses ordinary July credit for a July first wedding and preserves later-day treatment"
+  - line: "2026-boundary"
+    description: "Preserve the restored joint-income cliff after the cutoff"
+    formula: "Constructed2026 joint income130000/family4 with July1 wedding: six spouse alternative months390=2340, ordinary joint credit0, advances8423, full repayment6083. No additional refundable credit; full2026 return remains unavailable."
+    testRef: "tests/engine/forms/form-8962-marriage-first-day.test.ts::keeps full married months at the actual2026 joint income boundary"
+  - line: "source-guards"
+    description: "Preserve actual date and independently matched benchmark groups"
+    formula: "January1 is ineligible; missing or impossible completed cutoff rejects. A retained alternative benchmark in the full married month is unmatched and rejects. Copying current groups selects only months before the first full married month, leaving actual corrected amounts and confirmations unknown. Editing the date invalidates prior confirmations."
+    testRef: "tests/guided-interview/guided-marriage-policy.test.ts::copies only months before a first-day wedding without inventing benchmark amounts"
+  - line: "guided-date"
+    description: "Reach the first-day boundary through actual source controls"
+    formula: "Changing July15 toJuly1 in the real credits component clears confirmation; copying alternative groups creates twelve rows throughJune with original coverage IDs and blank benchmark amounts. January1 gives the explicit ineligibility message."
+    testRef: "tests/apps/web/marriage-policy-interactions.test.tsx::recopies first-day marriage groups through June after an actual date edit"
+  - line: "35/36"
+    description: "Print the actual alternative stop month and ordinary wedding-month values"
+    formula: "Saved2025 July1 packet prints PartV stop06 for both owners, July contribution768/credit498, line24=6801 and line29=1622. Reopen saved fields independently; original-source tokens still reject a changed marriage date."
+    testRef: "tests/pdf/form8962-marriage-review.test.ts::prints the preceding alternative month for a first-day wedding"

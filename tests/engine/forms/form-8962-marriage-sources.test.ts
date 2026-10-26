@@ -59,7 +59,7 @@ it('requires exact complete benchmark groups and known monthly eligibility', () 
 });
 it('preserves unsupported and unknown facts instead of certifying an election', () => {
   for(const mutate of [
-    (input:Fixture)=>{sources(input).packet.marriageDate='2025-07-01';},
+    (input:Fixture)=>{sources(input).packet.marriageDate='2025-01-01';},
     (input:Fixture)=>{sources(input).packet.marriageDate='2024-07-15';},
     (input:Fixture)=>{sources(input).packet.primaryUnmarriedOnJanuary1=undefined;},
     (input:Fixture)=>{sources(input).packet.marriedToEachOtherOnDecember31=false;},

@@ -77,8 +77,9 @@ export function copyMarriageBenchmarkGroups(data:PremiumTaxCreditData,personal:P
   if(!packet)throw new Error('Copy actual marriage sources and assign dependents first.');
   const date=text(packet.marriageDate,'marriage date'),parsed=new Date(`${date}T00:00:00Z`);
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(parsed.getTime())||parsed.toISOString().slice(0,10)!==date||parsed.getUTCFullYear()!==h.year)throw new Error('Enter the actual marriage date in the return year.');
-  if(parsed.getUTCDate()===1)throw new Error('Marriage on the first day needs its separate source method.');
-  const marriageMonth=parsed.getUTCMonth()+1,primaryId=id(h.primary.ssn,'primary SSN'),spouseId=id(h.spouse.ssn,'spouse SSN');
+  const lastPreMarriageMonth=parsed.getUTCMonth()+1-(parsed.getUTCDate()===1?1:0);
+  if(lastPreMarriageMonth===0)throw new Error('Marriage on January 1 is not eligible for the alternative marriage calculation.');
+  const primaryId=id(h.primary.ssn,'primary SSN'),spouseId=id(h.spouse.ssn,'spouse SSN');
   const families={primary:new Set([primaryId]),spouse:new Set([spouseId])};
   if(packet.dependents.length!==h.dependents.length)throw new Error('Reconcile every actual dependent assignment before copying benchmark groups.');
   for(const person of h.dependents){
@@ -97,7 +98,7 @@ export function copyMarriageBenchmarkGroups(data:PremiumTaxCreditData,personal:P
       const key=id(person.ssn,'original covered-person SSN'),first=person.firstMonth,last=person.lastMonth;
       originalIds.set(key,text(person.ssn,'original covered-person SSN'));
       if(first===undefined||last===undefined)throw new Error('Enter actual original covered-person periods.');
-      for(let month=first;month<=Math.min(last,marriageMonth);month++){
+      for(let month=first;month<=Math.min(last,lastPreMarriageMonth);month++){
         const covered=coverage.get(key)??new Set<number>();covered.add(month);coverage.set(key,covered);
         const people=groups[owner].get(month)??new Set<string>();people.add(key);groups[owner].set(month,people);
       }

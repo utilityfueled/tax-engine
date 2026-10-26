@@ -44,7 +44,7 @@ it('rejects missing stale and contradictory marriage source facts',()=>{
     (x:PremiumTaxCreditData)=>{present(present(x.policies[0]).monthlyPremiums[0]).enrolleePremium='500.001'},
     (x:PremiumTaxCreditData)=>{present(packet(x).benchmarks[0]).coveredIndividualSsns=[]},
     (x:PremiumTaxCreditData)=>{present(packet(x).benchmarks[0]).slcsp=''},
-    (x:PremiumTaxCreditData)=>{packet(x).marriageDate='2025-07-01'},
+    (x:PremiumTaxCreditData)=>{packet(x).marriageDate='2025-01-01'},
     (x:PremiumTaxCreditData)=>{x.selfEmployedHealthInsuranceCoordinationRequired=true},
   ]){const bad=actualMarriagePolicyData();mutate(bad);expect(()=>build(bad)).toThrow();}
   const exact=actualMarriagePolicyData();present(packet(exact).benchmarks[0]).slcsp='9,007,199,254,740,993.01';expect(build(exact).form8962?.marriageSources?.benchmarks?.[0]?.slcsp).toBe('9007199254740993.01');
@@ -57,4 +57,17 @@ it('invalidates nested confirmations after actual source edits',()=>{
   data.sourceFactsConfirmed=true;packet(data).sourceFactsConfirmed=true;for(const row of packet(data).benchmarks)row.sourceFactsConfirmed=true;
   expect(()=>buildPremiumTaxCreditInputs(data,2025,'mfj',changed.sectionData['personal-info'])).toThrow(/identit/i);
   const confirmation=updateSectionData(state,'credits',structuredClone(state.sectionData.credits));expect(packet(present(present(confirmation.sectionData.credits).premiumTaxCredit)).sourceFactsConfirmed).toBe(true);
+});
+
+// Spec: spec/federal/form-8962-marriage-first-day.yaml.
+it('copies only months before a first-day wedding without inventing benchmark amounts',()=>{
+  const data=actualMarriagePolicyData(),sources=packet(data);sources.marriageDate='2025-07-01';
+  sources.benchmarks=sources.benchmarks.filter(row=>Number(row.month)<=6);
+  const before=JSON.stringify(data),rows=copyMarriageBenchmarkGroups(data,actualMarriagePersonal(),'mfj');
+  expect(rows).toHaveLength(12);expect(rows.every(row=>Number(row.month)<=6&&row.slcsp===''&&row.sourceFactsConfirmed===null)).toBe(true);
+  expect(build(data).form8962?.marriageSources?.marriageDate).toBe('2025-07-01');
+  expect(build(data).form8962?.marriageSources?.benchmarks).toHaveLength(12);
+  expect(JSON.stringify(data)).toBe(before);
+  sources.marriageDate='2025-01-01';
+  expect(()=>copyMarriageBenchmarkGroups(data,actualMarriagePersonal(),'mfj')).toThrow(/January 1.*not eligible|not eligible.*January 1/i);
 });

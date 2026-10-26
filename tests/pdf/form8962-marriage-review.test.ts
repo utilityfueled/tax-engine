@@ -90,3 +90,19 @@ it('rejects stale marriage sources transfers and forged contexts while preservin
  } finally {rmSync(dir,{recursive:true,force:true});}
  expect(JSON.stringify(input)).toBe(before);
 });
+
+// Spec: spec/federal/form-8962-marriage-first-day.yaml.
+it('prints the preceding alternative month for a first-day wedding',async()=>{
+ const input=source(),sources=input.form8962?.marriageSources;if(!sources?.benchmarks)throw new Error('Missing sources');
+ sources.marriageDate='2025-07-01';sources.benchmarks=sources.benchmarks.filter(row=>(row.month??0)<=6);
+ const result=calculateFederalTax(input),prepared=preparePremiumTaxCreditReview(input),dir=mkdtempSync(join(tmpdir(),'tax-marriage-first-day-'));
+ try{
+  const packet=await fillReturn(input,result,{blankFormsDir:'forms/blank/2025',outputDir:dir,flatten:false,premiumTaxCreditReview:prepared});
+  const path=packet.filledForms.find(file=>file.endsWith('/f8962-filled.pdf'));if(!path)throw new Error('Missing physical8962');const saved=inspect(path);
+  for(const [index,value] of ['1','400','01','06','3','148','01','06'].entries())expect(saved.fields[F.marriage[index]]).toBe(value);
+  for(const [index,value] of ['1500','1266','768','498','498','794'].entries())expect(saved.fields[F.monthly[6][index]]).toBe(value);
+  expect(saved.fields[F.line24]).toBe('6801');expect(saved.fields[F.line29]).toBe('1622');expect(saved.fields[F.line26]).toBe('0');
+  for(const page of saved.pages)expect(page).toContain(REVIEW_PDF_NOTICE);
+  sources.marriageDate='2025-07-02';await expect(fillForm8962Marriage(input,result,blank,prepared)).rejects.toThrow(/stale|conflicting|reconcil/i);
+ }finally{rmSync(dir,{recursive:true,force:true});}
+});

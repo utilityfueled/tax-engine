@@ -15,7 +15,7 @@ export type Form8962MarriageSourceInput = Pick<TaxYearInput, 'form1095A' | 'form
   taxpayer: Pick<TaxYearInput['taxpayer'], 'taxYear' | 'filingStatus'> & {primary: Person; spouse?: Person; dependents: Person[]};
   standardDeductionFacts?: Pick<NonNullable<TaxYearInput['standardDeductionFacts']>, 'primaryCanBeClaimedAsDependent' | 'spouseCanBeClaimedAsDependent'>;
 };
-export interface Form8962MarriageSourceResult extends Pick<Form8962MarriageWorksheetInput, 'familySize' | 'marriageMonth' | 'families' | 'months'> {
+export interface Form8962MarriageSourceResult extends Pick<Form8962MarriageWorksheetInput, 'familySize' | 'marriageMonth' | 'lastPreMarriageMonth' | 'families' | 'months'> {
   lines: CalculatedLine[];
 }
 function text(value: string | undefined, label: string): string {
@@ -75,8 +75,9 @@ export function calculateForm8962MarriageSources(input: Form8962MarriageSourceIn
   if (packet.primaryUnmarriedOnJanuary1 !== true || packet.spouseUnmarriedOnJanuary1 !== true || packet.marriedToEachOtherOnDecember31 !== true) throw new Error('Marriage requires actual January unmarried and December joint-spouse facts');
   const date = text(packet.marriageDate, 'marriage date'), parsed = new Date(`${date}T00:00:00Z`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0,10) !== date || parsed.getUTCFullYear() !== year) throw new Error('Marriage date must be an actual date in the return year');
-  if (parsed.getUTCDate() === 1) throw new Error('Marriage on the first day requires the separate first-full-married-month source method');
   const marriageMonth = parsed.getUTCMonth() + 1;
+  const lastPreMarriageMonth = marriageMonth - (parsed.getUTCDate() === 1 ? 1 : 0);
+  if (lastPreMarriageMonth === 0) throw new Error('Marriage on January 1 is not eligible for the alternative marriage calculation');
   const primaryId = identity(taxpayer.primary.ssn), spouseId = identity(spouse.ssn);
   if (primaryId === spouseId || primaryId !== identity(packet.primarySsn) || spouseId !== identity(packet.spouseSsn)
     || name(packet.primaryName) !== name(`${taxpayer.primary.firstName} ${taxpayer.primary.lastName}`)
@@ -132,7 +133,7 @@ export function calculateForm8962MarriageSources(input: Form8962MarriageSourceIn
       combined.premium = combined.premium.plus(m.premium); combined.advance = combined.advance.plus(m.advance);
       for (const person of covered) combined.people.add(person.id);
       joint.set(m.month,combined);
-      if (m.month <= marriageMonth) {
+      if (m.month <= lastPreMarriageMonth) {
         const group = groups[owner].get(m.month) ?? {premium:d(0),people:new Set<string>()};
         group.premium = group.premium.plus(m.premium);
         for (const person of covered) group.people.add(person.id);
@@ -143,6 +144,8 @@ export function calculateForm8962MarriageSources(input: Form8962MarriageSourceIn
   const reconciled = facts.monthlyReconciliation;
   if (!reconciled || reconciled.length !== joint.size || new Set(reconciled.map(row => row.month)).size !== reconciled.length) throw new Error('Marriage requires complete actual joint monthly reconciliation');
   const audit = new AuditTrail();
+  audit.record('Form8962 marriage sources','last-premarriage-month','Last month before the first full married month',d(String(lastPreMarriageMonth)),
+    'Actual wedding month minus one for a day1 wedding; otherwise actual wedding month');
   const months = reconciled.map(row => {
     const m = month(row.month), actual = joint.get(m);
     if (!actual || !actual.premium.eq(money(row.enrolleePremium)) || !actual.advance.eq(money(row.advancePremiumTaxCredit))) throw new Error('Marriage joint monthly premium and advances must match exact original sources');
@@ -156,7 +159,7 @@ export function calculateForm8962MarriageSources(input: Form8962MarriageSourceIn
   const benchmarks = packet.benchmarks;
   const usedBenchmarks = new Set<number>();
   const families = (['primary','spouse'] as const).map(owner => {
-    const covered = [...members[owner]].flatMap(id => [...(coverage.get(id) ?? [])]).filter(m => m <= marriageMonth);
+    const covered = [...members[owner]].flatMap(id => [...(coverage.get(id) ?? [])]).filter(m => m <= lastPreMarriageMonth);
     const first = covered.length ? Math.min(...covered) : undefined, last = covered.length ? Math.max(...covered) : undefined;
     const rows: Form8962MarriageWorksheetInput['families'][number]['months'] = [];
     if (first !== undefined && last !== undefined) for (let m = first; m <= last; m++) {
@@ -178,5 +181,5 @@ export function calculateForm8962MarriageSources(input: Form8962MarriageSourceIn
   });
   if (usedBenchmarks.size !== benchmarks.length) throw new Error('Marriage alternative benchmark source month or owner is unmatched');
   const intervals = new Set(families.flatMap(family => family.months.map(row => row.month)));
-  return {marriageMonth,familySize,families,months:months.filter(row => row.coverageEligible || intervals.has(row.month)),lines:audit.getLines()};
+  return {marriageMonth,lastPreMarriageMonth,familySize,families,months:months.filter(row => row.coverageEligible || intervals.has(row.month)),lines:audit.getLines()};
 }
