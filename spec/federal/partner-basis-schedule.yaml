@@ -238,11 +238,11 @@ lines:
     testRef: "tests/engine/forms/partner-basis-schedule.test.ts::losses exceeding basis are suspended"
 
   - line: "loss-charitable"
-    description: "Charitable contributions (Box 13 Codes A/B/C)"
-    formula: "K-1 Box 13 Code A + Code B + Code C"
+    description: "Retained cash and capital-gain charitable contribution categories"
+    formula: "charitableCash + charitableCapitalGain30 + charitableCapitalGain20 (semantic values; partnership Box 13 A/E/F or S-corporation Box 12 A/E/F)"
     irsRef: "K-1 Basis Worksheet Line 15j"
     notes: "Charitable contributions reduce basis even though they flow to Schedule A, not Schedule E"
-    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::charitable contributions reduce basis (Box 13 Codes A/B/C)"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::charitable contributions reduce basis (semantic cash and capital-gain categories)"
 
   - line: "loss-other-deductions"
     description: "Other deductions (Box 13 Code W + aggregate)"
@@ -251,10 +251,10 @@ lines:
     testRef: "tests/engine/forms/partner-basis-schedule.test.ts::other deductions reduce basis (Box 13 aggregate)"
 
   - line: "loss-investment-interest"
-    description: "Investment interest expense (Box 13 Code D)"
-    formula: "K-1 Box 13 Code D"
+    description: "Investment interest expense (semantic amount; Code H)"
+    formula: "investmentInterestExpense (partnership Box 13 H or S-corporation Box 12 H)"
     irsRef: "K-1 Basis Worksheet Line 15k"
-    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::investment interest expense reduces basis (Box 13 Code D)"
+    testRef: "tests/engine/forms/partner-basis-schedule.test.ts::investment interest expense reduces basis (Code H)"
 
   - line: "loss-ebie"
     description: "Excess business interest expense (Box 13 Code K)"
@@ -393,3 +393,9 @@ edgeCases:
     testRef: "tests/engine/forms/partner-basis-schedule.test.ts::losses exceeding stock and debt basis are suspended"
   - description: "Debt basis fields ignored for partnerships"
     testRef: "tests/engine/forms/partner-basis-schedule.test.ts::debt basis fields ignored for partnerships"
+
+  - line: "semantic-deduction-labels"
+    description: "Basis categories do not assert the wrong source codes"
+    formula: "Retain semantic charity and investment-interest category values and identify them without fabricated box codes"
+    irsRef: "2025 Partner Instructions for Schedule K-1 (Form 1065), Box 13 A/E/F/H; 2025 Shareholder Instructions for Schedule K-1 (Form 1120-S), Box 12 A/E/F/H"
+    testRef: "tests/engine/k1-semantic-labels.test.ts::preserves basis category amounts for partnership and S corporation semantic inputs"

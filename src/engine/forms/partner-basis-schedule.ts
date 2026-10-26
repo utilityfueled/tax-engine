@@ -466,9 +466,9 @@ function buildLossCategories(
     { key: "section1231", description: "Section 1231 loss (Box 10)", total: current1231Loss.plus(prior1231), allowed: ZERO, suspended: ZERO },
     { key: "otherLoss", description: "Other loss (Box 11)", total: currentOtherLoss.plus(priorOtherLoss), allowed: ZERO, suspended: ZERO },
     { key: "section179", description: "Section 179 deduction (Box 12)", total: currentSection179.plus(priorSection179), allowed: ZERO, suspended: ZERO },
-    { key: "charitable", description: "Charitable contributions (Box 13 A/B/C)", total: currentCharitable.plus(priorCharitable), allowed: ZERO, suspended: ZERO },
+    { key: "charitable", description: "Charitable contributions (semantic cash and capital-gain categories)", total: currentCharitable.plus(priorCharitable), allowed: ZERO, suspended: ZERO },
     { key: "otherDeductions", description: "Other deductions (Box 13 W)", total: currentOtherDeductions.plus(priorOtherDeductions), allowed: ZERO, suspended: ZERO },
-    { key: "investmentInterest", description: "Investment interest expense (Box 13 D)", total: currentInvestmentInterest.plus(priorInvestmentInterest), allowed: ZERO, suspended: ZERO },
+    { key: "investmentInterest", description: "Investment interest expense (semantic amount)", total: currentInvestmentInterest.plus(priorInvestmentInterest), allowed: ZERO, suspended: ZERO },
     { key: "ebie", description: "Excess business interest expense (Box 13 K)", total: currentEBIE.plus(priorEBIE), allowed: ZERO, suspended: ZERO },
   ];
 }

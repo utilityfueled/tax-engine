@@ -10828,31 +10828,31 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
     expect(line11!.value.toNumber()).toBe(3000);
   });
 
-  it("K-1 Box 13 Code B charitable capital gain property flows to Schedule A", () => {
+  it("K-1 Box 13 Code E charitable capital gain property flows to Schedule A", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       scheduleK1: [{
         partnershipName: "Real Estate LP",
         partnershipEIN: "22-2222222",
         ordinaryIncome: "10000",
-        charitableCapitalGain30: "8000", // Box 13 Code B — 30% AGI limit
+        charitableCapitalGain30: "8000", // Box 13 Code E — 30% AGI limit
       }],
     });
 
-    // Non-cash charitable should include K-1 Code B
+    // Non-cash charitable should include K-1 Code E
     const line12 = result.allLines.find((l) => l.form === "Sched A" && l.line === "12");
     expect(line12).toBeDefined();
     expect(line12!.value.toNumber()).toBe(8000);
   });
 
-  it("K-1 Box 13 Code C charitable capital gain property flows to Schedule A", () => {
+  it("K-1 Box 13 Code F charitable capital gain property flows to Schedule A", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       scheduleK1: [{
         partnershipName: "Art Fund LP",
         partnershipEIN: "33-3333333",
         ordinaryIncome: "10000",
-        charitableCapitalGain20: "4000", // Box 13 Code C — 20% AGI limit
+        charitableCapitalGain20: "4000", // Box 13 Code F — 20% AGI limit
       }],
     });
 
@@ -10861,7 +10861,7 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
     expect(line12!.value.toNumber()).toBe(4000);
   });
 
-  it("K-1 Box 13 Codes A+B+C aggregate from multiple partnerships to Schedule A", () => {
+  it("K-1 Box 13 Codes A+E+F aggregate from multiple partnerships to Schedule A", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       donations: [{ qualifiedOrganization: true, isPrivateFoundation: false, organization: "Personal charity", type: "cash", amount: "2000", dateOfDonation: "2025-03-01" }],
@@ -10871,14 +10871,14 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
           partnershipEIN: "44-4444444",
           ordinaryIncome: "15000",
           charitableCash: "3000", // Code A
-          charitableCapitalGain30: "2000", // Code B
+          charitableCapitalGain30: "2000", // Code E
         },
         {
           partnershipName: "Fund B",
           partnershipEIN: "55-5555555",
           ordinaryIncome: "10000",
           charitableCash: "1000", // Code A
-          charitableCapitalGain20: "1500", // Code C
+          charitableCapitalGain20: "1500", // Code F
         },
       ],
     });
@@ -10902,7 +10902,7 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
         partnershipEIN: "66-6666666",
         ordinaryIncome: "50000",
         charitableCash: "5000", // Code A — should NOT subtract from Schedule E
-        charitableCapitalGain30: "3000", // Code B — should NOT subtract from Schedule E
+        charitableCapitalGain30: "3000", // Code E — should NOT subtract from Schedule E
       }],
     });
 
@@ -10959,17 +10959,17 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
     expect(line11!.value.toNumber()).toBe(57000); // 60% of 95000 AGI
   });
 
-  it("K-1 Code B charitable subject to 30% AGI limit on Schedule A", () => {
+  it("K-1 Code E charitable subject to 30% AGI limit on Schedule A", () => {
     // AGI = 85000 (W-2) + 5000 (K-1 ordinary) = 90000
     // 30% of 90000 = 27000
-    // K-1 Code B = 30000 → capped at 27000
+    // K-1 Code E = 30000 → capped at 27000
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       scheduleK1: [{
         partnershipName: "Property Donor LP",
         partnershipEIN: "99-9999999",
         ordinaryIncome: "5000",
-        charitableCapitalGain30: "30000", // Code B exceeds 30% AGI limit
+        charitableCapitalGain30: "30000", // Code E exceeds 30% AGI limit
       }],
     });
 
@@ -10978,17 +10978,17 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
     expect(line12!.value.toNumber()).toBe(27000); // 30% of 90000 AGI
   });
 
-  it("K-1 Code C charitable subject to 20% AGI limit on Schedule A", () => {
+  it("K-1 Code F charitable subject to 20% AGI limit on Schedule A", () => {
     // AGI = 85000 (W-2) + 5000 (K-1 ordinary) = 90000
     // 20% of 90000 = 18000
-    // K-1 Code C = 20000 → capped at 18000
+    // K-1 Code F = 20000 → capped at 18000
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       scheduleK1: [{
         partnershipName: "Foundation Donor LP",
         partnershipEIN: "10-1010101",
         ordinaryIncome: "5000",
-        charitableCapitalGain20: "20000", // Code C exceeds 20% AGI limit
+        charitableCapitalGain20: "20000", // Code F exceeds 20% AGI limit
       }],
     });
 
@@ -11065,14 +11065,14 @@ describe("K-1 Box 13 code separation — charitable contributions to Schedule A"
 // ═══════════════════════════════════════════════════════════
 
 describe("K-1 investment interest — Form 4952 integration", () => {
-  it("K-1 Box 13 Code D investment interest expense flows to Form 4952 Line 1", () => {
+  it("K-1 Box 13 Code H investment interest expense flows to Form 4952 Line 1", () => {
     const result = calculateFederalTax({
       ...simpleW2Fixture,
       scheduleK1: [{
         partnershipName: "Leveraged Investment LP",
         partnershipEIN: "20-2020201",
         ordinaryIncome: "10000",
-        investmentInterestExpense: "3000", // Box 13 Code D
+        investmentInterestExpense: "3000", // Box 13 Code H
         investmentIncome: "5000", // Box 20 Code A — enough to cover
       }],
     });
@@ -11137,7 +11137,7 @@ describe("K-1 investment interest — Form 4952 integration", () => {
         partnershipName: "Mixed Investment LP",
         partnershipEIN: "20-2020204",
         ordinaryIncome: "15000",
-        investmentInterestExpense: "4000", // Box 13 Code D
+        investmentInterestExpense: "4000", // Box 13 Code H
         investmentIncome: "3000", // Box 20 Code A
         investmentExpenses: "500", // Box 20 Code B
       }],
@@ -11168,7 +11168,7 @@ describe("K-1 investment interest — Form 4952 integration", () => {
         partnershipName: "K1-Only Investment LP",
         partnershipEIN: "20-2020205",
         ordinaryIncome: "10000",
-        investmentInterestExpense: "2000", // Box 13 Code D
+        investmentInterestExpense: "2000", // Box 13 Code H
         investmentIncome: "4000", // Box 20 Code A
       }],
     });
@@ -11189,7 +11189,7 @@ describe("K-1 investment interest — Form 4952 integration", () => {
           partnershipName: "Fund Alpha",
           partnershipEIN: "20-2020206",
           ordinaryIncome: "8000",
-          investmentInterestExpense: "1500", // Box 13 Code D
+          investmentInterestExpense: "1500", // Box 13 Code H
           investmentIncome: "3000", // Box 20 Code A
           investmentExpenses: "300", // Box 20 Code B
         },
@@ -11197,7 +11197,7 @@ describe("K-1 investment interest — Form 4952 integration", () => {
           partnershipName: "Fund Beta",
           partnershipEIN: "20-2020207",
           ordinaryIncome: "12000",
-          investmentInterestExpense: "2500", // Box 13 Code D
+          investmentInterestExpense: "2500", // Box 13 Code H
           investmentIncome: "2000", // Box 20 Code A
           investmentExpenses: "200", // Box 20 Code B
         },
@@ -11230,7 +11230,7 @@ describe("K-1 investment interest — Form 4952 integration", () => {
         partnershipName: "High-Leverage LP",
         partnershipEIN: "20-2020208",
         ordinaryIncome: "5000",
-        investmentInterestExpense: "8000", // Box 13 Code D
+        investmentInterestExpense: "8000", // Box 13 Code H
         investmentIncome: "3000", // Box 20 Code A — not enough
       }],
     });

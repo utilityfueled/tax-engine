@@ -2202,12 +2202,13 @@ export const ScheduleK1Schema = z.object({
   otherIncome: optionalDecimal, // Box 11
   section179Deduction: optionalDecimal, // Box 12
   otherDeductions: optionalDecimal, // Box 13 (aggregate or Code W only when code-level fields are used)
-  // Box 13 code-level charitable contributions (flow to Schedule A, NOT Schedule E)
-  charitableCash: optionalDecimal, // Box 13 Code A — cash/non-capital-gain property to 50% orgs (60% AGI limit) → Schedule A Line 12
-  charitableCapitalGain30: optionalDecimal, // Box 13 Code B — capital gain property to 50% orgs (30% AGI limit) → Schedule A Line 13
-  charitableCapitalGain20: optionalDecimal, // Box 13 Code C — capital gain property to non-50% orgs (20% AGI limit) → Schedule A Line 13
-  // Box 13 Code D — investment interest expense (→ Form 4952 Line 1)
-  investmentInterestExpense: optionalDecimal, // Box 13 Code D — IRC §163(d) investment interest expense from partnership
+  // Charitable semantic amounts flow to Schedule A, not Schedule E.
+  // Semantic amounts, not raw box-code records. Partnership Box 13 and S-corporation
+  // Box 12 both use A/E/F/H for the categories below; saved values are not recoded.
+  charitableCash: optionalDecimal, // Code A: cash (60% limit) → Schedule A Line 11
+  charitableCapitalGain30: optionalDecimal, // Code E: capital gain property to 50% organizations (30% limit) → Schedule A Line 12
+  charitableCapitalGain20: optionalDecimal, // Code F: capital gain property (20% limit) → Schedule A Line 12
+  investmentInterestExpense: optionalDecimal, // Code H: §163(d) investment interest → Form 4952 Line 1
   // Box 13 Code K — excess business interest expense (tracked for §163(j) carryforward)
   excessBusinessInterest: optionalDecimal, // Box 13 Code K — IRC §163(j) excess business interest expense
   selfEmploymentEarnings: optionalDecimalInput, // Actual Box 14 code A, including applicable guaranteed payments

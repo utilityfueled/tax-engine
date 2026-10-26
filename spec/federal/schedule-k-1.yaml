@@ -51,6 +51,19 @@ notes: |
   flag on each K-1 entry. Passive losses are subject to Form 8582 limitations.
 
 lines:
+  - line: "semantic-charity-investment-labels"
+    description: "Semantic charitable and investment amounts retain their meaning without fabricated statement codes"
+    formula: "Keep charitableCash, charitableCapitalGain30, charitableCapitalGain20 and investmentInterestExpense amounts unchanged; aggregate audit descriptions identify semantic categories"
+    irsRef: "2025 Partner Instructions for Schedule K-1 (Form 1065), Box 13 A/E/F/H, https://www.irs.gov/instructions/i1065sk1; 2025 Shareholder Instructions for Schedule K-1 (Form 1120-S), Box 12 A/E/F/H, https://www.irs.gov/instructions/i1120ssk"
+    notes: |
+      Both instruction tables use A for cash at 60%, E/F for capital-gain property
+      at 30%/20%, and H for investment interest. B/C/D are distinct cash/noncash
+      categories, not aliases for these semantic fields. The mixed-entity audit
+      retains legacy aggregate keys 13/inv but describes semantic values rather
+      than asserting an original box or code. Existing saved amounts are not
+      migrated or reclassified. This correction makes no raw parser claim.
+    testRef: "tests/engine/k1-semantic-labels.test.ts::retains semantic K1 amounts without asserting invented mixed-entity source codes"
+
   # ── Box 1: Ordinary business income (loss) ──────────────
   - line: "Box 1"
     description: "Ordinary business income (loss)"
@@ -180,56 +193,58 @@ lines:
     irsRef: "Form 1065 K-1 Instructions, Box 13"
     notes: |
       Box 13 contains multiple deduction codes that flow to DIFFERENT forms.
-      Charitable contribution codes (A, B, C) flow to Schedule A, NOT Schedule E.
+      The retained semantic charitable fields cover cash at 60% and capital-gain
+      property at 30% or 20%, corresponding to partnership codes A/E/F.
+      They flow to Schedule A, not Schedule E. This is not a raw code parser.
       Excess business interest (Code K) is tracked for §163(j) carryforward.
       Only Code W (other deductions) and the legacy aggregate otherDeductions
       field flow to Schedule E Part II.
-    testRef: "tests/engine/federal.test.ts::K-1 Box 13 Code B charitable capital gain property flows to Schedule A"
+    testRef: "tests/engine/federal.test.ts::K-1 Box 13 Code E charitable capital gain property flows to Schedule A"
 
   - line: "Box 13 Code A"
-    description: "Charitable contributions — cash and non-capital-gain property (60% AGI limit)"
-    formula: "Partner's share of cash contributions and non-capital-gain property donations to 50% limit organizations"
-    irsRef: "Form 1065 K-1 Instructions, Box 13 Code A; IRC §170(b)(1)(A)"
+    description: "Charitable contributions — cash (60% AGI limit)"
+    formula: "Partner's share of cash contributions subject to the 60% limit"
+    irsRef: "Form 1065 K-1 Instructions, Box 13 Code A; Form 1120-S K-1 Instructions, Box 12 Code A; IRC §170(b)(1)(G)"
     destination: "Schedule A Line 11 (current cash charitable)"
     notes: |
       Flows to Schedule A and is subject to the 60% of AGI limit for cash contributions.
-      Non-capital-gain property in Code A is subject to the 50% limit but is treated
-      conservatively as 60%-limit cash in the current implementation.
+      The charitableCash semantic field does not establish or recode an original
+      statement box. Ordinary noncash property is not Code A cash.
     testRef: "tests/engine/federal.test.ts::K-1 Box 13 Code A charitable cash flows to Schedule A"
 
-  - line: "Box 13 Code B"
+  - line: "Box 13 Code E"
     description: "Charitable contributions — capital gain property to 50% organizations (30% AGI limit)"
     formula: "Partner's share of capital gain property donated to public charities and certain private foundations"
-    irsRef: "Form 1065 K-1 Instructions, Box 13 Code B; IRC §170(b)(1)(C)"
+    irsRef: "Form 1065 K-1 Instructions, Box 13 Code E; Form 1120-S K-1 Instructions, Box 12 Code E; IRC §170(b)(1)(C)"
     destination: "Schedule A Line 12 (current noncash charitable)"
     notes: |
       Long-term capital gain property donated to 50% limit organizations (public charities).
       Subject to the 30% of AGI limit. Flows to the same bucket as personal
       appreciated-property donations on Schedule A.
-    testRef: "tests/engine/federal.test.ts::K-1 Box 13 Code B charitable capital gain property flows to Schedule A"
+    testRef: "tests/engine/federal.test.ts::K-1 Box 13 Code E charitable capital gain property flows to Schedule A"
 
-  - line: "Box 13 Code C"
+  - line: "Box 13 Code F"
     description: "Charitable contributions — capital gain property to non-50% organizations (20% AGI limit)"
     formula: "Partner's share of capital gain property donated to non-50% limit organizations"
-    irsRef: "Form 1065 K-1 Instructions, Box 13 Code C; IRC §170(b)(1)(D)"
+    irsRef: "Form 1065 K-1 Instructions, Box 13 Code F; Form 1120-S K-1 Instructions, Box 12 Code F; IRC §170(b)(1)(D)"
     destination: "Schedule A Line 12 (current noncash charitable)"
     notes: |
       Capital gain property donated to private foundations and other non-50% organizations.
       Subject to the 20% of AGI limit. Flows to the private-foundation appreciated-property
       bucket on Schedule A.
-    testRef: "tests/engine/federal.test.ts::K-1 Box 13 Code C charitable capital gain property flows to Schedule A"
+    testRef: "tests/engine/federal.test.ts::K-1 Box 13 Code F charitable capital gain property flows to Schedule A"
 
-  - line: "Box 13 Code D"
+  - line: "Box 13 Code H"
     description: "Investment interest expense"
     formula: "Partner's share of investment interest expense from the partnership"
-    irsRef: "Form 1065 K-1 Instructions, Box 13 Code D; IRC §163(d)"
+    irsRef: "Form 1065 K-1 Instructions, Box 13 Code H; Form 1120-S K-1 Instructions, Box 12 Code H; IRC §163(d)"
     destination: "Form 4952 Line 1"
     notes: |
       Investment interest expense from partnerships is aggregated with the
       taxpayer's own investment interest (margin interest, etc.) on Form 4952
       Line 1. Subject to the net investment income limitation. Does NOT include
       interest from passive activities or interest allocable to tax-exempt income.
-    testRef: "tests/engine/federal.test.ts::K-1 Box 13 Code D investment interest expense flows to Form 4952 Line 1"
+    testRef: "tests/engine/federal.test.ts::K-1 Box 13 Code H investment interest expense flows to Form 4952 Line 1"
 
   - line: "Box 13 Code K"
     description: "Excess business interest expense (§163(j))"

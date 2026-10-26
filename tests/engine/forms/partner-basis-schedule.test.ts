@@ -332,7 +332,7 @@ describe("Partner/Shareholder Basis Schedule", () => {
     expect(s179!.allowed).toEqual(new Decimal(3600));
   });
 
-  it("charitable contributions reduce basis (Box 13 Codes A/B/C)", () => {
+  it("charitable contributions reduce basis (semantic cash and capital-gain categories)", () => {
     const result = calculatePartnerBasisSchedule(k1({
       beginningBasis: "50000",
       charitableCash: "5000",
@@ -345,7 +345,7 @@ describe("Partner/Shareholder Basis Schedule", () => {
     expect(result.endingBasis).toEqual(new Decimal(40000));
   });
 
-  it("investment interest expense reduces basis (Box 13 Code D)", () => {
+  it("investment interest expense reduces basis (Code H)", () => {
     const result = calculatePartnerBasisSchedule(k1({
       beginningBasis: "30000",
       investmentInterestExpense: "5000",

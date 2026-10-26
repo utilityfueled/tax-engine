@@ -41,10 +41,10 @@ export interface ScheduleAInput {
   gamblingWinnings?: Decimal; // Line 21b: gambling winnings (limits gambling loss deduction)
   gamblingLosses?: Decimal; // Wagering losses
   gamblingExpenses?: Decimal; // Otherwise deductible expenses incurred carrying on wagering transactions
-  // K-1 Box 13 charitable pass-through amounts
-  k1CashCharitable?: Decimal; // Code A: cash/non-capital-gain property (60% AGI limit)
-  k1AppreciatedProperty30?: Decimal; // Code B: capital gain property to 50% orgs (30% limit)
-  k1AppreciatedProperty20?: Decimal; // Code C: capital gain property to non-50% orgs (20% limit)
+  // Semantic K-1 charitable amounts: partnership Box 13 or S-corporation Box 12.
+  k1CashCharitable?: Decimal; // Code A: cash (60% AGI limit)
+  k1AppreciatedProperty30?: Decimal; // Code E: capital gain property to 50% orgs (30% limit)
+  k1AppreciatedProperty20?: Decimal; // Code F: capital gain property to non-50% orgs (20% limit)
   /** Actual tentative crypto property values, before the common charitable limits. */
   cryptoCharitableAmounts?: CharitableContributionWorksheetInput["amounts"];
   /** Internal170(d)(1)(B) counterfactual source amount; never a taxpayer override. */

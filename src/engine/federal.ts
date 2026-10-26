@@ -2256,8 +2256,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   }
 
   // Form 4952: Investment interest expense deduction
-  // Aggregate K-1 Box 13 Code D (investment interest expense),
-  // Box 20 Code A (investment income), partnership-only Box 20 Code AF
+  // Aggregate semantic K-1 investment interest (partnership Box 13 H or
+  // S-corporation Box 12 H),
+  // investment income (partnership Box 20 A or S-corporation Box 17 A),
+  // partnership-only Box 20 Code AF
   // (excess business interest income that also counts as Form 4952 investment
   // income in this supported historical slice). Actual completed source
   // worksheets already include these amounts; Box 20 Code B needs a separate
@@ -2328,11 +2330,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         .plus(k1InvestmentIncome)
         .plus(k1PartnershipExcessBusinessInterestIncomeForForm4952)
         .plus(k1InvestmentExpenses),
-      form4952HasActualSources ? "Actual completed Form4952 includes source K1 amounts once; no second aggregation" : "Historical interest/income aggregation; Box20B retained as information pending actual deductible expense classification", {
-        "Box 13 Code D (investment interest expense → Line 1)": k1InvestmentInterestExpense,
-        "Box 20 Code A (investment income → Line 4a)": k1InvestmentIncome,
+      form4952HasActualSources ? "Actual completed Form4952 includes source K1 amounts once; no second aggregation" : "Historical interest/income aggregation; investment-expense information retained pending actual deductible expense classification", {
+        "Investment interest expense (semantic amount → Line 1)": k1InvestmentInterestExpense,
+        "Investment income (semantic amount → Line 4a)": k1InvestmentIncome,
         "Partnership Box 20 Code AF (EBII → Line 4a)": k1PartnershipExcessBusinessInterestIncomeForForm4952,
-        "Box 20 Code B (source information; actual deductible total on Line 5)": k1InvestmentExpenses,
+        "Investment expenses (semantic source information; actual deductible total on Line 5)": k1InvestmentExpenses,
       });
   }
 
@@ -2342,7 +2344,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     audit.merge(form4684.lines);
   }
 
-  // Aggregate K-1 Box 13 charitable contributions (Codes A, B, C) for Schedule A
+  // Aggregate semantic charitable amounts for Schedule A; partnership Box 13
+  // and S-corporation Box 12 use A/E/F for these categories.
   const k1CashCharitable = k1Agg.charitableCash;
   const k1AppreciatedProperty30 = k1Agg.charitableCapitalGain30;
   const k1AppreciatedProperty20 = k1Agg.charitableCapitalGain20;
@@ -2350,12 +2353,12 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     || !k1AppreciatedProperty30.isZero()
     || !k1AppreciatedProperty20.isZero();
   if (hasK1Charitable) {
-    audit.record("K-1", "13", "K-1 Box 13 charitable contributions routed to Schedule A",
+    audit.record("K-1", "13", "K-1 semantic charitable amounts routed to Schedule A",
       k1CashCharitable.plus(k1AppreciatedProperty30).plus(k1AppreciatedProperty20),
-      "Code A (cash 60%) + Code B (CG property 30%) + Code C (CG property 20%)", {
-        "Code A (cash, 60% AGI limit)": k1CashCharitable,
-        "Code B (capital gain property, 30% AGI limit)": k1AppreciatedProperty30,
-        "Code C (capital gain property, 20% AGI limit)": k1AppreciatedProperty20,
+      "Cash (60%) + capital gain property (30%) + capital gain property (20%)", {
+        "Cash (60% AGI limit)": k1CashCharitable,
+        "Capital gain property (30% AGI limit)": k1AppreciatedProperty30,
+        "Capital gain property (20% AGI limit)": k1AppreciatedProperty20,
       });
   }
 
