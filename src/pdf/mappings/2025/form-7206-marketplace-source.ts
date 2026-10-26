@@ -37,9 +37,10 @@ export function assertMarketplaceHealthReviewSources(input: TaxYearInput, result
     throw new Error("Pub974 review requires actual completed health and final credit sources.");
   }
   const ordinary = marketplace.method === "ordinary-no-ptc-2025";
-  if ((!ordinary && marketplace.method !== "pub974-simplified-2025")
+  const stopped = marketplace.method === "pub974-nonspecified-stop-2025";
+  if ((!ordinary && !stopped && marketplace.method !== "pub974-simplified-2025")
     || calculation.marketplaceHandling !== (ordinary ? "ordinary-no-ptc" : "separate-specified-premiums")
-    || credit.taxpayerEligible !== !ordinary) throw new Error("Pub974 review method contradicts the final actual calculation.");
+    || (!stopped && credit.taxpayerEligible !== !ordinary)) throw new Error("Pub974 review method contradicts the final actual calculation.");
   for (const amount of [marketplace.step2Credit, marketplace.finalCredit, roundDollar(marketplace.specifiedDeduction.plus(marketplace.nonspecifiedDeduction)), marketplace.nonspecifiedDeduction, marketplace.maximumDeduction]) {
     if (exact(amount).lt(0)) throw new Error("Pub974 review requires nonnegative source calculation amounts.");
   }
@@ -55,6 +56,35 @@ export function assertMarketplaceHealthReviewSources(input: TaxYearInput, result
   const { groups } = calculateMarketplaceHealthPremiums({ input, healthInsurance: nonspecified });
   if (groups.length !== marketplace.businesses.length || new Set(marketplace.businesses.map(row => row.businessSourceId)).size !== groups.length) {
     throw new Error("Pub974 review business sources are missing or duplicated.");
+  }
+  if (stopped) {
+    const checked = calculateMarketplaceHealthDeduction({ input, groups, credit });
+    if (checked.method !== marketplace.method || marketplace.historicalLimit
+      || result.allLines.some(row => /^Pub974 Worksheet [WXYZ]|^Pub974 Ordered Deductions|^Pub974 Simplified/.test(row.form))) {
+      throw new Error("Pub974 stopping source review cannot retain a different method or interim worksheets.");
+    }
+    same(marketplace.step2Credit, credit.ptcAllowed);
+    for (const key of ["maximumSpecifiedDeduction", "specifiedDeduction", "nonspecifiedDeduction"] as const) same(marketplace[key], checked[key]);
+    same(marketplace.nonspecifiedDeduction, exact(nonspecified.deduction));
+    same(marketplace.maximumDeduction, checked.nonspecifiedDeduction);
+    for (const source of checked.businesses) {
+      const actual = marketplace.businesses.find(row => row.businessSourceId === source.businessSourceId);
+      if (!actual || actual.accountHolder !== source.accountHolder) throw new Error("Pub974 stopping review owner source does not reconcile.");
+      for (const key of ["specifiedPremiums", "remainingEarnedIncome", "allocatedCredit", "netPremiumsAfterCredit", "ordinaryDeduction", "nonspecifiedDeduction"] as const) same(actual[key], source[key]);
+    }
+    for (const owner of ["primary", "spouse"] as const) {
+      const actual = checked.businesses.filter(row => row.accountHolder === owner);
+      const premiums = sum(...actual.map(row => row.specifiedPremiums), ...nonspecified.businesses.filter(row => row.accountHolder === owner).map(row => row.eligiblePremiums));
+      if (roundDollar(sum(...actual.map(row => row.nonspecifiedDeduction.plus(row.allocatedCredit)))).gt(roundDollar(premiums))) {
+        throw new Error("Pub974 stopping review exceeds the actual owner's premium sources.");
+      }
+    }
+    audits(checked.lines, marketplace.lines);
+    audits(checked.lines, result.allLines.filter(row => row.form.startsWith("Pub974 Nonspecified Stop")));
+    same(calculation.deductionToSchedule1, roundDollar(checked.nonspecifiedDeduction));
+    same(result.schedule1?.seHealthInsurance, calculation.deductionToSchedule1);
+    line(result.allLines, "Sched 1", "17", calculation.deductionToSchedule1);
+    return;
   }
   for (const group of groups) {
     const actual = marketplace.businesses.find(row => row.businessSourceId === group.businessSourceId);

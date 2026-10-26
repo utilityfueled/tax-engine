@@ -126,7 +126,9 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
   write(`Tax year 2025; business source ${businessSourceId}; owner ${accountHolder}; type ${group.kind}.`);
   write("This appendix preserves original source facts and exact calculations. The preceding IRS form is a review copy. Independent filing qualification remains pending.");
   const marketplace = result.marketplaceHealthInsurance;
-  if (marketplace) write(marketplace.method === "pub974-simplified-2025"
+  if (marketplace) write(marketplace.method === "pub974-nonspecified-stop-2025"
+    ? "NONSPECIFIED STOP: each actual specified-plan business has exhausted its income limit after its own completed nonspecified claim. These physical forms contain the final health deduction. Final Form8962 uses that deduction independently. No Worksheets W/X or retained special-order deductions apply."
+    : marketplace.method === "pub974-simplified-2025"
     ? "NONSPECIFIED PREMIUMS: the physical Form7206 contains only the nonspecified deduction. The separate Pub974 calculation below determines the combined return transfer."
     : "FINAL ORDINARY NO-CREDIT METHOD: the physical Form7206 contains the final ordinary eligible premiums and deduction. Interim attempted coordination is retained below for review; it does not replace the final ordinary deduction or repayment rules.");
   write(`Source reference: ${facts.sourceReference ?? "Unknown"}. Plans: ${group.planIds.join(", ")}.`);
@@ -176,7 +178,10 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
     write("The following return-level amounts are shared reference totals, not a separate deduction for this business. Do not add repeated totals from separate business appendices.");
     write("Calculated monetary worksheet values below are displayed to cents; the calculation audit retains full Decimal precision. Original source amounts above retain their supplied precision. The Schedule1 transfer follows its separate whole-dollar rule.");
     const money = (value: Decimal) => value.toDecimalPlaces(2).toFixed();
-    write(`Actual completed method: ${marketplace.method}. Step 2 credit: $${marketplace.step2Credit.toFixed()}. Final Form 8962 credit: $${marketplace.finalCredit.toFixed()}.`);
+    const stopped = marketplace.method === "pub974-nonspecified-stop-2025";
+    write(stopped
+      ? `Actual completed method: ${marketplace.method}. Final Form 8962 credit: $${marketplace.finalCredit.toFixed()}. No special Step 2 was retained.`
+      : `Actual completed method: ${marketplace.method}. Step 2 credit: $${marketplace.step2Credit.toFixed()}. Final Form 8962 credit: $${marketplace.finalCredit.toFixed()}.`);
     if (facts.marketplaceCreditAllocation) {
       const choice = facts.marketplaceCreditAllocation;
       write(`Recorded credit allocation: ${choice.method}; source year ${choice.sourceTaxYear}; reference ${choice.sourceReference}; consistent use ${String(choice.sameMethodForAllCalculationsConfirmed)}.`);
@@ -196,8 +201,11 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
     }
     for (const row of result.allLines.filter(line => line.form === "Pub974 Ordered Deductions")) write(`${row.form} ${row.line}: $${money(row.value)}. ${row.description}. ${row.formula}.`);
     const actualBusiness = marketplace.businesses.find(business => business.businessSourceId === businessSourceId && business.accountHolder === accountHolder);
-    if (actualBusiness) write(`Allocated Step2 credit $${money(actualBusiness.allocatedCredit)}; signed business premium difference $${money(actualBusiness.netPremiumsAfterCredit)}. These worksheet components are included in the combined transfer, not additional deductions.`);
-    for (const row of marketplace.lines.filter(line => line.form === "Pub974 Simplified" || line.form === `Pub974 Simplified ${businessSourceId}`)) write(`${row.form} line ${row.line}: $${money(row.value)}. ${row.description}. ${row.formula}.`);
+    if (actualBusiness) write(stopped
+      ? `Actual corresponding final credit $${money(actualBusiness.allocatedCredit)}; business premium difference $${money(actualBusiness.netPremiumsAfterCredit)} is a review amount only. The completed nonspecified claim above determines the deduction.`
+      : `Allocated Step2 credit $${money(actualBusiness.allocatedCredit)}; signed business premium difference $${money(actualBusiness.netPremiumsAfterCredit)}. These worksheet components are included in the combined transfer, not additional deductions.`);
+    const calculationForm = marketplace.method === "pub974-nonspecified-stop-2025" ? "Pub974 Nonspecified Stop" : "Pub974 Simplified";
+    for (const row of marketplace.lines.filter(line => line.form === calculationForm || line.form === `${calculationForm} ${businessSourceId}`)) write(`${row.form} line ${row.line}: $${money(row.value)}. ${row.description}. ${row.formula}.`);
   } else write(`This business transfers $${roundDollar(group.deduction!).toFixed()} to Schedule 1 line 17. Total across all business forms: $${calculation.deductionToSchedule1.toFixed()}.`);
   write(`Eligible premium excess $${group.eligiblePremiumExcess?.toFixed() ?? "Unknown"} is a review amount, not an automatic itemized deduction.`);
   await markReviewPdf(doc);

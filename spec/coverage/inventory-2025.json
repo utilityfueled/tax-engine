@@ -6219,6 +6219,29 @@
       ]
     },
     {
+      "key": "federal/marketplace-nonspecified-stop",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p974",
+      "specPath": "spec/federal/marketplace-nonspecified-stop.yaml",
+      "enginePath": "src/engine/forms/marketplace-nonspecified-stop.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-marketplace-nonspecified-stop.test.ts::stops before W when every actual specified business has exhausted its own income",
+        "tests/pdf/form7206-nonspecified-stop.test.ts::saves the completed nonspecified forms and rejects stale stopping sources before IO"
+      ],
+      "implementationNote": "Actual completed business income limits determine the published P/Form7206 stop; the shared 2025 mapper prints the completed nonspecified claim and final-credit review. No positive noncoverage-advance allocation, new ordinary physical8962 mapping, or filing qualification is claimed.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/marketplace-passive-ordering",
       "jurisdiction": "federal",
       "taxYear": 2025,

@@ -158,6 +158,7 @@ import { calculateForm1099C } from "./forms/form-1099-c.js";
 import { calculateForm982 } from "./forms/form-982.js";
 import { calculateCodNolReduction } from "./forms/cod-nol-reductions.js";
 import { calculateSEHealthInsuranceWorksheet, type SEHealthInsuranceWorksheetResult } from "./forms/se-health-insurance-worksheet.js";
+import { calculateMarketplaceNonspecifiedStop } from "./forms/marketplace-nonspecified-stop.js";
 import { calculateScheduleJ } from "./forms/schedule-j.js";
 import { calculateForm8915F, type Form8915FResult } from "./forms/form-8915-f.js";
 import { calculateTaxableRefundWorksheet, type TaxableRefundWorksheetResult } from "./forms/taxable-refund-worksheet.js";
@@ -223,13 +224,36 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   }
   let ordered: MarketplaceOrderedState = { kinds };
   let historicalLimit: MarketplaceHealthLimitResult | undefined;
+  const completeNonspecifiedStop = (initial: MarketplaceInterim): TaxReturnResult => {
+    const fixed = calculateMarketplaceHealthDeduction({ input, groups: initial.groups, credit: initial.credit });
+    // P/7206 explicitly stops before the special ordering. Recalculate actual
+    // ordinary claims at the fixed nonspecified amount, with no retained state.
+    const result = calculateFederalTaxWithNol(input, { stage: "final", deduction: fixed });
+    if (!result.form8962 || result.form8962.orderedDeductionInterim) throw new Error("Pub974 nonspecified stop requires the actual final credit.");
+    const final = calculateMarketplaceHealthDeduction({ input, groups: initial.groups, credit: result.form8962 });
+    if (!final.specifiedDeduction.isZero() || !final.nonspecifiedDeduction.eq(fixed.nonspecifiedDeduction)
+      || !result.schedule1?.seHealthInsurance.eq(roundDollar(final.nonspecifiedDeduction))) throw new Error("Pub974 stopped deduction must reconcile its completed actual business claims.");
+    for (const owner of ["primary", "spouse"] as const) {
+      const actual = final.businesses.filter(row => row.accountHolder === owner);
+      const premiums = sum(...actual.map(row => row.specifiedPremiums), ...(result.form7206?.businesses ?? []).filter(row => row.accountHolder === owner).map(row => row.eligiblePremiums));
+      if (roundDollar(sum(...actual.map(row => row.nonspecifiedDeduction.plus(row.allocatedCredit)))).gt(roundDollar(premiums))) {
+        throw new Error("Pub974 stopped deduction and credit exceed the actual owner's premium sources; separate coverage-family coordination is required.");
+      }
+    }
+    result.marketplaceHealthInsurance = { ...final, step2Credit: result.form8962.ptcAllowed,
+      finalCredit: result.form8962.ptcAllowed, maximumDeduction: final.nonspecifiedDeduction };
+    result.allLines.push(...final.lines);
+    return result;
+  };
   if (input.taxpayer.taxYear === 2025) {
     const initial = calculateFederalTaxWithNol(input, { stage: "worksheet-w", ordered });
+    if (calculateMarketplaceNonspecifiedStop(initial.groups)) return completeNonspecifiedStop(initial);
     if (!initial.passiveSpecialRequired) kinds.splice(kinds.indexOf("passive"), 1);
     historicalLimit = calculateMarketplaceHealthLimit({ taxYear: 2025, filingStatus: input.taxpayer.filingStatus, groups: initial.groups,
       householdIncomeAfterW: initial.credit.canonicalTaxpayerModifiedAGI.plus(d(input.form8962?.requiredFilingDependentsModifiedAGI)), federalPovertyLine: initial.credit.federalPovertyLine });
   }
   let intermediate = calculateFederalTaxWithNol(input, { stage: "maximum", historicalLimit, ordered, orderedDeductionInterim: kinds.length > 0 });
+  if (calculateMarketplaceNonspecifiedStop(intermediate.groups)) return completeNonspecifiedStop(intermediate);
   if (kinds.includes("passive") && !intermediate.passiveSpecialRequired) kinds.splice(kinds.indexOf("passive"), 1);
   let deduction: MarketplaceHealthDeductionResult = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: intermediate.credit, historicalLimit });
   const orderedAmounts: { kind: MarketplaceOrderedKind; amount: Decimal }[] = [];

@@ -9,6 +9,7 @@ import type { MarketplaceHealthDeductionResult } from "./marketplace-health-dedu
 import { AuditTrail } from "@/utils/audit.js";
 import { calculateMarketplaceHealthLimit, type MarketplaceHealthLimitResult } from "./marketplace-health-limit.js";
 import { calculateMarketplaceOwnerDeductions } from "./marketplace-health-owners.js";
+import { calculateMarketplaceNonspecifiedStop } from "./marketplace-nonspecified-stop.js";
 
 type Owner = "primary" | "spouse";
 interface Params {
@@ -153,16 +154,24 @@ export function calculateForm7206Return(params: Params) {
   if (marketplacePremiums) {
     const groups = marketplacePremiums.groups;
     const specified = groups.filter(row => row.months.length > 0 && row.includedInEarnedIncomeLimit !== false);
+    const nonspecifiedStop = calculateMarketplaceNonspecifiedStop(groups);
     const multipleOwners = new Set(specified.map(row => row.accountHolder)).size > 1;
-    const uncappedMaximum = multipleOwners
+    const uncappedMaximum = nonspecifiedStop ? d(0) : multipleOwners
       ? calculateMarketplaceOwnerDeductions({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups, stage: { kind: "maximum" } }).specifiedDeduction
       : Decimal.min(sum(...specified.map(row => row.specifiedPremiums)), Decimal.max(0,sum(...specified.map(row => row.remainingEarnedIncome))));
     const suppliedLimit = params.marketplace?.stage === "maximum" ? params.marketplace.historicalLimit : result?.historicalLimit;
-    const historicalLimit = year === 2025 ? calculateMarketplaceHealthLimit({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups,
+    const historicalLimit = year === 2025 && !nonspecifiedStop ? calculateMarketplaceHealthLimit({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups,
       stage: params.marketplace?.stage === "worksheet-w" ? "w" : "complete", householdIncomeAfterW: suppliedLimit?.householdIncomeAfterW, federalPovertyLine: suppliedLimit?.federalPovertyLine, orderedDeductions: suppliedLimit?.orderedDeductions }) : undefined;
     const maximum = historicalLimit?.maximumSpecifiedDeduction ?? uncappedMaximum;
     if (suppliedLimit && (!historicalLimit || !suppliedLimit.maximumSpecifiedDeduction.eq(historicalLimit.maximumSpecifiedDeduction))) throw new Error("Pub974 maximum must reconcile the actual historical worksheet.");
+    if (result && result.method.startsWith("pub974-nonspecified-stop-") !== nonspecifiedStop) throw new Error("Pub974 stopping method must reconcile the actual completed business limits.");
     const attributeSpecified = (amount: Decimal) => {
+      // The published stop retains each completed nonspecified business claim;
+      // there is no specified deduction to reallocate among its owner's sources.
+      if (nonspecifiedStop) {
+        if (!amount.isZero()) throw new Error("Pub974 nonspecified stop cannot contain a specified deduction.");
+        return;
+      }
       const selectedAllocation = specified.some(group => group.creditAllocationMethod !== undefined);
       if (amount.isZero() && !multipleOwners && !selectedAllocation) return;
       if (!specified.length) throw new Error("Pub974 health deduction has no attributable earned-income source.");
@@ -252,7 +261,7 @@ export function calculateForm7206Return(params: Params) {
     const positive = healthSources.filter(row => row.amount.gt(0));
     // Stable source identity, rather than plan-entry order, assigns the final
     // printed-dollar residual. Exact source and proportional amounts stay above.
-    if (selectedAllocation) positive.sort((left, right) => `${left.accountHolder}:${left.sourceId}`.localeCompare(`${right.accountHolder}:${right.sourceId}`, "en"));
+    if (selectedAllocation || nonspecifiedStop) positive.sort((left, right) => `${left.accountHolder}:${left.sourceId}`.localeCompare(`${right.accountHolder}:${right.sourceId}`, "en"));
     const roundingWeight = selectedAllocation ? sum(...positive.map(row => row.amount)) : exact;
     if (selectedAllocation) for (const row of healthSources) if (row.amount.lt(0)) row.amount = d(0);
     positive.forEach((row,index) => {

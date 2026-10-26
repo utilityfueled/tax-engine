@@ -8,6 +8,7 @@ import { d, min, roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
 import { calculateMarketplaceHealthLimit, type MarketplaceHealthLimitResult } from "./marketplace-health-limit.js";
 import { calculateMarketplaceOwnerDeductions } from "./marketplace-health-owners.js";
 import { readMarketplaceCreditAllocationSource } from "./marketplace-credit-allocation-source.js";
+import { calculateMarketplaceNonspecifiedStop } from "./marketplace-nonspecified-stop.js";
 
 export interface MarketplaceHealthDeductionAmount {
   businessSourceId: string;
@@ -27,8 +28,12 @@ export function calculateMarketplaceHealthDeduction(params: {
   const selectedCreditMethod = readMarketplaceCreditAllocationSource(input);
   const year = input.taxpayer.taxYear;
   if (![2025,2026].includes(year) || credit.taxYear !== year || !credit.sourceFactsVerified || (year === 2026 && credit.repaymentCap !== null)) throw new Error("Pub974 requires actual matching-year Form8962 source results.");
+  const nonspecifiedStop = calculateMarketplaceNonspecifiedStop(groups);
+  const auditForm = nonspecifiedStop ? "Pub974 Nonspecified Stop" : "Pub974 Simplified";
   let historicalLimit: MarketplaceHealthLimitResult | undefined;
-  if (year === 2025) {
+  if (nonspecifiedStop) {
+    if (params.historicalLimit) throw new Error("Pub974 nonspecified stop does not retain W/X repayment limits.");
+  } else if (year === 2025) {
     if (!params.historicalLimit) throw new Error("Pub9742025 requires the actual completed W/X limit.");
     historicalLimit = calculateMarketplaceHealthLimit({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups,
       householdIncomeAfterW: params.historicalLimit.householdIncomeAfterW, federalPovertyLine: params.historicalLimit.federalPovertyLine, orderedDeductions: params.historicalLimit.orderedDeductions });
@@ -109,31 +114,32 @@ export function calculateMarketplaceHealthDeduction(params: {
       ["1", "Actual specified premiums", group.specifiedPremiums, "Actual linked source ledger"],
       ["6", "PTC allocated to specified sources", allocatedCredit, group.creditAllocationMethod ? "Actual recorded consistent method: monthly credit times full eligible plan enrollment / household enrollment; no health benchmark ratio" : signedFamilyCredit ? "Full corresponding monthly credit for the actual one-business coverage-family sources; no health benchmark ratio" : "Actual monthly credit times specified enrollment share; annual unchanged credit divided by12"],
       ["7", "Specified premiums after PTC", netPremiumsAfterCredit, signedFamilyCredit ? "line1-line6; retain the signed Step3 intermediate" : "max(0,line1-line6); credit is bounded by the same coverage premiums"],
-    ] as const) audit.record(`Pub974 Simplified ${group.businessSourceId}`, line, label, amount, formula, { "Owner": group.accountHolder });
+    ] as const) audit.record(`${auditForm} ${group.businessSourceId}`, line, label, amount, formula, { "Owner": group.accountHolder });
     return { businessSourceId: group.businessSourceId, accountHolder: group.accountHolder, specifiedPremiums: group.specifiedPremiums,
       remainingEarnedIncome: group.remainingEarnedIncome, allocatedCredit, netPremiumsAfterCredit, ordinaryDeduction, nonspecifiedDeduction: group.nonspecifiedDeduction };
   });
   if (roundDollar(sum(...businesses.map(row => row.allocatedCredit))).gt(credit.ptcAllowed)) throw new Error("Pub974 source allocations duplicate the household credit.");
   const specifiedBusinesses = businesses.filter(row => groups.some(group => group.businessSourceId === row.businessSourceId && group.months.length && group.includedInEarnedIncomeLimit !== false));
   const multipleOwners = new Set(specifiedBusinesses.map(row => row.accountHolder)).size > 1;
-  const ownerMaximum = multipleOwners ? calculateMarketplaceOwnerDeductions({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups, stage: { kind: "maximum" } }) : undefined;
-  const maximumSpecifiedDeduction = historicalLimit?.maximumSpecifiedDeduction ?? ownerMaximum?.specifiedDeduction ?? min(sum(...specifiedBusinesses.map(row => row.specifiedPremiums)), zeroFloor(sum(...specifiedBusinesses.map(row => row.remainingEarnedIncome))));
-  const ownerFinal = multipleOwners && credit.taxpayerEligible
+  const ownerMaximum = multipleOwners && !nonspecifiedStop ? calculateMarketplaceOwnerDeductions({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups, stage: { kind: "maximum" } }) : undefined;
+  const maximumSpecifiedDeduction = nonspecifiedStop ? d(0) : historicalLimit?.maximumSpecifiedDeduction ?? ownerMaximum?.specifiedDeduction ?? min(sum(...specifiedBusinesses.map(row => row.specifiedPremiums)), zeroFloor(sum(...specifiedBusinesses.map(row => row.remainingEarnedIncome))));
+  const ownerFinal = multipleOwners && credit.taxpayerEligible && !nonspecifiedStop
     ? calculateMarketplaceOwnerDeductions({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups, stage: { kind: "final", businesses } }) : undefined;
-  const specifiedDeduction = credit.taxpayerEligible
+  const specifiedDeduction = nonspecifiedStop ? d(0) : credit.taxpayerEligible
     ? min(ownerFinal?.specifiedDeduction ?? sum(...businesses.map(row => row.netPremiumsAfterCredit)), maximumSpecifiedDeduction)
     : sum(...businesses.map(row => row.ordinaryDeduction));
   const nonspecifiedDeduction = sum(...businesses.map(row => row.nonspecifiedDeduction));
   if (roundDollar(specifiedDeduction.plus(nonspecifiedDeduction)).lt(0)) throw new Error("Pub974 combined health deduction cannot be negative; reconcile actual source attribution.");
-  const method = credit.taxpayerEligible ? (year === 2025 ? "pub974-simplified-2025" as const : "pub974-simplified-2026" as const)
+  const method = nonspecifiedStop ? (year === 2025 ? "pub974-nonspecified-stop-2025" as const : "pub974-nonspecified-stop-2026" as const)
+    : credit.taxpayerEligible ? (year === 2025 ? "pub974-simplified-2025" as const : "pub974-simplified-2026" as const)
     : (year === 2025 ? "ordinary-no-ptc-2025" as const : "ordinary-no-ptc-2026" as const);
   for (const [line, label, amount, formula] of [
     ["7", "Combined premiums after PTC", sum(...businesses.map(row => row.netPremiumsAfterCredit)), "Sum separate business line7"],
-    ["8", "Combined specified-premium maximum", maximumSpecifiedDeduction, year === 2025 ? "Actual completed Y/Z20, X30 or owner-limited W16 when no attributable advances" : multipleOwners ? "Sum each owner's min(specified premiums, nonnegative remaining earned income)" : "2026 uncapped X30: min(total specified premiums, combined remaining W earned limit)"],
-    ["9", "Specified health deduction", specifiedDeduction, credit.taxpayerEligible ? multipleOwners ? "Sum each owner's min(net premiums after Step2 credit, nonnegative remaining earned income), subject to actual combined maximum; no spouse income transfer" : "min(combined line7,line8), once" : "Ineligible Step2: ordinary separate business limits"],
+    ["8", "Combined specified-premium maximum", maximumSpecifiedDeduction, nonspecifiedStop ? "Every actual specified-plan business has exhausted its income after its own completed nonspecified claim; stop before W/X" : year === 2025 ? "Actual completed Y/Z20, X30 or owner-limited W16 when no attributable advances" : multipleOwners ? "Sum each owner's min(specified premiums, nonnegative remaining earned income)" : "2026 uncapped X30: min(total specified premiums, combined remaining W earned limit)"],
+    ["9", "Specified health deduction", specifiedDeduction, nonspecifiedStop ? "Pub974 P/7206 stop: no additional specified deduction; actual final Form8962 calculated independently" : credit.taxpayerEligible ? multipleOwners ? "Sum each owner's min(net premiums after Step2 credit, nonnegative remaining earned income), subject to actual combined maximum; no spouse income transfer" : "min(combined line7,line8), once" : "Ineligible Step2: ordinary separate business limits"],
     ["10", "Nonspecified health deduction", nonspecifiedDeduction, "Actual completed nonspecified worksheets, once"],
     ["11", "Combined health deduction", specifiedDeduction.plus(nonspecifiedDeduction), "Line9+line10; round Schedule1 transfer once"],
-  ] as const) audit.record("Pub974 Simplified", line, label, amount, formula);
+  ] as const) audit.record(auditForm, line, label, amount, formula);
   return { method, businesses, maximumSpecifiedDeduction, specifiedDeduction, nonspecifiedDeduction, historicalLimit, lines: audit.getLines() };
 }
 export type MarketplaceHealthDeductionResult = Omit<ReturnType<typeof calculateMarketplaceHealthDeduction>, "method"> & {

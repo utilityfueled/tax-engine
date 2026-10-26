@@ -939,6 +939,16 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/marketplace-nonspecified-stop",
+      "enginePath": "src/engine/forms/marketplace-nonspecified-stop.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-nonspecified-stop.test.ts::stops before W when every actual specified business has exhausted its own income",
+        "tests/pdf/form7206-nonspecified-stop.test.ts::saves the completed nonspecified forms and rejects stale stopping sources before IO"
+      ],
+      "note": "Actual completed business income limits determine the published P/Form7206 stop; the shared 2025 mapper prints the completed nonspecified claim and final-credit review. No positive noncoverage-advance allocation, new ordinary physical8962 mapping, or filing qualification is claimed."
+    },
+    {
       "key": "federal/marketplace-passive-ordering",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [
