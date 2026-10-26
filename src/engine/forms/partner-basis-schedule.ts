@@ -26,6 +26,7 @@ import type { ScheduleK1 } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { calculateK1CharitableBasisSources, type K1CharitableBasisContext, type K1CharitableBasisRecord, type K1CharitableCategory } from "./k1-charitable-basis-sources.js";
 
 const ZERO = new Decimal(0);
 const FORM = "Basis Schedule";
@@ -55,8 +56,17 @@ export interface DebtBasisResult {
   debtBasisReductionCarryforward: Decimal;
 }
 
+export interface K1CharitableBasisResult {
+  sourceFactsVerified: true;
+  /** Basis-stage amounts only; activity and section170 limitations still apply. */
+  availableAfterBasis: Record<K1CharitableCategory, Decimal>;
+  basisAllowed: Decimal; basisSuspended: Decimal; appreciationExempt: Decimal;
+  records: Array<K1CharitableBasisRecord & { basisAllowed: Decimal; basisSuspended: Decimal; availableAfterBasis: Decimal }>;
+}
+
 export interface PartnerBasisScheduleResult {
   entityType: "partnership" | "s_corporation";
+  charitableSources?: K1CharitableBasisResult;
 
   // ── Increases ──
   beginningBasis: Decimal;
@@ -112,8 +122,9 @@ export interface PartnerBasisScheduleResult {
   lines: CalculatedLine[];
 }
 
-export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisScheduleResult {
+export function calculatePartnerBasisSchedule(k1: ScheduleK1, charitableSourceContext?: K1CharitableBasisContext): PartnerBasisScheduleResult {
   const audit = new AuditTrail();
+  const charitable = charitableSourceContext ? calculateK1CharitableBasisSources(k1, charitableSourceContext) : undefined;
   const entityType = k1.entityType ?? "partnership";
   const entityLabel = entityType === "s_corporation" ? "S-Corp" : "Partnership";
 
@@ -207,7 +218,7 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
 
   // ── Build loss categories ──
   const priorSuspended = k1.priorSuspendedLosses;
-  const lossCategories: LossCategory[] = buildLossCategories(k1, priorSuspended);
+  const lossCategories: LossCategory[] = buildLossCategories(k1, priorSuspended, charitable?.currentBasis, charitable?.priorBasis);
   const totalLosses = lossCategories.reduce((sum, c) => sum.plus(c.total), ZERO);
 
   let basisAfterNondeductible: Decimal;
@@ -225,7 +236,7 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
     // Step 4 (swapped): Losses first
     basisAvailableForLosses = basisAfterDistributions;
     ({ totalAllowed: totalAllowedLosses, totalSuspended: totalSuspendedLosses } =
-      allocateLossesProRata(lossCategories, basisAvailableForLosses, audit));
+      allocateLossesProRata(lossCategories, basisAvailableForLosses, audit, charitable !== undefined));
 
     const basisAfterLosses = basisAfterDistributions.minus(totalAllowedLosses);
 
@@ -254,7 +265,7 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
     // Step 5: Losses
     basisAvailableForLosses = basisAfterNondeductible;
     ({ totalAllowed: totalAllowedLosses, totalSuspended: totalSuspendedLosses } =
-      allocateLossesProRata(lossCategories, basisAvailableForLosses, audit));
+      allocateLossesProRata(lossCategories, basisAvailableForLosses, audit, charitable !== undefined));
 
     endingBasis = basisAfterNondeductible.minus(totalAllowedLosses);
   }
@@ -326,7 +337,7 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
     const applyLosses = () => {
       lossesAppliedToDebtBasis = Decimal.min(totalSuspendedLosses, availableDebt);
       if (lossesAppliedToDebtBasis.gt(ZERO)) {
-        allocateDebtBasisLosses(lossCategories, lossesAppliedToDebtBasis, audit);
+        allocateDebtBasisLosses(lossCategories, lossesAppliedToDebtBasis, audit, charitable !== undefined);
         totalAllowedLosses = totalAllowedLosses.plus(lossesAppliedToDebtBasis);
         totalSuspendedLosses = totalSuspendedLosses.minus(lossesAppliedToDebtBasis);
         availableDebt = availableDebt.minus(lossesAppliedToDebtBasis);
@@ -381,8 +392,38 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
       });
   }
 
+  let charitableSources: K1CharitableBasisResult | undefined;
+  if (charitable) {
+    const basisCategory = findCategory(lossCategories, "charitable");
+    const records = charitable.records.map(row => ({ ...row,
+      basisAllowed: basisCategory.total.isZero() ? ZERO : row.basisSubjectToLimit.times(basisCategory.allowed).div(basisCategory.total),
+      basisSuspended: ZERO, availableAfterBasis: ZERO,
+    }));
+    // Reconcile only Decimal division residue, never whole-dollar reporting roundoff.
+    const allocated = records.reduce((total, row) => total.plus(row.basisAllowed), ZERO);
+    const residue = basisCategory.allowed.minus(allocated);
+    if (!residue.isZero()) {
+      const largest = [...records].sort((a,b) => b.basisSubjectToLimit.cmp(a.basisSubjectToLimit) || a.sourceId.localeCompare(b.sourceId))[0];
+      if (largest) largest.basisAllowed = largest.basisAllowed.plus(residue);
+    }
+    const availableAfterBasis = { cash_60: ZERO, capital_gain_30: ZERO, capital_gain_20: ZERO };
+    for (const [index, row] of records.entries()) {
+      row.basisSuspended = row.basisSubjectToLimit.minus(row.basisAllowed);
+      row.availableAfterBasis = row.basisAllowed.plus(row.appreciationExempt);
+      availableAfterBasis[row.category] = availableAfterBasis[row.category].plus(row.availableAfterBasis);
+      audit.record("K1 Charitable Basis", `source-${index+1}`, "Actual charitable source after basis limitation", row.availableAfterBasis,
+        "Allowed original basis plus current appreciation; no prior appreciation duplication", {
+          "Original source year": new Decimal(row.originTaxYear), "Original contribution": row.contributionShare,
+          "Original property or cash basis": row.originalBasis, "Prior basis allowed": row.basisPreviouslyAllowed,
+          "Basis subject to limit": row.basisSubjectToLimit, "Basis allowed": row.basisAllowed,
+          "Basis suspended": row.basisSuspended, "Current appreciation": row.appreciationExempt,
+        });
+    }
+    charitableSources = { sourceFactsVerified: true, availableAfterBasis, records,
+      basisAllowed: basisCategory.allowed, basisSuspended: basisCategory.suspended, appreciationExempt: charitable.appreciationExempt };
+  }
   return {
-    entityType,
+    entityType, charitableSources,
     beginningBasis,
     totalIncomeItems,
     basisBeforeDecreases,
@@ -414,7 +455,7 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
       investmentInterest: findCategory(lossCategories, "investmentInterest").suspended,
       ebie: findCategory(lossCategories, "ebie").suspended,
     },
-    lines: audit.getLines(),
+    lines: [...(charitable?.lines ?? []), ...audit.getLines()],
   };
 }
 
@@ -426,6 +467,8 @@ function findCategory(categories: LossCategory[], key: string): LossCategory {
 function buildLossCategories(
   k1: ScheduleK1,
   prior: ScheduleK1["priorSuspendedLosses"],
+  currentCharitableBasis?: Decimal,
+  priorCharitableBasis?: Decimal,
 ): LossCategory[] {
   // Extract current-year loss amounts (negative Box values become positive losses)
   const currentOrdinaryLoss = Decimal.max(ZERO, d(k1.ordinaryIncome).neg());
@@ -438,7 +481,7 @@ function buildLossCategories(
 
   // Deduction items are always positive amounts that reduce basis
   const currentSection179 = Decimal.max(ZERO, d(k1.section179Deduction));
-  const currentCharitable = Decimal.max(ZERO, d(k1.charitableCash))
+  const currentCharitable = currentCharitableBasis ?? Decimal.max(ZERO, d(k1.charitableCash))
     .plus(Decimal.max(ZERO, d(k1.charitableCapitalGain30)))
     .plus(Decimal.max(ZERO, d(k1.charitableCapitalGain20)));
   const currentOtherDeductions = Decimal.max(ZERO, d(k1.otherDeductions));
@@ -454,7 +497,7 @@ function buildLossCategories(
   const prior1231 = d(prior?.section1231);
   const priorOtherLoss = d(prior?.otherLoss);
   const priorSection179 = d(prior?.section179);
-  const priorCharitable = d(prior?.charitable);
+  const priorCharitable = priorCharitableBasis ?? d(prior?.charitable);
   const priorOtherDeductions = d(prior?.otherDeductions);
   const priorInvestmentInterest = d(prior?.investmentInterest);
   const priorEBIE = d(prior?.ebie);
@@ -479,12 +522,14 @@ function buildLossCategories(
  * Allocate losses pro-rata across categories when total losses exceed available basis.
  * Per IRS K-1 basis worksheet Part II and Form 7203 Part III:
  *   Each category allowed = (category total / sum of all totals) × available basis
- * Rounding to nearest dollar with correction on the largest category.
+ * Legacy reporting rounds to dollars; actual source contexts retain exact intermediates.
+ * Reconcile division residue on the largest category.
  */
 function allocateLossesProRata(
   categories: LossCategory[],
   availableBasis: Decimal,
   audit: AuditTrail,
+  exactSourceAmounts = false,
 ): { totalAllowed: Decimal; totalSuspended: Decimal } {
   const totalLosses = categories.reduce((sum, c) => sum.plus(c.total), ZERO);
 
@@ -514,8 +559,10 @@ function allocateLossesProRata(
   for (let i = 0; i < categories.length; i++) {
     const cat = categories[i];
     if (cat.total.gt(ZERO)) {
-      // Round each category's allowed amount to nearest dollar
-      cat.allowed = cat.total.div(totalLosses).times(availableBasis).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
+      // Preserve actual-source intermediate amounts; retain existing legacy reporting.
+      const allocation = exactSourceAmounts ? cat.total.times(availableBasis).div(totalLosses)
+        : cat.total.div(totalLosses).times(availableBasis);
+      cat.allowed = exactSourceAmounts ? allocation : allocation.toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
       allocatedSum = allocatedSum.plus(cat.allowed);
       if (cat.total.gt(largestTotal)) {
         largestTotal = cat.total;
@@ -557,12 +604,13 @@ function allocateLossesProRata(
 /**
  * Second-pass allocation: distribute debt-basis-allowed losses across
  * categories that still have suspended amounts from the stock basis pass.
- * Uses the same proportional method with rounding correction.
+ * Uses the same proportional method and actual-source precision as the stock pass.
  */
 function allocateDebtBasisLosses(
   categories: LossCategory[],
   debtBasisAvailable: Decimal,
   audit: AuditTrail,
+  exactSourceAmounts = false,
 ): void {
   const totalSuspended = categories.reduce((sum, c) => sum.plus(c.suspended), ZERO);
   if (totalSuspended.lte(ZERO) || debtBasisAvailable.lte(ZERO)) return;
@@ -578,8 +626,9 @@ function allocateDebtBasisLosses(
   for (let i = 0; i < categories.length; i++) {
     const cat = categories[i];
     if (cat.suspended.gt(ZERO)) {
-      additionalAmounts[i] = cat.suspended.div(totalSuspended).times(allocatable)
-        .toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
+      const allocation = exactSourceAmounts ? cat.suspended.times(allocatable).div(totalSuspended)
+        : cat.suspended.div(totalSuspended).times(allocatable);
+      additionalAmounts[i] = exactSourceAmounts ? allocation : allocation.toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
       allocatedSum = allocatedSum.plus(additionalAmounts[i]);
       if (cat.suspended.gt(largestSuspended)) {
         largestSuspended = cat.suspended;

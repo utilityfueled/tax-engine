@@ -1,0 +1,67 @@
+form: "K1 Charitable Basis Sources"
+fullName: "Actual K-1 charitable value, basis and basis-suspended character"
+taxYear: 2025
+irsReference: "https://www.irs.gov/newsroom/new-limits-on-partners-shares-of-partnership-losses-frequently-asked-questions"
+retrievedAt: "2026-10-26"
+notes: |
+  Pure source/basis prerequisite for actual 2025/2026 partnership and S-corporation
+  semantic A/E/F amounts. No canonical return or guided activation in this package.
+  IRC704(d)(3), 1366(d)(4), 1367(a)(2), final i1065sk1 Box20AH and i7203
+  distinguish the basis-limited portion from deductible appreciation. The IRS
+  partnership FAQ Example3 publishes 150 value / 50 property basis / 30 outside
+  basis => 130 available after basis and 20 basis-suspended. RevRul2008-16's
+  published 190/100 gift, 25 capital loss and 80 stock basis yields 154 charity,
+  16 capital loss and 36/9 suspended; current statutes retain that distinction.
+  https://uscode.house.gov/us/usc/119-120/t26/s704/
+  https://uscode.house.gov/us/usc/119-120/t26/s1366/
+  https://uscode.house.gov/us/usc/119-120/t26/s1367/
+  https://www.irs.gov/instructions/i1065sk1
+  https://www.irs.gov/instructions/i7203
+  https://www.irs.gov/irb/2008-11_IRB (RevRul2008-16; originally2006/2007)
+  https://www.ecfr.gov/current/title-26/section-1.704-1 (d)
+  https://www.ecfr.gov/current/title-26/section-1.1366-2 (a)
+  https://uscode.house.gov/us/usc/119-120/t26/s6102/ (c)
+  Source rows preserve original value/basis and prior basis-use history. Basis
+  release is not a five-year section170 percentage carry and is not a final
+  ScheduleA deduction. No taxpayer-supplied allowed amount or appreciation
+  override is accepted. At-risk/activity and section170 source qualification,
+  canonical/guide/PDF handoff remain the next coordinated internal package.
+  This prerequisite supports cash and property whose reported deductible value
+  is at least its allocated basis, with actual complete ordinary basis facts.
+  Separate pre2018 partnership histories, decreased-value basis adjustments,
+  special valuations, foreign-tax basis, current/prior EBIE, negative portfolio
+  source amounts not represented by the basis loss categories, guaranteed payments, dispositions,
+  noncash distributions and unreported basis movements remain explicit boundaries.
+  All inputs remain optional at schema level to preserve unknown. Computation
+  requires actual original identity/year/owner, original K1 totals, source facts,
+  complete history and positive/known-zero basis. Exact Decimal intermediate
+  amounts are retained under6102(c); no dollar rounding creates basis capacity.
+lines:
+  - line: "published-partner"
+    description: "Published partnership appreciation exception"
+    formula: "For value150 and allocated basis50, only50 enters basis loss pool. Outside basis30 permits30 plus100 appreciation;20 remains basis-suspended. Basis50 permits150 and zero suspension."
+    testRef: "tests/engine/forms/k1-charitable-basis-sources.test.ts::matches the published partnership appreciation and basis suspension example"
+  - line: "published-shareholder"
+    description: "Published S-corporation proportional basis limitation"
+    formula: "Stock basis50+income30=80; ordinary loss pool contains property basis100 and capital loss25. Allow charity basis64 plus90 appreciation and capital loss16; suspend36 and9. Stock becomes0."
+    testRef: "tests/engine/forms/k1-charitable-basis-sources.test.ts::reproduces the published shareholder property and capital loss allocation"
+  - line: "identity"
+    description: "Original statement and actual owner source binding"
+    formula: "Actual source period ending in the return year (including a fiscal period), entity type/name/EIN, recipient name/last4 and owner reconcile with original K1 and return. Each current category sum exactly equals its original semantic amount; missing facts or changed totals reject. No input mutation."
+    testRef: "tests/engine/forms/k1-charitable-basis-sources.test.ts::binds actual identity statement totals and known source values"
+  - line: "basis-history"
+    description: "Preserve original suspended character without repeating appreciation"
+    formula: "Prior opening equals original basis less actual allowed amounts for every origin-through-prior year. Original appreciation was taken into account once and never enters opening basis loss. Current plus prior basis amounts share basis proportionally, preserving category and original source year; no five-year expiry or FIFO substitution."
+    testRef: "tests/engine/forms/k1-charitable-basis-sources.test.ts::releases original basis suspended character without repeating appreciation"
+  - line: "exact-debt"
+    description: "Exact stock and direct debt allocation"
+    formula: "Source-bound loss categories share actual stock/outside basis proportionally before any reporting rounding. S-corporation remaining categories share actual direct debt basis in a second pass. Retained allowed/suspended amounts conserve each original category and all available basis."
+    testRef: "tests/engine/forms/k1-charitable-basis-sources.test.ts::conserves exact cents through stock debt and category allocation"
+  - line: "nondeductible-debt"
+    description: "Actual debt order limits only original charitable property basis"
+    formula: "Stock 0, debt 100, nondeductible costs 50, property value 180 and basis 80: default order permits basis 50 plus appreciation 100, suspends basis 30 and closes debt 0. Actual election permits all basis 80 plus appreciation 100, applies debt 20 to costs and carries nondeductible costs 30."
+    testRef: "tests/engine/forms/k1-charitable-basis-sources.test.ts::keeps appreciation separate after actual nondeductible debt ordering"
+  - line: "source-boundary"
+    description: "Known unimplemented basis facts cannot disappear"
+    formula: "Reject unsupported known source facts (including prior EBIE and negative portfolio amounts absent from basis loss categories), missing original basis/history, inconsistent debt facts, changed original property basis and unidentified prior aggregate charity. Legacy single-argument basis calls remain explicitly separate; no new canonical activation is claimed."
+    testRef: "tests/engine/forms/k1-charitable-basis-sources.test.ts::rejects missing contradictory and unsupported source histories"
