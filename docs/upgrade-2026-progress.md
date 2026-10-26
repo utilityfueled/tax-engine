@@ -2,66 +2,62 @@
 
 ## Current checkpoint
 
-The branch is pushed through `994d92d`. Rule metadata is `2025.126` /
-`2026.123-law-integration-draft`; readiness gates remain unchanged. The inventory now
-has 485 entries and 5,248 spec references.
+The branch is pushed through `9eb32ba`. Rule provenance is `2025.129` /
+`2026.126-law-integration-draft`; readiness gates remain unchanged. The regenerated
+inventory has491 entries and5,292 test references.
 
-Delivered since the previous integration are original investment-only K1 cash
-distribution gains (`be0b6be`) and their guided sources (`bb731b1`), actual direct
-royalty expenses (`848e1fc`) and intake (`bc5c837`), separate-business Marketplace
-health ordering (`4fcff15`), the exact HoH browser assertion (`389a6ee`) and corrected
-physical Schedule E review fields and continuations (`994d92d`). Their individual
-ledgers retain official sources, literal expected values, initial failures, separate
-agent reviews, exact source trees and artifact hashes. Final test counts are 553/7 for
-cash-source core, 119/8 for royalty core, 10/5 for health, 473/7 for royalty intake,
-469/6 for cash-source intake, and 63/4 for the PDF correction. The health consumer
-cohort also passes 561/31. Both new guided flows pass desktop/mobile production checks
-with zero retries. These are software checks, not human qualification.
+Since the previous checkpoint, `ee0132c` adds seven real setup/payment panel
+behaviors and fixes Enter during a pending upload. Passive distribution sources
+are `2669c37` and their actual guide is `9eb32ba`; PA original royalty property
+and expense treatment is `b334f19`; full coverage-family benchmarks for overlapping
+no-advance Marketplace policies are `35b862c`. Their separate ledgers retain
+sources, literal controls, original failures, frozen hashes and independent agent
+reviews. Final package checks are23/6,31/9,332/9 and665/29 respectively; the passive
+guide's broader exact cohort passes1,343/120. Both new guided flows pass desktop
+and mobile production checks with zero retries. These are software reviews.
 
-The Schedule E correction fixes gross-versus-net Part I cells, Part II subtotal
-columns and line 41, retains fourth-property/fifth-K1 continuation rows, and uses
-actual allowed losses and completed depreciation. Its independent review passes 44
-cases including five private controls. Eight saved PDFs/19 pages were reopened, 23
-literal fields checked, and every page and notice visually inspected. Original
-personal/account identifiers are omitted; explicit business EINs remain under the
-existing policy. Legacy unallocated sources, unmatched supplemental adjustments and
-passive/binding section 179 character remain disclosed method gaps.
+PA source review corrected an omitted MFJ status handoff before delivery; its
+17/4 independent cohort and three saved reference PDFs/five inspected pages pass.
+The overlapping-policy review passes14/5 including five separate controls; six
+saved PDFs/17 pages retain42 checked physical values. Passive source review
+passes16/4, including original-index/order and valuation-threshold controls. Its
+four direct PDFs/nine pages retain separate capital and passive values. Parent is
+finishing its physical Schedule E/full-packet mapping and the PA guided collector;
+those private candidates are not yet counted as delivered.
 
-Full immutable `2011778` passes 18,725 unit tests/1,091 files with no failures/skips,
-all three type checks, spec/inventory, both builds and lint (zero errors, 5,276
-warnings). Coverage also runs all tests successfully but **fails** the unchanged 90%
-function gate at 89.25% (9,945/11,142). Branches 86.39% pass the 85% gate; statements
-91.65%, lines 94.24%. Meaningful state/payment/setup panel interactions are being
-added; no threshold, include or exclusion is changed.
+Full immutable `ee0132c` passes18,785 tests/1,108 files with zero failures/skips,
+all three type checks, spec validation, both builds and lint (zero errors,5,340
+warnings). Its complete production browser run passes396 cases with zero retries;
+five hosted-only cases remain skipped. Coverage executes the same18,785 passing
+tests but **fails** the unchanged90% function gate at89.82% (10,148/11,298).
+Branches86.71% pass85%; statements91.85%, lines94.46%. Its inventory check also
+correctly failed stale; the current491-entry inventory is regenerated separately.
+The exact logs and hashes are retained under `.local/upgrade-evidence/ee0132c-complete`.
 
-Its full production browser run records 391 passes, five hosted-only skips and one
-failure, with zero retries. The HoH broad locator matched both the selected badge and
-an eligibility hint. `389a6ee` requires the exact badge label; all 21 cases in that
-file then pass against the unchanged 2011778 production bundle. The original full
-failure remains recorded. A fresh full current-source browser run is still required;
-the targeted repair is not a replacement for it.
+A reviewed test-only investment-panel package exercises actual digital-asset, OID
+and child-election corrections. Its full coverage rerun is pending; an initial
+sandbox localhost failure produced no coverage report. No coverage threshold,
+exclusion, test deadline or assertion has been relaxed. Earlier coverage passes
+remain evidence for their original commits, not this later branch.
 
-The earlier 817f76f coverage pass and 76e3538 local arm64 six-phase recovery/image
-scan remain scoped to their original commits. Final source/platform images, recovery
-and advisory-owner acceptance are outstanding. A fresh production package audit on
-994d92d reports zero advisories across 425 dependencies. Current 994d92d remote Web
-was in progress and CI queued when observed; older pushes cancelled their previous
-runs. No current remote pass is claimed.
+The recorded remote observation at09:27:51UTC shows ee0132c Web passed and CI
+failed; then-current2669c37 workflows were in progress. That observation does not
+claim current9eb32ba completion. Production package audit994d92d reports zero
+advisories across425 dependencies; final-source images and advisory-owner
+acceptance remain outstanding. The76e3538 local arm64 recovery/scan remains
+scoped to that earlier source.
 
-Active internal work is overlapping no-advance Marketplace coverage-family benchmarks,
-passive K1 distribution gain/loss coordination and intake, actual PA royalty treatment
-and guide, and the coverage interactions/upload keyboard fix. Prior charitable floor,
-regular/AMT NOL and partial mixed-media coordination, remaining EIC
-personal-property/mixed-source methods, and the source combinations listed in their
-ledgers still need implementation. A guard or inactive helper does not complete a
-method. Once these changes settle, repeat full current-source checks and reconcile
-actual artifacts with support claims.
+Shared-policy/self-employed-health source coordination, actual EIC denial and
+recertification chronology, prior charitable floor/NOL and partial mixed-media
+methods remain internal work. The durable method queue names these boundaries;
+a guard or inactive helper does not complete a method. Current full checks,
+final native images, recovery and support reconciliation follow integration.
 
-The goal remains active and the upgrade is **not release-ready**. Human reviews and
-controlling interpretations, provider access and approved budget, authorized staging,
-launch-state demand, final forms and advisory-owner acceptance remain outstanding.
-Public upgrade-branch pushes are expressly approved. Production deployment, filing and
-model promotion remain unauthorized/disabled.
+The goal remains active and the upgrade is **not release-ready**. Human reviews
+and controlling interpretations, provider account access and approved budget,
+authorized staging, launch-state demand, final forms and advisory acceptance
+remain unresolved. Public upgrade-branch pushes are expressly approved.
+Production deployment, filing and model promotion remain disabled/unauthorized.
 
 ## Prior execution evidence
 

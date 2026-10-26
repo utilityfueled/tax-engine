@@ -132,3 +132,26 @@ coverage-family benchmark sources remain active implementation, along with
 coverage interactions and the reproduced pending-upload Enter behavior. The
 remaining charitable, education, EIC and historical health combinations in their
 ledgers remain methods to implement; external interpretations are not invented.
+
+## Follow-through through9eb32ba — October26
+
+The actual single-passive-business distribution core is2669c37 and its complete
+guided records are9eb32ba. Physical Schedule E and full-packet transfer are in
+parent review candidate5772f719; do not count the candidate as delivered. PA
+actual royalty property/owner/receipt treatment and references areb334f19; its
+actual guide is parent candidate dda311af. Full-family benchmarks for overlapping
+no-advance Marketplace policies are35b862c, with source, guide and physical trace.
+Their software evidence and exclusions are in their package ledgers.
+
+`federal_law` is implementing the next ordinary Situation4 shared-policy/health
+source binder from original covered persons and payment records; allocation
+agreement alone does not establish who paid an eligible deductible premium.
+`complete_facts` owns actual EIC denial/assessment/recertification chronology for
+each required filer. `ai_billing` reviews these finite deliveries and resumes
+remaining charitable floor/regular-AMT NOL and partial mixed-media methods.
+Parent owns the PA guide and passive PDF follow-through plus integrated evidence.
+Coverage-only investment interaction work is separately reviewed; its exact full
+rerun is pending after an environment-only localhost failure.
+
+These deliveries do not erase the existing named source combinations, independent
+human interpretations, final2026 forms, live-provider evaluation or staging gates.
