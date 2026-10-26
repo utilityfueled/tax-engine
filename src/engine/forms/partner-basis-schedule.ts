@@ -46,6 +46,8 @@ export interface DebtBasisResult {
   debtBasisBeforeAdjustments: Decimal;
   /** Debt basis restored from net income per IRC §1367(b)(2)(B) */
   restoration: Decimal;
+  /** Nondeductible expenses applied after stock under Form 7203 line 28. */
+  nondeductibleExpensesAppliedToDebtBasis: Decimal;
   /** Excess stock losses applied to reduce debt basis per IRC §1367(b)(2)(A) */
   lossesAppliedToDebtBasis: Decimal;
   endingDebtBasis: Decimal;
@@ -70,6 +72,9 @@ export interface PartnerBasisScheduleResult {
   // ── Nondeductible expenses ──
   totalNondeductibleExpenses: Decimal;
   basisAfterNondeductible: Decimal;
+  /** Remaining nondeductible costs after the supplied stock and debt bases. */
+  unabsorbedNondeductibleExpenses: Decimal;
+  /** For S corporations, carries only under the actual Reg. 1.1367-1(g) election. */
   suspendedNondeductible: Decimal;
 
   // ── Losses ──
@@ -258,18 +263,7 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
     "Sum of current-year losses + prior suspended losses", {
       "Current-year + prior suspended total": totalLosses,
     });
-  audit.record(FORM, "total-allowed", "Total losses allowed against basis",
-    totalAllowedLosses, `min(${totalLosses}, ${basisAvailableForLosses})`, {
-      "Total losses": totalLosses,
-      "Basis available": basisAvailableForLosses,
-    });
-  if (totalSuspendedLosses.gt(ZERO)) {
-    audit.record(FORM, "total-suspended", "Total losses suspended (IRC §704(d)/§1366(d))",
-      totalSuspendedLosses, "Carry forward indefinitely", {
-        "Total losses": totalLosses,
-        "Allowed": totalAllowedLosses,
-      });
-  }
+  const stockAllowedLosses = totalAllowedLosses;
 
   audit.record(FORM, "ending-basis", `${entityLabel} adjusted basis at end of year`,
     endingBasis, "Basis after all decreases (≥ 0)", {
@@ -285,6 +279,7 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
   // excess losses beyond stock basis can reduce debt basis (IRC §1367(b)(2)(A)).
   // In net-increase years, income first restores debt basis (IRC §1367(b)(2)(B)).
   let debtBasisResult: DebtBasisResult | undefined;
+  let unabsorbedNondeductibleExpenses = suspendedNondeductible;
 
   if (entityType === "s_corporation" && k1.beginningDebtBasis !== undefined) {
     const beginningDebtBasis = Decimal.max(ZERO, d(k1.beginningDebtBasis));
@@ -292,92 +287,98 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
     const priorDebtReduction = Decimal.max(ZERO, d(k1.priorDebtBasisReduction));
     const debtBasisBeforeAdjustments = beginningDebtBasis.plus(additionalLoans);
 
-    audit.record(FORM, "debt-15", "S-Corp beginning debt basis (Form 7203 Part II Line 15)",
+    audit.record(FORM, "debt-15", "S-Corp beginning debt basis (Form 7203 line 21)",
       beginningDebtBasis, "Adjusted basis of shareholder loans to S-corp at beginning of year");
     if (additionalLoans.gt(ZERO)) {
-      audit.record(FORM, "debt-16", "Additional loans to S-Corp (Form 7203 Part II Line 16)",
+      audit.record(FORM, "debt-16", "Additional loans to S-Corp (Form 7203 line 22)",
         additionalLoans, "New direct loans made during the year");
     }
-    audit.record(FORM, "debt-17", "Debt basis before adjustments (Form 7203 Part II Line 17)",
+    audit.record(FORM, "debt-17", "Debt basis before restoration and reductions",
       debtBasisBeforeAdjustments, "Beginning debt + additional loans", {
         "Beginning debt": beginningDebtBasis,
         "Additional loans": additionalLoans,
       });
 
     // Net increase = max(0, ending stock basis (pre-restoration) - beginning stock basis)
-    // Per Treas. Reg. §1.1367-2(c)(2), net increase = stock increases - stock reductions
+    // Per Treas. Reg. §1.1367-2(c)(1), net increase = stock increases - stock reductions.
     const netIncrease = Decimal.max(ZERO, endingBasis.minus(beginningBasis));
 
-    let restoration = ZERO;
+    // A positive net increase restores reductions from both deductible losses
+    // and nondeductible expenses. It cannot coexist with an unabsorbed stock cost.
+    const restoration = Decimal.min(netIncrease, priorDebtReduction);
+    if (restoration.gt(ZERO)) {
+      endingBasis = endingBasis.minus(restoration);
+      audit.record(FORM, "debt-18", "S-Corp debt basis restoration from net increase",
+        restoration, "Form 7203 line 23: net increase restores prior debt basis reductions", {
+          "Net increase": netIncrease, "Prior debt reduction": priorDebtReduction,
+        });
+      audit.record(FORM, "ending-basis-adjusted", "S-Corp stock basis after debt restoration",
+        endingBasis, "Stock basis less the actual debt restoration");
+    }
+    let availableDebt = debtBasisBeforeAdjustments.plus(restoration);
+    let nondeductibleExpensesAppliedToDebtBasis = ZERO;
     let lossesAppliedToDebtBasis = ZERO;
-    let endingDebtBasis: Decimal;
-    let debtBasisReductionCarryforward: Decimal;
-
-    if (totalSuspendedLosses.gt(ZERO) && debtBasisBeforeAdjustments.gt(ZERO)) {
-      // Excess losses exist and debt basis is available → losses reduce debt basis
-      // No restoration (net increase is zero or negative when there are suspended losses)
-      lossesAppliedToDebtBasis = Decimal.min(totalSuspendedLosses, debtBasisBeforeAdjustments);
-
+    const applyNondeductible = () => {
+      nondeductibleExpensesAppliedToDebtBasis = Decimal.min(unabsorbedNondeductibleExpenses, availableDebt);
+      availableDebt = availableDebt.minus(nondeductibleExpensesAppliedToDebtBasis);
+      unabsorbedNondeductibleExpenses = unabsorbedNondeductibleExpenses.minus(nondeductibleExpensesAppliedToDebtBasis);
+    };
+    const applyLosses = () => {
+      lossesAppliedToDebtBasis = Decimal.min(totalSuspendedLosses, availableDebt);
       if (lossesAppliedToDebtBasis.gt(ZERO)) {
-        // Second-pass pro-rata allocation of debt-allowed losses across suspended categories
         allocateDebtBasisLosses(lossCategories, lossesAppliedToDebtBasis, audit);
         totalAllowedLosses = totalAllowedLosses.plus(lossesAppliedToDebtBasis);
         totalSuspendedLosses = totalSuspendedLosses.minus(lossesAppliedToDebtBasis);
+        availableDebt = availableDebt.minus(lossesAppliedToDebtBasis);
       }
-
-      endingDebtBasis = Decimal.max(ZERO, debtBasisBeforeAdjustments.minus(lossesAppliedToDebtBasis));
-      debtBasisReductionCarryforward = priorDebtReduction.plus(lossesAppliedToDebtBasis);
-
-      audit.record(FORM, "debt-20", "Losses applied to debt basis (IRC §1367(b)(2)(A))",
-        lossesAppliedToDebtBasis, "Excess losses from stock basis reduce debt basis", {
-          "Stock-suspended losses": totalSuspendedLosses.plus(lossesAppliedToDebtBasis),
-          "Debt basis available": debtBasisBeforeAdjustments,
-          "Applied to debt": lossesAppliedToDebtBasis,
-        });
-    } else if (netIncrease.gt(ZERO) && priorDebtReduction.gt(ZERO)) {
-      // Net increase year with prior debt reduction → restore debt basis
-      // Per Treas. Reg. §1.1367-1(g), net increase first restores debt basis,
-      // then any excess increases stock basis
-      restoration = Decimal.min(netIncrease, priorDebtReduction);
-      endingBasis = endingBasis.minus(restoration); // Divert from stock to debt restoration
-      endingDebtBasis = debtBasisBeforeAdjustments.plus(restoration);
-      debtBasisReductionCarryforward = priorDebtReduction.minus(restoration);
-
-      audit.record(FORM, "debt-18", "Debt basis restoration from net increase (IRC §1367(b)(2)(B))",
-        restoration, `Net increase of ${netIncrease} restores ${restoration} of prior reduction`, {
-          "Net increase (stock)": netIncrease,
-          "Prior debt reduction": priorDebtReduction,
-          "Restoration": restoration,
-        });
-      // Update the stock basis audit entry to reflect restoration
-      audit.record(FORM, "ending-basis-adjusted",
-        "S-Corp ending stock basis after debt restoration (Treas. Reg. §1.1367-1(g))",
-        endingBasis, `Stock basis reduced by ${restoration} for debt restoration`, {
-          "Pre-restoration stock basis": endingBasis.plus(restoration),
-          "Restoration diverted to debt": restoration,
-        });
-    } else {
-      // No excess losses and no restoration needed — debt basis unchanged
-      endingDebtBasis = debtBasisBeforeAdjustments;
-      debtBasisReductionCarryforward = priorDebtReduction;
-    }
-
-    audit.record(FORM, "debt-21", "S-Corp ending debt basis (Form 7203 Part II Line 21)",
-      endingDebtBasis, "Debt basis at end of year", {
-        "Before adjustments": debtBasisBeforeAdjustments,
-        "Restoration": restoration,
-        "Losses applied": lossesAppliedToDebtBasis,
-      });
-
-    debtBasisResult = {
-      beginningDebtBasis,
-      additionalLoans,
-      debtBasisBeforeAdjustments,
-      restoration,
-      lossesAppliedToDebtBasis,
-      endingDebtBasis,
-      debtBasisReductionCarryforward,
     };
+    if (useElectionOrdering) {
+      applyLosses();
+      applyNondeductible();
+    } else {
+      applyNondeductible();
+      applyLosses();
+    }
+    const endingDebtBasis = availableDebt;
+    const debtBasisReductionCarryforward = priorDebtReduction.minus(restoration)
+      .plus(nondeductibleExpensesAppliedToDebtBasis).plus(lossesAppliedToDebtBasis);
+    audit.record(FORM, "debt-nondeductible", "Nondeductible expenses applied to S-Corp debt basis",
+      nondeductibleExpensesAppliedToDebtBasis,
+      useElectionOrdering ? "Actual Reg. 1.1367-1(g) election: losses precede nondeductible costs"
+        : "Form 7203 line 28: excess stock nondeductible costs precede debt-allowed losses", {
+        "Unabsorbed nondeductible costs": unabsorbedNondeductibleExpenses,
+      });
+    audit.record(FORM, "debt-20", "Losses applied to S-Corp debt basis", lossesAppliedToDebtBasis,
+      "Form 7203 line 30: actual losses after the applicable debt reduction order");
+    audit.record(FORM, "debt-21", "S-Corp ending debt basis", endingDebtBasis,
+      "Beginning debt plus additions/restoration less nondeductible costs and allowed losses", {
+        "Debt before adjustments": debtBasisBeforeAdjustments, "Restoration": restoration,
+        "Nondeductible reduction": nondeductibleExpensesAppliedToDebtBasis, "Loss reduction": lossesAppliedToDebtBasis,
+      });
+    debtBasisResult = {
+      beginningDebtBasis, additionalLoans, debtBasisBeforeAdjustments, restoration,
+      nondeductibleExpensesAppliedToDebtBasis, lossesAppliedToDebtBasis,
+      endingDebtBasis, debtBasisReductionCarryforward,
+    };
+  }
+  if (entityType === "s_corporation") {
+    suspendedNondeductible = useElectionOrdering ? unabsorbedNondeductibleExpenses : ZERO;
+    audit.record(FORM, "nondeductible-unabsorbed", "Nondeductible costs exceeding supplied stock and debt bases",
+      unabsorbedNondeductibleExpenses, "Actual original nondeductible costs less stock and debt reductions");
+    audit.record(FORM, "nondeductible-carry", "S-Corp nondeductible carry under the actual election",
+      suspendedNondeductible, useElectionOrdering ? "Reg. 1.1367-1(g) election carries the unabsorbed amount"
+        : "No election: unabsorbed nondeductible costs do not carry");
+  }
+  audit.record(FORM, "total-allowed", "Total losses allowed against stock/outside and debt basis",
+    totalAllowedLosses, "Stock or outside-basis allowance plus actual direct-debt allowance", {
+      "Stock or outside allowance": stockAllowedLosses,
+      "Debt allowance": debtBasisResult?.lossesAppliedToDebtBasis ?? ZERO,
+    });
+  if (totalSuspendedLosses.gt(ZERO)) {
+    audit.record(FORM, "total-suspended", "Total losses suspended after supplied stock/outside and debt basis",
+      totalSuspendedLosses, "Original total losses less final basis allowance", {
+        "Total losses": totalLosses, "Allowed": totalAllowedLosses,
+      });
   }
 
   return {
@@ -391,6 +392,7 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1): PartnerBasisSched
     totalNondeductibleExpenses,
     basisAfterNondeductible,
     suspendedNondeductible,
+    unabsorbedNondeductibleExpenses,
     totalLosses,
     basisAvailableForLosses,
     totalAllowedLosses,

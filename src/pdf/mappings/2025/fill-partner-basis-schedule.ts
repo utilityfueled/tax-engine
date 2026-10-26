@@ -36,8 +36,11 @@ const INCLUDED_PARTNER_BASIS_LINES = [
   "debt-16",
   "debt-17",
   "debt-18",
+  "debt-nondeductible",
   "debt-20",
   "debt-21",
+  "nondeductible-unabsorbed",
+  "nondeductible-carry",
   "ending-basis-adjusted",
 ] as const;
 

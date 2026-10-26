@@ -1045,12 +1045,14 @@ describe("Partner/Shareholder Basis Schedule", () => {
         election1367: true,
       }));
       // Election: losses first, then nondeductible
-      // Stock: 10000 → losses 12000 → allowed 10000, excess 2000 → basis 0 → nondeductible 5000 → all suspended
-      // Debt: 6000 → absorbs 2000 of excess losses
+      // Stock absorbs 10000 losses. Debt then absorbs 2000 losses and 4000 nondeductible costs.
+      // Only the final 1000 nondeductible remainder carries under the actual election.
       expect(result.totalAllowedLosses).toEqual(new Decimal(12000));
       expect(result.totalSuspendedLosses).toEqual(new Decimal(0));
       expect(result.debtBasis!.lossesAppliedToDebtBasis).toEqual(new Decimal(2000));
-      expect(result.debtBasis!.endingDebtBasis).toEqual(new Decimal(4000));
+      expect(result.debtBasis!.endingDebtBasis).toEqual(new Decimal(0));
+      expect(result.debtBasis?.nondeductibleExpensesAppliedToDebtBasis).toEqual(new Decimal(4000));
+      expect(result.suspendedNondeductible).toEqual(new Decimal(1000));
     });
 
     it("debt basis carryforward tracks cumulative reduction", () => {

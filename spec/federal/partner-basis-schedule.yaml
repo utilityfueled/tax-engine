@@ -184,8 +184,8 @@ lines:
 
   - line: "suspended-nondeductible"
     description: "Nondeductible expenses exceeding remaining basis"
-    formula: "max(0, nondeductible-expenses - basis-after-distributions)"
-    notes: "Suspended nondeductible expenses carry forward as additional basis reductions"
+    formula: "S corporation: election-only unabsorbed nondeductible costs after both bases; zero carry without election. Legacy partnership field retains excess over outside basis."
+    notes: "For S corporations this field is an actual carry only with the Reg1.1367-1(g) election, after both stock and debt reductions. Without the election the unabsorbed amount does not carry. The retained legacy partnership amount is not a carry qualification."
     testRef: "tests/engine/forms/partner-basis-schedule.test.ts::nondeductible expenses exceeding remaining basis are suspended"
 
   # ── Losses and Deductions (Third Decrease, Pro-Rata) ────────
@@ -285,9 +285,9 @@ lines:
     testRef: "tests/engine/forms/partner-basis-schedule.test.ts::pro-rata allocation distributes losses proportionally"
 
   - line: "total-allowed-losses"
-    description: "Total losses allowed against basis"
-    formula: "min(total-losses, basis-after-nondeductible)"
-    irsRef: "K-1 Basis Worksheet Part II Column (d) total"
+    description: "Total losses allowed against stock or outside basis and actual direct debt basis"
+    formula: "Stock or outside-basis allowance under the actual order plus direct-debt allowance under that same order; never exceed total losses"
+    irsRef: "K-1 Basis Worksheet Part II Column (d) total; Form 7203 Part III"
     testRef: "tests/engine/forms/partner-basis-schedule.test.ts::sufficient basis allows all losses without pro-rata"
 
   - line: "total-suspended-losses"
@@ -300,7 +300,7 @@ lines:
   # ── Ending Basis ─────────────────────────────────────────────
   - line: "ending-basis"
     description: "Adjusted basis at end of tax year"
-    formula: "basis-after-nondeductible - total-allowed-losses (not less than zero)"
+    formula: "Stock or outside basis after applicable nondeductible costs and stock/outside allowed losses, less actual debt restoration; never subtract debt-allowed losses from stock again"
     irsRef: "K-1 Basis Worksheet ending basis; Form 7203 Line 14"
     testRef: "tests/engine/forms/partner-basis-schedule.test.ts::zero beginning basis suspends all losses"
 
@@ -312,7 +312,7 @@ lines:
     notes: |
       This election is only available for S-corporation shareholders. When elected:
       - Losses/deductions reduce basis BEFORE nondeductible expenses
-      - The election applies to the election year and all future years (irrevocable)
+      - The election applies to the election year and future years unless the IRS consents to revocation
       - This is beneficial when the shareholder expects to have basis restored in future
         years before incurring additional losses, allowing more losses to be deducted now
     edgeCases:
@@ -324,30 +324,30 @@ lines:
   - line: "debt-15"
     description: "Adjusted basis of loans at beginning of year"
     formula: "User-provided or carryforward from prior year (not less than zero)"
-    irsRef: "Form 7203 Part II Line 15"
+    irsRef: "Form 7203 Part II line 21; retained internal audit key debt-15"
     notes: "Only applicable for S-corporation shareholders with direct loans to the S-corp"
     testRef: "tests/engine/forms/partner-basis-schedule.test.ts::S-corp excess losses reduce debt basis"
 
   - line: "debt-16"
     description: "Additional loans made during the year"
     formula: "User-provided new direct loans to the S-corporation"
-    irsRef: "Form 7203 Part II Line 16"
+    irsRef: "Form 7203 Part II line 22; retained internal audit key debt-16"
     testRef: "tests/engine/forms/partner-basis-schedule.test.ts::additional loans increase available debt basis for losses"
 
   - line: "debt-17"
     description: "Debt basis before adjustments"
     formula: "Line debt-15 + Line debt-16"
-    irsRef: "Form 7203 Part II Line 17"
+    irsRef: "Form 7203 Part II lines 21 plus 22, before line 23 restoration; retained internal audit key debt-17"
     testRef: "tests/engine/forms/partner-basis-schedule.test.ts::additional loans increase available debt basis for losses"
 
   - line: "debt-18"
     description: "Net increase applied to restore debt basis"
     formula: "min(max(0, ending-stock-basis-pre-restoration - beginning-stock-basis), prior-debt-basis-reduction)"
-    irsRef: "Form 7203 Part II Line 18; IRC §1367(b)(2)(B); Treas. Reg. §1.1367-2(c)"
+    irsRef: "Form 7203 Part II line 23; IRC §1367(b)(2)(B); Treas. Reg. §1.1367-2(c)"
     notes: |
       When there is a net increase to stock basis (income items > total decreases
       at the stock level), the net increase first restores previously-reduced debt
-      basis before increasing stock basis per Treas. Reg. §1.1367-1(g).
+      basis before increasing stock basis per Treas. Reg. §1.1367-2(c).
       Restoration and loss-overflow to debt basis are mutually exclusive in any
       given year: a net increase means all losses fit within stock basis.
       The restoration is limited to the cumulative prior debt basis reduction.
@@ -355,8 +355,8 @@ lines:
 
   - line: "debt-20"
     description: "Losses and deductions applied to debt basis"
-    formula: "min(total-suspended-losses-from-stock, debt-basis-available)"
-    irsRef: "Form 7203 Part II Line 20; IRC §1367(b)(2)(A)"
+    formula: "min(total-suspended-losses-from-stock, debt-basis-after-default-nondeductible-decrease); actual election applies losses first"
+    irsRef: "Form 7203 Part II line 30; IRC §1367(b)(2)(A)"
     notes: |
       Losses that exceed stock basis can further reduce debt basis.
       These losses ARE deductible (unlike losses beyond both stock and debt basis
@@ -366,8 +366,8 @@ lines:
 
   - line: "debt-21"
     description: "Adjusted basis of loans at end of year"
-    formula: "debt-basis-available + restoration - losses-applied (not less than zero)"
-    irsRef: "Form 7203 Part II Line 21"
+    formula: "debt-basis-available + restoration - nondeductible-applied-to-debt - losses-applied (not less than zero)"
+    irsRef: "Form 7203 Part II line 31; retained internal audit key debt-21"
     testRef: "tests/engine/forms/partner-basis-schedule.test.ts::S-corp excess losses reduce debt basis"
 
 edgeCases:
