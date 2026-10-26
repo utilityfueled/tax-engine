@@ -8,7 +8,7 @@ vi.mock('@/models/constants.js', async importOriginal => {
 import { calculateFederalTax } from '@/engine/federal.js';
 import { currentCharitableOriginInput } from '../fixtures/form-172-charitable-origin.js';
 
-it('retains the isolated current floor without opening the nonitemized origin method', () => {
+it('retains the isolated current floor and the distinct actual standard choice', () => {
   const input = currentCharitableOriginInput('G', 2026), original = JSON.stringify(input), result = calculateFederalTax(input);
   expect([result.agi, result.scheduleA?.charitableTotal, result.deductionAmount, result.form172?.regular.netOperatingLoss,
     result.form172?.alternativeTax.netOperatingLoss, result.carryforwards.charitableContributions,
@@ -16,5 +16,8 @@ it('retains the isolated current floor without opening the nonitemized origin me
     .toEqual(['10000', '5950', '25950', '15950', '0', '14050', '14050']);
   expect(JSON.stringify(input)).toBe(original);
   input.deductionElection = 'standard';
-  expect(() => calculateFederalTax(input)).toThrow(/nonitemiz|origin|170.p/i);
+  const standard = calculateFederalTax(input);
+  expect([standard.deductionAmount, standard.nonitemizerCharitableDeduction, standard.form172?.regular.netOperatingLoss,
+    standard.carryforwards.charitableContributions, standard.carryforwards.amtCharitableContributions].map(value => value?.toFixed()))
+    .toEqual(['16100', '1000', '7100', '14000', '14000']);
 });

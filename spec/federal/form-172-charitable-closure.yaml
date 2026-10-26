@@ -1,0 +1,77 @@
+form: "Form172 charitable source and choice closure"
+fullName: "Original charitable sources and actual selected deductions in current loss origins"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  This source/selection extension reuses the validated section170 receipt,
+  entity-basis, percentage, FIFO and independent regular/AMT history methods.
+  IRC172(d)(4) and Reg1.172-3(a)(3) limit the selected nonbusiness deduction
+  group; undeducted percentage excess is not a new nonbusiness deduction.
+  Crypto must be donation-only. A K1 must have its complete original charity,
+  basis and at-risk attachment and no other current or prior income/loss or
+  disposition amount; no operating activity or trading classification is
+  inferred from an aggregate zero. All current-origin confirmations remain.
+  IRC63(b)(4),170(p) and172(c)/(d) include the actually selected nonitemizer
+  deduction in the ordinary nonbusiness group. IRC56(b)(1)(D) removes the
+  standard deduction, not the separate170(p) deduction. 2026 tests are isolated
+  statutory controls, not final-year/form qualification. The admitted choice
+  cohort has independently known-empty prior regular/AMT NOL histories; positive
+  old-NOL/nonitemized comparison attribution remains a separate method.
+  A2025 single prior charitable vintage keeps its original contribution year,
+  category, medium and expiry and its independent AMT opening. The actual
+  regular deduction choice/AGI and regular199A stay fixed for AMT. Neither a
+  new current loss nor a changed AMT opening silently rewrites prior histories.
+  All numerical controls below are independently derived, not published
+  matching IRS examples. The four named floor/NOL/mixed-medium interpretation
+  questions remain outside this extension.
+lines:
+  - line: "original-receipts"
+    description: "Use original donation-only digital assets and charity-only K1 statements"
+    formula: "At AGI10000 with personal tax20000, actual public crypto60000 allows3000 and retains57000; regular currentNOL13000 and alternative0. Original K1 stock FMV80000/basis40000/availablebasis20000 gives60000 section170 value and separate20000 basis suspension, then the same charity/current-loss results. Original source changes still invalidate private review."
+    irsRef: "IRC170(e),704(d)(3)(B),1366(d)(4),172(d)(4); i172PartI6; original source validation"
+    testRef: "tests/engine/federal-form-172-charitable-closure.test.ts::uses actual donation-only crypto and charity-only K1 sources in current origins"
+  - line: "source-boundaries"
+    description: "Reject unclassified original activity even if its net income is zero"
+    formula: "Any crypto trading/mining/staking/lot activity or K1 ordinary, capital, royalty, guaranteed-payment, foreign, QBI, prior-loss or distribution-gain source remains outside this charity-only current-origin class. Confirmed original sources and independent histories are required even for zero qualified value."
+    irsRef: "IRC172(d)(4); i172PartI6-7; original source character and completeness"
+    testRef: "tests/engine/federal-form-172-charitable-closure.test.ts::preserves actual source classifications and unknown histories before current origin netting"
+  - line: "prior-independent-ledgers"
+    description: "Use one original2025 prior charitable vintage in each independent current-loss computation"
+    formula: "Regular2024 C50000 and independentAMT C1000 at regularAGI10000 allow3000 and1000. Personal tax20000 produces regularNOL13000 and noATNOL. The signed currentAMT charity adjustment is+2000; original regularcarry47000 and AMTcarry0 keep2024 origin and expiry."
+    irsRef: "IRC170(d),172(d)(4); Reg1.170A-10(c)/(d),1.55-1; Reg1.199A-1(e)(5)"
+    testRef: "tests/engine/federal-form-172-charitable-closure.test.ts::retains original prior charity and independent current AMT differences in loss origins"
+  - line: "actual-choice"
+    description: "Include only the actual170(p) deduction with the selected2026 deduction method"
+    formula: "Wages20000 +activeCloss-40000 +interest30000 givesAGI10000. Current publiccash20000 and actual standard16100 plus170(p)1000 give PartI1=-7100,6=17100,7=30000 and regularNOL7100. AMT retains1000 charity, removes16100 standard and has no new loss. Both percentage carries14000 exclude the itemized50 floor. Actual nonitemized/zero standard entitlement yields no loss and the same14000 carry."
+    irsRef: "IRC63(b)(4),170(p),172(c)/(d)(4),56(b)(1)(D); Reg1.172-3(a)(3)"
+    testRef: "tests/engine/federal-form-172-charitable-closure-2026.test.ts::uses actual standard and nonitemized charitable deductions without inventing floor carry"
+  - line: "choice-boundaries"
+    description: "Retain positive prior-loss and unknown-choice method boundaries"
+    formula: "Unknown eligibility/history, contradictory standard entitlement and positive old NOL/ATNOL requiring nonitemized charitable comparison do not become known zero. Automatic choice uses internally computed candidates and actual eligibility; input cannot supply a calculated charitable override. Unmocked2026 calculation/export remain closed."
+    irsRef: "IRC63,170(p),172; actual source and final-year qualification boundaries"
+    testRef: "tests/engine/federal-form-172-charitable-closure-2026.test.ts::selects the actual candidate and preserves prior-loss and year boundaries"
+  - line: "internal-choice-proof"
+    description: "Reject absent wrong and stale original-source proof for a current-origin candidate"
+    formula: "The internal current-origin candidate context must carry the exact freshly derived original charitable digest and the confirmed current-origin year. Missing, wrong or changed-source proof rejects; a client input field cannot supply this internal context. The real2026 calculation gate remains closed."
+    irsRef: "IRC170/172; original current-year source binding and qualification boundary"
+    testRef: "tests/engine/federal-form-172-charitable-closure.test.ts::requires internal current-origin source proof and keeps the real year gate closed"
+  - line: "original-review"
+    description: "Bind original receipt kind and independent source values before review I/O"
+    formula: "Donation-only crypto and charity-only K1 originals need the same opaque original-source context after identifier redaction. Removing the actual originals or changing source kind, independent AMT value or same-total basis/recipient facts rejects before template I/O. Prior original2024 C50000/AMT1000 retains selected3000/1000 and regularcarry47000 in the saved notice-bearing reference."
+    irsRef: "IRC170/172; actual original-source and independent-ledger reconciliation"
+    testRef: "tests/pdf/form-172-charitable-closure-review.test.ts::binds original charitable source kinds and independent values in loss review"
+  - line: "guided-originals"
+    description: "Reach each supported current-origin source through the existing actual collectors"
+    formula: "Existing crypto, K1 charity and prior-charity collectors preserve original cents, basis and independent history. No calculated deduction or NOL input is added. Missing histories or an unconfirmed original prevent preview/export; source edits revoke the dependent current-origin confirmation."
+    irsRef: "IRC170/172; original source and confirmation conservation"
+    testRef: "tests/guided-interview/guided-form-172-charitable-closure.test.ts::reaches original charitable and prior-history loss origins from actual guided records"
+  - line: "workspace-originals"
+    description: "Export the actual original-source current loss without synthetic bridge data"
+    formula: "Actual guided crypto60000 at AGI10000 produces currentNOL13000, selected charity3000 and each percentagecarry57000. The real workspace packet retains the review notice on every page and no taxpayer/source identifiers; missing independent history rejects."
+    irsRef: "IRC170/172; original-source review export boundary"
+    testRef: "tests/apps/web/workspace-form-172-charitable-closure.test.ts::exports actual original charitable current loss sources through the workspace"
+  - line: "browser-originals"
+    description: "Preserve actual original gift edits and independent loss confirmations through reload and download"
+    formula: "Desktop and mobile preserve exact crypto basis and quantity. Missing basis prevents estimation; replacing it with an actual amount still requires the dependent regular/AMT history and current-origin confirmations. The reloaded source-based return downloads an actual review packet showing13000 current loss and57000 percentage excess, with no entered computed allowance."
+    irsRef: "IRC170/172; original-source confirmation and review-only export boundary"
+    testRef: "apps/web/tests/form-172-charitable-closure.spec.ts::preserves original donation facts and dependent current-loss confirmations"

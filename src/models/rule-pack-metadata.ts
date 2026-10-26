@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.148",
+    ruleVersion: "2025.149",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i172", section: "Actual donation-only crypto, charity-only K-1 and single prior charitable vintage in current regular and alternative loss origins; actual2026 standard or nonitemized choice", revision: "IRC172(d)(4),63(b)(4),56(b)(1)(D), Reg1.172-3/1.55-1; independent original histories and current claims, basis suspension separate, internal source proof and actual guide/private review; mixed floor/NOL attribution and human qualification remain separate, full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p970", section: "Actual prepaid and cash QTP tuition with independently supplied ordinary ESA allocations and original basis histories", revision: "IRC529(c)(3)(B)(v)/(vi),530(d)(2)(C), Notice2016-13; exact original costs and source allocations, separate QTP earnings and common ESA ratio, canonical educator and private review retained; assistance without ESA and academic-period room-board methods remain separate, human/form qualification pending", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i172", section: "Current direct charitable receipts in actual regular and alternative Form172 origins; selected nonbusiness deductions and independent percentage carry", revision: "IRC172(d)(4), Reg1.172-3 and1.55-1; source-confirmed current receipts, known-empty regular/AMT charity histories, actual current loss and existing COD composition, prior NOL replay precedence, guided confirmation and private review retained; original K1/crypto, prior charity, nonitemized origin and human qualification remain separate; full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual monthly coverage-family and noncoverage-family SLCSP allocation after original tax-family allocation; signed Simplified Step3 and Worksheets W/X", revision: "Final2025 Gary/Sue and worksheet instructions; full original enrollment and independent advances, one actual specified business, actual person payments, guided source conservation and private review retained; broader business/person/marriage and binding joint repayment methods remain separate; no human or filing qualification promotion", retrievedAt: "2026-10-26" },
@@ -188,11 +189,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.145-law-integration-draft",
+    ruleVersion: "2026.146-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i172", section: "Actual donation-only crypto, charity-only K-1 and single prior charitable vintage in current regular and alternative loss origins; actual2026 standard or nonitemized choice", revision: "IRC172(d)(4),63(b)(4),56(b)(1)(D), Reg1.172-3/1.55-1; independent original histories and current claims, basis suspension separate, internal source proof and actual guide/private review; mixed floor/NOL attribution and human qualification remain separate, full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p970", section: "Actual prepaid and cash QTP tuition with independently supplied ordinary ESA allocations and original basis histories", revision: "IRC529(c)(3)(B)(v)/(vi),530(d)(2)(C), Notice2016-13; exact original costs and source allocations, separate QTP earnings and common ESA ratio, canonical educator and private review retained; assistance without ESA and academic-period room-board methods remain separate, human/form qualification pending", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i172", section: "Current direct charitable receipts in actual regular and alternative Form172 origins; selected nonbusiness deductions and independent percentage carry", revision: "IRC172(d)(4), Reg1.172-3 and1.55-1; source-confirmed current receipts, known-empty regular/AMT charity histories, actual current loss and existing COD composition, prior NOL replay precedence, guided confirmation and private review retained; original K1/crypto, prior charity, nonitemized origin and human qualification remain separate; full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual monthly coverage-family and noncoverage-family SLCSP allocation after original tax-family allocation; signed Simplified Step3 and Worksheets W/X", revision: "Final2025 Gary/Sue and worksheet instructions; full original enrollment and independent advances, one actual specified business, actual person payments, guided source conservation and private review retained; broader business/person/marriage and binding joint repayment methods remain separate; no human or filing qualification promotion", retrievedAt: "2026-10-26" },

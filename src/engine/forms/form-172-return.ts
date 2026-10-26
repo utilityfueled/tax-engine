@@ -110,21 +110,22 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     }
   } else if (input.form1099Nec.length) throw new Error("Form172 NEC business income requires its actual Schedule C source classification");
 
+  const charitableSources = calculateForm172CharitableSources(input);
   // Reject actual unsupported records before netting so offsetting sources cannot
   // make a missing classification look like a known zero.
   for (const key of ["scheduleF", "scheduleK1", "scheduleK1Form1041", "rentalProperties", "form1099Misc",
     "form1099Q", "formW2G", "form1099K", "form1099OID", "form4797", "form4684", "form8824", "homeSales", "cryptoIncome",
     "form2555", "form8814", "form8839", "form6252", "form6781", "form8915F"] as const) {
     const value = input[key];
+    if ((key === "scheduleK1" || key === "cryptoIncome") && charitableSources?.sourceKind === "current") continue;
     if (Array.isArray(value) ? value.length > 0 : value !== undefined) throw new Error(`Form172 requires the separate current origin classification method for ${key}`);
   }
   const capital = calculateForm172CapitalSources(input, context?.scheduleD);
-  if (!d(input.priorYear?.charitableCarryforward).isZero()
+  if (charitableSources?.sourceKind !== "prior" && (!d(input.priorYear?.charitableCarryforward).isZero()
     || input.priorYear?.charitableCarryforwardByYear?.some(row => !d(row.amount).isZero())
-    || input.charitableCarryoverSources?.vintages?.some(row => !d(row.openingCarryforward).isZero())) {
+    || input.charitableCarryoverSources?.vintages?.some(row => !d(row.openingCarryforward).isZero()))) {
     throw new Error("Form172 current origin and charitable itemized carry require their separate regular and alternative coordination");
   }
-  const charitableSources = calculateForm172CharitableSources(input);
   if (input.form461 && [input.form461.otherBusinessIncome, input.form461.otherBusinessDeductions,
     input.form461.noncapitalNonbusinessIncome, input.form461.noncapitalNonbusinessLoss].some(value => !d(value).isZero())) {
     throw new Error("Form172 other business income and deduction classifications require their separate original sources");
@@ -142,11 +143,12 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
   for (const [key, value] of Object.entries(context)) {
     if (Decimal.isDecimal(value) && !value.isFinite()) throw new Error(`Form172 requires finite actual canonical ${key}`);
   }
-  if (!context.additionalDeductions.isZero() || !context.nonitemizerCharitableDeduction.isZero()) {
+  if (!context.additionalDeductions.minus(context.nonitemizerCharitableDeduction).isZero()) {
     throw new Error("Form172 Schedule1A and nonitemizer charitable deductions require their separate origin coordination method");
   }
-  if (charitableSources && year === 2026 && context.deductionUsed !== "itemized") {
-    throw new Error("Form172 nonitemized charitable origin requires its separate170(p) and carry method");
+  if (charitableSources && year === 2026 && context.deductionUsed !== "itemized"
+    && (input.netOperatingLoss.vintages?.length !== 0 || input.netOperatingLoss.alternativeTax?.vintages?.length !== 0)) {
+    throw new Error("Form172 nonitemized charitable origin with prior losses requires its separate170(p) and carry comparison method");
   }
   if (!context.scheduleD || !context.capitalGainLoss.eq(capital.capitalGainLoss)) throw new Error("Form172 capital must reconcile with the actual canonical Schedule D and1040 transfer");
   if (context.unverifiedAnnuitySourceIds.length) throw new Error("Form172 investment origin requires the actual pension/annuity source classification");
@@ -187,10 +189,11 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
       netCapitalGainOrLoss: capital.netCapitalGainLoss, section1202Exclusion: capital.section1202Exclusion, otherYearNolDeduction: oldNol };
     return calculateForm172Origin(args);
   };
-  const regular = partI(context.agi, context.deductionAmount, context.deductionAmount.plus(nonbusinessAdjustments), nonbusinessIncome, prior.deduction);
+  const selectedDeduction = context.deductionAmount.plus(context.nonitemizerCharitableDeduction);
+  const regular = partI(context.agi, selectedDeduction, selectedDeduction.plus(nonbusinessAdjustments), nonbusinessIncome, prior.deduction);
   const includedSection1202Preference = roundDollar(capital.section1202AmtPreference);
   const expectedAlternativeIncome = sum(context.agi, prior.deduction, context.alternativeTaxPrivateActivityInterest, includedSection1202Preference)
-    .minus(prior.alternativeTax.deduction).minus(context.qbiDeduction).minus(itemized?.alternative ?? zero);
+    .minus(prior.alternativeTax.deduction).minus(context.qbiDeduction).minus(itemized?.alternative ?? context.nonitemizerCharitableDeduction);
   if (!context.alternativeTaxIncome.eq(expectedAlternativeIncome)) {
     throw new Error("Form172 alternative origin requires its separately classified actual AMT adjustments");
   }
@@ -200,7 +203,7 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
   // preference already included by6251 before PartI restores that full amount.
   const alternativeTax = partI(context.alternativeTaxIncome.plus(prior.alternativeTax.deduction).plus(context.qbiDeduction)
     .minus(includedSection1202Preference), zero,
-    nonbusinessAdjustments.plus(itemized?.alternative ?? zero), nonbusinessIncome.plus(context.alternativeTaxPrivateActivityInterest), zero);
+    nonbusinessAdjustments.plus(itemized?.alternative ?? context.nonitemizerCharitableDeduction), nonbusinessIncome.plus(context.alternativeTaxPrivateActivityInterest), zero);
   // All supported business losses are active and nontrading. Ordinary investment
   // income and its nonbusiness early-withdrawal deduction are re-run under172(d),
   // whose nonbusiness limit prevents them from generating a new investment NOL.
@@ -218,18 +221,23 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
   if (charitableSources) {
     const scheduleA = context.scheduleA;
     if (!scheduleA) throw new Error("Form172 current charity requires its completed actual ScheduleA candidate");
-    const currentDeduction = context.deductionUsed === "itemized" ? scheduleA.charitableTotal : zero;
+    const currentDeduction = context.deductionUsed === "itemized" ? scheduleA.charitableTotal : context.nonitemizerCharitableDeduction;
+    const alternativeCurrentDeduction = charitableSources.sourceKind === "prior" && context.deductionUsed === "itemized"
+      ? roundDollar(prior.priorAlternativeCharitableCarryover?.normalDeduction ?? zero) : currentDeduction;
     const percentageCarryforwards = scheduleA.charitableTreatment?.carryforwards ?? scheduleA.charitableCarryforwardByYear;
     const percentageCarryforward = sum(...percentageCarryforwards.map(row => row.amount));
     charitable = { ...charitableSources, regularCurrentDeduction: currentDeduction,
-      alternativeCurrentDeduction: currentDeduction, percentageCarryforward, percentageCarryforwards };
-    audit.record("Current Form172 charitable sources", "qualified-current", "Original qualified current charitable value", charitable.qualifiedValue,
-      "Actual current receipts after original category valuation; independent prior charity histories are empty");
+      alternativeCurrentDeduction, percentageCarryforward, percentageCarryforwards };
+    audit.record("Current Form172 charitable sources", "qualified-current", charitableSources.sourceKind === "current"
+      ? "Original qualified current charitable value" : "Original qualified regular charitable opening", charitable.qualifiedValue,
+      charitableSources.sourceKind === "prior" ? "Actual original regular charitable opening; independent alternative history retained"
+        : "Actual current receipts after original category valuation; independent prior charity histories are empty");
     audit.record("Current Form172 charitable sources", "regular-deduction", "Selected regular charitable deduction in nonbusiness group", currentDeduction,
       "Actual section170 deduction selected on the return; PartI applies its nonbusiness limit to all selected nonbusiness deductions");
-    audit.record("Current Form172 charitable sources", "alternative-deduction", "Alternative charitable deduction in nonbusiness group", currentDeduction,
-      "Actual same-basis current sources and empty independent history at applicable regular AGI; retain actual itemization choice");
-    audit.record("Current Form172 charitable sources", "percentage-carry", "Current percentage charitable excess before any prior NOL coordination", percentageCarryforward,
+    audit.record("Current Form172 charitable sources", "alternative-deduction", "Alternative charitable deduction in nonbusiness group", alternativeCurrentDeduction,
+      "Actual original alternative sources and independent history at applicable regular AGI; retain actual deduction choice");
+    audit.record("Current Form172 charitable sources", "percentage-carry", charitableSources.sourceKind === "current"
+      ? "Current percentage charitable excess before any prior NOL coordination" : "Remaining original percentage charitable excess before any prior NOL coordination", percentageCarryforward,
       "Actual selected category carries retain their contribution year; new current loss does not reduce previously undeducted excess");
   }
   audit.record("Current Form172 source reconciliation", "current-regular", "New regular NOL carry", newRegularCarryforward,

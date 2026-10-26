@@ -107,8 +107,8 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult, capital
   const charity = checked.charitableSources, retainedCharity = current.charitableSources;
   if (Boolean(charity) !== Boolean(retainedCharity)) throw new Error("Current charitable origin sources do not reconcile");
   if (charity && retainedCharity) {
-    if (charity.sourceDigest !== retainedCharity.sourceDigest) throw new Error("Current charitable origin source digest does not reconcile");
-    for (const field of ["qualifiedValue", "regularCurrentDeduction", "alternativeCurrentDeduction", "percentageCarryforward"] as const) {
+    if (charity.sourceDigest !== retainedCharity.sourceDigest || charity.sourceKind !== retainedCharity.sourceKind) throw new Error("Current charitable origin source digest and kind do not reconcile");
+    for (const field of ["qualifiedValue", "alternativeQualifiedValue", "regularCurrentDeduction", "alternativeCurrentDeduction", "percentageCarryforward"] as const) {
       eq(retainedCharity[field], charity[field]);
     }
     const checkRows = (rows: typeof charity.percentageCarryforwards | undefined): void => {

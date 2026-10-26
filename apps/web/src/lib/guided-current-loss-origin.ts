@@ -31,11 +31,15 @@ export function buildCurrentLossOrigin(data: CurrentLossOriginData | undefined, 
     || data.allCurrentYearSourcesIncluded !== true) throw new Error('Confirm the actual current loss source year, reference and complete current records.');
   const prior = buildGuidedNetOperatingLoss(sectionData.adjustments?.netOperatingLossSources, taxYear, segmentation.filingStatus, sectionData['personal-info'], sectionData.deductions, sectionData.adjustments?.k1LossSources);
   if (!prior) throw new Error('Enter the complete actual prior regular and independent AMT carry histories, including explicit empty lists when none.');
-  if (sectionData.deductions?.donationEntries?.length) {
+  const currentCharity = !!(sectionData.deductions?.donationEntries?.length || sectionData.deductions?.cryptoDonations?.length
+    || sectionData.deductions?.k1CharitableSources);
+  const priorCharity = (sectionData.deductions?.charitableCarryoverSources?.vintages?.length ?? 0) > 0;
+  if (currentCharity || priorCharity) {
     const history = prior.alternativeTax?.charitableCarryoverHistory;
-    if (!history || !Array.isArray(history.priorRegularCarryovers) || !Array.isArray(history.priorAlternativeCarryovers)
-      || history.priorRegularCarryovers.length || history.priorAlternativeCarryovers.length) {
-      throw new Error('Current charitable loss-origin sources require complete independent regular and AMT charity histories, each explicitly empty. Prior charitable origin methods need their separate source calculation.');
+    if (!history || (priorCharity && !history.alternativeCarryoverSources)
+      || (currentCharity && (!Array.isArray(history.priorRegularCarryovers) || !Array.isArray(history.priorAlternativeCarryovers)
+        || history.priorRegularCarryovers.length || history.priorAlternativeCarryovers.length))) {
+      throw new Error('Charitable loss-origin sources require complete independent regular and AMT charity histories. Current gifts need explicitly empty histories; a prior vintage needs both complete original source packets.');
     }
   }
   if (data.farmingLossIncluded !== false || data.estateOrTrustLossIncluded !== false) {

@@ -16,10 +16,11 @@ notes: |
   taxes remain excluded from alternative deductions; regular AGI controls the
   current charitable percentage limit under Reg1.55-1(b). Source values remain
   exact before the existing form reporting boundary. Current K1 business/loss
-  classifications, trading crypto, prior charity and nonitemizer origin
-  methods remain separate. An already validated direct-current-only COD packet
-  retains the existing after-tax reduction of new NOL; original K1/crypto COD
-  and unresolved modified-absorption methods are not established here. These numerical controls are derived, not published
+  classifications and trading crypto remain separate. The source/choice
+  follow-through is specified in form-172-charitable-closure.yaml. An already
+  validated direct-current-only COD packet retains the existing after-tax
+  reduction of new NOL; original K1/crypto COD and unresolved modified-absorption
+  methods are not established here. These numerical controls are derived, not published
   matching IRS examples.
 lines:
   - line: "selected-nonbusiness"
@@ -69,9 +70,9 @@ lines:
     testRef: "tests/engine/federal-form-172-charitable-origin.test.ts::uses the actual standard choice without inventing charitable excess"
   - line: "isolated-2026-floor"
     description: "Preserve the existing current itemized floor before the loss-origin calculation"
-    formula: "Isolated2026 actualAGI10000/currentcash20000 gives6000 before floor50, currentcharity5950 and carry14050. Propertytax20000 makes selected25950 and newregularNOL15950; newATNOL0. The standard/nonitemized2026 origin method remains separately guarded and the unmocked year/export gates remain closed."
+    formula: "Isolated2026 actualAGI10000/currentcash20000 gives6000 before floor50, currentcharity5950 and carry14050. Propertytax20000 makes selected25950 and newregularNOL15950; newATNOL0. The separately sourced actual standard choice uses16100 plus170(p)1000, producing7100 currentNOL and14000 percentage carry without an itemized floor. The unmocked year/export gates remain closed."
     irsRef: "IRC170(b)(1)(G)/(I),(d)(1)(C),172(d)(4); isolated statutory method only"
-    testRef: "tests/engine/federal-form-172-charitable-origin-2026.test.ts::retains the isolated current floor without opening the nonitemized origin method"
+    testRef: "tests/engine/federal-form-172-charitable-origin-2026.test.ts::retains the isolated current floor and the distinct actual standard choice"
   - line: "browser-independent-history"
     description: "Collect both actual empty histories before showing a current charitable origin preview"
     formula: "Desktop and mobile start with the same original20000.49 receipt but unknown charitable histories. Enter the actual prior year/reference, separately record no regular and no AMT carry, and confirm the original loss sources; only then does the preview resume at actualAGI10000. Reload preserves original cents and independent empty arrays without calculated-loss inputs. Removing history blocks the preview again."

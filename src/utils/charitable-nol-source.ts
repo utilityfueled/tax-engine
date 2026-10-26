@@ -10,6 +10,7 @@ import { charitableSourceDigest } from "./charitable-source-digest.js";
 import type { PriorCharitableNolLimit } from "./charitable-prior-nol-source.js";
 import { calculateK1CharitableReturnSources } from "@/engine/forms/k1-charitable-return-sources.js";
 import { calculateCryptoDonations } from "@/engine/forms/crypto-lot-matching.js";
+import { calculateForm172CharitableSources } from "@/engine/forms/form-172-charitable-sources.js";
 
 type AmountKey = keyof CharitableContributionWorksheetInput["amounts"];
 export interface CurrentCharitableNolSource {
@@ -58,8 +59,11 @@ export function readCurrentCharitableSourceForNol(input: TaxYearInput): CurrentC
   }
   const amounts = readCurrentCharitableReceiptAmounts(input, { capitalStockOnly: true });
   const originalSources = hasOriginalCharitableNolSources(input);
-  if (originalSources && (input.form172 || input.form982NolSources)) {
-    throw new Error("Original charitable sources with current-origin or COD NOL require their separate source method");
+  if (originalSources && input.form982NolSources) {
+    throw new Error("Original charitable sources with COD NOL require their separate source method");
+  }
+  if (originalSources && input.form172 && calculateForm172CharitableSources(input)?.sourceKind !== "current") {
+    throw new Error("Original charitable current origin requires its validated donation-only source classification");
   }
   const k1 = calculateK1CharitableReturnSources(input);
   if (!k1 && input.scheduleK1.some(row => [row.charitableCash, row.charitableCapitalGain30, row.charitableCapitalGain20,

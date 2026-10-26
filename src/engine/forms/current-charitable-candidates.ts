@@ -14,6 +14,7 @@ import {
 } from './charitable-carryover-source-validation.js';
 import { allocateCharitablePrivateMedia } from './charitable-private-media.js';
 import { calculateCryptoDonations } from './crypto-lot-matching.js';
+import { calculateForm172CharitableSources } from './form-172-charitable-sources.js';
 import { readCurrentCharitableReceiptAmounts } from '@/utils/charitable-current-receipts.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, sum, zeroFloor } from '@/utils/decimal.js';
@@ -33,13 +34,21 @@ export interface CurrentCharitableCandidates {
 export function calculateCurrentCharitableCandidates(input: TaxYearInput, context: {
   contributionBase: Decimal;
   current: CharitableContributionWorksheetInput['amounts'];
+  /** Internal original-source proof, never a TaxYearInput deduction override. */
+  originSourceDigest?: string;
 }): CurrentCharitableCandidates {
   if (input.taxpayer.taxYear !== 2026) throw new Error('Current charitable candidates require actual 2026 sources');
   const records = validateCharitableCarryoverSources(input);
   if (records.length !== 0 || input.charitableCarryoverSources?.vintages?.length !== 0) {
     throw new Error('Current charitable candidates require an actual empty prior history; prior floor attribution remains separate');
   }
-  if (input.netOperatingLoss || input.form172 || input.form982NolSources || !d(input.priorYear?.nolCarryforward).isZero()) {
+  const origin = context.originSourceDigest === undefined ? undefined : calculateForm172CharitableSources(input);
+  const currentOrigin = input.form172?.sourceTaxYear === input.taxpayer.taxYear && input.form172.sourceFactsConfirmed === true
+    && input.form172.allCurrentYearSourcesIncluded === true && origin?.sourceKind === 'current'
+    && origin.sourceDigest === context.originSourceDigest && input.netOperatingLoss?.vintages?.length === 0
+    && input.netOperatingLoss.alternativeTax?.vintages?.length === 0 && !input.form982NolSources && d(input.priorYear?.nolCarryforward).isZero();
+  if ((context.originSourceDigest !== undefined && !currentOrigin)
+    || (!currentOrigin && (input.netOperatingLoss || input.form172 || input.form982NolSources || !d(input.priorYear?.nolCarryforward).isZero()))) {
     throw new Error('Current charitable candidates with NOL sources require the separate loss method');
   }
   const current = context.current;

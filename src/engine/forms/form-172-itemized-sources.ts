@@ -8,6 +8,8 @@ import { calculateScheduleA } from "@/engine/schedules/schedule-a.js";
 import { calculateForm4952 } from "./form-4952.js";
 import { calculateStateLocalIncomeTaxDeduction } from "./state-local-income-tax-deduction.js";
 import { calculateForm172CharitableSources } from "./form-172-charitable-sources.js";
+import { calculateCryptoDonations } from "./crypto-lot-matching.js";
+import { createPriorCharitableNolLimit } from "@/utils/charitable-prior-nol-source.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
 
@@ -26,7 +28,7 @@ export function calculateForm172ItemizedSources(input: TaxYearInput, context: {
   alternativeTaxPrivateActivityInterest: Decimal;
 }): Form172ItemizedSourceResult {
   const year = input.taxpayer.taxYear;
-  calculateForm172CharitableSources(input);
+  const charity = calculateForm172CharitableSources(input);
   const nonnegative = (value: string | undefined, label: string): Decimal => {
     const amount = d(value);
     if (!amount.isFinite() || amount.lt(0)) throw new Error(`Form172 ${label} must be finite and nonnegative`);
@@ -70,13 +72,15 @@ export function calculateForm172ItemizedSources(input: TaxYearInput, context: {
     medicalExpenses: medical, personalPropertyTaxes: personalProperty,
     investmentInterestExpense: regularInterest?.deductibleAmount ?? d("0"),
     salesTaxDeduction: salesElected ? sales : undefined, salesTaxElected: salesElected,
+    cryptoCharitableAmounts: input.cryptoIncome?.donations.length
+      ? calculateCryptoDonations(input.cryptoIncome.donations, year).contributionAmounts : undefined,
   });
   const taxSource = fresh.lines.filter(line => line.form === "Sched A" && line.line === "5a");
   if (taxSource.length !== 1 || (!fresh.salesTaxElected && !taxSource[0].value.isZero())) {
     throw new Error("Form172 state/local income-tax business and nonbusiness classification requires actual source attribution");
   }
   if ([fresh.foreignIncomeTaxDeduction, fresh.mortgageInsurancePremiums, fresh.casualtyLossDeduction,
-    fresh.charitablePriorYearUsed, fresh.otherItemizedDeductions].some(value => !value.isZero())) {
+    fresh.otherItemizedDeductions].some(value => !value.isZero()) || (!fresh.charitablePriorYearUsed.isZero() && charity?.sourceKind !== 'prior')) {
     throw new Error("Form172 other itemized deduction classifications require their separate regular and AMT source methods");
   }
   const mortgage = fresh.mortgageInterest.plus(fresh.mortgageWorksheet.deductiblePoints);
@@ -113,7 +117,10 @@ export function calculateForm172ItemizedSources(input: TaxYearInput, context: {
   }
   const regular = sum(fresh.medicalDeduction, fresh.saltDeduction, mortgage, fresh.investmentInterestDeduction, fresh.charitableTotal);
   if (!regular.eq(fresh.totalItemized)) throw new Error("Form172 ordinary itemized source components do not reconcile");
-  const alternative = sum(fresh.medicalDeduction, mortgage, alternativeInterest?.deductibleAmount ?? d("0"), fresh.charitableTotal);
+  const alternativeCharity = charity?.sourceKind === 'prior' ? calculateScheduleA(input, context.agi, input.taxpayer.filingStatus, getConstants(year), {
+    nolContributionLimit: createPriorCharitableNolLimit(input, 'alternative', charity.alternativeQualifiedValue),
+  }).charitableTotal : fresh.charitableTotal;
+  const alternative = sum(fresh.medicalDeduction, mortgage, alternativeInterest?.deductibleAmount ?? d("0"), alternativeCharity);
   const investment = fresh.investmentInterestDeduction;
   const audit = new AuditTrail();
   audit.record("Current Form172 itemized sources", "regular", "Regular nonbusiness itemized deductions", regular,

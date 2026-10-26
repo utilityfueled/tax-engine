@@ -54,7 +54,7 @@ function requiresOriginalCharitableNolReview(input: TaxYearInput, result?: TaxRe
 }
 
 function requiresCurrentCharitableOriginReview(input: TaxYearInput, result?: TaxReturnResult): boolean {
-  return !!(input.form172 && input.donations.length || result?.form172?.charitableSources
+  return !!(input.form172 && (input.donations.length || hasOriginalCharitableNolSources(input) || hasPriorCharitableNolSources(input)) || result?.form172?.charitableSources
     || result?.allLines.some(row => row.form === "Current Form172 charitable sources"));
 }
 
@@ -104,7 +104,8 @@ export function charitableReviewOriginalSourceInput(input: TaxYearInput, result:
   if (requiresOriginalCharitableNolReview(input, result) && (!input.netOperatingLoss || !hasOriginalCharitableNolSources(input))) {
     throw new Error("Charitable NOL review requires its retained original contribution sources");
   }
-  if (requiresCurrentCharitableOriginReview(input, result) && (!input.form172 || !input.donations.length)) {
+  if (requiresCurrentCharitableOriginReview(input, result) && (!input.form172
+    || !(input.donations.length || hasOriginalCharitableNolSources(input) || hasPriorCharitableNolSources(input)))) {
     throw new Error("Current charitable origin review requires its retained original contribution and origin sources");
   }
   const actual = token ?? (input.k1CharitableSources || requiresCharitableNolReview(input, result) ? prepareCharitableReview(input) : undefined);

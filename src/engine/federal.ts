@@ -2,6 +2,7 @@ import { calculateBrokerageWithholding } from "./forms/form-1099-b-withholding.j
 import { calculateForm1099DASources } from "./forms/form-1099-da-sources.js";
 import { normalizeDigitalAssetCapitalInput } from "./forms/digital-asset-capital-input.js";
 import { calculateForm172Return } from "./forms/form-172-return.js";
+import { calculateForm172CharitableSources } from "./forms/form-172-charitable-sources.js";
 import { validateQofDispositionFacts } from "./forms/qof-disposition-facts.js";
 /**
  * Federal tax calculation orchestrator.
@@ -192,12 +193,15 @@ import { calculateIllinoisReturn, type ILStateInput } from "./state/il-orchestra
 import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
 export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
-  if (input.k1CharitableSources && (input.form172 || input.form982NolSources
+  if (input.k1CharitableSources && (input.form982NolSources
     || [input.priorYear?.nolCarryforward, input.priorYear?.excessBusinessLossNOL,
       ...(input.scheduleK1Form1041 ?? []).map(row => row.finalYearNOLCarryover)].some(value => !d(value).isZero()))) {
     throw new Error("K1 charitable NOL coordination requires its original source replay method");
   }
-  if (input.deductionElection === "nonitemized" && (input.netOperatingLoss || input.form172)) {
+  if (input.deductionElection === "nonitemized" && (input.netOperatingLoss || input.form172)
+    && !(input.form172 && input.netOperatingLoss?.vintages?.length === 0
+      && input.netOperatingLoss.alternativeTax?.vintages?.length === 0 && !input.form982NolSources
+      && calculateForm172CharitableSources(input)?.sourceKind === "current")) {
     throw new Error("Explicit nonitemized NOL coordination requires its separate source method");
   }
   validateQofDispositionFacts(input.qofDispositionFacts, input.taxpayer.taxYear);

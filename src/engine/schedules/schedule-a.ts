@@ -20,6 +20,7 @@ import { AuditTrail } from "@/utils/audit.js";
 import { calculateSALTLimit } from "@/utils/tax-math.js";
 import { calculateCharitableContributionWorksheet, type CharitableCategory, type CharitableContributionWorksheetInput } from "@/engine/forms/charitable-contribution-worksheet.js";
 import { calculateK1CharitableReturnSources } from "@/engine/forms/k1-charitable-return-sources.js";
+import { calculateForm172CharitableSources } from "@/engine/forms/form-172-charitable-sources.js";
 import { readCurrentCharitableSourceForNol, validateCharitableNolContributionLimit, type CharitableNolContributionLimit } from "@/utils/charitable-nol-source.js";
 import { validatePriorCharitableNolLimit } from "@/utils/charitable-prior-nol-source.js";
 import { validateCharitableCarryoverSources } from "@/engine/forms/charitable-carryover-source-validation.js";
@@ -347,14 +348,20 @@ export function calculateScheduleA(
     amounts[nolSource.amountKey] = min(amounts[nolSource.amountKey], nolLimit.amount);
   }
   let currentCharitableNol: ScheduleAResult["currentCharitableNol"];
-  if (input.taxpayer.taxYear === 2026 && input.netOperatingLoss && input.charitableCarryoverSources?.vintages?.length === 0) {
+  const currentOrigin = input.taxpayer.taxYear === 2026 && input.form172 && input.netOperatingLoss?.vintages?.length === 0
+    && input.netOperatingLoss.alternativeTax?.vintages?.length === 0 && !input.form982NolSources && nolLimit === undefined
+    ? calculateForm172CharitableSources(input) : undefined;
+  if (input.taxpayer.taxYear === 2026 && input.netOperatingLoss && input.charitableCarryoverSources?.vintages?.length === 0
+    && currentOrigin?.sourceKind !== "current") {
     if (input.deductionElection !== "itemized") throw new Error("Current charitable NOL history requires the explicit itemized method; nonitemized coordination remains separate");
     if (validateCharitableCarryoverSources(input).length !== 0) throw new Error("Current charitable NOL requires actual empty prior history");
     if (!nolSource) readCurrentCharitableSourceForNol(input);
     currentCharitableNol = { method: "2026_current_single_category_nol_itemized", sourceDigest: charitableSourceDigest(input) };
   }
   if (input.charitableCarryoverSources && !currentCharitableNol) {
-    if (input.taxpayer.taxYear === 2026 && ((input.deductionElection !== "standard" && input.deductionElection !== "nonitemized")
+    if (currentOrigin?.sourceKind === "current") {
+      currentCharitableCandidates = calculateCurrentCharitableCandidates(input, { contributionBase, current: amounts, originSourceDigest: currentOrigin.sourceDigest });
+    } else if (input.taxpayer.taxYear === 2026 && ((input.deductionElection !== "standard" && input.deductionElection !== "nonitemized")
       || Object.entries(amounts).some(([category, amount]) => category !== "cashPublic" && amount.gt(0))
       || eligibleDonations.some(source => source.type !== "cash"))
       && input.charitableCarryoverSources.vintages?.length === 0) {

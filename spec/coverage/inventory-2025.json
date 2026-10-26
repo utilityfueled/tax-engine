@@ -2248,6 +2248,29 @@
       ]
     },
     {
+      "key": "federal/form-172-charitable-closure",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i172",
+      "specPath": "spec/federal/form-172-charitable-closure.yaml",
+      "enginePath": "src/engine/forms/form-172-charitable-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-form-172-charitable-closure.test.ts::uses actual donation-only crypto and charity-only K1 sources in current origins",
+        "tests/pdf/form-172-charitable-closure-review.test.ts::binds original charitable source kinds and independent values in loss review"
+      ],
+      "implementationNote": "Original charitable and independent prior sources in actual selected current loss origins; linked2025 reference is review-only, with isolated2026 choice controls and unchanged final-year gates.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-172-charitable-origin",
       "jurisdiction": "federal",
       "taxYear": 2025,

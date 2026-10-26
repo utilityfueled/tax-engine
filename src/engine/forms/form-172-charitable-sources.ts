@@ -1,4 +1,4 @@
-/** Current personal charitable sources for Form172; spec/federal/form-172-charitable-origin.yaml. */
+/** Actual charitable sources for Form172; spec/federal/form-172-charitable-closure.yaml. */
 import Decimal from 'decimal.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
@@ -7,21 +7,71 @@ import { eligibleCurrentCharitableDonations } from './charitable-current-sources
 import { validateCharitableCarryoverSources } from './charitable-carryover-source-validation.js';
 import { readCurrentCharitableReceiptAmounts } from '@/utils/charitable-current-receipts.js';
 import { charitableSourceDigest } from '@/utils/charitable-source-digest.js';
-import { sum } from '@/utils/decimal.js';
+import { hasPriorCharitableNolSources, readPriorCharitableNolSources } from '@/utils/charitable-prior-nol-source.js';
+import { calculateK1CharitableReturnSources } from './k1-charitable-return-sources.js';
+import { calculateCryptoDonations } from './crypto-lot-matching.js';
+import { d, sum } from '@/utils/decimal.js';
 
 export interface Form172CharitableSourcesResult {
+  sourceKind: 'current' | 'prior';
   qualifiedValue: Decimal;
+  alternativeQualifiedValue: Decimal;
   sourceDigest: string;
 }
 
-/** No AGI, allowance or loss is collected here. Original current receipts and
- * both known-empty histories establish the admitted current-source method. */
+/** No AGI, allowance or loss is collected here. Original current receipts need
+ * independently known-empty histories; the separate prior route retains one
+ * original vintage and its actual independent regular/AMT opening balances. */
 export function calculateForm172CharitableSources(input: TaxYearInput): Form172CharitableSourcesResult | undefined {
-  if (!input.donations.length) return undefined;
+  const hasCurrent = input.donations.length > 0 || input.k1CharitableSources !== undefined
+    || (input.cryptoIncome?.donations.length ?? 0) > 0;
+  if (!hasCurrent) {
+    if (!hasPriorCharitableNolSources(input)) return undefined;
+    const prior = readPriorCharitableNolSources(input);
+    return { sourceKind: 'prior', qualifiedValue: sum(...prior.regular.map(row => row.amount)),
+      alternativeQualifiedValue: sum(...prior.alternative.map(row => row.amount)), sourceDigest: prior.sourceDigest };
+  }
   for (const gift of eligibleCurrentCharitableDonations(input)) {
     if (!gift.organization.trim()) throw new Error('Form172 charitable source requires the actual qualified recipient');
   }
   const amounts = readCurrentCharitableReceiptAmounts(input, { capitalStockOnly: true });
+  if (input.scheduleK1.length) {
+    const k1 = calculateK1CharitableReturnSources(input);
+    if (!k1 || k1.statements.length !== input.scheduleK1.length) {
+      throw new Error('Form172 charity-only K1 requires every actual original statement and attached source packet');
+    }
+    const otherAmounts = ['ordinaryIncome', 'netRentalIncome', 'otherNetRentalIncome', 'guaranteedPayments', 'interestIncome',
+      'ordinaryDividends', 'qualifiedDividends', 'royalties', 'netShortTermCapitalGain', 'netLongTermCapitalGain',
+      'unrecapturedSection1250Gain', 'collectiblesGain', 'section1231Gain', 'otherIncome', 'section179Deduction', 'otherDeductions',
+      'investmentInterestExpense', 'excessBusinessInterest', 'selfEmploymentEarnings', 'selfEmploymentNetEarningsAfterAdjustments',
+      'foreignTaxPaid', 'foreignSourceIncome', 'amtDepreciationAdjustment', 'amtAdjustedGainOrLoss', 'amtDepletion', 'amtOtherItems',
+      'taxExemptInterest', 'otherTaxExemptIncome', 'investmentIncome', 'investmentExpenses', 'excessTaxableIncome', 'excessBusinessInterestIncome',
+      'section199AQBI', 'section199AW2Wages', 'section199AUBIA', 'section199AQualifiedReitDividends', 'section199AQualifiedPTPIncome',
+      'section199APTPW2Wages', 'section199APTPUBIA', 'lowIncomeHousingCredit42j5', 'lowIncomeHousingCreditOther',
+      'qualifiedRehabilitationExpenditures', 'otherRentalRealEstateCredits', 'otherRentalCredits', 'otherCredits', 'ptpDispositionGainOrLoss'] as const;
+    for (const [index, original] of input.scheduleK1.entries()) {
+      const actual = k1.statements.find(row => row.k1Index === index);
+      if (original.taxYear !== input.taxpayer.taxYear || otherAmounts.some(key => !d(original[key]).isFinite() || !d(original[key]).isZero())
+        || original.isPassiveActivity || original.isPubliclyTradedPartnership || original.ptpFullyDisposedInTaxableTransaction
+        || original.isForeignPartnership || actual?.distributionGain?.gain.gt(0)
+        || actual?.basis.charitableSources?.records.some(row => !row.current)
+        || input.qbiLossSources?.activities?.some(row => row.k1SourceId === `scheduleK1:${index}`)) {
+        throw new Error('Form172 charity-only K1 requires the separate current origin method for other activity, income, prior loss or gain sources');
+      }
+    }
+    for (const key of Object.keys(amounts) as (keyof typeof amounts)[]) amounts[key] = amounts[key].plus(k1.amounts[key]);
+  }
+  if (input.cryptoIncome) {
+    const crypto = input.cryptoIncome;
+    if (crypto.isMiningBusiness || crypto.isStakingBusiness || ['miningIncome', 'stakingIncome', 'airdropIncome', 'tokenSwaps',
+      'lpPositions', 'yieldRewards', 'nftTransactions', 'lendingIncome', 'liquidations', 'lots'].some(key =>
+      (crypto[key as keyof typeof crypto] as unknown[])?.length > 0)) {
+      throw new Error('Form172 donation-only crypto requires the separate current origin classification for trading or business sources');
+    }
+    const donations = calculateCryptoDonations(crypto.donations, input.taxpayer.taxYear);
+    if (!donations.sourceFactsVerified) throw new Error('Form172 crypto charity requires confirmed original donation sources');
+    for (const key of Object.keys(amounts) as (keyof typeof amounts)[]) amounts[key] = amounts[key].plus(donations.contributionAmounts[key]);
+  }
   const history = input.netOperatingLoss?.alternativeTax?.charitableCarryoverHistory;
   if (history?.sourceTaxYear !== input.taxpayer.taxYear - 1 || !history.sourceReference?.trim()
     || history.sourceFactsConfirmed !== true || history.allCarryoversIncluded !== true
@@ -38,7 +88,8 @@ export function calculateForm172CharitableSources(input: TaxYearInput): Form172C
     priorYear: undefined, charitableCarryoverSources: history.alternativeCarryoverSources }).length) {
     throw new Error('Form172 current charitable source method requires an actual empty alternative history');
   }
-  return { qualifiedValue: sum(...Object.values(amounts)), sourceDigest: bytesToHex(sha256(new TextEncoder().encode(JSON.stringify({
+  const qualifiedValue = sum(...Object.values(amounts));
+  return { sourceKind: 'current', qualifiedValue, alternativeQualifiedValue: qualifiedValue, sourceDigest: bytesToHex(sha256(new TextEncoder().encode(JSON.stringify({
     current: charitableSourceDigest(input), history,
   })))) };
 }
