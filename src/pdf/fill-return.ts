@@ -482,7 +482,7 @@ export async function fillReturn(
   if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result, charitableReview, premiumTaxCreditReview);
   const codNolReview = input.form982NolSources || result.codNolReduction
     ? options.codNolReview ?? prepareCodNolReview(input) : undefined;
-  if (input.netOperatingLoss || result.netOperatingLoss) buildNetOperatingLossReview(input, result, capitalGainReview, codNolReview, charitableReview);
+  if (input.netOperatingLoss || result.netOperatingLoss) buildNetOperatingLossReview(input, result, capitalGainReview, codNolReview, charitableReview, qbiLossReview);
   const filledForms: string[] = [];
   const finalizedPaths = new Set<string>();
   const savePacketPdf = async (doc: PDFDocument, outputPath: string) => {
@@ -790,7 +790,7 @@ export async function fillReturn(
   // zero. Inclusion is for source review and is not a filing-requirement claim.
   if (result.form6251 && (result.form6251.amt.gt(0) || result.netOperatingLoss || capitalTransactions.section1202?.amtPreference.gt(0))) {
     const f6251Path = join(blankFormsDir, "f6251.pdf");
-    const doc6251 = await fillForm6251(input, result, f6251Path, capitalGainReview, codNolReview, charitableReview);
+    const doc6251 = await fillForm6251(input, result, f6251Path, capitalGainReview, codNolReview, charitableReview, qbiLossReview);
     if (flatten) await flattenForm(doc6251.getForm());
     const outputPath6251 = join(outputDir, "f6251-filled.pdf");
     await savePacketPdf(doc6251, outputPath6251);
@@ -910,7 +910,7 @@ export async function fillReturn(
 
   // ── IRA Deduction Worksheet reference summary (if applicable — supported Pub. 590-A deduction worksheet inputs) ──
   if (result.netOperatingLoss) {
-    filledForms.push(await fillNetOperatingLossReview(input, result, outputDir, capitalGainReview, codNolReview, charitableReview));
+    filledForms.push(await fillNetOperatingLossReview(input, result, outputDir, capitalGainReview, codNolReview, charitableReview, qbiLossReview));
   }
 
   if (result.iraDeductionWorksheet) {

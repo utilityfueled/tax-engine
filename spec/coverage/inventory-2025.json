@@ -2661,6 +2661,29 @@
       ]
     },
     {
+      "key": "federal/form-172-operating-k1",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i172",
+      "specPath": "spec/federal/form-172-operating-k1.yaml",
+      "enginePath": "src/engine/forms/form-172-return.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-form-172-operating-k1.test.ts::classifies actual basis-limited ordinary K1 and charitable amounts separately",
+        "tests/apps/web/workspace-form-172-operating-k1.test.ts::exports actual guided operating K1 origins and independent carry histories"
+      ],
+      "implementationNote": "Actual original operating K1 income after existing basis and at-risk limits is classified in current regular/AMT Form172, with distinct charitable sources, current EBL, source-only guide and private review. The isolated2026 control preserves closed calculation/export gates; no human or filing qualification is claimed.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-172-origin",
       "jurisdiction": "federal",
       "taxYear": 2025,

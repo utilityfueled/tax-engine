@@ -13,6 +13,7 @@ import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { buildNetOperatingLossReview } from "@/pdf/fill-net-operating-loss.js";
 import { form8949ReviewCalculation, type PreparedForm8949Review } from "../../form-8949-review-context.js";
+import type { PreparedQbiLossReview } from "../../qbi-loss-review-context.js";
 import type { PreparedCodNolReview } from "../../cod-nol-review-context.js";
 import { requiresCharitableNolReview, type PreparedCharitableReview } from "../../charitable-review-context.js";
 import {
@@ -114,9 +115,13 @@ export async function fillForm6251(
   capitalGainReview?: PreparedForm8949Review,
   codNolReview?: PreparedCodNolReview,
   charitableReview?: PreparedCharitableReview,
+  qbiLossReview?: PreparedQbiLossReview,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
-  if (requiresCharitableNolReview(input, result)) buildNetOperatingLossReview(input, result, capitalGainReview, codNolReview, charitableReview);
+  if (requiresCharitableNolReview(input, result) || (input.form172 && input.qbiLossSources)
+    || result.form172?.k1Sources || result.allLines.some(line => line.form === "Current Form172 K1 sources")) {
+    buildNetOperatingLossReview(input, result, capitalGainReview, codNolReview, charitableReview, qbiLossReview);
+  }
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = FIELDS;
@@ -179,7 +184,7 @@ export async function fillForm6251(
     }
   }
   if (input.netOperatingLoss || result.netOperatingLoss) {
-    buildNetOperatingLossReview(input, result, capitalGainReview, codNolReview, charitableReview);
+    buildNetOperatingLossReview(input, result, capitalGainReview, codNolReview, charitableReview, qbiLossReview);
     if (!result.netOperatingLoss || !required("2e").eq(result.nolDeduction)
       || !required("2f").eq(result.netOperatingLoss.alternativeTax.deduction.negated())) {
       throw new Error("Form6251 NOL source amounts do not reconcile with the audited adjustments");

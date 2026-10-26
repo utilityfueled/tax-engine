@@ -12,6 +12,7 @@ import { calculateCodNolReduction } from "./cod-nol-reductions.js";
 import type { NetOperatingLossReturnResult } from "./net-operating-loss-return.js";
 import { calculateForm172ItemizedSources } from "./form-172-itemized-sources.js";
 import { calculateForm172CapitalSources } from "./form-172-capital-sources.js";
+import { calculateForm172K1Sources, type Form172K1SourcesResult } from "./form-172-operating-k1.js";
 import { calculateForm172CharitableSources, type Form172CharitableSourcesResult } from "./form-172-charitable-sources.js";
 
 export interface Form172ReturnContext {
@@ -54,6 +55,7 @@ export interface Form172ReturnResult {
   newAlternativeCarryforward: Decimal;
   regularClosingCarryforward: Decimal;
   alternativeClosingCarryforward: Decimal;
+  k1Sources?: Form172K1SourcesResult;
   charitableSources?: Form172CharitableSourcesResult & {
     regularCurrentDeduction: Decimal;
     alternativeCurrentDeduction: Decimal;
@@ -93,10 +95,11 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     || alternative.regularDepreciationSameAsAlternativeConfirmed !== true) {
     throw new Error("Form172 requires independent actual current AMT basis, depreciation and loss-limit facts");
   }
+  const k1Sources = calculateForm172K1Sources(input);
   const business = input.scheduleC;
-  if (facts.businessSources.length !== (business ? 1 : 0)) throw new Error("Form172 current business source list must match the actual Schedule C");
+  if (facts.businessSources.length !== (business ? 1 : 0) + (k1Sources?.rows.length ?? 0)) throw new Error("Form172 current business source list must match every actual Schedule C and operating K1");
   if (business) {
-    const source = facts.businessSources[0];
+    const source = facts.businessSources.find(row => row.sourceId === "scheduleC");
     if (!source) throw new Error("Form172 current business source is missing");
     if (source.sourceId !== "scheduleC" || !source.businessName?.trim() || source.businessName.trim() !== business.businessName?.trim()
       || !source.accountHolder || source.accountHolder !== business.accountHolder
@@ -117,6 +120,7 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     "form1099Q", "formW2G", "form1099K", "form1099OID", "form4797", "form4684", "form8824", "homeSales", "cryptoIncome",
     "form2555", "form8814", "form8839", "form6252", "form6781", "form8915F"] as const) {
     const value = input[key];
+    if (key === "scheduleK1" && k1Sources) continue;
     if ((key === "scheduleK1" || key === "cryptoIncome")
       && (charitableSources?.sourceKind === "current" || charitableSources?.sourceKind === "complete_histories")) continue;
     if (Array.isArray(value) ? value.length > 0 : value !== undefined) throw new Error(`Form172 requires the separate current origin classification method for ${key}`);
@@ -160,12 +164,14 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     throw new Error("Form172 requires completed separate actual prior regular and alternative carry results");
   }
   const sched1 = context.schedule1;
-  const expectedAdditionalIncome = sum(sched1.businessIncome, sched1.unemploymentCompensation, sched1.alimonyReceived,
+  const k1BusinessIncome = k1Sources?.ordinaryBusinessIncome ?? d("0");
+  if (!sched1.supplementalIncome.eq(k1BusinessIncome)) throw new Error("Form172 ordinary K1 sources must reconcile to actual final Schedule1 supplemental income");
+  const expectedAdditionalIncome = sum(sched1.businessIncome, k1BusinessIncome, sched1.unemploymentCompensation, sched1.alimonyReceived,
     context.currentExcessBusinessLoss).minus(prior.deduction);
   if (!sched1.totalAdditionalIncome.eq(expectedAdditionalIncome)) throw new Error("Form172 has unclassified actual additional income or losses");
   const nonbusinessIncome = sum(context.taxableInterest, context.ordinaryDividends, context.iraTaxable,
     context.pensionTaxable, context.taxableSocialSecurity, sched1.alimonyReceived);
-  const businessIncome = sum(context.totalWages, sched1.businessIncome, sched1.unemploymentCompensation);
+  const businessIncome = sum(context.totalWages, sched1.businessIncome, k1BusinessIncome, sched1.unemploymentCompensation);
   if (!sum(businessIncome, nonbusinessIncome, capital.capitalGainLoss, context.currentExcessBusinessLoss).minus(prior.deduction).eq(context.totalIncome)) {
     throw new Error("Form172 actual business and nonbusiness income must conserve final return income");
   }
@@ -220,6 +226,7 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
   const regularClosingCarryforward = prior.carryforward.plus(newRegularCarryforward);
   const alternativeClosingCarryforward = prior.alternativeTax.carryforward.plus(newAlternativeCarryforward);
   const audit = new AuditTrail();
+  if (k1Sources) audit.merge(k1Sources.lines);
   let charitable: Form172ReturnResult["charitableSources"];
   if (charitableSources) {
     const scheduleA = context.scheduleA;
@@ -266,6 +273,7 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
   return { taxYear: year, sourceFactsVerified: true, calculationComplete: true, regular, alternativeTax, investment, section1411OriginalLoss,
     currentExcessBusinessLoss, alternativeExcessBusinessLoss: currentExcessBusinessLoss, newRegularCarryforward, newAlternativeCarryforward,
     regularClosingCarryforward, alternativeClosingCarryforward, charitableSources: charitable,
+    ...(k1Sources ? { k1Sources } : {}),
     lines: [...regular.lines, ...alternativeTax.lines.map(line => ({ ...line, form: "Alternative172 Part I" })),
       ...investment.lines.map(line => ({ ...line, form: "Section1411 origin172" })), ...(itemized?.lines ?? []), ...capital.lines, ...audit.getLines()] };
 }

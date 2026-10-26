@@ -1,5 +1,6 @@
 import { Form172OriginSourcesSchema, type TaxYearInput } from '@/models/inputs';
 import type { GuidedFlowState } from './guided-interview-flow';
+import { buildGuidedK1CharitableSources } from './guided-k1-charitable-sources';
 import { hasBusinessSourceData } from './guided-business-facts';
 import { buildGuidedNetOperatingLoss } from './guided-net-operating-loss';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
@@ -55,10 +56,28 @@ export function buildCurrentLossOrigin(data: CurrentLossOriginData | undefined, 
   }
   const se = sectionData['income-self-employment'];
   const hasBusiness = hasBusinessSourceData(se);
-  if (!Array.isArray(data.businessSources) || data.businessSources.length !== (hasBusiness ? 1 : 0)) {
+  const operating = sectionData.adjustments?.k1LossSources ? buildGuidedK1CharitableSources(state) : undefined;
+  const k1Sources = operating?.qbiLossSources ? operating.scheduleK1 : [];
+  if (!Array.isArray(data.businessSources) || data.businessSources.length !== (hasBusiness ? 1 : 0) + k1Sources.length
+    || new Set(data.businessSources.map(source => source.sourceId)).size !== data.businessSources.length) {
     throw new Error('The complete current business source list must match the actual entered activity, including an explicit empty list when none.');
   }
   const businessSources = data.businessSources.map(source => {
+    const match = k1Sources.find((_, index) => source.sourceId === `scheduleK1:${index}`);
+    if (match) {
+      if (!source.businessName?.trim() || source.businessName.trim() !== match.partnershipName.trim()
+        || !source.accountHolder || source.accountHolder !== match.accountHolder
+        || (source.accountHolder === 'spouse' && (segmentation.filingStatus !== 'mfj' || !sectionData['personal-info']?.spouse))
+        || !source.sourceReference?.trim() || source.sourceFactsConfirmed !== true) {
+        throw new Error('Bind the actual original K-1 entity, owner and current activity reference.');
+      }
+      if (source.materiallyParticipated !== true || match.qbiMateriallyParticipated !== true || match.isPassiveActivity !== false
+        || typeof source.allInvestmentAtRisk !== 'boolean' || source.financialTradingBusiness !== false) {
+        throw new Error('Confirm the actual active nontrading K-1 and known at-risk facts; the original Form6198 determines the allowed amount.');
+      }
+      return { ...source, accountHolder: source.accountHolder, businessName: source.businessName.trim(), sourceReference: source.sourceReference.trim(),
+        sourceFactsConfirmed: true, materiallyParticipated: true, allInvestmentAtRisk: source.allInvestmentAtRisk, financialTradingBusiness: false };
+    }
     const business = se?.businessFacts;
     if (source.sourceId !== 'scheduleC' || !source.businessName?.trim() || source.businessName.trim() !== business?.businessName?.trim()
       || !source.accountHolder || source.accountHolder !== business?.accountHolder

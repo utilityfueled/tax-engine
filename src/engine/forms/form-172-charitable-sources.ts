@@ -10,6 +10,7 @@ import { charitableSourceDigest } from '@/utils/charitable-source-digest.js';
 import { hasPriorCharitableNolSources, readPriorCharitableNolSources } from '@/utils/charitable-prior-nol-source.js';
 import { calculateK1CharitableReturnSources } from './k1-charitable-return-sources.js';
 import { calculateCryptoDonations } from './crypto-lot-matching.js';
+import { calculateForm172K1Sources } from './form-172-operating-k1.js';
 import { d, sum } from '@/utils/decimal.js';
 import { readCharitableNolOrigins, usesCurrentOriginCharitableHistories } from '@/utils/charitable-nol-origins.js';
 
@@ -31,8 +32,9 @@ export function calculateForm172CharitableSources(input: TaxYearInput): Form172C
     qualifiedValue: sum(...Object.values(complete.current), ...complete.regular.map(row => row.amount)),
     alternativeQualifiedValue: sum(...Object.values(complete.current), ...complete.alternative.map(row => row.amount)),
     sourceDigest: complete.sourceDigest } : undefined;
+  const operatingK1 = calculateForm172K1Sources(input);
   if (!hasCurrent) {
-    if (completeResult && (input.scheduleK1.length || input.cryptoIncome)) {
+    if (completeResult && ((input.scheduleK1.length && !operatingK1) || input.cryptoIncome)) {
       throw new Error('Form172 complete prior charity histories require separate original classification for other K1 or crypto sources');
     }
     if (completeResult) return completeResult;
@@ -47,7 +49,7 @@ export function calculateForm172CharitableSources(input: TaxYearInput): Form172C
   const amounts = readCurrentCharitableReceiptAmounts(input, { capitalStockOnly: true });
   if (input.scheduleK1.length) {
     const k1 = calculateK1CharitableReturnSources(input);
-    if (!k1 || k1.statements.length !== input.scheduleK1.length) {
+    if (!operatingK1 && (!k1 || k1.statements.length !== input.scheduleK1.length)) {
       throw new Error('Form172 charity-only K1 requires every actual original statement and attached source packet');
     }
     const otherAmounts = ['ordinaryIncome', 'netRentalIncome', 'otherNetRentalIncome', 'guaranteedPayments', 'interestIncome',
@@ -60,7 +62,8 @@ export function calculateForm172CharitableSources(input: TaxYearInput): Form172C
       'section199APTPW2Wages', 'section199APTPUBIA', 'lowIncomeHousingCredit42j5', 'lowIncomeHousingCreditOther',
       'qualifiedRehabilitationExpenditures', 'otherRentalRealEstateCredits', 'otherRentalCredits', 'otherCredits', 'ptpDispositionGainOrLoss'] as const;
     for (const [index, original] of input.scheduleK1.entries()) {
-      const actual = k1.statements.find(row => row.k1Index === index);
+      if (operatingK1?.rows.some(row => row.k1Index === index)) continue;
+      const actual = k1?.statements.find(row => row.k1Index === index);
       if (original.taxYear !== input.taxpayer.taxYear || otherAmounts.some(key => !d(original[key]).isFinite() || !d(original[key]).isZero())
         || original.isPassiveActivity || original.isPubliclyTradedPartnership || original.ptpFullyDisposedInTaxableTransaction
         || original.isForeignPartnership || actual?.distributionGain?.gain.gt(0)
@@ -69,7 +72,7 @@ export function calculateForm172CharitableSources(input: TaxYearInput): Form172C
         throw new Error('Form172 charity-only K1 requires the separate current origin method for other activity, income, prior loss or gain sources');
       }
     }
-    for (const key of Object.keys(amounts) as (keyof typeof amounts)[]) amounts[key] = amounts[key].plus(k1.amounts[key]);
+    if (k1) for (const key of Object.keys(amounts) as (keyof typeof amounts)[]) amounts[key] = amounts[key].plus(k1.amounts[key]);
   }
   if (input.cryptoIncome) {
     const crypto = input.cryptoIncome;

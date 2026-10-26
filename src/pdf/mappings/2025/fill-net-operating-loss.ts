@@ -26,6 +26,7 @@ import { d, roundDollar, sum } from "@/utils/decimal.js";
 import { assertPdfExportAllowed, markReviewPdf } from "@/pdf/export-policy.js";
 import { form8949ReviewOriginalSourceInput, type PreparedForm8949Review } from "@/pdf/form-8949-review-context.js";
 import { codNolReviewOriginalSourceInput, type PreparedCodNolReview } from "@/pdf/cod-nol-review-context.js";
+import { qbiLossReviewOriginalSourceInput, type PreparedQbiLossReview } from "@/pdf/qbi-loss-review-context.js";
 import { charitableReviewOriginalSourceInput, requiresCharitableNolReview, requiresPriorCharitableNolReview, type PreparedCharitableReview } from "@/pdf/charitable-review-context.js";
 
 function amount(value: Decimal | undefined): Decimal {
@@ -106,6 +107,21 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult, capital
   }
   for (const key of ["section1411OriginalLoss", "currentExcessBusinessLoss", "alternativeExcessBusinessLoss", "newRegularCarryforward",
     "newAlternativeCarryforward", "regularClosingCarryforward", "alternativeClosingCarryforward"] as const) eq(current[key], checked[key]);
+  const k1 = checked.k1Sources, retainedK1 = current.k1Sources;
+  if (Boolean(k1) !== Boolean(retainedK1)) throw new Error("Current operating K1 source presence does not reconcile");
+  if (k1 && retainedK1) {
+    if (k1.sourceDigest !== retainedK1.sourceDigest || k1.rows.length !== retainedK1.rows.length) {
+      throw new Error("Current operating K1 original source digest or row count does not reconcile");
+    }
+    eq(retainedK1.ordinaryBusinessIncome, k1.ordinaryBusinessIncome);
+    k1.rows.forEach((expected, index) => {
+      const retained = retainedK1.rows[index];
+      if (expected.sourceId !== retained.sourceId || expected.k1Index !== retained.k1Index || expected.accountHolder !== retained.accountHolder) {
+        throw new Error("Current operating K1 original index and owner do not reconcile");
+      }
+      for (const key of ["originalOrdinary", "basisAllowedOrdinary", "allowedOrdinary"] as const) eq(retained[key], expected[key]);
+    });
+  }
   const charity = checked.charitableSources, retainedCharity = current.charitableSources;
   if (Boolean(charity) !== Boolean(retainedCharity)) throw new Error("Current charitable origin sources do not reconcile");
   if (charity && retainedCharity) {
@@ -149,7 +165,7 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult, capital
     `Current alternative PartI loss ${checked.alternativeTax.netOperatingLoss}; current EBL carry ${checked.alternativeExcessBusinessLoss}; total alternative closing carry ${checked.alternativeClosingCarryforward}`,
     `Current section1411 original loss ${checked.section1411OriginalLoss}`,
     ...checked.lines.filter(line => line.form === "Current Form172 itemized sources" || line.form === "Current Form172 capital sources"
-      || line.form === "Current Form172 charitable sources")
+      || line.form === "Current Form172 charitable sources" || line.form === "Current Form172 K1 sources")
       .map(line => `${line.description}: ${line.value}`),
     ...([ ["Regular", checked.regular], ["Alternative", checked.alternativeTax], ["Investment", checked.investment] ] as const)
       .flatMap(([label, form]) => form.lines.map(line => `${label} current Form172 line${line.line}: ${line.value}`)),
@@ -158,8 +174,13 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult, capital
 
 /** Source amounts and retained canonical contexts are checked separately. This
  * render path works after identifier redaction and never invents taxpayer IDs. */
-export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, capitalReview?: PreparedForm8949Review, codReview?: PreparedCodNolReview, charitableReview?: PreparedCharitableReview): string[] {
+export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, capitalReview?: PreparedForm8949Review, codReview?: PreparedCodNolReview, charitableReview?: PreparedCharitableReview, qbiReview?: PreparedQbiLossReview): string[] {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  if ((input.form172 && input.qbiLossSources) || result.form172?.k1Sources
+    || result.allLines.some(line => line.form === "Current Form172 K1 sources")) {
+    if (!input.form172 || !input.qbiLossSources) throw new Error("Operating K1 current origin review requires its actual original source packet");
+    input = qbiLossReviewOriginalSourceInput(input, result, qbiReview);
+  }
   if (requiresCharitableNolReview(input, result) || charitableReview) input = charitableReviewOriginalSourceInput(input, result, charitableReview);
   if (input.form982NolSources || result.codNolReduction) input = codNolReviewOriginalSourceInput(input, result, codReview);
   const facts = input.netOperatingLoss; const calculation = result.netOperatingLoss;
@@ -403,8 +424,8 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
     "This statement and the accompanying Form6251 are review material, not filing qualification."];
 }
 
-export async function fillNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, outputDir: string, capitalReview?: PreparedForm8949Review, codReview?: PreparedCodNolReview, charitableReview?: PreparedCharitableReview): Promise<string> {
-  const paragraphs = buildNetOperatingLossReview(input, result, capitalReview, codReview, charitableReview);
+export async function fillNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, outputDir: string, capitalReview?: PreparedForm8949Review, codReview?: PreparedCodNolReview, charitableReview?: PreparedCharitableReview, qbiReview?: PreparedQbiLossReview): Promise<string> {
+  const paragraphs = buildNetOperatingLossReview(input, result, capitalReview, codReview, charitableReview, qbiReview);
   const doc = await PDFDocument.create(); const font = await doc.embedFont(StandardFonts.Helvetica);
   let page = doc.addPage([612, 792]); let y = 738;
   for (const paragraph of paragraphs) {

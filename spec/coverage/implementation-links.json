@@ -612,6 +612,16 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/form-172-operating-k1",
+      "enginePath": "src/engine/forms/form-172-return.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-form-172-operating-k1.test.ts::classifies actual basis-limited ordinary K1 and charitable amounts separately",
+        "tests/apps/web/workspace-form-172-operating-k1.test.ts::exports actual guided operating K1 origins and independent carry histories"
+      ],
+      "note": "Actual original operating K1 income after existing basis and at-risk limits is classified in current regular/AMT Form172, with distinct charitable sources, current EBL, source-only guide and private review. The isolated2026 control preserves closed calculation/export gates; no human or filing qualification is claimed."
+    },
+    {
       "key": "federal/form-172-origin-precision",
       "enginePath": "src/engine/federal.ts",
       "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",

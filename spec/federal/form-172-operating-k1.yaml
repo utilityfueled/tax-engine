@@ -1,0 +1,73 @@
+form: "Current Form172 K1 sources"
+fullName: "Actual ordinary operating K1 income in current Form172 origins"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  Form172 instructions Before You Begin and PartI lines6-7 distinguish a
+  partner/shareholder's ordinary business income/loss from separately stated
+  nonbusiness income and charitable deductions. Reg1.172-3(a)(3) also treats
+  wages as business income. The actual current ordinary K1 amount is taken
+  after existing basis and at-risk limits, never from its QBI amount or gross
+  Box1 loss. Complete original K1/199A, basis,6198 and known prior histories
+  remain required. Each actual active nontrading business is linked by original
+  index, owner and entity to Form172 sources. Only this source-complete ordinary
+  continuing nonpassive cohort is admitted here; passive dispositions, capital,
+  rental, foreign, trading and unresolved prior loss releases retain their
+  existing independent source methods. Attached section170 gifts keep their
+  own basis/recipient/risk validation and nonbusiness deduction limits. This
+  does not implement a binding section465 charitable allocation.
+  Actual same regular/AMT treatment must be confirmed independently. Canonical
+  Schedule1 line5 must equal the freshly derived ordinary source total. Current
+  EBL is added once after PartI; original prior NOL use and charity comparisons
+  remain separate. Section1411 original loss stays independently calculated;
+  the admitted active nontrading activity is excluded. All arithmetic uses
+  Decimal, with original source cents and completed reporting rounding retained.
+  Literal controls below are derived from these primary rules, not published
+  matching numerical examples. The 2026 calculation/export gates stay closed.
+lines:
+  - line: "ordinary-charitable-classification"
+    description: "Classify allowed ordinary business loss separately from charity and QBI"
+    formula: "Actual Box1 loss80000 and cash gift20000 share50000basis: allowed ordinary40000 and charity10000, separate suspensions40000/10000. Wages20000+interest30000-40000 gives10000AGI. SALT20000+allowed charity6000 gives26000itemized; nonbusiness income30000 absorbs it, yielding16000regular NOL. AMT allows charity6000 but noSALT:4000AMTI and noATNOL. Current charity percentage carry4000 is not basis suspension."
+    irsRef: "i172BeforeYouBegin and PartI6-9; i1065sk1Box1/basis limits; IRC172(d)(4); Reg1.172-3(a)(3); IRC56(b)"
+    testRef: "tests/engine/federal-form-172-operating-k1.test.ts::classifies actual basis-limited ordinary K1 and charitable amounts separately"
+  - line: "ordinary-ebl"
+    description: "Retain actual K1 losses and current excess-business carry once"
+    formula: "Current ordinary loss500000 with full basis/risk, wages20000 and interest5000 yields187000Form461disallowance. AGI-288000, regularPartI293000 plus187000EBL gives480000newcarry; independentAMT288000+187000=475000. Charitable10000 remains separate percentage excess and QBI basis/risk/461 character is conserved."
+    irsRef: "IRC461(l)(2); Form172PartI23-24; i172EBLworksheet; Reg1.199A-3(b)(1)(iv)"
+    testRef: "tests/engine/federal-form-172-operating-k1.test.ts::adds the actual ordinary K1 EBL only once after current origin"
+  - line: "complete-source-classification"
+    description: "Validate every original activity before combining its allowed amounts"
+    formula: "Require exact current source index/entity/owner, actual participation/nontrading answers, complete original statements and independent prior basis/risk/passive histories. Unknown, contradictory and offsetting unclassified sources reject before netting. Actual positive, negative and zero ordinary amounts retain character."
+    testRef: "tests/engine/federal-form-172-operating-k1.test.ts::requires actual current operating identities and complete independent histories"
+  - line: "ordinary-source-choice"
+    description: "Support source-complete ordinary K1 without inventing charitable amounts"
+    formula: "With no gifts, original ordinary loss100000/basis100000/risk60000 yields60000allowed business loss. Wages20000+interest5000 givesAGI-35000. Standard15750 with nonbusiness income5000 gives10750addback, regular40000 and AMT35000 current losses. A known zero ordinary source remains zero; no computed deduction is collected."
+    testRef: "tests/engine/federal-form-172-operating-k1.test.ts::preserves no-gift standard and known-zero ordinary source choices"
+  - line: "guided-operating-sources"
+    description: "Link the actual existing K1 activity into current loss intake"
+    formula: "Reuse entered original K1/199A/basis/6198 histories and attached receipts. Select the actual indexed business, retain owner/entity and unknown/false confirmations, derive no income or allowance field. Source edits revoke confirmations. Known false all-investment-at-risk is allowed for K1 only because original6198 calculates the actual limit; unknown still rejects. ScheduleC keeps its existing all-at-risk requirement."
+    testRef: "tests/guided-interview/guided-form-172-operating-k1.test.ts::builds actual operating K1 current origins without income overrides"
+  - line: "guided-operating-confirmation"
+    description: "Preserve the existing original K1 while confirming its current business link"
+    formula: "Real source-only adjustment controls expose actual K1 choices. Confirming the current source preserves linked original, basis, risk and charity packets; an edited activity reference invalidates current confirmations without creating legacy monetary aggregates."
+    testRef: "tests/apps/web/form-172-operating-k1-interactions.test.tsx::confirms an actual K1 origin link through source-only adjustment controls"
+  - line: "original-operating-review"
+    description: "Bind original K1 sources and current losses before redacted rendering"
+    formula: "The original QBI context and charitable context are independent. Recalculate original allowed ordinary sources, compare retained current source digest/amounts and Form172 results; changed identity, removed source, changed allowed amount or stale token rejects before template access. Static ordinal rows reveal no private identity or references."
+    testRef: "tests/pdf/form-172-operating-k1-review.test.ts::binds operating K1 classification and loss output to original private sources"
+  - line: "workspace-operating-review"
+    description: "Export the actual guided operating K1 and independent loss packet"
+    formula: "Unmocked guided bridge plus real PDF download retains ordinary40000, charity6000, current regular16000 and alternative0, separate original basis suspensions and every-page review notice. Missing source confirmation rejects."
+    testRef: "tests/apps/web/workspace-form-172-operating-k1.test.ts::exports actual guided operating K1 origins and independent carry histories"
+  - line: "ordinary-direct-receipts"
+    description: "Keep independent direct charity and positive ordinary sources distinct"
+    formula: "Ordinary K1 loss60000 with wages20000 and interest30000 givesAGI-10000. Actual SALT20000 is within30000nonbusiness income; direct1000cash is all percentage excess, yielding30000regular and10000alternative current losses. No K1 charitable attachment is invented. Positive80000ordinary business income is included once and cannot be treated as nonbusiness loss."
+    testRef: "tests/engine/federal-form-172-operating-k1.test.ts::conserves ordinary K1 classification beside direct receipts and positive business income"
+  - line: "isolated-2026-source-choice"
+    description: "Retain the isolated current-year floor and actual nonitemized choice"
+    formula: "2026 original ordinary80000loss/cash20000/basis50000 leaves qualified charity10000; AGI10000. Itemized floor50 gives5950charity,15950regular origin,4050AMTI and4050charity carry. Actual standard16100 plus170(p)1000 gives7100regular origin,9000AMTI and4000percentage carry. No2026 gate is opened."
+    testRef: "tests/engine/federal-form-172-operating-k1-2026.test.ts::retains isolated current K1 floor and source-based standard choice"
+  - line: "browser-original-operating-source"
+    description: "Preserve actual K1 source choice through production save and PDF download"
+    formula: "Desktop/mobile controls confirm the original current business link without monetary overrides, retain independent original basis/6198/charity histories across reload, and download a source-bound regular16000/AMT0 review packet. An unknown source choice blocks the estimate; privacy/notices and filing gates are preserved."
+    testRef: "apps/web/tests/form-172-operating-k1.spec.ts::preserves original operating K1 through source confirmation and review download"

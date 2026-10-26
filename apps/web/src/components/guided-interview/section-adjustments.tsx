@@ -105,7 +105,7 @@ export function SectionAdjustments({
         <NetOperatingLossDetails data={current.netOperatingLossSources} onChange={netOperatingLossSources => onDataChange({ ...(data ?? emptyAdjustmentData), netOperatingLossSources })} />
         <K1LossSourceDetails data={current.k1LossSources} nol={current.netOperatingLossSources} onChange={k1LossSources => onDataChange({ ...current, k1LossSources })} />
         <CodNolDetails data={current.codNolSources} onChange={codNolSources => onDataChange({ ...current, codNolSources })} />
-        <CurrentLossOriginDetails data={current.currentLossOrigin} investments={investments} onChange={currentLossOrigin => onDataChange({ ...(data ?? emptyAdjustmentData), currentLossOrigin })} />
+        <CurrentLossOriginDetails data={current.currentLossOrigin} investments={investments} k1Sources={current.k1LossSources?.activities?.map((source, index) => [`scheduleK1:${index}`, `K-1 ${index + 1}: ${source.entityName?.trim() || "Original entity name required"}`])} onChange={currentLossOrigin => onDataChange({ ...(data ?? emptyAdjustmentData), currentLossOrigin })} />
 
         <EducatorSourceDetails sources={current.educatorExpenseSources} taxYear={taxYear} onChange={educatorExpenseSources => onDataChange({ ...current, educatorExpenseSources })} />
 
