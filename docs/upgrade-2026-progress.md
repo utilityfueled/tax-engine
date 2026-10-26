@@ -784,3 +784,17 @@ current-law EIC, binding-owner health and finite charity methods continue.
 The451-entry inventory,55 source-response hashes, refreshed local base and Grype
 DB are recorded. Later final-source checks/runtime/recovery remain due. No
 human, live-provider, staging, filing or release qualification is claimed.
+
+
+Pushed through `f47cb65`: actual default Marketplace allocation, corrected
+S-corporation debt ordering, optional K1 charitable source prerequisites, complete
+home/review EIC facts and absent investment-input preservation have scoped checks
+and separate agent reviews. Immutable `76e3538` passes 18,159 tests in 1,058 files,
+all static checks and 374 local production browser cases; five hosted-only cases
+remain skipped. Its coverage run has one spec-reference timeout, reproduced and
+repaired separately without changing assertions, deadlines or coverage gates.
+Full later coverage remains pending. Its exact arm64 image passes smoke and all
+six recovery phases; the same 67 distinct OS advisories await owner acceptance.
+No publication, staging, human, provider, filing or release qualification is
+claimed. The durable checklist records the finite source-method queue and exact
+package evidence; autonomous implementation continues.

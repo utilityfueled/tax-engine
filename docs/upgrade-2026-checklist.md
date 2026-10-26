@@ -7,55 +7,65 @@ complete a checkbox.
 
 ## Current integration — 2026-10-26
 
-Current application changes are pushed through `bb4cf38`: complete EIC claimant
-dependency and applicable-year home sources (`6619855`), the published 2025 EIC
-table and statutory phase-out ceiling (`7748af0`), first-day marriage alternative
-coverage (`768a987`), and the source-bound Form1040 Rule10 checkbox (`bb4cf38`).
-The reviewed source blobs are preserved in the commits. The metadata remains
-`2025.110` / `2026.107-law-integration-draft`; no readiness gate is promoted.
+The branch is pushed through `f47cb65`. New delivered packages are the remaining
+source-bound EIC review checkboxes (`fea969d`), corrected S-corporation debt-basis
+ordering (`71f8df0`), actual no-agreement Marketplace allocation (`ea43686`),
+optional K1 charitable basis sources (`ed52792`), all-claimant home/military
+intake (`085eaa7`), absent EIC investment-input preservation (`f98f9ed`) and the
+spec-reference runtime correction (`f47cb65`). Metadata is `2025.113` /
+`2026.110-law-integration-draft`; no readiness gate is promoted.
 
-The EIC table package passes a full immutable run of **18,120 tests in 1,045
-files**, with zero failures or skips, including disposable PostgreSQL cases.
-Its independent agent review passes 261 tests and verifies all 10,992 published
-table cells, 1,374 rows and eight footnotes. Final integration with the newer
-claimant sources passes 273 tests plus three metadata tests. The claimant
-package separately passes 18,111 tests in 1,052 files with 33 existing database
-skips, four production browser cases and a 23-case independent review. Those
-skips provide no database evidence. Marriage checks pass 109 scoped tests,
-four browser cases, 33 parent review tests and physical review artifacts; the
-final integration passes 44 tests. The Rule10 PDF passes 67 combined tests and
-49 separate parent review cases, including saved/reopened and visual checks.
-These package runs do not substitute for final combined verification.
+The S-corporation repair passes 680 tests in 13 files and 85 separate parent
+review tests, including independent stock/debt and category conservation cases.
+Its optional charitable prerequisite passes 687/14 and 117/6 separate review
+checks; it remains an inactive source helper pending canonical coordination.
+Situation4 default allocation passes 1,020/123, four production browser cases,
+17/6 parent review checks and both physical review pages. Final integration passes
+32/9. The EIC review-field package passes 1,271/170, 54/7 parent review and 48/6
+final checks. Home intake passes 863/109, two browser cases, nine independent
+review checks and final 14/4; four flattened PDFs were independently reopened.
+The EIC presence correction has 157/7 scoped tests, 12/3 separate review checks
+and 160/8 final integration checks. Exact ledgers retain source hashes and initial
+failures. Generated cases and agent reviews are not independent human review.
 
-The latest broad coverage evidence remains immutable `36d5fab`: 18,101 tests,
-zero failures/skips, **87.06% branches** against 85% and **90.38% functions**
-against 90%; statements 92.16%, lines 94.76%. The last complete build/browser
-integration is `9bcf47b`, with 368 Chromium passes, zero retries and five hosted
-skips. Later source packages require a fresh full run, now being prepared.
-The current inventory has **459 entries and 5,058 literal spec references**.
-The last observed remote CI/Web runs for `7748af0` were in progress; subsequent
-pushes may supersede them and no completed remote result is inferred.
+Full immutable `76e3538` passes **18,159 tests in 1,058 files**, zero failures or
+skips, with actual disposable PostgreSQL checks. Root/contracts/web types,
+spec/inventory, engine build and lint pass. The production bundle works and
+**374 browser cases pass**, zero retries; five hosted-only skips provide no
+staging evidence. Coverage passes 18,158 cases but fails the spec-reference test
+at its unchanged five-second deadline. `f47cb65` removes unused AST parent links;
+the original seven-second timeout is reproduced, the same six checks pass in
+3.41 seconds under V8, and all 13,327 discovered names remain identical. Its final
+34/2 integration checks pass. Full coverage must run again on the new snapshot.
+The prior passing coverage remains `36d5fab`: 87.06% branches and 90.38% functions.
+The refreshed inventory contains **465 entries and 5,090 literal references**.
 
-The final-source container build, SBOM, scan and local recovery rehearsal are
-being refreshed. The existing local-only Podman endpoint and refreshed official
-base are verified. Package advisories, 55 official source responses and the
-valid scanner database remain recorded separately from artifact qualification.
+The [versioned runtime evidence](upgrade-2026-runtime-76e3538.json) binds the
+local arm64 image to `76e3538`. Smoke and all six recovery phases pass, including
+actual synthetic database dump/restore and encrypted browser recovery. Its scan
+has 157 OS matches across 67 distinct advisories, zero critical/npm/available-fix
+matches. Owner acceptance and the existing 2026-11-07 expiry remain unresolved.
+No image was published. The first VM storage failure and bounded task-cache
+cleanup are retained. Later tax commits and final native images still require
+verification. Recent remote runs have been superseded by newer pushes; no
+completed current-head result is inferred.
 
-Remaining internal work includes the other explicit Form1040 EIC checkboxes,
-ordinary shared-policy and separate-business Marketplace methods, and actual
-K1 charitable sources with basis/history/at-risk coordination. Parent review
-reproduced an S-corporation nondeductible-expense debt-basis defect admitted by
-the charitable prerequisite. A separate spec-first repair is active; the
-charitable prerequisite is not yet approved or activated. Prior-floor,
-regular/AMT NOL and partial mixed-media charity methods remain explicit work.
-A guard or a reviewed helper does not complete an unsupported method.
+Remaining internal work includes actual separated-spouse EIC sources and the
+investment worksheet's income-character components; no-advance and overlapping/
+shared-plus-unshared Marketplace methods; separate-business health ordering;
+canonical K1 charitable basis/history/at-risk handoff; prior-floor, regular/AMT
+NOL and partial mixed-media charity methods. Situation3 no-advance source/guide/
+PDF work passed separate agent review on frozen `3a040111`; it is not committed
+or counted as delivered here. A guard or an inactive helper does not complete
+an unsupported method. Current full verification and support reconciliation
+remain active.
 
-The goal remains active and the upgrade is **not release-ready**. Required
-human reviews and controlling interpretations, provider access and approved
-budget, authorized staging, launch-state demand, final forms and advisory-owner
-acceptance remain outstanding. The user expressly approved normal pushes to
-the existing public `utilityfueled/tax-engine` upgrade branch. That approval
-does not authorize production deployment, filing or model promotion.
+The goal is active and the upgrade is **not release-ready**. Required human
+reviews and controlling interpretations, provider access and approved budget,
+authorized staging, launch-state demand, final forms and advisory-owner
+acceptance remain outstanding. The user expressly approved normal pushes to the
+public `utilityfueled/tax-engine` upgrade branch. Production deployment, filing
+and model promotion remain unauthorized and disabled.
 
 ## Earlier package evidence
 

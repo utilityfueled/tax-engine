@@ -97,3 +97,20 @@ verified against GitHub. Its scan reports the same157 matches/67 advisories and
 zero critical findings. Exact SBOM/scan hashes are in the register. This replaces
 the earlier absence of native amd64 evidence for that intermediate code only;
 both final images, staging and independent review are still required.
+
+## Exact-source local refresh at 76e3538 — 2026-10-26
+
+[The versioned runtime record](upgrade-2026-runtime-76e3538.json) binds the
+arm64 image to the tracked commit using its archive config hash and OCI revision.
+Smoke, all six upgrade/restart/restore/rollback phases, the real synthetic
+PostgreSQL restore and encrypted browser recovery pass. The valid refreshed
+scanner database reports 157 OS matches across 67 advisories: zero critical,
+54 high, 47 medium, 10 low and 46 negligible matches; zero npm or available-fix
+matches. These are match counts, not unique-advisory counts. The existing owner
+acceptance and 2026-11-07 expiry remain unresolved. No image was published.
+
+The first build exhausted local VM storage while saving a layer. Evidence-bound
+cleanup removed one obsolete task-owned cache chain; an in-use cache was retained.
+The retry passed. All original logs and the failed attempt remain available.
+This intermediate source predates later tax packages and does not establish final
+native-platform, hosted staging, human security or release qualification.
