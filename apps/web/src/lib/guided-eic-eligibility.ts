@@ -2,6 +2,19 @@ import { calculateEicClaimantEligibility, type EicClaimantInput } from '../../..
 import type { FilingStatus, PersonalInfoData } from './guided-interview-flow';
 import { buildStandardDeductionFacts } from './guided-standard-deduction-facts';
 
+export interface EicChildlessClaimantData {
+  mainHomeInUnitedStatesMoreThanHalfYear?: boolean | null;
+  countedMilitaryDutyOutsideUnitedStates?: boolean | null;
+  qualifyingChildOfAnotherTaxpayer?: boolean | null;
+  militaryDutySourceReference?: string;
+  extendedActiveDutyOrderOver90DaysOrIndefinite?: boolean | null;
+  dependentException?: {
+    sourceReference?: string;
+    allPotentialClaimantsNotRequiredToFile?: boolean | null;
+    allPotentialClaimantsDidNotFileOrRefundOnly?: boolean | null;
+  };
+}
+
 export interface EicClaimantEligibilityData {
   sourceTaxYear?: string;
   sourceReference?: string;
@@ -9,9 +22,28 @@ export interface EicClaimantEligibilityData {
   primaryNonresidentAlienDuringYear?: boolean | null;
   spouseNonresidentAlienDuringYear?: boolean | null;
   residentJointElection?: boolean | null;
+  primaryQualifyingChildOfAnotherTaxpayer?: boolean | null;
+  spouseQualifyingChildOfAnotherTaxpayer?: boolean | null;
+  primaryChildless?: EicChildlessClaimantData;
+  spouseChildless?: EicChildlessClaimantData;
 }
 const statuses = { single: 'single', mfj: 'married_filing_jointly', mfs: 'married_filing_separately', hoh: 'head_of_household', qss: 'qualifying_surviving_spouse' } as const;
 const bool = (value: boolean | null | undefined) => typeof value === 'boolean' ? value : undefined;
+const childlessSource = (data: EicChildlessClaimantData | undefined, currentOtherChild: boolean | null | undefined) => data === undefined ? undefined : ({
+  mainHomeInUnitedStatesMoreThanHalfYear: bool(data.mainHomeInUnitedStatesMoreThanHalfYear),
+  countedMilitaryDutyOutsideUnitedStates: bool(data.countedMilitaryDutyOutsideUnitedStates),
+  // An explicit blank in the current question remains unknown. An absent new
+  // field preserves the earlier actual answer; contradictory known facts fail
+  // in the shared source validator rather than being silently replaced here.
+  qualifyingChildOfAnotherTaxpayer: currentOtherChild === null ? undefined : bool(data.qualifyingChildOfAnotherTaxpayer),
+  militaryDutySourceReference: data.militaryDutySourceReference,
+  extendedActiveDutyOrderOver90DaysOrIndefinite: bool(data.extendedActiveDutyOrderOver90DaysOrIndefinite),
+  dependentException: data.dependentException === undefined ? undefined : {
+    sourceReference: data.dependentException.sourceReference,
+    allPotentialClaimantsNotRequiredToFile: bool(data.dependentException.allPotentialClaimantsNotRequiredToFile),
+    allPotentialClaimantsDidNotFileOrRefundOnly: bool(data.dependentException.allPotentialClaimantsDidNotFileOrRefundOnly),
+  },
+});
 
 export function buildGuidedEicClaimantEligibility(personal: PersonalInfoData | undefined, status: FilingStatus | null, taxYear: number | null | undefined) {
   const data = personal?.eicClaimantEligibility;
@@ -24,6 +56,10 @@ export function buildGuidedEicClaimantEligibility(personal: PersonalInfoData | u
     primaryNonresidentAlienDuringYear: bool(data.primaryNonresidentAlienDuringYear),
     spouseNonresidentAlienDuringYear: bool(data.spouseNonresidentAlienDuringYear),
     residentJointElection: bool(data.residentJointElection),
+    primaryQualifyingChildOfAnotherTaxpayer: bool(data.primaryQualifyingChildOfAnotherTaxpayer),
+    spouseQualifyingChildOfAnotherTaxpayer: bool(data.spouseQualifyingChildOfAnotherTaxpayer),
+    primaryChildless: childlessSource(data.primaryChildless, data.primaryQualifyingChildOfAnotherTaxpayer),
+    spouseChildless: childlessSource(data.spouseChildless, data.spouseQualifyingChildOfAnotherTaxpayer),
   };
   const input: EicClaimantInput = {
     taxpayer: { taxYear, filingStatus: statuses[status],

@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.107",
+    ruleVersion: "2025.108",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p596", section: "Actual claimant qualifying-child restriction with or without a child; separate childless dependency, applicable-year U.S. home and extended military duty sources", revision: "Final2025 Rules10/12/13/14, IRC32(c), Pub559 final-return rule; original source and guide controls, unknown historical facts retained, formula/table and human qualification separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual separate-owner health deductions constrained by each owner income in ordered credit, IRA and QBI replays;2025 zero specified advances and2026 full repayment", revision: "IRC162(l), Reg1.162(l)-1/1.199A-3 and RevProc2014-41; derived source and private review controls, binding joint2025 repayment ownership and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Actual claimant timely work-authorized SSNs, separate nonresident histories and joint election, either-spouse childless age/death, and nonjoint QSS phase-out threshold", revision: "Final2025 Rules1/2/4/11 and IRC32; original source/guide checks and literal controls, historical omissions unverified, other EIC requirements and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.170A-8", section: "Actual2025 current and prior other-charity share one B capacity; current public capital property remains unreduced by its30% cap", revision: "Historical2025 IRC170(B), final2025 Pub526 and Reg1.170A-10; published current-source reservation and derived prior controls,2026 carry methods and human qualification remain separate", retrievedAt: "2026-10-25" },
@@ -150,11 +151,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.104-law-integration-draft",
+    ruleVersion: "2026.105-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p596", section: "Actual claimant qualifying-child restriction with or without a child; separate childless dependency, applicable-year U.S. home and extended military duty sources", revision: "Final2025 Rules10/12/13/14, IRC32(c), Pub559 final-return rule; original source and guide controls, unknown historical facts retained, formula/table and human qualification separate", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.170A-10", section: "Actual 2026 explicit nonitemized current/prior ordinary category carry, current-before-prior FIFO, original fifth-year expiry and shared B/D capacity", revision: "IRC170(B)/(C)/(D)/(G)/(p), final2025 Pub526 and derived 2026 limits; exact source/category/history conservation, prior-C offset, itemized floor, NOL and partial mixed media remain separate", retrievedAt: "2026-10-26" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual 2026 current other-recipient capital gifts share the aggregate B ceiling remaining after other current B gifts", revision: "IRC170(b)(1)(B)/(D)/(G)/(I); exact source-derived controls preserve 2025, final selection and original carry; prior-category methods and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual separate-owner health deductions constrained by each owner income in ordered credit, IRA and QBI replays;2025 zero specified advances and2026 full repayment", revision: "IRC162(l), Reg1.162(l)-1/1.199A-3 and RevProc2014-41; derived source and private review controls, binding joint2025 repayment ownership and human qualification remain separate", retrievedAt: "2026-10-26" },

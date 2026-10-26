@@ -23,7 +23,8 @@ function credit(input: ReturnType<typeof source>) {
   return required(calculateFederalTax(TaxYearInputSchema.parse(input)).allLines.find(line => line.form === '1040' && line.line === '27a')).value.toFixed();
 }
 function packet(joint = false) {
-  return {sourceTaxYear:2025,sourceReference:'Actual claimant residency and identification records',sourceFactsConfirmed:true,primaryNonresidentAlienDuringYear:false,...(joint ? {spouseNonresidentAlienDuringYear:false} : {})};
+  const childless = { mainHomeInUnitedStatesMoreThanHalfYear: true, countedMilitaryDutyOutsideUnitedStates: false, qualifyingChildOfAnotherTaxpayer: false };
+  return {sourceTaxYear:2025,sourceReference:'Actual claimant residency and identification records',sourceFactsConfirmed:true,primaryNonresidentAlienDuringYear:false,primaryChildless:{...childless},...(joint ? {spouseNonresidentAlienDuringYear:false,spouseChildless:{...childless}} : {})};
 }
 
 describe('actual EIC claimant eligibility', () => {

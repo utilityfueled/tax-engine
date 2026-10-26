@@ -3397,6 +3397,21 @@ export const IraDeductionWorksheetSchema = z.object({
   spouseAge50OrOlder: z.boolean().optional(),
 });
 
+/** Original childless claimant answers under Pub596 Rules12–14; no defaults. */
+const EicChildlessClaimantSchema = z.object({
+  mainHomeInUnitedStatesMoreThanHalfYear: z.boolean().optional(),
+  countedMilitaryDutyOutsideUnitedStates: z.boolean().optional(),
+  /** Preserved source spelling; the same actual fact also applies with children. */
+  qualifyingChildOfAnotherTaxpayer: z.boolean().optional(),
+  militaryDutySourceReference: z.string().optional(),
+  extendedActiveDutyOrderOver90DaysOrIndefinite: z.boolean().optional(),
+  dependentException: z.object({
+    sourceReference: z.string().optional(),
+    allPotentialClaimantsNotRequiredToFile: z.boolean().optional(),
+    allPotentialClaimantsDidNotFileOrRefundOnly: z.boolean().optional(),
+  }).optional(),
+});
+
 export const EicConfigSchema = z.object({
   /** Actual claimant facts for IRC32. Omission preserves unknown historical sources. */
   claimantEligibility: z.object({
@@ -3407,6 +3422,11 @@ export const EicConfigSchema = z.object({
     spouseNonresidentAlienDuringYear: z.boolean().optional(),
     /** Actual valid IRC6013(g)/(h) election, not an inferred residency answer. */
     residentJointElection: z.boolean().optional(),
+    /** Pub596 Rule10/13 applies whether or not the claimant has a child. */
+    primaryQualifyingChildOfAnotherTaxpayer: z.boolean().optional(),
+    spouseQualifyingChildOfAnotherTaxpayer: z.boolean().optional(),
+    primaryChildless: EicChildlessClaimantSchema.optional(),
+    spouseChildless: EicChildlessClaimantSchema.optional(),
   }).optional(),
   /** Whether the MFS filer qualifies for the separated-spouse EIC exception
    *  (lived apart from spouse for the last 6 months of the year + qualifying child) */

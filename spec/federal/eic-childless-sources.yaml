@@ -1,0 +1,86 @@
+form: "EIC childless source requirements"
+fullName: "Actual dependency and main-home claimant facts"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p596"
+notes: |
+  Refreshed2026-10-26 UTC: Pub596 Rules10/12/13/14 and IRC32(c)(1)(A)(ii)(I)/(III),
+  (B),(4) require actual dependency, qualifying-child-of-another and United
+  States main-home facts. Both joint filers must satisfy these requirements;
+  the age rule's either-spouse convention does not apply to them.
+  Existing standard-deduction dependency answers are actual shared sources,
+  not default values. A known claimable dependent is ineligible unless the
+  actual Rule12 exception establishes that every potential claimant was not
+  required to file and did not file or filed solely for withholding/estimated
+  tax refund. A claimable-dependent answer is not a qualifying-child answer.
+  The same qualifying-child-of-another bar applies under Rule10 when the filer
+  has their own qualifying child. Its actual question is collected for every
+  relevant claimant; it is not conditional on the childless route.
+  A rule-specific main-home answer is separate from general residency months.
+  The United States means50states/DC, excluding Puerto Rico/territories.
+  Military time outside the United States may be counted only with actual
+  extended-active-duty evidence: order for more than90days or indefinite.
+  Do not require90days actually served if the qualifying order existed.
+  Pub559 EIC and IRC443(a)(2)/Reg1.443-1(a)(2) permit a deceased claimant's
+  short final year. This package consumes the source's applicable-period
+  main-home answer and never invents183days or a joint deceased-period rule.
+  Omitted legacy2025 packets remain unverified; supplied claimant packets and
+  potential positive2026 claims require actual answers. Known negative sources
+  remain effective. Unknown and explicit false are distinct. Other EIC child,
+  income/table and recertification methods and filing qualification remain
+  separate. No proposed Schedule3-A rule is implemented.
+lines:
+  - line: "dependency"
+    description: "Actual childless dependency and narrow filing exception"
+    formula: "Zero for a known claimable dependent absent actual complete Rule12 exception; do not infer missing exception or dependency facts"
+    irsRef: "IRC32(c)(1)(A)(ii)(III); Pub596 Rule12"
+    testRef: "tests/engine/eic-childless-sources.test.ts::uses actual dependency and the separately confirmed filing exception"
+  - line: "otherChild"
+    description: "Claimant cannot be another taxpayer's qualifying child"
+    formula: "Zero if either relevant claimant is actually the EIC qualifying child of another taxpayer, after the applicable filing exception, regardless of whether the claimant has a child"
+    irsRef: "IRC32(c)(1)(B); Pub596 Rules10/13"
+    testRef: "tests/engine/eic-childless-sources.test.ts::keeps another taxpayers qualifying child separate from dependency"
+  - line: "withChildRestriction"
+    description: "Having a qualifying child does not remove the claimant restriction"
+    formula: "Known claimant qualifying-child status gives zero even with one qualifying child and positive earned income; missing actual status cannot establish eligibility"
+    irsRef: "IRC32(c)(1)(B); Pub596 Rule10 and Example5 under Rule9"
+    testRef: "tests/engine/eic-childless-sources.test.ts::applies the claimant restriction even when the filer has a qualifying child"
+  - line: "abode"
+    description: "Both relevant main homes must satisfy the actual U.S. period rule"
+    formula: "Require each relevant main-home answer; general residency months never supplies it"
+    irsRef: "IRC32(c)(1)(A)(ii)(I); Pub596 Rule14; Pub559 EIC"
+    testRef: "tests/engine/eic-childless-sources.test.ts::requires both actual main homes without inferring a day count"
+  - line: "military"
+    description: "Actual extended active duty may count in the main-home answer"
+    formula: "Count outside-US military time only with actual qualifying-order source confirmation; unknown order is not affirmative eligibility"
+    irsRef: "IRC32(c)(4); Pub596 Rule14 and extended-active-duty definition"
+    testRef: "tests/engine/eic-childless-sources.test.ts::requires actual military evidence for an answer that counts foreign duty"
+  - line: "unknowns"
+    description: "Known restrictions and unknown historical sources stay distinct"
+    formula: "Apply known dependent restriction without manufacturing an exception; require actual positive2026 answers; retain absent legacy2025 sources as unverified"
+    irsRef: "Pub596 Rules12–14; source completeness boundary"
+    testRef: "tests/engine/eic-childless-sources.test.ts::preserves historical unknowns and requires actual positive childless sources"
+  - line: "guided"
+    description: "Actual household source answers reach the canonical return"
+    formula: "Forward each relevant claimant's source answers and existing dependency facts; nested source or household edits revoke confirmation"
+    irsRef: "Pub596 Rules12–14; original source binding"
+    testRef: "tests/guided-interview/guided-eic-childless-sources.test.ts::binds both childless claimant sources through the actual guide"
+  - line: "controls"
+    description: "Reachable childless source controls preserve blank, false and true"
+    formula: "Collect actual answers and conditional military/dependency evidence without affirmative defaults"
+    irsRef: "Pub596 Rules12–14; source intake"
+    testRef: "tests/apps/web/eic-childless-source-interactions.test.tsx::collects childless source and exception answers without inventing them"
+  - line: "withChildGuide"
+    description: "Actual Rule10 answers remain required with an EIC qualifying child"
+    formula: "Forward actual general claimant answers; an explicitly cleared new answer cannot revive a preserved earlier answer"
+    irsRef: "IRC32(c)(1)(B); Pub596 Rule10; actual source preservation"
+    testRef: "tests/guided-interview/guided-eic-childless-sources.test.ts::preserves general claimant answers with an EIC qualifying child"
+  - line: "withChildControls"
+    description: "Rule10 source controls remain reachable with an EIC qualifying child"
+    formula: "Show qualifying-child-of-another questions for every relevant filer, independent of the childless home controls; edits revoke confirmation"
+    irsRef: "Pub596 Rules10/13; source intake"
+    testRef: "tests/apps/web/eic-childless-source-interactions.test.tsx::shows the claimant restriction when the filer has a qualifying child"
+  - line: "persistence"
+    description: "Local saved childless source records survive reload"
+    formula: "Both viewport cases preserve unknown versus false and revoke stale confirmation without source POST requests"
+    irsRef: "Application source privacy and persistence contract"
+    testRef: "apps/web/tests/guided-eic-childless-sources.spec.ts::preserves childless eligibility sources and local privacy"

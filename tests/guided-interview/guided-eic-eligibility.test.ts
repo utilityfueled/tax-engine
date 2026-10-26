@@ -9,12 +9,13 @@ import { completePersonalInfo, completeW2Entry, startCompleteInterview } from '.
 
 function required<T>(value: T | null | undefined): T { if (value == null) throw new Error("Missing synthetic source"); return value; }
 function fixture() {
+  const childless = { mainHomeInUnitedStatesMoreThanHalfYear: true, countedMilitaryDutyOutsideUnitedStates: false, qualifyingChildOfAnotherTaxpayer: false };
   const state = startCompleteInterview({ filingStatus: 'mfj', incomeTypes: ['w2-wages'], lifeEvents: [], stateCode: null });
   state.sectionData['personal-info'] = {
     ...structuredClone(completePersonalInfo), dateOfBirth: '2002-02-01',
     spouse: { ...required(completePersonalInfo.spouse), dateOfBirth: '1998-02-01' },
     eicClaimantEligibility: { sourceTaxYear: '2025', sourceReference: 'Actual claimant records', sourceFactsConfirmed: true,
-      primaryNonresidentAlienDuringYear: false, spouseNonresidentAlienDuringYear: false },
+      primaryNonresidentAlienDuringYear: false, spouseNonresidentAlienDuringYear: false, primaryChildless: { ...childless }, spouseChildless: { ...childless } },
   };
   state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '10000', socialSecurityWages: '10000', socialSecurityWithheld: '620', medicareWages: '10000', medicareWithheld: '145' }] };
   return state;

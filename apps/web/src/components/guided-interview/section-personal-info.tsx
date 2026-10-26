@@ -420,7 +420,7 @@ export function SectionPersonalInfo({
           </div>
         )}
         <StandardDeductionSourceDetails data={current.standardDeductionFacts} filingStatus={filingStatus} onChange={standardDeductionFacts => onDataChange({ ...current, standardDeductionFacts })} />
-        <EicClaimantSourceDetails data={current.eicClaimantEligibility} filingStatus={filingStatus} onChange={eicClaimantEligibility => onDataChange({ ...current, eicClaimantEligibility })} />
+        <EicClaimantSourceDetails data={current.eicClaimantEligibility} filingStatus={filingStatus} childless={!dependents.some(entry => entry.qualifiesForEIC === true)} primaryDependent={current.standardDeductionFacts?.primaryCanBeClaimedAsDependent} spouseDependent={current.standardDeductionFacts?.spouseCanBeClaimedAsDependent} onChange={eicClaimantEligibility => onDataChange({ ...current, eicClaimantEligibility })} />
         {claimsDependentCredit && <fieldset className="guided-fieldset"><legend className="guided-fieldset-legend">Dependent credit worksheet</legend>
           {dependents.some((entry) => entry.qualifiesForCTC) && <BooleanFact label="Were you a bona fide resident of Puerto Rico during the tax year?" value={current.childTaxCredit?.bonaFidePuertoRicoResident} onChange={(value) => onDataChange({ ...current, childTaxCredit: { ...current.childTaxCredit, bonaFidePuertoRicoResident: value } })} />}
           <CurrencyField label="Puerto Rico income excluded from federal income" hint="Schedule 8812 line 2a. Enter the actual exclusion, including zero." value={current.childTaxCredit?.puertoRicoExcludedIncome ?? ""} onChange={(value) => onDataChange({ ...current, childTaxCredit: { ...current.childTaxCredit, puertoRicoExcludedIncome: value } })} />

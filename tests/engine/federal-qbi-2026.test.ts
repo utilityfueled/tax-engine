@@ -19,6 +19,7 @@ describe("2026 QBI minimum integration",()=>{
     input.eic = { mfsEligible: false, primaryIsFullTimeStudent: false, claimantEligibility: {
       sourceTaxYear: 2026, sourceReference: "Synthetic claimant identity and residency records",
       sourceFactsConfirmed: true, primaryNonresidentAlienDuringYear: false,
+      primaryChildless: { mainHomeInUnitedStatesMoreThanHalfYear: true, countedMilitaryDutyOutsideUnitedStates: false, qualifyingChildOfAnotherTaxpayer: false },
     } };
     const r=calculateFederalTax(input);
     expect(r.form8995?.qbiDeduction.toString()).toBe("400");

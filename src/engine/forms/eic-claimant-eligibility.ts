@@ -10,11 +10,42 @@ export type EicClaimantInput = Pick<TaxYearInput, "standardDeductionFacts"> & {
   taxpayer: Pick<TaxYearInput["taxpayer"], "taxYear" | "filingStatus"> & { primary: Claimant; spouse?: Claimant };
 };
 export interface EicClaimantEligibilityResult {
-  /** Covers only these claimant SSN, residency and relevant age source checks. */
+  /** Covers these claimant sources, including relevant childless requirements. */
   sourceFactsComplete: boolean;
   childlessAgeEligible: boolean | undefined;
   disqualificationReason?: string;
   lines: CalculatedLine[];
+}
+
+type ChildlessFacts = NonNullable<NonNullable<NonNullable<TaxYearInput["eic"]>["claimantEligibility"]>["primaryChildless"]>;
+
+function childlessRestriction(facts: ChildlessFacts | undefined, dependent: boolean | undefined, strict: boolean, who: string): string | undefined {
+  const exception = facts?.dependentException;
+  if (exception !== undefined && (!exception.sourceReference?.trim()
+    || typeof exception.allPotentialClaimantsNotRequiredToFile !== "boolean"
+    || typeof exception.allPotentialClaimantsDidNotFileOrRefundOnly !== "boolean")) {
+    throw new Error(`EIC ${who} dependency exception needs actual potential-claimant filing records and both known answers`);
+  }
+  if (strict && typeof dependent !== "boolean") throw new Error(`EIC ${who} dependency status is unknown`);
+  if (strict && typeof facts?.mainHomeInUnitedStatesMoreThanHalfYear !== "boolean") throw new Error(`EIC ${who} main-home answer is unknown for the applicable taxable year`);
+  if (strict && typeof facts?.countedMilitaryDutyOutsideUnitedStates !== "boolean") throw new Error(`EIC ${who} military time counted in the main-home answer is unknown`);
+  if (facts?.countedMilitaryDutyOutsideUnitedStates === true && (!facts.militaryDutySourceReference?.trim()
+    || facts.extendedActiveDutyOrderOver90DaysOrIndefinite !== true)) {
+    throw new Error(`EIC ${who} counted foreign military time requires an actual extended active duty order source for more than 90 days or indefinite duty`);
+  }
+  if (dependent === true && !(exception?.allPotentialClaimantsNotRequiredToFile === true
+    && exception.allPotentialClaimantsDidNotFileOrRefundOnly === true)) {
+    return `Childless ${who} claimant can be claimed as a dependent and does not meet the actual filing exception (Pub596 Rule12)`;
+  }
+  if (facts?.mainHomeInUnitedStatesMoreThanHalfYear === false) return `Childless ${who} claimant's main home does not meet the U.S. applicable-year requirement (Pub596 Rule14)`;
+  return undefined;
+}
+
+function otherTaxpayerChild(current: boolean | undefined, preserved: boolean | undefined, strict: boolean, who: string): boolean | undefined {
+  if (current !== undefined && preserved !== undefined && current !== preserved) throw new Error(`EIC ${who} qualifying-child source answers conflict`);
+  const value = current ?? preserved;
+  if (strict && typeof value !== "boolean") throw new Error(`EIC ${who} qualifying child of another taxpayer answer is unknown`);
+  return value;
 }
 
 function date(value: string | undefined, label: string): Date {
@@ -59,6 +90,8 @@ export function calculateEicClaimantEligibility(input: EicClaimantInput, childle
       reason = "Each claimant, including both joint filers, must have a timely employment-valid SSN (Pub596 Rule2)";
     } else if (primaryKnownNonresident === true && (!joint || standard?.residentJointElection === false)) {
       reason = "A nonresident claimant requires a valid joint resident election (IRC32(c)(1)(D); Pub596 Rule4)";
+    } else if (childless && (standard?.primaryCanBeClaimedAsDependent === true || (joint && standard?.spouseCanBeClaimedAsDependent === true))) {
+      reason = "A childless claimant can be claimed as a dependent; no actual filing exception has been supplied (Pub596 Rule12)";
     } else if (childless && standard?.primaryDeathDate !== undefined && (!joint || standard.spouseDeathDate !== undefined)) {
       const primary = meetsAgeTest(taxpayer.primary.dateOfBirth, standard.primaryDeathDate, taxpayer.taxYear, true, "primary");
       const spouse = joint && taxpayer.spouse ? meetsAgeTest(taxpayer.spouse.dateOfBirth, standard.spouseDeathDate, taxpayer.taxYear, true, "spouse") : false;
@@ -77,6 +110,8 @@ export function calculateEicClaimantEligibility(input: EicClaimantInput, childle
     if (typeof facts.primaryNonresidentAlienDuringYear !== "boolean" || (joint && typeof facts.spouseNonresidentAlienDuringYear !== "boolean")) throw new Error("EIC nonresident history is unknown for a required claimant");
   }
   if (!joint && facts?.spouseNonresidentAlienDuringYear !== undefined) throw new Error("EIC spouse claimant sources require a joint return");
+  if (!joint && facts?.spouseChildless !== undefined) throw new Error("EIC spouse childless sources require a joint return");
+  if (!joint && facts?.spouseQualifyingChildOfAnotherTaxpayer !== undefined) throw new Error("EIC spouse qualifying-child source requires a joint return");
   if (facts?.primaryNonresidentAlienDuringYear !== undefined && primaryKnownNonresident !== undefined && facts.primaryNonresidentAlienDuringYear !== primaryKnownNonresident) throw new Error("EIC primary nonresident history conflicts with the actual household residency facts");
   if (facts?.residentJointElection !== undefined && standard?.residentJointElection !== undefined && facts.residentJointElection !== standard.residentJointElection) throw new Error("EIC resident joint election must reconcile with the actual household election");
   const election = facts?.residentJointElection ?? standard?.residentJointElection;
@@ -87,10 +122,16 @@ export function calculateEicClaimantEligibility(input: EicClaimantInput, childle
   }
   const nonresident = (facts?.primaryNonresidentAlienDuringYear ?? primaryKnownNonresident) === true || (joint && facts?.spouseNonresidentAlienDuringYear === true);
   if (nonresident && joint && election === undefined) throw new Error("EIC nonresident claimant requires a known actual joint resident election answer");
-  const disqualificationReason = filers.some(filer => filer.employmentValidSsnIssuedByDueDate === false)
+  let disqualificationReason = filers.some(filer => filer.employmentValidSsnIssuedByDueDate === false)
     ? "Each claimant, including both joint filers, must have a timely employment-valid SSN (Pub596 Rule2)"
     : nonresident && (!joint || election !== true)
       ? "A nonresident claimant requires a valid joint resident election (IRC32(c)(1)(D); Pub596 Rule4)" : undefined;
+
+  // Rules10/13 share the same claimant restriction, including a filer who has
+  // their own qualifying child. Preserve/reconcile the earlier source spelling.
+  const primaryOtherChild = otherTaxpayerChild(facts?.primaryQualifyingChildOfAnotherTaxpayer, facts?.primaryChildless?.qualifyingChildOfAnotherTaxpayer, strict, "primary");
+  const spouseOtherChild = joint ? otherTaxpayerChild(facts?.spouseQualifyingChildOfAnotherTaxpayer, facts?.spouseChildless?.qualifyingChildOfAnotherTaxpayer, strict, "spouse") : false;
+  if (primaryOtherChild || spouseOtherChild) disqualificationReason ??= "A claimant is another taxpayer's qualifying child (IRC32(c)(1)(B); Pub596 Rules10/13)";
 
   let childlessAgeEligible = true;
   if (childless) {
@@ -98,9 +139,14 @@ export function calculateEicClaimantEligibility(input: EicClaimantInput, childle
     const primary = meetsAgeTest(taxpayer.primary.dateOfBirth, standard?.primaryDeathDate, taxpayer.taxYear, strict, "primary");
     const spouse = joint && taxpayer.spouse ? meetsAgeTest(taxpayer.spouse.dateOfBirth, standard?.spouseDeathDate, taxpayer.taxYear, strict, "spouse") : false;
     childlessAgeEligible = primary || spouse;
+    // Both filers satisfy Rules12–14. The either-spouse age rule does not
+    // substitute for either person's own dependency or main-home facts.
+    const primaryRestriction = childlessRestriction(facts?.primaryChildless, standard?.primaryCanBeClaimedAsDependent, strict, "primary");
+    const spouseRestriction = joint ? childlessRestriction(facts?.spouseChildless, standard?.spouseCanBeClaimedAsDependent, strict, "spouse") : undefined;
+    disqualificationReason ??= primaryRestriction ?? spouseRestriction;
   }
   const audit = new AuditTrail();
-  audit.record("EIC", "claimantSources", "Claimant SSN, residency and age source checks", new Decimal(strict ? 1 : 0),
+  audit.record("EIC", "claimantSources", "Claimant SSN, residency and applicable childless source checks", new Decimal(strict ? 1 : 0),
     strict ? "Actual claimant sources reconciled; other EIC eligibility rules remain separate" : "Historical claimant source completeness unverified; known source restrictions applied", {
       "Joint claimant SSNs required": joint ? "Yes" : "No",
       "Known claimant restriction": disqualificationReason ? "Yes" : "No",

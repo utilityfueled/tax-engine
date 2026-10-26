@@ -2,12 +2,13 @@
 import { expect, test } from '@playwright/test';
 import { taxpayerFacts2025 } from './guided-fixtures';
 
+const childless = { mainHomeInUnitedStatesMoreThanHalfYear: true, countedMilitaryDutyOutsideUnitedStates: false, qualifyingChildOfAnotherTaxpayer: false };
 const personal = { ...taxpayerFacts2025, firstName: 'Jordan', ssn: '111-22-3333', dateOfBirth: '2002-02-01',
   employmentValidSsnIssuedByDueDate: true, tinIssuedByDueDate: true, livedWithSpouseAtAnyTimeDuringYear: true,
   spouse: { firstName: 'Taylor', lastName: 'Example', ssn: '222-33-4444', dateOfBirth: '1998-02-01', usResidencyMonths: '12', employmentValidSsnIssuedByDueDate: true, tinIssuedByDueDate: true },
   standardDeductionFacts: { ...taxpayerFacts2025.standardDeductionFacts, spouseBlind: false, spouseCanBeClaimedAsDependent: false, spouseDeceased: false },
   eicClaimantEligibility: { sourceTaxYear: '2025', sourceReference: 'synthetic-private-eic-source', sourceFactsConfirmed: true,
-    primaryNonresidentAlienDuringYear: false, spouseNonresidentAlienDuringYear: false } };
+    primaryNonresidentAlienDuringYear: false, spouseNonresidentAlienDuringYear: false, primaryChildless: { ...childless }, spouseChildless: { ...childless } } };
 const w2 = { employerName: 'Synthetic EIC employer', employerEin: '12-3456789', accountHolder: 'primary', wages: '10000', federalWithheld: '0',
   socialSecurityWages: '10000', socialSecurityTips: '0', socialSecurityWithheld: '620', medicareWages: '10000', medicareWithheld: '145',
   box10DependentCareBenefits: '0', box12CodeW: '0', stateTaxReporting: 'none' };
