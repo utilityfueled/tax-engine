@@ -3261,13 +3261,24 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       "Line 5": eicNetCapitalGain, "Line 6": eicBusinessCapitalGain,
     });
 
+  const eicTaxExemptInterest = taxExemptInterest.plus(form8814?.totalTaxExemptInterest ?? new Decimal(0));
+  const eicChildOrdinaryIncome = form8814IncomeCharacter.eicOrdinaryInvestmentIncome;
+  audit.record("EIC Investment Income Worksheet", "2", "Parent and child tax-exempt interest", eicTaxExemptInterest,
+    "Form 1040 line 2a plus each elected child's Form 8814 line 1b", {
+      "Parent exempt interest": taxExemptInterest,
+      "Child exempt interest": form8814?.totalTaxExemptInterest ?? new Decimal(0),
+    });
+  audit.record("EIC Investment Income Worksheet", "4", "Child ordinary investment income", eicChildOrdinaryIncome,
+    "Child Form 8814 line 12 after each applicable Publication 596 Worksheet 2 Alaska allocation");
+
   // Remaining investment-income components are kept separate from capital gain.
   const eicInvestmentIncome = input.eic?.investmentIncomeOverride !== undefined
     ? d(input.eic.investmentIncomeOverride)
     : sum(
         totalTaxableInterest,
-        taxExemptInterest,
+        eicTaxExemptInterest,
         totalDividends,
+        eicChildOrdinaryIncome,
         eicInvestmentCapitalGain,
         Decimal.max(new Decimal(0), adjustedScheduleETotal),
       );
