@@ -17,6 +17,17 @@ export const RoyaltyPropertySourcesSchema = z.object({
     currentYearExpensesComplete: fact,
     interestExpense: amount, depreciationExpense: amount, depletionExpense: amount, otherExpenses: amount,
     priorUnallowedExpenses: amount,
+    paTreatment: z.object({
+      sourceTaxYear: z.number().int().optional(), sourceReference: text, sourceFactsConfirmed: fact,
+      accountHolder: owner, propertyType: z.enum(['copyright', 'patent', 'nil-rights', 'nonoperating-mineral']).optional(),
+      ownerFullYearPAResident: fact, paIncomeClass: z.enum(['royalties-copyrights-patents', 'business', 'capital-disposition']).optional(),
+      forProfit: fact, allExpenseClassificationsIncluded: fact,
+      expenses: z.array(z.object({
+        sourceId: text, paidDate: text, amountPaid: amount,
+        category: z.enum(['commissions', 'insurance', 'legal-professional', 'management-fees', 'property-production-taxes']).optional(),
+        relatesToRoyaltyRights: fact, surfaceRights: fact, netIncomeTax: fact,
+      })).optional(),
+    }).optional(),
     incomeSources: z.array(z.object({
       sourceIndex: z.number().int().nonnegative().optional(), allocatedGross: amount,
       original: z.object({

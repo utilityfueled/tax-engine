@@ -1,3 +1,4 @@
+import {preparePARoyaltyReview,assertPARoyaltyReview,type PreparedPARoyaltyReview} from "./pa-royalty-review-context.js";
 /**
  * Top-level orchestrator for filling a complete tax return as PDFs.
  * Fills all applicable forms and saves them to the output directory.
@@ -397,6 +398,7 @@ export interface FillReturnOptions {
   adoptionReview?: PreparedAdoptionReview;
   qbiLossReview?: PreparedQbiLossReview;
   scheduleEReview?: PreparedScheduleEReview;
+  paRoyaltyReview?: PreparedPARoyaltyReview;
   /** Actual EIC child records, validated before identifier redaction. */
   eicReview?: PreparedEicReview;
   /** Actual policy allocation and whole-return income, validated before redaction. */
@@ -424,6 +426,9 @@ export async function fillReturn(
   const scheduleEReview = input.royaltyPropertySources || options.scheduleEReview
     ? options.scheduleEReview ?? prepareScheduleEReview(input) : undefined;
   if (scheduleEReview) assertScheduleEReview(input, result, scheduleEReview);
+  const paRoyaltyReview = (input.royaltyPropertySources && result.stateReturns?.pennsylvania) || options.paRoyaltyReview
+    ? options.paRoyaltyReview ?? preparePARoyaltyReview(input) : undefined;
+  if (paRoyaltyReview) assertPARoyaltyReview(input,result,paRoyaltyReview);
   const eicReview = hasEicReviewSources(input) || options.eicReview
     ? options.eicReview ?? prepareEicReview(input) : undefined;
   const actualEicChildren = eicReview ? eicReviewChildren(eicReviewOriginalSourceInput(input, result, eicReview)) : undefined;

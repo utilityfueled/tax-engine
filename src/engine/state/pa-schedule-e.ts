@@ -5,6 +5,7 @@
  */
 
 import Decimal from "decimal.js";
+import { calculatePARoyaltyPropertySources, type PARoyaltyPropertyInput, type PARoyaltyPropertyResult } from "./pa-royalty-property-sources.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d } from "@/utils/decimal.js";
 import type {
@@ -19,6 +20,8 @@ import { calculatePARentalIncomeExpenses, type PARentalIncomeExpensesResult } fr
 
 export interface PAScheduleEInput {
   taxYear: number;
+  taxpayer?: PARoyaltyPropertyInput["taxpayer"];
+  royaltyPropertySources?: PARoyaltyPropertyInput["royaltyPropertySources"];
   filingStatus?: FilingStatus;
   rentalProperties?: RentalProperty[];
   form1099Misc?: Form1099Misc[];
@@ -28,10 +31,14 @@ export interface PAScheduleEInput {
 export type PAScheduleEPropertyResult = PARentalIncomeExpensesResult;
 
 export interface PAScheduleEResult {
+  taxYear: number;
   propertyGrossRents: Decimal;
   propertyNetIncome: Decimal;
   miscRents: Decimal;
   miscRoyalties: Decimal;
+  directRoyaltyExpenses: Decimal;
+  directRoyaltyNetIncome: Decimal;
+  royaltyProperties: PARoyaltyPropertyResult[];
   passThroughNetIncome: Decimal;
   taxpayerNetRentalRoyaltyIncome: Decimal;
   spouseNetRentalRoyaltyIncome: Decimal;
@@ -57,6 +64,12 @@ export function calculatePAScheduleE(input: PAScheduleEInput): PAScheduleEResult
   const rentalProperties = input.rentalProperties ?? [];
   const form1099Misc = input.form1099Misc ?? [];
   const scheduleK1 = input.scheduleK1 ?? [];
+  if (input.royaltyPropertySources && (input.taxpayer?.taxYear !== input.taxYear
+    || (input.filingStatus !== undefined && input.taxpayer?.filingStatus !== input.filingStatus))) {
+    throw new Error('PA royalty source return year and filing status must match');
+  }
+  const royalties = calculatePARoyaltyPropertySources({taxpayer:input.taxpayer, form1099Misc, royaltyPropertySources:input.royaltyPropertySources});
+  audit.merge(royalties.lines);
 
   const properties = rentalProperties.map((property) => {
     const worksheet = calculatePARentalIncomeExpenses(property, input.taxYear);
@@ -92,7 +105,7 @@ export function calculatePAScheduleE(input: PAScheduleEInput): PAScheduleEResult
     (acc, property) => acc.plus(property.grossRents),
     new Decimal(0),
   );
-  const totalAllowableExpenses = properties.reduce(
+  const rentalAllowableExpenses = properties.reduce(
     (acc, property) => acc.plus(property.allowableExpenses),
     new Decimal(0),
   );
@@ -105,10 +118,8 @@ export function calculatePAScheduleE(input: PAScheduleEInput): PAScheduleEResult
     (acc, form) => acc.plus(d(form.rents)),
     new Decimal(0),
   );
-  const miscRoyalties = form1099Misc.reduce(
-    (acc, form) => acc.plus(d(form.royalties)),
-    new Decimal(0),
-  );
+  const miscRoyalties = royalties.grossIncome;
+  const totalAllowableExpenses = rentalAllowableExpenses.plus(royalties.allowableExpenses);
   const passThroughTaxpayerIncome = scheduleK1.reduce((acc, k1) => (
     k1.accountHolder === "primary"
       ? acc.plus(getScheduleK1RentalRoyaltyAmount(k1))
@@ -139,8 +150,8 @@ export function calculatePAScheduleE(input: PAScheduleEInput): PAScheduleEResult
     "PA-Schedule-E",
     "2",
     "Allowable expenses for directly owned property",
-    totalAllowableExpenses,
-    "Sum of ordinary and necessary Schedule E expenses",
+    rentalAllowableExpenses,
+    "Sum of ordinary and necessary rental Schedule E expenses",
   );
   audit.record(
     "PA-Schedule-E",
@@ -154,7 +165,7 @@ export function calculatePAScheduleE(input: PAScheduleEInput): PAScheduleEResult
     "4",
     "Form 1099-MISC rents and royalties",
     miscRents.plus(miscRoyalties),
-    "Gross rents and royalties from Forms 1099-MISC",
+    "Gross rents and royalties from Forms 1099-MISC; actual royalty expenses are separately audited",
   );
   audit.record(
     "PA-Schedule-E",
@@ -166,24 +177,27 @@ export function calculatePAScheduleE(input: PAScheduleEInput): PAScheduleEResult
 
   const netRentalRoyaltyIncome = propertyNetIncome
     .plus(miscRents)
-    .plus(miscRoyalties)
+    .plus(royalties.netIncome)
     .plus(passThroughNetIncome);
 
   let taxpayerNetRentalRoyaltyIncome = netRentalRoyaltyIncome;
   let spouseNetRentalRoyaltyIncome = new Decimal(0);
   let reportableNetRentalRoyaltyIncome = netRentalRoyaltyIncome;
 
-  if (input.filingStatus === "married_filing_jointly") {
+  const filingStatus = input.taxpayer?.filingStatus ?? input.filingStatus;
+  if (filingStatus === "married_filing_jointly") {
     const primaryPropertyIncome = properties.reduce((total, property) => property.accountHolder === "primary" ? total.plus(property.netIncome) : total, new Decimal(0));
     const spousePropertyIncome = properties.reduce((total, property) => property.accountHolder === "spouse" ? total.plus(property.netIncome) : total, new Decimal(0));
+    const primaryRoyalties = royalties.properties.reduce((total,row)=>row.accountHolder==='primary'?total.plus(row.netIncome):total,new Decimal(0));
+    const spouseRoyalties = royalties.properties.reduce((total,row)=>row.accountHolder==='spouse'?total.plus(row.netIncome):total,new Decimal(0));
     const jointIncomeShare = propertyNetIncome.minus(primaryPropertyIncome).minus(spousePropertyIncome)
       .plus(miscRents)
-      .plus(miscRoyalties)
+      .plus(royalties.netIncome.minus(primaryRoyalties).minus(spouseRoyalties))
       .plus(passThroughJointIncome)
       .dividedBy(2);
 
-    taxpayerNetRentalRoyaltyIncome = passThroughTaxpayerIncome.plus(primaryPropertyIncome).plus(jointIncomeShare);
-    spouseNetRentalRoyaltyIncome = passThroughSpouseIncome.plus(spousePropertyIncome).plus(jointIncomeShare);
+    taxpayerNetRentalRoyaltyIncome = passThroughTaxpayerIncome.plus(primaryPropertyIncome).plus(primaryRoyalties).plus(jointIncomeShare);
+    spouseNetRentalRoyaltyIncome = passThroughSpouseIncome.plus(spousePropertyIncome).plus(spouseRoyalties).plus(jointIncomeShare);
 
     const taxpayerPositive = taxpayerNetRentalRoyaltyIncome.greaterThan(0);
     const spousePositive = spouseNetRentalRoyaltyIncome.greaterThan(0);
@@ -223,14 +237,18 @@ export function calculatePAScheduleE(input: PAScheduleEInput): PAScheduleEResult
     "6",
     "Net PA Schedule E income (loss)",
     netRentalRoyaltyIncome,
-    "Line 3 plus Line 4 plus Line 5",
+    "Rental net plus MISC rents plus actual PA royalty net plus pass-through income",
   );
 
   return {
+    taxYear:input.taxYear,
     propertyGrossRents,
     propertyNetIncome,
     miscRents,
     miscRoyalties,
+    directRoyaltyExpenses:royalties.allowableExpenses,
+    directRoyaltyNetIncome:royalties.netIncome,
+    royaltyProperties:royalties.properties,
     passThroughNetIncome,
     taxpayerNetRentalRoyaltyIncome,
     spouseNetRentalRoyaltyIncome,

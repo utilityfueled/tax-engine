@@ -107,15 +107,15 @@ describe("Pennsylvania Schedule E packet reference summary", () => {
     expect(summary.title).toBe("Pennsylvania Schedule E Rental and Royalty Reference Summary");
     expect(summary.warningLabel).toBe("REFERENCE SUMMARY ONLY");
     expect(summary.totals).toContainEqual({
-      label: "Line 1 gross rents from directly owned property",
+      label: "Gross rents from directly owned rental property",
       value: "18000",
     });
     expect(summary.totals).toContainEqual({
-      label: "Line 2 allowable expenses for directly owned property",
+      label: "Total allowable rental and royalty expenses",
       value: "13175",
     });
     expect(summary.totals).toContainEqual({
-      label: "Line 4 Form 1099-MISC rents and royalties",
+      label: "Gross Form 1099-MISC rents and royalties",
       value: "3200",
     });
     expect(summary.totals).toContainEqual({

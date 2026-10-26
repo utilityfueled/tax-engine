@@ -1,3 +1,4 @@
+import { calculatePARoyaltyPropertySources } from "./pa-royalty-property-sources.js";
 /**
  * Pennsylvania Personal Income Tax Return Orchestrator
  * Spec: spec/state/pa-orchestrator.yaml
@@ -1100,6 +1101,8 @@ function calculateResidentPAScheduleE(
       (property) => !businessRentals.has(property),
     ),
     form1099Misc: input.form1099Misc,
+    taxpayer: input.taxpayer,
+    royaltyPropertySources: input.royaltyPropertySources,
     scheduleK1: [...input.scheduleK1, ...additionalScheduleK1],
   });
 }
@@ -1455,7 +1458,7 @@ export function calculatePAReturn(
   overrides: PAOrchestratorOverrides = {},
 ): PAOrchestratorResult {
   if (input.royaltyPropertySources !== undefined) {
-    throw new Error('PA royalty properties require their separate actual state classification, ownership and expense source method');
+    calculatePARoyaltyPropertySources(input);
   }
   const digitalCapitalInput = calculateDigitalAssetStateSources(input, "PA");
   const taxYear = input.taxpayer.taxYear;

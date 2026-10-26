@@ -1,3 +1,4 @@
+import {assertPdfExportAllowed,markReviewPdf} from "@/pdf/export-policy.js";
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
 import {
@@ -29,6 +30,7 @@ export interface PAScheduleEReferenceSummary {
   introduction: string;
   filingTrigger: string;
   totals: PAScheduleEReferenceSummaryLine[];
+  royaltyDetails: {title:string;lines:PAScheduleEReferenceSummaryLine[]}[];
 }
 
 function wrapText(text: string, font: PDFFont, size: number, maxWidth: number) {
@@ -88,7 +90,8 @@ function drawWrappedText(
 }
 
 export function shouldIncludePAScheduleEReferenceSummary(result: PAScheduleEResult) {
-  return result.properties.length > 0
+  return result.royaltyProperties.length > 0
+    || result.properties.length > 0
     || !result.miscRents.isZero()
     || !result.miscRoyalties.isZero()
     || !result.passThroughNetIncome.isZero()
@@ -99,13 +102,17 @@ export function buildPAScheduleEReferenceSummary(
   result: PAScheduleEResult,
 ): PAScheduleEReferenceSummary {
   const totals: PAScheduleEReferenceSummaryLine[] = [
+    { label: "Source tax year", value:String(result.taxYear) },
     { label: "Supported rental properties summarized", value: String(result.properties.length) },
-    { label: "Line 1 gross rents from directly owned property", value: result.propertyGrossRents.toString() },
-    { label: "Line 2 allowable expenses for directly owned property", value: result.totalAllowableExpenses.toString() },
-    { label: "Line 3 net income or loss from directly owned property", value: result.propertyNetIncome.toString() },
-    { label: "Line 4 Form 1099-MISC rents and royalties", value: result.miscRents.plus(result.miscRoyalties).toString() },
-    { label: "Line 5 pass-through rental and royalty income", value: result.passThroughNetIncome.toString() },
-    { label: "Line 6 combined Schedule E income or loss", value: result.netRentalRoyaltyIncome.toString() },
+    { label: "Gross rents from directly owned rental property", value: result.propertyGrossRents.toString() },
+    { label: "Total allowable rental and royalty expenses", value: result.totalAllowableExpenses.toString() },
+    { label: "Net income or loss from directly owned rental property", value: result.propertyNetIncome.toString() },
+    { label: "Gross Form 1099-MISC rents and royalties", value: result.miscRents.plus(result.miscRoyalties).toString() },
+    { label: "Pass-through rental and royalty income", value: result.passThroughNetIncome.toString() },
+    { label: "Combined Schedule E income or loss", value: result.netRentalRoyaltyIncome.toString() },
+    { label: "Actual royalty properties summarized", value:String(result.royaltyProperties.length) },
+    { label: "Actual PA royalty expenses", value:result.directRoyaltyExpenses.toFixed() },
+    { label: "Actual PA royalty net income or loss", value:result.directRoyaltyNetIncome.toFixed() },
     { label: "PA-40 Line 6 reportable net rental and royalty income", value: result.reportableNetRentalRoyaltyIncome.toString() },
   ];
 
@@ -131,6 +138,8 @@ export function buildPAScheduleEReferenceSummary(
     introduction: "This page summarizes the supported Pennsylvania Schedule E computation. It is not an official PA Schedule E filing copy.",
     filingTrigger: "Attach when a resident return includes supported rental-property, royalty, copyright, patent, or pass-through Schedule E activity, including zero-net property detail that still requires disclosure support in the packet.",
     totals,
+    royaltyDetails:result.royaltyProperties.map((property,index)=>({title:`Royalty property ${index+1} - ${property.accountHolder==='primary'?'Primary taxpayer':'Spouse'}`,
+      lines:property.lines.map(line=>({label:line.line.endsWith('surface-excluded')?'Excluded surface expenses (actual receipt amount)':`PA line ${line.line.split(':')[1]} - ${line.description}`,value:line.value.toFixed()}))})),
   };
 }
 
@@ -138,11 +147,12 @@ export async function fillPAScheduleEReference(
   result: PAScheduleEResult,
   outputDir: string,
 ) {
+  assertPdfExportAllowed(result.taxYear,result.taxYear);
   const doc = await PDFDocument.create();
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const regular = await doc.embedFont(StandardFonts.Helvetica);
   const summary = buildPAScheduleEReferenceSummary(result);
-  const page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+  let page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   let y = PAGE_HEIGHT - PAGE_MARGIN;
 
   y = drawWrappedText(page, summary.title, {
@@ -184,16 +194,42 @@ export async function fillPAScheduleEReference(
 
   y -= 16;
 
-  for (const total of summary.totals) {
-    y = drawWrappedText(page, `${total.label}: ${total.value}`, {
-      font: regular,
-      size: BODY_FONT_SIZE,
-      x: PAGE_MARGIN,
-      y,
-      maxWidth: PAGE_WIDTH - PAGE_MARGIN * 2,
-      lineHeight: 13,
+  const bodyWidth = PAGE_WIDTH - PAGE_MARGIN * 2;
+  const minimumY = PAGE_MARGIN + 12;
+  function continuedPage() {
+    page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+    y = PAGE_HEIGHT - PAGE_MARGIN;
+    y = drawWrappedText(page, `${summary.title} - continued`, {
+      font: bold, size: 13, x: PAGE_MARGIN, y, maxWidth: bodyWidth, lineHeight: 17,
+    });
+    y = drawWrappedText(page, summary.warningLabel, {
+      font: bold, size: 11, x: PAGE_MARGIN, y: y - 6,
+      maxWidth: bodyWidth, lineHeight: 15, color: WARNING_COLOR,
+    });
+    y -= 12;
+  }
+  function rowHeight(text: string, font: PDFFont) {
+    return wrapText(text, font, BODY_FONT_SIZE, bodyWidth).length * 13;
+  }
+  function row(label: string, value: string, heading = false) {
+    const text = heading ? label : `${label}: ${value}`;
+    const font = heading ? bold : regular;
+    if (y - rowHeight(text, font) < minimumY) continuedPage();
+    y = drawWrappedText(page, text, {
+      font, size: BODY_FONT_SIZE, x: PAGE_MARGIN, y,
+      maxWidth: bodyWidth, lineHeight: 13,
     });
   }
+  for (const total of summary.totals) row(total.label, total.value);
+  for (const property of summary.royaltyDetails) {
+    const blockHeight = 12 + rowHeight(property.title, bold)
+      + property.lines.reduce((height, line) => height + rowHeight(`${line.label}: ${line.value}`, regular), 0);
+    if (y - blockHeight < minimumY) continuedPage();
+    y -= 12;
+    row(property.title, '', true);
+    for (const line of property.lines) row(line.label, line.value);
+  }
+  await markReviewPdf(doc);
 
   await mkdir(outputDir, { recursive: true });
   const outputPath = join(outputDir, PA_SCHEDULE_E_REFERENCE_FILENAME);

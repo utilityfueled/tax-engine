@@ -1,18 +1,69 @@
-form: "PA Schedule E"
-fullName: "Actual royalty property state source boundary"
+form: "PA-Royalty-Property"
+fullName: "Actual Pennsylvania direct royalty property sources"
 taxYear: 2025
 irsReference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40e.pdf"
 retrievedAt: "2026-10-26"
 notes: |
-  PA separately classifies commercial enterprises, ownership, allowable expenses
-  and royalty situs. Federal source confirmation alone cannot establish those
-  state facts. Until the actual PA property method is implemented, the canonical
-  PA path must not silently discard an actual federal royalty-property ledger
-  and substitute the gross MISC amount. This guard is a remaining method, not
-  implementation or qualification of PA royalty expenses. Existing raw-input
-  treatment is outside this newly supplied source attachment.
+  Final2025 PA40E SectionII and the PA PIT Guide, Net Income from Rents,
+  Royalties, Copyrights and Patents, refreshed2026-10-26:
+  https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/net-income-loss-from-rents,-royalties,-copyrights-and-patents
+  Compute a separate PA property worksheet from original MISC gross and actual
+  receipts; never substitute the federal net. This method covers a confirmed
+  full-year PA resident owner's nonbusiness for-profit copyright, patent or
+  nonoperating mineral royalty property. Each owner is identified separately;
+  full-year residency for a spouse is not inferred from the primary address.
+  Each PA property confirmation binds the actual year, owner and property type.
+  Each expense classification binds the original receipt ID, date, category and
+  paid amount; changed, omitted or duplicate receipts reject. Ordinary necessary
+  current-year cash expenses only; no capital, personal/labor, reimbursed or
+  net-income-tax deduction. For mineral rights, surface taxes/insurance and
+  other surface costs are excluded; only actually identified subsurface costs
+  enter deductible categories. Missing classifications stay unknown.
+  Federal positive/zero property source validation remains required. Other
+  interest, depreciation, depletion, loss histories, NIL classification,
+  nonresident/part-year sourcing and other income classes remain separate
+  methods; they are not silently assigned zero or a resident allocation.
+  2026 pure calculation uses the separately sourced year under unchanged
+  statutory rules; final2026 form availability and filing remain unqualified.
+  The existing unconfirmed raw2025 preview contract is retained separately.
 lines:
   - line: "actual-property-source-boundary"
-    description: "Reject an unimplemented state-property attachment before gross-only calculation"
-    formula: "A supplied actual royalty-property ledger requires independent PA classification, ownership and expense sources; do not silently replace its net result with gross MISC royalties."
+    description: "Actual PA classification and owner source confirmation"
+    formula: "Supplied royalty property sources require their actual matching PA property record, full-year resident owner, for-profit/nonbusiness class and complete receipt classifications. Reject absent or stale data before state calculation."
     testRef: "tests/engine/state/pa-royalty-property-sources.test.ts::requires the PA property source method before using actual royalty ledgers"
+  - line: "2"
+    description: "Original gross royalties received"
+    formula: "For each actual owner's property, round the sum of conserved original MISC Box2 allocations to the nearest whole dollar; .50 rounds up. Preserve zero."
+    testRef: "tests/engine/state/pa-royalty-property-sources.test.ts::uses original gross and separately rounded PA expense lines"
+  - line: "6-9,14"
+    description: "Commissions, insurance, legal, management and taxes"
+    formula: "For each property and category sum actual allowed receipts using Decimal, then round that printed category once. Exclude actual mineral surface-right expenses and preserve their separately audited amount. No federal net or entered allowable subtotal is accepted."
+    testRef: "tests/engine/state/pa-royalty-property-sources.test.ts::excludes actual mineral surface expenses while retaining gross and allowed subsurface receipts"
+  - line: "19-21"
+    description: "Expenses and current property net"
+    formula: "Line19 = sum rounded allowed expense categories. Line20 = max(0,Line2-Line19); Line21 = max(0,Line19-Line2). Signed property net = Line20-Line21. No federal passive-loss carryover is deducted."
+    testRef: "tests/engine/state/pa-royalty-property-sources.test.ts::uses original gross and separately rounded PA expense lines"
+  - line: "23-25"
+    description: "Actual owner totals and PA40 transfer"
+    formula: "Add each actual owner's signed direct royalty net once to that owner's Class6 property and pass-through income. Do not halve an owned royalty into a historical joint preview bucket. One spouse's class loss cannot offset the other's positive class income."
+    testRef: "tests/engine/state/pa-royalty-property-sources.test.ts::keeps actual royalty owners separate from the other spouses class loss"
+  - line: "source-integrity"
+    description: "Original property and receipt reconciliation"
+    formula: "Validate matching property year/owner/type, every original receipt identity/category/date/Decimal amount, exactly one state classification per receipt and complete actual gross-source conservation. Reject forged current sources and unknown classification facts."
+    testRef: "tests/engine/state/pa-royalty-property-sources.test.ts::rejects missing stale duplicate and unsupported state facts without inventing amounts"
+  - line: "actual-household-status"
+    description: "The actual source household controls separate spouse totals"
+    formula: "Use the actual taxpayer filing status when the redundant schedule override is omitted. Reject a supplied conflicting override. The actual joint owner's positive income cannot absorb the other spouse's Class6 loss."
+    testRef: "tests/engine/state/pa-royalty-property-sources.test.ts::uses actual household status when the duplicate schedule status is omitted"
+  - line: "zero-and-year"
+    description: "Zero-net detail and independent source year"
+    formula: "Retain confirmed zero-net property detail and preserve missing state answers as undefined. Recompute matching2026 originals using actual dates and source revision without changing the return year or opening filing gates."
+    testRef: "tests/engine/state/pa-royalty-property-sources.test.ts::preserves zero net and requires the source year independently"
+  - line: "review-reference"
+    description: "Actual property detail and state calculation integrity in redacted review output"
+    formula: "Reference summary labels are internal amounts rather than false printed line numbers. Keep actual zero-net properties, each printed PA category and owner, source year, excluded surface receipts and gross/expense/net distinctions. Keep each property block together when paginating, without dropping rows; mark every page review-only. Bind the actual original PA calculation before redaction and reject changed retained state results before output access."
+    testRef: "tests/pdf/pa-royalty-property-review.test.ts::retains actual state property lines and zero net across review pages"
+  - line: "review-context"
+    description: "Original state sources survive render redaction without exposing private records"
+    formula: "A request-local prepared context derives the actual complete PA calculation and matches original or redacted input plus retained state result. Forged contexts, changed receipts or balanced retained state changes reject before I/O."
+    testRef: "tests/pdf/pa-royalty-property-review.test.ts::rejects stale PA sources and balanced state result changes before output"

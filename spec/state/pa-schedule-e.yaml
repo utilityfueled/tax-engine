@@ -4,6 +4,11 @@ taxYear: 2025
 reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/net-income-loss-from-rents,-royalties,-copyrights-and-patents"
 
 notes: |
+  The historical audit IDs1-6 below are internal summary entries, not the
+  printed PA40E SectionII line numbers. Actual property worksheets use their
+  own physical-line audit. Direct royalty sources follow
+  spec/state/pa-royalty-property-sources.yaml and add their separately computed
+  owner net once; actual PA expense categories and rounding never use federal net.
   Pennsylvania Schedule E computes Class 6 income for rents, royalties,
   copyrights, and patents. The Pennsylvania Personal Income Tax Guide states:
     - Allowable expenses include ordinary and necessary costs of producing,

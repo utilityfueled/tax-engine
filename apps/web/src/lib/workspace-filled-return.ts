@@ -1,3 +1,4 @@
+import {preparePARoyaltyReview} from "@/pdf/pa-royalty-review-context.js";
 import { hasInKindEducationReviewSources, prepareEducationReview } from "@/pdf/education-review-context.js";
 import { buildGuidedOhioOverlay, buildGuidedPennsylvaniaOverrides } from "./guided-state-engine-inputs";
 import "server-only";
@@ -625,6 +626,7 @@ export async function buildWorkspaceFilledReturnDownload(
     ? prepareCharitableReview(resolved.taxInput) : undefined;
   const adoptionReview = hasHistoricalAdoptionSources(resolved.taxInput) ? prepareAdoptionReview(resolved.taxInput) : undefined;
   const scheduleEReview = resolved.taxInput.royaltyPropertySources ? prepareScheduleEReview(resolved.taxInput) : undefined;
+  const paRoyaltyReview = resolved.taxInput.royaltyPropertySources && completeResult.stateReturns?.pennsylvania ? preparePARoyaltyReview(resolved.taxInput) : undefined;
   const qbiLossReview = resolved.taxInput.qbiLossSources ? prepareQbiLossReview(resolved.taxInput) : undefined;
   const eicReview = hasEicReviewSources(resolved.taxInput) ? prepareEicReview(resolved.taxInput) : undefined;
   const premiumTaxCreditReview = hasPremiumTaxCreditReviewSources(resolved.taxInput) ? preparePremiumTaxCreditReview(resolved.taxInput) : undefined;
@@ -644,6 +646,7 @@ export async function buildWorkspaceFilledReturnDownload(
       adoptionReview,
       qbiLossReview,
       scheduleEReview,
+      paRoyaltyReview,
       eicReview,
       premiumTaxCreditReview,
       educationReview,
