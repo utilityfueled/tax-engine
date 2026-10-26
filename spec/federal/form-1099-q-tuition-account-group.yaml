@@ -1,0 +1,59 @@
+form: "Form1099Q tuition account group"
+fullName: "Actual shared tuition benefits and multiple ordinary Coverdell account histories"
+taxYear: [2025, 2026]
+irsReference: "https://www.irs.gov/publications/p970"
+sources:
+  - "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+  - "https://uscode.house.gov/us/usc/119-118/t26/s530/"
+  - "https://www.irs.gov/irb/2016-07_IRB#NOT-2016-13"
+notes: |
+  Official research refreshed October26,2026. IRC529(c)(3)(B)(v)/(vi) and
+  530(d)(2)(C) require actual adjusted expenses and a supplied QTP/ESA allocation.
+  Pub970 chapter6 Worksheet6-3 completes PartI once for the beneficiary and
+  PartII for each actual Coverdell account. PartI G sums ordinary distributions;
+  H is min(1,F/G); account line5 is line4 times H; each account retains its own
+  basis and earnings. A supplied expense payment allocation does not override
+  that common tax ratio. Notice2016-13 separately forbids aggregating QTP
+  earnings ratios. Preserve each original statement, benefit and account history.
+  The existing worksheet is unchanged; this source validator accepts several
+  ordinary distinct ESA accounts and distinct prepaid QTP benefits linked to a
+  shared actual tuition expense. Every linked QTP and every ESA has an explicit
+  allocation, including actual zero. Conserve expenses, credit, provided benefits
+  and each original gross amount with Decimal before whole-dollar worksheet
+  calculations. No election, account basis or missing allocation is inferred.
+  Transfers, corrections, changed ownership, other categories and unresolved
+  education interpretations retain their own methods.2026 stays gated. Literal
+  controls are independent worksheet derivations, not published IRS examples.
+lines:
+  - line: "pooled-esa"
+    description: "Use one beneficiary ratio and separate actual ESA basis"
+    formula: "Two prepaid QTPs2500/1500 with earnings500/600 receive1000/500 expense and500/500 credit. Separate ESAs4000/2000 have actual basis3200/800, earnings800/1200 and total assigned expense4500. WorksheetH=.75, line5=3000/1500, exclusions600/900. QTP exclusions200/200 remain separate; total exclusion1900, taxable1200, credit exception300 and tax90."
+    testRef: "tests/engine/forms/form-1099-q-tuition-account-group.test.ts::uses the beneficiary ESA ratio across distinct tuition account histories"
+  - line: "shared-expense"
+    description: "Preserve each original benefit within one actual tuition expense"
+    formula: "Actual tuition8000 less assistance1000 and credit1000 leaves6000; original QTP benefits2500/1500 plus actual ESA allocations3000/1500 retain1200 taxable/90 tax. Moving500 actual expense from ESA to first QTP leavesESA4000/6000: rounded account expenses2667/1333, exclusions533/800; total taxable1267 and additional tax97. Reallocating within the ESA pool alone does not change the common ratio."
+    testRef: "tests/engine/forms/form-1099-q-tuition-account-group.test.ts::conserves each original benefit in a shared tuition expense"
+  - line: "source-conflicts"
+    description: "Reject missing or contradictory original account sources"
+    formula: "Reject missing/duplicate source-expense allocations, unlinked benefits, reused account identities, missing basis, wrong owner/year, credit or one-cent conservation errors and original capacity excess. Explicit zero and exact source decimals remain present."
+    testRef: "tests/engine/forms/form-1099-q-tuition-account-group.test.ts::rejects inconsistent shared tuition account sources"
+  - line: "canonical"
+    description: "Route source-derived amounts through the return once"
+    formula: "50000wages plus1200/1267 taxable earnings gives51200/51267AGI; additional education tax90/97. Preserve original withholding and the actual LLC source, no direct credit/tax override.2026 arithmetic is isolated while its public gate remains closed."
+    testRef: "tests/engine/education-tuition-account-group-return.test.ts::routes the actual tuition account group once"
+  - line: "guide"
+    description: "Keep all actual account histories and allocations in saved intake"
+    formula: "Four original accounts, two benefits, one expense, four allocations and two ESA basis histories survive save/reload; a changed source revokes confirmation and an omitted source remains unknown."
+    testRef: "tests/guided-interview/guided-tuition-account-group.test.ts::preserves shared tuition and separate ESA histories through saved guided state"
+  - line: "review"
+    description: "Bind all originals before physical and reference review output"
+    formula: "Shared expense and both account histories bind before PDF I/O; stale balanced basis edits reject. Physical5329 has1200income/300exception/90tax, private identifiers are absent, and all pages remain review-only."
+    testRef: "tests/pdf/form-1099-q-tuition-account-group.test.ts::binds the shared tuition account group before review output"
+  - line: "workspace"
+    description: "Reopen actual saved guided records as a private review packet"
+    formula: "Both distinct Coverdell worksheets, the shared expense and original QTP benefits remain in saved packet with1200/300/90 amounts and unchanged privacy/readiness notices."
+    testRef: "tests/apps/web/tuition-account-group-workspace-packet.test.ts::reopens the shared tuition account group workspace packet"
+  - line: "browser"
+    description: "Edit original allocations and account sources at desktop and mobile widths"
+    formula: "Four originals and both ESA histories survive reload; changing the actual allocation requires confirmation; removing a basis source blocks calculation; restored original facts regain the same settled amounts. No private source values leave through requests."
+    testRef: "apps/web/tests/guided-tuition-account-group.spec.ts::preserves shared tuition and separate ESA sources through correction and reload"

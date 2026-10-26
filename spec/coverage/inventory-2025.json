@@ -1955,6 +1955,26 @@
       ]
     },
     {
+      "key": "federal/form-1099-q-tuition-account-group",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": "https://www.irs.gov/publications/p970",
+      "specPath": "spec/federal/form-1099-q-tuition-account-group.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-1099-r",
       "jurisdiction": "federal",
       "taxYear": 2025,
