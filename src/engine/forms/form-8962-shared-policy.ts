@@ -5,7 +5,14 @@ import type { CalculatedLine } from '@/models/outputs.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, sum } from '@/utils/decimal.js';
 
-export type Form8962AllocationInput = Pick<TaxYearInput, 'taxpayer' | 'standardDeductionFacts' | 'form1095A' | 'form8962'>;
+type HouseholdPerson = Pick<TaxYearInput['taxpayer']['primary'], 'firstName' | 'lastName' | 'ssn'>;
+/** Consumed actual source fields only; guided validation needs no invented return context. */
+export type Form8962AllocationInput = Pick<TaxYearInput, 'form1095A' | 'form8962'> & {
+  taxpayer: Pick<TaxYearInput['taxpayer'], 'taxYear' | 'filingStatus'> & {
+    primary: HouseholdPerson; spouse?: HouseholdPerson; dependents: HouseholdPerson[];
+  };
+  standardDeductionFacts?: Pick<NonNullable<TaxYearInput['standardDeductionFacts']>, 'primaryCanBeClaimedAsDependent' | 'spouseCanBeClaimedAsDependent'>;
+};
 type Packet = NonNullable<NonNullable<TaxYearInput['form8962']>['sharedPolicyAllocations']>;
 type Original = NonNullable<NonNullable<Packet['policies']>[number]['original']>;
 export interface Form8962AllocationMonth {

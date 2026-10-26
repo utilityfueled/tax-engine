@@ -1,10 +1,15 @@
 import Decimal from "decimal.js";
-import { Form1095ASchema, Form8962Schema, type TaxYearInput } from "@/models/inputs";
+import { Form8962Schema, type TaxYearInput } from "@/models/inputs";
 import type { FilingStatus, GuidedFlowState, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
+import { normalizeMarketplacePolicy, resolveGuidedSharedPolicy, type SharedPolicyAllocationData } from "./guided-shared-policy";
 
 export interface MarketplaceMonthData { month: string; enrolleePremium: string; slcsp: string; advancePremiumTaxCredit: string }
-export interface MarketplacePolicyData { taxYear: string; marketplace: string; policyNumber: string; monthlyPremiums: MarketplaceMonthData[] }
+export interface MarketplacePolicyData {
+  taxYear: string; marketplace: string; policyNumber: string; monthlyPremiums: MarketplaceMonthData[];
+  recipientName?: string; recipientSsn?: string;
+  coveredIndividuals?: { name: string; ssn: string; firstMonth: string; lastMonth: string }[];
+}
 export interface MarketplaceCoverageMonthData extends MarketplaceMonthData {
   coverageEligible: boolean | null; incomeBasedSepEnrollment: boolean | null;
   qsehraAffordable?: boolean | null; qsehraMonthlyPermittedBenefit?: string;
@@ -17,6 +22,7 @@ export interface PremiumTaxCreditData {
   marketplaceEstimatedIncomeWithinEligibilityRange?: boolean | null; marketplaceInformationAccurate?: boolean | null;
   coverageFactsConfirmed: boolean | null; allocationRequired: boolean | null; alternativeMarriageCalculationElected: boolean | null;
   selfEmployedHealthInsuranceCoordinationRequired: boolean | null; qsehraAffected: boolean | null; lawfulPresenceReconciliationRequired: boolean | null;
+  sharedPolicyAllocations?: SharedPolicyAllocationData;
   policies: MarketplacePolicyData[]; monthlyReconciliation: MarketplaceCoverageMonthData[];
 }
 export const emptyMarketplaceMonth: MarketplaceMonthData = { month: "", enrolleePremium: "", slcsp: "", advancePremiumTaxCredit: "" };
@@ -67,7 +73,8 @@ export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefin
   const dependency = fact(data.canBeClaimedAsDependent, "dependency eligibility answer");
   if (dependency !== (primaryClaimable || spouseClaimable === true)) throw new Error("Reconcile the Marketplace dependency answer with the household source facts.");
   if (!data.fplRegion || !data.belowPovertyException) throw new Error("Enter the actual poverty guideline region and below-poverty exception answer.");
-  for (const field of ["allocationRequired", "alternativeMarriageCalculationElected", "lawfulPresenceReconciliationRequired"] as const) {
+  const allocationRequired = fact(data.allocationRequired, "shared-policy allocation answer");
+  for (const field of ["alternativeMarriageCalculationElected", "lawfulPresenceReconciliationRequired"] as const) {
     if (fact(data[field], field) === true) throw new Error(`The actual ${field} worksheet is not yet supported in this guided route. Keep its source records for review.`);
   }
   if (filingStatus === "mfs") fact(data.marriedFilingSeparatelyExceptionConfirmed, "married-filing-separately exception answer");
@@ -75,11 +82,8 @@ export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefin
     fact(data.marketplaceEstimatedIncomeWithinEligibilityRange, "Marketplace income estimate eligibility"); fact(data.marketplaceInformationAccurate, "Marketplace information accuracy");
   }
   const qsehra = fact(data.qsehraAffected, "QSEHRA answer");
-  const policies = data.policies?.map(policy => {
-    if (integer(policy.taxYear, "original statement year") !== taxYear) throw new Error("An original Marketplace statement has a different tax year.");
-    if (!policy.marketplace?.trim() || !policy.policyNumber?.trim()) throw new Error("Enter the actual Marketplace and policy number.");
-    return Form1095ASchema.parse({ taxYear: integer(policy.taxYear, "original statement year"), marketplace: policy.marketplace.trim(), policyNumber: policy.policyNumber.trim(), monthlyPremiums: policy.monthlyPremiums?.map(row => month(row, "original statement")) });
-  });
+  const shared = allocationRequired || data.sharedPolicyAllocations ? resolveGuidedSharedPolicy(data, taxYear, filingStatus, personal) : undefined;
+  const policies = shared?.policies ?? data.policies?.map(policy => normalizeMarketplacePolicy(policy, taxYear));
   if (!policies?.length) throw new Error("Enter the actual original Marketplace policy statements.");
   const identities = new Set<string>();
   const sourceMonths = new Map<number, { premium: Decimal; advance: Decimal }>();
@@ -92,9 +96,15 @@ export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefin
       sourceMonths.set(row.month, { premium: new Decimal(row.enrolleePremium).plus(previous?.premium ?? 0), advance: new Decimal(row.advancePremiumTaxCredit).plus(previous?.advance ?? 0) });
     }
   }
+  if (shared) {
+    sourceMonths.clear();
+    for (const row of shared.allocation.months) sourceMonths.set(row.month, { premium: row.premium, advance: row.advance });
+  }
   const reconciliation = data.monthlyReconciliation?.map(row => {
     const actual = month(row, "household coverage"); const source = sourceMonths.get(actual.month);
     if (!source) throw new Error("The household month has no actual original statement.");
+    const allocated = shared?.allocation.months.find(entry => entry.month === actual.month);
+    if (allocated && (!allocated.premium.eq(actual.enrolleePremium) || !allocated.slcsp.eq(actual.slcsp) || !allocated.advance.eq(actual.advancePremiumTaxCredit))) throw new Error("Reconcile shared household amounts to the actual original sources and agreed allocation.");
     if (!source.advance.eq(actual.advancePremiumTaxCredit)) throw new Error("Reconcile household advance credit to the exact original monthly total.");
     if (new Decimal(actual.enrolleePremium).gt(source.premium)) throw new Error("Eligible enrollment premium cannot exceed the original monthly premiums.");
     const qsehraBenefit = row.qsehraMonthlyPermittedBenefit?.trim() ? money(row.qsehraMonthlyPermittedBenefit, "QSEHRA monthly permitted benefit") : undefined;
@@ -109,7 +119,7 @@ export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefin
     householdFactsConfirmed: true, canBeClaimedAsDependent: dependency,
     marriedFilingSeparatelyExceptionConfirmed: data.marriedFilingSeparatelyExceptionConfirmed ?? undefined,
     belowPovertyException: data.belowPovertyException, marketplaceEstimatedIncomeWithinEligibilityRange: data.marketplaceEstimatedIncomeWithinEligibilityRange ?? undefined, marketplaceInformationAccurate: data.marketplaceInformationAccurate ?? undefined,
-    coverageFactsConfirmed: true, allocationRequired: false, alternativeMarriageCalculationElected: false, lawfulPresenceReconciliationRequired: false,
+    coverageFactsConfirmed: true, allocationRequired, sharedPolicyAllocations: shared?.packet, alternativeMarriageCalculationElected: false, lawfulPresenceReconciliationRequired: false,
     selfEmployedHealthInsuranceCoordinationRequired: fact(data.selfEmployedHealthInsuranceCoordinationRequired, "self-employed health coordination answer"), qsehraAffected: qsehra, monthlyReconciliation: reconciliation,
   }) };
 }

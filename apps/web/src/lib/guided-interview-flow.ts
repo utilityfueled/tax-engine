@@ -1615,7 +1615,7 @@ export function updateSectionData(
         ...(minimumTaxCreditSourcesChanged ? { minimumTaxCredit: { ...minimumTaxCreditSourcesChanged, sourceFactsConfirmed: null } } : {}),
         ...(benefitSourcesChanged ? { dependentCareBenefits: { ...nextCredits.dependentCareBenefits, sourceFactsConfirmed: null, earnedIncomeWorksheetConfirmed: null, creditExpenseCoordinationConfirmed: null } } : {}),
         ...(educationSourcesChanged ? { educationDistributions: { ...nextCredits.educationDistributions, sourceFactsConfirmed: null } } : {}),
-        ...(premiumTaxCreditSourcesChanged ? { premiumTaxCredit: { ...premiumTaxCreditSourcesChanged, sourceFactsConfirmed: null } } : {}),
+        ...(premiumTaxCreditSourcesChanged ? { premiumTaxCredit: { ...premiumTaxCreditSourcesChanged, sourceFactsConfirmed: null, ...(premiumTaxCreditSourcesChanged.sharedPolicyAllocations ? { sharedPolicyAllocations: { ...premiumTaxCreditSourcesChanged.sharedPolicyAllocations, sourceFactsConfirmed: null } } : {}) } } : {}),
         ...(bondSourcesChanged ? { savingsBondEducation: { ...nextCredits.savingsBondEducation, sourceFactsConfirmed: null } } : {}),
       } } : {}),
     },

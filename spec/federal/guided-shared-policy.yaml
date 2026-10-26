@@ -1,0 +1,44 @@
+form: "Guided Form8962 allocation"
+fullName: "Actual two-family shared Marketplace policy intake"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8962"
+retrievedAt: "2026-10-25"
+notes: |
+  Uses the committed actual Situation4 source calculator for2025 and isolated
+  2026 sources. Original recipient/enrollees/months remain separate from actual
+  family assignments and monthly agreement fractions. No income/credit override.
+  A source-copy action snapshots actual entered originals and current household;
+  it never supplies an unknown fact, percentage, tax year or agreement answer.
+  Shared allocated household amounts are derived from originals at exact Decimal
+  precision. Coverage eligibility remains an actual independent answer. Changes
+  invalidate source confirmations. Other allocation methods retain their named
+  source boundaries. Full2026 calculation and PDF gates stay closed.
+lines:
+  - line: "sources"
+    description: "Capture complete actual original policies and preserve cents"
+    formula: "Copy entered source year, recipient, covered people, periods and monthly originals; bind actual household name/SSN and original source indices. Do not replace missing original identity/amount/year with defaults."
+    testRef: "tests/guided-interview/guided-shared-policy.test.ts::captures actual original policies without invented agreement facts"
+  - line: "allocation"
+    description: "Validate actual agreement with canonical source calculator"
+    formula: "Require actual fraction0-1 with at most two places and known family/method answers; canonical source binder reconciles original snapshots and derives each monthly premium/SLCSP/APTC. Shared route ignores no supplied numeric overrides: entered reconciliation amounts must match derived amounts."
+    testRef: "tests/guided-interview/guided-shared-policy.test.ts::derives exact allocated source amounts and rejects contradictory snapshots"
+  - line: "return"
+    description: "Transfer originals and verified allocation once"
+    formula: "Actual2025wages30000,originalmonthly1000/900/500 and.50 agreement give4812credit/3000advances/1812net. Source-only2026 intake succeeds but real2026 return stays closed. Original sources remain unchanged."
+    testRef: "tests/guided-interview/guided-shared-policy.test.ts::calculates shared coverage once through the actual guided return"
+  - line: "confirmation"
+    description: "Invalidate after actual household source and agreement changes"
+    formula: "Substantive edits revoke outer and shared-source confirmations; confirmation-only edits do not cycle. Stale originals/household still reject after manually restoring confirmations. Zero/one percentages and knownfalse eligibility stay actual facts."
+    testRef: "tests/guided-interview/guided-shared-policy.test.ts::preserves actual facts and invalidates stale source confirmations"
+  - line: "controls"
+    description: "Expose actual source and agreement controls in the full credits component"
+    formula: "Shared answer opens original recipient/enrollee controls and actual agreement fields. Copy uses supplied real household and originals; new percentage/family/confirmation fields remain blank. Amount refresh derives sources and preserves independent eligibility answers."
+    testRef: "tests/apps/web/shared-policy-interactions.test.tsx::reaches actual allocation controls and revokes confirmation after edits"
+  - line: "boundaries"
+    description: "Keep eligibility and zero or full agreements distinct from missing facts"
+    formula: "Actual0 or1 fractions derive exact0 or original amounts. Knownfalse coverage staysfalse; a new household month staysunknown. Duplicate normalized months and extraneous coverage months must be reconciled explicitly. Other allocation methods and conflicting required answers reject without losing stored facts."
+    testRef: "tests/guided-interview/guided-shared-policy.test.ts::preserves zero and full agreements while rejecting ambiguous household rows"
+  - line: "browser"
+    description: "Save actual sources without sending private records"
+    formula: "Desktop/mobile production flow retains original amounts, actual0 and blank fractions across reloads; source edits revoke confirmation, allocation refresh preserves eligibility, and private source identities/references are not sent in network request bodies."
+    testRef: "apps/web/tests/guided-shared-policy.spec.ts::preserves original policies and actual allocation agreement"

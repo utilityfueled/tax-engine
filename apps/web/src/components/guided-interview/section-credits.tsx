@@ -5,6 +5,7 @@ import {
   type CreditsData,
   type DependentCareData,
   type FilingStatus,
+  type PersonalInfoData,
   emptyCreditsData,
 } from "@/lib/guided-interview-flow";
 import { CurrencyField } from "./currency-field";
@@ -93,7 +94,9 @@ export function SectionCredits({
   taxYear,
   onDataChange,
   careBenefitSources,
+  personalData,
 }: {
+  personalData?: PersonalInfoData;
   careBenefitSources?: CareBenefitSource[];
   data: CreditsData | undefined;
   hasDependents: boolean;
@@ -136,7 +139,7 @@ export function SectionCredits({
           />
 
           <EducationDistributionDetails data={current.educationDistributions} onChange={educationDistributions => onDataChange({ ...current, educationDistributions })} />
-          <PremiumTaxCreditSourceDetails data={current.premiumTaxCredit} onChange={premiumTaxCredit => onDataChange({ ...current, premiumTaxCredit })} />
+          <PremiumTaxCreditSourceDetails personal={personalData} filingStatus={filingStatus} taxYear={taxYear} data={current.premiumTaxCredit} onChange={premiumTaxCredit => onDataChange({ ...current, premiumTaxCredit })} />
           <SavingsBondSourceDetails data={current.savingsBondEducation} onChange={savingsBondEducation => onDataChange({ ...current, savingsBondEducation })} />
           <MinimumTaxCreditDetails data={current.minimumTaxCredit} onChange={minimumTaxCredit => onDataChange({ ...current, minimumTaxCredit })} />
 

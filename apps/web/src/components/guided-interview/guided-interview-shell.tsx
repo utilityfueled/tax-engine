@@ -647,6 +647,7 @@ function SectionContent({
       const depCount = Number(personalData?.dependentCount ?? "0");
       return (
         <SectionCredits
+          personalData={personalData}
           careBenefitSources={guidedCareBenefitSources(getSectionData(state, "income-w2")?.entries, getSectionData(state, "income-self-employment")?.businessFacts, getSectionData(state, "income-self-employment")?.expenses)}
           taxYear={state.taxYear}
           data={getSectionData(state, "credits")}
