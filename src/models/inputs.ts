@@ -12,6 +12,7 @@ import { IraBasisSourcesSchema } from "@/models/ira-basis-sources.js";
 import { CharitableCarryoverSourcesSchema } from "@/models/charitable-carryover-sources.js";
 import { AdoptionPriorBenefitHistorySchema } from "@/models/adoption-prior-benefits.js";
 import { Form8962SharedPolicySchema, MarketplaceCoveredIndividualSchema } from "@/models/form-8962-shared-policy.js";
+import { Form8962MarriageSourcesSchema } from "@/models/form-8962-marriage.js";
 import { QbiLossSourcesSchema } from "@/models/qbi-loss-sources.js";
 
 // Custom Zod type for decimal strings (validated as numbers, stored as strings for Decimal.js)
@@ -2544,6 +2545,7 @@ export const Form8962Schema = z.object({
   allocationRequired: z.boolean().optional(),
   sharedPolicyAllocations: Form8962SharedPolicySchema.optional(),
   alternativeMarriageCalculationElected: z.boolean().optional(),
+  marriageSources: Form8962MarriageSourcesSchema.optional(),
   selfEmployedHealthInsuranceCoordinationRequired: z.boolean().optional(),
   qsehraAffected: z.boolean().optional(),
   lawfulPresenceReconciliationRequired: z.boolean().optional(),

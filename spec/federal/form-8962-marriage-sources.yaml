@@ -1,0 +1,56 @@
+form: "Form 8962 Marriage Sources"
+fullName: "Actual marriage-year household and original Marketplace source binding"
+taxYear: [2025, 2026]
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Refreshed 2026-10-25. This source-only prerequisite binds the actual joint
+  household and completed Table 4/alternative-family facts to original
+  Forms 1095-A. It does not accept an entered current credit, repayment,
+  income or contribution override. The completed calculation receives
+  canonical household income separately. References include final i8962
+  Table 4/Part V and 26 CFR 1.36B-4(b)(2).
+  Initial scope is actual MFJ, both unclaimable filers, both unmarried on
+  January 1 and married to each other on December 31, ordinary full-month
+  eligible coverage, with all policies sent to either filer. Shared-policy,
+  health-deduction, QSEHRA, special enrollment and below-poverty coordination
+  retain their distinct methods. An actual first-day wedding is retained
+  but requires reconciliation of the first-full-married-month convention.
+  Alternative family membership follows actual dependent qualification for
+  each filer, not the original policy recipient. Premium groups follow
+  Pub974 Steps 2/4: actual policy recipient determines the worksheet for
+  covered family members named on that policy. Corrected benchmark groups
+  bind the complete actual set of those covered people, their month and
+  actual source reference. Multiple same-owner policies use one corrected
+  household benchmark; a cross-owner duplicate coverage source rejects.
+  Original cents and policy snapshots remain unchanged. A wholly zero
+  source month outside every actual coverage interval is not a calculated
+  pre-marriage coverage month; the original record remains present.
+lines:
+  - line: "actual-household"
+    description: "Bind actual spouses, marriage date and separate dependent eligibility"
+    formula: "Year, MFJ status, both full original identities, unclaimable facts, actual current-year marriage date and known January/December answers must reconcile. Every claimed dependent has exactly one actual assignment to an owner for whom that dependent qualifies; no entered family-size substitute."
+    testRef: "tests/engine/forms/form-8962-marriage-sources.test.ts::binds actual spouse and dependent sources without an income or credit override"
+  - line: "original-policy"
+    description: "Reconcile every original policy identity, amount and covered person"
+    formula: "Each original index appears once with exact year/Marketplace/policy/recipient/covered-person/monthly snapshot. Known complete eligible full-month coverage and no third-family source are required. Reject equal-money replacement, duplication, changed original cents, wrong recipient or missing covered months."
+    testRef: "tests/engine/forms/form-8962-marriage-sources.test.ts::rejects stale original policy identities amounts and coverage periods"
+  - line: "alternative-groups"
+    description: "Derive source groups and intervals from actual coverage"
+    formula: "Each alternative family begins with its filer and assigned actual dependents. Determine its first/last full pre-marriage coverage month. Sum original premiums by original filer recipient; bind the corrected benchmark to that exact monthly covered-person set. Do not assign people or dollars by an assumed fraction."
+    testRef: "tests/engine/forms/form-8962-marriage-sources.test.ts::separates alternative family membership from the actual policy recipient"
+  - line: "source-completeness"
+    description: "Preserve missing versus actual zero and complete monthly benchmark evidence"
+    formula: "Every applicable owner month has one actual benchmark row, including an explicitly empty covered-person group and zero where applicable. Exact raw groups reconcile to joint eligible premiums and original advances; corrected joint and separate benchmarks are independently sourced."
+    testRef: "tests/engine/forms/form-8962-marriage-sources.test.ts::requires exact complete benchmark groups and known monthly eligibility"
+  - line: "supported-boundary"
+    description: "Retain the actual unsupported answers without creating a usable election"
+    formula: "Unknown or false qualifying answers, prior-year/first-day marriage, nonjoint/claimable filers, third-party allocations, health/QSEHRA/SEP/foreign-status exceptions and incomplete source snapshots reject. No source field defaults to a qualifying answer or zero."
+    testRef: "tests/engine/forms/form-8962-marriage-sources.test.ts::preserves unsupported and unknown facts instead of certifying an election"
+  - line: "multiple-policy-cents"
+    description: "Aggregate actual same-recipient policies without duplicating their benchmark"
+    formula: "Two original policies covering the same filer with300.01 and200.02 enrollment premiums preserve500.03 raw premiums. One independently sourced corrected433.11 benchmark is used; original policy benchmark values are not added into that corrected figure. Policy order does not change the result."
+    testRef: "tests/engine/forms/form-8962-marriage-sources.test.ts::preserves exact same-recipient policy cents and one corrected benchmark"
+  - line: "one-alternative-family"
+    description: "Leave an actually uncovered alternative family without a worksheet interval"
+    formula: "If only the primary family has actual pre-marriage coverage, only its complete benchmark interval is required; the other alternative family remains a known family with an empty interval. Wholly zero original months outside actual coverage are retained as sources but are not created as worksheet months."
+    testRef: "tests/engine/forms/form-8962-marriage-sources.test.ts::derives only actual covered alternative intervals and preserves zero source months"
