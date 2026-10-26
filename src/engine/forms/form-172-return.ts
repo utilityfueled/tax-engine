@@ -117,11 +117,12 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     "form1099Q", "formW2G", "form1099K", "form1099OID", "form4797", "form4684", "form8824", "homeSales", "cryptoIncome",
     "form2555", "form8814", "form8839", "form6252", "form6781", "form8915F"] as const) {
     const value = input[key];
-    if ((key === "scheduleK1" || key === "cryptoIncome") && charitableSources?.sourceKind === "current") continue;
+    if ((key === "scheduleK1" || key === "cryptoIncome")
+      && (charitableSources?.sourceKind === "current" || charitableSources?.sourceKind === "complete_histories")) continue;
     if (Array.isArray(value) ? value.length > 0 : value !== undefined) throw new Error(`Form172 requires the separate current origin classification method for ${key}`);
   }
   const capital = calculateForm172CapitalSources(input, context?.scheduleD);
-  if (charitableSources?.sourceKind !== "prior" && (!d(input.priorYear?.charitableCarryforward).isZero()
+  if (charitableSources?.sourceKind !== "prior" && charitableSources?.sourceKind !== "complete_histories" && (!d(input.priorYear?.charitableCarryforward).isZero()
     || input.priorYear?.charitableCarryforwardByYear?.some(row => !d(row.amount).isZero())
     || input.charitableCarryoverSources?.vintages?.some(row => !d(row.openingCarryforward).isZero()))) {
     throw new Error("Form172 current origin and charitable itemized carry require their separate regular and alternative coordination");
@@ -222,16 +223,26 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     const scheduleA = context.scheduleA;
     if (!scheduleA) throw new Error("Form172 current charity requires its completed actual ScheduleA candidate");
     const currentDeduction = context.deductionUsed === "itemized" ? scheduleA.charitableTotal : context.nonitemizerCharitableDeduction;
-    const alternativeCurrentDeduction = charitableSources.sourceKind === "prior" && context.deductionUsed === "itemized"
-      ? roundDollar(prior.priorAlternativeCharitableCarryover?.normalDeduction ?? zero) : currentDeduction;
+    let alternativeCurrentDeduction = currentDeduction;
+    if (context.deductionUsed === "itemized") {
+      if (charitableSources.sourceKind === "complete_histories") {
+        const actual = prior.determinedAlternativeCharitableCarryover;
+        if (!actual) throw new Error("Form172 complete charity histories require the actual independent AMT result");
+        alternativeCurrentDeduction = actual.normalReportedDeduction;
+      } else if (charitableSources.sourceKind === "prior") {
+        alternativeCurrentDeduction = roundDollar(prior.priorAlternativeCharitableCarryover?.normalDeduction ?? zero);
+      }
+    }
     const percentageCarryforwards = scheduleA.charitableTreatment?.carryforwards ?? scheduleA.charitableCarryforwardByYear;
     const percentageCarryforward = sum(...percentageCarryforwards.map(row => row.amount));
     charitable = { ...charitableSources, regularCurrentDeduction: currentDeduction,
       alternativeCurrentDeduction, percentageCarryforward, percentageCarryforwards };
     audit.record("Current Form172 charitable sources", "qualified-current", charitableSources.sourceKind === "current"
-      ? "Original qualified current charitable value" : "Original qualified regular charitable opening", charitable.qualifiedValue,
-      charitableSources.sourceKind === "prior" ? "Actual original regular charitable opening; independent alternative history retained"
-        : "Actual current receipts after original category valuation; independent prior charity histories are empty");
+      ? "Original qualified current charitable value" : charitableSources.sourceKind === "complete_histories"
+        ? "Original qualified current and prior charitable value" : "Original qualified regular charitable opening", charitable.qualifiedValue,
+      charitableSources.sourceKind === "complete_histories" ? "Actual qualified current receipts and complete original prior histories; separate regular and alternative balances"
+        : charitableSources.sourceKind === "prior" ? "Actual original regular charitable opening; independent alternative history retained"
+          : "Actual current receipts after original category valuation; independent prior charity histories are empty");
     audit.record("Current Form172 charitable sources", "regular-deduction", "Selected regular charitable deduction in nonbusiness group", currentDeduction,
       "Actual section170 deduction selected on the return; PartI applies its nonbusiness limit to all selected nonbusiness deductions");
     audit.record("Current Form172 charitable sources", "alternative-deduction", "Alternative charitable deduction in nonbusiness group", alternativeCurrentDeduction,

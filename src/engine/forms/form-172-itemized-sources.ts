@@ -10,6 +10,7 @@ import { calculateStateLocalIncomeTaxDeduction } from "./state-local-income-tax-
 import { calculateForm172CharitableSources } from "./form-172-charitable-sources.js";
 import { calculateCryptoDonations } from "./crypto-lot-matching.js";
 import { createPriorCharitableNolLimit } from "@/utils/charitable-prior-nol-source.js";
+import { createCharitableNolOriginLimit } from "@/utils/charitable-nol-origins.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
 
@@ -80,7 +81,8 @@ export function calculateForm172ItemizedSources(input: TaxYearInput, context: {
     throw new Error("Form172 state/local income-tax business and nonbusiness classification requires actual source attribution");
   }
   if ([fresh.foreignIncomeTaxDeduction, fresh.mortgageInsurancePremiums, fresh.casualtyLossDeduction,
-    fresh.otherItemizedDeductions].some(value => !value.isZero()) || (!fresh.charitablePriorYearUsed.isZero() && charity?.sourceKind !== 'prior')) {
+    fresh.otherItemizedDeductions].some(value => !value.isZero()) || (!fresh.charitablePriorYearUsed.isZero()
+      && charity?.sourceKind !== 'prior' && charity?.sourceKind !== 'complete_histories')) {
     throw new Error("Form172 other itemized deduction classifications require their separate regular and AMT source methods");
   }
   const mortgage = fresh.mortgageInterest.plus(fresh.mortgageWorksheet.deductiblePoints);
@@ -117,8 +119,12 @@ export function calculateForm172ItemizedSources(input: TaxYearInput, context: {
   }
   const regular = sum(fresh.medicalDeduction, fresh.saltDeduction, mortgage, fresh.investmentInterestDeduction, fresh.charitableTotal);
   if (!regular.eq(fresh.totalItemized)) throw new Error("Form172 ordinary itemized source components do not reconcile");
-  const alternativeCharity = charity?.sourceKind === 'prior' ? calculateScheduleA(input, context.agi, input.taxpayer.filingStatus, getConstants(year), {
-    nolContributionLimit: createPriorCharitableNolLimit(input, 'alternative', charity.alternativeQualifiedValue),
+  const alternativeLimit = charity?.sourceKind === 'complete_histories' ? createCharitableNolOriginLimit(input, 'alternative')
+    : charity?.sourceKind === 'prior' ? createPriorCharitableNolLimit(input, 'alternative', charity.alternativeQualifiedValue) : undefined;
+  const alternativeCharity = alternativeLimit ? calculateScheduleA(input, context.agi, input.taxpayer.filingStatus, getConstants(year), {
+    nolContributionLimit: alternativeLimit,
+    cryptoCharitableAmounts: input.cryptoIncome?.donations.length
+      ? calculateCryptoDonations(input.cryptoIncome.donations, year).contributionAmounts : undefined,
   }).charitableTotal : fresh.charitableTotal;
   const alternative = sum(fresh.medicalDeduction, mortgage, alternativeInterest?.deductibleAmount ?? d("0"), alternativeCharity);
   const investment = fresh.investmentInterestDeduction;

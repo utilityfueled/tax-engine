@@ -2482,6 +2482,29 @@
       ]
     },
     {
+      "key": "federal/form-172-charitable-histories",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i172",
+      "specPath": "spec/federal/form-172-charitable-histories.yaml",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-form-172-charitable-histories.test.ts::uses actual nonbusiness income for current and prior charitable origin deductions",
+        "tests/pdf/form-172-charitable-histories-review.test.ts::binds current loss and both original charitable histories before rendering"
+      ],
+      "implementationNote": "Actual current Form172 composes selected current and prior charitable histories with independently known-empty prior NOL ledgers. Historical private review is source-bound; actual2026 form, filing and human qualification remain separate.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-172-charitable-origin",
       "jurisdiction": "federal",
       "taxYear": 2025,

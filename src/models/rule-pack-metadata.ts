@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.156",
+    ruleVersion: "2025.157",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i172", section: "Actual current Form172 loss with complete independent regular and alternative charitable histories and known-empty prior NOL histories", revision: "IRC172(d)(4), Reg1.172-3,1.55-1 and1.170A-10; selected nonbusiness deduction and original charitable category/expiry retained, current-only COD composition, source-only guide and private review; positive old-NOL composition and precise allocation methods remain separate, no human or filing qualification promotion", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual completed nonspecified-premium deduction and the published Worksheet P/Form7206 stop before special Marketplace worksheets", revision: "Final2025 Before You Begin and separate own-business income limits; exact remaining capacity, ordinary final credit and other deductions, source-bound guide/private review; positive noncoverage advances and other finite payment/marriage methods remain separate. Agent source/PDF review only; human, filing and full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual prior use of one academic-period room-and-board allowance across return years", revision: "IRC529(e)(3)(B),(c)(3)(B)(v)/(vi),530(d)(2)(C), finalPub970 and post2001 historical applicability; original prior cost before assistance, refunds, aid and adjusted expenses independently reconcile in chronological order, current remaining cap and original QTP/ESA allocations derived; source-bound guide/private review, no cap reset or inferred history; separate competing-source methods and human/form qualification remain unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.170A-10", section: "Complete actual current and prior charitable origins with zero or one affected excess in separate regular and AMT NOL carry", revision: "IRC170(d)(1)(B), i172 line26, Reg1.170A-10(d),1.172-5,1.55-1 and1.199A-1(e)(5); simultaneous original-source comparison, fixed current claims and regularQBI, separate source histories, guide and private review; positive multi-origin allocation, prior-floor attribution and human qualification remain separate; full2026 and filing gates unchanged", retrievedAt: "2026-10-26" },
@@ -194,11 +195,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.153-law-integration-draft",
+    ruleVersion: "2026.154-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i172", section: "Actual current Form172 loss with complete independent regular and alternative charitable histories and known-empty prior NOL histories", revision: "IRC172(d)(4), Reg1.172-3,1.55-1 and1.170A-10; selected nonbusiness deduction and original charitable category/expiry retained, current-only COD composition, source-only guide and private review; positive old-NOL composition and precise allocation methods remain separate, no human or filing qualification promotion", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual completed nonspecified-premium deduction and the published Worksheet P/Form7206 stop before special Marketplace worksheets", revision: "Final2025 Before You Begin and separate own-business income limits; exact remaining capacity, ordinary final credit and other deductions, source-bound guide/private review; positive noncoverage advances and other finite payment/marriage methods remain separate. Agent source/PDF review only; human, filing and full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual prior use of one academic-period room-and-board allowance across return years", revision: "IRC529(e)(3)(B),(c)(3)(B)(v)/(vi),530(d)(2)(C), finalPub970 and post2001 historical applicability; original prior cost before assistance, refunds, aid and adjusted expenses independently reconcile in chronological order, current remaining cap and original QTP/ESA allocations derived; source-bound guide/private review, no cap reset or inferred history; separate competing-source methods and human/form qualification remain unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.170A-10", section: "Complete actual current and prior charitable origins with zero or one affected excess in separate regular and AMT NOL carry", revision: "IRC170(d)(1)(B), i172 line26, Reg1.170A-10(d),1.172-5,1.55-1 and1.199A-1(e)(5); simultaneous original-source comparison, fixed current claims and regularQBI, separate source histories, guide and private review; positive multi-origin allocation, prior-floor attribution and human qualification remain separate; full2026 and filing gates unchanged", retrievedAt: "2026-10-26" },

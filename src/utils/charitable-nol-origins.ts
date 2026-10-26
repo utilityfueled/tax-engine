@@ -32,9 +32,20 @@ export interface CharitableNolOriginLimit {
 }
 type HistoryInput = Pick<TaxYearInput,'netOperatingLoss'|'priorYear'|'charitableCarryoverSources'> & { taxpayer:CharitableSourceValidationInput['taxpayer'] };
 
-/** Existing single-source/current-origin methods remain separate; no new user switch. */
+/** A new current loss does not itself trigger the carried-NOL charity reduction.
+ * This source-derived composition requires actual empty prior loss histories. */
+export function usesCurrentOriginCharitableHistories(input:TaxYearInput):boolean {
+  const loss=input.netOperatingLoss,history=loss?.alternativeTax?.charitableCarryoverHistory;
+  if(!input.form172 || !Array.isArray(loss?.vintages) || loss.vintages.length
+    || !Array.isArray(loss.alternativeTax?.vintages) || loss.alternativeTax.vintages.length) return false;
+  return (input.charitableCarryoverSources?.vintages?.length??0)>0
+    || (history?.alternativeCarryoverSources?.vintages?.length??0)>0;
+}
+
+/** Existing single-source methods remain separate; no new user switch. */
 export function usesDeterminedCharitableNolOrigins(input:TaxYearInput):boolean {
-  if(!input.netOperatingLoss || input.form172 || input.form982NolSources) return false;
+  if(input.form172) return usesCurrentOriginCharitableHistories(input);
+  if(!input.netOperatingLoss || input.form982NolSources) return false;
   const history=input.netOperatingLoss.alternativeTax?.charitableCarryoverHistory;
   if(!history?.alternativeCarryoverSources) return false;
   const regular=input.charitableCarryoverSources?.vintages,alternative=history.alternativeCarryoverSources.vintages;
@@ -73,7 +84,9 @@ export function validateCharitableNolOriginHistories(input:HistoryInput): Pick<C
 
 export function readCharitableNolOrigins(input:TaxYearInput):CharitableNolOrigins {
   const {regular,alternative}=validateCharitableNolOriginHistories(input);
-  if(input.form172 || input.form982NolSources) throw new Error('Determined charitable NOL origins require the separate current-origin or COD composition method');
+  if((input.form172 || input.form982NolSources) && !usesCurrentOriginCharitableHistories(input)) {
+    throw new Error('Determined charitable NOL origins require the separate current-origin or COD composition method');
+  }
   const k1=calculateK1CharitableReturnSources(input);
   if(!k1 && input.scheduleK1.some(row=>[row.charitableCash,row.charitableCapitalGain30,row.charitableCapitalGain20,row.priorSuspendedLosses?.charitable].some(value=>!d(value).isZero()))) {
     throw new Error('Charitable NOL origins require complete actual K1 basis and receipt sources');

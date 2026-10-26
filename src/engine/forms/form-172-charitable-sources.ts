@@ -11,21 +11,31 @@ import { hasPriorCharitableNolSources, readPriorCharitableNolSources } from '@/u
 import { calculateK1CharitableReturnSources } from './k1-charitable-return-sources.js';
 import { calculateCryptoDonations } from './crypto-lot-matching.js';
 import { d, sum } from '@/utils/decimal.js';
+import { readCharitableNolOrigins, usesCurrentOriginCharitableHistories } from '@/utils/charitable-nol-origins.js';
 
 export interface Form172CharitableSourcesResult {
-  sourceKind: 'current' | 'prior';
+  sourceKind: 'current' | 'prior' | 'complete_histories';
   qualifiedValue: Decimal;
   alternativeQualifiedValue: Decimal;
   sourceDigest: string;
 }
 
-/** No AGI, allowance or loss is collected here. Original current receipts need
- * independently known-empty histories; the separate prior route retains one
- * original vintage and its actual independent regular/AMT opening balances. */
+/** No AGI, allowance or loss is collected here. Complete current/prior charity
+ * histories compose with a current origin only when both prior NOL ledgers are
+ * explicitly empty. Existing single-source carried-NOL routes remain separate. */
 export function calculateForm172CharitableSources(input: TaxYearInput): Form172CharitableSourcesResult | undefined {
   const hasCurrent = input.donations.length > 0 || input.k1CharitableSources !== undefined
     || (input.cryptoIncome?.donations.length ?? 0) > 0;
+  const complete = usesCurrentOriginCharitableHistories(input) ? readCharitableNolOrigins(input) : undefined;
+  const completeResult = complete ? { sourceKind: 'complete_histories' as const,
+    qualifiedValue: sum(...Object.values(complete.current), ...complete.regular.map(row => row.amount)),
+    alternativeQualifiedValue: sum(...Object.values(complete.current), ...complete.alternative.map(row => row.amount)),
+    sourceDigest: complete.sourceDigest } : undefined;
   if (!hasCurrent) {
+    if (completeResult && (input.scheduleK1.length || input.cryptoIncome)) {
+      throw new Error('Form172 complete prior charity histories require separate original classification for other K1 or crypto sources');
+    }
+    if (completeResult) return completeResult;
     if (!hasPriorCharitableNolSources(input)) return undefined;
     const prior = readPriorCharitableNolSources(input);
     return { sourceKind: 'prior', qualifiedValue: sum(...prior.regular.map(row => row.amount)),
@@ -72,6 +82,7 @@ export function calculateForm172CharitableSources(input: TaxYearInput): Form172C
     if (!donations.sourceFactsVerified) throw new Error('Form172 crypto charity requires confirmed original donation sources');
     for (const key of Object.keys(amounts) as (keyof typeof amounts)[]) amounts[key] = amounts[key].plus(donations.contributionAmounts[key]);
   }
+  if (completeResult) return completeResult;
   const history = input.netOperatingLoss?.alternativeTax?.charitableCarryoverHistory;
   if (history?.sourceTaxYear !== input.taxpayer.taxYear - 1 || !history.sourceReference?.trim()
     || history.sourceFactsConfirmed !== true || history.allCarryoversIncluded !== true

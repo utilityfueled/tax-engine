@@ -124,7 +124,7 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult, capital
       });
     };
     checkRows(retainedCharity.percentageCarryforwards);
-    const alternativeCarry = prior.priorAlternativeCharitableCarryover?.carryforward
+    const alternativeCarry = prior.determinedAlternativeCharitableCarryover?.carryforward ?? prior.priorAlternativeCharitableCarryover?.carryforward
       ?? prior.alternativeCharitableCarryover?.carryforward ?? prior.charitableCarryover?.alternativeTaxCarryforward;
     if (alternativeCarry === undefined) {
       eq(result.carryforwards.amtCharitableContributions, charity.percentageCarryforward);

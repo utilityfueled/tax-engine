@@ -1,0 +1,69 @@
+form: "Form172 charitable original histories"
+fullName: "Selected current and prior charitable sources in a current loss year with no prior NOL"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  Source refresh 2026-10-26. IRC172(d)(4), Form172 PartI lines6-10,
+  Reg1.172-3(a)(3), Reg1.55-1(a)/(b), and IRC170(d) apply to actual
+  current receipts and original prior charitable histories. Wages and
+  active business income/loss are business items; investment interest
+  income is nonbusiness. Personal property taxes and charity are
+  nonbusiness deductions, limited together to actual nonbusiness income.
+  Both regular and AMT prior NOL vintage arrays must be explicitly empty.
+  A new current loss is not an NOL carried into this year under170(d)(1)(B).
+  Preserve original charity use, expiry and independent AMT balances;
+  never infer unknown history or allocate a new-loss benefit to charity.
+  Reuse only established percentage/FIFO and determined2026floor methods.
+  Prior-vintage floor attribution, binding mixedB media and priorC amended
+  offset conflicts retain their exact existing source boundaries.
+  Numerical controls below are independently derived, not published IRS
+  matching examples or human qualification. Real2026 gates stay closed.
+lines:
+  - line: "selected-deductions"
+    description: "Classify actual income and selected deductions before computing current loss"
+    formula: "Wages20000 + active business loss−40000 + interest30000 = AGI10000. CurrentA1000 and priorC5000 allow1000+3000; personal tax20000 gives selected24000. PartI1=−14000,6=24000,7=30000,8=30000,9=0,10=0,24=−14000. AMT priorC500 gives charity1500 and AMTI8500, currentATNOL0. Preserve regular2024C2000, AMT0; no charitable reduction from the new loss."
+    testRef: "tests/engine/federal-form-172-charitable-histories.test.ts::uses actual nonbusiness income for current and prior charitable origin deductions"
+  - line: "business-income-control"
+    description: "Do not treat wages as nonbusiness income"
+    formula: "Replacing interest30000 with additional wages30000 preservesAGI10000 and selected24000, but line7/8=0 and line9=24000. Line24 is nonnegative and no regular or AMT NOL arises."
+    testRef: "tests/engine/federal-form-172-charitable-histories.test.ts::does not turn wages into nonbusiness capacity at identical AGI"
+  - line: "standard-choice"
+    description: "Keep actual nonitemization separate from treated-paid charity history"
+    formula: "With actual standard choice, regular15750 is the selected nonbusiness deduction; interest30000 covers it, giving currentNOL5750. AMT excludes standard and has no charitable deduction, so AMTI10000/currentATNOL0. Original priorC treated-paid3000 leaves2000 regular, while independent500 AMT is fully treated-paid."
+    testRef: "tests/engine/federal-form-172-charitable-histories.test.ts::preserves the selected standard deduction and original percentage history"
+  - line: "source-boundaries"
+    description: "Require complete actual independent loss and charitable histories"
+    formula: "Missing or revoked histories, positive priorNOL and changed original identity retain their source-specific rejection; no unknown balance is copied or reset to zero. Real2026 calculation remains gated."
+    testRef: "tests/engine/federal-form-172-charitable-histories.test.ts::retains independent source and prior-loss boundaries"
+  - line: "determined-floor"
+    description: "Apply only the established floor to current category before current-loss classification"
+    formula: "2026AGI10000,currentC4000,priorG1000/500. Both ledgers allow currentC3000 before50floor. Regular charity3950 with personal tax20000 gives currentNOL13950; AMT charity3450 givesAMTI6550/currentATNOL0. Current2026C1050 carries independently in each ledger; originalG fully used, no new-loss carry reduction."
+    testRef: "tests/engine/federal-form-172-charitable-histories-2026.test.ts::retains determined current floor and independent original prior history in current loss"
+  - line: "actual-guide"
+    description: "Reach current and prior history composition through existing original-source controls"
+    formula: "Actual guided currentA1000, regular priorC5000 and AMT priorC500 retain distinct originals and produce regularNOL14000, ATNOL0, and prior2024C2000. Missing independent history blocks calculation; source edits revoke current-origin confirmation."
+    testRef: "tests/guided-interview/guided-form-172-charitable-histories.test.ts::reaches current loss with complete independent current and prior charity sources"
+  - line: "source-review"
+    description: "Bind original current and prior source records before private review output"
+    formula: "Source-derived complete-history tag, currentNOL14000, original2024C2000 and independentAMT0 must reconcile. Removed or balanced changed sources, wrong kind, stale carry and altered independent deduction reject before template I/O. Saved notice and personal-identifier redaction remain required."
+    testRef: "tests/pdf/form-172-charitable-histories-review.test.ts::binds current loss and both original charitable histories before rendering"
+  - line: "workspace-review"
+    description: "Generate the actual guided current-loss review packet"
+    formula: "The unmocked workspace bridge preserves actual histories, computes currentNOL14000 and prints original2024C2000 once with review notices and personal source identifiers removed."
+    testRef: "tests/apps/web/workspace-form-172-charitable-histories.test.ts::exports current loss with actual current and prior charitable histories"
+  - line: "existing-cod-composition"
+    description: "Retain existing after-tax debt reduction separately from charity use"
+    formula: "Replacing personal tax20000 with actual medical30000 gives medical deduction29250; regular nonbusiness33250 and AMT30750 exceed actual interest30000 by3250/750, so each currentNOL is20000. Actual source-backed excluded personal debt5000 reduces both to15000 after tax. Original charity carry2000/0 and deduction4000/1500 stay unchanged. The original SALT case has no ATNOL and correctly retains the existing later-attribute guard. No new exclusion or attribute-allocation rule is added."
+    testRef: "tests/engine/federal-form-172-charitable-histories.test.ts::keeps existing after-tax current debt reduction separate from charity history"
+  - line: "signed-independent-history"
+    description: "Retain a larger independently supported AMT prior balance"
+    formula: "CurrentA1000, regular priorC500 and AMT priorC5000 atAGI10000 yield regular charity1500/currentNOL11500, AMT charity4000/AMTI6000/currentATNOL0. Regular carry0 and AMT2024C2000 remain distinct; signed charitable adjustment−2500."
+    testRef: "tests/engine/federal-form-172-charitable-histories.test.ts::preserves a larger independent AMT original balance"
+  - line: "source-confirmation"
+    description: "Confirm current origin without replacing the actual prior charitable records"
+    formula: "A source-only adjustments object retains exact regular and AMT history packets when current-origin confirmation is supplied; no aggregate carry or allowance is inserted. The panel describes the complete current/prior charitable-history composition with explicitly empty prior NOL histories rather than requiring all charitable histories to be empty."
+    testRef: "tests/apps/web/form-172-charitable-history-confirmation.test.tsx::confirms current loss without changing actual charitable histories"
+  - line: "production-guide"
+    description: "Preserve original histories through real desktop and mobile guide edits"
+    formula: "Current-origin confirmation restores the source-derived estimate; an independent AMT amount edit revokes the relevant confirmations, reconfirmation restores it, reload preserves exact cents, and removed history blocks estimation. Original current receipt and regular opening stay unchanged; no source identifiers are transmitted in request bodies."
+    testRef: "apps/web/tests/form-172-charitable-histories.spec.ts::preserves current loss and independent charitable histories through the production guide"

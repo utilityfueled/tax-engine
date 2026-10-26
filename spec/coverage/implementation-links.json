@@ -553,6 +553,16 @@
       "note": "Original charitable and independent prior sources in actual selected current loss origins; linked2025 reference is review-only, with isolated2026 choice controls and unchanged final-year gates."
     },
     {
+      "key": "federal/form-172-charitable-histories",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-form-172-charitable-histories.test.ts::uses actual nonbusiness income for current and prior charitable origin deductions",
+        "tests/pdf/form-172-charitable-histories-review.test.ts::binds current loss and both original charitable histories before rendering"
+      ],
+      "note": "Actual current Form172 composes selected current and prior charitable histories with independently known-empty prior NOL ledgers. Historical private review is source-bound; actual2026 form, filing and human qualification remain separate."
+    },
+    {
       "key": "federal/form-172-charitable-origin",
       "enginePath": "src/engine/forms/form-172-charitable-sources.ts",
       "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
