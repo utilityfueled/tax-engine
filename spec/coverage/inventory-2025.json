@@ -2481,6 +2481,29 @@
       ]
     },
     {
+      "key": "federal/form-172-charitable-carried-composition",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i172",
+      "specPath": "spec/federal/form-172-charitable-carried-composition.yaml",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-form-172-charitable-carried-composition.test.ts::keeps unused old regular carry separate from the new current loss",
+        "tests/pdf/form-172-charitable-carried-composition-review.test.ts::binds old carry and new current loss independently before review output"
+      ],
+      "implementationNote": "Complete actual old NOL and charitable histories use the established zero or unique original-excess comparison before independently adding the current Form172 loss. Historical review output and isolated2026 controls do not qualify filing, final2026 forms or human review.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-172-charitable-closure",
       "jurisdiction": "federal",
       "taxYear": 2025,

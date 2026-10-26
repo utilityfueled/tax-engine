@@ -33,13 +33,17 @@ export interface CharitableNolOriginLimit {
 type HistoryInput = Pick<TaxYearInput,'netOperatingLoss'|'priorYear'|'charitableCarryoverSources'> & { taxpayer:CharitableSourceValidationInput['taxpayer'] };
 
 /** A new current loss does not itself trigger the carried-NOL charity reduction.
- * This source-derived composition requires actual empty prior loss histories. */
+ * Complete original histories use the established old-carry comparison first;
+ * Form172 adds its independently derived current loss only afterward. */
 export function usesCurrentOriginCharitableHistories(input:TaxYearInput):boolean {
   const loss=input.netOperatingLoss,history=loss?.alternativeTax?.charitableCarryoverHistory;
-  if(!input.form172 || !Array.isArray(loss?.vintages) || loss.vintages.length
-    || !Array.isArray(loss.alternativeTax?.vintages) || loss.alternativeTax.vintages.length) return false;
+  if(!input.form172 || !Array.isArray(loss?.vintages)
+    || !Array.isArray(loss.alternativeTax?.vintages)) return false;
+  const current=input.donations.length>0 || input.k1CharitableSources!==undefined || (input.cryptoIncome?.donations.length??0)>0;
+  const completeCurrentWithOldLoss=current && (loss.vintages.length>0 || loss.alternativeTax.vintages.length>0)
+    && input.charitableCarryoverSources!==undefined && history?.alternativeCarryoverSources!==undefined;
   return (input.charitableCarryoverSources?.vintages?.length??0)>0
-    || (history?.alternativeCarryoverSources?.vintages?.length??0)>0;
+    || (history?.alternativeCarryoverSources?.vintages?.length??0)>0 || completeCurrentWithOldLoss;
 }
 
 /** Existing single-source methods remain separate; no new user switch. */

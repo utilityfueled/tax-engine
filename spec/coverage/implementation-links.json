@@ -552,6 +552,16 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/form-172-charitable-carried-composition",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-form-172-charitable-carried-composition.test.ts::keeps unused old regular carry separate from the new current loss",
+        "tests/pdf/form-172-charitable-carried-composition-review.test.ts::binds old carry and new current loss independently before review output"
+      ],
+      "note": "Complete actual old NOL and charitable histories use the established zero or unique original-excess comparison before independently adding the current Form172 loss. Historical review output and isolated2026 controls do not qualify filing, final2026 forms or human review."
+    },
+    {
       "key": "federal/form-172-charitable-closure",
       "enginePath": "src/engine/forms/form-172-charitable-sources.ts",
       "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",

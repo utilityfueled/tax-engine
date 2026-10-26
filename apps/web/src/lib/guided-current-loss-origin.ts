@@ -38,13 +38,12 @@ export function buildCurrentLossOrigin(data: CurrentLossOriginData | undefined, 
     const history = prior.alternativeTax?.charitableCarryoverHistory;
     // buildGuidedNetOperatingLoss has validated both complete original charity
     // packets. A new loss does not turn an unknown prior NOL into a known zero.
-    const completeHistoryWithoutPriorLoss = !!(history?.alternativeCarryoverSources && sectionData.deductions?.charitableCarryoverSources
-      && Array.isArray(prior.vintages) && prior.vintages.length === 0
-      && Array.isArray(prior.alternativeTax?.vintages) && prior.alternativeTax.vintages.length === 0);
+    const completeHistory = !!(history?.alternativeCarryoverSources && sectionData.deductions?.charitableCarryoverSources
+      && Array.isArray(prior.vintages) && Array.isArray(prior.alternativeTax?.vintages));
     if (!history || (priorCharity && !history.alternativeCarryoverSources)
-      || (currentCharity && !completeHistoryWithoutPriorLoss && (!Array.isArray(history.priorRegularCarryovers) || !Array.isArray(history.priorAlternativeCarryovers)
+      || (currentCharity && !completeHistory && (!Array.isArray(history.priorRegularCarryovers) || !Array.isArray(history.priorAlternativeCarryovers)
         || history.priorRegularCarryovers.length || history.priorAlternativeCarryovers.length))) {
-      throw new Error('Charitable loss-origin sources require complete independent regular and AMT charity histories. Current gifts with prior charity need both original packets and explicitly empty prior NOL histories; unknown balances cannot be inferred.');
+      throw new Error('Charitable loss-origin sources require complete independent regular and AMT charity histories. Current gifts with prior charity need both original packets and actual prior NOL histories; unknown balances cannot be inferred.');
     }
   }
   if (data.farmingLossIncluded !== false || data.estateOrTrustLossIncluded !== false) {

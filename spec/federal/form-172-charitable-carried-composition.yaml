@@ -1,0 +1,96 @@
+form: "Form172 carried loss and charitable histories"
+fullName: "Actual old NOL use and separate current loss with complete charitable histories"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  Source refresh 2026-10-26: IRC172(d)(1)/(4), Reg1.172-3(a)(1)(ii)/(3),
+  Reg1.172-5, Reg1.170A-10(d)(1), Reg1.55-1(a)/(b), and Form172 PartI
+  lines6-10/23 and PartII line26. An actual carried NOL retains its own
+  current deduction, modified absorption, expiry and succeeding carry.
+  The established zero-benefit/unique-excess charitable comparison uses
+  that succeeding OLD carry before adding any newly computed Form172 loss.
+  PartI adds back the actual regular old NOL deduction. The independent AMT
+  origin restores actual ATNOLD and actual regular199A once. Neither an
+  unused old balance nor the existence of a new loss itself establishes a
+  charitable carry reduction. Both original charitable and NOL histories
+  must be complete; no calculated allowance or comparison is an input.
+  Reuse existing original category/percentage/FIFO, source valuation and
+  selected deduction methods. Positive benefit across multiple excess
+  origins, floor allocation to prior vintages, binding mixed-B media and
+  unresolved amended prior-C offset remain their precise existing guards.
+  IRC108(b)(4) and Pub4681 order after-tax reduction to the current loss
+  first and then original old vintages. Admit this existing method only
+  with zero charitable comparison benefit in both systems and the existing
+  actual-use versus modified-absorption reconciliation; positive benefit
+  and different modified absorption retain their separate COD boundary.
+  These are independently derived controls, not matching published numeric
+  examples or human qualification. Real2026 calculation gates stay closed.
+lines:
+  - line: "unused-old-current-loss"
+    description: "Preserve unused old carry before adding the independently computed current loss"
+    formula: "Wages20000 + active business−40000 + interest30000 = AGI10000. Actual currentA1000 + priorC5000/500 allows4000 regular/1500AMT. Personal tax20000 yields regular currentNOL14000; old regular100000 claims/absorbs0 and stays100000. Closing regular114000; noATNOL; original charity2000/0 and charitable reduction0/0."
+    testRef: "tests/engine/federal-form-172-charitable-carried-composition.test.ts::keeps unused old regular carry separate from the new current loss"
+  - line: "independent-old-amt"
+    description: "Retain actual positive ATNOLD while generating a separate regular loss"
+    formula: "Same originals plus independent oldAMT100000: AMTI beforeATNOL8500, ATNOLD7650, oldAMTcarry92350, finalAMTI850. Restoring7650 before currentAMT PartI yields no newATNOL. Regular current14000/closing114000 and both charity balances remain unchanged."
+    testRef: "tests/engine/federal-form-172-charitable-carried-composition.test.ts::preserves actual positive ATNOLD without creating another alternative loss"
+  - line: "unique-old-benefit"
+    description: "Apply the established unique-origin comparison to old carry only"
+    formula: "Wages110000, business−40000, interest30000: preNOLAGI100000. CurrentA1000, priorC50000/5000 and personal tax20000 produce oldregularNOLD39200, AGI60800, charity19240, oldcarry60800. Keeping only normal charity19240 gives comparison carry51392; benefit9408 reduces originalC31760 to22352. New regular/AMT losses0. AMT charity6000, ATNOLD84600, oldcarry15400 and finalAMTI9400."
+    testRef: "tests/engine/federal-form-172-charitable-carried-composition.test.ts::uses only the old succeeding carry in the unique charitable comparison"
+  - line: "actual-selection"
+    description: "Preserve actual standard selection instead of forcing an itemized candidate"
+    formula: "Original10000AGI case with actual2025 standard15750: oldregular use0/carry100000, newregular5750/closing105750. OldAMT100000 allows9000/carry91000; finalAMTI1000 and no newATNOL. Charity deduction0, original treated-paid carry2000/0, no charitable reduction."
+    testRef: "tests/engine/federal-form-172-charitable-carried-composition.test.ts::keeps actual standard selection and both old carries"
+  - line: "original-expiry"
+    description: "Expire the old vintage without expiring the separately generated current loss"
+    formula: "Actual2005 regular100000 is fully deductible under172(a)(2)(A), despite modified absorption0. AGI−90000 means charity0 and personal tax20000; PartI−110000 plus old deduction100000 gives currentNOL10000. Old100000 expires after2025, oldclosing0, newclosing10000. CurrentA1000 and priorC5000 remain charitable carry6000, with comparison reduction0."
+    testRef: "tests/engine/federal-form-172-charitable-carried-composition.test.ts::preserves original old loss expiry and separate current origin"
+  - line: "nonitemized-2026"
+    description: "Use current170p once while retaining the established independent percentage ledgers"
+    formula: "Isolated2026 source: AGI10000, currentpubliccash2000, priorC5000/500, oldregular/AMT100000 each. Standard16100 plus current170p1000 yields newregular7100, oldregularuse0/closing107100. AMTI9000 beforeATNOL, deduction8100, oldAMTcarry91900, final900, newATNOL0. Prior charity2000/0; floor does not create a nonitemized carry."
+    testRef: "tests/engine/federal-form-172-charitable-carried-composition-2026.test.ts::retains current170p once with actual old regular and alternative carries"
+  - line: "no-standard-entitlement"
+    description: "Retain actual zero standard entitlement and a positive old NOL deduction"
+    formula: "Same2026 originals with actual MFS spouse itemizing and explicit nonitemized choice: standard0,170p1000, oldregularNOLD7200, AGI2800, oldcarry92800; no newregular loss after7200addback. AllowedG1680 exhausts the A shared limit1400, so neither regular nor AMT priorC is treated paid. Cash percentage carry320 plus priorC5000/500 gives5320/820. ATNOLD8100/oldcarry91900/finalAMTI900/newATNOL0."
+    testRef: "tests/engine/federal-form-172-charitable-carried-composition-2026.test.ts::does not invent standard entitlement when old NOL is claimed"
+  - line: "guarded-originals"
+    description: "Keep independent original histories and unresolved allocation boundaries"
+    formula: "Unknown loss histories, false charity confirmation, changed identity or old source year, positive-benefit COD composition, and multiple positive excess origins with positive benefit reject. No old history is silently reset and no origin is selected by input order."
+    testRef: "tests/engine/federal-form-172-charitable-carried-composition.test.ts::retains actual history and unresolved allocation guards"
+  - line: "actual-guide"
+    description: "Collect old and current sources without collecting a computed deduction"
+    formula: "The actual guide preserves oldregular100000 and independent oldAMT100000 alongside original current/prior charity and current origin. It derives regularclosing114000, AMTclosing92350; unknown histories block, edited originals revoke confirmation."
+    testRef: "tests/guided-interview/guided-form-172-charitable-carried-composition.test.ts::reaches old and current loss composition from actual independent guided sources"
+  - line: "private-review"
+    description: "Reconcile old use and new loss separately before review rendering"
+    formula: "Original-source preparation binds both NOL and charity histories. The review prints oldregular100000/new14000/closing114000 and oldAMT100000/use7650/closing92350. Removed sources, changed old carry, changed new loss and balanced old/new redistribution reject before template I/O."
+    testRef: "tests/pdf/form-172-charitable-carried-composition-review.test.ts::binds old carry and new current loss independently before review output"
+  - line: "actual-workspace"
+    description: "Render the unmocked actual guided old and current loss packet"
+    formula: "Saved originals produce oldregular100000 plus current14000, closing114000; independent oldAMT use7650 and carry92350. Each review page retains its notice and omits personal source identifiers."
+    testRef: "tests/apps/web/workspace-form-172-charitable-carried-composition.test.ts::exports the actual old and current charitable loss composition"
+  - line: "source-confirmation"
+    description: "Confirm current sources without erasing any actual old carry history"
+    formula: "The actual source-only adjustments panel retains both old100000 histories and independent charity packets while confirming the current origin. No aggregate or computed carry is inserted."
+    testRef: "tests/apps/web/form-172-charitable-carried-confirmation.test.tsx::confirms current origin while preserving both original old loss histories"
+  - line: "production-guide"
+    description: "Retain actual old histories through production desktop and mobile edits"
+    formula: "Current source confirmation enables the estimate, an exact original oldAMT source edit revokes confirmation, reconfirmation restores it, and reload preserves both old origins and actual current/prior charity. Blank old balance blocks estimation; no private source references are sent in request bodies."
+    testRef: "apps/web/tests/form-172-charitable-carried-composition.spec.ts::preserves old and current loss sources through the production guide"
+  - line: "zero-benefit-cod"
+    description: "Apply existing after-tax current-loss-first COD only after zero charitable comparisons"
+    formula: "Actual old regular100000/use0 plus new14000, oldAMT100000/use7650/remaining92350 plus new0, both charitable comparisons0. Actual insolvency-excluded personal debt5000 reduces newregular14000 to9000 first (closing109000), and oldAMT92350 to87350. Original losses, current deductions, charity2000/0 stay unchanged. Each original old absorption must equal current taxable-income use; positive charity benefit or different absorption remains closed."
+    testRef: "tests/engine/federal-form-172-charitable-carried-composition.test.ts::composes zero-benefit charitable histories with current-loss-first COD"
+  - line: "cod-guided-originals"
+    description: "Reach the bounded COD composition through the existing actual source collectors"
+    formula: "Actual debt and insolvency originals, old loss histories and current business/charity sources are preserved by the unmocked guide. It derives109000 regular/87350AMT after-tax carry; no entered carry or allocation."
+    testRef: "tests/guided-interview/guided-form-172-charitable-carried-composition.test.ts::retains actual debt sources beside old and current charitable histories"
+  - line: "cod-private-review"
+    description: "Bind debt reduction and charitable comparison independently in review output"
+    formula: "Original charity and COD contexts retain actual old/new use and5000 reduction; balanced changed old/current COD attribution rejects before output. No source identifiers appear in the redacted review."
+    testRef: "tests/pdf/form-172-charitable-carried-composition-review.test.ts::binds zero-benefit charitable and COD contexts before review output"
+  - line: "source-choice-closure"
+    description: "Include actual empty charitable histories and prior-only sources without an invented old-loss reset"
+    formula: "Same10k income with currentA1000 and explicitly empty regular/AMT charity histories gives newregular11000 plus old100000, independentATNOLD8100/closing91900. Removing actual current gift instead retains priorC5000/500, gives newregular13000 plus old100000 and independentATNOLD8550/closing91450. Both routes retain the original old-loss sources."
+    testRef: "tests/engine/federal-form-172-charitable-carried-composition.test.ts::closes current-only and prior-only actual charitable source choices"

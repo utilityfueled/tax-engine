@@ -21,8 +21,8 @@ export interface Form172CharitableSourcesResult {
 }
 
 /** No AGI, allowance or loss is collected here. Complete current/prior charity
- * histories compose with a current origin only when both prior NOL ledgers are
- * explicitly empty. Existing single-source carried-NOL routes remain separate. */
+ * histories retain the old-carry comparison separately from the new current
+ * origin. Existing source and unresolved allocation guards still apply. */
 export function calculateForm172CharitableSources(input: TaxYearInput): Form172CharitableSourcesResult | undefined {
   const hasCurrent = input.donations.length > 0 || input.k1CharitableSources !== undefined
     || (input.cryptoIncome?.donations.length ?? 0) > 0;

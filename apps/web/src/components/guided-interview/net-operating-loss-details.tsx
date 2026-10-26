@@ -15,8 +15,8 @@ function CharitableHistories({ data, onChange }: { data?: NolCharitableHistoryDa
   if (!data) return <button type="button" className="utility-button" onClick={() => onChange({})}>Add independent charitable carry histories</button>;
   const change = (patch: Partial<NolCharitableHistoryData>) => onChange({ ...data, ...patch });
   return <fieldset className="panel-stack" style={sourceGroupStyle}><legend>Prior charitable carry histories</legend>
-    <p className="guided-hint">Use both actual prior-year charitable worksheets. Confirm each empty history separately when there is no carryover. For a 2025 return with one earlier contribution and no current gifts, enter the regular original history under deductions and the independent AMT original history below. Their amounts can differ.</p>
-    <p className="guided-hint">Saved summary records remain here and must agree with the original histories. Mixed categories, multiple vintages, current-plus-prior contributions and the 2026 prior-carry floor need their separate methods.</p>
+    <p className="guided-hint">Use both actual prior-year charitable worksheets. Confirm each empty history separately when there is no carryover. Enter the regular original history under deductions and the independent AMT original history below. Their amounts can differ.</p>
+    <p className="guided-hint">Saved summary records remain here and must agree with the original histories. Complete current receipts and prior histories can use the supported category and NOL comparisons. Reductions that require an unresolved allocation between earlier contributions or between cash and property still need their separate method.</p>
     <div className="guided-form-grid">
       <TextFact label="Charitable histories source tax year" value={data.sourceTaxYear ?? ''} onChange={sourceTaxYear => change({ sourceTaxYear })} />
       <TextFact label="Charitable histories source reference" value={data.sourceReference ?? ''} onChange={sourceReference => change({ sourceReference })} />

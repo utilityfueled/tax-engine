@@ -41,10 +41,10 @@ it('retains independent source and prior-loss boundaries',()=>{
   if(!input.netOperatingLoss?.alternativeTax)throw new Error('Missing fictional source');
   input.netOperatingLoss.alternativeTax.charitableCarryoverHistory=undefined;
   expect(()=>calculateFederalTax(input)).toThrow(/charit|histor/i);
-  const positive=currentOriginCharitableHistoriesInput();
-  if(!positive.netOperatingLoss)throw new Error('Missing fictional loss history');
-  positive.netOperatingLoss.vintages=priorCharitableNolInput().netOperatingLoss?.vintages ?? [];
-  expect(()=>calculateFederalTax(positive)).toThrow(/current|prior|origin|charit/i);
+  const unknown=currentOriginCharitableHistoriesInput();
+  if(!unknown.netOperatingLoss)throw new Error('Missing fictional loss history');
+  unknown.netOperatingLoss.vintages=undefined;
+  expect(()=>calculateFederalTax(unknown)).toThrow(/current|prior|origin|charit|history|source/i);
   const changed=currentOriginCharitableHistoriesInput();
   if(!changed.charitableCarryoverSources)throw new Error('Missing fictional charity history');
   changed.charitableCarryoverSources.primaryTaxpayerIdLast4='9999';

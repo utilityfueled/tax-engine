@@ -148,7 +148,9 @@ export function calculateForm172Return(input: TaxYearInput, context?: Form172Ret
     throw new Error("Form172 Schedule1A and nonitemizer charitable deductions require their separate origin coordination method");
   }
   if (charitableSources && year === 2026 && context.deductionUsed !== "itemized"
-    && (input.netOperatingLoss.vintages?.length !== 0 || input.netOperatingLoss.alternativeTax?.vintages?.length !== 0)) {
+    && (input.netOperatingLoss.vintages?.length !== 0 || input.netOperatingLoss.alternativeTax?.vintages?.length !== 0)
+    && !(charitableSources.sourceKind === "complete_histories" && context.priorLoss.determinedCharitableCarryover
+      && context.priorLoss.determinedAlternativeCharitableCarryover)) {
     throw new Error("Form172 nonitemized charitable origin with prior losses requires its separate170(p) and carry comparison method");
   }
   if (!context.scheduleD || !context.capitalGainLoss.eq(capital.capitalGainLoss)) throw new Error("Form172 capital must reconcile with the actual canonical Schedule D and1040 transfer");

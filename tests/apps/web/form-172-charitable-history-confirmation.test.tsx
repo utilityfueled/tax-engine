@@ -24,7 +24,7 @@ it('confirms current loss without changing actual charitable histories', async (
   }
   try {
     await act(async () => root.render(<Harness />));
-    expect(element.textContent).toContain('Current gifts and prior charitable carryovers can be combined when both prior NOL histories explicitly record no carryovers.');
+    expect(element.textContent).toContain('Current gifts and prior charitable carryovers can be combined with complete original NOL histories.');
     expect(validateSection(latest, 'adjustments').status).toBe('partial');
     const select = [...element.querySelectorAll('label')].find(label => label.querySelector('.guided-field-label')?.textContent === 'Current loss sources checked after the last edit')?.querySelector('select');
     if (!select) throw new Error('Missing current source confirmation');
