@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.151",
+    ruleVersion: "2025.152",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-118/t26/s170/", section: "Source-bound 2026 ordinary current and prior charitable category use with a determined current-year floor", revision: "IRC170(b)(1)(I), (d)(1)(C), Reg1.170A-10 and final2025 Pub526; positive floor only in categories with zero allowed prior contribution, original FIFO/expiry and selected carry retained; prior-vintage floor, partial B media, amended prior-C offset and human qualification remain separate; historical2025 calculations and full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual consistent monthly full eligible-plan credit allocation across separate businesses; signed Step3 and WorksheetW/X amounts with independent owner income limits", revision: "Final2025 reasonable-method permission; this recorded allocation is a source-backed interpretation, not a published numerical example. Original policies, payments, benchmark splits, same-owner QBI attribution and private review are conserved; binding joint2025 repayment ownership and other payer/marriage methods remain separate. Agent source/PDF review only; human, filing and full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i172", section: "Actual donation-only crypto, charity-only K-1 and single prior charitable vintage in current regular and alternative loss origins; actual2026 standard or nonitemized choice", revision: "IRC172(d)(4),63(b)(4),56(b)(1)(D), Reg1.172-3/1.55-1; independent original histories and current claims, basis suspension separate, internal source proof and actual guide/private review; mixed floor/NOL attribution and human qualification remain separate, full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p970", section: "Actual prepaid and cash QTP tuition with independently supplied ordinary ESA allocations and original basis histories", revision: "IRC529(c)(3)(B)(v)/(vi),530(d)(2)(C), Notice2016-13; exact original costs and source allocations, separate QTP earnings and common ESA ratio, canonical educator and private review retained; assistance without ESA and academic-period room-board methods remain separate, human/form qualification pending", retrievedAt: "2026-10-26" },
@@ -190,11 +191,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.148-law-integration-draft",
+    ruleVersion: "2026.149-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-118/t26/s170/", section: "Source-bound 2026 ordinary current and prior charitable category use with a determined current-year floor", revision: "IRC170(b)(1)(I), (d)(1)(C), Reg1.170A-10 and final2025 Pub526; positive floor only in categories with zero allowed prior contribution, original FIFO/expiry and selected carry retained; prior-vintage floor, partial B media, amended prior-C offset and human qualification remain separate; historical2025 calculations and full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual consistent monthly full eligible-plan credit allocation across separate businesses; signed Step3 and WorksheetW/X amounts with independent owner income limits", revision: "Final2025 reasonable-method permission; this recorded allocation is a source-backed interpretation, not a published numerical example. Original policies, payments, benchmark splits, same-owner QBI attribution and private review are conserved; binding joint2025 repayment ownership and other payer/marriage methods remain separate. Agent source/PDF review only; human, filing and full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/instructions/i172", section: "Actual donation-only crypto, charity-only K-1 and single prior charitable vintage in current regular and alternative loss origins; actual2026 standard or nonitemized choice", revision: "IRC172(d)(4),63(b)(4),56(b)(1)(D), Reg1.172-3/1.55-1; independent original histories and current claims, basis suspension separate, internal source proof and actual guide/private review; mixed floor/NOL attribution and human qualification remain separate, full2026 gates unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p970", section: "Actual prepaid and cash QTP tuition with independently supplied ordinary ESA allocations and original basis histories", revision: "IRC529(c)(3)(B)(v)/(vi),530(d)(2)(C), Notice2016-13; exact original costs and source allocations, separate QTP earnings and common ESA ratio, canonical educator and private review retained; assistance without ESA and academic-period room-board methods remain separate, human/form qualification pending", retrievedAt: "2026-10-26" },

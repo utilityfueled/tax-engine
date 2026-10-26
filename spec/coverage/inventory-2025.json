@@ -248,6 +248,25 @@
       ]
     },
     {
+      "key": "federal/charitable-category-use",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s170/",
+      "specPath": "spec/federal/charitable-category-use.yaml",
+      "enginePath": "src/engine/forms/charitable-category-use.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/charitable-contribution-worksheet",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -274,6 +293,30 @@
       "specPath": "spec/federal/charitable-current-sources.yaml",
       "enginePath": "src/engine/forms/charitable-current-sources.ts",
       "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/charitable-determined-floor",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s170/",
+      "specPath": "spec/federal/charitable-determined-floor.yaml",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-charitable-determined-floor.test.ts::selects determined floor carry after the actual deduction choice",
+        "tests/guided-interview/guided-charitable-determined-floor.test.ts::preserves actual prior categories and current floor sources through guide and review gates"
+      ],
+      "implementationNote": "The shared canonical calculation selects the source-bound determined 2026 floor and its actual carry. The guide regression preserves the closed year and PDF gates; no 2026 physical form, filing support or human qualification is claimed.",
       "specExists": true,
       "engineExists": true,
       "packetGenerationExists": false,

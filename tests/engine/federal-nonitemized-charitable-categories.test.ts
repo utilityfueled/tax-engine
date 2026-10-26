@@ -21,5 +21,13 @@ it('transfers actual selected category balances without claiming itemization',()
     expect(r.allLines.filter(row=>row.form==='Charitable Carryover'&&row.line==='selected-deduction')).toHaveLength(1);
     expect(JSON.stringify(input)).toBe(before);
   }
-  for(const election of ['automatic','itemized'] as const){const input=nonitemizedCategoryFixture();input.deductionElection=election;expect(()=>calculateFederalTax(input)).toThrow(/prior|floor|source|selection/i);}
+  for(const election of ['automatic','itemized'] as const){
+    const input=nonitemizedCategoryFixture();input.deductionElection=election;const result=calculateFederalTax(input);
+    expect(result.deductionUsed).toBe('itemized');expect(result.deductionAmount.toFixed()).toBe('49500');
+    expect(result.taxableIncome.toFixed()).toBe('50500');expect(result.nonitemizerCharitableDeduction?.toFixed()).toBe('0');
+    expect(result.carryforwards.charitableContributions.toFixed()).toBe('53500');
+    expect(result.scheduleA?.charitableTreatment?.priorTreatedAsPaid.toFixed()).toBe('15000');
+    expect(result.scheduleA?.charitableTreatment?.priorDeduction.toFixed()).toBe('15000');
+    expect(result.scheduleA?.determinedCharitableFloor?.currentFloorByCategory.capital_gain_30.toFixed()).toBe('500');
+  }
 });

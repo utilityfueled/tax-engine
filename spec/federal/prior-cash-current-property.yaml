@@ -24,6 +24,10 @@ notes: |
   Sources also include https://www.ecfr.gov/current/title-26/section-1.170A-10
   and final 2025 Pub. 526 carryover ordering; the 2026 floor controls are
   statutory derivations, not published IRS worked examples.
+  The canonical handoff now uses charitable-determined-floor.yaml, which
+  derives this same result from the shared actual percentage ledger and
+  proves that every floor-hit category contains only current allowance.
+  This standalone original helper remains covered by its unchanged literals.
 lines:
   - line: "category-separated-floor"
     description: "Use actual prior G before current A and apply the floor entirely to current A"

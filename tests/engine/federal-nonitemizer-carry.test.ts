@@ -56,6 +56,6 @@ it('rejects unverified candidate carry and unsupported selection changes', () =>
   }
   for (const method of ['itemized', 'automatic'] as const) {
     const changed = nonitemizerCarryFixture('2000', [{ taxYear: 2025, amount: '5000' }]); changed.deductionElection = method;
-    expect(() => calculateFederalTax(changed)).toThrow(/2026.*floor|explicit|selection/i);
+    expect(() => calculateFederalTax(changed)).toThrow(/floor reaching an allowed prior contribution.*original-vintage/i);
   }
 });
