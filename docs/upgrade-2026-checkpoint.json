@@ -194,8 +194,8 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Final current-head full verification remains pending after source packages. Exact095d5bd unit/browser and7523384 coverage are historical, not later-code evidence.",
-    "The2026 rule pack and ordinary two-owner Marketplace and finite charitable methods remain incomplete. Other explicitly named unsupported methods are not counted as implemented; full2026 calculation remains blocked.",
+    "Final current-head combined verification remains pending after bb4cf38. Latest36d5fab coverage passes unchanged gates, 9bcf47b browser/build and7748af0 scoped full regression are separately bounded historical evidence.",
+    "The2026 rule pack, finite Marketplace methods and charitable basis/history/at-risk methods remain incomplete. Other explicitly named unsupported methods are not counted as implemented; full2026 calculation remains blocked.",
     "Independent human tax review, selected-state demand/qualification and final physical forms are outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net1202/Form172 interpretations remain unresolved.",
     "AI application/scorer bindings are reviewed;240draftcases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
     "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence; local synthetic checks do not establish staging readiness.",
@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "010879a6ab2f9394796761f2d5fc8af1f1513af9",
+    "lastRecordedCommit": "bb4cf3896fcac05ab195b3f6cf8dda45a1afeabd",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1310,8 +1310,8 @@
       "hosted staging",
       "final multi-platform release images"
     ],
-    "workInProgress": "Three frozen EIC/claimant/marriage candidates under review and verification; ordinary K1 charitable basis/source handoff, finite Marketplace and charitable history methods, followed by final exact-source release checks.",
-    "latestIntegratedCommit": "010879a6ab2f9394796761f2d5fc8af1f1513af9",
+    "workInProgress": "Remaining EIC PDF sources, finite Marketplace methods, separate S-corp debt repair and actual K1 charitable source handoff; fresh combined verification and runtime recovery.",
+    "latestIntegratedCommit": "bb4cf3896fcac05ab195b3f6cf8dda45a1afeabd",
     "activeIntegrationRun": {
       "commit": "9bcf47be7791b268875c6c47704e95b48ed5c5a8",
       "tree": "8511eebeccbdd5825760c12a03ecd80ca8b8d948",
@@ -1628,10 +1628,10 @@
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
     "remainingInternalWork": [
-      "Complete and integrate the independently reviewed EIC table/statutory correction, actual claimant dependency/abode restrictions and marriage first-full-month correction; preserve original source facts and closed2026 gates.",
-      "Complete ordinary shared-policy no-agreement default allocation, no-APTC allocation and overlapping/shared-plus-unshared months from actual sources, and historical separate nonspecified-only business health ordering. Joint2025 binding repayment ownership remains a controlling-interpretation dependency.",
-      "Finish actual K1 charitable attached statements and basis-limited versus appreciation source amounts; prior-floor and regular/AMT NOL charity coordination and partial B media allocation remain explicit internal methods.",
-      "Run final exact-source unit/coverage/types/spec/inventory/builds/lint/browser and completed remote CI, then native runtime images/SBOM/scans/recovery and support reconciliation. Local synthetic evidence does not substitute for staging, final forms or independent human qualification."
+      "Finish the remaining explicit Form1040 EIC eligibility/home review fields from actual sources; Rule10 checkbox is delivered.",
+      "Complete ordinary shared-policy no-agreement default allocation, no-APTC allocation, overlapping/shared-plus-unshared months, and historical separate nonspecified-only business health ordering. Joint2025 binding repayment ownership remains a controlling-interpretation dependency.",
+      "Repair S-corporation nondeductible-expense debt ordering, then complete actual K1 charitable attached statements, basis-limited versus appreciation amounts, distinct basis history and activity/at-risk handoff. Prior-floor, regular/AMT NOL charity and partial B media methods remain unfinished.",
+      "Run final exact-source unit/coverage/types/spec/inventory/builds/lint/browser and completed remote CI, then native runtime images/SBOM/scans/recovery and support reconciliation. Local synthetic evidence does not substitute for staging, final forms or human qualification."
     ],
     "previousStableCoverageRun": {
       "commit": "7523384faf0cdaa8583883abd2fb88319552bf92",
@@ -1651,7 +1651,7 @@
       "evidenceSha256": "e95fecc486133167677bfaa214ff20c6079658d669daa7144bc81ba4b70e4563",
       "scope": "Exact committed source with pinned Python/pypdf, original sample PDFs and disposable loopback PostgreSQL; later packages excluded."
     },
-    "lastPushedCommit": "010879a6ab2f9394796761f2d5fc8af1f1513af9",
+    "lastPushedCommit": "bb4cf3896fcac05ab195b3f6cf8dda45a1afeabd",
     "currentBrowserRun": {
       "commit": "9bcf47be7791b268875c6c47704e95b48ed5c5a8",
       "status": "passed",
@@ -2616,29 +2616,28 @@
       "scope": "Exact tracked source; later crypto, health and subsequent packages excluded."
     },
     "currentRemoteRuns": {
-      "sourceCommit": "010879a6ab2f9394796761f2d5fc8af1f1513af9",
+      "sourceCommit": "7748af06050f13297298ea5235b99baab927158e",
       "observedRuns": [
         {
           "conclusion": "",
-          "createdAt": "2026-10-26T04:19:13Z",
-          "databaseId": 40268456290,
-          "headSha": "010879a6ab2f9394796761f2d5fc8af1f1513af9",
-          "name": "CI",
+          "createdAt": "2026-10-26T04:38:55Z",
+          "databaseId": 40270143824,
+          "headSha": "7748af06050f13297298ea5235b99baab927158e",
           "status": "in_progress",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40268456290"
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40270143824",
+          "workflowName": "Web"
         },
         {
           "conclusion": "",
-          "createdAt": "2026-10-26T04:19:13Z",
-          "databaseId": 40268456207,
-          "headSha": "010879a6ab2f9394796761f2d5fc8af1f1513af9",
-          "name": "Web",
+          "createdAt": "2026-10-26T04:38:55Z",
+          "databaseId": 40270143803,
+          "headSha": "7748af06050f13297298ea5235b99baab927158e",
           "status": "in_progress",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40268456207"
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40270143803",
+          "workflowName": "CI"
         }
       ],
-      "evidence": ".local/upgrade-evidence/remote-runs-010879a.json",
-      "status": "in-progress-when-read",
+      "status": "in-progress-when-read; later pushes may supersede",
       "qualification": false
     },
     "charityHistoryParentReview": {
@@ -2835,6 +2834,18 @@
         ],
         "explicitNonitemizedCategoryCarry": [
           "010879a"
+        ],
+        "completeEicClaimants": [
+          "6619855fbdb7ea69f747dad8138a717f2bd4ede6"
+        ],
+        "eicPublishedTable": [
+          "7748af06050f13297298ea5235b99baab927158e"
+        ],
+        "marriageFirstDay": [
+          "768a987397c1576ba07b4f917c5353e23f0ada49"
+        ],
+        "eicRule10Pdf": [
+          "bb4cf3896fcac05ab195b3f6cf8dda45a1afeabd"
         ]
       },
       "owners": {
@@ -2844,11 +2855,11 @@
         "educationMethodsAndFinalIntegration": "parent"
       },
       "subsequent": [
-        "Complete and integrate the independently reviewed EIC table/statutory correction, actual claimant dependency/abode restrictions and marriage first-full-month correction; preserve original source facts and closed2026 gates.",
-        "Complete ordinary shared-policy no-agreement default allocation, no-APTC allocation and overlapping/shared-plus-unshared months from actual sources, and historical separate nonspecified-only business health ordering. Joint2025 binding repayment ownership remains a controlling-interpretation dependency.",
-        "Finish actual K1 charitable attached statements and basis-limited versus appreciation source amounts; prior-floor and regular/AMT NOL charity coordination and partial B media allocation remain explicit internal methods.",
-        "Run final exact-source unit/coverage/types/spec/inventory/builds/lint/browser and completed remote CI, then native runtime images/SBOM/scans/recovery and support reconciliation. Local synthetic evidence does not substitute for staging, final forms or independent human qualification.",
-        "Qualified interpretations for reduced mixed tips/bonds and negative-net1202 remain separate; do not invent allocations or human approval."
+        "Finish the remaining explicit Form1040 EIC eligibility/home review fields from actual sources; Rule10 checkbox is delivered.",
+        "Complete ordinary shared-policy no-agreement default allocation, no-APTC allocation, overlapping/shared-plus-unshared months, and historical separate nonspecified-only business health ordering. Joint2025 binding repayment ownership remains a controlling-interpretation dependency.",
+        "Repair S-corporation nondeductible-expense debt ordering, then complete actual K1 charitable attached statements, basis-limited versus appreciation amounts, distinct basis history and activity/at-risk handoff. Prior-floor, regular/AMT NOL charity and partial B media methods remain unfinished.",
+        "Run final exact-source unit/coverage/types/spec/inventory/builds/lint/browser and completed remote CI, then native runtime images/SBOM/scans/recovery and support reconciliation. Local synthetic evidence does not substitute for staging, final forms or human qualification.",
+        "Qualified interpretations for reduced mixed tips/bonds and negative-net1202 remain separate; no invented allocation or human approval."
       ],
       "unsupportedIsComplete": false
     },
@@ -3433,17 +3444,72 @@
         "parentVerifiedReviewedBlobs": 10,
         "evidenceDocument": "docs/upgrade-2026-nonitemized-category-carry-work.md",
         "findingFixed": "Independent current/prior D probes exposed the sharedB-cap omission; unchanged probes pass on corrected freeze."
+      },
+      "completeEicClaimants": {
+        "commit": "6619855fbdb7ea69f747dad8138a717f2bd4ede6",
+        "tests": 18111,
+        "files": 1052,
+        "existingDatabaseSkips": 33,
+        "browserPassed": 4,
+        "browserRetries": 0,
+        "independentReviewTests": 23,
+        "finalTests": 28,
+        "metadataTests": 3,
+        "reviewedBlobsVerified": 15,
+        "evidenceDocument": "docs/upgrade-2026-eic-childless-work.md"
+      },
+      "eicPublishedTable": {
+        "commit": "7748af06050f13297298ea5235b99baab927158e",
+        "tests": 18120,
+        "files": 1045,
+        "failures": 0,
+        "skips": 0,
+        "independentReviewTests": 261,
+        "independentPrivateProbes": 4,
+        "sourceCells": 10992,
+        "sourceRows": 1374,
+        "sourceFootnotes": 8,
+        "finalTests": 273,
+        "finalFiles": 8,
+        "metadataTests": 3,
+        "specReferences": 5049,
+        "evidenceDocument": "docs/upgrade-2026-eic-table-work.md"
+      },
+      "marriageFirstDay": {
+        "commit": "768a987397c1576ba07b4f917c5353e23f0ada49",
+        "tests": 109,
+        "files": 10,
+        "browserPassed": 4,
+        "browserRetries": 0,
+        "independentReviewTests": 33,
+        "independentReviewFiles": 7,
+        "independentPrivateProbes": 2,
+        "finalTests": 44,
+        "finalFiles": 9,
+        "reviewedBlobsVerified": 14,
+        "evidenceDocument": "docs/upgrade-2026-marriage-first-day-work.md"
+      },
+      "eicRule10Pdf": {
+        "commit": "bb4cf3896fcac05ab195b3f6cf8dda45a1afeabd",
+        "tests": 67,
+        "files": 6,
+        "independentReviewTests": 49,
+        "independentReviewFiles": 6,
+        "independentPrivateProbes": 3,
+        "reviewedBlobsVerified": 4,
+        "pagesVisuallyInspected": 2,
+        "evidenceDocument": "docs/upgrade-2026-eic-review-work.md"
       }
     },
     "currentInventory": {
-      "sourceCommit": "010879a6ab2f9394796761f2d5fc8af1f1513af9",
-      "entries": 455,
+      "sourceCommit": "bb4cf3896fcac05ab195b3f6cf8dda45a1afeabd",
+      "entries": 459,
       "generation": "passed",
       "freshness": "passed",
-      "specReferences": 5033,
-      "sha256": "ab12870fa3b29622d4d76ce4bf0ba09f19b9eeca8cadd2a527337c9f4fd67cda",
-      "evidence": ".local/upgrade-evidence/inventory-010879a.log",
-      "evidenceSha256": "fa5c346662d489d5a072e164a784905da809b6716c0a7294e5cd37450ca4f882"
+      "specReferences": 5058,
+      "sha256": "73ab8efcfb5c1f3b773408d5cde1dd2496b84f81b350c0c5b54ac830ae250389",
+      "evidence": ".local/upgrade-evidence/inventory-bb4cf38.log",
+      "evidenceSha256": "d9b9cc30f357b35efbcbdadf33ff5b74ad684ab3595b1038673ab04eb5533e6b"
     },
     "previousCoverageDiagnostic": {
       "commit": "9bcf47be7791b268875c6c47704e95b48ed5c5a8",
@@ -3543,30 +3609,13 @@
       "boundary": "Fresh base and vulnerability database only; final application image build/SBOM/scan/recovery still required."
     },
     "currentReviewCandidates": {
-      "eicTable": {
-        "tree": "2ec6fb6a8ed36094f68ceacfa69c86718dce736c",
-        "status": "independent-review-and-full-regression-in-progress",
-        "focusedTests": 257,
-        "sourceCells": 10992,
-        "sourceRows": 1374,
-        "sourceFootnotes": 8,
-        "knownReviewFinding": "Restore committed IRC32(b)(2)(B) filing-status citation; no numerical finding at this recording."
-      },
-      "eicClaimantRestrictions": {
-        "tree": "240617f45d9e2d8a6dfa693e1eaf5be4acab3b09",
-        "status": "independent-review-and-full-regression-in-progress",
-        "focusedTests": 23
-      },
-      "marriageFirstDay": {
-        "tree": "52db02b4446965fbfa1bca0226dcd32529b5a4a3",
-        "status": "parent33tests-passed-render-review-pending",
-        "authorTests": 109,
-        "authorFiles": 10,
-        "browserPassed": 4,
-        "browserRetries": 0,
-        "parentTests": 33,
-        "parentFiles": 7,
-        "privateProbes": 2
+      "k1CharitableBasis": {
+        "tree": "060bbf4e2c5df68bf034a8c83db470792d95c9a2",
+        "status": "changes-required",
+        "finding": "Admitted S-corp nondeductible expenses do not reduce debt basis; default charity180 vs150 and elected closing debt20 vs0 reproduced",
+        "reviewEvidence": ".local/upgrade-evidence/parent-k1-basis-review-snapshot.json",
+        "repairOwner": "ai_billing",
+        "canonicalActivated": false
       }
     }
   },

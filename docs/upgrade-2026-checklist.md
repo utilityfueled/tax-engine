@@ -7,48 +7,55 @@ complete a checkbox.
 
 ## Current integration — 2026-10-26
 
-Current additions are pushed through `010879a`: actual claimant EIC sources
-and joint age eligibility (`dbd7db5`), separate-owner Marketplace income limits
-(`9dff0ad`), prior other-charity capacity (`9ade041`), the shared capital-gift
-ceiling (`329b26f`) and explicit nonitemized charitable category carry
-(`010879a`). Each package has scoped checks and separate agent review. Human
-tax and final-form qualification remain open.
+Current application changes are pushed through `bb4cf38`: complete EIC claimant
+dependency and applicable-year home sources (`6619855`), the published 2025 EIC
+table and statutory phase-out ceiling (`7748af0`), first-day marriage alternative
+coverage (`768a987`), and the source-bound Form1040 Rule10 checkbox (`bb4cf38`).
+The reviewed source blobs are preserved in the commits. The metadata remains
+`2025.110` / `2026.107-law-integration-draft`; no readiness gate is promoted.
 
-Full coverage on immutable `36d5fab` passes **18,101 tests in 1,038 files**, with
-zero failures or skips. Branches are **87.06%** against the unchanged 85% gate;
-functions are **90.38%** against 90%, statements 92.16% and lines 94.76%.
-The new K1 history interaction tests exercise actual editing and confirmation;
-no thresholds or exclusions changed. This supersedes the earlier `9bcf47b`
-function-coverage failure. Later source packages are excluded and require a
-fresh integrated run.
+The EIC table package passes a full immutable run of **18,120 tests in 1,045
+files**, with zero failures or skips, including disposable PostgreSQL cases.
+Its independent agent review passes 261 tests and verifies all 10,992 published
+table cells, 1,374 rows and eight footnotes. Final integration with the newer
+claimant sources passes 273 tests plus three metadata tests. The claimant
+package separately passes 18,111 tests in 1,052 files with 33 existing database
+skips, four production browser cases and a 23-case independent review. Those
+skips provide no database evidence. Marriage checks pass 109 scoped tests,
+four browser cases, 33 parent review tests and physical review artifacts; the
+final integration passes 44 tests. The Rule10 PDF passes 67 combined tests and
+49 separate parent review cases, including saved/reopened and visual checks.
+These package runs do not substitute for final combined verification.
 
-The last complete build/browser integration remains `9bcf47b`: 18,079 unit
-tests, all three type checks, spec/inventory, both builds and lint pass.
-Production Chromium passes 368 cases with zero retries; five hosted-only skips
-provide no staging evidence. The latest remote CI and Web runs for `010879a`
-were still in progress when read. Earlier health/charity runs were cancelled by
-subsequent pushes; no completed remote result is inferred.
+The latest broad coverage evidence remains immutable `36d5fab`: 18,101 tests,
+zero failures/skips, **87.06% branches** against 85% and **90.38% functions**
+against 90%; statements 92.16%, lines 94.76%. The last complete build/browser
+integration is `9bcf47b`, with 368 Chromium passes, zero retries and five hosted
+skips. Later source packages require a fresh full run, now being prepared.
+The current inventory has **459 entries and 5,058 literal spec references**.
+The last observed remote CI/Web runs for `7748af0` were in progress; subsequent
+pushes may supersede them and no completed remote result is inferred.
 
-The inventory is regenerated from `010879a`: **455 entries and 5,033 literal
-spec references pass**. The last package audit reports zero advisories across
-521 locked dependencies. The official refresh retains 55 source-response
-hashes; final 2026 forms, authenticated provider availability and human review
-remain separate gates. The refreshed local base and Grype database are ready
-for the final application image/SBOM/scan/recovery run.
+The final-source container build, SBOM, scan and local recovery rehearsal are
+being refreshed. The existing local-only Podman endpoint and refreshed official
+base are verified. Package advisories, 55 official source responses and the
+valid scanner database remain recorded separately from artifact qualification.
 
-The EIC table and statutory ceiling correction, complete claimant dependency
-and abode sources, and the marriage first-full-month correction are frozen for
-independent review and full checks. Ordinary K1 charitable source/basis and the
-finite Marketplace and charitable history methods continue. A guard or a
-reviewed helper does not complete an unsupported method.
+Remaining internal work includes the other explicit Form1040 EIC checkboxes,
+ordinary shared-policy and separate-business Marketplace methods, and actual
+K1 charitable sources with basis/history/at-risk coordination. Parent review
+reproduced an S-corporation nondeductible-expense debt-basis defect admitted by
+the charitable prerequisite. A separate spec-first repair is active; the
+charitable prerequisite is not yet approved or activated. Prior-floor,
+regular/AMT NOL and partial mixed-media charity methods remain explicit work.
+A guard or a reviewed helper does not complete an unsupported method.
 
 The goal remains active and the upgrade is **not release-ready**. Required
 human reviews and controlling interpretations, provider access and approved
 budget, authorized staging, launch-state demand, final forms and advisory-owner
-acceptance remain outstanding. The user explicitly approved pushes to the
-existing public `utilityfueled/tax-engine` upgrade branch after automatic review
-requested that destination approval. No production, filing or model promotion
-is authorized by that approval.
+acceptance remain outstanding. The user expressly approved normal pushes to
+the existing public `utilityfueled/tax-engine` upgrade branch. That approval
+does not authorize production deployment, filing or model promotion.
 
 ## Earlier package evidence
 
