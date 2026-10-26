@@ -1,6 +1,7 @@
 import { calculateEicClaimantEligibility, type EicClaimantInput } from '../../../../src/engine/forms/eic-claimant-eligibility';
 import type { FilingStatus, PersonalInfoData } from './guided-interview-flow';
 import { buildStandardDeductionFacts } from './guided-standard-deduction-facts';
+import { buildGuidedEicSeparatedSpouseSources } from './guided-eic-separated-spouse';
 
 export interface EicChildlessClaimantData {
   mainHomeInUnitedStatesMoreThanHalfYear?: boolean | null;
@@ -47,7 +48,11 @@ const childlessSource = (data: EicChildlessClaimantData | undefined, currentOthe
 
 export function buildGuidedEicClaimantEligibility(personal: PersonalInfoData | undefined, status: FilingStatus | null, taxYear: number | null | undefined) {
   const data = personal?.eicClaimantEligibility;
-  if (!data) return undefined;
+  const separated = buildGuidedEicSeparatedSpouseSources(personal, status, taxYear);
+  if (!data) {
+    if (separated) throw new Error('Complete the actual EIC claimant records for the separated-spouse source route');
+    return undefined;
+  }
   if (!status || !taxYear || !personal?.dateOfBirth) throw new Error('EIC claimant sources need the actual return year, filing status and household dates');
   if (!/^\d{4}$/.test(data.sourceTaxYear?.trim() ?? '')) throw new Error('Enter the actual EIC claimant source tax year');
   const claimantEligibility = {
@@ -77,9 +82,10 @@ export function buildGuidedEicClaimantEligibility(personal: PersonalInfoData | u
     standardDeductionFacts: buildStandardDeductionFacts(personal.standardDeductionFacts, status, taxYear, personal),
     eic: { claimantEligibility },
   };
-  calculateEicClaimantEligibility(input, !personal.dependents?.some(child => child.qualifiesForEIC === true));
-  // These two existing legacy fields keep their prior guided behavior; no new exception is inferred.
-  return { mfsEligible: false, primaryIsFullTimeStudent: false, claimantEligibility };
+  calculateEicClaimantEligibility(input, separated ? !separated.result.qualifyingChildPresent : !personal.dependents?.some(child => child.qualifiesForEIC === true));
+  // Forward actual records; the canonical source resolver derives Rule3 eligibility.
+  return { primaryIsFullTimeStudent: false, claimantEligibility,
+    ...(separated ? { separatedSpouseSources: separated.source } : {}) };
 }
 
 export function eicClaimantFactErrors(personal: PersonalInfoData | undefined, status: FilingStatus | null, taxYear?: number | null): Record<string, string> {

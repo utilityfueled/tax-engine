@@ -564,6 +564,7 @@ export interface SpouseInfoData {
 export const emptySpouseInfo: SpouseInfoData = { firstName: "", lastName: "", ssn: "", dateOfBirth: "", usResidencyMonths: "" };
 
 export interface PersonalInfoData {
+  eicSeparatedSpouseSources?: import('./guided-eic-separated-spouse').EicSeparatedSpouseData;
   eicClaimantEligibility?: EicClaimantEligibilityData;
   standardDeductionFacts?: StandardDeductionData;
   employmentValidSsnIssuedByDueDate?: boolean | null;
@@ -1550,6 +1551,7 @@ export function updateSectionData(
   const sourceValuesChanged = guidedSourceValuesChanged(state.sectionData[sectionId as keyof SectionDataMap], data);
   const nextPersonal = sectionId === "personal-info" ? data as PersonalInfoData : state.sectionData["personal-info"];
   const eicClaimantSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && nextPersonal?.eicClaimantEligibility;
+  const eicSeparatedSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && nextPersonal?.eicSeparatedSpouseSources;
   const nextGovernment = sectionId === "income-unemployment" ? data as UnemploymentData : state.sectionData["income-unemployment"];
   const refundSourcesChanged = sourceValuesChanged && ["personal-info", "income-unemployment", "deductions"].includes(sectionId) && nextGovernment?.taxRefund;
   const nextRetirement = sectionId === "income-retirement" ? data as SectionDataMap["income-retirement"] : state.sectionData["income-retirement"];
@@ -1606,7 +1608,10 @@ export function updateSectionData(
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
-      ...(eicClaimantSourcesChanged && nextPersonal ? { "personal-info": { ...nextPersonal, eicClaimantEligibility: { ...eicClaimantSourcesChanged, sourceFactsConfirmed: null } } } : {}),
+      ...((eicClaimantSourcesChanged || eicSeparatedSourcesChanged) && nextPersonal ? { "personal-info": { ...nextPersonal,
+        ...(eicClaimantSourcesChanged ? { eicClaimantEligibility: { ...eicClaimantSourcesChanged, sourceFactsConfirmed: null } } : {}),
+        ...(eicSeparatedSourcesChanged ? { eicSeparatedSpouseSources: { ...eicSeparatedSourcesChanged, sourceFactsConfirmed: null } } : {}),
+      } } : {}),
       ...(refundSourcesChanged && nextGovernment ? { "income-unemployment": { ...nextGovernment, taxRefund: { ...refundSourcesChanged, sourceFactsConfirmed: null } } } : {}),
       ...(iraBasisSourcesChanged && nextRetirement ? { "income-retirement": { ...nextRetirement, basisSources: { ...iraBasisSourcesChanged, sourceFactsConfirmed: null } } } : {}),
       ...(rentalCarrySourcesChanged && nextRentals ? { "income-rental": { ...nextRentals, entries: nextRentals.entries.map(entry => entry.priorLossSources ? { ...entry, priorLossSources: { ...entry.priorLossSources, sourceFactsConfirmed: null } } : entry) } } : {}),

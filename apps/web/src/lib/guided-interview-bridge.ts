@@ -41,6 +41,7 @@ import Decimal from "decimal.js";
 import { buildGuidedNiitSources, guidedNiitFactErrors } from "./guided-niit-facts";
 import { parseGuidedCurrency, hasGuidedCurrency, formatGuidedDollars, sumGuidedDisplayAmounts } from "./guided-currency";
 import { childCreditExclusionValues, dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts";
+import { allowsBlankEicChildIdentifier, type EicSeparatedSpouseData } from "./guided-eic-separated-spouse";
 import { buildGuidedEicClaimantEligibility } from "./guided-eic-eligibility";
 import { buildVehicleCreditInput, vehicleFactErrors } from "./guided-vehicle-facts";
 import { buildAdoptionInput, adoptionFactErrors } from "./guided-adoption-facts";
@@ -332,6 +333,7 @@ export function buildBrokerageInputs(entries: BrokerageEntryData[] | undefined) 
 export function buildDependents(
   countStr: string | undefined,
   detailedDependents?: DependentEntryData[],
+  separatedSpouseSources?: EicSeparatedSpouseData,
 ) {
   const entries = detailedDependents ?? [];
   const count = countStr ?? String(entries.length);
@@ -339,7 +341,7 @@ export function buildDependents(
     throw new Error("Enter complete details for every dependent.");
   }
   return entries.map((entry, index) => {
-    const errors = dependentFactErrors(entry, index);
+    const errors = dependentFactErrors(entry, index, undefined, allowsBlankEicChildIdentifier(separatedSpouseSources, entry, index));
     if (Object.keys(errors).length) throw new Error(Object.values(errors)[0]);
     return {
       ...entry,
@@ -765,7 +767,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
         state: personalInfo.state,
         zip: personalInfo.zip,
       },
-      dependents: buildDependents(personalInfo?.dependentCount, personalInfo?.dependents),
+      dependents: buildDependents(personalInfo?.dependentCount, personalInfo?.dependents, personalInfo?.eicSeparatedSpouseSources),
     },
     w2s,
     form2210: buildEstimatedTaxFacts(paymentData, state.taxYear),

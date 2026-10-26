@@ -1,5 +1,6 @@
 import { standardDeductionFactErrors } from "./guided-standard-deduction-facts";
 import { eicClaimantFactErrors } from "./guided-eic-eligibility";
+import { allowsBlankEicChildIdentifier } from "./guided-eic-separated-spouse";
 import type { DependentEntryData, FilingStatus, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 
@@ -33,11 +34,11 @@ export function childCreditExclusionValues(data: PersonalInfoData["childTaxCredi
   throw new Error("Enter the separate Puerto Rico and Form 4563 income exclusions, including zero");
 }
 
-export function dependentFactErrors(entry: DependentEntryData, index: number, taxYear?: number | null): Record<string, string> {
+export function dependentFactErrors(entry: DependentEntryData, index: number, taxYear?: number | null, actualBlankEicIdentifier = false): Record<string, string> {
   const errors: Record<string, string> = {};
   const key = `dependent-${index}`;
   if (!entry.firstName?.trim() || !entry.lastName?.trim()) errors[`${key}-name`] = `Dependent ${index + 1} needs a first and last name`;
-  if (!hasTaxId(entry.ssn)) errors[`${key}-ssn`] = `Dependent ${index + 1} needs their actual taxpayer ID`;
+  if (!hasTaxId(entry.ssn) && !(actualBlankEicIdentifier && entry.ssn === '' && entry.qualifiesForCTC === false && entry.qualifiesForODC === false)) errors[`${key}-ssn`] = `Dependent ${index + 1} needs their actual taxpayer ID or a confirmed original blank in the EIC self-only source records`;
   if (!isActualBirthDate(entry.dateOfBirth, taxYear)) errors[`${key}-dateOfBirth`] = `Dependent ${index + 1} needs a valid birth date`;
   if (!entry.relationship) errors[`${key}-relationship`] = `Choose the relationship for dependent ${index + 1}`;
   if (!isResidencyMonths(entry.monthsLivedWithYou)) errors[`${key}-monthsLivedWithYou`] = `Enter 0–12 residency months for dependent ${index + 1}`;
@@ -75,7 +76,7 @@ export function personalFactErrors(data: PersonalInfoData | undefined, status: F
   if (!count || !/^\d+$/.test(count) || Number(count) > 20 || Number(count) !== (data?.dependents?.length ?? 0)) {
     errors.dependentCount = "Enter complete details for every dependent";
   }
-  data?.dependents?.forEach((entry, index) => Object.assign(errors, dependentFactErrors(entry, index, taxYear)));
+  data?.dependents?.forEach((entry, index) => Object.assign(errors, dependentFactErrors(entry, index, taxYear, allowsBlankEicChildIdentifier(data.eicSeparatedSpouseSources, entry, index))));
   const claimsCtc = data?.dependents?.some((entry) => entry.qualifiesForCTC);
   const claimsOdc = data?.dependents?.some((entry) => entry.qualifiesForODC);
   if (claimsCtc || claimsOdc) {
