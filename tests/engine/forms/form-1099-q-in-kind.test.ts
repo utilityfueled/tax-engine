@@ -99,6 +99,8 @@ describe("actual in-kind QTP benefit sources", () => {
     expect(capped.taxableEarnings.toFixed()).toBe("200");
     expect(capped.netPenalty.toFixed()).toBe("20");
     const otherPartial = summary({ expenses: [expense({ category: "k12_tuition" })], beneficiaries: [{ id: "student", outsideK12QualifiedDistributions: "19000" }] });
-    expect(() => calculateForm1099Q([source()], otherPartial, { taxYear: 2026 })).toThrow(/partial.*in-kind|in-kind.*partial/i);
+    // Spec: form-1099-q-in-kind-k12.yaml. Old records do not establish the
+    // actual qualified prepaid program or cash-only outside-plan sources.
+    expect(() => calculateForm1099Q([source()], otherPartial, { taxYear: 2026 })).toThrow(/prepaid.*program|program.*source/i);
   });
 });

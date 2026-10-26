@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.100",
+    ruleVersion: "2025.101",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual qualified prepaid K12 benefits under 529(b)(1)(A)(i)/(c)(3)(B)(i), separate cash-only annual limit under (e)(3)(A), and dated expanded expenses under (c)(7)", revision: "Current statute and final 2025 Pub970; original program, redeemed credit, institutional determination and outside cash confirmation; derived controls and private review binding, independent human qualification pending", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 current public and other-recipient cash G/B allowances, floor and final selected carry; confirmed empty prior history and exact source category reconciliation", revision: "IRC170(B)/(G)/(I)/(d)(1)(C), Reg1.170A-10; derived source controls retain historical2025 rules; positive prior, property, NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual marriage-year source binding and Worksheets I–V; canonical joint income, separate alternative-family months, no additional net credit and source-bound Part V review", revision: "Final2025 Pub974/i8962 and Reg1.36B-4(b)(2); derived2026 individual-income boundaries with closed full-year gates; guided intake, coupled health methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual prepaid tuition with combined assistance and credit, and taxpayer-confirmed single-expense Coverdell allocation under529(c)(3)(B)(v)/(vi) and530(d)(2)", revision: "Current statutes and final2025 Pub970 chapters6/7; original expense, earnings, recipient and allocation conservation, derived controls and private PDF binding; broader groups and human qualification remain separate", retrievedAt: "2026-10-25" },
@@ -143,11 +144,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.96-law-integration-draft",
+    ruleVersion: "2026.97-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual qualified prepaid K12 benefits under 529(b)(1)(A)(i)/(c)(3)(B)(i), separate cash-only annual limit under (e)(3)(A), and dated expanded expenses under (c)(7)", revision: "Current statute and final 2025 Pub970; original program, redeemed credit, institutional determination and outside cash confirmation; derived controls and private review binding, independent human qualification pending", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 current public and other-recipient cash G/B allowances, floor and final selected carry; confirmed empty prior history and exact source category reconciliation", revision: "IRC170(B)/(G)/(I)/(d)(1)(C), Reg1.170A-10; derived source controls retain historical2025 rules; positive prior, property, NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual marriage-year source binding and Worksheets I–V; canonical joint income, separate alternative-family months, no additional net credit and source-bound Part V review", revision: "Final2025 Pub974/i8962 and Reg1.36B-4(b)(2); derived2026 individual-income boundaries with closed full-year gates; guided intake, coupled health methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual prepaid tuition with combined assistance and credit, and taxpayer-confirmed single-expense Coverdell allocation under529(c)(3)(B)(v)/(vi) and530(d)(2)", revision: "Current statutes and final2025 Pub970 chapters6/7; original expense, earnings, recipient and allocation conservation, derived controls and private PDF binding; broader groups and human qualification remain separate", retrievedAt: "2026-10-25" },

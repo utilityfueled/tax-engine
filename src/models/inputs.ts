@@ -879,6 +879,8 @@ const EducationDistributionSourceFactsSchema = z.object({
     id: z.string().trim().min(1), name: z.string().optional(),
     studentTaxId: z.string().regex(/^\d{3}-?\d{2}-?\d{4}$/).optional(),
     outsideK12QualifiedDistributions: optionalDecimalInput,
+    /** Required to distinguish actual outside cash before the separate prepaid K12 method. */
+    outsideK12CashOnlyConfirmed: z.boolean().optional(),
   })).max(100).optional(),
   expenses: z.array(EducationDistributionExpenseSchema).max(500).optional(),
   allocations: z.array(z.object({
@@ -895,6 +897,13 @@ const EducationDistributionSourceFactsSchema = z.object({
     id: z.string().trim().min(1), sourceId: z.string().trim().min(1), expenseId: z.string().trim().min(1),
     amount: optionalDecimalInput, providedDate: z.string().optional(),
     qualificationConfirmed: z.boolean().optional(), sourceReference: z.string().trim().optional(),
+    /** Original qualified prepaid-plan and redeemed-credit evidence for K12 benefits. */
+    prepaidPlanSponsor: z.enum(["state", "eligible_educational_institutions"]).optional(),
+    prepaidPlanQualifiedConfirmed: z.boolean().optional(),
+    prepaidTuitionCreditRedeemed: z.boolean().optional(),
+    prepaidPlanSourceReference: z.string().trim().optional(),
+    prepaidInstitutionQualifiedTrustConfirmed: z.boolean().optional(),
+    prepaidInstitutionDeterminationReference: z.string().trim().optional(),
   })).max(500).optional(),
   loanBorrowers: z.array(z.object({
     id: z.string().trim().min(1), owner: z.enum(["primary", "spouse", "other"]).optional(),

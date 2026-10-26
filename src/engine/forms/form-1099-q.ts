@@ -22,6 +22,8 @@ import { d, sum, zeroFloor, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { assertDistinctEducationBeneficiaries } from "@/utils/education-beneficiary-identity.js";
 import { readInKindTuitionEsaSource } from "@/utils/in-kind-tuition-esa-source.js";
+import { readInKindK12PlanSource } from "@/utils/in-kind-k12-plan-source.js";
+import { isExpandedEducationDistributionAllowed } from "@/utils/education-distribution-date.js";
 
 const ZERO = new Decimal(0);
 const PENALTY_RATE = new Decimal("0.10");
@@ -381,14 +383,6 @@ function eligibleExpenseAmount(expense: SourceExpense, year: number, accountType
   return zeroFloor(qualified.minus(assistance).minus(credit).minus(other));
 }
 
-function expandedExpenseAllowed(form: SourceForm, expense: SourceExpense, year: number): boolean {
-  if (year !== 2025) return true;
-  const expanded = (form.accountType === "529" && expense.category.startsWith("k12_") && expense.category !== "k12_tuition") || expense.category.startsWith("credential_");
-  if (!expanded) return true;
-  if (form.distributionDate !== undefined) return actualDate(form.distributionDate, "distribution").getTime() > Date.UTC(2025, 6, 4);
-  return actualBoolean(form.allDistributionsAfterJuly42025, "all statement distributions after July4,2025, or actual distribution date");
-}
-
 interface TransferState {
   capacities: Map<string, Decimal>;
   baselines: Map<string, string>;
@@ -629,10 +623,16 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const qualified = actualBoolean(item.qualificationConfirmed, "in-kind benefit qualification");
     if (qualified !== actualBoolean(expense.qualificationConfirmed, "in-kind expense qualification")) throw new Error("Form1099Q in-kind benefit and expense qualification facts conflict");
     const amount = actualAmount(item.amount, "in-kind benefit amount");
+    if (qualified && expense.category.startsWith("k12_")) {
+      assertDistinctEducationBeneficiaries(verifiedForms, facts);
+      const inputs = readInKindK12PlanSource(item, beneficiaries.get(form.beneficiaryId));
+      audit.record("Form1099-Q", `${form.sourceId}:in-kind-k12:${item.id}`, "Actual qualified prepaid K12 benefit cost", amount,
+        "IRC529(b)(1)/(c)(3)(B)(i)/(c)(7); original program and redeemed tuition credit evidence, separate from the cash-only annual limit", inputs);
+    }
     audit.record("Form1099-Q", `${form.sourceId}:in-kind-benefit:${item.id}`, "Actual provided benefit cost", amount, "Actual source benefit, separate from the tax allocation", {
       "Expense source": expense.id, "Provided date": providedDate.toISOString().slice(0, 10), "Qualification": qualified ? "yes" : "no", "Source reference": item.sourceReference.trim(),
     });
-    return { form, expense, amount };
+    return { form, expense, amount, providedDate: providedDate.toISOString().slice(0, 10) };
   });
   for (const form of inKindSources) {
     const provided = sum(...inKindBenefits.filter(item => item.form.sourceId === form.sourceId).map(item => item.amount));
@@ -761,16 +761,18 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
       // The actual allocation group shares the qualified category capacity.
       // Other paid spending not assigned to a distribution cannot dilute it.
       item.allowed = requested.isZero() ? ZERO : item.amount.mul(Decimal.min(1, eligible.div(requested)));
-      if (!expandedExpenseAllowed(item.form, expense, options.taxYear)) item.allowed = ZERO;
+      const providedDates = inKindBenefits.filter(benefit => benefit.form.sourceId === item.form.sourceId && benefit.expense.id === expense.id).map(benefit => benefit.providedDate);
+      if (!isExpandedEducationDistributionAllowed(item.form, expense.category, options.taxYear, providedDates)) item.allowed = ZERO;
     }
   }
   for (const beneficiary of beneficiaries.values()) {
     const outside = actualAmount(beneficiary.outsideK12QualifiedDistributions, "outside-plan qualified K12 distributions");
-    const group = allocations.filter(item => item.form.beneficiaryId === beneficiary.id && item.form.accountType === "529" && item.expense.category.startsWith("k12_"));
+    const group = allocations.filter(item => item.form.beneficiaryId === beneficiary.id && item.form.accountType === "529"
+      && item.form.distributionMedium !== "in_kind_prepaid_tuition" && item.expense.category.startsWith("k12_"));
     const requested = sum(...group.map(item => item.allowed));
     const remaining = zeroFloor(d(options.taxYear === 2026 ? "20000" : "10000").minus(outside));
     if (requested.gt(remaining)) for (const item of group) item.allowed = item.allowed.mul(remaining).div(requested);
-    audit.record("Form1099-Q", `${beneficiary.id}:k12-qualified`, "Qualified K12 distributions after annual beneficiary limit", sum(...group.map(item => item.allowed)), "Apply annual cap across all beneficiary QTPs to elected allocations", { "Outside-plan qualified distributions": outside, "Remaining annual cap": remaining });
+    audit.record("Form1099-Q", `${beneficiary.id}:k12-qualified`, "Qualified K12 cash distributions after annual beneficiary limit", sum(...group.map(item => item.allowed)), "IRC529(e)(3)(A): apply annual cap across beneficiary cash savings-plan distributions", { "Outside-plan qualified distributions": outside, "Remaining annual cap": remaining });
   }
   for (const item of allocations.filter(entry => entry.expense.category === "student_loan")) if (!item.expense.borrowerId || !borrowers.has(item.expense.borrowerId)) throw new Error("Form1099Q actual student-loan borrower history required");
   for (const borrower of borrowers.values()) {
@@ -782,7 +784,9 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   }
   for (const item of allocations.filter(item => item.form.distributionMedium === "in_kind_prepaid_tuition")) {
     const expense = item.expense;
-    if (expense.qualificationConfirmed && !item.allowed.eq(item.amount)) {
+    const providedDates = inKindBenefits.filter(benefit => benefit.form.sourceId === item.form.sourceId && benefit.expense.id === expense.id).map(benefit => benefit.providedDate);
+    const datedK12Ineligible = expense.category.startsWith("k12_") && !isExpandedEducationDistributionAllowed(item.form, expense.category, options.taxYear, providedDates);
+    if (expense.qualificationConfirmed && !datedK12Ineligible && !item.allowed.eq(item.amount)) {
       assertDistinctEducationBeneficiaries(verifiedForms, facts);
       // Spec: form-1099-q-in-kind-room-board.yaml. No shared-cap election is
       // inferred for other distributions, expenses, credits or assistance.

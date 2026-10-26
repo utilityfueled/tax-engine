@@ -9,6 +9,8 @@ import type { Form1099QResult } from "@/engine/forms/form-1099-q.js";
 import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 import { assertDistinctEducationBeneficiaries } from "@/utils/education-beneficiary-identity.js";
 import { readInKindTuitionEsaSource } from "@/utils/in-kind-tuition-esa-source.js";
+import { readInKindK12PlanSource } from "@/utils/in-kind-k12-plan-source.js";
+import { isExpandedEducationDistributionAllowed } from "@/utils/education-distribution-date.js";
 import { assertPreparedEducationReview, type PreparedEducationReview } from "../../education-review-context.js";
 
 export const FORM_1099_Q_REFERENCE_FILENAME = "f1099q-reference-filled.pdf";
@@ -92,6 +94,13 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
           const entry = requireAudit("Form1099-Q", `${row.sourceId}:in-kind-benefit:${benefit.id}`, sourceMoney(benefit.amount));
           if (entry.inputs["Expense source"] !== expense.id || entry.inputs["Provided date"] !== benefit.providedDate || entry.inputs["Qualification"] !== (benefit.qualificationConfirmed ? "yes" : "no") || entry.inputs["Source reference"] !== benefit.sourceReference.trim()) throw new Error("Education reference in-kind benefit source disagrees with its audit");
           sourceLines.push(describe(entry, `Statement ${index + 1}, benefit ${benefitIndex + 1}: `));
+          if (expense.qualificationConfirmed && expense.category.startsWith("k12_")) {
+            if (!prepared) assertDistinctEducationBeneficiaries(forms, qeeSummary.sourceFacts);
+            const inputs = readInKindK12PlanSource(benefit, qeeSummary.sourceFacts.beneficiaries?.find(source => source.id === row.beneficiaryId));
+            const plan = requireAudit("Form1099-Q", `${row.sourceId}:in-kind-k12:${benefit.id}`, sourceMoney(benefit.amount));
+            if (Object.entries(inputs).some(([key, value]) => plan.inputs[key] !== value)) throw new Error("Education reference prepaid program sources disagree with the audit");
+            sourceLines.push(describe(plan, `Statement ${index + 1}, benefit ${benefitIndex + 1}: `));
+          }
         }
         const allocations = qeeSummary.sourceFacts.allocations?.filter(allocation => allocation.sourceId === row.sourceId) ?? [];
         const expenseIds = new Set([...benefits.map(benefit => benefit.expenseId), ...allocations.map(allocation => allocation.expenseId)]);
@@ -143,7 +152,7 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
           const credit = entry.inputs["Education credit expense"];
           if (!Decimal.isDecimal(credit) || !credit.eq(sourceMoney(allocation?.creditAmount))) throw new Error("Education reference in-kind credit allocation disagrees with its source audit");
           sourceLines.push(describe(entry, `Statement ${index + 1}: `));
-          let qualifiedAllocation = expense?.qualificationConfirmed === true ? sourceMoney(allocation?.amount) : new Decimal(0);
+          let qualifiedAllocation = expense?.qualificationConfirmed === true && isExpandedEducationDistributionAllowed(form, expense.category, result.taxYear, linked.map(benefit => benefit.providedDate)) ? sourceMoney(allocation?.amount) : new Decimal(0);
           if (expense?.qualificationConfirmed === true && expense.category === "postsecondary_room_board") {
             if (typeof expense.halfTimeStudent !== "boolean") throw new Error("Education reference actual room-and-board enrollment is missing");
             const amount = sourceMoney(expense.amount), refund = sourceMoney(expense.refundedAmount);
@@ -231,6 +240,15 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
       seen.add(row.sourceId);
       for (const [line, field] of distributionFields) sourceLines.push(describe(requireAudit("Form1099-Q", `${row.sourceId}:${line}`, row[field]), `Statement ${index + 1}: `));
       if (form.transfer?.kind !== "none") sourceLines.push(describe(requireAudit("Form1099-Q", `${row.sourceId}:valid-transfer`, row.validTransfers), `Statement ${index + 1}: `));
+    }
+    for (const [index, beneficiary] of (qeeSummary.sourceFacts.beneficiaries ?? []).entries()) {
+      if (!qeeSummary.sourceFacts.expenses?.some(expense => expense.beneficiaryId === beneficiary.id && expense.category.startsWith("k12_"))) continue;
+      const cap = requireAudit("Form1099-Q", `${beneficiary.id}:k12-qualified`);
+      const outside = sourceMoney(beneficiary.outsideK12QualifiedDistributions);
+      const outsideAudit = cap.inputs["Outside-plan qualified distributions"];
+      if (!Decimal.isDecimal(outsideAudit) || !outsideAudit.eq(outside)) throw new Error("Education reference outside K12 cash sources disagree with the audit");
+      sourceLines.push(describe(cap, `Beneficiary ${index + 1}: `));
+      qualifiedEducationExpenseInputs.push({ label: `Beneficiary ${index + 1}: Outside-plan qualified K-12 cash distributions`, value: outside.toFixed() });
     }
     const sumRows = (field: "grossDistribution" | "earnings" | "basis") => result.perDistribution.reduce((sum, row) => sum.plus(row[field]), new Decimal(0));
     if (!sumRows("grossDistribution").eq(result.grossDistribution) || !sumRows("earnings").eq(result.totalEarnings) || !sumRows("basis").eq(result.totalBasis)) throw new Error("Education source audit totals do not reconcile");
