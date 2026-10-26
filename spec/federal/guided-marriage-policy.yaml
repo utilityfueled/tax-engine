@@ -1,0 +1,42 @@
+form: "Guided marriage-year Marketplace sources"
+fullName: "Actual marriage, dependent assignment and alternative benchmark intake"
+taxYear: [2025, 2026]
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Refreshed2026-10-25 against Pub974 Alternative Family Size, TableA and Steps2/4,
+  and i8962 Table4. Reuses the committed facts-only marriage source validator.
+  Original household and1095-A records are copied only on an explicit action.
+  Copying supplies no marriage qualification, dependent election, source amount
+  or confirmation. Alternative benchmark rows use actual recipient policy groups
+  and claimed-dependent family intervals; their corrected SLCSP remains blank.
+  Actual joint income and the comparison/election remain canonical, with no user
+  income, contribution, credit or repayment override. Full2026 gates stay closed.
+lines:
+  - line: "original-sources"
+    description: "Capture actual household and original policies without invented facts"
+    formula: "Require actual MFJ household identity, original recipient/covered people, source year and monthly amounts. Capture immutable copies with unknown date, qualification and confirmations; actual empty claimed-dependent list is preserved."
+    testRef: "tests/guided-interview/guided-marriage-policy.test.ts::captures originals without inventing marriage facts"
+  - line: "benchmark-groups"
+    description: "Set up alternative benchmark rows from original coverage"
+    formula: "Actual dependent assignment controls each family's coverage interval, while actual filer recipient controls the policy group. Copy those owner/month/covered-person sources and leave SLCSP/reference/confirmation blank; exact original premiums are unchanged."
+    testRef: "tests/guided-interview/guided-marriage-policy.test.ts::copies benchmark groups while keeping amounts unknown"
+  - line: "canonical"
+    description: "Transfer actual sources once through the guided return"
+    formula: "Actual2025wages117000/family4/July15marriage yields original8423advances,7021credit,0net and1402repayment. Canonical AGI remains117000; source-only2026 binding is supported while fullreturn remains closed."
+    testRef: "tests/guided-interview/guided-marriage-policy.test.ts::calculates actual marriage sources once through the guided return"
+  - line: "source-integrity"
+    description: "Keep unknown, false, zero and exact cents distinct"
+    formula: "Unknown qualification, missing packet, contradictory election, stale equal-money identity, changed original fractions and incomplete benchmark people reject. Explicit zero benchmark stays zero; source cents are preserved without Number conversion or supplied tax amounts."
+    testRef: "tests/guided-interview/guided-marriage-policy.test.ts::rejects missing stale and contradictory marriage source facts"
+  - line: "confirmation"
+    description: "Reconfirm changed source facts without confirmation cycles"
+    formula: "Household, policy, dependency, income and benchmark edits revoke outer, marriage and benchmark source confirmations. Confirmation-only edits retain them. Reconfirming stale snapshots cannot make them valid."
+    testRef: "tests/guided-interview/guided-marriage-policy.test.ts::invalidates nested confirmations after actual source edits"
+  - line: "controls"
+    description: "Reach actual marriage source controls in the full credits component"
+    formula: "The actual marriage election exposes original people, date and qualification answers, dependent family choices and corrected benchmark fields. Copy preserves actual sources; clearing amounts remains unknown and substantive edits revoke confirmation."
+    testRef: "tests/apps/web/marriage-policy-interactions.test.tsx::reaches marriage controls and preserves unknown source answers"
+  - line: "browser"
+    description: "Persist actual marriage sources in desktop and mobile flows"
+    formula: "Production browser editing retains original policy amounts and exact corrected benchmark values, resets confirmations, preserves a blank source across reload, and sends no source identity/reference in request bodies."
+    testRef: "apps/web/tests/guided-marriage-policy.spec.ts::preserves actual marriage sources and corrected benchmarks"

@@ -62,7 +62,8 @@ it("binds household sources and preserves ineligible answers without inventing e
   data.taxFamilySize = "0"; expect(() => buildPremiumTaxCreditInputs(data, 2025, "single", personal)).toThrow(/zero.family|allocation/i);
   data.taxFamilySize = "1";
   data.canBeClaimedAsDependent = false;
-  for (const field of ["allocationRequired", "alternativeMarriageCalculationElected", "lawfulPresenceReconciliationRequired"] as const) { const special = actualPremiumTaxCredit(); special[field] = true; expect(() => input(special)).toThrow(/worksheet/i); }
+  for (const field of ["allocationRequired", "lawfulPresenceReconciliationRequired"] as const) { const special = actualPremiumTaxCredit(); special[field] = true; expect(() => input(special)).toThrow(/worksheet/i); }
+  const marriage = actualPremiumTaxCredit(); marriage.alternativeMarriageCalculationElected = true; expect(() => input(marriage)).toThrow(/married joint return/i);
   expect(() => buildPremiumTaxCreditInputs(data, 2025, "mfs", completePersonalInfo)).toThrow(/separately/i);
   data.marriedFilingSeparatelyExceptionConfirmed = false;
   expect(buildPremiumTaxCreditInputs(data, 2025, "mfs", completePersonalInfo).form8962?.marriedFilingSeparatelyExceptionConfirmed).toBe(false);

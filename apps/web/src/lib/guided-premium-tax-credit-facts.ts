@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { bindGuidedMarriageSources, type MarriagePolicyData } from "./guided-marriage-policy";
 import { Form8962Schema, type TaxYearInput } from "@/models/inputs";
 import type { FilingStatus, GuidedFlowState, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
@@ -23,6 +24,7 @@ export interface PremiumTaxCreditData {
   coverageFactsConfirmed: boolean | null; allocationRequired: boolean | null; alternativeMarriageCalculationElected: boolean | null;
   selfEmployedHealthInsuranceCoordinationRequired: boolean | null; qsehraAffected: boolean | null; lawfulPresenceReconciliationRequired: boolean | null;
   sharedPolicyAllocations?: SharedPolicyAllocationData;
+  marriageSources?: MarriagePolicyData;
   policies: MarketplacePolicyData[]; monthlyReconciliation: MarketplaceCoverageMonthData[];
 }
 export const emptyMarketplaceMonth: MarketplaceMonthData = { month: "", enrolleePremium: "", slcsp: "", advancePremiumTaxCredit: "" };
@@ -74,7 +76,8 @@ export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefin
   if (dependency !== (primaryClaimable || spouseClaimable === true)) throw new Error("Reconcile the Marketplace dependency answer with the household source facts.");
   if (!data.fplRegion || !data.belowPovertyException) throw new Error("Enter the actual poverty guideline region and below-poverty exception answer.");
   const allocationRequired = fact(data.allocationRequired, "shared-policy allocation answer");
-  for (const field of ["alternativeMarriageCalculationElected", "lawfulPresenceReconciliationRequired"] as const) {
+  const marriageElected = fact(data.alternativeMarriageCalculationElected, "alternative marriage election answer");
+  for (const field of ["lawfulPresenceReconciliationRequired"] as const) {
     if (fact(data[field], field) === true) throw new Error(`The actual ${field} worksheet is not yet supported in this guided route. Keep its source records for review.`);
   }
   if (filingStatus === "mfs") fact(data.marriedFilingSeparatelyExceptionConfirmed, "married-filing-separately exception answer");
@@ -114,14 +117,16 @@ export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefin
       qsehraAffordable: row.qsehraAffordable ?? undefined, qsehraMonthlyPermittedBenefit: qsehraBenefit };
   });
   if (!reconciliation || new Set(reconciliation.map(row => row.month)).size !== sourceMonths.size) throw new Error("Complete the household reconciliation for every original source month.");
-  return { form1095A: policies, form8962: Form8962Schema.parse({
+  const facts = Form8962Schema.parse({
     taxFamilySize: familySize, fplRegion: data.fplRegion, requiredFilingDependentsModifiedAGI: dependentMagi,
     householdFactsConfirmed: true, canBeClaimedAsDependent: dependency,
     marriedFilingSeparatelyExceptionConfirmed: data.marriedFilingSeparatelyExceptionConfirmed ?? undefined,
     belowPovertyException: data.belowPovertyException, marketplaceEstimatedIncomeWithinEligibilityRange: data.marketplaceEstimatedIncomeWithinEligibilityRange ?? undefined, marketplaceInformationAccurate: data.marketplaceInformationAccurate ?? undefined,
-    coverageFactsConfirmed: true, allocationRequired, sharedPolicyAllocations: shared?.packet, alternativeMarriageCalculationElected: false, lawfulPresenceReconciliationRequired: false,
+    coverageFactsConfirmed: true, allocationRequired, sharedPolicyAllocations: shared?.packet, alternativeMarriageCalculationElected: marriageElected, lawfulPresenceReconciliationRequired: false,
     selfEmployedHealthInsuranceCoordinationRequired: fact(data.selfEmployedHealthInsuranceCoordinationRequired, "self-employed health coordination answer"), qsehraAffected: qsehra, monthlyReconciliation: reconciliation,
-  }) };
+  });
+  if (marriageElected || data.marriageSources) facts.marriageSources = bindGuidedMarriageSources(data, taxYear, filingStatus, personal, policies, facts);
+  return { form1095A: policies, form8962: facts };
 }
 export function premiumTaxCreditFactErrors(state: GuidedFlowState): Record<string, string> {
   try {

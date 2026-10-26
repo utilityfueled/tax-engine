@@ -6,6 +6,8 @@ import { CurrencyField } from "./currency-field";
 import type { FilingStatus, PersonalInfoData } from "@/lib/guided-interview-flow";
 import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
 import { SharedPolicyOriginalDetails, SharedPolicySourceDetails } from "./shared-policy-source-details";
+import { MarriagePolicySourceDetails } from "./marriage-policy-source-details";
+import { invalidateMarriageSources } from "@/lib/guided-marriage-policy";
 
 function Choice({ label, value, choices, onChange }: { label: string; value: string; choices: readonly (readonly [string, string])[]; onChange: (value: string) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value} onChange={event => onChange(event.target.value)}><option value="">Confirm from actual records</option>{choices.map(([id, text]) => <option key={id} value={id}>{text}</option>)}</select></label>;
@@ -22,6 +24,7 @@ export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, ta
     const next = { ...data, ...patch };
     if (guidedSourceValuesChanged(data, next)) {
       next.sourceFactsConfirmed = null;
+      if (next.marriageSources) next.marriageSources = invalidateMarriageSources(next.marriageSources);
       if (next.sharedPolicyAllocations) next.sharedPolicyAllocations = { ...next.sharedPolicyAllocations, sourceFactsConfirmed: null };
     }
     onChange(next);
@@ -43,7 +46,7 @@ export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, ta
       <BooleanFact label="Household eligibility worksheet checked" value={data.householdFactsConfirmed} onChange={householdFactsConfirmed => update({ householdFactsConfirmed })} />
       {coverageFlags.map(([field, label]) => <BooleanFact key={field} label={label} value={data[field]} onChange={value => update({ [field]: value })} />)}
     </div>
-    <p className="guided-hint">An agreed shared-policy allocation has its own source worksheet below. Other allocation methods, the alternative marriage calculation and lawful-presence allocation retain their separate calculation requirements.</p>
+    <p className="guided-hint">An agreed shared-policy allocation has its own source worksheet below. The marriage-year alternative has its own source worksheet below. Other allocation methods and lawful-presence allocation retain their separate calculation requirements.</p>
     {data.policies.map((policy, policyIndex) => {
       const prefix = `Policy ${policyIndex + 1}`;
       const set = (patch: Partial<typeof policy>) => update({ policies: data.policies.map((current, index) => index === policyIndex ? { ...current, ...patch } : current) });
@@ -52,7 +55,7 @@ export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, ta
         <TextFact label={`${prefix}: Marketplace name`} value={policy.marketplace} onChange={marketplace => set({ marketplace })} />
         <TextFact label={`${prefix}: Policy number`} value={policy.policyNumber} onChange={policyNumber => set({ policyNumber })} />
       </div>
-        {(data.allocationRequired === true || policy.recipientName !== undefined || policy.recipientSsn !== undefined || policy.coveredIndividuals !== undefined) && <SharedPolicyOriginalDetails policy={policy} prefix={prefix} onChange={set} />}
+        {(data.allocationRequired === true || data.alternativeMarriageCalculationElected === true || policy.recipientName !== undefined || policy.recipientSsn !== undefined || policy.coveredIndividuals !== undefined) && <SharedPolicyOriginalDetails policy={policy} prefix={prefix} onChange={set} />}
         {policy.monthlyPremiums.map((row, rowIndex) => {
           const label = `${prefix} month ${rowIndex + 1}`;
           const setRow = (patch: Partial<typeof row>) => set({ monthlyPremiums: policy.monthlyPremiums.map((current, index) => index === rowIndex ? { ...current, ...patch } : current) });
@@ -67,6 +70,7 @@ export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, ta
     })}
     <button type="button" onClick={() => update({ policies: [...data.policies, { taxYear: "", marketplace: "", policyNumber: "", monthlyPremiums: [] }] })}>Add original Marketplace policy</button>
     {(data.allocationRequired === true || data.sharedPolicyAllocations !== undefined) && <SharedPolicySourceDetails data={data} personal={personal} filingStatus={filingStatus} taxYear={taxYear} onChange={update} />}
+    {(data.alternativeMarriageCalculationElected === true || data.marriageSources !== undefined) && <MarriagePolicySourceDetails data={data} personal={personal} filingStatus={filingStatus} onChange={update} />}
     <h5>Actual household monthly reconciliation</h5><p className="guided-hint">Use one actual household row for each source month. Do not add duplicate benchmark amounts from several policies. Confirm minimum essential coverage, employer offers, paid premiums and other eligibility facts before answering.</p>
     {data.monthlyReconciliation.map((row, rowIndex) => {
       const prefix = `Coverage month ${rowIndex + 1}`;
