@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.135",
+    ruleVersion: "2025.136",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual multiple tuition expenses allocated between one original in-kind QTP and one Coverdell ESA, after independent assistance and credit reductions", revision: "IRC529(c)(3)(B)(v)/(vi), IRC530 and final Pub970; each benefit, expense and source allocation conserved exactly, original ESA basis retained, canonical/guide/review and settled browser amounts checked; broader source groups and human qualification remain separate; no year or filing promotion", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual shared and household-only original policies in one self-employed health plan; original allocation before independent person payments and specified-premium totals", revision: "Final2025 Specified Premiums, W/X and i8962 monthly columns; original receipts and exact ratios, partial-year coverage, once-only benchmarks, guide and private review preserved; outside-family payments, multiple owners, marriage, binding joint-cap attribution and human qualification remain separate; full2026 gate unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.32-3", section: "Actual separate-filer EIC denial, filing chronology and later IRS allowance sources before a positive claim", revision: "IRC32(k), final Pub596 chapter5 and i8862; active bans derive from original records, unknown history stays unknown and supplied contradictions reject even at zero; actual guide and independent source review, current Form8862 facts/output, contested chronology and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual shared-policy enrollment-default and no-advance benchmark allocation before independent owner/person paid premiums and health-credit coordination", revision: "Final2025 Specified Premiums, W/X and i8962 Situations3/4; exact source ratios distinct from printed fractions, complete overlapping benchmarks once, guided and private review retained; shared/unshared health links, outside-family payments, multiple owners and human qualification remain separate; full2026 gate unchanged", retrievedAt: "2026-10-26" },
@@ -174,11 +175,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.132-law-integration-draft",
+    ruleVersion: "2026.133-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual multiple tuition expenses allocated between one original in-kind QTP and one Coverdell ESA, after independent assistance and credit reductions", revision: "IRC529(c)(3)(B)(v)/(vi), IRC530 and final Pub970; each benefit, expense and source allocation conserved exactly, original ESA basis retained, canonical/guide/review and settled browser amounts checked; broader source groups and human qualification remain separate; no year or filing promotion", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual shared and household-only original policies in one self-employed health plan; original allocation before independent person payments and specified-premium totals", revision: "Final2025 Specified Premiums, W/X and i8962 monthly columns; original receipts and exact ratios, partial-year coverage, once-only benchmarks, guide and private review preserved; outside-family payments, multiple owners, marriage, binding joint-cap attribution and human qualification remain separate; full2026 gate unchanged", retrievedAt: "2026-10-26" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.32-3", section: "Actual separate-filer EIC denial, filing chronology and later IRS allowance sources before a positive claim", revision: "IRC32(k), final Pub596 chapter5 and i8862; active bans derive from original records, unknown history stays unknown and supplied contradictions reject even at zero; actual guide and independent source review, current Form8862 facts/output, contested chronology and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual shared-policy enrollment-default and no-advance benchmark allocation before independent owner/person paid premiums and health-credit coordination", revision: "Final2025 Specified Premiums, W/X and i8962 Situations3/4; exact source ratios distinct from printed fractions, complete overlapping benchmarks once, guided and private review retained; shared/unshared health links, outside-family payments, multiple owners and human qualification remain separate; full2026 gate unchanged", retrievedAt: "2026-10-26" },

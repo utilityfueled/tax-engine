@@ -24,8 +24,10 @@ notes: |
   allocations exhaust actual credit expense. Allocation plus credit cannot
   exceed the respective distribution. Refunds and other benefits must be known
   zero. Actual ESA basis/year-end history is still required by Worksheet6-3.
-  No cash-QTP, multi-expense, extra-source, rollover or category-cap election is
-  manufactured. Distinct actual students retain separate source groups. Final
+  Multiple actual tuition expenses for this same original QTP/ESA group are
+  specified in form-1099-q-multiple-expense-esa.yaml. No cash-QTP, extra-source,
+  rollover or category-cap election is manufactured. Distinct actual students
+  retain separate source groups. Final
   physical forms,2026 calculation readiness and filing gates remain unchanged.
 lines:
   - line: "assistance-credit"
