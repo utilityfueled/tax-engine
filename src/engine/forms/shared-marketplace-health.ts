@@ -55,7 +55,10 @@ export function calculateSharedMarketplaceHealthSources(input: SharedMarketplace
       usedPolicies.add(id);
       const index = Number(id.slice('form1095A:'.length)), policy = input.form8962.sharedPolicyAllocations?.policies?.find(row => row.sourceId === id);
       const original = input.form1095A[index];
-      if (!original || policy?.situation !== 'other_two_tax_families' || policy.agreementConfirmed !== true) throw new Error('Shared Marketplace health requires its actual Situation4 agreement; other allocation methods remain separate.');
+      // The source allocator above independently validates either the actual
+      // Situation4 agreement/default or the Situation3 benchmark method.
+      // Its derived amounts never establish the payment facts checked below.
+      if (!original || !policy || !['other_two_tax_families', 'no_advance_credit'].includes(policy.situation ?? '')) throw new Error('Shared Marketplace health requires its actual supported two-family allocation source method.');
       for (const person of original.coveredIndividuals ?? []) {
         const identity = ssn(person.ssn), own = policy.coveredFamilyAssignments?.find(row => ssn(row.ssn) === identity)?.family === 'this_return';
         const current = originals.get(identity) ?? { name: name(person.name), own, months: new Set<number>() };

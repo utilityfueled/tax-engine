@@ -9,7 +9,9 @@ notes: |
   W1 uses eligible specified premiums and W2 their attributable advances.
   Form7206/i7206 and IRC162(l) retain actual owner/business-paid qualification;
   an agreement does not establish which person paid a premium.
-  This derived source method supports an actual Situation4 agreement and one
+  This derived source method supports actual Situation4 agreement/default or
+  Situation3 benchmark sources (see shared-marketplace-health-other-allocations)
+  and one
   owner/business for the linked shared health plans. Complete full receipts
   remain unchanged. Their actual person paid/APTC allocations are independently
   linked to original covered identities and family assignments. All this-return
