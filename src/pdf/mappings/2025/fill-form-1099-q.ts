@@ -8,6 +8,7 @@ import { roundDollar } from "@/utils/decimal.js";
 import type { Form1099QResult } from "@/engine/forms/form-1099-q.js";
 import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 import { assertDistinctEducationBeneficiaries } from "@/utils/education-beneficiary-identity.js";
+import { calculateAnnualCashQtpPools, roundEducationSourceAmounts } from "@/utils/annual-cash-qtp.js";
 import { calculateRoomBoardPeriods } from "@/utils/education-room-board-periods.js";
 import { readInKindTuitionEsaSource } from "@/utils/in-kind-tuition-esa-source.js";
 import { readInKindTuitionAssistanceSource } from "@/utils/in-kind-tuition-assistance-source.js";
@@ -72,8 +73,62 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
     if (!qeeSummary?.sourceFacts || qeeSummary.sourceFacts.sourceFactsConfirmed !== true || qeeSummary.sourceFacts.allDistributionsReconciled !== true || qeeSummary.sourceFacts.taxYear !== result.taxYear || forms.length !== result.perDistribution.length) throw new Error("Education reference source confirmation, year or statement count is inconsistent");
     if (qeeSummary.sourceFacts.roomBoardPeriods !== undefined && !prepared) assertDistinctEducationBeneficiaries(forms, qeeSummary.sourceFacts);
     const roomBoard = calculateRoomBoardPeriods(forms, qeeSummary.sourceFacts, result.taxYear);
+    const annualCash = calculateAnnualCashQtpPools(forms, qeeSummary.sourceFacts, roomBoard, result.taxYear);
+    const reportFields = { taxableEarnings: "taxableNumerator", taxFreeEarnings: "excludedNumerator", penaltyException: "penaltyExceptionNumerator" } as const;
+    const reportedSourceTotal = (rows: Form1099QResult["perDistribution"], field: keyof typeof reportFields): Decimal => annualCash.pools.length
+      ? roundEducationSourceAmounts(rows.map(row => ({ amount: row[field], numerator: row.annualCashReporting?.[reportFields[field]], denominator: row.annualCashReporting?.denominator })))
+      : rows.reduce((total, row) => total.plus(row[field]), new Decimal(0));
+    if (annualCash.pools.length && !prepared) assertDistinctEducationBeneficiaries(forms, qeeSummary.sourceFacts);
+    const annualAuditIds = new Set<string>();
+    for (const [sourceId, source] of annualCash.sources) {
+      const line = `${sourceId}:annual-cash`, entry = requireAudit("Form1099-Q", line, source.excludedEarnings);
+      annualAuditIds.add(line);
+      if (Object.entries(source.inputs).some(([key, value]) => Decimal.isDecimal(value)
+        ? !Decimal.isDecimal(entry.inputs[key]) || !(entry.inputs[key] as Decimal).eq(value)
+        : entry.inputs[key] !== value)) throw new Error("Education reference original annual cash sources disagree with the audit");
+      const rows = result.perDistribution.filter(row => row.sourceId === sourceId), row = rows[0];
+      if (rows.length !== 1 || !row || !row.adjustedQEE.eq(source.calculatedExpenseShare)
+        || !row.taxFreeEarnings.eq(source.excludedEarnings) || !row.taxableEarnings.eq(source.taxableEarnings)
+        || !row.creditException.eq(source.creditException)) throw new Error("Education reference annual cash calculation disagrees with original sources");
+      if (!row.annualCashReporting || ["denominator", "taxableNumerator", "excludedNumerator", "creditExceptionNumerator"].some(key => {
+        const field = key as keyof typeof source.reporting;
+        return !Decimal.isDecimal(row.annualCashReporting?.[field]) || !row.annualCashReporting[field].eq(source.reporting[field]);
+      })) throw new Error("Education reference exact annual cash reporting amounts disagree with original sources");
+      let exceptionNumerator = source.reporting.creditExceptionNumerator;
+      const original = forms.find(form => form.sourceId === sourceId);
+      for (const exception of qeeSummary.sourceFacts.penaltyExceptions ?? []) {
+        if (exception.sourceId !== sourceId) continue;
+        const requested = new Decimal(knownAmount(exception.distributionAmount));
+        const qualifying = new Decimal(knownAmount(exception.qualifyingAmount));
+        if (requested.lt(0) || qualifying.lt(0) || requested.gt(qualifying) || typeof exception.eligibilityConfirmed !== "boolean")
+          throw new Error("Education reference actual annual exception source is inconsistent");
+        if (!exception.eligibilityConfirmed) continue;
+        if (exception.kind === "death") {
+          if (typeof exception.paidToBeneficiaryOrEstate !== "boolean" || !exception.eventDate || !original?.distributionDate)
+            throw new Error("Education reference actual death-exception facts are missing");
+          if (!exception.paidToBeneficiaryOrEstate || exception.eventDate > original.distributionDate) continue;
+        }
+        exceptionNumerator = exceptionNumerator.plus(source.exceptionEarningsFactor.times(requested));
+      }
+      if (!row.annualCashReporting.penaltyExceptionNumerator.eq(Decimal.min(source.reporting.taxableNumerator, exceptionNumerator)))
+        throw new Error("Education reference exact annual exception total disagrees with original sources");
+      const statementIndex = forms.findIndex(form => form.sourceId === sourceId);
+      sourceLines.push(describe(entry, `Statement ${statementIndex + 1}: `));
+      for (const key of ["Annual cash gross", "Annual qualified cash expenses", "Annual cash education-credit expenses", "Original cash gross", "Original cash earnings", "Original linked expense amount", "Exact excluded cash earnings", "Exact taxable cash earnings"]) {
+        const value = source.inputs[key];
+        if (Decimal.isDecimal(value)) qualifiedEducationExpenseInputs.push({ label: `Statement ${statementIndex + 1}: ${key}`, value: value.toFixed() });
+      }
+    }
+    if (result.lines.some(line => line.form === "Form1099-Q" && line.line.endsWith(":annual-cash") && !annualAuditIds.has(line.line)))
+      throw new Error("Education reference original annual cash sources are missing");
+    if (result.perDistribution.some(row => row.annualCashReporting && !annualCash.sources.has(row.sourceId)))
+      throw new Error("Education reference exact annual cash reporting has no original source");
     const periodAuditIds = new Set<string>();
     for (const [periodIndex, period] of roomBoard.periods.entries()) {
+      if (period.annualCashQualified !== undefined) {
+        const entry = requireAudit("Form1099-Q", `${period.id}:annual-cash-period`, period.annualCashQualified);
+        sourceLines.push(describe(entry, `Academic period ${periodIndex + 1}: `));
+      }
       for (const [sourceId, amount] of period.qualifiedBySource) {
         const line = `${sourceId}:room-board-period:${period.id}`;
         const entry = requireAudit("Form1099-Q", line, amount); periodAuditIds.add(line);
@@ -245,7 +300,7 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
       if (hasReportedEarnings !== hasReportedBasis || (form.accountType === "529" && !hasReportedEarnings)) throw new Error("Education reference reported source Boxes2/3 must be jointly reconciled");
       if (form.earnings !== undefined && form.basis !== undefined) {
         const earnings = new Decimal(form.earnings), basis = new Decimal(form.basis);
-        if (!earnings.isFinite() || !basis.isFinite() || !earnings.plus(basis).eq(row.grossDistribution)) throw new Error("Education reference source Boxes2/3 do not reconcile to Box1");
+        if (!earnings.isFinite() || !basis.isFinite() || (!annualCash.sources.has(row.sourceId) && !earnings.plus(basis).eq(row.grossDistribution))) throw new Error("Education reference source Boxes2/3 do not reconcile to Box1");
         if (correction) {
           const expectedEarnings = correction.netIncome.lt(0) && form.finalDistribution !== true ? new Decimal(0) : correction.netIncome;
           if (!earnings.eq(expectedEarnings) || !basis.eq(row.grossDistribution.minus(expectedEarnings))) throw new Error("Education reference reported correction boxes disagree with the source calculation");
@@ -311,11 +366,15 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
       const label = row.owner === "other" ? `Recipient outside this return ${index + 1}` : row.owner === "spouse" ? "Spouse" : "Primary taxpayer";
       const key = `${row.owner}:${row.recipientId}`;
       const sources = result.perDistribution.filter(source => source.recipientOwner === row.owner && source.recipientId === row.recipientId);
-      if (!sources.length || result.perRecipient.filter(other => other.owner === row.owner && other.recipientId === row.recipientId).length !== 1 || !sources.reduce((sum, source) => sum.plus(source.taxableEarnings), new Decimal(0)).eq(row.taxableEarnings) || !sources.reduce((sum, source) => sum.plus(source.penaltyException), new Decimal(0)).eq(row.penaltyException)) throw new Error("Education recipient source audit does not reconcile");
+      if (!sources.length || result.perRecipient.filter(other => other.owner === row.owner && other.recipientId === row.recipientId).length !== 1 || !reportedSourceTotal(sources, "taxableEarnings").eq(row.taxableEarnings) || !reportedSourceTotal(sources, "penaltyException").eq(row.penaltyException)) throw new Error("Education recipient source audit does not reconcile");
       for (const [line, amount] of [["5", row.taxableEarnings], ["6", row.penaltyException], ["7", row.taxableEarnings.minus(row.penaltyException)], ["8", row.additionalTax]] as const) sourceLines.push(describe(requireAudit("Form5329 education", `${key}:${line}`, amount), `${label}, Form 5329 line ${line}: `));
     }
     const ownRecipients = result.perRecipient.filter(row => row.owner !== "other");
-    if (!ownRecipients.reduce((sum, row) => sum.plus(row.taxableEarnings), new Decimal(0)).eq(result.taxableEarnings) || !ownRecipients.reduce((sum, row) => sum.plus(row.additionalTax), new Decimal(0)).eq(result.netPenalty)) throw new Error("Education recipient audit totals do not reconcile");
+    const ownSources = result.perDistribution.filter(row => row.recipientOwner !== "other");
+    if (!reportedSourceTotal(ownSources, "taxableEarnings").eq(result.taxableEarnings)
+      || !reportedSourceTotal(ownSources, "penaltyException").eq(result.penaltyExceptionAmount)
+      || !reportedSourceTotal(result.perDistribution, "taxFreeEarnings").eq(result.taxFreeEarnings)
+      || !ownRecipients.reduce((sum, row) => sum.plus(row.additionalTax), new Decimal(0)).eq(result.netPenalty)) throw new Error("Education recipient audit totals do not reconcile");
     for (const [index, expense] of (qeeSummary.sourceFacts.expenses ?? []).entries()) {
       for (const [field, label] of [["amount", "Actual paid expense"], ["refundedAmount", "Refund"], ["taxFreeAssistance", "Tax-free assistance"], ["educationCreditAmount", "Expense used for education credit"], ["otherTaxBenefitAmount", "Expense used for another benefit"]] as const) qualifiedEducationExpenseInputs.push({ label: `Expense ${index + 1}: ${label}`, value: knownAmount(expense[field]) });
       if (expense.category === "postsecondary_room_board" && !roomBoard.expenseIds.has(expense.id)) {

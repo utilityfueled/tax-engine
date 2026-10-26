@@ -12,11 +12,13 @@ const contexts = new WeakMap<PreparedEducationReview, { original: string; redact
 const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 export function hasInKindEducationReviewSources(input: TaxYearInput): boolean {
   return (input.form1099Q ?? []).some(form => form.distributionMedium === 'in_kind_prepaid_tuition')
-    || input.qualifiedEducationExpenses?.sourceFacts?.roomBoardPeriods !== undefined;
+    || input.qualifiedEducationExpenses?.sourceFacts?.roomBoardPeriods !== undefined
+    || (input.form1099Q ?? []).some(form => form.accountType === '529' && form.distributionMedium === 'cash'
+      && (input.form1099Q ?? []).filter(other => other.beneficiaryId === form.beneficiaryId && other.accountType === '529' && other.distributionMedium === 'cash').length > 1);
 }
 /** Recompute from original facts; caller-supplied flags/results cannot certify themselves. */
 export function prepareEducationReview(input: TaxYearInput): PreparedEducationReview {
-  if (!hasInKindEducationReviewSources(input)) throw new Error('Education review requires actual in-kind or academic-period education sources');
+  if (!hasInKindEducationReviewSources(input)) throw new Error('Education review requires actual prepaid, academic-period or annual cash education sources');
   const result = calculateFederalTax(input).form1099Q;
   if (!result?.sourceFactsVerified) throw new Error('Education review requires the original source calculation');
   const sources = { forms: input.form1099Q, summary: input.qualifiedEducationExpenses };

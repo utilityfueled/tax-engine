@@ -8,6 +8,8 @@ export interface RoomBoardPeriodResult {
   expenseIds: string[];
   inputs: Record<string, Decimal | string>;
   qualifiedBySource: Map<string, Decimal>;
+  /** Determined cash capacity awaits the separate annual cash fraction. */
+  annualCashQualified?: Decimal;
 }
 export interface RoomBoardPeriodResults {
   periods: RoomBoardPeriodResult[];
@@ -266,6 +268,7 @@ export function calculateRoomBoardPeriods(forms: readonly Form1099Q[], facts: Fa
     if (total([...originalBySource.values()]).gt(available))
       throw new Error('Room-and-board original receipt allocations exceed actual available costs');
     const target = D.min(capacity, requested), qualified = new Map<string, Decimal>();
+    let annualCashQualified: Decimal | undefined;
     const esa = groupForms.filter(f => f.accountType === 'coverdell_esa' && money(f.grossDistribution, 'ESA distribution').gt(0));
     if (esa.length) {
       if (period.esaAllocationConfirmed !== true)
@@ -304,8 +307,10 @@ export function calculateRoomBoardPeriods(forms: readonly Form1099Q[], facts: Fa
           throw new Error('Room-and-board multiple prepaid originals share a binding cap; original allocation method remains unresolved without actual ESA coordination');
         const prepaidAllowed = D.min(prepaidAmount, target), cashAllowed = D.max(0, target.minus(prepaidAllowed));
         const cashAmount = total(cash.map(f => rawBySource.get(f.sourceId ?? '') ?? new D(0)));
-        if (cash.length > 1 && cashAllowed.gt(0) && cashAllowed.lt(cashAmount))
-          throw new Error('Room-and-board multiple cash originals share a reduced residual; original allocation method remains unresolved');
+        const pooledCash = cash.length > 1 && cashAllowed.gt(0) && cashAllowed.lt(cashAmount);
+        if (pooledCash && groupForms.some(form => form.accountType === 'coverdell_esa'))
+          throw new Error('Room-and-board multiple cash originals with ESA require their separate actual coordination method');
+        if (pooledCash) annualCashQualified = cashAllowed;
         for (const form of groupForms) {
           const sourceId = form.sourceId ?? '', raw = rawBySource.get(sourceId) ?? new D(0);
           // Only an original with an eligible allocation to this period can
@@ -314,25 +319,26 @@ export function calculateRoomBoardPeriods(forms: readonly Form1099Q[], facts: Fa
           const allowed = raw.isZero() ? new D(0)
             : form.distributionMedium === 'in_kind_prepaid_tuition'
               ? (prepaid.length === 1 ? prepaidAllowed : raw)
-              : cashAllowed.isZero() ? new D(0) : cash.length === 1 ? cashAllowed : raw;
+              : pooledCash || cashAllowed.isZero() ? new D(0) : cash.length === 1 ? cashAllowed : raw;
           qualified.set(sourceId, allowed);
         }
       }
     }
     if ([...qualified].some(([sourceId, amount]) => amount.gt(rawBySource.get(sourceId) ?? new D(0)))
-      || !total([...qualified.values()]).eq(target))
+      || !total([...qualified.values(), annualCashQualified ?? new D(0)]).eq(target))
       throw new Error('Room-and-board derived allocation must conserve each original source and the one period capacity');
     const inputs: Record<string, Decimal | string> = { 'Actual period costs': cost, 'Applicable institutional allowance': allowance, 'Actual institutional housing invoice': invoice, 'Period assistance': assistance, 'Derived period capacity': capacity, 'Original allocated costs': total([...originalBySource.values()]), 'Eligible allocated costs': requested, 'Half-time enrollment': halfTime ? 'yes' : 'no', 'Institution eligible': institution ? 'yes' : 'no', 'Period start': start, 'Period end': end, 'Living arrangement': period.livingArrangement ?? '' };
     if (historyRequired) Object.assign(inputs, { 'Prior actual period costs': priorCost, 'Prior qualified cost before assistance': priorQualified,
       'Prior period assistance': priorAssistance, 'Prior adjusted qualified expenses': priorAdjusted, 'Remaining period limit': remainingLimit,
       'Original prior worksheets': JSON.stringify(priorUses.slice().sort((a, b) => a.id.localeCompare(b.id))),
       'Original prior receipts': JSON.stringify(originalPriorReceipts.slice().sort((a, b) => a.id.localeCompare(b.id))) });
+    if (annualCashQualified !== undefined) inputs['Qualified cash capacity for annual fraction'] = annualCashQualified;
     // Retained for source/audit binding, never printed as free-text identifiers.
     inputs['Original period record'] = JSON.stringify(period);
     inputs['Original linked receipts'] = JSON.stringify(periodExpenses.map(row => ({ expense: row.expense, link: rows.find(link => link.expenseId === row.expense.id) })).sort((a, b) => a.expense.id.localeCompare(b.expense.id)));
     inputs['Original period allocations'] = JSON.stringify((facts.allocations ?? []).filter(row => ids.has(row.expenseId)).slice().sort((a, b) => (a.sourceId + '\0' + a.expenseId).localeCompare(b.sourceId + '\0' + b.expenseId)));
     inputs['Actual ESA allocation records'] = JSON.stringify(choices.filter(row => row.periodId === id).slice().sort((a, b) => (a.sourceId ?? '').localeCompare(b.sourceId ?? '')));
-    const result = { id, beneficiaryId, expenseIds: [...ids], inputs, qualifiedBySource: qualified };
+    const result = { id, beneficiaryId, expenseIds: [...ids], inputs, qualifiedBySource: qualified, annualCashQualified };
     empty.periods.push(result);
     ids.forEach(id => empty.expenseIds.add(id));
     for (const [sourceId, amount] of qualified)

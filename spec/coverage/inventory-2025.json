@@ -1907,6 +1907,28 @@
       "knownGaps": []
     },
     {
+      "key": "federal/form-1099-q-annual-cash",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
+      "specPath": "spec/federal/form-1099-q-annual-cash.yaml",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/pdf/form-1099-q-annual-cash.test.ts::prints summed annual cents and rejects rounded-source total forgery"
+      ],
+      "implementationNote": "Actual complete ordinary cash QTP originals feed the annual source fraction and summed reporting amounts. The own-spec regression generates historical2025 review output and validates the original-bound education summary. This association does not qualify2026 final forms, promote scenario support or establish human tax review.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-1099-q-cash-assistance",
       "jurisdiction": "federal",
       "taxYear": 2026,

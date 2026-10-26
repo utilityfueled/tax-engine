@@ -1,0 +1,109 @@
+form: "Form1099Q annual ordinary cash fraction"
+fullName: "Annual cash QTP fraction after determined original education costs"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+sources:
+  - "https://www.irs.gov/publications/p970"
+  - "https://www.irs.gov/instructions/i1040gi"
+  - "https://www.irs.gov/instructions/i1099q"
+  - "https://www.irs.gov/irb/2016-07_IRB#NOT-2016-13"
+notes: |
+  Sources refreshed October 26, 2026. Section529(c)(3)(B)(ii)(I)/(II)
+  applies the remaining qualified expenses to cash distributions after the
+  clause(i) in-kind benefit exclusion. Pub970 chapter7 compares the annual
+  total distributions with adjusted qualified expenses and applies that
+  fraction to actual distributed Box2 earnings. Notice2016-13 does not
+  create an allocation election and does not permit recomputing reported
+  original earnings or basis.
+  This bounded method uses complete ordinary same-year/beneficiary/recipient
+  postsecondary cash QTP sources without any ESA, transfer or correction.
+  Determine each actual academic-period cap and prior use once, subtract
+  assistance/credit/other-benefit use and determined prepaid qualified cost,
+  then sum the annual remaining cash expense. Include every actual ordinary
+  cash Box1 in the denominator, including an original without a receipt
+  allocation. Original receipt links remain unchanged evidence; a calculated
+  annual fraction is not a taxpayer allocation or a replacement source fact.
+  Preserve each original Box2 and multiply before division with a local
+  Decimal context. The Form1040 instructions, Rounding Off to Whole Dollars,
+  require adding cents before rounding a line total. Preserve each source's
+  exact taxable/excluded/exception contribution; round the recipient's actual
+  Form5329 lines and the return's income total separately after summing.
+  Do not assign invented pennies to original statements. A reported exclusion
+  and taxable total may independently round; exact source conservation remains.
+  Existing actual ESA choices and competing prepaid originals at a binding
+  cap remain separate; no new election, priority or time proration is inferred.
+  Derived literals below are independent controls, not published IRS examples.
+  Historical2025 review does not qualify final2026 output or filing.
+lines:
+  - line: "annual-common-fraction"
+    description: "Apply one annual cash fraction to unequal original earnings"
+    formula: "Actual cash10000/10000, earnings4000/1000, period cost10000/cap6000: r=.30, excluded1200/300, taxable2800/700, total3500 and350additional tax. Source order and receipt ordering do not change it."
+    testRef: "tests/engine/forms/form-1099-q-annual-cash.test.ts::applies the annual fraction to unequal original cash earnings"
+  - line: "distinct-periods"
+    description: "Keep independent source membership and one annual cash fraction"
+    formula: "Two5000 cash originals, earnings2000/500, actual spring/fall caps2000/3000: annualQ5000/G10000, taxable1000/250, total1250. Never repeat the cap or tax each at its source-local period ratio."
+    testRef: "tests/engine/forms/form-1099-q-annual-cash.test.ts::combines disjoint period capacities before the cash fraction"
+  - line: "unallocated-original"
+    description: "Include a complete actual original without receipt membership"
+    formula: "Cash10000/earnings4000 has room receipts10000/cap6000; cash5000/earnings500 has no receipt: annualr=.40, taxable2400/300, total2700. Original allocation records remain unchanged."
+    testRef: "tests/engine/forms/form-1099-q-annual-cash.test.ts::includes an annual cash original with no receipt allocation"
+  - line: "prepaid-first"
+    description: "Subtract the determined prepaid amount before annual cash treatment"
+    formula: "Actual periodcap8000 includes independently determined prepaid4000; two10000cash with4000/1000 earnings use remaining4000/G20000=.20, taxable3200/800. Prepaid gross is never a cash denominator."
+    testRef: "tests/engine/forms/form-1099-q-annual-cash.test.ts::keeps determined prepaid priority outside the cash denominator"
+  - line: "source-boundary"
+    description: "Retain complete actual source and separate unsupported methods"
+    formula: "Unknown confirmation, missing Box2, conflicting recipient/year, duplicate source and Box1 capacity contradiction reject without mutation; ESA choices and competing prepaid bounds are not relaxed."
+    testRef: "tests/engine/forms/form-1099-q-annual-cash.test.ts::rejects unknown or contradictory annual pool sources"
+  - line: "exact-source-and-reporting"
+    description: "Preserve original cents and exact tails before reporting"
+    formula: "Cash1000/1000 with original earnings100.50/101.50 and actual totalQ666.66 uses .33333: exact taxable67.000335/67.667005 sum134.66734, reported total135. A balanced41-place Box1/Box3 tail stays valid; a one-tail Box1 mismatch still rejects and global precision is unchanged."
+    testRef: "tests/engine/forms/form-1099-q-annual-cash.test.ts::keeps source cents before the reporting boundary"
+  - line: "complete-actual-expenses"
+    description: "Derive qualified expense from actual annual costs rather than a chosen account split"
+    formula: "Actual ordinary tuition6000 and all annual cash20000 givesr=.30 regardless of which cash original has the documented receipt payment; unknown qualification never becomes a positive numerator."
+    testRef: "tests/engine/forms/form-1099-q-annual-cash.test.ts::preserves the actual tuition ledger while deriving annual capacity"
+  - line: "canonical"
+    description: "Carry actual annual taxable earnings and additional tax once"
+    formula: "Actual wages50000 plus taxable cash earnings3500 yields53500AGI;350additional tax. Educator exclusion uses the actual1500excluded earnings once;2026 calculation remains separately qualified/gated."
+    testRef: "tests/engine/education-annual-cash-return.test.ts::carries the actual annual cash earnings through the return once"
+  - line: "private-reference"
+    description: "Bind the annual fraction to every original statement and expense"
+    formula: "Recompute annual original sources before review; reference exposes annualG20000/Q6000 and each original Box2, retained tax3500/350. Equal-net source replacements, missing annual audit and altered taxable result reject with and without a prepared token."
+    testRef: "tests/pdf/form-1099-q-annual-cash.test.ts::binds the annual cash fraction to every original source before rendering"
+  - line: "guide"
+    description: "Preserve actual annual cash originals through edits and saved drafts"
+    formula: "A second earnings/basis source edit revokes original and annual confirmation, preserves known zero/unknown, and only actual reconfirmation changes53500to54200AGI;save/reload preserves the same facts."
+    testRef: "tests/guided-interview/guided-annual-cash-qtp.test.ts::preserves annual cash originals and reconfirmation through reload"
+  - line: "actual-panel"
+    description: "Edit the real statement controls without replacing actual receipt links"
+    formula: "Second Box2/basis edits revoke its statement and the annual check; the full panel blocks contradictory Boxes1-3 and retains blank versus zero through actual reconfirmation."
+    testRef: "tests/apps/web/annual-cash-qtp-interactions.test.tsx::edits actual annual cash statements through the education panel"
+  - line: "workspace-review"
+    description: "Prepare annual cash original evidence before rendering redaction"
+    formula: "Both actual period and ordinary tuition source groups download the annualG/Q/source calculations; source identifiers do not appear in the review PDF, stale originals and final2026 output remain blocked."
+    testRef: "tests/apps/web/workspace-annual-cash-qtp.test.ts::replays annual cash originals before workspace redaction"
+  - line: "browser"
+    description: "Use actual source panels and download a saved review at both widths"
+    formula: "Actual earnings edit1000to2000 with corresponding basis9000to8000 changes53500to54200AGI only after reconfirmation; blank and contradictory sources block; original receipt allocations stay5000each. Desktop/mobile reload and review retain4200taxable/420additional tax with local-only source privacy."
+    testRef: "apps/web/tests/guided-annual-cash-qtp.spec.ts::preserves annual cash sources through edits reload and review"
+  - line: "credit-and-history"
+    description: "Keep credit-only exceptions and prior cap use at their actual stages"
+    formula: "Tuition10000 less credit4000 leaves annualQ6000: G20000/E4000+1000 gives3500taxable,1000credit exception and250additional tax. Actual prior period cost5000with1000aid consumes5000of6000cap, leaving annualQ1000and4750taxable before reporting."
+    testRef: "tests/engine/forms/form-1099-q-annual-cash.test.ts::separates annual credit exceptions and actual prior period use"
+  - line: "ordinary-originals"
+    description: "Never absorb known special sources into the ordinary annual pool"
+    formula: "Known outside-plan qualified distributions require their actual gross/earnings originals before this complete postsecondary pool; original correction, transfer, ESA or competing prepaid source methods retain their separate boundary; no omitted or conflicting special fact becomes an ordinary cash source."
+    testRef: "tests/engine/forms/form-1099-q-annual-cash.test.ts::keeps known special original facts outside the ordinary annual pool"
+  - line: "annual-reporting-rounding"
+    description: "Add exact annual source cents before each recipient or return line"
+    formula: "Two Box1=100/Box2=1/Box3=99 originals and actual tuition100 yield .50 taxable each, total1 (not2), excluded1. Earnings4.50 each yield taxable4.50 reported5 and Form5329 tax1. Unequal Box1=100/200, earnings.10/.65, Q100 yields total taxable.50 even though individual ratios repeat. Two distinct actual joint owners with.50 total taxable each report1 on each Form5329 but1 on the joint income line. Credit-only and actual other exceptions retain exact cents before total reporting, with no source penny apportionment."
+    testRef: "tests/engine/forms/form-1099-q-annual-cash.test.ts::rounds annual return and recipient totals after adding exact source cents"
+  - line: "annual-rounded-canonical"
+    description: "Carry aggregate annual cents into income and additional tax once"
+    formula: "Wages50000 plus actual cash taxable4.50 reports50005AGI, Form5329line5=5,line8=1; exact source taxable2.25 each remains unchanged. An actual educator expenditure304.50 less exact excluded earnings4.50 allows300; reported exclusion5 cannot replace that exact source reduction."
+    testRef: "tests/engine/education-annual-cash-return.test.ts::propagates annual summed cents to canonical income and additional tax"
+  - line: "annual-rounded-review"
+    description: "Preserve source cents and separately validate reported totals in saved review"
+    formula: "Saved original-source review retains exact2.25 per-source taxable; actual Form5329 prints5/blank/1 and Form1040 AGI50005. Forging return or recipient totals to4 rejects before rendering, with and without a prepared original-source context."
+    testRef: "tests/pdf/form-1099-q-annual-cash.test.ts::prints summed annual cents and rejects rounded-source total forgery"

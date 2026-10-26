@@ -205,10 +205,13 @@ function unusedOriginalControl(medium: 'cash' | 'in_kind_prepaid_tuition') {
   const before = JSON.stringify(input);
   for (const reordered of [false, true]) {
     if (reordered) input.form1099Q?.reverse();
+    const periodSources = calculateRoomBoardPeriods(input.form1099Q, facts, 2025);
+    expect(periodSources.qualifiedBySource.get('prepaid')?.toFixed()).toBe('6000');
+    expect(periodSources.qualifiedBySource.get('unused')?.toFixed()).toBe('0');
     const result = calculate(input);
-    expect(result.perDistribution.map(row => [row.sourceId, row.adjustedQEE.toFixed(), row.taxableEarnings.toFixed()]).sort()).toEqual([
-      ['prepaid', '6000', '800'], ['unused', '0', '1000'],
-    ]);
+    expect(result.perDistribution.map(row => [row.sourceId, row.adjustedQEE.toFixed(), row.taxableEarnings.toFixed()]).sort()).toEqual(medium === 'cash'
+      ? [['prepaid', '4000', '1200'], ['unused', '2000', '600']]
+      : [['prepaid', '6000', '800'], ['unused', '0', '1000']]);
     expect([result.adjustedQEE, result.taxableEarnings, result.netPenalty].map(value => value.toFixed())).toEqual(['6000', '1800', '180']);
     if (reordered) input.form1099Q?.reverse();
   }
@@ -226,9 +229,12 @@ function separateOriginalPeriodsControl(medium: 'cash' | 'in_kind_prepaid_tuitio
   Object.assign(required(facts.roomBoardPeriodExpenses[1]), { periodId: 'spring', coveredStart: '2025-02-01', coveredEnd: '2025-05-01' });
   if (medium === 'in_kind_prepaid_tuition') Object.assign(required(facts.inKindBenefits?.[1]), { sourceId: 'spring-original', providedDate: '2025-02-01' });
   const before = JSON.stringify(input), result = calculate(input);
-  expect(result.perDistribution.map(row => [row.sourceId, row.adjustedQEE.toFixed(), row.taxableEarnings.toFixed()])).toEqual([
-    ['prepaid', '3000', '400'], ['spring-original', '2000', '600'],
-  ]);
+  const periodSources = calculateRoomBoardPeriods(input.form1099Q, facts, 2025);
+  expect(periodSources.qualifiedBySource.get('prepaid')?.toFixed()).toBe('3000');
+  expect(periodSources.qualifiedBySource.get('spring-original')?.toFixed()).toBe('2000');
+  expect(result.perDistribution.map(row => [row.sourceId, row.adjustedQEE.toFixed(), row.taxableEarnings.toFixed()])).toEqual(medium === 'cash'
+    ? [['prepaid', '2500', '500'], ['spring-original', '2500', '500']]
+    : [['prepaid', '3000', '400'], ['spring-original', '2000', '600']]);
   expect([result.adjustedQEE, result.taxableEarnings, result.netPenalty].map(value => value.toFixed())).toEqual(['5000', '1000', '100']);
   expect(JSON.stringify(input)).toBe(before);
 }
