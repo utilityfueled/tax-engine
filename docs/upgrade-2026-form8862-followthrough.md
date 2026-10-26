@@ -29,3 +29,15 @@ Final reader tree `03570985` passed 511 tests in five files (39 PDF/workspace ca
 Delivery rebases the independently reviewed 13-path core and 28-path follow-through onto `74bf9481`, preserving intervening health, education and independent charitable/NOL source code. The only four differing product blobs versus the reviewed archives are those retained base changes in inputs, federal calculation, guided flow and return assembly; the owned original-source hunks are unchanged. Rule metadata advances to 2025.141/2026.138 without opening qualification. The generated implementation inventory is included. The separately assigned deceased-claimant numeric-period specification and red tests remain outside this package.
 
 The final integration tree `96e37c19` passed 1,646 tests in 154 files, with another 24 metadata/readiness cases, root/contract/web types, all 5,455 spec references, the 513-entry inventory check, root and production web builds, and scoped lint with zero errors/13 existing warnings. All 43 frozen source hashes remained unchanged. The exact broad test log SHA256 is `0140b29d7be7e0983458999c2bebd594b4bc2d20b6a1907f58cca029da2d3c4c`. Production browser checks against that rebased build passed both desktop/mobile cases with zero retries; log SHA256 `29195b6ddf31ca8d30399be0dc0453cd3794012c50b47cade6c6fef57a92a1eb`. Their saved PDFs retain the same source-bound assertions and 18 review pages each. The completed desktop/mobile source and download views were visually checked; the prior V4 browser PDFs were independently reopened and their cover, 1040, Form8862 and ScheduleEIC pages rendered and visually checked, with the official comb values, redacted identifiers and review notices retained. This final evidence append changes no executable source. Full integrated release verification remains separate from this scoped delivery.
+
+## Full-suite template inventory correction — 2026-10-26
+
+The immutable `603fc1b` full unit run found one stale assertion: the historical
+blank pack now contains 44 forms after adding Form 8862, while its registry test
+still expected 43. The other 18,992 tests passed. The corrected assertion expects
+44 and explicitly requires `f8862.pdf`; every registered file still undergoes
+its exact-byte hash check and the tampered/unknown/year controls remain intact.
+The focused registry and Form 8862 PDF checks pass all eight tests in two files.
+The full browser run on `603fc1b` passes 422 tests with five hosted-only skips,
+zero retries and two workers. Full coverage is still running on that unchanged
+snapshot; its result cannot include this subsequent test correction.
