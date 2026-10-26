@@ -3247,7 +3247,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   // Investment income for EIC disqualification: taxable + tax-exempt interest,
   // dividends, capital gain net income (≥ $0), net rental/royalty income (if positive)
-  const eicInvestmentIncome = input.eic?.investmentIncomeOverride
+  const eicInvestmentIncome = input.eic?.investmentIncomeOverride !== undefined
     ? d(input.eic.investmentIncomeOverride)
     : sum(
         totalTaxableInterest,

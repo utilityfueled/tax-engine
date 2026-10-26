@@ -3431,8 +3431,9 @@ export const EicConfigSchema = z.object({
   /** Whether the MFS filer qualifies for the separated-spouse EIC exception
    *  (lived apart from spouse for the last 6 months of the year + qualifying child) */
   mfsEligible: z.boolean().default(false),
-  /** Override investment income (otherwise computed by the engine from interest, dividends, capital gains, rental) */
-  investmentIncomeOverride: optionalDecimal,
+  /** Explicit legacy total only; absence must use computed income, never a default zero. */
+  investmentIncomeOverride: decimal.refine(value => d(value).isFinite() && d(value).gte(0),
+    "EIC investment income must be finite and nonnegative").optional(),
   /** Whether the primary filer is a full-time student (disqualifies childless EIC) */
   primaryIsFullTimeStudent: z.boolean().default(false),
 });

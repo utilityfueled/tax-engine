@@ -1,0 +1,27 @@
+form: "Earned Income Credit investment income sources"
+fullName: "Preserve missing investment-income overrides as missing"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p596"
+retrievedAt: "2026-10-26"
+notes: |
+  Pub596 Rule6 and Worksheet1 require the actual investment-income total.
+  IRC32(i) denies the credit above the indexed ceiling. Opening an EIC
+  claimant record cannot supply a zero investment-income election. An omitted
+  historical override stays absent and uses the existing computed amount.
+  Explicit nonnegative legacy overrides remain identifiable input; they are
+  not qualified replacement source worksheets. This input-presence correction
+  does not assert complete Worksheet1 character classification or final2026
+  readiness. Those remain separate work and review gates.
+lines:
+  - line: "missing-source"
+    description: "Do not manufacture a zero override when parsing EIC facts"
+    formula: "Missing investmentIncomeOverride remains undefined through parsing and JSON reopening; explicit zero remains the supplied string. Reject a negative total because Worksheet1 components are nonnegative."
+    testRef: "tests/engine/eic-investment-income-presence.test.ts::preserves absent override facts and validates an explicit legacy total"
+  - line: "empty-record"
+    description: "An empty EIC record cannot disable the investment ceiling"
+    formula: "Actual wages2000 plus taxable interest12000 exceed the2025 investment ceiling11950; credit is0 with absent or empty EIC configuration."
+    testRef: "tests/engine/eic-investment-income-presence.test.ts::keeps the actual investment ceiling when an EIC record is opened"
+  - line: "claimant-record"
+    description: "Actual claimant eligibility does not override investment income"
+    formula: "Confirmed age, home, SSN and residency sources establish only claimant eligibility. Actual interest12000 still disqualifies; interest11950 permits the published earned-income-table credit155 for wages2000."
+    testRef: "tests/engine/eic-investment-income-presence.test.ts::keeps claimant and investment sources independent through save and reopen"
