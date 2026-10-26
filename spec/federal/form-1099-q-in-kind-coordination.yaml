@@ -1,0 +1,58 @@
+form: "Form1099Q in-kind tuition coordination"
+fullName: "Actual assistance, education-credit and Coverdell tuition allocations"
+taxYear: [2025, 2026]
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+sources:
+  - "https://www.irs.gov/publications/p970"
+  - "https://uscode.house.gov/us/usc/119-118/t26/s530/"
+notes: |
+  Sources refreshed October25,2026. IRC529(c)(3)(B)(v) reduces expenses for
+  actual assistance and expenses used for section25A; clause(vi) expressly
+  permits the taxpayer to allocate remaining expenses between in-kind QTP and
+  Coverdell distributions. Pub970 chapters6/7 supply the earnings fractions
+  and distinct additional-tax exception for credit-caused taxable earnings.
+  Chapter6 permits any reasonable allocation method; the software retains the
+  actual confirmed source election instead of applying an automatic ratio.
+  These derived controls are not published IRS examples or human qualification.
+  Preserve source amounts and the taxpayer's confirmed allocation. Never choose
+  an election or infer scholarship eligibility. A single tuition benefit may
+  use both assistance and credit; provided cost equals actual expense and the
+  sum of assistance, credit and QTP allocation. The separate ESA method needs
+  one actual ordinary QTP benefit, one ordinary ESA statement/account and one
+  qualifying postsecondary tuition expense for the same actual student and
+  recipient. The two actual allocations exhaust adjusted expense; their credit
+  allocations exhaust actual credit expense. Allocation plus credit cannot
+  exceed the respective distribution. Refunds and other benefits must be known
+  zero. Actual ESA basis/year-end history is still required by Worksheet6-3.
+  No cash-QTP, multi-expense, extra-source, rollover or category-cap election is
+  manufactured. Distinct actual students retain separate source groups. Final
+  physical forms,2026 calculation readiness and filing gates remain unchanged.
+lines:
+  - line: "assistance-credit"
+    description: "Conserve original tuition with actual assistance and credit"
+    formula: "Benefit4000 and earnings800, assistance1000 and actual credit expense1000 leave QTPallocation2000: excluded400,taxable400,credit exception200,additional tax20. Separately confirmed scholarship1000 and distinct-from-credit evidence may exempt the remaining200; unknown/overlapping exception evidence rejects."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-coordination.test.ts::coordinates actual assistance and credit without inventing an exception"
+  - line: "esa-election"
+    description: "Honor actual expense election between a prepaid QTP and ESA"
+    formula: "Tuition8000,QTPbenefit4000/earnings800,ESA6000/basis4800/yearend0. Actual allocations QTP2000/ESA6000 exclude400/1200, taxable400 and additional40. Alternative actual QTP4000/ESA4000 excludes800/800, taxable400 and additional40; preserve both source packets unchanged."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-coordination.test.ts::uses the actual single-expense ESA election without reassigning costs"
+  - line: "shared-reductions"
+    description: "Reconcile assistance and credit before the actual ESA election"
+    formula: "Tuition8000 less assistance1000 and credit1000 leaves6000. QTPallocation1000 plus QTPcredit1000 and ESAallocation5000 gives excluded200/1000,taxable600/200,credit exception200 and total additional60. A one-cent mismatch in allocation or credit rejects; statement order cannot alter results."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-coordination.test.ts::conserves shared tuition reductions and exact source allocations"
+  - line: "source-boundary"
+    description: "Reject incomplete or conflicting source groups"
+    formula: "Missing basis history, extra or aliased actual students/sources, mismatched recipient, transfer/correction, wrong year, unqualified expense, omitted allocation or credit, unknown assistance/refund and expense-source mismatch reject. Known zero amounts remain zero."
+    testRef: "tests/engine/forms/form-1099-q-in-kind-coordination.test.ts::rejects invented or conflicting ESA tuition source groups"
+  - line: "canonical"
+    description: "Route actual recipient income and credit exceptions once"
+    formula: "Wages50000 plus shared-reduction taxable earnings800 gives50800AGI and60additional tax; actual LLC1000 remains linked to the same student. Unknown claimed student and false recipient assignment reject.2026 isolated-law controls preserve the actual readiness gate."
+    testRef: "tests/engine/education-in-kind-coordination-return.test.ts::routes actual shared tuition earnings and exceptions once"
+  - line: "review"
+    description: "Bind the original allocation before rendering source review"
+    formula: "Original or exactly redacted context validates actual tuition8000,assistance1000,credit1000,QTP1000andESA5000; source or audit edits reject before PDF I/O. Saved summary and Form5329 show800taxable,200exception,60additionaltax with review notices and no original identifiers."
+    testRef: "tests/pdf/form-1099-q-in-kind-coordination.test.ts::binds the original shared tuition election before producing review output"
+  - line: "guide"
+    description: "Existing actual source collector preserves the election"
+    formula: "Guided conversion preserves both actual allocations and reductions separately; no calculated allowable amount replaces an original source, and unknown/changed confirmation blocks calculation."
+    testRef: "tests/guided-interview/guided-in-kind-coordination.test.ts::preserves the actual tuition election through guided conversion"

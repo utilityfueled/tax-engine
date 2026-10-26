@@ -21,6 +21,7 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import { d, sum, zeroFloor, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { assertDistinctEducationBeneficiaries } from "@/utils/education-beneficiary-identity.js";
+import { readInKindTuitionEsaSource } from "@/utils/in-kind-tuition-esa-source.js";
 
 const ZERO = new Decimal(0);
 const PENALTY_RATE = new Decimal("0.10");
@@ -691,8 +692,17 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const provided = sum(...benefits.map(item => item.amount));
     const expense = allocation.expense;
     const assistance = actualAmount(expense.taxFreeAssistance, "in-kind expense assistance");
-    if (assistance.gt(0)) {
-      // Spec: form-1099-q-in-kind-assistance.yaml. The assistance belongs to
+    const exactBenefit = allocation.amount.plus(allocation.credit).plus(assistance).eq(provided);
+    const group = verifiedForms.filter(form => form.beneficiaryId === allocation.form.beneficiaryId);
+    const esaCoordination = group.some(form => form.accountType === "coverdell_esa") && (!exactBenefit || assistance.gt(0));
+    if (esaCoordination) {
+      assertDistinctEducationBeneficiaries(verifiedForms, facts);
+      const sourceInputs = readInKindTuitionEsaSource(verifiedForms, facts, allocation.form.sourceId, expense.id);
+      audit.record("Form1099-Q", `${allocation.form.sourceId}:in-kind-esa:${expense.id}`, "Actual tuition allocation between in-kind QTP and ESA", allocation.amount,
+        "IRC529(c)(3)(B)(vi): taxpayer supplied expense allocation after actual assistance and credit; no inferred election", sourceInputs);
+    }
+    if (assistance.gt(0) && !esaCoordination) {
+      // Spec: form-1099-q-in-kind-assistance.yaml and form-1099-q-in-kind-coordination.yaml. The assistance belongs to
       // one complete actual tuition benefit; no shared-source split is inferred.
       assertDistinctEducationBeneficiaries(verifiedForms, facts);
       if (expense.category !== "postsecondary_tuition" || expense.qualificationConfirmed !== true || benefits.length !== 1
@@ -700,10 +710,10 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
         || verifiedForms.filter(form => form.beneficiaryId === allocation.form.beneficiaryId).length !== 1
         || [...expenses.values()].filter(source => source.beneficiaryId === expense.beneficiaryId).length !== 1
         || allocations.filter(source => source.form.beneficiaryId === expense.beneficiaryId).length !== 1
-        || !allocation.credit.isZero()
-        || [expense.refundedAmount, expense.educationCreditAmount, expense.otherTaxBenefitAmount]
+        || !allocation.credit.eq(actualAmount(expense.educationCreditAmount, "actual tuition credit expense"))
+        || [expense.refundedAmount, expense.otherTaxBenefitAmount]
           .some(value => !actualAmount(value, "in-kind assistance other reduction").isZero())) {
-        throw new Error("Form1099Q in-kind assistance requires one actual tuition benefit and expense with known zero other reductions");
+        throw new Error("Form1099Q in-kind assistance requires one actual tuition benefit and expense with reconciled credit and known zero refund/other benefit");
       }
       audit.record("Form1099-Q", `${allocation.form.sourceId}:in-kind-assistance:${expense.id}`, "Actual tax-free assistance against the in-kind tuition benefit", assistance,
         "IRC529(c)(3)(B)(v)(I) and25A(g)(2); actual source reduction, not an additional-tax exception", {
@@ -713,10 +723,10 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
           "Other tax benefit": actualAmount(expense.otherTaxBenefitAmount, "other benefit"), "Original allocation": allocation.amount,
         });
     }
-    if (!allocation.amount.plus(allocation.credit).plus(assistance).eq(provided)) throw new Error("Form1099Q in-kind allocation, actual credit expense and supported assistance must conserve its benefit cost; unexplained partial allocation is unsupported");
+    if (!esaCoordination && !exactBenefit) throw new Error("Form1099Q in-kind allocation, actual credit expense and supported assistance must conserve its benefit cost; unexplained partial allocation is unsupported");
     if (allocation.credit.gt(0) && (allocation.expense.category !== "postsecondary_tuition" || allocation.expense.qualificationConfirmed !== true)) throw new Error("Form1099Q in-kind credit allocation requires actual qualifying postsecondary tuition");
     audit.record("Form1099-Q", `${allocation.form.sourceId}:in-kind-allocation:${allocation.expense.id}`, "Actual in-kind QTP expense allocation", allocation.amount,
-      assistance.gt(0) ? "Actual provided benefit cost less its actual tax-free assistance" : "Actual provided benefit cost less the explicitly allocated education-credit expense",
+      esaCoordination ? "Actual taxpayer allocation after assistance, credit and ESA coordination" : assistance.gt(0) ? "Actual provided benefit cost less its actual tax-free assistance and credit expense" : "Actual provided benefit cost less the explicitly allocated education-credit expense",
       { "Education credit expense": allocation.credit });
   }
   for (const expense of expenses.values()) {

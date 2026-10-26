@@ -12,7 +12,9 @@ notes: |
   interpretation is not a published IRS numerical example or human qualification.
   Require one actual distribution, tuition expense and allocation per actual
   student, original provided benefit equal to the expense, and known zero
-  refunds, credit and other-benefit reductions. The original provided cost is
+  refunds, credit and other-benefit reductions for this standalone method.
+  See form-1099-q-in-kind-coordination.yaml for the source-complete combined
+  credit and actual ESA allocation extension. The original provided cost is
   conserved as QTP allocation plus actual tax-free assistance. Do not allocate
   assistance across larger expenses, multiple sources or ESA elections, infer
   an exception, or replace any original source amount with a calculated amount.

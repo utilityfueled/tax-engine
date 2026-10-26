@@ -8,6 +8,7 @@ import { roundDollar } from "@/utils/decimal.js";
 import type { Form1099QResult } from "@/engine/forms/form-1099-q.js";
 import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 import { assertDistinctEducationBeneficiaries } from "@/utils/education-beneficiary-identity.js";
+import { readInKindTuitionEsaSource } from "@/utils/in-kind-tuition-esa-source.js";
 import { assertPreparedEducationReview, type PreparedEducationReview } from "../../education-review-context.js";
 
 export const FORM_1099_Q_REFERENCE_FILENAME = "f1099q-reference-filled.pdf";
@@ -103,15 +104,26 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
           const expense = qeeSummary.sourceFacts.expenses?.find(item => item.id === expenseId);
           const assistance = sourceMoney(expense?.taxFreeAssistance);
           const providedCost = linked.reduce((total, benefit) => total.plus(sourceMoney(benefit.amount)), new Decimal(0));
-          if (!sourceMoney(allocation?.amount).plus(sourceMoney(allocation?.creditAmount)).plus(assistance).eq(providedCost)) throw new Error("Education reference in-kind benefit allocation and assistance source disagree with the calculation");
-          if (assistance.gt(0)) {
+          const exactBenefit = sourceMoney(allocation?.amount).plus(sourceMoney(allocation?.creditAmount)).plus(assistance).eq(providedCost);
+          const esaCoordination = forms.some(source => source.beneficiaryId === row.beneficiaryId && source.accountType === "coverdell_esa") && (!exactBenefit || assistance.gt(0));
+          if (esaCoordination) {
+            if (!prepared) assertDistinctEducationBeneficiaries(forms, qeeSummary.sourceFacts);
+            const inputs = readInKindTuitionEsaSource(forms, qeeSummary.sourceFacts, row.sourceId, expenseId);
+            const entry = requireAudit("Form1099-Q", `${row.sourceId}:in-kind-esa:${expenseId}`, sourceMoney(allocation?.amount));
+            if (Object.entries(inputs).some(([key, value]) => !Decimal.isDecimal(entry.inputs[key]) || !(entry.inputs[key] as Decimal).eq(value))) {
+              throw new Error("Education reference actual tuition ESA allocation sources disagree with the audit");
+            }
+            sourceLines.push(describe(entry, `Statement ${index + 1}: `));
+          }
+          if (!esaCoordination && !exactBenefit) throw new Error("Education reference in-kind benefit allocation and assistance source disagree with the calculation");
+          if (assistance.gt(0) && !esaCoordination) {
             if (!prepared) assertDistinctEducationBeneficiaries(forms, qeeSummary.sourceFacts);
             if (expense?.category !== "postsecondary_tuition" || expense.qualificationConfirmed !== true || linked.length !== 1
               || !sourceMoney(expense.amount).eq(providedCost)
               || forms.filter(source => source.beneficiaryId === row.beneficiaryId).length !== 1
               || (qeeSummary.sourceFacts.expenses ?? []).filter(source => source.beneficiaryId === row.beneficiaryId).length !== 1
-              || allocations.length !== 1 || !sourceMoney(allocation?.creditAmount).isZero()
-              || [expense.refundedAmount, expense.educationCreditAmount, expense.otherTaxBenefitAmount].some(value => !sourceMoney(value).isZero())) {
+              || allocations.length !== 1 || !sourceMoney(allocation?.creditAmount).eq(sourceMoney(expense.educationCreditAmount))
+              || [expense.refundedAmount, expense.otherTaxBenefitAmount].some(value => !sourceMoney(value).isZero())) {
               throw new Error("Education reference in-kind assistance source group is unsupported");
             }
             const assistanceLine = requireAudit("Form1099-Q", `${row.sourceId}:in-kind-assistance:${expense.id}`, assistance);

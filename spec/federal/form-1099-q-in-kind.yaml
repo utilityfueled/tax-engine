@@ -18,7 +18,9 @@ notes: |
   benefits give no exclusion. It retains other actual cash/ESA/credit allocations only within
   the remaining expense, without choosing them for the taxpayer. A partly
   excluded in-kind benefit caused by assistance/category limits or an ESA
-  election remains separate. See form-1099-q-in-kind-credit.yaml for the
+  election uses its distinct source method. Actual single-tuition assistance
+  and credit/ESA coordination are specified in form-1099-q-in-kind-assistance.yaml
+  and form-1099-q-in-kind-coordination.yaml; unrelated partial methods remain separate. See form-1099-q-in-kind-credit.yaml for the
   actual tuition credit method and educator-in-kind-exclusions.yaml for
   verified earnings used in the separate recipient educator calculation.
 lines:
