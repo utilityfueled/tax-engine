@@ -2712,7 +2712,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     }
   }
   const { qbiDeduction, form8995Result, form8995AResult } = qbiCalculation;
-  if (year === 2026 && deductionUsed !== "itemized" && schedA.charitableCarryforward.gt(0) && !schedA.nonitemizedCharitableCarryover) {
+  if (year === 2026 && deductionUsed !== "itemized" && schedA.charitableCarryforward.gt(0)
+    && !schedA.nonitemizedCharitableCarryover && !schedA.currentCharitableCandidates) {
     throw new Error("Nonitemized charitable carry requires the complete supported source method; retained sources cannot use the itemized floor carry amount");
   }
   audit.merge(calculateFederalDeductionSelection({ taxYear: year, election: deductionElection,
@@ -4312,11 +4313,12 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         investmentInterestExpense: form4952?.disallowedCarryforward ?? new Decimal(0),
         minimumTaxCredit: cfMtc,
         charitableContributions: nol?.stage === "final" && nol.worksheet.charitableCarryover
-          ? nol.worksheet.charitableCarryover.carryforward : schedA.charitableCarryforward,
+          ? nol.worksheet.charitableCarryover.carryforward
+          : schedA.charitableTreatment ? sum(...schedA.charitableTreatment.carryforwards.map(row => row.amount)) : schedA.charitableCarryforward,
         charitableContributionsByYear: nol?.stage === "final" && nol.worksheet.charitableCarryover
           ? nol.worksheet.charitableCarryover.carryforward.gt(0)
             ? [{ taxYear: input.taxpayer.taxYear, category: "cash_60", amount: nol.worksheet.charitableCarryover.carryforward }] : []
-          : schedA.charitableCarryforwardByYear,
+          : schedA.charitableTreatment?.carryforwards ?? schedA.charitableCarryforwardByYear,
         ...(alternativeCharityCarry !== undefined ? {
           amtCharitableContributions: alternativeCharityCarry,
           amtCharitableContributionsByYear: alternativeCharityCarry.gt(0)

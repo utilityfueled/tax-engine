@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.88",
+    ruleVersion: "2025.90",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 current public-cash itemized and nonitemized carry candidates with confirmed empty prior history; final selected carry retained separately from the ScheduleA comparison", revision: "IRC170(G)/(I)/(d)(1)(C)/(p) and Reg1.170A-10; exact source-backed derived controls, positive prior/mixed/NOL methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 public-cash nonitemizer percentage carry, independent current170(p) deduction and original prior FIFO/fifth-year expiry", revision: "IRC170(G)/(p), Reg1.170A-10 and Pub6196; exact source/history and final-selection guards, ineligible-standard carry is a documented interpretation, itemized/mixed/NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Section529(c)(3)(A)/(B)(i)/(ii)/(iv)/(v) actual in-kind postsecondary tuition credit allocation; benefit/source cost conservation and recipient identity before own-return income", revision: "Final2025 Pub970/i1099Q and RevProc2025-32 educator cap; bounded derived source controls and original audit/PDF binding, other partial methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8962", section: "Actual two-family Situation4 policy agreement, original recipient/enrollee identity and monthly same-percentage allocation; physical PartIV and source-bound review", revision: "Final2025 instructions and Form8962 created2025-03-25; exact sources and derived2026 credit tests, additional allocation/health methods and independent qualification remain separate", retrievedAt: "2026-10-25" },
@@ -132,11 +133,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.84-law-integration-draft",
+    ruleVersion: "2026.86-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 current public-cash itemized and nonitemized carry candidates with confirmed empty prior history; final selected carry retained separately from the ScheduleA comparison", revision: "IRC170(G)/(I)/(d)(1)(C)/(p) and Reg1.170A-10; exact source-backed derived controls, positive prior/mixed/NOL methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 public-cash nonitemizer percentage carry, independent current170(p) deduction and original prior FIFO/fifth-year expiry", revision: "IRC170(G)/(p), Reg1.170A-10 and Pub6196; exact source/history and final-selection guards, ineligible-standard carry is a documented interpretation, itemized/mixed/NOL and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Section529(c)(3)(A)/(B)(i)/(ii)/(iv)/(v) actual in-kind postsecondary tuition credit allocation; benefit/source cost conservation and recipient identity before own-return income", revision: "Final2025 Pub970/i1099Q and RevProc2025-32 educator cap; bounded derived source controls and original audit/PDF binding, other partial methods and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/instructions/i8962", section: "Actual two-family Situation4 policy agreement, original recipient/enrollee identity and monthly same-percentage allocation; physical PartIV and source-bound review", revision: "Final2025 instructions and Form8962 created2025-03-25; exact sources and derived2026 credit tests, additional allocation/health methods and independent qualification remain separate", retrievedAt: "2026-10-25" },
