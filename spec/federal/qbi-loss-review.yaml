@@ -1,0 +1,59 @@
+form: "QBI Loss Source Review"
+fullName: "Original-source K-1 loss limitations and EBL character review"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8995"
+notes: |
+  Final2025 Form8995 lines3/16 and instructions Tracking Losses or Deductions
+  Suspended by Other Provisions, columnsD/I/J/L and row3. The appendix is a
+  review record, not an IRS form. It copies the actual canonical basis,465,469
+  and461 results without a new allowance calculation or taxpayer override.
+  Prior EBL current qualified deductions follow actual regular NOL deductions;
+  modified absorption, COD reductions, expiry and remaining character are
+  separately labeled. Ordinary QBI carry, suspended character, regular NOL
+  and independent AMT NOL are distinct balances, not additive deductions.
+  Missing independent regular or AMT NOL source histories are identified as
+  unavailable, not displayed as a zero closing balance from an output default.
+  Physical Form8995 lines4 and8 explicitly enter zero when the combined
+  amount is zero or less. Keep the calculated signed totals for lines2/6 and
+  loss carryforward lines16/17; floor only those two printed fields.
+  An original-input calculation before render redaction binds the complete
+  source, calculation and carry ledgers with a private nonserializable token.
+  The appendix uses static ordinal labels; no original reference, EIN or
+  personal identifier is rendered. Existing2026 and filing gates stay closed.
+lines:
+  - line: "printed-floors"
+    description: "Print explicit zero on physical8995 lines4/8 while preserving loss carries"
+    formula: "Physical4=max(0, signed totalQBI); physical8=max(0, signed REIT/PTP total); original loss on2/6 and carry16/17 remain unchanged"
+    testRef: "tests/pdf/qbi-loss-review.test.ts::prints the physical REIT and PTP zero floor without losing its carry"
+  - line: "completed"
+    description: "Keep an existing completed carry-only Form8995 without inventing K1 sources"
+    formula: "A completed canonical Form8995 is retained even when its current deduction is zero; an ordinary prior QBI carry does not create the separate original-K1 appendix"
+    testRef: "tests/pdf/qbi-loss-review.test.ts::retains a completed prior QBI carry without a K1 source packet"
+  - line: "packet"
+    description: "Retain an actual zero-deduction completed8995 and loss record"
+    formula: "Actual QBI source packet with completed8995 retains physical lines1/4/16 and a separate source character appendix even when current deduction is zero"
+    testRef: "tests/pdf/qbi-loss-review.test.ts::retains a saved zero-deduction QBI packet and separate loss limits"
+  - line: "ebl"
+    description: "Separate actual EBL deductions from closing character"
+    formula: "Copy each original regular vintage current deduction, qualified deduction, modified absorption, COD reduction, expiry and qualified remaining balance; do not use modified absorption as current QBI"
+    testRef: "tests/pdf/qbi-loss-review.test.ts::keeps actual regular EBL deduction distinct from modified absorption and carry"
+  - line: "current"
+    description: "Keep current461 re-suspension outside ordinary QBI carry"
+    formula: "Copy calculated current qualified allowance and separate new461 qualified vintage; preserve other Code-section suspended balances by activity and vintage"
+    testRef: "tests/pdf/qbi-loss-review.test.ts::shows current461 character separately from the ordinary QBI carry"
+  - line: "original"
+    description: "Reject stale or forged source and calculation contexts"
+    formula: "Full actual source digest and completed federal loss/carry digest must match before rendering; cloned returned source cannot mutate the original private record"
+    testRef: "tests/pdf/qbi-loss-review.test.ts::binds original identity and every retained loss ledger before redaction"
+  - line: "pages"
+    description: "Complete loss-history continuation and visible privacy"
+    formula: "Every activity and stage remains visible on paginated review pages with ordinal labels and one notice per page; no hidden source identity is rendered"
+    testRef: "tests/pdf/qbi-loss-review.test.ts::paginates actual activities without leaking private source identifiers"
+  - line: "gates"
+    description: "Retain existing year and filing restrictions"
+    formula: "The2025 review appendix enables neither2026 output nor filing purpose"
+    testRef: "tests/pdf/qbi-loss-review.test.ts::retains year and filing restrictions for loss review"
+  - line: "workspace"
+    description: "Prepare real identity before the workspace download redacts it"
+    formula: "Actual guided K1 original records reach a completed negative8995 and separate loss appendix; every calculation keeps original identity and only rendering copies are redacted"
+    testRef: "tests/apps/web/workspace-filled-return.test.ts::binds actual K1 loss sources before redacting the workspace packet"

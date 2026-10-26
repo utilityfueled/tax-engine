@@ -19,6 +19,7 @@ import { TaxYearInputSchema } from "../../../src/models/inputs";
 import { calculateFederalTax } from "../../../src/engine/federal";
 import * as federalEngine from "../../../src/engine/federal";
 import { actualGuidedAdoptionHistory } from "../../fixtures/guided-adoption-prior-benefits";
+import { actualGuidedK1Sources } from "../../fixtures/guided-k1-qbi-sources";
 
 vi.mock("server-only", () => ({}));
 
@@ -503,6 +504,30 @@ describe("workspace filled return download", () => {
 
     expect(commandResult).not.toContain("111223333");
     expect(commandResult).not.toContain("000000000");
+  });
+
+  it("binds actual K1 loss sources before redacting the workspace packet", async () => {
+    const state = createGuidedFlowState();
+    state.segmentation.lifeEvents = ['k1-loss-sources'];
+    state.completedSections.push('adjustments', 'other-taxes');
+    state.sectionData['personal-info'] = { ...state.sectionData['personal-info'], lastName: 'Example' };
+    const wages = state.sectionData['income-w2']?.entries[0];
+    if (!wages) throw new Error('Missing original wage source');
+    Object.assign(wages, { wages: '100000', socialSecurityWages: '100000', socialSecurityWithheld: '6200',
+      medicareWages: '100000', medicareWithheld: '1450', stateWages: '100000' });
+    state.sectionData.adjustments = { k1LossSources: actualGuidedK1Sources() };
+    const before = JSON.stringify(state), calculate = vi.spyOn(federalEngine, 'calculateFederalTax');
+    try {
+      const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+      expect(download.includedForms).toContain('f8995-filled.pdf');
+      expect(download.includedForms).toContain('qbi-loss-reference-filled.pdf');
+      expect(calculate.mock.calls.every(([input]) => input.taxpayer.primary.ssn === '111-22-3333')).toBe(true);
+      const text = await extractPdfText(download.contents);
+      expect(text).toContain('Current QBI after loss limits: $-48000');
+      expect(text).toContain('465, origin 2025: suspended $40000; qualified $32000');
+      for (const secret of ['111223333', 'Original K1 and199A attachment', 'Actual year-end outside-basis worksheet']) expect(text).not.toContain(secret);
+      expect(JSON.stringify(state)).toBe(before);
+    } finally { calculate.mockRestore(); }
   });
 
   it("binds historical adoption before redacting the actual workspace packet", async () => {

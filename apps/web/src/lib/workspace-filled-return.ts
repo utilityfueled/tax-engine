@@ -28,6 +28,7 @@ import { prepareForm8949Review } from "@/pdf/form-8949-review-context.js";
 import { prepareCodNolReview } from "@/pdf/cod-nol-review-context.js";
 import { prepareCharitableReview } from "@/pdf/charitable-review-context.js";
 import { hasHistoricalAdoptionSources, prepareAdoptionReview } from "@/pdf/adoption-review-context.js";
+import { prepareQbiLossReview } from "@/pdf/qbi-loss-review-context.js";
 import { hasPremiumTaxCreditReviewSources, preparePremiumTaxCreditReview } from "@/pdf/premium-tax-credit-review-context.js";
 import { fillOhioReferenceForms } from "@/pdf/fill-oh-reference-forms.js";
 import { loadPdfDocumentQuietly } from "@/pdf/pdf-utils.js";
@@ -97,6 +98,7 @@ const FORM_LABELS: Record<string, string> = {
   "f8959-filled.pdf": "Form 8959",
   "f8960-filled.pdf": "Form 8960",
   "f8995-filled.pdf": "Form 8995",
+  "qbi-loss-reference-filled.pdf": "QBI loss sources and carryforwards",
   "oh-it-1040-reference.pdf": "Ohio IT 1040 (reference summary)",
   "oh-schedule-adjustments-reference.pdf": "Ohio Schedule of Adjustments (reference summary)",
   "oh-it-bus-reference.pdf": "Ohio Schedule of Business Income (reference summary)",
@@ -619,6 +621,7 @@ export async function buildWorkspaceFilledReturnDownload(
   const codNolReview = resolved.taxInput.form982NolSources ? prepareCodNolReview(resolved.taxInput) : undefined;
   const charitableReview = resolved.taxInput.charitableCarryoverSources ? prepareCharitableReview(resolved.taxInput) : undefined;
   const adoptionReview = hasHistoricalAdoptionSources(resolved.taxInput) ? prepareAdoptionReview(resolved.taxInput) : undefined;
+  const qbiLossReview = resolved.taxInput.qbiLossSources ? prepareQbiLossReview(resolved.taxInput) : undefined;
   const premiumTaxCreditReview = hasPremiumTaxCreditReviewSources(resolved.taxInput) ? preparePremiumTaxCreditReview(resolved.taxInput) : undefined;
   const educationReview = hasInKindEducationReviewSources(resolved.taxInput) ? prepareEducationReview(resolved.taxInput) : undefined;
   const redactedTaxInput = redactReviewIdentifiers(resolved.taxInput);
@@ -634,6 +637,7 @@ export async function buildWorkspaceFilledReturnDownload(
       codNolReview,
       charitableReview,
       adoptionReview,
+      qbiLossReview,
       premiumTaxCreditReview,
       educationReview,
       blankFormsDir,

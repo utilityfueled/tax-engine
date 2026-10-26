@@ -24,6 +24,8 @@ import { fillForm8959 } from "./fill-form-8959.js";
 import { fillForm8960 } from "./fill-form-8960.js";
 import { fillForm8582 } from "./fill-form-8582.js";
 import { fillForm8995 } from "./fill-form-8995.js";
+import { buildQbiLossReview, fillQbiLossReview, QBI_LOSS_REFERENCE_FILENAME } from "./mappings/2025/qbi-loss-review.js";
+import { prepareQbiLossReview, type PreparedQbiLossReview } from "./qbi-loss-review-context.js";
 import { fillForm8812 } from "./fill-form-8812.js";
 import { fillForm8889 } from "./fill-form-8889.js";
 import { fillForm2441 } from "./fill-form-2441.js";
@@ -389,6 +391,7 @@ export interface FillReturnOptions {
   charitableReview?: PreparedCharitableReview;
   /** Actual historical benefits and income, checked before identifier redaction. */
   adoptionReview?: PreparedAdoptionReview;
+  qbiLossReview?: PreparedQbiLossReview;
   /** Actual policy allocation and whole-return income, validated before redaction. */
   premiumTaxCreditReview?: PreparedPremiumTaxCreditReview;
   /** Original student identities validated privately before render redaction. */
@@ -411,6 +414,9 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  const qbiLossReview = input.qbiLossSources || options.qbiLossReview
+    ? options.qbiLossReview ?? prepareQbiLossReview(input) : undefined;
+  if (qbiLossReview) buildQbiLossReview(input, result, qbiLossReview);
   if (input.deductionElection === "nonitemized" || result.deductionUsed === "nonitemized") throw new Error("Nonitemized election is available only for 2026 and has no supported review PDF mapping");
   const charitableReview = input.charitableCarryoverSources
     ? options.charitableReview ?? prepareCharitableReview(input) : undefined;
@@ -680,13 +686,18 @@ export async function fillReturn(
   }
 
   // ── Form 8995 (if applicable — QBI Deduction Simplified Computation) ──
-  if (result.form8995 && result.form8995.qbiDeduction.gt(0)) {
+  if (result.form8995) {
     const f8995Path = join(blankFormsDir, "f8995.pdf");
     const doc8995 = await fillForm8995(input, result, f8995Path);
     if (flatten) await flattenForm(doc8995.getForm());
     const outputPath8995 = join(outputDir, "f8995-filled.pdf");
     await savePacketPdf(doc8995, outputPath8995);
     filledForms.push(outputPath8995);
+  }
+  if (qbiLossReview) {
+    const doc = await fillQbiLossReview(input, result, qbiLossReview);
+    const outputPath = join(outputDir, QBI_LOSS_REFERENCE_FILENAME);
+    await savePacketPdf(doc, outputPath); filledForms.push(outputPath);
   }
 
   // ── Schedule 8812 (if applicable — Child Tax Credit / ACTC) ──

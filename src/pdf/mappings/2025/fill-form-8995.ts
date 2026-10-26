@@ -198,8 +198,10 @@ export async function fillForm8995(
     setCurrencyField(form, F.line3, priorYearQBILoss);
   }
 
-  // ── Line 4: Total QBI after prior year loss (Line 2 − Line 3) ──
-  setCurrencyField(form, F.line4, f8995.totalQBI);
+  // Physical line 4 explicitly enters zero for a nonpositive sum. Keep the
+  // signed calculated total unchanged for loss carryforward line 16.
+  if (f8995.totalQBI.lte(0)) setTextField(form, F.line4, "0");
+  else setCurrencyField(form, F.line4, f8995.totalQBI);
 
   // ── Line 5: QBI component (20% of Line 4, floor 0) ──
   setCurrencyField(form, F.line5, f8995.qbiComponent);
@@ -212,7 +214,9 @@ export async function fillForm8995(
 
   // ── Line 8: Total qualified REIT/PTP (Line 6 + Line 7) ──
   // Same as Line 6 when no prior year carryforward
-  setCurrencyField(form, F.line8, f8995.reitPTPAmount);
+  // The same printed zero floor applies here; line 17 retains the loss.
+  if (f8995.reitPTPAmount.lte(0)) setTextField(form, F.line8, "0");
+  else setCurrencyField(form, F.line8, f8995.reitPTPAmount);
 
   // ── Line 9: REIT/PTP component (20% of Line 8, floor 0) ──
   setCurrencyField(form, F.line9, f8995.reitPTPComponent);
