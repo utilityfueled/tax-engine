@@ -24,6 +24,7 @@ import { eligibleCurrentCharitableDonations } from "@/engine/forms/charitable-cu
 import { calculateCharitableCarryover } from "@/engine/forms/charitable-carryover.js";
 import { calculateNonitemizedCharitableCarryover, type NonitemizedCharitableCarryoverResult } from "@/engine/forms/nonitemized-charitable-carryover.js";
 import { calculateCurrentCharitableCandidates, type CurrentCharitableCandidates } from "@/engine/forms/current-charitable-candidates.js";
+import { calculatePriorCashCurrentProperty, type PriorCashCurrentPropertyResult } from "@/engine/forms/prior-cash-current-property.js";
 import type { SelectedCharitableCarryover } from "@/engine/forms/selected-charitable-carryover.js";
 // calculateDeductibleMortgageInterest is no longer used here — mortgage interest
 // is now computed with aggregate debt limits per IRS Pub 936 (see Lines 8a-8d section).
@@ -100,6 +101,8 @@ export interface ScheduleAResult {
   nonitemizedCharitableCarryover?: NonitemizedCharitableCarryoverResult;
   /** Derived current-only alternatives with an actual empty prior history. */
   currentCharitableCandidates?: CurrentCharitableCandidates;
+  /** Actual prior G, with the entire floor attributed to current A only. */
+  priorCashCurrentProperty?: PriorCashCurrentPropertyResult;
   gamblingLossDeduction: Decimal; // Component of line16
   bondPremiumDeduction: Decimal; // Actual allowable section171 excess
   oidOrdinaryLossDeduction: Decimal; // Actual allowable section1.1275-7(f)(1) ordinary loss
@@ -310,6 +313,7 @@ export function calculateScheduleA(
   let charitableCarryforwardDetail: CharitableCarryforwardYearDetail[] = [];
   let nonitemizedCharitableCarryover: NonitemizedCharitableCarryoverResult | undefined;
   let currentCharitableCandidates: CurrentCharitableCandidates | undefined;
+  let priorCashCurrentProperty: PriorCashCurrentPropertyResult | undefined;
   const crypto = extra?.cryptoCharitableAmounts;
   const amounts = { cashPublic: (extra?.k1CashCharitable ?? ZERO).plus(crypto?.cashPublic ?? ZERO), noncashPublic: crypto?.noncashPublic ?? ZERO,
     capitalGainPublic: (extra?.k1AppreciatedProperty30 ?? ZERO).plus(crypto?.capitalGainPublic ?? ZERO), cashPrivate: crypto?.cashPrivate ?? ZERO,
@@ -349,6 +353,10 @@ export function calculateScheduleA(
       && input.charitableCarryoverSources.vintages?.length === 0) {
       if (nolCashLimit !== undefined) throw new Error("Current charitable candidates require their separate NOL replay method");
       currentCharitableCandidates = calculateCurrentCharitableCandidates(input, { contributionBase, current: amounts });
+    } else if (input.taxpayer.taxYear === 2026 && (input.charitableCarryoverSources.vintages?.length ?? 0) > 0
+      && (amounts.noncashPublic.gt(0) || eligibleDonations.some(source => source.type !== "cash"))) {
+      if (nolCashLimit !== undefined) throw new Error("Prior cash and current property require their separate NOL replay method");
+      priorCashCurrentProperty = calculatePriorCashCurrentProperty(input, { contributionBase, current: amounts });
     } else if (input.taxpayer.taxYear === 2026 && (input.deductionElection === "standard" || input.deductionElection === "nonitemized")) {
       if (nolCashLimit !== undefined) throw new Error("Nonitemized charitable carry requires its separate NOL replay method");
       nonitemizedCharitableCarryover = calculateNonitemizedCharitableCarryover(input, { contributionBase, current: amounts });
@@ -359,7 +367,7 @@ export function calculateScheduleA(
       nonCashCharitable = currentCharitableCandidates.itemized.exactNonCashDeduction;
       charitableCarryforwards = currentCharitableCandidates.itemized.carryforwards;
     } else {
-      const charitable = nonitemizedCharitableCarryover ?? calculateCharitableCarryover(input, { contributionBase, current: amounts, itemizes: true });
+      const charitable = priorCashCurrentProperty ?? nonitemizedCharitableCarryover ?? calculateCharitableCarryover(input, { contributionBase, current: amounts, itemizes: true });
       audit.merge(charitable.lines);
       cashCharitable = charitable.currentCash.plus(charitable.priorCashDeduction);
       nonCashCharitable = charitable.currentNoncash.plus(charitable.priorNoncashDeduction);
@@ -471,6 +479,7 @@ export function calculateScheduleA(
     charitableSourceDigest: charitableSourceDigest(input),
     ...(nonitemizedCharitableCarryover ? { nonitemizedCharitableCarryover } : {}),
     ...(currentCharitableCandidates ? { currentCharitableCandidates } : {}),
+    ...(priorCashCurrentProperty ? { priorCashCurrentProperty } : {}),
     gamblingLossDeduction,
     bondPremiumDeduction,
     oidOrdinaryLossDeduction,

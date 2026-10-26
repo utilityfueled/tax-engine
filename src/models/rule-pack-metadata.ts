@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.93",
+    ruleVersion: "2025.94",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual 2026 prior public cash with current ordinary property absorbing the entire floor; original FIFO and expiration, separate final selected carry candidates", revision: "IRC170(G)/(I)/(d)(1)(C), Reg1.170A-10; bounded derived source controls, same-category floor and broader mixed/NOL methods remain separate, no human qualification", retrievedAt: "2026-10-25" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.199A-3", section: "Actual ordinary K-1 basis, at-risk, passive and unique-pool excess-business-loss character; actual regular EBL-origin NOL deduction and independent qualified closing history", revision: "Reg1.199A-3(b)(1)(iv)/(v), final2025 i8995/i461/i1065sk1; literal48000/32000 and derived source controls; mixed positive461 and partial mixed-character COD methods, guided intake and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual in-kind room-and-board benefit limited by half-time enrollment and school allowance or housing cost; distinct original student identities and private redacted review binding", revision: "IRC529(c)(3)/(e)(3)(B), final2025 Pub970 and i1099Q; bounded derived partial method, other assistance/ESA interactions and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 current public cash and ordinary-property G/A candidates; per-item FMV/basis, exact floor, and final selected carry with confirmed empty prior history", revision: "IRC170(G)/(I)/(d)(1)(C)/(e)(1)(A) and Reg1.170A-10; derived source controls, positive-prior and broader mixed/NOL methods remain separate, no human qualification", retrievedAt: "2026-10-25" },
@@ -136,11 +137,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.89-law-integration-draft",
+    ruleVersion: "2026.90-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual 2026 prior public cash with current ordinary property absorbing the entire floor; original FIFO and expiration, separate final selected carry candidates", revision: "IRC170(G)/(I)/(d)(1)(C), Reg1.170A-10; bounded derived source controls, same-category floor and broader mixed/NOL methods remain separate, no human qualification", retrievedAt: "2026-10-25" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.199A-3", section: "Actual ordinary K-1 basis, at-risk, passive and unique-pool excess-business-loss character; actual regular EBL-origin NOL deduction and independent qualified closing history", revision: "Reg1.199A-3(b)(1)(iv)/(v), final2025 i8995/i461/i1065sk1; literal48000/32000 and derived source controls; mixed positive461 and partial mixed-character COD methods, guided intake and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-118/t26/s529/", section: "Actual in-kind room-and-board benefit limited by half-time enrollment and school allowance or housing cost; distinct original student identities and private redacted review binding", revision: "IRC529(c)(3)/(e)(3)(B), final2025 Pub970 and i1099Q; bounded derived partial method, other assistance/ESA interactions and human qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual2026 current public cash and ordinary-property G/A candidates; per-item FMV/basis, exact floor, and final selected carry with confirmed empty prior history", revision: "IRC170(G)/(I)/(d)(1)(C)/(e)(1)(A) and Reg1.170A-10; derived source controls, positive-prior and broader mixed/NOL methods remain separate, no human qualification", retrievedAt: "2026-10-25" },

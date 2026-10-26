@@ -1,0 +1,47 @@
+form: "Prior Cash Current Property"
+fullName: "2026 actual prior public cash with current property absorbing the entire floor"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s170/"
+retrievedAt: "2026-10-25"
+reviewStatus: "independent-review-pending"
+notes: |
+  Bounded statutory derivation under section 170(G)(i)/(iii), I(v)/(vi),
+  d(1)(C) and Reg. 1.170A-10. Current G precedes original FIFO G carry. All current A
+  values are per-receipt min(FMV,basis), and actual prior categories are G
+  only. Aggregate G=min(current+eligible prior G,.60B); current A is limited
+  to max(0,.50B-G), satisfying the reciprocal G ceiling less A. This route
+  requires allowed current A to absorb the entire .005B floor (or B=0).
+  No part of that floor is assigned to current or prior G. A percentage
+  excess allows the current A floor amount to retain its current origin;
+  without percentage excess, the current floor amount does not carry.
+  Nonitemization retains only percentage excess and original unused prior
+  balances. It does not create carry from the170(p) cap or grant a standard
+  deduction. Prior G use/expiry remains separate from its actual deduction.
+  Positive-base G capacity cannot bind while A absorbs a positive floor;
+  zero-base and expired-source cases retain actual vintage conservation.
+  A floor reaching G, other prior categories, special receipts and NOL
+  sources require separate methods. No source or filing gate is opened.
+  Sources also include https://www.ecfr.gov/current/title-26/section-1.170A-10
+  and final 2025 Pub. 526 carryover ordering; the 2026 floor controls are
+  statutory derivations, not published IRS worked examples.
+lines:
+  - line: "category-separated-floor"
+    description: "Use actual prior G before current A and apply the floor entirely to current A"
+    formula: "Base100000/currentG10000/priorG20000/currentA30000 gives before-floor G30000/A20000; current cash10000/property19500/prior20000; current A carry10500 itemized or10000 nonitemized. No percentage excess means no floor-only carry."
+    testRef: "tests/engine/forms/prior-cash-current-property.test.ts::keeps the current property floor separate from original prior cash usage"
+  - line: "floor-source-boundary"
+    description: "Accept the exact floor boundary and retain unsupported attribution as a guard"
+    formula: "Base100000/currentG0/priorG49500/A5000 leaves currentA500 equal to the floor; itemized currentA carry5000 and nonitemized4500. PriorG49500.01 leaves499.99, so reject instead of assigning the remaining.01 floor to prior cash. Missing identity/history/basis, changed receipt totals, other prior categories and NOL sources reject."
+    testRef: "tests/engine/forms/prior-cash-current-property.test.ts::requires the whole floor to have an actual current property source"
+  - line: "original-expiry"
+    description: "Preserve source cents, FIFO order and original fifth-year expiration"
+    formula: "At base0/currentG.01/A.02, prior2020.03 and2021.04 expire; prior2025.05 and current.01/.02 remain. Reordering sources changes no amounts, original inputs stay intact, and expired sources never consume capacity."
+    testRef: "tests/engine/forms/prior-cash-current-property.test.ts::conserves original cash vintages through the zero-base and expiration boundaries"
+  - line: "canonical-selection"
+    description: "Transfer separate current/prior lines and select carry after the actual deduction method"
+    formula: "Base10000/currentG1000/priorG2000/A3000 gives ScheduleA11=1000,12=1950,13=2000,14=4950. Automatic standard or explicit nonitemization keeps Acarry1000/current170p1000/prior actual deduction0; itemized keeps Acarry1050/current170p0/prior deduction2000. Prior treated-paid2000 is retained under every selection."
+    testRef: "tests/engine/federal-prior-cash-current-property.test.ts::selects the prior-cash current-property carry only after the actual deduction choice"
+  - line: "guided-source-gates"
+    description: "Reuse actual source history and property inputs while retaining closed full-year gates"
+    formula: "Confirmed original2025 cash2000 and current2026 cash1000/propertyFMV5000/basis3000 survive guided input; actual current/prior groups and both carries reconcile. Missing basis or revoked history blocks bridging. Canonical2026 preview and PDF export remain unavailable."
+    testRef: "tests/guided-interview/guided-prior-cash-current-property.test.ts::preserves actual prior cash and current property without opening the year gates"
