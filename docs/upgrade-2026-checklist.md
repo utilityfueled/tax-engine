@@ -7,6 +7,59 @@ complete a checkbox.
 
 ## Current integration — 2026-10-26
 
+The branch is pushed through `a71c561`. Rule provenance is `2025.154` /
+`2026.151-law-integration-draft`; the inventory has 531 entries, 5,616
+specification test references and 125 explicit shared-method associations.
+The remote branch was independently verified at the exact delivery commit.
+Readiness gates are unchanged.
+
+| Delivered package | Commit | Bounded verification |
+| --- | --- | --- |
+| One institutional room-and-board allowance with original distribution membership | `02dccca` | Final candidate passes 1,689 tests in 191 files; main passes 551 in ten. Separate source review passes 23 in five, including seven private controls and the three previously failing regressions. Parent reopened 58 PDFs/286 pages/258 populated fields, checked 30 literal fields and twelve browser values, and inspected rendered output. Four production browser cases pass with zero retries. |
+| Determined charitable NOL attribution with separate regular/AMT source histories | `a71c561` | Final candidate passes 856 tests in 113 files; main passes 539 in nine plus 24 readiness checks in two. Separate source review passes 28 in nine, including six private controls. Parent reopened 35 PDFs/76 pages/150 populated fields, checked 74 literal fields and three workspace values, and inspected 24 readable pages. Two production browser cases pass with zero retries. |
+
+The charitable comparison preserves the actual current deduction and separate
+regular/AMT histories. A positive adjustment requires one affected excess
+origin; zero adjustment can preserve multiple originals. Current and prior
+categories, actual deduction choice, expiry, QBI, crypto and pass-through sources
+remain bound to the original records. Ambiguous allocations remain guarded.
+The room-and-board correction prevents an original without expenses in a period
+from taking that period's allowance; the original failure is retained. Exact
+delivery hashes and source/review limits are in the respective package ledgers.
+These agent reviews do not supply qualified human tax or security approval.
+
+The remaining internal source work is finite. Cross-year room-and-board history
+is privately implemented: its frozen source passes 30 independently run tests
+in eight files, including five private controls; retained original and actual
+browser PDFs are under review. The applicable health Worksheet P/Form 7206
+stop package awaits independent source/artifact review. Actual health payer,
+person, determined positive-advance and marriage combinations remain in the
+health queue. Current-year Form 172 charitable-origin composition is private
+work in progress. Precise competing-source interpretation questions remain
+separate and are not replaced by invented elections or taxpayer amounts.
+
+The most recent complete local run remains immutable `3669b00`: 19,086 tests
+in 1,216 files pass in both unit and coverage runs, branches are 86.78% and
+functions 90.49%, and all unchanged thresholds pass. All eight static checks
+and 434 production browser cases pass with zero retries; five hosted-only
+cases remain skipped. Later packages are excluded from that evidence. Final
+integrated checks, exact native images, scans and recovery verification remain
+due after the finite source queue. The Web workflow for `d5b5c43` completed,
+but its runtime artifacts have not been inspected; the last fully inspected
+native amd64 evidence remains scoped to `8f1d1ba`. No latest-source remote or
+staging pass is claimed.
+
+The October 26 production dependency audit records zero advisories across
+425 dependencies; the image advisory register separately awaits owner acceptance.
+The active goal remains **not complete or release-ready**. The
+[external-action handoff](upgrade-2026-external-actions.md) identifies missing
+qualified reviewers, launch-state demand, authorized staging, provider account
+access and approved evaluation funds, final official forms and advisory
+acceptance. Implementation continues while these inputs remain unavailable.
+No production deployment, filing enablement or model promotion has occurred.
+
+## Previous checkpoint through4932a83
+
 The branch is pushed through `4932a83`. Rule provenance is `2025.152` /
 `2026.149-law-integration-draft`; the inventory has 529 entries, 5,574
 specification test references and 123 explicit shared-method associations.

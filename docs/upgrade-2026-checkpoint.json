@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "4932a8392caf166b1389e6b4a5bbc9d1fd054508",
+    "lastRecordedCommit": "a71c561a37fcdfcdf4ba36391a19c3e811fd3d3c",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1310,8 +1310,8 @@
       "hosted staging",
       "final multi-platform release images"
     ],
-    "workInProgress": "Complete remaining bounded health worksheet/payer/person/positive-advance/marriage sources, zero/unique-origin charitable NOL attribution, corrected room-board source membership and original cross-year period use. Then run final integrated/remote/native-image/security/recovery checks. Preserve exact controlling-interpretation questions and external qualified human, staging, provider/funds, state-demand, final-form and advisory requirements.",
-    "latestIntegratedCommit": "4932a8392caf166b1389e6b4a5bbc9d1fd054508",
+    "workInProgress": "Finish private cross-year room-board original/PDF review and integration; applicable health P/7206 stop review plus remaining actual payer/person/determined-positive-advance/marriage methods; and current-year Form172 charity-origin composition. Then complete final integrated/remote/native-image/security/recovery checks. Preserve precise controlling-interpretation questions and external human/staging/provider/funds/state-demand/final-form/advisory requirements.",
+    "latestIntegratedCommit": "a71c561a37fcdfcdf4ba36391a19c3e811fd3d3c",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1656,7 +1656,7 @@
       "branchThresholdPercent": "85",
       "functionThresholdPercent": "90"
     },
-    "remainingInternalWork": "Complete remaining bounded health worksheet/payer/person/positive-advance/marriage sources, zero/unique-origin charitable NOL attribution, corrected room-board source membership and original cross-year period use. Then run final integrated/remote/native-image/security/recovery checks. Preserve exact controlling-interpretation questions and external qualified human, staging, provider/funds, state-demand, final-form and advisory requirements.",
+    "remainingInternalWork": "Finish private cross-year room-board original/PDF review and integration; applicable health P/7206 stop review plus remaining actual payer/person/determined-positive-advance/marriage methods; and current-year Form172 charity-origin composition. Then complete final integrated/remote/native-image/security/recovery checks. Preserve precise controlling-interpretation questions and external human/staging/provider/funds/state-demand/final-form/advisory requirements.",
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
       "tree": "244b253149d4a86fe4b855770a2ec9ffdf46cdc2",
@@ -1677,7 +1677,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "4932a8392caf166b1389e6b4a5bbc9d1fd054508",
+    "lastPushedCommit": "a71c561a37fcdfcdf4ba36391a19c3e811fd3d3c",
     "currentBrowserRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -3171,6 +3171,12 @@
         ],
         "guidedCryptoDonations": [
           "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c"
+        ],
+        "roomBoardInstitutionalPeriods": [
+          "02dccca10004687f4cc3c5fd7897be686efe6082"
+        ],
+        "determinedCharitableNolOrigins": [
+          "a71c561a37fcdfcdf4ba36391a19c3e811fd3d3c"
         ]
       },
       "owners": {
@@ -3180,11 +3186,8 @@
         "educationAndFinalIntegration": "complete_facts: bounded education audit/implementation; parent: inventory mapping and final integration"
       },
       "subsequent": [
-        "Complete actual partial-coverage-family health premiums and ordinary outside-payer/payment/marriage combinations. Separate actual plans and multiple owners are delivered in9eafb45. Binding joint2025 repayment attribution needs controlling interpretation.",
-        "Complete current-loss-origin charity and determined floor/current-prior methods. Original current K1/crypto regular-AMT NOL sources are8d97c0f and actual crypto donation intake/history binding ise91d7d7; prior category/vintage replay is405d914. Mixed attribution and partial B remain exact source-method questions.",
-        "Reconcile and implement remaining bounded partial-cash/category education methods against the completed ordinary account-group route. Distinct QTP and multiple ESA sources sharing actual tuition arec6df682/74bf948. Mixed-owner bond and broader code6 interpretations remain unresolved.",
-        "Complete explicit spec-to-shared-implementation inventory links and current integrated/remote verification. Full603fc1b had one stale template count failure fixed ineca2e6a; the failed archive is preserved. Current source has later scoped packages and requires a fresh complete run.",
-        "Rehearse final-source native images, SBOMs/scans and full recovery; reconcile artifacts and support evidence. Qualified human review, live-provider qualification, authorized staging, final forms and advisory acceptance remain external requirements."
+        "Finish private cross-year room-board original/PDF review and integration; applicable health P/7206 stop review plus remaining actual payer/person/determined-positive-advance/marriage methods; and current-year Form172 charity-origin composition. Then complete final integrated/remote/native-image/security/recovery checks. Preserve precise controlling-interpretation questions and external human/staging/provider/funds/state-demand/final-form/advisory requirements.",
+        "Resolve only the identified controlling-source questions through qualified authority; do not invent allocation elections or missing taxpayer facts."
       ],
       "unsupportedIsComplete": false
     },
@@ -4476,15 +4479,78 @@
         "deliveryReceipt": ".local/upgrade-evidence/public-privacy-copy-delivery-receipt.json",
         "deliveryReceiptSha256": "b412d2bbbe5fb670a6d1f51fa9adab396106ea577b71edc2e953b53d72b76ffd",
         "reviewKind": "Separate agent review only; qualified human review and readiness promotion remain outstanding"
+      },
+      "roomBoardInstitutionalPeriods": {
+        "commit": "02dccca10004687f4cc3c5fd7897be686efe6082",
+        "tree": "d6541465eac1460da12b97cd2d4ac7197d6a7811",
+        "receipt": ".local/upgrade-evidence/room-board-period-delivery-receipt.json",
+        "receiptSha256": "d6b94250c3bdcd2e7dfc06844cdf933952f429a3a3e0a5999773192f7e577659",
+        "mainChecks": {
+          "tests": 551,
+          "files": 10,
+          "rootAndWebTypes": "pass",
+          "specReferences": 5593,
+          "inventoryRows": 530,
+          "implementationLinks": 124
+        },
+        "independentReview": {
+          "sourceTests": 23,
+          "sourceFiles": 5,
+          "privateControls": 7,
+          "originalFailuresNowPassing": 3,
+          "pdfs": 58,
+          "pages": 286,
+          "populatedFields": 258,
+          "literalFields": 30,
+          "browserValues": 12,
+          "artifactReport": ".local/upgrade-evidence/parent-room-board-period-pdf-review-v3/checks.json",
+          "artifactReportSha256": "76d6351c2cdb14bb96841a7fc732ea4d215918aa445ff69b801ef0e53c69cf8e"
+        },
+        "qualification": "Bounded synthetic agent-reviewed source and artifacts only; no human,final2026forms,staging or release qualification."
+      },
+      "determinedCharitableNolOrigins": {
+        "commit": "a71c561a37fcdfcdf4ba36391a19c3e811fd3d3c",
+        "tree": "49ebc457f471c22760fb81cda2a3030e1e578f87",
+        "receipt": ".local/upgrade-evidence/charity-nol-origins-delivery-receipt.json",
+        "receiptSha256": "92675f1579c1ebc28e6f8180caf646275581d1f28eac037e9dd4b35a6fe86c38",
+        "mainChecks": {
+          "focusedTests": 539,
+          "focusedFiles": 9,
+          "readinessTests": 24,
+          "readinessFiles": 2,
+          "rootTypes": "pass",
+          "specRefs": 5616,
+          "missingOrBrokenRefs": 0,
+          "inventoryEntries": 531,
+          "inventoryCheck": "pass",
+          "stagedDiffCheck": "pass"
+        },
+        "independentReview": {
+          "sourceReport": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/parent-charity-nol-source-review.json",
+          "sourceSha256": "709701d45fa3ccb2b62992bc7a447b1a3ab513cddede0b3c38e8ed24ad8c3926",
+          "sourceCases": 28,
+          "sourceFiles": 9,
+          "privateControls": 6,
+          "artifactReport": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/parent-charity-nol-copy-pdf-review/checks.json",
+          "artifactSha256": "0e9d725bce7b6cb007dfb3061e800567d898e50e4ea07097516c4cd453cfa382",
+          "pdfs": 35,
+          "pages": 76,
+          "populatedFields": 150,
+          "literalPhysicalFields": 74,
+          "workspaceValues": 3,
+          "readablePages": 24,
+          "contacts": 4
+        },
+        "qualification": "Bounded synthetic agent-reviewed source and artifacts only; no human,final2026forms,staging or release qualification."
       }
     },
     "currentInventory": {
-      "entries": 529,
-      "specReferences": 5574,
-      "sourceCommit": "4932a8392caf166b1389e6b4a5bbc9d1fd054508",
+      "entries": 531,
+      "specReferences": 5616,
+      "sourceCommit": "a71c561a37fcdfcdf4ba36391a19c3e811fd3d3c",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 123,
-      "specOwnedAssociationReferences": 189,
+      "explicitAssociations": 125,
+      "specOwnedAssociationReferences": 193,
       "fullySupportedTraceabilityCount": 69,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
@@ -4578,7 +4644,8 @@
         "sourceTests": 14,
         "sourceFiles": 7,
         "privateControls": 5,
-        "status": "source review clear; parent saved-artifact review unfinished; no main integration"
+        "status": "delivered; final source/artifact evidence retained in package ledger",
+        "deliveredCommit": "2bd4fdd"
       },
       "tuitionAssistance": {
         "tree": "7f6786ca621cd27c40dc46b37514bed3e9e4f37c",
@@ -4586,12 +4653,31 @@
         "sourceTests": 12,
         "sourceFiles": 7,
         "privateControls": 4,
-        "status": "source review clear; corrected browser fixture and retained artifacts await parent review and main integration"
+        "status": "delivered; final source/artifact evidence retained in package ledger",
+        "deliveredCommit": "dbe9bb0"
+      },
+      "roomBoardPriorUse": {
+        "tree": "4a07a0bb6aa9992794d159be9cc273eb5624f6a3",
+        "sourceReview": ".local/upgrade-evidence/parent-room-board-prior-source-review.json",
+        "sourceReviewSha256": "cfb8d1687adc699089410892eb851210f47fde4a52b940404180f99232c39956",
+        "sourceTests": 30,
+        "sourceFiles": 8,
+        "privateControls": 5,
+        "status": "private; source review clear, original/browser PDF review in progress; no main integration"
+      },
+      "healthWorksheetStop": {
+        "tree": "48ec4d7516504e560c164274f5191be229f24ff7",
+        "manifest": ".local/upgrade-evidence/health-nonspecified-stop-review-snapshot.json",
+        "manifestSha256": "71761f157dc72f692531b4bcb7c2c7e95de7420fc4a275529a441a28372f813a",
+        "status": "private; author evidence ready, independent review pending; no main integration"
+      },
+      "currentOriginCharityComposition": {
+        "status": "private implementation and actual browser verification; not delivered"
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.152",
-      "2026": "2026.149-law-integration-draft"
+      "2025": "2025.154",
+      "2026": "2026.151-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -6552,6 +6638,16 @@
           }
         ],
         "boundary": "Historical observation only: dbe9bb0 CI/Web were running, prior runs cancelled. Later status not inferred."
+      },
+      {
+        "observedAt": "2026-10-26T18:45:19.036999+00:00",
+        "branch": "upgrade/2026-baseline",
+        "exactRemoteHead": "a71c561a37fcdfcdf4ba36391a19c3e811fd3d3c",
+        "method": "independent git ls-remote",
+        "d5b5c43WebRun": 40371961046,
+        "d5b5c43WebConclusion": "success",
+        "d5b5c43ArtifactInspection": "not performed; no runtime counts/digest claim",
+        "latestHeadQualification": "no latest-source full remote/staging pass claimed"
       }
     ],
     "fullVerification603fc1b": {
@@ -6591,8 +6687,8 @@
       "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
     },
     "currentFullVerificationRequired": {
-      "sourceCommit": "4932a8392caf166b1389e6b4a5bbc9d1fd054508",
-      "reason": "Health business sources, determined charitable floor, public privacy wording and further finite source methods follow the immutable passing3669b00 run.",
+      "sourceCommit": "a71c561a37fcdfcdf4ba36391a19c3e811fd3d3c",
+      "reason": "Institutional room-board source membership, determined charitable NOL origins and the remaining finite source methods follow the immutable passing3669b00 run.",
       "readiness": "Final integrated run required after the finite queue; no later full pass claimed"
     },
     "previousCurrentUnitRunBeforeE91": {
@@ -6818,7 +6914,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-26T17:44:50.494874+00:00",
+    "recordedAt": "2026-10-26T18:45:19.036999+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
