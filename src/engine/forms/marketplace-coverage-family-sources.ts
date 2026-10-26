@@ -11,7 +11,7 @@ export type MarketplaceCoverageFamilyInput = Pick<TaxYearInput, 'form7206' | 'fo
 export interface MarketplaceCoverageFamilyMonth {
   month: number; coverageFamilySlcsp: Decimal; nonCoverageFamilySlcsp: Decimal;
   coveragePersonIds: string[]; nonCoveragePersonIds: string[]; coverageSsns: string[]; nonCoverageSsns: string[];
-  sourcePremium: Decimal; sourceAdvance: Decimal; ownCash: Decimal; ownAdvance: Decimal;
+  sourcePremium: Decimal; sourceAdvance: Decimal; ownCash: Decimal; ownAdvance: Decimal; ownNoncoverageAdvance: Decimal;
 }
 export interface MarketplaceCoverageFamilyPlan {
   planId: string; policyIndexes: number[]; months: MarketplaceCoverageFamilyMonth[];
@@ -137,7 +137,7 @@ export function calculateMarketplaceCoverageFamilySources(input: MarketplaceCove
       if (nonCoverageSsns.length ? nonCoverageFamilySlcsp.lte(0) : !nonCoverageFamilySlcsp.isZero()) throw new Error('Coverage-family actual benchmark amount conflicts with its empty or nonempty person group.');
       const receipts = plan.payments?.filter(payment => payment.coverageMonth === m);
       if (!receipts?.length) throw new Error('Coverage-family source needs actual monthly premium receipts.');
-      let fullPremium = d(0), fullAdvance = d(0), ownCash = d(0), ownAdvance = d(0);
+      let fullPremium = d(0), fullAdvance = d(0), ownCash = d(0), ownAdvance = d(0), ownNoncoverageAdvance = d(0);
       const paidPeople = new Set<string>();
       for (const receipt of receipts) {
         if (receipt.coverageTaxYear !== year || !receipt.personAmounts) throw new Error('Coverage-family payment source year or person allocations are incomplete.');
@@ -154,7 +154,9 @@ export function calculateMarketplaceCoverageFamilySources(input: MarketplaceCove
           paymentPeople.add(payer); paidPeople.add(id);
           if (!amount(allocation.excludedPublicSafetyOfficerAmount).isZero() || !amount(allocation.otherTaxFreeFunding).isZero()) throw new Error('Coverage-family separate tax-free premium funding needs its actual method.');
           if (!person.own && !paid.isZero()) throw new Error('Coverage-family owner-paid outside-family amounts need their actual separate method.');
-          if (nonCoveragePersonIds.includes(id) && !credit.isZero()) throw new Error('Noncoverage member advances require their actual separate repayment and deduction method.');
+          // Positive advances are actual facts. Their deduction method is checked
+          // separately, after preserving exact person and original-policy sources.
+          if (person.own && nonCoveragePersonIds.includes(id)) ownNoncoverageAdvance = ownNoncoverageAdvance.plus(credit);
           personCash = personCash.plus(paid); personAdvance = personAdvance.plus(credit);
           if (person.own) { ownCash = ownCash.plus(paid); ownAdvance = ownAdvance.plus(credit); }
         }
@@ -162,7 +164,7 @@ export function calculateMarketplaceCoverageFamilySources(input: MarketplaceCove
       }
       if (!fullPremium.eq(originalMonth.premium) || !fullAdvance.eq(originalMonth.advance) || [...linked].some(([id, person]) => person.months.has(m) && !paidPeople.has(id))) throw new Error('Coverage-family original premium/advance source or complete monthly people do not reconcile.');
       return { month: m, coverageFamilySlcsp, nonCoverageFamilySlcsp, coveragePersonIds, nonCoveragePersonIds, coverageSsns, nonCoverageSsns,
-        sourcePremium: fullPremium, sourceAdvance: fullAdvance, ownCash, ownAdvance };
+        sourcePremium: fullPremium, sourceAdvance: fullAdvance, ownCash, ownAdvance, ownNoncoverageAdvance };
     }).sort((a,b) => a.month - b.month);
     const allOwnCovered = months.every(row => row.nonCoveragePersonIds.length === 0), outside = [...linked.values()].some(person => !person.own);
     if (plan.allCoveredPersonsInCoverageFamilyConfirmed !== (allOwnCovered && !outside)) throw new Error('Coverage-family plan answer contradicts actual original and monthly member sources.');

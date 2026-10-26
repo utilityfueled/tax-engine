@@ -51,7 +51,7 @@ export interface Form8962Input {
   /** Actual return source identity, not a supplied validation flag or calculated allocation. */
   allocationHousehold?: Pick<Form8962AllocationInput, "taxpayer" | "standardDeductionFacts" | "form7206">;
   /** Canonical engine context; never a TaxYearInput source flag or supplied amount. */
-  healthInsuranceCoordination?: "pub974-simplified-2025" | "pub974-simplified-2026" | "pub974-alternative-reentry-2026";
+  healthInsuranceCoordination?: "pub974-simplified-2025" | "pub974-simplified-2026" | "pub974-alternative-reentry-2026" | "ordinary-full-advance-repayment";
   /** Computed WorksheetX/Y/Z result, never a taxpayer-provided Form8962 fact. */
   healthInsuranceRepaymentLimit?: Decimal;
   /** Internal Pub974 auxiliary calculation while an ordered claim remains; never final. */
@@ -126,7 +126,7 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
       if (flag === "allocationRequired" && sharedPolicyAllocation) continue;
       if (flag === "alternativeMarriageCalculationElected" && marriageSources) continue;
       if (flag === "selfEmployedHealthInsuranceCoordinationRequired" && facts[flag] === true
-        && (input.healthInsuranceCoordination === `pub974-simplified-${year}`
+        && (input.healthInsuranceCoordination === "ordinary-full-advance-repayment" || input.healthInsuranceCoordination === `pub974-simplified-${year}`
           || (year === 2026 && input.healthInsuranceCoordination === "pub974-alternative-reentry-2026"))) continue;
       if (facts[flag] !== false) throw new Error(`Form 8962 requires completed ${flag} worksheets or confirmed absence`);
     }

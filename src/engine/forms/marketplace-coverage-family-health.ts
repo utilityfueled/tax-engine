@@ -4,9 +4,10 @@ import { calculateMarketplaceCoverageFamilySources, type MarketplaceCoverageFami
 import { calculateForm8962SharedPolicy } from './form-8962-shared-policy.js';
 import { d, sum } from '@/utils/decimal.js';
 
-export function calculateMarketplaceCoverageFamilyHealth(input: MarketplaceCoverageFamilyInput) {
+export function calculateMarketplaceCoverageFamilyHealth(input: MarketplaceCoverageFamilyInput, mode?: "full-repayment-candidate" | "source-only") {
   const sources = calculateMarketplaceCoverageFamilySources(input);
   if (!sources) return undefined;
+  if (!mode && sources.some(plan => plan.months.some(row => row.ownNoncoverageAdvance.gt(0)))) throw new Error("Noncoverage member advances require their actual separate repayment and deduction method.");
   const allocated = input.form8962?.allocationRequired === true ? calculateForm8962SharedPolicy(input) : undefined;
   return sources.flatMap(plan => plan.months.map(row => {
     const allocatedMonths = allocated?.months.filter(month => month.month === row.month && plan.policyIndexes.includes(month.policyIndex));

@@ -9,6 +9,7 @@ import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 import { formatCurrency, loadReviewTemplate, setTextField } from "../../pdf-utils.js";
 import { assertMarketplaceHealthReviewSources } from "./form-7206-marketplace-source.js";
 import { calculateForm7206ReviewSources } from "./form-7206-business-source.js";
+import { calculateMarketplaceFullAdvanceRepayment } from "@/engine/forms/marketplace-full-advance-repayment.js";
 import { charitableReviewOriginalSourceInput, type PreparedCharitableReview } from "../../charitable-review-context.js";
 import { hasPremiumTaxCreditReviewSources, premiumTaxCreditReviewOriginalSourceInput, type PreparedPremiumTaxCreditReview } from "../../premium-tax-credit-review-context.js";
 import { redactReviewIdentifiers } from "../../redact-review-identifiers.js";
@@ -30,9 +31,11 @@ function exact(value: unknown, label: string): Decimal {
   return value;
 }
 function reconcileSources(input: TaxYearInput, result: NonNullable<TaxReturnResult["form7206"]>, fullReturn: TaxReturnResult) {
-  const marketplace = fullReturn.marketplaceHealthInsurance;
+  const marketplace = fullReturn.marketplaceHealthInsurance, fullRepayment = fullReturn.marketplaceFullRepaymentHealth;
   const hasMarketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage && plan.premiumTaxCreditInvolved);
-  if (Boolean(marketplace) !== Boolean(hasMarketplace) || (!marketplace && result.marketplaceHandling !== undefined)) throw new Error("Form7206 Marketplace method requires its actual source coordination.");
+  if ((marketplace && fullRepayment) || Boolean(marketplace || fullRepayment) !== Boolean(hasMarketplace)
+    || (!marketplace && !fullRepayment && result.marketplaceHandling !== undefined)
+    || (fullRepayment && result.marketplaceHandling !== 'full-advance-repayment')) throw new Error("Form7206 Marketplace method requires its actual source coordination.");
   const actual = calculateForm7206({ taxYear: input.taxpayer.taxYear, filingStatus: input.taxpayer.filingStatus, facts: input.form7206!, marketplaceSourceInput: input, marketplaceHandling: result.marketplaceHandling });
   const retained = (value: unknown) => JSON.stringify(redactReviewIdentifiers(value));
   if (retained(actual.coverageFamilyAllocations) !== retained(result.coverageFamilyAllocations)) throw new Error("Form7206 coverage-family allocation does not reconcile its actual original sources.");
@@ -62,7 +65,11 @@ function reconcileSources(input: TaxYearInput, result: NonNullable<TaxReturnResu
       } else if (!source[property]!.eq(exact(persisted[property], property))) throw new Error("Form7206 current business income sources do not reconcile with the saved calculation.");
     }
   }
-  if (marketplace) assertMarketplaceHealthReviewSources(input, fullReturn, fresh.physical, fresh.nonspecified);
+  if (fullRepayment) {
+    const proof = calculateMarketplaceFullAdvanceRepayment(input, fullReturn);
+    if (retained(proof) !== retained(fullRepayment)
+      || retained(proof.lines) !== retained(fullReturn.allLines.filter(row => row.form === 'Marketplace Full Advance Repayment'))) throw new Error('Form7206 full advance repayment proof and audits do not reconcile.');
+  } else if (marketplace) assertMarketplaceHealthReviewSources(input, fullReturn, fresh.physical, fresh.nonspecified);
   else {
     const transferred = sum(...result.businesses.map(group => roundDollar(exact(group.deduction, "business deduction"))));
     if (!transferred.eq(exact(result.deductionToSchedule1, "Schedule1 transfer"))) throw new Error("Form7206 separate business deductions disagree with the Schedule1 transfer.");
@@ -126,6 +133,13 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
   write(`Tax year 2025; business source ${businessSourceId}; owner ${accountHolder}; type ${group.kind}.`);
   write("This appendix preserves original source facts and exact calculations. The preceding IRS form is a review copy. Independent filing qualification remains pending.");
   const marketplace = result.marketplaceHealthInsurance;
+  const fullRepayment = result.marketplaceFullRepaymentHealth;
+  if (fullRepayment) {
+    write('ACTUAL ZERO CREDIT AND FULL ADVANCE REPAYMENT');
+    write('The completed return has zero premium tax credit and repays all original advances. The physical Form7206 contains ordinary eligible premiums and its actual own-business income limit. No partial repayment or credit is allocated between people or businesses.');
+    write(`Exact original allocated advances $${fullRepayment.exactSourceAdvances.toFixed()}; reported advances $${fullRepayment.reportedAdvances.toFixed()}; actual final credit $${fullRepayment.finalCredit.toFixed()}; actual final repayment $${fullRepayment.finalRepayment.toFixed()}.`);
+    write('These final credit and repayment amounts are shared return-level reference totals. Do not add repeated totals from separate business appendices. Source cash and advances remain separately recorded below.');
+  }
   if (marketplace) write(marketplace.method === "pub974-nonspecified-stop-2025"
     ? "NONSPECIFIED STOP: each actual specified-plan business has exhausted its income limit after its own completed nonspecified claim. These physical forms contain the final health deduction. Final Form8962 uses that deduction independently. No Worksheets W/X or retained special-order deductions apply."
     : marketplace.method === "pub974-simplified-2025"

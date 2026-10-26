@@ -6055,6 +6055,29 @@
       ]
     },
     {
+      "key": "federal/marketplace-full-advance-repayment",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.162(l)-1",
+      "specPath": "spec/federal/marketplace-full-advance-repayment.yaml",
+      "enginePath": "src/engine/forms/marketplace-full-advance-repayment.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-marketplace-full-repayment.test.ts::accepts only actual zero final credit and full original repayment after the ordinary deduction",
+        "tests/pdf/marketplace-full-repayment-review.test.ts::prints actual ordinary health and fully repaid advances with private source binding"
+      ],
+      "implementationNote": "Actual zero final credit and full original advance repayment support the ordinary own-business premium deduction. Source-only intake and private original-input review context remain distinct from final method acceptance. Partial/capped repayment, source-cent differences and closed year/filing gates remain explicit.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/marketplace-health-deduction",
       "jurisdiction": "federal",
       "taxYear": 2026,

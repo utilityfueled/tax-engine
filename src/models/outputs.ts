@@ -259,6 +259,7 @@ export interface TaxReturnResult {
   >>;
   seHealthInsuranceWorksheet?: import("@/engine/forms/se-health-insurance-worksheet.js").SEHealthInsuranceWorksheetResult;
   form7206?: ReturnType<typeof import("@/engine/forms/form-7206-return.js").calculateForm7206Return>["form7206"];
+  marketplaceFullRepaymentHealth?: import("@/engine/forms/marketplace-full-advance-repayment.js").MarketplaceFullRepaymentHealthResult;
   marketplaceHealthInsurance?: import("@/engine/forms/marketplace-health-deduction.js").MarketplaceHealthDeductionResult & {
     step2Credit: Decimal; finalCredit: Decimal; maximumDeduction: Decimal;
   };

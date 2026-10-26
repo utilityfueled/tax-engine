@@ -1,0 +1,74 @@
+form: "Marketplace health premiums with fully repaid advances"
+fullName: "Actual zero final credit and full advance repayment before ordinary health deduction"
+taxYear: 2025
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.162(l)-1"
+notes: |
+  Refreshed 2026-10-26: IRC162(l)(1)-(2), 26CFR1.162(l)-1(a)(1)-(3),
+  Pub974 Other methods and actual coverage-family premium allocation, and
+  Pub502 Premium Tax Credit. This is a derived zero-credit/full-repayment
+  case, not a published numerical example or human tax/form qualification.
+  With final C=0 and every actual advance repaid, each original advance is
+  wholly repaid. For each specified source S, min(S-0,S-As+As)=S. Actual
+  nonspecified cash plus its own fully repaid advances is the original paid
+  premium. No partial repayment or positive credit is allocated between people,
+  businesses or spouses. Ordinary payer/person/month/own-business limits still
+  apply. PartIV allocation and actual paid shares are independently reconciled.
+  Calculate the complete ordinary candidate, including its actual income-sensitive
+  claims, then accept only if final8962 proves zero credit and full repayment.
+  Neither entered MAGI nor a credit/repayment override can establish acceptance.
+  Original source cents remain exact; compare actual reported8962 amounts using
+  its annual or monthly whole-dollar convention. This bounded proof also requires
+  actual repayment equal the exact original advance total. Matching only rounded
+  advances cannot create a payment bridge for an unrepaid source-cent remainder.
+  Partial/capped repayment and a source/reporting difference remain gated.
+  Keep the existing source guards for outside-family owner-paid amounts and
+  marriage composition. Production2026 and all qualification gates are unchanged.
+lines:
+  - line: "final-proof"
+    description: "Final ordinary calculation proves all advances are repaid"
+    formula: "After deriving ordinary7206 and all canonical claims from actual sources, require final Form8962 source verification, PTC=0, netPTC=0 and repayment=reported original advances. Reconcile reported advances to original allocated policy months before accepting. Full premiums18000, source cash6000, original advances12000, finalcredit0/repayment12000 permit ordinary18000 before each business earned-income limit."
+    testRef: "tests/engine/federal-marketplace-full-repayment.test.ts::accepts only actual zero final credit and full original repayment after the ordinary deduction"
+  - line: "source-conservation"
+    description: "Original person and policy facts cannot be replaced by an allocation ratio"
+    formula: "Retain cash and advances for each actual person and payer; exact receipt totals equal original policy totals. PartIV tax-family amounts must equal that family's independently recorded cash plus advances. Missing or contradictory persons, amounts, coverage evidence or source references reject before accepting any deduction."
+    testRef: "tests/engine/federal-marketplace-full-repayment.test.ts::keeps actual positive noncoverage advances separate from unknown or contradictory sources"
+  - line: "conditional-rejection"
+    description: "Deduction-created credit or incomplete repayment rejects this method"
+    formula: "If the actual ordinary deduction changes final income so credit is positive, or any original advance remains unrepaid, reject the full-repayment candidate. Never freeze a pre-deduction credit, use a hypothetical tax override or manufacture paid premiums from an agreement."
+    testRef: "tests/engine/federal-marketplace-full-repayment.test.ts::rejects a positive final credit or a partially repaid advance after ordinary refiguring"
+  - line: "own-income"
+    description: "Ordinary limits stay with each actual owner and business"
+    formula: "Each actual business deductible premium is min(qualified premiums, nonnegative own earned-income limit). No spouse or unrelated business lends income. Transfer each actual ordinary business deduction once to Schedule1 and applicable QBI sources."
+    testRef: "tests/engine/federal-marketplace-full-repayment.test.ts::retains actual own business income limits without borrowing spouse earnings"
+  - line: "isolated-2026"
+    description: "Final current-law credit eligibility is calculated after the ordinary deduction"
+    formula: "In the isolated indexed2026 method, above400% FPL gives zero credit and full actual repayment. A lower ordinary candidate that restores positive finalcredit is rejected; no current-year eligibility or credit override is retained. The production2026 gate remains unchanged."
+    testRef: "tests/engine/federal-marketplace-full-repayment-2026.test.ts::requires actual final2026 zero credit after the full ordinary deduction"
+  - line: "intake"
+    description: "Actual source entry stays separate from final method acceptance"
+    formula: "Source-only intake preserves original policy/person cash/advances, allows complete positive noncoverage-advance facts, and leaves final credit/repayment acceptance to the canonical return. Edits revoke confirmation; unknown sources cannot become zero."
+    testRef: "tests/guided-interview/guided-marketplace-full-repayment.test.ts::preserves actual full-repayment sources without an entered credit or repayment"
+  - line: "source-cents"
+    description: "Reported repayment does not replace original source cents"
+    formula: "Retain each original actual advance at source precision. Annual8962 rounds the annual sum; monthly8962 rounds each completed monthly line before annual sum. Reject exact advances12005.88 when reported repayment differs, and positive0.12 reported0, rather than infer payment. Six1000.01 and six999.99 advances reconcile exact and reported12000, with original18005.88 premiums transferring18006 under the separate7206 business rule."
+    testRef: "tests/engine/federal-marketplace-full-repayment.test.ts::retains source cents independently of annual and monthly repayment reporting"
+  - line: "separate-owners"
+    description: "Separate original plans retain each owner's ordinary business limit"
+    formula: "Each unique original plan belongs to its actual owner and business. Full repayment removes partial-credit attribution; it does not lend the primary owner's income to a spouse's business. Reverse plan order without changing sources or the separately calculated deductions."
+    testRef: "tests/engine/federal-marketplace-full-repayment.test.ts::keeps separate owner plans and health qualification after full repayment"
+  - line: "review"
+    description: "Physical forms and private source evidence bind the actual completed return"
+    formula: "Prepare original complete return context before redaction. Physical7206 shows ordinary eligible premiums and own-business deduction; physical8962 shows actual zero credit and all original reported advances repaid. Recompute business sources and bind the derived proof/audit before any template I/O."
+    testRef: "tests/pdf/marketplace-full-repayment-review.test.ts::prints actual ordinary health and fully repaid advances with private source binding"
+  - line: "ordinary-controls"
+    description: "The existing full interview exposes and invalidates actual payment sources"
+    formula: "Reach the existing original-policy, person-payment and coverage-family controls before Continue. Editing consumed source references revokes health and Marketplace confirmations; reconfirmation retains the same saved original amounts and no current-tax inputs."
+    testRef: "tests/apps/web/marketplace-full-repayment-interactions.test.tsx::reaches actual full-repayment sources and reconfirmation in the full interview"
+  - line: "workspace"
+    description: "Actual guided workspace output keeps original proof before redaction"
+    formula: "The ordinary guided download calculates full repayment from actual source data and prepares the private context before masking identifiers. Reopen the saved combined PDF and retain the original premium/cash/advance distinctions and review-only notices."
+    testRef: "tests/apps/web/workspace-marketplace-full-repayment.test.ts::downloads the actual guided full-repayment return without discarding original sources"
+  - line: "browser"
+    description: "Production desktop and mobile retain source facts after edits and reload"
+    formula: "Actual ordinary and shared source records produce final AGI267065 from300000 business income less14935 SE deduction and18000 health. Source edits clear the preview until the actual family, health, allocation and Marketplace facts are reconfirmed. Reload preserves original amounts and an explicitly unknown MEC answer; private values remain local."
+    testRef: "apps/web/tests/guided-marketplace-full-repayment.spec.ts::preserves actual positive advances and full-repayment source confirmation"

@@ -31,7 +31,7 @@ export function validateMarketplaceHealthSources(state: GuidedFlowState, health:
   const sharedPlans = originalShared ? calculateSharedMarketplaceHealthSources({ ...originalShared, form8962: coverage.form8962, form7206: normalized }) : undefined;
   const families = normalized?.plans?.some(plan => plan.coverageFamilySources) ? calculateMarketplaceCoverageFamilyHealth({
     ...guidedMarketplaceHousehold(state.sectionData['personal-info'], state.segmentation.filingStatus, state.taxYear), form1095A: coverage.form1095A, form8962: coverage.form8962, form7206: normalized,
-  }) : undefined;
+  }, 'source-only') : undefined;
   const used = new Set<string>();
   const totals = new Map<number, { premium: Decimal; advance: Decimal }>();
   for (const plan of plans) {

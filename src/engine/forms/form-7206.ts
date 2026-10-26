@@ -55,7 +55,7 @@ export interface Form7206Result {
   calculationComplete: boolean;
   grossSourcePremiums: Decimal;
   paidSourcePremiums: Decimal;
-  marketplaceHandling?: "separate-specified-premiums" | "ordinary-no-ptc";
+  marketplaceHandling?: "separate-specified-premiums" | "ordinary-no-ptc" | "full-advance-repayment";
   businesses: Form7206BusinessResult[];
   coverageFamilyAllocations?: ReturnType<typeof calculateMarketplaceCoverageFamilyHealth>;
   sourceRecords: { sourceId: string; planId: string; accountHolder: Owner; businessSourceId: string; personId: string; payer: "owner_after_tax" | "business_paid_or_reimbursed"; amountPaid: Decimal; advancePremiumTaxCredit: Decimal; coverageTaxYear: number; coverageMonth: number; excludedFunding: Decimal; eligiblePremium: Decimal; marketplaceSpecifiedPremium: Decimal }[];
@@ -102,7 +102,7 @@ export function calculateForm7206(options: {
   /** Original household/policy context. Never a calculated allocation override. */
   marketplaceSourceInput?: Omit<MarketplaceCoverageFamilyInput, "form7206">;
   /** Internal worksheet preparation: never itself allows a specified deduction. */
-  marketplaceHandling?: "separate-specified-premiums" | "ordinary-no-ptc";
+  marketplaceHandling?: "separate-specified-premiums" | "ordinary-no-ptc" | "full-advance-repayment";
 }): Form7206Result {
   const { facts, taxYear } = options;
   if (taxYear !== 2025 && taxYear !== 2026) throw new Error("Form7206 supports actual 2025 and 2026 sources.");
@@ -128,7 +128,7 @@ export function calculateForm7206(options: {
   const hasFamilySources = facts.plans.some(plan => plan.coverageFamilySources !== undefined);
   if (hasFamilySources && options.businesses && !options.marketplaceSourceInput) throw new Error("Coverage-family business calculation requires its actual original policy and household context.");
   const coverageFamilyAllocations = hasFamilySources && options.marketplaceSourceInput
-    ? calculateMarketplaceCoverageFamilyHealth({ ...options.marketplaceSourceInput, form7206: facts }) : undefined;
+    ? calculateMarketplaceCoverageFamilyHealth({ ...options.marketplaceSourceInput, form7206: facts }, options.marketplaceHandling === "full-advance-repayment" ? "full-repayment-candidate" : undefined) : undefined;
   const groups = new Map<string, Form7206BusinessResult>();
   const ltc = new Map<string, Map<string, Decimal>>();
   const paymentIds = new Set<string>();
@@ -257,7 +257,7 @@ export function calculateForm7206(options: {
         if (grossEligiblePremium.gt(0) && specified && options.marketplaceHandling === undefined) throw new Error("Form7206 Marketplace premiums require actual Pub974 premium-tax-credit coordination.");
         if (specified && plan.kind !== "medical") throw new Error("Form7206 specified Marketplace premiums require an actual qualified medical plan.");
         const marketplaceSpecifiedPremium = specified && !plan.coverageFamilySources ? grossEligiblePremium : new Decimal(0);
-        const eligiblePremium = plan.coverageFamilySources || (specified && options.marketplaceHandling !== "ordinary-no-ptc") ? new Decimal(0) : grossEligiblePremium;
+        const eligiblePremium = plan.coverageFamilySources || (specified && options.marketplaceHandling !== "ordinary-no-ptc" && options.marketplaceHandling !== "full-advance-repayment") ? new Decimal(0) : grossEligiblePremium;
         group.specifiedPremiums = group.specifiedPremiums.plus(marketplaceSpecifiedPremium);
         if (grossEligiblePremium.gt(0) && clergy) throw new Error("Form7206 clergy premiums require the actual Pub517 special-rule worksheet.");
         if (plan.kind === "qualified_ltc") {
@@ -285,7 +285,7 @@ export function calculateForm7206(options: {
     const specified = eligible ? row.specifiedPremium : d(0), ordinary = eligible ? row.nonspecifiedPremium : d(0);
     if (!sum(...records.map(record => record.amountPaid.plus(record.advancePremiumTaxCredit))).gte(row.taxFamilyPremium)) throw new Error("Coverage-family health records do not preserve their original payments.");
     group.specifiedPremiums = group.specifiedPremiums.plus(specified);
-    group.medicalPremiums = group.medicalPremiums.plus(options.marketplaceHandling === "ordinary-no-ptc" ? specified.plus(ordinary) : ordinary);
+    group.medicalPremiums = group.medicalPremiums.plus((options.marketplaceHandling === "ordinary-no-ptc" || options.marketplaceHandling === "full-advance-repayment") ? specified.plus(ordinary) : ordinary);
     audit.record("Pub974 Coverage Family", `${row.planId}:${row.month}:specified`, "Specified premium from actual benchmark groups", specified, "Tax-family premium times coverage-family SLCSP / both group SLCSPs, after PartIV", { "Plan": row.planId, "Owner": group.accountHolder, "Business": group.businessSourceId, "Original tax-family premium": row.taxFamilyPremium, "Coverage-family SLCSP": row.coverageFamilySlcsp, "Noncoverage-family SLCSP": row.nonCoverageFamilySlcsp });
     audit.record("Pub974 Coverage Family", `${row.planId}:${row.month}:nonspecified`, "Nonspecified premium from actual benchmark groups", ordinary, "Tax-family premium less specified premium; original person payments retained separately", { "Plan": row.planId, "Owner": group.accountHolder, "Business": group.businessSourceId });
   }

@@ -1,3 +1,5 @@
+import { calculateMarketplaceCoverageFamilySources } from "./forms/marketplace-coverage-family-sources.js";
+import { calculateMarketplaceFullAdvanceRepayment } from "./forms/marketplace-full-advance-repayment.js";
 import { calculateBrokerageWithholding } from "./forms/form-1099-b-withholding.js";
 import { calculateForm1099DASources } from "./forms/form-1099-da-sources.js";
 import { normalizeDigitalAssetCapitalInput } from "./forms/digital-asset-capital-input.js";
@@ -212,6 +214,15 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   const marketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
   if (!marketplace) return calculateFederalTaxWithNol(input);
   if (![2025,2026].includes(input.taxpayer.taxYear)) throw new Error("Marketplace health coordination supports actual2025 and2026 sources.");
+  const familySources = calculateMarketplaceCoverageFamilySources(input);
+  if (familySources?.some(plan => plan.months.some(row => row.ownNoncoverageAdvance.gt(0)))) {
+    // This is an internal ordinary-premium candidate, never an entered credit
+    // or repayment. Acceptance depends on the completed actual final return.
+    const result = calculateFederalTaxWithNol(input, { stage: "full-repayment" });
+    result.marketplaceFullRepaymentHealth = calculateMarketplaceFullAdvanceRepayment(input, result);
+    result.allLines.push(...result.marketplaceFullRepaymentHealth.lines);
+    return result;
+  }
   // Discover the passive special method from actual Form8582 PartI in the first
   // canonical pass; do not infer its net-loss condition from raw property signs.
   const kinds: MarketplaceOrderedKind[] = ["passive"];
@@ -319,7 +330,7 @@ interface MarketplaceOrderedState {
   bond?: Form8815Result;
   studentLoan?: { result: ReturnType<typeof calculateStudentLoanInterestDeduction>; modifiedAgi: Decimal };
 }
-type MarketplaceContext = ({ stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult }
+type MarketplaceContext = ({ stage: "full-repayment" } | { stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult }
   | { stage: "ordered"; deduction: MarketplaceHealthDeductionResult }
   | { stage: "final"; deduction: MarketplaceHealthDeductionResult }) & { ordered?: MarketplaceOrderedState; orderedDeductionInterim?: boolean };
 interface MarketplaceInterim {
@@ -329,12 +340,12 @@ interface MarketplaceInterim {
   deductions: Omit<MarketplaceOrderedState, "kinds" | "calculating">;
 }
 function calculateFederalTaxWithNol(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }): MarketplaceInterim;
-function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" }): TaxReturnResult;
+function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" | "full-repayment" }): TaxReturnResult;
 function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: MarketplaceContext): TaxReturnResult | MarketplaceInterim {
   if (input.form172 && !input.netOperatingLoss) throw new Error("Form172 requires the actual complete prior regular and separate AMT carry packet");
   const complete = (worksheet?: NetOperatingLossReturnResult): TaxReturnResult | MarketplaceInterim => {
     const context = worksheet ? { stage: "final" as const, deduction: worksheet.deduction, modified: false as const, worksheet } : undefined;
-    return marketplace && marketplace.stage !== "final"
+    return marketplace && marketplace.stage !== "final" && marketplace.stage !== "full-repayment"
       ? calculateFederalTaxCore(input, marketplace, undefined, context)
       : calculateFederalTaxCore(input, marketplace, undefined, context);
   };
@@ -359,10 +370,10 @@ type NolReturnContext = { stage: "income" | "alternative-income"; deduction: Dec
   | { stage: "final"; deduction: Decimal; modified: false; worksheet: NetOperatingLossReturnResult };
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "income" }): NolIncomeContext;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "alternative-income" }): NolAlternativeIncomeContext;
-function calculateFederalTaxCore(input: TaxYearInput, marketplace: (MarketplaceContext & { stage: "final" }) | undefined, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }): TaxReturnResult;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: (MarketplaceContext & { stage: "final" | "full-repayment" }) | undefined, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }): TaxReturnResult;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: undefined, hypothetical: ForeignTaxHypotheticalRequest): ForeignTaxHypotheticalContext;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }): MarketplaceInterim;
-function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" }): TaxReturnResult;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" | "full-repayment" }): TaxReturnResult;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext, hypothetical?: ForeignTaxHypotheticalRequest, nol?: NolReturnContext): TaxReturnResult | MarketplaceInterim | ForeignTaxHypotheticalContext | NolIncomeContext | NolAlternativeIncomeContext {
   validateForeignTaxDeductionScope(input);
   const ordered = marketplace?.ordered;
@@ -2191,7 +2202,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     }
     audit.merge(form8815.lines);
   }
-  if (input.adjustments?.educatorExpenseSources?.length && (!marketplace || marketplace.stage === "final")) {
+  if (input.adjustments?.educatorExpenseSources?.length && (!marketplace || marketplace.stage === "final" || marketplace.stage === "full-repayment")) {
     const educatorExclusions = reconcileEducatorEducationExclusions({
       taxYear: year,
       filingStatus,
@@ -2277,7 +2288,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       ? "SE deduction + other adjustments + K-1 1041 §67(e) excess deductions"
       : "SE deduction + other adjustments");
 
-  if (marketplace && marketplace.stage !== "final" && (!nol || nol.stage === "final")) {
+  if (marketplace && marketplace.stage !== "final" && marketplace.stage !== "full-repayment" && (!nol || nol.stage === "final")) {
     if (!actualHealthInsurance?.marketplacePremiums) throw new Error("Pub974 source calculation is incomplete.");
     if (!nol && sum(d(input.priorYear?.nolCarryforward), d(input.priorYear?.excessBusinessLossNOL), k1Form1041FinalNOL).gt(0)) throw new Error("Pub974 NOL coordination requires the actual circular taxable-income worksheet.");
     const credit = calculatePremiumTaxCreditReturn({ input, agi, taxExemptInterest,
@@ -2916,7 +2927,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (nol?.stage === "alternative-income") return {
     ...calculateForm6251(amtIncomeInput(rawTaxableIncome, nol.deduction, d("0")), constants, { incomeOnly: true }), qbiDeduction,
   };
-  if (marketplace && marketplace.stage !== "final") throw new Error("Interim Marketplace income must return before final tax calculations.");
+  if (marketplace && marketplace.stage !== "final" && marketplace.stage !== "full-repayment") throw new Error("Interim Marketplace income must return before final tax calculations.");
 
   // ── IRC §172: Net Operating Loss Deduction ──────────────
   // For post-2017 NOLs, the deduction is limited to 80% of taxable income
@@ -3604,7 +3615,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       input, agi, taxExemptInterest, foreignIncomeReduction: form2555IncomeReduction,
       foreignHousingDeduction: form2555HousingDeduction,
       socialSecurityBenefitsGross, socialSecurityBenefitsTaxable,
-    }, marketplace ? { method: marketplace.deduction.method === "pub974-alternative-reentry-2026" ? marketplace.deduction.method
+    }, marketplace?.stage === "full-repayment" ? { method: "ordinary-full-advance-repayment", stage: "final" } : marketplace ? { method: marketplace.deduction.method === "pub974-alternative-reentry-2026" ? marketplace.deduction.method
       : year === 2025 ? "pub974-simplified-2025" : "pub974-simplified-2026", stage: marketplace.stage,
       repaymentLimit: marketplace.deduction.method.startsWith("ordinary-no-ptc-") ? undefined : marketplace.deduction.historicalLimit?.repaymentLimit ?? undefined } : undefined);
     netPremiumTaxCredit = form8962.netPTC;

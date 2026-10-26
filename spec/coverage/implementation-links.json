@@ -913,6 +913,16 @@
       "note": "Actual monthly coverage-family source calculation feeds the source-bound 2025 Form7206 review mapper; this link makes no additional scenario, tax-law or filing qualification claim."
     },
     {
+      "key": "federal/marketplace-full-advance-repayment",
+      "enginePath": "src/engine/forms/marketplace-full-advance-repayment.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-full-repayment.test.ts::accepts only actual zero final credit and full original repayment after the ordinary deduction",
+        "tests/pdf/marketplace-full-repayment-review.test.ts::prints actual ordinary health and fully repaid advances with private source binding"
+      ],
+      "note": "Actual zero final credit and full original advance repayment support the ordinary own-business premium deduction. Source-only intake and private original-input review context remain distinct from final method acceptance. Partial/capped repayment, source-cent differences and closed year/filing gates remain explicit."
+    },
+    {
       "key": "federal/marketplace-health-ordered",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [

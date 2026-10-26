@@ -57,7 +57,8 @@ export function calculateForm7206ReviewSources(input: TaxYearInput, result: TaxR
     foreignIncomeExclusion: foreign?.totalIncomeReduction ?? d(0), selfEmploymentSourcesVerified: scheduleSE.sourceFactsVerified,
     businessGrossIncomes: [{ sourceId: "scheduleC", amount: scheduleC.grossIncome }, { sourceId: "scheduleF", amount: scheduleF.grossFarmIncome }, { sourceId: "cryptoBusiness", amount: cryptoGross }] };
   const marketplace = result.marketplaceHealthInsurance;
-  const physical = calculateForm7206Return({ ...params, marketplace: marketplace ? { stage: "final", deduction: marketplace } : undefined }).form7206;
+  const physical = calculateForm7206Return({ ...params, marketplace: result.marketplaceFullRepaymentHealth ? { stage: "full-repayment" }
+    : marketplace ? { stage: "final", deduction: marketplace } : undefined }).form7206;
   const nonspecified = marketplace?.method.startsWith("ordinary-no-ptc-")
     ? calculateForm7206Return({ ...params, marketplace: { stage: "maximum", historicalLimit: marketplace.historicalLimit } }).form7206 : physical;
   return { physical, nonspecified };

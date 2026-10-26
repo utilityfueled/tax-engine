@@ -14,10 +14,11 @@ const contexts = new WeakMap<PreparedPremiumTaxCreditReview, {
 const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 function calculationDigest(result: TaxReturnResult): string {
   return digest(redactReviewIdentifiers({ taxYear: result.taxYear, filingStatus: result.filingStatus, agi: result.agi,
-    form8962: result.form8962, form7206: result.form7206, marketplaceHealthInsurance: result.marketplaceHealthInsurance, coverageFamilyAllocations: result.form7206?.coverageFamilyAllocations,
+    form8962: result.form8962, form7206: result.form7206, marketplaceHealthInsurance: result.marketplaceHealthInsurance,
+    marketplaceFullRepaymentHealth: result.marketplaceFullRepaymentHealth, coverageFamilyAllocations: result.form7206?.coverageFamilyAllocations,
     coverageFamilyAudits: result.form7206?.lines.filter(row => row.form === 'Pub974 Coverage Family'),
     transfers: result.allLines.filter(row => /^Form\s?8962/.test(row.form) || row.form === 'Pub974 Coverage Family'
-      || row.form.startsWith('Pub974') || row.form === 'Form 7206'
+      || row.form.startsWith('Pub974') || row.form === 'Form 7206' || row.form === 'Marketplace Full Advance Repayment'
       || (/^(Sched|Schedule) 1$/.test(row.form) && row.line === '17')
       || (/^(Sched|Schedule) 2$/.test(row.form) && row.line === '1a') || (/^(Sched|Schedule) 3$/.test(row.form) && row.line === '9')) }));
 }
