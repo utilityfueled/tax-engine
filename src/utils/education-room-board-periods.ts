@@ -17,7 +17,7 @@ export interface RoomBoardPeriodResults {
 export function calculateRoomBoardPeriods(forms: readonly Form1099Q[], facts: Facts, taxYear: number | undefined): RoomBoardPeriodResults {
   const empty: RoomBoardPeriodResults = { periods: [], expenseIds: new Set(), qualifiedBySource: new Map() };
   if (facts.roomBoardPeriods === undefined) {
-    if (facts.roomBoardPeriodExpenses !== undefined || facts.roomBoardEsaAllocations !== undefined)
+    if (facts.roomBoardPeriodExpenses !== undefined || facts.roomBoardEsaAllocations !== undefined || facts.roomBoardPriorUses !== undefined || facts.roomBoardPriorUseExpenses !== undefined)
       throw new Error('Room-and-board original period records are missing');
     return empty;
   }
@@ -25,6 +25,9 @@ export function calculateRoomBoardPeriods(forms: readonly Form1099Q[], facts: Fa
     throw new Error('Room-and-board actual annual source year and confirmations are required');
   if (!Array.isArray(facts.roomBoardPeriodExpenses) || !Array.isArray(facts.roomBoardEsaAllocations))
     throw new Error('Room-and-board actual receipt and ESA allocation lists are required, including known empty lists');
+  const hasHistory = facts.roomBoardPriorUses !== undefined || facts.roomBoardPriorUseExpenses !== undefined;
+  if (hasHistory && (!Array.isArray(facts.roomBoardPriorUses) || !Array.isArray(facts.roomBoardPriorUseExpenses)))
+    throw new Error('Room-and-board actual prior history and receipt lists are required, including known empty lists');
   const strings: string[] = [];
   const scan = (value: unknown): void => {
     if (typeof value === 'string' && /^-?\d+(\.\d+)?$/.test(value)) {
@@ -67,6 +70,7 @@ export function calculateRoomBoardPeriods(forms: readonly Form1099Q[], facts: Fa
   const expenses = facts.expenses ?? [], links = facts.roomBoardPeriodExpenses, choices = facts.roomBoardEsaAllocations;
   const roomExpenses = expenses.filter(e => e.category === 'postsecondary_room_board');
   const seenPeriods = new Set<string>(), seenExpenses = new Set<string>();
+  const seenPriorUses = new Set<string>(), seenPriorReceipts = new Set<string>();
   const periodDates: Array<{
     beneficiary: string;
     start: string;
@@ -85,8 +89,8 @@ export function calculateRoomBoardPeriods(forms: readonly Form1099Q[], facts: Fa
     text(period.institutionId, 'institution identity');
     text(period.institutionName, 'institution name');
     const start = date(period.academicPeriodStart, 'academic period start'), end = date(period.academicPeriodEnd, 'academic period end');
-    if (start > end || Number(start.slice(0, 4)) !== taxYear || Number(end.slice(0, 4)) !== taxYear)
-      throw new Error('Room-and-board academic period requires actual same-return-year start and end; cross-year usage needs its separate source history');
+    if (start > end || start > `${taxYear}-12-31` || end < `${taxYear}-01-01`)
+      throw new Error('Room-and-board academic period does not overlap the actual return year');
     if (periodDates.some(p => p.beneficiary === beneficiaryId && p.start <= end && p.end >= start))
       throw new Error('Room-and-board overlapping academic periods require one reconciled actual allowance group');
     periodDates.push({ beneficiary: beneficiaryId, start, end });
@@ -98,6 +102,67 @@ export function calculateRoomBoardPeriods(forms: readonly Form1099Q[], facts: Fa
       throw new Error('Room-and-board institutional housing invoice contradicts actual residence');
     if (housing)
       text(period.schoolHousingInvoiceReference, 'institution housing invoice reference');
+    const limit = D.max(allowance, invoice);
+    const priorUses = (facts.roomBoardPriorUses ?? []).filter(row => row.periodId?.trim() === id);
+    const crossYear = Number(start.slice(0, 4)) !== taxYear || Number(end.slice(0, 4)) !== taxYear;
+    const historyRequired = crossYear || priorUses.length > 0 || period.priorUseHistoryConfirmed !== undefined || period.priorUseHistorySourceReference !== undefined;
+    if (historyRequired) {
+      if (!Array.isArray(facts.roomBoardPriorUses) || !Array.isArray(facts.roomBoardPriorUseExpenses) || period.priorUseHistoryConfirmed !== true)
+        throw new Error('Room-and-board actual complete prior period history is required, including known empty history');
+      text(period.priorUseHistorySourceReference, 'prior period history source reference');
+    }
+    let priorQualified = new D(0), priorAdjusted = new D(0), priorCost = new D(0), priorAssistance = new D(0);
+    const priorYears = new Set<number>();
+    const originalPriorReceipts: NonNullable<Facts['roomBoardPriorUseExpenses']> = [];
+    for (const use of priorUses.slice().sort((a, b) => (a.sourceTaxYear ?? 0) - (b.sourceTaxYear ?? 0))) {
+      const useId = text(use.id, 'prior worksheet identity'), year = use.sourceTaxYear;
+      if (seenPriorUses.has(useId) || year === undefined || !Number.isInteger(year) || year >= taxYear || year < Number(start.slice(0, 4)) || priorYears.has(year))
+        throw new Error('Room-and-board prior worksheet year or identity is missing, duplicated or inconsistent');
+      if (year < 2002)
+        throw new Error('Room-and-board prior history before 2002 requires its earlier statutory cap method');
+      seenPriorUses.add(useId); priorYears.add(year);
+      if (use.sourceFactsConfirmed !== true || use.allPriorUseSourcesIncludedConfirmed !== true || use.noPostFilingChangesConfirmed !== true)
+        throw new Error('Room-and-board actual complete prior history and unchanged filed worksheet confirmation are required');
+      text(use.sourceReference, 'prior worksheet source reference');
+      const beneficiaries = (facts.beneficiaries ?? []).filter(row => row.id === beneficiaryId);
+      const normalizeName = (value: string | undefined): string => text(value, 'prior beneficiary name').replace(/\s+/g, ' ').toLowerCase();
+      if (use.beneficiaryId !== beneficiaryId || beneficiaries.length !== 1 || normalizeName(use.beneficiaryName) !== normalizeName(beneficiaries[0]?.name)
+        || text(use.institutionId, 'prior institution identity') !== text(period.institutionId, 'institution identity')
+        || date(use.academicPeriodStart, 'prior academic period start') !== start || date(use.academicPeriodEnd, 'prior academic period end') !== end
+        || use.livingArrangement !== period.livingArrangement || bool(use.institutionEligible, 'prior institution eligibility') !== institution
+        || bool(use.halfTimeStudent, 'prior half-time enrollment') !== halfTime || bool(use.schoolOwnedHousing, 'prior institution housing fact') !== housing
+        || !money(use.roomBoardAllowance, 'prior period allowance').eq(allowance) || !money(use.schoolOwnedHousingCharge, 'prior institution housing charge').eq(invoice))
+        throw new Error('Room-and-board prior worksheet conflicts with the actual beneficiary or institutional period');
+      if (housing) text(use.schoolHousingInvoiceReference, 'prior housing invoice reference');
+      const priorReceipts = (facts.roomBoardPriorUseExpenses ?? []).filter(row => row.priorUseId?.trim() === useId);
+      let annualCost = new D(0), annualAssistance = new D(0);
+      for (const receipt of priorReceipts) {
+        const receiptId = text(receipt.id, 'prior receipt identity');
+        if (seenPriorReceipts.has(receiptId) || expenses.some(row => row.id === receiptId))
+          throw new Error('Room-and-board prior receipt identity is duplicated or reused in the current return');
+        seenPriorReceipts.add(receiptId);
+        if (receipt.sourceFactsConfirmed !== true) throw new Error('Room-and-board actual prior receipt confirmation is required');
+        text(receipt.sourceReference, 'prior receipt source reference');
+        const paid = date(receipt.paidDate, 'prior receipt paid date'), coveredStart = date(receipt.coveredStart, 'prior receipt service start'), coveredEnd = date(receipt.coveredEnd, 'prior receipt service end');
+        if (Number(paid.slice(0, 4)) !== year || coveredStart > coveredEnd || coveredStart < start || coveredEnd > end)
+          throw new Error('Room-and-board prior receipt year or service period conflicts with its original worksheet');
+        const paidAmount = money(receipt.amount, 'prior receipt amount'), refund = money(receipt.refundedAmount, 'prior receipt refund'), aid = money(receipt.taxFreeAssistance, 'prior receipt assistance');
+        if (refund.plus(aid).gt(paidAmount)) throw new Error('Room-and-board prior receipt reductions exceed original cost');
+        if (!money(receipt.educationCreditAmount, 'prior receipt education credit').isZero() || !money(receipt.otherTaxBenefitAmount, 'prior receipt other benefit').isZero())
+          throw new Error('Room-and-board prior receipt credit or other-benefit source treatment needs its separate method');
+        if (bool(receipt.qualificationConfirmed, 'prior receipt qualification')) {
+          annualCost = annualCost.plus(paidAmount.minus(refund)); annualAssistance = annualAssistance.plus(aid);
+        }
+      }
+      const qualified = money(use.qualifiedCostBeforeAssistance, 'prior qualified cost before assistance'), adjusted = money(use.adjustedQualifiedExpenses, 'prior adjusted qualified expenses');
+      const expectedQualified = institution && halfTime ? D.min(annualCost, limit.minus(priorQualified)) : new D(0);
+      if (!qualified.eq(expectedQualified) || !adjusted.eq(D.max(0, qualified.minus(annualAssistance))))
+        throw new Error('Room-and-board prior worksheet does not reconcile to actual receipts, remaining cap and assistance');
+      priorQualified = priorQualified.plus(qualified); priorAdjusted = priorAdjusted.plus(adjusted);
+      priorCost = priorCost.plus(annualCost); priorAssistance = priorAssistance.plus(annualAssistance);
+      originalPriorReceipts.push(...priorReceipts);
+    }
+    const remainingLimit = limit.minus(priorQualified);
     const rows = links.filter(l => l.periodId === id);
     if (!rows.length)
       throw new Error('Room-and-board period has no actual receipt links');
@@ -195,7 +260,7 @@ export function calculateRoomBoardPeriods(forms: readonly Form1099Q[], facts: Fa
     }
     const cost = total(periodExpenses.filter(r => r.qualifies).map(r => r.amount.minus(r.refund)));
     const assistance = total(periodExpenses.filter(r => r.qualifies).map(r => r.assistance));
-    const limit = D.max(allowance, invoice), capacity = institution && halfTime ? D.max(0, D.min(cost, limit).minus(assistance)) : new D(0);
+    const capacity = institution && halfTime ? D.max(0, D.min(cost, remainingLimit).minus(assistance)) : new D(0);
     const requested = total([...rawBySource.values()]);
     const available = total(periodExpenses.map(r => r.amount.minus(r.refund).minus(r.assistance)));
     if (total([...originalBySource.values()]).gt(available))
@@ -258,6 +323,10 @@ export function calculateRoomBoardPeriods(forms: readonly Form1099Q[], facts: Fa
       || !total([...qualified.values()]).eq(target))
       throw new Error('Room-and-board derived allocation must conserve each original source and the one period capacity');
     const inputs: Record<string, Decimal | string> = { 'Actual period costs': cost, 'Applicable institutional allowance': allowance, 'Actual institutional housing invoice': invoice, 'Period assistance': assistance, 'Derived period capacity': capacity, 'Original allocated costs': total([...originalBySource.values()]), 'Eligible allocated costs': requested, 'Half-time enrollment': halfTime ? 'yes' : 'no', 'Institution eligible': institution ? 'yes' : 'no', 'Period start': start, 'Period end': end, 'Living arrangement': period.livingArrangement ?? '' };
+    if (historyRequired) Object.assign(inputs, { 'Prior actual period costs': priorCost, 'Prior qualified cost before assistance': priorQualified,
+      'Prior period assistance': priorAssistance, 'Prior adjusted qualified expenses': priorAdjusted, 'Remaining period limit': remainingLimit,
+      'Original prior worksheets': JSON.stringify(priorUses.slice().sort((a, b) => a.id.localeCompare(b.id))),
+      'Original prior receipts': JSON.stringify(originalPriorReceipts.slice().sort((a, b) => a.id.localeCompare(b.id))) });
     // Retained for source/audit binding, never printed as free-text identifiers.
     inputs['Original period record'] = JSON.stringify(period);
     inputs['Original linked receipts'] = JSON.stringify(periodExpenses.map(row => ({ expense: row.expense, link: rows.find(link => link.expenseId === row.expense.id) })).sort((a, b) => a.expense.id.localeCompare(b.expense.id)));
@@ -269,7 +338,8 @@ export function calculateRoomBoardPeriods(forms: readonly Form1099Q[], facts: Fa
     for (const [sourceId, amount] of qualified)
       empty.qualifiedBySource.set(sourceId, (empty.qualifiedBySource.get(sourceId) ?? new D(0)).plus(amount));
   }
-  if (roomExpenses.some(e => !seenExpenses.has(e.id)) || links.some(l => !seenPeriods.has(l.periodId ?? '')) || choices.some(c => !seenPeriods.has(c.periodId ?? '')))
+  if (roomExpenses.some(e => !seenExpenses.has(e.id)) || links.some(l => !seenPeriods.has(l.periodId ?? '')) || choices.some(c => !seenPeriods.has(c.periodId ?? ''))
+    || (facts.roomBoardPriorUses ?? []).some(row => !seenPriorUses.has(row.id.trim())) || (facts.roomBoardPriorUseExpenses ?? []).some(row => !seenPriorReceipts.has(row.id.trim())))
     throw new Error('Room-and-board complete period/receipt membership contains missing or unused originals');
   return empty;
 }

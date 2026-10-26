@@ -83,7 +83,7 @@ export function buildForm1099QReferenceSummary(forms: Form1099Q[], result: Form1
         const statementIndex = forms.findIndex(form=>form.sourceId===sourceId);
         sourceLines.push(describe(entry, `Statement ${statementIndex+1}, academic period ${periodIndex+1}: `));
       }
-      for (const key of ["Period start","Period end","Living arrangement","Half-time enrollment","Institution eligible","Actual period costs","Applicable institutional allowance","Actual institutional housing invoice","Period assistance","Derived period capacity"]) {
+      for (const key of ["Period start","Period end","Living arrangement","Half-time enrollment","Institution eligible","Actual period costs","Applicable institutional allowance","Actual institutional housing invoice","Prior actual period costs","Prior qualified cost before assistance","Prior period assistance","Prior adjusted qualified expenses","Remaining period limit","Period assistance","Derived period capacity"]) {
         const value=period.inputs[key];
         if(value!==undefined) qualifiedEducationExpenseInputs.push({label:`Academic period ${periodIndex+1}: ${key}`,value:Decimal.isDecimal(value)?value.toFixed():value});
       }

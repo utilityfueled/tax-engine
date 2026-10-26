@@ -22,12 +22,14 @@ export interface EducationDistributionData {
   roomBoardPeriods?: EducationSourceRecord[];
   roomBoardPeriodExpenses?: EducationSourceRecord[];
   roomBoardEsaAllocations?: EducationSourceRecord[];
+  roomBoardPriorUses?: EducationSourceRecord[];
+  roomBoardPriorUseExpenses?: EducationSourceRecord[];
 }
-export type EducationSourceCollection = "beneficiaries" | "expenses" | "allocations" | "inKindBenefits" | "loanBorrowers" | "coverdellAccounts" | "penaltyExceptions" | "roomBoardPeriods" | "roomBoardPeriodExpenses" | "roomBoardEsaAllocations";
+export type EducationSourceCollection = "beneficiaries" | "expenses" | "allocations" | "inKindBenefits" | "loanBorrowers" | "coverdellAccounts" | "penaltyExceptions" | "roomBoardPeriods" | "roomBoardPeriodExpenses" | "roomBoardEsaAllocations" | "roomBoardPriorUses" | "roomBoardPriorUseExpenses";
 export interface EducationSourceField {
   key: string; label: string; kind: "text" | "date" | "money" | "integer" | "boolean" | "choice";
   choices?: ReadonlyArray<readonly [string, string]>; signed?: boolean;
-  link?: "beneficiary" | "expense" | "source" | "borrower" | "period";
+  link?: "beneficiary" | "expense" | "source" | "borrower" | "period" | "priorUse";
   when?: (record: EducationSourceRecord) => boolean;
 }
 const text = (key: string, label: string): EducationSourceField => ({ key, label, kind: "text" });
@@ -101,6 +103,7 @@ export const educationCollectionFields: Record<EducationSourceCollection, Educat
     bool("allowanceApplicableConfirmed", "Allowance matches the actual period and living arrangement"), bool("schoolOwnedHousing", "Housing is owned or operated by the institution"),
     money("schoolOwnedHousingCharge", "Actual period institution housing charge (0 if none)"), text("schoolHousingInvoiceReference", "Institution housing invoice reference (when applicable)"),
     bool("allReceiptsIncludedConfirmed", "Every room-and-board receipt for this period is included"),
+    bool("priorUseHistoryConfirmed", "Complete prior use of this academic-period allowance checked"), text("priorUseHistorySourceReference", "Complete prior period history source reference"),
     bool("esaAllocationConfirmed", "Actual ESA allocation choice recorded (only with an ESA)"), text("esaAllocationSourceReference", "Actual ESA allocation source reference (only with an ESA)"),
     bool("sourceFactsConfirmed", "Actual academic-period records checked")],
   roomBoardPeriodExpenses: [link("periodId", "Receipt academic period", "period"), link("expenseId", "Actual room-and-board receipt", "expense"),
@@ -108,6 +111,21 @@ export const educationCollectionFields: Record<EducationSourceCollection, Educat
     bool("sourceFactsConfirmed", "Receipt and period link checked")],
   roomBoardEsaAllocations: [link("periodId", "ESA allocation academic period", "period"), link("sourceId", "Original distribution in ESA allocation", "source"),
     money("amount", "Actual coordinated room-and-board expense allocated to this original")],
+  roomBoardPriorUses: [link("periodId", "Prior worksheet academic period", "period"), integer("sourceTaxYear", "Prior worksheet tax year"),
+    text("sourceReference", "Prior filed worksheet source reference"), link("beneficiaryId", "Prior worksheet beneficiary", "beneficiary"), text("beneficiaryName", "Beneficiary name on prior worksheet"),
+    text("institutionId", "Institution source label on prior worksheet"), date("academicPeriodStart", "Prior worksheet academic-period start"), date("academicPeriodEnd", "Prior worksheet academic-period end"),
+    choice("livingArrangement", "Prior worksheet living arrangement", [["with_parent", "Living with a parent"], ["off_campus", "Off-campus housing"], ["institution_housing", "Institution-owned or operated housing"]]),
+    bool("institutionEligible", "Prior worksheet institution eligible"), bool("halfTimeStudent", "Prior worksheet half-time enrollment"),
+    money("roomBoardAllowance", "Prior worksheet full period allowance"), bool("schoolOwnedHousing", "Prior worksheet institution-owned housing"),
+    money("schoolOwnedHousingCharge", "Prior worksheet institution housing charge (0 if none)"), text("schoolHousingInvoiceReference", "Prior institution housing invoice reference"),
+    money("qualifiedCostBeforeAssistance", "Prior worksheet qualified cost before assistance"), money("adjustedQualifiedExpenses", "Prior worksheet adjusted qualified expenses"),
+    bool("allPriorUseSourcesIncludedConfirmed", "All prior worksheet receipts and reductions included"), bool("noPostFilingChangesConfirmed", "Prior worksheet unchanged after filing"),
+    bool("sourceFactsConfirmed", "Actual prior worksheet checked")],
+  roomBoardPriorUseExpenses: [link("priorUseId", "Prior receipt worksheet", "priorUse"), text("sourceReference", "Prior receipt source reference"),
+    date("paidDate", "Prior receipt actual payment date"), date("coveredStart", "Prior receipt service start"), date("coveredEnd", "Prior receipt service end"),
+    money("amount", "Prior receipt original amount"), money("refundedAmount", "Prior receipt actual refund (0 if none)"), money("taxFreeAssistance", "Prior receipt tax-free assistance (0 if none)"),
+    money("educationCreditAmount", "Prior receipt education-credit use (0 if none)"), money("otherTaxBenefitAmount", "Prior receipt other-benefit use (0 if none)"),
+    bool("qualificationConfirmed", "Prior receipt qualification checked"), bool("sourceFactsConfirmed", "Actual prior receipt checked")],
   penaltyExceptions: [link("sourceId", "Distribution with an additional-tax exception", "source"), choice("kind", "Exception reason", [["scholarship", "Scholarship or other eligible assistance"], ["military_academy", "Eligible military academy attendance"], ["death", "Beneficiary death"], ["disability", "Beneficiary disability"]]), money("qualifyingAmount", "Actual qualifying source amount"), money("distributionAmount", "Distinct nonqualified distribution allocated to this exception"), bool("eligibilityConfirmed", "Exception eligibility checked"), only(date("eventDate", "Beneficiary death date"), record => record.kind === "death"), only(bool("paidToBeneficiaryOrEstate", "Death distribution paid to an eligible beneficiary or estate"), record => record.kind === "death")],
 };
 const allFields = [...educationStatementFields, ...educationTransferFields, ...Object.values(educationCollectionFields).flat()];
@@ -156,5 +174,7 @@ export function invalidateEducationPeriodSources(data?: EducationDistributionDat
   return { ...data, sourceFactsConfirmed: null,
     ...(data.roomBoardPeriods !== undefined ? { roomBoardPeriods: data.roomBoardPeriods.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
     ...(data.roomBoardPeriodExpenses !== undefined ? { roomBoardPeriodExpenses: data.roomBoardPeriodExpenses.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
+    ...(data.roomBoardPriorUses !== undefined ? { roomBoardPriorUses: data.roomBoardPriorUses.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
+    ...(data.roomBoardPriorUseExpenses !== undefined ? { roomBoardPriorUseExpenses: data.roomBoardPriorUseExpenses.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
   };
 }

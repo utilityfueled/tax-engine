@@ -13,6 +13,7 @@ export const EducationRoomBoardPeriodSchema = z.object({
   schoolOwnedHousing: fact, schoolOwnedHousingCharge: amount, schoolHousingInvoiceReference: text,
   allReceiptsIncludedConfirmed: fact,
   esaAllocationConfirmed: fact, esaAllocationSourceReference: text,
+  priorUseHistoryConfirmed: fact, priorUseHistorySourceReference: text,
 });
 export const EducationRoomBoardPeriodExpenseSchema = z.object({
   periodId: text, expenseId: text, coveredStart: text, coveredEnd: text,
@@ -20,4 +21,24 @@ export const EducationRoomBoardPeriodExpenseSchema = z.object({
 });
 /** Actual ESA coordination choice, bounded by the separately derived period AQEE. */
 export const EducationRoomBoardEsaAllocationSchema = z.object({ periodId: text, sourceId: text, amount });
+/** Actual filed history for the same academic period, before and after assistance. */
+export const EducationRoomBoardPriorUseSchema = z.object({
+  id: z.string().trim().min(1), periodId: text, sourceTaxYear: z.number().int().optional(),
+  sourceReference: text, sourceFactsConfirmed: fact,
+  allPriorUseSourcesIncludedConfirmed: fact, noPostFilingChangesConfirmed: fact,
+  beneficiaryId: text, beneficiaryName: text, institutionId: text,
+  academicPeriodStart: text, academicPeriodEnd: text,
+  livingArrangement: z.enum(['with_parent', 'off_campus', 'institution_housing']).optional(),
+  institutionEligible: fact, halfTimeStudent: fact,
+  roomBoardAllowance: amount, schoolOwnedHousing: fact, schoolOwnedHousingCharge: amount,
+  schoolHousingInvoiceReference: text,
+  qualifiedCostBeforeAssistance: amount, adjustedQualifiedExpenses: amount,
+});
+export const EducationRoomBoardPriorUseExpenseSchema = z.object({
+  id: z.string().trim().min(1), priorUseId: text,
+  paidDate: text, coveredStart: text, coveredEnd: text,
+  amount, refundedAmount: amount, taxFreeAssistance: amount,
+  educationCreditAmount: amount, otherTaxBenefitAmount: amount, qualificationConfirmed: fact,
+  sourceReference: text, sourceFactsConfirmed: fact,
+});
 export type EducationRoomBoardPeriod = z.infer<typeof EducationRoomBoardPeriodSchema>;

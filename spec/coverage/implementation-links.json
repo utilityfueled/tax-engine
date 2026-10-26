@@ -503,6 +503,16 @@
       "note": "Actual institutional periods, uniquely linked receipts and determined allocations feed the shared Form1099-Q calculation and source-bound historical 2025 review summary. Unresolved allocation methods remain explicit; this association does not qualify 2026 output or promote filing, human-review or release readiness."
     },
     {
+      "key": "federal/form-1099-q-room-board-prior-use",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/form-1099-q-room-board-prior-use.test.ts::uses actual prior cost before assistance without resetting the period cap",
+        "tests/pdf/form-1099-q-room-board-prior-use.test.ts::binds historical period originals and prints separate prior and current limits"
+      ],
+      "note": "Actual prior worksheets and original receipts conserve one academic-period allowance before current Form1099-Q calculation. Historical2025 private review binds prior cost, assistance and current remaining cap; no final2026 output, filing or human-review qualification is inferred."
+    },
+    {
       "key": "federal/form-1099-q-source",
       "enginePath": "src/engine/forms/form-1099-q.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",

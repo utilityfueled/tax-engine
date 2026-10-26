@@ -1,0 +1,80 @@
+form: "Form1099Q room and board prior period use"
+fullName: "Actual prior-return use of one institutional academic-period allowance"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+sources:
+  - "https://www.irs.gov/publications/p970"
+  - "https://uscode.house.gov/us/usc/119-118/t26/s530/"
+notes: |
+  Sources refreshed October 26, 2026. IRC529(e)(3)(B) defines one applicable
+  institutional room-and-board limit for the actual academic period and living
+  arrangement. Pub970 Chapter7 separately uses annual paid AQEE and distributions.
+  This method preserves actual prior-return worksheet cost treated as qualified
+  before tax-free assistance, reconciled to its original receipts and reductions.
+  It does not reconstruct prior cap use from taxable earnings, excluded earnings,
+  after-assistance AQEE, or a distribution amount. The prior worksheet is an
+  actual historical source; no entered current allowable amount is accepted.
+  Current remaining cap is the one actual period limit less validated prior
+  pre-assistance qualified cost. Current qualifying paid receipts are limited to
+  that remainder, then current assistance is subtracted once. No time proration
+  or new priority between competing original QTP distributions is inferred.
+  Actual ESA choices remain bounded by the separately derived current capacity.
+  Unknown history remains unknown; complete actual empty history is distinct.
+  Historical records before 2002 require the earlier statutory method; the
+  current institutional allowance/invoice formulation took effect for taxable
+  years beginning after 2001 under PubL107-16 section402(h).
+  Literal controls are independently derived, not published examples. This
+  private follow-up does not promote final-year forms, filing or human review.
+lines:
+  - line: "prior-use-before-assistance"
+    description: "Keep prior cap use separate from prior adjusted expenses"
+    formula: "Period cap6000 less actual prior qualified cost5000 leaves1000, despite prior assistance1000/AQEE4000. Current original10000/2000earnings gives1000AQEE,200excluded,1800taxable and180additional tax."
+    testRef: "tests/engine/forms/form-1099-q-room-board-prior-use.test.ts::uses actual prior cost before assistance without resetting the period cap"
+  - line: "zero-unknown-and-first-year"
+    description: "Preserve complete empty history and original academic dates"
+    formula: "Confirmed empty history leaves6000capacity and800taxable; missing history/confirmation rejects. A current-year period continuing next year uses its actual cap without date proration."
+    testRef: "tests/engine/forms/form-1099-q-room-board-prior-use.test.ts::distinguishes empty unknown and first-year period histories"
+  - line: "historical-source-binding"
+    description: "Reconcile actual prior worksheet identity receipts and reductions"
+    formula: "Reject replaced period institution/beneficiary/dates/allowance, wrong prior year, duplicate receipt or worksheet, excessive prior cost, inconsistent adjusted expense and omitted original zero."
+    testRef: "tests/engine/forms/form-1099-q-room-board-prior-use.test.ts::rejects contradictory historical worksheets and original receipts"
+  - line: "esa-and-source-conservation"
+    description: "Use current actual ESA choices after one historical cap reduction"
+    formula: "Current1000target allocated300QTP/700ESA gives1940QTP+860ESA taxable,2800total and280additional tax; changed choice or inactive-source assignment rejects."
+    testRef: "tests/engine/forms/form-1099-q-room-board-prior-use.test.ts::coordinates actual current ESA choices after historical use"
+  - line: "exact-history"
+    description: "Conserve exact historical source cents without changing global precision"
+    formula: "Actual prior6000.00000000000000000000000000000000000000001 against cap6000 rejects; an actual fully consumed cap gives0currentAQEE and2000taxable."
+    testRef: "tests/engine/forms/form-1099-q-room-board-prior-use.test.ts::retains exact historical amounts and a fully consumed cap"
+  - line: "prior-worksheet-conservation"
+    description: "Reconcile each actual historical worksheet before consuming one shared cap"
+    formula: "Chronological historical qualified cost must equal eligible net receipts limited by the remaining period cap before assistance; actual AQEE must then equal its nonnegative assistance reduction. Do not accept a smaller entered historical cost to reopen the cap or assign an unresolved historical allocation."
+    testRef: "tests/engine/forms/form-1099-q-room-board-prior-use.test.ts::reconciles chronological historical cost without an allowance override"
+  - line: "canonical-recipient"
+    description: "Transfer only current taxable earnings to the actual recipient"
+    formula: "Actual wages50000 plus current taxable1800 gives51800AGI and180additional tax; prior4000AQEE is history, never current income or exclusion."
+    testRef: "tests/engine/education-room-board-prior-use-return.test.ts::carries only current earnings after actual prior period usage"
+  - line: "guided-history"
+    description: "Save actual historical sources and renew every dependent source confirmation"
+    formula: "Original prior amounts and known false remain unchanged; any substantive history or receipt edit revokes annual, period, history and receipt confirmations. Missing history remains a saved unresolved draft."
+    testRef: "tests/guided-interview/guided-room-board-prior-use.test.ts::preserves historical originals through reload and reconfirmation"
+  - line: "actual-panel"
+    description: "Reach the history records through actual education source controls"
+    formula: "Editing the prior receipt and its matching filed worksheet requires reconfirmation; actual5000to4000 prior cost makes current capacity2000 and taxable1600."
+    testRef: "tests/apps/web/room-board-prior-use-interactions.test.tsx::edits actual cross-year history through the education panel"
+  - line: "private-review"
+    description: "Bind prior originals to the original calculation before redaction and PDF generation"
+    formula: "Equal-net prior receipt or reference replacement cannot reuse an old audit/private context. Printed reference distinguishes prior cost, aid, AQEE and remaining cap without original identifiers."
+    testRef: "tests/pdf/form-1099-q-room-board-prior-use.test.ts::binds historical period originals and prints separate prior and current limits"
+  - line: "saved-workspace-review"
+    description: "Preserve original history through the actual saved-return PDF boundary"
+    formula: "Both cash/prepaid saved guided records retain1800currenttaxable/180tax with original history source privacy and closed2026physical export."
+    testRef: "tests/apps/web/workspace-room-board-prior-use.test.ts::replays actual historical room and board sources before workspace redaction"
+  - line: "browser-prior-records"
+    description: "Exercise actual prior sources on desktop and mobile through saved review download"
+    formula: "Cash and prepaid originals, original prior5000→4000 cost plus corresponding worksheet edit, confirmation revocation, unknown versus zero, local save/reload, privacy and current1600taxable/160additional tax."
+    testRef: "apps/web/tests/guided-room-board-prior-use.spec.ts::preserves prior academic period use through edits reload and review"
+  - line: "historical-rule-date"
+    description: "Do not apply the later institutional allowance rule to earlier actual history"
+    formula: "A supplied2001 worksheet requires its earlier statutory source method; no current allowance is retroactively applied."
+    testRef: "tests/engine/forms/form-1099-q-room-board-prior-use.test.ts::keeps earlier statutory cap history outside the current source method"
