@@ -13,6 +13,7 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import { calculateForm4562 } from "@/engine/forms/form-4562.js";
 import { calculateForm6198, type Form6198Result } from "@/engine/forms/form-6198.js";
 import { calculatePartnerBasisSchedule, type PartnerBasisScheduleResult } from "@/engine/forms/partner-basis-schedule.js";
+import { calculateK1CharitableReturnSources, type K1CharitableReturnResult } from "@/engine/forms/k1-charitable-return-sources.js";
 import { d, sum } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 
@@ -101,11 +102,12 @@ function applyBasisLimitation(
   k1: ScheduleK1,
   rawTotalK1Income: Decimal,
   audit: AuditTrail,
+  completedBasis?: PartnerBasisScheduleResult,
 ): {
   basisAdjustedTotal: Decimal;
   basisResult: PartnerBasisScheduleResult;
 } {
-  const basisResult = calculatePartnerBasisSchedule(k1);
+  const basisResult = completedBasis ?? calculatePartnerBasisSchedule(k1);
   audit.merge(basisResult.lines);
 
   // If there are no losses to limit, the basis-adjusted total is the same as raw.
@@ -121,25 +123,25 @@ function applyBasisLimitation(
 
   // Ordinary: if K-1 Box 1 is a loss, substitute with basis-allowed ordinary
   const rawOrdinary = d(k1.ordinaryIncome);
-  const basisOrdinary = rawOrdinary.isNegative()
+  const basisOrdinary = completedBasis ? Decimal.max(0, rawOrdinary).minus(findAllowed("ordinary")) : rawOrdinary.isNegative()
     ? findAllowed("ordinary").negated() // Convert allowed (positive) back to negative loss
     : rawOrdinary;
 
   // Rental: if K-1 Box 2 is a loss, substitute
   const rawRental = d(k1.netRentalIncome);
-  const basisRental = rawRental.isNegative()
+  const basisRental = completedBasis ? Decimal.max(0, rawRental).minus(findAllowed("rental")) : rawRental.isNegative()
     ? findAllowed("rental").negated()
     : rawRental;
 
   // Other rental: if K-1 Box 3 is a loss, substitute
   const rawOtherRental = d(k1.otherNetRentalIncome);
-  const basisOtherRental = rawOtherRental.isNegative()
+  const basisOtherRental = completedBasis ? Decimal.max(0, rawOtherRental).minus(findAllowed("otherRental")) : rawOtherRental.isNegative()
     ? findAllowed("otherRental").negated()
     : rawOtherRental;
 
   // Other income: if K-1 Box 11 is a loss, substitute
   const rawOther = d(k1.otherIncome);
-  const basisOther = rawOther.isNegative()
+  const basisOther = completedBasis ? Decimal.max(0, rawOther).minus(findAllowed("otherLoss")) : rawOther.isNegative()
     ? findAllowed("otherLoss").negated()
     : rawOther;
 
@@ -283,7 +285,9 @@ function applyAtRiskLimitation(
   };
 }
 
-export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'rentalProperties' | 'form1099Misc'>): ScheduleEResult {
+export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'rentalProperties' | 'form1099Misc'> & Partial<Pick<TaxYearInput, 'taxpayer' | 'k1CharitableSources' | 'qbiLossSources'>>, completedCharitable?: K1CharitableReturnResult): ScheduleEResult {
+  if (input.k1CharitableSources && !input.taxpayer) throw new Error('K1 charitable ScheduleE requires the actual taxpayer context');
+  const charitable = input.k1CharitableSources ? completedCharitable ?? calculateK1CharitableReturnSources({ ...input, taxpayer: input.taxpayer! }) : undefined;
   const audit = new AuditTrail();
 
   // ═══════════════════════════════════════════════════════════
@@ -462,7 +466,7 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
 
   const partnerships: PartnershipEntry[] = [];
 
-  for (const k1 of input.scheduleK1) {
+  for (const [k1Index, k1] of input.scheduleK1.entries()) {
     const ordinaryIncome = d(k1.ordinaryIncome);
     const guaranteedPayments = d(k1.guaranteedPayments);
     const netRentalIncome = d(k1.netRentalIncome);
@@ -493,7 +497,7 @@ export function calculateScheduleE(input: Pick<TaxYearInput, 'scheduleK1' | 'ren
     let basisAdjustedAmount = rawTotalK1Income;
     let basisResult: PartnerBasisScheduleResult | undefined;
     if (k1.beginningBasis !== undefined) {
-      const basisOutput = applyBasisLimitation(k1, rawTotalK1Income, audit);
+      const basisOutput = applyBasisLimitation(k1, rawTotalK1Income, audit, charitable?.statements.find(row => row.k1Index === k1Index)?.basis);
       basisAdjustedAmount = basisOutput.basisAdjustedTotal;
       basisResult = basisOutput.basisResult;
     }

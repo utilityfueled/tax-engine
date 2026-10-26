@@ -13,6 +13,7 @@ import { CharitableCarryoverSourcesSchema } from "@/models/charitable-carryover-
 import { AdoptionPriorBenefitHistorySchema } from "@/models/adoption-prior-benefits.js";
 import { Form8962SharedPolicySchema, MarketplaceCoveredIndividualSchema } from "@/models/form-8962-shared-policy.js";
 import { Form8962MarriageSourcesSchema } from "@/models/form-8962-marriage.js";
+import { K1CharitableReturnSourcesSchema } from "@/models/k1-charitable-return-sources.js";
 import { QbiLossSourcesSchema } from "@/models/qbi-loss-sources.js";
 import { EicSeparatedSpouseSourcesSchema } from "@/models/eic-separated-spouse-sources.js";
 
@@ -5997,6 +5998,7 @@ export const TaxYearInputSchema = z.object({
   priorYear: PriorYearCarryforwardSchema.optional(),
   netOperatingLoss: NetOperatingLossSourcesSchema.optional(),
   charitableCarryoverSources: CharitableCarryoverSourcesSchema.optional(),
+  k1CharitableSources: K1CharitableReturnSourcesSchema.optional(),
   qbiLossSources: QbiLossSourcesSchema.optional(),
   form172: Form172OriginSourcesSchema.optional(),
   adjustments: AdjustmentsSchema.optional(),

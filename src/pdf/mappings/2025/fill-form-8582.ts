@@ -1,4 +1,5 @@
 import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
+import { charitableReviewOriginalSourceInput, type PreparedCharitableReview } from "../../charitable-review-context.js";
 /**
  * PDF filler for IRS Form 8582 — Passive Activity Loss Limitations.
  *
@@ -234,11 +235,12 @@ function sameSource(expected: unknown, retained: unknown): boolean {
 }
 
 /** Recalculate only to validate actual activity sources; render the retained audits. */
-export function assertForm8582ReviewSource(input: TaxYearInput, result: TaxReturnResult): Form8582Result | undefined {
+export function assertForm8582ReviewSource(input: TaxYearInput, result: TaxReturnResult, charitableReview?: PreparedCharitableReview): Form8582Result | undefined {
+  const original = charitableReviewOriginalSourceInput(input, result, charitableReview);
   const retained = result.form8582;
   if (!retained) return undefined;
   if (!Decimal.isDecimal(retained.modifiedAgi) || !retained.modifiedAgi.isFinite()) throw new Error("Form8582 actual modified AGI source is missing");
-  const schedule = calculateScheduleE(input);
+  const schedule = calculateScheduleE(original);
   const activities: PassiveActivity[] = schedule.partnerships.filter(row => row.isPassive).map(row => ({
     name: row.name, reportingFormAndLine: "Schedule E, line 28", income: row.passiveIncome, loss: row.passiveLoss,
     isRentalRealEstate: row.isRentalRealEstate, isActiveParticipant: row.isRentalRealEstate,
@@ -324,9 +326,9 @@ async function appendSourceRows(doc: PDFDocument, result: Form8582Result): Promi
   await markReviewPdf(doc);
 }
 
-export async function fillForm8582(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string): Promise<PDFDocument> {
+export async function fillForm8582(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string, charitableReview?: PreparedCharitableReview): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
-  const retained = assertForm8582ReviewSource(input, result);
+  const retained = assertForm8582ReviewSource(input, result, charitableReview);
   const doc = await loadReviewTemplate(blankPdfPath, 2025), form = doc.getForm();
   setTextField(form, FIELDS.name, input.taxpayer.spouse
     ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`

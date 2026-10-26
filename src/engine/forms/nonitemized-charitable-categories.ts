@@ -34,11 +34,11 @@ export function calculateNonitemizedCharitableCategories(input: TaxYearInput, co
     || Object.values(context.current).some(value => !Decimal.isDecimal(value) || !value.isFinite() || value.lt(0))) {
     throw new Error('Nonitemized charitable amounts must be finite with nonnegative contributions');
   }
-  if (input.scheduleK1.some(source => [source.charitableCash, source.charitableCapitalGain30, source.charitableCapitalGain20]
+  if (!input.k1CharitableSources && input.scheduleK1.some(source => [source.charitableCash, source.charitableCapitalGain30, source.charitableCapitalGain20]
     .some(value => !d(value).isZero()))) {
     throw new Error('Nonitemized K-1 charitable sources require their actual attached-statement and basis method');
   }
-  const raw = readCurrentCharitableReceiptAmounts(input, { capitalStockOnly: true });
+  const raw = readCurrentCharitableReceiptAmounts(input, { capitalStockOnly: true, includeK1: true });
   if (input.cryptoIncome?.donations.length) {
     const crypto = calculateCryptoDonations(input.cryptoIncome.donations, input.taxpayer.taxYear);
     if (!crypto.sourceFactsVerified) throw new Error('Nonitemized category carry requires verified original crypto sources');

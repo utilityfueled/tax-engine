@@ -6,6 +6,7 @@ import type { CharitableCarryoverResult } from './charitable-carryover.js';
 import { validateCharitableCarryoverSources, type CharitableCarryoverBalance } from './charitable-carryover-source-validation.js';
 import { eligibleCurrentCharitableDonations } from './charitable-current-sources.js';
 import { resolveCharitableRecipient } from '@/utils/charitable-recipient.js';
+import { calculateK1CharitableReturnSources } from './k1-charitable-return-sources.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, min, sum, zeroFloor } from '@/utils/decimal.js';
 
@@ -40,7 +41,7 @@ export function calculatePriorCashCurrentProperty(input: TaxYearInput, context: 
   }
   const receipts = eligibleCurrentCharitableDonations(input);
   if (receipts.some(row => resolveCharitableRecipient(row).percentageCategory !== 'fifty-percent')) throw new Error('Actual current public recipient sources are required');
-  const currentCashPaid = sum(...receipts.filter(row => row.type === 'cash').map(row => d(row.amount)));
+  const currentCashPaid = sum(...receipts.filter(row => row.type === 'cash').map(row => d(row.amount))).plus(calculateK1CharitableReturnSources(input)?.amounts.cashPublic ?? d(0));
   const currentPropertyValue = sum(...receipts.filter(row => row.type !== 'cash').map(row => {
     if (row.isLongTermCapitalGain !== false || row.costBasis === undefined) throw new Error('Current public property requires actual ordinary character and basis');
     const basis = d(row.costBasis);

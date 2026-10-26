@@ -620,7 +620,8 @@ export async function buildWorkspaceFilledReturnDownload(
   // intact through calculation, then redact only copies passed to renderers.
   const capitalGainReview = prepareForm8949Review(resolved.taxInput);
   const codNolReview = resolved.taxInput.form982NolSources ? prepareCodNolReview(resolved.taxInput) : undefined;
-  const charitableReview = resolved.taxInput.charitableCarryoverSources ? prepareCharitableReview(resolved.taxInput) : undefined;
+  const charitableReview = resolved.taxInput.charitableCarryoverSources || resolved.taxInput.k1CharitableSources
+    ? prepareCharitableReview(resolved.taxInput) : undefined;
   const adoptionReview = hasHistoricalAdoptionSources(resolved.taxInput) ? prepareAdoptionReview(resolved.taxInput) : undefined;
   const qbiLossReview = resolved.taxInput.qbiLossSources ? prepareQbiLossReview(resolved.taxInput) : undefined;
   const eicReview = hasEicReviewSources(resolved.taxInput) ? prepareEicReview(resolved.taxInput) : undefined;

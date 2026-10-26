@@ -1,6 +1,6 @@
 import { assertPdfExportAllowed } from "../../export-policy.js";
 import { charitableSourceDigest } from "@/utils/charitable-source-digest.js";
-import { assertCharitableReviewSource, type PreparedCharitableReview } from "../../charitable-review-context.js";
+import { charitableReviewOriginalSourceInput, type PreparedCharitableReview } from "../../charitable-review-context.js";
 /**
  * PDF filler for IRS Schedule A (Form 1040) — Itemized Deductions.
  *
@@ -117,7 +117,7 @@ export async function fillScheduleA(
   charitableReview?: PreparedCharitableReview,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
-  assertCharitableReviewSource(input, charitableReview);
+  charitableReviewOriginalSourceInput(input, result, charitableReview);
   const sa = result.scheduleA;
   if (!sa) throw new Error("Schedule A requires an actual calculation before tax audit mapping");
   if (sa.charitableSourceDigest !== charitableSourceDigest(input)) throw new Error("Schedule A charitable sources do not match the calculation");

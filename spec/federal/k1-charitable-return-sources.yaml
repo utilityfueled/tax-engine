@@ -1,0 +1,135 @@
+form: "K1 Charitable Return Sources"
+fullName: "Original attached charitable statements through basis and return limitations"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1065sk1"
+retrievedAt: "2026-10-26"
+notes: |
+  Actual 2025/2026 source handoff; existing legacy no-packet paths are not newly
+  qualified. IRC702(a)(4)/(b),706(a),704(d),1366(a)/(b)/(d),170 and final partner /
+  shareholder instructions preserve separately stated charity and basis-limited
+  capital/ordinary character. The optional basis prerequisite is reused, never
+  replaced with a taxpayer's final allowed-deduction entry. Reported A/E/F codes
+  remain original semantic amounts; exact source results supply their permitted
+  amounts before section170 percentage/floor/final-choice calculations.
+  https://uscode.house.gov/us/usc/119-120/t26/s702/
+  https://uscode.house.gov/us/usc/119-120/t26/s706/
+  https://uscode.house.gov/us/usc/119-120/t26/s704/
+  https://uscode.house.gov/us/usc/119-120/t26/s1366/
+  https://uscode.house.gov/us/usc/119-120/t26/s170/
+  https://www.irs.gov/instructions/i1120ssk
+  https://www.irs.gov/instructions/i6198
+  Section469 excludes charity from8582 but does not establish a465 exemption.
+  This source cohort conservatively requires actual simplified6198 capacity
+  sufficient for every basis-allowed deduction plus the entire charity, including
+  appreciation, with independent known-empty prior465 history. Therefore either
+  activity classification leaves the same allowance. A binding465 allocation,
+  special gain/179/4952 deductions, royalties and unrepresented activity methods
+  remain separate. Positive prior ordinary basis release requires independent
+  QBI-history work; original prior charitable/property basis can be retained.
+  Actual recipient class, qualification, original stock holding dates, FMV/basis,
+  Box13/12 A/E/F and direct source IDs must reconcile. No invented valuation,
+  cash source, public recipient, prior history or affirmative confirmation.
+  For170(p), current entity-year cash uses actual DAF/supporting answers and only
+  the basis-allowed amount. Reg1.702-1(a)(4) treats partnership-year contributions
+  as paid by the partner, with the706 inclusion year; Reg1.1366-1(a)(1)/(2)(iii)
+  likewise includes the separately stated corporation-year contribution in the
+  shareholder year. This source-derived fiscal-year application is not a
+  published170(p) worked example. Preserve the actual payment date and entity
+  period. Prior basis-release cash has a distinct timing question and is not
+  silently treated as current cash or legally ineligible.
+  https://www.ecfr.gov/current/title-26/section-1.702-1
+  https://www.ecfr.gov/current/title-26/section-1.1366-1
+  RevRul2008-16 and Reg1.1366-2(a)(3)/1.704-1(d) establish later basis
+  releases while preserving character. They do not expressly settle whether the
+  release year becomes the contribution year for the new170(d)(1)(C) floor carry.
+  A positive2026 prior-basis release therefore preserves its original history and
+  rejects this unresolved floor/carry-vintage method; zero release remains known
+  zero and preserves basis suspension. This is an internal interpretation gap.
+  https://www.ecfr.gov/current/title-26/section-1.1366-2
+  https://www.ecfr.gov/current/title-26/section-1.704-1
+  https://www.irs.gov/pub/irs-irbs/irb08-11.pdf
+  General NOL charity-source coordination remains separate; this package cannot
+  strip original source records to enter an unsupported replay.
+  IRC731(a)(1) recognizes money distributed above partnership-interest basis;
+  IRC1368(b)(2) similarly addresses excess stock distributions under its stated
+  conditions. This attachment does not contain the original interest/stock
+  holding period and distribution treatment. A positive calculated excess
+  distribution gain therefore rejects before return handoff rather than losing
+  the gain or inventing its character. Zero excess remains supported; the
+  original actual distribution is retained. The source-bound gain handoff is
+  separate internal work, not a conclusion that the distribution is ineligible.
+  https://uscode.house.gov/us/usc/119-120/t26/s731/
+  https://uscode.house.gov/us/usc/119-120/t26/s1368/
+lines:
+  - line: "published-130"
+    description: "Original charity basis and nonbinding activity evidence"
+    formula: "Published150property/50basis/30outside produces130 after basis and20 basis suspended. Actual6198 capacity130 passes exactly;129.99 rejects the unresolved binding allocation."
+    testRef: "tests/engine/forms/k1-charitable-return-sources.test.ts::binds the published charitable basis result to actual recipient and nonbinding risk sources"
+  - line: "source-identity"
+    description: "Complete original statement receipt and history binding"
+    formula: "Every positive original charity or prior charitable basis source has exactly one indexed packet. Original recipient/owner/entity/category/date/amount/qualification and independent risk inputs reconcile; changed, missing or unconfirmed facts reject."
+    testRef: "tests/engine/forms/k1-charitable-return-sources.test.ts::rejects changed incomplete and contradictory original source facts"
+  - line: "current-cash"
+    description: "Source cash and basis suspension are distinct from170 carry"
+    formula: "Current-calendar qualified cash5000 with basis3000 produces G3000 and170p eligible cash3000; basis2000 remains outside the170 ledger. DAF/supporting cash remains G but is not170p eligible."
+    testRef: "tests/engine/forms/k1-charitable-return-sources.test.ts::retains actual cash qualification and unresolved source timing separately"
+  - line: "current-property"
+    description: "Original capital-property category and exact value remain distinct"
+    formula: "Actual stock FMV150.75/basis50.25 with outside basis30.50 permits131 and suspends19.75 for original E or qualified-stock F. Private nonoperating stock without the qualified-stock exception is limited to original basis50.25 before entity basis, permitting30.50 with no appreciation. Unknown qualification and mismatched original amount reject. IRC170(b)(1)(D),170(e)(1)(B)(ii)/(5)."
+    testRef: "tests/engine/forms/k1-charitable-return-sources.test.ts::keeps exact current property value and category through basis"
+  - line: "published-return"
+    description: "All affected source characters use the same canonical basis result"
+    formula: "Published190property/100basis plus25capital loss with80basis produces154charity and16capital loss, not190and25. Original input remains unchanged, current basis carries36and9."
+    testRef: "tests/engine/federal-k1-charitable-sources.test.ts::transfers the published charitable and capital basis amounts together"
+  - line: "fiscal-cash"
+    description: "Current fiscal entity cash uses the actual K1 inclusion year"
+    formula: "Actual2025-08 payment in entity2025-07 through2026-06 and2026 individual inclusion retains current G3000/170p eligible3000 after basis. Both partnership and S corporation preserve dates; a payment outside the original period rejects."
+    testRef: "tests/engine/forms/k1-charitable-return-sources.test.ts::uses the original entity period for current fiscal cash inclusion"
+  - line: "current-selection"
+    description: "Current cash candidate uses original source qualification"
+    formula: "Actual2026 current cash5000/basis3000 enters G3000 before floor. Standard selection takes170p1000 and creates no percentage carry;2000 basis-suspended remains separate. Closed2026 calculation gate is unchanged outside isolated draft-constant tests."
+    testRef: "tests/engine/federal-k1-charitable-sources.test.ts::selects current source cash without converting basis suspension into charitable carry"
+  - line: "current-qbi"
+    description: "Ordinary QBI history remains separate from charity basis"
+    formula: "Actual ordinary loss10000 and cash basis10000 share basis10000 equally;5000 ordinary reaches actual QBI/passive stages and5000 charity reaches ScheduleA once. Charity is not a passive loss or QBI deduction."
+    testRef: "tests/engine/federal-k1-charitable-sources.test.ts::preserves the actual ordinary QBI history alongside charitable basis"
+  - line: "nol-boundary"
+    description: "NOL replay cannot discard a new original charity source"
+    formula: "An original K1 charity packet with an actual regular/AMT NOL source, current Form172 origin, COD reduction or positive legacy NOL carry requires the separate source-coordination method before any replay."
+    testRef: "tests/engine/federal-k1-charitable-sources.test.ts::preserves the explicit original-source NOL coordination boundary"
+  - line: "review-binding"
+    description: "Original K1 source and final federal calculation bind before redaction"
+    formula: "An unforgeable local context accepts only complete original or exact render-redacted input and the recomputed federal result. Changed owner/source/basis/capital/charity audit or omitted packet rejects before any template or output access. No identifier is reconstructed."
+    testRef: "tests/pdf/k1-charitable-review.test.ts::rejects changed sources and retained amounts before template access"
+  - line: "review-packet"
+    description: "Saved review packet preserves exact basis and physical amounts"
+    formula: "Original190/100 property and25 capital loss with80 basis render ScheduleA12=154, ScheduleDlong=-16, and separate36/9 basis suspensions. Redacted source IDs stay absent and each page retains its review notice."
+    testRef: "tests/pdf/k1-charitable-review.test.ts::saves redacted original-source charity and capital amounts with separate basis balances"
+  - line: "prior-property"
+    description: "Prior basis release is distinct from a five-year charitable carry"
+    formula: "2025 basis20 shared by currentcash20 and original2018 property basis remaining20 permits10each. Original150FMV/50basis appreciation100 is not repeated; current basis suspension20 and section170 carry0 remain separate."
+    testRef: "tests/engine/federal-k1-charitable-sources.test.ts::preserves prior property basis origin without repeating appreciation or charitable carry"
+  - line: "prior-release-2026"
+    description: "Original basis origin cannot silently become a new floor carry vintage"
+    formula: "Positive2026 release of actual prior property basis requires the separate170 floor/carry contribution-year method. Actual zero release retains20 basis suspension without creating section170 current cash or property."
+    testRef: "tests/engine/forms/k1-charitable-return-sources.test.ts::preserves the unresolved prior basis release year without losing a zero release history"
+  - line: "review-health"
+    description: "Redacted health reconciliation retains original K1 source identity privately"
+    formula: "Actual independent ScheduleC health deduction600 with original K1 charity remains source-bound; private original facts validate income while Form7206 displays a blank SSN. Omitted or stale contexts reject."
+    testRef: "tests/pdf/k1-charitable-review.test.ts::reconciles health income from original K1 facts while rendering redacted identifiers"
+  - line: "review-qbi"
+    description: "Separate basis charity and QBI balances survive the complete review packet"
+    formula: "Original ordinary loss10000 plus cash10000 with basis10000 renders charitable5000 and QBI carry5000, with independent original-source contexts. Neither5000 basis suspension becomes a170 carry; private identifiers remain absent."
+    testRef: "tests/pdf/k1-charitable-review.test.ts::keeps separate charitable and QBI contexts in the saved packet"
+  - line: "year-gate"
+    description: "Source support does not qualify the future year"
+    formula: "Actual2026 source calculation remains blocked by the canonical calculation gate and historical PDF export gate outside explicitly mocked draft calculation tests."
+    testRef: "tests/pdf/k1-charitable-review.test.ts::preserves the closed future calculation and export gates"
+  - line: "at-risk-known-zero"
+    description: "Actual Form6198 PartI values preserve unknown versus explicit zero"
+    formula: "All four original PartI values are explicitly present before source reconciliation. Missing line1,2,3 or4 rejects even where the expected source value is zero; actual zero remains valid."
+    testRef: "tests/engine/forms/k1-charitable-return-sources.test.ts::requires explicit original at-risk income and deduction values"
+  - line: "excess-distribution-source"
+    description: "Preserve a recognized distribution gain until its source character is represented"
+    formula: "Actual basis30/distribution30 has no excess gain and retains the100 charitable appreciation amount. Actual distribution30.01 or31 requires original gain treatment before the canonical handoff; the known excess cannot disappear from ScheduleD. Both entity-source types preserve original inputs."
+    testRef: "tests/engine/federal-k1-charitable-sources.test.ts::rejects original excess distributions until gain source treatment is complete"

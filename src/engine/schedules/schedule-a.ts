@@ -19,6 +19,7 @@ import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { calculateSALTLimit } from "@/utils/tax-math.js";
 import { calculateCharitableContributionWorksheet, type CharitableCategory, type CharitableContributionWorksheetInput } from "@/engine/forms/charitable-contribution-worksheet.js";
+import { calculateK1CharitableReturnSources } from "@/engine/forms/k1-charitable-return-sources.js";
 import { charitableSourceDigest } from "@/utils/charitable-source-digest.js";
 import { eligibleCurrentCharitableDonations } from "@/engine/forms/charitable-current-sources.js";
 import { resolveCharitableRecipient } from "@/utils/charitable-recipient.js";
@@ -284,6 +285,12 @@ export function calculateScheduleA(
       ? "No casualty or theft losses"
       : "Form 4684 Section A deductible casualty loss (federally declared disaster only, post-TCJA)");
 
+  const k1Charitable = calculateK1CharitableReturnSources(input);
+  if (k1Charitable) {
+    for (const [field, category] of [["k1CashCharitable", "cashPublic"], ["k1AppreciatedProperty30", "capitalGainPublic"], ["k1AppreciatedProperty20", "capitalGainPrivate"]] as const) {
+      if (extra?.[field] !== undefined && !extra[field]!.eq(k1Charitable.amounts[category])) throw new Error("K1 charitable ScheduleA handoff conflicts with original validated sources");
+    }
+  }
   let nonitemizerCharitableDeduction = ZERO;
   const contributionBase = zeroFloor(agi);
   const nolCashLimit = extra?.nolPublicCashContributionLimit;
@@ -291,7 +298,7 @@ export function calculateScheduleA(
     throw new Error("Charitable NOL counterfactual requires a finite nonnegative source contribution limit");
   }
   if (input.taxpayer.taxYear === 2026) {
-    let eligibleCash = ZERO;
+    let eligibleCash = k1Charitable?.nonitemizedEligibleCash ?? ZERO;
     for (const donation of eligibleDonations) {
       const amount = d(donation.amount);
       if (!amount.isFinite() || amount.lt(0)) throw new Error("Charitable contribution must be finite and nonnegative");
@@ -318,9 +325,9 @@ export function calculateScheduleA(
   let currentCharitableCandidates: CurrentCharitableCandidates | undefined;
   let priorCashCurrentProperty: PriorCashCurrentPropertyResult | undefined;
   const crypto = extra?.cryptoCharitableAmounts;
-  const amounts = { cashPublic: (extra?.k1CashCharitable ?? ZERO).plus(crypto?.cashPublic ?? ZERO), noncashPublic: crypto?.noncashPublic ?? ZERO,
-    capitalGainPublic: (extra?.k1AppreciatedProperty30 ?? ZERO).plus(crypto?.capitalGainPublic ?? ZERO), cashPrivate: crypto?.cashPrivate ?? ZERO,
-    noncashPrivate: crypto?.noncashPrivate ?? ZERO, capitalGainPrivate: (extra?.k1AppreciatedProperty20 ?? ZERO).plus(crypto?.capitalGainPrivate ?? ZERO) };
+  const amounts = { cashPublic: (k1Charitable?.amounts.cashPublic ?? extra?.k1CashCharitable ?? ZERO).plus(crypto?.cashPublic ?? ZERO), noncashPublic: crypto?.noncashPublic ?? ZERO,
+    capitalGainPublic: (k1Charitable?.amounts.capitalGainPublic ?? extra?.k1AppreciatedProperty30 ?? ZERO).plus(crypto?.capitalGainPublic ?? ZERO), cashPrivate: crypto?.cashPrivate ?? ZERO,
+    noncashPrivate: crypto?.noncashPrivate ?? ZERO, capitalGainPrivate: (k1Charitable?.amounts.capitalGainPrivate ?? extra?.k1AppreciatedProperty20 ?? ZERO).plus(crypto?.capitalGainPrivate ?? ZERO) };
   const receiptAmounts = readCurrentCharitableReceiptAmounts(input);
   for (const category of Object.keys(receiptAmounts) as (keyof typeof amounts)[]) amounts[category] = amounts[category].plus(receiptAmounts[category]);
   if (nolCashLimit !== undefined) amounts.cashPublic = min(amounts.cashPublic, nolCashLimit);

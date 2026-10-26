@@ -1,0 +1,71 @@
+/** Source-bound basis and charity review; spec/k1-charitable-return-sources.yaml. */
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import type { TaxYearInput } from '@/models/inputs.js';
+import type { TaxReturnResult } from '@/models/outputs.js';
+import { calculateK1CharitableReturnSources } from '@/engine/forms/k1-charitable-return-sources.js';
+import { charitableReviewOriginalSourceInput, type PreparedCharitableReview } from '@/pdf/charitable-review-context.js';
+import { assertPdfExportAllowed, markReviewPdf } from '@/pdf/export-policy.js';
+export const K1_CHARITABLE_REFERENCE_FILENAME = 'k1-charitable-reference-filled.pdf';
+export function buildK1CharitableReview(input: TaxYearInput, result: TaxReturnResult, context?: PreparedCharitableReview): string[] {
+    assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+    const original = charitableReviewOriginalSourceInput(input, result, context);
+    const source = calculateK1CharitableReturnSources(original);
+    if (!source)
+        throw new Error('K1 charitable review requires original attached sources');
+    const rows = [
+        `Tax year ${result.taxYear}. Original K1 charitable contribution review.`,
+        'Basis suspensions are separate from section170 charitable carryovers. Do not add these amounts as deductions.',
+        `Schedule A candidate charitable amount: $${result.scheduleA?.charitableTotal.toFixed() ?? '0'}`,
+        `Selected deduction method: ${result.deductionUsed}`,
+        `Selected section170 charitable carryforward: $${result.carryforwards.charitableContributions.toFixed()}`,
+    ];
+    for (const statement of source.statements) {
+        const charity = statement.basis.charitableSources;
+        if (!charity)
+            throw new Error('K1 charitable review requires completed basis sources');
+        rows.push(`Statement ${statement.k1Index + 1}, ${original.scheduleK1[statement.k1Index].accountHolder === 'spouse' ? 'spouse' : 'primary taxpayer'}`, `Conservative at-risk requirement: $${statement.nonbindingRiskRequired.toFixed()}; actual capacity: $${statement.amountAtRisk.toFixed()}`, `Ordinary amount after basis: $${statement.ordinaryAmount.toFixed()}`, `Short-term capital amount after basis: $${statement.shortTermAmount.toFixed()}`, `Long-term capital amount after basis: $${statement.longTermAmount.toFixed()}`);
+        for (const [index, record] of charity.records.entries()) {
+            const label = record.category === 'cash_60' ? 'public cash' : record.category === 'capital_gain_30' ? 'public capital property' : 'other capital property';
+            rows.push(`Contribution ${index + 1}: ${label}; original year ${record.originTaxYear}; ${record.current ? 'current entity-year source' : 'prior basis source'}`, `Original contribution share: $${record.contributionShare.toFixed()}; original allocated basis: $${record.originalBasis.toFixed()}`, `Basis previously allowed: $${record.basisPreviouslyAllowed.toFixed()}; basis allowed this year: $${record.basisAllowed.toFixed()}`, `Current appreciation outside the basis limit: $${record.appreciationExempt.toFixed()}`, `Available after basis: $${record.availableAfterBasis.toFixed()}; Basis suspended: $${record.basisSuspended.toFixed()}`);
+        }
+    }
+    return rows;
+}
+export async function fillK1CharitableReview(input: TaxYearInput, result: TaxReturnResult, context?: PreparedCharitableReview): Promise<PDFDocument> {
+    const rows = buildK1CharitableReview(input, result, context), doc = await PDFDocument.create();
+    const font = await doc.embedFont(StandardFonts.Helvetica), bold = await doc.embedFont(StandardFonts.HelveticaBold);
+    let page = doc.addPage([612, 792]), y = 708, number = 1;
+    const header = () => {
+        page.drawText('K1 charitable sources and basis', { x: 42, y: 750, size: 15, font: bold });
+        page.drawText(`Review appendix - page ${number}`, { x: 42, y: 732, size: 9, font, color: rgb(.35, .35, .35) });
+        y = 708;
+    };
+    header();
+    for (const row of rows) {
+        // Static labels, enums, validated years and exact amounts only.
+        let line = '';
+        const write = () => {
+            if (y < 66) {
+                page = doc.addPage([612, 792]);
+                number++;
+                header();
+            }
+            page.drawText(line, { x: 42, y, size: 9.5, font });
+            y -= 14;
+        };
+        for (const word of row.split(' ')) {
+            const next = line ? `${line} ${word}` : word;
+            if (font.widthOfTextAtSize(next, 9.5) > 528 && line) {
+                write();
+                line = word;
+            }
+            else
+                line = next;
+        }
+        if (line)
+            write();
+        y -= 5;
+    }
+    await markReviewPdf(doc);
+    return doc;
+}

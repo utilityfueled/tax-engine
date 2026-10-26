@@ -3,11 +3,13 @@ import type { TaxYearInput } from '@/models/inputs.js';
 import type { CharitableContributionWorksheetInput } from '@/engine/forms/charitable-contribution-worksheet.js';
 import { eligibleCurrentCharitableDonations } from '@/engine/forms/charitable-current-sources.js';
 import { resolveCharitableRecipient } from './charitable-recipient.js';
+import { calculateK1CharitableReturnSources } from '@/engine/forms/k1-charitable-return-sources.js';
 import { d, min } from './decimal.js';
 
 export function readCurrentCharitableReceiptAmounts(input: TaxYearInput, options?: {
   /** The current-only carry method has no tangible-property related-use election. */
   capitalStockOnly?: boolean;
+  includeK1?: boolean;
 }): CharitableContributionWorksheetInput['amounts'] {
   const amounts = { cashPublic: d('0'), noncashPublic: d('0'), capitalGainPublic: d('0'),
     cashPrivate: d('0'), noncashPrivate: d('0'), capitalGainPrivate: d('0') };
@@ -41,6 +43,10 @@ export function readCurrentCharitableReceiptAmounts(input: TaxYearInput, options
         ? otherRecipient ? 'capitalGainPrivate' : 'capitalGainPublic'
         : otherRecipient ? 'noncashPrivate' : 'noncashPublic';
     amounts[category] = amounts[category].plus(contributionValue);
+  }
+  if (options?.includeK1) {
+    const k1=calculateK1CharitableReturnSources(input);
+    if(k1) for(const key of Object.keys(amounts) as (keyof typeof amounts)[]) amounts[key]=amounts[key].plus(k1.amounts[key]);
   }
   return amounts;
 }

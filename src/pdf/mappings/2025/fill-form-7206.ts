@@ -9,6 +9,7 @@ import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 import { formatCurrency, loadReviewTemplate, setTextField } from "../../pdf-utils.js";
 import { assertMarketplaceHealthReviewSources } from "./form-7206-marketplace-source.js";
 import { calculateForm7206ReviewSources } from "./form-7206-business-source.js";
+import { charitableReviewOriginalSourceInput, type PreparedCharitableReview } from "../../charitable-review-context.js";
 const field = (number: number) => `topmostSubform[0].Page1[0].f1_${number}[0]`;
 /** Sixteen leaf fields inspected against the registered October2,2025 revision. */
 export const FORM_7206_FIELDS = {
@@ -61,17 +62,18 @@ function reconcileSources(input: TaxYearInput, result: NonNullable<TaxReturnResu
   }
 }
 
-export function assertForm7206ReviewSource(input: TaxYearInput, result: TaxReturnResult) {
+export function assertForm7206ReviewSource(input: TaxYearInput, result: TaxReturnResult, charitableReview?: PreparedCharitableReview) {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const calculation = result.form7206;
   if (!input.form7206 || !calculation || calculation.sourceFactsVerified !== true || !calculation.calculationComplete) throw new Error("Form7206 requires actual sources and a completed audited calculation.");
-  reconcileSources(input, calculation, result);
+  const original = charitableReviewOriginalSourceInput(input, result, charitableReview);
+  reconcileSources(original, calculation, result);
   return calculation;
 }
 
 export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string,
-  businessSourceId: string, accountHolder: "primary" | "spouse"): Promise<PDFDocument> {
-  const calculation = assertForm7206ReviewSource(input, result);
+  businessSourceId: string, accountHolder: "primary" | "spouse", charitableReview?: PreparedCharitableReview): Promise<PDFDocument> {
+  const calculation = assertForm7206ReviewSource(input, result, charitableReview);
   const facts = input.form7206!; // The source assertion above requires this original worksheet.
   const groups = calculation.businesses.filter(group => group.businessSourceId === businessSourceId && group.accountHolder === accountHolder);
   if (groups.length !== 1) throw new Error("Form7206 requires one actual business and owner.");

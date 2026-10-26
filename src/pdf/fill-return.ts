@@ -33,7 +33,8 @@ import { fillForm8863 } from "./fill-form-8863.js";
 import { fillForm6251 } from "./fill-form-6251.js";
 import { form8949ReviewCalculation, prepareForm8949Review, type PreparedForm8949Review } from "./form-8949-review-context.js";
 import { prepareCodNolReview, type PreparedCodNolReview } from "./cod-nol-review-context.js";
-import { prepareCharitableReview, type PreparedCharitableReview } from "./charitable-review-context.js";
+import { prepareCharitableReview, charitableReviewOriginalSourceInput, type PreparedCharitableReview } from "./charitable-review-context.js";
+import { fillK1CharitableReview, K1_CHARITABLE_REFERENCE_FILENAME } from "./mappings/2025/k1-charitable-review.js";
 import { hasHistoricalAdoptionSources, prepareAdoptionReview, type PreparedAdoptionReview } from "./adoption-review-context.js";
 import { eicReviewChildren, eicReviewOriginalSourceInput, hasEicReviewSources, prepareEicReview, type PreparedEicReview } from "./eic-review-context.js";
 import { fillForm8880 } from "./fill-form-8880.js";
@@ -424,8 +425,9 @@ export async function fillReturn(
     ? options.qbiLossReview ?? prepareQbiLossReview(input) : undefined;
   if (qbiLossReview) buildQbiLossReview(input, result, qbiLossReview);
   if (input.deductionElection === "nonitemized" || result.deductionUsed === "nonitemized") throw new Error("Nonitemized election is available only for 2026 and has no supported review PDF mapping");
-  const charitableReview = input.charitableCarryoverSources
+  const charitableReview = input.charitableCarryoverSources || input.k1CharitableSources || options.charitableReview
     ? options.charitableReview ?? prepareCharitableReview(input) : undefined;
+  if (charitableReview) charitableReviewOriginalSourceInput(input, result, charitableReview);
   const adoptionReview = hasHistoricalAdoptionSources(input)
     ? options.adoptionReview ?? prepareAdoptionReview(input) : undefined;
   const premiumTaxCreditReview = hasPremiumTaxCreditReviewSources(input) || result.form8962?.sharedPolicyAllocation || result.form8962?.marriageCalculation || options.premiumTaxCreditReview
@@ -462,7 +464,7 @@ export async function fillReturn(
       }
     }
   }
-  if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result);
+  if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result, charitableReview);
   const codNolReview = input.form982NolSources || result.codNolReduction
     ? options.codNolReview ?? prepareCodNolReview(input) : undefined;
   if (input.netOperatingLoss || result.netOperatingLoss) buildNetOperatingLossReview(input, result, capitalGainReview, codNolReview);
@@ -560,7 +562,7 @@ export async function fillReturn(
   // ── Schedule D (if applicable) ──
   if (result.scheduleD) {
     const sdPath = join(blankFormsDir, "f1040sd.pdf");
-    const docSD = await fillScheduleD(input, result, sdPath);
+    const docSD = await fillScheduleD(input, result, sdPath, charitableReview);
     if (flatten) await flattenForm(docSD.getForm());
     const outputPathSD = join(outputDir, "f1040sd-filled.pdf");
     await savePacketPdf(docSD, outputPathSD);
@@ -664,7 +666,7 @@ export async function fillReturn(
   // ── Form 8582 (if applicable — Passive Activity Loss Limitations) ──
   if (result.form8582?.requiresForm8582) {
     const f8582Path = join(blankFormsDir, "f8582.pdf");
-    const doc8582 = await fillForm8582(input, result, f8582Path);
+    const doc8582 = await fillForm8582(input, result, f8582Path, charitableReview);
     if (flatten) await flattenForm(doc8582.getForm());
     const outputPath8582 = join(outputDir, "f8582-filled.pdf");
     await savePacketPdf(doc8582, outputPath8582);
@@ -703,6 +705,11 @@ export async function fillReturn(
   if (qbiLossReview) {
     const doc = await fillQbiLossReview(input, result, qbiLossReview);
     const outputPath = join(outputDir, QBI_LOSS_REFERENCE_FILENAME);
+    await savePacketPdf(doc, outputPath); filledForms.push(outputPath);
+  }
+  if (input.k1CharitableSources) {
+    const doc = await fillK1CharitableReview(input, result, charitableReview);
+    const outputPath = join(outputDir, K1_CHARITABLE_REFERENCE_FILENAME);
     await savePacketPdf(doc, outputPath); filledForms.push(outputPath);
   }
 
@@ -872,7 +879,7 @@ export async function fillReturn(
   // Actual Form7206 has a separate completed worksheet for each business.
   if (result.form7206) {
     for (const [index, business] of result.form7206.businesses.entries()) {
-      const doc = await fillForm7206(input, result, join(blankFormsDir, "f7206.pdf"), business.businessSourceId, business.accountHolder);
+      const doc = await fillForm7206(input, result, join(blankFormsDir, "f7206.pdf"), business.businessSourceId, business.accountHolder, charitableReview);
       if (flatten) await flattenForm(doc.getForm());
       const outputPath = join(outputDir, `form-7206-${business.accountHolder}-${index + 1}.pdf`);
       await savePacketPdf(doc, outputPath); filledForms.push(outputPath);

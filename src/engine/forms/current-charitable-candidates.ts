@@ -47,7 +47,7 @@ export function calculateCurrentCharitableCandidates(input: TaxYearInput, contex
     || Object.values(current).some(value => !Decimal.isDecimal(value) || !value.isFinite() || value.lt(0))) {
     throw new Error('Current charitable amounts must be finite with nonnegative contributions');
   }
-  const actual = readCurrentCharitableReceiptAmounts(input, { capitalStockOnly: true });
+  const actual = readCurrentCharitableReceiptAmounts(input, { capitalStockOnly: true, includeK1: true });
   if (input.cryptoIncome?.donations.length) {
     const crypto = calculateCryptoDonations(input.cryptoIncome.donations, input.taxpayer.taxYear);
     if (!crypto.sourceFactsVerified) throw new Error('Current charitable candidates require verified original crypto donation sources');

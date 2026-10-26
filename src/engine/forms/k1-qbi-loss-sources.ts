@@ -4,6 +4,7 @@
 import Decimal from 'decimal.js';
 import type { ScheduleK1, TaxYearInput } from '@/models/inputs.js';
 import type { QbiLossHistorySource } from '@/engine/forms/qbi-loss-character.js';
+import { calculateK1CharitableReturnSources } from './k1-charitable-return-sources.js';
 import { d, sum } from '@/utils/decimal.js';
 
 type Identity=Pick<TaxYearInput['taxpayer']['primary'],'firstName'|'lastName'|'ssn'>;
@@ -11,6 +12,7 @@ export interface K1QbiLossSourceInput {
   taxpayer:{taxYear:number;filingStatus:TaxYearInput['taxpayer']['filingStatus'];primary:Identity;spouse?:Identity};
   scheduleK1:ScheduleK1[];
   qbiLossSources?:TaxYearInput['qbiLossSources'];
+  k1CharitableSources?:TaxYearInput['k1CharitableSources'];
   priorYear?:Pick<NonNullable<TaxYearInput['priorYear']>,'suspendedPassiveLosses'>;
   rentalProperties?:Array<Pick<TaxYearInput['rentalProperties'][number],'description'>>;
 }
@@ -68,6 +70,7 @@ function history(value:QbiLossHistorySource|undefined,year:number,opening:Decima
 }
 
 export function validateK1QbiLossSources(input:K1QbiLossSourceInput):ValidatedK1QbiLossSource[] {
+  const charitable=calculateK1CharitableReturnSources(input);
   const packet=input.qbiLossSources;
   if(packet===undefined) return [];
   const year=input.taxpayer.taxYear;
@@ -97,6 +100,7 @@ export function validateK1QbiLossSources(input:K1QbiLossSourceInput):ValidatedK1
     if(source.ordinaryBusinessOnlyConfirmed!==true||source.continuingActivityConfirmed!==true||original.isPubliclyTradedPartnership
       ||original.ptpFullyDisposedInTaxableTransaction||original.isForeignPartnership||original.section199APTPIsSST||original.election1367) throw new Error('K1 QBI requires continuing ordinary sources; PTP disposal foreign and other methods are separate');
     for(const field of ordinaryOnlyZeroFields){
+      if ((field==='charitableCash'||field==='charitableCapitalGain30'||field==='charitableCapitalGain20') && charitable?.statements.some(row=>row.k1Index===index)) continue;
       const value=d(original[field]);
       if(!value.isFinite()||!value.isZero()) throw new Error(`K1 QBI ordinary-only source conflicts with original ${field}; its separate method is required`);
     }

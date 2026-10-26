@@ -60,6 +60,7 @@ import { validateForeignTaxDeductionScope } from "./forms/foreign-tax-deduction-
 import { calculateScheduleB } from "./schedules/schedule-b.js";
 import { calculateScheduleC } from "./schedules/schedule-c.js";
 import { calculateScheduleD, recomputeCarryforward } from "./schedules/schedule-d.js";
+import { calculateK1CharitableReturnSources } from "./forms/k1-charitable-return-sources.js";
 import { calculateScheduleE } from "./schedules/schedule-e.js";
 import { calculateK1Form461Classification } from "./forms/k1-form461-classification.js";
 import { calculateK1OrdinarySelfEmployment } from "./forms/k1-ordinary-self-employment.js";
@@ -186,6 +187,11 @@ import { calculateIllinoisReturn, type ILStateInput } from "./state/il-orchestra
 import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
 export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
+  if (input.k1CharitableSources && (input.netOperatingLoss || input.form172 || input.form982NolSources
+    || [input.priorYear?.nolCarryforward, input.priorYear?.excessBusinessLossNOL,
+      ...(input.scheduleK1Form1041 ?? []).map(row => row.finalYearNOLCarryover)].some(value => !d(value).isZero()))) {
+    throw new Error("K1 charitable NOL coordination requires its original source replay method");
+  }
   if (input.deductionElection === "nonitemized" && (input.netOperatingLoss || input.form172)) {
     throw new Error("Explicit nonitemized NOL coordination requires its separate source method");
   }
@@ -1273,8 +1279,12 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     resolvedLegacyBasis: lotMatchedBasis, additionalDispositions: phase2Dispositions,
   });
 
+  const k1CharitableSources = calculateK1CharitableReturnSources(input);
+  if (k1CharitableSources) audit.merge(k1CharitableSources.lines);
+
   // Line 7: Capital gains/losses via Schedule D (includes Form 8949)
   const schedD = calculateScheduleD(inputWithCrypto, filingStatus, constants, form4797, {
+    k1CharitableSources,
     originalDigitalAssetSources: input.form1099DA,
     form8824CapitalGainLoss: form8824?.totalCapitalRecognizedGainOrLoss ?? new Decimal(0),
     childCapitalGainDistributions: form8814?.totalCapitalGains ?? new Decimal(0),
@@ -1345,7 +1355,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   audit.record("1040", "8-sched-f", "Farm income (Schedule F)", schedFNetProfit, "Schedule F Line 34");
 
   // Schedule E: Supplemental income (rental + partnership)
-  const schedE = calculateScheduleE(input);
+  const schedE = calculateScheduleE(input, k1CharitableSources);
   audit.merge(schedE.lines);
 
   // ── IRC §280F(b)(2) recapture: aggregate from Schedule C and Schedule E Form 4562 ──
@@ -2347,9 +2357,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   // Aggregate semantic charitable amounts for Schedule A; partnership Box 13
   // and S-corporation Box 12 use A/E/F for these categories.
-  const k1CashCharitable = k1Agg.charitableCash;
-  const k1AppreciatedProperty30 = k1Agg.charitableCapitalGain30;
-  const k1AppreciatedProperty20 = k1Agg.charitableCapitalGain20;
+  const k1CashCharitable = k1CharitableSources?.amounts.cashPublic ?? k1Agg.charitableCash;
+  const k1AppreciatedProperty30 = k1CharitableSources?.amounts.capitalGainPublic ?? k1Agg.charitableCapitalGain30;
+  const k1AppreciatedProperty20 = k1CharitableSources?.amounts.capitalGainPrivate ?? k1Agg.charitableCapitalGain20;
   const hasK1Charitable = !k1CashCharitable.isZero()
     || !k1AppreciatedProperty30.isZero()
     || !k1AppreciatedProperty20.isZero();

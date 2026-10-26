@@ -6,6 +6,7 @@ import type { CharitableCarryoverResult } from './charitable-carryover.js';
 import { validateCharitableCarryoverSources, type CharitableCarryoverBalance } from './charitable-carryover-source-validation.js';
 import { eligibleCurrentCharitableDonations } from './charitable-current-sources.js';
 import { resolveCharitableRecipient } from '@/utils/charitable-recipient.js';
+import { calculateK1CharitableReturnSources } from './k1-charitable-return-sources.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, sum, zeroFloor } from '@/utils/decimal.js';
 
@@ -40,8 +41,9 @@ export function calculateNonitemizedCharitableCarryover(input: TaxYearInput, con
     throw new Error('Nonitemized carry currently requires only the actual public cash category');
   }
   const actualDonations = eligibleCurrentCharitableDonations(input);
+  const k1Cash=calculateK1CharitableReturnSources(input)?.amounts.cashPublic ?? d(0);
   if (actualDonations.some(row => row.type !== 'cash' || resolveCharitableRecipient(row).percentageCategory !== 'fifty-percent')
-    || !sum(...actualDonations.map(row => d(row.amount))).eq(current.cashPublic)) {
+    || !sum(...actualDonations.map(row => d(row.amount))).plus(k1Cash).eq(current.cashPublic)) {
     throw new Error('Nonitemized public cash must reconcile to actual current receipts; pass-through and other categories require their separate source method');
   }
   const records = validateCharitableCarryoverSources(input);

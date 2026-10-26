@@ -1,5 +1,6 @@
 import { validateQofDispositionFacts } from "@/engine/forms/qof-disposition-facts.js";
 import { assertPdfExportAllowed } from "../../export-policy.js";
+import { charitableReviewOriginalSourceInput, type PreparedCharitableReview } from "../../charitable-review-context.js";
 /**
  * PDF filler for IRS Schedule D (Form 1040) — Capital Gains and Losses.
  *
@@ -147,8 +148,10 @@ export async function fillScheduleD(
   input: TaxYearInput,
   result: TaxReturnResult,
   blankPdfPath: string,
+  charitableReview?: PreparedCharitableReview,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  charitableReviewOriginalSourceInput(input, result, charitableReview);
   const qofDisposition = validateQofDispositionFacts(input.qofDispositionFacts, input.taxpayer.taxYear);
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
