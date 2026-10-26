@@ -103,29 +103,30 @@ describe("Spec testRef validation", () => {
     }
   });
 
-  it("all testRefs point to existing test files and test names", () => {
+  // Keep each source document independently diagnosable. The AST work for the
+  // entire growing catalog must not share a single test's five-second budget.
+  // Every spec and reference is still checked, using the same cached AST names.
+  it.each(allSpecs)("testRefs in $file point to existing test files and test names", ({ file, spec }) => {
     const broken: string[] = [];
 
-    for (const { file, spec } of allSpecs) {
-      for (const line of spec.lines) {
-        if (!line.testRef) continue;
+    for (const line of spec.lines) {
+      if (!line.testRef) continue;
 
-        // Parse "tests/path/file.test.ts::test name"
-        const [testFile, testName] = line.testRef.split("::");
-        if (!testFile || !testName) {
-          broken.push(`${file} line ${line.line}: invalid testRef format "${line.testRef}"`);
-          continue;
-        }
+      // Parse "tests/path/file.test.ts::test name"
+      const [testFile, testName] = line.testRef.split("::");
+      if (!testFile || !testName) {
+        broken.push(`${file} line ${line.line}: invalid testRef format "${line.testRef}"`);
+        continue;
+      }
 
-        const names = getTestNames(testFile);
-        if (names.size === 0) {
-          broken.push(`${file} line ${line.line}: test file not found "${testFile}"`);
-          continue;
-        }
+      const names = getTestNames(testFile);
+      if (names.size === 0) {
+        broken.push(`${file} line ${line.line}: test file not found "${testFile}"`);
+        continue;
+      }
 
-        if (!names.has(testName)) {
-          broken.push(`${file} line ${line.line}: test "${testName}" not found in ${testFile}`);
-        }
+      if (!names.has(testName)) {
+        broken.push(`${file} line ${line.line}: test "${testName}" not found in ${testFile}`);
       }
     }
 
