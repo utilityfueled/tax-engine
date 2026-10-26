@@ -85,3 +85,33 @@ describe("2026 charitable floor and carryforward", () => {
     expect(result.carryforwards).toEqual([]);
   });
 });
+
+it("keeps capital gifts inside the shared amended other-contribution ceiling", () => {
+  const amounts = { ...empty, cashPublic: d("10000"), cashPrivate: d("20000"),
+    capitalGainPublic: d("30000"), capitalGainPrivate: d("10000") };
+  const before = JSON.stringify(amounts);
+  const result = calc(amounts);
+  expect(result.allowedBeforeFloor).toEqual({ cash_60:d("10000"), noncash_50:d("0"),
+    other_30:d("20000"), capital_gain_30:d("20000"), capital_gain_20:d("0") });
+  expect(result.exactCashDeduction.toFixed()).toBe("30000");
+  expect(result.exactNonCashDeduction.toFixed()).toBe("19500");
+  expect(result.totalDeduction.toFixed()).toBe("49500");
+  expect(result.carryforwards).toEqual([
+    { taxYear:2026, category:"capital_gain_30", amount:d("10500") },
+    { taxYear:2026, category:"capital_gain_20", amount:d("10000") },
+  ]);
+  for (const [other, allowedOther, capital] of [["19999.99","19999.99","0.01"],["20000","20000","0"],["20000.01","20000","0"]]) {
+    const boundary = calc({ ...amounts, cashPrivate:d(other) });
+    expect(boundary.allowedBeforeFloor.other_30.toFixed()).toBe(allowedOther);
+    expect(boundary.allowedBeforeFloor.capital_gain_20.toFixed()).toBe(capital);
+    expect(boundary.allowedBeforeFloor.other_30.plus(boundary.allowedBeforeFloor.capital_gain_20).toFixed()).toBe("20000");
+    expect(Object.values(boundary.allowedAfterFloor).reduce((a,b)=>a.plus(b),d("0"))
+      .plus(boundary.carryforwards.reduce((a,b)=>a.plus(b.amount),d("0"))).toFixed()).toBe(d("50000").plus(other).toFixed());
+  }
+  const full = calc({ ...amounts, cashPrivate:d("0"), capitalGainPublic:d("10000"), capitalGainPrivate:d("20000") });
+  expect(full.allowedBeforeFloor.capital_gain_20.toFixed()).toBe("20000");
+  const historical = calculateCharitableContributionWorksheet({taxYear:2025,contributionBase:d("100000"),amounts});
+  expect(historical.allowedBeforeFloor).toEqual({cash_60:d("10000"),noncash_50:d("0"),other_30:d("10000"),capital_gain_30:d("30000"),capital_gain_20:d("0")});
+  expect(historical.totalDeduction.toFixed()).toBe("50000");
+  expect(JSON.stringify(amounts)).toBe(before);
+});

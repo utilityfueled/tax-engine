@@ -150,11 +150,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.102-law-integration-draft",
+    ruleVersion: "2026.103-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://uscode.house.gov/us/usc/119-120/t26/s170/", section: "Actual 2026 current other-recipient capital gifts share the aggregate B ceiling remaining after other current B gifts", revision: "IRC170(b)(1)(B)/(D)/(G)/(I); exact source-derived controls preserve 2025, final selection and original carry; prior-category methods and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual separate-owner health deductions constrained by each owner income in ordered credit, IRA and QBI replays;2025 zero specified advances and2026 full repayment", revision: "IRC162(l), Reg1.162(l)-1/1.199A-3 and RevProc2014-41; derived source and private review controls, binding joint2025 repayment ownership and human qualification remain separate", retrievedAt: "2026-10-26" },
       { url: "https://www.irs.gov/publications/p596", section: "Actual claimant timely work-authorized SSNs, separate nonresident histories and joint election, either-spouse childless age/death, and nonjoint QSS phase-out threshold", revision: "Final2025 Rules1/2/4/11 and IRC32; original source/guide checks and literal controls, historical omissions unverified, other EIC requirements and independent qualification remain separate", retrievedAt: "2026-10-25" },
       { url: "https://www.irs.gov/publications/p974", section: "Actual two-owner specified health deductions with nonbinding owner income and joint maximum; same-owner gross-income QBI attribution and retained original-source review", revision: "IRC162(l), Reg1.162(l)-1/1.199A-3 and RevProc2014-41; bounded derived2025/isolated2026 controls, binding owner/capped-repayment methods and human qualification remain separate", retrievedAt: "2026-10-25" },

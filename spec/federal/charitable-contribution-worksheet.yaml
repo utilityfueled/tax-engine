@@ -2,7 +2,7 @@ form: "Charitable Contribution Worksheet"
 fullName: "2026 contribution categories, floor and carryforward origin"
 taxYear: 2026
 irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s170/"
-retrievedAt: "2026-10-24"
+retrievedAt: "2026-10-26"
 reviewStatus: "independent-review-pending"
 notes: |
   Statutory calculation for supported current-year contributions. The 2025
@@ -25,7 +25,7 @@ lines:
       reserveC=min(raw C,max(0,50% base-G-A)). B other second-category gifts:
       min(B,30% base,max(0,50% base-G-A-reserveC+min(G,10% base))).
       C public capital-gain property: min(C,30% base,max(0,50% base-G-A-B)). D second-category capital-gain
-      property: min(D,20% base,30% base-C,30% base-B,
+      property: min(D,20% base,30% base-C,30% base-B,remaining shared B ceiling,
       max(0,50% base-G-A-C-B+min(G,10% base))). B's cash/noncash split requires
       the uniquely determined source method in charitable-private-media.yaml;
       no cash-first partial reporting or carry allocation is inferred.
@@ -48,3 +48,21 @@ lines:
     formula: "Base1000.49 gives capacities600.294/500.245/300.147/200.098, and the2026floor is5.00245. With currentcash10000.99,2025 retains600.294 allowed and9400.696 carry;2026 retains595.29155 afterfloor and9405.69845 carry. Only completed report lines round; a rounding difference never creates or destroys source carry."
     irsRef: "IRC6102(c); Pub526 Worksheet2; IRC170(b)(1)(I) and170(d)(1)(C)"
     testRef: "tests/engine/forms/charitable-contribution-worksheet.test.ts::retains exact percentage floor and carry values in both supported years"
+  - line: "shared-other-ceiling"
+    description: "Capital property remains inside the aggregate other-contribution ceiling"
+    formula: |
+      IRC170(b)(1)(B) limits the aggregate of every non-A/non-G gift, including
+      capital-gain property separately restricted by D. Compute Bcapacity without
+      limiting the actual public capital contribution under C, allow ordinary B,
+      then D may use at most max(0,Bcapacity-allowedB), in addition to its own
+      limits. D is considered last under170(b)(1)(D)(i). On base100000 with actual
+      current G10000/B20000/C30000/D10000, Bcapacity20000 is exhausted: D0,
+      C20000 before floor; itemized C19500, total49500, new Ccarry10500 and
+      Dcarry10000. B19999.99 leaves D.01; B20000.01 still leaves D0. No repeated
+      cash offset creates a second B allowance. The2025 published worksheet is
+      unchanged; its historical limits already prevent this amended-offset case.
+    testRef: "tests/engine/forms/charitable-contribution-worksheet.test.ts::keeps capital gifts inside the shared amended other-contribution ceiling"
+  - line: "shared-other-transfer"
+    description: "Transfer corrected current allowance and selected carry from original receipts"
+    formula: "Actual2026 G10000/B20000/C30000/D10000 on base100000 yields candidate cash30000/noncash19500. Itemized selection carries20500 including floor; explicitstandard carries20000 percentage excess and preserves actual standard16100 plus current170(p)1000. Original facts and closed2026 qualification remain unchanged."
+    testRef: "tests/engine/federal-charitable-shared-other-cap.test.ts::transfers the shared other ceiling through actual current receipts and selected carry"
