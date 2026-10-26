@@ -1,0 +1,45 @@
+form: "Prior other charitable capacity"
+fullName: "Current public contributions retain the section170(B) capacity used by prior other contributions"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p526"
+references:
+  - "https://www.govinfo.gov/content/pkg/USCODE-2024-title26/html/USCODE-2024-title26-subtitleA-chap1-subchapB-partVI-sec170.htm"
+  - "https://www.ecfr.gov/current/title-26/section-1.170A-8"
+  - "https://www.ecfr.gov/current/title-26/section-1.170A-10"
+notes: |
+  Refreshed2026-10-25. Historical section170(b)(1)(B)(ii) computes the other
+  contribution aggregate ceiling using public contributions allowable under A
+  without C's capital-property limitation. B's carry sentence retains B's
+  original category. Final2025 Pub526, Limits Based on30% and Carryovers,
+  preserves that percentage category, current-before-prior and oldest-first use.
+  Thus the same B ceiling applies to current B plus prior B treated as paid;
+  prior B does not receive extra capacity by substituting the smaller deduction
+  for actual current public capital-property contributions. By contrast,
+  Reg1.170A-10(c)(2) limits how much prior C itself is treated as paid this year.
+  Reg1.170A-8(f) Example2 publishes the current-source reservation control:
+  base100000/current C40000/current B30000 gives B10000 and C30000. Its historical
+  B percentage and no-carry rule are not imported into2025. The prior-B controls
+  are derived from the applicable2025 statute and source-category carry rules,
+  not a published matching prior-year example. No2026 itemized-floor, NOL or
+  partial mixed-media rule is added.
+lines:
+  - line: "published-current-control"
+    description: "Retain the published current-source reservation before testing prior B"
+    formula: "Reg1.170A-8(f) Example2: base100000/current C40000/current B30000 gives B10000,C30000,total40000. Applicable2025 B carry is20000 and C carry10000; the historical example's no-B-carry rule is superseded and is not used."
+    testRef: "tests/engine/forms/charitable-prior-other-capacity.test.ts::preserves the published current other and public capital property reservation"
+  - line: "shared-b-capacity"
+    description: "Use one aggregate B capacity for current and prior B sources"
+    formula: "Base100000/current C40000/prior B30000: B capacity=min(30000,50000-40000)=10000; current C deduction30000, prior B used10000, prior B carry20000 and new C carry10000. Current B5000 uses capacity first, leaving prior B use5000. Preserve exact cents and grouped FIFO."
+    testRef: "tests/engine/forms/charitable-prior-other-capacity.test.ts::retains actual current capital property in the prior other contribution ceiling"
+  - line: "treated-paid-distinction"
+    description: "Distinguish an original prior C balance from current C paid"
+    formula: "Base100000/prior C40000/current B30000: prior C treated paid30000 under Reg1.170A-10(c)(2), current B20000; remaining prior C10000 and new B10000. A standard year deducts no charity while preserving that treated-paid reduction and original expiry."
+    testRef: "tests/engine/forms/charitable-prior-other-capacity.test.ts::distinguishes current public property from prior property treated as paid"
+  - line: "canonical"
+    description: "Forward actual B history and current C receipts into the final return"
+    formula: "Actual2025 wages100000 and the shared-b-capacity sources give ScheduleA12=30000,13=10000,14=40000; selected itemized deduction40000. Explicit standard retains prior treated-paid10000 with actual prior deduction0 and the same source carry30000. Missing source confirmation or mismatched original identity rejects."
+    testRef: "tests/engine/federal-charitable-prior-other-capacity.test.ts::uses the original prior other ceiling under final deduction selection"
+  - line: "physical-source"
+    description: "Bind corrected source use to physical current and prior lines"
+    formula: "Original prepared2025 review prints current noncash30000, prior10000, total40000 with render-only identity redacted. Changing current C receipt or original B opening cannot reuse the prior result or review token."
+    testRef: "tests/pdf/charitable-prior-other-capacity.test.ts::prints corrected current property and prior other use with original source binding"

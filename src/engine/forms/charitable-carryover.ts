@@ -56,10 +56,13 @@ export function calculateCharitableCarryover(input: TaxYearInput, context: {
   const currentCForCarryCapacity = Decimal.min(raw.capitalGainPublic, thirty);
   const priorA = consume("noncash_50", fifty.minus(g).minus(priorG).minus(a).minus(currentCForCarryCapacity));
   const priorC = consume("capital_gain_30", Decimal.min(thirty.minus(currentCForCarryCapacity), fifty.minus(g).minus(priorG).minus(a).minus(priorA).minus(currentCForCarryCapacity)));
-  const b = Decimal.min(raw.cashPrivate.plus(raw.noncashPrivate), thirty,
+  // Section170(B)'s aggregate ceiling retains actual current public capital
+  // contributions before C's30% cap, including when B is an older carry.
+  const bCapacity = Decimal.min(thirty,
     zeroFloor(fifty.minus(raw.cashPublic).minus(raw.noncashPublic).minus(raw.capitalGainPublic).minus(priorG).minus(priorA).minus(priorC)));
+  const b = Decimal.min(raw.cashPrivate.plus(raw.noncashPrivate), bCapacity);
   const c = Decimal.min(raw.capitalGainPublic, zeroFloor(thirty.minus(priorC)), zeroFloor(fifty.minus(g).minus(priorG).minus(a).minus(priorA).minus(b).minus(priorC)));
-  const priorB = consume("other_30", Decimal.min(thirty.minus(b), fifty.minus(g).minus(priorG).minus(a).minus(priorA).minus(b).minus(c).minus(priorC)));
+  const priorB = consume("other_30", bCapacity.minus(b));
   const dCapacity = Decimal.min(twenty, zeroFloor(thirty.minus(c).minus(priorC)), zeroFloor(thirty.minus(b).minus(priorB)), zeroFloor(fifty.minus(g).minus(priorG).minus(a).minus(priorA).minus(b).minus(priorB).minus(c).minus(priorC)));
   const privateCapital = Decimal.min(raw.capitalGainPrivate, dCapacity);
   consume("capital_gain_20", dCapacity.minus(privateCapital));
@@ -81,6 +84,12 @@ export function calculateCharitableCarryover(input: TaxYearInput, context: {
   const priorNoncashDeduction = sum(...detail.filter(row => row.medium === "noncash").map(row => row.amountUsed));
   const priorDeduction = priorCashDeduction.plus(priorNoncashDeduction), priorTreatedAsPaid = sum(...detail.map(row => row.treatedAsPaid));
   const audit = new AuditTrail();
+  if (raw.cashPrivate.plus(raw.noncashPrivate).gt(0) || records.some(row => row.category === "other_30")) {
+    audit.record("Charitable Carryover", "other-capacity", "Shared current and prior other-contribution ceiling", bCapacity,
+      "Section170(B): current public capital property remains unreduced by C's30% cap; current B precedes prior B", {
+        "Actual current public capital property": raw.capitalGainPublic, "Current B used": b, "Prior B treated as paid": priorB,
+      });
+  }
   detail.forEach((row, index) => audit.record("Charitable Carryover", `prior-${index+1}`, "Actual prior charitable source reconciliation", row.amountUsed,
     "Original category and year; current-category priority, FIFO, fifth-year expiry and standard-year absorption", {
       opening: row.amountAvailable, treatedAsPaid: row.treatedAsPaid, expired: row.amountExpired, remaining: row.amountRemaining,
