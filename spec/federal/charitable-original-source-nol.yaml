@@ -13,7 +13,9 @@ notes: |
   Reg1.702-1(a)(4)/706 and Reg1.1366-1 preserve the entity-year source and
   its character. A source from the current included entity year is not
   rejected merely because its actual payment date was in a fiscal year.
-  No positive prior basis release is converted to a current170 contribution.
+  The separate charitable-k1-basis-release-nol specification admits actual2025
+  releases without rewriting historical basis origins. Positive2026 releases
+  retain their separate timing and floor/contribution-year method.
   Digital assets retain their actual dates, receipt and per-gift qualified
   value under170(e) and Notice2014-21. Confirmed source facts are required,
   including the recipient and actual appraisal/acknowledgment facts.

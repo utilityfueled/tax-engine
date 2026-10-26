@@ -95,7 +95,9 @@ export function readCharitableNolOrigins(input:TaxYearInput):CharitableNolOrigin
   if(!k1 && input.scheduleK1.some(row=>[row.charitableCash,row.charitableCapitalGain30,row.charitableCapitalGain20,row.priorSuspendedLosses?.charitable].some(value=>!d(value).isZero()))) {
     throw new Error('Charitable NOL origins require complete actual K1 basis and receipt sources');
   }
-  if(k1?.statements.some(row=>row.basis.charitableSources?.records.some(record=>!record.current && record.availableAfterBasis.gt(0)))) {
+  // Only the validated release is current section170 value in 2025. Neither
+  // original basis nor previously used appreciation is altered by this replay.
+  if(input.taxpayer.taxYear!==2025 && k1?.statements.some(row=>row.basis.charitableSources?.records.some(record=>!record.current && record.availableAfterBasis.gt(0)))) {
     throw new Error('Prior K1 basis releases require their separate NOL contribution-year method');
   }
   const current=readCurrentCharitableReceiptAmounts(input,{capitalStockOnly:true,includeK1:true});

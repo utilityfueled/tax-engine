@@ -71,7 +71,10 @@ export function readCurrentCharitableSourceForNol(input: TaxYearInput): CurrentC
     row.priorSuspendedLosses?.charitable].some(value => !d(value).isZero()))) {
     throw new Error("Original K1 charitable NOL sources require their complete attached basis and receipt sources");
   }
-  if (k1?.statements.some(row => row.basis.charitableSources?.records.some(record => !record.current && record.availableAfterBasis.gt(0)))) {
+  // A validated 2025 basis release is available under section 170 in 2025;
+  // the original basis vintage and prior appreciation remain in the K1 ledger.
+  // The separate 2026 release/floor-year method is not inferred here.
+  if (taxYear !== 2025 && k1?.statements.some(row => row.basis.charitableSources?.records.some(record => !record.current && record.availableAfterBasis.gt(0)))) {
     throw new Error("Prior K1 charitable basis releases require their separate NOL contribution-year method");
   }
   if (k1) for (const key of Object.keys(amounts) as AmountKey[]) amounts[key] = amounts[key].plus(k1.amounts[key]);

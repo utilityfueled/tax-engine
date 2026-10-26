@@ -64,7 +64,7 @@ export function calculateForm172CharitableSources(input: TaxYearInput): Form172C
       if (original.taxYear !== input.taxpayer.taxYear || otherAmounts.some(key => !d(original[key]).isFinite() || !d(original[key]).isZero())
         || original.isPassiveActivity || original.isPubliclyTradedPartnership || original.ptpFullyDisposedInTaxableTransaction
         || original.isForeignPartnership || actual?.distributionGain?.gain.gt(0)
-        || actual?.basis.charitableSources?.records.some(row => !row.current)
+        || (input.taxpayer.taxYear !== 2025 && actual?.basis.charitableSources?.records.some(row => !row.current))
         || input.qbiLossSources?.activities?.some(row => row.k1SourceId === `scheduleK1:${index}`)) {
         throw new Error('Form172 charity-only K1 requires the separate current origin method for other activity, income, prior loss or gain sources');
       }

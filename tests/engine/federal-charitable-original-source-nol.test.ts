@@ -101,12 +101,15 @@ it('validates original facts before a small or ineligible gift could bypass the 
   const mixed = cryptoCharitableNolInput(); mixed.donations = [{ type: 'cash', organization: 'Fictional other current receipt',
     amount: '1', dateOfDonation: '2025-05-01', qualifiedOrganization: true, recipientCategory: 'fifty-percent' }];
   expect(() => calculateFederalTax(mixed)).toThrow(/mixed.*categor/i);
-  const prior = k1CharitableNolInput(), source = charitableStatement(prior), k = prior.scheduleK1[0];
+  // Actual2025 released basis now has its separate sourced NOL handoff; the
+  // positive2026 release/floor-year boundary remains closed.
+  const prior = k1CharitableNolInput(2026), source = charitableStatement(prior), k = prior.scheduleK1[0];
   k.charitableCapitalGain30 = '0'; requireSource(k.priorSuspendedLosses).charitable = '20';
   requireSource(source.basis).currentContributions = [];
   requireSource(source.basis).priorBasisSuspensions = [{ sourceId: 'prior-property', originTaxYear: 2024, category: 'capital_gain_30', contributionShare: '150', adjustedBasisShare: '50',
-    appreciationPreviouslyTakenIntoAccount: '100', sourceReference: 'Fictional original basis history', basisUseHistory: [{ taxYear: 2024, basisAllowed: '30' }] }];
-  source.receipts = [{ ...requireSource(source.receipts)[0], basisSourceId: 'prior-property', contributionDate: '2024-06-01', fairMarketValueShare: '150' }];
-  expect(calculateK1CharitableReturnSources(prior)?.amounts.capitalGainPublic.toFixed()).toBe('20');
-  expect(() => calculateFederalTax(prior)).toThrow(/prior K1.*basis.*release/i);
+    appreciationPreviouslyTakenIntoAccount: '100', sourceReference: 'Fictional original basis history',
+    basisUseHistory: [{ taxYear: 2024, basisAllowed: '30' }, { taxYear: 2025, basisAllowed: '0' }] }];
+  source.receipts = [{ ...requireSource(source.receipts)[0], basisSourceId: 'prior-property', contributionDate: '2024-06-01', acquisitionDate: '2022-01-01', fairMarketValueShare: '150' }];
+  expect(() => calculateK1CharitableReturnSources(prior)).toThrow(/prior-basis release in2026.*timing.*floor/i);
+  expect(() => calculateFederalTax(prior)).toThrow(/prior-basis release in2026.*timing.*floor/i);
 });

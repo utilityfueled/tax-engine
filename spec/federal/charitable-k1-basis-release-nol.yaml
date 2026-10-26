@@ -1,0 +1,73 @@
+form: "Section170 2025 K1 basis-release NOL sources"
+fullName: "Actual released charitable basis through current section170 and independent NOL limits"
+taxYear: 2025
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.1366-2"
+notes: |
+  IRC704(d)(2)-(3), Reg1.704-1(d)(1)-(2) and the IRS partner-basis FAQ
+  permit the prior basis-limited amount when later actual basis is available.
+  IRC1366(d)(2),(4) and Reg1.1366-2(a)(3) preserve character and treat an
+  S-corporation disallowance as incurred in succeeding entity years.
+  RevRul2008-16 explicitly retains36 of charitable basis after154 is allowed;
+  its stated historical effective period is not used as current-law authority.
+  Current704/1366 and the regulations supply the2025 rule. No appreciation
+  already taken into account is repeated, and unreleased basis is not a170(d)
+  carry. Actual2025 released amounts retain their recipient/category/medium
+  and enter the existing2025 percentage limits and NOL comparison. Any170
+  excess first arising on release is a2025 excess, separately from the original
+  payment/basis year. Original basis records and sources remain unchanged.
+  This is a source handoff, not new percentage/NOL arithmetic. Form172 line26
+  and Reg1.170A-10(d) still reduce a determined charitable excess by the old
+  succeeding-NOL benefit. Current Form172 uses only actually selected charity
+  and actual nonbusiness income. Independent regular/AMT histories and same
+  original entity treatment remain required; hypothetical170 caps never alter
+  basis release. Operating K1 classification, binding465, positive-benefit COD
+  and multiple positive-origin attribution remain separate internal methods.
+  A positive2026 prior-basis release retains the separate170(p)/floor-year
+  guard. Missing records are not known zero and do not become current gifts.
+  Sources refreshed2026-10-26. Derived NOL literals are not published examples.
+lines:
+  - line: "released-value"
+    description: "Take only the actual2025 basis release into account"
+    formula: "Original2018 C180000/basis80000, appreciation previously100000 and basis previously20000 leave60000 basis suspension. Actual2025 available basis60000 releases60000 C, no new appreciation. With income100000/NOL100000: NOLD56000,AGI44000,charity13200,oldcarry44000 versus30560; charitycarry33360 in2025, independent known-zero AMT NOL leaves46800."
+    irsRef: "IRC704(d)(2)-(3),1366(d)(2),(4); Reg1.704-1(d),1.1366-2(a)(3); i172 line26"
+    testRef: "tests/engine/federal-charitable-k1-basis-release-nol.test.ts::uses the actual2025 release without repeating old appreciation or basis carry"
+  - line: "partial-current"
+    description: "Keep current and previously suspended basis proportional and separate"
+    formula: "Actual owner basis40000, current G20000 and original remaining C60000 release10000 G+30000 C and retain40000 basis suspension. Existing determined NOL method gives NOLD48000,AGI52000,charity25600,oldcarry52000 versus40480; unique C excess14400 less11520 benefit leaves2880 section170 carry. Basis output is unchanged by the comparison."
+    irsRef: "Reg1.704-1(d)(2),1.1366-2(a)(5); Reg1.170A-10(d)"
+    testRef: "tests/engine/federal-charitable-k1-basis-release-nol.test.ts::preserves current and prior basis allocation before the unique excess comparison"
+  - line: "independent-amt"
+    description: "Use actual independent alternative histories and cents"
+    formula: "Released C60000 with income100000/capital-loss3000/known-zero regular NOL/ATNOL100000 preserves actual currentATNOLD61110,regular charitable carry30900,AMT charitable carry30090. Released60000.49/60000.50 retains exact basis and tentative ScheduleA excess46800.49/46800.50; the established single-category completed carry worksheet reports regular33360/33361 and alternative46800/46801. Current ScheduleA remains13200; no source or percentage capacity is rounded early."
+    irsRef: "IRC56(d); Reg1.55-1(b),1.170A-10(d); IRC6102(c)"
+    testRef: "tests/engine/federal-charitable-k1-basis-release-nol.test.ts::keeps released cents and alternative NOL treatment independent"
+  - line: "current-origin"
+    description: "Classify only the source-complete charity-only K1 for current Form172"
+    formula: "Actual released G1000 beside prior C5000 regular/500 AMT, wages20000,activeScheduleCloss40000,interest30000,SALT20000: selected charity4000/1500. With oldNOL100000 each, actual regular olduse0/currentloss14000/closing114000; ATNOLD7650/old92350/AMTI850/no newATNOL. Without old losses the current loss remains14000 and AMTI8500. Original basis year stays2018."
+    irsRef: "IRC172(d)(4); Form172 lines6,7,10,23; Reg1.172-3,1.55-1"
+    testRef: "tests/engine/federal-charitable-k1-basis-release-nol.test.ts::composes released charity with complete old histories and current Form172 once"
+  - line: "source-boundary"
+    description: "Preserve actual histories and the separate2026 question"
+    formula: "Known complete2025 release is admitted; missing annual basis use, inconsistent appreciation, missing independent AMT history or conflicting original receipt rejects before benefit. Positive2026 release remains unsupported by its existing timing/floor-year guard. A basis-origin date is never rewritten or inserted into prior170 carry histories."
+    irsRef: "IRC704(d),1366(d),170; original-source conservation"
+    testRef: "tests/engine/federal-charitable-k1-basis-release-nol.test.ts::rejects unknown release evidence and retains the2026 timing boundary"
+  - line: "guided"
+    description: "Reach the release through existing actual receipt and annual history collectors"
+    formula: "Existing K1 original/basis/receipt and independent NOL collectors retain the2018 source and seven actual use records, release60000 in2025 and compute33360/46800 charitable carry. An annual-history edit revokes confirmation; missing history cannot be guessed. No calculated release or deduction is collected."
+    irsRef: "IRC704(d),1366(d); actual source completeness"
+    testRef: "tests/guided-interview/guided-charitable-k1-release-nol.test.ts::reaches released basis through actual collectors and preserves source invalidation"
+  - line: "review"
+    description: "Bind original basis history and current year to saved review output"
+    formula: "Original2018 basis row and actual2025 release remain visible separately from2025 section170 carry. Altered history, same-value recipient or retained carry rejects before template access. Review PDFs contain exact amounts, per-page notices and no private source identifiers."
+    irsRef: "Form172 recordkeeping; original source and calculation binding"
+    testRef: "tests/pdf/charitable-k1-release-nol-review.test.ts::binds historical basis and released-year charity before redacted output"
+  - line: "workspace"
+    description: "Preserve the real guided source packet through saved PDF output"
+    formula: "The unmocked source bridge and workspace export retain original2018 payment/basis history,2025 released60000,ScheduleA13200,charitablecarry33360/46800 and basis suspension0; actual originals remain unchanged."
+    irsRef: "Actual-source review download contract; no filing qualification"
+    testRef: "tests/apps/web/workspace-charitable-k1-release-nol.test.ts::exports actual prior basis release and independent NOL histories without a bridge mock"
+  - line: "browser"
+    description: "Retain original prior history through desktop and mobile production controls"
+    formula: "Original prior-basis row remains editable; confirmation-only restores the actual complete history without new aggregates. Reopening preserves source years and amounts, missing records remain incomplete and no current gift is fabricated."
+    irsRef: "Actual-source preservation and confirmation"
+    testRef: "apps/web/tests/charitable-k1-release-nol.spec.ts::preserves prior basis sources through confirmation and saved review"

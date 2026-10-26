@@ -42,6 +42,16 @@
       "note": "Original current and independent prior sources determine zero-benefit or one-affected-excess NOL carry, with actual guided sources and a source-bound 2025 review reference. Positive multiple-origin attribution and closed year/filing gates remain distinct."
     },
     {
+      "key": "federal/charitable-k1-basis-release-nol",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/k1-charitable-review.ts",
+      "testRefs": [
+        "tests/engine/federal-charitable-k1-basis-release-nol.test.ts::uses the actual2025 release without repeating old appreciation or basis carry",
+        "tests/pdf/charitable-k1-release-nol-review.test.ts::binds historical basis and released-year charity before redacted output"
+      ],
+      "note": "Actual 2025 charitable basis releases retain their original basis and receipt history through existing section 170 and regular/AMT NOL calculations. This association does not admit the separate 2026 release/floor-year method, binding at-risk allocation or broader operating K1 loss-origin methods, and it is not human qualification."
+    },
+    {
       "key": "federal/charitable-original-source-nol",
       "enginePath": "src/engine/federal.ts",
       "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",

@@ -352,6 +352,29 @@
       ]
     },
     {
+      "key": "federal/charitable-k1-basis-release-nol",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.1366-2",
+      "specPath": "spec/federal/charitable-k1-basis-release-nol.yaml",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/k1-charitable-review.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-charitable-k1-basis-release-nol.test.ts::uses the actual2025 release without repeating old appreciation or basis carry",
+        "tests/pdf/charitable-k1-release-nol-review.test.ts::binds historical basis and released-year charity before redacted output"
+      ],
+      "implementationNote": "Actual 2025 charitable basis releases retain their original basis and receipt history through existing section 170 and regular/AMT NOL calculations. This association does not admit the separate 2026 release/floor-year method, binding at-risk allocation or broader operating K1 loss-origin methods, and it is not human qualification.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/charitable-net-operating-loss",
       "jurisdiction": "federal",
       "taxYear": 2025,
