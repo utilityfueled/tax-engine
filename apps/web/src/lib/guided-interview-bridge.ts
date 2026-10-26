@@ -1,3 +1,4 @@
+import { buildGuidedCryptoDonations, cryptoDonationFactErrors } from './guided-crypto-donations';
 import { buildGuidedRoyaltySources, royaltySourceFactErrors } from "./guided-royalty-sources";
 import { buildGuidedQofFacts } from "./guided-qof-facts";
 import { buildGuidedScheduleDInputs } from "./guided-schedule-d-sources";
@@ -671,6 +672,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(netOperatingLossFactErrors(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, segmentation.lifeEvents.includes("net-operating-loss"), deductionData, adjustmentData?.k1LossSources));
     assertKnownFacts(k1LossSourceFactErrors(state));
     assertKnownFacts(k1CharitableSourceFactErrors(state));
+    assertKnownFacts(cryptoDonationFactErrors(deductionData?.cryptoDonations, state.taxYear));
     assertKnownFacts(currentLossOriginFactErrors(state));
     assertKnownFacts(codNolFactErrors(state));
     assertKnownFacts(premiumTaxCreditFactErrors(state));
@@ -747,6 +749,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
   const form172 = buildCurrentLossOrigin(adjustmentData?.currentLossOrigin, state);
   const codSources = buildGuidedCodNol(adjustmentData?.codNolSources, state);
   const k1Sources = buildGuidedK1CharitableSources(state);
+  const cryptoDonations = buildGuidedCryptoDonations(deductionData?.cryptoDonations, state.taxYear);
   const currentCapitalCarry = form172?.capitalSources?.priorCapitalLosses;
 
   return {
@@ -782,6 +785,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     form2210: buildEstimatedTaxFacts(paymentData, state.taxYear),
     form2555: buildForeignIncomeInput(adjustmentData?.foreignIncome, state),
     netOperatingLoss: buildGuidedNetOperatingLoss(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, deductionData, adjustmentData?.k1LossSources),
+    ...(cryptoDonations !== undefined ? { cryptoIncome: { donations: cryptoDonations } } : {}),
     scheduleK1: k1Sources?.scheduleK1,
     qbiLossSources: k1Sources?.qbiLossSources,
     k1CharitableSources: k1Sources?.k1CharitableSources,

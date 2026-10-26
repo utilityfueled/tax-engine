@@ -83,7 +83,7 @@ export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefin
     throw new Error('Confirm the separate actual AMT carry history and current source classification. Special-disaster or differing basis/loss-limit methods need their separate worksheet.');
   }
   const history = alternative.charitableCarryoverHistory;
-  const hasOriginalCharitableSources = deductions?.k1CharitableSources !== undefined;
+  const hasOriginalCharitableSources = deductions?.k1CharitableSources !== undefined || deductions?.cryptoDonations !== undefined;
   const hasGifts = [deductions?.charitableContributions, ...(deductions?.donationEntries?.map(row => row.amount) ?? [])]
     .some(value => value?.trim() && !parseGuidedCurrency(value).isZero());
   const positiveAlternative = alternative.vintages?.some(row => row.openingCarryforward?.trim() && parseGuidedCurrency(row.openingCarryforward).gt(0));

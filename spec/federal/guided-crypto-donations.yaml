@@ -1,0 +1,50 @@
+form: "Guided digital-asset charitable donations"
+fullName: "Actual original digital-asset gifts through the interview and saved return"
+taxYear: 2026
+irsReference: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-digital-asset-transactions"
+references:
+  - "https://www.irs.gov/publications/p526"
+  - "https://www.irs.gov/publications/p561"
+notes: |
+  Official sources refreshed 2026-10-26. Digital-asset FAQ78-79 and Publication526 distinguish
+  a property's original basis, contribution-date value, holding period and
+  recipient. Publication561 requires the appraisal determination to consider
+  similar-property gifts throughout the year, including different recipients.
+  Collect the original facts, including that actual determination; never derive
+  an appraisal exemption from a single small row or from an exchange quotation.
+  Reuse calculateCryptoDonations and its existing source/category restrictions.
+  No calculation, valuation election, Form8283 qualification or filing gate changes.
+  No AGI, tentative deduction or allowed deduction is an editable source input.
+lines:
+  - line: "nol-source-history"
+    description: "Original digital-asset gifts require actual regular and AMT charitable histories with NOL sources"
+    formula: "When an actual NOL packet accompanies digital-asset donation sources, require independently confirmed regular and AMT prior charitable histories, including explicit empty lists. Missing either list remains unknown; neither the absence of a direct receipt nor zero current carry creates an empty history. A known empty original gift list remains distinguishable from an absent collection."
+    testRef: "tests/guided-interview/guided-crypto-donations.test.ts::requires independent charitable histories for original gifts with NOL sources"
+  - line: "similar-property"
+    description: "Validate the combined original gift group before preview"
+    formula: "Two actual BTC gifts of4000 each exceed the known similar-property5000 appraisal threshold across recipients. Per-row false appraisal answers reject in the helper, section, preview and canonical bridge. Actual confirmed appraisal records restore the8000 contribution without changing the source values."
+    testRef: "tests/guided-interview/guided-crypto-donations.test.ts::reconciles known similar-property gifts as one source group"
+  - line: "canonical"
+    description: "Original confirmed gifts enter the canonical return once"
+    formula: "2025 wages100000 and a long-term public capital-asset gift FMV20000/basis1000 yield ScheduleA charity20000 and taxable income80000 under the actual itemized choice. Keep the gift separate from direct receipts and retain exact quantity and original zero basis."
+    testRef: "tests/guided-interview/guided-crypto-donations.test.ts::carries original gifts once through the actual deduction choice"
+  - line: "unknown"
+    description: "Blank and contradictory originals cannot become known source facts"
+    formula: "Missing value/date/recipient/qualification/confirmation and appraisal requirements reject before preview. Explicit false and zero survive. A known unqualified recipient contributes zero without a guessed recipient category."
+    testRef: "tests/guided-interview/guided-crypto-donations.test.ts::keeps missing false and zero donation facts distinct"
+  - line: "year-and-edit"
+    description: "Saved original sources remain year bound and require reconfirmation after edits"
+    formula: "Actual acquisition and donation dates determine the year and holding period. Edits revoke source confirmation; confirmation-only changes do not erase completed source answers. Saved2026 originals remain accessible but unqualified2026 calculation/export stays closed."
+    testRef: "tests/guided-interview/guided-crypto-donations.test.ts::binds the actual year and invalidates changed original records"
+  - line: "controls"
+    description: "Every actual source field is reachable without defaults"
+    formula: "Adding a gift creates blank fields and unknown answers. Original asset/quantity/dates/value/basis/recipient/category and actual qualification, ownership, benefits, records and appraisal answers remain editable. Removing a gift removes that source once."
+    testRef: "tests/apps/web/crypto-donation-interactions.test.tsx::collects original digital-asset gifts and explicit appraisal facts"
+  - line: "saved-review"
+    description: "Saved current-year sources reach the redacted review packet"
+    formula: "Reloaded2025 originals reproduce ScheduleA and the full saved review packet. Required unknown sources block the export. The review notice and private-identifier redaction remain in force."
+    testRef: "tests/apps/web/workspace-crypto-donations.test.ts::reopens the actual gift through the private saved return packet"
+  - line: "browser"
+    description: "Desktop and mobile users can complete and correct the actual gift"
+    formula: "Use real controls, edit/reconfirm an original, save/reload, calculate, download and reopen the2025 review packet; blank basis blocks calculation and actual zero remains known. Local editing and preview send no private source facts."
+    testRef: "apps/web/tests/guided-crypto-donations.spec.ts::preserves original digital-asset gifts through local reload and review"
