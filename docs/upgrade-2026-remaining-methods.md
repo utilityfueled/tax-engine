@@ -240,3 +240,22 @@ cash/category education methods. Named interpretation questions are not replaced
 with arbitrary allocations. Support/inventory mapping and final checks, native
 images, recovery and external qualification remain due. The603fc1b immutable full
 run is active; its results must not be inferred from the earlier d898091 pass.
+
+## Follow-through throughe91d7d7 — October26
+
+Actual deceased-claimant numeric short periods and current8862review are now
+5702c78. Original current K1/crypto charitable NOL sources are8d97c0f. The actual
+crypto donation guide, saved review and independent NOL-history presence are
+e91d7d7; the known same-asset appraisal-group correction isc078ce0. These close
+the named corresponding source/guide tasks. Their ledgers retain exact bounds.
+
+Remaining internal work is actual coverage-family health premiums and ordinary
+payment/marriage combinations, current-loss-origin charity and determined
+floor/current-prior methods, and remaining bounded cash/category education
+methods. A read-only education inventory is active. Explicit shared-implementation
+links, current integrated/remote verification, final images/scans and recovery
+remain due. The603fc1b full run finished with18992pass/one stale template count
+failure in both unit and coverage; eca2e6a fixes it without changing byte checks.
+Its422browserpasses/fivehostedskips do not establish hosted readiness. Current
+source requires another complete run. External interpretation, final-form,
+human-review, provider, staging and advisory decisions remain unresolved.

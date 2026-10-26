@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
+    "lastRecordedCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1310,8 +1310,8 @@
       "hosted staging",
       "final multi-platform release images"
     ],
-    "workInProgress": "Complete actual partial-coverage-family health premiums and ordinary outside-payer/payment/marriage combinations. Separate actual plans and multiple owners are delivered in9eafb45. Binding joint2025 repayment attribution needs controlling interpretation. Complete actual deceased-claimant numeric short-year residence using each original taxpayer period. Current Form8862 sources, canonical eligibility, interview and review are delivered in603fc1b. Complete actual K1/crypto charitable NOL sources and missing crypto donation guide, current-loss-origin charity and other determined floor/current-prior methods. One prior category/vintage regular-AMT replay is delivered in405d914. Mixed attribution and partial B remain exact source-method questions. Reconcile remaining bounded partial-cash/category education methods against the completed ordinary account-group route. Distinct QTP and multiple ordinary ESA sources sharing actual tuition are delivered inc6df682 and74bf948. Mixed-owner bond and broader code6 interpretations remain unresolved. Finish the immutable603fc1b full check, later final integrated/remote workflows and support/inventory implementation mapping. Last completed d898091 excludes thirteen later source packages. Rehearse final-source native images, SBOMs/scans and full recovery; reconcile artifacts and support evidence. Qualified human review, live-provider qualification, authorized staging, final forms and advisory acceptance remain external requirements.",
-    "latestIntegratedCommit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
+    "workInProgress": "Complete actual partial-coverage-family health premiums and ordinary outside-payer/payment/marriage combinations. Separate actual plans and multiple owners are delivered in9eafb45. Binding joint2025 repayment attribution needs controlling interpretation. Complete current-loss-origin charity and determined floor/current-prior methods. Original current K1/crypto regular-AMT NOL sources are8d97c0f and actual crypto donation intake/history binding ise91d7d7; prior category/vintage replay is405d914. Mixed attribution and partial B remain exact source-method questions. Reconcile and implement remaining bounded partial-cash/category education methods against the completed ordinary account-group route. Distinct QTP and multiple ESA sources sharing actual tuition arec6df682/74bf948. Mixed-owner bond and broader code6 interpretations remain unresolved. Complete explicit spec-to-shared-implementation inventory links and current integrated/remote verification. Full603fc1b had one stale template count failure fixed ineca2e6a; the failed archive is preserved. Current source has later scoped packages and requires a fresh complete run. Rehearse final-source native images, SBOMs/scans and full recovery; reconcile artifacts and support evidence. Qualified human review, live-provider qualification, authorized staging, final forms and advisory acceptance remain external requirements.",
+    "latestIntegratedCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
     "activeIntegrationRun": {
       "status": "d898091-complete-passed-later-integrated-full-run-due",
       "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
@@ -1658,10 +1658,9 @@
     },
     "remainingInternalWork": [
       "Complete actual partial-coverage-family health premiums and ordinary outside-payer/payment/marriage combinations. Separate actual plans and multiple owners are delivered in9eafb45. Binding joint2025 repayment attribution needs controlling interpretation.",
-      "Complete actual deceased-claimant numeric short-year residence using each original taxpayer period. Current Form8862 sources, canonical eligibility, interview and review are delivered in603fc1b.",
-      "Complete actual K1/crypto charitable NOL sources and missing crypto donation guide, current-loss-origin charity and other determined floor/current-prior methods. One prior category/vintage regular-AMT replay is delivered in405d914. Mixed attribution and partial B remain exact source-method questions.",
-      "Reconcile remaining bounded partial-cash/category education methods against the completed ordinary account-group route. Distinct QTP and multiple ordinary ESA sources sharing actual tuition are delivered inc6df682 and74bf948. Mixed-owner bond and broader code6 interpretations remain unresolved.",
-      "Finish the immutable603fc1b full check, later final integrated/remote workflows and support/inventory implementation mapping. Last completed d898091 excludes thirteen later source packages.",
+      "Complete current-loss-origin charity and determined floor/current-prior methods. Original current K1/crypto regular-AMT NOL sources are8d97c0f and actual crypto donation intake/history binding ise91d7d7; prior category/vintage replay is405d914. Mixed attribution and partial B remain exact source-method questions.",
+      "Reconcile and implement remaining bounded partial-cash/category education methods against the completed ordinary account-group route. Distinct QTP and multiple ESA sources sharing actual tuition arec6df682/74bf948. Mixed-owner bond and broader code6 interpretations remain unresolved.",
+      "Complete explicit spec-to-shared-implementation inventory links and current integrated/remote verification. Full603fc1b had one stale template count failure fixed ineca2e6a; the failed archive is preserved. Current source has later scoped packages and requires a fresh complete run.",
       "Rehearse final-source native images, SBOMs/scans and full recovery; reconcile artifacts and support evidence. Qualified human review, live-provider qualification, authorized staging, final forms and advisory acceptance remain external requirements."
     ],
     "previousStableCoverageRun": {
@@ -1684,7 +1683,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
+    "lastPushedCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
     "currentBrowserRun": {
       "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
       "tree": "23f7a5fe620edbdb43f13b35fbb315fb660a8a89",
@@ -1786,20 +1785,112 @@
       },
       "currentRuns": [
         {
-          "commit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
-          "workflow": "CI",
-          "status": "in_progress",
           "conclusion": "",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40330381094",
-          "createdAt": "2026-10-26T13:25:05Z"
+          "createdAt": "2026-10-26T14:29:32Z",
+          "databaseId": 40340026591,
+          "headSha": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+          "status": "pending",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40340026591",
+          "workflowName": "CI"
         },
         {
-          "commit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
-          "workflow": "Web",
-          "status": "in_progress",
           "conclusion": "",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40330381056",
-          "createdAt": "2026-10-26T13:25:05Z"
+          "createdAt": "2026-10-26T14:29:32Z",
+          "databaseId": 40340026663,
+          "headSha": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+          "status": "queued",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40340026663",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "",
+          "createdAt": "2026-10-26T14:19:30Z",
+          "databaseId": 40338585090,
+          "headSha": "8d97c0f2a4895d43f85c725078863eaa4934c6fd",
+          "status": "in_progress",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40338585090",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T14:19:30Z",
+          "databaseId": 40338585169,
+          "headSha": "8d97c0f2a4895d43f85c725078863eaa4934c6fd",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40338585169",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T14:13:31Z",
+          "databaseId": 40337642759,
+          "headSha": "5702c78d50bed5762d5fbcbf702c2ae8604ce828",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40337642759",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T14:13:31Z",
+          "databaseId": 40337642791,
+          "headSha": "5702c78d50bed5762d5fbcbf702c2ae8604ce828",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40337642791",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T13:59:38Z",
+          "databaseId": 40335511005,
+          "headSha": "c078ce047295f712621e8422dfe0cae6946e7dab",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40335511005",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T13:59:38Z",
+          "databaseId": 40335510875,
+          "headSha": "c078ce047295f712621e8422dfe0cae6946e7dab",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40335510875",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T13:49:11Z",
+          "databaseId": 40333943308,
+          "headSha": "eca2e6a497e122a2733da75c7c40559f35d40c77",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40333943308",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T13:49:11Z",
+          "databaseId": 40333943444,
+          "headSha": "eca2e6a497e122a2733da75c7c40559f35d40c77",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40333943444",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T13:34:49Z",
+          "databaseId": 40331813863,
+          "headSha": "7a4553218edc4e62e48202b325610c5b4fecb9ea",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40331813863",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T13:34:49Z",
+          "databaseId": 40331813817,
+          "headSha": "7a4553218edc4e62e48202b325610c5b4fecb9ea",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40331813817",
+          "workflowName": "CI"
         }
       ]
     },
@@ -2666,26 +2757,118 @@
       "scope": "Exact immutable d898091 local synthetic source only; all later source packages excluded. Five hosted browser skips are not staging evidence."
     },
     "currentRemoteRuns": {
+      "observedAt": "2026-10-26T14:32:06.519876+00:00",
       "runs": [
         {
-          "commit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
-          "workflow": "CI",
-          "status": "in_progress",
           "conclusion": "",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40330381094",
-          "createdAt": "2026-10-26T13:25:05Z"
+          "createdAt": "2026-10-26T14:29:32Z",
+          "databaseId": 40340026591,
+          "headSha": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+          "status": "pending",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40340026591",
+          "workflowName": "CI"
         },
         {
-          "commit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
-          "workflow": "Web",
-          "status": "in_progress",
           "conclusion": "",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40330381056",
-          "createdAt": "2026-10-26T13:25:05Z"
+          "createdAt": "2026-10-26T14:29:32Z",
+          "databaseId": 40340026663,
+          "headSha": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+          "status": "queued",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40340026663",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "",
+          "createdAt": "2026-10-26T14:19:30Z",
+          "databaseId": 40338585090,
+          "headSha": "8d97c0f2a4895d43f85c725078863eaa4934c6fd",
+          "status": "in_progress",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40338585090",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T14:19:30Z",
+          "databaseId": 40338585169,
+          "headSha": "8d97c0f2a4895d43f85c725078863eaa4934c6fd",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40338585169",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T14:13:31Z",
+          "databaseId": 40337642759,
+          "headSha": "5702c78d50bed5762d5fbcbf702c2ae8604ce828",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40337642759",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T14:13:31Z",
+          "databaseId": 40337642791,
+          "headSha": "5702c78d50bed5762d5fbcbf702c2ae8604ce828",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40337642791",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T13:59:38Z",
+          "databaseId": 40335511005,
+          "headSha": "c078ce047295f712621e8422dfe0cae6946e7dab",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40335511005",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T13:59:38Z",
+          "databaseId": 40335510875,
+          "headSha": "c078ce047295f712621e8422dfe0cae6946e7dab",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40335510875",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T13:49:11Z",
+          "databaseId": 40333943308,
+          "headSha": "eca2e6a497e122a2733da75c7c40559f35d40c77",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40333943308",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T13:49:11Z",
+          "databaseId": 40333943444,
+          "headSha": "eca2e6a497e122a2733da75c7c40559f35d40c77",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40333943444",
+          "workflowName": "CI"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T13:34:49Z",
+          "databaseId": 40331813863,
+          "headSha": "7a4553218edc4e62e48202b325610c5b4fecb9ea",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40331813863",
+          "workflowName": "Web"
+        },
+        {
+          "conclusion": "cancelled",
+          "createdAt": "2026-10-26T13:34:49Z",
+          "databaseId": 40331813817,
+          "headSha": "7a4553218edc4e62e48202b325610c5b4fecb9ea",
+          "status": "completed",
+          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40331813817",
+          "workflowName": "CI"
         }
       ],
-      "boundary": "Current603fc1b CI/Web in progress; preceding74bf948,9eafb45 and405d914 runs cancelled by later pushes. No completed current remote result claimed.",
-      "observedDate": "2026-10-26"
+      "boundary": "Observed exact branch runs only; in-progress/cancelled workflows are not completed passing evidence."
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
@@ -3028,20 +3211,31 @@
         ],
         "currentForm8862": [
           "603fc1bbf48d18d1682f775eeea6752f394808d2"
+        ],
+        "similarPropertyAppraisal": [
+          "c078ce047295f712621e8422dfe0cae6946e7dab"
+        ],
+        "deceasedClaimantPeriods": [
+          "5702c78d50bed5762d5fbcbf702c2ae8604ce828"
+        ],
+        "originalCharitableNol": [
+          "8d97c0f2a4895d43f85c725078863eaa4934c6fd"
+        ],
+        "guidedCryptoDonations": [
+          "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c"
         ]
       },
       "owners": {
         "marketplaceMethodsAndIntake": "federal_law",
         "charitableSourceMethods": "ai_billing",
         "eicHistoryAndCurrent8862": "complete_facts",
-        "educationAndFinalIntegration": "parent; also actual crypto donation guided intake"
+        "educationAndFinalIntegration": "complete_facts: bounded education audit/implementation; parent: inventory mapping and final integration"
       },
       "subsequent": [
         "Complete actual partial-coverage-family health premiums and ordinary outside-payer/payment/marriage combinations. Separate actual plans and multiple owners are delivered in9eafb45. Binding joint2025 repayment attribution needs controlling interpretation.",
-        "Complete actual deceased-claimant numeric short-year residence using each original taxpayer period. Current Form8862 sources, canonical eligibility, interview and review are delivered in603fc1b.",
-        "Complete actual K1/crypto charitable NOL sources and missing crypto donation guide, current-loss-origin charity and other determined floor/current-prior methods. One prior category/vintage regular-AMT replay is delivered in405d914. Mixed attribution and partial B remain exact source-method questions.",
-        "Reconcile remaining bounded partial-cash/category education methods against the completed ordinary account-group route. Distinct QTP and multiple ordinary ESA sources sharing actual tuition are delivered inc6df682 and74bf948. Mixed-owner bond and broader code6 interpretations remain unresolved.",
-        "Finish the immutable603fc1b full check, later final integrated/remote workflows and support/inventory implementation mapping. Last completed d898091 excludes thirteen later source packages.",
+        "Complete current-loss-origin charity and determined floor/current-prior methods. Original current K1/crypto regular-AMT NOL sources are8d97c0f and actual crypto donation intake/history binding ise91d7d7; prior category/vintage replay is405d914. Mixed attribution and partial B remain exact source-method questions.",
+        "Reconcile and implement remaining bounded partial-cash/category education methods against the completed ordinary account-group route. Distinct QTP and multiple ESA sources sharing actual tuition arec6df682/74bf948. Mixed-owner bond and broader code6 interpretations remain unresolved.",
+        "Complete explicit spec-to-shared-implementation inventory links and current integrated/remote verification. Full603fc1b had one stale template count failure fixed ineca2e6a; the failed archive is preserved. Current source has later scoped packages and requires a fresh complete run.",
         "Rehearse final-source native images, SBOMs/scans and full recovery; reconcile artifacts and support evidence. Qualified human review, live-provider qualification, authorized staging, final forms and advisory acceptance remain external requirements."
       ],
       "unsupportedIsComplete": false
@@ -4087,15 +4281,83 @@
         "pdfs": 4,
         "pdfPages": 14,
         "literalFields": 36,
-        "boundary": "Actual current recertification and positive EIC; deceased-claimant short-year period remains private software work; no final2026 or filing qualification",
+        "boundary": "Actual current recertification and positive EIC; deceased-claimant numeric periods now delivered separately in5702c78; no final2026 or filing qualification",
         "tree": "22f2f6b67909b9acf2bc104b2178fe73cfbd7385",
         "reviewKind": "Separate agent review; qualified human review remains outstanding"
+      },
+      "similarPropertyAppraisal": {
+        "commit": "c078ce047295f712621e8422dfe0cae6946e7dab",
+        "ledger": "docs/upgrade-2026-crypto-appraisal-work.md",
+        "wideTests": 753,
+        "wideFiles": 53,
+        "independentTests": 13,
+        "independentFiles": 7,
+        "boundary": "Known same-asset annual original contributions across recipients; no inferred outside-ledger appraisal exemption",
+        "tree": "7d5872b84455e50c03b76dfea45c5ab4bf7ecdef",
+        "reviewKind": "Separate agent software/source review; qualified human review remains outstanding"
+      },
+      "deceasedClaimantPeriods": {
+        "commit": "5702c78d50bed5762d5fbcbf702c2ae8604ce828",
+        "ledger": "docs/upgrade-2026-eic-deceased-period-work.md",
+        "wideTests": 1581,
+        "wideFiles": 154,
+        "integrationTests": 569,
+        "integrationFiles": 14,
+        "independentTests": 12,
+        "independentFiles": 4,
+        "privateControls": 4,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 2,
+        "pdfPages": 32,
+        "literalFields": 8,
+        "tree": "3e5cb3df4891a868da787742f2aff048b056875e",
+        "reviewKind": "Separate agent software/source review; qualified human review remains outstanding"
+      },
+      "originalCharitableNol": {
+        "commit": "8d97c0f2a4895d43f85c725078863eaa4934c6fd",
+        "ledger": "docs/upgrade-2026-charity-original-nol-work.md",
+        "wideTests": 867,
+        "wideFiles": 92,
+        "integrationTests": 872,
+        "integrationFiles": 93,
+        "readinessTests": 43,
+        "independentTests": 14,
+        "independentFiles": 7,
+        "privateControls": 4,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 54,
+        "pdfPages": 118,
+        "literalFields": 253,
+        "literalScheduleAFields": 15,
+        "tree": "d296ddfbe4a373cdb00fd9883393383e8a7fc1e6",
+        "reviewKind": "Separate agent software/source review; qualified human review remains outstanding"
+      },
+      "guidedCryptoDonations": {
+        "commit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+        "ledger": "docs/upgrade-2026-guided-crypto-donations-work.md",
+        "wideTests": 733,
+        "wideFiles": 53,
+        "integrationTests": 795,
+        "integrationFiles": 63,
+        "independentTests": 20,
+        "independentFiles": 9,
+        "privateControls": 9,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "independentlyReviewedPDFs": 7,
+        "pdfPages": 91,
+        "literalFields": 21,
+        "additionalFinalBrowserPDFs": 2,
+        "tree": "5f4f0279f2d065f766895610e15eef3f22d497ec",
+        "reviewKind": "Separate agent software/source review; qualified human review remains outstanding"
       }
     },
     "currentInventory": {
-      "entries": 513,
-      "specReferences": 5455,
-      "sourceCommit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
+      "entries": 517,
+      "specReferences": 5486,
+      "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
       "path": "spec/coverage/inventory-2025.json",
       "qualification": "Traceability only; no readiness or human review promotion"
     },
@@ -4184,8 +4446,8 @@
     },
     "currentReviewCandidates": {},
     "currentRuleVersions": {
-      "2025": "2025.141",
-      "2026": "2026.138-law-integration-draft"
+      "2025": "2025.145",
+      "2026": "2026.142-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -5313,6 +5575,74 @@
         "boundary": "Actual current recertification and positive EIC; deceased-claimant short-year period remains private software work; no final2026 or filing qualification",
         "tree": "22f2f6b67909b9acf2bc104b2178fe73cfbd7385",
         "reviewKind": "Separate agent review; qualified human review remains outstanding"
+      },
+      "similarPropertyAppraisal": {
+        "commit": "c078ce047295f712621e8422dfe0cae6946e7dab",
+        "ledger": "docs/upgrade-2026-crypto-appraisal-work.md",
+        "wideTests": 753,
+        "wideFiles": 53,
+        "independentTests": 13,
+        "independentFiles": 7,
+        "boundary": "Known same-asset annual original contributions across recipients; no inferred outside-ledger appraisal exemption",
+        "tree": "7d5872b84455e50c03b76dfea45c5ab4bf7ecdef",
+        "reviewKind": "Separate agent software/source review; qualified human review remains outstanding"
+      },
+      "deceasedClaimantPeriods": {
+        "commit": "5702c78d50bed5762d5fbcbf702c2ae8604ce828",
+        "ledger": "docs/upgrade-2026-eic-deceased-period-work.md",
+        "wideTests": 1581,
+        "wideFiles": 154,
+        "integrationTests": 569,
+        "integrationFiles": 14,
+        "independentTests": 12,
+        "independentFiles": 4,
+        "privateControls": 4,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 2,
+        "pdfPages": 32,
+        "literalFields": 8,
+        "tree": "3e5cb3df4891a868da787742f2aff048b056875e",
+        "reviewKind": "Separate agent software/source review; qualified human review remains outstanding"
+      },
+      "originalCharitableNol": {
+        "commit": "8d97c0f2a4895d43f85c725078863eaa4934c6fd",
+        "ledger": "docs/upgrade-2026-charity-original-nol-work.md",
+        "wideTests": 867,
+        "wideFiles": 92,
+        "integrationTests": 872,
+        "integrationFiles": 93,
+        "readinessTests": 43,
+        "independentTests": 14,
+        "independentFiles": 7,
+        "privateControls": 4,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "pdfs": 54,
+        "pdfPages": 118,
+        "literalFields": 253,
+        "literalScheduleAFields": 15,
+        "tree": "d296ddfbe4a373cdb00fd9883393383e8a7fc1e6",
+        "reviewKind": "Separate agent software/source review; qualified human review remains outstanding"
+      },
+      "guidedCryptoDonations": {
+        "commit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+        "ledger": "docs/upgrade-2026-guided-crypto-donations-work.md",
+        "wideTests": 733,
+        "wideFiles": 53,
+        "integrationTests": 795,
+        "integrationFiles": 63,
+        "independentTests": 20,
+        "independentFiles": 9,
+        "privateControls": 9,
+        "browserPassed": 2,
+        "browserRetries": 0,
+        "independentlyReviewedPDFs": 7,
+        "pdfPages": 91,
+        "literalFields": 21,
+        "additionalFinalBrowserPDFs": 2,
+        "tree": "5f4f0279f2d065f766895610e15eef3f22d497ec",
+        "reviewKind": "Separate agent software/source review; qualified human review remains outstanding"
       }
     },
     "latestPassingCandidateCoverage": {
@@ -5691,29 +6021,70 @@
           }
         ],
         "boundary": "Current b0de955 CI and Web in progress; 827b399, b41f628 and 15549f8 runs cancelled by subsequent pushes. No completed current remote result is claimed."
+      },
+      {
+        "runs": [
+          {
+            "commit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
+            "workflow": "CI",
+            "status": "in_progress",
+            "conclusion": "",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40330381094",
+            "createdAt": "2026-10-26T13:25:05Z"
+          },
+          {
+            "commit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
+            "workflow": "Web",
+            "status": "in_progress",
+            "conclusion": "",
+            "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40330381056",
+            "createdAt": "2026-10-26T13:25:05Z"
+          }
+        ],
+        "boundary": "Current603fc1b CI/Web in progress; preceding74bf948,9eafb45 and405d914 runs cancelled by later pushes. No completed current remote result claimed.",
+        "observedDate": "2026-10-26"
       }
     ],
-    "currentFullVerificationInProgress": {
-      "sourceCommit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
+    "fullVerification603fc1b": {
+      "commit": "603fc1bbf48d18d1682f775eeea6752f394808d2",
       "tree": "22f2f6b67909b9acf2bc104b2178fe73cfbd7385",
-      "trackedFiles": 3155,
-      "evidence": ".local/upgrade-evidence/603fc1b-complete/verification.json",
-      "passed": [
-        "types",
-        "contract-types",
-        "web-types",
-        "spec",
-        "inventory",
-        "engine-build",
-        "web-build",
-        "lint"
-      ],
-      "pending": [
-        "unit",
-        "coverage",
-        "browser"
-      ],
-      "boundary": "Immutable source with synthetic local PostgreSQL; hosted readiness is not inferred"
+      "trackedSourceFiles": 3155,
+      "trackedSourceUnchanged": true,
+      "portClosed": true,
+      "staticChecks": "All eight pass",
+      "unit": {
+        "passed": 18992,
+        "failed": 1,
+        "passedFiles": 1183,
+        "failedFiles": 1
+      },
+      "coverage": {
+        "passedTests": 18992,
+        "failedTests": 1,
+        "exitCode": 1,
+        "percentage": null,
+        "reason": "Coverage run failed the same stale template-registry count assertion; no successful coverage result claimed."
+      },
+      "browser": {
+        "passed": 422,
+        "skippedHosted": 5,
+        "failed": 0,
+        "retries": 0,
+        "workers": 2
+      },
+      "onlyFailure": {
+        "test": "tests/pdf/template-registry.test.ts",
+        "reason": "Review pack has 44 templates after Form 8862; assertion still expected 43. All exact-byte checks are preserved.",
+        "fixedBy": "eca2e6a497e122a2733da75c7c40559f35d40c77",
+        "fixChecks": "8 tests in 2 files pass; inventory regenerated without changes."
+      },
+      "allRequiredChecksPass": false,
+      "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
+    },
+    "currentFullVerificationRequired": {
+      "sourceCommit": "e91d7d7ec1b3e1535e6fa5e5f38753b781f47d1c",
+      "reason": "Four later source packages plus template count repair; full integrated current suite remains due",
+      "readiness": "No full current pass claimed"
     }
   },
   "historicalReleaseBlockers": {
