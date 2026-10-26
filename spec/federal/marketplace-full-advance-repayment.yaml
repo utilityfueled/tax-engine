@@ -20,7 +20,10 @@ notes: |
   its annual or monthly whole-dollar convention. This bounded proof also requires
   actual repayment equal the exact original advance total. Matching only rounded
   advances cannot create a payment bridge for an unrepaid source-cent remainder.
-  Partial/capped repayment and a source/reporting difference remain gated.
+  Partial/capped repayment remains gated. A source/reporting difference rejects
+  this full-repayment proof; the separately specified one-pool actual-cash-plus-
+  reported-repayment method may derive paid costs without claiming those source
+  cents were repaid. Its separate component/qualification conditions must hold.
   Keep the existing source guards for outside-family owner-paid amounts and
   marriage composition. Production2026 and all qualification gates are unchanged.
 lines:
@@ -50,7 +53,7 @@ lines:
     testRef: "tests/guided-interview/guided-marketplace-full-repayment.test.ts::preserves actual full-repayment sources without an entered credit or repayment"
   - line: "source-cents"
     description: "Reported repayment does not replace original source cents"
-    formula: "Retain each original actual advance at source precision. Annual8962 rounds the annual sum; monthly8962 rounds each completed monthly line before annual sum. Reject exact advances12005.88 when reported repayment differs, and positive0.12 reported0, rather than infer payment. Six1000.01 and six999.99 advances reconcile exact and reported12000, with original18005.88 premiums transferring18006 under the separate7206 business rule."
+    formula: "Retain each original actual advance at source precision. Annual8962 rounds the annual sum; monthly8962 rounds each completed monthly line before annual sum. The full-source proof rejects exact advances12005.88 when reported repayment differs, and positive0.12 reported0, rather than infer payment. The separately validated one-pool reported-payment method may retain0.12 unpaid and derive17999.88 paid costs. Six1000.01 and six999.99 advances reconcile exact and reported12000, with original18005.88 premiums transferring18006 under the separate7206 business rule."
     testRef: "tests/engine/federal-marketplace-full-repayment.test.ts::retains source cents independently of annual and monthly repayment reporting"
   - line: "separate-owners"
     description: "Separate original plans retain each owner's ordinary business limit"

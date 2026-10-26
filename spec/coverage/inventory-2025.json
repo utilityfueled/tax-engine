@@ -6356,6 +6356,29 @@
       ]
     },
     {
+      "key": "federal/marketplace-reported-repayment-payment",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.162(l)-1",
+      "specPath": "spec/federal/marketplace-reported-repayment-payment.yaml",
+      "enginePath": "src/engine/forms/marketplace-reported-repayment-payment.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-marketplace-reported-repayment.test.ts::uses actual reported repayment without treating source cents as paid",
+        "tests/pdf/marketplace-reported-repayment-review.test.ts::prints reported repayment and unpaid source cents with private source binding"
+      ],
+      "implementationNote": "One actual eligible owner/business payment pool derives paid cost from original cash and completed reported repayment; private original source binding precedes review output. No allocation across differently qualified pools or independent filing qualification is claimed.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/net-operating-loss",
       "jurisdiction": "federal",
       "taxYear": 2025,

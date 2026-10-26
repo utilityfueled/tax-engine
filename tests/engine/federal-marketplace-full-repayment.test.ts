@@ -1,6 +1,7 @@
 // Spec: spec/federal/marketplace-full-advance-repayment.yaml.
 import { describe, expect, it } from 'vitest';
 import { calculateFederalTax } from '@/engine/federal.js';
+import { calculateMarketplaceFullAdvanceRepayment } from '@/engine/forms/marketplace-full-advance-repayment.js';
 import { simpleW2Fixture } from '../fixtures/simple-w2.js';
 import { d, sum } from '@/utils/decimal.js';
 import { marketplaceFullRepaymentInput, marketplaceFullRepaymentTwoOwners } from '../fixtures/marketplace-full-repayment.js';
@@ -58,7 +59,7 @@ describe('actual fully repaid Marketplace advances', () => {
         if (shared) row.personAmounts![2].advancePremiumTaxCredit = '1000.49';
       }
       // Rounded equality alone is not proof that the source cents were repaid.
-      expect(() => calculateFederalTax(input)).toThrow(/full.*repay|source.*advance/i);
+      expect(() => calculateFederalTax(input)).toThrow(/full.*repay|source.*advance|component costs/i);
       for (const row of original.monthlyPremiums) row.advancePremiumTaxCredit = shared ? (row.month <= 6 ? '2000.02' : '1999.98') : (row.month <= 6 ? '1000.01' : '999.99');
       plan.coverageFamilySources!.policies![0].original = structuredClone(original);
       if (shared) input.form8962!.sharedPolicyAllocations!.policies![0].original = structuredClone(original);
@@ -86,7 +87,10 @@ describe('actual fully repaid Marketplace advances', () => {
       Object.assign(row.personAmounts![0], { amountPaid: '1000', advancePremiumTaxCredit: '0' });
       Object.assign(row.personAmounts![1], { amountPaid: '499.99', advancePremiumTaxCredit: '0.01' });
     }
-    expect(() => calculateFederalTax(small)).toThrow(/full.*repay|source.*advance/i);
+    const actualPaid = calculateFederalTax(small);
+    expect(actualPaid.marketplaceReportedRepaymentHealth!.unreportedAdvanceRemainder.toFixed()).toBe('0.12');
+    expect(actualPaid.form7206!.businesses[0].eligiblePremiums.toFixed()).toBe('17999.88');
+    expect(() => calculateMarketplaceFullAdvanceRepayment(small, actualPaid)).toThrow(/full.*repay|source.*advance/i);
   });
   it('keeps separate owner plans and health qualification after full repayment', () => {
     const input = marketplaceFullRepaymentTwoOwners(), before = structuredClone(input);

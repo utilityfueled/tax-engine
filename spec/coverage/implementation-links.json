@@ -996,6 +996,16 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/marketplace-reported-repayment-payment",
+      "enginePath": "src/engine/forms/marketplace-reported-repayment-payment.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-reported-repayment.test.ts::uses actual reported repayment without treating source cents as paid",
+        "tests/pdf/marketplace-reported-repayment-review.test.ts::prints reported repayment and unpaid source cents with private source binding"
+      ],
+      "note": "One actual eligible owner/business payment pool derives paid cost from original cash and completed reported repayment; private original source binding precedes review output. No allocation across differently qualified pools or independent filing qualification is claimed."
+    },
+    {
       "key": "federal/net-operating-loss-vintages",
       "enginePath": "src/engine/forms/net-operating-loss.ts",
       "testRefs": [

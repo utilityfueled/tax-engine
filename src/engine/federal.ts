@@ -1,4 +1,5 @@
 import { calculateMarketplaceCoverageFamilySources } from "./forms/marketplace-coverage-family-sources.js";
+import { calculateMarketplaceReportedRepaymentPayment, type MarketplaceReportedRepaymentPayment } from "./forms/marketplace-reported-repayment-payment.js";
 import { calculateMarketplaceFullAdvanceRepayment } from "./forms/marketplace-full-advance-repayment.js";
 import { calculateBrokerageWithholding } from "./forms/form-1099-b-withholding.js";
 import { calculateForm1099DASources } from "./forms/form-1099-da-sources.js";
@@ -219,6 +220,14 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     // This is an internal ordinary-premium candidate, never an entered credit
     // or repayment. Acceptance depends on the completed actual final return.
     const result = calculateFederalTaxWithNol(input, { stage: "full-repayment" });
+    const exactAdvances = sum(...familySources.flatMap(plan => plan.months.map(row => row.ownAdvance)));
+    if (result.form8962 && !exactAdvances.eq(result.form8962.advancePTCTotal)) {
+      const reportedPayment = calculateMarketplaceReportedRepaymentPayment(input, result, "candidate");
+      const paidResult = calculateFederalTaxWithNol(input, { stage: "full-repayment", reportedPayment });
+      paidResult.marketplaceReportedRepaymentHealth = calculateMarketplaceReportedRepaymentPayment(input, paidResult);
+      paidResult.allLines.push(...paidResult.marketplaceReportedRepaymentHealth.lines);
+      return paidResult;
+    }
     result.marketplaceFullRepaymentHealth = calculateMarketplaceFullAdvanceRepayment(input, result);
     result.allLines.push(...result.marketplaceFullRepaymentHealth.lines);
     return result;
@@ -330,7 +339,7 @@ interface MarketplaceOrderedState {
   bond?: Form8815Result;
   studentLoan?: { result: ReturnType<typeof calculateStudentLoanInterestDeduction>; modifiedAgi: Decimal };
 }
-type MarketplaceContext = ({ stage: "full-repayment" } | { stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult }
+type MarketplaceContext = ({ stage: "full-repayment"; reportedPayment?: MarketplaceReportedRepaymentPayment } | { stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult }
   | { stage: "ordered"; deduction: MarketplaceHealthDeductionResult }
   | { stage: "final"; deduction: MarketplaceHealthDeductionResult }) & { ordered?: MarketplaceOrderedState; orderedDeductionInterim?: boolean };
 interface MarketplaceInterim {
@@ -3615,7 +3624,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       input, agi, taxExemptInterest, foreignIncomeReduction: form2555IncomeReduction,
       foreignHousingDeduction: form2555HousingDeduction,
       socialSecurityBenefitsGross, socialSecurityBenefitsTaxable,
-    }, marketplace?.stage === "full-repayment" ? { method: "ordinary-full-advance-repayment", stage: "final" } : marketplace ? { method: marketplace.deduction.method === "pub974-alternative-reentry-2026" ? marketplace.deduction.method
+    }, marketplace?.stage === "full-repayment" ? { method: marketplace.reportedPayment ? "ordinary-reported-advance-repayment" : "ordinary-full-advance-repayment", stage: "final" } : marketplace ? { method: marketplace.deduction.method === "pub974-alternative-reentry-2026" ? marketplace.deduction.method
       : year === 2025 ? "pub974-simplified-2025" : "pub974-simplified-2026", stage: marketplace.stage,
       repaymentLimit: marketplace.deduction.method.startsWith("ordinary-no-ptc-") ? undefined : marketplace.deduction.historicalLimit?.repaymentLimit ?? undefined } : undefined);
     netPremiumTaxCredit = form8962.netPTC;

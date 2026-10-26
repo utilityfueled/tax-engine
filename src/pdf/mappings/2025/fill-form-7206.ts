@@ -10,6 +10,7 @@ import { formatCurrency, loadReviewTemplate, setTextField } from "../../pdf-util
 import { assertMarketplaceHealthReviewSources } from "./form-7206-marketplace-source.js";
 import { calculateForm7206ReviewSources } from "./form-7206-business-source.js";
 import { calculateMarketplaceFullAdvanceRepayment } from "@/engine/forms/marketplace-full-advance-repayment.js";
+import { calculateMarketplaceReportedRepaymentPayment } from "@/engine/forms/marketplace-reported-repayment-payment.js";
 import { charitableReviewOriginalSourceInput, type PreparedCharitableReview } from "../../charitable-review-context.js";
 import { hasPremiumTaxCreditReviewSources, premiumTaxCreditReviewOriginalSourceInput, type PreparedPremiumTaxCreditReview } from "../../premium-tax-credit-review-context.js";
 import { redactReviewIdentifiers } from "../../redact-review-identifiers.js";
@@ -32,11 +33,14 @@ function exact(value: unknown, label: string): Decimal {
 }
 function reconcileSources(input: TaxYearInput, result: NonNullable<TaxReturnResult["form7206"]>, fullReturn: TaxReturnResult) {
   const marketplace = fullReturn.marketplaceHealthInsurance, fullRepayment = fullReturn.marketplaceFullRepaymentHealth;
+  const reportedRepayment = fullReturn.marketplaceReportedRepaymentHealth;
   const hasMarketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage && plan.premiumTaxCreditInvolved);
-  if ((marketplace && fullRepayment) || Boolean(marketplace || fullRepayment) !== Boolean(hasMarketplace)
-    || (!marketplace && !fullRepayment && result.marketplaceHandling !== undefined)
-    || (fullRepayment && result.marketplaceHandling !== 'full-advance-repayment')) throw new Error("Form7206 Marketplace method requires its actual source coordination.");
-  const actual = calculateForm7206({ taxYear: input.taxpayer.taxYear, filingStatus: input.taxpayer.filingStatus, facts: input.form7206!, marketplaceSourceInput: input, marketplaceHandling: result.marketplaceHandling });
+  if ([marketplace, fullRepayment, reportedRepayment].filter(Boolean).length !== (hasMarketplace ? 1 : 0)
+    || (!marketplace && !fullRepayment && !reportedRepayment && result.marketplaceHandling !== undefined)
+    || (fullRepayment && result.marketplaceHandling !== 'full-advance-repayment')
+    || (reportedRepayment && result.marketplaceHandling !== 'reported-advance-repayment')) throw new Error("Form7206 Marketplace method requires its actual source coordination.");
+  const reportedPayment = reportedRepayment ? calculateMarketplaceReportedRepaymentPayment(input, fullReturn) : undefined;
+  const actual = calculateForm7206({ taxYear: input.taxpayer.taxYear, filingStatus: input.taxpayer.filingStatus, facts: input.form7206!, marketplaceSourceInput: input, marketplaceHandling: result.marketplaceHandling, reportedPayment });
   const retained = (value: unknown) => JSON.stringify(redactReviewIdentifiers(value));
   if (retained(actual.coverageFamilyAllocations) !== retained(result.coverageFamilyAllocations)) throw new Error("Form7206 coverage-family allocation does not reconcile its actual original sources.");
   const familyAudit = actual.lines.filter(row => row.form === "Pub974 Coverage Family");
@@ -65,7 +69,10 @@ function reconcileSources(input: TaxYearInput, result: NonNullable<TaxReturnResu
       } else if (!source[property]!.eq(exact(persisted[property], property))) throw new Error("Form7206 current business income sources do not reconcile with the saved calculation.");
     }
   }
-  if (fullRepayment) {
+  if (reportedPayment) {
+    if (retained(reportedPayment) !== retained(reportedRepayment)
+      || retained(reportedPayment.lines) !== retained(fullReturn.allLines.filter(row => row.form === 'Marketplace Reported Repayment'))) throw new Error('Form7206 reported repayment proof and audits do not reconcile.');
+  } else if (fullRepayment) {
     const proof = calculateMarketplaceFullAdvanceRepayment(input, fullReturn);
     if (retained(proof) !== retained(fullRepayment)
       || retained(proof.lines) !== retained(fullReturn.allLines.filter(row => row.form === 'Marketplace Full Advance Repayment'))) throw new Error('Form7206 full advance repayment proof and audits do not reconcile.');
@@ -134,6 +141,14 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
   write("This appendix preserves original source facts and exact calculations. The preceding IRS form is a review copy. Independent filing qualification remains pending.");
   const marketplace = result.marketplaceHealthInsurance;
   const fullRepayment = result.marketplaceFullRepaymentHealth;
+  const reportedRepayment = result.marketplaceReportedRepaymentHealth;
+  if (reportedRepayment) {
+    write('ACTUAL CASH AND REPORTED ADVANCE REPAYMENT');
+    write('The completed return has zero premium tax credit. One eligible owner and business payment source uses actual cash plus reported repayment, capped at its original premium cost and its actual business income limit. Original source cents are not replaced by the reported total.');
+    write(`Original eligible premium $${reportedRepayment.originalEligiblePremiums.toFixed()}; actual cash $${reportedRepayment.actualCash.toFixed()}; actual paid premium $${reportedRepayment.eligiblePremiums.toFixed()}.`);
+    write(`Exact original advances $${reportedRepayment.exactSourceAdvances.toFixed()}; actual reported repayment $${reportedRepayment.finalRepayment.toFixed()}; unpaid source remainder $${reportedRepayment.unreportedAdvanceRemainder.toFixed()}; reporting excess above original advance $${reportedRepayment.reportingExcess.toFixed()}.`);
+    write('A reporting excess does not create an expense above original cost. The unpaid remainder is not treated as repaid. These amounts describe one payment pool and do not authorize an allocation across differently qualified people, plans or owners.');
+  }
   if (fullRepayment) {
     write('ACTUAL ZERO CREDIT AND FULL ADVANCE REPAYMENT');
     write('The completed return has zero premium tax credit and repays all original advances. The physical Form7206 contains ordinary eligible premiums and its actual own-business income limit. No partial repayment or credit is allocated between people or businesses.');
