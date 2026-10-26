@@ -958,6 +958,25 @@
       ]
     },
     {
+      "key": "federal/eic-schedule-e-investment",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p596",
+      "specPath": "spec/federal/eic-schedule-e-investment.yaml",
+      "enginePath": "src/engine/forms/eic-schedule-e-investment.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/eic-separated-review",
       "jurisdiction": "federal",
       "taxYear": 2025,

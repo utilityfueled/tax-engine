@@ -2,12 +2,22 @@
 
 ## Current checkpoint
 
-The branch is pushed through `c0dd1eb`. Since the previous record, delivered
+The branch is pushed through `5e1828c`. Since the previous record, delivered
 packages are actual separated-spouse intake (`0871438`) and review PDFs
 (`b2e1dc9`), disjoint shared/unshared Marketplace policies (`0799088`), K1 royalty
 classification with actual at-risk offsets (`8b3daea`), and canonical K1
-charitable sources (`c0dd1eb`). Rule metadata is `2025.120` /
-`2026.117-law-integration-draft`; all readiness gates remain unchanged.
+charitable sources (`c0dd1eb`). Rule metadata is `2025.121` /
+`2026.118-law-integration-draft`; all readiness gates remain unchanged.
+
+The EIC represented royalty/passive worksheet is now committed in `747e37d`:
+801 checks/15 files, 13 separate review checks including five private controls,
+and 35 final integration checks pass. The source method preserves original earned
+income, prior losses and ordinary PTP segregation; the remaining royalty-expense,
+personal-property and mixed-source methods remain explicit gaps. `5e1828c`
+separates full unit and coverage CI runs into one-worker jobs while preserving
+all tests, deadlines and thresholds. Both affected files pass five local cases;
+separate agent review and structural workflow checks pass. Replacement remote
+and full current-source verification remain pending.
 
 The EIC guide passes 968 tests/117 files and two production viewport flows;
 its separate review passes nine checks including four private probes. The PDF
@@ -31,11 +41,11 @@ review trees and final commits. Agent reviews are not human qualification.
 
 Full immutable `817f76f` passes **18,189 tests in 1,067 files**, zero failures or
 skips, using disposable PostgreSQL. Coverage is **87.14% branches** against 85%
-and **90.43% functions** against 90%; statements92.17%, lines94.77%. The run
+and **90.43% functions** against 90%; statements 92.17%, lines 94.77%. The run
 excludes later tax packages, so final current-source verification remains due.
-The current regenerated inventory has **474 entries and 5,172 references**.
+The current regenerated inventory has **475 entries and 5,180 references**.
 Remote CI for `b2e1dc9` failed two unchanged five-second PDF deadlines, with
-18,237 other tests passing; those failures are retained and repair is active.
+18,237 other tests passing; those failures are retained; the scheduling repair awaits a completed remote run.
 The `c0dd1eb` CI and Web runs were still in progress when last observed.
 
 The broad `76e3538` unit/static/build/browser evidence remains separate: 18,159
@@ -43,13 +53,14 @@ tests and 374 browser cases pass; five hosted-only skips provide no staging
 evidence. Its [runtime evidence](upgrade-2026-runtime-76e3538.json) binds the
 local arm64 image to source, with smoke and all six recovery phases passing.
 The scan reports 157 OS matches/67 advisories, zero critical/npm/available-fix
-matches. Owner acceptance and expiry2026-11-07 remain unresolved. No image was
+matches. Owner acceptance and expiry 2026-11-07 remain unresolved. No image was
 published; final source/platform artifacts still require verification.
 
-Active internal work includes source-character EIC royalty/passive components
-(the private candidate passes eight new source controls and 801 adjacent checks,
-with independent review underway), overlapping Marketplace benchmark groups,
-separate-business health ordering and actual K1 charitable guided intake.
+Active internal work includes overlapping Marketplace benchmark groups,
+separate-business health ordering, actual K1 charitable guided intake and the
+source-bound excess-distribution gain handoff. Complete EIC royalty-expense,
+personal-property and mixed-source methods remain separate from the represented
+ordinary components now committed.
 Remaining methods include excess-distribution gain, prior charitable floor,
 regular/AMT NOL and partial mixed-media coordination, followed by complete
 current-source checks and support reconciliation. A guard or inactive helper

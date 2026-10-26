@@ -194,16 +194,16 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Current-source combined verification remains pending afterc0dd1eb; b2e1dc9 remote unit run failed two five-second PDF deadlines (18237other tests passed). Exact817f76f coverage passes18189tests with unchanged gates. Later packages have scoped checks and separate agent reviews but need final combined verification.",
-    "The2026 rule pack and finite Marketplace/EIC/charitable source methods remain incomplete; explicit unsupported methods and inactive helpers are not counted as implemented. Full2026 calculation remains blocked.",
-    "Independent human tax review, selected-state demand/qualification and final physical forms are outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net1202/Form172 interpretations remain unresolved.",
-    "AI application/scorer bindings are reviewed;240draftcases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
+    "Current-source combined and completed remote verification remain pending after 5e1828c. The b2e1dc9 two PDF deadline failures are retained; CI scheduling repair keeps all cases/deadlines/thresholds and passes targeted checks. Exact 817f76f broad coverage passes unchanged gates; later packages have scoped checks and separate reviews.",
+    "The 2026 rule pack and finite Marketplace/EIC/charitable source methods remain incomplete; explicit unsupported methods and inactive helpers are not counted as implemented. Full 2026 calculation remains blocked.",
+    "Independent human tax review, selected-state demand/qualification and final physical forms are outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net \u00a71202/Form172 interpretations remain unresolved.",
+    "AI application/scorer bindings are reviewed;240 draft cases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
     "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence; local synthetic checks do not establish staging readiness.",
-    "Final native release images, SBOMs/scans/rollback/recovery and advisory owner acceptance remain pending. Intermediate76e3538 localarm64 smoke/recovery pass; no publication or staging evidence."
+    "Final native release images, SBOMs/scans/rollback/recovery and advisory owner acceptance remain pending. Intermediate 76e3538 local arm64 smoke/recovery pass; no publication or staging evidence."
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8",
+    "lastRecordedCommit": "5e1828c8ea181f4ddb88a52920dde117bf539364",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1310,8 +1310,8 @@
       "hosted staging",
       "final multi-platform release images"
     ],
-    "workInProgress": "EIC investment source review; remote PDF deadline repair; overlapping Marketplace and separate-business health methods; actual K1 charitable intake and remaining source methods; current verification and external qualification.",
-    "latestIntegratedCommit": "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8",
+    "workInProgress": "Overlapping Marketplace and separate-business health methods; K1 charitable intake and source-bound distribution gains; current combined verification and remaining source/external qualification.",
+    "latestIntegratedCommit": "5e1828c8ea181f4ddb88a52920dde117bf539364",
     "activeIntegrationRun": {
       "sourceCommit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
       "unit": "passed",
@@ -1612,10 +1612,10 @@
       "localSyntheticPostgres": true
     },
     "remainingInternalWork": [
-      "Complete represented EIC royalty/passive components and remaining royalty-expense, mixed earned/passive and disposition source methods. Actual separated-spouse intake/PDF, royalty classification, capital and child-election components are committed.",
+      "Complete EIC royalty-expense, personal-property rental, mixed earned/passive and disposition source methods. Represented ordinary royalty/passive worksheet is committed with actual Rule3 intake/PDF, capital and child-election components.",
       "Complete overlapping Marketplace benchmark source groups and historical separate-business health ordering. Disjoint shared/unshared and no-advance allocation are committed. Binding joint2025 repayment ownership still needs a controlling interpretation.",
       "Complete actual K1 charitable guided intake and excess-distribution gain sources, prior-floor, regular/AMT NOL and partial mixed-media methods. Canonical A/E/F source/basis/nonbinding-risk handoff is committed; its guard does not finish the remaining methods.",
-      "Repair remote PDF deadline failures without weakening assertions/deadlines; repeat exact current-source unit/coverage/types/spec/inventory/builds/lint/browser and completed remote CI; final native images/SBOM/scans/recovery, support reconciliation and external qualification remain."
+      "Verify the CI scheduling repair with completed remote runs; run exact current-source unit/coverage/types/spec/inventory/builds/lint/browser, final native images/SBOM/scans/recovery and support reconciliation. Required external qualification remains."
     ],
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
@@ -1637,7 +1637,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8",
+    "lastPushedCommit": "5e1828c8ea181f4ddb88a52920dde117bf539364",
     "currentBrowserRun": {
       "commit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
       "tree": "651098f2b79840dabbd1c39240398c743284d34c",
@@ -2889,6 +2889,9 @@
         ],
         "k1CharitableCanonical": [
           "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8"
+        ],
+        "eicScheduleEInvestment": [
+          "747e37d71e1630a13dca5d370d5b1b34b4b17cde"
         ]
       },
       "owners": {
@@ -2898,10 +2901,10 @@
         "educationMethodsAndFinalIntegration": "parent"
       },
       "subsequent": [
-        "Complete represented EIC royalty/passive components and remaining royalty-expense, mixed earned/passive and disposition source methods. Actual separated-spouse intake/PDF, royalty classification, capital and child-election components are committed.",
+        "Complete EIC royalty-expense, personal-property rental, mixed earned/passive and disposition source methods. Represented ordinary royalty/passive worksheet is committed with actual Rule3 intake/PDF, capital and child-election components.",
         "Complete overlapping Marketplace benchmark source groups and historical separate-business health ordering. Disjoint shared/unshared and no-advance allocation are committed. Binding joint2025 repayment ownership still needs a controlling interpretation.",
         "Complete actual K1 charitable guided intake and excess-distribution gain sources, prior-floor, regular/AMT NOL and partial mixed-media methods. Canonical A/E/F source/basis/nonbinding-risk handoff is committed; its guard does not finish the remaining methods.",
-        "Repair remote PDF deadline failures without weakening assertions/deadlines; repeat exact current-source unit/coverage/types/spec/inventory/builds/lint/browser and completed remote CI; final native images/SBOM/scans/recovery, support reconciliation and external qualification remain.",
+        "Verify the CI scheduling repair with completed remote runs; run exact current-source unit/coverage/types/spec/inventory/builds/lint/browser, final native images/SBOM/scans/recovery and support reconciliation. Required external qualification remains.",
         "Qualified interpretations for reduced mixed tips/bonds and negative-net1202 remain unresolved; no invented allocation or review."
       ],
       "unsupportedIsComplete": false
@@ -3720,12 +3723,24 @@
         "independentFields": 27,
         "remainingGainSourceMethod": "Positive excess-distribution gain now rejects; original holding period and full distribution gain handoff still required",
         "ledger": "docs/upgrade-2026-k1-charitable-return-work.md"
+      },
+      "eicScheduleEInvestment": {
+        "commit": "747e37d71e1630a13dca5d370d5b1b34b4b17cde",
+        "reviewedTree": "6a47e2b60bd629087002088bc53d483add9ef97e",
+        "authorTests": 801,
+        "authorFiles": 15,
+        "independentTests": 13,
+        "independentFiles": 2,
+        "privateProbes": 5,
+        "finalTests": 35,
+        "finalFiles": 6,
+        "ledger": "docs/upgrade-2026-eic-schedule-e-investment-work.md"
       }
     },
     "currentInventory": {
-      "entries": 474,
-      "specReferences": 5172,
-      "sourceCommit": "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8",
+      "entries": 475,
+      "specReferences": 5180,
+      "sourceCommit": "5e1828c8ea181f4ddb88a52920dde117bf539364",
       "path": "spec/coverage/inventory-2025.json"
     },
     "previousCoverageDiagnostic": {
@@ -3811,19 +3826,10 @@
       "evidenceSha256": "c7b4223d373ec352807b8acc11eb7e7406fdde188ecab4cafe351eec1decfe54",
       "boundary": "Fresh base and vulnerability database only; final application image build/SBOM/scan/recovery still required."
     },
-    "currentReviewCandidates": {
-      "eicScheduleEInvestment": {
-        "tree": "6a47e2b60bd629087002088bc53d483add9ef97e",
-        "base": "c0dd1ebebb77cff19c17d689c99d28dd94efc1e8",
-        "authorTests": 801,
-        "authorFiles": 15,
-        "status": "Separate source review underway; eight new source controls; no publication or qualification",
-        "published": false
-      }
-    },
+    "currentReviewCandidates": {},
     "currentRuleVersions": {
-      "2025": "2025.120",
-      "2026": "2026.117-law-integration-draft"
+      "2025": "2025.121",
+      "2026": "2026.118-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -3873,7 +3879,23 @@
         "evidenceSha256": "bb67846fc6d6df7be26aa0ecaa44fec4c77ef73af79bdec1ba36ead0f162de53",
         "limitation": "Full coverage command failed despite all tests passing. Branch threshold passed; function threshold did not. Parent is adding behavioral K1 history interaction coverage; no threshold or exclusions changed."
       }
-    ]
+    ],
+    "ciPdfWorkerScheduling": {
+      "commit": "5e1828c8ea181f4ddb88a52920dde117bf539364",
+      "change": "Full ordinary and coverage suites each have their own one-worker30min job and disposable PG service; original coverage job/artifact preserved",
+      "localTargetedTests": 5,
+      "localTargetedFiles": 2,
+      "affectedCaseMilliseconds": [
+        1247,
+        1296
+      ],
+      "independentAgentReview": "clear",
+      "structuralYamlComparison": "passed",
+      "perTestDeadlineChanged": false,
+      "assertionsOrThresholdsChanged": false,
+      "completedRemoteResult": "pending",
+      "ledger": "docs/upgrade-2026-ci-pdf-worker-work.md"
+    }
   },
   "historicalReleaseBlockers": {
     "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
