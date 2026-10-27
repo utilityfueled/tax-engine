@@ -195,7 +195,7 @@
   },
   "releaseBlockers": [
     "Intermediate 318 passes 19,587 unit and coverage cases in 1,406 files. Coverage is 91.90% statements, 86.98% branches, 90.79% functions and 94.63% lines; all unchanged 90/85/90/90 thresholds pass. The first seven 5000 ms timeout failures remain retained. Later packages and final integrated verification remain internal.",
-    "The 2026 pack and finite education, charitable/NOL and health methods remain incomplete. Exact bond/educator and outside-child marriage are delivered; reviewed COD, changed filing histories and actual-paid advance repayment await final adoption. Same-couple current joint pooling, precise remaining source compositions and interpretation questions remain separately documented. Full 2026 calculation remains blocked.",
+    "The2026 pack and finite carryover/health methods remain incomplete. COD ced90a20, changed one-owner filing histories a1f63cf2, actual-paid health661977aa and educator/reissue2ab4d9ac are delivered. Current joint-pool artifact/final integration, positive other-return health, explicit nonitemized2026 prior property release and source-determined EBL composition remain internal. Precise unresolved source interpretations stay documented; full2026 calculation remains blocked.",
     "Independent human tax review, selected-state demand/qualification and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net \u00a71202/Form172 interpretations remain unresolved.",
     "AI application/scorer bindings are reviewed; 240 draft cases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
     "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence; local synthetic checks do not establish staging readiness.",
@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "a1f63cf2b28d89cda2240a4421bbaf324ad56262",
+    "lastRecordedCommit": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1316,7 +1316,7 @@
       "Health: complete V2 actual payment-source browser/PDF independent review passes. Final integration on a1f63cf2 and separate corrected-download check active. Positive other-return actual cash/reimbursement composition is next internal work.",
       "Verification: full final integrated/source/browser/coverage/native arm64+amd64/SBOM/scan/recovery remains required. Intermediate 318 evidence is passing within its exact commit; staging, human, provider and final-form gates remain closed."
     ],
-    "latestIntegratedCommit": "a1f63cf2b28d89cda2240a4421bbaf324ad56262",
+    "latestIntegratedCommit": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1600,7 +1600,9 @@
       "pdfNativeBufferClearing": "25f71f066ae7cf24364e6117cb72e4b2e89f8ab5",
       "monthlyMarriageCoverage": "05c58193fc31833d4bb32facee68298b6648bc85",
       "educatorBondRational": "00089be4fff6299b9d26fd44878b21dd0c80141f",
-      "marriageOutsidePerson": "977212bfbe38733ae79977a917a63cc529413cef"
+      "marriageOutsidePerson": "977212bfbe38733ae79977a917a63cc529413cef",
+      "marketplaceActualPaidRepayment": "661977aabb6c9f5467ff5d4b1ef450fc81e3cfb3",
+      "educatorBondReissue": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18"
     },
     "remoteCi": {
       "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
@@ -1696,10 +1698,10 @@
       "record": "docs/upgrade-2026-runtime-31812714.json"
     },
     "remainingInternalWork": [
-      "Education: full or sole-owner educator handoff from actual reissue history is active; canonical/source/output cases pass, guided edit/reconfirmation sequences are being verified. Precise mixed-category/allocation and jurisdiction questions remain separate.",
-      "Charity/NOL: bounded COD delivered ced90a20 and changed-current-one-owner sources delivered a1f63cf2. Current same-couple joint pooling and explicitly nonitemized2026 prior property release remain internal. Exact floor/vintage/multiple-positive-benefit/COD-exhaustion questions remain in the audit.",
-      "Health: complete V2 actual payment-source browser/PDF independent review passes. Final integration on a1f63cf2 and separate corrected-download check active. Positive other-return actual cash/reimbursement composition is next internal work.",
-      "Verification: full final integrated/source/browser/coverage/native arm64+amd64/SBOM/scan/recovery remains required. Intermediate 318 evidence is passing within its exact commit; staging, human, provider and final-form gates remain closed."
+      "Finish same-couple current-joint NOL saved-original/PDF review and final adoption; source review19/7 with8private controls is clear.",
+      "Finish positive-other-return health exact-source checks, independent source and saved-output reviews, then final adoption.",
+      "Implement explicitly nonitemized2026 prior property entity basis/465 release and source-determined same-yearEBL character compositions established by the finite audit. Preserve precise unresolved attribution and excluded-regime boundaries.",
+      "Run final integrated/static/browser/coverage/native arm64+amd64/SBOM/scan/recovery evidence. Intermediate318 remains exact historical evidence; staging, human, provider and final-form gates remain closed."
     ],
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
@@ -1721,7 +1723,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "a1f63cf2b28d89cda2240a4421bbaf324ad56262",
+    "lastPushedCommit": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18",
     "currentBrowserRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -2856,8 +2858,8 @@
       "scope": "Intermediate318 remote synthetic evidence only; later private packages excluded."
     },
     "currentRemoteRuns": {
-      "sourceCommit": "a1f63cf2b28d89cda2240a4421bbaf324ad56262",
-      "status": "Pushed; exact workflow identifiers to be refreshed. Earlier65cc631c/ced90a20 runs cancelled by later pushes;318 full pass remains separately recorded."
+      "sourceCommit": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18",
+      "status": "Normal branch push confirmed; exact new run identifiers and completion remain to be observed. Superseded661 workflows were still in progress before this push."
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
@@ -5025,11 +5027,11 @@
       }
     },
     "currentInventory": {
-      "entries": 568,
-      "specReferences": 6037,
-      "sourceCommit": "a1f63cf2b28d89cda2240a4421bbaf324ad56262",
+      "entries": 572,
+      "specReferences": 6064,
+      "sourceCommit": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 153,
+      "explicitAssociations": 155,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -5968,7 +5970,7 @@
       },
       "healthActualPaidAdvance": {
         "tree": "a5454b976a182bb0571ef7d5d04cef7dd5beeb32",
-        "status": "V1 source and numerical review preserved. Complete V2 saved-payment/browser/original/PDF review clear numerically; wrong-year label repaired upstream in4752ae46. Final rebase on a1f63cf2 and corrected-download check active.",
+        "status": "Delivered and pushed; final corrected-download comparison and exact-base source integration pass. Human, staging, full2026 and filing gates remain open.",
         "artifactReview": {
           "path": ".local/upgrade-evidence/parent-actual-paid-artifact-review.json",
           "sha256": "52ba8385d517f9f774e42716ad4f812e5e9bbcdeeb130ea8af27cf06e6407e8c"
@@ -5997,12 +5999,146 @@
         "independentV2SourceDelta": {
           "path": ".local/upgrade-evidence/facts-actual-paid-v2-delta-review.json",
           "sha256": "ec41de47c31e7e9fffa88f1056dc5ec819481fe2adb8fc43b50994c10a42c609"
+        },
+        "deliveredCommit": "661977aabb6c9f5467ff5d4b1ef450fc81e3cfb3",
+        "finalTree": "d4da46986f612a49c359051e0766dea3212d792e",
+        "finalSourceManifest": {
+          "path": ".local/upgrade-evidence/actual-paid-final-review-snapshot.json",
+          "sha256": "638f1f4aa2765d22153b1625a6e5194bf115955e26ac4365da4021c0870b0e85"
+        },
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-actual-paid-final-delivery.json",
+          "sha256": "55d4fa479f7b3f756916f36b0f15f240cbc940b2381f3e8910a1a4428f84666d"
+        },
+        "mainChecks": {
+          "path": ".local/upgrade-evidence/actual-paid-main-checks.json",
+          "sha256": "e518c704ef89986a77300eb0311d64a33d57c8c6799824bebfa671abe0e27618",
+          "tests": 145,
+          "files": 22
+        },
+        "finalPrivateChecks": {
+          "tests": 152,
+          "files": 23,
+          "unchangedPrivateControls": 7,
+          "allTypesSpecInventoryAndBothBuilds": true,
+          "browserCases": 2,
+          "browserRetries": 0
+        },
+        "finalDownloadComparison": {
+          "path": ".local/upgrade-evidence/parent-actual-paid-final-review/comparison.json",
+          "sha256": "d2bb13f0ee400925de4d5ef18305c2a4bb546ab3f32b5a02d01bbc172b032ef7",
+          "pdfs": 2,
+          "pages": 64,
+          "unchangedTextAndPixels": 63,
+          "onlyChangedPage": "Mobile37 actual2025 audit label; unchanged7000 amount"
         }
+      },
+      "educatorBondReissue": {
+        "status": "Delivered and pushed; independent agent source and original/PDF review passed; no human or readiness promotion",
+        "deliveredCommit": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18",
+        "finalTree": "6ab98a31e954470ab8511fe6090490e5c0ee6dd2",
+        "manifest": {
+          "path": ".local/upgrade-evidence/educator-reissue-final-delivery-snapshot.json",
+          "sha256": "75e99c576965ee4cf2bb60fa394f23e973c34a3d6d099ae4e15082c51daeafc0"
+        },
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/parent-educator-reissue-source-review.json",
+          "sha256": "29be3c31190319d8a95c2c6574d01b0863f7ce161a7bfb13c5f34fc6a21b395b",
+          "tests": 35,
+          "files": 9,
+          "privateControls": 8
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/parent-educator-reissue-artifact-review.json",
+          "sha256": "c1bed30e24fc7e7283676c61430ce0543f8cc6f97522db51de6472714b0efbaa",
+          "checks": 11287,
+          "failures": 0,
+          "pdfs": 53,
+          "pages": 217,
+          "populatedFields": 224,
+          "originals": 9
+        },
+        "finalDownloadComparison": {
+          "path": ".local/upgrade-evidence/parent-educator-reissue-final-download-comparison.json",
+          "sha256": "68f101ac7a229d0ca9e52cfe980461149024a4d75e2c527e28069f36460f6919",
+          "pdfs": 2,
+          "pages": 30,
+          "savedOriginalsByteEqual": true,
+          "allPageTextAndPixelsEqual": true
+        },
+        "mainChecks": {
+          "path": ".local/upgrade-evidence/educator-reissue-main-checks.json",
+          "sha256": "d15550922a1e887057e5c34627d1ae667c2b65d4f45eb7001a3a5ef4d6690ab4",
+          "tests": 43,
+          "files": 12
+        },
+        "finalPrivateChecks": {
+          "tests": 51,
+          "files": 13,
+          "unchangedPrivateControls": 8,
+          "allTypesSpecInventoryAndBothBuilds": true,
+          "lintErrors": 0,
+          "lintWarnings": 4,
+          "browserCases": 2,
+          "browserRetries": 0
+        },
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-educator-reissue-final-delivery.json",
+          "sha256": "787b4040dbe006e0548403de23bcff598a53e5f5f97a49f37e1e4192dc62d40d"
+        },
+        "browserScope": "Focused seeded source edit, reconfirmation, reload and download; final full journey remains separate",
+        "independentHumanTaxReview": false
+      },
+      "nolSameCoupleJointPool": {
+        "status": "Frozen source independently reviewed; saved-original/PDF review and final adoption active",
+        "tree": "588c3c8f57d273c39df3520a2798d23c4c5cf340",
+        "manifest": {
+          "path": ".local/upgrade-evidence/nol-joint-pool-review-snapshot.json",
+          "sha256": "5549fbd8958cdfdd6e9d8d2b82f404a9ae13a7288f9360343e841249654ed8fa"
+        },
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/parent-joint-nol-source-review.json",
+          "sha256": "07806d0c872ceea19d55990f6511fa01f560ef879dc7c464129d7a27e7b7b484",
+          "tests": 19,
+          "files": 7,
+          "privateControls": 8
+        },
+        "affectedCohort": {
+          "tests": 1507,
+          "files": 145
+        },
+        "originalArtifactManifest": {
+          "path": ".local/upgrade-evidence/nol-joint-pool-artifacts/manifest.json",
+          "sha256": "6f57de9f863b716ab4a83a39f7cdc44aa4836f6e9a86891f36a1afe086b9180b"
+        },
+        "provenanceErratum": {
+          "path": ".local/upgrade-evidence/nol-joint-pool-runtime-provenance-erratum.json",
+          "sha256": "b67090d61a816e9f13d6eb1ab28dfa4e42497fcc69a14c97bb812f43479684ed"
+        },
+        "boundaries": [
+          "No invented current owner closing shares",
+          "Partial differing1411 fractions, jointCOD and same-yearEBL composition remain separate",
+          "Human, filing and final release gates remain unchanged"
+        ]
+      },
+      "positiveOtherReturnHealth": {
+        "status": "Frozen implementation with source-only guide and review adapters; exact frozen checks and separate facts-agent source review active",
+        "tree": "b78a7a41a4ca4eb2b432b9e6b3921d0d6892aeda",
+        "manifest": {
+          "path": ".local/upgrade-evidence/positive-other-health-review-snapshot.json",
+          "sha256": "8b4a518123805a7470b65615c5c4fd80af4119afeb8d4ce6bdfbadc8163d363a"
+        },
+        "developmentChecks": {
+          "tests": 12,
+          "files": 6,
+          "rootAndWebTypes": true
+        },
+        "scope": "Positive completed other-return credit kept separate from actual payer premium cash, actual reimbursements and other-return tax payments. No outside credit or repayment imported into own return."
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.181",
-      "2026": "2026.178-law-integration-draft"
+      "2025": "2025.183",
+      "2026": "2026.180-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -8240,7 +8376,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-27T08:04:51.661012+00:00",
+    "recordedAt": "2026-10-27T09:08:02.610437+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -10565,6 +10701,17 @@
         "Final integrated/static/browser/coverage/native arm64+amd64/recovery/scan evidence"
       ],
       "boundary": "Precise controlling-source questions and specialized excluded regimes remain explicit in the audit and checklist; source guards do not constitute implementation or human qualification."
+    },
+    "finiteClosureAudit20261027": {
+      "source": {
+        "path": ".local/upgrade-evidence/ai-charity-joint-closure-audit.json",
+        "sha256": "89337cb1b310693b95b4bff332b9c82a985baee1f75957e37e1674ba63bcaf0e"
+      },
+      "markdown": {
+        "path": ".local/upgrade-evidence/ai-charity-joint-closure-audit.md",
+        "sha256": "273eed7843bba33e4d2b2baa9e01e721db384762d01e119979d2b742fe46bcc9"
+      },
+      "boundary": "A guard is not completion or evidence of an external ruling. ZeroNOLD alone does not resolve positive modified absorption; zeroQBI character does not assign survivingEBL balance. Continue source-determined ordinary compositions separately."
     }
   },
   "historicalReleaseBlockers": {

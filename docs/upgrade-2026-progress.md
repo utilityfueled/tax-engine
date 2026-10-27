@@ -2,14 +2,15 @@
 
 ## Current checkpoint — 2026-10-27 UTC
 
-Latest implementation is `a1f63cf2`. Changed-filing-status NOL sources retain
-original owner allocations and independent regular/AMT historical use. The
-bounded charitable debt-reduction composition is delivered in `ced90a20`;
-`4752ae46` separately corrects the year named in an uncapped repayment
-explanation. Rule provenance is `2025.181` / `2026.178-law-integration-draft`;
-inventory has 568 entries, 6,037 specification test references and 153 explicit
-associations. Package agent reviews and scoped checks pass. Human tax review,
-final-source release checks and filing qualification remain open.
+Latest implementation is `2ab4d9ac`. Actual educator expenses now use the
+verified savings-bond successor ownership and separate current transfer income.
+Actual-paid health deduction and fully repaid own-return advances are delivered
+in `661977aa`; original loss ownership remains in `a1f63cf2`, charitable debt
+reduction in `ced90a20`, and the repayment audit-year correction in `4752ae46`.
+Rule provenance is `2025.183` / `2026.180-law-integration-draft`; inventory has
+572 entries, 6,064 specification test references and 155 explicit associations.
+Package agent reviews and scoped checks pass. Human tax review, final-source
+release checks and filing qualification remain open.
 
 Remote CI on `25f71f06` passes 19,523 tests in 1,384 files both normally and
 under coverage. Coverage is 91.85% statements, 86.88% branches, 90.72% functions
@@ -44,16 +45,28 @@ files, including the separate audit-year regression, and static/build checks.
 Its final private desktop/mobile runs pass 2/2 with zero retries; all 34 downloaded
 pages match the earlier reviewed originals in extracted text and rendered pixels.
 
-Actual-paid health V2 now has complete saved payment sources and actual browser
-downloads. Parent independently derives both originals and checks 4 PDFs/128
-pages with 13,169 numerical/source/placement checks, all passing. All pages were
-viewed through contacts and eight readable details; the existing wrong-year
-explanation finding is recorded and repaired separately in `4752ae46`. Final
-actual-paid rebase on `a1f63cf2` and the corrected-download check remain active.
-This evidence does not enable filing or substitute for human review.
+Actual-paid health is delivered in `661977aa`. The final private source passes
+152 tests/23 files including seven unchanged independent controls; main passes
+145/22 with all three types, spec, inventory and engine-build checks. Both
+production builds and desktop/mobile checks pass on the adopted runtime. Parent
+reopens both saved originals and all 64 final download pages: 63 are identical
+in text and pixels, and the remaining page changes only the corrected 2025
+audit label. The prior independent V2 review covers 13,169 checks/128 pages.
+
+Educator/reissue delivery `2ab4d9ac` passes final 51/13 including eight unchanged
+independent controls, all static/build checks and desktop/mobile 2/2; main passes
+43/12 and static/engine-build checks. Parent derives nine saved originals and
+checks 53 PDFs/217 pages/224 populated fields with 11,287 assertions and no
+failures, then inspects all page contacts, eleven details and four UI views.
+Both final saved source states are byte-identical to the reviewed originals.
+All 30 final download pages have identical extracted text and rendered pixels.
+Browser evidence is focused seeded edit/reconfirmation/reload/download, not a
+fully traversed release interview. Human, final-form and filing qualification remain separate.
 
 | Delivered package | Commit | Bounded verification |
 | --- | --- | --- |
+| Actual educator deductions from reissued bond ownership | `2ab4d9ac` | Final 51/13, main 43/12, all static/build gates and production browser 2/2 pass. Separate source 35/9 includes eight private controls; parent 11,287 original/PDF checks over 53 PDFs/217 pages/224 fields. Final 30 pages match in text and pixels. See [ledger](upgrade-2026-educator-bond-reissue-work.md). |
+| Actual payer cash and fully repaid own-return health advances | `661977aa` | Final 152/23 includes seven private controls; main 145/22 and relevant static/build gates pass. Production browser 2/2; final 64-page comparison verifies only the separately corrected audit-year label changed. Complete payment-source originals and historical review remain partial. See [ledger](upgrade-2025-marketplace-actual-paid-work.md). |
 | Bounded debt reduction after actual and charitable-comparison NOL absorption | `ced90a20` | Main 55/16 and static/build checks pass; source and saved-original reviews are separate. Parent checks 9 originals and 83 PDFs/338 pages/454 fields with 10,430 assertions. Full affected cohort 1,205/167 and desktop/mobile 2/2 pass. See [ledger](upgrade-2026-charitable-cod-work.md). |
 | Actual year in uncapped premium repayment explanation | `4752ae46` | Spec-first red 8/1, green 16/3 and source-only independent review clear. Numerical expressions, historical cap and gates unchanged. See [ledger](upgrade-2025-marriage-health-work.md). |
 | Original loss ownership through joint and separate filed histories | `a1f63cf2` | Main 65/22 and static/build gates pass. Separate source 23/7 includes 8 private controls; parent 13,676 checks over 7 originals and 55 PDFs/128 pages/294 fields. Final source 64/22 and production browser 2/2 pass. See [ledger](upgrade-2026-nol-filing-unit-work.md). |
