@@ -2,12 +2,12 @@
 
 ## Current checkpoint — 2026-10-26
 
-The branch is pushed through `dff617c8`. Rule provenance is `2025.168` /
-`2026.165-law-integration-draft`; the inventory has 547 entries, 5,805
-specification test references and 140 explicit shared-method associations.
+The branch is pushed through `5ea12622`. Rule provenance is `2025.169` /
+`2026.166-law-integration-draft`; the inventory has 548 entries, 5,820
+specification test references and 141 explicit shared-method associations.
 Delivered tax packages preserve their reviewed executable files and independently
-checked integration deltas. The PDF serialization change also has an independent
-source and saved-artifact review. Calculation, filing,
+checked integration deltas. The temporary page-copy optimization also has an
+independent source and saved-artifact review. Calculation, filing,
 human-review and model-promotion gates remain unchanged.
 
 | Delivered package | Commit | Bounded verification |
@@ -28,8 +28,9 @@ human-review and model-promotion gates remain unchanged.
 | Temporary workspace PDF components avoid repeated compression | `d00b554e` | Frozen source passes 1,344 tests/215 files, static checks and both builds; main 4/3. Independent review passes 55/5, including three private controls. Eight saved 22-page outputs retain identical text, appearances, amounts and notices; final downloads remain compressed. Production desktop/mobile download and reopen passes 2/2 with zero retries. |
 | Actual charitable activity allocation after basis | `944f91a4` | Final source passes 648 tests/24 files and static/spec/inventory checks; main 13/5. Independent source/reader review passes 22/8, retaining seven private controls. Independently derived originals and all 97 PDFs/193 pages pass 3,162 comparisons, including 136 physical and 13 flattened placements. |
 | Actual eligible health cash independent of policy allocations | `a2d4898` | Final source passes 92 tests/15 files, static checks and both builds; main 19/6. Independent source review passes 19/7 with eight private controls. Six original inputs and all 15 PDFs/113 pages/229 fields pass 4,044 independent comparisons. Production desktop/mobile workflows pass 2/2 with zero retries. |
-
 | Actual annual cash education category and borrower limits | `dff617c8` | Final source passes 1,959 tests/249 files and static/spec/inventory/build checks; main 20/6. Independent review retains twelve private controls in 32/8. Original/PDF review checks the retained annual corpus and 27 corrected PDFs/108 pages/132 fields with 2,855 comparisons. Four production browser workflows pass with zero retries. A positive own-return interest claim now requires actual lender/eligibility sources. |
+| Actual outside-person health cash and separate return evidence | `fbe731a3` | Final source passes 340 tests/98 files and static/build/spec/inventory checks; main 13/6. Independent source review passes 19/7 with six private controls. All 14 PDFs/146 pages/428 populated fields pass 1,774 checks plus 666 actual-guide/source comparisons. Two production browser cases pass with zero retries. |
+| Copy completed pages for temporary workspace merges | `5ea12622` | Corrected frozen source passes 1,482 tests/250 files and static/build checks; main 40/6 plus types/lint. Independent review passes 13/3, retaining the original orphan-widget failure. All 106 paired pages in eight actual production packets match in text and rendered pixels; four production desktop/mobile download checks pass with zero retries. |
 
 Original-source browser and PDF evidence remains attributed to its recorded
 producer. Later source checks do not turn those artifacts into a new integrated
@@ -50,8 +51,9 @@ The finite internal queue is now reconciled against actual source reachability:
 - **Health:** reported-versus-original advance cents are delivered. Signed
   negative Worksheet W remaining-capacity treatment and its actual business
   gross-income source handoff and actual own-family zero-credit cash are also
-  delivered. Actual eligible outside-family persons, determined advance/payment
-  attribution and marriage combinations remain in the finite health queue.
+  delivered, along with actual eligible outside-family persons and their separate
+  return evidence. Determined advance/payment attribution and marriage
+  combinations remain in the finite health queue.
 - **Verification:** investigate the retained remote coverage failures, then run
   the complete integrated checks and final native images, SBOM/scans and
   recovery rehearsal. The reviewed PDF and evaluation performance changes are delivered;
@@ -61,9 +63,31 @@ The annual-category missing-loan-source finding is resolved in `dff617c8`; its
 original failing input and PDF remain retained. The corrected actual lender
 packet produces a 1,000 deduction and 58,000 AGI; explicit-zero and outside-owner
 claims retain 59,000 AGI. See [the package ledger](upgrade-2026-education-annual-category-work.md).
-The outside-person health candidate passes independent source controls and
-1,774 original/PDF checks plus 666 saved-guide/source comparisons across 14 PDFs
-and 146 pages. Its final rebase is pending; it is not yet delivered.
+The outside-person health package is delivered in `fbe731a3`; actual relationship,
+age, monthly cash and separate completed-return evidence are retained. See [its
+ledger](upgrade-2025-marketplace-outside-person-work.md).
+
+The prior-year at-risk candidate `470ad2ac` passes independent source checks
+(28 tests/7 files, including seven private controls) and original/PDF review of
+71 PDFs/157 pages/403 fields. There are 2,656 artifact/source comparisons with
+zero failures, plus 3,450 exact producing Git blobs and six normalized symlink
+target checks. Its final rebase and metadata 170/167 integration remain pending.
+The initial reader's line-2 versus line-3 QBI expectation, guide year types,
+archive symlink slash and form-widget initialization corrections are retained;
+the actual sources and PDFs were not changed to satisfy that review.
+
+The bounded annual loan-interest candidate `e5052162` has a confirmed independent
+finding: changing actual W-2 income can leave an earlier 700 deduction accepted
+by the PDF context although the new calculation yields zero. The original
+validator and full-renderer failures are retained (the latter wrote eight PDFs).
+Corrected candidate `3020d271` binds the original income/phaseout determinants;
+its independent recheck and regenerated-output review are pending. This is internal
+work, and the package is not delivered or qualified.
+
+The page-copy package [ledger](upgrade-2026-pdf-page-merge-work.md) records the
+orphan-widget rejection fix and exact saved-output comparisons. Temporary byte
+counts decreased; local timing varied, including one slower candidate. This does
+not claim that the remote coverage failures have been resolved.
 
 The new temporary-component source passes all 31 tests in four previously
 relevant PDF suites under instrumentation. This deliberately partial run exits

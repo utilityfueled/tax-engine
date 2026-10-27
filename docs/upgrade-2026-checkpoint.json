@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "dff617c8bad8463f8007dd0033ec7dd51d97c73b",
+    "lastRecordedCommit": "5ea12622b2cdbe68bacf1b9ee390b56cb94de90e",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1311,12 +1311,12 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Education: annual cash with existing date/category and borrower limits, then bounded actual bond ownership/reissue history and rational reporting. Ordinary receipt composition and actual current-year retained refund records delivered.",
-      "Charity: positive prior at-risk character/history release and raw passive capital classification, positive benefit COD with modified absorption, changed filing-unit histories.",
-      "Health: actual eligible outside-family persons, determined advance/payment attribution and marriage compositions. Own-family zero-credit actual-cash method delivered.",
-      "Verification: resolve retained remote coverage failures without changing test deadlines, assertions or thresholds; final full integrated/remote/native image/SBOM/scan/recovery checks."
+      "Education: bounded interest-only annual cash method has an independent stale-income PDF binding finding under correction; mixed July4/mixed-purpose attribution, then actual bond ownership/reissue history and rational reporting remain. Ordinary receipts/refunds and annual category/borrower limits delivered.",
+      "Charity: prior465 character/history candidate independently cleared and awaiting final rebase; raw passive capital classification,2026 prior-gift floor, positive benefit COD with modified absorption, and changed filing-unit histories remain internal.",
+      "Health: actual eligible outside-family cash/person and separate-return evidence delivered; determined positive advance/payment attribution and alternative-marriage compositions remain.",
+      "Verification: resolve retained remote five-second coverage failures without changing deadlines/assertions/thresholds; complete final integrated/remote/native image/SBOM/scan/recovery checks."
     ],
-    "latestIntegratedCommit": "a2d4898d57557e7cd51616ea90dc3ca20a62cc92",
+    "latestIntegratedCommit": "5ea12622b2cdbe68bacf1b9ee390b56cb94de90e",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1690,10 +1690,10 @@
       "completedAt": "2026-10-26T23:39:58.828902+00:00"
     },
     "remainingInternalWork": [
-      "Education: mixed July4 chronology and positive qualified-interest annual attribution, then bounded actual bond ownership/reissue history and rational reporting. Ordinary receipts, current-year retained refunds and determined annual category/borrower limits delivered.",
-      "Charity: positive prior at-risk character/history release and raw passive capital classification, positive benefit COD with modified absorption, changed filing-unit histories.",
-      "Health: actual eligible outside-family persons, determined advance/payment attribution and marriage compositions. Own-family zero-credit actual-cash method delivered.",
-      "Verification: resolve retained remote coverage failures without changing test deadlines, assertions or thresholds; final full integrated/remote/native image/SBOM/scan/recovery checks."
+      "Education: bounded interest-only annual cash method has an independent stale-income PDF binding finding under correction; mixed July4/mixed-purpose attribution, then actual bond ownership/reissue history and rational reporting remain. Ordinary receipts/refunds and annual category/borrower limits delivered.",
+      "Charity: prior465 character/history candidate independently cleared and awaiting final rebase; raw passive capital classification,2026 prior-gift floor, positive benefit COD with modified absorption, and changed filing-unit histories remain internal.",
+      "Health: actual eligible outside-family cash/person and separate-return evidence delivered; determined positive advance/payment attribution and alternative-marriage compositions remain.",
+      "Verification: resolve retained remote five-second coverage failures without changing deadlines/assertions/thresholds; complete final integrated/remote/native image/SBOM/scan/recovery checks."
     ],
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
@@ -1715,7 +1715,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "dff617c8bad8463f8007dd0033ec7dd51d97c73b",
+    "lastPushedCommit": "5ea12622b2cdbe68bacf1b9ee390b56cb94de90e",
     "currentBrowserRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -4753,14 +4753,122 @@
           "sha256": "db5676813a1d4e6e6cf14a9cc7a333c39ad5b21d2970e71c868662b813498d31"
         },
         "scope": "Determined annual categories; no mixed July4, positive qualified interest attribution, human or filing qualification"
+      },
+      "healthOutsidePerson": {
+        "tree": "2bc022837c7101951e361726670b472d285adde2",
+        "status": "delivered; independent agent source/artifact review clear; no human or release qualification",
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/parent-outside-person-source-review.json",
+          "sha256": "9bd53a68a6d7971c7552cea2ad9310f603024b33ddb4a4327b304d8d452c8843"
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/parent-health-outside-person-artifact-review/checks.json",
+          "sha256": "a6828030e7f86c35bb63b9283c7df57b7a232500bc6a3180cc37b03814a2fa5b"
+        },
+        "sourceTests": 19,
+        "sourceFiles": 7,
+        "privateControls": 6,
+        "artifactChecks": 1774,
+        "guidedSourceComparisons": 666,
+        "producerTrackedBlobsUnchanged": 3499,
+        "pdfs": 14,
+        "pages": 146,
+        "populatedFields": 428,
+        "deliveredCommit": "fbe731a39eeb71263f4ecd60434a5e04c5865f82",
+        "finalTree": "3a6a5142d69c97a3078c44f1047a7609e86c164f",
+        "finalManifest": {
+          "path": ".local/upgrade-evidence/health-outside-person-final-snapshot.json",
+          "sha256": "15f66053e4310c17043aed1e522e1ffd9e88f83db94a4e214ea769de941adba9"
+        },
+        "finalTests": {
+          "passed": 340,
+          "files": 98,
+          "workers": 1
+        },
+        "mainTests": {
+          "passed": 13,
+          "files": 6,
+          "workers": 1,
+          "evidence": {
+            "path": ".local/upgrade-evidence/health-outside-person-main.log",
+            "sha256": "a06c3db6fc805adbca21f46bcb8260a01787e6c3e4f8dc476bde6e20a3b50a26"
+          }
+        },
+        "ledger": "docs/upgrade-2025-marketplace-outside-person-work.md"
+      },
+      "pdfPageOnlyTemporaryMerge": {
+        "commit": "5ea12622b2cdbe68bacf1b9ee390b56cb94de90e",
+        "ledger": "docs/upgrade-2026-pdf-page-merge-work.md",
+        "reviewTree": "e07ea9730449ce136cbad9b82b1fc2183527eede",
+        "manifest": {
+          "path": ".local/upgrade-evidence/pdf-page-merge-v2-review-snapshot.json",
+          "sha256": "af00a2780947f29129bcb47fe49a01b23a509c0136a3c3fc2aec956b7d9bc0a6"
+        },
+        "checks": {
+          "path": ".local/upgrade-evidence/pdf-page-merge-v2-frozen-checks.json",
+          "sha256": "1392ce13af035346853b77f2a72faa4e47f06edd65d26a81b407f2cdc9511e4d"
+        },
+        "frozenTests": {
+          "passed": 1482,
+          "files": 250,
+          "workers": 1
+        },
+        "sourceBlobsUnchanged": 3516,
+        "independentReview": {
+          "path": ".local/upgrade-evidence/federal-pdf-page-merge-v2-independent-review.json",
+          "sha256": "3803974ed68ecf18bbba887e2d4accb8d8330c6fa50ad907916d01b3636ce6d7"
+        },
+        "independentTests": {
+          "passed": 13,
+          "files": 3,
+          "privateControls": 5
+        },
+        "savedOutputComparison": {
+          "path": ".local/upgrade-evidence/pdf-page-merge-v2-artifacts/independent-output-comparison.json",
+          "sha256": "8669376f1c65467a9e4e0330cec4ee9193904ed7b40c83d6dbb0573491152890"
+        },
+        "savedPackets": 8,
+        "pairedPages": 106,
+        "browser": {
+          "path": ".local/upgrade-evidence/pdf-page-merge-v2-browser/verification.json",
+          "sha256": "18066f1cc8dedb4749f7134080684016d2f4c0c14b8cb2c3ca54ce80c5d32b4f"
+        },
+        "browserTests": {
+          "passed": 4,
+          "workers": 1,
+          "retries": 0
+        },
+        "mainChecks": {
+          "path": ".local/upgrade-evidence/pdf-page-merge-main-checks.json",
+          "sha256": "1758d6b8206ce484b22dc1efb3a800a84ff95faa3e791e69734621004cceb449"
+        },
+        "mainTests": {
+          "passed": 40,
+          "files": 6,
+          "workers": 1
+        },
+        "deliveryDelta": "One non-null assertion changed to explicit absent-annotation return; predicate unchanged; main tests/types/lint passed.",
+        "retainedFinding": {
+          "initialTree": "f9d6b4ce8daa7e50072e98ff746075fbed3d9de8",
+          "review": {
+            "path": ".local/upgrade-evidence/federal-pdf-page-merge-independent-review.json",
+            "sha256": "470643db88939eb80e57ed5ed530e5ad4bb042d8a35be3e480722af4ae96edb6"
+          },
+          "red": {
+            "path": ".local/upgrade-evidence/pdf-page-merge-v2-widget-red.log",
+            "sha256": "36d181c1f83784c007d843d94430fcb796bd63c04bec692213eeb21e961345ef"
+          },
+          "status": "Resolved; orphan resolved page widgets reject before output"
+        },
+        "boundary": "Temporary serialization only. Reduced bytes; timings varied including a slower candidate. No remote coverage, release or privacy gate change."
       }
     },
     "currentInventory": {
-      "entries": 547,
-      "specReferences": 5805,
-      "sourceCommit": "dff617c8bad8463f8007dd0033ec7dd51d97c73b",
+      "entries": 548,
+      "specReferences": 5820,
+      "sourceCommit": "fbe731a39eeb71263f4ecd60434a5e04c5865f82",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 140,
+      "explicitAssociations": 141,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -5171,7 +5279,7 @@
       },
       "healthOutsidePerson": {
         "tree": "2bc022837c7101951e361726670b472d285adde2",
-        "status": "Independent source and artifact review clear; final rebase and169/166 integration pending",
+        "status": "delivered; independent agent source/artifact review clear; no human or release qualification",
         "sourceReview": {
           "path": ".local/upgrade-evidence/parent-outside-person-source-review.json",
           "sha256": "9bd53a68a6d7971c7552cea2ad9310f603024b33ddb4a4327b304d8d452c8843"
@@ -5188,12 +5296,99 @@
         "producerTrackedBlobsUnchanged": 3499,
         "pdfs": 14,
         "pages": 146,
-        "populatedFields": 428
+        "populatedFields": 428,
+        "deliveredCommit": "fbe731a39eeb71263f4ecd60434a5e04c5865f82",
+        "finalTree": "3a6a5142d69c97a3078c44f1047a7609e86c164f",
+        "finalManifest": {
+          "path": ".local/upgrade-evidence/health-outside-person-final-snapshot.json",
+          "sha256": "15f66053e4310c17043aed1e522e1ffd9e88f83db94a4e214ea769de941adba9"
+        },
+        "finalTests": {
+          "passed": 340,
+          "files": 98,
+          "workers": 1
+        },
+        "mainTests": {
+          "passed": 13,
+          "files": 6,
+          "workers": 1,
+          "evidence": {
+            "path": ".local/upgrade-evidence/health-outside-person-main.log",
+            "sha256": "a06c3db6fc805adbca21f46bcb8260a01787e6c3e4f8dc476bde6e20a3b50a26"
+          }
+        },
+        "ledger": "docs/upgrade-2025-marketplace-outside-person-work.md"
+      },
+      "k1PriorCharitableAtRisk": {
+        "tree": "470ad2acd2b379ac3c4780feb06a4df41fabfdc1",
+        "status": "Independent source and actual saved-artifact review clear; final rebase/170-167 metadata pending",
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/parent-prior-risk-source-review.json",
+          "sha256": "a68ecbd323563c8c3f945ce64b11724a5b8136f4403be7d32173c4af5e5db617"
+        },
+        "sourceTests": {
+          "passed": 28,
+          "files": 7,
+          "privateControls": 7
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/parent-prior-risk-artifact-review/checks.json",
+          "sha256": "5cc1ed3d2b86ec4a6cc31d69ef66824a5e8d8b18137e84557f75dc2986105f66"
+        },
+        "pdfs": 71,
+        "pages": 157,
+        "populatedFields": 403,
+        "artifactChecks": 2656,
+        "producerExactBlobs": 3450,
+        "producerEquivalentSymlinkTargets": 6,
+        "visual": {
+          "contactSheets": 10,
+          "readablePages": 8
+        },
+        "oracle": "Original source records and actual guided state only; independent PythonDecimal90. No author literals or engine results used as oracle.",
+        "readerCorrectionsRetained": [
+          "8995 prior allowed qualified loss maps to line3, not current QBI line2",
+          "Guide years are text and canonical years numeric; only supplied zeros allow default comparison",
+          "Six archived symlink targets differ by trailing slash; normalized targets equivalent, not byte-identical",
+          "Form widgets initialized for final contact/readable renders"
+        ],
+        "remaining": "2026 prior-gift floor and raw passive capital are internal separate methods"
+      },
+      "annualLoanInterest": {
+        "initialTree": "e5052162535cfe2f761317bf19b5090e3612873f",
+        "initialReview": {
+          "path": ".local/upgrade-evidence/ai-annual-loan-interest-source-review.json",
+          "sha256": "28aa253c57d668059ca9091c73a961173432bebfc0967638e5a06e8e39c15026"
+        },
+        "status": "Original income/phaseout binding correction implemented inV2; independent recheck and regenerated-output review pending",
+        "finding": "Actual W2 income change makes correct student-loan deduction zero, but old700 private token accepted and8 PDFs written.",
+        "initialTests": {
+          "passed": 14,
+          "failed": 2,
+          "files": 7,
+          "independentControls": 7
+        },
+        "correctedTree": "3020d271c46b5821f64d718918cba195c495413e",
+        "correctedManifest": {
+          "path": ".local/upgrade-evidence/annual-loan-interest-v2-review-snapshot.json",
+          "sha256": "530fa337ec4cf409c1aa0374906fac44b3622697e02fb64a426d23fa3a282a22"
+        },
+        "delivery": "Not delivered; no human tax qualification",
+        "correctedAuthorChecks": {
+          "testsPassed": 1969,
+          "testFiles": 254,
+          "workers": 1,
+          "static": "root/contracts/web types,5815 spec references,lint0errors and both builds pass",
+          "browserPassed": 2,
+          "browserRetries": 0,
+          "browserWorkers": 1,
+          "inventory": "Stale new-spec inventory failure retained; final integration regeneration pending"
+        }
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.168",
-      "2026": "2026.165-law-integration-draft"
+      "2025": "2025.169",
+      "2026": "2026.166-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -7203,9 +7398,9 @@
       "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
     },
     "currentFullVerificationRequired": {
-      "sourceCommit": "a2d4898d57557e7cd51616ea90dc3ca20a62cc92",
-      "reason": "Complete intermediate944 coverage passes after the PDF serialization change. Healtha2d and later finite packages still require final full integration, remoteCI and native runtime verification.",
-      "readiness": "Final integrated run required after the finite queue; no later full pass claimed"
+      "sourceCommit": "5ea12622b2cdbe68bacf1b9ee390b56cb94de90e",
+      "reason": "Completed remote16609 unit/browser/native recovery evidence is retained; its31 five-second PDF/workspace coverage failures remain unresolved. Page-copy package has bounded corrected source/browser/artifact evidence. Final complete integration, remote coverage and native runtime verification remain required after the finite queue.",
+      "readiness": "Not release qualified; no later full-project coverage pass claimed"
     },
     "previousCurrentUnitRunBeforeE91": {
       "sourceCommit": "d898091fc124dd1ea130121b418163818e2d7f0c",
@@ -7430,7 +7625,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-27T00:38:29.669214+00:00",
+    "recordedAt": "2026-10-27T01:22:49.923672+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -7710,12 +7905,13 @@
       "sha256": "90919f70e3420edcb79b82b740ca1d9b3ddf479d6c3feaed1b280c5a1ca128fd",
       "internal": [
         "Separate-business/owner worksheets, applicable stops, signed same-owner W15 and actual gross-income attribution delivered; remaining payer/person, payment-share and marriage compositions continue",
-        "Actual eligible outside-tax-family persons and payment reconciliation; own-family zero-advance/zero-final-credit unequal-cash method delivered",
         "Determined positive actual noncoverage advances with payment and corresponding-credit bounds",
         "Alternative-marriage composition with preceding original health/shared sources"
       ],
       "interpretation": "Binding2025 joint capped-repayment attribution among competing owners or qualified/nonqualified source groups; no guessed split",
-      "deliveredActualCash": "a2d4898d57557e7cd51616ea90dc3ca20a62cc92"
+      "deliveredActualCash": "a2d4898d57557e7cd51616ea90dc3ca20a62cc92",
+      "deliveredOutsidePerson": "fbe731a39eeb71263f4ecd60434a5e04c5865f82",
+      "boundary": "Outside-person own-family zero-final-credit bounded method delivered; positive other-return credit/shared advances remain internal, not inferred legally ineligible."
     },
     "remoteRecoveryFailure1e04964": {
       "commit": "1e04964e6e401536ff4c1bee806ba3ac2c4a94e9",
