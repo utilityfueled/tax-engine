@@ -3,7 +3,7 @@ import { royaltySourceFactErrors, invalidateRoyaltySources, type RoyaltyIncomeDa
 import { invalidateSharedPolicySources } from "./guided-shared-policy";
 import { invalidateMarriageSources } from "./guided-marriage-policy";
 import { foreignIncomeFactErrors, type ForeignIncomeData } from "./guided-foreign-income";
-import { netOperatingLossFactErrors, netOperatingLossNavigationFactErrors, type NetOperatingLossData } from "./guided-net-operating-loss";
+import { netOperatingLossFactErrors, netOperatingLossNavigationFactErrors, invalidateNetOperatingLossSources, type NetOperatingLossData } from "./guided-net-operating-loss";
 import { currentLossOriginNavigationFactErrors, invalidateCurrentLossOrigin, type CurrentLossOriginData } from "./guided-current-loss-origin";
 import { codNolNavigationFactErrors, invalidateGuidedCodNol, type CodNolData } from "./guided-cod-nol";
 import { k1LossSourceFactErrors, invalidateK1LossSources } from "./guided-k1-qbi-sources";
@@ -1661,9 +1661,7 @@ export function updateSectionData(
         ...(k1LossSourcesChanged ? { k1LossSources: invalidateK1LossSources(k1LossSourcesChanged) } : {}),
         ...(codSourcesChanged ? { codNolSources: invalidateGuidedCodNol(codSourcesChanged) } : {}),
         ...(currentLossSourcesChanged ? { currentLossOrigin: invalidateCurrentLossOrigin(currentLossSourcesChanged) } : {}),
-        ...(nolSourcesChanged ? { netOperatingLossSources: { ...nolSourcesChanged, sourceFactsConfirmed: null, ...(nolSourcesChanged.alternativeTax ? { alternativeTax: { ...nolSourcesChanged.alternativeTax, sourceFactsConfirmed: null,
-          ...(nolSourcesChanged.alternativeTax.charitableCarryoverHistory ? { charitableCarryoverHistory: { ...nolSourcesChanged.alternativeTax.charitableCarryoverHistory, sourceFactsConfirmed: null,
-            ...(nolSourcesChanged.alternativeTax.charitableCarryoverHistory.alternativeCarryoverSources ? { alternativeCarryoverSources: { ...nolSourcesChanged.alternativeTax.charitableCarryoverHistory.alternativeCarryoverSources, sourceFactsConfirmed: null, ...(nolSourcesChanged.alternativeTax.charitableCarryoverHistory.alternativeCarryoverSources.filingUnitHistory ? { filingUnitHistory: { ...nolSourcesChanged.alternativeTax.charitableCarryoverHistory.alternativeCarryoverSources.filingUnitHistory, sourceFactsConfirmed: null } } : {}) } } : {}) } } : {}) } } : {}) } } : {}),
+        ...(nolSourcesChanged ? { netOperatingLossSources: invalidateNetOperatingLossSources(nolSourcesChanged) } : {}),
         ...(foreignIncomeSourcesChanged ? { foreignIncome: { ...foreignIncomeSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(healthSourcesChanged ? { healthInsuranceFacts: invalidateHealthInsuranceSources(healthSourcesChanged) } : {}), ...(studentLoanSourcesChanged ? { studentLoanFacts: { ...studentLoanSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(iraSourcesChanged ? { iraContributions: { ...iraSourcesChanged, sourceFactsConfirmed: null } } : {}), ...(hsaSourcesChanged ? { hsaAccounts: hsaSourcesChanged.map(account => ({ ...account, sourceFactsConfirmed: null })) } : {}), ...(educatorSourcesChanged ? { educatorExpenseSources: educatorSourcesChanged.map(source => ({ ...source, sourceFactsConfirmed: null })) } : {}) } } : {}),
       ...((benefitSourcesChanged || educationSourcesChanged || bondSourcesChanged || premiumTaxCreditSourcesChanged || minimumTaxCreditSourcesChanged || adoptionHistoryChanged) && nextCredits ? { credits: { ...nextCredits,
         ...(adoptionHistoryChanged ? { adoption: invalidateAdoptionHistories(adoptionHistoryChanged) } : {}),

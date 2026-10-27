@@ -28,6 +28,7 @@ import { fillReturn } from "@/pdf/fill-return.js";
 import { redactReviewIdentifiers } from "@/pdf/redact-review-identifiers.js";
 import { prepareForm8949Review } from "@/pdf/form-8949-review-context.js";
 import { prepareCodNolReview } from "@/pdf/cod-nol-review-context.js";
+import { prepareNolFilingUnitReview, requiresNolFilingUnitReview } from "@/pdf/nol-filing-unit-review-context.js";
 import { prepareCharitableReview, requiresCharitableNolReview, requiresCharitableFilingHistoryReview } from "@/pdf/charitable-review-context.js";
 import { hasHistoricalAdoptionSources, prepareAdoptionReview } from "@/pdf/adoption-review-context.js";
 import { hasScheduleEReviewSources, prepareScheduleEReview } from "@/pdf/schedule-e-review-context.js";
@@ -623,6 +624,7 @@ export async function buildWorkspaceFilledReturnDownload(
   // intact through calculation, then redact only copies passed to renderers.
   const capitalGainReview = prepareForm8949Review(resolved.taxInput);
   const codNolReview = resolved.taxInput.form982NolSources ? prepareCodNolReview(resolved.taxInput) : undefined;
+  const nolFilingUnitReview = requiresNolFilingUnitReview(resolved.taxInput, completeResult) ? prepareNolFilingUnitReview(resolved.taxInput) : undefined;
   const charitableReview = resolved.taxInput.charitableCarryoverSources || resolved.taxInput.k1CharitableSources || requiresCharitableNolReview(resolved.taxInput, completeResult) || requiresCharitableFilingHistoryReview(resolved.taxInput, completeResult)
     ? prepareCharitableReview(resolved.taxInput) : undefined;
   const adoptionReview = hasHistoricalAdoptionSources(resolved.taxInput) ? prepareAdoptionReview(resolved.taxInput) : undefined;
@@ -645,6 +647,7 @@ export async function buildWorkspaceFilledReturnDownload(
       capitalGainReview,
       codNolReview,
       charitableReview,
+      nolFilingUnitReview,
       adoptionReview,
       qbiLossReview,
       scheduleEReview,

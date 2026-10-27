@@ -1,5 +1,7 @@
 /** Canonical Section172 income-context orchestration. Spec: net-operating-loss-return.yaml. */
 import Decimal from "decimal.js";
+import { nolFilingUnitSourceDigest } from "@/utils/nol-filing-unit-source-digest.js";
+import { assertNolFilingUnitAgreement } from "@/utils/nol-filing-unit-timeline.js";
 import type { CharitableNolContributionLimit } from "@/utils/charitable-nol-source.js";
 import { hasOriginalCharitableNolSources, readCurrentCharitableSourceForNol } from "@/utils/charitable-nol-source.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -38,6 +40,8 @@ export interface NolIncomeContext {
 export interface NolAlternativeIncomeContext extends Form6251IncomeResult { qbiDeduction: Decimal }
 export interface NetOperatingLossReturnResult extends NetOperatingLossResult {
   calculationComplete: true;
+  /** Original source binding for changed membership; never a current amount override. */
+  filingUnitSourceDigest?: string;
   deduction: Decimal;
   absorbed: Decimal;
   expired: Decimal;
@@ -86,7 +90,7 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   if (input.form8839?.children.some(child => d(child.employerBenefits).gt(0) || (child.isSpecialNeeds && child.employerPlanQualified))) {
     throw new Error("Actual NOL and adoption-benefit exclusions require the coupled source MAGI worksheet");
   }
-  const params = { taxYear: input.taxpayer.taxYear, filingStatus: input.taxpayer.filingStatus, taxpayer: input.taxpayer, facts };
+  const params = { taxYear: input.taxpayer.taxYear, filingStatus: input.taxpayer.filingStatus, taxpayer: input.taxpayer, standardDeductionFacts: input.standardDeductionFacts, facts };
   const source = calculateNetOperatingLoss(params);
   if (input.priorYear?.nolCarryforward !== undefined && !d(input.priorYear.nolCarryforward).eq(source.availableCarryforward)) {
     throw new Error("Legacy NOL aggregate must reconcile with actual source vintages");
@@ -104,7 +108,8 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
     || !Array.isArray(alternative.vintages)) {
     throw new Error("NOL requires the separate actual complete AMT carry history and special-loss classification");
   }
-  const alternativeTaxSources = calculateNetOperatingLoss({ ...params, facts: { ...facts, ...alternative } });
+  const alternativeTaxSources = calculateNetOperatingLoss({ ...params, facts: { ...facts, ...alternative, filingUnitHistory: alternative.filingUnitHistory } });
+  if (facts.returnMembership === "changed_membership") assertNolFilingUnitAgreement(input.taxpayer, facts.filingUnitHistory, alternative.filingUnitHistory, input.standardDeductionFacts);
   if (input.scheduleK1.some(row => !d(row.amtDepletion).isZero())) {
     throw new Error("ATNOL with depletion requires its refigured AMT taxable-income limitation worksheet");
   }
@@ -253,13 +258,14 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
     const value = record?.section1411OriginalLoss;
     if (value === undefined || !/^\d+$/.test(value) || !d(value).isFinite() || d(value).gt(row.originalLoss)
       || (row.lossTaxYear < 2013 && !d(value).isZero())) throw new Error("NOL requires each actual originating Section1411 loss, including known zero");
-    const amount = (row.deduction ?? d("0")).times(d(value)).div(row.originalLoss);
+    const amount = row.originalLoss.isZero() ? d("0") : (row.deduction ?? d("0")).times(d(value)).div(row.originalLoss);
     audit.record("Section1411 NOL Worksheet", row.sourceId, "Applicable portion of regular NOL deduction", amount,
       "Actual current regular deduction times fixed originating1411loss/originalNOL fraction; basis is the claimed deduction, not carry absorption",
       { "Original regular loss": row.originalLoss, "Original1411 loss": d(value), "Regular deduction": row.deduction ?? d("0") });
     return amount;
   });
-  return { ...result, calculationComplete: true, deduction: result.deduction, absorbed: result.absorbed,
+  return { ...result, calculationComplete: true,
+    ...(facts.returnMembership === "changed_membership" ? { filingUnitSourceDigest: nolFilingUnitSourceDigest(input) } : {}), deduction: result.deduction, absorbed: result.absorbed,
     expired: result.expired, carryforward: result.carryforward, actualIncome, modifiedIncome, finalIncome,
     modifiedVintageIncome, section1411Deduction: roundDollar(sum(...section1411Amounts)),
     alternativeTaxSources, alternativeTax, charitableCarryover, charitableCounterfactual,

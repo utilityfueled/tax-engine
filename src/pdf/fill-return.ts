@@ -37,6 +37,7 @@ import { fillForm6251 } from "./fill-form-6251.js";
 import { form8949ReviewCalculation, prepareForm8949Review, type PreparedForm8949Review } from "./form-8949-review-context.js";
 import { prepareCodNolReview, type PreparedCodNolReview } from "./cod-nol-review-context.js";
 import { fillCharitableFilingUnitReview, CHARITABLE_FILING_UNIT_REFERENCE_FILENAME } from './mappings/2025/charitable-filing-unit-review.js';
+import { prepareNolFilingUnitReview, nolFilingUnitReviewOriginalSourceInput, requiresNolFilingUnitReview, type PreparedNolFilingUnitReview } from "./nol-filing-unit-review-context.js";
 import { prepareCharitableReview, charitableReviewOriginalSourceInput, requiresCharitableNolReview, requiresK1CharitableReview, requiresCharitableFilingHistoryReview, type PreparedCharitableReview } from "./charitable-review-context.js";
 import { fillK1CharitableReview, K1_CHARITABLE_REFERENCE_FILENAME } from "./mappings/2025/k1-charitable-review.js";
 import { hasHistoricalAdoptionSources, prepareAdoptionReview, type PreparedAdoptionReview } from "./adoption-review-context.js";
@@ -401,6 +402,7 @@ export interface FillReturnOptions {
   codNolReview?: PreparedCodNolReview;
   /** Original prior-charity identity/history, validated before render redaction. */
   charitableReview?: PreparedCharitableReview;
+  nolFilingUnitReview?: PreparedNolFilingUnitReview;
   /** Actual historical benefits and income, checked before identifier redaction. */
   adoptionReview?: PreparedAdoptionReview;
   qbiLossReview?: PreparedQbiLossReview;
@@ -448,6 +450,9 @@ export async function fillReturn(
     ? options.qbiLossReview ?? prepareQbiLossReview(input) : undefined;
   if (qbiLossReview) buildQbiLossReview(input, result, qbiLossReview);
   if (input.deductionElection === "nonitemized" || result.deductionUsed === "nonitemized") throw new Error("Nonitemized election is available only for 2026 and has no supported review PDF mapping");
+  const nolFilingUnitReview = requiresNolFilingUnitReview(input, result) || options.nolFilingUnitReview
+    ? options.nolFilingUnitReview ?? prepareNolFilingUnitReview(input) : undefined;
+  if (nolFilingUnitReview) nolFilingUnitReviewOriginalSourceInput(input, result, nolFilingUnitReview);
   const charitableReview = input.charitableCarryoverSources || requiresK1CharitableReview(input, result) || requiresCharitableNolReview(input, result) || requiresCharitableFilingHistoryReview(input, result) || options.charitableReview
     ? options.charitableReview ?? prepareCharitableReview(input) : undefined;
   if (charitableReview) charitableReviewOriginalSourceInput(input, result, charitableReview);
@@ -496,7 +501,7 @@ export async function fillReturn(
   if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result, charitableReview, premiumTaxCreditReview);
   const codNolReview = input.form982NolSources || result.codNolReduction
     ? options.codNolReview ?? prepareCodNolReview(input) : undefined;
-  if (input.netOperatingLoss || result.netOperatingLoss) buildNetOperatingLossReview(input, result, capitalGainReview, codNolReview, charitableReview, qbiLossReview);
+  if (input.netOperatingLoss || result.netOperatingLoss) buildNetOperatingLossReview(input, result, capitalGainReview, codNolReview, charitableReview, qbiLossReview, nolFilingUnitReview);
   const filledForms: string[] = [];
   const finalizedPaths = new Set<string>();
   const savePacketPdf = async (doc: PDFDocument, outputPath: string) => {
@@ -809,7 +814,7 @@ export async function fillReturn(
   // zero. Inclusion is for source review and is not a filing-requirement claim.
   if (result.form6251 && (result.form6251.amt.gt(0) || result.netOperatingLoss || capitalTransactions.section1202?.amtPreference.gt(0))) {
     const f6251Path = join(blankFormsDir, "f6251.pdf");
-    const doc6251 = await fillForm6251(input, result, f6251Path, capitalGainReview, codNolReview, charitableReview, qbiLossReview);
+    const doc6251 = await fillForm6251(input, result, f6251Path, capitalGainReview, codNolReview, charitableReview, qbiLossReview, nolFilingUnitReview);
     if (flatten) await flattenForm(doc6251.getForm());
     const outputPath6251 = join(outputDir, "f6251-filled.pdf");
     await savePacketPdf(doc6251, outputPath6251);
@@ -929,7 +934,7 @@ export async function fillReturn(
 
   // ── IRA Deduction Worksheet reference summary (if applicable — supported Pub. 590-A deduction worksheet inputs) ──
   if (result.netOperatingLoss) {
-    filledForms.push(await fillNetOperatingLossReview(input, result, outputDir, capitalGainReview, codNolReview, charitableReview, qbiLossReview));
+    filledForms.push(await fillNetOperatingLossReview(input, result, outputDir, capitalGainReview, codNolReview, charitableReview, qbiLossReview, nolFilingUnitReview));
   }
 
   if (result.iraDeductionWorksheet) {

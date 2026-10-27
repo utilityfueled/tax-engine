@@ -3,6 +3,9 @@
  * Canonical return computations supply income contexts; they are not source inputs.
  */
 import Decimal from "decimal.js";
+import type { FilingUnitHistory } from "@/models/filing-unit-sources.js";
+import type { NolFilingUnitOrigin, NolFilingUnitUse } from "@/models/net-operating-loss-filing-unit.js";
+import { calculateNolFilingUnitHistory } from "./net-operating-loss-filing-unit-history.js";
 import type { FilingStatus } from "@/models/constants.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -22,7 +25,8 @@ export interface NetOperatingLossVintageSource {
   historySourceReference?: string;
   allHistoryIncluded?: boolean;
   farmingLossIncluded?: boolean;
-  history?: Array<{ taxYear?: number; nolUsed?: string; attributeReduction?: string; sourceReference?: string }>;
+  filingUnitOrigin?: NolFilingUnitOrigin;
+  history?: Array<{ taxYear?: number; nolUsed?: string; attributeReduction?: string; sourceReference?: string; filingUnitUses?: NolFilingUnitUse[] }>;
 }
 export interface NetOperatingLossSources {
   sourceTaxYear?: number;
@@ -30,7 +34,8 @@ export interface NetOperatingLossSources {
   sourceFactsConfirmed?: boolean;
   allCarryoversIncluded?: boolean;
   calendarYearTaxpayer?: boolean;
-  returnMembership?: "continuous_individual" | "same_spouses_joint";
+  returnMembership?: "continuous_individual" | "same_spouses_joint" | "changed_membership";
+  filingUnitHistory?: FilingUnitHistory;
   membershipUnchangedConfirmed?: boolean;
   primaryName?: string;
   primaryTaxpayerIdLast4?: string;
@@ -99,6 +104,7 @@ export function calculateNetOperatingLoss(input: {
   filingStatus: FilingStatus;
   taxpayer: { primary: { firstName: string; lastName: string; ssn: string }; spouse?: { firstName: string; lastName: string; ssn: string } };
   facts: NetOperatingLossSources;
+  standardDeductionFacts?: { primaryDeathDate?: string | null; spouseDeathDate?: string | null };
   context?: NetOperatingLossContext;
 }): NetOperatingLossResult {
   const { facts, taxYear, context } = input;
@@ -107,9 +113,11 @@ export function calculateNetOperatingLoss(input: {
     throw new Error("NOL requires actual confirmed calendar-year carry sources and complete source records");
   }
   const joint = input.filingStatus === "married_filing_jointly";
-  if (facts.membershipUnchangedConfirmed !== true || facts.returnMembership !== (joint ? "same_spouses_joint" : "continuous_individual")) {
+  const changed = facts.returnMembership === "changed_membership";
+  if (!changed && (facts.membershipUnchangedConfirmed !== true || facts.returnMembership !== (joint ? "same_spouses_joint" : "continuous_individual"))) {
     throw new Error("NOL changed return membership requires its separate actual allocation worksheet");
   }
+  const filingHistory = calculateNolFilingUnitHistory({ ...input, taxpayer: { ...input.taxpayer, taxYear, filingStatus: input.filingStatus } });
   const matches = (person: typeof input.taxpayer.primary | undefined, sourceName: string | undefined, sourceLast4: string | undefined): boolean =>
     person !== undefined && /^\d{4}$/.test(sourceLast4 ?? "") && /^\d{9}$/.test(person.ssn.replace(/-/g, ""))
       && person.ssn.replace(/-/g, "").slice(-4) === sourceLast4 && name(`${person.firstName} ${person.lastName}`) === name(sourceName);
@@ -120,6 +128,7 @@ export function calculateNetOperatingLoss(input: {
   }
   if (!Array.isArray(facts.vintages)) throw new Error("NOL requires actual vintage history, including an explicit empty list when none");
   const audit = new AuditTrail();
+  audit.merge(filingHistory.lines);
   const sourceIds = new Set<string>();
   const lossYears = new Set<number>();
   const vintages: NetOperatingLossVintageResult[] = facts.vintages.map(row => {
@@ -170,7 +179,7 @@ export function calculateNetOperatingLoss(input: {
       }
       return used.plus(reduced);
     });
-    if (originalLoss.isZero() || !originalLoss.minus(sum(...reductions)).eq(openingCarryforward)) {
+    if ((!changed && originalLoss.isZero()) || !originalLoss.minus(sum(...reductions)).eq(openingCarryforward)) {
       throw new Error("NOL original loss, prior uses, reductions and opening carry must reconcile");
     }
     const expiredBeforeYear = year < 2018 && taxYear > year + 20 ? openingCarryforward : d("0");

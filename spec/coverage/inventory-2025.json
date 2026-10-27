@@ -6980,6 +6980,29 @@
       ]
     },
     {
+      "key": "federal/net-operating-loss-filing-unit-history",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i172",
+      "specPath": "spec/federal/net-operating-loss-filing-unit-history.yaml",
+      "enginePath": "src/engine/forms/net-operating-loss-filing-unit-history.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/net-operating-loss-filing-unit-history.test.ts::derives the published original joint allocation without inheriting the other owner loss",
+        "tests/engine/federal-net-operating-loss-filing-unit.test.ts::computes the current separate return from independent regular and AMT owner histories"
+      ],
+      "implementationNote": "Original owner allocation and filed historical use determine a current one-owner carry, with independent AMT sources and original-bound historical review. Current joint pooling, human review and final 2026 filing qualification remain distinct.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/net-operating-loss-return",
       "jurisdiction": "federal",
       "taxYear": 2025,

@@ -1,5 +1,6 @@
 /** Source-bound NOL review statement. Spec: net-operating-loss-return.yaml. */
 import Decimal from "decimal.js";
+import { nolFilingUnitReviewOriginalSourceInput, requiresNolFilingUnitReview, type PreparedNolFilingUnitReview } from "@/pdf/nol-filing-unit-review-context.js";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { PDFDocument, StandardFonts } from "pdf-lib";
@@ -174,8 +175,9 @@ function currentOriginRows(input: TaxYearInput, result: TaxReturnResult, capital
 
 /** Source amounts and retained canonical contexts are checked separately. This
  * render path works after identifier redaction and never invents taxpayer IDs. */
-export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, capitalReview?: PreparedForm8949Review, codReview?: PreparedCodNolReview, charitableReview?: PreparedCharitableReview, qbiReview?: PreparedQbiLossReview): string[] {
+export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, capitalReview?: PreparedForm8949Review, codReview?: PreparedCodNolReview, charitableReview?: PreparedCharitableReview, qbiReview?: PreparedQbiLossReview, nolFilingUnitReview?: PreparedNolFilingUnitReview): string[] {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  if (requiresNolFilingUnitReview(input, result) || nolFilingUnitReview) input = nolFilingUnitReviewOriginalSourceInput(input, result, nolFilingUnitReview);
   if ((input.form172 && input.qbiLossSources) || result.form172?.k1Sources
     || result.allLines.some(line => line.form === "Current Form172 K1 sources")) {
     if (!input.form172 || !input.qbiLossSources) throw new Error("Operating K1 current origin review requires its actual original source packet");
@@ -429,7 +431,14 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
       }
     }
   }
-  return ["NET OPERATING LOSS - REVIEW CALCULATION STATEMENT", ...contexts, ...regularRows, ...alternativeRows, ...originRows, ...charityRows, ...codRows,
+  const ownershipRows = facts.returnMembership === 'changed_membership' ? [
+    'ACTUAL FILED OWNER HISTORY - REGULAR AND ALTERNATIVE TAX',
+    'Original allocation and historical owner use are separate from the current deduction and modified absorption. Former-owner balances are not inherited.',
+    ...([['Regular', calculation], ['Alternative', calculation.alternativeTaxSources]] as const).flatMap(([label, ledger]) =>
+      ledger.lines.filter(row => row.form === 'Section172 Filing Unit History' && row.line !== 'timeline').map(row =>
+        `${label}: ${row.description}: ${row.value}; ${Object.entries(row.inputs ?? {}).map(([key, value]) => `${key}: ${value}`).join('; ')}`)),
+  ] : [];
+  return ["NET OPERATING LOSS - REVIEW CALCULATION STATEMENT", ...ownershipRows, ...contexts, ...regularRows, ...alternativeRows, ...originRows, ...charityRows, ...codRows,
     result.codNolReduction
       ? "The original source packet was recalculated before identifier removal. The before-COD loss calculations and final after-COD balances are shown separately."
       : "Amounts explain the retained canonical income contexts; this statement does not independently replay every upstream income source.",
@@ -437,8 +446,8 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
     "This statement and the accompanying Form6251 are review material, not filing qualification."];
 }
 
-export async function fillNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, outputDir: string, capitalReview?: PreparedForm8949Review, codReview?: PreparedCodNolReview, charitableReview?: PreparedCharitableReview, qbiReview?: PreparedQbiLossReview): Promise<string> {
-  const paragraphs = buildNetOperatingLossReview(input, result, capitalReview, codReview, charitableReview, qbiReview);
+export async function fillNetOperatingLossReview(input: TaxYearInput, result: TaxReturnResult, outputDir: string, capitalReview?: PreparedForm8949Review, codReview?: PreparedCodNolReview, charitableReview?: PreparedCharitableReview, qbiReview?: PreparedQbiLossReview, nolFilingUnitReview?: PreparedNolFilingUnitReview): Promise<string> {
+  const paragraphs = buildNetOperatingLossReview(input, result, capitalReview, codReview, charitableReview, qbiReview, nolFilingUnitReview);
   const doc = await PDFDocument.create(); const font = await doc.embedFont(StandardFonts.Helvetica);
   let page = doc.addPage([612, 792]); let y = 738;
   for (const paragraph of paragraphs) {

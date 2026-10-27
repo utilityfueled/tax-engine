@@ -1,0 +1,84 @@
+form: "Section172 changed filing-unit history"
+fullName: "Actual original owner allocation and filed intervening NOL records"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  Form172 Change in Filing Status allocates an original joint NOL using the
+  separately computed originating NOLs. Reg1.172-7(d)(1), (d)(2) and (e) preserve
+  owner attribution through intervening separate and joint returns. A closing
+  joint balance cannot be split using the original ratio again.
+  This method validates actual filed original and intervening worksheets. It
+  does not calculate a historical return, accept a current deduction override,
+  or invent an owner allocation of the current joint post2017 80percent reserve.
+  The current return has one owner. Each regular and AMT packet supplies its own
+  complete timeline and monetary sources. The current deduction and modified
+  absorption remain the established canonical172 and56 calculations.
+  Existing filed NOL amounts are whole dollars. Original allocation is checked
+  by exact cross-products against those filed owner amounts, without rounding a
+  residual into either spouse. A source that cannot reconcile this existing
+  precision contract needs its actual allocation records and a separate precise
+  projection; it is not evidence for a rounding-priority rule.
+  The published5000/1800/3000 example illustrates allocation only; its farming
+  carryback facts do not enable farming origins. Actual historical claim,
+  modified absorption and after-tax attribute reduction remain distinct.
+lines:
+  - line: "original-joint-allocation"
+    description: "Validate the original joint NOL allocation from separate computations"
+    formula: "Joint5000 times owner1800/(1800+3000)=1875; other owner3125. A later current one-owner return uses only its original1875 before actual intervening reductions."
+    irsRef: "Form172 Change in Filing Status, joint return in NOL year example; Reg1.172-7(d)(1)"
+    testRef: "tests/engine/forms/net-operating-loss-filing-unit-history.test.ts::derives the published original joint allocation without inheriting the other owner loss"
+  - line: "recurrent-owner-use"
+    description: "Conserve actual owner use through separate, reunited and new-spouse years"
+    formula: "Joint100000 allocated60000/40000; separate uses5000/10000, later joint uses7000/3000, then actual0/2000 leaves48000/25000. Current original owner gets48000, not60percent of73000."
+    irsRef: "Reg1.172-7(d)(2), (e); Form172 Change in Marital Status"
+    testRef: "tests/engine/forms/net-operating-loss-filing-unit-history.test.ts::preserves filed owner allocations through recurrent and new-spouse returns"
+  - line: "claim-versus-absorption"
+    description: "Historical tax claim is not automatically historical carry absorption"
+    formula: "Filed owner deduction1000 and modified absorption1500 reduce that owner's carry by1500. A separate attribute reduction200 reduces it by another200; all owner amounts reconcile to each filed return total."
+    irsRef: "IRC172(b)(2); Reg1.172-7(d)(2); Form172 How to Figure an NOL Carryover"
+    testRef: "tests/engine/forms/net-operating-loss-filing-unit-history.test.ts::uses actual modified absorption and attribute reductions without substituting the deduction"
+  - line: "actual-timeline"
+    description: "Require complete actual identity, year, return and monetary evidence"
+    formula: "Missing or duplicate years/people/returns, unknown or false confirmations, an owner absent from the return, conflicting source summaries or current-year entered use reject. Input order does not affect the conserved result."
+    irsRef: "Form172 Keeping records and Change in Filing Status; Reg1.172-7(d)-(e)"
+    testRef: "tests/engine/forms/net-operating-loss-filing-unit-history.test.ts::requires complete source ownership and rejects changed or contradictory filed records"
+  - line: "current-joint-boundary"
+    description: "Do not substitute historical owner records for current joint limits"
+    formula: "Current joint filing with changed membership still requires actual canonical owner-income and joint-limit coordination; a historical worksheet cannot set this year's deduction."
+    irsRef: "Form172 Change in Marital Status; IRC172(a)(2); Reg1.172-7(d)(2)"
+    testRef: "tests/engine/forms/net-operating-loss-filing-unit-history.test.ts::retains the separate current joint method and exact original allocation boundary"
+  - line: "source-expiry-and-year"
+    description: "Retain the original expiration and actual present owner across source years"
+    formula: "An original2004 ordinary loss with an actual carryback waiver and explicit2005-through2024 zero uses expires before2025. A complete2026 one-owner history retains2021 original ownership; this source support does not enable2026 filing output. Final separate returns require the actual deceased-owner year; another owner's later balance is not inherited."
+    irsRef: "IRC172(b)(1); Reg1.172-7; Form172 Carryover period and Change in Marital Status"
+    testRef: "tests/engine/forms/net-operating-loss-filing-unit-history.test.ts::keeps original expiry and actual current-year ownership separate from source validation"
+  - line: "independent-amt"
+    description: "Use independent regular and AMT owner histories in the canonical return"
+    formula: "Wages50000, regular opening48000 and independent AMT opening20000 produce regular deduction27400/carry20600 and ATNOLD20000/carry0. Regular AGI22600 and AMTI30000 retain their different bases."
+    irsRef: "IRC172(a)(2), 56(d); Reg1.55-1; independent filed owner histories under Reg1.172-7"
+    testRef: "tests/engine/federal-net-operating-loss-filing-unit.test.ts::computes the current separate return from independent regular and AMT owner histories"
+  - line: "source-guide"
+    description: "Collect actual original and intervening records without calculated current inputs"
+    formula: "Saved source values retain unknown/zero/false and every independent original; edits revoke confirmation. The actual source-only guide reaches the canonical result without an entered deduction."
+    irsRef: "Form172 Keeping records; Reg1.172-7(d)-(e)"
+    testRef: "tests/guided-interview/guided-net-operating-loss-filing-unit.test.ts::preserves actual histories and invalidates confirmation after source edits"
+  - line: "original-bound-review"
+    description: "Bind the review to the complete original history and calculated result"
+    formula: "Balanced owner changes, removal of a timeline, a stale source year or altered current result reject before template I/O; the permitted redacted packet retains the original validated context."
+    irsRef: "Form172 Keeping records; review-only output policy"
+    testRef: "tests/pdf/net-operating-loss-filing-unit-review.test.ts::binds both owner histories and the current calculated result before rendering"
+  - line: "saved-review"
+    description: "Retain the original ownership explanation with the redacted physical AMT form"
+    formula: "Actual original source context permits only the original input or its exact identifier redaction. Form6251 lines2e/2f/4 show27400/20000/30000. The statement shows original allocation and historical absorption without names, identifiers or source references. Altered source/result or a forged context rejects before template I/O."
+    irsRef: "Form172 Keeping records; Form6251 lines2e,2f and4; review-only output policy"
+    testRef: "tests/pdf/net-operating-loss-filing-unit-review.test.ts::saves the physical AMT adjustments and original owner explanation using a private source context"
+  - line: "actual-workspace"
+    description: "Export the actual guided original histories without replacing their identity records"
+    formula: "The unmocked guided bridge calculates NOLD27400, AGI22600, AMTI30000 and regular carry20600. Every saved packet page retains its review notice; personal identifiers and source references are absent, and unknown source confirmation blocks export."
+    irsRef: "Form172 Keeping records; review-only workspace output policy"
+    testRef: "tests/apps/web/workspace-net-operating-loss-filing-unit.test.ts::exports actual guided NOL owner histories with the original-bound review packet"
+  - line: "production-history"
+    description: "Reach the source history and review download in the production guided application"
+    formula: "Desktop and mobile retain independent owner records, unknown versus zero, and false confirmations through actual edits, save and reload. Reconfirmation reaches the calculated review download; no current deduction amount is collected."
+    irsRef: "Form172 Keeping records; original-source guided workflow"
+    testRef: "apps/web/tests/net-operating-loss-filing-unit.spec.ts::preserves actual owner histories through edits reload and review download"

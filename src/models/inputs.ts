@@ -4,6 +4,8 @@
  */
 
 import { z } from "zod";
+import { FilingUnitHistorySchema } from "./filing-unit-sources.js";
+import { NolFilingUnitOriginSchema, NolFilingUnitUseSchema } from "./net-operating-loss-filing-unit.js";
 import { SavingsBondReissueSourcesSchema } from "./savings-bond-reissue-sources.js";
 import { EducationRoomBoardPeriodSchema, EducationRoomBoardPeriodExpenseSchema, EducationRoomBoardEsaAllocationSchema, EducationRoomBoardPriorUseSchema, EducationRoomBoardPriorUseExpenseSchema } from "@/models/education-room-board-periods.js";
 import { VehicleRefinancingSourcesSchema } from "@/models/vehicle-refinancing-sources.js";
@@ -2629,17 +2631,20 @@ export const NetOperatingLossVintageSchema = z.object({
   carrybackTreatment: z.enum(["not_required", "waived", "completed"]).optional(), carrybackSourceReference: z.string().optional(),
   ordinaryHistoricalCarrybackConfirmed: z.boolean().optional(), adjustedThroughTaxYear: z.number().int().optional(),
   historySourceReference: z.string().optional(), allHistoryIncluded: z.boolean().optional(), farmingLossIncluded: z.boolean().optional(),
+  filingUnitOrigin: NolFilingUnitOriginSchema.optional(),
   history: z.array(z.object({ taxYear: z.number().int().optional(), nolUsed: optionalDecimalInput,
-    attributeReduction: optionalDecimalInput, sourceReference: z.string().optional() })).optional(),
+    attributeReduction: optionalDecimalInput, sourceReference: z.string().optional(), filingUnitUses: z.array(NolFilingUnitUseSchema).optional() })).optional(),
   section1411OriginalLoss: optionalDecimalInput,
 });
 export const NetOperatingLossSourcesSchema = z.object({
   sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
   allCarryoversIncluded: z.boolean().optional(), calendarYearTaxpayer: z.boolean().optional(),
-  returnMembership: z.enum(["continuous_individual", "same_spouses_joint"]).optional(), membershipUnchangedConfirmed: z.boolean().optional(),
+  returnMembership: z.enum(["continuous_individual", "same_spouses_joint", "changed_membership"]).optional(), membershipUnchangedConfirmed: z.boolean().optional(),
+  filingUnitHistory: FilingUnitHistorySchema.optional(),
   primaryName: z.string().optional(), primaryTaxpayerIdLast4: z.string().optional(), spouseName: z.string().optional(), spouseTaxpayerIdLast4: z.string().optional(),
   vintages: z.array(NetOperatingLossVintageSchema).optional(),
   alternativeTax: z.object({ sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    filingUnitHistory: FilingUnitHistorySchema.optional(),
     allCarryoversIncluded: z.boolean().optional(), specialDisasterCarryIncluded: z.boolean().optional(),
     currentYearAdjustmentsCompleteConfirmed: z.boolean().optional(), regularBasisAndLossLimitsSameAsAlternativeConfirmed: z.boolean().optional(),
     /** Independent actual charity histories; absence never establishes either history is empty. */

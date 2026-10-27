@@ -1196,6 +1196,16 @@
       "note": "Own-spec controls bind actual full shared policies, PartIV allocation, alternative marriage groups and independent health payments to the historical2025 Form8962 review packet. Exact source fractions remain distinct from printed percentages. Unresolved within-return grouping, partial-family and payer methods remain explicit; no filing or human qualification is claimed."
     },
     {
+      "key": "federal/net-operating-loss-filing-unit-history",
+      "enginePath": "src/engine/forms/net-operating-loss-filing-unit-history.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/forms/net-operating-loss-filing-unit-history.test.ts::derives the published original joint allocation without inheriting the other owner loss",
+        "tests/engine/federal-net-operating-loss-filing-unit.test.ts::computes the current separate return from independent regular and AMT owner histories"
+      ],
+      "note": "Original owner allocation and filed historical use determine a current one-owner carry, with independent AMT sources and original-bound historical review. Current joint pooling, human review and final 2026 filing qualification remain distinct."
+    },
+    {
       "key": "federal/net-operating-loss-vintages",
       "enginePath": "src/engine/forms/net-operating-loss.ts",
       "testRefs": [
