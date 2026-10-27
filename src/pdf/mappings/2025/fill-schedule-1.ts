@@ -12,9 +12,7 @@ import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import {
   loadReviewTemplate,
-  setTextField,
-  setCurrencyField,
-  setCheckBox,
+  createPdfFieldBatch,
 } from "../../pdf-utils.js";
 
 // ─── PDF Field Name Helpers ────────────────────────────────────────────────
@@ -121,7 +119,7 @@ export async function fillSchedule1(
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
-  const form = doc.getForm();
+  const fields = createPdfFieldBatch(doc.getForm());
   const F = FIELDS;
   const s1 = result.schedule1;
 
@@ -129,10 +127,10 @@ export async function fillSchedule1(
   const name = input.taxpayer.spouse
     ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
     : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
-  setTextField(form, F.name, name);
-  setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
+  fields.setText(F.name, name);
+  fields.setText(F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
 
-  if (!s1) return doc;
+  if (!s1) { fields.apply(); return doc; }
 
   const audited = new Map<string, Decimal>();
   for (const entry of s1.lines) {
@@ -175,14 +173,14 @@ export async function fillSchedule1(
     const value = audited.get(id);
     if (value !== undefined) {
       // These two fields are inside parentheses already printed on the form.
-      setCurrencyField(form, field, id === "8a" || id === "8d" ? value.abs() : value);
+      fields.setCurrency(field, id === "8a" || id === "8d" ? value.abs() : value);
     }
   }
   const otherSources = s1.lines.find(line => line.form === "Sched 1" && line.line === "8z")?.inputs ?? {};
   const sourceEntries = Object.entries(otherSources).filter(([,amount]) => Decimal.isDecimal(amount) && !amount.isZero());
   const manualAdjustments = d(input.adjustments?.otherAdjustmentsTotal);
   if (sourceEntries.length > 0 || !manualAdjustments.isZero()) {
-    if (sourceEntries.length > 0) setTextField(form, F.line8zDesc, "See review source attachment");
+    if (sourceEntries.length > 0) fields.setText(F.line8zDesc, "See review source attachment");
     const page = doc.addPage([612, 792]);
     const font = await doc.embedFont(StandardFonts.Helvetica);
     const notes = [
@@ -204,8 +202,9 @@ export async function fillSchedule1(
   if (repaymentAudit.length !== 1 || !repaymentAudit[0].value.eq(repaid)) {
     throw new Error("Schedule1 unemployment repayment requires a unique reconciled source audit");
   }
-  setCurrencyField(form, F.line7Repaid, repaid);
-  setCheckBox(form, F.line7RepaymentCheckbox, repaid.gt(0));
+  fields.setCurrency(F.line7Repaid, repaid);
+  fields.setCheckBox(F.line7RepaymentCheckbox, repaid.gt(0));
+  fields.apply();
   return doc;
 }
 

@@ -9,6 +9,10 @@ notes: |
   Existing document Subject metadata never establishes a visible page notice.
   Unchanged template hashes, year and filing gates remain mandatory.
 lines:
+  - line: "mapped-write-batch"
+    description: "One current field lookup pass for a bounded batch of mapped writes"
+    formula: "Resolve names and types from the current form once at apply time; reject missing or wrong-type fields even for blank values before writes. Apply exact original text/currency/checkbox values in order, retain no cross-document index, and close the batch after application. Template, privacy and year gates remain unchanged."
+    testRef: "tests/pdf/pdf-field-batch.test.ts::saves text, exact money and both checkbox states with one lookup pass"
   - line: "registered-template"
     description: "Review templates are visibly marked before mapping"
     formula: "Verify registered revision/year, load, visibly stamp every page, then return."

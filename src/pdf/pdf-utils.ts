@@ -84,6 +84,52 @@ export function formatCurrencyWithCents(value: Decimal): string {
   return rounded.toFixed(2);
 }
 
+/** Resolve a bounded set of writes once, without caching a mutable form's fields. */
+export function createPdfFieldBatch(form: PDFForm): {
+  setText(fieldName: string, value: string): void;
+  setCurrency(fieldName: string, value: Decimal): void;
+  setCheckBox(fieldName: string, checked: boolean): void;
+  apply(): void;
+} {
+  type Write = { kind: "text"; fieldName: string; value: string }
+    | { kind: "checkbox"; fieldName: string; value: boolean };
+  const writes: Write[] = [];
+  let applied = false;
+  const open = () => {
+    if (applied) throw new Error("Mapped PDF field batch was already applied");
+  };
+  return {
+    setText(fieldName, value) { open(); writes.push({ kind: "text", fieldName, value }); },
+    setCurrency(fieldName, value) { open(); writes.push({ kind: "text", fieldName, value: formatCurrency(value) }); },
+    setCheckBox(fieldName, value) { open(); writes.push({ kind: "checkbox", fieldName, value }); },
+    apply() {
+      open();
+      const fields = new Map<string, ReturnType<PDFForm["getFields"]>[number]>();
+      for (const field of form.getFields()) {
+        // Match getFieldMaybe's first matching field, even for malformed duplicates.
+        if (!fields.has(field.getName())) fields.set(field.getName(), field);
+      }
+      const resolved = writes.map(write => {
+        const field = fields.get(write.fieldName);
+        if (!field) throw new Error(`Missing mapped PDF field: ${write.fieldName}`);
+        if (write.kind === "text") {
+          if (!(field instanceof PDFTextField)) throw new Error(`Mapped PDF text field has the wrong type: ${write.fieldName}`);
+          return { kind: "text" as const, field, value: write.value };
+        }
+        if (!(field instanceof PDFCheckBox)) throw new Error(`Mapped PDF checkbox field has the wrong type: ${write.fieldName}`);
+        return { kind: "checkbox" as const, field, value: write.value };
+      });
+      applied = true;
+      for (const write of resolved) {
+        if (write.kind === "text") write.field.setText(write.value);
+        else if (write.value) write.field.check();
+        else write.field.uncheck();
+      }
+      writes.length = 0;
+    },
+  };
+}
+
 /** A missing or wrong-type mapped field is a broken mapping, including blank writes. */
 export function setTextField(
   form: PDFForm,

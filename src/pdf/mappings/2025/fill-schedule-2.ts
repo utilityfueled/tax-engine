@@ -11,9 +11,7 @@ import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import {
   loadReviewTemplate,
-  setTextField,
-  setCurrencyField,
-  setCheckBox,
+  createPdfFieldBatch,
 } from "../../pdf-utils.js";
 
 // ─── PDF Field Name Helpers ────────────────────────────────────────────────
@@ -99,7 +97,7 @@ export async function fillSchedule2(
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
-  const form = doc.getForm();
+  const fields = createPdfFieldBatch(doc.getForm());
   const F = FIELDS;
   const s2 = result.schedule2;
 
@@ -107,33 +105,34 @@ export async function fillSchedule2(
   const name = input.taxpayer.spouse
     ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
     : `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
-  setTextField(form, F.name, name);
-  setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
+  fields.setText(F.name, name);
+  fields.setText(F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
 
-  if (!s2) return doc;
+  if (!s2) { fields.apply(); return doc; }
 
   // ── Part I: Tax ──
-  setCurrencyField(form, F.line1a, s2.excessAPTCRepayment);
-  setCurrencyField(form, F.line1z, s2.excessAPTCRepayment); // 1z = sum of 1a-1y
-  setCurrencyField(form, F.line2, s2.amt);
-  setCurrencyField(form, F.line3, s2.partITotal);
+  fields.setCurrency(F.line1a, s2.excessAPTCRepayment);
+  fields.setCurrency(F.line1z, s2.excessAPTCRepayment); // 1z = sum of 1a-1y
+  fields.setCurrency(F.line2, s2.amt);
+  fields.setCurrency(F.line3, s2.partITotal);
 
   // ── Part II: Other Taxes ──
-  setCurrencyField(form, F.line4, s2.selfEmploymentTax);
-  setCurrencyField(form, F.line5, s2.unreportedSSTax);
-  setCurrencyField(form, F.line6, s2.form8919Tax);
-  setCurrencyField(form, F.line7, s2.unreportedSSTax.plus(s2.form8919Tax));
-  setCurrencyField(form, F.line11, s2.additionalMedicareTax);
-  setCurrencyField(form, F.line12, s2.niitTax);
-  setCurrencyField(form, F.line9, s2.householdEmploymentTax);
+  fields.setCurrency(F.line4, s2.selfEmploymentTax);
+  fields.setCurrency(F.line5, s2.unreportedSSTax);
+  fields.setCurrency(F.line6, s2.form8919Tax);
+  fields.setCurrency(F.line7, s2.unreportedSSTax.plus(s2.form8919Tax));
+  fields.setCurrency(F.line11, s2.additionalMedicareTax);
+  fields.setCurrency(F.line12, s2.niitTax);
+  fields.setCurrency(F.line9, s2.householdEmploymentTax);
 
   // Page 2 — Line 17 sub-items
-  setCurrencyField(form, F.line17c, s2.hsaAdditionalTax);
-  setCurrencyField(form, F.line17d, s2.hsaRecaptureTax);
+  fields.setCurrency(F.line17c, s2.hsaAdditionalTax);
+  fields.setCurrency(F.line17d, s2.hsaRecaptureTax);
 
-  setCurrencyField(form, F.line18, s2.partIITotal);
-  setCurrencyField(form, F.line21, s2.totalAdditionalTaxes);
+  fields.setCurrency(F.line18, s2.partIITotal);
+  fields.setCurrency(F.line21, s2.totalAdditionalTaxes);
 
+  fields.apply();
   return doc;
 }
 

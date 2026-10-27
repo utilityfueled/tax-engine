@@ -17,9 +17,7 @@ import { eicReviewOriginalSourceInput, hasEicReviewSources, type PreparedEicRevi
 import { assertPdfExportAllowed } from "../../export-policy.js";
 import {
   loadReviewTemplate,
-  setTextField,
-  setCurrencyField,
-  setCheckBox,
+  createPdfFieldBatch,
 } from "../../pdf-utils.js";
 
 // ─── PDF Field Name Helpers ────────────────────────────────────────────────
@@ -190,37 +188,37 @@ export async function fillForm1040(
     throw new Error("EIC claimant source (including Rule10) requiring line27c conflicts with a positive EIC credit result");
   }
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
-  const form = doc.getForm();
+  const fields = createPdfFieldBatch(doc.getForm());
 
   const F = FIELDS;
   const { taxpayer } = input;
 
   // ── Header ──
-  setTextField(form, F.primaryFirstName, taxpayer.primary.firstName);
-  setTextField(form, F.primaryLastName, taxpayer.primary.lastName);
-  setTextField(form, F.primarySSN, stripSSN(taxpayer.primary.ssn));
+  fields.setText(F.primaryFirstName, taxpayer.primary.firstName);
+  fields.setText(F.primaryLastName, taxpayer.primary.lastName);
+  fields.setText(F.primarySSN, stripSSN(taxpayer.primary.ssn));
 
   if (taxpayer.spouse) {
-    setTextField(form, F.spouseFirstName, taxpayer.spouse.firstName);
-    setTextField(form, F.spouseLastName, taxpayer.spouse.lastName);
-    setTextField(form, F.spouseSSN, stripSSN(taxpayer.spouse.ssn));
+    fields.setText(F.spouseFirstName, taxpayer.spouse.firstName);
+    fields.setText(F.spouseLastName, taxpayer.spouse.lastName);
+    fields.setText(F.spouseSSN, stripSSN(taxpayer.spouse.ssn));
   }
 
   // ── Address ──
-  setTextField(form, F.street, taxpayer.address.street);
-  setTextField(form, F.apt, taxpayer.address.apt ?? "");
-  setTextField(form, F.city, taxpayer.address.city);
-  setTextField(form, F.state, taxpayer.address.state);
-  setTextField(form, F.zip, taxpayer.address.zip);
-  setCheckBox(form, F.mainHomeInUnitedStates, claimantBoxes.mainHomeInUnitedStatesMoreThanHalfYear === true);
+  fields.setText(F.street, taxpayer.address.street);
+  fields.setText(F.apt, taxpayer.address.apt ?? "");
+  fields.setText(F.city, taxpayer.address.city);
+  fields.setText(F.state, taxpayer.address.state);
+  fields.setText(F.zip, taxpayer.address.zip);
+  fields.setCheckBox(F.mainHomeInUnitedStates, claimantBoxes.mainHomeInUnitedStatesMoreThanHalfYear === true);
 
   // ── Filing Status ──
   const status = taxpayer.filingStatus;
-  setCheckBox(form, F.single, status === "single");
-  setCheckBox(form, F.mfj, status === "married_filing_jointly");
-  setCheckBox(form, F.mfs, status === "married_filing_separately");
-  setCheckBox(form, F.hoh, status === "head_of_household");
-  setCheckBox(form, F.qss, status === "qualifying_surviving_spouse");
+  fields.setCheckBox(F.single, status === "single");
+  fields.setCheckBox(F.mfj, status === "married_filing_jointly");
+  fields.setCheckBox(F.mfs, status === "married_filing_separately");
+  fields.setCheckBox(F.hoh, status === "head_of_household");
+  fields.setCheckBox(F.qss, status === "qualifying_surviving_spouse");
 
   // ── Dependents (up to 4) ──
   const depFields = [
@@ -232,85 +230,86 @@ export async function fillForm1040(
   for (let i = 0; i < Math.min(taxpayer.dependents.length, 4); i++) {
     const dep = taxpayer.dependents[i];
     const df = depFields[i];
-    setTextField(form, df.first, dep.firstName);
-    setTextField(form, df.last, dep.lastName);
-    setTextField(form, df.ssn, stripSSN(dep.ssn));
-    setTextField(form, df.rel, dep.relationship);
-    setCheckBox(form, df.ctc, dep.qualifiesForCTC);
-    setCheckBox(form, df.odc, dep.qualifiesForODC ?? false);
+    fields.setText(df.first, dep.firstName);
+    fields.setText(df.last, dep.lastName);
+    fields.setText(df.ssn, stripSSN(dep.ssn));
+    fields.setText(df.rel, dep.relationship);
+    fields.setCheckBox(df.ctc, dep.qualifiesForCTC);
+    fields.setCheckBox(df.odc, dep.qualifiesForODC ?? false);
   }
 
   // ── Page 1 Income Lines ──
   for (const line of ["1a", "1c", "1g", "1h"] as const) {
     const value = getLineValue(result, "1040", line);
     if (value === undefined) throw new Error(`Missing audited Form 1040 line ${line}.`);
-    setCurrencyField(form, F[`line${line}`], value);
+    fields.setCurrency(F[`line${line}`], value);
   }
   for (const line of ["1b", "1d", "1e", "1f"] as const) {
-    setCurrencyField(form, F[`line${line}`], getLineValue(result, "1040", line) ?? new Decimal(0));
+    fields.setCurrency(F[`line${line}`], getLineValue(result, "1040", line) ?? new Decimal(0));
   }
-  setCurrencyField(form, F.line1z, getLineValue(result, "1040", "1z") ?? result.totalWages);
-  setCurrencyField(form, F.line2a, result.taxExemptInterest);
-  setCurrencyField(form, F.line2b, result.totalInterest);
-  setCurrencyField(form, F.line3a, result.qualifiedDividends);
-  setCurrencyField(form, F.line3b, result.totalDividends);
-  setCurrencyField(form, F.line4a, result.iraDistributionsGross);
-  setCurrencyField(form, F.line4b, result.iraDistributionsTaxable);
-  setCurrencyField(form, F.line5a, result.pensionDistributionsGross);
-  setCurrencyField(form, F.line5b, result.pensionDistributionsTaxable);
-  setCurrencyField(form, F.line6a, result.socialSecurityBenefitsGross);
-  setCurrencyField(form, F.line6b, result.socialSecurityBenefitsTaxable);
-  setCurrencyField(form, F.line7, result.capitalGainLoss);
-  setCurrencyField(form, F.line8, result.otherIncome);
-  setCurrencyField(form, F.line9, result.totalIncome);
-  setCurrencyField(form, F.line10, result.adjustmentsToIncome);
-  setCurrencyField(form, F.line11, result.agi);
-  setCurrencyField(form, F.line11b, result.agi);
-  setCurrencyField(form, F.line12, result.deductionAmount);
+  fields.setCurrency(F.line1z, getLineValue(result, "1040", "1z") ?? result.totalWages);
+  fields.setCurrency(F.line2a, result.taxExemptInterest);
+  fields.setCurrency(F.line2b, result.totalInterest);
+  fields.setCurrency(F.line3a, result.qualifiedDividends);
+  fields.setCurrency(F.line3b, result.totalDividends);
+  fields.setCurrency(F.line4a, result.iraDistributionsGross);
+  fields.setCurrency(F.line4b, result.iraDistributionsTaxable);
+  fields.setCurrency(F.line5a, result.pensionDistributionsGross);
+  fields.setCurrency(F.line5b, result.pensionDistributionsTaxable);
+  fields.setCurrency(F.line6a, result.socialSecurityBenefitsGross);
+  fields.setCurrency(F.line6b, result.socialSecurityBenefitsTaxable);
+  fields.setCurrency(F.line7, result.capitalGainLoss);
+  fields.setCurrency(F.line8, result.otherIncome);
+  fields.setCurrency(F.line9, result.totalIncome);
+  fields.setCurrency(F.line10, result.adjustmentsToIncome);
+  fields.setCurrency(F.line11, result.agi);
+  fields.setCurrency(F.line11b, result.agi);
+  fields.setCurrency(F.line12, result.deductionAmount);
   // Line 13: QBI deduction — pull from form8995/8995A if present
   const qbiDeduction = getLineValue(result, "1040", "13");
-  if (qbiDeduction) setCurrencyField(form, F.line13, qbiDeduction);
+  if (qbiDeduction) fields.setCurrency(F.line13, qbiDeduction);
   const schedule1ADeduction = getLineValue(result, "1040", "13b") ?? new Decimal(0);
-  setCurrencyField(form, F.line13b, schedule1ADeduction);
+  fields.setCurrency(F.line13b, schedule1ADeduction);
   const totalDeductions = getLineValue(result, "1040", "14")
     ?? result.deductionAmount.plus(qbiDeduction ?? new Decimal(0)).plus(schedule1ADeduction);
-  setCurrencyField(form, F.line14, totalDeductions);
-  setCurrencyField(form, F.line15, result.taxableIncome);
+  fields.setCurrency(F.line14, totalDeductions);
+  fields.setCurrency(F.line15, result.taxableIncome);
 
   // The engine owns these amounts. Preserve its final audited values without
   // recalculating credits or adding AMT twice in the form layer.
   for (const line of ["16", "17", "18", "19", "20", "21", "22", "23", "24"] as const) {
     const value = getLineValue(result, "1040", line);
     if (value === undefined) throw new Error(`Missing audited Form 1040 line ${line}.`);
-    setCurrencyField(form, F[`line${line}`], value);
+    fields.setCurrency(F[`line${line}`], value);
   }
 
   // ── Page 2 Payments ──
   for (const line of ["25a", "25b", "25c"] as const) {
     const value = getLineValue(result, "1040", line);
     if (value === undefined) throw new Error(`Missing audited Form 1040 line ${line}.`);
-    setCurrencyField(form, F[`line${line}`], value);
+    fields.setCurrency(F[`line${line}`], value);
   }
-  setCurrencyField(form, F.line25d, result.totalWithholding);
-  setCurrencyField(form, F.line26, result.estimatedTaxPayments);
-  setCurrencyField(form, F.line27a, result.earnedIncomeCredit);
+  fields.setCurrency(F.line25d, result.totalWithholding);
+  fields.setCurrency(F.line26, result.estimatedTaxPayments);
+  fields.setCurrency(F.line27a, result.earnedIncomeCredit);
   // Pub596 and i1040gi expressly direct these marks despite the physical
   // form's broader voluntary-opt-out label. No voluntary election is inferred.
-  setCheckBox(form, F.line27c, claimantBoxes.doNotClaimEic);
+  fields.setCheckBox(F.line27c, claimantBoxes.doNotClaimEic);
 
   // ── Page 2 Totals ──
   for (const line of ["28", "29", "30", "31"] as const) {
-    setCurrencyField(form, F[`line${line}`], getLineValue(result, "1040", line) ?? new Decimal(0));
+    fields.setCurrency(F[`line${line}`], getLineValue(result, "1040", line) ?? new Decimal(0));
   }
   const otherPayments = result.totalPayments.minus(result.totalWithholding).minus(result.estimatedTaxPayments);
-  setCurrencyField(form, F.line32, otherPayments);
-  setCurrencyField(form, F.line33, result.totalPayments);
+  fields.setCurrency(F.line32, otherPayments);
+  fields.setCurrency(F.line33, result.totalPayments);
   for (const line of ["34", "35a", "37", "38"] as const) {
     const value = getLineValue(result, "1040", line);
     if (value === undefined) throw new Error(`Missing audited Form 1040 line ${line}.`);
-    setCurrencyField(form, F[`line${line}`], value);
+    fields.setCurrency(F[`line${line}`], value);
   }
 
+  fields.apply();
   return doc;
 }
 
