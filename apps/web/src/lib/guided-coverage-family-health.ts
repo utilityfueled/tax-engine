@@ -12,10 +12,20 @@ export interface CoverageFamilyHealthMonthData {
   coverageFamilyMemberSsns: string[]; nonCoverageFamilyMemberSsns: string[];
   allCoverageFamilyMembersIncludedConfirmed: boolean | null; allNonCoverageFamilyMembersIncludedConfirmed: boolean | null;
 }
+export interface OutsidePersonReturnData {
+  personId: string; sourceTaxYear: string; sourceReference: string; returnStatus: '' | 'draft' | 'completed';
+  claimantName: string; claimantSsn: string; policySourceIds: string[]; allPoliciesIncludedConfirmed: boolean | null;
+  form8962Line24: string;
+}
+export function emptyOutsidePersonReturn(): OutsidePersonReturnData {
+  return { personId: '', sourceTaxYear: '', sourceReference: '', returnStatus: '', claimantName: '', claimantSsn: '',
+    policySourceIds: [], allPoliciesIncludedConfirmed: null, form8962Line24: '' };
+}
 export interface CoverageFamilyHealthData {
   sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null; allPolicySourcesIncluded: boolean | null;
   policies: { sourceId: string; original: MarketplacePolicyData }[];
   persons: { personId: string; coveredIndividualSsn: string }[];
+  outsidePersonReturns?: OutsidePersonReturnData[];
   months: CoverageFamilyHealthMonthData[];
 }
 export function emptyCoverageFamilyHealthMonth(month = ''): CoverageFamilyHealthMonthData {
@@ -24,7 +34,7 @@ export function emptyCoverageFamilyHealthMonth(month = ''): CoverageFamilyHealth
     allCoverageFamilyMembersIncludedConfirmed: null, allNonCoverageFamilyMembersIncludedConfirmed: null };
 }
 export function emptyCoverageFamilyHealth(): CoverageFamilyHealthData {
-  return { sourceTaxYear: '', sourceReference: '', sourceFactsConfirmed: null, allPolicySourcesIncluded: null, policies: [], persons: [], months: [] };
+  return { sourceTaxYear: '', sourceReference: '', sourceFactsConfirmed: null, allPolicySourcesIncluded: null, policies: [], persons: [], outsidePersonReturns: [], months: [] };
 }
 /** Copy actual originals only. No person role, eligibility, benchmark or confirmation is inferred. */
 export function captureCoverageFamilyHealthSources(sourceIds: string[], options: MarketplacePolicyOption[]): CoverageFamilyHealthData {
@@ -60,6 +70,12 @@ export function buildCoverageFamilyHealthSources(data: CoverageFamilyHealthData 
     allPolicySourcesIncluded: data.allPolicySourcesIncluded ?? undefined,
     policies: data.policies.map(row => ({ sourceId: row.sourceId.trim(), original: normalizeMarketplacePolicy(row.original, year, true) })),
     persons: data.persons.map(row => ({ personId: row.personId.trim(), coveredIndividualSsn: row.coveredIndividualSsn.trim() })),
+    outsidePersonReturns: data.outsidePersonReturns?.map(row => ({ personId: row.personId.trim(),
+      sourceTaxYear: integer(row.sourceTaxYear, 'other-return source year'), sourceReference: row.sourceReference.trim(),
+      returnStatus: row.returnStatus || undefined, claimantName: row.claimantName.trim(), claimantSsn: row.claimantSsn.trim(),
+      policySourceIds: row.policySourceIds.map(id => id.trim()), allPoliciesIncludedConfirmed: row.allPoliciesIncludedConfirmed ?? undefined,
+      form8962Line24: money(row.form8962Line24),
+    })),
     months: data.months.map(row => ({ month: integer(row.month, 'coverage-family month'), sourceReference: row.sourceReference.trim(),
       allCoveredPersonsIncludedConfirmed: row.allCoveredPersonsIncludedConfirmed ?? undefined,
       personFacts: row.personFacts.map(person => ({ personId: person.personId.trim(), sourceReference: person.sourceReference.trim(),

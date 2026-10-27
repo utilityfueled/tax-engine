@@ -14,6 +14,8 @@ export function calculateMarketplaceCoverageFamilyHealth(input: MarketplaceCover
     if (allocated && allocatedMonths?.length !== plan.policyIndexes.filter(index => input.form1095A[index].monthlyPremiums.some(month => month.month === row.month)).length) throw new Error('Coverage-family health source is absent from its complete actual policy allocation.');
     const taxFamilyPremium = allocatedMonths ? sum(...allocatedMonths.map(month => month.premium)) : row.sourcePremium;
     const advancePremiumTaxCredit = allocatedMonths ? sum(...allocatedMonths.map(month => month.advance)) : row.sourceAdvance;
+    const outsidePremiumPool = row.sourcePremium.minus(taxFamilyPremium);
+    if (outsidePremiumPool.lt(0) || row.outsideCash.plus(row.outsideAdvance).gt(outsidePremiumPool)) throw new Error('Actual outside-person cash and advances exceed their independently allocated outside premium pool.');
     const cashDiffers = !taxFamilyPremium.eq(row.ownCash.plus(row.ownAdvance));
     if (!advancePremiumTaxCredit.eq(row.ownAdvance) || (cashDiffers && (mode !== 'actual-cash-candidate' && mode !== 'source-only'
       || !row.sourceAdvance.isZero() || !row.ownAdvance.isZero()))) throw new Error('Coverage-family actual paid shares must reconcile the independently allocated tax-family policy amounts.');
@@ -24,7 +26,8 @@ export function calculateMarketplaceCoverageFamilyHealth(input: MarketplaceCover
     if (cashDiffers && (row.ownCoverageCash.gt(specifiedPremium) || row.ownNoncoverageCash.gt(nonspecifiedPremium))) throw new Error('Actual cash component exceeds its independently allocated premium pool; a separate paid-share method is required.');
     return { planId: plan.planId, policyIndexes: plan.policyIndexes, month: row.month, taxFamilyPremium, advancePremiumTaxCredit,
       coverageFamilySlcsp: row.coverageFamilySlcsp, nonCoverageFamilySlcsp: row.nonCoverageFamilySlcsp,
-      coveragePersonIds: row.coveragePersonIds, nonCoveragePersonIds: row.nonCoveragePersonIds,
+      coveragePersonIds: row.coveragePersonIds, nonCoveragePersonIds: row.nonCoveragePersonIds, outsidePersonIds: row.outsidePersonIds,
+      outsidePremiumPool, outsideCash: row.outsideCash, outsideAdvance: row.outsideAdvance,
       specifiedPremium, nonspecifiedPremium };
   }));
 }

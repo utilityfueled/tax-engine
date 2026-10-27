@@ -183,6 +183,16 @@
       "note": "Digital-asset income and original donation calculations are exported by the shared lot-matching module; this entry makes no packet or filing claim."
     },
     {
+      "key": "federal/education-annual-category-limits",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/education-annual-category-limits.test.ts::applies the K12 annual cap once before unequal original earnings",
+        "tests/pdf/education-annual-category-limits.test.ts::binds annual category sources and prints the derived physical totals"
+      ],
+      "note": "Actual ordinary annual cash category qualification, dated refund and borrower history, completed beneficiary limits and source-bound historical 2025 review are exercised by these own-spec tests. Mixed effective-date and positive qualified-interest attribution remain separate internal methods. No final2026 output, filing qualification or independent human review is claimed."
+    },
+    {
       "key": "federal/education-distribution-return",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [
@@ -1058,6 +1068,16 @@
       "note": "Actual completed business income limits determine the published P/Form7206 stop; the shared 2025 mapper prints the completed nonspecified claim and final-credit review. No positive noncoverage-advance allocation, new ordinary physical8962 mapping, or filing qualification is claimed."
     },
     {
+      "key": "federal/marketplace-outside-person-health",
+      "enginePath": "src/engine/forms/marketplace-coverage-family-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-outside-person.test.ts::deducts actual outside child cash as nonspecified without changing family premiums",
+        "tests/pdf/marketplace-outside-person-review.test.ts::prints original outside cash separately and binds qualification before output"
+      ],
+      "note": "Actual outside-child cash and the independent completed zero-credit other return are bound to original policy and person sources. This sufficient source cohort does not establish a universal other-return requirement, positive-credit disallowance, marriage method or filing qualification."
+    },
+    {
       "key": "federal/marketplace-passive-ordering",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [
@@ -1286,16 +1306,6 @@
         "tests/engine/federal-student-loan-sources.test.ts::routes actual loan sources once and preserves eligibility and unknown distinctions"
       ],
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
-    },
-    {
-      "key": "federal/education-annual-category-limits",
-      "enginePath": "src/engine/forms/form-1099-q.ts",
-      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
-      "testRefs": [
-        "tests/engine/forms/education-annual-category-limits.test.ts::applies the K12 annual cap once before unequal original earnings",
-        "tests/pdf/education-annual-category-limits.test.ts::binds annual category sources and prints the derived physical totals"
-      ],
-      "note": "Actual ordinary annual cash category qualification, dated refund and borrower history, completed beneficiary limits and source-bound historical 2025 review are exercised by these own-spec tests. Mixed effective-date and positive qualified-interest attribution remain separate internal methods. No final2026 output, filing qualification or independent human review is claimed."
     }
   ]
 }

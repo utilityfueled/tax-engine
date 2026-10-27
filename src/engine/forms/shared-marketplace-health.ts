@@ -93,7 +93,7 @@ export function calculateSharedMarketplaceHealthSources(input: SharedMarketplace
       identities.add(identity);
       const person = persons[0], relationship = covered[0].relationshipToOwner;
       if (!original.own) {
-        if (person.householdRole !== 'other' || relationship !== 'other') throw new Error('Shared Marketplace health outside-family eligible persons require their separate actual coverage method.');
+        if (person.householdRole !== 'other' || (relationship !== 'other' && !(family && relationship === 'child_under_27'))) throw new Error('Shared Marketplace health outside-family eligible persons require their separate actual coverage method.');
       } else {
         const role = identity === primary ? 'primary' : identity === spouse ? 'spouse' : dependents.has(identity) ? 'other' : undefined;
         const expectedRelationship = role === plan.accountHolder ? 'self' : role === 'primary' || role === 'spouse' ? 'spouse' : 'dependent';
@@ -113,7 +113,7 @@ export function calculateSharedMarketplaceHealthSources(input: SharedMarketplace
         const id = text(allocation.personId, 'payment person link'), person = linked.get(id), cash = amount(allocation.amountPaid), credit = amount(allocation.advancePremiumTaxCredit);
         if (!person || (!person.months.has(month) && (!cash.isZero() || !credit.isZero()))) throw new Error('Shared Marketplace health paid person does not match original monthly coverage.');
         if (!amount(allocation.otherTaxFreeFunding).isZero() || !amount(allocation.excludedPublicSafetyOfficerAmount).isZero()) throw new Error('Shared Marketplace health separate tax-free payment funding requires its actual coordination method.');
-        if (!person.own && !cash.isZero()) throw new Error('Shared Marketplace health owner-paid outside-family premiums require their separate actual source method.');
+        if (!person.own && !cash.isZero() && !family) throw new Error('Shared Marketplace health owner-paid outside-family premiums require their separate actual source method.');
         paid.people.add(id); personPaid = personPaid.plus(cash); personAdvance = personAdvance.plus(credit);
         if (person.own) { paid.ownPaid = paid.ownPaid.plus(cash); paid.ownAdvance = paid.ownAdvance.plus(credit); }
       }

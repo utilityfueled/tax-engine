@@ -195,6 +195,15 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
         write(`Coverage-family month ${row.month}: tax-family enrollment premium $${row.taxFamilyPremium.toFixed()}; coverage-family SLCSP $${row.coverageFamilySlcsp.toFixed()}; noncoverage-family SLCSP $${row.nonCoverageFamilySlcsp.toFixed()}; specified premium $${row.specifiedPremium.toFixed()}; nonspecified premium $${row.nonspecifiedPremium.toFixed()}; actual attributable advances $${row.advancePremiumTaxCredit.toFixed()}.`);
         for (const audit of calculation.lines.filter(line => line.form === "Pub974 Coverage Family" && line.line.startsWith(`${plan.planId}:${row.month}:`))) write(actualCash ? `Independently allocated ${audit.line.endsWith(':nonspecified') ? 'nonspecified' : 'specified'} premium pool $${audit.value.toFixed()}; actual eligible cash is recorded separately.` : `Actual qualified ${audit.line.endsWith(':nonspecified') ? 'nonspecified' : 'specified'} amount before business limits $${audit.value.toFixed()}.`);
       }
+      const outsideMonths = (calculation.coverageFamilyAllocations ?? []).filter(row => row.planId === plan.planId && row.outsidePersonIds.length > 0);
+      if (outsideMonths.length) {
+        write("OUTSIDE-TAX-FAMILY CASH: actual owner/business cash for each outside person remains separate from this return's family premiums and credit. Only independently qualified cash enters nonspecified Form7206 premiums, subject to the actual business limit. Another family's advances or repayment are not treated as cash.");
+        for (const record of plan.coverageFamilySources.outsidePersonReturns ?? []) {
+          if (!(calculation.sourceRecords ?? []).some(source => source.planId === plan.planId && source.personId === record.personId && source.eligiblePremium.gt(0))) continue;
+          write(`Completed other-return Form8962 line24 $${record.form8962Line24}; tax year ${record.sourceTaxYear}; claimant ${record.claimantName}; covered health person ${record.personId}; source ${record.sourceReference}; original policy links ${(record.policySourceIds ?? []).join(', ')}. Claimant identifier withheld from this review copy.`);
+        }
+        for (const row of outsideMonths) write(`Outside-person month ${row.month}: outside-person cash $${row.outsideCash.toFixed()}; outside premium pool $${row.outsidePremiumPool.toFixed()}; original outside advances $${row.outsideAdvance.toFixed()}.`);
+      }
     }
     for (const month of plan.months ?? []) {
       write(`Coverage month ${month.month}: eligible for subsidized employer coverage ${String(month.employerSubsidizedPlanEligible)}.`);
@@ -206,6 +215,8 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
       for (const source of calculation.sourceRecords.filter(row => row.planId === plan.planId && row.sourceId === payment.sourceId)) {
         const person = facts.persons?.find(row => row.personId === source.personId);
         write(`Person ${person?.name ?? source.personId}; payer ${source.payer}; paid share $${source.amountPaid.toFixed()}; distinct excluded funding $${source.excludedFunding.toFixed()}; eligible before annual and business limits $${source.eligiblePremium.toFixed()}.`);
+        const relationship = plan.coveredPersons?.find(row => row.personId === source.personId)?.relationshipToOwner;
+        if (relationship === 'child_under_27') write(`Actual relationship to owner ${relationship}; Actual attained age at year end ${person?.attainedAgeAtYearEnd ?? "Unknown"}.`);
         if (plan.marketplaceCoverage && plan.premiumTaxCreditInvolved) write(plan.coverageFamilySources
           ? `Person ${person?.name ?? source.personId}: actual advance credit $${source.advancePremiumTaxCredit.toFixed()}; legal premium classes are derived separately in the monthly coverage-family ledger above.`
           : `Person ${person?.name ?? source.personId}: actual advance credit $${source.advancePremiumTaxCredit.toFixed()}; specified premium before coordinated credit $${source.marketplaceSpecifiedPremium.toFixed()}.`);

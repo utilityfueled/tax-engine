@@ -262,9 +262,13 @@ export function calculateForm7206(options: {
         const specified = marketplace && ptc;
         if (grossEligiblePremium.gt(0) && specified && options.marketplaceHandling === undefined) throw new Error("Form7206 Marketplace premiums require actual Pub974 premium-tax-credit coordination.");
         if (specified && plan.kind !== "medical") throw new Error("Form7206 specified Marketplace premiums require an actual qualified medical plan.");
-        const actualCoveragePerson = actualCash && coverageFamilyAllocations?.find(row => row.planId === planId && row.month === month)?.coveragePersonIds.includes(id);
+        const actualFamily = coverageFamilyAllocations?.find(row => row.planId === planId && row.month === month);
+        const actualCoveragePerson = actualCash && actualFamily?.coveragePersonIds.includes(id);
+        const outsidePerson = actualFamily?.outsidePersonIds.includes(id) === true;
         const marketplaceSpecifiedPremium = specified && (actualCash ? actualCoveragePerson : !plan.coverageFamilySources) ? grossEligiblePremium : new Decimal(0);
-        const eligiblePremium = actualCash ? grossEligiblePremium : plan.coverageFamilySources || (specified && options.marketplaceHandling !== "ordinary-no-ptc" && options.marketplaceHandling !== "full-advance-repayment" && options.marketplaceHandling !== "reported-advance-repayment") ? new Decimal(0) : grossEligiblePremium;
+        // Outside-tax-family child cash is ordinary nonspecified cost. It is not
+        // replaced by, or added to, this return's independently allocated pool.
+        const eligiblePremium = actualCash || outsidePerson ? grossEligiblePremium : plan.coverageFamilySources || (specified && options.marketplaceHandling !== "ordinary-no-ptc" && options.marketplaceHandling !== "full-advance-repayment" && options.marketplaceHandling !== "reported-advance-repayment") ? new Decimal(0) : grossEligiblePremium;
         group.specifiedPremiums = group.specifiedPremiums.plus(marketplaceSpecifiedPremium);
         if (grossEligiblePremium.gt(0) && clergy) throw new Error("Form7206 clergy premiums require the actual Pub517 special-rule worksheet.");
         if (plan.kind === "qualified_ltc") {
@@ -274,6 +278,9 @@ export function calculateForm7206(options: {
         } else group.medicalPremiums = group.medicalPremiums.plus(eligiblePremium);
         sourceRecords.push({ sourceId: paymentId, planId, accountHolder: owner, businessSourceId: sourceId, personId: id, payer, amountPaid: paid, advancePremiumTaxCredit: personAdvance, coverageTaxYear: coverageYear, coverageMonth: month, excludedFunding: funded, eligiblePremium, marketplaceSpecifiedPremium });
         if (specified && !plan.coverageFamilySources) audit.record("Pub974 Premium Sources", `${paymentId}:${id}:${payer}`, "Actual specified premium before credit coordination", marketplaceSpecifiedPremium, "Eligible owner/business paid share plus actual APTC less distinct funding; excluded from Form7206line1", { "Plan": planId, "Business": sourceId, "Owner": owner, "Coverage month": String(month), "Actual advance payment": personAdvance });
+        if (outsidePerson) audit.record('Pub974 Outside Person', `${paymentId}:${id}:${payer}`, 'Actual eligible outside-tax-family cash', eligiblePremium,
+          'Actual paid under27 child cash, after person/payer/plan/month qualification; no other-family advance or credit attributed',
+          { 'Plan': planId, 'Owner': owner, 'Business': sourceId, 'Person': id, 'Actual paid cash': paid, 'Outside premium pool': actualFamily.outsidePremiumPool });
         audit.record("Form 7206", `${paymentId}:${id}:${payer}`, "Actual eligible premium before annual LTC and business limits", eligiblePremium, "Actual paid person share less distinct funding, subject to actual plan, person, payer, year and month qualification", { "Source": paymentId, "Plan": planId, "Owner": owner, "Business": sourceId, "Payer": payer, "Paid share": paid, "Funding": funded });
       }
       if (!allocated.eq(ownPaid) || !allocatedAdvance.eq(advance)) throw new Error("Form7206 person allocations must reconcile the actual owner/business and advance payment shares separately.");
@@ -292,14 +299,15 @@ export function calculateForm7206(options: {
         'Tax-family premium less specified pool; actual cash remains separate', { 'Plan': row.planId, 'Owner': group.accountHolder, 'Business': group.businessSourceId });
       continue;
     }
+    const familyRecords = records.filter(record => !row.outsidePersonIds.includes(record.personId));
     const eligible = plan.establishedUnderBusiness === true && plan.insuranceQualificationConfirmed === true
       && !plan.months!.find(month => month.month === row.month)!.employerSubsidizedPlanEligible
       && (plan.businessKind !== "s_corporation" || plan.moreThanTwoPercentShareholder === true)
-      && records.every(record => record.amountPaid.isZero() && record.advancePremiumTaxCredit.isZero()
+      && familyRecords.every(record => record.amountPaid.isZero() && record.advancePremiumTaxCredit.isZero()
         || plan.businessKind === "self_employed"
         || (record.payer === "owner_after_tax" ? plan.businessKind === "partnership" && plan.policyHolder === "business" : plan.premiumsIncludedInOwnerIncome === true));
     const specified = eligible ? row.specifiedPremium : d(0), ordinary = eligible ? row.nonspecifiedPremium : d(0);
-    if (!sum(...records.map(record => record.amountPaid.plus(record.advancePremiumTaxCredit))).gte(row.taxFamilyPremium)) throw new Error("Coverage-family health records do not preserve their original payments.");
+    if (!sum(...familyRecords.map(record => record.amountPaid.plus(record.advancePremiumTaxCredit))).gte(row.taxFamilyPremium)) throw new Error("Coverage-family health records do not preserve their original payments.");
     group.specifiedPremiums = group.specifiedPremiums.plus(specified);
     group.medicalPremiums = group.medicalPremiums.plus((options.marketplaceHandling === "ordinary-no-ptc" || options.marketplaceHandling === "full-advance-repayment" || options.marketplaceHandling === "reported-advance-repayment") ? specified.plus(ordinary) : ordinary);
     audit.record("Pub974 Coverage Family", `${row.planId}:${row.month}:specified`, "Specified premium from actual benchmark groups", specified, "Tax-family premium times coverage-family SLCSP / both group SLCSPs, after PartIV", { "Plan": row.planId, "Owner": group.accountHolder, "Business": group.businessSourceId, "Original tax-family premium": row.taxFamilyPremium, "Coverage-family SLCSP": row.coverageFamilySlcsp, "Noncoverage-family SLCSP": row.nonCoverageFamilySlcsp });

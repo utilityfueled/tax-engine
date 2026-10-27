@@ -7,6 +7,12 @@ export const MarketplaceCoverageFamilySchema = z.object({
   allPolicySourcesIncluded: z.boolean().optional(),
   policies: z.array(z.object({ sourceId: z.string().optional(), original: MarketplaceOriginalPolicySchema.optional() })).optional(),
   persons: z.array(z.object({ personId: z.string().optional(), coveredIndividualSsn: z.string().optional() })).optional(),
+  outsidePersonReturns: z.array(z.object({
+    personId: z.string().optional(), sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(),
+    returnStatus: z.enum(['draft', 'completed']).optional(), claimantName: z.string().optional(), claimantSsn: z.string().optional(),
+    policySourceIds: z.array(z.string()).optional(), allPoliciesIncludedConfirmed: z.boolean().optional(),
+    form8962Line24: z.string().optional(),
+  })).optional(),
   months: z.array(z.object({
     month: z.number().int().optional(), sourceReference: z.string().optional(), allCoveredPersonsIncludedConfirmed: z.boolean().optional(),
     personFacts: z.array(z.object({ personId: z.string().optional(), sourceReference: z.string().optional(),

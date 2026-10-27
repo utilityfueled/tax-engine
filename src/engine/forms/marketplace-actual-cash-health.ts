@@ -12,6 +12,7 @@ export interface MarketplaceActualCashMonth {
   planId: string; month: number; taxFamilyPremium: Decimal;
   specifiedPremium: Decimal; nonspecifiedPremium: Decimal;
   actualSpecifiedCash: Decimal; actualNonspecifiedCash: Decimal;
+  actualOutsideCash: Decimal; outsidePremiumPool: Decimal;
 }
 export interface MarketplaceActualCashHealthResult {
   method: 'ordinary-actual-cash-zero-credit';
@@ -31,7 +32,8 @@ export function calculateMarketplaceActualCashSources(input: SharedMarketplaceHe
     const actual = families.find(plan => plan.planId === row.planId)!.months.find(month => month.month === row.month)!;
     return { planId: row.planId, month: row.month, taxFamilyPremium: row.taxFamilyPremium,
       specifiedPremium: row.specifiedPremium, nonspecifiedPremium: row.nonspecifiedPremium,
-      actualSpecifiedCash: actual.ownCoverageCash, actualNonspecifiedCash: actual.ownNoncoverageCash };
+      actualSpecifiedCash: actual.ownCoverageCash, actualNonspecifiedCash: actual.ownNoncoverageCash,
+      actualOutsideCash: actual.outsideCash, outsidePremiumPool: row.outsidePremiumPool };
   });
   if (!allocations.some(row => {
     const actual = families.find(plan => plan.planId === row.planId)!.months.find(month => month.month === row.month)!;
@@ -76,6 +78,8 @@ export function calculateMarketplaceActualCashHealth(input: TaxYearInput, result
       'Actual owner/business cash, independently bounded by allocated specified premium', { 'Plan': row.planId, 'Month': String(row.month), 'Specified premium pool': row.specifiedPremium, 'Tax-family premium': row.taxFamilyPremium });
     audit.record('Marketplace Actual Cash', `${row.planId}:${row.month}:nonspecified`, 'Actual noncoverage-family cash', row.actualNonspecifiedCash,
       'Actual owner/business cash, independently bounded by allocated nonspecified premium', { 'Plan': row.planId, 'Month': String(row.month), 'Nonspecified premium pool': row.nonspecifiedPremium });
+    audit.record('Marketplace Actual Cash', `${row.planId}:${row.month}:outside`, 'Actual cash for people outside the tax family', row.actualOutsideCash,
+      'Original cash only; each person separately qualifies under Form7206 before business limits', { 'Plan': row.planId, 'Month': String(row.month), 'Outside premium pool': row.outsidePremiumPool });
   }
   audit.record('Marketplace Actual Cash', '24', 'Actual final premium tax credit', credit.ptcAllowed, 'Completed actual ordinary deduction; no entered credit or hypothetical income');
   audit.record('Marketplace Actual Cash', '29', 'Actual advance repayment', credit.excessAPTCRepayment, 'All original advances explicitly zero');

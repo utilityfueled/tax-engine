@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { captureCoverageFamilyHealthSources, emptyCoverageFamilyHealth, emptyCoverageFamilyHealthMonth, type CoverageFamilyHealthData, type CoverageFamilyHealthMonthData } from '@/lib/guided-coverage-family-health';
+import { captureCoverageFamilyHealthSources, emptyCoverageFamilyHealth, emptyCoverageFamilyHealthMonth, emptyOutsidePersonReturn, type CoverageFamilyHealthData, type CoverageFamilyHealthMonthData } from '@/lib/guided-coverage-family-health';
 import type { MarketplacePolicyOption } from '@/lib/guided-marketplace-health-facts';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
@@ -51,6 +51,36 @@ export function CoverageFamilyHealthDetails({ prefix, data, people, sourceIds, p
       </div>;
     })}
     <button type="button" onClick={() => update({ persons: [...data.persons, { personId: '', coveredIndividualSsn: '' }] })}>{label}: Add person link</button>
+    <p className="guided-hint">If you paid for a child outside your tax family, retain the other claimant's completed Form 8962. Zero advance payments do not establish zero final credit. Enter the original result and policies; do not enter a proposed credit waiver.</p>
+    {(data.outsidePersonReturns ?? []).map((record, index) => {
+      const row = `${label} other return ${index + 1}`;
+      const records = data.outsidePersonReturns ?? [];
+      const change = (patch: Partial<typeof record>) => update({ outsidePersonReturns: records.map((current, position) => position === index ? { ...current, ...patch } : current) });
+      return <fieldset key={index}><legend>{row}: Original completed Form 8962</legend><div className="guided-form-grid">
+        <PersonChoice label={`${row}: Covered child`} value={record.personId} people={people} onChange={personId => change({ personId })} />
+        <TextFact label={`${row}: Tax year`} value={record.sourceTaxYear} onChange={sourceTaxYear => change({ sourceTaxYear })} />
+        <TextFact label={`${row}: Source reference`} value={record.sourceReference} onChange={sourceReference => change({ sourceReference })} />
+        <TextFact label={`${row}: Claimant name`} value={record.claimantName} onChange={claimantName => change({ claimantName })} />
+        <TextFact label={`${row}: Claimant SSN`} value={record.claimantSsn} onChange={claimantSsn => change({ claimantSsn })} />
+        <label className="guided-field"><span className="guided-field-label">{row}: Return status</span><select className="guided-input" value={record.returnStatus} onChange={event => change({ returnStatus: event.target.value as typeof record.returnStatus })}>
+          <option value="">Choose the actual status</option><option value="draft">Draft or incomplete</option><option value="completed">Completed return calculation</option>
+        </select></label>
+        <CurrencyField label={`${row}: Actual Form 8962 line 24`} value={record.form8962Line24} onChange={form8962Line24 => change({ form8962Line24 })} />
+        <BooleanFact label={`${row}: Completed calculation includes every linked original policy`} value={record.allPoliciesIncludedConfirmed} onChange={allPoliciesIncludedConfirmed => change({ allPoliciesIncludedConfirmed })} />
+      </div>
+        {record.policySourceIds.map((id, position) => <div className="guided-form-grid" key={position}>
+          <label className="guided-field"><span className="guided-field-label">{row} policy {position + 1}: Original policy</span><select className="guided-input" value={id} onChange={event => change({ policySourceIds: record.policySourceIds.map((current, i) => i === position ? event.target.value : current) })}>
+            <option value="">Choose the actual original policy</option>
+            {id && !policies.some(policy => policy.sourceId === id) && <option value={id}>Saved original needs reconciliation</option>}
+            {policies.map(policy => <option key={policy.sourceId} value={policy.sourceId}>{policy.original?.marketplace || 'Marketplace'} / {policy.original?.policyNumber || policy.sourceId}</option>)}
+          </select></label>
+          <button type="button" onClick={() => change({ policySourceIds: record.policySourceIds.filter((_, i) => i !== position) })}>{row} policy {position + 1}: Remove</button>
+        </div>)}
+        <button type="button" onClick={() => change({ policySourceIds: [...record.policySourceIds, ''] })}>{row}: Add original policy</button>
+        <button type="button" onClick={() => update({ outsidePersonReturns: records.filter((_, position) => position !== index) })}>{row}: Remove other return</button>
+      </fieldset>;
+    })}
+    <button type="button" onClick={() => update({ outsidePersonReturns: [...(data.outsidePersonReturns ?? []), emptyOutsidePersonReturn()] })}>{label}: Add actual other-return Form 8962</button>
     {data.months.map((month, index) => {
       const row = `${label} month ${index + 1}`;
       const change = (patch: Partial<CoverageFamilyHealthMonthData>) => update({ months: data.months.map((current, position) => position === index ? { ...current, ...patch } : current) });

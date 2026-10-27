@@ -6538,6 +6538,29 @@
       ]
     },
     {
+      "key": "federal/marketplace-outside-person-health",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/irb/2014-33_IRB",
+      "specPath": "spec/federal/marketplace-outside-person-health.yaml",
+      "enginePath": "src/engine/forms/marketplace-coverage-family-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-marketplace-outside-person.test.ts::deducts actual outside child cash as nonspecified without changing family premiums",
+        "tests/pdf/marketplace-outside-person-review.test.ts::prints original outside cash separately and binds qualification before output"
+      ],
+      "implementationNote": "Actual outside-child cash and the independent completed zero-credit other return are bound to original policy and person sources. This sufficient source cohort does not establish a universal other-return requirement, positive-credit disallowance, marriage method or filing qualification.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/marketplace-passive-ordering",
       "jurisdiction": "federal",
       "taxYear": 2025,

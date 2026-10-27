@@ -1,0 +1,100 @@
+form: "Marketplace health premiums paid for people outside the tax family"
+fullName: "Actual nonspecified cash remains separate from Form8962 family allocations"
+taxYear: 2025
+irsReference: "https://www.irs.gov/irb/2014-33_IRB"
+notes: |
+  Refreshed 2026-10-26: IRC162(l)(1), 26CFR1.162(l)-1(a), RevProc2014-41
+  sections3-4 and section7 Example3, final2025 i7206, and Pub974 WorksheetP,
+  Nonspecified Premiums and Plan covering individuals in another tax family.
+  Section4 and WorksheetP include otherwise deductible cash paid for a child
+  under27 outside the taxpayer's tax family before the specified-premium method.
+  Example3's child policy is not an Exchange policy; applying the same stated
+  nonspecified rule to a source-complete shared QHP is a derivation, not a
+  published numeric example. Preserve full original QHPs and actual PartIV
+  allocations first. Neither an agreement nor the benchmark ratio supplies cash.
+  Complete actual person/payment links distinguish this-return family cash from
+  cash paid for each original outside person. Require known original outside
+  advances of zero for an eligible outside child; do not transfer their advances
+  or another family's repayment. Outside cash cannot exceed the independent
+  outside policy pool. Actual child relationship, attained year-end age, payer,
+  established business and monthly employer qualification remain necessary.
+  Reg1.36B-3(c)(3) permits another person's payment to support a claimant's
+  credit, so zero APTC alone does not establish zero final other-return credit.
+  For this bounded sufficient method, retain an independent completed other
+  return with the actual other claimant/year/policy identity, completed
+  Form8962 line24 explicitly zero, complete-policy confirmation and reference.
+  Draft, missing, conflicting or positive final-credit records do not qualify
+  for this bounded cash method. This is external original evidence, never an
+  entered deduction or override of this return. The temporary-regulation
+  preamble in 2014-33IRB section6 describes IRC280C(g)'s limitation in terms of
+  the taxpayer's credit. This package does not claim a universal requirement
+  to obtain another return or that positive child credit disallows a parent's
+  deduction; positive cross-return attribution remains a separate method.
+  Add only eligible actual outside cash to ordinary nonspecified7206, once, with
+  own-business limits. Do not add it to the coverage-family SLCSP or specified
+  premiums. Known age27 or other-person status preserves paid sources but gives
+  no child deduction. Existing supported family-payment and completed-credit
+  methods remain controlling. Outside eligible-dependent definitions, positive
+  outside advances and marriage composition remain separate actual methods.
+  Source amounts use Decimal; only reported form transfers use whole dollars.
+lines:
+  - line: "outside-cash"
+    description: "An actual under27 child's cash is nonspecified before the family worksheet"
+    formula: "Original shared1875/month with actual tax-family allocation1250, owner family cash1250, owner child cash100, other cash525 and zero advances: family specified10000 and family nonspecified5000 remain unchanged; child nonspecified1200 makes6200. Actual business40000 less SEhalf2826, maximum health16200 gives initial income20974 and Step2PTC12000; signed specified deduction-2000 plus6200 gives4200 and finalAGI32974."
+    testRef: "tests/engine/federal-marketplace-outside-person.test.ts::deducts actual outside child cash as nonspecified without changing family premiums"
+  - line: "actual-family-cash"
+    description: "A separately supported actual family cash method retains the outside payment"
+    formula: "At actual business300000, actual family cash450 and childcash100 per month, gross1875 and othercash1325, completed zero-credit cash method gives6600 once. Family specified/noncoverage cash pools remain300/150; the outside100 is a separate actual source, never their residual."
+    testRef: "tests/engine/federal-marketplace-outside-person.test.ts::combines independently supported family cash with actual outside cash once"
+  - line: "qualification"
+    description: "Original qualification and partial months govern the outside amount"
+    formula: "Known child age27 or other-person status yields no outside deduction and preserves full paid originals; actual child paymentsJuly-December add600, giving health3600. Unknown age, wrong identity and positive outside advances cannot establish this method."
+    testRef: "tests/engine/federal-marketplace-outside-person.test.ts::retains actual outside qualification months and missing-source boundaries"
+  - line: "conservation"
+    description: "Outside payments conserve their own source pool and exact cents"
+    formula: "Actual childcash100.01/month stays1200.12 before reported rounding. A source cash transfer exceeding the original outside pool cannot borrow this-return family premium. Reversing original source rows preserves results; a changed receipt must be rebound before output."
+    testRef: "tests/engine/federal-marketplace-outside-person.test.ts::preserves exact outside cash and rejects a borrowed family premium pool"
+  - line: "intake"
+    description: "Actual outside child sources remain editable and unconfirmed after change"
+    formula: "Existing original relationship, age, source-payment and family controls reach4200 or6600 without an entered deduction. Changing age or receipt facts revokes confirmation; blank age remains unknown."
+    testRef: "tests/guided-interview/guided-marketplace-outside-person.test.ts::reaches actual outside child sources without overriding the family calculation"
+  - line: "own-limits"
+    description: "Actual employer eligibility and each own business limit still apply"
+    formula: "Actual cash6600 remains source cash when employer eligibility makes the health deduction0. With primary business5000 and spouse wages300000, the primary earned-income limit is4646, not the spouse's wages. Positive actual outside-child advances require their separate payment method."
+    testRef: "tests/engine/federal-marketplace-outside-person.test.ts::preserves own business and employer limits without treating outside advances as cash"
+  - line: "ordinary-controls"
+    description: "The full interview reaches original outside-person qualification"
+    formula: "Actual age26 and relationship child_under_27 are editable alongside full original payments; an edit requires all independent source confirmations again."
+    testRef: "tests/apps/web/marketplace-outside-person-interactions.test.tsx::edits actual outside child qualification and reconfirms the full interview sources"
+  - line: "review"
+    description: "Private review separates the outside source from family premium and credit"
+    formula: "Ordinary physical7206 shows6200 nonspecified while the shared return transfer is4200; actual-cash variant shows6600. Retain outside cash100/pool625 by month, full original1875, age26 and source identities privately. Changed source, age, split or audit rejects before templateI/O."
+    testRef: "tests/pdf/marketplace-outside-person-review.test.ts::prints original outside cash separately and binds qualification before output"
+  - line: "workspace"
+    description: "Actual guide to workspace output preserves the original outside-person method"
+    formula: "The real workspace download retains outside monthlycash100 separately from tax-family premium1250 and family cash300/150; Schedule1 is6600 only once."
+    testRef: "tests/apps/web/workspace-marketplace-outside-person.test.ts::downloads the outside child cash review from actual guided sources"
+  - line: "ordinary-physical"
+    description: "Ordinary nonspecified Form7206 and the signed joint transfer stay distinct"
+    formula: "The ordinary source has physical Form7206 line1 and14 of6200, but Schedule1 transfer4200 after the signed specified deduction-2000. Full original cash16200 and original premium22500 remain in the reference."
+    testRef: "tests/pdf/marketplace-outside-person-review.test.ts::keeps nonspecified physical values separate from the signed combined transfer"
+  - line: "browser"
+    description: "Actual outside child age remains editable through a real browser and reload"
+    formula: "Desktop ordinary and mobile zero-credit cash sources retain original1875 and child100. Changing actual age26 to27 revokes confirmations and removes1200 from the deduction; restoring26 restores4200/6600. Blank age stays unknown after reload; private person and source details do not enter requests."
+    testRef: "apps/web/tests/guided-marketplace-outside-person.spec.ts::preserves actual outside child payments and qualification after edits and reload"
+  - line: "other-return-credit"
+    description: "Zero advances do not establish the other claimant's final premium credit"
+    formula: "Require actual completed other-return Form8962 line24=0, same tax year and original PartIV claimant/policy/member links. Unknown, draft, positive, duplicated or conflicting records reject before cash becomes a deduction. The source is retained independently of the current return's computed credit."
+    testRef: "tests/engine/federal-marketplace-outside-person.test.ts::requires the completed other return independently of zero advances"
+  - line: "other-return-identity"
+    description: "The completed outside record must belong to the actual claimant and policy"
+    formula: "An explicit zero credit cannot cure a stale year, claimant, source reference, incomplete policy list or duplicated covered-person record. Original source values remain immutable."
+    testRef: "tests/engine/federal-marketplace-outside-person.test.ts::binds the zero-credit other return to its actual claimant and original policies"
+  - line: "other-return-control"
+    description: "The interview collects the actual separate return rather than a credit waiver"
+    formula: "Actual completed status/year/claimant/original-policy links and Form8962 line24 remain editable. Blank and positive amounts do not become zero. Editing any record revokes existing source confirmations. Copying originals supplies no completed-return facts."
+    testRef: "tests/apps/web/marketplace-outside-person-interactions.test.tsx::edits actual outside child qualification and reconfirms the full interview sources"
+  - line: "indexed2026"
+    description: "The independent other-return source year remains explicit in the isolated2026 method"
+    formula: "With the same actual cash6600 and sufficiently high actual income, final2026 credit remains0; changing only the other-return year to2025 rejects. The actual production2026 readiness gate remains closed."
+    testRef: "tests/engine/federal-marketplace-outside-person-2026.test.ts::binds the isolated2026 outside credit record without opening production readiness"

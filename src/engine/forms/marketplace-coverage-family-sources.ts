@@ -10,8 +10,8 @@ export type MarketplaceCoverageFamilyInput = Pick<TaxYearInput, 'form7206' | 'fo
 };
 export interface MarketplaceCoverageFamilyMonth {
   month: number; coverageFamilySlcsp: Decimal; nonCoverageFamilySlcsp: Decimal;
-  coveragePersonIds: string[]; nonCoveragePersonIds: string[]; coverageSsns: string[]; nonCoverageSsns: string[];
-  sourcePremium: Decimal; sourceAdvance: Decimal; ownCash: Decimal; ownCoverageCash: Decimal; ownNoncoverageCash: Decimal; ownAdvance: Decimal; ownNoncoverageAdvance: Decimal;
+  coveragePersonIds: string[]; nonCoveragePersonIds: string[]; outsidePersonIds: string[]; coverageSsns: string[]; nonCoverageSsns: string[];
+  sourcePremium: Decimal; sourceAdvance: Decimal; ownCash: Decimal; ownCoverageCash: Decimal; ownNoncoverageCash: Decimal; ownAdvance: Decimal; ownNoncoverageAdvance: Decimal; outsideCash: Decimal; outsideAdvance: Decimal;
 }
 export interface MarketplaceCoverageFamilyPlan {
   planId: string; policyIndexes: number[]; months: MarketplaceCoverageFamilyMonth[];
@@ -50,6 +50,30 @@ function original(value: NonNullable<Original>[number]['original'], year: number
   for (const person of people) for (let m = person.firstMonth; m <= person.lastMonth; m++) if (!months.some(row => row.month === m)) throw new Error('Coverage-family original policy omits a covered month.');
   return { taxYear: year, marketplace: text(value.marketplace, 'Marketplace'), policyNumber: text(value.policyNumber, 'policy number'),
     recipientName: name(value.recipientName), recipientSsn: ssn(value.recipientSsn), coveredIndividuals: people, monthlyPremiums: months };
+}
+/** A completed other return is source evidence, not a current-return credit override.
+ * Zero advances alone cannot establish zero final credit: sections280C(g),36B
+ * and Reg1.36B-3(c)(3) also cover premiums paid by another person. */
+type HealthPlan = NonNullable<NonNullable<TaxYearInput['form7206']>['plans']>[number];
+function validateOutsideReturn(input: MarketplaceCoverageFamilyInput, plan: HealthPlan,
+  personId: string, identity: string): void {
+  const packet = plan.coverageFamilySources!;
+  const records = packet.outsidePersonReturns?.filter(row => row.personId?.trim() === personId);
+  if (records?.length !== 1) throw new Error('Outside child return sources require one actual completed other-return Form8962 record.');
+  const row = records[0];
+  if (row.sourceTaxYear !== input.taxpayer.taxYear || row.returnStatus !== 'completed' || row.allPoliciesIncludedConfirmed !== true
+    || !row.sourceReference?.trim() || !row.claimantName?.trim() || !row.claimantSsn?.trim()) throw new Error('Outside child return requires actual completed year, claimant, reference and complete policy sources.');
+  if (row.form8962Line24 === undefined || !/^\d+(?:\.\d+)?$/.test(row.form8962Line24) || !d(row.form8962Line24).isFinite()
+    || !d(row.form8962Line24).isZero()) throw new Error('Outside child return credit must be an explicit actual zero on completed Form8962 line24; positive or unknown credit needs its separate method.');
+  const expected = packet.policies!.filter(policy => policy.original!.coveredIndividuals!.some(person => ssn(person.ssn) === identity)).map(policy => policy.sourceId!).sort();
+  const actual = row.policySourceIds?.map(value => value.trim()).sort();
+  if (!actual || new Set(actual).size !== actual.length || JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error('Outside child return policy links must include every actual original policy for that covered person.');
+  for (const id of expected) {
+    const source = input.form8962?.sharedPolicyAllocations?.policies?.find(policy => policy.sourceId === id);
+    if (!source?.otherTaxpayerSsn || !source.otherTaxpayerName || ssn(source.otherTaxpayerSsn) !== ssn(row.claimantSsn)
+      || name(source.otherTaxpayerName) !== name(row.claimantName)
+      || source.coveredFamilyAssignments?.find(member => ssn(member.ssn) === identity)?.family !== 'other_return') throw new Error('Outside child return claimant and covered person must match the actual original shared-policy sources.');
+  }
 }
 function sameMembers(actual: string[] | undefined, expected: string[], label: string) {
   if (!actual) throw new Error(`Coverage-family ${label} member sources are unknown.`);
@@ -100,7 +124,7 @@ export function calculateMarketplaceCoverageFamilySources(input: MarketplaceCove
       }
     }
     if (packet.persons?.length !== originalPeople.size || plan.coveredPersons?.length !== originalPeople.size) throw new Error('Coverage-family source must link every original person exactly once.');
-    const linked = new Map<string, { ssn: string; own: boolean; months: Set<number> }>(), seenIdentities = new Set<string>();
+    const linked = new Map<string, { ssn: string; own: boolean; eligibleOutsideChild: boolean; months: Set<number> }>(), seenIdentities = new Set<string>();
     for (const link of packet.persons) {
       const id = text(link.personId, 'health person ID'), identity = ssn(link.coveredIndividualSsn), originalPerson = originalPeople.get(identity);
       const persons = people.filter(row => row.personId === id), covered = plan.coveredPersons.filter(row => row.personId === id), actual = household.get(identity);
@@ -108,16 +132,23 @@ export function calculateMarketplaceCoverageFamilySources(input: MarketplaceCove
       if (actual) {
         const relationship = actual.role === plan.accountHolder ? 'self' : actual.role === 'other' ? 'dependent' : 'spouse';
         if (persons[0].householdRole !== actual.role || covered[0].relationshipToOwner !== relationship || (relationship === 'dependent' && covered[0].dependencyEligibilityConfirmed !== true)) throw new Error('Coverage-family member must match the actual household, dependency and plan-owner sources.');
-      } else if (persons[0].householdRole !== 'other' || covered[0].relationshipToOwner !== 'other') throw new Error('Coverage-family outside-tax-family health eligibility needs its distinct actual method.');
-      linked.set(id, { ssn: identity, own: Boolean(actual), months: originalPerson.months }); seenIdentities.add(identity);
+      } else if (persons[0].householdRole !== 'other' || !['other', 'child_under_27'].includes(covered[0].relationshipToOwner ?? '')) throw new Error('Coverage-family outside-tax-family dependent eligibility needs its distinct actual method.');
+      const outsideChild = !actual && covered[0].relationshipToOwner === 'child_under_27';
+      const age = persons[0].attainedAgeAtYearEnd;
+      if (outsideChild && (age === undefined || !Number.isInteger(age) || age < 0 || age > 120)) throw new Error('Outside child health sources require actual attained age at year end.');
+      linked.set(id, { ssn: identity, own: Boolean(actual), eligibleOutsideChild: outsideChild && age! < 27, months: originalPerson.months }); seenIdentities.add(identity);
     }
     if (packet.months?.length !== sourceMonths.size) throw new Error('Coverage-family source needs actual evidence for every original policy month.');
+    const outsideReturnIds = packet.outsidePersonReturns?.map(row => text(row.personId, 'outside return person ID')) ?? [];
+    if (new Set(outsideReturnIds).size !== outsideReturnIds.length || outsideReturnIds.some(id => !linked.has(id) || linked.get(id)!.own)) throw new Error('Outside child return person sources are duplicated or not an original outside person.');
+    const validatedOutsideReturns = new Set<string>();
     const seenMonths = new Set<number>();
     const months = packet.months.map(row => {
       const m = month(row.month), originalMonth = sourceMonths.get(m);
       if (!originalMonth || seenMonths.has(m) || row.allCoveredPersonsIncludedConfirmed !== true) throw new Error('Coverage-family actual monthly source is duplicated or incomplete.');
       seenMonths.add(m); text(row.sourceReference, 'monthly eligibility reference');
       const ownPeople = [...linked].filter(([, person]) => person.own && person.months.has(m));
+      const outsidePersonIds = [...linked].filter(([, person]) => !person.own && person.months.has(m)).map(([id]) => id);
       if (row.personFacts?.length !== ownPeople.length) throw new Error('Coverage-family month requires every actual tax-family person eligibility source.');
       const coveragePersonIds: string[] = [], nonCoveragePersonIds: string[] = [], seen = new Set<string>();
       for (const fact of row.personFacts) {
@@ -137,7 +168,7 @@ export function calculateMarketplaceCoverageFamilySources(input: MarketplaceCove
       if (nonCoverageSsns.length ? nonCoverageFamilySlcsp.lte(0) : !nonCoverageFamilySlcsp.isZero()) throw new Error('Coverage-family actual benchmark amount conflicts with its empty or nonempty person group.');
       const receipts = plan.payments?.filter(payment => payment.coverageMonth === m);
       if (!receipts?.length) throw new Error('Coverage-family source needs actual monthly premium receipts.');
-      let fullPremium = d(0), fullAdvance = d(0), ownCash = d(0), ownCoverageCash = d(0), ownNoncoverageCash = d(0), ownAdvance = d(0), ownNoncoverageAdvance = d(0);
+      let fullPremium = d(0), fullAdvance = d(0), ownCash = d(0), ownCoverageCash = d(0), ownNoncoverageCash = d(0), ownAdvance = d(0), ownNoncoverageAdvance = d(0), outsideCash = d(0), outsideAdvance = d(0);
       const paidPeople = new Set<string>();
       for (const receipt of receipts) {
         if (receipt.coverageTaxYear !== year || !receipt.personAmounts) throw new Error('Coverage-family payment source year or person allocations are incomplete.');
@@ -153,7 +184,15 @@ export function calculateMarketplaceCoverageFamilySources(input: MarketplaceCove
           if (!person || paymentPeople.has(payer) || !['owner_after_tax', 'business_paid_or_reimbursed'].includes(allocation.payer ?? '') || (!person.months.has(m) && (!paid.isZero() || !credit.isZero()))) throw new Error('Coverage-family paid person or payer source contradicts actual monthly coverage.');
           paymentPeople.add(payer); paidPeople.add(id);
           if (!amount(allocation.excludedPublicSafetyOfficerAmount).isZero() || !amount(allocation.otherTaxFreeFunding).isZero()) throw new Error('Coverage-family separate tax-free premium funding needs its actual method.');
-          if (!person.own && !paid.isZero()) throw new Error('Coverage-family owner-paid outside-family amounts need their actual separate method.');
+          if (!person.own) {
+            // Actual child cash is nonspecified under Rev. Proc. 2014-41 section4.
+            // No other family's advance or repayment is treated as this owner's cash.
+            if (person.eligibleOutsideChild && !credit.isZero()) throw new Error('Outside child advances require their separate actual payment and repayment method.');
+            if (person.eligibleOutsideChild && paid.gt(0) && !validatedOutsideReturns.has(id)) {
+              validateOutsideReturn(input, plan, id, person.ssn); validatedOutsideReturns.add(id);
+            }
+            outsideCash = outsideCash.plus(paid); outsideAdvance = outsideAdvance.plus(credit);
+          }
           // Positive advances are actual facts. Their deduction method is checked
           // separately, after preserving exact person and original-policy sources.
           if (person.own && nonCoveragePersonIds.includes(id)) ownNoncoverageAdvance = ownNoncoverageAdvance.plus(credit);
@@ -167,8 +206,8 @@ export function calculateMarketplaceCoverageFamilySources(input: MarketplaceCove
         if (!personCash.eq(cash) || !personAdvance.eq(advance)) throw new Error('Coverage-family actual person payments and advances do not reconcile their original receipt.');
       }
       if (!fullPremium.eq(originalMonth.premium) || !fullAdvance.eq(originalMonth.advance) || [...linked].some(([id, person]) => person.months.has(m) && !paidPeople.has(id))) throw new Error('Coverage-family original premium/advance source or complete monthly people do not reconcile.');
-      return { month: m, coverageFamilySlcsp, nonCoverageFamilySlcsp, coveragePersonIds, nonCoveragePersonIds, coverageSsns, nonCoverageSsns,
-        sourcePremium: fullPremium, sourceAdvance: fullAdvance, ownCash, ownCoverageCash, ownNoncoverageCash, ownAdvance, ownNoncoverageAdvance };
+      return { month: m, coverageFamilySlcsp, nonCoverageFamilySlcsp, coveragePersonIds, nonCoveragePersonIds, outsidePersonIds, coverageSsns, nonCoverageSsns,
+        sourcePremium: fullPremium, sourceAdvance: fullAdvance, ownCash, ownCoverageCash, ownNoncoverageCash, ownAdvance, ownNoncoverageAdvance, outsideCash, outsideAdvance };
     }).sort((a,b) => a.month - b.month);
     const allOwnCovered = months.every(row => row.nonCoveragePersonIds.length === 0), outside = [...linked.values()].some(person => !person.own);
     if (plan.allCoveredPersonsInCoverageFamilyConfirmed !== (allOwnCovered && !outside)) throw new Error('Coverage-family plan answer contradicts actual original and monthly member sources.');
