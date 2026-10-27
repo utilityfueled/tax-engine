@@ -2,6 +2,9 @@
 import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { d, min, zeroFloor } from "@/utils/decimal.js";
+import type { BondSourceRatio } from "./savings-bond-reissue-sources.js";
+import type { EducatorBondCalculationContext } from "./educator-bond-sources.js";
+import { displaySavingsBondRatio, reportSavingsBondRatios, sumSavingsBondRatios } from "@/utils/savings-bond-ratios.js";
 const ZERO = new Decimal(0);
 
 export interface EducatorExpenseResult {
@@ -21,19 +24,29 @@ export interface EducatorExpenseResult {
 export function calculateEducatorExpensesDeduction(
   adjustments: TaxYearInput["adjustments"],
   filingStatus: TaxYearInput["taxpayer"]["filingStatus"],
-  taxYear: number
+  taxYear: number,
+  bondContext?: EducatorBondCalculationContext,
 ): EducatorExpenseResult {
   if (taxYear !== 2025 && taxYear !== 2026) throw new Error(`Educator expense limit is not supported for tax year ${taxYear}`);
   // 2026 Rev. Proc. 2025-32 section4.12; 2025 Schedule1 line11.
   const perPersonLimit = new Decimal(taxYear === 2026 ? "350" : "300");
   const actualSources = adjustments?.educatorExpenseSources;
   if (actualSources?.length) {
+    const tokens = JSON.stringify(actualSources).match(/"-?\d+(?:\.\d+)?"/g) ?? [];
+    const digits = tokens.reduce((total, value) => total + value.length, 0);
+    const D = Decimal.clone({ precision: Math.max(80, digits * 4 + 32) });
+    const ratio = (value: Decimal): BondSourceRatio => ({ numerator: value, denominator: new D(1) });
+    const subtract = (left: BondSourceRatio, right: BondSourceRatio) => sumSavingsBondRatios([left, { numerator: right.numerator.negated(), denominator: right.denominator }]);
+    const floor = (value: BondSourceRatio) => value.numerator.lt(0) ? ratio(new D(0)) : value;
+    const display = (value: BondSourceRatio) => value.numerator.div(value.denominator);
+    const preBond = bondContext?.purpose === "form8815_magi";
+    const exactReturnSources = actualSources.some(source => source.savingsBondReductionMethod === "return_sources");
     const owners = new Set<string>();
     const expenseIds = new Set<string>();
     const inputs: Record<string, Decimal | string> = {};
     const amount = (value: string | undefined, name: string) => {
       if (value === undefined || !/^-?\d+(\.\d+)?$/.test(value) || !d(value).isFinite() || d(value).lt(0)) throw new Error(`Educator source requires actual nonnegative ${name}; unknown is not zero.`);
-      return d(value);
+      return new D(value);
     };
     const sourceRecords = actualSources.map(source => {
       if (!source.accountHolder || owners.has(source.accountHolder)) throw new Error("Educator sources require one actual worksheet per owner; duplicate owner.");
@@ -45,8 +58,8 @@ export function calculateEducatorExpensesDeduction(
       if (end !== start + 1 || (start !== taxYear && end !== taxYear)) throw new Error("Educator school year must overlap the actual tax year.");
       if (source.sourceFactsConfirmed !== true) throw new Error("Educator source facts need confirmation after their last edit.");
       if (!source.schools?.length) throw new Error("Educator source requires actual school roles and hours.");
-      let eligibleHours = new Decimal(0);
-      let itemizedEligibleHours = new Decimal(0);
+      let eligibleHours = new D(0);
+      let itemizedEligibleHours = new D(0);
       for (const school of source.schools) {
         if (!school.name.trim() || school.role === undefined || typeof school.schoolEligible !== "boolean") throw new Error("Educator source requires actual school and role eligibility.");
         if (taxYear >= 2026 && school.level === undefined) throw new Error("2026 educator sources require the actual school level; unknown is not K12");
@@ -71,13 +84,24 @@ export function calculateEducatorExpensesDeduction(
         }
       }
       if (source.expenses === undefined) throw new Error("Educator source requires actual paid expense records, including an empty list for none.");
-      let qualifiedExpenses = new Decimal(0);
-      let itemizedNetExpenses = new Decimal(0);
+      let qualifiedExpenses = new D(0);
+      let itemizedNetExpenses = new D(0);
       let itemizedComplete = true;
-      let overlappingReimbursements = new Decimal(0);
-      let overlappingTaxFreeFunding = new Decimal(0);
+      let overlappingReimbursements = new D(0);
+      let overlappingTaxFreeFunding = new D(0);
       const reimbursement = amount(source.reimbursementsNotInWages, "reimbursementsNotInWages");
-      const educationReductions = ["excludedSavingsBondInterest", "nontaxableQualifiedTuitionProgramAmount", "nontaxableCoverdellEarnings"].reduce((sum, field) => sum.plus(amount(source[field as keyof typeof source] as string | undefined, field)), new Decimal(0));
+      const derivedBond = source.savingsBondReductionMethod === "return_sources";
+      const declaredBond = derivedBond && source.excludedSavingsBondInterest === undefined ? undefined
+        : amount(source.excludedSavingsBondInterest, "excludedSavingsBondInterest");
+      if (derivedBond && !preBond && bondContext?.purpose !== "full_exclusion_sources")
+        throw new Error("Derived educator exclusion requires its actual return bond source calculation.");
+      const bondReduction = preBond ? ratio(new D(0)) : derivedBond && bondContext?.purpose === "full_exclusion_sources"
+        ? bondContext.ownerInterest[source.accountHolder] : ratio(declaredBond ?? new D(0));
+      if (derivedBond && !preBond && declaredBond !== undefined && !subtract(ratio(declaredBond), bondReduction).numerator.isZero())
+        throw new Error("Reconcile the declared educator bond reduction with the exact source ratio; a rounding allocation is not an original.");
+      const educationReductionRatio = sumSavingsBondRatios([bondReduction,
+        ratio(amount(source.nontaxableQualifiedTuitionProgramAmount, "nontaxableQualifiedTuitionProgramAmount")),
+        ratio(amount(source.nontaxableCoverdellEarnings, "nontaxableCoverdellEarnings"))]);
       for (const expense of source.expenses) {
         const expenseId = expense.sourceId.trim();
         if (!expenseId || expenseIds.has(expenseId)) throw new Error("Educator source has a duplicate or missing expense ID.");
@@ -100,7 +124,7 @@ export function calculateEducatorExpensesDeduction(
             // Wider instructional costs or material reductions require their own
             // actual allocations; the section62 blanket reduction is not assumed
             // to establish which section162 receipt was funded.
-            const canUseKnownZero = expense.qualifyingUse && reimbursement.isZero() && educationReductions.isZero();
+            const canUseKnownZero = expense.qualifyingUse && reimbursement.isZero() && educationReductionRatio.numerator.isZero() && !(derivedBond && preBond);
             if ((expense.itemizedReimbursements === undefined || expense.itemizedTaxFreeFunding === undefined) && !canUseKnownZero) itemizedComplete = false;
             else {
               const itemizedReimbursement = amount(expense.itemizedReimbursements ?? "0", "itemized reimbursement");
@@ -118,30 +142,38 @@ export function calculateEducatorExpensesDeduction(
       }
       if (taxYear >= 2026 && itemizedEligibleHours.gte(900) && qualifiedExpenses.gt(0) && itemizedComplete) {
         if (!overlappingReimbursements.eq(reimbursement)) throw new Error("Reconcile educator reimbursements between the actual above-line worksheet and overlapping itemized receipts");
-        if (overlappingTaxFreeFunding.gt(educationReductions)) throw new Error("Reconcile actual tax-free funding of above-line educator receipts with the education-benefit reduction worksheet");
+        if (!preBond && subtract(ratio(overlappingTaxFreeFunding), educationReductionRatio).numerator.gt(0)) throw new Error("Reconcile actual tax-free funding of above-line educator receipts with the education-benefit reduction worksheet");
       }
-      const reductions = reimbursement.plus(educationReductions);
-      const netExpenses = eligibleHours.gte(900) ? zeroFloor(qualifiedExpenses.minus(reductions)) : ZERO;
-      const deduction = min(netExpenses, perPersonLimit);
-      const itemizedDeduction = itemizedComplete ? zeroFloor(itemizedNetExpenses.minus(deduction)) : undefined;
+      const reductionsRatio = sumSavingsBondRatios([ratio(reimbursement), educationReductionRatio]);
+      const netExpensesRatio = eligibleHours.gte(900) ? floor(subtract(ratio(qualifiedExpenses), reductionsRatio)) : ratio(new D(0));
+      const deductionRatio = subtract(netExpensesRatio, ratio(perPersonLimit)).numerator.gt(0) ? ratio(perPersonLimit) : netExpensesRatio;
+      const reductions = display(reductionsRatio), netExpenses = display(netExpensesRatio), deduction = display(deductionRatio);
+      const itemizedDeductionRatio = itemizedComplete ? floor(subtract(ratio(itemizedNetExpenses), deductionRatio)) : undefined;
+      const itemizedDeduction = itemizedDeductionRatio ? display(itemizedDeductionRatio) : undefined;
       inputs[`${source.accountHolder} actual eligible hours`] = eligibleHours;
       inputs[`${source.accountHolder} qualified costs`] = qualifiedExpenses;
       inputs[`${source.accountHolder} reimbursements and exclusions`] = reductions;
       inputs[`${source.accountHolder} net expenses`] = netExpenses;
       inputs[`${source.accountHolder} allowed deduction`] = deduction;
+      if (derivedBond || preBond) {
+        inputs[`${source.accountHolder} exact bond reduction`] = displaySavingsBondRatio(bondReduction);
+        inputs[`${source.accountHolder} exact allowed deduction`] = displaySavingsBondRatio(deductionRatio);
+      }
       const legacy = source.accountHolder === "primary" ? adjustments?.primaryEducatorExpenses : adjustments?.spouseEducatorExpenses;
-      if (d(legacy).gt(0) && !d(legacy).eq(netExpenses)) throw new Error("Reconcile the legacy educator net expenses with actual source facts.");
+      if (!preBond && d(legacy).gt(0) && !subtract(ratio(new D(legacy ?? "0")), netExpensesRatio).numerator.isZero()) throw new Error("Reconcile the legacy educator net expenses with actual source facts.");
       inputs[`${source.accountHolder} itemized eligible hours`] = itemizedEligibleHours;
       if (itemizedDeduction !== undefined) inputs[`${source.accountHolder} remaining itemized expense`] = itemizedDeduction;
       return { accountHolder: source.accountHolder, eligibleHours, qualifiedExpenses, reductions, netExpenses, deduction,
-        itemizedEligibleHours, itemizedNetExpenses: itemizedComplete ? itemizedNetExpenses : undefined, itemizedDeduction };
+        itemizedEligibleHours, itemizedNetExpenses: itemizedComplete ? itemizedNetExpenses : undefined, itemizedDeduction,
+        netExpensesRatio, deductionRatio, itemizedDeductionRatio };
     });
     for (const owner of ["primary", "spouse"] as const) if (!owners.has(owner) && d(owner === "primary" ? adjustments?.primaryEducatorExpenses : adjustments?.spouseEducatorExpenses).gt(0)) throw new Error("Reconcile the legacy educator owner amount with actual sources.");
-    const totalNet = sourceRecords.reduce((sum, source) => sum.plus(source.netExpenses), new Decimal(0));
-    if (d(adjustments?.educatorExpenses).gt(0) && !d(adjustments?.educatorExpenses).eq(totalNet)) throw new Error("Reconcile the legacy educator aggregate with actual net sources.");
+    const totalNet = sumSavingsBondRatios(sourceRecords.map(source => source.netExpensesRatio));
+    if (!preBond && d(adjustments?.educatorExpenses).gt(0) && !subtract(ratio(new D(adjustments?.educatorExpenses ?? "0")), totalNet).numerator.isZero()) throw new Error("Reconcile the legacy educator aggregate with actual net sources.");
     const itemizedCalculationComplete = sourceRecords.every(source => source.itemizedDeduction !== undefined);
-    return { amount: sourceRecords.reduce((sum, source) => sum.plus(source.deduction), new Decimal(0)), formula: `Sum each eligible owner's min(actual qualified costs less reimbursements and education exclusions, $${perPersonLimit})`, inputs, sourceFactsVerified: true, sourceRecords,
-      itemizedCalculationComplete, itemizedDeduction: itemizedCalculationComplete ? sourceRecords.reduce((sum, source) => sum.plus(source.itemizedDeduction ?? ZERO), ZERO) : undefined };
+    const reported = (values: BondSourceRatio[]) => exactReturnSources ? reportSavingsBondRatios(values) : display(sumSavingsBondRatios(values));
+    return { amount: reported(sourceRecords.map(source => source.deductionRatio)), formula: `Sum each eligible owner's min(actual qualified costs less reimbursements and education exclusions, $${perPersonLimit})${preBond ? "; Form8815 MAGI omits only the bond exclusion reduction" : exactReturnSources ? "; retain exact ratios and round the completed line" : ""}`, inputs, sourceFactsVerified: true, sourceRecords,
+      itemizedCalculationComplete, itemizedDeduction: itemizedCalculationComplete ? reported(sourceRecords.map(source => source.itemizedDeductionRatio ?? ratio(new D(0)))) : undefined };
   }
   const aggregateEducatorExpenses = zeroFloor(d(adjustments?.educatorExpenses));
   const primaryEducatorExpenses = zeroFloor(d(adjustments?.primaryEducatorExpenses));

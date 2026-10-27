@@ -76,6 +76,13 @@ export function EducatorSourceDetails({ sources = [], taxYear, onChange }: { sou
         })}
         <button type="button" onClick={() => update(index, { expenses: [...source.expenses, { ...emptyEducatorExpense }] })}>{prefix}: Add paid expense</button>
         <div className="guided-form-grid">
+          <Choice label={`${prefix}: Savings-bond reduction method`} value={source.savingsBondReductionMethod ?? ""}
+            options={[["return_sources", "Calculate from complete original bond records"]]}
+            onChange={savingsBondReductionMethod => update(index, { savingsBondReductionMethod: savingsBondReductionMethod as EducatorSourceData["savingsBondReductionMethod"] })} />
+        </div>
+        <p className="guided-hint">Enter the actual worksheet amount below, or calculate it from this return's complete original bond records. Calculation from originals currently requires unchanged income ownership and full exclusion of the bond interest. Keep any existing worksheet amount; it must reconcile with the originals.</p>
+        {source.savingsBondReductionMethod === "return_sources" && <p className="guided-hint">The savings-bond amount below may stay blank if you do not have a separate worksheet amount. Complete and confirm the bond records in Credits as well as this educator's actual expenses.</p>}
+        <div className="guided-form-grid">
           {reductionLabels.map(([field, label]) => <CurrencyField key={field} label={`${prefix}: ${label}`} value={source[field]} onChange={value => update(index, { [field]: value })} />)}
           <BooleanFact label={`${prefix}: Sources checked after the last edit`} value={source.sourceFactsConfirmed} onChange={sourceFactsConfirmed => update(index, { sourceFactsConfirmed })} />
         </div>

@@ -9,6 +9,7 @@
 import Decimal from "decimal.js";
 import { calculateHomeMortgageInterest, type HomeMortgageInterestResult } from "../forms/home-mortgage-interest.js";
 import { calculateEducatorExpensesDeduction } from "../forms/educator-expenses.js";
+import type { EducatorBondSourceContext } from "../forms/educator-bond-sources.js";
 import { calculateForm1099OID } from "../forms/form-1099-oid.js";
 import { calculateStateLocalIncomeTaxDeduction } from "../forms/state-local-income-tax-deduction.js";
 import { resolveForeignTaxElection, type ForeignTaxElectionResult } from "../forms/foreign-tax-election.js";
@@ -40,6 +41,8 @@ import type { SelectedCharitableCarryover } from "@/engine/forms/selected-charit
 // is now computed with aggregate debt limits per IRS Pub 936 (see Lines 8a-8d section).
 
 export interface ScheduleAInput {
+  /** Completed canonical exact educator ownership context, never a taxpayer override. */
+  educatorBondSources?: EducatorBondSourceContext;
   medicalExpenses?: Decimal;
   personalPropertyTaxes?: Decimal; // Line 5c: annual value-based taxes
   /** Form 2555 lines 45 + 50, computed by the federal orchestrator. */
@@ -483,7 +486,7 @@ export function calculateScheduleA(
   const estateTaxAmounts = (input.scheduleK1Form1041 ?? []).map(source => d(source.estateTaxDeduction));
   if (estateTaxAmounts.some(amount => !amount.isFinite() || amount.lt(0))) throw new Error("Estate-tax deductions must be finite and nonnegative");
   const estateTaxDeduction = sum(...estateTaxAmounts);
-  const educatorWorksheet = calculateEducatorExpensesDeduction(input.adjustments, filingStatus, input.taxpayer.taxYear);
+  const educatorWorksheet = calculateEducatorExpensesDeduction(input.adjustments, filingStatus, input.taxpayer.taxYear, extra?.educatorBondSources);
   if (!educatorWorksheet.itemizedCalculationComplete || educatorWorksheet.itemizedDeduction === undefined) {
     throw new Error("Educator itemized expenses require actual instructional and expense-funding source allocations");
   }

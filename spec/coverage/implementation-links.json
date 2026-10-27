@@ -239,6 +239,16 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/educator-bond-rational-magi",
+      "enginePath": "src/engine/forms/educator-bond-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8815.ts",
+      "testRefs": [
+        "tests/engine/forms/educator-bond-rational-magi.test.ts::calculates bond MAGI before the final educator reduction",
+        "tests/pdf/educator-bond-review.test.ts::binds actual educator ownership and MAGI before saved review output"
+      ],
+      "note": "Exact original educator and bond sources use a separate pre-exclusion MAGI worksheet and source-bound historical reference output. No final2026 form, independent human review or filing qualification is claimed."
+    },
+    {
       "key": "federal/educator-in-kind-exclusions",
       "enginePath": "src/engine/forms/educator-education-exclusions.ts",
       "testRefs": [

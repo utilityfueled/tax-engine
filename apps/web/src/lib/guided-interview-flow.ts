@@ -22,7 +22,7 @@ import { tipIncomeFactErrors, type AdditionalDeductionsData } from "./guided-tip
 import { healthInsuranceSourceErrors, invalidateHealthInsuranceSources, type HealthInsuranceData } from "./guided-health-insurance-facts";
 import { hsaFactErrors, type HsaAccountData } from "./guided-hsa-facts";
 import type { StandardDeductionData } from "./guided-standard-deduction-facts";
-import { educatorFactErrors, type EducatorSourceData } from "./guided-educator-facts";
+import { educatorFactErrors, educatorBondFactErrors, type EducatorSourceData } from "./guided-educator-facts";
 import { studentLoanFactErrors, studentLoanEducationSources, type StudentLoanData, type StudentLoanEducationSources } from "./guided-student-loan-facts";
 /**
  * Guided interview flow — state model, section routing, skip logic, and progress.
@@ -2025,6 +2025,7 @@ export function validateSection(
       return validateRequiredFacts({
         ...educationErrors,
         ...distributionErrors,
+        ...educatorBondFactErrors(state),
         ...premiumTaxCreditFactErrors(state),
         ...minimumTaxCreditFactErrors(credits?.minimumTaxCredit, state.taxYear, state.segmentation.filingStatus, personal),
         ...savingsBondFactErrors(credits?.savingsBondEducation, state.taxYear, state.segmentation.filingStatus, getSectionData(state, "income-investments")?.interestEntries, personal),

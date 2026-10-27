@@ -186,9 +186,9 @@ export function buildForm8815ReferenceSummary(
     if (context.result.form8815 !== result && JSON.stringify(context.result.form8815) !== JSON.stringify(result)) throw new Error("Savings-bond reference result does not match its prepared return.");
     if (JSON.stringify(context.input.savingsBondRedemptions) !== JSON.stringify(redemptions)) throw new Error("Savings-bond reference originals do not match the prepared rendering sources.");
     const history = calculateSavingsBondStatementSources(original);
-    if (!history) throw new Error("Savings-bond reference is missing its original history.");
+    if (!history && (result.reissueSourcesVerified || redemptions.some(row => row.reissueSourceId !== undefined))) throw new Error("Savings-bond reference is missing its original history.");
     for (const [index, group] of (original.form8815?.reissueSources?.groups ?? []).entries()) {
-      const computed = history.groups[index]; if (!computed) throw new Error("Savings-bond original group is missing.");
+      const computed = history?.groups[index]; if (!computed) throw new Error("Savings-bond original group is missing.");
       for (const [label, value] of [["original face value", group.originalFaceValue], ["your purchase funds", group.taxpayerPurchaseFunds], ["spouse purchase funds", group.spousePurchaseFunds], ["value at reissue", group.valueAtReissue]] as const)
         historyTotals.push({ label: `Group ${index + 1} ${label}`, value: `$${value}` });
       historyTotals.push({ label: `Group ${index + 1} actual reissue year`, value: group.reissueDate?.slice(0,4) ?? "" });
@@ -197,6 +197,15 @@ export function buildForm8815ReferenceSummary(
     for (const [index, statement] of (original.form8815?.reissueSources?.statements ?? []).entries()) {
       for (const [label, value] of [["original Box 3", statement.box3], ["earlier-year interest included", statement.priorRecognizedInterestIncluded], ["other Box 3 interest", statement.otherBox3Interest]] as const)
         historyTotals.push({ label: `Statement ${index + 1} ${label}`, value: `$${value}` });
+    }
+    for (const owner of ["primary", "spouse"] as const) {
+      const row = context.result.allLines.find(line => line.form === "Educator education exclusions" && line.line === `${owner}:bond-exclusion`);
+      if (row) historyTotals.push({ label: `${owner === "primary" ? "Primary" : "Spouse"} educator excluded bond interest`, value: String(row.inputs["Exact recipient exclusion"]) });
+    }
+    const educatorMagi = context.result.allLines.find(line => line.form === "Form 8815 MAGI Worksheet" && line.line === "educator");
+    if (educatorMagi) {
+      historyTotals.push({ label: "Educator deduction for Form 8815 MAGI", value: educatorMagi.value.toFixed() });
+      historyTotals.push({ label: "Final Schedule 1 educator deduction", value: context.result.schedule1?.educatorExpenses.toFixed() ?? "0" });
     }
   }
   if (result.redemptionResults.length !== redemptions.length) throw new Error("Form 8815 redemption sources do not match the calculation.");

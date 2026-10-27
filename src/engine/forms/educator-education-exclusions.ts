@@ -8,6 +8,9 @@ import type { Form8815Result } from "@/engine/forms/form-8815.js";
 import { calculateSavingsBondIncomeOwnership } from "@/engine/forms/savings-bond-income-ownership.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar } from "@/utils/decimal.js";
+import type { BondSourceRatio } from "./savings-bond-reissue-sources.js";
+import type { EducatorBondSourceContext } from "./educator-bond-sources.js";
+import { displaySavingsBondRatio, reportSavingsBondRatios, sumSavingsBondRatios } from "@/utils/savings-bond-ratios.js";
 
 type Owner = "primary" | "spouse";
 export interface EducatorEducationExclusionInput {
@@ -17,10 +20,12 @@ export interface EducatorEducationExclusionInput {
   educationDistributions?: Form1099QResult;
   savingsBondResult?: Form8815Result;
   savingsBondRedemptions?: SavingsBondRedemption[];
+  bondSourceContext?: EducatorBondSourceContext;
 }
 export interface EducatorOwnerExclusions {
   owner: Owner;
   savingsBondInterest: Decimal;
+  savingsBondInterestRatio?: BondSourceRatio;
   qtpEarnings: Decimal;
   coverdellEarnings: Decimal;
 }
@@ -78,6 +83,8 @@ export function reconcileEducatorEducationExclusions(input: EducatorEducationExc
   }
 
   const bonds = input.savingsBondResult;
+  const derivedSources = input.educatorSources.some(source => source.savingsBondReductionMethod === "return_sources");
+  if (derivedSources && (!bonds || !input.bondSourceContext)) throw new Error("Derived educator reduction requires its completed actual Form8815 source calculation.");
   if (bonds) {
     if (bonds.sourceFactsVerified !== true) throw new Error("Educator savings-bond exclusions require verified actual source calculations.");
     if (bonds.taxYear !== input.taxYear) throw new Error("Educator savings-bond source year must match the return year.");
@@ -90,7 +97,7 @@ export function reconcileEducatorEducationExclusions(input: EducatorEducationExc
     }
     if (sources.size !== bonds.redemptionResults.length) throw new Error("Educator savings-bond sources do not match the calculated redemptions.");
     const seen = new Set<string>(), eligibleIds = new Set<string>();
-    const ownerInterest = { primary: d(0), spouse: d(0) };
+    const ownerRatios: Record<Owner, BondSourceRatio[]> = { primary: [], spouse: [] };
     for (const row of bonds.redemptionResults) {
       const source = row.sourceId ? sources.get(row.sourceId) : undefined;
       if (!source || !row.sourceId || seen.has(row.sourceId) || source.sourceFactsComplete !== true || typeof source.ownershipConfirmed !== "boolean" || typeof row.eligible !== "boolean") throw new Error("Educator savings-bond result requires each complete actual source exactly once.");
@@ -99,31 +106,57 @@ export function reconcileEducatorEducationExclusions(input: EducatorEducationExc
       if (!source.ownershipConfirmed || !source.registeredOwner || source.registeredOwner === "other") throw new Error("Educator eligible bond requires actual registered ownership.");
       if (source.registeredOwner !== "taxpayer") ownerIsAllowed("spouse", input.filingStatus);
       eligibleIds.add(row.sourceId);
-      if (total.gt(0)) {
+      if (total.gt(0) || derivedSources) {
         const actual = calculateSavingsBondIncomeOwnership(source);
         if (!actual.currentInterest.eq(amount(row.currentYearInterest, "eligible bond current interest")) || !actual.principal.eq(amount(row.principal, "eligible bond principal")) || !amount(source.proceeds, "source proceeds").eq(row.proceeds)) throw new Error("Educator bond source interest and principal do not match the actual calculated redemption.");
-        ownerInterest.primary = ownerInterest.primary.plus(actual.primaryInterest);
-        ownerInterest.spouse = ownerInterest.spouse.plus(actual.spouseInterest);
+        ownerRatios.primary.push(actual.primaryInterestRatio);
+        ownerRatios.spouse.push(actual.spouseInterestRatio);
       }
     }
+    const exactOwner = { primary: sumSavingsBondRatios(ownerRatios.primary), spouse: sumSavingsBondRatios(ownerRatios.spouse) };
+    const ownerInterest = { primary: exactOwner.primary.numerator.div(exactOwner.primary.denominator), spouse: exactOwner.spouse.numerator.div(exactOwner.spouse.denominator) };
     if (total.gt(0) && eligibleIds.size === 0) throw new Error("Educator positive bond exclusion has no actual eligible source.");
     const soleOwner: Owner | undefined = ownerInterest.primary.gt(0) && ownerInterest.spouse.isZero() ? "primary"
       : ownerInterest.spouse.gt(0) && ownerInterest.primary.isZero() ? "spouse" : undefined;
-    const currentInterest = ownerInterest.primary.plus(ownerInterest.spouse);
-    if (total.gt(0)) {
-      if (!roundDollar(currentInterest).eq(amount(bonds.totalInterest, "calculated Form8815line6 interest"))) throw new Error("Educator bond source interest rounding must reconcile to the actual Form8815 worksheet before owner allocation.");
+    const exactCurrent = sumSavingsBondRatios([exactOwner.primary, exactOwner.spouse]);
+    const currentInterest = exactCurrent.numerator.div(exactCurrent.denominator);
+    if (total.gt(0) || derivedSources) {
+      const reportedCurrentInterest = derivedSources ? reportSavingsBondRatios([exactCurrent]) : roundDollar(currentInterest);
+      if (!reportedCurrentInterest.eq(amount(bonds.totalInterest, "calculated Form8815line6 interest"))) throw new Error("Educator bond source interest rounding must reconcile to the actual Form8815 worksheet before owner allocation.");
     }
-    if (soleOwner) {
-      totals[soleOwner].savingsBondInterest = total;
-    } else if (total.gt(0) && bonds.expenseRatio.eq(1) && bonds.modifiedAGI.lte(bonds.phaseOutThreshold) && total.eq(bonds.totalInterest)) {
-      if (!currentInterest.eq(total)) throw new Error("Educator fully excluded bond source interest needs exact source rounding reconciliation before owner attribution.");
+    if (derivedSources && bonds.expenseRatio.eq(1) && bonds.modifiedAGI.lte(bonds.phaseOutThreshold) && total.eq(bonds.totalInterest)) {
+      // A full original exclusion keeps source cents and exact ownership. The
+      // separately rounded printed total is not redistributed between owners.
       totals.primary.savingsBondInterest = ownerInterest.primary;
       totals.spouse.savingsBondInterest = ownerInterest.spouse;
+      totals.primary.savingsBondInterestRatio = exactOwner.primary;
+      totals.spouse.savingsBondInterestRatio = exactOwner.spouse;
+    } else if (soleOwner) {
+      totals[soleOwner].savingsBondInterest = total;
+      totals[soleOwner].savingsBondInterestRatio = { numerator: total, denominator: d(1) };
+    } else if (total.gt(0) && bonds.expenseRatio.eq(1) && bonds.modifiedAGI.lte(bonds.phaseOutThreshold) && total.eq(bonds.totalInterest)) {
+      if (!sumSavingsBondRatios([exactCurrent, { numerator: total.negated(), denominator: d(1) }]).numerator.isZero()) throw new Error("Educator fully excluded bond source interest needs exact source rounding reconciliation before owner attribution.");
+      totals.primary.savingsBondInterest = ownerInterest.primary;
+      totals.spouse.savingsBondInterest = ownerInterest.spouse;
+      totals.primary.savingsBondInterestRatio = exactOwner.primary;
+      totals.spouse.savingsBondInterestRatio = exactOwner.spouse;
     } else if (total.gt(0)) {
       throw new Error("Educator mixed or joint bond ownership has an unresolved statutory owner-allocation method; a supplied split cannot establish it.");
     }
   } else if (input.savingsBondRedemptions?.length) {
     throw new Error("Educator savings-bond source facts require the complete calculated Form8815 result.");
+  }
+  if (derivedSources && input.bondSourceContext && bonds) {
+    const original = input.bondSourceContext.ownerInterest;
+    if (!bonds.expenseRatio.eq(1) || bonds.modifiedAGI.gt(bonds.phaseOutThreshold)
+      || !bonds.excludableSavingsBondInterest.eq(bonds.totalInterest)
+      || !reportSavingsBondRatios([original.primary, original.spouse]).eq(bonds.totalInterest))
+      throw new Error("Derived educator source method requires the completed full bond exclusion; a partial exclusion needs its separate owner method.");
+    for (const owner of ["primary", "spouse"] as const) {
+      const completed = totals[owner].savingsBondInterestRatio ?? { numerator: totals[owner].savingsBondInterest, denominator: d(1) };
+      if (!sumSavingsBondRatios([original[owner], { numerator: completed.numerator.negated(), denominator: completed.denominator }]).numerator.isZero())
+        throw new Error("Derived educator source ownership must reconcile to the completed full exclusion.");
+    }
   }
 
   for (const source of input.educatorSources) {
@@ -135,10 +168,15 @@ export function reconcileEducatorEducationExclusions(input: EducatorEducationExc
       ["nontaxableQualifiedTuitionProgramAmount", "qtpEarnings", "qtp-exclusion"],
       ["nontaxableCoverdellEarnings", "coverdellEarnings", "coverdell-exclusion"],
     ] as const) {
-      const claimed = amount(source[field], field), calculated = totals[owner][key];
-      if (!claimed.eq(calculated)) throw new Error(`Reconcile ${owner} educator ${field} with the complete calculated actual source exclusion.`);
+      const derived = field === "excludedSavingsBondInterest" && source.savingsBondReductionMethod === "return_sources";
+      const claimed = derived && source[field] === undefined ? undefined : amount(source[field], field), calculated = totals[owner][key];
+      const exact = field === "excludedSavingsBondInterest" ? totals[owner].savingsBondInterestRatio ?? { numerator: calculated, denominator: d(1) }
+        : { numerator: calculated, denominator: d(1) };
+      if (claimed !== undefined && !sumSavingsBondRatios([exact, { numerator: claimed.negated(), denominator: d(1) }]).numerator.isZero()) throw new Error(`Reconcile ${owner} educator ${field} with the complete calculated actual source exclusion; a rounding split is not exact.`);
       audit.record("Educator education exclusions", `${owner}:${line}`, `Reconciled ${owner} educator ${key}`, calculated,
-        "Actual declared reduction equals calculated recipient exclusion; no expense or owner reallocation", { claimed, calculated });
+        derived ? "Calculated from complete actual owner sources and verified full exclusion; no entered allocation"
+          : "Actual declared reduction equals calculated recipient exclusion; no expense or owner reallocation",
+        { ...(claimed === undefined ? {} : { claimed }), calculated, "Exact recipient exclusion": displaySavingsBondRatio(exact) });
     }
   }
   return output();

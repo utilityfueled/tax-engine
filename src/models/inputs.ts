@@ -3547,6 +3547,8 @@ export const EducatorExpenseSourceSchema = z.object({
     deductedElsewhere: z.boolean().optional(),
   })).optional(),
   reimbursementsNotInWages: optionalDecimalInput,
+  /** Explicit source calculation for fully excluded unchanged bonds; omission preserves the actual worksheet contract. */
+  savingsBondReductionMethod: z.enum(["return_sources"]).optional(),
   excludedSavingsBondInterest: optionalDecimalInput,
   nontaxableQualifiedTuitionProgramAmount: optionalDecimalInput,
   nontaxableCoverdellEarnings: optionalDecimalInput,

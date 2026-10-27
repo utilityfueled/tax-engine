@@ -26,9 +26,12 @@ import { calculateForm1099G, type Form1099GResult } from "@/engine/forms/form-10
 import { calculateForm1099C } from "@/engine/forms/form-1099-c.js";
 import { calculateForm5329Hsa, type Form5329HsaResult } from "@/engine/forms/form-5329-hsa.js";
 import { calculateEducatorExpensesDeduction } from "@/engine/forms/educator-expenses.js";
+import type { EducatorBondSourceContext } from "@/engine/forms/educator-bond-sources.js";
 import { calculateForm3903, type Form3903Result } from "@/engine/forms/form-3903.js";
 
 export interface Schedule1Input {
+  /** Internal exact ownership, independently reconciled to the completed Form8815 by the caller. */
+  educatorBondSources?: EducatorBondSourceContext;
   /** Completed canonical return amount after actual source and MAGI coordination. */
   studentLoanDeductionOverride?: Decimal;
   /** Complete return MAGI for the explicitly unverified historical source path. */
@@ -640,7 +643,7 @@ export function calculateSchedule1(
   const archerMSADeduction = d(adjustments?.archerMSADeduction);
   audit.record("Sched 1", "23", "Archer MSA deduction", archerMSADeduction, "Validated manual Archer MSA deduction input");
 
-  const educatorExpensesDeduction = calculateEducatorExpensesDeduction(adjustments, filingStatus, input.taxpayer.taxYear);
+  const educatorExpensesDeduction = calculateEducatorExpensesDeduction(adjustments, filingStatus, input.taxpayer.taxYear, extra?.educatorBondSources);
   const educatorExpenses = educatorExpensesDeduction.amount;
   audit.record(
     "Sched 1",

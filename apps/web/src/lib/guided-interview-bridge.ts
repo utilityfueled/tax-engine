@@ -26,7 +26,7 @@ import { actualCompensationSourceYear } from "./guided-compensation-reporting";
 import { buildTipIncomeInputs, tipIncomeFactErrors } from "./guided-tip-income-facts";
 import { buildHealthInsuranceInput, healthInsuranceSourceErrors } from "./guided-health-insurance-facts";
 import { buildHsaInputs, hsaFactErrors } from "./guided-hsa-facts";
-import { buildEducatorSources, educatorFactErrors } from "./guided-educator-facts";
+import { buildEducatorSources, educatorFactErrors, educatorBondFactErrors } from "./guided-educator-facts";
 import { buildStudentLoanInputs, studentLoanFactErrors, studentLoanEducationSources, type StudentLoanEducationSources } from "./guided-student-loan-facts";
 import { buildGuidedMortgageInputs } from "./guided-mortgage-worksheet";
 import { buildStandardDeductionFacts } from "./guided-standard-deduction-facts";
@@ -698,6 +698,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
     assertKnownFacts(premiumTaxCreditFactErrors(state));
     assertKnownFacts(adjustmentFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation));
     assertKnownFacts(educatorFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, segmentation.lifeEvents.includes("educator-expenses")));
+    assertKnownFacts(educatorBondFactErrors(state));
     assertKnownFacts(hsaFactErrors(adjustmentData?.hsaAccounts, segmentation.filingStatus, state.taxYear, w2Data?.entries ?? [], personalInfo, segmentation.lifeEvents.includes("hsa-contributions")));
     assertKnownFacts(householdFactErrors(otherTaxesData, state.taxYear));
     assertKnownFacts(guidedNiitFactErrors(otherTaxesData?.niitSources, retirementData?.entries, state.taxYear, segmentation.filingStatus));

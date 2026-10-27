@@ -1,8 +1,10 @@
 import { AdjustmentsSchema } from "@/models/inputs";
 import { calculateEducatorExpensesDeduction } from "@/engine/forms/educator-expenses";
-import type { AdjustmentData, FilingStatus } from "./guided-interview-flow";
+import { calculateEducatorBondSources } from "@/engine/forms/educator-bond-sources";
+import type { AdjustmentData, FilingStatus, GuidedFlowState } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
+import { buildSavingsBondInputs } from "./guided-savings-bond-facts";
 
 export const educatorReductionFields = ["reimbursementsNotInWages", "excludedSavingsBondInterest", "nontaxableQualifiedTuitionProgramAmount", "nontaxableCoverdellEarnings"] as const;
 export interface EducatorSchoolData {
@@ -24,6 +26,7 @@ export interface EducatorExpenseData {
 export interface EducatorSourceData {
   accountHolder: "" | "primary" | "spouse"; taxYear: string; schoolYear: string;
   sourceFactsConfirmed: boolean | null; schools: EducatorSchoolData[]; expenses: EducatorExpenseData[];
+  savingsBondReductionMethod?: "" | "return_sources";
   reimbursementsNotInWages: string; excludedSavingsBondInterest: string;
   nontaxableQualifiedTuitionProgramAmount: string; nontaxableCoverdellEarnings: string;
 }
@@ -60,14 +63,37 @@ export function buildEducatorSources(sources: EducatorSourceData[] | undefined, 
       instructionalActivity: expense.instructionalActivity ?? undefined,
       itemizedReimbursements: hasEnteredAmount(expense.itemizedReimbursements) ? money(expense.itemizedReimbursements, "receipt reimbursements") : undefined,
       itemizedTaxFreeFunding: hasEnteredAmount(expense.itemizedTaxFreeFunding) ? money(expense.itemizedTaxFreeFunding, "receipt tax-free funding") : undefined })),
-    ...Object.fromEntries(educatorReductionFields.map(field => [field, money(source[field], field)])),
+    savingsBondReductionMethod: source.savingsBondReductionMethod || undefined,
+    ...Object.fromEntries(educatorReductionFields.map(field => [field,
+      field === "excludedSavingsBondInterest" && source.savingsBondReductionMethod === "return_sources" && !hasEnteredAmount(source[field])
+        ? undefined : money(source[field], field)])),
   }));
   const adjustments = AdjustmentsSchema.parse({ educatorExpenseSources: actual, educatorExpenses: hasEnteredAmount(legacyAmount) ? money(legacyAmount, "saved educator net expenses") : undefined });
   const year = taxYear ?? actual[0]?.taxYear;
   if (year !== 2025 && year !== 2026) throw new Error("Select and confirm the actual educator tax year.");
-  const result = calculateEducatorExpensesDeduction(adjustments, filingStatus === "mfj" ? "married_filing_jointly" : "single", year);
+  const result = calculateEducatorExpensesDeduction(adjustments, filingStatus === "mfj" ? "married_filing_jointly" : "single", year,
+    sources.some(source => source.savingsBondReductionMethod === "return_sources") ? { purpose: "form8815_magi" } : undefined);
   if (year >= 2026 && !result.itemizedCalculationComplete) throw new Error("Complete the actual itemized educator facts, including instructional use and receipt funding; unknown is not zero.");
   return adjustments.educatorExpenseSources;
+}
+
+/** Reconcile the selected source method with actual return records, never an entered exclusion. */
+export function educatorBondFactErrors(state: GuidedFlowState): Record<string, string> {
+  const data = state.sectionData.adjustments;
+  if (!data?.educatorExpenseSources?.some(source => source.savingsBondReductionMethod === "return_sources")) return {};
+  try {
+    const educatorExpenseSources = buildEducatorSources(data.educatorExpenseSources, state.segmentation.filingStatus, state.taxYear, data.educatorExpenses);
+    const adjustments = AdjustmentsSchema.parse({ educatorExpenseSources });
+    const bonds = buildSavingsBondInputs(state.sectionData.credits?.savingsBondEducation, state.taxYear,
+      state.segmentation.filingStatus, state.sectionData["income-investments"]?.interestEntries, state.sectionData["personal-info"]);
+    const context = calculateEducatorBondSources({ adjustments, ...bonds });
+    const year = state.taxYear;
+    if (year !== 2025 && year !== 2026) throw new Error("Select the actual educator tax year.");
+    calculateEducatorExpensesDeduction(adjustments, state.segmentation.filingStatus === "mfj" ? "married_filing_jointly" : "single", year, context);
+    return {};
+  } catch (error) {
+    return { educatorBondSources: error instanceof Error ? error.message : "Complete the actual educator and bond sources." };
+  }
 }
 
 export function educatorFactErrors(data: AdjustmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, required = false): Record<string, string> {

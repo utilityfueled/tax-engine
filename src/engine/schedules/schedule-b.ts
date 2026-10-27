@@ -53,6 +53,7 @@ export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOver
   // Validates actual current transfer/redemption sources; income still enters
   // exclusively through the original statements below.
   const reissueSources = calculateSavingsBondStatementSources(input);
+  const exactEducatorBondSources = input.adjustments?.educatorExpenseSources?.some(source => source.savingsBondReductionMethod === "return_sources") === true;
 
   // ── Part I: Interest ──────────────────────────────────
 
@@ -62,7 +63,7 @@ export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOver
   for (const form of input.form1099Int) {
     const box1Interest = d(form.interestIncome);
     const box3Interest = d(form.usSavingsBondInterest);
-    const amount = reissueSources ? sumSavingsBondRatios([box1Interest, box3Interest]
+    const amount = reissueSources || exactEducatorBondSources ? sumSavingsBondRatios([box1Interest, box3Interest]
       .map(numerator => ({ numerator, denominator: new Decimal(1) }))).numerator : box1Interest.plus(box3Interest);
     interestPayers.push({
       name: form.payer,
@@ -141,7 +142,7 @@ export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOver
   );
 
   // Line 2: Total interest
-  const totalInterest = reissueSources ? reportSavingsBondRatios(interestPayers.map(payer => ({ numerator: payer.amount, denominator: new Decimal(1) }))) : interestPayers.reduce(
+  const totalInterest = reissueSources || exactEducatorBondSources ? reportSavingsBondRatios(interestPayers.map(payer => ({ numerator: payer.amount, denominator: new Decimal(1) }))) : interestPayers.reduce(
     (acc, p) => acc.plus(p.amount),
     new Decimal(0)
   );

@@ -1017,6 +1017,50 @@
       ]
     },
     {
+      "key": "federal/educator-bond-rational-magi",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/f8815.pdf",
+      "specPath": "spec/federal/educator-bond-rational-magi.yaml",
+      "enginePath": "src/engine/forms/educator-bond-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8815.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/educator-bond-rational-magi.test.ts::calculates bond MAGI before the final educator reduction",
+        "tests/pdf/educator-bond-review.test.ts::binds actual educator ownership and MAGI before saved review output"
+      ],
+      "implementationNote": "Exact original educator and bond sources use a separate pre-exclusion MAGI worksheet and source-bound historical reference output. No final2026 form, independent human review or filing qualification is claimed.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/educator-bond-sources",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/educator-bond-sources.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/educator-education-exclusions",
       "jurisdiction": "federal",
       "taxYear": 2026,

@@ -14,16 +14,18 @@ const digest = (value: unknown) => createHash("sha256").update(JSON.stringify(va
 function calculationDigest(result: TaxReturnResult): string {
   return digest(redactReviewIdentifiers({ taxYear: result.taxYear, filingStatus: result.filingStatus,
     agi: result.agi, totalInterest: result.totalInterest, form8815: result.form8815, scheduleB: result.scheduleB,
-    schedule1: result.schedule1, allLines: result.allLines.filter(row => ["Form 8815", "Savings bond reissue sources", "Sched B", "Educator education exclusions"].includes(row.form)
+    schedule1: result.schedule1, allLines: result.allLines.filter(row => ["Form 8815", "Form 8815 MAGI Worksheet", "Savings bond reissue sources", "Sched B", "Educator education exclusions"].includes(row.form)
       || (row.form === "1040" && ["2b", "11"].includes(row.line))) }));
 }
 export function hasSavingsBondReviewSources(input: TaxYearInput): boolean {
-  return input.form8815?.reissueSources !== undefined || (input.savingsBondRedemptions ?? []).some(row => row.reissueSourceId !== undefined);
+  return input.form8815?.reissueSources !== undefined || (input.savingsBondRedemptions ?? []).some(row => row.reissueSourceId !== undefined)
+    || (input.form8815 !== undefined && (input.adjustments?.educatorExpenseSources?.length ?? 0) > 0);
 }
 export function prepareSavingsBondReview(input: TaxYearInput): PreparedSavingsBondReview {
-  if (!hasSavingsBondReviewSources(input)) throw new Error("Savings-bond review requires original reissue sources.");
+  if (!hasSavingsBondReviewSources(input)) throw new Error("Savings-bond review requires original reissue or educator sources.");
   const result = calculateFederalTax(input);
-  if (!result.form8815?.reissueSourcesVerified) throw new Error("Savings-bond review requires the completed original history and return calculation.");
+  const hasHistory = input.form8815?.reissueSources !== undefined || (input.savingsBondRedemptions ?? []).some(row => row.reissueSourceId !== undefined);
+  if (!result.form8815?.sourceFactsVerified || (hasHistory && !result.form8815.reissueSourcesVerified)) throw new Error("Savings-bond review requires the completed original sources and return calculation.");
   const token: PreparedSavingsBondReview = Object.freeze({ [brand]: true as const });
   contexts.set(token, { original: structuredClone(input), originalDigest: digest(input),
     redactedDigest: digest(redactReviewIdentifiers(input)), calculationDigest: calculationDigest(result) });

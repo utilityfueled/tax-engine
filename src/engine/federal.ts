@@ -112,6 +112,8 @@ import { calculateForm5695 } from "./forms/form-5695.js";
 import { calculateForm8815, type Form8815Result } from "./forms/form-8815.js";
 import { validateSavingsBondReturnIdentity } from "./forms/savings-bond-return-identity.js";
 import { reconcileEducatorEducationExclusions } from "./forms/educator-education-exclusions.js";
+import { calculateEducatorBondSources } from "./forms/educator-bond-sources.js";
+import { calculateEducatorExpensesDeduction } from "./forms/educator-expenses.js";
 import { calculateForm7206Return } from "./forms/form-7206-return.js";
 import { calculateForm8995 } from "./forms/form-8995.js";
 import { calculateForm8995A } from "./forms/form-8995-a.js";
@@ -1711,7 +1713,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   }
 
   // Schedule 1 — formal line-by-line for audit trail
+  const educatorBondSources = calculateEducatorBondSources(input);
   const sched1Context = {
+    educatorBondSources,
     schedCNetProfit: schedCNetProfit,
     schedFNetProfit: schedFNetProfit,
     schedETotal: adjustedScheduleETotal,
@@ -2210,12 +2214,22 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         }
       }
     }
-    const form8815MAGI = sum(preliminaryAgi, sched1.studentLoanInterest,
+    // Final Form8815 Line9 footnote: replace only the educator deduction
+    // with its amount before the bond-exclusion reduction. The original
+    // source declaration and completed deductions used elsewhere stay intact.
+    const preBondEducator = calculateEducatorExpensesDeduction(input.adjustments, filingStatus, year, { purpose: "form8815_magi" });
+    const educatorMagiChange = preBondEducator.amount.minus(sched1.educatorExpenses);
+    const form8815MAGI = sum(preliminaryAgi.minus(educatorMagiChange), sched1.studentLoanInterest,
       form2555IncomeReduction, form2555HousingDeduction,
       adoptionBenefitResult?.allowableExclusion ?? new Decimal(0),
       d(bondMagiFacts?.americanSamoaIncomeExclusion), d(bondMagiFacts?.puertoRicoIncomeExclusion),
       d(bondMagiFacts?.royaltyInterestAdjustment));
     form8815 = ordered?.bond ?? calculateForm8815(input.savingsBondRedemptions, form8815MAGI, filingStatus, { taxYear: year, facts: bondMagiFacts, sourceTaxpayer: input.taxpayer });
+    if (input.adjustments?.educatorExpenseSources?.length) audit.record("Form 8815 MAGI Worksheet", "educator", "Educator deduction before bond exclusion reduction", preBondEducator.amount,
+      "Line9 footnote uses actual qualified educator expenses without the Form8815line14 reduction", {
+        ...preBondEducator.inputs, "Final Schedule1 educator deduction": sched1.educatorExpenses,
+        "Additional MAGI deduction": educatorMagiChange,
+      });
     savingsBondExclusion = form8815.excludableSavingsBondInterest;
     if (form8815.sourceFactsVerified) {
       const remainingStatementInterest = sum(...input.form1099Int.map(form => d(form.usSavingsBondInterest)))
@@ -2228,13 +2242,18 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         ...input.form1099Int.map(form => ({ numerator: d(form.usSavingsBondInterest), denominator: d(1) })),
         { numerator: preliminaryScheduleB.previouslyReportedSavingsBondInterest.negated(), denominator: d(1) },
       ]) : remainingStatementInterest;
-      if (savingsBondExclusion.gt(statementBound) || sourcedCurrentInterest.gt(statementBound)) {
+      const reportedExclusionBound = educatorBondSources && !form8815.reissueSourcesVerified
+        ? reportSavingsBondRatios([
+          ...input.form1099Int.map(form => ({ numerator: d(form.usSavingsBondInterest), denominator: d(1) })),
+          { numerator: preliminaryScheduleB.previouslyReportedSavingsBondInterest.negated(), denominator: d(1) },
+        ]) : statementBound;
+      if (savingsBondExclusion.gt(reportedExclusionBound) || sourcedCurrentInterest.gt(statementBound)) {
         throw new Error("Form 8815 current bond interest and exclusion must reconcile to remaining reported Box 3 statement interest");
       }
     }
     audit.merge(form8815.lines);
   }
-  if (input.adjustments?.educatorExpenseSources?.length && (!marketplace || marketplace.stage === "final" || marketplace.stage === "full-repayment" || marketplace.stage === "actual-cash")) {
+  if (input.adjustments?.educatorExpenseSources?.length && (!marketplace || marketplace.stage === "final" || marketplace.stage === "full-repayment" || marketplace.stage === "actual-cash" || (educatorBondSources && form8815))) {
     const educatorExclusions = reconcileEducatorEducationExclusions({
       taxYear: year,
       filingStatus,
@@ -2242,6 +2261,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       educationDistributions: form1099Q,
       savingsBondResult: form8815,
       savingsBondRedemptions: input.savingsBondRedemptions,
+      bondSourceContext: educatorBondSources,
     });
     audit.merge(educatorExclusions.lines);
   }
@@ -2494,6 +2514,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     throw new Error("Charitable NOL comparison ledger must match the actual regular or alternative context");
   }
   const hasScheduleAExtra = input.scheduleA !== undefined
+    || educatorBondSources !== undefined
     || nolContributionLimit !== undefined
     || input.form2555 !== undefined
     || form4952DeductibleAmount !== undefined
@@ -2509,6 +2530,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     !hasScheduleAExtra
       ? undefined
       : {
+        educatorBondSources,
         medicalExpenses: d(input.scheduleA?.medicalExpenses),
         personalPropertyTaxes: d(input.scheduleA?.personalPropertyTaxes),
         saltMagiAdditions: form2555IncomeReduction.plus(form2555HousingDeduction),
