@@ -1,0 +1,68 @@
+{
+  "sourceCommit": "25f71f066ae7cf24364e6117cb72e4b2e89f8ab5",
+  "observedAt": "2026-10-27T05:50:06.421207+00:00",
+  "scope": "Synthetic remote CI; excludes later monthly and charity packages. No staging/production/human qualification.",
+  "runs": {
+    "ci": 40452338523,
+    "web": 40452338450
+  },
+  "ciConclusion": "success",
+  "webConclusion": "cancelled",
+  "unit": {
+    "job": 122017838029,
+    "passed": 19523,
+    "files": 1384,
+    "workers": 1,
+    "seconds": "1157.98"
+  },
+  "coverage": {
+    "job": 122017837718,
+    "passed": 19523,
+    "files": 1384,
+    "workers": 1,
+    "seconds": "1641.39",
+    "percentages": {
+      "statements": "91.85",
+      "branches": "86.88",
+      "functions": "90.72",
+      "lines": "94.59"
+    },
+    "thresholds": {
+      "statements": 90,
+      "branches": 85,
+      "functions": 90,
+      "lines": 90
+    },
+    "allUnchangedThresholdsPassed": true
+  },
+  "selfHostBrowser": {
+    "job": 122017868171,
+    "passed": 492,
+    "hostedSkipped": 5,
+    "duration": "20.5m"
+  },
+  "staticAndBuild": "All root/contracts/web type, lint, spec/inventory and root/web build jobs passed.",
+  "container": {
+    "job": 122017867929,
+    "status": "cancelled during actual-runtime browser step after all six recovery steps passed; SBOM/scan/upload skipped",
+    "completeRuntimeEvidence": false
+  },
+  "logs": {
+    "unit": {
+      "path": ".local/upgrade-evidence/25f71f06-unit-ci.log",
+      "sha256": "ca3761e3a276a8395d38677a8c416aaa577035b3fd0b676a2a7a089bab284927"
+    },
+    "coverage": {
+      "path": ".local/upgrade-evidence/25f71f06-coverage-ci.log",
+      "sha256": "ac7059c7a13169f70a3aefa1fb353cb3c5ee69fa71e21f64a056bbcf20527564"
+    },
+    "selfhost": {
+      "path": ".local/upgrade-evidence/25f71f06-selfhost-ci.log",
+      "sha256": "251fc412e2f1f936f6c52f0035c41e1632bab2fcdfde208af38e73f8224a9224"
+    },
+    "jobStatus": {
+      "path": ".local/upgrade-evidence/25f71f06-ci-job-status.json",
+      "sha256": "4c3c9cba1adba5b0b3e2566222c3feb17ee02622ba5ba0ea8e5dee7d5f10dc6b"
+    }
+  }
+}

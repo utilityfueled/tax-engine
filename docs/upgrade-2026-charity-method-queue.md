@@ -2,7 +2,7 @@
 
 This document reconciles the assigned charity work through delivered `31c37948` and delivered carried/current-origin package `d83ffe01` (reviewed `340d734a`), with the separate 2025 K-1 prior-release package delivered in `7c11d1ca` after independent source and artifact review. It replaces four broad implementation blocks, several of which are now delivered. The execution brief remains authoritative: a guarded input or a bounded review endpoint is not a completed ordinary method. Missing taxpayer records do not, by themselves, mean that a calculation needs a new rule.
 
-The carried/current composition has clear independent source and original/PDF reviews and is delivered in `d83ffe01bfb9be30c6d980b83e65f7ebb85507a5`, exact final tree `4950892c185e10887f76c483c8479fbc96b91e4a`. All 25 final hashes match; all 21 reviewed executable/spec/test/UI blobs remain unchanged. Final checks pass 772/93 and 568 strict-spec/5, with types/spec/inventory/lint and both builds; main checks pass 23/8 plus 24 readiness/2. The separate K-1 prior-release package is delivered in `7c11d1ca6524fe4c83e9fde7e17d7462487f3dae`, exact final tree `abbbbf9ca82759711db681328193a59bcd29ea49`. All 18 final hashes match; all 14 reviewed product/spec/test/UI files and four unrelated performance paths are preserved. Parent main checks pass 37 tests in seven files with one worker. A separate enabled-scenario audit identifies the remaining internal compositions below; they must not be relabeled as external blockers. Four precise source interpretation questions remain separate. Current changed-membership authority and the required actual ownership timeline are recorded in [the source-contract research](upgrade-2026-changed-membership-research.md); implementation remains pending. Agent source review and saved review PDFs do not establish qualified human tax review, final 2026 form qualification, e-filing support or release approval. Existing 2026 calculation and export gates remain closed.
+The carried/current composition has clear independent source and original/PDF reviews and is delivered in `d83ffe01bfb9be30c6d980b83e65f7ebb85507a5`, exact final tree `4950892c185e10887f76c483c8479fbc96b91e4a`. All 25 final hashes match; all 21 reviewed executable/spec/test/UI blobs remain unchanged. Final checks pass 772/93 and 568 strict-spec/5, with types/spec/inventory/lint and both builds; main checks pass 23/8 plus 24 readiness/2. The separate K-1 prior-release package is delivered in `7c11d1ca6524fe4c83e9fde7e17d7462487f3dae`, exact final tree `abbbbf9ca82759711db681328193a59bcd29ea49`. All 18 final hashes match; all 14 reviewed product/spec/test/UI files and four unrelated performance paths are preserved. Parent main checks pass 37 tests in seven files with one worker. A separate enabled-scenario audit identifies the remaining internal compositions below; they must not be relabeled as external blockers. Four precise source interpretation questions remain separate. Current changed-membership authority and the required actual ownership timeline are recorded in [the source-contract research](upgrade-2026-changed-membership-research.md); charitable ownership is now delivered as described below, while NOL histories remain active. Agent source review and saved review PDFs do not establish qualified human tax review, final 2026 form qualification, e-filing support or release approval. Existing 2026 calculation and export gates remain closed.
 
 Current binding section 465 allocation is now delivered in `944f91a4` after
 independent source, reader and original/PDF review. Its actual activity attachment,
@@ -11,7 +11,7 @@ post-basis deduction denominator and separate character balances are documented 
 character/history is delivered in `2384428b`, and original passive
 capital classification is delivered in `a29662b8`. Their independent sources and
 successive limits remain distinct; positive-benefit COD and changed-membership
-history work below remains open.
+NOL work below remains open. Charitable ownership is delivered in `2a8f6c17`.
 
 ## Delivered methods
 
@@ -80,3 +80,17 @@ Incomplete or contradictory qualification, valuation, identity, history, receipt
 Specialized contribution methods remain explicit exclusions: conservation/farmer 15-year rules; food/inventory enhanced deductions; partial-interest/future-interest gifts; bargain sales and unrelated-use tangible property; and elective capital-appreciation/basis substitutions. This finite queue does not expand into them merely to remove guards.
 
 After the reviewed composition and the remaining required internal methods are delivered, reconcile exact commits, source contracts, collector reachability, source-bound outputs and checks with the central inventory. Keep the four interpretation questions and explicit non-enabled source methods distinct in support/readiness documentation. Complete the assigned integration and release checks without creating arbitrary category-pair packages or inferring human/form qualification from software evidence.
+
+## Charitable ownership delivery — October 27 UTC
+
+`2a8f6c17` delivers actual original spouse ownership, complete relevant filed use,
+death, first separate allocation and determined reunion/remarriage histories.
+Regular and AMT sources remain independent, exact ratios are retained, and the
+actual guided collector, private output binding and review appendix are covered.
+See [the package ledger](upgrade-2026-charitable-filing-unit-work.md) for source
+54/11, original-output 9,452 checks, final 72/17, main 50/9 and production/browser
+evidence. The original internal-queue row above is retained as audit history.
+Its charitable part is delivered within the stated method; NOL histories,
+positive-benefit COD/modified absorption and recurrent owner attribution after
+partial joint use remain separate active work or precise source-method questions.
+No current deduction, historical ownership or final human qualification is inferred.

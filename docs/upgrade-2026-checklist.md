@@ -7,25 +7,28 @@ complete a checkbox.
 
 ## Current integration — 2026-10-27 UTC
 
-Latest implementation is `05c5819`. Actual monthly enrollment and eligibility
-now compose with marriage-year health calculations after independent source
-and saved-output reviews. Actual savings-bond reissue histories (`c6abb245`)
-and the separate compression patch (`25f71f06`) are also delivered. Rule
-provenance is `2025.176` / `2026.173-law-integration-draft`; inventory has
-562 entries, 5,961 specification test references and 148 explicit shared-method
-associations.
-The completed remote `87e37df0` run passed all 19,475 unit tests and both
-488-case browser suites. Coverage passed 19,455 cases and failed 20 unchanged
-five-second deadlines across 19 PDF/workspace files; no complete coverage report
-was produced. All six native recovery phases pass. The scan retains the same
-67 OS advisories, pending owner review. That evidence excludes the later shared
-marriage, bond, Form 8815 output and compression packages. The new `25f71f06`
-remote run has passed unit tests, the self-host browser suite, types, lint,
-spec validation and both builds. At the recorded observation, coverage and
-container browser/SBOM jobs remain in progress; their results are not inferred.
-A fresh full package audit reports zero advisories; runtime OS acceptance
-remains separate. Calculation, filing, human-review and model-promotion gates
-remain unchanged.
+Latest implementation is `2a8f6c17`. Actual charitable ownership histories now
+preserve original spouses, filed use, death and current owners, with separate
+regular and AMT records. Independent source and saved-output reviews pass;
+recurrent partial-joint attribution and NOL/COD compositions remain separate.
+Actual monthly marriage coverage (`05c5819`), savings-bond reissues (`c6abb245`)
+and compression work (`25f71f06`) are delivered. Rule provenance is `2025.177` /
+`2026.174-law-integration-draft`; inventory has 563 entries, 5,982 specification
+test references and 149 explicit shared-method associations.
+
+Remote CI on `25f71f06` passes 19,523 tests in 1,384 files both normally and
+under coverage. Coverage is 91.85% statements, 86.88% branches, 90.72% functions
+and 94.59% lines; every unchanged threshold passes. Its self-host browser suite
+passes 492 cases with five hosted-only skips, and all static/build jobs pass.
+The container job was cancelled during its browser phase after six recovery
+steps passed; its SBOM, scan and artifact upload were skipped. See the
+[exact CI record](upgrade-2026-ci-25f71f06.json). This is an intermediate commit,
+not final evidence for later monthly/charity changes.
+
+The last complete retained native runtime remains `87e37df0`, with all six
+recovery phases and 67 OS advisories pending owner review. A fresh package audit
+reports zero advisories. Final integrated checks, final images/scans, staging,
+human review, filing and model-promotion requirements remain open.
 
 | Delivered package | Commit | Bounded verification |
 | --- | --- | --- |
@@ -50,7 +53,7 @@ remain unchanged.
 | Copy completed pages for temporary workspace merges | `5ea12622` | Corrected frozen source passes 1,482 tests/250 files and static/build checks; main 40/6 plus types/lint. Independent review passes 13/3, retaining the original orphan-widget failure. All 106 paired pages in eight actual production packets match in text and rendered pixels; four production desktop/mobile download checks pass with zero retries. |
 | Original prior at-risk gift/loss histories and successive QBI character | `2384428b` | Final author cohort 205/30; independent final 240/11 includes seven private controls; main 210/7. All 71 PDFs/157 pages/403 fields were independently reopened. Original gift years, prior use and new passive disallowance years remain distinct; no second basis deduction. |
 | Annual cash interest-only education sources and exact lender reduction | `78a5219` | Final author cohort 1,979/256 and all static/build gates pass; final browser 2/2, zero retries. Parent final 25/10 preserves seven private controls; main 18/8 passes. Independent original/PDF review covers 48 PDFs/237 pages/225 fields and 6,614 checks. Original income and lender records bind the final review output. |
-| Actual marriage-year health deduction and premium credit | `9c077851` | Independent source31/8 includes six private controls; parent final192/31 and main31/7 pass. Six original records and15 PDFs/143 pages/449 fields pass8,767 independent checks, including physical8962/7206 and flattened transfer locations. Final source186/30, static/build checks and original production desktop/mobile2/2 pass. |
+| Actual marriage-year health deduction and premium credit | `9c077851` | Independent source31/8 includes six private controls; parent final192/31 and main31/7 pass. Six original records and15 PDFs/143 pages/449 fields pass8,767 independent checks, including physical8962/7206 and flattened transfer locations. Final source186/30, static/build checks and original production desktop/mobile 2/2 pass. |
 | Resolve mapped PDF fields once per form | `99592823` | Main 128 tests in 19 files and static/build checks pass. Independent review includes six private controls; 24 paired PDFs/50 paired pages pass 1,855 exact field, text, geometry, notice and pixel assertions. Existing deadlines and thresholds are unchanged. |
 | Original passive ordinary, short-term and long-term character through loss limits | `a29662b8` | Independent source review 33/11 with seven private controls; parent final 123/29 and main 26/9 pass. Eight canonical originals and actual guided state produce 122 PDFs/262 pages/836 fields; independent original/PDF review passes 10,742 checks. Original basis, at-risk, passive, QBI, Schedule D/E and NIIT treatment stay distinct. |
 | Form 8815 reference-only packet completeness | `499dc198` | Main 24/3 and independent 29/4 including five private controls pass; actual saved cover is partial. No calculation or filing gate changes. See [ledger](upgrade-2026-form8815-readiness-work.md). |
@@ -59,6 +62,7 @@ remain unchanged.
 | Actual savings-bond reissue and prior income histories | `c6abb245` | Final source passes 1,633 tests/171 files plus final regression/static/build/browser checks; parent source 33/10 includes seven private controls; main 92/10 passes. Independent original/PDF review reopens 76 PDFs/301 pages/293 populated fields with 7,867 checks and separate reference-body geometry verification. Original half-dollar, cover and footer findings remain retained. See [ledger](upgrade-2026-savings-bond-reissue-work.md). |
 | Native clearing of compression buffers | `25f71f06` | Complete private PDF cohort passes 1,350 tests/225 files; main 30/5 passes. Independent review compares 70 exact byte cases, 12 streams and four PDF pairs/eight paired pages. Production builds and four desktop/mobile workflows pass with zero retries; a local dependency-stage container verifies the exact patch. No final runtime or remote coverage pass is inferred. See [ledger](upgrade-2026-pdf-compression-work.md). |
 | Actual monthly coverage in marriage-year health worksheets | `05c5819` | Final private source passes 64 tests/14 files including six independent controls; main 58/13 passes. Independent saved-output review reopens 14 PDFs/148 pages/443 fields, with 4,084 comparisons plus flattened/privacy/footer checks. Final static/build checks and production desktop/mobile 2/2 pass with zero retries; original PDF producer and final browser evidence remain distinct. See [ledger](upgrade-2025-marriage-coverage-family-work.md). |
+| Actual charitable ownership and filed-use histories | `2a8f6c17` | Independent source 54/11 includes eight private controls; original/PDF review passes 9,452 checks over 73 PDFs/123 pages/311 fields. Final 72/17 and main 50/9 pass with static/build gates; production desktop/mobile 2/2 and separate settled-ticker 2/2 pass without retries. Later downloaded PDFs receive 102 additional checks. See [ledger](upgrade-2026-charitable-filing-unit-work.md). |
 
 Original-source browser and PDF evidence remains attributed to its recorded
 producer. Later source checks do not turn those artifacts into a new integrated
@@ -81,13 +85,15 @@ The finite internal queue is now reconciled against actual source reachability:
 - **Education:** common per-expense composition and actual current-year retained
   refund records and determined annual category/borrower limits are delivered.
   The bounded annual interest-only route is now delivered. Mixed July4 chronology,
-  mixed-purpose interest attribution and educator/MAGI rational-source reporting
-  remain. Actual bond reissue/ownership history is delivered in `c6abb245`. See [the education queue](upgrade-2026-education-method-queue.md).
+  mixed-purpose interest attribution and final educator/MAGI integration
+  remain; independent educator source and saved-output reviews now pass. Actual bond reissue/ownership history is delivered in `c6abb245`. See [the education queue](upgrade-2026-education-method-queue.md).
 - **Charity:** prior K-1 basis release and ordinary operating K-1 current
   Form 172 classification and current binding at-risk allocation are delivered.
   Prior at-risk character/history and passive capital releases are delivered.
-  Positive charitable benefit with COD/modified absorption and changed
-  filing-unit ownership histories remain internal work. See [the charity queue](upgrade-2026-charity-method-queue.md).
+  Charitable filing-unit ownership histories are delivered in `2a8f6c17`.
+  Positive benefit with COD/modified absorption, NOL filing histories and
+  recurrent partial-joint owner attribution remain in active work or precise
+  source-method review. See [the charity queue](upgrade-2026-charity-method-queue.md).
 - **Health:** reported-versus-original advance cents are delivered. Signed
   negative Worksheet W remaining-capacity treatment and its actual business
   gross-income source handoff and actual own-family zero-credit cash are also
@@ -96,10 +102,10 @@ The finite internal queue is now reconciled against actual source reachability:
   Actual monthly partial-family composition is delivered in `05c5819`.
   Outside-family marriage composition and determined positive advance/payment
   attribution remain in the finite health queue.
-- **Verification:** investigate the retained remote coverage failures, then run
-  the complete integrated checks and final native images, SBOM/scans and
-  recovery rehearsal. The reviewed PDF and evaluation performance changes are delivered;
-  they do not establish that the remote failures are resolved.
+- **Verification:** intermediate remote `25f71f06` now passes full coverage
+  and every unchanged threshold. Run the complete checks on the final integrated
+  source and retain final native images, SBOM/scans and recovery evidence.
+  The cancelled container run is not complete runtime qualification.
 
 The annual-category missing-loan-source finding is resolved in `dff617c8`; its
 original failing input and PDF remain retained. The corrected actual lender
@@ -790,7 +796,7 @@ and the current method queue supersede older work-in-progress labels.
 - Full unit integration of committed `fab31fe` with the regenerated396-entry
   inventory passes17,787tests/927files, zero failures/skips, in473.55seconds.
   The inventory is committed in `59eae66`. Its refreshed package audit has
-  zero advisories across521 locked entries; later charity/COD guided work is
+  zero advisories across 521 locked entries; later charity/COD guided work is
   excluded from this run.
 - `b31b5df`: browser and CI commands use the shared pinned PDF-reader
   prerequisite. Both unchanged download cases and 28 unit-path cases pass;
@@ -905,12 +911,12 @@ and the current method queue supersede older work-in-progress labels.
   independently reviewed corpus results exist; all240 cases remain draft.
 - `d078cf4`: direct pinned browser-safe SHA256 dependency, matching the existing
   transitive2.4.0 version. Strict frozen peers, three reference hash comparisons
-  and the refreshed package audit pass with zero findings across521 entries.
+  and the refreshed package audit pass with zero findings across 521 entries.
 - CI at `9da0bab` passes17,725 cases but fails one fourteen-page PDF timeout
   and stale inventory. The test lookup repair is committed in`b5a0675`; the regenerated inventory
   has397entries from`f006285`. The observed`59eae66` unit/type/lint/spec/build
   jobs pass; coverage/browser were still running before later pushes. The fresh
-  package audit has zero findings across521entries. Final-head full verification,
+  package audit has zero findings across 521entries. Final-head full verification,
   runtime-image advisories/rehearsal and external qualification remain required.
   Full synthetic unit integration on isolated committed `5006088` passed
   17,723 tests in 907 files, zero failures/skips, in 382.79 seconds, with pinned
