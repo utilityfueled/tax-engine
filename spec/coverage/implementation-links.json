@@ -259,6 +259,16 @@
       "note": "Exact original educator and bond sources use a separate pre-exclusion MAGI worksheet and source-bound historical reference output. No final2026 form, independent human review or filing qualification is claimed."
     },
     {
+      "key": "federal/educator-bond-reissue-coordination",
+      "enginePath": "src/engine/forms/educator-bond-ownership.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8815.ts",
+      "testRefs": [
+        "tests/engine/federal-educator-bond-reissues.test.ts::uses actual historical successor interest for both educator owners",
+        "tests/pdf/educator-bond-reissue-review.test.ts::binds actual successor income and educator originals before saved review output"
+      ],
+      "note": "Original successor ownership feeds the educator reduction and bond MAGI. The historical review remains a partial reference packet, with independent agent review and no human, final2026 or filing qualification."
+    },
+    {
       "key": "federal/educator-in-kind-exclusions",
       "enginePath": "src/engine/forms/educator-education-exclusions.ts",
       "testRefs": [

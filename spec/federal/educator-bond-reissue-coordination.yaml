@@ -1,0 +1,129 @@
+form: "Educator coordination with actual savings-bond reissues"
+fullName: "Actual successor redemption ownership through the educator expense reduction"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p550"
+retrievedAt: "2026-10-27"
+notes: |
+  Pub550 Ownership transferred, Purchased jointly and Examples1/2 distinguish
+  transfer recognition from the successor owner's deferred redemption income.
+  The delivered reissue ledger already derives those amounts from original
+  purchase funds, dates, prior reports and each complete successor. This method
+  consumes that ledger; it does not introduce a new ownership or transfer rule.
+  IRC135(a) excludes qualified redemption income, not current transfer income.
+  IRC62(d)(2) then reduces an educator's expenses by that educator's determined
+  exclusion. Final2025 Form8815 page4 Line9 footnote retains the educator
+  deduction before the bond reduction solely for bond MAGI. Final1040 rounding
+  adds source amounts for a line before rounding. Exact source ratios and
+  independently reported form lines remain distinct.
+  https://uscode.house.gov/us/usc/119-118/t26/s135/
+  https://uscode.house.gov/us/usc/119-118/t26/s62/
+  https://www.irs.gov/pub/irs-pdf/f8815.pdf
+  https://www.irs.gov/instructions/i1040gi
+  Below are original-derived controls, not published combined IRS examples.
+  The actual fully excluded route preserves each owner's redemption ratio.
+  The existing declared-reduction route may reconcile a reduced exclusion
+  where only one eligible owner has positive redemption income. A reduced
+  exclusion with two positive owners remains a separate allocation method.
+  Reissue community-property, nonproportional two-funder splits, later ownership
+  changes and incomplete original histories retain the delivered guards.
+  Current2026 law/form/human/filing qualification gates are not promoted.
+lines:
+  - line: "historical-redemption"
+    description: "Use the original successor ledger rather than unchanged-owner summaries"
+    formula: |
+      Original paperEE principal500, sole primary funds500, reissue value700
+      and equal successor face values transfer100 to spouse. Historical reissue
+      recognition is already reported; redemptions500 each have principal250
+      each and current interest250 primary/150 spouse. Box3=500 includes100
+      earlier interest, so ScheduleB reports400 and Form8815 excludes400.
+      Actual educator costs400 each yield150+250=400 deduction and79600AGI
+      from wages80000. Pre-bond educator600 gives Form8815MAGI79800.
+    testRef: "tests/engine/federal-educator-bond-reissues.test.ts::uses actual historical successor interest for both educator owners"
+  - line: "current-transfer"
+    description: "Do not use current transfer recognition as a redemption exclusion"
+    formula: |
+      With the same actual original and current-year reissue, Box3=500 includes
+      transfer100 and redemption400. Exclusion remains400; current taxable
+      transfer100 does not reduce either educator's expenses. Deduction400,
+      Form8815MAGI79900 and finalAGI79700. Reordering original redemptions and
+      successors cannot change identity or once-only reporting.
+    testRef: "tests/engine/federal-educator-bond-reissues.test.ts::keeps current transfer recognition outside educator reductions after reordering"
+  - line: "exact-sole-successor"
+    description: "Preserve a recurring successor interest fraction through full exclusion"
+    formula: |
+      Original principal3000 funded1000/2000, value4000, all6000 paper face
+      reissued to spouse this year, proceeds5000. Primary recognizes1000/3;
+      spouse redemption interest is5000/3. Original Box3 is2000. Fully qualified
+      education5000 reports Form8815line6/14=1667, ScheduleB taxable333.
+      Actual educator primary cost100/spouse1800 yield100+400/3=700/3,
+      reporting educator233 and finalAGI80100. No rounded source declaration
+      or transfer-interest subtraction from educator costs is permitted.
+    testRef: "tests/engine/federal-educator-bond-reissues.test.ts::retains exact recurring successor interest without an entered exclusion"
+  - line: "sole-owner-partial"
+    description: "Reconcile an actual reduced-exclusion declaration with one positive owner"
+    formula: |
+      In the same sole-successor original, actual qualified tuition2500 gives
+      fraction0.5 and reported exclusion834. The actual primary declaration0
+      and spouse declaration834 reconcile to that sole redemption owner.
+      Educator costs100/1000 give100+166=266; taxable interest1166 andAGI80900.
+      A declaration833 or a fabricated second owner split must reject. This
+      does not turn the full-exclusion source mode into a partial allocator.
+    testRef: "tests/engine/federal-educator-bond-reissues.test.ts::binds the reduced exclusion only to its sole actual successor owner"
+  - line: "held-successor"
+    description: "Keep a held successor outside redeemed-interest educator reductions"
+    formula: |
+      In the current equal-successor original, primary retains its bond and
+      spouse alone redeems500. Actual Box3=250 combines transfer100 and spouse
+      redemption150. Educator costs400 each give300+250=550 deduction; taxable
+      interest100 and finalAGI79550. The held successor's deferred income is
+      neither a redemption source nor an educator reduction.
+    testRef: "tests/engine/federal-educator-bond-reissues.test.ts::excludes held successors while retaining taxable current transfers"
+  - line: "source-boundaries"
+    description: "Keep complete original identity chronology and exclusion boundaries"
+    formula: |
+      Reissue history and actual household must be present and confirmed.
+      Missing dates, stale owner identity, duplicate successor/redemption links,
+      unknown prior reporting and contradicted optional summaries reject.
+      Actual zero is retained. A reduced two-owner exclusion and an entered
+      rounded substitute for a recurring exact share remain guarded.
+    testRef: "tests/engine/federal-educator-bond-reissues.test.ts::rejects missing contradicted and unsupported original sources"
+  - line: "exact-source-boundary"
+    description: "Bind the original household and exact successor result at both calculation boundaries"
+    formula: |
+      The existing complete reissue ledger determines redeemed interest only.
+      Repeated final source ownership, exact ratios, principal, proceeds and
+      return year must agree. Missing household or history is not a zero share.
+      True zero successor income is accepted from complete original facts.
+    testRef: "tests/engine/forms/educator-bond-reissue-sources.test.ts::binds exact successor ownership and original household to the completed form"
+  - line: "original-zero"
+    description: "Preserve complete actual zero and the separate current transfer"
+    formula: |
+      Original principal500/value500, proportional250/250 purchase funds,
+      equal250 principal redemptions and Box3zero produce no redeemed interest
+      and no transfer recognition. Educator costs400 each retain600 deduction.
+      Removing an actual prior-reporting zero leaves the source incomplete.
+    testRef: "tests/engine/forms/educator-bond-reissue-sources.test.ts::keeps complete actual zero separate from missing prior reporting"
+  - line: "guided-originals"
+    description: "Carry original household and reissue sources through save and reload"
+    formula: "The guide forwards the actual household, full original history and educator receipts without manufacturing a prior-interest summary or exclusion."
+    testRef: "tests/guided-interview/guided-educator-bond-reissues.test.ts::preserves actual successor history and optional exclusion through save and reload"
+  - line: "guided-invalidation"
+    description: "Reconfirm edited receipts and later actual bond history separately"
+    formula: "An edited educator receipt invalidates its own confirmation, later bond confirmation, nested reissue history, statement reconciliation and the actual payment worksheet. Reconciling the actual statement also invalidates dependent educator confirmation. Ordinary visited-section navigation remains available; canonical preview stays blocked until every actual record is explicitly reconfirmed, including the later payment history."
+    testRef: "tests/guided-interview/guided-educator-bond-reissues.test.ts::invalidates changed actual records without inferring missing household facts"
+  - line: "visible-originals"
+    description: "Use the actual source panels and normal navigation"
+    formula: "The educator source choice leaves the exclusion blank; actual reissue originals remain editable and separately confirmed before completion."
+    testRef: "tests/apps/web/educator-bond-reissue-interactions.test.tsx::reaches and reconfirms actual reissue sources after an educator receipt edit"
+  - line: "original-review"
+    description: "Bind the complete original household history and income before PDF I/O"
+    formula: "Prepared private context rejects stale original history, identity, wages, educator receipts and forged audit totals. Exact source ownership and separately rounded final deduction are visible without private identifiers."
+    testRef: "tests/pdf/educator-bond-reissue-review.test.ts::binds actual successor income and educator originals before saved review output"
+  - line: "saved-review"
+    description: "Download the saved original-source guide with reference readiness"
+    formula: "Saved and reloaded actual sources yield primary250/spouse150 excluded redemption interest, educator400, taxable transfer100 and AGI79700. The review packet stays partial with Form8815 as a reference."
+    testRef: "tests/apps/web/workspace-educator-bond-reissues.test.ts::downloads actual successor sources after save and reload"
+  - line: "production-saved-source"
+    description: "Verify desktop and mobile original edits through the actual review download"
+    formula: "Both viewport workflows edit and separately reconfirm the actual educator and reissue sources, reload saved facts, and download a privacy-preserving review PDF with the same independently derived values."
+    testRef: "apps/web/tests/guided-educator-bond-reissues.spec.ts::preserves actual successor records through edits reload and review"

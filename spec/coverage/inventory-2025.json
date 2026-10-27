@@ -1040,6 +1040,27 @@
       ]
     },
     {
+      "key": "federal/educator-bond-ownership",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/educator-bond-ownership.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/educator-bond-rational-magi",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -1052,6 +1073,29 @@
         "tests/pdf/educator-bond-review.test.ts::binds actual educator ownership and MAGI before saved review output"
       ],
       "implementationNote": "Exact original educator and bond sources use a separate pre-exclusion MAGI worksheet and source-bound historical reference output. No final2026 form, independent human review or filing qualification is claimed.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/educator-bond-reissue-coordination",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p550",
+      "specPath": "spec/federal/educator-bond-reissue-coordination.yaml",
+      "enginePath": "src/engine/forms/educator-bond-ownership.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8815.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-educator-bond-reissues.test.ts::uses actual historical successor interest for both educator owners",
+        "tests/pdf/educator-bond-reissue-review.test.ts::binds actual successor income and educator originals before saved review output"
+      ],
+      "implementationNote": "Original successor ownership feeds the educator reduction and bond MAGI. The historical review remains a partial reference packet, with independent agent review and no human, final2026 or filing qualification.",
       "specExists": true,
       "engineExists": true,
       "packetGenerationExists": true,

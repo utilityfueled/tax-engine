@@ -86,9 +86,18 @@ export function educatorBondFactErrors(state: GuidedFlowState): Record<string, s
     const adjustments = AdjustmentsSchema.parse({ educatorExpenseSources });
     const bonds = buildSavingsBondInputs(state.sectionData.credits?.savingsBondEducation, state.taxYear,
       state.segmentation.filingStatus, state.sectionData["income-investments"]?.interestEntries, state.sectionData["personal-info"]);
-    const context = calculateEducatorBondSources({ adjustments, ...bonds });
     const year = state.taxYear;
     if (year !== 2025 && year !== 2026) throw new Error("Select the actual educator tax year.");
+    const personal = state.sectionData["personal-info"];
+    let taxpayer;
+    if (bonds.form8815?.reissueSources) {
+      if (state.segmentation.filingStatus !== "mfj" || !personal?.dateOfBirth || !personal.spouse?.dateOfBirth)
+        throw new Error("Educator reissue sources require both actual joint filers and birth dates.");
+      taxpayer = { taxYear: year, filingStatus: "married_filing_jointly" as const,
+        primary: { firstName: personal.firstName, lastName: personal.lastName, ssn: personal.ssn, dateOfBirth: personal.dateOfBirth },
+        spouse: { firstName: personal.spouse.firstName, lastName: personal.spouse.lastName, ssn: personal.spouse.ssn, dateOfBirth: personal.spouse.dateOfBirth } };
+    }
+    const context = calculateEducatorBondSources({ adjustments, ...bonds, taxpayer });
     calculateEducatorExpensesDeduction(adjustments, state.segmentation.filingStatus === "mfj" ? "married_filing_jointly" : "single", year, context);
     return {};
   } catch (error) {

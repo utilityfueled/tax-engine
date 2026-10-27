@@ -2271,6 +2271,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       educationDistributions: form1099Q,
       savingsBondResult: form8815,
       savingsBondRedemptions: input.savingsBondRedemptions,
+      taxpayer: input.taxpayer,
+      form8815: input.form8815,
       bondSourceContext: educatorBondSources,
     });
     audit.merge(educatorExclusions.lines);
