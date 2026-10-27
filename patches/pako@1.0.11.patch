@@ -1,0 +1,17 @@
+diff --git a/lib/zlib/deflate.js b/lib/zlib/deflate.js
+--- a/lib/zlib/deflate.js
++++ b/lib/zlib/deflate.js
+@@ -131,7 +131,12 @@
+   return ((f) << 1) - ((f) > 4 ? 9 : 0);
+ }
+ 
+-function zero(buf) { var len = buf.length; while (--len >= 0) { buf[len] = 0; } }
++// Tax-engine local patch: use native buffer clearing where supported.
++function zero(buf) {
++  if (typeof buf.fill === 'function') { buf.fill(0); return; }
++  var len = buf.length;
++  while (--len >= 0) { buf[len] = 0; }
++}
+ 
+ 
+ /* =========================================================================

@@ -8,3 +8,7 @@ allowBuilds:
 overrides:
   # The installed OTel SDK peers require <1.10.0 throughout Sentry's tree.
   '@opentelemetry/api': 1.9.0
+
+# Keep pdf-lib pinned; retain the original compression bytes and fallback.
+patchedDependencies:
+  pako@1.0.11: patches/pako@1.0.11.patch

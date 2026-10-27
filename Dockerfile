@@ -7,10 +7,11 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 WORKDIR /app
 
-# Install dependencies in a separate layer — only package manifests and lockfile
-# so this layer is cached unless dependencies actually change.
+# Install dependencies in a separate layer with manifests, lockfile and patches.
+# Cache it until one of those dependency inputs changes.
 FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches ./patches
 COPY apps/web/package.json apps/web/package.json
 COPY packages/contracts/package.json packages/contracts/package.json
 COPY packages/engine/package.json packages/engine/package.json

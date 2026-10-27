@@ -7,6 +7,11 @@ settings:
 overrides:
   '@opentelemetry/api': 1.9.0
 
+patchedDependencies:
+  pako@1.0.11:
+    hash: d41a50bfb404925c968ae99ca11a824bf057a67692637c9ecb44bdd99eb90e04
+    path: patches/pako@1.0.11.patch
+
 importers:
 
   .:
@@ -3450,11 +3455,11 @@ snapshots:
 
   '@pdf-lib/standard-fonts@1.0.0':
     dependencies:
-      pako: 1.0.11
+      pako: 1.0.11(patch_hash=d41a50bfb404925c968ae99ca11a824bf057a67692637c9ecb44bdd99eb90e04)
 
   '@pdf-lib/upng@1.0.1':
     dependencies:
-      pako: 1.0.11
+      pako: 1.0.11(patch_hash=d41a50bfb404925c968ae99ca11a824bf057a67692637c9ecb44bdd99eb90e04)
 
   '@playwright/test@1.64.1':
     dependencies:
@@ -4657,7 +4662,7 @@ snapshots:
     dependencies:
       p-limit: 3.1.0
 
-  pako@1.0.11: {}
+  pako@1.0.11(patch_hash=d41a50bfb404925c968ae99ca11a824bf057a67692637c9ecb44bdd99eb90e04): {}
 
   parse5@8.0.1:
     dependencies:
@@ -4678,7 +4683,7 @@ snapshots:
     dependencies:
       '@pdf-lib/standard-fonts': 1.0.0
       '@pdf-lib/upng': 1.0.1
-      pako: 1.0.11
+      pako: 1.0.11(patch_hash=d41a50bfb404925c968ae99ca11a824bf057a67692637c9ecb44bdd99eb90e04)
       tslib: 1.14.1
 
   pdfjs-dist@6.4.299:

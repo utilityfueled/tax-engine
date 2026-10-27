@@ -9,6 +9,10 @@ notes: |
   Existing document Subject metadata never establishes a visible page notice.
   Unchanged template hashes, year and filing gates remain mandatory.
 lines:
+  - line: "compression-byte-compatibility"
+    description: "PDF compression preserves bytes and reset semantics with native zero filling"
+    formula: "The pinned pako1.0.11 local patch may clear internal buffers with native fill(0) when available, retaining the original fallback. Compressed output for repeated and chunked streams, full flush, typed/untyped buffers, dictionaries, raw and gzip modes must match the unmodified bundled implementation and decode with an independent zlib reader. PDF content, notices, privacy and qualification gates are unchanged."
+    testRef: "tests/pdf/compression-compatibility.test.ts::preserves compressed bytes and independent decoding across reset modes"
   - line: "form8815-reference-pagination"
     description: "Every Form8815 reference body line remains above the review footer"
     formula: "Paginate each wrapped text line before it crosses the existing40-point body margin, including long audit explanations and every computed-source total. Preserve all text and amounts in order, and stamp every added page with the review-only notice."
