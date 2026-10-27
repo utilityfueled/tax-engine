@@ -7,9 +7,11 @@ complete a checkbox.
 
 ## Current integration — 2026-10-26
 
-The branch is pushed through `5ea12622`. Rule provenance is `2025.169` /
-`2026.166-law-integration-draft`; the inventory has 548 entries, 5,820
-specification test references and 141 explicit shared-method associations.
+The branch is committed and pushed through `78a5219`.
+The preceding `8f8de91a` remote coverage run is now complete and failed on 13 unchanged
+five-second PDF/workspace test deadlines; implementation and integration continue. Rule provenance is
+`2025.171` / `2026.168-law-integration-draft`; the inventory has 551 entries,
+5,854 specification test references and 143 explicit shared-method associations.
 Delivered tax packages preserve their reviewed executable files and independently
 checked integration deltas. The temporary page-copy optimization also has an
 independent source and saved-artifact review. Calculation, filing,
@@ -36,6 +38,8 @@ human-review and model-promotion gates remain unchanged.
 | Actual annual cash education category and borrower limits | `dff617c8` | Final source passes 1,959 tests/249 files and static/spec/inventory/build checks; main 20/6. Independent review retains twelve private controls in 32/8. Original/PDF review checks the retained annual corpus and 27 corrected PDFs/108 pages/132 fields with 2,855 comparisons. Four production browser workflows pass with zero retries. A positive own-return interest claim now requires actual lender/eligibility sources. |
 | Actual outside-person health cash and separate return evidence | `fbe731a3` | Final source passes 340 tests/98 files and static/build/spec/inventory checks; main 13/6. Independent source review passes 19/7 with six private controls. All 14 PDFs/146 pages/428 populated fields pass 1,774 checks plus 666 actual-guide/source comparisons. Two production browser cases pass with zero retries. |
 | Copy completed pages for temporary workspace merges | `5ea12622` | Corrected frozen source passes 1,482 tests/250 files and static/build checks; main 40/6 plus types/lint. Independent review passes 13/3, retaining the original orphan-widget failure. All 106 paired pages in eight actual production packets match in text and rendered pixels; four production desktop/mobile download checks pass with zero retries. |
+| Original prior at-risk gift/loss histories and successive QBI character | `2384428b` | Final author cohort 205/30; independent final 240/11 includes seven private controls; main 210/7. All 71 PDFs/157 pages/403 fields were independently reopened. Original gift years, prior use and new passive disallowance years remain distinct; no second basis deduction. |
+| Annual cash interest-only education sources and exact lender reduction | `78a5219` | Final author cohort 1,979/256 and all static/build gates pass; final browser 2/2, zero retries. Parent final 25/10 preserves seven private controls; main 18/8 passes. Independent original/PDF review covers 48 PDFs/237 pages/225 fields and 6,614 checks. Original income and lender records bind the final review output. |
 
 Original-source browser and PDF evidence remains attributed to its recorded
 producer. Later source checks do not turn those artifacts into a new integrated
@@ -46,11 +50,12 @@ The finite internal queue is now reconciled against actual source reachability:
 
 - **Education:** common per-expense composition and actual current-year retained
   refund records and determined annual category/borrower limits are delivered.
-  Mixed July4 chronology, positive qualified-interest attribution, then bounded
-  actual bond reissue/ownership history and rational-source reporting remain. See [the education queue](upgrade-2026-education-method-queue.md).
+  The bounded annual interest-only route is now delivered. Mixed July4 chronology,
+  mixed-purpose interest attribution, actual bond reissue/ownership history and
+  rational-source reporting remain. See [the education queue](upgrade-2026-education-method-queue.md).
 - **Charity:** prior K-1 basis release and ordinary operating K-1 current
   Form 172 classification and current binding at-risk allocation are delivered.
-  Positive prior at-risk character/history release, raw passive capital
+  Prior at-risk character/history release is now committed. Raw passive capital
   classification, positive charitable benefit with COD/modified absorption, and changed
   filing-unit ownership histories remain internal work. See [the charity queue](upgrade-2026-charity-method-queue.md).
 - **Health:** reported-versus-original advance cents are delivered. Signed
@@ -72,22 +77,33 @@ The outside-person health package is delivered in `fbe731a3`; actual relationshi
 age, monthly cash and separate completed-return evidence are retained. See [its
 ledger](upgrade-2025-marketplace-outside-person-work.md).
 
-The prior-year at-risk candidate `470ad2ac` passes independent source checks
-(28 tests/7 files, including seven private controls) and original/PDF review of
-71 PDFs/157 pages/403 fields. There are 2,656 artifact/source comparisons with
-zero failures, plus 3,450 exact producing Git blobs and six normalized symlink
-target checks. Its final rebase and metadata 170/167 integration remain pending.
-The initial reader's line-2 versus line-3 QBI expectation, guide year types,
-archive symlink slash and form-widget initialization corrections are retained;
-the actual sources and PDFs were not changed to satisfy that review.
+The prior-year at-risk package is committed in `2384428b` with metadata 170/167.
+The parent independently reran 240 tests/11 files on the final rebase, retaining
+seven private controls; main passes 210/7, types, spec and inventory. Original
+review evidence covers 71 PDFs/157 pages/403 fields. The type-only builder
+annotation emits identical executable JavaScript; all PDF performance changes
+are preserved. See [its ledger](upgrade-2026-k1-prior-charitable-at-risk-work.md).
 
-The bounded annual loan-interest candidate `e5052162` has a confirmed independent
-finding: changing actual W-2 income can leave an earlier 700 deduction accepted
-by the PDF context although the new calculation yields zero. The original
-validator and full-renderer failures are retained (the latter wrote eight PDFs).
-Corrected candidate `3020d271` binds the original income/phaseout determinants;
-its independent recheck and regenerated-output review are pending. This is internal
-work, and the package is not delivered or qualified.
+The bounded annual loan-interest candidate's original stale-income finding is
+resolved in `3020d271`: the two unchanged private finding probes and remaining
+controls pass 16 tests/7 files. The independent original/PDF review reopens
+48 PDFs/237 pages/225 populated fields, with 6,614 checks including all 3,512
+producing hashes. The exact half-dollar deduction reports 1; all other checked
+amounts, appearances, original-guide facts and privacy notices agree. Six
+contacts cover 86 pixel-unique pages, eight readable pages and four browser
+screenshots were personally inspected. The retained reader-only correction
+replaces an incorrect prior-K1 partial-status assumption with this packet's
+unchanged supported classification; filing remains false and e-file validation
+not-validated. Final rebase `63ba5f02` on `2384428b` passed 1,979 tests/256 files,
+all static/build gates and two zero-retry production browser checks. Delivery
+`78a5219` records metadata 171/168, parent 25/10 and main 18/8 checks, preserving
+the prior-loss bridge and PDF merge changes. See [its ledger](upgrade-2026-annual-loan-interest-work.md).
+No human tax or final-year qualification is claimed.
+
+Marriage-year health source `90c73f80` is under separate independent review. Its
+original-record and saved-PDF review is pending; the author has retained the
+source, zero-month controls and two zero-retry production browser cases. This
+candidate is not delivered or qualified.
 
 The page-copy package [ledger](upgrade-2026-pdf-page-merge-work.md) records the
 orphan-widget rejection fix and exact saved-output comparisons. Temporary byte
@@ -169,15 +185,23 @@ Owner acceptance remains pending. These checks exclude the later private tax
 packages and do not qualify hosted staging, historical schema downgrade or
 independent human review.
 
-The annual education candidate remains private after a new independent source
-check found that a positive own student-loan-interest claim could be silently
-omitted when its actual lender and eligibility facts were absent. The original
-candidate and PDF remain retained evidence. Four independent controls reproduce
-one failure and three passes. The corrected canonical and guided source
-boundaries pass 32 independently run tests in eight files, including all twelve
-unchanged private controls. Corrected saved output and final browser checks are
-still pending. No deduction is inferred from the claim. Outside-person health and prior at-risk character/history releases
-are also undergoing independent source and saved-output review.
+The latest [native amd64 record](upgrade-2026-runtime-8f8de91.json) verifies
+`8f8de91a`: all 19,386 unit tests/1,341 files pass, as do the static jobs and
+both 480-case browser runs, each with five hosted-only skips and no observed
+flaky cases. Coverage completed with 19,373 passes and 13 five-second timeouts
+in 12 files; it failed and produced no complete coverage report. The previous
+31-case failure remains retained. Exact failure logs and cases identify the
+remaining PDF/workspace performance work; no deadline or threshold changed.
+
+The image `sha256:a4177acaf4fd6fa96808b918f4c2727a7c882f2cb4a4f8c66e6c58fbbf6ad4a7`
+passes all six synthetic recovery phases with exact database, browser-fact and
+original-document hashes. The 2,930-component SBOM matches the source revision;
+the 43,857,010-byte archive matches GitHub's digest. All 157 scan matches retain
+the same 67 advisory/package/version/fix tuples; no Critical, npm or fixed-version
+match was found. Advisory ownership and independent security review remain
+pending. This intermediate evidence excludes the later prior-loss and annual
+interest packages and does not qualify hosted staging or historical schema
+downgrades.
 
 The goal remains **active, incomplete and not release-ready**. The
 [external-action handoff](upgrade-2026-external-actions.md) retains missing

@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "5ea12622b2cdbe68bacf1b9ee390b56cb94de90e",
+    "lastRecordedCommit": "78a5219dd924a2c6d64b37db805c3b394d8ed31f",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1311,12 +1311,12 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Education: bounded interest-only annual cash method has an independent stale-income PDF binding finding under correction; mixed July4/mixed-purpose attribution, then actual bond ownership/reissue history and rational reporting remain. Ordinary receipts/refunds and annual category/borrower limits delivered.",
-      "Charity: prior465 character/history candidate independently cleared and awaiting final rebase; raw passive capital classification,2026 prior-gift floor, positive benefit COD with modified absorption, and changed filing-unit histories remain internal.",
+      "Education: bounded interest-only annual cash method delivered in78a5219. Mixed July4/mixed-purpose attribution, actual bond ownership/reissue history and rational reporting remain.",
+      "Charity: prior465 original character/history delivered locally in2384428b. Raw passive capital classification,2026 prior-gift floor, positive benefit COD with modified absorption, and changed filing-unit histories remain internal.",
       "Health: actual eligible outside-family cash/person and separate-return evidence delivered; determined positive advance/payment attribution and alternative-marriage compositions remain.",
       "Verification: resolve retained remote five-second coverage failures without changing deadlines/assertions/thresholds; complete final integrated/remote/native image/SBOM/scan/recovery checks."
     ],
-    "latestIntegratedCommit": "5ea12622b2cdbe68bacf1b9ee390b56cb94de90e",
+    "latestIntegratedCommit": "78a5219dd924a2c6d64b37db805c3b394d8ed31f",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1690,8 +1690,8 @@
       "completedAt": "2026-10-26T23:39:58.828902+00:00"
     },
     "remainingInternalWork": [
-      "Education: bounded interest-only annual cash method has an independent stale-income PDF binding finding under correction; mixed July4/mixed-purpose attribution, then actual bond ownership/reissue history and rational reporting remain. Ordinary receipts/refunds and annual category/borrower limits delivered.",
-      "Charity: prior465 character/history candidate independently cleared and awaiting final rebase; raw passive capital classification,2026 prior-gift floor, positive benefit COD with modified absorption, and changed filing-unit histories remain internal.",
+      "Education: bounded interest-only annual cash method delivered in78a5219. Mixed July4/mixed-purpose attribution, actual bond ownership/reissue history and rational reporting remain.",
+      "Charity: prior465 original character/history delivered locally in2384428b. Raw passive capital classification,2026 prior-gift floor, positive benefit COD with modified absorption, and changed filing-unit histories remain internal.",
       "Health: actual eligible outside-family cash/person and separate-return evidence delivered; determined positive advance/payment attribution and alternative-marriage compositions remain.",
       "Verification: resolve retained remote five-second coverage failures without changing deadlines/assertions/thresholds; complete final integrated/remote/native image/SBOM/scan/recovery checks."
     ],
@@ -1715,7 +1715,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "5ea12622b2cdbe68bacf1b9ee390b56cb94de90e",
+    "lastPushedCommit": "78a5219dd924a2c6d64b37db805c3b394d8ed31f",
     "currentBrowserRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -4861,14 +4861,166 @@
           "status": "Resolved; orphan resolved page widgets reject before output"
         },
         "boundary": "Temporary serialization only. Reduced bytes; timings varied including a slower candidate. No remote coverage, release or privacy gate change."
+      },
+      "k1PriorCharitableAtRisk": {
+        "tree": "470ad2acd2b379ac3c4780feb06a4df41fabfdc1",
+        "status": "committed and pushed",
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/parent-prior-risk-source-review.json",
+          "sha256": "a68ecbd323563c8c3f945ce64b11724a5b8136f4403be7d32173c4af5e5db617"
+        },
+        "sourceTests": {
+          "passed": 28,
+          "files": 7,
+          "privateControls": 7
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/parent-prior-risk-artifact-review/checks.json",
+          "sha256": "5cc1ed3d2b86ec4a6cc31d69ef66824a5e8d8b18137e84557f75dc2986105f66"
+        },
+        "pdfs": 71,
+        "pages": 157,
+        "populatedFields": 403,
+        "artifactChecks": 2656,
+        "producerExactBlobs": 3450,
+        "producerEquivalentSymlinkTargets": 6,
+        "visual": {
+          "contactSheets": 10,
+          "readablePages": 8
+        },
+        "oracle": "Original source records and actual guided state only; independent PythonDecimal90. No author literals or engine results used as oracle.",
+        "readerCorrectionsRetained": [
+          "8995 prior allowed qualified loss maps to line3, not current QBI line2",
+          "Guide years are text and canonical years numeric; only supplied zeros allow default comparison",
+          "Six archived symlink targets differ by trailing slash; normalized targets equivalent, not byte-identical",
+          "Form widgets initialized for final contact/readable renders"
+        ],
+        "remaining": "2026 prior-gift floor and raw passive capital are internal separate methods",
+        "deliveredCommit": "2384428b934a46004f985c5b5cda2ac10e43deae",
+        "finalTree": "16fc6420013e65b201b661c168e7220fea16246b",
+        "finalManifest": {
+          "path": ".local/upgrade-evidence/k1-prior-charitable-at-risk-final-snapshot.json",
+          "sha256": "0b80a9da499807c4fec43658b2ce4f686d873ea6331b32248a547079f55be9d6"
+        },
+        "finalParentCheck": {
+          "path": ".local/upgrade-evidence/parent-prior-risk-final-tests.json",
+          "sha256": "bea4ad37340b0b0023310563e1841ddfc4a9c1bfb8493c0405c648822ca44355"
+        },
+        "mainCheck": {
+          "path": ".local/upgrade-evidence/k1-prior-risk-main-checks.json",
+          "sha256": "3ee127f867e6881c91354254057ca640dc2910abe6fb4e41aaad99f4821e7d14"
+        },
+        "typeOnlyProof": {
+          "path": ".local/upgrade-evidence/parent-prior-risk-bridge-type-proof.json",
+          "sha256": "ca2014c7782310c927a38b2ed8ca17e66e482c6242c410a67fea352a54eae428"
+        },
+        "ledger": "docs/upgrade-2026-k1-prior-charitable-at-risk-work.md"
+      },
+      "annualLoanInterest": {
+        "initialTree": "e5052162535cfe2f761317bf19b5090e3612873f",
+        "initialReview": {
+          "path": ".local/upgrade-evidence/ai-annual-loan-interest-source-review.json",
+          "sha256": "28aa253c57d668059ca9091c73a961173432bebfc0967638e5a06e8e39c15026"
+        },
+        "status": "committed and pushed",
+        "finding": "Actual W2 income change makes correct student-loan deduction zero, but old700 private token accepted and8 PDFs written.",
+        "initialTests": {
+          "passed": 14,
+          "failed": 2,
+          "files": 7,
+          "independentControls": 7
+        },
+        "correctedTree": "3020d271c46b5821f64d718918cba195c495413e",
+        "correctedManifest": {
+          "path": ".local/upgrade-evidence/annual-loan-interest-v2-review-snapshot.json",
+          "sha256": "530fa337ec4cf409c1aa0374906fac44b3622697e02fb64a426d23fa3a282a22"
+        },
+        "delivery": "Not delivered; no human tax qualification",
+        "correctedAuthorChecks": {
+          "testsPassed": 1969,
+          "testFiles": 254,
+          "workers": 1,
+          "static": "root/contracts/web types,5815 spec references,lint0errors and both builds pass",
+          "browserPassed": 2,
+          "browserRetries": 0,
+          "browserWorkers": 1,
+          "inventory": "Stale new-spec inventory failure retained; final integration regeneration pending"
+        },
+        "correctedSourceRereview": {
+          "path": ".local/upgrade-evidence/ai-annual-loan-interest-v2-rereview.json",
+          "sha256": "cd53c2fe396f7555a77c1cb5c98a77b56c86384e677981d822ea21735aea42f4"
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/parent-annual-interest-v2-artifact-review/checks.json",
+          "sha256": "428db6f3d61cc76c38cc63b990a6c476c85dbd3e1434f83066a095b426bbb038"
+        },
+        "finalTree": "63ba5f02b11dde8dbf77e9d27ffad97efe9039fb",
+        "finalManifest": {
+          "path": ".local/upgrade-evidence/annual-loan-interest-final-review-snapshot.json",
+          "sha256": "5cadb8d5e7f67f4f1ba2b84071453b5281af0cb3b6da57cef0f0174724ac37d0"
+        },
+        "reservedVersions": {
+          "2025": "2025.171",
+          "2026": "2026.168-law-integration-draft"
+        },
+        "independentArtifactCounts": {
+          "pdfs": 48,
+          "pages": 237,
+          "populatedFields": 225,
+          "checks": 6614,
+          "producingSourceHashes": 3512,
+          "personallyViewedUniqueRenderedPages": 86,
+          "contacts": 6,
+          "readablePages": 8,
+          "browserScreenshots": 4
+        },
+        "commit": "78a5219dd924a2c6d64b37db805c3b394d8ed31f",
+        "finalDeliveryTree": "c53c66d594bb8ccd52ced0d202a62755e23ee11e",
+        "finalTestedTree": "63ba5f02b11dde8dbf77e9d27ffad97efe9039fb",
+        "metadata": {
+          "2025": "2025.171",
+          "2026": "2026.168-law-integration-draft"
+        },
+        "finalVerification": {
+          "authorTests": 1979,
+          "authorFiles": 256,
+          "parentTests": 25,
+          "parentFiles": 10,
+          "mainTests": 18,
+          "mainFiles": 8,
+          "browserPass": 2,
+          "browserRetries": 0,
+          "allSourceHashes": 3545,
+          "mainSpecReferences": 5854,
+          "inventoryRows": 551,
+          "filingQualified": false
+        },
+        "finalReceipts": {
+          "annual-loan-interest-delivery-snapshot.json": {
+            "path": ".local/upgrade-evidence/annual-loan-interest-delivery-snapshot.json",
+            "sha256": "64002b2fdcc1a02c8c40e2bcf077f889a2ffcbcfb52cab72a05cff689f3b9a2d"
+          },
+          "annual-loan-interest-final-checks.json": {
+            "path": ".local/upgrade-evidence/annual-loan-interest-final-checks.json",
+            "sha256": "aff897c6f5c972fa40cb368046ba6aa04ba1676598c3809bf70b426662803089"
+          },
+          "parent-annual-interest-final-tests.json": {
+            "path": ".local/upgrade-evidence/parent-annual-interest-final-tests.json",
+            "sha256": "d929e6c1640a50a2b90702db5f7a8ae8b9d748377ba7b48b5135c6ce9fef596b"
+          },
+          "annual-loan-interest-main-checks.json": {
+            "path": ".local/upgrade-evidence/annual-loan-interest-main-checks.json",
+            "sha256": "7883fe604c7c264964e3887603738441a40e845ee28a8f1a00bfc3ee12e30661"
+          }
+        }
       }
     },
     "currentInventory": {
-      "entries": 548,
-      "specReferences": 5820,
-      "sourceCommit": "fbe731a39eeb71263f4ecd60434a5e04c5865f82",
+      "entries": 551,
+      "specReferences": 5854,
+      "sourceCommit": "78a5219dd924a2c6d64b37db805c3b394d8ed31f",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 141,
+      "explicitAssociations": 143,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -5321,7 +5473,7 @@
       },
       "k1PriorCharitableAtRisk": {
         "tree": "470ad2acd2b379ac3c4780feb06a4df41fabfdc1",
-        "status": "Independent source and actual saved-artifact review clear; final rebase/170-167 metadata pending",
+        "status": "committed and pushed",
         "sourceReview": {
           "path": ".local/upgrade-evidence/parent-prior-risk-source-review.json",
           "sha256": "a68ecbd323563c8c3f945ce64b11724a5b8136f4403be7d32173c4af5e5db617"
@@ -5352,7 +5504,26 @@
           "Six archived symlink targets differ by trailing slash; normalized targets equivalent, not byte-identical",
           "Form widgets initialized for final contact/readable renders"
         ],
-        "remaining": "2026 prior-gift floor and raw passive capital are internal separate methods"
+        "remaining": "2026 prior-gift floor and raw passive capital are internal separate methods",
+        "deliveredCommit": "2384428b934a46004f985c5b5cda2ac10e43deae",
+        "finalTree": "16fc6420013e65b201b661c168e7220fea16246b",
+        "finalManifest": {
+          "path": ".local/upgrade-evidence/k1-prior-charitable-at-risk-final-snapshot.json",
+          "sha256": "0b80a9da499807c4fec43658b2ce4f686d873ea6331b32248a547079f55be9d6"
+        },
+        "finalParentCheck": {
+          "path": ".local/upgrade-evidence/parent-prior-risk-final-tests.json",
+          "sha256": "bea4ad37340b0b0023310563e1841ddfc4a9c1bfb8493c0405c648822ca44355"
+        },
+        "mainCheck": {
+          "path": ".local/upgrade-evidence/k1-prior-risk-main-checks.json",
+          "sha256": "3ee127f867e6881c91354254057ca640dc2910abe6fb4e41aaad99f4821e7d14"
+        },
+        "typeOnlyProof": {
+          "path": ".local/upgrade-evidence/parent-prior-risk-bridge-type-proof.json",
+          "sha256": "ca2014c7782310c927a38b2ed8ca17e66e482c6242c410a67fea352a54eae428"
+        },
+        "ledger": "docs/upgrade-2026-k1-prior-charitable-at-risk-work.md"
       },
       "annualLoanInterest": {
         "initialTree": "e5052162535cfe2f761317bf19b5090e3612873f",
@@ -5360,7 +5531,7 @@
           "path": ".local/upgrade-evidence/ai-annual-loan-interest-source-review.json",
           "sha256": "28aa253c57d668059ca9091c73a961173432bebfc0967638e5a06e8e39c15026"
         },
-        "status": "Original income/phaseout binding correction implemented inV2; independent recheck and regenerated-output review pending",
+        "status": "committed and pushed",
         "finding": "Actual W2 income change makes correct student-loan deduction zero, but old700 private token accepted and8 PDFs written.",
         "initialTests": {
           "passed": 14,
@@ -5383,12 +5554,94 @@
           "browserRetries": 0,
           "browserWorkers": 1,
           "inventory": "Stale new-spec inventory failure retained; final integration regeneration pending"
+        },
+        "correctedSourceRereview": {
+          "path": ".local/upgrade-evidence/ai-annual-loan-interest-v2-rereview.json",
+          "sha256": "cd53c2fe396f7555a77c1cb5c98a77b56c86384e677981d822ea21735aea42f4"
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/parent-annual-interest-v2-artifact-review/checks.json",
+          "sha256": "428db6f3d61cc76c38cc63b990a6c476c85dbd3e1434f83066a095b426bbb038"
+        },
+        "finalTree": "63ba5f02b11dde8dbf77e9d27ffad97efe9039fb",
+        "finalManifest": {
+          "path": ".local/upgrade-evidence/annual-loan-interest-final-review-snapshot.json",
+          "sha256": "5cadb8d5e7f67f4f1ba2b84071453b5281af0cb3b6da57cef0f0174724ac37d0"
+        },
+        "reservedVersions": {
+          "2025": "2025.171",
+          "2026": "2026.168-law-integration-draft"
+        },
+        "independentArtifactCounts": {
+          "pdfs": 48,
+          "pages": 237,
+          "populatedFields": 225,
+          "checks": 6614,
+          "producingSourceHashes": 3512,
+          "personallyViewedUniqueRenderedPages": 86,
+          "contacts": 6,
+          "readablePages": 8,
+          "browserScreenshots": 4
+        },
+        "commit": "78a5219dd924a2c6d64b37db805c3b394d8ed31f",
+        "finalDeliveryTree": "c53c66d594bb8ccd52ced0d202a62755e23ee11e",
+        "finalTestedTree": "63ba5f02b11dde8dbf77e9d27ffad97efe9039fb",
+        "metadata": {
+          "2025": "2025.171",
+          "2026": "2026.168-law-integration-draft"
+        },
+        "finalVerification": {
+          "authorTests": 1979,
+          "authorFiles": 256,
+          "parentTests": 25,
+          "parentFiles": 10,
+          "mainTests": 18,
+          "mainFiles": 8,
+          "browserPass": 2,
+          "browserRetries": 0,
+          "allSourceHashes": 3545,
+          "mainSpecReferences": 5854,
+          "inventoryRows": 551,
+          "filingQualified": false
+        },
+        "finalReceipts": {
+          "annual-loan-interest-delivery-snapshot.json": {
+            "path": ".local/upgrade-evidence/annual-loan-interest-delivery-snapshot.json",
+            "sha256": "64002b2fdcc1a02c8c40e2bcf077f889a2ffcbcfb52cab72a05cff689f3b9a2d"
+          },
+          "annual-loan-interest-final-checks.json": {
+            "path": ".local/upgrade-evidence/annual-loan-interest-final-checks.json",
+            "sha256": "aff897c6f5c972fa40cb368046ba6aa04ba1676598c3809bf70b426662803089"
+          },
+          "parent-annual-interest-final-tests.json": {
+            "path": ".local/upgrade-evidence/parent-annual-interest-final-tests.json",
+            "sha256": "d929e6c1640a50a2b90702db5f7a8ae8b9d748377ba7b48b5135c6ce9fef596b"
+          },
+          "annual-loan-interest-main-checks.json": {
+            "path": ".local/upgrade-evidence/annual-loan-interest-main-checks.json",
+            "sha256": "7883fe604c7c264964e3887603738441a40e845ee28a8f1a00bfc3ee12e30661"
+          }
         }
+      },
+      "marriageHealth": {
+        "status": "independent source review active; parent original/PDF review pending",
+        "tree": "90c73f80b2be3dc696e4086251f87fc5371e3215",
+        "base": "16609f2d4b81c33bfd44680afa2f928c4c390bb8",
+        "manifest": {
+          "path": ".local/upgrade-evidence/health-marriage-review-snapshot.json",
+          "sha256": "a772f383d14ed169214307bd4edcba935a5d93d81a85f2890277711490d85944"
+        },
+        "authorOwnedTests": 18,
+        "authorOwnedFiles": 6,
+        "authorBrowserPassed": 2,
+        "authorBrowserRetries": 0,
+        "delivered": false,
+        "metadataReserved": "172/169 only after review and current-base merge"
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.169",
-      "2026": "2026.166-law-integration-draft"
+      "2025": "2025.171",
+      "2026": "2026.168-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -7398,8 +7651,8 @@
       "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
     },
     "currentFullVerificationRequired": {
-      "sourceCommit": "5ea12622b2cdbe68bacf1b9ee390b56cb94de90e",
-      "reason": "Completed remote16609 unit/browser/native recovery evidence is retained; its31 five-second PDF/workspace coverage failures remain unresolved. Page-copy package has bounded corrected source/browser/artifact evidence. Final complete integration, remote coverage and native runtime verification remain required after the finite queue.",
+      "sourceCommit": "78a5219dd924a2c6d64b37db805c3b394d8ed31f",
+      "reason": "Exact8f8 remote unit/static/browser/native recovery passes; coverage fails13 five-second PDF/workspace tests with no report. Original16609 31failures retained. Complete final integrated/remote coverage and native verification still required after finite implementations.",
       "readiness": "Not release qualified; no later full-project coverage pass claimed"
     },
     "previousCurrentUnitRunBeforeE91": {
@@ -7625,7 +7878,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-27T01:22:49.923672+00:00",
+    "recordedAt": "2026-10-27T02:00:38.254579+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -8984,6 +9237,137 @@
         "sha256": "4f611e8bf27ef5471b38ad7df386ecf0eb17724e0c6faa02c600354f4f0f0328"
       },
       "unchangedDeadlinesAndThresholds": true
+    },
+    "remote8f8InProgress": {
+      "sourceCommit": "8f8de91a4fb45442f456a7a4d0c58bb67c66ec6c",
+      "ciRun": 40432296892,
+      "webRun": 40432296850,
+      "unitJob": 121952935054,
+      "coverageJob": 121952935419,
+      "observed": "Completed: unit19386/1341 and all static/web/native jobs pass. Coverage failed13 five-second timeouts;19373pass/12failedfiles, no coverage report.",
+      "pushHold": "Released; ordinary push to the expressly approved branch confirmed78a5219."
+    },
+    "remote8f8CompletedChecks": {
+      "runtimeRecord": "docs/upgrade-2026-runtime-8f8de91.json",
+      "runtimeRecordSha256": "90b6bdeb0e5ec583a0ee63abea24eef8406c1468770b564d91b2cc6b476dd96c",
+      "unit": {
+        "job": 121952935054,
+        "passed": 19386,
+        "files": 1341,
+        "workers": 1,
+        "seconds": "1167.91"
+      },
+      "browser": {
+        "container": {
+          "job": 121952926397,
+          "passed": 480,
+          "hostedSkipped": 5,
+          "configuredRetries": 0,
+          "timeoutMs": 30000,
+          "duration": "18.7m"
+        },
+        "selfHost": {
+          "job": 121952926599,
+          "passed": 480,
+          "flaky": 0,
+          "hostedSkipped": 5,
+          "configuredRetries": 1,
+          "reportedRetryCases": 0,
+          "duration": "21.6m"
+        }
+      },
+      "coverage": {
+        "sourceCommit": "8f8de91a4fb45442f456a7a4d0c58bb67c66ec6c",
+        "runId": 40432296892,
+        "jobId": 121952935419,
+        "conclusion": "failure",
+        "passed": 19373,
+        "failed": 13,
+        "passedFiles": 1329,
+        "failedFiles": 12,
+        "totalFiles": 1341,
+        "seconds": "2054.36",
+        "workers": 1,
+        "failureKind": "All13 cases hit the unchanged5000ms test timeout; no complete coverage report was produced.",
+        "failedCases": [
+          "tests/pdf/eic-additional-checkboxes.test.ts > prints actual joint homes while preserving false and unknown sources",
+          "tests/pdf/form-8862-review.test.ts > uses actual current child presence for printed claimant restrictions",
+          "tests/pdf/form-8949-digital-reporting.test.ts > retains all categories and digital continuation rows after reopening",
+          "tests/pdf/form8839-history-review.test.ts > preserves source cents and private identity through redacted review rendering",
+          "tests/pdf/k1-cash-distribution-review.test.ts > binds and saves the redacted distribution gain with original basis evidence",
+          "tests/pdf/qbi-loss-review.test.ts > retains a saved zero-deduction QBI packet and separate loss limits",
+          "tests/pdf/temporary-component-serialization.test.ts > preserves actual form values and notices in temporary component serialization (flatten=false)",
+          "tests/pdf/temporary-component-serialization.test.ts > preserves actual form values and notices in temporary component serialization (flatten=true)",
+          "tests/apps/web/workspace-annual-cash-qtp.test.ts > replays annual cash originals before workspace redaction",
+          "tests/apps/web/workspace-marketplace-actual-cash.test.ts > downloads the actual cash payment review without replacing original policies",
+          "tests/apps/web/workspace-marketplace-outside-person.test.ts > downloads the outside child cash review from actual guided sources",
+          "tests/apps/web/workspace-room-board-periods.test.ts > binds actual cash and prepaid period records before workspace redaction",
+          "tests/apps/web/workspace-room-board-prior-use.test.ts > replays actual historical room and board sources before workspace redaction"
+        ],
+        "log": ".local/upgrade-evidence/8f8de91-coverage-ci.log",
+        "logSha256": "e56eb80e8cb5b6256b0e0a8de1a89a63cb3825d6f9e2a2a86fcd9733dab052c6"
+      }
+    },
+    "nativeRuntime8f8de91": {
+      "record": "docs/upgrade-2026-runtime-8f8de91.json",
+      "sourceCommit": "8f8de91a4fb45442f456a7a4d0c58bb67c66ec6c",
+      "image": "sha256:a4177acaf4fd6fa96808b918f4c2727a7c882f2cb4a4f8c66e6c58fbbf6ad4a7",
+      "scan": {
+        "sbomComponents": 2930,
+        "sbomGenerator": "syft 1.42.3",
+        "sbomTimestamp": "2026-10-27T01:49:54Z",
+        "scanner": "grype 0.121.0",
+        "scanTimestamp": "2026-10-27T01:51:15.455435269Z",
+        "databaseBuilt": "2026-10-26T06:38:44Z",
+        "databaseValid": true,
+        "matches": 157,
+        "distinctAdvisories": 67,
+        "critical": 0,
+        "matchSeverities": {
+          "High": 54,
+          "Negligible": 46,
+          "Medium": 47,
+          "Low": 10
+        },
+        "npmMatches": 0,
+        "fixedVersionMatches": 0,
+        "advisoryRegisterTuplesUnchanged": true,
+        "comparison": "456bd432 native runtime; advisory, severity, package, version, type, fix state and versions including multiplicities",
+        "ownerConfirmation": "pending",
+        "reviewBy": "2026-11-07"
+      },
+      "releaseReady": false
+    },
+    "remoteCoverage8f8de91": {
+      "sourceCommit": "8f8de91a4fb45442f456a7a4d0c58bb67c66ec6c",
+      "runId": 40432296892,
+      "jobId": 121952935419,
+      "conclusion": "failure",
+      "passed": 19373,
+      "failed": 13,
+      "passedFiles": 1329,
+      "failedFiles": 12,
+      "totalFiles": 1341,
+      "seconds": "2054.36",
+      "workers": 1,
+      "failureKind": "All13 cases hit the unchanged5000ms test timeout; no complete coverage report was produced.",
+      "failedCases": [
+        "tests/pdf/eic-additional-checkboxes.test.ts > prints actual joint homes while preserving false and unknown sources",
+        "tests/pdf/form-8862-review.test.ts > uses actual current child presence for printed claimant restrictions",
+        "tests/pdf/form-8949-digital-reporting.test.ts > retains all categories and digital continuation rows after reopening",
+        "tests/pdf/form8839-history-review.test.ts > preserves source cents and private identity through redacted review rendering",
+        "tests/pdf/k1-cash-distribution-review.test.ts > binds and saves the redacted distribution gain with original basis evidence",
+        "tests/pdf/qbi-loss-review.test.ts > retains a saved zero-deduction QBI packet and separate loss limits",
+        "tests/pdf/temporary-component-serialization.test.ts > preserves actual form values and notices in temporary component serialization (flatten=false)",
+        "tests/pdf/temporary-component-serialization.test.ts > preserves actual form values and notices in temporary component serialization (flatten=true)",
+        "tests/apps/web/workspace-annual-cash-qtp.test.ts > replays annual cash originals before workspace redaction",
+        "tests/apps/web/workspace-marketplace-actual-cash.test.ts > downloads the actual cash payment review without replacing original policies",
+        "tests/apps/web/workspace-marketplace-outside-person.test.ts > downloads the outside child cash review from actual guided sources",
+        "tests/apps/web/workspace-room-board-periods.test.ts > binds actual cash and prepaid period records before workspace redaction",
+        "tests/apps/web/workspace-room-board-prior-use.test.ts > replays actual historical room and board sources before workspace redaction"
+      ],
+      "log": ".local/upgrade-evidence/8f8de91-coverage-ci.log",
+      "logSha256": "e56eb80e8cb5b6256b0e0a8de1a89a63cb3825d6f9e2a2a86fcd9733dab052c6"
     }
   },
   "historicalReleaseBlockers": {
