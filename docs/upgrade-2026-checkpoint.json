@@ -194,16 +194,16 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Immutable944 local full coverage passes19,333tests/1,322files and every unchanged threshold, including86.85%branches and90.73%functions. Remote16609 unit passes19,345/1,328 and both browser runs pass474 with five hosted skips each; its coverage fails31 five-second PDF/workspace tests with no completed report. Runtime performance correction and later-source verification remain internal work. Later-source full integrated and final remote evidence remains due.",
-    "The 2026 pack and finite health/charitable/education methods remain incomplete. Cross-year room-board history, applicable health stop and current charitable histories are delivered. Annual cash aggregation, old/current charitable loss and remaining health methods are still internal. Full 2026 calculation remains blocked.",
-    "Independent human tax review, selected-state demand/qualification and final physical forms are outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net \u00a71202/Form172 interpretations remain unresolved.",
-    "AI application/scorer bindings are reviewed;240 draft cases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
+    "Immutable 944 local full coverage passes 19,333 tests in 1,322 files and unchanged thresholds, including 86.85% branches. Latest completed 87 remote unit passes 19,475 tests in 1,369 files, and both browser runs pass 488 with five hosted skips each. Coverage fails 20 unchanged five-second PDF/workspace deadlines, with no completed report. Runtime performance and final integrated verification remain internal.",
+    "The 2026 pack and finite education, charitable and health methods remain incomplete. Shared full-family marriage is delivered in 7dd7fab5. Ordinary bond final integration, educator/rational composition, filing-unit timelines, COD/prior-gift floor and remaining monthly/attribution health methods are internal. Full 2026 calculation remains blocked.",
+    "Independent human tax review, selected-state demand/qualification and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net \u00a71202/Form172 interpretations remain unresolved.",
+    "AI application/scorer bindings are reviewed; 240 draft cases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
     "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence; local synthetic checks do not establish staging readiness.",
-    "Intermediate16609 native amd64 recovery and browser checks pass with verified artifact/SBOM; later-source final native release images, scans and recovery remain due. The same67 OS advisories await owner acceptance by2026-11-07. Historical failed/cancelled runs remain retained. No publication, staging or human security approval is claimed."
+    "Intermediate 87 native amd64 recovery/browser checks pass with verified SBOM/archive; final later-source native release images/scans/recovery remain due. The same 67 OS advisories await owner acceptance by 2026-11-07. Historical failed/cancelled runs remain retained; no staging, publication or human security approval."
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "a29662b8c72232f04c683e7d35b0453f78d79df3",
+    "lastRecordedCommit": "bc35f5d2fca06d303a412af190ddd29a8c4ed064",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1311,12 +1311,12 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Education: bounded interest-only annual cash method delivered in78a5219. Mixed July4/mixed-purpose attribution, actual bond ownership/reissue history and rational reporting remain.",
-      "Charity: prior465 original character/history delivered in2384428b. Raw passive capital delivered in a29662b8; 2026 prior-gift floor, positive benefit COD with modified absorption, and changed filing-unit histories remain internal.",
-      "Health: actual eligible outside-family cash/person and separate-return evidence delivered; unshared full-family marriage delivered in9c077851; determined positive advance/payment and shared/outside-family marriage compositions remain.",
-      "Verification: resolve retained remote five-second coverage failures without changing deadlines/assertions/thresholds; complete final integrated/remote/native image/SBOM/scan/recovery checks."
+      "Education: ordinary bond reissue final integration/output regeneration after retained numeric, cover and footer findings; educator/MAGI source composition and rational ownership reporting; remaining mixed July4/mixed-purpose attribution.",
+      "Charity: 2026 prior-gift floor, positive benefit COD with modified absorption, and changed filing-unit histories remain internal; prior465 and passive-capital history packages delivered.",
+      "Health: unshared and shared full-family marriage delivered; actual monthly partial-family and outside-family marriage composition and determined positive advance/payment attribution remain.",
+      "Verification: resolve remote five-second coverage failures without changing deadlines/assertions/thresholds; complete final integrated/remote/native image/SBOM/scan/recovery checks."
     ],
-    "latestIntegratedCommit": "a29662b8c72232f04c683e7d35b0453f78d79df3",
+    "latestIntegratedCommit": "bc35f5d2fca06d303a412af190ddd29a8c4ed064",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1592,7 +1592,10 @@
       "eicHistoryCanonicalAndGuide": "b41f62845c5a5fe65f8c9fde14f913bdb4bbab04",
       "sharedUnsharedHealth": "827b399f8d680cf35dacc2ccd234571cbc10c1d8",
       "multipleExpenseEsa": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
-      "marriageHealth": "9c077851766b1ca44ccbfafb3348b7d062ed7b29"
+      "marriageHealth": "9c077851766b1ca44ccbfafb3348b7d062ed7b29",
+      "form8815ReferenceReadiness": "499dc198ebcb2d0e9ad7157a04a348ddf7247567",
+      "sharedMarriageHealth": "7dd7fab52ae05e3f73e7c247cccfb3126f4821ad",
+      "form8815ReferencePagination": "bc35f5d2fca06d303a412af190ddd29a8c4ed064"
     },
     "remoteCi": {
       "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
@@ -1691,10 +1694,10 @@
       "completedAt": "2026-10-26T23:39:58.828902+00:00"
     },
     "remainingInternalWork": [
-      "Education: bounded interest-only annual cash method delivered in78a5219. Mixed July4/mixed-purpose attribution, actual bond ownership/reissue history and rational reporting remain.",
-      "Charity: prior465 original character/history delivered in2384428b. Raw passive capital delivered in a29662b8; 2026 prior-gift floor, positive benefit COD with modified absorption, and changed filing-unit histories remain internal.",
-      "Health: actual eligible outside-family cash/person and separate-return evidence delivered; unshared full-family marriage delivered in9c077851; determined positive advance/payment and shared/outside-family marriage compositions remain.",
-      "Verification: resolve retained remote five-second coverage failures without changing deadlines/assertions/thresholds; complete final integrated/remote/native image/SBOM/scan/recovery checks."
+      "Education: ordinary bond reissue final integration/output regeneration after retained numeric, cover and footer findings; educator/MAGI source composition and rational ownership reporting; remaining mixed July4/mixed-purpose attribution.",
+      "Charity: 2026 prior-gift floor, positive benefit COD with modified absorption, and changed filing-unit histories remain internal; prior465 and passive-capital history packages delivered.",
+      "Health: unshared and shared full-family marriage delivered; actual monthly partial-family and outside-family marriage composition and determined positive advance/payment attribution remain.",
+      "Verification: resolve remote five-second coverage failures without changing deadlines/assertions/thresholds; complete final integrated/remote/native image/SBOM/scan/recovery checks."
     ],
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
@@ -1716,7 +1719,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "99592823f2bdb94841c0ac247f58a92fc7ac3360",
+    "lastPushedCommit": "bc35f5d2fca06d303a412af190ddd29a8c4ed064",
     "currentBrowserRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -2792,10 +2795,10 @@
       "skipped": 0
     },
     "currentRemoteRuns": {
-      "sourceCommit": "99592823f2bdb94841c0ac247f58a92fc7ac3360",
-      "ci": 40440878207,
-      "web": 40440878223,
-      "status": "Completed: unit19448/1360 and all static/build jobs pass; both486-case browser suites and native recovery pass; coverage19428passes/20five-second failures, no report."
+      "sourceCommit": "87e37df066924ae149feef8bba2726ebd404bbc9",
+      "ci": 40445494550,
+      "web": 40445494532,
+      "status": "Completed: unit19475/1369 and all static/build jobs pass; both488-case browser suites and native recovery pass; coverage19455passes/20five-second failures, no report."
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
@@ -4957,11 +4960,11 @@
       }
     },
     "currentInventory": {
-      "entries": 556,
-      "specReferences": 5901,
-      "sourceCommit": "a29662b8c72232f04c683e7d35b0453f78d79df3",
+      "entries": 557,
+      "specReferences": 5921,
+      "sourceCommit": "bc35f5d2fca06d303a412af190ddd29a8c4ed064",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 145,
+      "explicitAssociations": 146,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -5619,13 +5622,22 @@
         "boundary": "Full coverage-family unshared actual marriage composition only; no human tax qualification, filing, production2026 readiness or model promotion."
       },
       "sharedMarriageHealth": {
-        "tree": "f1c381c86614a8ce9ca9854044fb6c63dcaa65aa",
-        "sourceReview": ".local/upgrade-evidence/parent-shared-marriage-source-review.json",
-        "sourceReviewSha256": "1935c9a7509bf58d5889ed196f376739c506fdeb7494b9bf1c1c7e02ea772416",
-        "tests": 24,
-        "files": 8,
-        "privateControls": 8,
-        "status": "source review clear, independent original/PDF review pending; not delivered"
+        "status": "delivered; bounded software source and saved-output review, not human qualification",
+        "deliveredCommit": "7dd7fab52ae05e3f73e7c247cccfb3126f4821ad",
+        "ledger": "docs/upgrade-2025-shared-marriage-health-work.md",
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/parent-shared-marriage-final-review.json",
+          "sha256": "546a6d83eb8592084bd2d48583a403592cc109549aa3efa74bb0f7e068bb8ba7"
+        },
+        "originalSourceReview": {
+          "tree": "f1c381c86614a8ce9ca9854044fb6c63dcaa65aa",
+          "sourceReview": ".local/upgrade-evidence/parent-shared-marriage-source-review.json",
+          "sourceReviewSha256": "1935c9a7509bf58d5889ed196f376739c506fdeb7494b9bf1c1c7e02ea772416",
+          "tests": 24,
+          "files": 8,
+          "privateControls": 8,
+          "status": "source review clear, independent original/PDF review pending; not delivered"
+        }
       },
       "bondReissueReturn": {
         "tree": "e1adba37484994b4c1393ff02dcc6e794f1acb51",
@@ -5636,11 +5648,39 @@
         "privateControls": 7,
         "status": "corrected source review clear; V3 documentation-only delta independently checked, original/PDF review and final integration pending",
         "retainedFinding": "Original a673 rounded current transfer0.50 before subtraction from actual Box3=1, dropping eligible redemption0.50. Corrected method aggregates exact eligible source ratios then rounds at Form8815line6."
+      },
+      "form8815ReferenceReadiness": {
+        "status": "delivered; bounded software source and saved-output review, not human qualification",
+        "deliveredCommit": "499dc198ebcb2d0e9ad7157a04a348ddf7247567",
+        "ledger": "docs/upgrade-2026-form8815-readiness-work.md",
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/federal-form8815-independent-review.json",
+          "sha256": "d56b5c5f0f190052ea8bc6207df389ce9026da897c81d58c740d637cd90d0ce6"
+        }
+      },
+      "form8815ReferencePagination": {
+        "status": "delivered; bounded software source and saved-output review, not human qualification",
+        "deliveredCommit": "bc35f5d2fca06d303a412af190ddd29a8c4ed064",
+        "ledger": "docs/upgrade-2026-form8815-pagination-work.md",
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/federal-form8815-pagination-independent-review.json",
+          "sha256": "aecac43b836306444bc936c9ea8045286f512a1978483741f7d2c4a5a15a84ce"
+        }
+      },
+      "bondReissueFinalFollowthrough": {
+        "status": "V3 numeric/source review clear; original artifacts retain three supported-cover errors and one footer overlap. Both product fixes delivered separately; final rebase and original-output regeneration in progress.",
+        "candidate": "e1adba37484994b4c1393ff02dcc6e794f1acb51",
+        "report": ".local/upgrade-evidence/parent-bond-reissue-artifact-review/checks.json",
+        "reportSha256": "501582af134b2bf5473b3edba7b2f393dceb5d4264fab2008bbc79a821e2fee4",
+        "reservedRuleVersions": {
+          "2025": "2025.175",
+          "2026": "2026.172-law-integration-draft"
+        }
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.173",
-      "2026": "2026.170-law-integration-draft"
+      "2025": "2025.174",
+      "2026": "2026.171-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -5837,31 +5877,45 @@
       ]
     },
     "latestFailedCoverageRun": {
-      "sourceCommit": "ee0132c2f493bbd089514e8fad00ec6de7f3128a",
-      "tree": "0d9702209900eab48b797f410a5f8d79c67efe0a",
-      "id": "coverage",
-      "command": [
-        "pnpm",
-        "test:coverage",
-        "--maxWorkers=1"
+      "sourceCommit": "87e37df066924ae149feef8bba2726ebd404bbc9",
+      "runId": 40445494550,
+      "jobId": 121995666816,
+      "conclusion": "failure",
+      "passed": 19455,
+      "failed": 20,
+      "passedFiles": 1350,
+      "failedFiles": 19,
+      "totalFiles": 1369,
+      "seconds": "2276.62",
+      "workers": 1,
+      "failureKind": "All twenty cases hit the unchanged 5000ms timeout; no complete coverage report was produced.",
+      "failedCases": [
+        "tests/pdf/eic-additional-checkboxes.test.ts > prints actual joint homes while preserving false and unknown sources",
+        "tests/pdf/form-8949-digital-reporting.test.ts > retains all categories and digital continuation rows after reopening",
+        "tests/pdf/form8839-history-review.test.ts > preserves source cents and private identity through redacted review rendering",
+        "tests/pdf/k1-cash-distribution-review.test.ts > binds and saves the redacted distribution gain with original basis evidence",
+        "tests/pdf/k1-passive-capital-review.test.ts > prints ordinary and capital destinations with exact separate PartIX records",
+        "tests/pdf/qbi-loss-review.test.ts > retains a saved zero-deduction QBI packet and separate loss limits",
+        "tests/pdf/schedule-e-passive-distribution-review.test.ts > saves and reopens the redacted complete passive distribution packet",
+        "tests/pdf/shared-owner-marketplace-health-review.test.ts > renders separate shared-plan owners from the original private context",
+        "tests/pdf/temporary-component-serialization.test.ts > preserves actual form values and notices in temporary component serialization (flatten=false)",
+        "tests/pdf/temporary-component-serialization.test.ts > preserves actual form values and notices in temporary component serialization (flatten=true)",
+        "tests/apps/web/workspace-annual-cash-qtp.test.ts > replays annual cash originals before workspace redaction",
+        "tests/apps/web/workspace-filled-return.test.ts > workspace filled return download > prepares the actual passive distribution context before workspace redaction",
+        "tests/apps/web/workspace-form-172-operating-k1.test.ts > exports actual guided operating K1 origins and independent carry histories",
+        "tests/apps/web/workspace-marketplace-actual-cash.test.ts > downloads the actual cash payment review without replacing original policies",
+        "tests/apps/web/workspace-marketplace-business-method.test.ts > exports the recorded business method through the original guided workspace context",
+        "tests/apps/web/workspace-marketplace-full-repayment.test.ts > downloads the actual guided full-repayment return without discarding original sources",
+        "tests/apps/web/workspace-marketplace-outside-person.test.ts > downloads the outside child cash review from actual guided sources",
+        "tests/apps/web/workspace-marketplace-reported-repayment.test.ts > downloads the actual source-cent payment review without replacing originals",
+        "tests/apps/web/workspace-room-board-periods.test.ts > binds actual cash and prepaid period records before workspace redaction",
+        "tests/apps/web/workspace-room-board-prior-use.test.ts > replays actual historical room and board sources before workspace redaction"
       ],
-      "exitCode": 1,
-      "seconds": 746.03,
-      "evidence": ".local/upgrade-evidence/ee0132c-complete/coverage.log",
-      "sha256": "88a1533704d0553bb0cfc63cd4fdd33dd91ca9f1d9298d40bddd286b339a65b6",
-      "status": "failed-function-coverage-threshold",
-      "allTestsPassed": true,
-      "passed": 18785,
-      "files": 1108,
-      "functionsCovered": 10148,
-      "functionsTotal": 11298,
-      "functionsPercent": "89.82",
-      "functionThresholdPercent": "90",
-      "branchesPercent": "86.71",
-      "branchThresholdPercent": "85",
-      "statementsPercent": "91.85",
-      "linesPercent": "94.46",
-      "noThresholdOrExclusionChanges": true
+      "log": {
+        "path": ".local/upgrade-evidence/87e37df0-coverage-ci.log",
+        "sha256": "fcfcf6ee28fae52b4e92f8a1076acd153de20a8157b2cc8e8257215247789fde"
+      },
+      "coverageGatePassed": false
     },
     "currentProductionPackageAudit": {
       "sourceTree": "6b1cd55bfbac049374bed5d8aa9093181c79c68f",
@@ -7650,8 +7704,8 @@
       "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
     },
     "currentFullVerificationRequired": {
-      "sourceCommit": "a29662b8c72232f04c683e7d35b0453f78d79df3",
-      "reason": "Latest complete995 remote coverage fails20 unchanged five-second PDF/workspace cases across19files. No complete coverage report. Unit, browser, static and native recovery pass for995 only. Preserve deadlines/thresholds and investigate remaining cost; final integrated checks still required after finite implementations.",
+      "sourceCommit": "bc35f5d2fca06d303a412af190ddd29a8c4ed064",
+      "reason": "Latest complete87 remote coverage fails20 unchanged five-second PDF/workspace cases across19files. Unit, browser, static and native recovery pass for87 only. Preserve deadlines/assertions/thresholds; compression CPU diagnostic and final integrated checks remain.",
       "readiness": "Not release qualified; no later full-project coverage pass claimed"
     },
     "previousCurrentUnitRunBeforeE91": {
@@ -7877,7 +7931,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-27T03:40:23.603677+00:00",
+    "recordedAt": "2026-10-27T04:24:23.830718+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -9621,6 +9675,104 @@
           "duration": "21.1m"
         }
       }
+    },
+    "remote87CompletedChecks": {
+      "record": "docs/upgrade-2026-runtime-87e37df0.json",
+      "sha256": "39add43c85cdc29a4ffb17f78ff09f4bb425e30664141c900f38fb4e19a61218",
+      "unit": {
+        "job": 121995666607,
+        "passed": 19475,
+        "files": 1369,
+        "workers": 1,
+        "seconds": "923.43"
+      },
+      "coverage": {
+        "sourceCommit": "87e37df066924ae149feef8bba2726ebd404bbc9",
+        "runId": 40445494550,
+        "jobId": 121995666816,
+        "conclusion": "failure",
+        "passed": 19455,
+        "failed": 20,
+        "passedFiles": 1350,
+        "failedFiles": 19,
+        "totalFiles": 1369,
+        "seconds": "2276.62",
+        "workers": 1,
+        "failureKind": "All twenty cases hit the unchanged 5000ms timeout; no complete coverage report was produced.",
+        "failedCases": [
+          "tests/pdf/eic-additional-checkboxes.test.ts > prints actual joint homes while preserving false and unknown sources",
+          "tests/pdf/form-8949-digital-reporting.test.ts > retains all categories and digital continuation rows after reopening",
+          "tests/pdf/form8839-history-review.test.ts > preserves source cents and private identity through redacted review rendering",
+          "tests/pdf/k1-cash-distribution-review.test.ts > binds and saves the redacted distribution gain with original basis evidence",
+          "tests/pdf/k1-passive-capital-review.test.ts > prints ordinary and capital destinations with exact separate PartIX records",
+          "tests/pdf/qbi-loss-review.test.ts > retains a saved zero-deduction QBI packet and separate loss limits",
+          "tests/pdf/schedule-e-passive-distribution-review.test.ts > saves and reopens the redacted complete passive distribution packet",
+          "tests/pdf/shared-owner-marketplace-health-review.test.ts > renders separate shared-plan owners from the original private context",
+          "tests/pdf/temporary-component-serialization.test.ts > preserves actual form values and notices in temporary component serialization (flatten=false)",
+          "tests/pdf/temporary-component-serialization.test.ts > preserves actual form values and notices in temporary component serialization (flatten=true)",
+          "tests/apps/web/workspace-annual-cash-qtp.test.ts > replays annual cash originals before workspace redaction",
+          "tests/apps/web/workspace-filled-return.test.ts > workspace filled return download > prepares the actual passive distribution context before workspace redaction",
+          "tests/apps/web/workspace-form-172-operating-k1.test.ts > exports actual guided operating K1 origins and independent carry histories",
+          "tests/apps/web/workspace-marketplace-actual-cash.test.ts > downloads the actual cash payment review without replacing original policies",
+          "tests/apps/web/workspace-marketplace-business-method.test.ts > exports the recorded business method through the original guided workspace context",
+          "tests/apps/web/workspace-marketplace-full-repayment.test.ts > downloads the actual guided full-repayment return without discarding original sources",
+          "tests/apps/web/workspace-marketplace-outside-person.test.ts > downloads the outside child cash review from actual guided sources",
+          "tests/apps/web/workspace-marketplace-reported-repayment.test.ts > downloads the actual source-cent payment review without replacing originals",
+          "tests/apps/web/workspace-room-board-periods.test.ts > binds actual cash and prepaid period records before workspace redaction",
+          "tests/apps/web/workspace-room-board-prior-use.test.ts > replays actual historical room and board sources before workspace redaction"
+        ]
+      },
+      "staticBuild": {
+        "build": 121995666438,
+        "specAndInventory": 121995666692,
+        "rootAndContractsTypes": 121995666739,
+        "lint": 121995666755,
+        "conclusion": "success"
+      },
+      "browser": {
+        "container": {
+          "job": 121995666436,
+          "passed": 488,
+          "hostedSkipped": 5,
+          "configuredRetries": 0,
+          "duration": "20.3m"
+        },
+        "selfHost": {
+          "job": 121995666456,
+          "passed": 488,
+          "hostedSkipped": 5,
+          "configuredRetries": 1,
+          "reportedFlaky": 0,
+          "duration": "21.8m"
+        }
+      }
+    },
+    "previousLatestFailedCoverageBefore87": {
+      "sourceCommit": "ee0132c2f493bbd089514e8fad00ec6de7f3128a",
+      "tree": "0d9702209900eab48b797f410a5f8d79c67efe0a",
+      "id": "coverage",
+      "command": [
+        "pnpm",
+        "test:coverage",
+        "--maxWorkers=1"
+      ],
+      "exitCode": 1,
+      "seconds": 746.03,
+      "evidence": ".local/upgrade-evidence/ee0132c-complete/coverage.log",
+      "sha256": "88a1533704d0553bb0cfc63cd4fdd33dd91ca9f1d9298d40bddd286b339a65b6",
+      "status": "failed-function-coverage-threshold",
+      "allTestsPassed": true,
+      "passed": 18785,
+      "files": 1108,
+      "functionsCovered": 10148,
+      "functionsTotal": 11298,
+      "functionsPercent": "89.82",
+      "functionThresholdPercent": "90",
+      "branchesPercent": "86.71",
+      "branchThresholdPercent": "85",
+      "statementsPercent": "91.85",
+      "linesPercent": "94.46",
+      "noThresholdOrExclusionChanges": true
     }
   },
   "historicalReleaseBlockers": {
