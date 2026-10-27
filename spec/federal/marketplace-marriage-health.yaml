@@ -19,9 +19,11 @@ notes: |
   permits a consistent reasonable allocation; a recipient-local alternative
   is not imposed as a mandatory rule. Separate owner earned limits,
   gross-income QBI attribution, actual payment records and month exclusions
-  remain in force. Shared/outside-family marriage, unproved premarriage spouse
-  payment qualification and binding joint historical repayment attribution
-  are separate source methods, not inferred facts or legal disallowances.
+  remain in force. The separate marketplace-shared-marriage-health packet
+  composes determined PartIV source allocations before these worksheets.
+  Outside-family marriage payment qualification, unproved premarriage spouse
+  payments and binding joint historical repayment attribution remain separate
+  source methods, not inferred facts or legal disallowances.
 lines:
   - line: "separate-recipients"
     description: "Preserve actual alternative families and the existing health allocation method"
@@ -45,7 +47,7 @@ lines:
     testRef: "tests/engine/federal-marketplace-marriage-health-2026.test.ts::preserves final joint ineligibility with actual pre-marriage credit"
   - line: "sources"
     description: "Do not turn source elections into missing health evidence"
-    formula: "Actual marriage and health packets remain independently required. Full original policy/person/payment links must reconcile before canonical coordination. Missing, stale, ambiguous or shared sources reject; changing the election flag does not supply a plan, payer or benchmark. Input remains unchanged."
+    formula: "Actual marriage and health packets remain independently required. Full original policy/person/payment links must reconcile before canonical coordination. Missing, stale or ambiguous sources reject; shared sources additionally require their complete PartIV and actual payment packet. Changing the election flag does not supply a plan, payer or benchmark. Input remains unchanged."
     testRef: "tests/engine/federal-marketplace-marriage-health.test.ts::retains independent original health and marriage source requirements"
   - line: "retained-credit"
     description: "Bind positive pre-marriage audit amounts to completed actual alternative worksheets"

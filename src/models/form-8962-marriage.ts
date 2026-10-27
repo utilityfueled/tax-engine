@@ -23,7 +23,7 @@ export const Form8962MarriageSourcesSchema = z.object({
       taxYear: z.number().int().optional(), marketplace: z.string().optional(), policyNumber: z.string().optional(),
       recipientName: z.string().optional(), recipientSsn: z.string().optional(),
       coveredIndividuals: z.array(MarketplaceCoveredIndividualSchema).optional(),
-      monthlyPremiums: z.array(z.object({month: z.number().int().optional(), enrolleePremium: amount, slcsp: amount, advancePremiumTaxCredit: amount})).optional(),
+      monthlyPremiums: z.array(z.object({month: z.number().int().optional(), enrolleePremium: amount, slcsp: amount.nullable(), advancePremiumTaxCredit: amount})).optional(),
     }).optional(),
   })).optional(),
   benchmarks: z.array(z.object({

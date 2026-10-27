@@ -292,7 +292,11 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
   // Pub974 allocates a shared policy before deriving specified premiums. A
   // known health answer permits this pure source step; Form8962 still requires
   // its independently completed internal health coordination context.
-  if (facts.alternativeMarriageCalculationElected !== false || typeof facts.selfEmployedHealthInsuranceCoordinationRequired !== 'boolean'
+  const marriage = facts.alternativeMarriageCalculationElected === true;
+  // i8962 line9: PartIV precedes PartV. This facts-only step can run before
+  // the independent marriage worksheet is complete; it does not elect or
+  // calculate marriage relief. Canonical Form8962 validates that packet next.
+  if (typeof facts.alternativeMarriageCalculationElected !== 'boolean' || (marriage && input.taxpayer.filingStatus !== 'married_filing_jointly') || typeof facts.selfEmployedHealthInsuranceCoordinationRequired !== 'boolean'
     || facts.qsehraAffected !== false || facts.lawfulPresenceReconciliationRequired !== false) {
     throw new Error('Form8962 allocation requires separate marriage, health, QSEHRA or lawful-presence coordination sources');
   }
@@ -369,7 +373,13 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
     const recipientName = household.get(original.recipientSsn) ?? (original.recipientSsn === otherSsn ? otherName : undefined);
     if (recipientName !== original.recipientName) throw new Error('Form8962 allocation original recipient does not match either actual tax family taxpayer');
     const noAdvance = policy.situation === 'no_advance_credit';
-    if ((!noAdvance && policy.situation !== 'other_two_tax_families') || policy.noCurrentYearMarriageOrDivorceConfirmed !== true
+    if (marriage) {
+      if (policy.noCurrentYearMarriageOrDivorceConfirmed === true || policy.otherTaxpayerNotMarriedToEitherFilerDuringYearConfirmed !== true) {
+        throw new Error('Form8962 marriage allocation requires actual unrelated-counterparty relationship facts, not a global no-marriage confirmation');
+      }
+      text(policy.otherTaxpayerRelationshipSourceReference, 'other-taxpayer relationship history source reference');
+    }
+    if ((!noAdvance && policy.situation !== 'other_two_tax_families') || (!marriage && policy.noCurrentYearMarriageOrDivorceConfirmed !== true)
       || policy.twoTaxFamiliesConfirmed !== true || policy.allCoveredPeopleAssignedConfirmed !== true) throw new Error('Form8962 allocation requires actual Situation4 and two-family source facts');
     if (!noAdvance && policy.originalSlcspCorrectConfirmed !== true) throw new Error('Form8962 allocation requires the actual correct original SLCSP source');
     if (!noAdvance && typeof policy.agreementConfirmed !== 'boolean') throw new Error('Form8962 allocation requires a known actual agreement answer');

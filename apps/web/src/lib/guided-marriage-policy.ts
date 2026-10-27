@@ -1,6 +1,6 @@
 import { Form8962MarriageSourcesSchema } from '@/models/form-8962-marriage';
 import type { TaxYearInput } from '@/models/inputs';
-import { calculateForm8962MarriageSources } from '@/engine/forms/form-8962-marriage-sources';
+import { calculateForm8962MarriageSources, marriagePolicyGroupOwner } from '@/engine/forms/form-8962-marriage-sources';
 import { normalizeMarketplacePolicy } from './guided-shared-policy';
 import { parseGuidedCurrency } from './guided-currency';
 import type { FilingStatus, PersonalInfoData } from './guided-interview-flow';
@@ -91,17 +91,36 @@ export function copyMarriageBenchmarkGroups(data:PremiumTaxCreditData,personal:P
   const policies=data.policies.map(policy=>normalizeMarketplacePolicy(policy,h.year,true));
   const coverage=new Map<string,Set<number>>(),originalIds=new Map<string,string>();
   const groups={primary:new Map<number,Set<string>>(),spouse:new Map<number,Set<string>>()};
-  for(const policy of policies){
-    const recipient=id(policy.recipientSsn,'original recipient SSN'),owner=recipient===primaryId?'primary':recipient===spouseId?'spouse':undefined;
-    if(!owner)throw new Error('Marriage benchmarks require an actual filer recipient.');
-    for(const person of policy.coveredIndividuals??[]){
+  const householdIds = new Set([...families.primary,...families.spouse]);
+  for(const [index,policy] of policies.entries()){
+    const recipient=id(policy.recipientSsn,'original recipient SSN');
+    const sharedRows=data.sharedPolicyAllocations?.policies.filter(row=>row.sourceId===`form1095A:${index}`),shared=sharedRows?.[0];
+    if(data.allocationRequired && (sharedRows?.length!==1 || !shared?.original || JSON.stringify(normalizeMarketplacePolicy(shared.original,h.year,true))!==JSON.stringify(policy)))throw new Error('Reconcile each actual allocation original before copying marriage groups.');
+    const ownPeople=(policy.coveredIndividuals??[]).filter(person=>{
+      const key=id(person.ssn,'original covered-person SSN');
+      if(data.allocationRequired && shared?.situation!=='not_shared'){
+        const assignments=shared?.coveredFamilyAssignments.filter(row=>id(row.ssn,'shared person SSN')===key),assignment=assignments?.[0];
+        if(assignments?.length!==1 || !assignment?.family || (assignment.family==='this_return')!==householdIds.has(key))throw new Error('Reconcile every original person to an actual tax family before copying marriage groups.');
+        return assignment.family==='this_return';
+      }
+      if(!householdIds.has(key))throw new Error('An original outside person requires the actual shared-family source assignment.');
+      return true;
+    });
+    if(!data.allocationRequired && recipient!==primaryId && recipient!==spouseId)throw new Error('Marriage benchmarks require an actual filer recipient or completed shared-family sources.');
+    for(const person of ownPeople){
       const key=id(person.ssn,'original covered-person SSN'),first=person.firstMonth,last=person.lastMonth;
       originalIds.set(key,text(person.ssn,'original covered-person SSN'));
       if(first===undefined||last===undefined)throw new Error('Enter actual original covered-person periods.');
       for(let month=first;month<=Math.min(last,lastPreMarriageMonth);month++){
         const covered=coverage.get(key)??new Set<number>();covered.add(month);coverage.set(key,covered);
-        const people=groups[owner].get(month)??new Set<string>();people.add(key);groups[owner].set(month,people);
       }
+    }
+    for(let month=1;month<=lastPreMarriageMonth;month++){
+      const people=ownPeople.filter(person=>person.firstMonth!<=month&&person.lastMonth!>=month).map(person=>id(person.ssn,'original covered-person SSN'));
+      if(!people.length)continue;
+      const owner=marriagePolicyGroupOwner(recipient,primaryId,spouseId,people,families),group=groups[owner].get(month)??new Set<string>();
+      for(const key of people)group.add(key);
+      groups[owner].set(month,group);
     }
   }
   return (['primary','spouse'] as const).flatMap(owner=>{

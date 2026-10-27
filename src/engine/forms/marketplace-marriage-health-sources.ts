@@ -3,6 +3,7 @@ import type { TaxYearInput } from '@/models/inputs.js';
 import { d } from '@/utils/decimal.js';
 import { calculateForm8962MarriageSources, type Form8962MarriageSourceInput } from './form-8962-marriage-sources.js';
 import { calculateMarketplaceCoverageFamilySources } from './marketplace-coverage-family-sources.js';
+import { calculateSharedMarketplaceHealthSources } from './shared-marketplace-health.js';
 
 const normalizedName = (value: string | undefined) => value?.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-US');
 function identity(value: string | undefined): string {
@@ -36,10 +37,13 @@ export function calculateMarketplaceMarriageHealthSources(input: Form8962Marriag
   // Validate any existing dependent/child identity links against their full
   // original snapshots and monthly evidence before using them here.
   const families = calculateMarketplaceCoverageFamilySources(input);
+  const sharedPlans = calculateSharedMarketplaceHealthSources(input);
+  const ownPeople = new Set([input.taxpayer.primary.ssn, input.taxpayer.spouse?.ssn, ...input.taxpayer.dependents.map(person => person.ssn)].filter((value): value is string => value !== undefined).map(identity));
   for (const plan of health.plans) {
     if (plan.marketplaceCoverage !== true || plan.premiumTaxCreditInvolved !== true) continue;
     const coveredPersons = plan.coveredPersons, paymentSources = plan.payments;
-    if (plan.allCoveredPersonsInCoverageFamilyConfirmed !== true || !coveredPersons || !paymentSources
+    const shared = sharedPlans?.get(plan.planId ?? '');
+    if ((!shared && plan.allCoveredPersonsInCoverageFamilyConfirmed !== true) || (shared && plan.sharedMarketplaceSources?.allThisReturnPersonsInCoverageFamilyConfirmed !== true) || !coveredPersons || !paymentSources
       || !plan.marketplacePolicySourceIds?.length || !plan.accountHolder) {
       throw new Error('Marriage health partial coverage-family or missing-person sources require their separate actual method.');
     }
@@ -58,6 +62,10 @@ export function calculateMarketplaceMarriageHealthSources(input: Form8962Marriag
         const actual = input.taxpayer[person.householdRole];
         if (!actual || normalizedName(person.name) !== normalizedName(`${actual.firstName} ${actual.lastName}`)) throw new Error('Marriage health covered-person identity contradicts the actual filer.');
         actualIdentity = identity(actual.ssn);
+      } else if (shared) {
+        const links = plan.sharedMarketplaceSources!.persons?.filter(row => row.personId === covered.personId), link = links?.[0];
+        if (links?.length !== 1 || !link) throw new Error('Marriage health requires actual shared covered-person identity links.');
+        actualIdentity = identity(link.coveredIndividualSsn);
       } else {
         const links = plan.coverageFamilySources?.persons?.filter(row => row.personId === covered.personId), link = links?.[0];
         if (!families?.some(row => row.planId === plan.planId) || links?.length !== 1 || !link) throw new Error('Marriage health needs the actual covered-person identity link for a dependent or child.');
@@ -74,6 +82,7 @@ export function calculateMarketplaceMarriageHealthSources(input: Form8962Marriag
         const id = allocation.personId === undefined ? undefined : linked.get(allocation.personId);
         const covered = coveredPersons.find(row => row.personId === allocation.personId);
         if (!id || !covered) throw new Error('Marriage health payment person contradicts the original coverage.');
+        if (!ownPeople.has(id) && !amount(allocation.amountPaid).isZero()) throw new Error('Marriage health owner-paid outside-family persons require their separate actual qualification and credit method.');
         if (amount(allocation.amountPaid).plus(amount(allocation.advancePremiumTaxCredit)).isZero()) continue;
         if (!originalPeople.some(person => person.id === id && person.first <= month && person.last >= month)) {
           throw new Error('Marriage health payment month contradicts the original coverage.');

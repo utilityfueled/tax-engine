@@ -1338,6 +1338,16 @@
       "note": "Own-spec controls bind actual unshared marriage and health sources to the existing health worksheets and historical2025 Form8962 review output. Actual joint eligibility, computed repayment limit, owner deductions and original sources remain separate. No additional source cohort, filing readiness or independent human qualification is claimed."
     },
     {
+      "key": "federal/marketplace-shared-marriage-health",
+      "enginePath": "src/engine/forms/form-8962-marriage-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-shared-marriage-health.test.ts::allocates actual agreement and default sources before marriage and health",
+        "tests/pdf/marketplace-shared-marriage-health-review.test.ts::prints both actual allocation and marriage parts with the independent health sources"
+      ],
+      "note": "Own-spec controls bind actual full shared policies, PartIV allocation, alternative marriage groups and independent health payments to the historical2025 Form8962 review packet. Exact source fractions remain distinct from printed percentages. Unresolved within-return grouping, partial-family and payer methods remain explicit; no filing or human qualification is claimed."
+    },
+    {
       "key": "federal/k1-passive-capital-sources",
       "enginePath": "src/engine/federal.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-8582.ts",
