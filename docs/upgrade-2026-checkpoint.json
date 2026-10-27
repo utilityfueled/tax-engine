@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "78a5219dd924a2c6d64b37db805c3b394d8ed31f",
+    "lastRecordedCommit": "99592823f2bdb94841c0ac247f58a92fc7ac3360",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1312,11 +1312,11 @@
     ],
     "workInProgress": [
       "Education: bounded interest-only annual cash method delivered in78a5219. Mixed July4/mixed-purpose attribution, actual bond ownership/reissue history and rational reporting remain.",
-      "Charity: prior465 original character/history delivered locally in2384428b. Raw passive capital classification,2026 prior-gift floor, positive benefit COD with modified absorption, and changed filing-unit histories remain internal.",
-      "Health: actual eligible outside-family cash/person and separate-return evidence delivered; determined positive advance/payment attribution and alternative-marriage compositions remain.",
+      "Charity: prior465 original character/history delivered in2384428b. Raw passive capital classification,2026 prior-gift floor, positive benefit COD with modified absorption, and changed filing-unit histories remain internal.",
+      "Health: actual eligible outside-family cash/person and separate-return evidence delivered; unshared full-family marriage delivered in9c077851; determined positive advance/payment and shared/outside-family marriage compositions remain.",
       "Verification: resolve retained remote five-second coverage failures without changing deadlines/assertions/thresholds; complete final integrated/remote/native image/SBOM/scan/recovery checks."
     ],
-    "latestIntegratedCommit": "78a5219dd924a2c6d64b37db805c3b394d8ed31f",
+    "latestIntegratedCommit": "99592823f2bdb94841c0ac247f58a92fc7ac3360",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1591,7 +1591,8 @@
       "sharedHealthOtherAllocations": "15549f834c2bf0aeed02d75215801c1d1944d081",
       "eicHistoryCanonicalAndGuide": "b41f62845c5a5fe65f8c9fde14f913bdb4bbab04",
       "sharedUnsharedHealth": "827b399f8d680cf35dacc2ccd234571cbc10c1d8",
-      "multipleExpenseEsa": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e"
+      "multipleExpenseEsa": "b0de9550e52b93e2f829dd2f9df6982dcaadc70e",
+      "marriageHealth": "9c077851766b1ca44ccbfafb3348b7d062ed7b29"
     },
     "remoteCi": {
       "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
@@ -1691,8 +1692,8 @@
     },
     "remainingInternalWork": [
       "Education: bounded interest-only annual cash method delivered in78a5219. Mixed July4/mixed-purpose attribution, actual bond ownership/reissue history and rational reporting remain.",
-      "Charity: prior465 original character/history delivered locally in2384428b. Raw passive capital classification,2026 prior-gift floor, positive benefit COD with modified absorption, and changed filing-unit histories remain internal.",
-      "Health: actual eligible outside-family cash/person and separate-return evidence delivered; determined positive advance/payment attribution and alternative-marriage compositions remain.",
+      "Charity: prior465 original character/history delivered in2384428b. Raw passive capital classification,2026 prior-gift floor, positive benefit COD with modified absorption, and changed filing-unit histories remain internal.",
+      "Health: actual eligible outside-family cash/person and separate-return evidence delivered; unshared full-family marriage delivered in9c077851; determined positive advance/payment and shared/outside-family marriage compositions remain.",
       "Verification: resolve retained remote five-second coverage failures without changing deadlines/assertions/thresholds; complete final integrated/remote/native image/SBOM/scan/recovery checks."
     ],
     "previousStableCoverageRun": {
@@ -1715,7 +1716,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "78a5219dd924a2c6d64b37db805c3b394d8ed31f",
+    "lastPushedCommit": "99592823f2bdb94841c0ac247f58a92fc7ac3360",
     "currentBrowserRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -2791,70 +2792,10 @@
       "skipped": 0
     },
     "currentRemoteRuns": {
-      "observedAt": "2026-10-26T16:15:01.094912+00:00",
-      "runs": [
-        {
-          "conclusion": "",
-          "createdAt": "2026-10-26T16:11:32Z",
-          "databaseId": 40356705615,
-          "headSha": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
-          "status": "pending",
-          "updatedAt": "2026-10-26T16:11:33Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40356705615",
-          "workflowName": "CI"
-        },
-        {
-          "conclusion": "",
-          "createdAt": "2026-10-26T16:11:32Z",
-          "databaseId": 40356705644,
-          "headSha": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
-          "status": "in_progress",
-          "updatedAt": "2026-10-26T16:12:17Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40356705644",
-          "workflowName": "Web"
-        },
-        {
-          "conclusion": "",
-          "createdAt": "2026-10-26T15:58:59Z",
-          "databaseId": 40354655542,
-          "headSha": "cd5e4c7ccf3a47afb55462821ab5805b622e4a0a",
-          "status": "in_progress",
-          "updatedAt": "2026-10-26T15:59:50Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40354655542",
-          "workflowName": "CI"
-        },
-        {
-          "conclusion": "cancelled",
-          "createdAt": "2026-10-26T15:58:59Z",
-          "databaseId": 40354655534,
-          "headSha": "cd5e4c7ccf3a47afb55462821ab5805b622e4a0a",
-          "status": "completed",
-          "updatedAt": "2026-10-26T16:12:14Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40354655534",
-          "workflowName": "Web"
-        },
-        {
-          "conclusion": "cancelled",
-          "createdAt": "2026-10-26T15:52:26Z",
-          "databaseId": 40353590198,
-          "headSha": "3f2e80a990d7ae6b96e1e1734fae94dd7d34c7b0",
-          "status": "completed",
-          "updatedAt": "2026-10-26T15:59:25Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40353590198",
-          "workflowName": "Web"
-        },
-        {
-          "conclusion": "cancelled",
-          "createdAt": "2026-10-26T15:52:25Z",
-          "databaseId": 40353589540,
-          "headSha": "3f2e80a990d7ae6b96e1e1734fae94dd7d34c7b0",
-          "status": "completed",
-          "updatedAt": "2026-10-26T15:59:40Z",
-          "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40353589540",
-          "workflowName": "CI"
-        }
-      ],
-      "boundary": "Observed push-workflow states only. In-progress and cancelled runs are not completed passing evidence."
+      "sourceCommit": "99592823f2bdb94841c0ac247f58a92fc7ac3360",
+      "ci": 40440878207,
+      "web": 40440878223,
+      "status": "in progress; not final evidence"
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
@@ -5016,11 +4957,11 @@
       }
     },
     "currentInventory": {
-      "entries": 551,
-      "specReferences": 5854,
-      "sourceCommit": "78a5219dd924a2c6d64b37db805c3b394d8ed31f",
+      "entries": 553,
+      "specReferences": 5874,
+      "sourceCommit": "99592823f2bdb94841c0ac247f58a92fc7ac3360",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 143,
+      "explicitAssociations": 144,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -5624,24 +5565,63 @@
         }
       },
       "marriageHealth": {
-        "status": "independent source review active; parent original/PDF review pending",
-        "tree": "90c73f80b2be3dc696e4086251f87fc5371e3215",
-        "base": "16609f2d4b81c33bfd44680afa2f928c4c390bb8",
+        "status": "delivered and pushed",
+        "commit": "9c077851766b1ca44ccbfafb3348b7d062ed7b29",
+        "sourceTree": "724f24d0867dc3e51626800f77fa6df8779d807f",
         "manifest": {
-          "path": ".local/upgrade-evidence/health-marriage-review-snapshot.json",
-          "sha256": "a772f383d14ed169214307bd4edcba935a5d93d81a85f2890277711490d85944"
+          "path": ".local/upgrade-evidence/health-marriage-final-snapshot.json",
+          "sha256": "ede511e08e9691a362131ce205a91a55c5d35694acc285456985cd0d6269010c"
         },
-        "authorOwnedTests": 18,
-        "authorOwnedFiles": 6,
-        "authorBrowserPassed": 2,
-        "authorBrowserRetries": 0,
-        "delivered": false,
-        "metadataReserved": "172/169 only after review and current-base merge"
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/ai-marriage-health-source-review.json",
+          "sha256": "58300cf2a70764de0486f1bb6f692a97d05e8aaa25cb70d8d84ad8aa4c2b751a"
+        },
+        "originalPdfReview": {
+          "path": ".local/upgrade-evidence/parent-marriage-health-artifact-review/checks.json",
+          "sha256": "1989a34c0ffca015dc312c051426f936f80fa342138a8aaa84f08e662196d0b1"
+        },
+        "parentFinalTests": {
+          "path": ".local/upgrade-evidence/parent-marriage-final-tests.json",
+          "sha256": "0b639f1be3ab4fa67fcd24f8838f0e79a5e60ad50b26190ccc09084ad7a72d61"
+        },
+        "mainChecks": {
+          "path": ".local/upgrade-evidence/health-marriage-main-checks.json",
+          "sha256": "fad41fd891db5245af81f152c15257cd3f105bf2296a340d767254334d187a7a"
+        },
+        "tests": {
+          "authorFinal": {
+            "tests": 186,
+            "files": 30
+          },
+          "independentSource": {
+            "tests": 31,
+            "files": 8,
+            "privateControls": 6
+          },
+          "parentFinal": {
+            "tests": 192,
+            "files": 31,
+            "trackedUnchanged": 3560
+          },
+          "main": {
+            "tests": 31,
+            "files": 7
+          }
+        },
+        "originalPdf": {
+          "originals": 6,
+          "pdfs": 15,
+          "pages": 143,
+          "populatedFields": 449,
+          "independentChecks": 8767,
+          "failures": 0
+        },
+        "boundary": "Full coverage-family unshared actual marriage composition only; no human tax qualification, filing, production2026 readiness or model promotion."
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.171",
-      "2026": "2026.168-law-integration-draft"
+      "2025": "2025.172",
+      "2026": "2026.169-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -7878,7 +7858,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-27T02:00:38.254579+00:00",
+    "recordedAt": "2026-10-27T03:10:00.470821+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -8157,14 +8137,15 @@
       "evidence": ".local/upgrade-evidence/health-finite-remainder-2026-10-26.md",
       "sha256": "90919f70e3420edcb79b82b740ca1d9b3ddf479d6c3feaed1b280c5a1ca128fd",
       "internal": [
-        "Separate-business/owner worksheets, applicable stops, signed same-owner W15 and actual gross-income attribution delivered; remaining payer/person, payment-share and marriage compositions continue",
-        "Determined positive actual noncoverage advances with payment and corresponding-credit bounds",
-        "Alternative-marriage composition with preceding original health/shared sources"
+        "Actual shared/outside-family original health sources with marriage",
+        "Determined positive actual noncoverage advances and payer/person attribution with actual corresponding-credit limits",
+        "Positive actual other-return credit attribution"
       ],
       "interpretation": "Binding2025 joint capped-repayment attribution among competing owners or qualified/nonqualified source groups; no guessed split",
       "deliveredActualCash": "a2d4898d57557e7cd51616ea90dc3ca20a62cc92",
       "deliveredOutsidePerson": "fbe731a39eeb71263f4ecd60434a5e04c5865f82",
-      "boundary": "Outside-person own-family zero-final-credit bounded method delivered; positive other-return credit/shared advances remain internal, not inferred legally ineligible."
+      "boundary": "Outside-person own-family zero-final-credit bounded method delivered; positive other-return credit/shared advances remain internal, not inferred legally ineligible.",
+      "deliveredUnsharedMarriage": "9c077851766b1ca44ccbfafb3348b7d062ed7b29"
     },
     "remoteRecoveryFailure1e04964": {
       "commit": "1e04964e6e401536ff4c1bee806ba3ac2c4a94e9",
@@ -9368,6 +9349,168 @@
       ],
       "log": ".local/upgrade-evidence/8f8de91-coverage-ci.log",
       "logSha256": "e56eb80e8cb5b6256b0e0a8de1a89a63cb3825d6f9e2a2a86fcd9733dab052c6"
+    },
+    "pdfFieldBatchDiagnostic": {
+      "status": "Delivered and pushed in99592823; full current-head coverage pending.",
+      "base": "927399be49312738511b0fe1da3b989e8f6b5e76",
+      "source": "/private/tmp/tax-pdf-lookup-profile-vrbtpu49/source",
+      "originalFailingTests": 7,
+      "initialTests": 59,
+      "initialFiles": 3,
+      "unchangedTimeoutCohort": {
+        "tests": 36,
+        "files": 12
+      },
+      "pairedOutput": {
+        "path": ".local/upgrade-evidence/pdf-field-batch-output-review/checks.json",
+        "sha256": "8f13c7ea58ce87f39cc829da74744d3b03d56b1ed735baad0c1683b31e2eafb2"
+      },
+      "counts": {
+        "pairs": 24,
+        "pairedPages": 50,
+        "checks": 1855,
+        "failures": 0
+      },
+      "coverage": "45 tests/13files pass with V8, partial-suite command exits1 solely on unchanged global thresholds; not a complete coverage pass."
+    },
+    "remote927InProgress": {
+      "head": "927399be49312738511b0fe1da3b989e8f6b5e76",
+      "ciRun": 40436395899,
+      "webRun": 40436395967,
+      "unitJob": 121966177482,
+      "coverageJob": 121966177512,
+      "containerJob": 121966183683,
+      "selfHostJob": 121966183413,
+      "status": "Completed:19420 unit tests pass; both484-case browser suites and native recovery/static checks pass. Coverage19415passes/five5000ms timeouts; no coverage report. Push hold released."
+    },
+    "remote927CompletedChecks": {
+      "record": "docs/upgrade-2026-runtime-927399be.json",
+      "sha256": "3e408b8ba13f9445526ede07ce89533c0890e7f33e316cb2f8fb0a51091756e2",
+      "unit": {
+        "job": 121966177482,
+        "passed": 19420,
+        "files": 1353,
+        "workers": 1,
+        "seconds": "1386.62"
+      },
+      "coverage": {
+        "sourceCommit": "927399be49312738511b0fe1da3b989e8f6b5e76",
+        "runId": 40436395899,
+        "jobId": 121966177512,
+        "conclusion": "failure",
+        "passed": 19415,
+        "failed": 5,
+        "passedFiles": 1348,
+        "failedFiles": 5,
+        "totalFiles": 1353,
+        "seconds": "2001.57",
+        "workers": 1,
+        "failureKind": "All five cases hit the unchanged5000ms timeout; no complete coverage report was produced.",
+        "failedCases": [
+          "tests/pdf/k1-cash-distribution-review.test.ts > binds and saves the redacted distribution gain with original basis evidence",
+          "tests/pdf/qbi-loss-review.test.ts > retains a saved zero-deduction QBI packet and separate loss limits",
+          "tests/pdf/temporary-component-serialization.test.ts > preserves actual form values and notices in temporary component serialization (flatten=false)",
+          "tests/apps/web/workspace-annual-cash-qtp.test.ts > replays annual cash originals before workspace redaction",
+          "tests/apps/web/workspace-room-board-prior-use.test.ts > replays actual historical room and board sources before workspace redaction"
+        ],
+        "log": {
+          "path": ".local/upgrade-evidence/927399be-coverage-ci.log",
+          "sha256": "1278af35d13eaa289b92e577e66c120a952606d8cb2caa7c81aff41ad56d365f"
+        },
+        "coverageGatePassed": false
+      },
+      "browser": {
+        "container": {
+          "job": 121966183683,
+          "passed": 484,
+          "hostedSkipped": 5,
+          "configuredRetries": 0,
+          "duration": "17.5m"
+        },
+        "selfHost": {
+          "job": 121966183413,
+          "passed": 484,
+          "hostedSkipped": 5,
+          "configuredRetries": 1,
+          "reportedFlaky": 0,
+          "duration": "22.4m"
+        }
+      },
+      "image": "sha256:e2eda90bb9c26747e49acad0d73008ce419aae87e922409254644b66b40b4a82",
+      "scan": {
+        "sbomComponents": 2930,
+        "sbomGenerator": "syft1.42.3",
+        "sbomTimestamp": "2026-10-27T02:29:19Z",
+        "scanner": "grype 0.121.0",
+        "scanTimestamp": "2026-10-27T02:30:25.281823698Z",
+        "databaseBuilt": "2026-10-26T06:38:44Z",
+        "databaseValid": true,
+        "matches": 157,
+        "distinctAdvisories": 67,
+        "matchSeverities": {
+          "High": 54,
+          "Negligible": 46,
+          "Medium": 47,
+          "Low": 10
+        },
+        "npmMatches": 0,
+        "fixedVersionMatches": 0,
+        "exactAdvisoryTuplesUnchangedFrom8f8": true,
+        "ownerConfirmation": "pending",
+        "reviewBy": "2026-11-07"
+      }
+    },
+    "pdfFieldBatchDelivery": {
+      "commit": "99592823f2bdb94841c0ac247f58a92fc7ac3360",
+      "ledger": "docs/upgrade-2026-pdf-field-batch-work.md",
+      "sourceTree": "02f793f5f30f810a3b59d9b84107cf44fe8a5127",
+      "manifestSha256": "b3f33fbf53554c58e5f777353167379c8f8fe19dbfe7f3afe092f068547853df",
+      "independentReview": {
+        "path": ".local/upgrade-evidence/ai-pdf-field-batch-independent-review.json",
+        "sha256": "f5e13b1a3b0697ab91935b9ca30aa0ff059b0f9c6e0a49b69ddcc381a22de2bb",
+        "passed": 18,
+        "files": 3,
+        "privateControls": 6
+      },
+      "mainChecks": {
+        "path": ".local/upgrade-evidence/pdf-field-batch-main-checks.json",
+        "sha256": "21d2a0beb48110257f837553d87ea75bc97820c34ef8907f1db30997460ef4f0",
+        "passed": 128,
+        "files": 19,
+        "specReferences": 5874,
+        "inventoryRows": 553,
+        "allSevenCommandsPassed": true
+      },
+      "pairedOutput": {
+        "path": ".local/upgrade-evidence/pdf-field-batch-output-review/checks.json",
+        "sha256": "8f13c7ea58ce87f39cc829da74744d3b03d56b1ed735baad0c1683b31e2eafb2"
+      },
+      "thresholdsAndDeadlinesUnchanged": true
+    },
+    "rawPassiveCapitalIndependentReview": {
+      "tree": "0236f5ad3beea38de830ab923525f8ad8b72bcce",
+      "report": ".local/upgrade-evidence/federal-passive-capital-source-review.json",
+      "sha256": "323125e64e97e2eeb9290c3eea0f0adf432c305976489ca41b10a7fe3e3626b4",
+      "tests": 33,
+      "files": 11,
+      "privateControls": 7,
+      "verdict": "source and parent original/PDF clear within stated scope; final integration pending",
+      "originalArtifacts": ".local/upgrade-evidence/k1-passive-capital-artifacts/manifest.json",
+      "originalArtifactsSha256": "069c480190fe06e9906b95e99cc0d6a156dd6731a5293e99f83f1b47b54ac822",
+      "humanQualification": false,
+      "parentArtifactReview": {
+        "path": ".local/upgrade-evidence/parent-passive-capital-artifact-review/checks.json",
+        "sha256": "432d745a3f72f703408c1b4cb92354fd0d24bebb36d2a4bb3d06a2cfaab29d1e",
+        "checks": 10742,
+        "failures": 0,
+        "pdfs": 122,
+        "pages": 262,
+        "populatedFields": 836,
+        "contactSheetsViewed": 17,
+        "readablePagesViewed": 8,
+        "retainedReaderCorrections": 9,
+        "savedArtifactsChanged": false
+      }
     }
   },
   "historicalReleaseBlockers": {
