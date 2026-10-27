@@ -2,9 +2,9 @@
 
 ## Current checkpoint — 2026-10-26
 
-The branch is pushed through `a2d4898`. Rule provenance is `2025.167` /
-`2026.164-law-integration-draft`; the inventory has 546 entries, 5,785
-specification test references and 139 explicit shared-method associations.
+The branch is pushed through `dff617c8`. Rule provenance is `2025.168` /
+`2026.165-law-integration-draft`; the inventory has 547 entries, 5,805
+specification test references and 140 explicit shared-method associations.
 Delivered tax packages preserve their reviewed executable files and independently
 checked integration deltas. The PDF serialization change also has an independent
 source and saved-artifact review. Calculation, filing,
@@ -29,6 +29,8 @@ human-review and model-promotion gates remain unchanged.
 | Actual charitable activity allocation after basis | `944f91a4` | Final source passes 648 tests/24 files and static/spec/inventory checks; main 13/5. Independent source/reader review passes 22/8, retaining seven private controls. Independently derived originals and all 97 PDFs/193 pages pass 3,162 comparisons, including 136 physical and 13 flattened placements. |
 | Actual eligible health cash independent of policy allocations | `a2d4898` | Final source passes 92 tests/15 files, static checks and both builds; main 19/6. Independent source review passes 19/7 with eight private controls. Six original inputs and all 15 PDFs/113 pages/229 fields pass 4,044 independent comparisons. Production desktop/mobile workflows pass 2/2 with zero retries. |
 
+| Actual annual cash education category and borrower limits | `dff617c8` | Final source passes 1,959 tests/249 files and static/spec/inventory/build checks; main 20/6. Independent review retains twelve private controls in 32/8. Original/PDF review checks the retained annual corpus and 27 corrected PDFs/108 pages/132 fields with 2,855 comparisons. Four production browser workflows pass with zero retries. A positive own-return interest claim now requires actual lender/eligibility sources. |
+
 Original-source browser and PDF evidence remains attributed to its recorded
 producer. Later source checks do not turn those artifacts into a new integrated
 browser run. These software/source reviews are agent reviews, not qualified
@@ -37,9 +39,9 @@ human tax or security approval.
 The finite internal queue is now reconciled against actual source reachability:
 
 - **Education:** common per-expense composition and actual current-year retained
-  refund records are delivered. Annual cash with existing date/category and
-  borrower limits, then bounded actual bond reissue/ownership history and
-  rational-source reporting remain. See [the education queue](upgrade-2026-education-method-queue.md).
+  refund records and determined annual category/borrower limits are delivered.
+  Mixed July4 chronology, positive qualified-interest attribution, then bounded
+  actual bond reissue/ownership history and rational-source reporting remain. See [the education queue](upgrade-2026-education-method-queue.md).
 - **Charity:** prior K-1 basis release and ordinary operating K-1 current
   Form 172 classification and current binding at-risk allocation are delivered.
   Positive prior at-risk character/history release, raw passive capital
@@ -55,10 +57,24 @@ The finite internal queue is now reconciled against actual source reachability:
   recovery rehearsal. The reviewed PDF and evaluation performance changes are delivered;
   they do not establish that the remote failures are resolved.
 
+The annual-category missing-loan-source finding is resolved in `dff617c8`; its
+original failing input and PDF remain retained. The corrected actual lender
+packet produces a 1,000 deduction and 58,000 AGI; explicit-zero and outside-owner
+claims retain 59,000 AGI. See [the package ledger](upgrade-2026-education-annual-category-work.md).
+The outside-person health candidate passes independent source controls and
+1,774 original/PDF checks plus 666 saved-guide/source comparisons across 14 PDFs
+and 146 pages. Its final rebase is pending; it is not yet delivered.
+
 The new temporary-component source passes all 31 tests in four previously
 relevant PDF suites under instrumentation. This deliberately partial run exits
 below the unchanged full-project coverage thresholds; it is a diagnostic, not a
-coverage pass. Complete coverage still requires a fresh integrated run. Remote
+coverage pass. A later complete immutable run on `944f91a4` passes 19,333 tests
+in 1,322 files with one worker: 86.85% branches (51,789/59,624), 90.73%
+functions, 91.87% statements and 94.59% lines. Every unchanged threshold passes
+and all 3,474 tracked source hashes are unchanged. This intermediate run
+includes the PDF serialization and current at-risk changes, excludes health
+`a2d4898` and later work, and does not replace final integrated or remote checks.
+The evidence is retained in `944f91a-coverage/`. Remote
 `11039247` and `d00b554e` static jobs passed, while their unit/coverage runs were
 cancelled by subsequent authorized pushes; neither is complete CI evidence.
 
@@ -75,8 +91,8 @@ cases pass in isolated instrumented profiles, whose partial selection remains
 below the unchanged global thresholds. Timing varies across runs; a private
 larger-batch experiment gave no consistent benefit and was not integrated.
 These diagnostics do not resolve the full-run failures. That snapshot excludes
-the later K-1 release and health package. The last complete local
-coverage evidence remains `3669b00`: 19,086 tests/1,216 files, 86.78% branches,
+the later K-1 release and health package. Earlier complete local
+verification at `3669b00` recorded: 19,086 tests/1,216 files, 86.78% branches,
 90.49% functions and every unchanged threshold passing; all eight static checks
 and 434 production browser cases pass with zero retries, with five hosted-only
 skips. Later packages are excluded.
@@ -105,6 +121,34 @@ The runtime scan has 157 matches across 67 advisories: 54 High, 47 Medium,
 The exact advisory/package/version/fix tuples equal the prior inspected image.
 Owner acceptance and its November 7 expiry remain pending. The October 26
 production dependency audit records zero advisories across 425 dependencies.
+
+The newer [native amd64 record](upgrade-2026-runtime-16609f2.json) verifies
+`16609f2`: remote unit checks pass 19,345 tests in 1,328 files, and both browser
+runs pass 474 cases with five hosted-only skips each. The runtime browser run
+has zero configured retries; the self-host run reports no flaky cases. All
+static jobs and web build/types pass. Remote coverage completed with 19,314
+passes and 31 five-second PDF/workspace timeouts across 28 files; no coverage
+report was produced. The exact failed log and cases remain recorded while the
+runtime path is investigated. The built image is
+`sha256:6a09e9cb577feb4d48b6e76934832bf3d787408d9ddc2fa5846f84cbefba77a2`;
+all six synthetic recovery phases preserve the same database, browser facts and
+original document hashes. Its 2,930-component SBOM carries the exact source
+revision, and the downloaded archive digest matches GitHub's artifact digest.
+The 157 scan matches have the same 67 advisory/package/version/fix tuples as the
+previous image, with no Critical, npm or available-fixed-version findings.
+Owner acceptance remains pending. These checks exclude the later private tax
+packages and do not qualify hosted staging, historical schema downgrade or
+independent human review.
+
+The annual education candidate remains private after a new independent source
+check found that a positive own student-loan-interest claim could be silently
+omitted when its actual lender and eligibility facts were absent. The original
+candidate and PDF remain retained evidence. Four independent controls reproduce
+one failure and three passes. The corrected canonical and guided source
+boundaries pass 32 independently run tests in eight files, including all twelve
+unchanged private controls. Corrected saved output and final browser checks are
+still pending. No deduction is inferred from the claim. Outside-person health and prior at-risk character/history releases
+are also undergoing independent source and saved-output review.
 
 The goal remains **active, incomplete and not release-ready**. The
 [external-action handoff](upgrade-2026-external-actions.md) retains missing
