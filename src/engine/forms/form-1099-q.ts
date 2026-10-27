@@ -26,6 +26,7 @@ import { calculateRoomBoardPeriods } from "@/utils/education-room-board-periods.
 import { readInKindTuitionEsaSource } from "@/utils/in-kind-tuition-esa-source.js";
 import { readInKindTuitionAssistanceSource } from "@/utils/in-kind-tuition-assistance-source.js";
 import { isOrdinaryEducationExpense, readOrdinaryEducationExpense, validateOrdinaryEducationSources } from "@/utils/education-ordinary-expense-source.js";
+import { readAnnualEducationCategorySources } from "@/utils/education-annual-category-sources.js";
 import { readInKindK12PlanSource } from "@/utils/in-kind-k12-plan-source.js";
 import { isExpandedEducationDistributionAllowed } from "@/utils/education-distribution-date.js";
 
@@ -575,7 +576,10 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   if (summary && Object.entries(summary).some(([key, value]) => key !== "sourceFacts" && value !== undefined)) throw new Error("Form1099Q legacy aggregate fields require explicit source reconciliation and removal before using the source ledger");
   const beneficiaries = uniqueBy(requireList(facts.beneficiaries, "beneficiaries"), item => item.id, "beneficiary");
   const expenses = uniqueBy(requireList(facts.expenses, "expenses"), item => item.id, "expense");
-  validateOrdinaryEducationSources(facts, options.taxYear, options.educationExpenses);
+  const annualCategorySources = readAnnualEducationCategorySources(forms, facts, options.taxYear);
+  const annualCategoryBeneficiaries = new Set([...annualCategorySources.keys()].map(id => expenses.get(id)?.beneficiaryId));
+  const annualCategoryBorrowers = new Set([...annualCategorySources.values()].flatMap(value => value.borrowerId ? [value.borrowerId] : []));
+  validateOrdinaryEducationSources(facts, options.taxYear, options.educationExpenses, new Set(annualCategorySources.keys()));
   for (const refund of facts.expenseRefunds ?? []) {
     audit.record("Form1099-Q", `expense-refund:${refund.id}`, "Actual current-year cash refund retained by the beneficiary", actualAmount(refund.amount, "receipt refund"),
       "Original receipt reduction; preserve the reported benefit and distribution", { "Expense source": refund.expenseId,
@@ -799,7 +803,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const requested = sum(...group.map(item => item.allowed));
     const remaining = zeroFloor(d(options.taxYear === 2026 ? "20000" : "10000").minus(outside));
     if (requested.gt(remaining)) for (const item of group) item.allowed = item.allowed.mul(remaining).div(requested);
-    audit.record("Form1099-Q", `${beneficiary.id}:k12-qualified`, "Qualified K12 cash distributions after annual beneficiary limit", sum(...group.map(item => item.allowed)), "IRC529(e)(3)(A): apply annual cap across beneficiary cash savings-plan distributions", { "Outside-plan qualified distributions": outside, "Remaining annual cap": remaining });
+    if (!annualCategoryBeneficiaries.has(beneficiary.id)) audit.record("Form1099-Q", `${beneficiary.id}:k12-qualified`, "Qualified K12 cash distributions after annual beneficiary limit", sum(...group.map(item => item.allowed)), "IRC529(e)(3)(A): apply annual cap across beneficiary cash savings-plan distributions", { "Outside-plan qualified distributions": outside, "Remaining annual cap": remaining });
   }
   for (const item of allocations.filter(entry => entry.expense.category === "student_loan")) if (!item.expense.borrowerId || !borrowers.has(item.expense.borrowerId)) throw new Error("Form1099Q actual student-loan borrower history required");
   for (const borrower of borrowers.values()) {
@@ -807,7 +811,7 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const group = allocations.filter(item => item.expense.category === "student_loan" && item.expense.borrowerId === borrower.id);
     const requested = sum(...group.map(item => item.allowed));
     if (requested.gt(remaining)) for (const item of group) item.allowed = item.allowed.mul(remaining).div(requested);
-    audit.record("Form1099-Q", `${borrower.id}:loan-qualified`, "Qualified loan repayments after lifetime borrower limit", sum(...group.map(item => item.allowed)), "10000 lifetime limit less actual prior and other current qualified distributions", { "Remaining limit": remaining });
+    if (!annualCategoryBorrowers.has(borrower.id)) audit.record("Form1099-Q", `${borrower.id}:loan-qualified`, "Qualified loan repayments after lifetime borrower limit", sum(...group.map(item => item.allowed)), "10000 lifetime limit less actual prior and other current qualified distributions", { "Remaining limit": remaining });
   }
   for (const item of allocations.filter(item => item.form.distributionMedium === "in_kind_prepaid_tuition")) {
     const expense = item.expense;
@@ -922,6 +926,25 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
   }
   if (accountResults.length) audit.record(accountResults.some(row => row.auditForm === "Coverdell rollover worksheet") ? "Coverdell rollover worksheet" : "Pub970 WS6-3", "16", "Total taxable Coverdell earnings", sum(...[...derived.values()].map(item => item.earnings.minus(item.taxFree))), "Sum each account line14 once; preserve statement split totals");
   const annualCash = calculateAnnualCashQtpPools(verifiedForms, facts, roomBoardPeriods, options.taxYear);
+  // Annual category costs come from the completed pool, never an invented
+  // receipt allocation. Other source methods retain their existing audits.
+  for (const pool of annualCash.pools) if (pool.categoryCosts) {
+    const outside = actualAmount(beneficiaries.get(pool.beneficiaryId)?.outsideK12QualifiedDistributions, "outside-plan qualified K12 distributions");
+    const remaining = zeroFloor(d(options.taxYear === 2026 ? "20000" : "10000").minus(outside));
+    audit.record("Form1099-Q", `${pool.beneficiaryId}:k12-qualified`, "Qualified K12 cash costs after annual beneficiary limit", pool.categoryCosts.k12,
+      "IRC529(e)(3)(A): completed annual qualified category costs before the common cash earnings fraction",
+      { "Outside-plan qualified distributions": outside, "Remaining annual cap": remaining });
+  }
+  for (const borrowerId of annualCategoryBorrowers) {
+    const borrower = borrowers.get(borrowerId);
+    if (!borrower) throw new Error("Form1099Q annual category borrower history is missing");
+    const amounts = annualCash.pools.flatMap(pool => { const amount = pool.categoryCosts?.loans.get(borrowerId); return amount === undefined ? [] : [amount]; });
+    const qualified = amounts.reduce((total, amount, index) => index === 0 ? amount : total.plus(amount), ZERO);
+    const remaining = [...annualCategorySources.values()].find(source => source.borrowerId === borrowerId)?.borrowerRemaining;
+    if (!remaining) throw new Error("Form1099Q annual category borrower capacity is missing");
+    audit.record("Form1099-Q", `${borrowerId}:loan-qualified`, "Qualified loan principal cash costs after lifetime borrower limit", qualified,
+      "IRC529(c)(9): completed principal-only category costs before the annual cash earnings fraction", { "Remaining limit": remaining });
+  }
   const reportFields = { taxableEarnings: "taxableNumerator", taxFreeEarnings: "excludedNumerator", creditException: "creditExceptionNumerator", penaltyException: "penaltyExceptionNumerator" } as const;
   const reportedSourceTotal = (rows: EducationDistributionResult[], field: keyof typeof reportFields): Decimal => annualCash.pools.length
     ? roundEducationSourceAmounts(rows.map(row => ({ amount: row[field], numerator: row.annualCashReporting?.[reportFields[field]], denominator: row.annualCashReporting?.denominator })))

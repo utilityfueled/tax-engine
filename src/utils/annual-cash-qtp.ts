@@ -2,6 +2,7 @@
 import Decimal from 'decimal.js';
 import type { Form1099Q, QualifiedEducationExpenseSummary } from '@/models/inputs.js';
 import type { RoomBoardPeriodResults } from './education-room-board-periods.js';
+import { readAnnualEducationCategorySources } from './education-annual-category-sources.js';
 
 type Facts = NonNullable<QualifiedEducationExpenseSummary['sourceFacts']>;
 /** Calculated exact ratios, never user-entered source or penny allocations. */
@@ -33,6 +34,7 @@ export interface AnnualCashQtpPool {
   beneficiaryId: string;
   sourceIds: string[];
   qualifiedExpenses: Decimal;
+  categoryCosts?: { k12: Decimal; loans: ReadonlyMap<string, Decimal> };
 }
 
 /** Add exact ratios before rounding a printed line, including repeating fractions. */
@@ -73,6 +75,7 @@ export function calculateAnnualCashQtpPools(forms: readonly Form1099Q[], facts: 
     return v;
   };
   const total = (values: readonly Decimal[]) => values.reduce((a, b) => a.plus(b), new D(0));
+  const categorySources = readAnnualEducationCategorySources(forms, facts, taxYear);
   for (const beneficiaryId of new Set(forms.map(form => form.beneficiaryId))) {
     const group = forms.filter(form => form.beneficiaryId === beneficiaryId);
     const cash = group.filter(form => form.accountType === '529' && form.distributionMedium === 'cash');
@@ -101,7 +104,8 @@ export function calculateAnnualCashQtpPools(forms: readonly Form1099Q[], facts: 
     if (beneficiaries.length !== 1 || !money(beneficiaries[0]?.outsideK12QualifiedDistributions, 'outside-plan qualified distributions').isZero())
       throw new Error('Annual cash QTP known outside-plan distributions require their complete original sources');
     const expenses = facts.expenses.filter(expense => expense.beneficiaryId === beneficiaryId);
-    if (expenses.some(expense => !expense.category.startsWith('postsecondary_'))) {
+    const hasCategorySources = expenses.some(expense => categorySources.has(expense.id));
+    if (expenses.some(expense => !expense.category.startsWith('postsecondary_') && !categorySources.has(expense.id))) {
       throw new Error('Annual cash QTP special expense categories require their separate source calculation');
     }
     const prepaidIds = new Set(group.filter(form => form.distributionMedium === 'in_kind_prepaid_tuition').map(form => form.sourceId));
@@ -113,7 +117,8 @@ export function calculateAnnualCashQtpPools(forms: readonly Form1099Q[], facts: 
         throw new Error('Annual cash QTP original expense allocations exceed Box1 capacity');
       }
     }
-    let qualified = new D(0), credits = new D(0);
+    let qualified = new D(0), credits = new D(0), k12 = new D(0);
+    const loanCosts = new Map<string, Decimal>(), prepaidLoanCosts = new Map<string, Decimal>();
     for (const expense of expenses) {
       if (roomBoard.expenseIds.has(expense.id)) continue;
       if (expense.category === 'postsecondary_room_board') throw new Error('Annual cash QTP room and board requires the actual academic-period packet');
@@ -132,9 +137,40 @@ export function calculateAnnualCashQtpPools(forms: readonly Form1099Q[], facts: 
       const prepaid = linked.filter(row => prepaidIds.has(row.sourceId));
       const prepaidQualified = total(prepaid.map(row => money(row.amount, 'qualified prepaid expense')));
       const prepaidCredit = total(prepaid.map(row => money(row.creditAmount, 'prepaid credit expense')));
+      const category = categorySources.get(expense.id);
+      if (category) {
+        const remaining = D.max(0, new D(category.qualified).minus(prepaidQualified));
+        if (category.k12) k12 = k12.plus(remaining);
+        else if (category.borrowerId) {
+          loanCosts.set(category.borrowerId, (loanCosts.get(category.borrowerId) ?? new D(0)).plus(remaining));
+          prepaidLoanCosts.set(category.borrowerId, (prepaidLoanCosts.get(category.borrowerId) ?? new D(0)).plus(D.min(category.qualified, prepaidQualified)));
+        } else qualified = qualified.plus(remaining);
+        continue;
+      }
       qualified = qualified.plus(available.minus(prepaidQualified));
       credits = credits.plus(credit.minus(prepaidCredit));
     }
+    const k12Limit = new D(taxYear === 2026 ? '20000' : '10000');
+    const qualifiedK12 = D.min(k12, k12Limit);
+    qualified = qualified.plus(qualifiedK12);
+    let qualifiedLoans = new D(0);
+    const qualifiedLoansByBorrower = new Map<string, Decimal>();
+    for (const [borrowerId, cost] of loanCosts) {
+      const borrower = facts.loanBorrowers?.find(row => row.id === borrowerId);
+      if (!borrower?.owner) throw new Error('Annual cash QTP actual borrower ownership and lifetime history are required');
+      const limit = D.max(0, new D(10000).minus(money(borrower.priorQualifiedDistributions, 'prior borrower qualified distributions'))
+        .minus(money(borrower.otherCurrentQualifiedDistributions, 'other current borrower qualified distributions')));
+      const otherBeneficiaries = (facts.expenses ?? []).filter(expense => expense.borrowerId === borrowerId && expense.beneficiaryId !== beneficiaryId);
+      if (otherBeneficiaries.some(expense => !categorySources.has(expense.id))) throw new Error('Annual cash QTP shared borrower requires complete current beneficiary sources');
+      const allCost = total([...categorySources].filter(([id, value]) => value.borrowerId === borrowerId
+        && facts.expenses?.some(expense => expense.id === id)).map(([, value]) => value.qualified));
+      if (otherBeneficiaries.length && allCost.gt(limit)) throw new Error('Annual cash QTP binding cross-beneficiary borrower limit requires its actual allocation method');
+      const remaining = D.max(0, limit.minus(prepaidLoanCosts.get(borrowerId) ?? new D(0)));
+      const qualifiedLoan = D.min(cost, remaining);
+      qualifiedLoansByBorrower.set(borrowerId, qualifiedLoan);
+      qualifiedLoans = qualifiedLoans.plus(qualifiedLoan);
+    }
+    qualified = qualified.plus(qualifiedLoans);
     for (const period of roomBoard.periods.filter(period => period.beneficiaryId === beneficiaryId)) {
       const capacity = period.inputs['Derived period capacity'];
       if (!Decimal.isDecimal(capacity)) throw new Error('Annual cash QTP requires the completed original academic-period capacity');
@@ -144,7 +180,8 @@ export function calculateAnnualCashQtpPools(forms: readonly Form1099Q[], facts: 
     const gross = total(cash.map(form => money(form.grossDistribution, 'cash gross')));
     qualified = D.min(gross, qualified);
     const beforeCredit = D.min(gross, qualified.plus(credits));
-    const pool: AnnualCashQtpPool = { beneficiaryId, sourceIds: cash.map(form => form.sourceId ?? ''), qualifiedExpenses: qualified };
+    const pool: AnnualCashQtpPool = { beneficiaryId, sourceIds: cash.map(form => form.sourceId ?? ''), qualifiedExpenses: qualified,
+      ...(hasCategorySources ? { categoryCosts: { k12: qualifiedK12, loans: qualifiedLoansByBorrower } } : {}) };
     result.pools.push(pool);
     for (const form of cash) {
       const sourceId = form.sourceId ?? '', sourceGross = money(form.grossDistribution, 'cash Box1');
@@ -163,12 +200,15 @@ export function calculateAnnualCashQtpPools(forms: readonly Form1099Q[], facts: 
       const inputs: Record<string, Decimal | string> = {
         'Annual cash gross': gross, 'Annual qualified cash expenses': qualified,
         'Annual cash education-credit expenses': credits, 'Original cash gross': sourceGross,
+        ...(hasCategorySources ? { 'Annual qualified K12 cash costs': qualifiedK12, 'Annual K12 cash limit': k12Limit,
+          'Annual qualified principal-only loan costs': qualifiedLoans } : {}),
         'Original cash earnings': money(form.earnings, 'cash Box2', true),
         'Original linked expense amount': originalAllocated,
         'Exact excluded cash earnings': exactExcluded, 'Exact taxable cash earnings': exactTaxable,
         'Original annual statement sources': JSON.stringify(group.slice().sort((a,b)=>(a.sourceId??'').localeCompare(b.sourceId??''))),
         'Original annual expense sources': JSON.stringify(expenses.slice().sort((a,b)=>a.id.localeCompare(b.id))),
         'Original annual allocations': JSON.stringify(facts.allocations.filter(row=>group.some(form=>form.sourceId===row.sourceId)).slice().sort((a,b)=>(a.sourceId+'\0'+a.expenseId).localeCompare(b.sourceId+'\0'+b.expenseId))),
+        ...(loanCosts.size ? { 'Original annual borrower sources': JSON.stringify((facts.loanBorrowers ?? []).filter(row => loanCosts.has(row.id)).slice().sort((a,b) => a.id.localeCompare(b.id))) } : {}),
       };
       result.sources.set(sourceId, { sourceId, beneficiaryId, gross, qualifiedExpenses: qualified, originalAllocatedExpenses: originalAllocated,
         calculatedExpenseShare: gross.isZero() ? new D(0) : sourceGross.times(qualified).div(gross),

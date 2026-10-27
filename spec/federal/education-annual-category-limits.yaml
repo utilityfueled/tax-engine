@@ -1,0 +1,120 @@
+form: "Annual QTP category limits"
+fullName: "Actual annual cash category eligibility and beneficiary limits"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+sources:
+  - "https://www.irs.gov/publications/p970"
+  - "https://www.irs.gov/instructions/i1099q"
+  - "https://www.irs.gov/instructions/i1040gi"
+  - "https://uscode.house.gov/us/usc/119-118/t26/s221/"
+notes: |
+  Official sources refreshed October 26, 2026. Apply the existing complete
+  ordinary same-year/beneficiary/recipient annual cash fraction after actual
+  category eligibility. Section529(e)(3)(A) limits cash K12 costs across the
+  beneficiary to10000 in2025 and20000 in2026; PL119-21 section70413(b)(2)
+  makes the increased cap effective for distributions after December31,2025.
+  The expanded K12 categories and recognized credential categories apply to
+  distributions after July4,2025. Homogeneous actual before/after dates are
+  determined; a mixed-date annual pool retains the separate attribution
+  method boundary rather than inferring an expense split.
+  Section529(c)(8) requires an apprenticeship registered and certified
+  with the Secretary of Labor and required fees/books/supplies/equipment.
+  Section529(c)(7) supplies tutoring and disability conditions; credential
+  conditions are in529(e)(3)(C) and(f). Explicit false yields zero eligible
+  cost; absence is unknown.
+  Section529(c)(9) applies the10000 lifetime limit per actual borrower after
+  actual prior and other current qualified distributions. This cohort admits
+  actual zero loan interest; positive interest retains the unresolved annual
+  attribution required by221(e)(1). No computed exclusion or cap election is
+  entered. Shared borrowers at a binding cross-beneficiary limit require a
+  determined allocation, not a guessed priority.
+  Cash-retained refunds retain original paid/received dates, source references,
+  complete-history confirmation and exact reconciliation. Other dispositions
+  and years keep their existing separate methods. Prepaid qualified costs are
+  removed before the cash numerator and are not subject to the cash K12 cap.
+  The existing exact annual rational reporting adds source cents before each
+  printed total. Existing ESA choices, transfers, corrections, outside-plan
+  original completeness and final-year/public readiness gates are unchanged.
+  All numerical controls are independently derived from fictional originals,
+  not published IRS examples or independent professional tax qualification.
+lines:
+  - line: "k12-annual-cap"
+    description: "Apply one year-specific K12 cap before the annual cash ratio"
+    formula: "Cash15000+15000 with original earnings3000+6000 and tuition25000:2025Q10000 gives6000taxable/600additional;2026Q20000 gives3000taxable/300additional. Original and expense order do not change the result."
+    testRef: "tests/engine/forms/education-annual-category-limits.test.ts::applies the K12 annual cap once before unequal original earnings"
+  - line: "qualified-categories"
+    description: "Require the actual statutory category answers"
+    formula: "Tuition8000+books4000 uses capped10000; false books leaves8000. Tutoring requires all three source predicates; therapy requires disability and provider facts; credential requires recognized and required facts; apprenticeship requires registration and required costs. Unknown never becomes false or eligible."
+    testRef: "tests/engine/forms/education-annual-category-limits.test.ts::keeps false and unknown statutory category facts distinct"
+  - line: "effective-date"
+    description: "Respect actual homogeneous distribution timing"
+    formula: "Expanded2025 costs with all originals on July4 yield zero; all July5 qualify. Mixed July4/July5 originals reject the unresolved annual attribution; an explicit after-July4 answer cannot contradict an actual original date.2026 ordinary annual eligibility does not reuse2025 timing."
+    testRef: "tests/engine/forms/education-annual-category-limits.test.ts::uses actual homogeneous effective dates without an annual timing election"
+  - line: "loan-history"
+    description: "Derive principal-only qualified costs from actual borrower history"
+    formula: "Actual principal8000, prior qualifying3000 and other current2000 leaves lifetime capacity5000; cash gross30000/earnings9000 yields7500taxable. Missing zero interest, borrower history, relationship or ownership rejects; positive interest retains its named attribution method."
+    testRef: "tests/engine/forms/education-annual-category-limits.test.ts::derives principal-only capacity from the actual borrower history"
+  - line: "known-zero-loan-qualification"
+    description: "Do not request an attribution method when actual loan costs cannot qualify"
+    formula: "Actual unrelated borrower or fully consumed10000 lifetime limit yields zero qualified loan cost even with positive actual interest. Actual interest and claimed deduction must still reconcile; unknown source amounts never become zero."
+    testRef: "tests/engine/forms/education-annual-category-limits.test.ts::keeps known zero loan qualification separate from unresolved positive attribution"
+  - line: "refund-history"
+    description: "Retain actual category receipt refunds before annual qualification"
+    formula: "K12cost8000 minus actual cash-retained refund500 and assistance500 givesQ7000/G30000,6900taxable. Missing, duplicate, inconsistent or next-year refund evidence rejects without changing originals."
+    testRef: "tests/engine/forms/education-annual-category-limits.test.ts::requires complete actual category refund chronology and exact source sums"
+  - line: "prepaid-and-independent-costs"
+    description: "Keep actual prepaid costs and unrelated eligible annual costs separate"
+    formula: "Actual K12tuition14000 includes prepaid4000; remaining cash K12cost10000 plus postsecondary3000 givesQ13000 against cash30000. Unequal cash earnings9000 give5100taxable while prepaid earnings remain excluded."
+    testRef: "tests/engine/forms/education-annual-category-limits.test.ts::keeps prepaid costs outside the cash category cap and denominator"
+  - line: "reporting-and-boundaries"
+    description: "Preserve exact aggregate rounding and existing source exclusions"
+    formula: "Two cash100/earnings1 originals and K12cost100 produce exact.5+.5 taxable,reported1. Exact source tails remain conserved; ESA and outside-source methods retain their original boundaries."
+    testRef: "tests/engine/forms/education-annual-category-limits.test.ts::preserves category source cents and the existing annual source boundaries"
+  - line: "separate-credit-source"
+    description: "Compose separately qualified postsecondary credit costs with capped K12 costs"
+    formula: "K12tuition25000 is capped10000; a distinct actual postsecondary tuition5000 with1000 matched LLC allocation contributes4000, soQ14000/G30000 gives4800taxable and300credit-only exception. K12 category selection alone cannot establish postsecondary credit eligibility."
+    testRef: "tests/engine/forms/education-annual-category-limits.test.ts::composes capped categories with independently qualified credit expenses"
+  - line: "canonical"
+    description: "Carry actual category earnings and penalties through the return once"
+    formula: "Actual wages50000 plus2025K12 annual taxable6000 gives56000AGI/600additional tax. Exact two half-dollar sources report1 on income. Educator coordination uses actual excluded3000, not the25000 receipt or10000 cap."
+    testRef: "tests/engine/education-annual-category-return.test.ts::carries actual annual category amounts through income and educator coordination"
+  - line: "guide-and-reload"
+    description: "Preserve actual category facts and re-confirmation through saved drafts"
+    formula: "Apprenticeship6000 with explicit true registration/required answers yields57200AGI; false yields59000; omission blocks. Changing an answer revokes root confirmation and save/reload preserves exact false/blank/source amounts."
+    testRef: "tests/guided-interview/guided-annual-category-limits.test.ts::preserves annual category sources and unknown answers through reload"
+  - line: "actual-panel"
+    description: "Reach source qualification through the actual education panel"
+    formula: "Actual registration/required-cost controls preserve unknown/false, require root reconfirmation, and keep all original earnings and paid receipts unchanged."
+    testRef: "tests/apps/web/annual-category-interactions.test.tsx::edits actual apprenticeship eligibility through the education panel"
+  - line: "private-review"
+    description: "Bind original category, chronology and history before review rendering"
+    formula: "Actual capped2025 sources print1040AGI56000/5329taxable6000/additional600. Replaced actual category, receipt refund chronology, borrower history or forged cap totals reject before rendering, even at unchanged total expense."
+    testRef: "tests/pdf/education-annual-category-limits.test.ts::binds annual category sources and prints the derived physical totals"
+  - line: "workspace"
+    description: "Replay original category evidence before identifier redaction"
+    formula: "Actual guide retains the annual gross30000 and qualified apprentice6000 orK1210000, with7200/6000taxable and720/600additional; all pages retain review notices, source identities are absent and final2026 review remains gated."
+    testRef: "tests/apps/web/workspace-annual-category-limits.test.ts::downloads actual category sources with local review privacy"
+  - line: "browser"
+    description: "Edit category sources and download actual saved review at both widths"
+    formula: "Actual registration true/false/unknown and K12receipt25000to9000 retain original Box1/2/3, revoke confirmation, reload and download calculated category amounts. No client source data leaves the local workspace except its authorized review request."
+    testRef: "apps/web/tests/guided-annual-category-limits.spec.ts::preserves annual category facts through edits reload and review"
+  - line: "category-audit"
+    description: "Report annual qualified category costs from the completed pool"
+    formula: "A complete annual cash pool with no receipt allocations still records actual capped K12cost10000 and principal-only loan cost5000 in its category audit. These are qualified costs before the annual earnings fraction, not fabricated per-statement allocations; the legacy allocation-only zero is not the annual category result."
+    testRef: "tests/engine/forms/education-annual-category-limits.test.ts::reports completed annual category costs without fabricated source allocations"
+  - line: "exact-borrower-history"
+    description: "Determine lifetime capacity from every original history digit"
+    formula: "Actual prior use1e-60 plus other current use10000minus1e-60 exactly exhausts the loan limit. Positive interest therefore has zero qualifying capacity; no intermediate rounding can create capacity or demand an attribution method. The audit retains exact zero too, without changing global Decimal precision. Removing that tiny prior use leaves actual positive capacity and retains the positive-interest method guard."
+    testRef: "tests/engine/forms/education-annual-category-limits.test.ts::preserves exact complementary borrower histories before the interest boundary"
+  - line: "own-return-loan-claim"
+    description: "Reconcile an actual own-return interest claim even when no QTP earnings are excluded"
+    formula: "An exhausted borrower limit leaves9000 taxable QTP earnings. A primary or joint-spouse1000 claimed interest amount before phase-out requires the existing actual loan source facts, including borrower/expense links and eligibility; no claim amount creates its own deduction. Complete qualifying lender records produce1000 deduction and58000AGI from50000wages plus9000QTP earnings. Explicit zero claim or owner other leaves59000AGI without importing a deduction. Missing, unconfirmed or mismatched own-return sources reject. IRC221(a),(b),(d),(e) and Pub970 chapter4 govern the existing deduction."
+    testRef: "tests/engine/education-annual-category-return.test.ts::reconciles an actual own-return loan claim when the annual QTP benefit is zero"
+  - line: "own-return-loan-review"
+    description: "Print the reconciled actual loan deduction alongside the exhausted QTP result"
+    formula: "The same independently qualified1000 loan source prints1040adjustments1000/AGI58000, Schedule1line211000 and unchanged5329taxable9000/additional900. The source claim is never treated as a deduction override."
+    testRef: "tests/pdf/education-annual-category-limits.test.ts::prints the independently sourced interest claim with zero annual QTP benefit"
+  - line: "own-return-loan-guide"
+    description: "Require and preserve actual loan sources for an education claim before preview"
+    formula: "An actual primary interest claim1000 with exhausted QTP capacity blocks the guided bridge until the existing loan worksheet supplies independent lender, loan-origin, eligibility and receipt links. Save/reload retains those sources and yields58000AGI; a cleared source link blocks and editing the actual education claim revokes confirmation. No selected life event is needed to recognize the actual source claim."
+    testRef: "tests/guided-interview/guided-annual-category-limits.test.ts::requires and preserves actual loan records for a zero-benefit education claim"

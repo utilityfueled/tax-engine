@@ -2001,7 +2001,7 @@ export function validateSection(
       Object.assign(errors, netOperatingLossFactErrors(state.sectionData.adjustments?.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], state.segmentation.lifeEvents.includes("net-operating-loss"), state.sectionData.deductions, state.sectionData.adjustments?.k1LossSources));
       let loanEducation: StudentLoanEducationSources = [];
       try {
-        if (state.sectionData.adjustments?.studentLoanFacts) loanEducation = studentLoanEducationSources(state.sectionData.credits, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments.studentLoanFacts);
+        if (state.sectionData.adjustments?.studentLoanFacts || state.sectionData.credits?.educationDistributions?.expenses?.some(expense => expense.category === "student_loan")) loanEducation = studentLoanEducationSources(state.sectionData.credits, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments?.studentLoanFacts);
       } catch (error) { errors.studentLoanSources = error instanceof Error ? error.message : "Reconcile the actual education sources linked to student-loan interest."; }
       Object.assign(errors, studentLoanFactErrors(state.sectionData.adjustments, state.segmentation.filingStatus, state.taxYear, loanEducation, state.segmentation.lifeEvents.includes("student-loans")));
       return Object.keys(errors).length ? validateRequiredFacts(errors) : validateAdjustmentsSection(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear, loanEducation);

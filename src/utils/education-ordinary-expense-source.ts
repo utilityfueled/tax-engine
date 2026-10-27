@@ -65,12 +65,13 @@ export function readOrdinaryEducationExpense(facts: Facts, expense: Expense, yea
 }
 
 /** Validate original refund identity and actual credit-program binding before canonical calculation. */
-export function validateOrdinaryEducationSources(facts: Facts, year: number, educationExpenses?: EducationExpenses): void {
+export function validateOrdinaryEducationSources(facts: Facts, year: number, educationExpenses?: EducationExpenses, validatedCategoryExpenseIds: ReadonlySet<string> = new Set()): void {
   const ids = new Set<string>();
   for (const refund of facts.expenseRefunds ?? []) {
     const id = refund.id?.trim();
     const expense = (facts.expenses ?? []).filter(row => row.id === refund.expenseId);
-    if (!id || ids.has(id) || expense.length !== 1 || !expense[0] || !isOrdinaryEducationExpense(expense[0])) throw new Error('Ordinary education refund requires a unique original refund and receipt identity');
+    if (!id || ids.has(id) || expense.length !== 1 || !expense[0]
+      || (!isOrdinaryEducationExpense(expense[0]) && !validatedCategoryExpenseIds.has(expense[0].id))) throw new Error('Ordinary education refund requires a unique original refund and receipt identity');
     ids.add(id);
   }
   for (const expense of facts.expenses ?? []) {

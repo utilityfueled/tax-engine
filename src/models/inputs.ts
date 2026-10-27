@@ -880,6 +880,8 @@ const EducationDistributionExpenseSchema = z.object({
   tutorUnrelated: z.boolean().optional(), tutoringOutsideHome: z.boolean().optional(), tutorQualified: z.boolean().optional(),
   studentHasDisability: z.boolean().optional(), providerLicensedOrAccredited: z.boolean().optional(),
   credentialRecognized: z.boolean().optional(), requiredForCredential: z.boolean().optional(),
+  /** Actual Labor Department program registration and required apprenticeship costs. */
+  apprenticeshipRegistered: z.boolean().optional(), requiredForApprenticeship: z.boolean().optional(),
   destinationAccountId: z.string().trim().min(1).optional(),
   borrowerId: z.string().trim().min(1).optional(), beneficiaryOrSibling: z.boolean().optional(),
   studentLoanInterestAmount: optionalDecimalInput, studentLoanInterestDeducted: optionalDecimalInput,

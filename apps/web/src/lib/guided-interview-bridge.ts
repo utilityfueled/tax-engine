@@ -665,7 +665,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
     assertKnownFacts(educationFactErrors(creditsData, state.taxYear, segmentation.filingStatus, personalInfo));
     assertKnownFacts(educationDistributionFactErrors(creditsData?.educationDistributions, state.taxYear, segmentation.filingStatus,
       buildActualEducationInput(creditsData, state.taxYear, segmentation.filingStatus, personalInfo)));
-    if (adjustmentData?.studentLoanFacts) loanEducation = studentLoanEducationSources(creditsData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData.studentLoanFacts);
+    if (adjustmentData?.studentLoanFacts || creditsData?.educationDistributions?.expenses?.some(expense => expense.category === "student_loan")) loanEducation = studentLoanEducationSources(creditsData, segmentation.filingStatus, state.taxYear, personalInfo, adjustmentData?.studentLoanFacts);
     assertKnownFacts(studentLoanFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation, segmentation.lifeEvents.includes("student-loans")));
     assertKnownFacts(healthInsuranceSourceErrors(state));
     assertKnownFacts(foreignIncomeFactErrors(state));

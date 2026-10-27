@@ -879,6 +879,29 @@
       ]
     },
     {
+      "key": "federal/education-annual-category-limits",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s529/",
+      "specPath": "spec/federal/education-annual-category-limits.yaml",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/education-annual-category-limits.test.ts::applies the K12 annual cap once before unequal original earnings",
+        "tests/pdf/education-annual-category-limits.test.ts::binds annual category sources and prints the derived physical totals"
+      ],
+      "implementationNote": "Actual ordinary annual cash category qualification, dated refund and borrower history, completed beneficiary limits and source-bound historical 2025 review are exercised by these own-spec tests. Mixed effective-date and positive qualified-interest attribution remain separate internal methods. No final2026 output, filing qualification or independent human review is claimed.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/education-distribution-return",
       "jurisdiction": "federal",
       "taxYear": 2026,

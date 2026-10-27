@@ -1286,6 +1286,16 @@
         "tests/engine/federal-student-loan-sources.test.ts::routes actual loan sources once and preserves eligibility and unknown distinctions"
       ],
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/education-annual-category-limits",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-1099-q.ts",
+      "testRefs": [
+        "tests/engine/forms/education-annual-category-limits.test.ts::applies the K12 annual cap once before unequal original earnings",
+        "tests/pdf/education-annual-category-limits.test.ts::binds annual category sources and prints the derived physical totals"
+      ],
+      "note": "Actual ordinary annual cash category qualification, dated refund and borrower history, completed beneficiary limits and source-bound historical 2025 review are exercised by these own-spec tests. Mixed effective-date and positive qualified-interest attribution remain separate internal methods. No final2026 output, filing qualification or independent human review is claimed."
     }
   ]
 }

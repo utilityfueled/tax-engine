@@ -1812,6 +1812,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       && (filingStatus !== "married_filing_jointly" || !input.taxpayer.spouse)) {
       throw new Error("Form1099Q spouse recipient requires an actual joint-return spouse");
     }
+    if (!input.studentLoanInterestFacts && form1099Q.loanInterestSourceAdjustments.some(
+      item => item.owner !== "other" && item.interestClaimedElsewhere.gt(0))) {
+      throw new Error("Form1099Q own-return interest claims require actual student-loan source facts");
+    }
     if (form1099Q.loanInterestAdjustments.some(item => item.owner !== "other" && item.taxFreeEarningsUsedForInterest.gt(0))
       && d(combinedStudentLoanInterest ?? input.adjustments?.studentLoanInterest).gt(0) && !input.studentLoanInterestFacts) {
       throw new Error("Form1099Q excluded earnings require actual student-loan interest source coordination before a deduction");

@@ -46,6 +46,9 @@ export function hasSavedStudentLoanStatement(loan: StudentLoanSourceData): boole
 export function buildStudentLoanInputs(data: StudentLoanData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, educationLoanInterest: StudentLoanEducationSources = [], legacyGrossInterest?: string) {
   const legacy = hasEnteredAmount(legacyGrossInterest) ? new Decimal(money(legacyGrossInterest, "saved student-loan gross interest")) : undefined;
   if (!data) {
+    if (educationLoanInterest.some(source => source.owner !== "other" && source.interestClaimedElsewhere.gt(0))) {
+      throw new Error("Enter actual student-loan source facts for the interest claim in your education records.");
+    }
     if (legacy?.gt(0)) throw new Error("Enter actual student-loan source facts; a saved amount does not establish eligibility.");
     return {};
   }
