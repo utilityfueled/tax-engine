@@ -1316,6 +1316,16 @@
         "tests/engine/federal-student-loan-sources.test.ts::routes actual loan sources once and preserves eligibility and unknown distinctions"
       ],
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/education-annual-loan-interest",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-5329.ts",
+      "testRefs": [
+        "tests/engine/education-annual-loan-interest.test.ts::derives the annual interest exclusion and actual lender deduction once",
+        "tests/pdf/education-annual-loan-interest.test.ts::binds original lender records and the calculated deduction before rendering"
+      ],
+      "note": "The own-spec controls exercise actual annual interest-only qualification, original Box2 earnings, independent lender deduction and historical2025 Form5329 output. The private review binds all consumed original return facts before output. Mixed-purpose attribution, mixed effective dates and bond methods remain separate; no final2026 output, filing qualification or independent human review is claimed."
     }
   ]
 }

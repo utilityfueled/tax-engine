@@ -21,7 +21,7 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import { d, sum, zeroFloor, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { assertDistinctEducationBeneficiaries } from "@/utils/education-beneficiary-identity.js";
-import { calculateAnnualCashQtpPools, roundEducationSourceAmounts, type AnnualCashReportingAmounts } from "@/utils/annual-cash-qtp.js";
+import { calculateAnnualCashQtpPools, roundEducationSourceAmounts, type AnnualCashReportingAmounts, type AnnualLoanInterestReporting } from "@/utils/annual-cash-qtp.js";
 import { calculateRoomBoardPeriods } from "@/utils/education-room-board-periods.js";
 import { readInKindTuitionEsaSource } from "@/utils/in-kind-tuition-esa-source.js";
 import { readInKindTuitionAssistanceSource } from "@/utils/in-kind-tuition-assistance-source.js";
@@ -42,7 +42,7 @@ export interface Form1099QResult {
   coverdellAccounts: Array<{ accountId: string; beneficiaryId: string; auditForm: "Pub970 WS6-3" | "Coverdell rollover worksheet"; distributedBasis: Decimal; earnings: Decimal; endingBasis: Decimal }>;
   /** Opaque beneficiary links only; personal tax identifiers are not calculation output. */
   creditAllocations: Array<{ beneficiaryId: string; amount: Decimal; taxableEarningsCausedByCredit: Decimal }>;
-  loanInterestSourceAdjustments: Array<{ expenseId: string; borrowerId: string; owner: "primary" | "spouse" | "other"; interestPaid: Decimal; taxFreeEarningsUsedForInterest: Decimal; interestClaimedElsewhere: Decimal }>;
+  loanInterestSourceAdjustments: Array<{ expenseId: string; borrowerId: string; owner: "primary" | "spouse" | "other"; interestPaid: Decimal; taxFreeEarningsUsedForInterest: Decimal; interestClaimedElsewhere: Decimal; annualInterestOnlyReporting?: AnnualLoanInterestReporting }>;
   loanInterestAdjustments: Array<{ borrowerId: string; owner: "primary" | "spouse" | "other"; interestPaid: Decimal; taxFreeEarningsUsedForInterest: Decimal; interestClaimedElsewhere: Decimal }>;
   /** Total gross distributions (sum of Box 1) */
   grossDistribution: Decimal;
@@ -942,8 +942,11 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     const qualified = amounts.reduce((total, amount, index) => index === 0 ? amount : total.plus(amount), ZERO);
     const remaining = [...annualCategorySources.values()].find(source => source.borrowerId === borrowerId)?.borrowerRemaining;
     if (!remaining) throw new Error("Form1099Q annual category borrower capacity is missing");
-    audit.record("Form1099-Q", `${borrowerId}:loan-qualified`, "Qualified loan principal cash costs after lifetime borrower limit", qualified,
-      "IRC529(c)(9): completed principal-only category costs before the annual cash earnings fraction", { "Remaining limit": remaining });
+    const hasInterest = [...annualCategorySources.values()].some(source => source.borrowerId === borrowerId && source.annualInterestOnly);
+    audit.record("Form1099-Q", `${borrowerId}:loan-qualified`, hasInterest ? "Qualified loan payment cash costs after lifetime borrower limit"
+      : "Qualified loan principal cash costs after lifetime borrower limit", qualified,
+      hasInterest ? "IRC529(c)(9): completed interest-only category costs before the annual cash earnings fraction"
+        : "IRC529(c)(9): completed principal-only category costs before the annual cash earnings fraction", { "Remaining limit": remaining });
   }
   const reportFields = { taxableEarnings: "taxableNumerator", taxFreeEarnings: "excludedNumerator", creditException: "creditExceptionNumerator", penaltyException: "penaltyExceptionNumerator" } as const;
   const reportedSourceTotal = (rows: EducationDistributionResult[], field: keyof typeof reportFields): Decimal => annualCash.pools.length
@@ -1030,16 +1033,27 @@ function calculateSourceDistributions(forms: Form1099Q[], summary: QualifiedEduc
     if (!borrower?.owner) throw new Error("Form1099Q actual student-loan borrower ownership is required");
     const interestPaid = actualAmount(expense.studentLoanInterestAmount, "expense interest paid");
     const interestClaimedElsewhere = actualAmount(expense.studentLoanInterestDeducted, "expense interest claimed for deduction before phase-out");
-    const taxFreeEarningsUsedForInterest = sum(...allocations.filter(item => item.expense.id === expense.id && item.loanInterest.gt(0)).map(item => {
+    const annualInterestOnlyReporting = annualCash.loanInterest.get(expense.id);
+    const taxFreeEarningsUsedForInterest = annualInterestOnlyReporting
+      ? annualInterestOnlyReporting.numerator.div(annualInterestOnlyReporting.denominator)
+      : sum(...allocations.filter(item => item.expense.id === expense.id && item.loanInterest.gt(0)).map(item => {
       const distribution = perDistribution.find(row => row.sourceId === item.form.sourceId);
       if (!distribution || item.amount.isZero() || distribution.grossDistribution.isZero() || distribution.adjustedQEE.isZero()) return ZERO;
       const sourceShare = item.loanInterest.mul(item.allowed).div(item.amount);
       const fundingShare = Decimal.min(1, zeroFloor(distribution.grossDistribution.minus(distribution.validTransfers)).div(distribution.adjustedQEE));
       return zeroFloor(distribution.earnings).mul(sourceShare).mul(fundingShare).div(distribution.grossDistribution);
     }));
-    if (interestClaimedElsewhere.plus(taxFreeEarningsUsedForInterest).gt(interestPaid)) throw new Error("Form1099Q loan interest claimed for deduction includes tax-free QTP earnings");
-    audit.record("Form1099-Q", `loan-expense:${expense.id}:loan-interest-reduction`, "Tax-free QTP earnings used for this loan expense's interest", taxFreeEarningsUsedForInterest, "Actual interest allocation times source earnings ratio, after loan and distribution limits", { "Actual interest paid": interestPaid, "Interest claimed before deduction phase-out": interestClaimedElsewhere });
-    return { expenseId: expense.id, borrowerId: borrower.id, owner: borrower.owner, interestPaid, taxFreeEarningsUsedForInterest, interestClaimedElsewhere };
+    const claimExceedsInterest = annualInterestOnlyReporting
+      ? annualInterestOnlyReporting.numerator.plus(annualInterestOnlyReporting.denominator.times(interestClaimedElsewhere)).gt(annualInterestOnlyReporting.denominator.times(interestPaid))
+      : interestClaimedElsewhere.plus(taxFreeEarningsUsedForInterest).gt(interestPaid);
+    if (claimExceedsInterest) throw new Error("Form1099Q loan interest claimed for deduction includes tax-free QTP earnings");
+    audit.record("Form1099-Q", `loan-expense:${expense.id}:loan-interest-reduction`, "Tax-free QTP earnings used for this loan expense's interest", taxFreeEarningsUsedForInterest,
+      annualInterestOnlyReporting ? "Actual interest-only annual cash pool: total original earnings times qualified interest over annual gross; exact ratio carried to the lender deduction"
+        : "Actual interest allocation times source earnings ratio, after loan and distribution limits",
+      { "Actual interest paid": interestPaid, "Interest claimed before deduction phase-out": interestClaimedElsewhere,
+        ...(annualInterestOnlyReporting ? { "Exact annual interest exclusion numerator": annualInterestOnlyReporting.numerator, "Exact annual cash denominator": annualInterestOnlyReporting.denominator } : {}) });
+    return { expenseId: expense.id, borrowerId: borrower.id, owner: borrower.owner, interestPaid, taxFreeEarningsUsedForInterest, interestClaimedElsewhere,
+      ...(annualInterestOnlyReporting ? { annualInterestOnlyReporting } : {}) };
   });
   const loanInterestAdjustments: Form1099QResult["loanInterestAdjustments"] = [...borrowers.values()].map(borrower => {
     if (!borrower.owner) throw new Error("Form1099Q actual student-loan borrower ownership is required");

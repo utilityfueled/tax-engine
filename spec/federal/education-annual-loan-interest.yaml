@@ -1,0 +1,64 @@
+form: "Annual cash QTP loan interest"
+fullName: "Determined annual interest-only exclusion and actual lender coordination"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s221/"
+sources:
+  - "https://uscode.house.gov/us/usc/119-118/t26/s529/"
+  - "https://www.irs.gov/publications/p970"
+  - "https://www.irs.gov/instructions/i1040gi"
+notes: |
+  Sources refreshed October27,2026. For a complete ordinary no-ESA annual
+  cash pool whose sole positive qualified cost is one actual interest-only
+  receipt with zero receipt reductions, removing that receipt leaves Q zero.
+  IRC221(e)(1) and Pub970 chapters4/7 therefore identify the same calculated
+  excluded earnings, without choosing a cash-account allocation. Actual
+  borrower lifetime history is applied before the annual ratio. Independent
+  loan eligibility and lender sources remain required for the deduction.
+  A supplied legacy QTP reduction must reconcile. Its omission is permitted
+  only with the completed linked annual-interest calculation; no absent
+  source fact or original amount becomes zero. Exact numerator/denominator
+  context survives through the2500 cap and phaseout, rounding only the final
+  reported deduction. Mixed positive purposes, principal, ESA and prepaid
+  methods remain separate. No final-year or filing qualification is added.
+  Literal values below are derived from fictional originals, not IRS examples.
+lines:
+  - line: "annual-exclusion"
+    description: "Derive the interest-only annual earnings exclusion from every original"
+    formula: "Actual G30000,E9000,interest1000 and lifetime capacity10000 yields Q1000,excluded300,taxable8700; actual lender1000 less300 yields700 deduction and58000AGI with50000wages. No receipt allocation is fabricated. Its category audit describes the actual loan payment, not principal-only costs."
+    testRef: "tests/engine/education-annual-loan-interest.test.ts::derives the annual interest exclusion and actual lender deduction once"
+  - line: "borrower-cap"
+    description: "Apply actual lifetime history before the annual interest fraction"
+    formula: "Interest8000,prior3000,othercurrent2000 leavesQ5000;G30000/E9000 gives1500excluded,7500taxable,6500netinterest capped2500 and55000AGI. Original order and explicit no-receipt originals do not change the result."
+    testRef: "tests/engine/education-annual-loan-interest.test.ts::preserves lifetime capacity and unequal original earnings without source elections"
+  - line: "exact-reporting"
+    description: "Keep the actual rational exclusion through deduction limits"
+    formula: "G3/E1/Q1 gives excluded1/3 and netinterest2/3. At2025singleMAGI88750 the remaining phaseout fraction is3/4; final deduction is exactly1/2, reported1. Immediately above the boundary reports0. Global Decimal precision is unchanged."
+    testRef: "tests/engine/education-annual-loan-interest.test.ts::rounds exact repeating interest ratios only after the deduction phaseout"
+  - line: "source-boundary"
+    description: "Bind computed reductions to original sources and preserve unknowns"
+    formula: "Omitted old reduction is accepted only for linked completed annual interest-only evidence. Supplied0 or another incorrect amount rejects; missing borrower/link/confirmation rejects. Mixed principal or another positive qualified purpose retains its named attribution boundary."
+    testRef: "tests/engine/education-annual-loan-interest.test.ts::requires actual source links and keeps mixed purposes outside the determined cohort"
+  - line: "guided-sources"
+    description: "Derive the annual reduction from actual linked records across reload"
+    formula: "A blank old QTP-reduction field remains absent in saved facts while the completed linked annual pool derives300. Actual lender interest1000 produces700 deduction/58000AGI. Removing the link or editing originals blocks until independently reconfirmed; explicit incorrect0 is retained and rejected."
+    testRef: "tests/guided-interview/guided-annual-loan-interest.test.ts::preserves actual lender links without entering an annual computed reduction"
+  - line: "actual-panel"
+    description: "Keep the optional calculated reduction visible and the link editable"
+    formula: "The actual loan panel explains when the annual calculation supplies the reduction. Removing the original expense link revokes confirmation and blocks; restoring it and confirming actual sources restores58000AGI without populating a calculated source field."
+    testRef: "tests/apps/web/annual-loan-interest-interactions.test.tsx::edits the actual loan link while preserving the blank calculated field"
+  - line: "original-review"
+    description: "Bind original return and lender sources and the resulting deduction before PDF output"
+    formula: "Changing original income or any other consumed return source, lender identity or actual qualification with the same QTP result, or forging line21, rejects before PDF I/O. Changing actual wages from50000 to200000 makes the independent loan deduction0; the older700 result/token cannot certify that changed return. The original result prints700 Schedule1line21,1040adjustments700/AGI58000,5329taxable8700/additional870. Only the exact original input or its permitted identifier-redacted copy is accepted for this annual-interest context."
+    testRef: "tests/pdf/education-annual-loan-interest.test.ts::binds original lender records and the calculated deduction before rendering"
+  - line: "workspace"
+    description: "Keep the actual annual interest and independent lender sources in saved review"
+    formula: "The saved guide's blank calculated reduction remains blank. Original annual interest1000 and lender1000 produce700 deduction/58000AGI and8700taxable/870additional tax in the flattened local review; unknown/revoked sources and2026 output remain blocked."
+    testRef: "tests/apps/web/workspace-annual-loan-interest.test.ts::downloads the actual annual interest and independent lender sources"
+  - line: "year-and-eligibility"
+    description: "Retain selected-year sources and independent loan qualification"
+    formula: "Actual2026 sources give the same determined300exclusion/700netinterest at low MAGI without opening final2026 output. Known false borrower qualification gives zero deduction; omission remains unknown. Exact positive residual capacity is retained from actual borrower digits."
+    testRef: "tests/engine/education-annual-loan-interest.test.ts::preserves independent qualification year and exact residual capacity"
+  - line: "browser"
+    description: "Reach the actual lender controls on desktop and mobile"
+    formula: "Removing/restoring a source link requires both education and lender reconfirmation. Save/reload retains the blank computed reduction, known false and original earnings. Actual local review download reports700deduction/58000AGI/8700taxable/870tax with privacy and filing gates intact."
+    testRef: "apps/web/tests/guided-annual-loan-interest.spec.ts::preserves actual annual interest sources through links reload and review"

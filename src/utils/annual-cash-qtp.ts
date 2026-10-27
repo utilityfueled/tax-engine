@@ -36,6 +36,10 @@ export interface AnnualCashQtpPool {
   qualifiedExpenses: Decimal;
   categoryCosts?: { k12: Decimal; loans: ReadonlyMap<string, Decimal> };
 }
+export interface AnnualLoanInterestReporting {
+  numerator: Decimal;
+  denominator: Decimal;
+}
 
 /** Add exact ratios before rounding a printed line, including repeating fractions. */
 export function roundEducationSourceAmounts(values: readonly { amount: Decimal; numerator?: Decimal; denominator?: Decimal }[]): Decimal {
@@ -57,8 +61,8 @@ export function roundEducationSourceAmounts(values: readonly { amount: Decimal; 
 
 /** Source records stay unchanged; computed shares are not expense allocations. */
 export function calculateAnnualCashQtpPools(forms: readonly Form1099Q[], facts: Facts,
-  roomBoard: RoomBoardPeriodResults, taxYear: number): { sources: Map<string, AnnualCashQtpSource>; pools: AnnualCashQtpPool[] } {
-  const result = { sources: new Map<string, AnnualCashQtpSource>(), pools: [] as AnnualCashQtpPool[] };
+  roomBoard: RoomBoardPeriodResults, taxYear: number): { sources: Map<string, AnnualCashQtpSource>; pools: AnnualCashQtpPool[]; loanInterest: Map<string, AnnualLoanInterestReporting> } {
+  const result = { sources: new Map<string, AnnualCashQtpSource>(), pools: [] as AnnualCashQtpPool[], loanInterest: new Map<string, AnnualLoanInterestReporting>() };
   const sourceNumbers: Decimal[] = [];
   const scan = (value: unknown): void => {
     if (typeof value === 'string' && /^-?\d+(\.\d+)?$/.test(value)) sourceNumbers.push(new Decimal(value));
@@ -179,6 +183,13 @@ export function calculateAnnualCashQtpPools(forms: readonly Form1099Q[], facts: 
     }
     const gross = total(cash.map(form => money(form.grossDistribution, 'cash gross')));
     qualified = D.min(gross, qualified);
+    for (const expense of expenses.filter(row => categorySources.get(row.id)?.annualInterestOnly)) {
+      // The sole positive qualified receipt is actual interest. Removing it
+      // leaves Q=0, so every excluded annual earnings dollar is attributable
+      // to that interest without a per-account expense allocation.
+      const earnings = total(cash.map(form => D.max(0, money(form.earnings, 'cash earnings', true))));
+      result.loanInterest.set(expense.id, { numerator: earnings.times(qualified), denominator: gross.isZero() ? new D(1) : gross });
+    }
     const beforeCredit = D.min(gross, qualified.plus(credits));
     const pool: AnnualCashQtpPool = { beneficiaryId, sourceIds: cash.map(form => form.sourceId ?? ''), qualifiedExpenses: qualified,
       ...(hasCategorySources ? { categoryCosts: { k12: qualifiedK12, loans: qualifiedLoansByBorrower } } : {}) };
@@ -201,7 +212,8 @@ export function calculateAnnualCashQtpPools(forms: readonly Form1099Q[], facts: 
         'Annual cash gross': gross, 'Annual qualified cash expenses': qualified,
         'Annual cash education-credit expenses': credits, 'Original cash gross': sourceGross,
         ...(hasCategorySources ? { 'Annual qualified K12 cash costs': qualifiedK12, 'Annual K12 cash limit': k12Limit,
-          'Annual qualified principal-only loan costs': qualifiedLoans } : {}),
+          [expenses.some(row => categorySources.get(row.id)?.annualInterestOnly)
+            ? 'Annual qualified loan payment costs' : 'Annual qualified principal-only loan costs']: qualifiedLoans } : {}),
         'Original cash earnings': money(form.earnings, 'cash Box2', true),
         'Original linked expense amount': originalAllocated,
         'Exact excluded cash earnings': exactExcluded, 'Exact taxable cash earnings': exactTaxable,

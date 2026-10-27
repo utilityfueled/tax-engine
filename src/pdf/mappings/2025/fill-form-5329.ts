@@ -168,7 +168,7 @@ export async function fillForm5329(
     ? educationReview ?? prepareEducationReview(input) : undefined;
   if (preparedEducation) {
     if (!sourceEducation) throw new Error("Education review requires the original distribution calculation");
-    assertPreparedEducationReturn(input, sourceEducation, preparedEducation);
+    assertPreparedEducationReturn(input, sourceEducation, preparedEducation, result.schedule1?.studentLoanInterest);
   }
   if (sourceEducation) buildForm1099QReferenceSummary(input.form1099Q, sourceEducation, input.qualifiedEducationExpenses, preparedEducation);
   if (sourceEducation && education?.length) {

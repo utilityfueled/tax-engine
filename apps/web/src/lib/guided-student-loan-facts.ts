@@ -64,7 +64,10 @@ export function buildStudentLoanInputs(data: StudentLoanData | undefined, filing
       forms.set(form.sourceId!, form);
     } else if (hasSavedStudentLoanStatement(loan)) throw new Error("Reconcile the saved Form 1098-E statement details with the actual source kind; clear only records that do not apply.");
     return { ...loan, accountHolder: loan.accountHolder || undefined, sourceKind: loan.sourceKind || undefined, studentRelationshipAtOrigination: loan.studentRelationshipAtOrigination || undefined,
-      ...Object.fromEntries(studentLoanMoneyFields.map(field => [field, money(loan[field], field)])),
+      ...Object.fromEntries(studentLoanMoneyFields.map(field => [field,
+        field === "qtpTaxFreeEarningsUsedForInterest" && !hasEnteredAmount(loan[field])
+          && loan.educationExpenseIds.length > 0 && loan.educationExpenseIds.every(id => educationLoanInterest.some(entry => entry.expenseId === id && entry.annualInterestOnlyReporting))
+          ? undefined : money(loan[field], field)])),
       ...Object.fromEntries(studentLoanBooleanFields.map(field => [field, loan[field] ?? undefined])),
     };
   });

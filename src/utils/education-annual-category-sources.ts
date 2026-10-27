@@ -10,6 +10,8 @@ export interface AnnualEducationCategorySource {
   k12: boolean;
   borrowerId?: string;
   borrowerRemaining?: Decimal;
+  /** Calculated source cohort, never a user-entered allocation or election. */
+  annualInterestOnly?: true;
 }
 
 /** Validate receipts, not a user-entered exclusion or a chosen cash account split. */
@@ -36,7 +38,9 @@ export function readAnnualEducationCategorySources(forms: readonly Form1099Q[], 
     const borrowerRows = (facts.loanBorrowers ?? []).filter(row => row.id === expense.borrowerId);
     const raw = [expense.amount, expense.refundedAmount, expense.taxFreeAssistance, expense.educationCreditAmount,
       expense.otherTaxBenefitAmount, expense.studentLoanInterestAmount, expense.studentLoanInterestDeducted, ...refundRows.map(row => row.amount),
-      ...borrowerRows.flatMap(row => [row.priorQualifiedDistributions, row.otherCurrentQualifiedDistributions])]
+      ...borrowerRows.flatMap(row => [row.priorQualifiedDistributions, row.otherCurrentQualifiedDistributions]),
+      ...(facts.expenses ?? []).filter(row => row.beneficiaryId === expense.beneficiaryId)
+        .flatMap(row => [row.amount, row.refundedAmount, row.taxFreeAssistance, row.educationCreditAmount, row.otherTaxBenefitAmount])]
       .filter((value): value is string => value !== undefined).map(value => new Decimal(value)).filter(value => value.isFinite());
     const integers = Math.max(1, ...raw.map(value => value.precision(true) - value.decimalPlaces()));
     const fractions = Math.max(0, ...raw.map(value => value.decimalPlaces()));
@@ -91,6 +95,7 @@ export function readAnnualEducationCategorySources(forms: readonly Form1099Q[], 
       eligible = registered && required;
     }
     let borrowerRemaining: Decimal | undefined;
+    let annualInterestOnly: true | undefined;
     if (expense.category === 'student_loan') {
       const related = answer(expense.beneficiaryOrSibling, 'loan borrower relationship');
       const interest = money(expense.studentLoanInterestAmount, 'student-loan interest');
@@ -102,8 +107,16 @@ export function readAnnualEducationCategorySources(forms: readonly Form1099Q[], 
       const remaining = D.max(0, new D(10000).minus(money(borrowers[0].priorQualifiedDistributions, 'prior borrower qualified distributions'))
         .minus(money(borrowers[0].otherCurrentQualifiedDistributions, 'other current borrower qualified distributions')));
       borrowerRemaining = remaining;
-      if (eligible && related && available.gt(0) && remaining.gt(0) && interest.gt(0))
-        throw new Error('Annual cash QTP positive qualified loan interest requires its separate annual earnings attribution method');
+      if (eligible && related && available.gt(0) && remaining.gt(0) && interest.gt(0)) {
+        const otherPositiveCost = (facts.expenses ?? []).some(row => row.beneficiaryId === expense.beneficiaryId && row.id !== expense.id
+          && row.qualificationConfirmed !== false && money(row.amount, 'other receipt').minus(money(row.refundedAmount, 'other refund'))
+            .minus(money(row.taxFreeAssistance, 'other assistance')).minus(money(row.educationCreditAmount, 'other credit'))
+            .minus(money(row.otherTaxBenefitAmount, 'other benefit')).gt(0));
+        if (!interest.eq(cost) || !available.eq(cost) || otherPositiveCost
+          || group.some(form => form.accountType !== '529' || form.distributionMedium !== 'cash'))
+          throw new Error('Annual cash QTP mixed-purpose loan interest requires its separate annual earnings attribution method');
+        annualInterestOnly = true;
+      }
       eligible &&= related;
     }
     if (eligible) {
@@ -118,7 +131,7 @@ export function readAnnualEducationCategorySources(forms: readonly Form1099Q[], 
       eligible = dated[0] === true;
     }
     result.set(expense.id, { available, qualified: eligible ? available : new D(0), k12: expense.category.startsWith('k12_'),
-      ...(expense.category === 'student_loan' ? { borrowerId: expense.borrowerId, borrowerRemaining } : {}) });
+      ...(expense.category === 'student_loan' ? { borrowerId: expense.borrowerId, borrowerRemaining, ...(annualInterestOnly ? { annualInterestOnly } : {}) } : {}) });
   }
   return result;
 }
