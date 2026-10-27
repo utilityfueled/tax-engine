@@ -393,17 +393,30 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
       const saved = retained[key], fresh = checked[key];
       if (!saved || !fresh) throw new Error("COD review requires both independent carry ledgers");
       if (saved.vintages.length !== fresh.vintages.length) throw new Error("COD review vintage counts do not reconcile");
-      for (const field of ["beforeReduction", "carryforwardBeforeReduction", "reduction", "expiredAfterReduction", "carryforward"] as const) eq(saved[field], fresh[field]);
+      for (const field of ["beforeReduction", "carryforwardBeforeReduction", "currentTaxUse", "modifiedAbsorption", "modifiedUseAdjustment",
+        "modifiedAvailableBeforeReduction", "reduction", "expiredAfterReduction", "carryforward"] as const) eq(saved[field], fresh[field]);
+      if (!fresh.modifiedUseAdjustment.isZero()) codRows.push(`${label} COD current-tax use ${fresh.currentTaxUse}; modified absorption ${fresh.modifiedAbsorption}; modified available before reduction ${fresh.modifiedAvailableBeforeReduction}`);
+      if (Boolean(saved.charitableComparison) !== Boolean(fresh.charitableComparison)) throw new Error("COD review charitable comparison completeness does not reconcile");
+      if (fresh.charitableComparison) {
+        for (const field of ["carryforwardBeforeReduction", "expiredAfterReduction", "carryforward", "nolDifferenceBeforeReduction", "nolDifferenceAfterReduction"] as const) eq(saved.charitableComparison?.[field], fresh.charitableComparison[field]);
+        const comparison = fresh.charitableComparison;
+        codRows.push(`${label} COD charitable comparison: before ${comparison.carryforwardBeforeReduction}; remaining ${comparison.carryforward}; original NOL difference ${comparison.nolDifferenceBeforeReduction}; after COD difference ${comparison.nolDifferenceAfterReduction}`);
+      }
       codRows.push(`${label} COD: before ${fresh.beforeReduction}; reduction ${fresh.reduction}; expiry ${fresh.expiredAfterReduction}; remaining ${fresh.carryforward}`);
       fresh.vintages.forEach((row, index) => {
         const old = saved.vintages[index];
         if (old.sourceId !== row.sourceId || old.lossTaxYear !== row.lossTaxYear) throw new Error("COD review original vintage identities do not reconcile");
-        for (const field of ["originalLoss", "beforeReduction", "attributeReduction", "expiredAfterReduction", "remainingCarryforward"] as const) eq(old[field], row[field]);
+        for (const field of ["originalLoss", "beforeReduction", "currentTaxUse", "modifiedAbsorption", "modifiedAvailableBeforeReduction",
+          "attributeReduction", "expiredAfterReduction", "remainingCarryforward"] as const) eq(old[field], row[field]);
+        if (Boolean(old.charitableComparison) !== Boolean(row.charitableComparison)) throw new Error("COD review original charitable comparison does not reconcile");
+        if (row.charitableComparison) for (const field of ["modifiedAbsorption", "beforeReduction", "expiredAfterReduction", "remainingCarryforward"] as const) eq(old.charitableComparison?.[field], row.charitableComparison[field]);
         for (const field of ["section1411OriginalLoss", "section1411RemainingCarryforward"] as const) {
           if (row[field] === undefined) { if (old[field] !== undefined) throw new Error("COD review original investment source does not reconcile"); }
           else eq(old[field], row[field]);
         }
         codRows.push(`${row.lossTaxYear}: before ${row.beforeReduction}; reduction ${row.attributeReduction}; expiry ${row.expiredAfterReduction}; remaining ${row.remainingCarryforward}`);
+        if (!row.currentTaxUse.eq(row.modifiedAbsorption)) codRows.push(`${row.lossTaxYear}: actual current use ${row.currentTaxUse}; modified absorption ${row.modifiedAbsorption}; modified available ${row.modifiedAvailableBeforeReduction}`);
+        if (row.charitableComparison) codRows.push(`${row.lossTaxYear} charitable comparison: modified absorption ${row.charitableComparison.modifiedAbsorption}; available ${row.charitableComparison.beforeReduction}; same reduction ${row.attributeReduction}; expiry ${row.charitableComparison.expiredAfterReduction}; remaining ${row.charitableComparison.remainingCarryforward}`);
         if (row.section1411OriginalLoss !== undefined) codRows.push(`Original regular loss ${row.originalLoss}; original investment loss ${row.section1411OriginalLoss}; applicable remaining investment carry ${row.section1411RemainingCarryforward}`);
       });
     }

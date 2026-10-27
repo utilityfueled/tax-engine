@@ -2,9 +2,9 @@ import { Form172OriginSourcesSchema, type TaxYearInput } from '@/models/inputs';
 import type { GuidedFlowState } from './guided-interview-flow';
 import { buildGuidedK1CharitableSources } from './guided-k1-charitable-sources';
 import { hasBusinessSourceData } from './guided-business-facts';
-import { buildGuidedNetOperatingLoss } from './guided-net-operating-loss';
+import { buildGuidedNetOperatingLoss, buildGuidedNetOperatingLossForNavigation } from './guided-net-operating-loss';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
-import { buildGuidedCodNol } from './guided-cod-nol';
+import { buildGuidedCodNol, buildGuidedCodNolForNavigation } from './guided-cod-nol';
 import { buildCurrentCapitalSources, invalidateCurrentCapitalSources, type CurrentCapitalSourceData } from './guided-current-capital-origin';
 
 export interface CurrentLossBusinessData {
@@ -25,21 +25,25 @@ export interface CurrentLossOriginData {
 
 /** Only actual source facts. Canonical Form172 calculates all amounts and source-method limits. */
 export function buildCurrentLossOrigin(data: CurrentLossOriginData | undefined, state: GuidedFlowState): TaxYearInput['form172'] {
+  return collectCurrentLossOrigin(false, data, state);
+}
+function collectCurrentLossOrigin(forNavigation: boolean, data: CurrentLossOriginData | undefined, state: GuidedFlowState): TaxYearInput['form172'] {
   if (!data) return undefined;
   const { taxYear, segmentation, sectionData } = state;
   if ((taxYear !== 2025 && taxYear !== 2026) || data.sourceTaxYear !== String(taxYear)
     || !segmentation.filingStatus || !data.sourceReference?.trim() || data.sourceFactsConfirmed !== true
     || data.allCurrentYearSourcesIncluded !== true) throw new Error('Confirm the actual current loss source year, reference and complete current records.');
-  const prior = buildGuidedNetOperatingLoss(sectionData.adjustments?.netOperatingLossSources, taxYear, segmentation.filingStatus, sectionData['personal-info'], sectionData.deductions, sectionData.adjustments?.k1LossSources);
+  const buildPrior = forNavigation ? buildGuidedNetOperatingLossForNavigation : buildGuidedNetOperatingLoss;
+  const prior = buildPrior(sectionData.adjustments?.netOperatingLossSources, taxYear, segmentation.filingStatus, sectionData['personal-info'], sectionData.deductions, sectionData.adjustments?.k1LossSources);
   if (!prior) throw new Error('Enter the complete actual prior regular and independent AMT carry histories, including explicit empty lists when none.');
   const currentCharity = !!(sectionData.deductions?.donationEntries?.length || sectionData.deductions?.cryptoDonations?.length
     || sectionData.deductions?.k1CharitableSources);
   const priorCharity = (sectionData.deductions?.charitableCarryoverSources?.vintages?.length ?? 0) > 0;
   if (currentCharity || priorCharity) {
     const history = prior.alternativeTax?.charitableCarryoverHistory;
-    // buildGuidedNetOperatingLoss has validated both complete original charity
-    // packets. A new loss does not turn an unknown prior NOL into a known zero.
-    const completeHistory = !!(history?.alternativeCarryoverSources && sectionData.deductions?.charitableCarryoverSources
+    // The AMT packet belongs to Adjustments and remains required for navigation.
+    // Only the later regular packet is deferred; strict construction binds both.
+    const completeHistory = !!(history?.alternativeCarryoverSources && (forNavigation || sectionData.deductions?.charitableCarryoverSources)
       && Array.isArray(prior.vintages) && Array.isArray(prior.alternativeTax?.vintages));
     if (!history || (priorCharity && !history.alternativeCarryoverSources)
       || (currentCharity && !completeHistory && (!Array.isArray(history.priorRegularCarryovers) || !Array.isArray(history.priorAlternativeCarryovers)
@@ -50,7 +54,7 @@ export function buildCurrentLossOrigin(data: CurrentLossOriginData | undefined, 
   if (data.farmingLossIncluded !== false || data.estateOrTrustLossIncluded !== false) {
     throw new Error('Confirm the actual farming and estate facts. Those positive origin methods require separate source calculations.');
   }
-  const cod = buildGuidedCodNol(sectionData.adjustments?.codNolSources, state);
+  const cod = (forNavigation ? buildGuidedCodNolForNavigation : buildGuidedCodNol)(sectionData.adjustments?.codNolSources, state);
   if (data.cancelledDebtIncluded !== Boolean(cod)) {
     throw new Error('The current canceled-debt classification must match the actual validated cancellation and insolvency source packet.');
   }
@@ -106,10 +110,16 @@ export function buildCurrentLossOrigin(data: CurrentLossOriginData | undefined, 
   });
 }
 export function currentLossOriginFactErrors(state: GuidedFlowState): Record<string, string> {
+  return validateCurrentLossOrigin(false, state);
+}
+export function currentLossOriginNavigationFactErrors(state: GuidedFlowState): Record<string, string> {
+  return validateCurrentLossOrigin(true, state);
+}
+function validateCurrentLossOrigin(forNavigation: boolean, state: GuidedFlowState): Record<string, string> {
   try {
     const data = state.sectionData.adjustments?.currentLossOrigin;
     if (!data && state.segmentation.lifeEvents.includes('current-year-loss')) throw new Error('Enter the actual current loss origin sources, or remove the current-year loss event if it does not apply.');
-    buildCurrentLossOrigin(data, state); return {};
+    collectCurrentLossOrigin(forNavigation, data, state); return {};
   } catch (error) { return { currentLossOrigin: error instanceof Error ? error.message : 'Reconcile the actual current-year loss sources.' }; }
 }
 export function invalidateCurrentLossOrigin(data: CurrentLossOriginData): CurrentLossOriginData {

@@ -84,7 +84,11 @@ it('retains actual history and unresolved allocation guards', () => {
   const multiple = carriedCurrentCharitableHistoriesInput({ positiveBenefit: true });
   multiple.donations[0].amount = '60000'; multiple.donations[0].costBasis = '60000';
   expect(() => calculateFederalTax(multiple)).toThrow(/multiple|origin|attribution|allocation/i);
-  expect(() => calculateFederalTax(carriedCurrentCharitableCodInput({ positiveBenefit: true }))).toThrow(/COD|debt|separate|composition|absorption/i);
+  const exhausted = carriedCurrentCharitableCodInput({ positiveBenefit: true });
+  if (!exhausted.form982NolSources?.debts?.[0] || !exhausted.netOperatingLoss?.alternativeTax?.vintages?.[0]) throw new Error('Missing fictional original COD records');
+  exhausted.form1099C[0].amountDischarged = '52000'; exhausted.form982NolSources.debts[0].amountDischarged = '52000';
+  Object.assign(exhausted.netOperatingLoss.alternativeTax.vintages[0], { originalLoss: '1000000', openingCarryforward: '1000000' });
+  expect(() => calculateFederalTax(exhausted)).toThrow(/COD.*charitable comparison.*exhaustion/i);
   expect(() => calculateFederalTax(carriedCurrentCharitableHistoriesInput({ year: 2026 }))).toThrow(/2026|qualified|enabled|support/i);
 });
 

@@ -11,12 +11,18 @@ import { d, roundDollar, sum, zeroFloor } from '@/utils/decimal.js';
 
 export interface CodNolVintageReduction {
   sourceId: string; lossTaxYear: number; originalLoss: Decimal;
-  beforeReduction: Decimal; attributeReduction: Decimal; expiredAfterReduction: Decimal; remainingCarryforward: Decimal;
+  beforeReduction: Decimal; currentTaxUse: Decimal; modifiedAbsorption: Decimal; modifiedAvailableBeforeReduction: Decimal;
+  attributeReduction: Decimal; expiredAfterReduction: Decimal; remainingCarryforward: Decimal;
+  charitableComparison?: { modifiedAbsorption: Decimal; beforeReduction: Decimal; expiredAfterReduction: Decimal; remainingCarryforward: Decimal };
   section1411OriginalLoss?: Decimal; section1411RemainingCarryforward?: Decimal;
 }
 export interface CodNolLedgerReduction {
   beforeReduction: Decimal; carryforwardBeforeReduction: Decimal; reduction: Decimal;
+  currentTaxUse: Decimal; modifiedAbsorption: Decimal; modifiedUseAdjustment: Decimal; modifiedAvailableBeforeReduction: Decimal;
   expiredAfterReduction: Decimal; carryforward: Decimal; vintages: CodNolVintageReduction[];
+  charitableComparison?: { carryforwardBeforeReduction: Decimal; expiredAfterReduction: Decimal; carryforward: Decimal;
+    nolDifferenceBeforeReduction: Decimal; nolDifferenceAfterReduction: Decimal };
+
 }
 export interface CodNolReductionResult {
   sourceFactsVerified: true; calculationComplete: boolean; sourceExcludedAmount: Decimal;
@@ -146,12 +152,32 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
   const ledger = (alternative: boolean): CodNolLedgerReduction => {
     const priorRows = alternative ? prior.alternativeTax.vintages : prior.vintages;
     const sources = alternative ? input.netOperatingLoss?.alternativeTax?.vintages : input.netOperatingLoss?.vintages;
-    if (!sources || sources.length !== priorRows.length) throw new Error('COD canonical loss vintages must match complete original histories');
-    const rows: Array<{ sourceId: string; lossTaxYear: number; originalLoss: Decimal; beforeReduction: Decimal; section1411OriginalLoss?: Decimal }> = [];
+    const priorCarry = canonical(alternative ? prior.alternativeTax.carryforward : prior.carryforward, 'aggregate prior carry');
+    const comparison = alternative ? prior.alternativeCharitableCounterfactual?.calculation : prior.charitableCounterfactual?.calculation;
+    const charity = alternative
+      ? prior.determinedAlternativeCharitableCarryover ?? prior.priorAlternativeCharitableCarryover ?? prior.alternativeCharitableCarryover
+      : prior.determinedCharitableCarryover ?? prior.priorCharitableCarryover ?? prior.charitableCarryover;
+    if (!sources || sources.length !== priorRows.length || new Set(priorRows.map(row => row.sourceId)).size !== priorRows.length) {
+      throw new Error('COD canonical loss vintages must match complete original histories');
+    }
+    if (charity && (!canonical(charity.nolCarryforward, 'charitable normal carry').eq(priorCarry)
+      || (!comparison && !canonical(charity.counterfactualNolCarryforward, 'charitable comparison carry').eq(priorCarry)))) {
+      throw new Error('COD charitable benefit requires its complete original comparison');
+    }
+    if (comparison && (!charity || !comparison.calculationComplete || !comparison.sourceFactsVerified
+      || comparison.vintages.length !== priorRows.length || new Set(comparison.vintages.map(row => row.sourceId)).size !== priorRows.length
+      || !canonical(comparison.deduction, 'comparison current deduction').eq(canonical(alternative ? prior.alternativeTax.deduction : prior.deduction, 'actual current deduction'))
+      || !canonical(comparison.carryforward, 'comparison prior carry').eq(canonical(charity.counterfactualNolCarryforward, 'charitable comparison carry')))) {
+      throw new Error('COD charitable comparison must preserve the actual current deduction and complete original loss vector');
+    }
+    const rows: Array<{ sourceId: string; lossTaxYear: number; originalLoss: Decimal; beforeReduction: Decimal;
+      currentTaxUse: Decimal; modifiedAbsorption: Decimal; modifiedAvailableBeforeReduction: Decimal;
+      comparison?: { modifiedAbsorption: Decimal; beforeReduction: Decimal }; section1411OriginalLoss?: Decimal }> = [];
+    const currentLoss = currentOrigin ? canonical((alternative ? currentOrigin.alternativeTax : currentOrigin.regular).netOperatingLoss, 'current original loss') : d('0');
     if (currentOrigin) {
-      const origin = alternative ? currentOrigin.alternativeTax : currentOrigin.regular;
-      rows.push({ sourceId: `current-origin:${year}`, lossTaxYear: year,
-        originalLoss: canonical(origin.netOperatingLoss, 'current original loss'), beforeReduction: canonical(origin.netOperatingLoss, 'current available loss'),
+      rows.push({ sourceId: `current-origin:${year}`, lossTaxYear: year, originalLoss: currentLoss, beforeReduction: currentLoss,
+        currentTaxUse: d('0'), modifiedAbsorption: d('0'), modifiedAvailableBeforeReduction: currentLoss,
+        ...(comparison ? { comparison: { modifiedAbsorption: d('0'), beforeReduction: currentLoss } } : {}),
         ...(!alternative ? { section1411OriginalLoss: canonical(currentOrigin.investment.netOperatingLoss, 'current investment loss') } : {}) });
     }
     for (const row of [...priorRows].sort((a, b) => a.lossTaxYear - b.lossTaxYear)) {
@@ -162,45 +188,117 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
       const available = canonical(row.openingCarryforward, 'opening loss').minus(expiredBeforeYear);
       const claimed = canonical(row.deduction, 'current deduction');
       // An unrestricted pre2018 claim may exceed positive taxable income.
-      // Keep that claim intact and identify only its current taxable-income use.
+      // The current-tax108 pool and the modified172 residual are separate.
       const currentUse = !alternative && row.lossTaxYear < 2018
         ? Decimal.min(available, zeroFloor(prior.actualIncome.taxableIncome.minus(canonical(row.earlierClaimedNolDeductions, 'earlier current deductions'))))
         : claimed;
-      if (!absorbed.eq(currentUse)) throw new Error('COD modified-income absorption differs from current taxable-income use and requires its separate coordination method');
-      const before = available.minus(currentUse);
+      const before = available.minus(currentUse), modifiedBefore = available.minus(absorbed);
       if (!source || source.lossTaxYear !== row.lossTaxYear || !actual(source.originalLoss, 'original loss').eq(row.originalLoss)
         || !actual(source.openingCarryforward, 'opening loss').eq(row.openingCarryforward)
-        || !sum(absorbed, expired, closing).eq(row.openingCarryforward)
-        || !before.eq(closing.plus(expired).minus(expiredBeforeYear))) throw new Error('COD canonical opening, absorption, expiry and closing loss must conserve each original vintage');
+        || before.lt(0) || modifiedBefore.lt(0) || !sum(absorbed, expired, closing).eq(row.openingCarryforward)
+        || !modifiedBefore.eq(closing.plus(expired).minus(expiredBeforeYear))) {
+        throw new Error('COD canonical opening, current use, absorption, expiry and closing loss must conserve each original vintage');
+      }
+      const other = comparison?.vintages.find(value => value.sourceId === row.sourceId);
+      let compared: { modifiedAbsorption: Decimal; beforeReduction: Decimal } | undefined;
+      if (comparison) {
+        if (!other || other.lossTaxYear !== row.lossTaxYear || !canonical(other.originalLoss, 'comparison original loss').eq(row.originalLoss)
+          || !canonical(other.openingCarryforward, 'comparison opening').eq(row.openingCarryforward)
+          || !canonical(other.expiredBeforeYear, 'comparison unavailable loss').eq(expiredBeforeYear)
+          || !canonical(other.deduction, 'comparison current deduction').eq(claimed)) {
+          throw new Error('COD charitable comparison must bind the same original vintage and actual current deduction');
+        }
+        const otherAbsorbed = canonical(other.absorbed, 'comparison absorption'), otherBefore = available.minus(otherAbsorbed);
+        const otherExpired = canonical(other.expired, 'comparison expiry'), otherClosing = canonical(other.remainingCarryforward, 'comparison remaining carry');
+        if (otherBefore.lt(0) || !sum(otherAbsorbed, otherExpired, otherClosing).eq(row.openingCarryforward)
+          || !otherBefore.eq(otherClosing.plus(otherExpired).minus(expiredBeforeYear))) {
+          throw new Error('COD charitable comparison must conserve each original modified loss');
+        }
+        compared = { modifiedAbsorption: otherAbsorbed, beforeReduction: otherBefore };
+      }
       rows.push({ sourceId: row.sourceId, lossTaxYear: row.lossTaxYear, originalLoss: row.originalLoss, beforeReduction: before,
+        currentTaxUse: currentUse, modifiedAbsorption: absorbed, modifiedAvailableBeforeReduction: modifiedBefore,
+        ...(compared ? { comparison: compared } : {}),
         ...(!alternative ? { section1411OriginalLoss: actual('section1411OriginalLoss' in source ? source.section1411OriginalLoss : undefined, 'original1411 loss') } : {}) });
     }
     const beforeReduction = sum(...rows.map(row => row.beforeReduction));
-    const carryforwardBeforeReduction = canonical(alternative ? prior.alternativeTax.carryforward : prior.carryforward, 'aggregate prior carry')
-      .plus(currentOrigin ? (alternative ? currentOrigin.alternativeTax : currentOrigin.regular).netOperatingLoss : d('0'));
+    const currentTaxUse = sum(...rows.map(row => row.currentTaxUse)), modifiedAbsorption = sum(...rows.map(row => row.modifiedAbsorption));
+    const modifiedUseAdjustment = modifiedAbsorption.minus(currentTaxUse);
+    const modifiedAvailableBeforeReduction = sum(...rows.map(row => row.modifiedAvailableBeforeReduction));
+    const carryforwardBeforeReduction = priorCarry.plus(currentLoss);
     const expected = carryforwardBeforeReduction.plus(sum(...priorRows.map(row =>
       canonical(row.expired, 'prior expiry').minus(canonical(row.expiredBeforeYear, 'prior unavailable loss')))));
-    if (!beforeReduction.eq(expected)) throw new Error('COD canonical aggregate loss does not reconcile to its vintages');
+    if (!modifiedAvailableBeforeReduction.eq(expected) || !beforeReduction.minus(modifiedUseAdjustment).eq(expected)) {
+      throw new Error('COD current-use and modified-loss aggregates must reconcile separately to their original vintages');
+    }
+    const comparisonCarryBefore = comparison ? canonical(comparison.carryforward, 'comparison carry').plus(currentLoss) : undefined;
+    if (comparison && !sum(...rows.map(row => row.comparison?.beforeReduction ?? d('0'))).eq(
+      canonical(comparison.carryforward, 'comparison carry').plus(currentLoss).plus(sum(...comparison.vintages.map(row =>
+        canonical(row.expired, 'comparison expiry').minus(canonical(row.expiredBeforeYear, 'comparison unavailable loss'))))))) {
+      throw new Error('COD charitable comparison aggregate does not reconcile with the complete original vector');
+    }
     if (reportedExcludedAmount.gt(beforeReduction)) throw new Error('COD NOL is insufficient in an independent tax system; later-attribute reduction requires its separate actual worksheet');
     let remaining = reportedExcludedAmount;
-    const vintages = rows.map(row => {
-      const attributeReduction = Decimal.min(row.beforeReduction, remaining), afterReduction = row.beforeReduction.minus(attributeReduction);
+    const vintages = rows.map((row): CodNolVintageReduction => {
+      // The same determined108 vector must fit both modified vectors. No
+      // invented exhaustion priority or post-COD charitable revival is used.
+      const attributeReduction = Decimal.min(row.beforeReduction, remaining);
+      if (attributeReduction.gt(row.modifiedAvailableBeforeReduction)) {
+        throw new Error('COD modified-loss exhaustion requires its separate current-use and absorption composition method');
+      }
+      if (row.comparison && attributeReduction.gt(row.comparison.beforeReduction)) {
+        throw new Error('COD charitable comparison exhaustion requires its separate after-tax composition method');
+      }
+      const afterReduction = row.modifiedAvailableBeforeReduction.minus(attributeReduction);
       const expires = row.lossTaxYear < 2018 && year === row.lossTaxYear + 20;
       const expiredAfterReduction = expires ? afterReduction : d('0'), remainingCarryforward = expires ? d('0') : afterReduction;
+      const comparedAfter = row.comparison?.beforeReduction.minus(attributeReduction);
+      const charitableComparison = row.comparison && comparedAfter !== undefined ? {
+        ...row.comparison, expiredAfterReduction: expires ? comparedAfter : d('0'), remainingCarryforward: expires ? d('0') : comparedAfter,
+      } : undefined;
       remaining = remaining.minus(attributeReduction);
       if (row.section1411OriginalLoss && row.section1411OriginalLoss.gt(row.originalLoss)) throw new Error('COD original1411 loss cannot exceed original regular loss');
       const section1411RemainingCarryforward = row.section1411OriginalLoss === undefined ? undefined
         : row.originalLoss.isZero() ? d('0') : remainingCarryforward.times(row.section1411OriginalLoss).div(row.originalLoss);
       audit.record(alternative ? 'Alternative COD NOL Worksheet' : 'Regular COD NOL Worksheet', row.sourceId, 'After-tax NOL attribute reduction', attributeReduction,
-        'Current loss first, then oldest carryover to this year before residual expiry; actual deduction and original loss remain unchanged', {
+        'Current loss first, then oldest current-tax carryover; the same reduction fits the separate modified residual before expiry', {
           'Origin year': String(row.lossTaxYear), 'Original loss': row.originalLoss, 'Before reduction': row.beforeReduction,
+          'Actual current-tax use': row.currentTaxUse, 'Modified absorption': row.modifiedAbsorption,
+          'Modified available before reduction': row.modifiedAvailableBeforeReduction,
           'Expired after reduction': expiredAfterReduction, 'Remaining carry': remainingCarryforward,
+          ...(charitableComparison ? { 'Comparison modified absorption': charitableComparison.modifiedAbsorption,
+            'Comparison available before reduction': charitableComparison.beforeReduction,
+            'Comparison expired after reduction': charitableComparison.expiredAfterReduction,
+            'Comparison remaining carry': charitableComparison.remainingCarryforward } : {}),
           ...(section1411RemainingCarryforward === undefined ? {} : { 'Applicable remaining1411 carry': section1411RemainingCarryforward }),
         });
-      return { ...row, attributeReduction, expiredAfterReduction, remainingCarryforward, ...(section1411RemainingCarryforward === undefined ? {} : { section1411RemainingCarryforward }) };
+      return { sourceId: row.sourceId, lossTaxYear: row.lossTaxYear, originalLoss: row.originalLoss, beforeReduction: row.beforeReduction,
+        currentTaxUse: row.currentTaxUse, modifiedAbsorption: row.modifiedAbsorption, modifiedAvailableBeforeReduction: row.modifiedAvailableBeforeReduction,
+        attributeReduction, expiredAfterReduction, remainingCarryforward,
+        ...(charitableComparison ? { charitableComparison } : {}),
+        ...(row.section1411OriginalLoss === undefined ? {} : { section1411OriginalLoss: row.section1411OriginalLoss, section1411RemainingCarryforward }) };
     });
+    if (!remaining.isZero()) throw new Error('COD original reduction is not conserved by its original vintage vector');
+    const expiredAfterReduction = sum(...vintages.map(row => row.expiredAfterReduction));
+    const carryforward = sum(...vintages.map(row => row.remainingCarryforward));
+    let charitableComparison: CodNolLedgerReduction['charitableComparison'];
+    if (comparisonCarryBefore !== undefined) {
+      const comparedCarry = sum(...vintages.map(row => row.charitableComparison?.remainingCarryforward ?? d('0')));
+      const comparedExpiry = sum(...vintages.map(row => row.charitableComparison?.expiredAfterReduction ?? d('0')));
+      const beforeDifference = carryforwardBeforeReduction.minus(comparisonCarryBefore), afterDifference = carryforward.minus(comparedCarry);
+      if (beforeDifference.lt(0) || !beforeDifference.eq(afterDifference)) {
+        throw new Error('COD charitable comparison must preserve the existing original benefit with the same reduction vector');
+      }
+      charitableComparison = { carryforwardBeforeReduction: comparisonCarryBefore, expiredAfterReduction: comparedExpiry,
+        carryforward: comparedCarry, nolDifferenceBeforeReduction: beforeDifference, nolDifferenceAfterReduction: afterDifference };
+      audit.record(alternative ? 'Alternative COD NOL Worksheet' : 'Regular COD NOL Worksheet', 'charitable-comparison',
+        'Original charitable NOL difference after the same COD reduction', afterDifference,
+        'Each original normal and comparison modified loss supports the same actual reduction; their succeeding difference is conserved',
+        { 'Before COD difference': beforeDifference, 'Normal succeeding carry': carryforward, 'Comparison succeeding carry': comparedCarry });
+    }
     return { beforeReduction, carryforwardBeforeReduction, reduction: reportedExcludedAmount,
-      expiredAfterReduction: sum(...vintages.map(row => row.expiredAfterReduction)), carryforward: sum(...vintages.map(row => row.remainingCarryforward)), vintages };
+      currentTaxUse, modifiedAbsorption, modifiedUseAdjustment, modifiedAvailableBeforeReduction,
+      expiredAfterReduction, carryforward, vintages, ...(charitableComparison ? { charitableComparison } : {}) };
   };
   const regular = ledger(false), alternativeTax = ledger(true);
   audit.record('Form 982', '6', 'Excluded debt applied to regular net operating losses', regular.reduction,

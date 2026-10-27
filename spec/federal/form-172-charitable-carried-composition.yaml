@@ -21,8 +21,9 @@ notes: |
   IRC108(b)(4) and Pub4681 order after-tax reduction to the current loss
   first and then original old vintages. Admit this existing method only
   with zero charitable comparison benefit in both systems and the existing
-  actual-use versus modified-absorption reconciliation; positive benefit
-  and different modified absorption retain their separate COD boundary.
+  actual-use versus modified-absorption reconciliation. The separate
+  charitable-cod-modified-composition spec admits determined reductions that
+  fit both original modified vectors; exhaustion retains its precise boundary.
   These are independently derived controls, not matching published numeric
   examples or human qualification. Real2026 calculation gates stay closed.
 lines:
@@ -56,7 +57,7 @@ lines:
     testRef: "tests/engine/federal-form-172-charitable-carried-composition-2026.test.ts::does not invent standard entitlement when old NOL is claimed"
   - line: "guarded-originals"
     description: "Keep independent original histories and unresolved allocation boundaries"
-    formula: "Unknown loss histories, false charity confirmation, changed identity or old source year, positive-benefit COD composition, and multiple positive excess origins with positive benefit reject. No old history is silently reset and no origin is selected by input order."
+    formula: "Unknown loss histories, false charity confirmation, changed identity or old source year, COD beyond a charitable comparison capacity, and multiple positive excess origins with positive benefit reject. No old history is silently reset and no origin is selected by input order."
     testRef: "tests/engine/federal-form-172-charitable-carried-composition.test.ts::retains actual history and unresolved allocation guards"
   - line: "actual-guide"
     description: "Collect old and current sources without collecting a computed deduction"
@@ -80,7 +81,7 @@ lines:
     testRef: "apps/web/tests/form-172-charitable-carried-composition.spec.ts::preserves old and current loss sources through the production guide"
   - line: "zero-benefit-cod"
     description: "Apply existing after-tax current-loss-first COD only after zero charitable comparisons"
-    formula: "Actual old regular100000/use0 plus new14000, oldAMT100000/use7650/remaining92350 plus new0, both charitable comparisons0. Actual insolvency-excluded personal debt5000 reduces newregular14000 to9000 first (closing109000), and oldAMT92350 to87350. Original losses, current deductions, charity2000/0 stay unchanged. Each original old absorption must equal current taxable-income use; positive charity benefit or different absorption remains closed."
+    formula: "Actual old regular100000/use0 plus new14000, oldAMT100000/use7650/remaining92350 plus new0, both charitable comparisons0. Actual insolvency-excluded personal debt5000 reduces newregular14000 to9000 first (closing109000), and oldAMT92350 to87350. Original losses, current deductions, charity2000/0 stay unchanged. This zero-benefit control is unchanged. The separately specified sufficient-capacity composition admits positive benefit and distinct modified absorption only when each actual reduction fits both original modified vectors."
     testRef: "tests/engine/federal-form-172-charitable-carried-composition.test.ts::composes zero-benefit charitable histories with current-loss-first COD"
   - line: "cod-guided-originals"
     description: "Reach the bounded COD composition through the existing actual source collectors"

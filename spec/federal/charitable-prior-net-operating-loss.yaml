@@ -68,7 +68,7 @@ lines:
     testRef: "tests/pdf/charitable-prior-nol-review.test.ts::reconciles original prior regular and AMT charity before private review output"
   - line: "actual-guide"
     description: "Collect independent prior charity histories without calculated overrides"
-    formula: "Actual original regular sources remain in the charity collector; the NOL panel independently retains the AMT source/history packet. Unknown/false/zero survive, source and household edits revoke nested confirmations, and the real bridge reaches the same canonical prior-vintage result."
+    formula: "Actual original regular sources remain in the charity collector; the NOL panel independently retains the AMT source/history packet. Unknown/false/zero survive, source and household edits revoke nested confirmations, and the real bridge reaches the same canonical prior-vintage result. A missing later regular packet is reachable from valid Adjustments but keeps Deductions partial and the strict bridge closed; missing or conflicting owned AMT sources still keep Adjustments partial."
     testRef: "tests/apps/web/guided-charitable-prior-nol.test.ts::transfers independently confirmed prior charity histories through the actual guide"
   - line: "interactive-guide"
     description: "Edit the independent AMT original history without copying regular balances"

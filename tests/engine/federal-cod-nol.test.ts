@@ -55,9 +55,9 @@ it('applies COD before final-year expiry but never revives an already expired lo
     }
   }
 });
-it('requires the separate COD method when modified absorption differs from current use', () => {
-  const input = actualCodNolInput('5000'); input.priorYear = { shortTermCapitalLoss: '-3000' };
-  expect(() => calculateFederalTax(input)).toThrow(/COD.*modified.*absorption.*current/i);
+it('requires the separate COD method when the actual reduction exceeds modified capacity', () => {
+  const input = actualCodNolInput('11000'); input.priorYear = { shortTermCapitalLoss: '-3000' };
+  expect(() => calculateFederalTax(input)).toThrow(/COD.*modified.*exhaustion/i);
 });
 it('retains source cents and rejects unresolved or conflicting attribute sources', () => {
   const cents = calculateFederalTax(actualCodNolInput('1000.49'));

@@ -31,7 +31,12 @@ it('transfers independently confirmed prior charity histories through the actual
             required(bad.sectionData.deductions).charitableCarryoverSources = undefined;
         if (mutation === 'year')
             bad.taxYear = 2026;
-        expect(validateSection(bad, 'adjustments').status).toBe('partial');
+        if (mutation === 'regular') {
+            expect(validateSection(bad, 'adjustments').status).toBe('complete');
+            expect(validateSection(bad, 'deductions').status).toBe('partial');
+        } else {
+            expect(validateSection(bad, 'adjustments').status).toBe('partial');
+        }
         expect(buildTaxInputFromGuidedData(bad)).toBeNull();
     }
     const changed = updateSectionData(state, 'personal-info', { ...required(state.sectionData['personal-info']), lastName: 'Changed' });

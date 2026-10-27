@@ -2,7 +2,7 @@ import Decimal from 'decimal.js';
 import { Form982NolSourcesSchema, type Form982NolSources } from '@/models/cod-nol-sources';
 import { calculateCodNolReduction, type CodNolSourceInput } from '@/engine/forms/cod-nol-reductions';
 import type { GuidedFlowState } from './guided-interview-flow';
-import { buildGuidedNetOperatingLoss } from './guided-net-operating-loss';
+import { buildGuidedNetOperatingLoss, buildGuidedNetOperatingLossForNavigation } from './guided-net-operating-loss';
 import { parseGuidedCurrency } from './guided-currency';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
 
@@ -35,12 +35,19 @@ function boolean(value: boolean | null | undefined): boolean | undefined { retur
 
 /** Source-only validation; the canonical return calculates every loss and carry amount. */
 export function buildGuidedCodNol(data: CodNolData | undefined, state: GuidedFlowState) {
+  return collectGuidedCodNol(buildGuidedNetOperatingLoss, data, state);
+}
+/** Navigation only; complete-return callers must use the strict source builder above. */
+export function buildGuidedCodNolForNavigation(data: CodNolData | undefined, state: GuidedFlowState) {
+  return collectGuidedCodNol(buildGuidedNetOperatingLossForNavigation, data, state);
+}
+function collectGuidedCodNol(buildPrior: typeof buildGuidedNetOperatingLoss, data: CodNolData | undefined, state: GuidedFlowState) {
   if (!data) return undefined;
   const { taxYear, segmentation, sectionData } = state, personal = sectionData['personal-info'];
   if ((taxYear !== 2025 && taxYear !== 2026) || !segmentation.filingStatus || !personal) {
     throw new Error('Confirm the actual year, filing status and household before entering cancellation sources.');
   }
-  const prior = buildGuidedNetOperatingLoss(sectionData.adjustments?.netOperatingLossSources, taxYear, segmentation.filingStatus, personal, sectionData.deductions, sectionData.adjustments?.k1LossSources);
+  const prior = buildPrior(sectionData.adjustments?.netOperatingLossSources, taxYear, segmentation.filingStatus, personal, sectionData.deductions, sectionData.adjustments?.k1LossSources);
   if (!prior) throw new Error('Enter the actual independent regular and AMT loss carry histories, including explicit empty histories when none.');
   if (data.title11Case !== false || data.electBasisReductionFirst !== false || data.otherExclusionsOrExceptionsApply !== false) {
     throw new Error('Confirm the actual bankruptcy, basis-first election and other exclusion answers. Positive or unknown answers require their separate debt method.');
@@ -89,10 +96,16 @@ export function buildGuidedCodNol(data: CodNolData | undefined, state: GuidedFlo
   return { form1099C, codExclusion, form982NolSources: facts };
 }
 export function codNolFactErrors(state: GuidedFlowState): Record<string, string> {
+  return validateGuidedCodNol(buildGuidedCodNol, state);
+}
+export function codNolNavigationFactErrors(state: GuidedFlowState): Record<string, string> {
+  return validateGuidedCodNol(buildGuidedCodNolForNavigation, state);
+}
+function validateGuidedCodNol(build: typeof buildGuidedCodNol, state: GuidedFlowState): Record<string, string> {
   try {
     const data = state.sectionData.adjustments?.codNolSources;
     if (!data && state.segmentation.lifeEvents.includes('cancelled-debt')) throw new Error('Enter the actual canceled-debt and insolvency records, or remove that event if it does not apply.');
-    buildGuidedCodNol(data, state); return {};
+    build(data, state); return {};
   } catch (error) { return { codNolSources: error instanceof Error ? error.message : 'Reconcile the actual canceled-debt sources.' }; }
 }
 export function invalidateGuidedCodNol(data: CodNolData): CodNolData {

@@ -23,6 +23,16 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/charitable-cod-modified-composition",
+      "enginePath": "src/engine/forms/cod-nol-reductions.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-982.ts",
+      "testRefs": [
+        "tests/engine/federal-charitable-cod-modified.test.ts::preserves a unique charitable benefit when the same COD fits both loss comparisons",
+        "tests/pdf/charitable-cod-modified-review.test.ts::shows distinct actual use modified absorption and comparison after the same reduction"
+      ],
+      "note": "Original debt and separate regular, AMT and charitable comparison histories produce bounded equal reductions without changing current tax. Historical original-bound review does not qualify final 2026 forms, broader exhaustion or human review."
+    },
+    {
       "key": "federal/charitable-determined-floor",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [

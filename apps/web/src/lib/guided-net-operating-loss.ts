@@ -74,6 +74,13 @@ function vintages(rows: NolVintageData[] | undefined, regular: boolean, actualEb
   });
 }
 export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, deductions?: DeductionData, qbiSources?: K1LossSourcesData): TaxYearInput['netOperatingLoss'] {
+  return collectGuidedNetOperatingLoss(true, data, taxYear, filingStatus, personal, deductions, qbiSources);
+}
+/** Section navigation validates this section's originals; the strict builder binds later Deductions too. */
+export function buildGuidedNetOperatingLossForNavigation(...args: Parameters<typeof buildGuidedNetOperatingLoss>): TaxYearInput['netOperatingLoss'] {
+  return collectGuidedNetOperatingLoss(false, ...args);
+}
+function collectGuidedNetOperatingLoss(validateDeductions: boolean, data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, deductions?: DeductionData, qbiSources?: K1LossSourcesData): TaxYearInput['netOperatingLoss'] {
   if (!data) return undefined;
   if ((taxYear !== 2025 && taxYear !== 2026) || !filingStatus || !personal) throw new Error('Confirm the actual return year, filing status and household before binding NOL sources.');
   const alternative = data.alternativeTax;
@@ -124,7 +131,7 @@ export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefin
   const taxpayer = { primary: { firstName: [personal.firstName.trim(), middle].filter(Boolean).join(' '), lastName: personal.lastName, ssn: personal.ssn },
     spouse: filingStatus === 'mfj' && personal.spouse ? { firstName: personal.spouse.firstName, lastName: personal.spouse.lastName, ssn: personal.spouse.ssn } : undefined };
   const context = { taxYear, filingStatus: statuses[filingStatus], taxpayer };
-  if (history?.alternativeCarryoverSources) validateCharitableNolOriginHistories({ taxpayer: { ...taxpayer, taxYear, filingStatus: statuses[filingStatus] },
+  if (validateDeductions && history?.alternativeCarryoverSources) validateCharitableNolOriginHistories({ taxpayer: { ...taxpayer, taxYear, filingStatus: statuses[filingStatus] },
     netOperatingLoss: facts, charitableCarryoverSources: buildGuidedCharitableCarryover(deductions?.charitableCarryoverSources, taxYear, filingStatus, personal) });
   calculateNetOperatingLoss({ ...context, facts });
   calculateNetOperatingLoss({ ...context, facts: { ...facts, ...facts.alternativeTax } });
@@ -133,9 +140,15 @@ export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefin
   return facts;
 }
 export function netOperatingLossFactErrors(data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, required = false, deductions?: DeductionData, qbiSources?: K1LossSourcesData): Record<string, string> {
+  return validateGuidedNetOperatingLoss(buildGuidedNetOperatingLoss, data, taxYear, filingStatus, personal, required, deductions, qbiSources);
+}
+export function netOperatingLossNavigationFactErrors(...args: Parameters<typeof netOperatingLossFactErrors>): Record<string, string> {
+  return validateGuidedNetOperatingLoss(buildGuidedNetOperatingLossForNavigation, ...args);
+}
+function validateGuidedNetOperatingLoss(build: typeof buildGuidedNetOperatingLoss, data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, required = false, deductions?: DeductionData, qbiSources?: K1LossSourcesData): Record<string, string> {
   try {
     if (required && !data) throw new Error('Enter the actual NOL source packet or remove the NOL carry life event if it does not apply.');
-    buildGuidedNetOperatingLoss(data, taxYear, filingStatus, personal, deductions, qbiSources); return {};
+    build(data, taxYear, filingStatus, personal, deductions, qbiSources); return {};
   } catch (error) { return { netOperatingLoss: error instanceof Error ? error.message : 'Reconcile the actual NOL source packet.' }; }
 }
 export function updateNetOperatingLossSources(previous: NetOperatingLossData, patch: Partial<NetOperatingLossData>): NetOperatingLossData {

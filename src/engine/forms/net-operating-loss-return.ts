@@ -226,14 +226,9 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
       alternativeTaxNolAvailable: alternativeTaxSources.availableCarryforward, nolCarryforward: alternativeTax.carryforward,
       computeCarryover: computeAlternativeCharitableComparison });
   }
-  // Existing108(b) reduction follows current tax and the new current loss.
-  // Zero comparison in each system avoids attributing a charitable benefit
-  // through that different after-tax ordering; COD still verifies actual use.
-  if (determinedOrigins && input.form982NolSources && (facts.vintages?.length || alternative.vintages.length)
-    && (!determinedCharitableCarryover?.nolCarryforward.eq(determinedCharitableCarryover.counterfactualNolCarryforward)
-      || !determinedAlternativeCharitableCarryover?.nolCarryforward.eq(determinedAlternativeCharitableCarryover.counterfactualNolCarryforward))) {
-    throw new Error("Charitable benefit with old NOL and COD requires its separate after-tax composition method");
-  }
+  // Completed108 composition is checked only after current tax and both
+  // original modified/comparison vectors exist. It must preserve this
+  // original charitable benefit; no hypothetical current deduction is used.
   const audit = new AuditTrail();
   if (originalCharitableSource) audit.record("Section170 Original NOL Sources", "qualified-current",
     "Original qualified K1 and digital-asset contribution value", originalCharitableSource.amount,

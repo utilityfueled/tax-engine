@@ -3,9 +3,9 @@ import { royaltySourceFactErrors, invalidateRoyaltySources, type RoyaltyIncomeDa
 import { invalidateSharedPolicySources } from "./guided-shared-policy";
 import { invalidateMarriageSources } from "./guided-marriage-policy";
 import { foreignIncomeFactErrors, type ForeignIncomeData } from "./guided-foreign-income";
-import { netOperatingLossFactErrors, type NetOperatingLossData } from "./guided-net-operating-loss";
-import { currentLossOriginFactErrors, invalidateCurrentLossOrigin, type CurrentLossOriginData } from "./guided-current-loss-origin";
-import { codNolFactErrors, invalidateGuidedCodNol, type CodNolData } from "./guided-cod-nol";
+import { netOperatingLossFactErrors, netOperatingLossNavigationFactErrors, type NetOperatingLossData } from "./guided-net-operating-loss";
+import { currentLossOriginNavigationFactErrors, invalidateCurrentLossOrigin, type CurrentLossOriginData } from "./guided-current-loss-origin";
+import { codNolNavigationFactErrors, invalidateGuidedCodNol, type CodNolData } from "./guided-cod-nol";
 import { k1LossSourceFactErrors, invalidateK1LossSources } from "./guided-k1-qbi-sources";
 import type { K1LossSourcesData } from "./guided-qbi-loss-data";
 import { charitableCarryoverFactErrors, type CharitableCarryoverData } from "./guided-charitable-carryover";
@@ -1995,14 +1995,19 @@ export function validateSection(
       return validateUnemploymentSection(getSectionData(state, "income-unemployment"), state);
     case "additional-deductions":
       return getSectionData(state, "additional-deductions") ? validateRequiredFacts({ ...tipIncomeFactErrors(state), ...schedule1AFactErrors(state) }) : EMPTY_SECTION("additional deduction sources");
-    case "deductions":
-      return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, { ...nonitemizedElectionFactErrors(state), ...nonW2TaxAllocationErrors(state), ...investmentInterestFactErrors(state.sectionData.deductions, state.sectionData["income-investments"]?.childElections, state.taxYear), ...charitableCarryoverFactErrors(state.sectionData.deductions?.charitableCarryoverSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"]), ...k1CharitableSourceFactErrors(state), ...cryptoDonationFactErrors(state.sectionData.deductions?.cryptoDonations, state.taxYear) }, state.segmentation.filingStatus, state.sectionData["personal-info"]?.spouse);
+    case "deductions": {
+      // This later section owns the regular charitable history. Navigation from
+      // Adjustments must not confirm it, while completion here binds both originals.
+      const charitableNolErrors = state.sectionData.adjustments?.netOperatingLossSources?.alternativeTax?.charitableCarryoverHistory?.alternativeCarryoverSources
+        ? netOperatingLossFactErrors(state.sectionData.adjustments.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], false, state.sectionData.deductions, state.sectionData.adjustments.k1LossSources) : {};
+      return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, { ...charitableNolErrors, ...nonitemizedElectionFactErrors(state), ...nonW2TaxAllocationErrors(state), ...investmentInterestFactErrors(state.sectionData.deductions, state.sectionData["income-investments"]?.childElections, state.taxYear), ...charitableCarryoverFactErrors(state.sectionData.deductions?.charitableCarryoverSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"]), ...k1CharitableSourceFactErrors(state), ...cryptoDonationFactErrors(state.sectionData.deductions?.cryptoDonations, state.taxYear) }, state.segmentation.filingStatus, state.sectionData["personal-info"]?.spouse);
+    }
     case "adjustments": {
       const errors = { ...foreignIncomeFactErrors(state), ...healthInsuranceSourceErrors(state), ...hsaFactErrors(getSectionData(state, "adjustments")?.hsaAccounts, state.segmentation.filingStatus, state.taxYear, getSectionData(state, "income-w2")?.entries ?? [], getSectionData(state, "personal-info"), state.segmentation.lifeEvents.includes("hsa-contributions")), ...educatorFactErrors(getSectionData(state, "adjustments"), state.segmentation.filingStatus, state.taxYear, state.segmentation.lifeEvents.includes("educator-expenses")) };
-      Object.assign(errors, currentLossOriginFactErrors(state));
-      Object.assign(errors, codNolFactErrors(state));
+      Object.assign(errors, currentLossOriginNavigationFactErrors(state));
+      Object.assign(errors, codNolNavigationFactErrors(state));
       Object.assign(errors, k1LossSourceFactErrors(state));
-      Object.assign(errors, netOperatingLossFactErrors(state.sectionData.adjustments?.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], state.segmentation.lifeEvents.includes("net-operating-loss"), state.sectionData.deductions, state.sectionData.adjustments?.k1LossSources));
+      Object.assign(errors, netOperatingLossNavigationFactErrors(state.sectionData.adjustments?.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], state.segmentation.lifeEvents.includes("net-operating-loss"), state.sectionData.deductions, state.sectionData.adjustments?.k1LossSources));
       let loanEducation: StudentLoanEducationSources = [];
       try {
         if (state.sectionData.adjustments?.studentLoanFacts || state.sectionData.credits?.educationDistributions?.expenses?.some(expense => expense.category === "student_loan")) loanEducation = studentLoanEducationSources(state.sectionData.credits, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments?.studentLoanFacts);

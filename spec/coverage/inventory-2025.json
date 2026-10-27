@@ -267,6 +267,29 @@
       ]
     },
     {
+      "key": "federal/charitable-cod-modified-composition",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p4681",
+      "specPath": "spec/federal/charitable-cod-modified-composition.yaml",
+      "enginePath": "src/engine/forms/cod-nol-reductions.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-982.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-charitable-cod-modified.test.ts::preserves a unique charitable benefit when the same COD fits both loss comparisons",
+        "tests/pdf/charitable-cod-modified-review.test.ts::shows distinct actual use modified absorption and comparison after the same reduction"
+      ],
+      "implementationNote": "Original debt and separate regular, AMT and charitable comparison histories produce bounded equal reductions without changing current tax. Historical original-bound review does not qualify final 2026 forms, broader exhaustion or human review.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/charitable-contribution-worksheet",
       "jurisdiction": "federal",
       "taxYear": 2026,

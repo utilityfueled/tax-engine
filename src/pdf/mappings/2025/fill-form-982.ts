@@ -175,10 +175,33 @@ export function buildForm982ReferenceSummary(result: TaxReturnResult): Form982Re
       if (!Decimal.isDecimal(actual) || !actual.isFinite() || !actual.eq(expected)) throw new Error("Form982 NOL reference amounts do not reconcile");
     };
     for (const ledger of [cod.regular, cod.alternativeTax]) {
-      const total = (key: "beforeReduction" | "attributeReduction" | "expiredAfterReduction" | "remainingCarryforward") => ledger.vintages.reduce((value, row) => value.plus(row[key]), new Decimal(0));
+      const total = (key: "beforeReduction" | "currentTaxUse" | "modifiedAbsorption" | "modifiedAvailableBeforeReduction"
+        | "attributeReduction" | "expiredAfterReduction" | "remainingCarryforward") => ledger.vintages.reduce((value, row) => value.plus(row[key]), new Decimal(0));
       same(ledger.beforeReduction, total("beforeReduction")); same(ledger.reduction, total("attributeReduction")); same(ledger.carryforward, total("remainingCarryforward"));
+      same(ledger.currentTaxUse, total("currentTaxUse")); same(ledger.modifiedAbsorption, total("modifiedAbsorption"));
+      same(ledger.modifiedAvailableBeforeReduction, total("modifiedAvailableBeforeReduction"));
+      same(ledger.modifiedUseAdjustment, ledger.modifiedAbsorption.minus(ledger.currentTaxUse));
       same(ledger.expiredAfterReduction, total("expiredAfterReduction"));
-      same(ledger.beforeReduction, ledger.reduction.plus(ledger.expiredAfterReduction).plus(ledger.carryforward)); same(ledger.reduction, cod.reportedExcludedAmount);
+      same(ledger.beforeReduction.minus(ledger.modifiedUseAdjustment), ledger.modifiedAvailableBeforeReduction);
+      same(ledger.modifiedAvailableBeforeReduction, ledger.reduction.plus(ledger.expiredAfterReduction).plus(ledger.carryforward));
+      same(ledger.reduction, cod.reportedExcludedAmount);
+      for (const row of ledger.vintages) {
+        same(row.beforeReduction.minus(row.modifiedAbsorption.minus(row.currentTaxUse)), row.modifiedAvailableBeforeReduction);
+        same(row.modifiedAvailableBeforeReduction, row.attributeReduction.plus(row.expiredAfterReduction).plus(row.remainingCarryforward));
+        if (Boolean(row.charitableComparison) !== Boolean(ledger.charitableComparison)) throw new Error("Form982 charitable comparison completeness does not reconcile");
+        if (row.charitableComparison) same(row.charitableComparison.beforeReduction,
+          row.attributeReduction.plus(row.charitableComparison.expiredAfterReduction).plus(row.charitableComparison.remainingCarryforward));
+      }
+      const comparison = ledger.charitableComparison;
+      if (comparison) {
+        const comparisonTotal = (key: "expiredAfterReduction" | "remainingCarryforward") => ledger.vintages.reduce((value, row) =>
+          value.plus(row.charitableComparison?.[key] ?? 0), new Decimal(0));
+        same(comparison.expiredAfterReduction, comparisonTotal("expiredAfterReduction"));
+        same(comparison.carryforward, comparisonTotal("remainingCarryforward"));
+        same(comparison.nolDifferenceBeforeReduction, ledger.carryforwardBeforeReduction.minus(comparison.carryforwardBeforeReduction));
+        same(comparison.nolDifferenceAfterReduction, ledger.carryforward.minus(comparison.carryforward));
+        same(comparison.nolDifferenceBeforeReduction, comparison.nolDifferenceAfterReduction);
+      }
     }
     same(result.carryforwards.nolCarryforward, cod.regular.carryforward);
     same(result.carryforwards.alternativeTaxNolCarryforward, cod.alternativeTax.carryforward);
@@ -204,6 +227,17 @@ export function buildForm982ReferenceSummary(result: TaxReturnResult): Form982Re
         { label: "Alternative-tax NOL reduction", value: cod.alternativeTax.reduction.toString() },
         { label: "Alternative-tax remaining NOL", value: cod.alternativeTax.carryforward.toString() },
         { label: "Alternative residual expiry after COD", value: cod.alternativeTax.expiredAfterReduction.toString() },
+        ...([ ["Regular", cod.regular], ["Alternative", cod.alternativeTax] ] as const).flatMap(([label, ledger]) => [
+          ...(!ledger.modifiedUseAdjustment.isZero() ? [
+            { label: `${label} actual current-tax NOL use`, value: ledger.currentTaxUse.toString() },
+            { label: `${label} modified NOL absorption`, value: ledger.modifiedAbsorption.toString() },
+            { label: `${label} modified loss available before COD`, value: ledger.modifiedAvailableBeforeReduction.toString() },
+          ] : []),
+          ...(ledger.charitableComparison ? [
+            { label: `${label} comparison remaining NOL`, value: ledger.charitableComparison.carryforward.toString() },
+            { label: `${label} succeeding NOL difference after COD`, value: ledger.charitableComparison.nolDifferenceAfterReduction.toString() },
+          ] : []),
+        ]),
       ],
     };
   }
