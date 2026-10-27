@@ -1,5 +1,6 @@
 // Spec: spec/federal/guided-savings-bond-sources.yaml.
 import { expect, it, vi } from "vitest";
+import { execFileSync } from "node:child_process";
 import { actualSavingsBondData } from "../../fixtures/guided-savings-bond";
 import { completeInterestSource, startCompleteInterview } from "../../guided-interview/complete-facts";
 import { emptyCreditsData, getGuidedFlowStorageKey } from "@/lib/guided-interview-flow";
@@ -30,6 +31,13 @@ it("redacts bond beneficiary IDs only after calculation and preserves them in en
     const download = await buildWorkspaceFilledReturnDownload(workspace, state);
     expect(download.contents.length).toBeGreaterThan(0);
     expect(download.includedForms.some(form => form.includes("8815"))).toBe(true);
+    // Spec: spec/federal/form-8815.yaml reference-packet-cover.
+    const cover = execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c",
+      "import io,sys; from pypdf import PdfReader; print(PdfReader(io.BytesIO(sys.stdin.buffer.read())).pages[0].extract_text())",
+    ], { input: download.contents, encoding: "utf8", timeout: 5000 });
+    expect(cover).toContain("Packet completeness status: partial.");
+    expect(cover).toContain("Form 8815 is included as a reference summary, not an official filed Form 8815.");
+    expect(cover).toContain("E-file and business-rule validation: not-validated.");
     expect(render).toHaveBeenCalledOnce();
     const [reviewInput, result] = render.mock.calls[0];
     expect(reviewInput.form8815?.educationExpenses?.[0].beneficiaryTaxId).toBe("");

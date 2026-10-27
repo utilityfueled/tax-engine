@@ -300,6 +300,22 @@ export function assessReturnReadiness(
     );
   }
 
+  if (input.federalResult.form8815?.excludableSavingsBondInterest.gt(0)) {
+    const hasForm8815Reference = hasIncludedForm(
+      input.includedForms,
+      /^f8815-reference-filled\.pdf$/i,
+    );
+
+    // The current output is a reference summary. A supplied filename cannot
+    // establish qualification of a physical form or its mapping.
+    packetCompleteness = "partial";
+    findings.push(
+      hasForm8815Reference
+        ? "Form 8815 is included as a reference summary, not an official filed Form 8815."
+        : "Form 8815 applies, but no qualified official Form 8815 or reference summary was generated.",
+    );
+  }
+
   if (input.federalResult.carryforwards.partnerBasis.length > 0) {
     const hasPartnerBasisReference = hasIncludedForm(
       input.includedForms,
