@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "318127142879f68472ab8440a95f1b9abdc49234",
+    "lastRecordedCommit": "a1f63cf2b28d89cda2240a4421bbaf324ad56262",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1311,12 +1311,12 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Education: ordinary annual cash, actual loan interest, exact bond reissues and educator/MAGI composition are delivered. Full or sole-owner educator handoff from the reissue ledger remains an internal composition. Precise mixed July 4 annual denominator and mixed-purpose interest questions remain in the finite queue; no arbitrary new category-pair scope.",
-      "Charity/NOL: COD V4 source and actual-original/PDF reviews pass; final main rebase is active. Changed-filing-unit histories pass independent source/PDF review and await the adopted COD base. Same-couple current joint pooling and the explicitly nonitemized prior-gift composition remain finite internal work. Recurrent partial-owner attribution and floor/vintage/medium interpretation questions stay separate.",
-      "Health: monthly and outside-child marriage composition delivered. Actual cash plus full attributable advance repayment passes independent source and eight-original physical review; complete V2 payment-source/browser qualification and final rebase are active. Positive other-return credit remains a separate internal method; binding joint attribution questions remain explicit.",
-      "Verification: intermediate 318 passes 19,587 unit and coverage cases in 1,406 files, every unchanged 90/85/90/90 threshold, both 500-case browser runs and six native-amd64 recovery phases. Downloaded coverage counters and SBOM/scan/archive are independently verified. The first seven unchanged 5 s timeout failures remain retained. Final integrated/native arm64+amd64/browser/SBOM/scan/recovery and external qualification remain required."
+      "Education: full or sole-owner educator handoff from actual reissue history is active; canonical/source/output cases pass, guided edit/reconfirmation sequences are being verified. Precise mixed-category/allocation and jurisdiction questions remain separate.",
+      "Charity/NOL: bounded COD delivered ced90a20 and changed-current-one-owner sources delivered a1f63cf2. Current same-couple joint pooling and explicitly nonitemized2026 prior property release remain internal. Exact floor/vintage/multiple-positive-benefit/COD-exhaustion questions remain in the audit.",
+      "Health: complete V2 actual payment-source browser/PDF independent review passes. Final integration on a1f63cf2 and separate corrected-download check active. Positive other-return actual cash/reimbursement composition is next internal work.",
+      "Verification: full final integrated/source/browser/coverage/native arm64+amd64/SBOM/scan/recovery remains required. Intermediate 318 evidence is passing within its exact commit; staging, human, provider and final-form gates remain closed."
     ],
-    "latestIntegratedCommit": "977212bfbe38733ae79977a917a63cc529413cef",
+    "latestIntegratedCommit": "a1f63cf2b28d89cda2240a4421bbaf324ad56262",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1696,10 +1696,10 @@
       "record": "docs/upgrade-2026-runtime-31812714.json"
     },
     "remainingInternalWork": [
-      "Education: ordinary annual cash, actual loan interest, exact bond reissues and educator/MAGI composition are delivered. Full or sole-owner educator handoff from the reissue ledger remains an internal composition. Precise mixed July 4 annual denominator and mixed-purpose interest questions remain in the finite queue; no arbitrary new category-pair scope.",
-      "Charity/NOL: COD V4 source and actual-original/PDF reviews pass; final main rebase is active. Changed-filing-unit histories pass independent source/PDF review and await the adopted COD base. Same-couple current joint pooling and the explicitly nonitemized prior-gift composition remain finite internal work. Recurrent partial-owner attribution and floor/vintage/medium interpretation questions stay separate.",
-      "Health: monthly and outside-child marriage composition delivered. Actual cash plus full attributable advance repayment passes independent source and eight-original physical review; complete V2 payment-source/browser qualification and final rebase are active. Positive other-return credit remains a separate internal method; binding joint attribution questions remain explicit.",
-      "Verification: intermediate 318 passes 19,587 unit and coverage cases in 1,406 files, every unchanged 90/85/90/90 threshold, both 500-case browser runs and six native-amd64 recovery phases. Downloaded coverage counters and SBOM/scan/archive are independently verified. The first seven unchanged 5 s timeout failures remain retained. Final integrated/native arm64+amd64/browser/SBOM/scan/recovery and external qualification remain required."
+      "Education: full or sole-owner educator handoff from actual reissue history is active; canonical/source/output cases pass, guided edit/reconfirmation sequences are being verified. Precise mixed-category/allocation and jurisdiction questions remain separate.",
+      "Charity/NOL: bounded COD delivered ced90a20 and changed-current-one-owner sources delivered a1f63cf2. Current same-couple joint pooling and explicitly nonitemized2026 prior property release remain internal. Exact floor/vintage/multiple-positive-benefit/COD-exhaustion questions remain in the audit.",
+      "Health: complete V2 actual payment-source browser/PDF independent review passes. Final integration on a1f63cf2 and separate corrected-download check active. Positive other-return actual cash/reimbursement composition is next internal work.",
+      "Verification: full final integrated/source/browser/coverage/native arm64+amd64/SBOM/scan/recovery remains required. Intermediate 318 evidence is passing within its exact commit; staging, human, provider and final-form gates remain closed."
     ],
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
@@ -1721,7 +1721,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "318127142879f68472ab8440a95f1b9abdc49234",
+    "lastPushedCommit": "a1f63cf2b28d89cda2240a4421bbaf324ad56262",
     "currentBrowserRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -2856,12 +2856,8 @@
       "scope": "Intermediate318 remote synthetic evidence only; later private packages excluded."
     },
     "currentRemoteRuns": {
-      "sourceCommit": "318127142879f68472ab8440a95f1b9abdc49234",
-      "ci": 40460532332,
-      "web": 40460532320,
-      "webStatus": "success",
-      "ciStatus": "success; unchanged coverage rerun passes all thresholds; first seven timeout failures retained",
-      "coverageRerunJob": 122057416711
+      "sourceCommit": "a1f63cf2b28d89cda2240a4421bbaf324ad56262",
+      "status": "Pushed; exact workflow identifiers to be refreshed. Earlier65cc631c/ced90a20 runs cancelled by later pushes;318 full pass remains separately recorded."
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
@@ -5029,11 +5025,11 @@
       }
     },
     "currentInventory": {
-      "entries": 566,
-      "specReferences": 6009,
-      "sourceCommit": "977212bfbe38733ae79977a917a63cc529413cef",
+      "entries": 568,
+      "specReferences": 6037,
+      "sourceCommit": "a1f63cf2b28d89cda2240a4421bbaf324ad56262",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 151,
+      "explicitAssociations": 153,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -5920,7 +5916,7 @@
       },
       "charitableCodModified": {
         "tree": "2089e23daac95f74ad96b238f7376cc99d4f32c8",
-        "status": "independent source and actual-original/PDF reviews clear; final main rebase active",
+        "status": "Delivered and pushed; bounded independent agent source and saved-original/PDF review clear. Human, filing and final release qualification remain open.",
         "artifactReview": {
           "path": ".local/upgrade-evidence/parent-charitable-cod-v4-artifact-review.json",
           "sha256": "e15056ce9df29405840671b3ec0a3638dd27a6c035aceb4b6d1b39f00ae32c26"
@@ -5933,11 +5929,18 @@
           "populatedFields": 454,
           "originals": 9
         },
-        "independentHumanTaxReview": false
+        "independentHumanTaxReview": false,
+        "deliveredCommit": "ced90a20a8a97708069ab1e567eefa9b70f9036e",
+        "finalTree": "0d867f69681d59f6b1eb65518aa85344da1d7ff3",
+        "mainChecks": {
+          "path": ".local/upgrade-evidence/charitable-cod-main-checks.json",
+          "sha256": "cfe80cf05f00383922ab16f71e4c597a560327a243ab1cd2ca0565884bc31e80"
+        },
+        "ledger": "docs/upgrade-2026-charitable-cod-work.md"
       },
       "nolChangedFilingUnit": {
         "tree": "c962988fa4508dd7603bbb8e777f45769ae1b448",
-        "status": "independent source and actual-original/PDF reviews clear; final main rebase follows COD",
+        "status": "Delivered and pushed; bounded independent agent source and saved-original/PDF review clear. Human, filing and final release qualification remain open.",
         "artifactReview": {
           "path": ".local/upgrade-evidence/parent-nol-filing-unit-artifact-review.json",
           "sha256": "90dc72670fffc324bf6302d2801dc8f4d144622e8530fbc8a2122d0188410d8b"
@@ -5950,11 +5953,22 @@
           "pages": 128,
           "populatedFields": 294
         },
-        "independentHumanTaxReview": false
+        "independentHumanTaxReview": false,
+        "deliveredCommit": "a1f63cf2b28d89cda2240a4421bbaf324ad56262",
+        "finalTree": "a264f31777c9a4396c0033bcdb2424879e421da4",
+        "mainChecks": {
+          "path": ".local/upgrade-evidence/nol-filing-unit-main-checks.json",
+          "sha256": "84ad0f8694176dbe6fc2b7402919ccd8892ef5661f08ee6bb7dca7e9d2c9b1b2"
+        },
+        "ledger": "docs/upgrade-2026-nol-filing-unit-work.md",
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-nol-filing-unit-delivery-verification.json",
+          "sha256": "2ef2d7f79fd07fe754bbdd06d71ef94aa2a6d1bb749767d2930b5fe04640723e"
+        }
       },
       "healthActualPaidAdvance": {
         "tree": "a5454b976a182bb0571ef7d5d04cef7dd5beeb32",
-        "status": "independent source and bounded health/source/PDF reviews clear; V1 incomplete payment guide preserved; V2 complete browser/payment artifacts active",
+        "status": "V1 source and numerical review preserved. Complete V2 saved-payment/browser/original/PDF review clear numerically; wrong-year label repaired upstream in4752ae46. Final rebase on a1f63cf2 and corrected-download check active.",
         "artifactReview": {
           "path": ".local/upgrade-evidence/parent-actual-paid-artifact-review.json",
           "sha256": "52ba8385d517f9f774e42716ad4f812e5e9bbcdeeb130ea8af27cf06e6407e8c"
@@ -5967,12 +5981,28 @@
           "pages": 155,
           "fields": 444
         },
-        "independentHumanTaxReview": false
+        "independentHumanTaxReview": false,
+        "v2Tree": "6805ccd44b0dc5d0e546ccf44643000aeedaee8c",
+        "v2ArtifactReview": {
+          "path": ".local/upgrade-evidence/parent-actual-paid-browser-v2-review.json",
+          "sha256": "9ead16a5dbd1fd62f3d606a0ee0d0ce455c57f6e70bda7807ddef1255fe86e16",
+          "checks": 13169,
+          "numericalFailures": 0,
+          "originals": 2,
+          "pdfs": 4,
+          "pages": 128,
+          "populatedFields": 0,
+          "flattenedPlacements": 560
+        },
+        "independentV2SourceDelta": {
+          "path": ".local/upgrade-evidence/facts-actual-paid-v2-delta-review.json",
+          "sha256": "ec41de47c31e7e9fffa88f1056dc5ec819481fe2adb8fc43b50994c10a42c609"
+        }
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.179",
-      "2026": "2026.176-law-integration-draft"
+      "2025": "2025.181",
+      "2026": "2026.178-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -8210,7 +8240,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-27T07:35:04.786621+00:00",
+    "recordedAt": "2026-10-27T08:04:51.661012+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -10505,6 +10535,36 @@
       "distinctAdvisories": 67,
       "critical": 0,
       "scope": "Native CI synthetic intermediate artifact; not final release or staging"
+    },
+    "repaymentAuditYearCorrection": {
+      "commit": "4752ae46feeb52b1c89dbd0a57961aa7fdf1f12e",
+      "red": {
+        "passed": 8,
+        "failed": 1
+      },
+      "green": {
+        "passed": 16,
+        "files": 3
+      },
+      "sourceReview": {
+        "path": ".local/upgrade-evidence/federal-marriage-audit-year-independent-review.json",
+        "sha256": "c2180dfedd9c3b148d3c825ecbc1d9e6b70d25bbe5832ab5e1cadb8f324f4b26"
+      },
+      "scope": "Only uncapped explanation names actual year; every monetary expression, branch, historical cap and gate unchanged."
+    },
+    "finiteScopeRefresh20261027": {
+      "path": ".local/upgrade-evidence/ai-finite-scope-refresh-20261027.json",
+      "sha256": "8cdc4b93891c1eae751573252ae6ccaa468f3fd3fe9d837285535334e16625d6",
+      "markdown": ".local/upgrade-evidence/ai-finite-scope-refresh-20261027.md",
+      "markdownSha256": "48844510c9580162062b5fa0916c3ac6adbc2102b9ec612e57463b39033e7e9d",
+      "internal": [
+        "Educator actual reissue ownership handoff",
+        "Same-couple current-joint NOL pooling without invented closing owner shares",
+        "Actual-paid health final integration and positive-other-return cash source composition",
+        "Explicitly nonitemized2026 prior property entity basis/465 release",
+        "Final integrated/static/browser/coverage/native arm64+amd64/recovery/scan evidence"
+      ],
+      "boundary": "Precise controlling-source questions and specialized excluded regimes remain explicit in the audit and checklist; source guards do not constitute implementation or human qualification."
     }
   },
   "historicalReleaseBlockers": {

@@ -7,15 +7,14 @@ complete a checkbox.
 
 ## Current integration — 2026-10-27 UTC
 
-Latest implementation is `977212bf`. Actual outside-child relationship and
-payment sources now compose with the historical marriage-year health calculation;
-the child does not become a member of either alternative marriage family.
-Educator deductions and exact original savings-bond MAGI sources are delivered
-in `00089be4`, following charitable ownership histories in `2a8f6c17`.
-Rule provenance is `2025.179` / `2026.176-law-integration-draft`; inventory has
-566 entries, 6,009 specification test references and 151 explicit associations.
-Independent agent source and saved-output reviews pass within each package's
-recorded scope. Human tax review and final filing qualification remain open.
+Latest implementation is `a1f63cf2`. Changed-filing-status NOL sources retain
+original owner allocations and independent regular/AMT historical use. The
+bounded charitable debt-reduction composition is delivered in `ced90a20`;
+`4752ae46` separately corrects the year named in an uncapped repayment
+explanation. Rule provenance is `2025.181` / `2026.178-law-integration-draft`;
+inventory has 568 entries, 6,037 specification test references and 153 explicit
+associations. Package agent reviews and scoped checks pass. Human tax review,
+final-source release checks and filing qualification remain open.
 
 Remote CI on `25f71f06` passes 19,523 tests in 1,384 files both normally and
 under coverage. Coverage is 91.85% statements, 86.88% branches, 90.72% functions
@@ -44,16 +43,25 @@ The [October 27 public refresh](upgrade-2026-source-refresh-20261027.md) retains
 qualification remain separate. Final integrated checks, native images/scans,
 staging, human review, filing and model-promotion requirements remain open.
 
-Charitable COD V4 now passes 1,205 affected tests and independent source/original
-PDF reviews, including completed payment-source browser downloads; final main
-rebase is active. Changed NOL filing histories have separate independent reviews
-and follow that integration. Actual-paid health expense sources pass bounded
-physical review; complete payment-source guide examples and actual downloads are
-being verified before adoption. The finite source-method audit keeps concrete
-internal work separate from the unresolved tax-interpretation questions.
+Charitable COD main integration passes 55 tests/16 files and all relevant static
+and build checks. Changed-filing-status NOL main integration passes 65 tests/22
+files, including the separate audit-year regression, and static/build checks.
+Its final private desktop/mobile runs pass 2/2 with zero retries; all 34 downloaded
+pages match the earlier reviewed originals in extracted text and rendered pixels.
+
+Actual-paid health V2 now has complete saved payment sources and actual browser
+downloads. Parent independently derives both originals and checks 4 PDFs/128
+pages with 13,169 numerical/source/placement checks, all passing. All pages were
+viewed through contacts and eight readable details; the existing wrong-year
+explanation finding is recorded and repaired separately in `4752ae46`. Final
+actual-paid rebase on `a1f63cf2` and the corrected-download check remain active.
+This evidence does not enable filing or substitute for human review.
 
 | Delivered package | Commit | Bounded verification |
 | --- | --- | --- |
+| Bounded debt reduction after actual and charitable-comparison NOL absorption | `ced90a20` | Main 55/16 and static/build checks pass; source and saved-original reviews are separate. Parent checks 9 originals and 83 PDFs/338 pages/454 fields with 10,430 assertions. Full affected cohort 1,205/167 and desktop/mobile 2/2 pass. See [ledger](upgrade-2026-charitable-cod-work.md). |
+| Actual year in uncapped premium repayment explanation | `4752ae46` | Spec-first red 8/1, green 16/3 and source-only independent review clear. Numerical expressions, historical cap and gates unchanged. See [ledger](upgrade-2025-marriage-health-work.md). |
+| Original loss ownership through joint and separate filed histories | `a1f63cf2` | Main 65/22 and static/build gates pass. Separate source 23/7 includes 8 private controls; parent 13,676 checks over 7 originals and 55 PDFs/128 pages/294 fields. Final source 64/22 and production browser 2/2 pass. See [ledger](upgrade-2026-nol-filing-unit-work.md). |
 | Actual zero credit and complete advance repayment for eligible health payments | `496f6444` | Final source passes 962 tests/108 files; main 49/9. Parent source and final-delta reviews pass, including six private controls. Parent independently derives five original inputs, reopens 12 PDFs/76 pages/345 populated fields and checks 61 physical, 25 reference and four workspace values. |
 | Annual ordinary cash education earnings, with exact aggregation before reporting | `b0746956` | Final source passes 1,724 tests/203 files, types/contracts/spec/inventory/lint and both builds; main 55/9. Parent final checks pass 62/9, preserving nine private controls. Ten merged PDFs/183 pages and 64 component PDFs are independently reopened. The retained first candidate's two half-dollar amounts incorrectly produced 2; the corrected exact sum produces 1. |
 | Old NOL histories composed with a separate current charitable loss | `d83ffe01` | Final source passes 772 tests/93 files and 568 strict-spec checks/5 files, types/spec/inventory/lint and both builds; main 23/8 plus 24 readiness checks/2 files. Separate source review passes 22/7 with six private controls. Independent original-source review reopens 38 PDFs/99 pages/279 populated fields and checks 193 physical and 162 reference values. |
@@ -105,33 +113,40 @@ available-fixed-version matches. Every advisory tuple matches the preceding
 995 scan; owner acceptance by November 7 remains pending. These are synthetic
 remote checks, not staging or production evidence.
 
-The finite internal queue is now reconciled against actual source reachability:
+The finite internal queue was refreshed against the actual source on October27.
+The bounded audit and its24 source/document hashes are retained in
+`.local/upgrade-evidence/ai-finite-scope-refresh-20261027.json`, SHA256
+`8cdc4b93891c1eae751573252ae6ccaa468f3fd3fe9d837285535334e16625d6`.
+It does not reopen delivered ordinary methods or expand every IRS election.
 
-- **Education:** common per-expense composition and actual current-year retained
-  refund records and determined annual category/borrower limits are delivered.
-  The bounded annual interest-only route is now delivered. Mixed July4 chronology,
-  mixed-purpose interest attribution remain. Educator/MAGI reconciliation is
-  delivered in `00089be4`, with independent source and saved-output reviews. Actual bond reissue/ownership history is delivered in `c6abb245`. See [the education queue](upgrade-2026-education-method-queue.md).
-- **Charity:** prior K-1 basis release and ordinary operating K-1 current
-  Form 172 classification and current binding at-risk allocation are delivered.
-  Prior at-risk character/history and passive capital releases are delivered.
-  Charitable filing-unit ownership histories are delivered in `2a8f6c17`.
-  Positive benefit with COD/modified absorption, NOL filing histories and
-  recurrent partial-joint owner attribution remain in active work or precise
-  source-method review. See [the charity queue](upgrade-2026-charity-method-queue.md).
-- **Health:** reported-versus-original advance cents are delivered. Signed
-  negative Worksheet W remaining-capacity treatment and its actual business
-  gross-income source handoff and actual own-family zero-credit cash are also
-  delivered, along with actual eligible outside-family persons and their separate
-  return evidence. The unshared and shared full-family marriage compositions are delivered.
-  Actual monthly partial-family composition is delivered in `05c5819`.
-  Outside-family marriage composition is delivered in `977212bf`. Determined
-  positive advance/payment and positive other-return credit attribution remain
-  in the finite health queue.
-- **Verification:** intermediate remote `25f71f06` now passes full coverage
-  and every unchanged threshold. Run the complete checks on the final integrated
-  source and retain final native images, SBOM/scans and recovery evidence.
-  The cancelled container run is not complete runtime qualification.
+- **Education:** educator handoff from actual savings-bond reissue records is
+  being implemented for full exclusion or one actual income owner. Reduced
+  two-positive-owner exclusion, mixed-purpose loan earnings, mixed July4 annual
+  allocation and binding multiple-prepaid-source allocation need their exact
+  controlling method; supplied timing or conservation alone is insufficient.
+  Changed community-property ownership needs actual jurisdiction/history and
+  applicable local law, not an invented nationwide rule. Specialized Coverdell
+  partial pledges and post-termination regimes remain separate excluded methods.
+- **Charity/NOL:** the reviewed debt-reduction and current one-owner filing
+  histories are delivered. Same-couple current joint pooling and explicitly
+  nonitemized2026 property-only prior entity basis/at-risk release are internal
+  work. Prior floor-vintage, multiple positive NOL-origin attribution, partial
+  mixed cash/property and prior treated-paid versus final-deduction questions
+  remain distinct. Debt reduction beyond either modified residual, or expiry
+  changing the charitable benefit, still lacks the controlling composition;
+  neither a simple zero-clamp nor a minimum of different residuals is approved.
+  Later section108 attributes require a separate original-source worksheet.
+- **Health:** complete actual-paid/advance V2 review passes; its final integration
+  follows the delivered NOL package. Actual owner cash for an eligible outside
+  child with a positive other-return credit is the next internal method. It
+  must bind actual insurer cash and reimbursements separately from the other
+  taxpayer's credit, advances and return tax payment. Binding joint ownership
+  interpretation questions remain explicit.
+- **Verification:** intermediate `31812714` passes full tests/coverage and all
+  unchanged thresholds, both500-case browser suites and native-amd64 recovery.
+  Final integrated local/remote checks, native arm64+amd64 images, SBOM/scans
+  and recovery remain due after the source queue. Five hosted-only skips do not
+  establish staging readiness; external inputs below remain required.
 
 The annual-category missing-loan-source finding is resolved in `dff617c8`; its
 original failing input and PDF remain retained. The corrected actual lender
