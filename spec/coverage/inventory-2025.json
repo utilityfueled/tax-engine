@@ -3473,6 +3473,27 @@
       ]
     },
     {
+      "key": "federal/form-8582-character-allocation",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/form-8582-character-allocation.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-8606",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -5883,6 +5904,27 @@
       ]
     },
     {
+      "key": "federal/k1-capital-character-sources",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/k1-capital-character-sources.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/k1-cash-distribution-gain",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -6020,6 +6062,29 @@
         "Missing spec coverage",
         "Missing packet generation or inclusion rule",
         "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/k1-passive-capital-sources",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/k1-passive-capital-sources.yaml",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8582.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-k1-passive-capital.test.ts::routes actual passive capital through PartIX once and preserves the portfolio distinction",
+        "tests/pdf/k1-passive-capital-review.test.ts::prints ordinary and capital destinations with exact separate PartIX records"
+      ],
+      "implementationNote": "Own-spec controls bind actual ordinary K1 capital character, independent loss histories and exact reporting-part allocation to the historical2025 packet. The mixed ST/LT PartV summary is a derived interpretation, with original term amounts retained. PTP, rental, disposition and special-rate methods remain excluded; no filing readiness, full2026 output or independent human qualification is claimed.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
         "Missing e-file and business-rule validation coverage"
       ]
     },

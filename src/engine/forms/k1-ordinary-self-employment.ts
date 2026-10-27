@@ -11,7 +11,7 @@ export function calculateK1OrdinarySelfEmployment(input: K1QbiLossSourceInput, s
   const selected=input.qbiLossSources?.activities?.filter(row=>row.selfEmploymentTreatment!==undefined)??[];
   const audit=new AuditTrail();
   if(!selected.length) return {scheduleK1:input.scheduleK1,lines:audit.getLines(),passive:undefined};
-  const {sources,passive}=calculateK1OrdinaryPassiveSources(input,scheduleE);
+  const {sources,passive,capital}=calculateK1OrdinaryPassiveSources(input,scheduleE);
   const scheduleK1:ScheduleK1[]=input.scheduleK1.map((original,index)=>{
     const facts=selected.find(row=>row.k1SourceId===`scheduleK1:${index}`);
     if(!facts) return original;
@@ -26,7 +26,8 @@ export function calculateK1OrdinarySelfEmployment(input: K1QbiLossSourceInput, s
       }
       if(original.isPassiveActivity) {
         const passiveIndex=input.scheduleK1.slice(0,index).filter(row=>row.isPassiveActivity).length;
-        calculated=(passive.activityAllocations.find(row=>row.sourceIndex===passiveIndex)?.allowedLoss??d(0)).negated();
+        calculated=(capital?.rows.find(row=>row.k1Index===index)?.ordinaryAllowedLoss
+          ??passive.activityAllocations.find(row=>row.sourceIndex===passiveIndex)?.allowedLoss??d(0)).negated();
       } else calculated=entry.netAmount;
       if(source.priorAtRiskLoss.gt(0)) {
         const risk=source.charitableAtRisk;
@@ -35,7 +36,8 @@ export function calculateK1OrdinarySelfEmployment(input: K1QbiLossSourceInput, s
         if(original.isPassiveActivity) {
           const passiveIndex=input.scheduleK1.slice(0,index).filter(row=>row.isPassiveActivity).length;
           const grossAllowed=risk.ordinaryDeductionAllowed.minus(Decimal.max(0,entry.netAmount.negated()))
-            .plus(passive.activityAllocations.find(row=>row.sourceIndex===passiveIndex)?.allowedLoss??d(0));
+            .plus(capital?.rows.find(row=>row.k1Index===index)?.ordinaryAllowedLoss
+              ??passive.activityAllocations.find(row=>row.sourceIndex===passiveIndex)?.allowedLoss??d(0));
           calculated=risk.ordinaryDeductionAllowed.isZero()?d(0):currentAllowed.times(grossAllowed).div(risk.ordinaryDeductionAllowed).negated();
         } else calculated=currentAllowed.negated();
       }

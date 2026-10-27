@@ -3,6 +3,7 @@ import type { ScheduleEResult } from '@/engine/schedules/schedule-e.js';
 import { calculateForm8582 } from '@/engine/forms/form-8582.js';
 import { validateK1QbiLossSources, type K1QbiLossSourceInput } from '@/engine/forms/k1-qbi-loss-sources.js';
 import { calculateK1PassiveDistributionSources } from './k1-passive-distribution-sources.js';
+import { calculateK1PassiveCapitalSources } from './k1-passive-capital-sources.js';
 import { d, sum } from '@/utils/decimal.js';
 
 export function calculateK1OrdinaryPassiveSources(input: K1QbiLossSourceInput, scheduleE: ScheduleEResult) {
@@ -20,6 +21,8 @@ export function calculateK1OrdinaryPassiveSources(input: K1QbiLossSourceInput, s
       throw new Error('K1 ordinary classification requires matching canonical ordinary basis and at-risk sources');
     }
   }
+  const capital=calculateK1PassiveCapitalSources(input,scheduleE);
+  if(capital) return {sources,passive:capital.passive,scheduleESupplementalIncome:capital.scheduleESupplementalIncome,capital};
   const distribution=calculateK1PassiveDistributionSources(input,scheduleE);
   const passiveEntries=scheduleE.partnerships.filter(row=>row.isPassive);
   const passiveNames=new Set(passiveEntries.map(row=>row.name));
@@ -35,5 +38,5 @@ export function calculateK1OrdinaryPassiveSources(input: K1QbiLossSourceInput, s
   });
   const scheduleESupplementalIncome=sum(scheduleE.totalNonpassiveIncome,scheduleE.totalNonpassiveLoss,
     passive.passiveIncome).minus(passive.allowedLoss).minus(distribution.ordinaryTransferExclusion);
-  return {sources,passive,scheduleESupplementalIncome};
+  return {sources,passive,scheduleESupplementalIncome,capital:undefined};
 }

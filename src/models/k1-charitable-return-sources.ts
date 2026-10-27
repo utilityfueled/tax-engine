@@ -3,6 +3,7 @@ import { K1CharitableBasisSourcesSchema } from './k1-charitable-basis-sources.js
 import { K1CashDistributionSourcesSchema } from './k1-cash-distribution-sources.js';
 import { K1CharitableReceiptSourcesSchema } from './k1-charitable-receipt-sources.js';
 import { K1PriorCharitableAtRiskHistorySchema } from './k1-prior-charitable-at-risk.js';
+import { K1CapitalCharacterSourcesSchema } from './k1-capital-character-sources.js';
 const amount = z.string().regex(/^\d+(\.\d+)?$/).optional();
 /** Actual attachments only. No calculated allowance, recipient default, or inferred history. */
 export const K1CharitableReturnSourcesSchema = z.object({
@@ -12,6 +13,7 @@ export const K1CharitableReturnSourcesSchema = z.object({
         k1SourceId: z.string().optional(), sameRegularAmtTreatmentConfirmed: z.boolean().optional(),
         basis: K1CharitableBasisSourcesSchema.optional(),
         cashDistribution: K1CashDistributionSourcesSchema.optional(),
+        capitalCharacter: K1CapitalCharacterSourcesSchema.optional(),
         receipts: z.array(K1CharitableReceiptSourcesSchema).optional(),
         atRisk: z.object({
             sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),

@@ -40,6 +40,7 @@ const amountKeys = new Set<string>([...k1CharitableOriginalAmounts, ...k1Charita
   'beginningDebtBasis', 'additionalLoansToScorp', 'priorDebtBasisReduction', 'contributionShare', 'adjustedBasisShare',
   'appreciationPreviouslyTakenIntoAccount', 'basisAllowed', 'fairMarketValueShare', 'amount',
   'originalPostBasisDeduction', 'originalDisallowedAmount', 'amountAllowed',
+  'originalAmount', 'shortTermLoss', 'longTermLoss',
   'ordinary', 'rental', 'otherRental', 'royalty', 'section179', 'charitable', 'shortTermCapital', 'longTermCapital', 'section1231', 'other',
 ]);
 function actualAmount(value: unknown, key: string): string {

@@ -34,7 +34,7 @@ import {
   setCheckBox,
 } from "../../pdf-utils.js";
 import { d, sum, roundDollar, zeroFloor } from "@/utils/decimal.js";
-import { requiresScheduleEReview, scheduleEReviewPassiveDistributionSources, type PreparedScheduleEReview, type ScheduleEPassiveDistributionSource } from "../../schedule-e-review-context.js";
+import { requiresScheduleEReview, scheduleEReviewSourceDetails, type PreparedScheduleEReview, type ScheduleEPassiveDistributionSource, type ScheduleEPassiveCapitalSource } from "../../schedule-e-review-context.js";
 
 // ─── PDF Field Name Helpers ────────────────────────────────────────────────
 
@@ -485,13 +485,21 @@ function propertyRows(input:TaxYearInput,result:TaxReturnResult):PropertyRow[] {
     expenses:{commissions:row.commissions,insurance:row.insurance,legalProfessional:row.legalProfessional,managementFees:row.managementFees,taxes:row.taxes},allowedLoss:zeroFloor(row.netIncome.negated())}));
   return [...rentals,...royalties];
 }
-function partnershipRows(input:TaxYearInput,result:TaxReturnResult,passiveDistributions:ScheduleEPassiveDistributionSource[]):PartnershipRow[] {
+function partnershipRows(input:TaxYearInput,result:TaxReturnResult,passiveDistributions:ScheduleEPassiveDistributionSource[],passiveCapital:ScheduleEPassiveCapitalSource[]):PartnershipRow[] {
   let passiveIndex=0;
   return (result.scheduleE?.partnerships??[]).map((row,sourceIndex)=>{
     const index=row.isPassive?passiveIndex++:undefined;
     const activity=result.form8582?.activityRows.find(item=>item.sourceIndex===index&&index!==undefined);
     const allowance=result.form8582?.activityAllocations.find(item=>item.sourceIndex===index&&index!==undefined);
     if(row.isPassive&&!row.isPubliclyTradedPartnership) {
+      const capital=passiveCapital.find(source=>source.k1Index===sourceIndex);
+      if(capital) {
+        if(!activity||capital.passiveIndex!==index||!activity.sourceCurrentIncome.eq(capital.sourceCurrentIncome)
+          ||!activity.sourceCurrentLoss.eq(capital.sourceCurrentLoss)||!activity.sourcePriorYearSuspendedLoss.eq(capital.sourcePriorLoss))
+          throw new Error('Schedule E passive capital source does not reconcile with original-index Form8582');
+        return {sourceIndex,passiveIncome:capital.ordinaryIncome,passiveLoss:capital.ordinaryAllowedLoss,
+          nonpassiveIncome:row.nonpassiveIncome,nonpassiveLoss:row.nonpassiveLoss.abs()};
+      }
       const distribution=passiveDistributions.find(source=>source.k1Index===sourceIndex);
       if(distribution&&(!activity||distribution.passiveIndex!==index||!activity.sourceCurrentIncome.eq(distribution.sourceIncome)))
         throw new Error('Schedule E passive distribution source does not reconcile with original-index Form8582');
@@ -557,11 +565,11 @@ async function appendReference(doc:PDFDocument,lines:string[]):Promise<void> {
 /** Fill final2025 review maps; source preparation happens before template I/O. */
 export async function fillScheduleE(input:TaxYearInput,result:TaxReturnResult,blankPdfPath:string,prepared?:PreparedScheduleEReview):Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear,result.taxYear);
-  const passiveDistributions=requiresScheduleEReview(input,result)||prepared?
-    scheduleEReviewPassiveDistributionSources(input,result,prepared):[];
+  const sources=requiresScheduleEReview(input,result)||prepared?
+    scheduleEReviewSourceDetails(input,result,prepared):{passiveDistributions:[],passiveCapital:[]};
   const supplementalIncome=result.schedule1?.supplementalIncome;
   if(result.scheduleE&&supplementalIncome===undefined)throw new Error("Schedule E review requires the final Schedule1 source amount");
-  const properties=propertyRows(input,result),partnerships=partnershipRows(input,result,passiveDistributions);
+  const properties=propertyRows(input,result),partnerships=partnershipRows(input,result,sources.passiveDistributions,sources.passiveCapital);
   const doc=await loadReviewTemplate(blankPdfPath,2025),form=doc.getForm(),se=result.scheduleE;
   const name=input.taxpayer.spouse?`${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`:`${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName}`;
   const ssn=input.taxpayer.primary.ssn.replace(/-/g,'');

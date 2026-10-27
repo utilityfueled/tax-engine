@@ -3,6 +3,7 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import type { TaxYearInput } from '@/models/inputs.js';
 import type { TaxReturnResult } from '@/models/outputs.js';
 import { calculateK1CharitableReturnSources } from '@/engine/forms/k1-charitable-return-sources.js';
+import { calculateK1PassiveCapitalSources } from '@/engine/forms/k1-passive-capital-sources.js';
 import { charitableReviewOriginalSourceInput, type PreparedCharitableReview } from '@/pdf/charitable-review-context.js';
 import { assertPdfExportAllowed, markReviewPdf } from '@/pdf/export-policy.js';
 export const K1_CHARITABLE_REFERENCE_FILENAME = 'k1-charitable-reference-filled.pdf';
@@ -12,6 +13,7 @@ export function buildK1CharitableReview(input: TaxYearInput, result: TaxReturnRe
     const source = calculateK1CharitableReturnSources(original);
     if (!source)
         throw new Error('K1 charitable review requires original attached sources');
+    const passiveCapital = result.scheduleE ? calculateK1PassiveCapitalSources(original, result.scheduleE) : undefined;
     const rows = [
         `Tax year ${result.taxYear}. Original K1 charitable contribution review.`,
         'Basis and at-risk suspensions are separate from section170 charitable carryovers. Do not add these amounts as deductions.',
@@ -50,6 +52,15 @@ export function buildK1CharitableReview(input: TaxYearInput, result: TaxReturnRe
             }
         }
         const distribution = statement.distributionGain;
+        const capital = passiveCapital?.rows.find(row => row.k1Index === statement.k1Index);
+        if (statement.capitalCharacter && capital) rows.push(
+            `Original current short-term character: ${statement.capitalCharacter.currentShortTerm ?? 'known zero original'}`,
+            `Original current long-term character: ${statement.capitalCharacter.currentLongTerm ?? 'known zero original'}`,
+            `Opening passive short-term loss: $${statement.capitalCharacter.priorShortTermLoss.toFixed()}; long-term loss: $${statement.capitalCharacter.priorLongTermLoss.toFixed()}`,
+            `Ordinary passive loss allowed: $${capital.ordinaryAllowedLoss.toFixed()}; ordinary passive loss remaining: $${capital.ordinarySuspended.toFixed()}`,
+            `Short-term passive loss remaining: $${capital.shortTermSuspended.toFixed()}; long-term passive loss remaining: $${capital.longTermSuspended.toFixed()}`,
+            'Form8582 PartIX keeps capital deductions separate from ordinary deductions. These exact histories are not adjusted for destination-line rounding.',
+        );
         if (distribution) rows.push(
             `Actual cash distribution: $${distribution.cash.toFixed()}; Basis before distribution: $${distribution.basisBeforeDistribution.toFixed()}`,
             `Basis recovered: $${distribution.recoveredBasis.toFixed()}; Owner capital gain: $${distribution.gain.toFixed()}`,
@@ -66,7 +77,7 @@ export function buildK1CharitableReview(input: TaxYearInput, result: TaxReturnRe
                 'Distribution character: single passive business; continuing ownership.',
                 `Valuation date: ${distribution.passiveActivity.valuationDate}; holder underlying business FMV: $${distribution.passiveActivity.fairMarketValue.toFixed()}; adjusted basis: $${distribution.passiveActivity.adjustedBasis.toFixed()}`,
                 `Form8582 activity income: $${activity.currentIncome.toFixed()}; owner capital gain remains on Form8949 and Schedule D.`,
-                `Ordinary passive loss allowed: $${allocation.allowedLoss.toFixed()}; Passive loss remaining: $${allocation.suspendedLoss.toFixed()}`,
+                `Ordinary passive loss allowed: $${(capital?.ordinaryAllowedLoss ?? allocation.allowedLoss).toFixed()}; Passive loss remaining: $${(capital?.ordinarySuspended ?? allocation.suspendedLoss).toFixed()}`,
                 'The owner gain does not restore entity basis or become qualified business income. No full-disposition loss release applies.',
             );
         }

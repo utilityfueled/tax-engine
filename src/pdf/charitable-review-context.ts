@@ -69,7 +69,8 @@ export function requiresCharitableNolReview(input: TaxYearInput, result?: TaxRet
 /** Retained basis/activity allocation cannot be detached from its originals. */
 export function requiresK1CharitableReview(input: TaxYearInput, result?: TaxReturnResult): boolean {
   return input.k1CharitableSources !== undefined || result?.carryforwards.k1AtRiskByCharacter !== undefined
-    || !!result?.allLines.some(row => row.form === 'K1 Charitable Return' || row.form === 'K1 Charitable At Risk');
+    || result?.carryforwards.k1PassiveByCharacter !== undefined
+    || !!result?.allLines.some(row => row.form === 'K1 Charitable Return' || row.form === 'K1 Charitable At Risk' || row.form === 'Form 8582 Part IX');
 }
 
 /** Local only; never serialize a token or accept one from a client. */

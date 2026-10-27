@@ -8,6 +8,7 @@ import { CurrencyField } from './currency-field';
 import { K1CashDistributionDetails } from './k1-cash-distribution-details';
 import { K1CharitableAtRiskDetails } from './k1-charitable-at-risk-details';
 import { K1PriorAtRiskDetails } from './k1-prior-at-risk-details';
+import { K1CapitalCharacterDetails } from './k1-capital-character-details';
 
 type Field = readonly [string, string, 'text' | 'money' | 'signed' | 'boolean' | readonly (readonly [string, string])[]];
 function Fields<T extends object>({ prefix, data, fields, onChange }: { prefix: string; data?: T; fields: readonly Field[]; onChange: (patch: Partial<T>) => void }) {
@@ -120,6 +121,7 @@ function CharitableStatement({ index, data, activities, onChange }: { index: num
     <Original prefix={prefix} data={data.original} onChange={original => change({ original })} />
     <Basis prefix={prefix} data={data.basis} onChange={basis => change({ basis })} />
     <K1CashDistributionDetails prefix={prefix} data={data.cashDistribution} entityType={data.original?.entityType} onChange={cashDistribution => change({ cashDistribution })} />
+    <K1CapitalCharacterDetails prefix={prefix} data={data.capitalCharacter} onChange={capitalCharacter => change({ capitalCharacter })} />
     <fieldset><legend>{prefix} recipient receipts</legend>
       {data.receipts === undefined && <p role="status">The recipient receipt list is unknown.</p>}
       {data.receipts?.length === 0 && <p>Explicitly recorded: no recipient receipts.</p>}

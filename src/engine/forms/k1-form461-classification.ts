@@ -36,7 +36,10 @@ export function calculateK1Form461Classification(input: TaxYearInput, context: {
     ||(input.priorYear?.suspendedBusinessInterest?.length??0)>0||(input.priorYear?.suspendedPTPLosses?.length??0)>0) {
     throw new Error('K1 Form461 ordinary-only classification requires a separate method for other business sources');
   }
-  const {passive,scheduleESupplementalIncome}=calculateK1OrdinaryPassiveSources(input,context.scheduleE);
+  const {passive,scheduleESupplementalIncome,capital}=calculateK1OrdinaryPassiveSources(input,context.scheduleE);
+  if(capital?.rows.some(row=>row.hasPassiveCapital)) {
+    throw new Error('Actual passive business capital requires its separate Form461 classification; it cannot assert ordinary-only nonbusiness capital.');
+  }
   const deductions=sum(context.deductibleSETax,context.seHealthInsurance,context.seRetirementContributions);
   const form461=calculateForm461({
     totalWages:d(0),scheduleCNetProfit:d(0),scheduleFNetProfit:d(0),form4797OrdinaryGainOrLoss:d(0),

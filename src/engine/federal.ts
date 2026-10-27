@@ -69,6 +69,7 @@ import { calculateScheduleC } from "./schedules/schedule-c.js";
 import { calculateScheduleD, recomputeCarryforward } from "./schedules/schedule-d.js";
 import { calculateK1CharitableReturnSources } from "./forms/k1-charitable-return-sources.js";
 import { calculateScheduleE } from "./schedules/schedule-e.js";
+import { calculateK1PassiveCapitalSources } from "./forms/k1-passive-capital-sources.js";
 import { calculateK1Form461Classification } from "./forms/k1-form461-classification.js";
 import { calculateK1PassiveDistributionSources } from "./forms/k1-passive-distribution-sources.js";
 import { calculateK1OrdinarySelfEmployment } from "./forms/k1-ordinary-self-employment.js";
@@ -1420,6 +1421,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Schedule E: Supplemental income (rental + partnership)
   const schedE = calculateScheduleE(input, k1CharitableSources);
   audit.merge(schedE.lines);
+  const passiveCapital = calculateK1PassiveCapitalSources(input, schedE);
+  if (passiveCapital) audit.merge(passiveCapital.lines);
 
   // ── IRC §280F(b)(2) recapture: aggregate from Schedule C and Schedule E Form 4562 ──
   const section280FRecapture = sum(
@@ -1950,8 +1953,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     .flatMap((partnership, k1Index) => partnership.isPassive ? [{
       name: partnership.name,
       reportingFormAndLine: "Schedule E, line 28",
-      income: partnership.passiveIncome.plus(passiveDistribution.rows.find(row => row.k1Index === k1Index)?.gain ?? 0),
-      loss: partnership.passiveLoss,
+      income: passiveCapital?.rows.find(row => row.k1Index === k1Index)?.currentIncome
+        ?? partnership.passiveIncome.plus(passiveDistribution.rows.find(row => row.k1Index === k1Index)?.gain ?? 0),
+      loss: passiveCapital?.rows.find(row => row.k1Index === k1Index)?.currentLoss ?? partnership.passiveLoss,
       isRentalRealEstate: partnership.isRentalRealEstate,
       isActiveParticipant: partnership.isRentalRealEstate, // simplified assumption
       isPubliclyTradedPartnership: partnership.isPubliclyTradedPartnership,
@@ -2000,7 +2004,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     .plus(sched1.iraDeduction).plus(sched1.studentLoanInterest).plus(schedSE.deductibleHalf)
     .plus(adoptionBenefitResult?.allowableExclusion ?? new Decimal(0));
 
-  const calculatedForm8582 = calculateForm8582({
+  const calculatedForm8582 = passiveCapital ? { ...passiveCapital.passive, modifiedAgi: form8582MAGI } : calculateForm8582({
     activities: passiveActivities,
     agi: form8582MAGI,
     filingStatus,
@@ -2021,7 +2025,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     throw new Error("Pub974 passive ordering requires separate actual K1 participation, disposition or business-loss source coordination.");
   }
   const form8582 = ordered?.passive ?? calculatedForm8582;
-  for (const earlier of [k1Form461Classification?.passive, ordinaryK1SelfEmployment.passive]) {
+  for (const earlier of [k1Form461Classification?.passive, ordinaryK1SelfEmployment.passive, passiveCapital?.passive]) {
     if (!earlier) continue;
     const sourceRows = (value: typeof earlier) => value.activityRows.map(row => [row.sourceIndex, row.name,
       row.sourceCurrentIncome.toFixed(), row.sourceCurrentLoss.toFixed(), row.sourcePriorYearSuspendedLoss.toFixed()]);
@@ -2044,7 +2048,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // A signed replacement handles both suspended current losses and released
   // prior losses, including activities whose current income is positive.
   const allowedPassiveIncome = form8582.rentalIncome.plus(form8582.passiveIncome)
-    .minus(passiveLossForIncome).plus(currentPtpIncome).minus(passiveDistribution.ordinaryTransferExclusion);
+    .minus(passiveLossForIncome).plus(currentPtpIncome).minus(passiveCapital?.ordinaryTransferExclusion ?? passiveDistribution.ordinaryTransferExclusion);
   const passiveIncomeAdjustment = allowedPassiveIncome.minus(preliminaryPassiveIncome);
   // ── PTP disposition: released losses reduce AGI (IRC §469(g)(1)) ──
   // When a PTP is fully disposed of in a taxable transaction, accumulated
@@ -4169,7 +4173,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // Portfolio royalties are outside the section 469 pool but remain investment
   // income under section 1411(c)(1)(A)(i). Line 4b must not remove them along
   // with excluded active business income already included on line 4a.
-  const niitScheduleEIncome = netAllowedPassive.minus(passiveDistribution.ordinaryTransferExclusion).plus(schedE.totalRoyaltyIncome);
+  const niitScheduleEIncome = netAllowedPassive.minus(passiveCapital?.ordinaryTransferExclusion ?? passiveDistribution.ordinaryTransferExclusion).plus(schedE.totalRoyaltyIncome);
   audit.record("Form8960 Source", "portfolio-royalties", "Portfolio royalties retained in investment income", schedE.totalRoyaltyIncome,
     "Completed Schedule E portfolio royalty component, included once outside the passive activity pool");
   const form8960 = calculateForm8960(
@@ -4526,6 +4530,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
           .map((a) => ({ partnershipName: a.name, amount: a.suspendedLoss,
             qbiVintages: a.sourceIndex === undefined ? undefined : rentalLossQbi.get(a.sourceIndex)?.remainingVintages
               ?? k1QbiLosses.activities.find(source => source.passiveSourceIndex === a.sourceIndex)?.stages.find(stage => stage.limitation === "469")?.remainingVintages })),
+        ...(passiveCapital ? { k1PassiveByCharacter: passiveCapital.rows.map(row => ({
+          k1SourceId: `scheduleK1:${row.k1Index}`, accountHolder: row.accountHolder,
+          taxYear: year, ordinary: row.ordinarySuspended, shortTermCapital: row.shortTermSuspended, longTermCapital: row.longTermSuspended,
+        })) } : {}),
         suspendedPTPLosses: form8582.ptpSuspendedLosses
           .filter((p) => p.netSuspended.greaterThan(0))
           .map((p) => ({ partnershipName: p.name, amount: p.netSuspended })),

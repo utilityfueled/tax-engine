@@ -1336,6 +1336,16 @@
         "tests/pdf/marketplace-marriage-health-review.test.ts::prints the source-bound marriage and health worksheets with the computed cap"
       ],
       "note": "Own-spec controls bind actual unshared marriage and health sources to the existing health worksheets and historical2025 Form8962 review output. Actual joint eligibility, computed repayment limit, owner deductions and original sources remain separate. No additional source cohort, filing readiness or independent human qualification is claimed."
+    },
+    {
+      "key": "federal/k1-passive-capital-sources",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8582.ts",
+      "testRefs": [
+        "tests/engine/federal-k1-passive-capital.test.ts::routes actual passive capital through PartIX once and preserves the portfolio distinction",
+        "tests/pdf/k1-passive-capital-review.test.ts::prints ordinary and capital destinations with exact separate PartIX records"
+      ],
+      "note": "Own-spec controls bind actual ordinary K1 capital character, independent loss histories and exact reporting-part allocation to the historical2025 packet. The mixed ST/LT PartV summary is a derived interpretation, with original term amounts retained. PTP, rental, disposition and special-rate methods remain excluded; no filing readiness, full2026 output or independent human qualification is claimed."
     }
   ]
 }

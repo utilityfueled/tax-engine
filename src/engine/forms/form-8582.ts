@@ -33,6 +33,7 @@ export interface PassiveActivity {
 }
 
 export interface Form8582Input {
+  preserveSourcePrecision?: never;
   activities: PassiveActivity[];
   agi: Decimal;
   filingStatus: FilingStatus;
@@ -52,6 +53,8 @@ export interface Form8582Input {
 /** Completed ordinary nonrental Part I; no rental special allowance or MAGI source. */
 export interface Form8582NonRentalInput {
   scope: "ordinary_nonrental_part_i";
+  /** Internal completed-source handoff; downstream form lines round their own totals. */
+  preserveSourcePrecision?: true;
   activities: PassiveActivity[];
   filingStatus: FilingStatus;
   priorYearSuspendedLosses?: Array<{ name: string; amount: Decimal }>;
@@ -152,6 +155,11 @@ function allocateDollars(total: Decimal, weights: Decimal[]): Decimal[] {
   return amounts;
 }
 
+function allocateSourceAmounts(total: Decimal, weights: Decimal[]): Decimal[] {
+  const denominator = weights.reduce((sum, weight) => sum.plus(weight), new Decimal(0));
+  return weights.map(weight => denominator.isZero() ? new Decimal(0) : total.times(weight).div(denominator));
+}
+
 export function calculateForm8582(input: Form8582NonRentalInput): Form8582NonRentalResult;
 export function calculateForm8582(input: Form8582Input): Form8582Result;
 export function calculateForm8582(input: Form8582Input | Form8582NonRentalInput): Form8582Result | Form8582NonRentalResult {
@@ -164,6 +172,10 @@ export function calculateForm8582(input: Form8582Input | Form8582NonRentalInput)
   // ═══════════════════════════════════════════════════════════
 
   const scoped = "scope" in input;
+  const preserveSourcePrecision = "preserveSourcePrecision" in input;
+  if (preserveSourcePrecision && (!scoped || input.preserveSourcePrecision !== true)) {
+    throw new Error("Form8582 source precision requires the completed ordinary nonrental source scope.");
+  }
   if (scoped) {
     if (input.scope !== "ordinary_nonrental_part_i" || "agi" in input || "mfsLivedApartFromSpouseAllYear" in input
       || "priorYearPTPSuspendedLosses" in input || input.activities.some(activity => activity.isRentalRealEstate !== false
@@ -337,9 +349,9 @@ export function calculateForm8582(input: Form8582Input | Form8582NonRentalInput)
   const activityRows: Form8582ActivityRow[] = nonPTPActivities.map(activity => {
     const prior = priorByName.get(activity.name) ?? new Decimal(0);
     priorByName.delete(activity.name);
-    const currentIncome = roundDollar(activity.income);
-    const currentLoss = roundDollar(activity.loss);
-    const priorYearSuspendedLoss = roundDollar(prior);
+    const currentIncome = preserveSourcePrecision ? activity.income : roundDollar(activity.income);
+    const currentLoss = preserveSourcePrecision ? activity.loss : roundDollar(activity.loss);
+    const priorYearSuspendedLoss = preserveSourcePrecision ? prior : roundDollar(prior);
     return { sourceIndex: activity.sourceIndex, name: activity.name, reportingFormAndLine: activity.reportingFormAndLine,
       isActiveRental: activity.isRentalRealEstate && activity.isActiveParticipant && !mfsIneligible,
       sourceCurrentIncome: activity.income, sourceCurrentLoss: activity.loss, sourcePriorYearSuspendedLoss: prior,
@@ -410,10 +422,11 @@ export function calculateForm8582(input: Form8582Input | Form8582NonRentalInput)
   const lossRows = activityRows.filter(row => row.currentLoss.minus(row.priorYearSuspendedLoss).lt(0));
   const rentalWeights = lossRows.map(row => row.isActiveRental ? zeroFloor(row.overallNet.negated()) : new Decimal(0));
   const rentalDenominator = rentalWeights.reduce((sum, value) => sum.plus(value), new Decimal(0));
-  const specialAllowances = allocateDollars(rentalAllowance, rentalWeights);
+  const allocate = preserveSourcePrecision ? allocateSourceAmounts : allocateDollars;
+  const specialAllowances = allocate(rentalAllowance, rentalWeights);
   const remainingLosses = lossRows.map((row, index) => zeroFloor(row.overallNet.negated()).minus(specialAllowances[index]));
   const remainingTotal = remainingLosses.reduce((sum, value) => sum.plus(value), new Decimal(0));
-  const unallowed = allocateDollars(suspendedLoss, remainingLosses);
+  const unallowed = allocate(suspendedLoss, remainingLosses);
   const activityAllocations = lossRows.map((row, index) => {
     const totalLoss = row.currentLoss.minus(row.priorYearSuspendedLoss);
     return { sourceIndex: row.sourceIndex, name: row.name, reportingFormAndLine: row.reportingFormAndLine, isActiveRental: row.isActiveRental,

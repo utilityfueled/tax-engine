@@ -6,6 +6,7 @@ import type { ScheduleK1, TaxYearInput } from '@/models/inputs.js';
 import type { QbiLossHistorySource } from '@/engine/forms/qbi-loss-character.js';
 import { calculateK1CharitableReturnSources } from './k1-charitable-return-sources.js';
 import type { K1CharitableAtRiskResult } from './k1-charitable-at-risk.js';
+import type { K1CapitalCharacterResult } from './k1-capital-character-sources.js';
 import { d, sum } from '@/utils/decimal.js';
 
 type Identity=Pick<TaxYearInput['taxpayer']['primary'],'firstName'|'lastName'|'ssn'>;
@@ -23,6 +24,7 @@ export interface ValidatedK1QbiLossSource {
   sourceId:string;k1Index:number;accountHolder:'primary'|'spouse';
   ordinaryIncome:Decimal;qualifiedBusinessIncome:Decimal;priorPassiveLoss:Decimal;passiveCapitalGain:Decimal;
   priorAtRiskLoss:Decimal;charitableAtRisk?:K1CharitableAtRiskResult;
+  capitalCharacter?:K1CapitalCharacterResult;
   basisHistory:QbiLossHistorySource;atRiskHistory:QbiLossHistorySource;passiveHistory:QbiLossHistorySource;
 }
 const ordinaryOnlyZeroFields=[
@@ -175,11 +177,13 @@ export function validateK1QbiLossSources(input:K1QbiLossSourceInput):ValidatedK1
     if(source.sameOwnerHistoryConfirmed!==true) throw new Error('K1 QBI actual prior history must retain the same owner');
     const prior=amount(source.priorPassiveLoss,'prior passive opening',true,true);
     const priorRows=(input.priorYear?.suspendedPassiveLosses??[]).filter(row=>row.partnershipName===original.partnershipName);
-    if(priorRows.length!==1||!prior.eq(amount(priorRows[0].amount,'original prior passive opening',true,true))) throw new Error('K1 QBI requires one matching actual prior passive opening record, including zero');
+    const capitalCharacter=charitableSource?.capitalCharacter;
+    const capitalPrior=sum(capitalCharacter?.priorShortTermLoss??d(0),capitalCharacter?.priorLongTermLoss??d(0));
+    if(priorRows.length!==1||!prior.plus(capitalPrior).eq(amount(priorRows[0].amount,'original prior passive opening',true,!capitalCharacter))) throw new Error('K1 QBI requires one matching actual prior passive opening record, including zero and independently classified capital');
     if(!original.isPassiveActivity&&prior.gt(0)) throw new Error('K1 QBI former passive activity requires its separate current nonpassive release method');
     const passiveHistory=history(priorRows[0].qbiLossTracking,year,prior,known(original.qbiMateriallyParticipated,'material participation'));
     const basisHistory:QbiLossHistorySource={...basis,sourceFactsConfirmed:true,vintages:[]};
     return {sourceId:id,k1Index:index,accountHolder:owner,ordinaryIncome:ordinary,qualifiedBusinessIncome:qualified,priorPassiveLoss:prior,passiveCapitalGain,
-      priorAtRiskLoss,charitableAtRisk:charitableSource?.atRiskAllocation,basisHistory,atRiskHistory,passiveHistory};
+      priorAtRiskLoss,charitableAtRisk:charitableSource?.atRiskAllocation,capitalCharacter,basisHistory,atRiskHistory,passiveHistory};
   });
 }

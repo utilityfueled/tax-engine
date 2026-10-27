@@ -20,6 +20,8 @@ import { calculateForm6781, type Form6781Result } from "../forms/form-6781.js";
 import { calculateForm6252, aggregateForm6252Results, type Form6252AggregateResult } from "../forms/form-6252.js";
 
 import { calculateK1CharitableReturnSources, type K1CharitableReturnResult } from "../forms/k1-charitable-return-sources.js";
+import { calculateK1PassiveCapitalSources } from "../forms/k1-passive-capital-sources.js";
+import { calculateScheduleE } from "./schedule-e.js";
 import { calculateScheduleDSourceBinding } from "./schedule-d-source-binding.js";
 import type { ScheduleDSpecialGainResult } from "./schedule-d-special-gains.js";
 
@@ -57,6 +59,8 @@ export function calculateScheduleD(
 ): ScheduleDResult {
   const audit = new AuditTrail();
   const k1Charitable = extra?.k1CharitableSources ?? calculateK1CharitableReturnSources(input);
+  const passiveCapital = input.k1CharitableSources?.statements?.some(row => row.capitalCharacter !== undefined)
+    ? calculateK1PassiveCapitalSources(input, calculateScheduleE(input, k1Charitable)) : undefined;
   const form8824CapitalGainLoss = extra?.form8824CapitalGainLoss ?? new Decimal(0);
   const childCapitalGainDistributions = extra?.childCapitalGainDistributions ?? new Decimal(0);
   if (!childCapitalGainDistributions.isFinite() || childCapitalGainDistributions.lt(0)) throw new Error("ScheduleD child distributions must be finite and nonnegative");
@@ -96,7 +100,8 @@ export function calculateScheduleD(
   const k1ShortTerm = input.scheduleK1.reduce(
     (acc, k, index) => {
       const source = k1Charitable?.statements.find(row => row.k1Index === index);
-      return acc.plus(source?.atRiskAllocation?.shortTermAmount ?? source?.shortTermAmount ?? d(k.netShortTermCapitalGain));
+      return acc.plus(passiveCapital?.rows.find(row => row.k1Index === index && row.hasCapitalSource)?.shortTermAmount
+        ?? source?.atRiskAllocation?.shortTermAmount ?? source?.shortTermAmount ?? d(k.netShortTermCapitalGain));
     },
     new Decimal(0)
   );
@@ -148,7 +153,8 @@ export function calculateScheduleD(
   const k1LongTerm = input.scheduleK1.reduce(
     (acc, k, index) => {
       const source = k1Charitable?.statements.find(row => row.k1Index === index);
-      return acc.plus(source?.atRiskAllocation?.longTermAmount ?? source?.longTermAmount ?? d(k.netLongTermCapitalGain));
+      return acc.plus(passiveCapital?.rows.find(row => row.k1Index === index && row.hasCapitalSource)?.longTermAmount
+        ?? source?.atRiskAllocation?.longTermAmount ?? source?.longTermAmount ?? d(k.netLongTermCapitalGain));
     },
     new Decimal(0)
   );

@@ -8,6 +8,7 @@ import { calculatePartnerBasisSchedule, type PartnerBasisScheduleResult } from '
 import { calculateForm6198 } from './form-6198.js';
 import { calculateK1CharitableAtRisk, type K1CharitableAtRiskResult } from './k1-charitable-at-risk.js';
 import { calculateK1PriorAtRiskSources, type K1PriorAtRiskSourcesResult } from './k1-prior-charitable-at-risk.js';
+import { calculateK1CapitalCharacterSources, type K1CapitalCharacterResult } from './k1-capital-character-sources.js';
 import { calculateK1CashDistributionGain, type K1CashDistributionGain } from './k1-cash-distribution-gain.js';
 import { resolveCharitableRecipient } from '@/utils/charitable-recipient.js';
 import { d, sum } from '@/utils/decimal.js';
@@ -40,6 +41,7 @@ export interface K1CharitableStatementResult {
     longTermAmount: Decimal;
     atRiskAllocation?: K1CharitableAtRiskResult;
     priorAtRisk: K1PriorAtRiskSourcesResult;
+    capitalCharacter?: K1CapitalCharacterResult;
 }
 export interface K1CharitableReturnResult {
     sourceFactsVerified: true;
@@ -238,7 +240,7 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
                 throw new Error('K1 charitable at-risk activity line4 must include all assigned charitable deductions after basis');
             if (!d(k1.guaranteedPayments).isZero())
                 throw new Error('K1 charitable at-risk guaranteed payment assignment requires its separate original activity method');
-            if (k1.isPassiveActivity && (!d(k1.netShortTermCapitalGain).isZero() || !d(k1.netLongTermCapitalGain).isZero()
+            if (k1.isPassiveActivity && !source.capitalCharacter && (!d(k1.netShortTermCapitalGain).isZero() || !d(k1.netLongTermCapitalGain).isZero()
                 || priorAtRisk.shortTerm.gt(0) || priorAtRisk.longTerm.gt(0)))
                 throw new Error('K1 charitable passive capital items require their separate original character source');
             atRiskAllocation = calculateK1CharitableAtRisk({ form, ordinaryAmount, shortTermAmount, longTermAmount,
@@ -254,6 +256,10 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
             throw new Error('K1 prior at-risk release requires actual current activity assignment and complete character allocation');
         else if (amountAtRisk.lt(nonbindingRiskRequired))
             throw new Error('K1 charitable nonbinding at-risk capacity must cover all basis-allowed deductions and full charitable value');
+        const capitalCharacter = source.capitalCharacter ? calculateK1CapitalCharacterSources({ taxYear: year, k1,
+            source: source.capitalCharacter, priorAtRisk: priorAtRisk.records }) : undefined;
+        if (capitalCharacter && !input.qbiLossSources?.activities?.some(row => row.k1SourceId === source.k1SourceId))
+            throw new Error('K1 capital character requires linked actual ordinary and prior passive histories, including zero');
         for (const row of charity.records) {
             const treatment = receiptTreatment.get(row.sourceId);
             if (!treatment) throw new Error('K1 charitable original receipt treatment is missing');
@@ -273,7 +279,7 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
             'Ordinary amount after basis': ordinaryAmount, 'Short-term amount after basis': shortTermAmount, 'Long-term amount after basis': longTermAmount,
         });
         if (distributionGain) audit.merge(distributionGain.lines.map(line => ({ ...line, line: `${line.line}-${index + 1}` })));
-        return { k1Index: index, accountHolder: k1.accountHolder, basis, distributionGain, nonbindingRiskRequired, amountAtRisk, ordinaryAmount, shortTermAmount, longTermAmount, atRiskAllocation, priorAtRisk };
+        return { k1Index: index, accountHolder: k1.accountHolder, basis, distributionGain, nonbindingRiskRequired, amountAtRisk, ordinaryAmount, shortTermAmount, longTermAmount, atRiskAllocation, priorAtRisk, capitalCharacter };
     });
     if (input.scheduleK1.some((row, index) => needsSource(row) && !seen.has(index)))
         throw new Error('K1 charitable complete packet omits an actual current or prior basis source');

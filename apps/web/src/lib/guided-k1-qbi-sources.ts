@@ -4,6 +4,7 @@ import { calculatePartnerBasisSchedule } from '@/engine/forms/partner-basis-sche
 import { calculateScheduleE } from '@/engine/schedules/schedule-e';
 import { calculateK1OrdinarySelfEmployment } from '@/engine/forms/k1-ordinary-self-employment';
 import { calculateK1PassiveDistributionSources } from '@/engine/forms/k1-passive-distribution-sources';
+import { calculateK1PassiveCapitalSources } from '@/engine/forms/k1-passive-capital-sources';
 import { calculateQbiEblNol } from '@/engine/forms/qbi-ebl-nol';
 import { d } from '@/utils/decimal';
 import type { GuidedFlowState } from './guided-interview-flow';
@@ -74,10 +75,18 @@ export function buildGuidedK1Sources(data: K1LossSourcesData | undefined, state:
       currentYearIncreases: source.atRisk.currentYearIncreases ?? '', currentYearDecreases: source.atRisk.currentYearDecreases ?? '' };
     return original;
   });
-  const suspendedPassiveLosses: NonNullable<TaxYearInput['priorYear']>['suspendedPassiveLosses'] = packet.activities.map((source, index) => ({
-    partnershipName: scheduleK1[index].partnershipName, amount: source.priorPassiveLoss ?? '',
+  const suspendedPassiveLosses: NonNullable<TaxYearInput['priorYear']>['suspendedPassiveLosses'] = packet.activities.map((source, index) => {
+    const capital = charitable?.packet.statements?.find(row => row.k1SourceId === `scheduleK1:${index}`)?.capitalCharacter;
+    let amount = source.priorPassiveLoss ?? '';
+    if (capital) {
+      const prior = capital.priorPassiveCapital;
+      if (!amount || prior?.shortTermLoss === undefined || prior.longTermLoss === undefined)
+        throw new Error('Record the independent ordinary and short/long-term capital prior passive balances, including known zero.');
+      amount = d(amount).plus(prior.shortTermLoss).plus(prior.longTermLoss).toFixed();
+    }
+    return { partnershipName: scheduleK1[index].partnershipName, amount,
     qbiLossTracking: qbiSourceValues(data.activities?.[index]?.passiveHistory) as NonNullable<TaxYearInput['priorYear']>['suspendedPassiveLosses'][number]['qbiLossTracking'],
-  }));
+  }; });
   const sourceInput = { taxpayer, scheduleK1, qbiLossSources: packet, k1CharitableSources: charitable?.packet, priorYear: { suspendedPassiveLosses }, ...k1CashDistributionKnownTreatment(state) };
   validateK1QbiLossSources(sourceInput);
   const scheduleE = calculateScheduleE({ ...sourceInput, rentalProperties: [], form1099Misc: [] });
@@ -85,7 +94,8 @@ export function buildGuidedK1Sources(data: K1LossSourcesData | undefined, state:
   // This validated route has actual business capital. It cannot assert the
   // different ordinary-only461 method; supplied classifications still reject.
   const passiveDistribution = calculateK1PassiveDistributionSources(sourceInput, scheduleE);
-  if (scheduleK1.length && !passiveDistribution.rows.length) {
+  const passiveCapital = calculateK1PassiveCapitalSources(sourceInput, scheduleE);
+  if (scheduleK1.length && !passiveDistribution.rows.length && !passiveCapital?.rows.some(row => row.hasPassiveCapital)) {
     const classification = packet.form461Classification;
     if (!classification || classification.sourceTaxYear !== taxYear || !classification.sourceReference?.trim()
       || classification.sourceFactsConfirmed !== true || classification.method !== 'ordinary_k1_only'

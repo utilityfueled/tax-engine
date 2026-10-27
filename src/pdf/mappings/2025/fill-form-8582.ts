@@ -15,6 +15,7 @@ import type { TaxYearInput } from "@/models/inputs.js";
 import { d, sum, zeroFloor } from "@/utils/decimal.js";
 import { calculateScheduleE } from "@/engine/schedules/schedule-e.js";
 import { calculateK1PassiveDistributionSources } from "@/engine/forms/k1-passive-distribution-sources.js";
+import { calculateK1PassiveCapitalSources, type K1PassiveCapitalResult } from "@/engine/forms/k1-passive-capital-sources.js";
 import { calculateForm8582, type Form8582ActivityRow, type Form8582Result, type PassiveActivity } from "@/engine/forms/form-8582.js";
 import {
   loadReviewTemplate,
@@ -237,11 +238,20 @@ function sameSource(expected: unknown, retained: unknown): boolean {
 
 /** Recalculate only to validate actual activity sources; render the retained audits. */
 export function assertForm8582ReviewSource(input: TaxYearInput, result: TaxReturnResult, charitableReview?: PreparedCharitableReview): Form8582Result | undefined {
+  return form8582ReviewSource(input, result, charitableReview)?.retained;
+}
+function form8582ReviewSource(input: TaxYearInput, result: TaxReturnResult, charitableReview?: PreparedCharitableReview) {
   const original = charitableReviewOriginalSourceInput(input, result, charitableReview);
   const retained = result.form8582;
   if (!retained) return undefined;
   if (!Decimal.isDecimal(retained.modifiedAgi) || !retained.modifiedAgi.isFinite()) throw new Error("Form8582 actual modified AGI source is missing");
   const schedule = calculateScheduleE(original);
+  const capital = calculateK1PassiveCapitalSources(original, schedule);
+  if (capital) {
+    const expected = { ...capital.passive, modifiedAgi: retained.modifiedAgi };
+    if (!sameSource(expected, retained)) throw new Error("Form8582 original capital activities, allocation and retained audit do not reconcile");
+    return { retained, capital };
+  }
   const distribution = calculateK1PassiveDistributionSources(original, schedule);
   const activities: PassiveActivity[] = schedule.partnerships.flatMap((row, k1Index) => row.isPassive ? [{
     name: row.name, reportingFormAndLine: "Schedule E, line 28",
@@ -261,7 +271,7 @@ export function assertForm8582ReviewSource(input: TaxYearInput, result: TaxRetur
     priorYearPTPSuspendedLosses: input.priorYear?.suspendedPTPLosses?.map(row => ({ name: row.partnershipName, amount: d(row.amount) })),
   });
   if (!sameSource(expected, retained)) throw new Error("Form8582 source activities, allocation and retained audit do not reconcile");
-  return retained;
+  return { retained, capital };
 }
 
 /** Printed ratio precision only; retain exact core ratios and dollar allocations.
@@ -280,7 +290,7 @@ function printedRatios(rows: Allocation[], read: (row: Allocation) => Decimal): 
   return rounded.map(value => value.div(units).toFixed(6));
 }
 
-async function appendSourceRows(doc: PDFDocument, result: Form8582Result): Promise<void> {
+async function appendSourceRows(doc: PDFDocument, result: Form8582Result, capital?: K1PassiveCapitalResult): Promise<void> {
   if (!result.activityRows.length) return;
   const font = await doc.embedFont(StandardFonts.Helvetica);
   let page: PDFPage, y = 0;
@@ -308,7 +318,7 @@ async function appendSourceRows(doc: PDFDocument, result: Form8582Result): Promi
   };
   newPage();
   wrapped("All sources appear below. Rows beyond the five spaces are included in the printed form totals.");
-  wrapped("Original source cents are retained. Form dollars and ratios use reconciled rounding; no ownership allocation is inferred.");
+  wrapped("Original source cents are retained. Each destination line is rounded only after aggregation. Displayed ratios are reconciled separately; no carry or tax character is changed to absorb a printed-dollar difference.");
   const specialRows = result.rentalAllowance.gt(0) ? result.activityAllocations.filter(row => row.isActiveRental && row.overallLoss.gt(0)) : [];
   const unallowedRows = result.suspendedLoss.gt(0) ? result.activityAllocations.filter(row => row.remainingLoss.gt(0)) : [];
   const specialRatios = specialRows.length ? printedRatios(specialRows, row => row.specialAllowanceRatio) : [];
@@ -326,12 +336,25 @@ async function appendSourceRows(doc: PDFDocument, result: Form8582Result): Promi
       if (unallowedIndex >= 0) wrapped(`Part VII: remaining loss ${allocation.remainingLoss.toFixed()} | ratio ${unallowedRatios[unallowedIndex]}`);
     }
   }
+  for (const row of capital?.rows.filter(item => item.hasCapitalSource || item.distributionGain) ?? []) {
+    y -= 12;
+    wrapped(`Form 8582 Part IX - original K1 activity ${row.k1Index + 1}`);
+    wrapped("Part V retains separate reporting-form nets. Part IX retains each separately reportable ordinary and capital group. The allowed net amount on line 11 is not a substitution for these character deductions.");
+    for (const group of row.byCharacter.groups) {
+      const label = group.character === 'ordinary' ? 'Ordinary: Schedule E'
+        : group.character === 'short_term_capital' ? 'Short-term capital: Schedule D Part I' : 'Long-term capital: Schedule D Part II';
+      wrapped(label);
+      wrapped(`Current deduction $${group.currentDeduction.toFixed()}; prior deduction $${group.priorDeduction.toFixed()}; Current income $${group.currentIncome.toFixed()}`);
+      wrapped(`Net loss allocation weight $${group.netLoss.toFixed()}; unallowed deduction $${group.suspendedDeduction.toFixed()}`);
+      wrapped(`Allowed deduction $${group.allowedDeduction.toFixed()}`);
+    }
+  }
   await markReviewPdf(doc);
 }
 
 export async function fillForm8582(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string, charitableReview?: PreparedCharitableReview): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
-  const retained = assertForm8582ReviewSource(input, result, charitableReview);
+  const source = form8582ReviewSource(input, result, charitableReview), retained = source?.retained, capital = source?.capital;
   const doc = await loadReviewTemplate(blankPdfPath, 2025), form = doc.getForm();
   setTextField(form, FIELDS.name, input.taxpayer.spouse
     ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
@@ -375,19 +398,26 @@ export async function fillForm8582(input: TaxYearInput, result: TaxReturnResult,
     const rows = retained.activityAllocations.filter(row => row.remainingLoss.gt(0));
     const ratios = printedRatios(rows, row => row.unallowedRatio);
     for (const [index, row] of rows.slice(0, 5).entries()) {
-      const fields = FIELDS.part7.rows[index], allowed = FIELDS.part8.rows[index];
+      const fields = FIELDS.part7.rows[index];
       setTextField(form, fields.name, row.name); setTextField(form, fields.form, row.reportingFormAndLine ?? "");
       setCurrencyField(form, fields.a, row.remainingLoss); setTextField(form, fields.b, ratios[index]); setCurrencyField(form, fields.c, row.suspendedLoss);
-      setTextField(form, allowed.name, row.name); setTextField(form, allowed.form, row.reportingFormAndLine ?? "");
-      setCurrencyField(form, allowed.a, row.totalLoss.abs()); setCurrencyField(form, allowed.b, row.suspendedLoss); setCurrencyField(form, allowed.c, row.allowedLoss);
     }
     setCurrencyField(form, FIELDS.part7.totalA, sum(...rows.map(row => row.remainingLoss)));
     setCurrencyField(form, FIELDS.part7.totalC, sum(...rows.map(row => row.suspendedLoss)));
-    setCurrencyField(form, FIELDS.part8.totalA, sum(...rows.map(row => row.totalLoss.abs())));
-    setCurrencyField(form, FIELDS.part8.totalB, sum(...rows.map(row => row.suspendedLoss)));
-    setCurrencyField(form, FIELDS.part8.totalC, sum(...rows.map(row => row.allowedLoss)));
+    const separateCharacters = new Set(capital?.rows.filter(row => row.hasCapitalSource || row.distributionGain).map(row => row.passiveIndex) ?? []);
+    const singleFormRows = rows.filter(row => row.sourceIndex === undefined || !separateCharacters.has(row.sourceIndex));
+    for (const [index, row] of singleFormRows.slice(0, 5).entries()) {
+      const allowed = FIELDS.part8.rows[index];
+      setTextField(form, allowed.name, row.name); setTextField(form, allowed.form, row.reportingFormAndLine ?? "");
+      setCurrencyField(form, allowed.a, row.totalLoss.abs()); setCurrencyField(form, allowed.b, row.suspendedLoss); setCurrencyField(form, allowed.c, row.allowedLoss);
+    }
+    if (singleFormRows.length) {
+      setCurrencyField(form, FIELDS.part8.totalA, sum(...singleFormRows.map(row => row.totalLoss.abs())));
+      setCurrencyField(form, FIELDS.part8.totalB, sum(...singleFormRows.map(row => row.suspendedLoss)));
+      setCurrencyField(form, FIELDS.part8.totalC, sum(...singleFormRows.map(row => row.allowedLoss)));
+    }
   }
-  await appendSourceRows(doc, retained);
+  await appendSourceRows(doc, retained, capital);
   return doc;
 }
 export { FIELDS as FORM_8582_FIELDS };
