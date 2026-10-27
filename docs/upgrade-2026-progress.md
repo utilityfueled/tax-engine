@@ -2,14 +2,15 @@
 
 ## Current checkpoint — 2026-10-27 UTC
 
-Latest implementation is `2a8f6c17`. Actual charitable ownership histories now
-preserve original spouses, filed use, death and current owners, with separate
-regular and AMT records. Independent source and saved-output reviews pass;
-recurrent partial-joint attribution and NOL/COD compositions remain separate.
-Actual monthly marriage coverage (`05c5819`), savings-bond reissues (`c6abb245`)
-and compression work (`25f71f06`) are delivered. Rule provenance is `2025.177` /
-`2026.174-law-integration-draft`; inventory has 563 entries, 5,982 specification
-test references and 149 explicit shared-method associations.
+Latest implementation is `977212bf`. Actual outside-child relationship and
+payment sources now compose with the historical marriage-year health calculation;
+the child does not become a member of either alternative marriage family.
+Educator deductions and exact original savings-bond MAGI sources are delivered
+in `00089be4`, following charitable ownership histories in `2a8f6c17`.
+Rule provenance is `2025.179` / `2026.176-law-integration-draft`; inventory has
+566 entries, 6,009 specification test references and 151 explicit associations.
+Independent agent source and saved-output reviews pass within each package's
+recorded scope. Human tax review and final filing qualification remain open.
 
 Remote CI on `25f71f06` passes 19,523 tests in 1,384 files both normally and
 under coverage. Coverage is 91.85% statements, 86.88% branches, 90.72% functions
@@ -18,7 +19,7 @@ passes 492 cases with five hosted-only skips, and all static/build jobs pass.
 The container job was cancelled during its browser phase after six recovery
 steps passed; its SBOM, scan and artifact upload were skipped. See the
 [exact CI record](upgrade-2026-ci-25f71f06.json). This is an intermediate commit,
-not final evidence for later monthly/charity changes.
+not final evidence for later monthly, charity, educator or outside-child changes.
 
 The last complete retained native runtime remains `87e37df0`, with all six
 recovery phases and 67 OS advisories pending owner review. A fresh package audit
@@ -59,6 +60,9 @@ human review, filing and model-promotion requirements remain open.
 | Actual monthly coverage in marriage-year health worksheets | `05c5819` | Final private source passes 64 tests/14 files including six independent controls; main 58/13 passes. Independent saved-output review reopens 14 PDFs/148 pages/443 fields, with 4,084 comparisons plus flattened/privacy/footer checks. Final static/build checks and production desktop/mobile 2/2 pass with zero retries; original PDF producer and final browser evidence remain distinct. See [ledger](upgrade-2025-marriage-coverage-family-work.md). |
 | Actual charitable ownership and filed-use histories | `2a8f6c17` | Independent source 54/11 includes eight private controls; original/PDF review passes 9,452 checks over 73 PDFs/123 pages/311 fields. Final 72/17 and main 50/9 pass with static/build gates; production desktop/mobile 2/2 and separate settled-ticker 2/2 pass without retries. Later downloaded PDFs receive 102 additional checks. See [ledger](upgrade-2026-charitable-filing-unit-work.md). |
 
+| Actual educator costs and exact bond MAGI reconciliation | `00089be4` | Final source 32/12 includes nine unchanged independent controls; main 21/10 and all static/build gates pass. Independent original/PDF review covers 52 PDFs/215 pages/206 fields and 10,471 checks. Production desktop/mobile 2/2 passes with zero retries; final actual downloads receive 34 additional source/text/privacy checks. See [ledger](upgrade-2026-educator-bond-rational-magi-work.md). |
+| Actual outside-child sources in marriage-year health | `977212bf` | Independent source16/6 includes seven private controls; final21/9 and main15/8 pass with all static/build gates. Six originals and14 PDFs/156 pages/480 nonempty controls pass11,029 independent checks. Final desktop/mobile2/2 passes with zero retries; original PDF producer attribution remains distinct. See [ledger](upgrade-2025-marriage-outside-person-work.md). |
+
 Original-source browser and PDF evidence remains attributed to its recorded
 producer. Later source checks do not turn those artifacts into a new integrated
 browser run. These software/source reviews are agent reviews, not qualified
@@ -80,8 +84,8 @@ The finite internal queue is now reconciled against actual source reachability:
 - **Education:** common per-expense composition and actual current-year retained
   refund records and determined annual category/borrower limits are delivered.
   The bounded annual interest-only route is now delivered. Mixed July4 chronology,
-  mixed-purpose interest attribution and final educator/MAGI integration
-  remain; independent educator source and saved-output reviews now pass. Actual bond reissue/ownership history is delivered in `c6abb245`. See [the education queue](upgrade-2026-education-method-queue.md).
+  mixed-purpose interest attribution remain. Educator/MAGI reconciliation is
+  delivered in `00089be4`, with independent source and saved-output reviews. Actual bond reissue/ownership history is delivered in `c6abb245`. See [the education queue](upgrade-2026-education-method-queue.md).
 - **Charity:** prior K-1 basis release and ordinary operating K-1 current
   Form 172 classification and current binding at-risk allocation are delivered.
   Prior at-risk character/history and passive capital releases are delivered.
@@ -95,8 +99,9 @@ The finite internal queue is now reconciled against actual source reachability:
   delivered, along with actual eligible outside-family persons and their separate
   return evidence. The unshared and shared full-family marriage compositions are delivered.
   Actual monthly partial-family composition is delivered in `05c5819`.
-  Outside-family marriage composition and determined positive advance/payment
-  attribution remain in the finite health queue.
+  Outside-family marriage composition is delivered in `977212bf`. Determined
+  positive advance/payment and positive other-return credit attribution remain
+  in the finite health queue.
 - **Verification:** intermediate remote `25f71f06` now passes full coverage
   and every unchanged threshold. Run the complete checks on the final integrated
   source and retain final native images, SBOM/scans and recovery evidence.

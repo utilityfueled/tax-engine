@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "2a8f6c17c2f4d03b6d26e1542053717391ec202e",
+    "lastRecordedCommit": "977212bfbe38733ae79977a917a63cc529413cef",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1311,12 +1311,12 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Education: final educator/MAGI integration after independent source and saved-output clearance; precise mixed July4 and mixed-purpose attribution remain.",
-      "Charity: charitable ownership delivered. Positive-benefit COD with distinct modified absorption and changed NOL filing histories are in private spec-first implementation. Recurrent partial-joint attribution and floor/vintage/medium questions remain explicit.",
-      "Health: actual monthly marriage delivered; outside-person marriage frozen69a182ae awaits independent review. Determined positive advance/payment attribution remains.",
-      "Verification: intermediate25 coverage passes every unchanged threshold. Complete final integrated/native/browser/SBOM/scan/recovery evidence and external qualification gates."
+      "Education: educator/MAGI and exact bond sources delivered00089be4. Precise mixed July4 and mixed-purpose interest attribution remain in the documented finite queue.",
+      "Charity: positive-benefit COD tree148048dd has1201/167 affected tests and independent source review active. Changed NOL filing histories have source/UI/PDF tests and types; original artifacts and remaining checks active. Recurrent partial-joint attribution and floor/vintage/medium questions remain explicit.",
+      "Health: monthly and outside-child marriage source composition delivered. Actual cash differing from allocated premiums plus full attributable advance repayment is in private spec-first implementation; positive other-return credit remains separate.",
+      "Verification: intermediate25 coverage passes all unchanged thresholds. Final integrated/native/browser/SBOM/scan/recovery and external qualification remain required."
     ],
-    "latestIntegratedCommit": "2a8f6c17c2f4d03b6d26e1542053717391ec202e",
+    "latestIntegratedCommit": "977212bfbe38733ae79977a917a63cc529413cef",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1598,7 +1598,9 @@
       "form8815ReferencePagination": "bc35f5d2fca06d303a412af190ddd29a8c4ed064",
       "savingsBondReissue": "c6abb245770d94d5a9760ec03b142318ccb802bc",
       "pdfNativeBufferClearing": "25f71f066ae7cf24364e6117cb72e4b2e89f8ab5",
-      "monthlyMarriageCoverage": "05c58193fc31833d4bb32facee68298b6648bc85"
+      "monthlyMarriageCoverage": "05c58193fc31833d4bb32facee68298b6648bc85",
+      "educatorBondRational": "00089be4fff6299b9d26fd44878b21dd0c80141f",
+      "marriageOutsidePerson": "977212bfbe38733ae79977a917a63cc529413cef"
     },
     "remoteCi": {
       "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
@@ -1697,10 +1699,10 @@
       "completedAt": "2026-10-26T23:39:58.828902+00:00"
     },
     "remainingInternalWork": [
-      "Education: final educator/MAGI integration after independent source and saved-output clearance; precise mixed July4 and mixed-purpose attribution remain.",
-      "Charity: charitable ownership delivered. Positive-benefit COD with distinct modified absorption and changed NOL filing histories are in private spec-first implementation. Recurrent partial-joint attribution and floor/vintage/medium questions remain explicit.",
-      "Health: actual monthly marriage delivered; outside-person marriage frozen69a182ae awaits independent review. Determined positive advance/payment attribution remains.",
-      "Verification: intermediate25 coverage passes every unchanged threshold. Complete final integrated/native/browser/SBOM/scan/recovery evidence and external qualification gates."
+      "Education: educator/MAGI and exact bond sources delivered00089be4. Precise mixed July4 and mixed-purpose interest attribution remain in the documented finite queue.",
+      "Charity: positive-benefit COD tree148048dd has1201/167 affected tests and independent source review active. Changed NOL filing histories have source/UI/PDF tests and types; original artifacts and remaining checks active. Recurrent partial-joint attribution and floor/vintage/medium questions remain explicit.",
+      "Health: monthly and outside-child marriage source composition delivered. Actual cash differing from allocated premiums plus full attributable advance repayment is in private spec-first implementation; positive other-return credit remains separate.",
+      "Verification: intermediate25 coverage passes all unchanged thresholds. Final integrated/native/browser/SBOM/scan/recovery and external qualification remain required."
     ],
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
@@ -1722,7 +1724,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "2a8f6c17c2f4d03b6d26e1542053717391ec202e",
+    "lastPushedCommit": "977212bfbe38733ae79977a917a63cc529413cef",
     "currentBrowserRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -2817,8 +2819,8 @@
       "skipped": 0
     },
     "currentRemoteRuns": {
-      "sourceCommit": "2a8f6c17c2f4d03b6d26e1542053717391ec202e",
-      "status": "Pushed; final exact run identifiers not yet recorded. Older25 CI/coverage success is separate."
+      "sourceCommit": "977212bfbe38733ae79977a917a63cc529413cef",
+      "status": "Pushed; exact current CI/Web run identifiers remain to be refreshed. Intermediate25 full coverage remains separate."
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
@@ -4986,11 +4988,11 @@
       }
     },
     "currentInventory": {
-      "entries": 563,
-      "specReferences": 5982,
-      "sourceCommit": "2a8f6c17c2f4d03b6d26e1542053717391ec202e",
+      "entries": 566,
+      "specReferences": 6009,
+      "sourceCommit": "977212bfbe38733ae79977a917a63cc529413cef",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 149,
+      "explicitAssociations": 151,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -5769,7 +5771,7 @@
         "pdfProducerBoundary": "V2 saved14PDF/148pages/443fields independently reopened; final ac711 browser states/workspaces/screenshots independently compared, final downloaded PDFs not retained."
       },
       "educatorBondRational": {
-        "status": "V2 source navigation review clear; author broad/static/build/browser/original-output checks pass; independent saved-output review and final integration pending",
+        "status": "delivered; independent source and saved-output review clear, human and release gates unchanged",
         "tree": "d0f65a830d61137ff7042d3b8cc320f744dceb53",
         "sourceReview": ".local/upgrade-evidence/ai-educator-bond-independent-review.json",
         "sourceReviewSha256": "37dafe2c3231097abb75096be71654746410136c5bf91e287b3a2c642a918400",
@@ -5786,7 +5788,26 @@
         "authorFiles": 217,
         "authorBrowserCases": 2,
         "authorBrowserRetries": 0,
-        "retainedFinding": "V1 future bond confirmation blocked earlier Adjustments navigation; V2 checks local facts in Adjustments and combined sources in Tax Credits, preserving canonical guards."
+        "retainedFinding": "V1 future bond confirmation blocked earlier Adjustments navigation; V2 checks local facts in Adjustments and combined sources in Tax Credits, preserving canonical guards.",
+        "deliveredCommit": "00089be4fff6299b9d26fd44878b21dd0c80141f",
+        "finalTree": "841331eddf1dd998dc2ece3d04405a0176b928fc",
+        "finalChecks": {
+          "path": ".local/upgrade-evidence/educator-bond-final-checks.json",
+          "sha256": "1f081b7597d70dddd58577989d06db365898da7953046c2ec3903939d3ac36d5"
+        },
+        "mainChecks": {
+          "path": ".local/upgrade-evidence/educator-bond-main-checks.json",
+          "sha256": "1b1648ae3795503004df8b37f86a3461cfc0f87cfb95493b1e3a37915f07fe09"
+        },
+        "finalProduction": {
+          "path": ".local/upgrade-evidence/educator-bond-final-production/verification.json",
+          "sha256": "6c5200a1ed1ded878ef1e555d4e9681c18991fbbe0ea1d19186f43e7641d9e5a"
+        },
+        "finalBrowserSourceOutputComparison": {
+          "path": ".local/upgrade-evidence/parent-educator-final-browser-equivalence.json",
+          "sha256": "940cc00e2c12ae43d19fc3fe124cffa8f7e67ebdd41082a53af32064fb9d4ed9"
+        },
+        "ledger": "docs/upgrade-2026-educator-bond-rational-magi-work.md"
       },
       "charitableFilingUnit": {
         "status": "independent source and original/PDF review clear; final rebase and integration pending",
@@ -5825,11 +5846,38 @@
           "pages": 123,
           "fields": 311
         }
+      },
+      "marriageOutsidePerson": {
+        "status": "delivered; bounded independent source and saved-output review clear, human and release gates unchanged",
+        "deliveredCommit": "977212bfbe38733ae79977a917a63cc529413cef",
+        "originalTree": "69a182ae4e1e2e37fd4a2a2dfce0e21475893e2f",
+        "finalTree": "f5b848b4bcf12a99be70d80c7e3e88d2c526a65a",
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/parent-marriage-outside-source-review.json",
+          "sha256": "de6c947445f047e7275b9cd43e3c13d018520a5d719f14336c8116e80d568e83"
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/parent-marriage-outside-artifact-review.json",
+          "sha256": "f67a874becad41115f52e5e0f6f3c0ab2ab37c1d338c0f8e01867758b8541fe2"
+        },
+        "finalChecks": {
+          "path": ".local/upgrade-evidence/marriage-outside-final-checks.json",
+          "sha256": "9257a6f77db8adde6b24af3cd821037902428014c312efdee6bb42ffdd0922d6"
+        },
+        "mainChecks": {
+          "path": ".local/upgrade-evidence/marriage-outside-main-checks.json",
+          "sha256": "cde75af0aa21b7148e044d378c02105f56788561545a6d181043d8baafcd0d0f"
+        },
+        "finalProduction": {
+          "path": ".local/upgrade-evidence/marriage-outside-final-production/verification.json",
+          "sha256": "420b76047125a22da1a192066663376ea29970ecf9e72cd72f1293ba95e55d4b"
+        },
+        "ledger": "docs/upgrade-2025-marriage-outside-person-work.md"
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.177",
-      "2026": "2026.174-law-integration-draft"
+      "2025": "2025.179",
+      "2026": "2026.176-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -7853,7 +7901,7 @@
       "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
     },
     "currentFullVerificationRequired": {
-      "sourceCommit": "2a8f6c17c2f4d03b6d26e1542053717391ec202e",
+      "sourceCommit": "977212bfbe38733ae79977a917a63cc529413cef",
       "reason": "Intermediate25 complete CI/coverage passes, but final integrated checks and complete native/browser/SBOM/scan/recovery artifacts remain required.",
       "readiness": "Not release qualified; external reviews, staging, final forms and model evaluation remain open."
     },
@@ -8080,7 +8128,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-27T05:50:06.421207+00:00",
+    "recordedAt": "2026-10-27T06:20:21.612813+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -8359,15 +8407,15 @@
       "evidence": ".local/upgrade-evidence/health-finite-remainder-2026-10-26.md",
       "sha256": "90919f70e3420edcb79b82b740ca1d9b3ddf479d6c3feaed1b280c5a1ca128fd",
       "internal": [
-        "Actual shared/outside-family original health sources with marriage",
         "Determined positive actual noncoverage advances and payer/person attribution with actual corresponding-credit limits",
         "Positive actual other-return credit attribution"
       ],
       "interpretation": "Binding2025 joint capped-repayment attribution among competing owners or qualified/nonqualified source groups; no guessed split",
       "deliveredActualCash": "a2d4898d57557e7cd51616ea90dc3ca20a62cc92",
       "deliveredOutsidePerson": "fbe731a39eeb71263f4ecd60434a5e04c5865f82",
-      "boundary": "Outside-person own-family zero-final-credit bounded method delivered; positive other-return credit/shared advances remain internal, not inferred legally ineligible.",
-      "deliveredUnsharedMarriage": "9c077851766b1ca44ccbfafb3348b7d062ed7b29"
+      "boundary": "Actual eligible outside cash with source-confirmed zero other-return credit and zero outside advances now composes with marriage. Positive other-return credit/shared advances remain separate internal methods, not inferred legal ineligibility.",
+      "deliveredUnsharedMarriage": "9c077851766b1ca44ccbfafb3348b7d062ed7b29",
+      "deliveredOutsideMarriage": "977212bfbe38733ae79977a917a63cc529413cef"
     },
     "remoteRecoveryFailure1e04964": {
       "commit": "1e04964e6e401536ff4c1bee806ba3ac2c4a94e9",
@@ -8477,7 +8525,8 @@
           "sha256": "51b479c5841ede1f41661ef95d19ffbe32116a72b83f0597515f15cc4be6cf18"
         },
         "deliveredOrdinaryComposition": "771c638a6d5386f64c8bbc0f2abcbc84f1dc7be7",
-        "deliveredBondReissue": "c6abb245770d94d5a9760ec03b142318ccb802bc"
+        "deliveredBondReissue": "c6abb245770d94d5a9760ec03b142318ccb802bc",
+        "deliveredEducatorBondRational": "00089be4fff6299b9d26fd44878b21dd0c80141f"
       },
       "charity": {
         "document": "docs/upgrade-2026-charity-method-queue.md",
@@ -10088,7 +10137,7 @@
       }
     },
     "educatorBondSavedOutputReview": {
-      "status": "clear; final integration rebase active",
+      "status": "delivered00089be4; original artifacts retain original producer",
       "sourceTree": "d0f65a830d61137ff7042d3b8cc320f744dceb53",
       "report": ".local/upgrade-evidence/parent-educator-bond-artifact-review.json",
       "sha256": "53f02550df18479fd9f3b17db33598355280bfa96f8b12cdc94b5e474d79bdf1",
@@ -10096,7 +10145,8 @@
       "pdfs": 52,
       "pages": 215,
       "fields": 206,
-      "originals": 9
+      "originals": 9,
+      "deliveredCommit": "00089be4fff6299b9d26fd44878b21dd0c80141f"
     }
   },
   "historicalReleaseBlockers": {
