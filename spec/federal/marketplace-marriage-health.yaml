@@ -1,0 +1,101 @@
+form: "Marketplace marriage and self-employed health source composition"
+fullName: "Actual marriage-year reconciliation within the existing health worksheets"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Refreshed 2026-10-26: Reg1.36B-4(a)(3)(iii) determines the self-employed
+  repayment limit before the deduction and credit; (b)(2) determines separate
+  pre-marriage assistance from half actual joint income and actual alternative
+  families. The alternative may reduce excess advances but cannot increase net
+  PTC. Final i8962 line28 directs self-employed taxpayers to Pub974 rather than
+  substituting Table5. Pub974 Simplified Step2/Step3 use completed line24 and
+  actual corresponding column(e) months. Reg1.162(l)-1(a) separately limits
+  deduction to attributable premiums less credit and actual payments plus
+  attributable repayment. No taxpayer-entered income, credit or repayment.
+  This source composition starts with independently complete unshared policies
+  and fully coverage-family health plans. Compute alternative assistance from
+  each actual recipient's original policy group, then retain the existing
+  monthly joint enrollment-premium allocation for health. Pub974 expressly
+  permits a consistent reasonable allocation; a recipient-local alternative
+  is not imposed as a mandatory rule. Separate owner earned limits,
+  gross-income QBI attribution, actual payment records and month exclusions
+  remain in force. Shared/outside-family marriage, unproved premarriage spouse
+  payment qualification and binding joint historical repayment attribution
+  are separate source methods, not inferred facts or legal disallowances.
+lines:
+  - line: "separate-recipients"
+    description: "Preserve actual alternative families and the existing health allocation method"
+    formula: "C60000 plus spouse F40000 gives pre-health92935. Premiums1000/500, benchmarks800/400, advances900/450 monthly; X uncapped, maximum18000. Step2HH74935: joint366%/.0765/monthly478 and separate half37468/monthly122. Pre credits678/278; post credit722. Step2credit10302, health7698. Existing consistent monthly enrollment allocation1000/1500 and500/1500 gives owner deductions5132/2566; finalAGI85237, alternative half42619/monthly188, joint604, finalcredit8748. Original alternative family calculations remain separate from the chosen health allocation."
+    testRef: "tests/engine/federal-marketplace-marriage-health.test.ts::preserves separate marriage families and the existing two-owner health allocation"
+  - line: "ordinary"
+    description: "One actual self-employed plan and alternative marriage credit"
+    formula: "2025 C100000, SE deduction7065, premium1000/benchmark800/APTC700 monthly, July15 wedding: W3600, maximum12000, Step2 HH80935; joint monthly565, primary half-income40468/monthly159; Step2 credit7*641+5*235=5662. Health12000-5662=6338. FinalAGI86597, primary monthly198/joint613: finalcredit7*602+5*187=5149, repayment3251, no netPTC. QBI uses health6338 once."
+    testRef: "tests/engine/federal-marketplace-marriage-health.test.ts::composes actual marriage and health sources without changing the joint income"
+  - line: "source-order"
+    description: "Preserve original identity and independent owners when source records change order"
+    formula: "Reversing the complete original policies requires rebinding canonical policy indices in both marriage and health packets. Reversing actual benchmarks, plans, payment rows and people then preserves joint85237AGI/8748PTC/7698health and the primary5132/spouse2566 deductions. Unchanged stale indices reject."
+    testRef: "tests/engine/federal-marketplace-marriage-health.test.ts::preserves marriage health results after exact original source rebinding"
+  - line: "historical-limit"
+    description: "Retain the independently computed historical X limit"
+    formula: "2025 C60000 gives SE deduction4239; spouse wages7439 yields pre-health63200. Monthly premium/benchmark1000 and A900: W1200 leaves62000; X1950 gives maximum3150 and Step2HH60050. Alternative monthly49/joint286 yields credit10227 and health1773. FinalAGI61427, alternative54/joint307 gives credit10087, repayment713 and actual X limit1950 even though final joint Table5 would say3250."
+    testRef: "tests/engine/federal-marketplace-marriage-health.test.ts::retains the computed X repayment limit through both marriage calculations"
+  - line: "indexed"
+    description: "Keep actual joint eligibility separate from pre-marriage assistance"
+    formula: "Isolated2026 same100000 source: Step2HH80935, joint672/primary293 gives4189 credit, health7811. FinalAGI85124 exceeds4*21150; actual joint eligibility staysfalse, primary half42562/monthly322 gives7*478=3346 alternative credit and5054 repayment. Deduction7811 is below actual3600+5054 payments and premium12000-finalcredit3346. Production readiness remains closed."
+    testRef: "tests/engine/federal-marketplace-marriage-health-2026.test.ts::preserves final joint ineligibility with actual pre-marriage credit"
+  - line: "sources"
+    description: "Do not turn source elections into missing health evidence"
+    formula: "Actual marriage and health packets remain independently required. Full original policy/person/payment links must reconcile before canonical coordination. Missing, stale, ambiguous or shared sources reject; changing the election flag does not supply a plan, payer or benchmark. Input remains unchanged."
+    testRef: "tests/engine/federal-marketplace-marriage-health.test.ts::retains independent original health and marriage source requirements"
+  - line: "retained-credit"
+    description: "Bind positive pre-marriage audit amounts to completed actual alternative worksheets"
+    formula: "Recompute the marriage worksheet from actual original policies, alternative benchmarks and retained actual modified AGI/ordered-stage/cap. Compare its numeric family/month/final values before accepting positive column(e) while actual joint eligibility is false. Missing, forged or balanced altered marriage result/credit audit is rejected. Do not relabel actual joint eligibility."
+    testRef: "tests/engine/federal-marketplace-marriage-health-2026.test.ts::rejects altered or missing alternative-credit evidence"
+  - line: "actual-person"
+    description: "Match health people to the full original marriage policies"
+    formula: "Existing actual filer role/name binds original covered identity; other people require the actual coverage-family identity link. Matching premium amounts do not cure a different covered person. An end-year spouse label does not establish pre-wedding payment qualification. This package preserves that separate source boundary; actual spouse payments and coverage after the wedding use the existing qualification."
+    testRef: "tests/engine/federal-marketplace-marriage-health.test.ts::binds actual covered people and does not infer premarital spouse qualification"
+  - line: "zero-coverage"
+    description: "Preserve an original zero month outside the actual coverage interval"
+    formula: "An original all-zero January outside February-December coverage has no alternative worksheet month and no positive credit audit. Retaining that zero source produces the same numeric credit and health deduction as omitting the source month; no positive or unknown amount may be silently discarded."
+    testRef: "tests/engine/federal-marketplace-marriage-health.test.ts::retains original zero coverage months without inventing alternative credits"
+  - line: "unknown-payment"
+    description: "Keep unknown person payment and advance evidence distinct from zero"
+    formula: "The actual marriage-health source binder requires current-year confirmed health records and complete dated person payment amounts. Missing paid or advance amount, even for a person with zero other amounts, cannot be treated as zero."
+    testRef: "tests/engine/federal-marketplace-marriage-health.test.ts::requires actual known person payments before marriage health source binding"
+  - line: "guided"
+    description: "Reach both actual marriage and health source packets through the interview"
+    formula: "One saved actual household, original policy, dated payments and pre-marriage benchmarks transfer through the ordinary guide. Canonical actual income100000 yields health6338, AGI86597 and finalPTC5149. No entered calculated amount or new election."
+    testRef: "tests/guided-interview/guided-marketplace-marriage-health.test.ts::composes actual marriage and health sources through the unmocked guide"
+  - line: "guided-binding"
+    description: "Validate actual marriage health identities before accepting the guided section"
+    formula: "The source-only marriage-health binder applies to the guide's actual normalized people, policies and payments. Equal-money wrong covered person or unknown person payment rejects; no calculated-income placeholder."
+    testRef: "tests/guided-interview/guided-marketplace-marriage-health.test.ts::rejects contradictory marriage health people at the guided boundary"
+  - line: "guided-confirmation"
+    description: "Invalidate both affected original source packets after an edit"
+    formula: "A substantive marriage, payment or policy change invalidates the affected health and Marketplace confirmations. Confirming health alone cannot restore an unknown or stale marriage benchmark. Complete source-only reconfirmation restores the same unchanged amounts."
+    testRef: "tests/guided-interview/guided-marketplace-marriage-health.test.ts::requires both actual source packets to be reconfirmed after edits"
+  - line: "guided-controls"
+    description: "Edit and reconfirm actual marriage sources beside the health sources"
+    formula: "The full adjustments shell exposes marriage and payment controls together and asks for both original source packets when claiming health insurance. A changed benchmark reference clears both confirmations; incomplete or blank facts stay pending; complete reconfirmation calculates the original5149credit and6338health deduction."
+    testRef: "tests/apps/web/marketplace-marriage-health-interactions.test.tsx::reconciles actual marriage and health sources in the full shell"
+  - line: "physical"
+    description: "Print actual joint income and final marriage credit beside the health worksheets"
+    formula: "Saved2025physical8962 retains86597joint income,5149PTC,8400advance,3251repayment and PartV1/198/01/07. Form7206 physical nonspecified lines remain0 while its reference reports6338return deduction and5662Step2credit. The historicalX example prints1950cap and713repayment. Original identifiers stay private."
+    testRef: "tests/pdf/marketplace-marriage-health-review.test.ts::prints the source-bound marriage and health worksheets with the computed cap"
+  - line: "output-binding"
+    description: "Require fresh source and calculation binding before output"
+    formula: "A prepared actual original context binds marriage people, benchmark records and health payments. Changing a same-amount source reference, removing the context from redacted data, or redistributing retained credit cannot produce files."
+    testRef: "tests/pdf/marketplace-marriage-health-review.test.ts::rejects stale marriage health contexts before output"
+  - line: "zero-coverage-output"
+    description: "Keep original zero uncovered months in the source review without inventing a calculation row"
+    formula: "A source-bound all-zero month outside actual covered months has no marriage calculation row. Its original statement remains in the review, while annual credit and advance totals reconcile only to actual calculation months. Positive or unknown omitted source amounts still reject."
+    testRef: "tests/pdf/marketplace-marriage-health-review.test.ts::exports an original zero uncovered month without fabricating a credit row"
+  - line: "workspace"
+    description: "Download the actual guided marriage health result"
+    formula: "The unmocked source bridge and workspace export retain the original marriage and independent health packets before identifier redaction. Flattened output contains the5149finalcredit,6338health,5662interimcredit and actual PartV; one review notice per page and no tax IDs."
+    testRef: "tests/apps/web/workspace-marketplace-marriage-health.test.ts::exports actual guided marriage and health sources together"
+  - line: "browser"
+    description: "Preserve original marriage and health facts in the production interview"
+    formula: "Desktop and mobile actual source edits clear both relevant confirmations. Complete source-only reconfirmation restores actual86597AGI, while blank alternative benchmarks survive reload as unknown. Original1000premium/700advance/300cash records remain unchanged and private."
+    testRef: "apps/web/tests/guided-marketplace-marriage-health.spec.ts::preserves marriage and health sources through edits and reload"

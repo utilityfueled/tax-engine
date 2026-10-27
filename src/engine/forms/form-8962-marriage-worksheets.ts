@@ -11,6 +11,10 @@ export interface Form8962MarriageWorksheetInput {
   taxYear: number; fplRegion: Form8962FplRegion; householdIncome: Decimal; familySize: number; marriageMonth: number;
   /** Derived from the actual date: preceding month for day1; wedding month otherwise. */
   lastPreMarriageMonth: number;
+  /** Computed historical Pub974 limit from the canonical health calculation; never entered facts. */
+  healthInsuranceRepaymentLimit?: Decimal;
+  /** Existing ordered-deduction auxiliary joint calculation; actual alternative income stays unchanged. */
+  orderedDeductionInterim?: boolean;
   /** Validated ordinary coverage amounts. Policy/household source binding is a separate prerequisite. */
   months: Array<CoverageMonth & { advance: Decimal }>;
   families: Array<{ owner: Owner; familySize: number; months: CoverageMonth[] }>;
@@ -77,8 +81,12 @@ export function calculateForm8962MarriageWorksheets(input: Form8962MarriageWorks
   });
   const ordinaryCredit = sum(...ordinaryMonths.map(row => row.credit));
   const advancePTCTotal = sum(...ordinaryMonths.map(row => row.advance));
-  const repaymentCap = input.taxYear === 2026 || joint.fplPercentageForTable.gte(400) ? null
-    : d(joint.fplPercentageForTable.lt(200) ? '750' : joint.fplPercentageForTable.lt(300) ? '1950' : '3250');
+  const worksheetLimit = input.healthInsuranceRepaymentLimit;
+  if (worksheetLimit !== undefined && (input.taxYear !== 2025 || !Decimal.isDecimal(worksheetLimit) || !worksheetLimit.isFinite() || worksheetLimit.lt(0))) {
+    throw new Error('Marriage worksheet requires an actual computed historical Pub974 repayment limit');
+  }
+  const repaymentCap = worksheetLimit ?? (input.taxYear === 2026 || joint.fplPercentageForTable.gte(400) ? null
+    : d(joint.fplPercentageForTable.lt(200) ? '750' : joint.fplPercentageForTable.lt(300) ? '1950' : '3250'));
   const ordinaryExcess = zeroFloor(advancePTCTotal.minus(ordinaryCredit));
   const ordinaryRepayment = repaymentCap === null ? ordinaryExcess : min(ordinaryExcess, repaymentCap);
   const audit = new AuditTrail();
@@ -193,7 +201,7 @@ export function calculateForm8962MarriageWorksheets(input: Form8962MarriageWorks
   audit.record('Form 8962', '26', 'Net premium tax credit', netPTC, electionApplies ? 'Pub974 Step8 requires zero for this election' : 'max(0,24-25)');
   if (!electionApplies || excessAPTC.gt(0)) {
     audit.record('Form 8962', '27', 'Excess advance payments', excessAPTC, 'max(0,25-24)');
-    if (repaymentCap !== null && excessAPTC.gt(0)) audit.record('Form 8962', '28', 'Applicable historical repayment cap', repaymentCap, '2025 joint Table5 using actual joint household income');
+    if (repaymentCap !== null && excessAPTC.gt(0)) audit.record('Form 8962', '28', 'Applicable historical repayment cap', repaymentCap, worksheetLimit === undefined ? '2025 joint Table5 using actual joint household income' : 'Actual computed Pub974 X/Y/Z limitation replaces Table5');
     audit.record('Form 8962', '29', 'Excess advance repayment', excessAPTCRepayment, repaymentCap === null ? 'Full excess; no2026 limitation' : 'min(27,28)');
   }
   return { electionApplies, ...(reason ? { reason } : {}), families, partV, ordinaryCredit, ordinaryRepayment,

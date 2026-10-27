@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import type { Form7206Input } from "@/models/inputs";
 import { calculateSharedMarketplaceHealthSources } from "@/engine/forms/shared-marketplace-health";
+import { calculateMarketplaceMarriageHealthSources } from "@/engine/forms/marketplace-marriage-health-sources";
 import { calculateMarketplaceActualCashSources } from "@/engine/forms/marketplace-actual-cash-health";
 import { calculateMarketplaceCoverageFamilyHealth } from "@/engine/forms/marketplace-coverage-family-health";
 import { resolveGuidedSharedPolicy, guidedMarketplaceHousehold } from "./guided-shared-policy";
@@ -26,6 +27,12 @@ export function validateMarketplaceHealthSources(state: GuidedFlowState, health:
   const coverage = buildPremiumTaxCreditInputs(state.sectionData.credits?.premiumTaxCredit, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], normalized);
   if (!coverage.form1095A || !coverage.form8962 || coverage.form8962.selfEmployedHealthInsuranceCoordinationRequired !== true) throw new Error("Enter and confirm the actual Marketplace policy and coverage worksheet in credits before linking health premiums.");
   if (coverage.form8962.qsehraAffected !== false) throw new Error("Marketplace health deduction with QSEHRA requires its separate actual coordination worksheet.");
+  if (coverage.form8962.alternativeMarriageCalculationElected === true || coverage.form8962.marriageSources) {
+    calculateMarketplaceMarriageHealthSources({
+      ...guidedMarketplaceHousehold(state.sectionData['personal-info'], state.segmentation.filingStatus, state.taxYear),
+      form1095A: coverage.form1095A, form8962: coverage.form8962, form7206: normalized,
+    });
+  }
   const shared = coverage.form8962.allocationRequired === true;
   if (!shared && plans.some(plan => plan.sharedMarketplaceSources)) throw new Error("Shared health source links conflict with the actual policy allocation answer.");
   const originalShared = shared ? resolveGuidedSharedPolicy(state.sectionData.credits!.premiumTaxCredit!, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], normalized).sourceInput : undefined;
@@ -78,7 +85,9 @@ export function validateMarketplaceHealthSources(state: GuidedFlowState, health:
   for (const [month, total] of totals) {
     const actual = coverage.form8962.monthlyReconciliation?.find(row => row.month === month);
     const monthFamilies = families?.filter(row => row.month === month) ?? [];
-    const emptyCoverage = monthFamilies.length > 0 && monthFamilies.every(row => row.coverageFamilySlcsp.isZero());
+    const zeroUncoveredSource = actual?.coverageEligible === false && total.premium.isZero() && total.advance.isZero()
+      && [actual.enrolleePremium,actual.slcsp,actual.advancePremiumTaxCredit].every(value=>amount(value).isZero());
+    const emptyCoverage = zeroUncoveredSource || monthFamilies.length > 0 && monthFamilies.every(row => row.coverageFamilySlcsp.isZero());
     if (!actual || actual.coverageEligible !== !emptyCoverage || actual.incomeBasedSepEnrollment !== false || new Decimal(actual.enrolleePremium).lt(total.premium) || new Decimal(actual.advancePremiumTaxCredit).lt(total.advance)) throw new Error("Marketplace health sources require the actual eligible household month and separate coordination for ineligible or mixed coverage.");
     if (monthFamilies.some(row => !row.coverageFamilySlcsp.eq(actual.slcsp))) throw new Error('Reconcile the full actual coverage-family benchmark with the household month.');
   }

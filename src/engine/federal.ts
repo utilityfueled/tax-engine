@@ -2311,9 +2311,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (marketplace && marketplace.stage !== "final" && marketplace.stage !== "full-repayment" && marketplace.stage !== "actual-cash" && (!nol || nol.stage === "final")) {
     if (!actualHealthInsurance?.marketplacePremiums) throw new Error("Pub974 source calculation is incomplete.");
     if (!nol && sum(d(input.priorYear?.nolCarryforward), d(input.priorYear?.excessBusinessLossNOL), k1Form1041FinalNOL).gt(0)) throw new Error("Pub974 NOL coordination requires the actual circular taxable-income worksheet.");
+    const repaymentLimit = marketplace.stage === "maximum" ? marketplace.historicalLimit?.repaymentLimit
+      : marketplace.stage === "ordered" && !marketplace.deduction.method.startsWith("ordinary-no-ptc-") ? marketplace.deduction.historicalLimit?.repaymentLimit : undefined;
     const credit = calculatePremiumTaxCreditReturn({ input, agi, taxExemptInterest,
       foreignIncomeReduction: form2555IncomeReduction, foreignHousingDeduction: form2555HousingDeduction,
-      socialSecurityBenefitsGross, socialSecurityBenefitsTaxable }, { method: year === 2025 ? "pub974-simplified-2025" : "pub974-simplified-2026", stage: marketplace.stage, orderedDeductionInterim: marketplace.orderedDeductionInterim
+      socialSecurityBenefitsGross, socialSecurityBenefitsTaxable }, { method: year === 2025 ? "pub974-simplified-2025" : "pub974-simplified-2026", stage: marketplace.stage, repaymentLimit: repaymentLimit ?? undefined, orderedDeductionInterim: marketplace.orderedDeductionInterim
         && (passiveSpecialRequired || ordered?.kinds.some(kind => kind !== "passive")) });
     return { passiveSpecialRequired, groups: actualHealthInsurance.marketplacePremiums.groups, credit,
       deductions: { passive: passiveSpecialRequired && calculateOrdered("passive") ? form8582 : undefined, ira: iraDeductionWorksheetResult, bond: form8815,

@@ -9,6 +9,7 @@ import { calculateMarketplaceHealthLimit, type MarketplaceHealthLimitResult } fr
 import { calculateMarketplaceOwnerDeductions } from "./marketplace-health-owners.js";
 import { readMarketplaceCreditAllocationSource } from "./marketplace-credit-allocation-source.js";
 import { calculateMarketplaceNonspecifiedStop } from "./marketplace-nonspecified-stop.js";
+import { calculateMarketplaceMarriageHealth } from "./marketplace-marriage-health.js";
 
 export interface MarketplaceHealthDeductionAmount {
   businessSourceId: string;
@@ -41,6 +42,7 @@ export function calculateMarketplaceHealthDeduction(params: {
       || historicalLimit.repaymentLimit?.toFixed() !== params.historicalLimit.repaymentLimit?.toFixed()) throw new Error("Pub9742025 maximum contradicts its actual W/X sources.");
     if (!credit.taxpayerEligible && historicalLimit.specifiedAdvances.gt(0) && historicalLimit.repaymentLimit?.lt(historicalLimit.specifiedAdvances)) throw new Error("Pub9742025 ineligible coverage needs its actual capped-repayment ordinary-premium coordination.");
   } else if (params.historicalLimit) throw new Error("Historical capped-repayment facts cannot change the2026 worksheet.");
+  const marriage = calculateMarketplaceMarriageHealth({ input, credit, repaymentLimit: historicalLimit?.repaymentLimit ?? undefined });
   const months = input.form8962?.monthlyReconciliation;
   if (!months) throw new Error("Pub974 needs actual household monthly sources.");
   const creditAudit = (line: string, required: boolean): Decimal => {
@@ -63,7 +65,11 @@ export function calculateMarketplaceHealthDeduction(params: {
     if (credit.lines.some(row => row.form === "Form 8962" && row.line === "11e")) throw new Error("Pub974 monthly credit audit contradicts annual sources.");
     for (const month of months) {
       if (monthlyCredits.has(month.month)) throw new Error("Pub974 monthly credit source is duplicated.");
-      monthlyCredits.set(month.month, creditAudit(`${month.month + 11}e`, credit.taxpayerEligible && month.coverageEligible && !month.incomeBasedSepEnrollment));
+      const marriageMonth = marriage?.calculation.months.find(row => row.month === month.month);
+      const alternativeMonth = marriageMonth !== undefined && marriage?.calculation.electionApplies === true && month.month <= marriage.lastPreMarriageMonth;
+      const value = creditAudit(`${month.month + 11}e`, alternativeMonth || (credit.taxpayerEligible && month.coverageEligible && !month.incomeBasedSepEnrollment));
+      if (marriage && (marriageMonth ? !marriageMonth.credit.eq(value) : !value.isZero())) throw new Error("Pub974 monthly marriage credit does not reconcile the actual alternative calculation.");
+      monthlyCredits.set(month.month, value);
     }
     if (!sum(...monthlyCredits.values()).eq(credit.ptcAllowed)) throw new Error("Pub974 monthly credit audits do not reconcile line24.");
   }

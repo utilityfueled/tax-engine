@@ -6559,6 +6559,50 @@
       ]
     },
     {
+      "key": "federal/marketplace-marriage-health",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p974",
+      "specPath": "spec/federal/marketplace-marriage-health.yaml",
+      "enginePath": "src/engine/forms/marketplace-marriage-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-marketplace-marriage-health.test.ts::composes actual marriage and health sources without changing the joint income",
+        "tests/pdf/marketplace-marriage-health-review.test.ts::prints the source-bound marriage and health worksheets with the computed cap"
+      ],
+      "implementationNote": "Own-spec controls bind actual unshared marriage and health sources to the existing health worksheets and historical2025 Form8962 review output. Actual joint eligibility, computed repayment limit, owner deductions and original sources remain separate. No additional source cohort, filing readiness or independent human qualification is claimed.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/marketplace-marriage-health-sources",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/marketplace-marriage-health-sources.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/marketplace-net-operating-loss",
       "jurisdiction": "federal",
       "taxYear": 2025,

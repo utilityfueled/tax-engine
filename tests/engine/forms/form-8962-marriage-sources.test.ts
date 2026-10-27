@@ -28,6 +28,8 @@ it('binds actual spouse and dependent sources without an income or credit overri
     expect(result.families.map(row=>[row.owner,row.familySize,row.months.length])).toEqual([['primary',1,7],['spouse',3,7]]);
     expect(result.families.map(row=>[row.months[0].premium.toFixed(),row.months[0].slcsp.toFixed()])).toEqual([['500','433'],['1000','833']]);
     expect(JSON.stringify(input)).toBe(before);
+    sources(input).facts.selfEmployedHealthInsuranceCoordinationRequired=true;
+    expect(calculateForm8962MarriageSources(input)).toEqual(result);
   }
 });
 it('rejects stale original policy identities amounts and coverage periods', () => {
@@ -65,7 +67,7 @@ it('preserves unsupported and unknown facts instead of certifying an election', 
     (input:Fixture)=>{sources(input).packet.marriedToEachOtherOnDecember31=false;},
     (input:Fixture)=>{sources(input).standard.spouseCanBeClaimedAsDependent=true;},
     (input:Fixture)=>{sources(input).facts.allocationRequired=true;},
-    (input:Fixture)=>{sources(input).facts.selfEmployedHealthInsuranceCoordinationRequired=true;},
+    (input:Fixture)=>{sources(input).facts.selfEmployedHealthInsuranceCoordinationRequired=undefined;},
     (input:Fixture)=>{sources(input).monthly[0].incomeBasedSepEnrollment=true;},
   ]) {const input=marriageSourcesFixture();mutate(input);expect(()=>calculateForm8962MarriageSources(input)).toThrow();}
 });

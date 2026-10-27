@@ -70,8 +70,8 @@ export function calculateForm8962MarriageSources(input: Form8962MarriageSourceIn
     || packet.allDependentAssignmentsIncluded !== true || facts.householdFactsConfirmed !== true || facts.coverageFactsConfirmed !== true) throw new Error('Marriage household, coverage and complete original sources must be confirmed');
   text(packet.sourceReference, 'marriage worksheet reference');
   if (input.standardDeductionFacts?.primaryCanBeClaimedAsDependent !== false || input.standardDeductionFacts.spouseCanBeClaimedAsDependent !== false || facts.canBeClaimedAsDependent !== false) throw new Error('Marriage sources require both actual unclaimable filer facts');
-  if (facts.allocationRequired !== false || facts.sharedPolicyAllocations !== undefined || facts.selfEmployedHealthInsuranceCoordinationRequired !== false
-    || facts.qsehraAffected !== false || facts.lawfulPresenceReconciliationRequired !== false || facts.belowPovertyException !== 'none') throw new Error('Marriage allocation, health, QSEHRA or special eligibility requires its separate source method');
+  if (facts.allocationRequired !== false || facts.sharedPolicyAllocations !== undefined || typeof facts.selfEmployedHealthInsuranceCoordinationRequired !== 'boolean'
+    || facts.qsehraAffected !== false || facts.lawfulPresenceReconciliationRequired !== false || facts.belowPovertyException !== 'none') throw new Error('Marriage allocation, unknown health, QSEHRA or special eligibility requires its separate source method');
   if (packet.primaryUnmarriedOnJanuary1 !== true || packet.spouseUnmarriedOnJanuary1 !== true || packet.marriedToEachOtherOnDecember31 !== true) throw new Error('Marriage requires actual January unmarried and December joint-spouse facts');
   const date = text(packet.marriageDate, 'marriage date'), parsed = new Date(`${date}T00:00:00Z`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0,10) !== date || parsed.getUTCFullYear() !== year) throw new Error('Marriage date must be an actual date in the return year');

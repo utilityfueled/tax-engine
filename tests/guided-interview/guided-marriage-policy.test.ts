@@ -45,7 +45,7 @@ it('rejects missing stale and contradictory marriage source facts',()=>{
     (x:PremiumTaxCreditData)=>{present(packet(x).benchmarks[0]).coveredIndividualSsns=[]},
     (x:PremiumTaxCreditData)=>{present(packet(x).benchmarks[0]).slcsp=''},
     (x:PremiumTaxCreditData)=>{packet(x).marriageDate='2025-01-01'},
-    (x:PremiumTaxCreditData)=>{x.selfEmployedHealthInsuranceCoordinationRequired=true},
+    (x:PremiumTaxCreditData)=>{x.selfEmployedHealthInsuranceCoordinationRequired=null},
   ]){const bad=actualMarriagePolicyData();mutate(bad);expect(()=>build(bad)).toThrow();}
   const exact=actualMarriagePolicyData();present(packet(exact).benchmarks[0]).slcsp='9,007,199,254,740,993.01';expect(build(exact).form8962?.marriageSources?.benchmarks?.[0]?.slcsp).toBe('9007199254740993.01');
   present(packet(exact).benchmarks[0]).slcsp='0';expect(build(exact).form8962?.marriageSources?.benchmarks?.[0]?.slcsp).toBe('0');

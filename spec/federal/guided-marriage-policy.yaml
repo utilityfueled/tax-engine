@@ -26,7 +26,7 @@ lines:
     testRef: "tests/guided-interview/guided-marriage-policy.test.ts::calculates actual marriage sources once through the guided return"
   - line: "source-integrity"
     description: "Keep unknown, false, zero and exact cents distinct"
-    formula: "Unknown qualification, missing packet, contradictory election, stale equal-money identity, changed original fractions and incomplete benchmark people reject. Explicit zero benchmark stays zero; source cents are preserved without Number conversion or supplied tax amounts."
+    formula: "Unknown qualification or health-coordination answer, missing packet, contradictory election, stale equal-money identity, changed original fractions and incomplete benchmark people reject. Explicit zero benchmark stays zero; source cents are preserved without Number conversion or supplied tax amounts."
     testRef: "tests/guided-interview/guided-marriage-policy.test.ts::rejects missing stale and contradictory marriage source facts"
   - line: "confirmation"
     description: "Reconfirm changed source facts without confirmation cycles"

@@ -297,6 +297,7 @@ export function calculateForm8962(input: Form8962Input): Form8962Result {
   record("29", "Excess advance premium tax credit repayment", excessAPTCRepayment, "Line 27 limited by line 28 where applicable -> Schedule 2 line 1a");
   const marriageCalculation = marriageSources ? calculateForm8962MarriageWorksheets({
     ...marriageSources, taxYear: year, fplRegion: region, householdIncome: modifiedAGI,
+    healthInsuranceRepaymentLimit: worksheetLimit, orderedDeductionInterim: input.orderedDeductionInterim,
   }) : undefined;
   if (marriageCalculation && (!marriageCalculation.ordinaryCredit.eq(ptcAllowed)
     || !marriageCalculation.ordinaryRepayment.eq(excessAPTCRepayment)

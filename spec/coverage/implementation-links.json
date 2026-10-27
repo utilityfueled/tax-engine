@@ -1326,6 +1326,16 @@
         "tests/pdf/education-annual-loan-interest.test.ts::binds original lender records and the calculated deduction before rendering"
       ],
       "note": "The own-spec controls exercise actual annual interest-only qualification, original Box2 earnings, independent lender deduction and historical2025 Form5329 output. The private review binds all consumed original return facts before output. Mixed-purpose attribution, mixed effective dates and bond methods remain separate; no final2026 output, filing qualification or independent human review is claimed."
+    },
+    {
+      "key": "federal/marketplace-marriage-health",
+      "enginePath": "src/engine/forms/marketplace-marriage-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-marriage-health.test.ts::composes actual marriage and health sources without changing the joint income",
+        "tests/pdf/marketplace-marriage-health-review.test.ts::prints the source-bound marriage and health worksheets with the computed cap"
+      ],
+      "note": "Own-spec controls bind actual unshared marriage and health sources to the existing health worksheets and historical2025 Form8962 review output. Actual joint eligibility, computed repayment limit, owner deductions and original sources remain separate. No additional source cohort, filing readiness or independent human qualification is claimed."
     }
   ]
 }

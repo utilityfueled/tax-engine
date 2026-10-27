@@ -12,8 +12,11 @@ notes: |
   Initial scope is actual MFJ, both unclaimable filers, both unmarried on
   January 1 and married to each other on December 31, ordinary full-month
   eligible coverage, with all policies sent to either filer. Shared-policy,
-  health-deduction, QSEHRA, special enrollment and below-poverty coordination
-  retain their distinct methods. A January1 wedding is ineligible. For Feb-Dec day1, the last alternative
+  QSEHRA, special enrollment and below-poverty coordination
+  retain their distinct methods. A known health-coordination answer is preserved
+  by this source-only binder; its actual calculation independently requires
+  marketplace-marriage-health.yaml and complete health sources. An unknown
+  health answer still rejects. A January1 wedding is ineligible. For Feb-Dec day1, the last alternative
   month precedes the wedding month; later-day weddings include that month.
   See form-8962-marriage-first-day.yaml for the specific source derivation.
   Alternative family membership follows actual dependent qualification for
@@ -45,7 +48,7 @@ lines:
     testRef: "tests/engine/forms/form-8962-marriage-sources.test.ts::requires exact complete benchmark groups and known monthly eligibility"
   - line: "supported-boundary"
     description: "Retain the actual unsupported answers without creating a usable election"
-    formula: "Unknown or false qualifying answers, prior-year/January1 marriage, nonjoint/claimable filers, third-party allocations, health/QSEHRA/SEP/foreign-status exceptions and incomplete source snapshots reject. No source field defaults to a qualifying answer or zero."
+    formula: "Unknown or false qualifying answers, prior-year/January1 marriage, nonjoint/claimable filers, third-party allocations, unknown health coordination, QSEHRA/SEP/foreign-status exceptions and incomplete source snapshots reject. No source field defaults to a qualifying answer or zero."
     testRef: "tests/engine/forms/form-8962-marriage-sources.test.ts::preserves unsupported and unknown facts instead of certifying an election"
   - line: "multiple-policy-cents"
     description: "Aggregate actual same-recipient policies without duplicating their benchmark"

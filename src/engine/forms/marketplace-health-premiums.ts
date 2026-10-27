@@ -128,7 +128,10 @@ export function calculateMarketplaceHealthPremiums(params: { input: TaxYearInput
   }
   for (const [month, source] of recordedMonthly) {
     const reconciled = facts.monthlyReconciliation?.filter(row => row.month === month);
-    const knownEmptyFamily = families?.some(row => row.month === month && row.coverageFamilySlcsp.isZero())
+    const zeroUncoveredSource = reconciled?.length === 1 && reconciled[0].coverageEligible === false
+      && source.premium.isZero() && source.advance.isZero()
+      && [reconciled[0].enrolleePremium, reconciled[0].slcsp, reconciled[0].advancePremiumTaxCredit].every(value => actual(value).isZero());
+    const knownEmptyFamily = zeroUncoveredSource || families?.some(row => row.month === month && row.coverageFamilySlcsp.isZero())
       && families.filter(row => row.month === month).every(row => row.coverageFamilySlcsp.isZero());
     if (reconciled?.length !== 1 || reconciled[0].coverageEligible !== !knownEmptyFamily || reconciled[0].incomeBasedSepEnrollment !== false || actual(reconciled[0].enrolleePremium).lt(source.premium) || actual(reconciled[0].advancePremiumTaxCredit).lt(source.advance)) throw new Error("Marketplace premium sources must reconcile the actual household month worksheet.");
   }
