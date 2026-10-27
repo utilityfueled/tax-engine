@@ -35,10 +35,11 @@ const unlistedAmounts = [
   'qualifiedRehabilitationExpenditures', 'otherRentalRealEstateCredits', 'otherRentalCredits', 'otherCredits', 'ptpDispositionGainOrLoss',
   'njPassThroughBusinessAlternativeIncomeTaxCredit',
 ] as const;
-const yearKeys = new Set(['taxYear', 'sourceTaxYear', 'originTaxYear']);
+const yearKeys = new Set(['taxYear', 'sourceTaxYear', 'originTaxYear', 'basisOriginTaxYear']);
 const amountKeys = new Set<string>([...k1CharitableOriginalAmounts, ...k1CharitableFormAmounts, ...unlistedAmounts,
   'beginningDebtBasis', 'additionalLoansToScorp', 'priorDebtBasisReduction', 'contributionShare', 'adjustedBasisShare',
   'appreciationPreviouslyTakenIntoAccount', 'basisAllowed', 'fairMarketValueShare', 'amount',
+  'originalPostBasisDeduction', 'originalDisallowedAmount', 'amountAllowed',
   'ordinary', 'rental', 'otherRental', 'royalty', 'section179', 'charitable', 'shortTermCapital', 'longTermCapital', 'section1231', 'other',
 ]);
 function actualAmount(value: unknown, key: string): string {

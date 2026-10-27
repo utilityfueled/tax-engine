@@ -21,6 +21,14 @@ export function charitableSourceDigest(input: TaxYearInput): string {
           const { recipientTaxpayerIdLast4: _identifier, ...facts } = statement.basis;
           return facts;
         })(),
+        ...(statement.atRisk?.priorLossHistory?.characterSources ? { atRisk: {
+          ...statement.atRisk, priorLossHistory: { ...statement.atRisk.priorLossHistory,
+            characterSources: (() => {
+              const { recipientTaxpayerIdLast4: _identifier, ...facts } = statement.atRisk.priorLossHistory.characterSources;
+              return facts;
+            })(),
+          },
+        } } : {}),
       })),
     } } : {}),
     crypto: input.cryptoIncome?.donations?.map(({ charityEIN: _identifier, ...facts }) => facts),

@@ -4550,9 +4550,20 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
           : schedA.charitableTreatment?.carryforwards ?? schedA.charitableCarryforwardByYear,
         ...(k1CharitableSources?.statements.some(row => row.atRiskAllocation) ? { k1AtRiskByCharacter: k1CharitableSources.statements.flatMap(row => {
           const risk = row.atRiskAllocation;
-          return risk ? [{ k1SourceId: `scheduleK1:${row.k1Index}`, accountHolder: row.accountHolder, taxYear: year,
-            ordinary: risk.ordinarySuspended, shortTermCapital: risk.shortTermSuspended, longTermCapital: risk.longTermSuspended,
-            charitable: risk.charitable }] : [];
+          if (!risk) return [];
+          const identity = { k1SourceId: `scheduleK1:${row.k1Index}`, accountHolder: row.accountHolder };
+          return [{ ...identity, taxYear: year,
+            ordinary: risk.currentOrdinarySuspended, shortTermCapital: risk.currentShortTermSuspended, longTermCapital: risk.currentLongTermSuspended,
+            charitable: risk.charitable }, ...[...new Set(risk.prior.map(item => item.taxYear))].sort((a,b)=>a-b).map(taxYear => {
+              const priorRecords = risk.prior.filter(item=>item.taxYear===taxYear);
+              return { ...identity, taxYear,
+                ordinary: sum(...priorRecords.filter(item=>item.character==='ordinary').map(item=>item.suspended)),
+                shortTermCapital: sum(...priorRecords.filter(item=>item.character==='short_term_capital').map(item=>item.suspended)),
+                longTermCapital: sum(...priorRecords.filter(item=>item.character==='long_term_capital').map(item=>item.suspended)),
+                charitable: priorRecords.flatMap(item=>item.gift?[{ sourceId:item.gift.basisSourceId, basisOriginTaxYear:item.gift.basisOriginTaxYear,
+                  contributionDate:item.gift.contributionDate, category:item.gift.category, amountAfterBasis:item.remaining,
+                  allowed:item.allowed, suspended:item.suspended }]:[]), priorRecords };
+            })];
         }) } : {}),
         ...(determinedAlternativeCharity ? {
           amtCharitableContributions: determinedAlternativeCharity.carryforward,

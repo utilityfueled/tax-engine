@@ -6066,6 +6066,50 @@
       ]
     },
     {
+      "key": "federal/k1-prior-charitable-at-risk",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i6198",
+      "specPath": "spec/federal/k1-prior-charitable-at-risk.yaml",
+      "enginePath": "src/engine/forms/k1-prior-charitable-at-risk.ts",
+      "packetPath": "src/pdf/mappings/2025/k1-charitable-review.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-k1-prior-charitable-at-risk.test.ts::releases actual prior activity deductions once while preserving separate basis tax and QBI histories",
+        "tests/pdf/k1-prior-charitable-at-risk-review.test.ts::saves original historical use separately from current basis and charitable deductions"
+      ],
+      "implementationNote": "Actual post-basis original deductions, at-risk history and original gifts feed current allowance once. Original section465 histories and new section469 qualified-loss suspensions remain distinct; actual guide and private historical review bind the sources. This does not qualify a 2026 form or replace independent human review.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/k1-prior-risk-qbi",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/k1-prior-risk-qbi.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/k1-qbi-loss-return",
       "jurisdiction": "federal",
       "taxYear": 2025,

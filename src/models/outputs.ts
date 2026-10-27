@@ -186,7 +186,8 @@ export interface TaxReturnResult {
     /** Derived section465 suspensions, distinct from entity basis and section170 carry. */
     k1AtRiskByCharacter?: Array<{ k1SourceId: string; accountHolder: "primary" | "spouse"; taxYear: number;
       ordinary: Decimal; shortTermCapital: Decimal; longTermCapital: Decimal;
-      charitable: import("@/engine/forms/k1-charitable-at-risk.js").K1CharitableRiskRecord[] }>;
+      charitable: import("@/engine/forms/k1-charitable-at-risk.js").K1CharitableRiskRecord[];
+      priorRecords?: import("@/engine/forms/k1-charitable-at-risk.js").K1CharitableAtRiskResult['prior'] }>;
     /** Separately reconciled current charitable carry using actual independent alternative NOL and charity histories. */
     amtCharitableContributions?: Decimal;
     amtCharitableContributionsByYear?: Array<{ taxYear: number; category?: import("@/engine/forms/charitable-contribution-worksheet.js").CharitableCategory; medium?: "cash" | "noncash"; amount: Decimal }>;

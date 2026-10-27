@@ -77,7 +77,14 @@ function K1Activity({ index, data, onChange }: { index: number; data: K1Activity
       <p className="guided-hint">The ordinary amount on Form 6198 comes from the calculated basis limit. Enter source movements above, not a current allowance.</p>
       {!risk.priorLossHistory ? <button type="button" className="utility-button" onClick={() => change({ atRisk: { ...risk, priorLossHistory: {} } })}>Add {prefix} prior at-risk history</button> : <>
         <Fields prefix={`${prefix} prior at-risk history`} data={risk.priorLossHistory} fields={evidence} onChange={patch => change({ atRisk: { ...risk, priorLossHistory: { ...risk.priorLossHistory, ...patch } } })} />
-        <p>{risk.priorLossHistory.vintages === undefined ? 'The preceding-year at-risk loss list is unknown.' : `Recorded prior at-risk vintages: ${risk.priorLossHistory.vintages.length}. Positive releases require their separate method.`}</p>
+        <p>{risk.priorLossHistory.vintages === undefined ? 'The preceding-year at-risk loss list is unknown.' : `Recorded prior at-risk vintages: ${risk.priorLossHistory.vintages.length}.`}</p>
+        <p className="guided-hint">For a prior release, link the original deduction history in the charitable attachment. Preserve the original qualified fraction here, even if the current K-1 has a different fraction.</p>
+        {risk.priorLossHistory.vintages?.map((row, i) => <div className="guided-w2-card" key={i}>
+          <Fields prefix={`${prefix} at-risk qualified vintage ${i + 1}`} data={row} fields={[...vintageFields, ['materiallyParticipatedInCurrentYear', 'current material participation', 'boolean']]}
+            onChange={patch => change({ atRisk: { ...risk, priorLossHistory: { ...risk.priorLossHistory, vintages: risk.priorLossHistory?.vintages?.map((value, n) => n === i ? { ...value, ...patch } : value) } } })} />
+          <button type="button" className="utility-button" onClick={() => change({ atRisk: { ...risk, priorLossHistory: { ...risk.priorLossHistory, vintages: risk.priorLossHistory?.vintages?.filter((_, n) => n !== i) } } })}>Remove {prefix} at-risk qualified vintage {i + 1}</button>
+        </div>)}
+        <button type="button" className="utility-button" onClick={() => change({ atRisk: { ...risk, priorLossHistory: { ...risk.priorLossHistory, vintages: [...(risk.priorLossHistory?.vintages ?? []), {}] } } })}>Add {prefix} at-risk qualified vintage</button>
         <button type="button" className="utility-button" onClick={() => change({ atRisk: { ...risk, priorLossHistory: { ...risk.priorLossHistory, vintages: [] } } })}>Record no {prefix} prior at-risk vintages</button>
       </>}
       <button type="button" className="utility-button" onClick={() => change({ atRisk: undefined })}>Remove {prefix} at-risk sources</button>
@@ -123,7 +130,7 @@ export function K1LossSourceDetails({ data, nol, onChange }: { data?: K1LossSour
   const classification = data?.form461Classification;
   return <details className="guided-expand"><summary className="guided-expand-trigger">K-1 and qualified loss sources</summary><div className="guided-expand-body">
     <p className="guided-hint">Use original K-1 and Section 199A statements, opening basis and at-risk records, and filed qualified-loss histories. The return calculates the current deduction and carry. Prior EBL character uses its separate regular NOL record; AMT and ordinary QBI carries stay separate.</p>
-    <p className="guided-hint">This method covers continuing ordinary domestic K-1 activities. Other boxes, prior basis or at-risk releases, differing AMT treatment and mixed loss pools under a new excess-business-loss limit need their additional methods. Keep their actual records; do not substitute zero.</p>
+    <p className="guided-hint">This method covers continuing ordinary domestic K-1 activities. Prior at-risk releases need their original deduction history in the linked charitable attachment and their independent qualified history here. Other boxes, prior ordinary basis releases, differing AMT treatment and mixed loss pools under a new excess-business-loss limit need their additional methods. Keep their actual records; do not substitute zero.</p>
     {!data ? <button type="button" className="utility-button" onClick={() => onChange({})}>Add K-1 and qualified loss sources</button> : <>
       <Fields prefix="K-1 packet" data={data} fields={[...evidence, ['allK1ActivitiesIncluded', 'all original K-1 activities included', 'boolean']]} onChange={change} />
       {data.activities === undefined && <p role="status">The original K-1 list is unknown.</p>}

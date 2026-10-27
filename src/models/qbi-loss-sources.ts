@@ -38,7 +38,8 @@ export const QbiLossSourcesSchema=z.object({
     atRisk:z.object({...evidence,simplifiedMethodEligible:z.boolean().optional(),adjustedBasisAtEffectiveDate:amount,
       priorYearAmountAtRisk:amount,currentYearIncreases:amount,currentYearDecreases:amount,priorSuspendedLoss:amount,
       priorLossHistory:z.object({...evidence,vintages:z.array(z.object({taxYear:z.number().int(),originalLoss:amount,
-        qualifiedOriginalLoss:amount,remainingLoss:amount,qualifiedRemainingLoss:amount})).optional()}).optional()}).optional(),
+        qualifiedOriginalLoss:amount,remainingLoss:amount,qualifiedRemainingLoss:amount,
+        materiallyParticipatedInCurrentYear:z.boolean().optional()})).optional()}).optional()}).optional(),
     priorPassiveLoss:amount,sameOwnerHistoryConfirmed:z.boolean().optional(),sameRegularAmtTreatmentConfirmed:z.boolean().optional(),
   })).optional(),
 });

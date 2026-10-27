@@ -33,6 +33,8 @@ export interface QbiLossCharacterInput {
   priorLoss: Decimal;
   /** Result of the canonical loss limitation, including current and prior loss. */
   calculatedAllowedLoss: Decimal;
+  /** Internal tax-allocation result, when current and prior deductions were separately prorated. */
+  calculatedPriorLossAllowance?: Decimal;
   history: QbiLossHistorySource;
 }
 export interface QbiLossCharacterVintage {
@@ -79,6 +81,15 @@ export function calculateQbiLossCharacter(input: QbiLossCharacterInput): QbiLoss
   const currentLoss = roundDollar(input.currentLoss);
   const allowedLoss = roundDollar(input.calculatedAllowedLoss);
   if (allowedLoss.gt(currentLoss.plus(input.priorLoss))) throw new Error("Calculated loss allowance exceeds actual current and prior loss.");
+  const suppliedPrior = input.calculatedPriorLossAllowance;
+  if (suppliedPrior !== undefined && (!(suppliedPrior instanceof Decimal) || !suppliedPrior.isFinite() || suppliedPrior.lt(0)
+    || suppliedPrior.gt(input.priorLoss) || suppliedPrior.gt(input.calculatedAllowedLoss))) {
+    throw new Error("Calculated prior loss allowance must be an actual conserved tax-allocation result.");
+  }
+  const priorAllowance = suppliedPrior === undefined ? allowedLoss : roundDollar(suppliedPrior);
+  if (allowedLoss.minus(Decimal.min(input.priorLoss, priorAllowance)).gt(currentLoss)) {
+    throw new Error("Calculated current loss allowance exceeds its actual current source.");
+  }
   const history = input.history;
   if (!history || history.sourceTaxYear !== input.taxYear - 1 || history.sourceFactsConfirmed !== true
     || typeof history.sourceReference !== "string" || !history.sourceReference.trim() || !Array.isArray(history.vintages)) {
@@ -119,7 +130,7 @@ export function calculateQbiLossCharacter(input: QbiLossCharacterInput): QbiLoss
   const identity = { "Code provision": input.limitation, "Activity source": input.activitySourceId };
   const remainingVintages: QbiLossCharacterVintage[] = [];
   const allowedPriorVintages: QbiLossCharacterResult["allowedPriorVintages"] = [];
-  let availableAllowed = allowedLoss;
+  let availableAllowed = priorAllowance;
   let priorLossAllowed = d("0");
   let priorQualifiedLossAllowed = d("0");
   let priorActiveQualifiedLossAllowed: Decimal | undefined = d("0");
@@ -150,7 +161,7 @@ export function calculateQbiLossCharacter(input: QbiLossCharacterInput): QbiLoss
         "Opening loss": row.remainingLoss, "Opening qualified loss": row.qualifiedRemainingLoss,
         "Allowed loss": lossAllowed, "Closing loss": remainingLoss, "Closing qualified loss": qualifiedRemainingLoss });
   }
-  const currentAllowedLoss = Decimal.min(currentLoss, availableAllowed);
+  const currentAllowedLoss = Decimal.min(currentLoss, allowedLoss.minus(priorLossAllowed));
   const remainingCurrent = currentLoss.minus(currentAllowedLoss);
   const currentQualifiedLossAllowed = currentAllowedLoss.eq(currentLoss) ? roundDollar(input.currentQualifiedLoss)
     : input.currentLoss.isZero() ? d("0") : roundDollar(currentAllowedLoss.times(input.currentQualifiedLoss).div(input.currentLoss));
@@ -160,7 +171,8 @@ export function calculateQbiLossCharacter(input: QbiLossCharacterInput): QbiLoss
   if (remainingCurrent.gt(0)) remainingVintages.push({ taxYear: input.taxYear, originalLoss: remainingCurrent,
     qualifiedOriginalLoss: remainingQualifiedCurrent, remainingLoss: remainingCurrent, qualifiedRemainingLoss: remainingQualifiedCurrent });
   audit.record("QBI Loss Character", `${input.activitySourceId}:${input.limitation}:current`, "Current qualified loss allowed", currentQualifiedLossAllowed,
-    "Current allowance after FIFO prior use times exact current qualified/total source fraction; whole-dollar transfer",
+    suppliedPrior === undefined ? "Current allowance after FIFO prior use times exact current qualified/total source fraction; whole-dollar transfer"
+      : "Actual separately allocated current allowance times its original qualified fraction; FIFO applies only to the actual prior allowance",
     { ...identity, "Current source loss": input.currentLoss, "Current source qualified loss": input.currentQualifiedLoss,
       "Current allowed loss": currentAllowedLoss, "Current suspended loss": remainingCurrent,
       "Current suspended qualified loss": remainingQualifiedCurrent, "Prior qualified loss allowed": priorQualifiedLossAllowed });

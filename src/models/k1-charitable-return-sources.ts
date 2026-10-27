@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { K1CharitableBasisSourcesSchema } from './k1-charitable-basis-sources.js';
 import { K1CashDistributionSourcesSchema } from './k1-cash-distribution-sources.js';
+import { K1CharitableReceiptSourcesSchema } from './k1-charitable-receipt-sources.js';
+import { K1PriorCharitableAtRiskHistorySchema } from './k1-prior-charitable-at-risk.js';
 const amount = z.string().regex(/^\d+(\.\d+)?$/).optional();
 /** Actual attachments only. No calculated allowance, recipient default, or inferred history. */
 export const K1CharitableReturnSourcesSchema = z.object({
@@ -10,14 +12,7 @@ export const K1CharitableReturnSourcesSchema = z.object({
         k1SourceId: z.string().optional(), sameRegularAmtTreatmentConfirmed: z.boolean().optional(),
         basis: K1CharitableBasisSourcesSchema.optional(),
         cashDistribution: K1CashDistributionSourcesSchema.optional(),
-        receipts: z.array(z.object({
-            basisSourceId: z.string().optional(), originalBox: z.enum(['12', '13']).optional(), originalCode: z.enum(['A', 'E', 'F']).optional(),
-            recipientName: z.string().optional(), recipientCategory: z.enum(['fifty-percent', 'private-nonoperating', 'other-thirty-percent']).optional(),
-            qualifiedOrganization: z.boolean().optional(), donorAdvisedFund: z.boolean().optional(), supportingOrganization: z.boolean().optional(),
-            sourceReference: z.string().optional(), contributionDate: z.string().optional(),
-            propertyType: z.enum(['appreciated_stock', 'other_property']).optional(), acquisitionDate: z.string().optional(),
-            fairMarketValueShare: amount, qualifiedAppreciatedStock: z.boolean().optional(),
-        })).optional(),
+        receipts: z.array(K1CharitableReceiptSourcesSchema).optional(),
         atRisk: z.object({
             sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
             simplifiedMethodEligible: z.boolean().optional(), allActivityDeductionsIncluded: z.boolean().optional(),
@@ -29,8 +24,7 @@ export const K1CharitableReturnSourcesSchema = z.object({
                 allOriginalItemsBelongToActivityConfirmed: z.boolean().optional(),
                 charitableSourceIds: z.array(z.string()).optional(),
             }).optional(),
-            priorLossHistory: z.object({ sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
-                vintages: z.array(z.object({ taxYear: z.number().int().optional(), amount })).optional() }).optional(),
+            priorLossHistory: K1PriorCharitableAtRiskHistorySchema.optional(),
         }).optional(),
     })).optional(),
 });

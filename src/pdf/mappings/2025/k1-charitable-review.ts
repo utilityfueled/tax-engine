@@ -34,6 +34,21 @@ export function buildK1CharitableReview(input: TaxYearInput, result: TaxReturnRe
             `Long-term capital amount after at risk: $${risk.longTermAmount.toFixed()}; Long-term capital suspended at risk: $${risk.longTermSuspended.toFixed()}`,
             'At-risk suspensions retain their original source and character; these are not new section170 carryovers.',
         );
+        if (risk?.prior.length) {
+            rows.push(`Current ordinary suspended at risk: $${risk.currentOrdinarySuspended.toFixed()}`,
+                `Current short-term suspended at risk: $${risk.currentShortTermSuspended.toFixed()}; current long-term suspended at risk: $${risk.currentLongTermSuspended.toFixed()}`,
+                'Historical deductions below have already passed the original basis limitation. They do not reduce current basis again.');
+            for (const [index, record] of risk.prior.entries()) {
+                rows.push(`Prior at-risk deduction ${index + 1}: ${record.character}; suspension year ${record.taxYear}`,
+                    `Original deduction after basis: $${record.originalPostBasisDeduction.toFixed()}; original at-risk disallowance: $${record.originalDisallowedAmount.toFixed()}`,
+                    `Earlier at-risk use: $${record.previouslyAllowed.toFixed()}; opening suspension: $${record.remaining.toFixed()}`,
+                    `Allowed this year: $${record.allowed.toFixed()}; closing at-risk suspension: $${record.suspended.toFixed()}`);
+                if (record.gift) rows.push(`Original gift basis year: ${record.gift.basisOriginTaxYear}; payment date: ${record.gift.contributionDate}; category: ${record.gift.category}`,
+                    `Original gift value: $${record.gift.contributionShare.toFixed()}; original allocated basis: $${record.gift.adjustedBasisShare.toFixed()}`,
+                    `Prior gift available for section170 after at risk: $${record.allowed.toFixed()}`,
+                    'Original payment and basis years are retained separately from the at-risk suspension and current allowance years.');
+            }
+        }
         const distribution = statement.distributionGain;
         if (distribution) rows.push(
             `Actual cash distribution: $${distribution.cash.toFixed()}; Basis before distribution: $${distribution.basisBeforeDistribution.toFixed()}`,

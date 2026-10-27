@@ -1,0 +1,136 @@
+form: "K1 Prior Charitable At Risk"
+fullName: "Actual historical section465 character and original charitable sources"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i6198"
+retrievedAt: "2026-10-26"
+notes: |
+  IRC465(a)(2) treats a disallowed activity loss as an activity deduction in the
+  succeeding year. Final i6198 PartI includes prior nondeductible amounts in their
+  original ordinary, capital or other-deduction character. Reg1.469-2T(d)(6)(iii)
+  apportions disallowed loss among deductions; (iv) removes basis-disallowed
+  items first. An already basis-allowed historical465 amount is not subjected to
+  basis again or included in the current K1 original charitable boxes.
+  https://uscode.house.gov/us/usc/119-120/t26/s465/
+  https://www.ecfr.gov/current/title-26/section-1.469-2T
+  https://www.irs.gov/publications/p925
+  The existing vintage totals are preserved and reconciled to complete original
+  character records. Each original post-basis deduction, closing disallowance,
+  subsequent annual actual use and source year remains distinct. Original gift
+  payment, basis origin, category, recipient and valuation are not overwritten by
+  the year an amount is released from465. No current allowance is an input.
+  Positive current income must stay separate from current and prior deductions
+  before applying the common disallowed fraction. Charity remains outside469.
+  Reg1.199A-3(b)(1)(iv) separately preserves original qualified/nonqualified and
+  pre2018 character and applies QBI FIFO when deductions are finally allowed;
+  QBI FIFO is not a new priority for the section465 or469 deduction allocation.
+  https://www.ecfr.gov/current/title-26/section-1.199A-3
+  This source contract supports the continuing ordinary activity method. The
+  separate2026 prior-gift contribution-year/floor interpretation is not inferred.
+  The bounded source, canonical, guided and saved-review paths preserve these
+  distinctions. Agent source/software review does not establish human tax-law
+  qualification or support for the separate named interpretation boundaries.
+  The2025 Form8995 QBI Loss Tracking Worksheet ColumnC uses actual prior
+  deductions allowed under the current provision. FIFO does not replace465
+  tax allocation between current and prior deductions. ColumnD and Row3 then
+  allocate any later disallowance by the utilized qualified/nonqualified ratio;
+  the later provision records a new suspension year while original source
+  provenance remains retained. https://www.irs.gov/instructions/i8995
+  Passive deduction allocation is ratable under1.469-1T(f)(2)(ii), distinct
+  from the QBI FIFO character ledger.
+lines:
+  - line: "actual-history"
+    description: "Derive preceding-year balances without changing character or origin"
+    formula: "An original2022 ordinary disallowance40000 with actual2023use10000 and2024use10000 retains20000. A distinct2024 gift disallowance77 retains77; legacy vintages2022=20000 and2024=77 reconcile exactly. Original post-basis deductions and source order remain unchanged."
+    testRef: "tests/engine/forms/k1-prior-charitable-at-risk.test.ts::retains actual historical character and annual use without reapplying basis"
+  - line: "source-completeness"
+    description: "A legacy aggregate never invents historical character or utilization"
+    formula: "Positive legacy totals without actual records, missing or repeated annual use, duplicate record IDs, contradictory source-year amounts and overused original deductions reject. Explicit known-empty history is distinct from absence."
+    testRef: "tests/engine/forms/k1-prior-charitable-at-risk.test.ts::rejects incomplete contradictory and duplicated historical deductions"
+  - line: "original-owner"
+    description: "Original owner and activity identity are bound independently"
+    formula: "Unknown or false confirmation, different actual owner suffix, different entity EIN and changed original reference reject; no identity is inferred from current tax amounts."
+    testRef: "tests/engine/forms/k1-prior-charitable-at-risk.test.ts::binds historical source identity to the original owner and activity"
+  - line: "basis-separation"
+    description: "An overlapping original gift cannot release the same basis twice"
+    formula: "Original FMV190/basis100 and historical basis allowance64 give154 post-basis charity. Historical465 suspension77 is independent of36 remaining basis. Claiming155 historical post-basis value or changing the original basis/payment/category contradicts the source history and rejects."
+    testRef: "tests/engine/forms/k1-prior-charitable-at-risk.test.ts::reconciles the same original gift across separate basis and at-risk histories"
+  - line: "exact-and-year"
+    description: "Exact source amounts and the separate prior-gift year boundary"
+    formula: "Original1.01 deduction with0.505 historical465disallowance and0.105 actual later use retains0.4 exactly. Reordered records preserve values. Positive2026 prior-gift release requires the separate contribution-year/floor method; no prior gift is silently relabeled as a current cash receipt."
+    testRef: "tests/engine/forms/k1-prior-charitable-at-risk.test.ts::preserves exact historical values and the explicit prior-gift year boundary"
+  - line: "same-gift-conservation"
+    description: "All risk-origin records for one gift retain one original value"
+    formula: "A gift cannot be duplicated with a different record ID, conflicting original receipt facts, or historical post-basis deductions exceeding its original qualified value. A cash basis history may omit redundant adjusted basis; original source decimals are compared by exact value."
+    testRef: "tests/engine/forms/k1-prior-charitable-at-risk.test.ts::conserves one original gift across risk origins and equivalent decimal source formats"
+  - line: "current-allocation"
+    description: "Retain current income while allocating current and original prior deductions"
+    formula: "Current ordinary deduction40000 and cash10000, prior ordinary20000 and cash10000, separate current capital income20000 and actual risk20000 give80000 deductions/20000 income/40000 disallowance. Every deduction is half allowed: current ordinary20000, prior ordinary10000, current and prior cash5000 each. Capital income remains20000. Original prior years and closing balances are retained."
+    testRef: "tests/engine/forms/k1-prior-charitable-at-risk.test.ts::allocates current and prior deductions without netting retained income into the denominator"
+  - line: "canonical-current-prior"
+    description: "Original prior at-risk deductions pass to their current tax character once"
+    formula: "Wages100000 plus retained capital income20000 less ordinary30000 gives AGI90000; current5000 and original-prior5000 cash give ScheduleA10000. Prior deductions never reduce current basis again. Tax465 carries retain current ordinary20000 and cash5000 separately from original2022ordinary10000 and2024cash5000. QBI ColumnC uses the actual10000 prior deduction allowed, with FIFO only among prior QBI vintages; actual current20000 is nonqualified. Closing QBI465 history is2022loss10000/qualified10000 plus2025loss20000/qualified0. The initial author20kQBI literal wrongly used all ordinary allowance to prioritize prior use and is retained as an oracle correction, not implementation evidence."
+    testRef: "tests/engine/federal-k1-prior-charitable-at-risk.test.ts::releases actual prior activity deductions once while preserving separate basis tax and QBI histories"
+  - line: "positive-income-prior-deduction"
+    description: "Positive current ordinary income does not erase the prior deduction pool"
+    formula: "Actual current ordinary income10000, prior ordinary20000 and priorcash10000, risk5000: total deductions30000/income10000/disallowed15000; priorordinary10000 and cash5000 allowed, ordinary net0. Current10000 QBI and actual priorqualified10000 offset, without claiming that prior deduction as current income or losing it to netting."
+    testRef: "tests/engine/federal-k1-prior-charitable-at-risk.test.ts::retains positive current income and prior ordinary utilization when the net activity amount is zero"
+  - line: "prior-property-cents"
+    description: "Prior property release keeps its original value and independent basis suspension"
+    formula: "Current stock FMV190/basis100 and basis-allowed64 give154 current section170 value with36 basis suspension. An independently already basis-allowed prior property deduction154 has77 remaining465 suspension. Current capital loss16 plus current154 and prior77 gives247 deductions; risk123.50 allows half: currentproperty77, priorproperty38.50 and capital8. AGI99992; exact ScheduleA noncash115.50 reports116. Original2024gift date/year and priorclosing38.50 remain, with current basis36 separately suspended."
+    testRef: "tests/engine/federal-k1-prior-charitable-at-risk.test.ts::preserves exact prior property release separately from current basis and capital loss"
+  - line: "successive-qbi"
+    description: "The next provision retains qualified character with its new suspension year"
+    formula: "465 allows current20000 nonqualified and prior10000 qualified.469 allows15000 of30000 ordinary deductions, so current10000 and prior5000 survive; original prior QBI5000 is used and5000 transfers to2025section469 with15000 total suspended. A separate original469 balance10000/nonqualified with total allowed20000 of40000 gives current-pool15000/prior4695000; five thousand priorqualified is still used, original469remaining5000 remains old, new46915000/qualified5000 is2025."
+    testRef: "tests/engine/forms/k1-prior-risk-qbi.test.ts::retains original qualified character through a later provision without inventing an old suspension year"
+  - line: "successive-qbi-boundaries"
+    description: "No stale calculated handoff or missing original history can authorize transfer"
+    formula: "Zero and full subsequent allowance conserve the actual current/prior pools; changed year or source, altered prior-qualified total, overallowance and unknown469history reject. No current-year fraction replaces the original qualified fraction."
+    testRef: "tests/engine/forms/k1-prior-risk-qbi.test.ts::conserves zero and full allowance and rejects inconsistent derived source contexts"
+  - line: "successive-mixed-fractions"
+    description: "Different original qualified fractions remain separate across provisions"
+    formula: "Actual465 current allowance20000 has10000QBI from its original50% source. Its prior allowance10000 uses oldest5000/2500QBI and next5000/1250QBI. A later half469allowance retains current5000QBI and prior1875QBI; new46915000 suspension has6875QBI. Reordered original vintages cannot replace those fractions with the current50% or move the new469 suspension into an older year."
+    testRef: "tests/engine/forms/k1-prior-risk-qbi.test.ts::preserves different original fractions and prior FIFO across the later deduction allocation"
+  - line: "canonical-passive-transfer"
+    description: "Actual prior465 qualification survives the canonical passive limitation"
+    formula: "Current ordinary40000/cash10000 plus prior ordinary20000/cash10000 and risk40000 allow ordinary30000 and charity10000. With separate passive income15000, section469 permits15000 ordinary: current10000 nonqualified and prior4655000 qualified. New2025section469 carry15000 has5000 QBI; old465 keeps its original2022loss10000/QBI10000. Adding actual prior46910000/nonqualified and increasing independent income to20000 retains old4695000 and the same new15000/QBI5000. AGI100000 and charity10000 remain; neither charitable amount is a passive deduction."
+    testRef: "tests/engine/federal-k1-prior-charitable-at-risk.test.ts::retains first-stage prior qualification through the canonical passive limit"
+  - line: "passive-own-income"
+    description: "The activity own income permits prior ordinary deductions even at net zero"
+    formula: "Actual current ordinary income10000 and prior465 ordinary allowance10000 give net0 with no8582allocationrow. The gross10000 prior deduction is allowed against its own income; current10000QBI minus prior10000QBI remains0, and no469carry is created."
+    testRef: "tests/engine/federal-k1-prior-charitable-at-risk.test.ts::uses actual own income before a passive net-zero result"
+  - line: "current-partner-earnings"
+    description: "A prior465 ordinary release never becomes a current Box14 deduction"
+    formula: "Matching current Box14 and ordinary deduction40000, actual zero prior SE history and current465ordinary allowance20000 produce current SE deduction20000. The separate prior465ordinary10000 remains outside that current amount. With actual passive income15000 allowing half of the incoming30000 ordinary deductions, only10000 current deduction reaches the existing current SE route."
+    testRef: "tests/engine/federal-k1-prior-charitable-at-risk.test.ts::keeps prior ordinary use outside the existing current partner SE transfer"
+  - line: "guided-originals"
+    description: "Guided prior histories preserve originals rather than collecting an allowance"
+    formula: "Actual character records, original gifts, every intervening use and independent QBI histories pass through the linked K1 once. Decimal text and source years normalize without defaults; false, unknown, original balances and every nested confirmation remain distinct. The actual guide derives AGI90000/charity10000/QBIcarry10000."
+    testRef: "tests/apps/web/guided-k1-prior-charitable-at-risk.test.ts::uses actual linked prior records without an entered current allowance"
+  - line: "guided-invalidation"
+    description: "Editing any original history invalidates its source confirmations"
+    formula: "Changing a historical use, gift date, owner or source reference keeps all original values but revokes confirmation; missing history and false confirmation reject. Source-only confirmation restores a complete original packet without adding computed results."
+    testRef: "tests/apps/web/guided-k1-prior-charitable-at-risk.test.ts::retains unknown and false source history and invalidates original edits"
+  - line: "history-controls"
+    description: "Actual historical deduction and receipt controls have no computed defaults"
+    formula: "Add/edit/remove controls retain original deduction character, basis-applied answer, original amount, annual use, gift receipt and actual source identity. Adding a record creates no amount, category, origin year or confirmation; false and unknown remain distinct."
+    testRef: "tests/apps/web/k1-prior-charitable-at-risk-interactions.test.tsx::collects original historical deductions and gifts without calculated defaults"
+  - line: "qbi-history-controls"
+    description: "The independent qualified465 history remains an original filed ledger"
+    formula: "Record actual original/remaining total and qualified amounts by origin year; no current-year qualified percentage or computed allowance is entered. Changing any history value revokes nested source confirmation."
+    testRef: "tests/apps/web/k1-prior-charitable-at-risk-interactions.test.tsx::collects independent qualified history and revokes confirmation on edit"
+  - line: "original-review"
+    description: "Original risk and gift years stay separate in physical review output"
+    formula: "The saved reference reports2022ordinary originalpostbasis60000/originaldisallowed40000/historicaluse20000/opening20000/currentuse10000/closing10000;2024cash opening10000/use5000/closing5000. The gift keeps its original2024basis year and actual2024payment date. Physical ScheduleA cash10000, ScheduleD gain20000 and8995loss10000 agree. Original identifiers and references are omitted from this appendix; every page is marked review-only."
+    testRef: "tests/pdf/k1-prior-charitable-at-risk-review.test.ts::saves original historical use separately from current basis and charitable deductions"
+  - line: "review-binding"
+    description: "Every original historical record and retained closing amount is bound before output"
+    formula: "Changed actual use, original owner suffix, equal-money reference replacement, changed gift date, removed original packet and modified closing prior balances reject before template IO. The public charitable amount digest omits the historical taxpayer suffix so exact render redaction is valid. Private original context independently validates the full exact original or its exact render-redacted representation; omitting the suffix from the public digest never authorizes a changed identity."
+    testRef: "tests/pdf/k1-prior-charitable-at-risk-review.test.ts::rejects stale historical sources and retained prior balances before template access"
+  - line: "workspace-review"
+    description: "The actual guided histories reach the completed flattened review packet"
+    formula: "The saved actual guide produces the same original prior uses and closing balances as the canonical packet, with each original history retained. Source edits invalidate export; no mock bridge or supplied calculated allowance authorizes the packet."
+    testRef: "tests/apps/web/workspace-k1-prior-charitable-at-risk.test.ts::exports actual guided prior histories with separate use and closing balances"
+  - line: "production-browser"
+    description: "Source-only confirmation survives save reload and actual review download"
+    formula: "Desktop and mobile actual guided histories remain incomplete until source confirmation. Confirmation alone derives AGI90000 without collecting an allowance. Saved originals and exact use history survive reload; a later edit revokes readiness. The actual downloaded packet retains distinct prior use and closing balances with review notices and redacted identifiers."
+    testRef: "apps/web/tests/k1-prior-charitable-at-risk.spec.ts::retains actual prior deduction histories through confirmation reload and review download"

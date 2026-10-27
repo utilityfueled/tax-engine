@@ -7,6 +7,7 @@ import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
 import { K1CashDistributionDetails } from './k1-cash-distribution-details';
 import { K1CharitableAtRiskDetails } from './k1-charitable-at-risk-details';
+import { K1PriorAtRiskDetails } from './k1-prior-at-risk-details';
 
 type Field = readonly [string, string, 'text' | 'money' | 'signed' | 'boolean' | readonly (readonly [string, string])[]];
 function Fields<T extends object>({ prefix, data, fields, onChange }: { prefix: string; data?: T; fields: readonly Field[]; onChange: (patch: Partial<T>) => void }) {
@@ -149,6 +150,8 @@ function CharitableStatement({ index, data, activities, onChange }: { index: num
         <button type="button" className="utility-button" onClick={() => change({ atRisk: { ...risk, priorLossHistory: { ...risk.priorLossHistory, vintages: risk.priorLossHistory?.vintages?.filter((_, n) => n !== i) } } })}>Remove {prefix} prior at-risk vintage {i + 1}</button></div>)}
       <button type="button" className="utility-button" onClick={() => change({ atRisk: { ...risk, priorLossHistory: { ...risk?.priorLossHistory, vintages: [...(risk?.priorLossHistory?.vintages ?? []), {}] } } })}>Add {prefix} prior at-risk vintage</button>
       <button type="button" className="utility-button" onClick={() => change({ atRisk: { ...risk, priorLossHistory: { ...risk?.priorLossHistory, vintages: [] } } })}>Record no {prefix} prior at-risk vintages</button>
+      <K1PriorAtRiskDetails prefix={`${prefix} prior at-risk character`} data={risk?.priorLossHistory?.characterSources}
+        onChange={characterSources => change({ atRisk: { ...risk, priorLossHistory: { ...risk?.priorLossHistory, characterSources } } })} />
     </fieldset>
   </div></details>;
 }
@@ -156,7 +159,7 @@ export function K1CharitableSourceDetails({ data, activities, onChange }: { data
   const change = (patch: Partial<K1CharitableSourcesData>) => onChange(updateK1CharitableSources(data ?? {}, patch));
   return <details className="guided-expand"><summary className="guided-expand-trigger">Charitable contributions reported on Schedule K-1</summary><div className="guided-expand-body">
     <p className="guided-hint">Use each original partnership or S-corporation K-1, attached gift receipts, basis history and Form 6198 sources. Keep these amounts separate from gifts you made directly and from charitable percentage-limit carryovers. Passive activities and ordinary losses also need the linked activity and independent histories in adjustments.</p>
-    <p className="guided-hint">Current ordinary cash and appreciated-stock gifts are supported with complete sources and actual at-risk records. A binding limitation also requires the original activity assignment. Earlier charitable basis releases use their original histories. A cash distribution above basis needs the original attachment below, with investment-only assets or a complete single passive business report and linked histories. Other property, differing AMT treatment, prior at-risk releases, other business distributions and some 2026 prior-basis timing require separate methods; their entered facts stay saved.</p>
+    <p className="guided-hint">Current ordinary cash and appreciated-stock gifts are supported with complete sources and actual at-risk records. A binding limitation also requires the original activity assignment. Earlier basis and at-risk releases need their separate original histories; prior charitable at-risk releases currently use the 2025 method. A cash distribution above basis needs its original attachment, with investment-only assets or a complete single passive business report and linked histories. Other property, differing AMT treatment, passive capital losses, other business distributions and some 2026 prior-gift timing require separate methods; their entered facts stay saved.</p>
     {!data ? <button type="button" className="utility-button" onClick={() => onChange({})}>Add K-1 charitable sources</button> : <>
       <Fields prefix="K-1 charitable packet" data={data} fields={[...evidence, ['allK1CharitableSourcesIncluded', 'all original charitable K-1 attachments included', 'boolean']]} onChange={change} />
       {data.statements === undefined && <p role="status">The original charitable K-1 list is unknown.</p>}

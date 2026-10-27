@@ -16,7 +16,7 @@ export function calculateK1OrdinaryPassiveSources(input: K1QbiLossSourceInput, s
       ||!entry.rawNetAmount.eq(source.ordinaryIncome)||entry.isPassive!==original.isPassiveActivity
       ||entry.isRentalRealEstate||entry.isPubliclyTradedPartnership||entry.ptpFullyDisposedInTaxableTransaction
       ||!entry.ptpDispositionGainOrLoss.isZero()||!entry.basisResult
-      ||!d(original.form6198?.ordinaryIncome).eq(entry.basisAdjustedNetAmount)) {
+      ||!d(original.form6198?.ordinaryIncome).eq(entry.basisAdjustedNetAmount.minus(source.priorAtRiskLoss))) {
       throw new Error('K1 ordinary classification requires matching canonical ordinary basis and at-risk sources');
     }
   }

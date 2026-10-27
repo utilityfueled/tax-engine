@@ -9,6 +9,7 @@ import type { Form8582Result } from '@/engine/forms/form-8582.js';
 import type { Form461Result } from '@/engine/forms/form-461.js';
 import { calculateQbiLossCharacter, type QbiLossCharacterResult, type QbiLossCharacterVintage } from '@/engine/forms/qbi-loss-character.js';
 import { calculateQbiLossRelimitation } from '@/engine/forms/qbi-loss-relimitation.js';
+import { calculateQbiPriorRiskTransfer } from '@/engine/forms/k1-prior-risk-qbi.js';
 import { validateK1QbiLossSources, type K1QbiLossSourceInput } from '@/engine/forms/k1-qbi-loss-sources.js';
 import { d, roundDollar, sum } from '@/utils/decimal.js';
 
@@ -37,6 +38,7 @@ export function calculateK1QbiLossReturn(input: K1QbiLossSourceInput & Pick<TaxY
   form461: Form461Result;
 }): K1QbiLossReturnResult {
   const sources = validateK1QbiLossSources(input);
+  const terminalCharacters = new Map<string, QbiLossCharacterResult>();
   const lines: CalculatedLine[] = [];
   let priorQualifiedLoss = d('0');
   let priorActiveQualifiedLoss: Decimal | undefined = d('0');
@@ -48,15 +50,15 @@ export function calculateK1QbiLossReturn(input: K1QbiLossSourceInput & Pick<TaxY
       || !entry.basisResult) {
       throw new Error('K1 QBI requires its matching canonical ordinary ScheduleE source and basis result');
     }
-    if (!original.form6198 || !d(original.form6198.ordinaryIncome).eq(entry.basisAdjustedNetAmount)) {
+    if (!original.form6198 || !d(original.form6198.ordinaryIncome).eq(entry.basisAdjustedNetAmount.minus(source.priorAtRiskLoss))) {
       throw new Error('K1 QBI original Form6198 ordinary source must reconcile to the canonical basis-adjusted amount');
     }
     const currentLoss = Decimal.max(0, source.ordinaryIncome.negated());
     const qualifiedLoss = Decimal.max(0, source.qualifiedBusinessIncome.negated());
     const qualifiedFraction = currentLoss.isZero() ? d('0') : qualifiedLoss.div(currentLoss);
     const basisLoss = Decimal.max(0, entry.basisAdjustedNetAmount.negated());
-    const atRiskLoss = Decimal.max(0, entry.netAmount.negated());
-    if (basisLoss.gt(currentLoss) || atRiskLoss.gt(basisLoss)) {
+    const atRiskLoss = source.charitableAtRisk?.ordinaryDeductionAllowed ?? Decimal.max(0, entry.netAmount.negated());
+    if (basisLoss.gt(currentLoss) || atRiskLoss.gt(basisLoss.plus(source.priorAtRiskLoss))) {
       throw new Error('K1 QBI canonical current loss limits exceed their original source');
     }
     const common = { taxYear: input.taxpayer.taxYear, activitySourceId: source.sourceId, priorLoss: d('0') };
@@ -67,11 +69,17 @@ export function calculateK1QbiLossReturn(input: K1QbiLossSourceInput & Pick<TaxY
     // rounded QBI display as the next step's original source numerator.
     const atRisk = calculateQbiLossCharacter({ ...common, limitation: '465',
       currentLoss: basisLoss, currentQualifiedLoss: basisLoss.times(qualifiedFraction),
-      calculatedAllowedLoss: atRiskLoss, history: source.atRiskHistory });
+      priorLoss: source.priorAtRiskLoss, calculatedAllowedLoss: atRiskLoss,
+      calculatedPriorLossAllowance: source.charitableAtRisk
+        ? sum(...source.charitableAtRisk.prior.filter(row=>row.character==='ordinary').map(row=>row.allowed)) : undefined,
+      history: source.atRiskHistory });
     const stages = [basis, atRisk];
     let passiveSourceIndex: number | undefined;
-    let final = atRisk;
+    let currentQualifiedAllowed = atRisk.currentQualifiedLossAllowed;
+    let priorQualifiedAllowed = atRisk.priorQualifiedLossAllowed;
+    let priorActiveAllowed = atRisk.priorActiveQualifiedLossAllowed;
     if (original.isPassiveActivity) {
+      let final: QbiLossCharacterResult;
       passiveSourceIndex = input.scheduleK1.slice(0, source.k1Index).filter(row => row.isPassiveActivity).length;
       const row = context.form8582.activityRows.find(row => row.sourceIndex === passiveSourceIndex);
       const allocation = context.form8582.activityAllocations.find(row => row.sourceIndex === passiveSourceIndex);
@@ -79,22 +87,54 @@ export function calculateK1QbiLossReturn(input: K1QbiLossSourceInput & Pick<TaxY
         || !row.sourceCurrentLoss.eq(Decimal.min(0, entry.netAmount))
         || !row.sourceCurrentIncome.eq(Decimal.max(0, entry.netAmount).plus(source.passiveCapitalGain))
         || !row.sourcePriorYearSuspendedLoss.eq(source.priorPassiveLoss)
-        || ((atRiskLoss.gt(0) || source.priorPassiveLoss.gt(0)) && !allocation)) {
+        || ((entry.netAmount.lt(0) || source.priorPassiveLoss.gt(0)) && !allocation)) {
         throw new Error('K1 QBI requires its original-index canonical passive allocation and source balances');
       }
-      final = calculateQbiLossCharacter({ ...common, limitation: '469',
-        currentLoss: atRiskLoss, currentQualifiedLoss: atRiskLoss.times(qualifiedFraction),
-        priorLoss: source.priorPassiveLoss, calculatedAllowedLoss: allocation?.allowedLoss ?? d('0'),
-        history: source.passiveHistory });
+      if (source.priorAtRiskLoss.gt(0)) {
+        // Gross deductions already offset by this activity's own ordinary
+        // income remain allowed even if the net Form8582 current loss is zero.
+        const allowedGross = atRiskLoss.minus(Decimal.max(0, entry.netAmount.negated()))
+          .plus(allocation?.allowedLoss ?? d(0));
+        const transferred = calculateQbiPriorRiskTransfer(atRisk, { taxYear: input.taxpayer.taxYear,
+          activitySourceId: source.sourceId, priorPassiveLoss: source.priorPassiveLoss,
+          calculatedAllowedLoss: allowedGross, history: source.passiveHistory });
+        final = transferred.stage;
+        currentQualifiedAllowed = transferred.currentQualifiedLossAllowed;
+        priorQualifiedAllowed = transferred.priorQualifiedLossAllowed;
+        priorActiveAllowed = transferred.priorActiveQualifiedLossAllowed;
+        if (context.form461.line16ExcessBusinessLoss.gt(0)) {
+          const oldSources = [...atRisk.allowedPriorVintages, ...final.allowedPriorVintages].filter(item => item.lossAllowed.gt(0));
+          const originalCurrentAllowed = roundDollar(transferred.currentLossAllowed);
+          const originalPriorAllowed = final.currentAllowedLoss.plus(final.priorLossAllowed).minus(originalCurrentAllowed);
+          if (originalCurrentAllowed.gt(0) && originalPriorAllowed.gt(0) || oldSources.length > 1) {
+            throw new Error('Multiple loss pools or mixed current/prior origin EBL require their separate allocation method.');
+          }
+          terminalCharacters.set(source.sourceId, { ...final,
+            sourceCurrentLoss: atRisk.sourceCurrentLoss, sourceCurrentQualifiedLoss: atRisk.sourceCurrentQualifiedLoss,
+            currentAllowedLoss: originalCurrentAllowed, currentQualifiedLossAllowed: currentQualifiedAllowed,
+            priorLossAllowed: originalPriorAllowed, priorQualifiedLossAllowed: priorQualifiedAllowed,
+            priorActiveQualifiedLossAllowed: priorActiveAllowed,
+            allowedPriorVintages: originalPriorAllowed.isZero() ? [] : [{ ...oldSources[0],
+              lossAllowed: originalPriorAllowed, qualifiedLossAllowed: priorQualifiedAllowed }] });
+        }
+      } else {
+        final = calculateQbiLossCharacter({ ...common, limitation: '469',
+          currentLoss: atRiskLoss, currentQualifiedLoss: atRiskLoss.times(qualifiedFraction),
+          priorLoss: source.priorPassiveLoss, calculatedAllowedLoss: allocation?.allowedLoss ?? d('0'),
+          history: source.passiveHistory });
+        currentQualifiedAllowed = final.currentQualifiedLossAllowed;
+        priorQualifiedAllowed = final.priorQualifiedLossAllowed;
+        priorActiveAllowed = final.priorActiveQualifiedLossAllowed;
+      }
       stages.push(final);
     }
-    priorQualifiedLoss = priorQualifiedLoss.plus(final.priorQualifiedLossAllowed);
-    if (final.priorActiveQualifiedLossAllowed === undefined) priorActiveQualifiedLoss = undefined;
-    else if (priorActiveQualifiedLoss !== undefined) priorActiveQualifiedLoss = priorActiveQualifiedLoss.plus(final.priorActiveQualifiedLossAllowed);
+    priorQualifiedLoss = priorQualifiedLoss.plus(priorQualifiedAllowed);
+    if (priorActiveAllowed === undefined) priorActiveQualifiedLoss = undefined;
+    else if (priorActiveQualifiedLoss !== undefined) priorActiveQualifiedLoss = priorActiveQualifiedLoss.plus(priorActiveAllowed);
     lines.push(...stages.flatMap(stage => stage.lines));
     return { sourceId: source.sourceId, k1Index: source.k1Index, accountHolder: source.accountHolder,
-      passiveSourceIndex, currentQbi: source.ordinaryIncome.lt(0) ? final.currentQualifiedLossAllowed.negated() : source.qualifiedBusinessIncome,
-      priorQualifiedLoss: final.priorQualifiedLossAllowed, priorActiveQualifiedLoss: final.priorActiveQualifiedLossAllowed, stages };
+      passiveSourceIndex, currentQbi: source.ordinaryIncome.lt(0) ? currentQualifiedAllowed.negated() : source.qualifiedBusinessIncome,
+      priorQualifiedLoss: priorQualifiedAllowed, priorActiveQualifiedLoss: priorActiveAllowed, stages };
   });
   if (sources.length > 0 && context.form461.line16ExcessBusinessLoss.gt(0)) {
     const form = context.form461;
@@ -131,7 +171,7 @@ export function calculateK1QbiLossReturn(input: K1QbiLossSourceInput & Pick<TaxY
       throw new Error('Multiple calculated business loss pools require their separate Form461 allocation method');
     }
     const activity = activities.find(activity => activity.sourceId === lossPools[0].activitySourceId);
-    const final = activity?.stages.at(-1);
+    const final = activity ? terminalCharacters.get(activity.sourceId) ?? activity.stages.at(-1) : undefined;
     if (!activity || !final) throw new Error('K1 QBI requires the actual completed source loss pool');
     const relimited = calculateQbiLossRelimitation(final, { taxYear: input.taxpayer.taxYear, form461: form, positiveBusinessIncome, lossPools });
     if (d(input.scheduleK1[activity.k1Index].ordinaryIncome).lt(0)) activity.currentQbi = relimited.currentQualifiedLossAllowed.negated();

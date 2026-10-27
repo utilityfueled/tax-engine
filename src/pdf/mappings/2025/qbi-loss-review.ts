@@ -38,6 +38,9 @@ export function buildQbiLossReview(input: TaxYearInput, result: TaxReturnResult,
         `Current QBI after loss limits: $${amount(activity.currentQbi)}`,
         `Prior qualified loss allowed after all limits: $${amount(activity.priorQualifiedLoss)}`);
       for (const stage of activity.stages) {
+        if (stage.lines.some(line => line.form === 'QBI Successive Limit')) rows.push(
+          'The incoming469 pool includes current deductions and released prior465 deductions. Its new suspension year is the current year; original465 character and history remain separate.',
+        );
         rows.push(`${stage.limitation}: current source loss $${amount(stage.sourceCurrentLoss)}; qualified source loss $${amount(stage.sourceCurrentQualifiedLoss)}`,
           `${stage.limitation}: current loss allowed $${amount(stage.currentAllowedLoss)}; qualified current loss allowed $${amount(stage.currentQualifiedLossAllowed)}`,
           `${stage.limitation}: prior loss allowed $${amount(stage.priorLossAllowed)}; qualified prior loss allowed $${amount(stage.priorQualifiedLossAllowed)}`);

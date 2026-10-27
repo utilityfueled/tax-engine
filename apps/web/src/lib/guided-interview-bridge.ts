@@ -1,3 +1,5 @@
+import type { z } from "zod";
+import type { TaxYearInputSchema } from "@/models/inputs";
 import { buildGuidedCryptoDonations, cryptoDonationFactErrors } from './guided-crypto-donations';
 import { buildGuidedRoyaltySources, royaltySourceFactErrors } from "./guided-royalty-sources";
 import { buildGuidedQofFacts } from "./guided-qof-facts";
@@ -619,7 +621,25 @@ export function buildScheduleHInput(otherTaxesData: OtherTaxesData | undefined) 
 
 // ── Main builder ────────────────────────────────────────────────────────────
 
-export function buildTaxInputFromGuidedData(state: GuidedFlowState) {
+// These are source values before TaxYearInputSchema parsing. Preserve the
+// converters' unknown monetary fields and the actual nullable residency answer.
+// Naming the contract also keeps declaration generation bounded as sources grow.
+type GuidedTaxInputSources = Omit<z.input<typeof TaxYearInputSchema>,
+  "taxpayer" | "w2s" | "form1099Nec" | "form1099Int" | "form1099Div" | "form1099B" | "form1099R" | "rentalProperties" | "form8889ByOwner"> & {
+  taxpayer: Omit<z.input<typeof TaxYearInputSchema>["taxpayer"], "stateResidency"> & {
+    stateResidency: PersonalInfoData["stateResidency"];
+  };
+  form8889ByOwner?: ReturnType<typeof buildHsaInputs>["form8889ByOwner"];
+  w2s: ReturnType<typeof buildW2Inputs>;
+  form1099Nec: ReturnType<typeof buildNecInputs>;
+  form1099Int: ReturnType<typeof buildInterestInputs>;
+  form1099Div: ReturnType<typeof buildDividendInputs>;
+  form1099B: ReturnType<typeof buildBrokerageInputs>;
+  form1099R: ReturnType<typeof buildRetirementInputs>;
+  rentalProperties: ReturnType<typeof buildRentalPropertyInputs>;
+};
+
+export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxInputSources | null {
   const { segmentation, sectionData } = state;
 
   if (!segmentation.filingStatus || !Number.isInteger(state.taxYear) || state.taxYear == null) return null;

@@ -5,6 +5,7 @@ import type { K1QbiLossSourceInput } from '@/engine/forms/k1-qbi-loss-sources.js
 import { calculateK1OrdinaryPassiveSources } from '@/engine/forms/k1-ordinary-passive-sources.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d } from '@/utils/decimal.js';
+import Decimal from 'decimal.js';
 
 export function calculateK1OrdinarySelfEmployment(input: K1QbiLossSourceInput, scheduleE: ScheduleEResult) {
   const selected=input.qbiLossSources?.activities?.filter(row=>row.selfEmploymentTreatment!==undefined)??[];
@@ -27,6 +28,17 @@ export function calculateK1OrdinarySelfEmployment(input: K1QbiLossSourceInput, s
         const passiveIndex=input.scheduleK1.slice(0,index).filter(row=>row.isPassiveActivity).length;
         calculated=(passive.activityAllocations.find(row=>row.sourceIndex===passiveIndex)?.allowedLoss??d(0)).negated();
       } else calculated=entry.netAmount;
+      if(source.priorAtRiskLoss.gt(0)) {
+        const risk=source.charitableAtRisk;
+        if(!risk) throw new Error('Current partner SE with prior465 use requires original character allocation');
+        const currentAllowed=Decimal.max(0,entry.basisAdjustedNetAmount.negated()).minus(risk.currentOrdinarySuspended);
+        if(original.isPassiveActivity) {
+          const passiveIndex=input.scheduleK1.slice(0,index).filter(row=>row.isPassiveActivity).length;
+          const grossAllowed=risk.ordinaryDeductionAllowed.minus(Decimal.max(0,entry.netAmount.negated()))
+            .plus(passive.activityAllocations.find(row=>row.sourceIndex===passiveIndex)?.allowedLoss??d(0));
+          calculated=risk.ordinaryDeductionAllowed.isZero()?d(0):currentAllowed.times(grossAllowed).div(risk.ordinaryDeductionAllowed).negated();
+        } else calculated=currentAllowed.negated();
+      }
     }
     for(const supplied of [original.selfEmploymentNetEarningsAfterAdjustments,facts.statement?.selfEmploymentNetEarningsAfterAdjustments]) {
       if(supplied!==undefined&&(!d(supplied).isFinite()||!d(supplied).eq(calculated))) {

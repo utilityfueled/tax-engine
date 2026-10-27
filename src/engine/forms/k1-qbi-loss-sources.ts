@@ -5,6 +5,7 @@ import Decimal from 'decimal.js';
 import type { ScheduleK1, TaxYearInput } from '@/models/inputs.js';
 import type { QbiLossHistorySource } from '@/engine/forms/qbi-loss-character.js';
 import { calculateK1CharitableReturnSources } from './k1-charitable-return-sources.js';
+import type { K1CharitableAtRiskResult } from './k1-charitable-at-risk.js';
 import { d, sum } from '@/utils/decimal.js';
 
 type Identity=Pick<TaxYearInput['taxpayer']['primary'],'firstName'|'lastName'|'ssn'>;
@@ -21,6 +22,7 @@ export interface K1QbiLossSourceInput {
 export interface ValidatedK1QbiLossSource {
   sourceId:string;k1Index:number;accountHolder:'primary'|'spouse';
   ordinaryIncome:Decimal;qualifiedBusinessIncome:Decimal;priorPassiveLoss:Decimal;passiveCapitalGain:Decimal;
+  priorAtRiskLoss:Decimal;charitableAtRisk?:K1CharitableAtRiskResult;
   basisHistory:QbiLossHistorySource;atRiskHistory:QbiLossHistorySource;passiveHistory:QbiLossHistorySource;
 }
 const ordinaryOnlyZeroFields=[
@@ -52,11 +54,14 @@ function evidence<T extends {sourceTaxYear?:number;sourceReference?:string;sourc
   if(!value||value.sourceTaxYear!==year||value.sourceFactsConfirmed!==true) throw new Error(`K1 QBI ${label} requires confirmed actual source year`);
   text(value.sourceReference,`${label} source reference`);
 }
-function history(value:QbiLossHistorySource|undefined,year:number,opening:Decimal,materialParticipation:boolean):QbiLossHistorySource {
+type IncompleteHistory = Partial<Omit<QbiLossHistorySource,'vintages'>> & {
+  vintages?:Array<Pick<QbiLossHistorySource['vintages'][number],'taxYear'> & Partial<QbiLossHistorySource['vintages'][number]>>;
+};
+function history(value:IncompleteHistory|undefined,year:number,opening:Decimal,materialParticipation:boolean):QbiLossHistorySource {
   evidence(value,year-1,'prior passive history');
   if(!value||!Array.isArray(value.vintages)) throw new Error('K1 QBI prior passive history requires an explicit vintage list, including none');
   const seen=new Set<number>();
-  const balances=value.vintages.map(row=>{
+  const vintages=value.vintages.map(row=>{
     if(!Number.isInteger(row.taxYear)||row.taxYear<1||row.taxYear>=year||seen.has(row.taxYear)) throw new Error('K1 QBI history requires unique actual earlier origin years');
     seen.add(row.taxYear);
     const original=amount(row.originalLoss,'original history',true,true),qualified=amount(row.qualifiedOriginalLoss,'original qualified history',true,true);
@@ -65,10 +70,12 @@ function history(value:QbiLossHistorySource|undefined,year:number,opening:Decima
       ||remaining.minus(qualifiedRemaining).gt(original.minus(qualified))) throw new Error('K1 QBI original and remaining history must conserve qualified character');
     if(row.taxYear<2018&&(!qualified.isZero()||!qualifiedRemaining.isZero())) throw new Error('K1 QBI pre-2018 history cannot be qualified');
     if(row.materiallyParticipatedInCurrentYear!==undefined&&row.materiallyParticipatedInCurrentYear!==materialParticipation) throw new Error('K1 QBI prior history participation must match the actual current activity');
-    return remaining;
+    return {taxYear:row.taxYear,originalLoss:original.toFixed(),qualifiedOriginalLoss:qualified.toFixed(),
+      remainingLoss:remaining.toFixed(),qualifiedRemainingLoss:qualifiedRemaining.toFixed(),
+      materiallyParticipatedInCurrentYear:row.materiallyParticipatedInCurrentYear};
   });
-  if(!sum(...balances).eq(opening)) throw new Error('K1 QBI passive history must reconcile to the actual opening balance');
-  return value;
+  if(!sum(...vintages.map(row=>d(row.remainingLoss))).eq(opening)) throw new Error('K1 QBI history must reconcile to the actual opening balance');
+  return {...value,vintages};
 }
 
 export function validateK1QbiLossSources(input:K1QbiLossSourceInput):ValidatedK1QbiLossSource[] {
@@ -154,9 +161,11 @@ export function validateK1QbiLossSources(input:K1QbiLossSourceInput):ValidatedK1
       ||Object.values(original.priorSuspendedLosses??{}).some(value=>!amount(value,'original prior basis loss',true,true).isZero())) throw new Error('K1 QBI positive prior basis loss requires its separate release method');
     if(!atRisk||atRisk.simplifiedMethodEligible!==true||!original.form6198) throw new Error('K1 QBI requires an actual eligible simplified at-risk worksheet');
     if(original.atRiskAmount!==undefined) throw new Error('K1 QBI current at-risk allowance overrides are not original source facts');
-    if(!amount(atRisk.priorSuspendedLoss,'prior at-risk loss',true,true).isZero()) throw new Error('K1 QBI positive prior at-risk loss requires its separate release method');
+    const priorAtRiskLoss=amount(atRisk.priorSuspendedLoss,'prior at-risk loss',true,true);
+    if(!priorAtRiskLoss.eq(charitableSource?.priorAtRisk.ordinary??d(0)))
+      throw new Error('K1 QBI prior at-risk ordinary balance requires its complete matching character-source history');
     evidence(atRisk.priorLossHistory,year-1,'prior at-risk loss history');
-    if(!Array.isArray(atRisk.priorLossHistory?.vintages)||atRisk.priorLossHistory.vintages.length!==0) throw new Error('K1 QBI current at-risk route requires an actual known-empty prior loss history');
+    const atRiskHistory=history(atRisk.priorLossHistory,year,priorAtRiskLoss,known(original.qbiMateriallyParticipated,'material participation'));
     for(const field of ['adjustedBasisAtEffectiveDate','priorYearAmountAtRisk','currentYearIncreases','currentYearDecreases'] as const){
       if(!amount(atRisk[field],`at-risk ${field}`,true).eq(amount(original.form6198[field],`original at-risk ${field}`,true))) throw new Error(`K1 QBI original at-risk ${field} must match its source`);
     }
@@ -170,7 +179,7 @@ export function validateK1QbiLossSources(input:K1QbiLossSourceInput):ValidatedK1
     if(!original.isPassiveActivity&&prior.gt(0)) throw new Error('K1 QBI former passive activity requires its separate current nonpassive release method');
     const passiveHistory=history(priorRows[0].qbiLossTracking,year,prior,known(original.qbiMateriallyParticipated,'material participation'));
     const basisHistory:QbiLossHistorySource={...basis,sourceFactsConfirmed:true,vintages:[]};
-    const atRiskHistory:QbiLossHistorySource={...atRisk.priorLossHistory,sourceFactsConfirmed:true,vintages:[]};
-    return {sourceId:id,k1Index:index,accountHolder:owner,ordinaryIncome:ordinary,qualifiedBusinessIncome:qualified,priorPassiveLoss:prior,passiveCapitalGain,basisHistory,atRiskHistory,passiveHistory};
+    return {sourceId:id,k1Index:index,accountHolder:owner,ordinaryIncome:ordinary,qualifiedBusinessIncome:qualified,priorPassiveLoss:prior,passiveCapitalGain,
+      priorAtRiskLoss,charitableAtRisk:charitableSource?.atRiskAllocation,basisHistory,atRiskHistory,passiveHistory};
   });
 }

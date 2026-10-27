@@ -954,6 +954,16 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/k1-prior-charitable-at-risk",
+      "enginePath": "src/engine/forms/k1-prior-charitable-at-risk.ts",
+      "packetPath": "src/pdf/mappings/2025/k1-charitable-review.ts",
+      "testRefs": [
+        "tests/engine/federal-k1-prior-charitable-at-risk.test.ts::releases actual prior activity deductions once while preserving separate basis tax and QBI histories",
+        "tests/pdf/k1-prior-charitable-at-risk-review.test.ts::saves original historical use separately from current basis and charitable deductions"
+      ],
+      "note": "Actual post-basis original deductions, at-risk history and original gifts feed current allowance once. Original section465 histories and new section469 qualified-loss suspensions remain distinct; actual guide and private historical review bind the sources. This does not qualify a 2026 form or replace independent human review."
+    },
+    {
       "key": "federal/k1-royalty-classification",
       "enginePath": "src/engine/schedules/schedule-e.ts",
       "testRefs": [
