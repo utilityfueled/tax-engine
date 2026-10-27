@@ -16,7 +16,9 @@ export interface Form8962MarriageWorksheetInput {
   /** Existing ordered-deduction auxiliary joint calculation; actual alternative income stays unchanged. */
   orderedDeductionInterim?: boolean;
   /** Validated ordinary coverage amounts. Policy/household source binding is a separate prerequisite. */
-  months: Array<CoverageMonth & { advance: Decimal }>;
+  months: Array<CoverageMonth & { advance: Decimal;
+    /** Derived from full original monthly people before an owner's first full QHP month. Not entered facts. */
+    ineligiblePremiumOutsideAlternativeInterval?: Decimal }>;
   families: Array<{ owner: Owner; familySize: number; months: CoverageMonth[] }>;
 }
 export interface Form8962MarriageMonth {
@@ -66,9 +68,13 @@ export function calculateForm8962MarriageWorksheets(input: Form8962MarriageWorks
   }
   if (input.families.reduce((total, family) => total + family.familySize, 0) !== input.familySize) throw new Error('Marriage worksheet alternative family sizes must reconcile to the actual joint tax family');
   if (!Array.isArray(input.months)) throw new Error('Marriage worksheet requires actual ordinary monthly sources');
-  const sourceMonths = new Map<number, CoverageMonth & { advance: Decimal }>();
+  const sourceMonths = new Map<number, Form8962MarriageWorksheetInput['months'][number]>();
   for (const row of input.months) {
     coverage(row); amount(row.advance, 'advance payment');
+    if (row.ineligiblePremiumOutsideAlternativeInterval !== undefined) {
+      amount(row.ineligiblePremiumOutsideAlternativeInterval,'ineligible premium outside the alternative interval');
+      if (row.month > input.lastPreMarriageMonth || row.ineligiblePremiumOutsideAlternativeInterval.gt(row.premium)) throw new Error('Marriage ineligible source premium does not reconcile with its actual pre-marriage month');
+    }
     if (sourceMonths.has(row.month)) throw new Error('Marriage worksheet has duplicate ordinary months');
     sourceMonths.set(row.month, row);
   }
@@ -145,7 +151,9 @@ export function calculateForm8962MarriageWorksheets(input: Form8962MarriageWorks
   for (const row of preMonths) {
     const original = sourceMonths.get(row.month);
     const sources = input.families.flatMap(family => family.months.filter(value => value.month === row.month));
-    if (!original || sources.length === 0 || !sum(...sources.map(value => value.premium)).eq(original.premium)) throw new Error('Marriage worksheet owner premiums must exactly reconcile to each actual pre-marriage source month');
+    const ineligible = original?.ineligiblePremiumOutsideAlternativeInterval ?? d(0);
+    if (!original || (sources.length === 0 && (row.coverageEligible || ineligible.isZero()))
+      || !sum(...sources.map(value => value.premium),ineligible).eq(original.premium)) throw new Error('Marriage worksheet owner premiums must exactly reconcile to each actual pre-marriage source month');
   }
   const applicableMonths = new Set(families.filter(family => family.incomeWithinLimit).flatMap(family => family.months.map(row => row.month)));
   let alternativePreMarriageCredit = d('0'), ordinaryPreMarriageCredit = d('0');
@@ -188,7 +196,10 @@ export function calculateForm8962MarriageWorksheets(input: Form8962MarriageWorks
   }
   for (const row of months) {
     const line = String(row.month + 11);
-    if ((electionApplies && row.month <= input.lastPreMarriageMonth) || (jointIncomeEligible && row.coverageEligible)) {
+    // Pub974 Step7 retains the enrolled married-month premium and contribution
+    // even when actual other MEC makes that month's allowed credit zero.
+    const electedMonthlyTransfer = electionApplies && (row.month <= input.lastPreMarriageMonth || jointIncomeEligible);
+    if (electedMonthlyTransfer || (jointIncomeEligible && row.coverageEligible)) {
       for (const [column, description, value] of [['a', 'Enrollment premium', row.premium], ['b', 'Corrected benchmark', row.slcsp], ['c', 'Contribution', row.contribution],
         ['d', 'Maximum assistance', row.maximumCredit], ['e', 'Monthly allowed assistance', row.credit]] as const) {
         audit.record('Form 8962', `${line}${column}`, description, value, electionApplies && row.month <= input.lastPreMarriageMonth ? 'Pub974 Step7; columnE comes from separate owner calculations' : 'Ordinary monthly calculation');

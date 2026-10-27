@@ -126,7 +126,7 @@ export function buildPremiumTaxCreditInputs(data: PremiumTaxCreditData | undefin
     coverageFactsConfirmed: true, allocationRequired, sharedPolicyAllocations: shared?.packet, alternativeMarriageCalculationElected: marriageElected, lawfulPresenceReconciliationRequired: false,
     selfEmployedHealthInsuranceCoordinationRequired: fact(data.selfEmployedHealthInsuranceCoordinationRequired, "self-employed health coordination answer"), qsehraAffected: qsehra, monthlyReconciliation: reconciliation,
   });
-  if (marriageElected || data.marriageSources) facts.marriageSources = bindGuidedMarriageSources(data, taxYear, filingStatus, personal, policies, facts);
+  if (marriageElected || data.marriageSources) facts.marriageSources = bindGuidedMarriageSources(data, taxYear, filingStatus, personal, policies, facts, form7206);
   return { form1095A: policies, form8962: facts };
 }
 export function premiumTaxCreditFactErrors(state: GuidedFlowState): Record<string, string> {

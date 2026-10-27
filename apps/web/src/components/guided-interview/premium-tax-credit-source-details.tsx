@@ -73,7 +73,7 @@ export function PremiumTaxCreditSourceDetails({ data, personal, filingStatus, ta
     })}
     <button type="button" onClick={() => update({ policies: [...data.policies, { taxYear: "", marketplace: "", policyNumber: "", monthlyPremiums: [] }] })}>Add original Marketplace policy</button>
     {(data.allocationRequired === true || data.sharedPolicyAllocations !== undefined) && <SharedPolicySourceDetails healthInsurance={healthInsurance} data={data} personal={personal} filingStatus={filingStatus} taxYear={taxYear} onChange={update} />}
-    {(data.alternativeMarriageCalculationElected === true || data.marriageSources !== undefined) && <MarriagePolicySourceDetails data={data} personal={personal} filingStatus={filingStatus} onChange={update} />}
+    {(data.alternativeMarriageCalculationElected === true || data.marriageSources !== undefined) && <MarriagePolicySourceDetails healthInsurance={healthInsurance} data={data} personal={personal} filingStatus={filingStatus} onChange={update} />}
     <h5>Actual household monthly reconciliation</h5><p className="guided-hint">Use one actual household row for each source month. Do not add duplicate benchmark amounts from several policies. Confirm minimum essential coverage, employer offers, paid premiums and other eligibility facts before answering.</p>
     {data.monthlyReconciliation.map((row, rowIndex) => {
       const prefix = `Coverage month ${rowIndex + 1}`;

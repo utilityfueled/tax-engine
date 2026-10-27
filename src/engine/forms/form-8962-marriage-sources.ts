@@ -1,5 +1,6 @@
 /** Actual marriage and policy evidence. Spec: form-8962-marriage-sources.yaml. */
 import Decimal from 'decimal.js';
+import { calculateMarketplaceCoverageFamilySources } from './marketplace-coverage-family-sources.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import type { CalculatedLine } from '@/models/outputs.js';
 import { AuditTrail } from '@/utils/audit.js';
@@ -114,9 +115,11 @@ export function calculateForm8962MarriageSources(input: Form8962MarriageSourceIn
   }
   const familySize = household.size;
   if (facts.taxFamilySize !== familySize) throw new Error('Marriage joint tax family must match the actual claimed people');
+  const coverageFamilies = calculateMarketplaceCoverageFamilySources(input);
   const allocation = facts.allocationRequired ? calculateForm8962SharedPolicy(input) : undefined;
   if (!packet.policies?.length || packet.policies.length !== input.form1095A.length) throw new Error('Marriage requires all original Marketplace policies');
   const coverage = new Map<string,Set<number>>([...household.keys()].map(id => [id,new Set<number>()]));
+  const fullCoverage = new Map<string,Set<number>>([...household.keys()].map(id => [id,new Set<number>()]));
   const seenPolicies = new Set<number>(), policyIdentities = new Set<string>();
   const recipientCoverage = new Map<string,Owner>();
   const joint = new Map<number,{premium: Decimal; advance: Decimal; people: Set<string>}>();
@@ -126,12 +129,28 @@ export function calculateForm8962MarriageSources(input: Form8962MarriageSourceIn
     const actual = input.form1095A[index];
     if (!actual || seenPolicies.has(index) || actual.sourceFactsComplete !== true || !row.original) throw new Error('Marriage original policy index, completeness or duplicate source conflicts');
     seenPolicies.add(index); text(row.sourceReference, 'original policy reference');
-    if (row.fullMonthCoverageConfirmed !== true || row.allCoveredIndividualsEligibleForPtcConfirmed !== true) throw new Error('Marriage requires actual full-month eligible coverage evidence');
     const source = original(actual,year,Boolean(allocation));
     if (JSON.stringify(source) !== JSON.stringify(original(row.original,year,Boolean(allocation)))) throw new Error('Marriage original policy snapshot is stale or conflicting');
     const policyKey = `${source.marketplace}\u0000${source.policyNumber}`;
     if (policyIdentities.has(policyKey)) throw new Error('Marriage duplicate actual policy statements require reconciliation');
     policyIdentities.add(policyKey);
+    const family = coverageFamilies?.find(plan => plan.policyIndexes.includes(index));
+    const familyPacket = family ? input.form7206?.plans?.find(plan => plan.planId === family.planId)?.coverageFamilySources : undefined;
+    const memberMonths = new Map<string,{full: boolean; eligible: boolean}>();
+    for (const person of source.people.filter(person => household.has(person.id))) for (let m = person.first; m <= person.last; m++) {
+      if (family) {
+        const member = familyPacket?.persons?.find(link => identity(link.coveredIndividualSsn) === person.id);
+        const actual = familyPacket?.months?.find(month => month.month === m)?.personFacts?.find(fact => fact.personId === member?.personId);
+        const month = family.months.find(month => month.month === m);
+        if (!member || !actual || !month || typeof actual.fullCoverageMonthConfirmed !== 'boolean') throw new Error('Marriage monthly coverage requires the complete original person and full-month source.');
+        memberMonths.set(`${person.id}:${m}`, {full:actual.fullCoverageMonthConfirmed,eligible:month.coverageSsns.includes(person.id)});
+      } else memberMonths.set(`${person.id}:${m}`, {full:true,eligible:true});
+    }
+    if (family) {
+      if (row.fullMonthCoverageConfirmed !== [...memberMonths.values()].every(fact => fact.full)
+        || row.allCoveredIndividualsEligibleForPtcConfirmed !== [...memberMonths.values()].every(fact => fact.eligible)) throw new Error('Marriage policy answers contradict actual this-return monthly coverage sources.');
+    } else if (row.fullMonthCoverageConfirmed !== true || row.allCoveredIndividualsEligibleForPtcConfirmed !== true) throw new Error('Marriage requires actual full-month eligible coverage evidence or its complete monthly coverage-family sources.');
+    const eligiblePeople = (people: typeof source.people, m: number) => people.filter(person => memberMonths.get(`${person.id}:${m}`)?.eligible === true);
     const filerRecipient = source.recipientId === primaryId || source.recipientId === spouseId;
     if ((!filerRecipient && !allocation) || (filerRecipient && source.recipientName !== household.get(source.recipientId))) throw new Error('Marriage policy requires an actual filer recipient or completed other-family allocation');
     for (const person of source.people) {
@@ -142,6 +161,7 @@ export function calculateForm8962MarriageSources(input: Form8962MarriageSourceIn
       if (!actualCoverage || household.get(person.id) !== person.name) throw new Error('Marriage policy covered person is not the actual household member');
       for (let m = person.first; m <= person.last; m++) {
         actualCoverage.add(m);
+        if (memberMonths.get(`${person.id}:${m}`)?.full) fullCoverage.get(person.id)!.add(m);
       }
     }
     for (const m of source.months) {
@@ -153,7 +173,7 @@ export function calculateForm8962MarriageSources(input: Form8962MarriageSourceIn
       const premium = allocated?.premium ?? d(m.premium), advance = allocated?.advance ?? d(m.advance);
       const combined = joint.get(m.month) ?? {premium:d(0),advance:d(0),people:new Set<string>()};
       combined.premium = sourceSum([combined.premium,premium]); combined.advance = sourceSum([combined.advance,advance]);
-      for (const person of covered) combined.people.add(person.id);
+      for (const person of eligiblePeople(covered,m.month)) combined.people.add(person.id);
       joint.set(m.month,combined);
       if (m.month <= lastPreMarriageMonth) {
         const owner = marriagePolicyGroupOwner(source.recipientId, primaryId, spouseId, covered.map(person => person.id), members);
@@ -168,7 +188,7 @@ export function calculateForm8962MarriageSources(input: Form8962MarriageSourceIn
         }
         const group = groups[owner].get(m.month) ?? {premium:d(0),people:new Set<string>()};
         group.premium = sourceSum([group.premium,premium]);
-        for (const person of covered) group.people.add(person.id);
+        for (const person of eligiblePeople(covered,m.month)) group.people.add(person.id);
         groups[owner].set(m.month,group);
       }
     }
@@ -182,6 +202,8 @@ export function calculateForm8962MarriageSources(input: Form8962MarriageSourceIn
     const m = month(row.month), actual = joint.get(m);
     if (!actual || !actual.premium.eq(money(row.enrolleePremium)) || !actual.advance.eq(money(row.advancePremiumTaxCredit))) throw new Error('Marriage joint monthly premium and advances must match exact original sources');
     const eligible = actual.people.size > 0, slcsp = money(row.slcsp);
+    const actualCoverageBenchmark = coverageFamilies?.flatMap(plan => plan.months).find(source => source.month === m)?.coverageFamilySlcsp;
+    if (actualCoverageBenchmark && !actualCoverageBenchmark.eq(slcsp)) throw new Error('Marriage joint benchmark contradicts the actual complete monthly coverage-family source.');
     if (allocation && !allocation.householdMonths.find(source => source.month === m)?.slcsp.eq(slcsp)) throw new Error('Marriage joint benchmark must match the actual complete PartIV coverage-family source');
     if (row.coverageEligible !== eligible || row.incomeBasedSepEnrollment !== false || row.qsehraAffordable === true
       || (row.qsehraMonthlyPermittedBenefit !== undefined && !money(row.qsehraMonthlyPermittedBenefit).isZero()) || (!eligible && !slcsp.isZero())) throw new Error('Marriage joint monthly eligibility or special enrollment evidence is incomplete or conflicting');
@@ -191,9 +213,11 @@ export function calculateForm8962MarriageSources(input: Form8962MarriageSourceIn
   if (!Array.isArray(packet.benchmarks)) throw new Error('Marriage requires actual alternative benchmark source records');
   const benchmarks = packet.benchmarks;
   const usedBenchmarks = new Set<number>();
+  const outsideAlternative = new Map<number,Decimal>();
   const families = (['primary','spouse'] as const).map(owner => {
     const covered = [...members[owner]].flatMap(id => [...(coverage.get(id) ?? [])]).filter(m => m <= lastPreMarriageMonth);
-    const first = covered.length ? Math.min(...covered) : undefined, last = covered.length ? Math.max(...covered) : undefined;
+    const full = [...members[owner]].flatMap(id => [...(fullCoverage.get(id) ?? [])]).filter(m => m <= lastPreMarriageMonth);
+    const first = full.length ? Math.min(...full) : undefined, last = covered.length ? Math.max(...covered) : undefined;
     const rows: Form8962MarriageWorksheetInput['families'][number]['months'] = [];
     if (first !== undefined && last !== undefined) for (let m = first; m <= last; m++) {
       if (!joint.has(m)) throw new Error('Marriage alternative coverage interval needs its actual intervening zero-month sources');
@@ -209,10 +233,14 @@ export function calculateForm8962MarriageSources(input: Form8962MarriageSourceIn
       rows.push({month:m,premium:group.premium,slcsp,coverageEligible:ids.length>0});
       audit.record('Form8962 marriage sources',`${owner}-${m}`,'Actual alternative monthly enrollment premiums',group.premium,allocation ? 'Exclude other-taxpayer PartIV amounts; group actual filer recipients or determined alternative family under Pub974 Steps2/4' : 'Group original policies by their actual filer recipient',{'Corrected alternative benchmark':slcsp});
     }
-    for (const [m,group] of groups[owner]) if (group.premium.gt(0) && (first === undefined || last === undefined || m < first || m > last)) throw new Error('Marriage recipient premiums outside the actual alternative-family interval need a separate source method');
+    for (const [m,group] of groups[owner]) if (group.premium.gt(0) && (first === undefined || last === undefined || m < first || m > last)) {
+      if (group.people.size) throw new Error('Marriage eligible recipient premiums outside the actual alternative-family interval need a separate source method');
+      outsideAlternative.set(m,sourceSum([outsideAlternative.get(m) ?? d(0),group.premium]));
+      audit.record('Form8962 marriage sources',`${owner}-${m}-outside-interval`,'Actual ineligible enrollment before the first full alternative month',group.premium,'Retain in joint originals; no alternative contribution or credit');
+    }
     return {owner,familySize:members[owner].size,months:rows};
   });
   if (usedBenchmarks.size !== benchmarks.length) throw new Error('Marriage alternative benchmark source month or owner is unmatched');
   const intervals = new Set(families.flatMap(family => family.months.map(row => row.month)));
-  return {marriageMonth,lastPreMarriageMonth,familySize,families,months:months.filter(row => row.coverageEligible || intervals.has(row.month)),lines:audit.getLines()};
+  return {marriageMonth,lastPreMarriageMonth,familySize,families,months:months.filter(row => row.coverageEligible || intervals.has(row.month) || row.premium.gt(0) || row.advance.gt(0)).map(row => ({...row,...(outsideAlternative.has(row.month) ? {ineligiblePremiumOutsideAlternativeInterval:outsideAlternative.get(row.month)!} : {})})),lines:audit.getLines()};
 }

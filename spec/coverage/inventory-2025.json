@@ -6644,6 +6644,29 @@
       ]
     },
     {
+      "key": "federal/marketplace-marriage-coverage-family",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p974",
+      "specPath": "spec/federal/marketplace-marriage-coverage-family.yaml",
+      "enginePath": "src/engine/forms/marketplace-marriage-health-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-marriage-coverage-family.test.ts::replays actual monthly marriage coverage through health final credit and QBI once",
+        "tests/pdf/marriage-coverage-family-review.test.ts::retains enrolled ineligible married-month fields in the elected marriage form"
+      ],
+      "implementationNote": "Complete monthly sources compose with shared marriage and health worksheets; the linked historical review mapping retains actual monthly enrollment columns. Traceability does not establish human or filing qualification.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/marketplace-marriage-health",
       "jurisdiction": "federal",
       "taxYear": 2025,

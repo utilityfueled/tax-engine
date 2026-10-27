@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import type { FilingStatus, PersonalInfoData } from '@/lib/guided-interview-flow';
 import type { PremiumTaxCreditData } from '@/lib/guided-premium-tax-credit-facts';
+import type { HealthInsuranceData } from '@/lib/guided-health-insurance-facts';
 import { captureMarriageSources, copyMarriageBenchmarkGroups, type MarriagePolicyData } from '@/lib/guided-marriage-policy';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
 
-export function MarriagePolicySourceDetails({data,personal,filingStatus,onChange}:{
-  data:PremiumTaxCreditData;personal?:PersonalInfoData;filingStatus?:FilingStatus|null;onChange:(patch:Partial<PremiumTaxCreditData>)=>void;
+export function MarriagePolicySourceDetails({data,personal,filingStatus,healthInsurance,onChange}:{
+  data:PremiumTaxCreditData;personal?:PersonalInfoData;filingStatus?:FilingStatus|null;healthInsurance?:HealthInsuranceData;onChange:(patch:Partial<PremiumTaxCreditData>)=>void;
 }) {
   const [error,setError]=useState<string>();
   const packet=data.marriageSources;
@@ -16,7 +17,7 @@ export function MarriagePolicySourceDetails({data,personal,filingStatus,onChange
   function perform(action:()=>void){try{action();setError(undefined);}catch(caught){setError(caught instanceof Error?caught.message:'Check the actual marriage sources.');}}
   return <section><h5>Marriage-year Marketplace worksheet</h5>
     <p className="guided-hint">Use actual marriage records, dependent qualifications and corrected monthly benchmarks. The return compares the ordinary and alternative calculations to determine whether the alternative reduces advance-credit repayment.</p>
-    <p className="guided-hint">This worksheet supports a joint return with full-month eligible coverage on policies issued to either spouse. For a wedding on the first day of February through December, alternative months stop before the wedding month. January 1 marriages cannot use this election. For self-employed health insurance, enter both the original marriage records and the actual health-plan payments. Shared-policy allocations require separate source coordination.</p>
+    <p className="guided-hint">Enter actual enrollment periods and monthly coverage eligibility. For a wedding on the first day of February through December, alternative months stop before the wedding month. January 1 marriages cannot use this election. For self-employed health insurance, enter both the original marriage records and the actual health-plan payments. Use the monthly coverage-family sources when full-month enrollment or other coverage varies. Shared-policy allocations require separate source coordination.</p>
     <button type="button" onClick={()=>perform(()=>onChange({marriageSources:captureMarriageSources(data,personal,filingStatus)}))}>Copy marriage household and original policies</button>
     <p className="guided-hint">Copy again after replacing the household or original statements. Copying clears the previous marriage answers and benchmarks.</p>
     {error&&<p role="alert">{error}</p>}
@@ -49,14 +50,14 @@ export function MarriagePolicySourceDetails({data,personal,filingStatus,onChange
       {packet.policies.map((policy,index)=>{
         const prefix=`Marriage policy ${index+1}`;
         const set=(patch:Partial<typeof policy>)=>update({policies:packet.policies.map((current,i)=>i===index?{...current,...patch}:current)});
-        return <fieldset key={index}><legend>{prefix}: {policy.original.policyNumber}</legend><div className="guided-form-grid">
+        return <fieldset key={index}><legend>{prefix}: {policy.original.policyNumber}</legend><p className="guided-hint">For a shared original, these coverage answers describe the people assigned to this return. Record partial months and other coverage in the health plan's monthly sources.</p><div className="guided-form-grid">
           <TextFact label={`${prefix}: Original statement reference`} value={policy.sourceReference} onChange={sourceReference=>set({sourceReference})}/>
           <BooleanFact label={`${prefix}: Covered people had full-month coverage`} value={policy.fullMonthCoverageConfirmed} onChange={fullMonthCoverageConfirmed=>set({fullMonthCoverageConfirmed})}/>
           <BooleanFact label={`${prefix}: All covered people met premium-credit coverage eligibility`} value={policy.allCoveredIndividualsEligibleForPtcConfirmed} onChange={allCoveredIndividualsEligibleForPtcConfirmed=>set({allCoveredIndividualsEligibleForPtcConfirmed})}/>
         </div></fieldset>;
       })}
-      <button type="button" onClick={()=>perform(()=>update({benchmarks:copyMarriageBenchmarkGroups(data,personal,filingStatus)}))}>Copy alternative benchmark coverage groups</button>
-      <p className="guided-hint">Complete the date and dependent assignments first. Copying sets up each spouse's rows from the original coverage periods and recipients. Enter the actual corrected SLCSP for the listed people; amounts stay blank until entered. Original statement and joint-household benchmarks stay separate.</p>
+      <button type="button" onClick={()=>perform(()=>update({benchmarks:copyMarriageBenchmarkGroups(data,personal,filingStatus,healthInsurance)}))}>Copy alternative benchmark coverage groups</button>
+      <p className="guided-hint">Complete the date, dependent assignments and any monthly eligibility sources first. Copying uses the first full enrollment month and actual eligible people for each month. Enter the corrected SLCSP for the listed people, including an actual zero for an empty group; amounts stay blank until entered. Original statement and joint-household benchmarks stay separate.</p>
       {packet.benchmarks.map((row,index)=>{
         const prefix=`${row.owner==='primary'?'Primary':'Spouse'} month ${row.month}`;
         const set=(patch:Partial<typeof row>)=>update({benchmarks:packet.benchmarks.map((current,i)=>i===index?{...current,...patch}:current)});

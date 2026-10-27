@@ -43,9 +43,10 @@ export function calculateMarketplaceMarriageHealthSources(input: Form8962Marriag
     if (plan.marketplaceCoverage !== true || plan.premiumTaxCreditInvolved !== true) continue;
     const coveredPersons = plan.coveredPersons, paymentSources = plan.payments;
     const shared = sharedPlans?.get(plan.planId ?? '');
-    if ((!shared && plan.allCoveredPersonsInCoverageFamilyConfirmed !== true) || (shared && plan.sharedMarketplaceSources?.allThisReturnPersonsInCoverageFamilyConfirmed !== true) || !coveredPersons || !paymentSources
+    const monthlyFamily = families?.find(family => family.planId === plan.planId);
+    if ((!monthlyFamily && ((!shared && plan.allCoveredPersonsInCoverageFamilyConfirmed !== true) || (shared && plan.sharedMarketplaceSources?.allThisReturnPersonsInCoverageFamilyConfirmed !== true))) || !coveredPersons || !paymentSources
       || !plan.marketplacePolicySourceIds?.length || !plan.accountHolder) {
-      throw new Error('Marriage health partial coverage-family or missing-person sources require their separate actual method.');
+      throw new Error('Marriage health requires complete actual monthly coverage-family or affirmative full-family and person sources.');
     }
     const originalPeople = plan.marketplacePolicySourceIds.flatMap(sourceId => {
       const index = /^form1095A:(0|[1-9]\d*)$/.exec(sourceId)?.[1];

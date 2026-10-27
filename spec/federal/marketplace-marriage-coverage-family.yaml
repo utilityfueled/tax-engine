@@ -1,0 +1,94 @@
+form: "Marriage-year Marketplace coverage-family composition"
+fullName: "Actual monthly eligible people before the marriage and business-health worksheets"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Official Pub974 coverage-family definition, alternative-family discussion,
+  Steps2/4 and WorksheetsI/III lines8/9 distinguish annual tax-family assignment,
+  actual QHP enrollment and the people eligible for a monthly credit. A person
+  with other MEC may remain enrolled but is excluded from the corrected SLCSP.
+  The alternative start is the first FULL QHP month; the stop is the last QHP
+  month before the first full married month. Eligibility is not a substitute
+  for either enrollment endpoint. Reg1.36B-4(b)(2) retains the corresponding
+  actual premarriage policy groups and the ordinary full-year reconciliation.
+  Use the existing complete coverageFamilySources original/person/month/payment
+  packet. Do not invent source eligibility from a zero benchmark or copy an
+  annual dependent assignment into monthly eligibility. Reconcile affirmative
+  aggregate policy facts against every actual own-person month; unknown stays
+  unknown. Existing actual allocation is completed before the marriage method.
+  Full allocated enrollment premiums and APTC are not multiplied by the
+  coverage/noncoverage SLCSP ratio. That existing Pub974 Gary/Sue ratio applies
+  only to specified premiums for business-health worksheets. Actual zero
+  noncoverage-person advances remains required by the existing ordinary method;
+  positive noncoverage/capped-repayment attribution is not supplied here.
+  An ineligible QHP month before the first full alternative month remains in
+  the original joint premium/APTC ledger. Its source-derived premium outside
+  the alternative interval reconciles the original; it creates no alternative
+  contribution or credit. No taxpayer-entered amount or election supplies it.
+  Annual alternative-family dependent qualifications remain separate from the
+  existing premarriage health-payment qualification guard. This package does
+  not establish a new stepchild/payment-period or outside-return credit rule.
+  Production browser evidence: apps/web/tests/guided-marriage-coverage-family.spec.ts
+  exercises desktop original and mobile shared original sources, actual group
+  copying, explicit zero versus blank, nested reconfirmation, reload and privacy.
+lines:
+  - line: "married-ineligible-month-fields"
+    description: "Print the complete elected-marriage monthly transfer after the wedding"
+    formula: "Pub974 Step7 transfers original Worksheet3 enrollment premiums, corrected joint benchmark and APTC into every corresponding Form8962 month. For a fully married December with actual enrollment1000, corrected benchmark0 and advance0, print columns(a)-(f)=1000/0/603/0/0/0 in the partial-January control. Monthly other-MEC ineligibility keeps credit zero but does not erase the full enrollment source or joint monthly contribution from the elected-marriage form. Taxpayer income-eligibility and ordinary non-election behavior remain separate. Health7855/PTC3853/repayment2447 are unchanged."
+    testRef: "tests/pdf/marriage-coverage-family-review.test.ts::retains enrolled ineligible married-month fields in the elected marriage form"
+  - line: "saved-review"
+    description: "Retain independent full sources in physical and reference marriage reviews"
+    formula: "Saved/reopened Form8962 prints actual finalAGI85080/PTC3853/APTC6300/repayment2447 and PartV start02/stop07 for the partial-first-month source; shared originals also retain their actual PartIV half fractions. Mixed-person signed source prints52371/11545/12000/455. Reference output retains the full enrollment originals, actual health split and once-only Schedule1 transfer; redacted identities, appearances and every-page review notice remain. Changed actual eligibility/reference/snapshot or changed calculated months rejects before output I/O."
+    testRef: "tests/pdf/marriage-coverage-family-review.test.ts::prints monthly coverage marriage and signed health from bound originals"
+  - line: "private-context"
+    description: "Bind monthly people and full sources before any PDF output"
+    formula: "A same-money monthly eligibility-reference change, person eligibility change, altered original snapshot, missing or forged prepared context, or changed final monthly credit cannot reuse the old calculated result. Reject before opening templates or creating output artifacts."
+    testRef: "tests/pdf/marriage-coverage-family-review.test.ts::rejects changed monthly marriage sources before output"
+  - line: "workspace-review"
+    description: "Export actual saved guide sources through the workspace"
+    formula: "The complete actual monthly source flow exports physical8962, reference and7206 review pages with health7855/finalPTC3853/Step2credit4145. Flatten the merged output; show the review-only notice on every page and remove original personal identifiers. Source state remains unchanged."
+    testRef: "tests/apps/web/workspace-marriage-coverage-family.test.ts::exports actual monthly coverage marriage sources through the workspace"
+  - line: "guided-monthly-sources"
+    description: "Forward actual monthly sources through the complete guided return"
+    formula: "Normalize independent full original, person/month and payment sources into the same marriage binder; never fill unknown full-month or MEC answers. Updating either actual source invalidates health, Marketplace and alternative benchmark confirmations. Confirming only the outer source does not restore stale nested evidence. Preserve original source amounts and the derived7855/85080/3853 partial-first-month control."
+    testRef: "tests/guided-interview/guided-marriage-coverage-family.test.ts::forwards complete actual monthly coverage through marriage health and invalidates edits"
+  - line: "guided-group-copy"
+    description: "Copy actual eligible benchmark members while retaining enrollment endpoints"
+    formula: "With partialJanuary/fullFebruaryMEC/eligibleMarch, copyFebruary-July rows, emptyFebruary eligible members, and March primary member. Keep every copied amount/reference/confirmation blank. Reconcile the original policy and unique actual person/month identity; unknown answers, duplicates or stale originals reject without changing saved data."
+    testRef: "tests/guided-interview/guided-marriage-coverage-family.test.ts::copies monthly eligible marriage groups without inventing amounts or eligibility"
+  - line: "guided-shell"
+    description: "Expose monthly marriage source copying in the actual adjustments shell"
+    formula: "The shared saved health packet reaches the marriage collector. Copy actual full/eligible groups, require an explicit zero for an empty month, and retain partial state until nested coverage/benchmark and outer sources are reconfirmed. Reopening uses the same saved facts and canonical7855/3853 result."
+    testRef: "tests/apps/web/marriage-coverage-family-interactions.test.tsx::copies and reconfirms actual monthly marriage groups in the full shell"
+  - line: "signed-mixed-people"
+    description: "Keep the actual monthly SLCSP split and signed Step3 with an annual dependent family"
+    formula: "Derived ScheduleC60000 gives SEhalf4239/prehealth55761. Actual primary plus own qualifying child have fullP15000, coverageB12000/noncoverageB6000, allA12000 attributable to eligible primary and actual childcash3000. Gary/Sue ratio gives specified10000/nonspecified5000. W16=-2000/W17=3000; X14=52761,750 gives201percent while1950 gives196percent, so X31=4950. Step2HH50811 at196percent/.0184 gives joint78; alternative family2 half25406 at124percent gives0. Credit7x1000+5x922=11610; signedStep3=-1610 plus5000 gives3390. FinalHH52371 at202percent/.0208 givesjoint91; alternative0. FinalPTC7x1000+5x909=11545/repayment455. The dependent qualification is separately actual; MEC excludes the child from monthly benchmark membership, not annual alternative family size. No advance belongs to the noncoverage child."
+    testRef: "tests/engine/federal-marriage-coverage-family.test.ts::keeps signed health worksheets with actual mixed coverage people and annual family size"
+  - line: "canonical-replay"
+    description: "Recompute marriage credit at both actual health worksheet stages"
+    formula: "Derived 2025 MFJ ScheduleC100000 gives SEhalf7065 and pre-health92935. P12000/A7000, specified10000/nonspecified2000; W17=5000 and X14=87935, so even3250 gives414percent and X25=7000/X31=12000. Step2HH80935: joint395percent/.0838 gives monthly565; alternative half40468 at268percent/.0472 gives159. Six eligible premarriage and four eligible married months give4786. Health10000-4786+2000=7214; finalHH85721 gives joint607/alternative191, PTC6x609+4x193=4426, repayment2574. Full shared originals with an independently established half allocation give the same own result and QBI deduction once. These are derived controls, not published examples."
+    testRef: "tests/engine/federal-marriage-coverage-family.test.ts::replays actual monthly marriage coverage through health final credit and QBI once"
+  - line: "canonical-partial-first"
+    description: "A partial first month remains a full original payment without alternative credit"
+    formula: "The same actual sources with January not a full coverage month give specified9000/nonspecified3000/A6300; X31 remains12000. Step2 has five eligible premarriage and four eligible married months:5x641+4x235=4145. Health7855; finalHH85080 gives joint603 and alternative187 from half42540/282percent/.0528. FinalPTC5x613+4x197=3853; repayment2447. Alternative beginsFebruary although February is MEC-ineligible; January1000 remains in the full premium source."
+    testRef: "tests/engine/federal-marriage-coverage-family.test.ts::preserves partial first month cash and the full enrollment source in canonical output"
+  - line: "retained-attribution-boundary"
+    description: "Monthly marriage composition does not supply positive noncoverage advance attribution"
+    formula: "Even balanced original cash/APTC and snapshots do not establish the separate partial-family repayment attribution method. Existing noncoverage-person advance and paid-source guards remain; source edits, unknowns and stale originals cannot bypass them."
+    testRef: "tests/engine/federal-marriage-coverage-family.test.ts::retains actual noncoverage advance attribution and original source gates"
+  - line: "monthly-members"
+    description: "Use actual person/month eligibility without discarding QHP premiums"
+    formula: "P1000 each month; actual own A700 only in eligible months and A0 in February/December. Full-month QHP enrollment remains January-December; otherMEC makes February/December own benchmarks0 and member lists empty. Primary alternative interval remains January-July with explicit February0; all12 original premiums remain12000, own advances7000."
+    testRef: "tests/engine/forms/form-8962-marriage-coverage-family.test.ts::binds actual eligible marriage members while retaining full enrollment sources"
+  - line: "partiv-first"
+    description: "Compose complete actual shared allocation and monthly eligibility"
+    formula: "Shared full originals and independent cash/APTC remain unchanged; actual half allocation produces own1000 per month. A known no-eligible-family month has actual originalB0/A0, ownercash1000 and othercash1000. Corrected own eligible groups omit that month's primary; allocated premium is not discarded or replaced by cash."
+    testRef: "tests/engine/forms/form-8962-marriage-coverage-family.test.ts::keeps actual shared allocation before monthly marriage membership"
+  - line: "first-full-month"
+    description: "Keep full-month enrollment distinct from credit eligibility"
+    formula: "January actual fullCoverageMonth=false; February fullCoverageMonth=true with MEC=true; March eligible. Alternative startsFebruary, notJanuary orMarch. January1000 remains ordinary-only ineligible enrollment; complete original annual12000 and laterAPTC are conserved. No alternative credit is assigned to that source-only amount."
+    testRef: "tests/engine/forms/form-8962-marriage-coverage-family.test.ts::starts at the actual first full QHP month without dropping earlier premiums"
+  - line: "source-contradictions"
+    description: "False and missing source answers cannot impersonate complete monthly evidence"
+    formula: "Missing actual monthly packet, unknown MEC/full-month answer, omitted person/month, affirmative all-eligible contradiction, changed full original, changed complete joint benchmark or a nonzero benchmark for an empty alternative group rejects. Original inputs remain immutable."
+    testRef: "tests/engine/forms/form-8962-marriage-coverage-family.test.ts::rejects missing contradictory and stale marriage eligibility sources"
