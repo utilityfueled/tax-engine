@@ -1,10 +1,12 @@
 import { z } from "zod";
+import { FilingUnitHistorySchema } from './filing-unit-sources.js';
 const sourceAmount = z.string().regex(/^\d+(\.\d+)?$/).optional();
 /** Actual filed charitable history. Omission never creates a category, amount or confirmation. */
 export const CharitableCarryoverSourcesSchema = z.object({
   sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
   allCarryoversIncluded: z.boolean().optional(), calendarYearTaxpayer: z.boolean().optional(),
-  returnMembership: z.enum(["continuous_individual", "same_spouses_joint"]).optional(), membershipUnchangedConfirmed: z.boolean().optional(),
+  returnMembership: z.enum(["continuous_individual", "same_spouses_joint", "changed_filing_unit"]).optional(), membershipUnchangedConfirmed: z.boolean().optional(),
+  filingUnitHistory: FilingUnitHistorySchema.optional(),
   primaryName: z.string().optional(), primaryTaxpayerIdLast4: z.string().optional(),
   spouseName: z.string().optional(), spouseTaxpayerIdLast4: z.string().optional(),
   vintages: z.array(z.object({
@@ -13,8 +15,18 @@ export const CharitableCarryoverSourcesSchema = z.object({
     medium: z.enum(["cash", "noncash"]).optional(), originalExcess: sourceAmount, originNolReduction: sourceAmount,
     openingCarryforward: sourceAmount, adjustedThroughTaxYear: z.number().int().optional(), allHistoryIncluded: z.boolean().optional(),
     ordinaryPercentageMethodConfirmed: z.boolean().optional(),
+    filingUnitOrigin: z.object({
+      returnSourceId: z.string().optional(),
+      separateComputations: z.array(z.object({
+        personId: z.string().optional(), originalExcess: sourceAmount, originNolReduction: sourceAmount,
+        sourceReference: z.string().optional(), ordinaryPercentageMethodConfirmed: z.boolean().optional(),
+      })).optional(),
+    }).optional(),
     history: z.array(z.object({ taxYear: z.number().int().optional(), treatedAsPaid: sourceAmount,
-      nolReduction: sourceAmount, sourceReference: z.string().optional() })).optional(),
+      nolReduction: sourceAmount, sourceReference: z.string().optional(),
+      filingUnitUses: z.array(z.object({ returnSourceId: z.string().optional(), treatedAsPaid: sourceAmount,
+        nolReduction: sourceAmount, sourceReference: z.string().optional() })).optional(),
+    })).optional(),
   })).optional(),
 });
 export type CharitableCarryoverSources = z.infer<typeof CharitableCarryoverSourcesSchema>;

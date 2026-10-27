@@ -143,5 +143,5 @@ export function updateNetOperatingLossSources(previous: NetOperatingLossData, pa
   return guidedSourceValuesChanged(previous, next) ? { ...next, sourceFactsConfirmed: null,
     ...(next.alternativeTax ? { alternativeTax: { ...next.alternativeTax, sourceFactsConfirmed: null,
       ...(next.alternativeTax.charitableCarryoverHistory ? { charitableCarryoverHistory: { ...next.alternativeTax.charitableCarryoverHistory, sourceFactsConfirmed: null,
-        ...(next.alternativeTax.charitableCarryoverHistory.alternativeCarryoverSources ? { alternativeCarryoverSources: { ...next.alternativeTax.charitableCarryoverHistory.alternativeCarryoverSources, sourceFactsConfirmed: null } } : {}) } } : {}) } } : {}) } : next;
+        ...(next.alternativeTax.charitableCarryoverHistory.alternativeCarryoverSources ? { alternativeCarryoverSources: { ...next.alternativeTax.charitableCarryoverHistory.alternativeCarryoverSources, sourceFactsConfirmed: null, ...(next.alternativeTax.charitableCarryoverHistory.alternativeCarryoverSources.filingUnitHistory ? { filingUnitHistory: { ...next.alternativeTax.charitableCarryoverHistory.alternativeCarryoverSources.filingUnitHistory, sourceFactsConfirmed: null } } : {}) } } : {}) } } : {}) } } : {}) } : next;
 }

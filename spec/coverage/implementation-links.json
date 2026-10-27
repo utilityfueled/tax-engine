@@ -42,6 +42,16 @@
       "note": "Original current and independent prior sources determine zero-benefit or one-affected-excess NOL carry, with actual guided sources and a source-bound 2025 review reference. Positive multiple-origin attribution and closed year/filing gates remain distinct."
     },
     {
+      "key": "federal/charitable-filing-unit-history",
+      "enginePath": "src/engine/forms/charitable-filing-unit-history.ts",
+      "packetPath": "src/pdf/mappings/2025/charitable-filing-unit-review.ts",
+      "testRefs": [
+        "tests/engine/forms/charitable-filing-unit-history.test.ts::derives the published first-separate-year allocation from original excesses",
+        "tests/pdf/charitable-filing-unit-review.test.ts::renders original ownership ratios and physical prior deduction without identifiers"
+      ],
+      "note": "Original filed ownership histories feed existing regular/AMT charitable methods. Source-bound review appendix preserves exact ratios and original years; traceability is not human or filing qualification."
+    },
+    {
       "key": "federal/charitable-k1-basis-release-nol",
       "enginePath": "src/engine/federal.ts",
       "packetPath": "src/pdf/mappings/2025/k1-charitable-review.ts",

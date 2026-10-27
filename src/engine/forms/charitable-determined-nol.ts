@@ -71,7 +71,9 @@ export function calculateDeterminedCharitableNol(params:{
     throw new Error('Determined charitable comparison must reconcile actual succeeding NOL carry');
   }
   const benefit=params.nolCarryforward.minus(comparison);
-  if(benefit.gt(0) && excessRows.length!==1) throw new Error('Positive charitable NOL benefit across multiple original excess sources requires its separate attribution method');
+  const pooledOrigins = excessRows[0]?.kind === 'prior'
+    ? sources[ledger].find(row => row.sourceId === excessRows[0].sourceId)?.filingUnitSources?.filter(row => d(row.openingBalance.numerator).gt(0)).length ?? 1 : 1;
+  if(benefit.gt(0) && (excessRows.length!==1 || pooledOrigins > 1)) throw new Error('Positive charitable NOL benefit across multiple original excess sources requires its separate attribution method');
   if(benefit.gt(0)) excessRows[0].reduction=Decimal.min(benefit,excessRows[0].tentativeExcess);
   for(const row of rows) {
     const remainder=row.tentativeExcess.minus(row.reduction);

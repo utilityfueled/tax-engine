@@ -8,12 +8,14 @@ import { d, sum, zeroFloor } from "@/utils/decimal.js";
 import { validateCharitableCarryoverSources, type CharitableCarryoverBalance } from "./charitable-carryover-source-validation.js";
 import { allocateCharitablePrivateMedia } from "./charitable-private-media.js";
 import { resolveCharitableNolOriginLimit, type CharitableNolOriginLimit } from "@/utils/charitable-nol-origins.js";
+import { charitableFilingUnitAmount } from '@/utils/charitable-filing-unit-ratios.js';
 const ZERO = d("0");
 type Medium = "cash" | "noncash";
 export type { CharitableCarryoverBalance } from "./charitable-carryover-source-validation.js";
 export interface CharitableCarryoverDetail {
   sourceId: string; taxYear: number; category: CharitableCategory; medium: Medium;
   amountAvailable: Decimal; treatedAsPaid: Decimal; amountUsed: Decimal; amountExpired: Decimal; amountRemaining: Decimal;
+  filingUnitSources?: CharitableCarryoverBalance['filingUnitSources'];
 }
 export interface CharitableCarryoverResult {
   currentCash: Decimal; currentNoncash: Decimal; priorDeduction: Decimal; priorCashDeduction: Decimal; priorNoncashDeduction: Decimal;
@@ -86,9 +88,11 @@ export function calculateCharitableCarryover(input: TaxYearInput, context: {
   const detail = records.map(row => {
     const remainder = row.amount.minus(row.used), expires = row.taxYear + 5 <= taxYear;
     return { sourceId: row.sourceId, taxYear: row.taxYear, category: row.category, medium: row.medium, amountAvailable: row.amount,
+      ...(row.filingUnitSources ? { filingUnitSources: row.filingUnitSources } : {}),
       treatedAsPaid: row.used, amountUsed: context.itemizes ? row.used : ZERO, amountExpired: expires ? remainder : ZERO, amountRemaining: expires ? ZERO : remainder };
   });
-  const carryforwards: CharitableCarryoverBalance[] = detail.filter(row => row.amountRemaining.gt(0)).map(row => ({ sourceId: row.sourceId, taxYear: row.taxYear, category: row.category, medium: row.medium, amount: row.amountRemaining }));
+  const carryforwards: CharitableCarryoverBalance[] = detail.filter(row => row.amountRemaining.gt(0)).map(row => ({ sourceId: row.sourceId, taxYear: row.taxYear, category: row.category, medium: row.medium, amount: row.amountRemaining,
+    ...(row.filingUnitSources ? { filingUnitSources: row.filingUnitSources } : {}) }));
   const newAmounts: [CharitableCategory, Medium, Decimal][] = [
     ["cash_60", "cash", raw.cashPublic.minus(g)], ["noncash_50", "noncash", raw.noncashPublic.minus(a)],
     ["capital_gain_30", "noncash", raw.capitalGainPublic.minus(c)], ["other_30", "cash", raw.cashPrivate.minus(privateCash)],
@@ -99,6 +103,12 @@ export function calculateCharitableCarryover(input: TaxYearInput, context: {
   const priorNoncashDeduction = sum(...detail.filter(row => row.medium === "noncash").map(row => row.amountUsed));
   const priorDeduction = priorCashDeduction.plus(priorNoncashDeduction), priorTreatedAsPaid = sum(...detail.map(row => row.treatedAsPaid));
   const audit = new AuditTrail();
+  for (const row of records) for (const source of row.filingUnitSources ?? []) audit.record('Charitable Filing History', source.sourceId,
+    'Original filed ownership history available to this return', charitableFilingUnitAmount([source.openingBalance]),
+    'Original joint excess allocated at first separate year; subsequent actual use and current pooled balance preserve source identity', {
+      'Contribution year': String(source.contributionYear), 'Exact opening ratio': `${source.openingBalance.numerator}/${source.openingBalance.denominator}`,
+      'Excluded ownership ratio': `${source.excludedBalance.numerator}/${source.excludedBalance.denominator}`,
+    });
   if (raw.cashPrivate.plus(raw.noncashPrivate).gt(0) || records.some(row => row.category === "other_30")) {
     audit.record("Charitable Carryover", "other-capacity", "Shared current and prior other-contribution ceiling", bCapacity,
       "Section170(B): current public capital property remains unreduced by C's30% cap; current B precedes prior B", {

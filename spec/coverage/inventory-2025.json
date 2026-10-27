@@ -352,6 +352,29 @@
       ]
     },
     {
+      "key": "federal/charitable-filing-unit-history",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.170A-10",
+      "specPath": "spec/federal/charitable-filing-unit-history.yaml",
+      "enginePath": "src/engine/forms/charitable-filing-unit-history.ts",
+      "packetPath": "src/pdf/mappings/2025/charitable-filing-unit-review.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/charitable-filing-unit-history.test.ts::derives the published first-separate-year allocation from original excesses",
+        "tests/pdf/charitable-filing-unit-review.test.ts::renders original ownership ratios and physical prior deduction without identifiers"
+      ],
+      "implementationNote": "Original filed ownership histories feed existing regular/AMT charitable methods. Source-bound review appendix preserves exact ratios and original years; traceability is not human or filing qualification.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/charitable-k1-basis-release-nol",
       "jurisdiction": "federal",
       "taxYear": 2025,

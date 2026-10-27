@@ -6,7 +6,7 @@ import type { TaxYearInput } from '@/models/inputs.js';
 import { validateCharitableCarryoverSources, type CharitableCarryoverBalance, type CharitableSourceValidationInput } from '@/engine/forms/charitable-carryover-source-validation.js';
 import { d } from './decimal.js';
 
-export type PriorCharitableNolSourceInput = Pick<TaxYearInput, 'donations' | 'scheduleK1' | 'k1CharitableSources' | 'cryptoIncome' | 'priorYear' | 'charitableCarryoverSources' | 'netOperatingLoss'>
+export type PriorCharitableNolSourceInput = Pick<TaxYearInput, 'standardDeductionFacts' | 'donations' | 'scheduleK1' | 'k1CharitableSources' | 'cryptoIncome' | 'priorYear' | 'charitableCarryoverSources' | 'netOperatingLoss'>
   & { taxpayer: CharitableSourceValidationInput['taxpayer'] };
 export interface PriorCharitableNolSources {
   regular: CharitableCarryoverBalance[];
@@ -29,7 +29,7 @@ export function hasPriorCharitableNolSources(input: PriorCharitableNolSourceInpu
 }
 
 /** Facts-only validation for the source collector; no invented income context. */
-export function validatePriorCharitableNolHistories(input: Pick<PriorCharitableNolSourceInput, 'taxpayer' | 'charitableCarryoverSources' | 'priorYear' | 'netOperatingLoss'>): Pick<PriorCharitableNolSources, 'regular' | 'alternative'> {
+export function validatePriorCharitableNolHistories(input: Pick<PriorCharitableNolSourceInput, 'taxpayer' | 'standardDeductionFacts' | 'charitableCarryoverSources' | 'priorYear' | 'netOperatingLoss'>): Pick<PriorCharitableNolSources, 'regular' | 'alternative'> {
   if (input.taxpayer.taxYear !== 2025) throw new Error('Prior charitable NOL sources require the separate2026 floor/vintage method');
   const history = input.netOperatingLoss?.alternativeTax?.charitableCarryoverHistory;
   if (history?.sourceTaxYear !== input.taxpayer.taxYear - 1 || !history.sourceReference?.trim()
@@ -39,8 +39,11 @@ export function validatePriorCharitableNolHistories(input: Pick<PriorCharitableN
   const regular = validateCharitableCarryoverSources(input);
   // The legacy return aggregate describes regular charity only. It is not an
   // AMT opening; the independent AMT packet validates its own exact history.
-  const alternative = validateCharitableCarryoverSources({ taxpayer: input.taxpayer, charitableCarryoverSources: history.alternativeCarryoverSources });
-  if (regular.length > 1 || alternative.length > 1) throw new Error('Prior charitable NOL requires one original category/medium/vintage per ledger; mixed attribution remains separate');
+  const alternative = validateCharitableCarryoverSources({ taxpayer: input.taxpayer, standardDeductionFacts: input.standardDeductionFacts, charitableCarryoverSources: history.alternativeCarryoverSources });
+  if (regular.length > 1 || alternative.length > 1 || [...regular, ...alternative].some(row =>
+    (row.filingUnitSources?.filter(source => d(source.openingBalance.numerator).gt(0)).length ?? 1) > 1)) {
+    throw new Error('Prior charitable NOL requires one original category/medium/vintage per ledger; mixed attribution remains separate');
+  }
   if (regular[0] && alternative[0] && (regular[0].taxYear !== alternative[0].taxYear || regular[0].category !== alternative[0].category || regular[0].medium !== alternative[0].medium)) {
     throw new Error('Prior charitable regular and alternative sources must retain the same original year category and medium');
   }
@@ -62,7 +65,7 @@ export function readPriorCharitableNolSources(input: PriorCharitableNolSourceInp
     || (input.cryptoIncome?.donations.length ?? 0) > 0) throw new Error('Prior charitable NOL method requires no current gifts; mixed current and prior sources remain separate');
   const history = input.netOperatingLoss?.alternativeTax?.charitableCarryoverHistory;
   const sourceDigest = bytesToHex(sha256(new TextEncoder().encode(JSON.stringify({
-    taxpayer: input.taxpayer, regular: input.charitableCarryoverSources, history,
+    taxpayer: input.taxpayer, standardDeductionFacts: input.standardDeductionFacts, regular: input.charitableCarryoverSources, history,
     legacy: input.priorYear && { aggregate: input.priorYear.charitableCarryforward, rows: input.priorYear.charitableCarryforwardByYear },
     current: input.donations, k1: input.scheduleK1.map(row => [row.charitableCash, row.charitableCapitalGain30, row.charitableCapitalGain20]),
   }))));

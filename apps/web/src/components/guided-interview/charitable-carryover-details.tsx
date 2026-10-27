@@ -2,6 +2,7 @@
 
 import { updateCharitableCarryoverSources, type CharitableCarryoverData, type CharitableCarryoverVintageData, type CharitableCarryoverHistoryData } from '@/lib/guided-charitable-carryover';
 import { BooleanFact, TextFact } from './fact-fields';
+import { CharitableFilingUnitDetails, CharitableFilingUnitOrigin, CharitableFilingUnitUses } from './charitable-filing-unit-details';
 import { CurrencyField } from './currency-field';
 
 function Choice({ label, value, options, onChange }: { label: string; value?: string; options: [string, string][]; onChange: (value: string) => void }) {
@@ -22,14 +23,14 @@ export function CharitableCarryoverDetails({ data, onChange }: { data?: Charitab
   });
   return <details className="guided-expand"><summary className="guided-expand-trigger">Charitable contributions carried from earlier years</summary><div className="guided-expand-body">
     <p className="guided-hint">Use the original contribution worksheets and every intervening return, including years when you took the standard deduction. Keep earlier contributions separate from this year&apos;s gifts.</p>
-    <p className="guided-hint">Enter the actual opening balance and its history. The return calculates this year&apos;s deduction, amounts treated as paid, and remaining carryover. Ownership changes, special elections and conservation contributions require their separate methods.</p>
+    <p className="guided-hint">Enter the actual opening balance and its history. The return calculates this year&apos;s deduction, amounts treated as paid, and remaining carryover. For a changed filing unit, attach the original people, returns and ownership computations below. Special elections and conservation contributions require their separate methods.</p>
     {!data ? <button type="button" className="utility-button" onClick={() => onChange({})}>Add charitable carryover sources</button> : <>
       <div className="guided-form-grid">
         <TextFact label="Charitable carryover source tax year" value={data.sourceTaxYear ?? ''} onChange={sourceTaxYear => change({ sourceTaxYear })} />
         <TextFact label="Charitable carryover packet reference" value={data.sourceReference ?? ''} onChange={sourceReference => change({ sourceReference })} />
         <Choice label="Charitable carryover return membership" value={data.returnMembership} options={[
-          ['continuous_individual', 'Same individual throughout the history'], ['same_spouses_joint', 'Same spouses filing jointly throughout the history'],
-        ]} onChange={value => change({ returnMembership: value === 'continuous_individual' || value === 'same_spouses_joint' ? value : undefined })} />
+          ['continuous_individual', 'Same individual throughout the history'], ['same_spouses_joint', 'Same spouses filing jointly throughout the history'], ['changed_filing_unit', 'Marriage, separation, remarriage or death changed the filing unit'],
+        ]} onChange={value => change({ returnMembership: value === 'continuous_individual' || value === 'same_spouses_joint' || value === 'changed_filing_unit' ? value : undefined })} />
         {([
           ['primaryName', 'Primary taxpayer name on the original records'], ['primaryTaxpayerIdLast4', 'Primary taxpayer SSN last four on the original records'],
           ['spouseName', 'Spouse name on joint original records'], ['spouseTaxpayerIdLast4', 'Spouse SSN last four on joint original records'],
@@ -39,6 +40,7 @@ export function CharitableCarryoverDetails({ data, onChange }: { data?: Charitab
           ['membershipUnchangedConfirmed', 'The taxpayer or joint spouses are unchanged throughout the history'],
         ] as const).map(([key, label]) => <BooleanFact key={key} label={label} value={data[key]} onChange={value => change({ [key]: value })} />)}
       </div>
+      {data.returnMembership === 'changed_filing_unit' && <CharitableFilingUnitDetails data={data.filingUnitHistory} onChange={filingUnitHistory => change({ filingUnitHistory })} />}
       {data.vintages === undefined && <p role="status">The prior contribution history is unknown.</p>}
       {data.vintages?.length === 0 && <p>Explicitly recorded: no prior charitable carryovers.</p>}
       {(data.vintages ?? []).map((row, index) => {
@@ -63,6 +65,10 @@ export function CharitableCarryoverDetails({ data, onChange }: { data?: Charitab
           <BooleanFact label={`${prefix} ordinary percentage method confirmed`} value={row.ordinaryPercentageMethodConfirmed} onChange={ordinaryPercentageMethodConfirmed => vintage(index, { ordinaryPercentageMethodConfirmed })} />
           <BooleanFact label={`${prefix} all intervening history included`} value={row.allHistoryIncluded} onChange={allHistoryIncluded => vintage(index, { allHistoryIncluded })} />
         </div>
+          {data.returnMembership === 'changed_filing_unit' && <>
+            <p className="guided-hint">The opening balance is derived from the original timeline. An optional recorded opening is checked against that result; it cannot replace the calculation.</p>
+            <CharitableFilingUnitOrigin timeline={data.filingUnitHistory} data={row.filingUnitOrigin} number={index + 1} onChange={filingUnitOrigin => vintage(index, { filingUnitOrigin })} />
+          </>}
           <p className="guided-hint">Record each year after the contribution through last year. Amount treated as paid includes any required absorption in a standard-deduction year. Enter known zero amounts explicitly.</p>
           {row.history === undefined && <p role="status">The intervening-year history is unknown.</p>}
           {row.history?.length === 0 && <p>Explicitly recorded: no intervening years.</p>}
@@ -73,7 +79,7 @@ export function CharitableCarryoverDetails({ data, onChange }: { data?: Charitab
               <TextFact label={`${label} source reference`} value={entry.sourceReference ?? ''} onChange={sourceReference => history(index, historyIndex, { sourceReference })} />
               <CurrencyField label={`${label} treated as paid`} value={entry.treatedAsPaid ?? ''} onChange={treatedAsPaid => history(index, historyIndex, { treatedAsPaid })} />
               <CurrencyField label={`${label} NOL reduction`} value={entry.nolReduction ?? ''} onChange={nolReduction => history(index, historyIndex, { nolReduction })} />
-            </div><button type="button" className="utility-button" onClick={() => vintage(index, { history: row.history?.filter((_, i) => i !== historyIndex) })}>Remove contribution {index + 1} history {historyIndex + 1}</button></fieldset>;
+            </div>{data.returnMembership === 'changed_filing_unit' && <CharitableFilingUnitUses timeline={data.filingUnitHistory} data={entry.filingUnitUses} number={index + 1} historyNumber={historyIndex + 1} onChange={filingUnitUses => history(index, historyIndex, { filingUnitUses })} />}<button type="button" className="utility-button" onClick={() => vintage(index, { history: row.history?.filter((_, i) => i !== historyIndex) })}>Remove contribution {index + 1} history {historyIndex + 1}</button></fieldset>;
           })}
           <button type="button" className="utility-button" onClick={() => vintage(index, { history: [...(row.history ?? []), {}] })}>Add intervening year for contribution {index + 1}</button>
           <button type="button" className="utility-button" onClick={() => vintage(index, { history: [] })}>Record no intervening years for contribution {index + 1}</button>

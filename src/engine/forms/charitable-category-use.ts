@@ -11,6 +11,7 @@ import { readCurrentCharitableReceiptAmounts } from '@/utils/charitable-current-
 import { AuditTrail } from '@/utils/audit.js';
 import { d, sum, zeroFloor } from '@/utils/decimal.js';
 import { resolveCharitableNolOriginLimit, type CharitableNolOriginLimit } from '@/utils/charitable-nol-origins.js';
+import { charitableFilingUnitAmount } from '@/utils/charitable-filing-unit-ratios.js';
 
 export interface CharitableCategoryUseResult {
   contributionBase: Decimal;
@@ -99,11 +100,13 @@ export function calculateCharitableCategoryUse(input: TaxYearInput, context: {
   const detail = records.map(row => {
     const remainder = row.amount.minus(row.treatedAsPaid), expires = row.taxYear + 5 <= taxYear;
     return { sourceId:row.sourceId, taxYear:row.taxYear, category:row.category, medium:row.medium,
+      ...(row.filingUnitSources ? { filingUnitSources: row.filingUnitSources } : {}),
       amountAvailable:row.amount, treatedAsPaid:row.treatedAsPaid, amountUsed:zero,
       amountExpired:expires ? remainder : zero, amountRemaining:expires ? zero : remainder };
   });
   const carryforwards: CharitableCarryoverBalance[] = detail.filter(row => row.amountRemaining.gt(0)).map(row => ({
     sourceId:row.sourceId, taxYear:row.taxYear, category:row.category, medium:row.medium, amount:row.amountRemaining,
+    ...(row.filingUnitSources ? { filingUnitSources: row.filingUnitSources } : {}),
   }));
   const newAmounts: [CharitableCategory, 'cash' | 'noncash', Decimal][] = [
     ['cash_60','cash',raw.cashPublic.minus(g)], ['noncash_50','noncash',raw.noncashPublic.minus(a)],
@@ -114,6 +117,12 @@ export function calculateCharitableCategoryUse(input: TaxYearInput, context: {
     sourceId:`current-${category}-${medium}`, taxYear, category, medium, amount:value,
   });
   const audit = new AuditTrail();
+  for (const row of records) for (const source of row.filingUnitSources ?? []) audit.record('Charitable Filing History', source.sourceId,
+    'Original filed ownership history available to this return', charitableFilingUnitAmount([source.openingBalance]),
+    'Original allocation and source histories retained independently of current floor and deduction choice', {
+      'Contribution year': String(source.contributionYear), 'Exact opening ratio': `${source.openingBalance.numerator}/${source.openingBalance.denominator}`,
+      'Excluded ownership ratio': `${source.excludedBalance.numerator}/${source.excludedBalance.denominator}`,
+    });
   audit.record('Charitable Category Use','base','Actual nonnegative contribution base',base,
     'Percentage limits retain exact source values before the actual floor and deduction choice');
   audit.record('Charitable Category Use','other-capacity','Shared current and prior other-gift capacity',bCapacity,

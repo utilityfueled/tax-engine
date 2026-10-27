@@ -30,7 +30,7 @@ export interface CharitableNolOriginLimit {
   method:'determined_origins'; ledger:Ledger; sourceDigest:string;
   rows:Array<Omit<CharitableNolOrigin,'amount'> & { retainedAmount:Decimal }>;
 }
-type HistoryInput = Pick<TaxYearInput,'netOperatingLoss'|'priorYear'|'charitableCarryoverSources'> & { taxpayer:CharitableSourceValidationInput['taxpayer'] };
+type HistoryInput = Pick<TaxYearInput,'standardDeductionFacts'|'netOperatingLoss'|'priorYear'|'charitableCarryoverSources'> & { taxpayer:CharitableSourceValidationInput['taxpayer'] };
 
 /** A new current loss does not itself trigger the carried-NOL charity reduction.
  * Complete original histories use the established old-carry comparison first;
@@ -69,7 +69,7 @@ export function validateCharitableNolOriginHistories(input:HistoryInput): Pick<C
     throw new Error('Charitable NOL origins require complete independent regular and alternative source histories');
   }
   const regular=validateCharitableCarryoverSources(input);
-  const alternative=validateCharitableCarryoverSources({ taxpayer:input.taxpayer,charitableCarryoverSources:history.alternativeCarryoverSources });
+  const alternative=validateCharitableCarryoverSources({ taxpayer:input.taxpayer,standardDeductionFacts:input.standardDeductionFacts,charitableCarryoverSources:history.alternativeCarryoverSources });
   for (const [records,summary] of [[regular,history.priorRegularCarryovers],[alternative,history.priorAlternativeCarryovers]] as const) {
     if (summary===undefined) continue;
     const remaining=[...records];

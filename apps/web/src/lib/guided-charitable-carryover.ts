@@ -4,12 +4,17 @@ import type { FilingStatus, PersonalInfoData } from './guided-interview-flow';
 import { parseGuidedCurrency } from './guided-currency';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
 
-type Editable<T> = { [K in keyof T]: T[K] extends boolean | undefined ? boolean | null | undefined
-  : T[K] extends number | undefined ? string | undefined : T[K] };
+type Editable<T> = { [K in keyof T]: NonNullable<T[K]> extends boolean ? boolean | null | undefined
+  : NonNullable<T[K]> extends number ? string | undefined
+  : NonNullable<T[K]> extends Array<infer Item> ? Editable<Item>[] | undefined
+  : NonNullable<T[K]> extends object ? Editable<NonNullable<T[K]>> | undefined : T[K] };
 type OriginalVintage = NonNullable<CharitableCarryoverSources['vintages']>[number];
 export type CharitableCarryoverHistoryData = Editable<NonNullable<OriginalVintage['history']>[number]>;
 export type CharitableCarryoverVintageData = Editable<Omit<OriginalVintage, 'history'>> & { history?: CharitableCarryoverHistoryData[] };
 export type CharitableCarryoverData = Editable<Omit<CharitableCarryoverSources, 'vintages'>> & { vintages?: CharitableCarryoverVintageData[] };
+export type CharitableFilingUnitHistoryData = NonNullable<CharitableCarryoverData['filingUnitHistory']>;
+export type CharitableFilingUnitPersonData = NonNullable<CharitableFilingUnitHistoryData['persons']>[number];
+export type CharitableFilingUnitReturnData = NonNullable<CharitableFilingUnitHistoryData['returns']>[number];
 const statuses = { single: 'single', mfj: 'married_filing_jointly', mfs: 'married_filing_separately', hoh: 'head_of_household', qss: 'qualifying_surviving_spouse' } as const;
 function year(value: string | undefined, label: string): number {
   if (!value || !/^\d{4}$/.test(value)) throw new Error(`Enter the actual ${label}.`);
@@ -32,20 +37,48 @@ export function buildGuidedCharitableCarryover(data: CharitableCarryoverData | u
     allCarryoversIncluded: data.allCarryoversIncluded ?? undefined, calendarYearTaxpayer: data.calendarYearTaxpayer ?? undefined,
     membershipUnchangedConfirmed: data.membershipUnchangedConfirmed ?? undefined,
     spouseName: data.spouseName?.trim() || undefined, spouseTaxpayerIdLast4: data.spouseTaxpayerIdLast4?.trim() || undefined,
+    ...(data.filingUnitHistory ? { filingUnitHistory: { ...data.filingUnitHistory,
+      sourceFactsConfirmed: data.filingUnitHistory.sourceFactsConfirmed ?? undefined,
+      allRelevantReturnsIncluded: data.filingUnitHistory.allRelevantReturnsIncluded ?? undefined,
+      allRelevantCarryoversIncluded: data.filingUnitHistory.allRelevantCarryoversIncluded ?? undefined,
+      persons: data.filingUnitHistory.persons?.map(person => ({ ...person,
+        deathYear: person.deathYear?.trim() ? year(person.deathYear, 'actual death year') : undefined,
+      })),
+      returns: data.filingUnitHistory.returns?.map(unit => ({ ...unit, taxYear: year(unit.taxYear, 'filed return year'),
+        spousePersonId: unit.spousePersonId?.trim() || undefined, finalReturnForDeceased: unit.finalReturnForDeceased ?? undefined,
+      })),
+    } } : {}),
     vintages: data.vintages.map(row => {
       if (!Array.isArray(row.history)) throw new Error('Enter every actual intervening year, or explicitly record no intervening years.');
       return { ...row, contributionYear: year(row.contributionYear, 'original contribution year'),
         originalExcess: amount(row.originalExcess, 'original excess'), originNolReduction: amount(row.originNolReduction, 'origin NOL reduction'),
-        openingCarryforward: amount(row.openingCarryforward, 'opening carryforward'),
+        openingCarryforward: data.returnMembership === 'changed_filing_unit' && !row.openingCarryforward?.trim()
+          ? undefined : amount(row.openingCarryforward, 'opening carryforward'),
         adjustedThroughTaxYear: year(row.adjustedThroughTaxYear, 'history adjusted-through year'),
         allHistoryIncluded: row.allHistoryIncluded ?? undefined, ordinaryPercentageMethodConfirmed: row.ordinaryPercentageMethodConfirmed ?? undefined,
+        ...(row.filingUnitOrigin ? { filingUnitOrigin: { ...row.filingUnitOrigin,
+          separateComputations: row.filingUnitOrigin.separateComputations?.map(computation => ({ ...computation,
+            originalExcess: amount(computation.originalExcess, 'separately computed original excess'),
+            originNolReduction: amount(computation.originNolReduction, 'separately computed original NOL reduction'),
+            ordinaryPercentageMethodConfirmed: computation.ordinaryPercentageMethodConfirmed ?? undefined,
+          })),
+        } } : {}),
         history: row.history.map(entry => ({ ...entry, taxYear: year(entry.taxYear, 'intervening tax year'),
-          treatedAsPaid: amount(entry.treatedAsPaid, 'amount treated as paid'), nolReduction: amount(entry.nolReduction, 'intervening NOL reduction') })),
+          treatedAsPaid: amount(entry.treatedAsPaid, 'amount treated as paid'), nolReduction: amount(entry.nolReduction, 'intervening NOL reduction'),
+          ...(entry.filingUnitUses ? { filingUnitUses: entry.filingUnitUses.map(use => ({ ...use,
+            treatedAsPaid: amount(use.treatedAsPaid, 'filed return amount treated as paid'), nolReduction: amount(use.nolReduction, 'filed return NOL reduction'),
+          })) } : {}),
+        })),
       };
     }),
   });
   const middleInitial = personal.middleName?.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase();
-  const input: CharitableSourceValidationInput = { charitableCarryoverSources: facts, taxpayer: {
+  const deathFacts = personal.standardDeductionFacts;
+  const input: CharitableSourceValidationInput = { charitableCarryoverSources: facts,
+    standardDeductionFacts: {
+      primaryDeathDate: deathFacts?.primaryDeceased === false ? null : deathFacts?.primaryDeathDate?.trim() || undefined,
+      ...(filingStatus === 'mfj' ? { spouseDeathDate: deathFacts?.spouseDeceased === false ? null : deathFacts?.spouseDeathDate?.trim() || undefined } : {}),
+    }, taxpayer: {
     taxYear, filingStatus: statuses[filingStatus],
     primary: { firstName: [personal.firstName.trim(), middleInitial].filter(Boolean).join(' '), lastName: personal.lastName, ssn: personal.ssn },
     ...(filingStatus === 'mfj' && personal.spouse ? { spouse: {
@@ -62,5 +95,7 @@ export function charitableCarryoverFactErrors(data: CharitableCarryoverData | un
 }
 export function updateCharitableCarryoverSources(previous: CharitableCarryoverData, patch: Partial<CharitableCarryoverData>): CharitableCarryoverData {
   const next = { ...previous, ...patch };
-  return guidedSourceValuesChanged(previous, next) ? { ...next, sourceFactsConfirmed: null } : next;
+  return guidedSourceValuesChanged(previous, next) ? { ...next, sourceFactsConfirmed: null,
+    ...(next.filingUnitHistory ? { filingUnitHistory: { ...next.filingUnitHistory, sourceFactsConfirmed: null } } : {}),
+  } : next;
 }

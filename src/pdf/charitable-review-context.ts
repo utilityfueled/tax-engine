@@ -33,7 +33,7 @@ function freeze<T>(value: T): T {
 }
 
 function sourceDigest(input: TaxYearInput, redacted = false): string {
-  if (input.k1CharitableSources || requiresCharitableNolReview(input)) return digest(redacted ? redactReviewIdentifiers(input) : input);
+  if (input.k1CharitableSources || requiresCharitableNolReview(input) || requiresCharitableFilingHistoryReview(input)) return digest(redacted ? redactReviewIdentifiers(input) : input);
   const projection = { taxpayer: input.taxpayer, charitableCarryoverSources: input.charitableCarryoverSources,
     priorCharitableCarryforward: input.priorYear?.charitableCarryforward,
     priorCharitableCarryforwardByYear: input.priorYear?.charitableCarryforwardByYear,
@@ -66,6 +66,13 @@ export function requiresCharitableNolReview(input: TaxYearInput, result?: TaxRet
     || requiresCurrentCharitableOriginReview(input, result);
 }
 
+/** Retained ownership calculations still require the original filing timeline. */
+export function requiresCharitableFilingHistoryReview(input: TaxYearInput, result?: TaxReturnResult): boolean {
+  return input.charitableCarryoverSources?.returnMembership === 'changed_filing_unit'
+    || input.netOperatingLoss?.alternativeTax?.charitableCarryoverHistory?.alternativeCarryoverSources?.returnMembership === 'changed_filing_unit'
+    || !!result?.allLines.some(row => row.form.startsWith('Charitable Filing History'));
+}
+
 /** Retained basis/activity allocation cannot be detached from its originals. */
 export function requiresK1CharitableReview(input: TaxYearInput, result?: TaxReturnResult): boolean {
   return input.k1CharitableSources !== undefined || result?.carryforwards.k1AtRiskByCharacter !== undefined
@@ -82,7 +89,7 @@ export function prepareCharitableReview(input: TaxYearInput): PreparedCharitable
     if (requiresOriginalCharitableNolReview(input)) readCurrentCharitableSourceForNol(input);
   }
   if (requiresCurrentCharitableOriginReview(input)) calculateForm172CharitableSources(input);
-  const calculation = input.k1CharitableSources || requiresCharitableNolReview(input) ? calculateFederalTax(input) : undefined;
+  const calculation = input.k1CharitableSources || requiresCharitableNolReview(input) || requiresCharitableFilingHistoryReview(input) ? calculateFederalTax(input) : undefined;
   const token: PreparedCharitableReview = Object.freeze({ [brand]: true as const });
   prepared.set(token, { originalDigest: sourceDigest(input), redactedDigest: sourceDigest(input, true),
     ...(calculation ? { original: freeze(structuredClone(input)), calculationDigest: calculationDigest(calculation) } : {}),
@@ -113,6 +120,9 @@ export function assertCharitableReviewSource(input: TaxYearInput, token?: Prepar
 /** A private clone is used only for source validation, never for rendering IDs.
  * The retained output is compared with an independent original calculation. */
 export function charitableReviewOriginalSourceInput(input: TaxYearInput, result: TaxReturnResult, token?: PreparedCharitableReview): TaxYearInput {
+  if (requiresCharitableFilingHistoryReview(input, result) && !requiresCharitableFilingHistoryReview(input)) {
+    throw new Error('Charitable filing-history review requires its original ownership and filed source attachment');
+  }
   if (requiresK1CharitableReview(input, result) && !input.k1CharitableSources) {
     throw new Error('K1 charitable review requires its original source attachment and activity history');
   }
@@ -126,7 +136,7 @@ export function charitableReviewOriginalSourceInput(input: TaxYearInput, result:
     || !(input.donations.length || hasOriginalCharitableNolSources(input) || hasPriorCharitableNolSources(input)))) {
     throw new Error("Current charitable origin review requires its retained original contribution and origin sources");
   }
-  const actual = token ?? (input.k1CharitableSources || requiresCharitableNolReview(input, result) ? prepareCharitableReview(input) : undefined);
+  const actual = token ?? (input.k1CharitableSources || requiresCharitableNolReview(input, result) || requiresCharitableFilingHistoryReview(input, result) ? prepareCharitableReview(input) : undefined);
   assertCharitableReviewSource(input, actual);
   const context = actual ? prepared.get(actual) : undefined;
   if (context?.calculationDigest !== undefined && calculationDigest(result) !== context.calculationDigest) {
