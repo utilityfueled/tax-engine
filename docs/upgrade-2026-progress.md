@@ -21,10 +21,31 @@ steps passed; its SBOM, scan and artifact upload were skipped. See the
 [exact CI record](upgrade-2026-ci-25f71f06.json). This is an intermediate commit,
 not final evidence for later monthly, charity, educator or outside-child changes.
 
-The last complete retained native runtime remains `87e37df0`, with all six
-recovery phases and 67 OS advisories pending owner review. A fresh package audit
-reports zero advisories. Final integrated checks, final images/scans, staging,
-human review, filing and model-promotion requirements remain open.
+Newer `31812714` passes all 19,587 tests in 1,406 files both normally and
+under coverage, all static/build checks and both 500-case browser runs. Each
+browser run retains five hosted-only skips. The unchanged coverage rerun reaches
+91.90% statements, 86.98% branches, 90.79% functions and 94.63% lines; independent
+recounting of the downloaded artifact agrees with the report. Every unchanged
+threshold passes. The first attempt's seven five-second timeouts are retained;
+no deadline, assertion or coverage threshold changed.
+
+The [verified native amd64 runtime](upgrade-2026-runtime-31812714.json) passes
+all six recovery phases, preserving nine database tables, exact billing values,
+two synthetic tenants, browser facts and original document bytes. Its 157 scan
+matches comprise the same exact 67 OS advisories as the earlier scan, with no
+critical, npm or fixed-version matches. Owner acceptance remains pending.
+The [October 27 public refresh](upgrade-2026-source-refresh-20261027.md) retains
+75 successful responses and four HTTP failures; final-form and provider-account
+qualification remain separate. Final integrated checks, native images/scans,
+staging, human review, filing and model-promotion requirements remain open.
+
+Charitable COD V4 now passes 1,205 affected tests and independent source/original
+PDF reviews, including completed payment-source browser downloads; final main
+rebase is active. Changed NOL filing histories have separate independent reviews
+and follow that integration. Actual-paid health expense sources pass bounded
+physical review; complete payment-source guide examples and actual downloads are
+being verified before adoption. The finite source-method audit keeps concrete
+internal work separate from the unresolved tax-interpretation questions.
 
 | Delivered package | Commit | Bounded verification |
 | --- | --- | --- |
