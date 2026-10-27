@@ -3,6 +3,7 @@ import type { Form7206Input } from "@/models/inputs";
 import { calculateSharedMarketplaceHealthSources } from "@/engine/forms/shared-marketplace-health";
 import { calculateMarketplaceMarriageHealthSources } from "@/engine/forms/marketplace-marriage-health-sources";
 import { calculateMarketplaceActualCashSources } from "@/engine/forms/marketplace-actual-cash-health";
+import { calculateMarketplaceActualPaidSources } from "@/engine/forms/marketplace-actual-paid-sources";
 import { calculateMarketplaceCoverageFamilyHealth } from "@/engine/forms/marketplace-coverage-family-health";
 import { resolveGuidedSharedPolicy, guidedMarketplaceHousehold } from "./guided-shared-policy";
 import type { GuidedFlowState } from "./guided-interview-flow";
@@ -37,13 +38,17 @@ export function validateMarketplaceHealthSources(state: GuidedFlowState, health:
   if (!shared && plans.some(plan => plan.sharedMarketplaceSources)) throw new Error("Shared health source links conflict with the actual policy allocation answer.");
   const originalShared = shared ? resolveGuidedSharedPolicy(state.sectionData.credits!.premiumTaxCredit!, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], normalized).sourceInput : undefined;
   const sharedPlans = originalShared ? calculateSharedMarketplaceHealthSources({ ...originalShared, form8962: coverage.form8962, form7206: normalized }) : undefined;
-  const families = normalized?.plans?.some(plan => plan.coverageFamilySources) ? calculateMarketplaceCoverageFamilyHealth({
-    ...guidedMarketplaceHousehold(state.sectionData['personal-info'], state.segmentation.filingStatus, state.taxYear), form1095A: coverage.form1095A, form8962: coverage.form8962, form7206: normalized,
-  }, 'source-only') : undefined;
-  const actualCash = families ? calculateMarketplaceActualCashSources({
+  const originalSource = {
     ...guidedMarketplaceHousehold(state.sectionData['personal-info'], state.segmentation.filingStatus, state.taxYear),
     form1095A: coverage.form1095A, form8962: coverage.form8962, form7206: normalized,
-  }) : undefined;
+  };
+  // Actual payments can be collected before income determines the final credit.
+  // This only validates sources; the canonical return must separately prove its
+  // completed zero credit and full reported own-return repayment.
+  const actualPaid = calculateMarketplaceActualPaidSources(originalSource);
+  const families = normalized?.plans?.some(plan => plan.coverageFamilySources)
+    ? calculateMarketplaceCoverageFamilyHealth(originalSource, actualPaid ? 'actual-paid-candidate' : 'source-only') : undefined;
+  const actualCash = families && !actualPaid ? calculateMarketplaceActualCashSources(originalSource) : undefined;
   const used = new Set<string>();
   const totals = new Map<number, { premium: Decimal; advance: Decimal }>();
   for (const plan of plans) {
@@ -64,7 +69,7 @@ export function validateMarketplaceHealthSources(state: GuidedFlowState, health:
     const payments = new Map<number, { premium: Decimal; advance: Decimal }>();
     for (const payment of plan.payments) {
       if (payment.coverageTaxYear !== String(state.taxYear) || !payment.datePaid.startsWith(`${state.taxYear}-`) || !/^(?:[1-9]|1[0-2])$/.test(payment.coverageMonth)) throw new Error("Marketplace health premiums require actual current-year payment and coverage dates; other timing requires a separate worksheet.");
-      if ((!sharedPlan && !actualCash?.some(row => row.planId === plan.planId) && !amount(payment.otherPersonPaid).isZero()) || payment.personAmounts.some(person => !amount(person.otherTaxFreeFunding).isZero() || !amount(person.excludedPublicSafetyOfficerAmount).isZero())) throw new Error("Marketplace outside-payer or separate tax-free funding requires its actual deduction allocation worksheet.");
+      if ((!sharedPlan && !actualCash?.some(row => row.planId === plan.planId) && !actualPaid?.months.some(row => row.planId === plan.planId) && !amount(payment.otherPersonPaid).isZero()) || payment.personAmounts.some(person => !amount(person.otherTaxFreeFunding).isZero() || !amount(person.excludedPublicSafetyOfficerAmount).isZero())) throw new Error("Marketplace outside-payer or separate tax-free funding requires its actual deduction allocation worksheet.");
       const month = Number(payment.coverageMonth), sum = payments.get(month) ?? { premium: new Decimal(0), advance: new Decimal(0) };
       sum.premium = sum.premium.plus(amount(payment.grossPremium)); sum.advance = sum.advance.plus(amount(payment.advancePremiumTaxCredit)); payments.set(month, sum);
     }

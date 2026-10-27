@@ -1032,6 +1032,16 @@
       "note": "Actual cash, allocated premium pools and final zero credit are independently bound. This derived sufficient method does not attribute positive credit/repayment, remove outside-person or marriage boundaries, or establish filing qualification."
     },
     {
+      "key": "federal/marketplace-actual-paid-repayment",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-actual-paid-repayment.test.ts::uses actual owner cash and only the fully repaid own-return advances",
+        "tests/pdf/marketplace-actual-paid-review.test.ts::prints actual payer repayment with private source and result binding"
+      ],
+      "note": "Actual original cash and own-return advance repayment require final return proof and own-business limits; private 2025 review keeps source and reported cents separate. This association does not qualify 2026 forms or filing."
+    },
+    {
       "key": "federal/marketplace-business-credit-method",
       "enginePath": "src/engine/forms/marketplace-health-deduction.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",

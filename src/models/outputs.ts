@@ -269,6 +269,7 @@ export interface TaxReturnResult {
   form7206?: ReturnType<typeof import("@/engine/forms/form-7206-return.js").calculateForm7206Return>["form7206"];
   marketplaceReportedRepaymentHealth?: import("@/engine/forms/marketplace-reported-repayment-payment.js").MarketplaceReportedRepaymentPayment;
   marketplaceFullRepaymentHealth?: import("@/engine/forms/marketplace-full-advance-repayment.js").MarketplaceFullRepaymentHealthResult;
+  marketplaceActualPaidRepaymentHealth?: import("@/engine/forms/marketplace-actual-paid-repayment.js").MarketplaceActualPaidRepaymentResult;
   marketplaceActualCashHealth?: import("@/engine/forms/marketplace-actual-cash-health.js").MarketplaceActualCashHealthResult;
   marketplaceHealthInsurance?: import("@/engine/forms/marketplace-health-deduction.js").MarketplaceHealthDeductionResult & {
     step2Credit: Decimal; finalCredit: Decimal; maximumDeduction: Decimal;

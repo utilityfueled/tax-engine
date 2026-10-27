@@ -6392,6 +6392,50 @@
       ]
     },
     {
+      "key": "federal/marketplace-actual-paid-repayment",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.162(l)-1",
+      "specPath": "spec/federal/marketplace-actual-paid-repayment.yaml",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-marketplace-actual-paid-repayment.test.ts::uses actual owner cash and only the fully repaid own-return advances",
+        "tests/pdf/marketplace-actual-paid-review.test.ts::prints actual payer repayment with private source and result binding"
+      ],
+      "implementationNote": "Actual original cash and own-return advance repayment require final return proof and own-business limits; private 2025 review keeps source and reported cents separate. This association does not qualify 2026 forms or filing.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/marketplace-actual-paid-sources",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/marketplace-actual-paid-sources.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/marketplace-business-credit-method",
       "jurisdiction": "federal",
       "taxYear": 2026,

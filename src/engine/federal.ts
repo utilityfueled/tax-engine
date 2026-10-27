@@ -1,3 +1,5 @@
+import { calculateMarketplaceActualPaidRepayment, type MarketplaceActualPaidAdjustment } from "./forms/marketplace-actual-paid-repayment.js";
+import { calculateMarketplaceActualPaidSources } from "./forms/marketplace-actual-paid-sources.js";
 import { calculateMarketplaceActualCashSources, calculateMarketplaceActualCashHealth } from './forms/marketplace-actual-cash-health.js';
 import { calculateMarketplaceCoverageFamilySources } from "./forms/marketplace-coverage-family-sources.js";
 import { calculateMarketplaceReportedRepaymentPayment, type MarketplaceReportedRepaymentPayment } from "./forms/marketplace-reported-repayment-payment.js";
@@ -221,6 +223,14 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   if (!marketplace) return calculateFederalTaxWithNol(input);
   if (![2025,2026].includes(input.taxpayer.taxYear)) throw new Error("Marketplace health coordination supports actual2025 and2026 sources.");
   const familySources = calculateMarketplaceCoverageFamilySources(input);
+  if (calculateMarketplaceActualPaidSources(input)) {
+    const candidate = calculateFederalTaxWithNol(input, { stage: 'actual-paid' });
+    const payment = calculateMarketplaceActualPaidRepayment(input, candidate, 'candidate').reportedPayment;
+    const result = payment ? calculateFederalTaxWithNol(input, { stage: 'actual-paid', actualPaidAdjustment: payment }) : candidate;
+    result.marketplaceActualPaidRepaymentHealth = calculateMarketplaceActualPaidRepayment(input, result);
+    result.allLines.push(...result.marketplaceActualPaidRepaymentHealth.lines);
+    return result;
+  }
   if (calculateMarketplaceActualCashSources(input)) {
     const result = calculateFederalTaxWithNol(input, { stage: 'actual-cash' });
     result.marketplaceActualCashHealth = calculateMarketplaceActualCashHealth(input, result);
@@ -350,7 +360,7 @@ interface MarketplaceOrderedState {
   bond?: Form8815Result;
   studentLoan?: { result: ReturnType<typeof calculateStudentLoanInterestDeduction>; modifiedAgi: Decimal };
 }
-type MarketplaceContext = ({ stage: "actual-cash" } | { stage: "full-repayment"; reportedPayment?: MarketplaceReportedRepaymentPayment } | { stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult }
+type MarketplaceContext = ({ stage: "actual-paid"; actualPaidAdjustment?: MarketplaceActualPaidAdjustment } | { stage: "actual-cash" } | { stage: "full-repayment"; reportedPayment?: MarketplaceReportedRepaymentPayment } | { stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult }
   | { stage: "ordered"; deduction: MarketplaceHealthDeductionResult }
   | { stage: "final"; deduction: MarketplaceHealthDeductionResult }) & { ordered?: MarketplaceOrderedState; orderedDeductionInterim?: boolean };
 interface MarketplaceInterim {
@@ -360,12 +370,12 @@ interface MarketplaceInterim {
   deductions: Omit<MarketplaceOrderedState, "kinds" | "calculating">;
 }
 function calculateFederalTaxWithNol(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }): MarketplaceInterim;
-function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" | "full-repayment" | "actual-cash" }): TaxReturnResult;
+function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" | "full-repayment" | "actual-cash" | "actual-paid" }): TaxReturnResult;
 function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: MarketplaceContext): TaxReturnResult | MarketplaceInterim {
   if (input.form172 && !input.netOperatingLoss) throw new Error("Form172 requires the actual complete prior regular and separate AMT carry packet");
   const complete = (worksheet?: NetOperatingLossReturnResult): TaxReturnResult | MarketplaceInterim => {
     const context = worksheet ? { stage: "final" as const, deduction: worksheet.deduction, modified: false as const, worksheet } : undefined;
-    return marketplace && marketplace.stage !== "final" && marketplace.stage !== "full-repayment" && marketplace.stage !== "actual-cash"
+    return marketplace && marketplace.stage !== "final" && marketplace.stage !== "full-repayment" && marketplace.stage !== "actual-cash" && marketplace.stage !== "actual-paid"
       ? calculateFederalTaxCore(input, marketplace, undefined, context)
       : calculateFederalTaxCore(input, marketplace, undefined, context);
   };
@@ -390,10 +400,10 @@ type NolReturnContext = { stage: "income" | "alternative-income"; deduction: Dec
   | { stage: "final"; deduction: Decimal; modified: false; worksheet: NetOperatingLossReturnResult };
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "income" }): NolIncomeContext;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext | undefined, hypothetical: undefined, nol: NolReturnContext & { stage: "alternative-income" }): NolAlternativeIncomeContext;
-function calculateFederalTaxCore(input: TaxYearInput, marketplace: (MarketplaceContext & { stage: "final" | "full-repayment" | "actual-cash" }) | undefined, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }): TaxReturnResult;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace: (MarketplaceContext & { stage: "final" | "full-repayment" | "actual-cash" | "actual-paid" }) | undefined, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }): TaxReturnResult;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: undefined, hypothetical: ForeignTaxHypotheticalRequest): ForeignTaxHypotheticalContext;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace: MarketplaceContext & { stage: "worksheet-w" | "maximum" | "ordered" }, hypothetical?: undefined, nol?: NolReturnContext & { stage: "final" }): MarketplaceInterim;
-function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" | "full-repayment" | "actual-cash" }): TaxReturnResult;
+function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext & { stage: "final" | "full-repayment" | "actual-cash" | "actual-paid" }): TaxReturnResult;
 function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceContext, hypothetical?: ForeignTaxHypotheticalRequest, nol?: NolReturnContext): TaxReturnResult | MarketplaceInterim | ForeignTaxHypotheticalContext | NolIncomeContext | NolAlternativeIncomeContext {
   validateForeignTaxDeductionScope(input);
   const ordered = marketplace?.ordered;
@@ -2253,7 +2263,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     }
     audit.merge(form8815.lines);
   }
-  if (input.adjustments?.educatorExpenseSources?.length && (!marketplace || marketplace.stage === "final" || marketplace.stage === "full-repayment" || marketplace.stage === "actual-cash" || (educatorBondSources && form8815))) {
+  if (input.adjustments?.educatorExpenseSources?.length && (!marketplace || marketplace.stage === "final" || marketplace.stage === "full-repayment" || marketplace.stage === "actual-cash" || marketplace.stage === "actual-paid" || (educatorBondSources && form8815))) {
     const educatorExclusions = reconcileEducatorEducationExclusions({
       taxYear: year,
       filingStatus,
@@ -2340,7 +2350,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       ? "SE deduction + other adjustments + K-1 1041 §67(e) excess deductions"
       : "SE deduction + other adjustments");
 
-  if (marketplace && marketplace.stage !== "final" && marketplace.stage !== "full-repayment" && marketplace.stage !== "actual-cash" && (!nol || nol.stage === "final")) {
+  if (marketplace && marketplace.stage !== "final" && marketplace.stage !== "full-repayment" && marketplace.stage !== "actual-cash" && marketplace.stage !== "actual-paid" && (!nol || nol.stage === "final")) {
     if (!actualHealthInsurance?.marketplacePremiums) throw new Error("Pub974 source calculation is incomplete.");
     if (!nol && sum(d(input.priorYear?.nolCarryforward), d(input.priorYear?.excessBusinessLossNOL), k1Form1041FinalNOL).gt(0)) throw new Error("Pub974 NOL coordination requires the actual circular taxable-income worksheet.");
     const repaymentLimit = marketplace.stage === "maximum" ? marketplace.historicalLimit?.repaymentLimit
@@ -2983,7 +2993,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (nol?.stage === "alternative-income") return {
     ...calculateForm6251(amtIncomeInput(rawTaxableIncome, nol.deduction, d("0")), constants, { incomeOnly: true }), qbiDeduction,
   };
-  if (marketplace && marketplace.stage !== "final" && marketplace.stage !== "full-repayment" && marketplace.stage !== "actual-cash") throw new Error("Interim Marketplace income must return before final tax calculations.");
+  if (marketplace && marketplace.stage !== "final" && marketplace.stage !== "full-repayment" && marketplace.stage !== "actual-cash" && marketplace.stage !== "actual-paid") throw new Error("Interim Marketplace income must return before final tax calculations.");
 
   // ── IRC §172: Net Operating Loss Deduction ──────────────
   // For post-2017 NOLs, the deduction is limited to 80% of taxable income
@@ -3671,7 +3681,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       input, agi, taxExemptInterest, foreignIncomeReduction: form2555IncomeReduction,
       foreignHousingDeduction: form2555HousingDeduction,
       socialSecurityBenefitsGross, socialSecurityBenefitsTaxable,
-    }, marketplace?.stage === "actual-cash" ? { method: "ordinary-actual-cash-zero-credit", stage: "final" } : marketplace?.stage === "full-repayment" ? { method: marketplace.reportedPayment ? "ordinary-reported-advance-repayment" : "ordinary-full-advance-repayment", stage: "final" } : marketplace ? { method: marketplace.deduction.method === "pub974-alternative-reentry-2026" ? marketplace.deduction.method
+    }, marketplace?.stage === "actual-paid" ? { method: "ordinary-actual-paid-repayment", stage: "final" } : marketplace?.stage === "actual-cash" ? { method: "ordinary-actual-cash-zero-credit", stage: "final" } : marketplace?.stage === "full-repayment" ? { method: marketplace.reportedPayment ? "ordinary-reported-advance-repayment" : "ordinary-full-advance-repayment", stage: "final" } : marketplace ? { method: marketplace.deduction.method === "pub974-alternative-reentry-2026" ? marketplace.deduction.method
       : year === 2025 ? "pub974-simplified-2025" : "pub974-simplified-2026", stage: marketplace.stage,
       repaymentLimit: marketplace.deduction.method.startsWith("ordinary-no-ptc-") ? undefined : marketplace.deduction.historicalLimit?.repaymentLimit ?? undefined } : undefined);
     netPremiumTaxCredit = form8962.netPTC;

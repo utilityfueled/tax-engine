@@ -10,6 +10,7 @@ import { formatCurrency, loadReviewTemplate, setTextField } from "../../pdf-util
 import { assertMarketplaceHealthReviewSources } from "./form-7206-marketplace-source.js";
 import { calculateForm7206ReviewSources } from "./form-7206-business-source.js";
 import { calculateMarketplaceActualCashHealth } from "@/engine/forms/marketplace-actual-cash-health.js";
+import { calculateMarketplaceActualPaidRepayment } from "@/engine/forms/marketplace-actual-paid-repayment.js";
 import { calculateMarketplaceFullAdvanceRepayment } from "@/engine/forms/marketplace-full-advance-repayment.js";
 import { calculateMarketplaceReportedRepaymentPayment } from "@/engine/forms/marketplace-reported-repayment-payment.js";
 import { charitableReviewOriginalSourceInput, type PreparedCharitableReview } from "../../charitable-review-context.js";
@@ -35,14 +36,17 @@ function exact(value: unknown, label: string): Decimal {
 function reconcileSources(input: TaxYearInput, result: NonNullable<TaxReturnResult["form7206"]>, fullReturn: TaxReturnResult) {
   const marketplace = fullReturn.marketplaceHealthInsurance, fullRepayment = fullReturn.marketplaceFullRepaymentHealth;
   const reportedRepayment = fullReturn.marketplaceReportedRepaymentHealth, actualCash = fullReturn.marketplaceActualCashHealth;
+  const actualPaid = fullReturn.marketplaceActualPaidRepaymentHealth;
   const hasMarketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage && plan.premiumTaxCreditInvolved);
-  if ([marketplace, fullRepayment, reportedRepayment, actualCash].filter(Boolean).length !== (hasMarketplace ? 1 : 0)
-    || (!marketplace && !fullRepayment && !reportedRepayment && !actualCash && result.marketplaceHandling !== undefined)
+  if ([marketplace, fullRepayment, reportedRepayment, actualCash, actualPaid].filter(Boolean).length !== (hasMarketplace ? 1 : 0)
+    || (!marketplace && !fullRepayment && !reportedRepayment && !actualCash && !actualPaid && result.marketplaceHandling !== undefined)
+    || (actualPaid && result.marketplaceHandling !== 'actual-paid-repayment')
     || (actualCash && result.marketplaceHandling !== 'actual-cash-zero-credit')
     || (fullRepayment && result.marketplaceHandling !== 'full-advance-repayment')
     || (reportedRepayment && result.marketplaceHandling !== 'reported-advance-repayment')) throw new Error("Form7206 Marketplace method requires its actual source coordination.");
   const reportedPayment = reportedRepayment ? calculateMarketplaceReportedRepaymentPayment(input, fullReturn) : undefined;
-  const actual = calculateForm7206({ taxYear: input.taxpayer.taxYear, filingStatus: input.taxpayer.filingStatus, facts: input.form7206!, marketplaceSourceInput: input, marketplaceHandling: result.marketplaceHandling, reportedPayment });
+  const actualPaidProof = actualPaid ? calculateMarketplaceActualPaidRepayment(input, fullReturn) : undefined;
+  const actual = calculateForm7206({ taxYear: input.taxpayer.taxYear, filingStatus: input.taxpayer.filingStatus, facts: input.form7206!, marketplaceSourceInput: input, marketplaceHandling: result.marketplaceHandling, reportedPayment, actualPaidAdjustment: actualPaidProof?.reportedPayment });
   const retained = (value: unknown) => JSON.stringify(redactReviewIdentifiers(value));
   if (retained(actual.coverageFamilyAllocations) !== retained(result.coverageFamilyAllocations)) throw new Error("Form7206 coverage-family allocation does not reconcile its actual original sources.");
   const familyAudit = actual.lines.filter(row => row.form === "Pub974 Coverage Family");
@@ -71,7 +75,10 @@ function reconcileSources(input: TaxYearInput, result: NonNullable<TaxReturnResu
       } else if (!source[property]!.eq(exact(persisted[property], property))) throw new Error("Form7206 current business income sources do not reconcile with the saved calculation.");
     }
   }
-  if (actualCash) {
+  if (actualPaidProof) {
+    if (retained(actualPaidProof) !== retained(actualPaid)
+      || retained(actualPaidProof.lines) !== retained(fullReturn.allLines.filter(row => row.form === 'Marketplace Actual Paid Repayment'))) throw new Error('Form7206 actual paid repayment proof and audits do not reconcile.');
+  } else if (actualCash) {
     const proof = calculateMarketplaceActualCashHealth(input, fullReturn);
     if (retained(proof) !== retained(actualCash)
       || retained(proof.lines) !== retained(fullReturn.allLines.filter(row => row.form === 'Marketplace Actual Cash'))) throw new Error('Form7206 actual cash proof and audits do not reconcile.');
@@ -149,6 +156,18 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
   const fullRepayment = result.marketplaceFullRepaymentHealth;
   const reportedRepayment = result.marketplaceReportedRepaymentHealth;
   const actualCash = result.marketplaceActualCashHealth;
+  const actualPaid = result.marketplaceActualPaidRepaymentHealth;
+  if (actualPaid) {
+    write('ACTUAL PAYER CASH AND OWN-RETURN REPAYMENT');
+    write('The completed return has zero premium tax credit and repays its own reported advances in full. Actual qualified owner/business cash and attributable repayment enter ordinary Form7206 subject to actual person, month and own-business limits. The original policy and Part IV premium allocation remain separate from payment records; another return\'s advances or repayment are not imported.');
+    write(`All original policy advances $${actualPaid.originalPolicyAdvances.toFixed()}; Exact own-return advances $${actualPaid.exactSourceAdvances.toFixed()}; reported own-return repayment $${actualPaid.finalRepayment.toFixed()}; final credit $${actualPaid.finalCredit.toFixed()}.`);
+    write(`Return-level unpaid source remainder $${actualPaid.unreportedAdvanceRemainder.toFixed()}; reporting excess $${actualPaid.reportingExcess.toFixed()}; Schedule1 health deduction $${actualPaid.deduction!.toFixed()}. These shared return totals are not additional deductions and must not be added across business appendices.`);
+    if (actualPaid.reportedPayment) {
+      const payment = actualPaid.reportedPayment;
+      write(`Single fully eligible owner/business pool: original actual eligible cost $${payment.originalEligiblePremiums.toFixed()}; actual cash $${payment.actualCash.toFixed()}; actual paid cost $${payment.eligiblePremiums.toFixed()}. The lesser of original cost and actual cash plus reported repayment preserves unpaid source cents and prevents a reporting increase from creating expense.`);
+    }
+    for (const row of actualPaid.months) if (group.planIds.includes(row.planId)) write(`Plan ${row.planId}, month ${row.month}: actual specified cash $${row.actualSpecifiedCash.toFixed()}; specified advance $${row.actualSpecifiedAdvance.toFixed()}; actual nonspecified cash $${row.actualNonspecifiedCash.toFixed()}; nonspecified advance $${row.actualNonspecifiedAdvance.toFixed()}; allocated tax-family premium $${row.taxFamilyPremium.toFixed()}; specified pool $${row.specifiedPremium.toFixed()}; nonspecified pool $${row.nonspecifiedPremium.toFixed()}.`);
+  }
   if (actualCash) {
     write('ACTUAL CASH WITH ZERO FINAL CREDIT');
     write('The completed return has zero premium tax credit and all original advances are zero. Actual qualified owner/business cash enters this ordinary Form7206 subject to its own business income limit. Tax-family and coverage-family premium allocations remain separate from payment records.');
@@ -197,7 +216,7 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
       write("COVERAGE-FAMILY PREMIUM SPLIT: original person cash and advance payments remain unchanged. The monthly benchmark calculation below determines separate specified and nonspecified premiums after any tax-family allocation. It is not a payment or credit allocation percentage.");
       for (const row of calculation.coverageFamilyAllocations ?? []) if (row.planId === plan.planId) {
         write(`Coverage-family month ${row.month}: tax-family enrollment premium $${row.taxFamilyPremium.toFixed()}; coverage-family SLCSP $${row.coverageFamilySlcsp.toFixed()}; noncoverage-family SLCSP $${row.nonCoverageFamilySlcsp.toFixed()}; specified premium $${row.specifiedPremium.toFixed()}; nonspecified premium $${row.nonspecifiedPremium.toFixed()}; actual attributable advances $${row.advancePremiumTaxCredit.toFixed()}.`);
-        for (const audit of calculation.lines.filter(line => line.form === "Pub974 Coverage Family" && line.line.startsWith(`${plan.planId}:${row.month}:`))) write(actualCash ? `Independently allocated ${audit.line.endsWith(':nonspecified') ? 'nonspecified' : 'specified'} premium pool $${audit.value.toFixed()}; actual eligible cash is recorded separately.` : `Actual qualified ${audit.line.endsWith(':nonspecified') ? 'nonspecified' : 'specified'} amount before business limits $${audit.value.toFixed()}.`);
+        for (const audit of calculation.lines.filter(line => line.form === "Pub974 Coverage Family" && line.line.startsWith(`${plan.planId}:${row.month}:`))) write(actualCash || actualPaid ? `Independently allocated ${audit.line.endsWith(':nonspecified') ? 'nonspecified' : 'specified'} premium pool $${audit.value.toFixed()}; actual eligible ${actualPaid ? 'payments are' : 'cash is'} recorded separately.` : `Actual qualified ${audit.line.endsWith(':nonspecified') ? 'nonspecified' : 'specified'} amount before business limits $${audit.value.toFixed()}.`);
       }
       const outsideMonths = (calculation.coverageFamilyAllocations ?? []).filter(row => row.planId === plan.planId && row.outsidePersonIds.length > 0);
       if (outsideMonths.length) {

@@ -4,7 +4,7 @@ import { calculateMarketplaceCoverageFamilySources, type MarketplaceCoverageFami
 import { calculateForm8962SharedPolicy } from './form-8962-shared-policy.js';
 import { d, sum } from '@/utils/decimal.js';
 
-export function calculateMarketplaceCoverageFamilyHealth(input: MarketplaceCoverageFamilyInput, mode?: "full-repayment-candidate" | "actual-cash-candidate" | "source-only") {
+export function calculateMarketplaceCoverageFamilyHealth(input: MarketplaceCoverageFamilyInput, mode?: "full-repayment-candidate" | "actual-cash-candidate" | "actual-paid-candidate" | "source-only") {
   const sources = calculateMarketplaceCoverageFamilySources(input);
   if (!sources) return undefined;
   if (!mode && sources.some(plan => plan.months.some(row => row.ownNoncoverageAdvance.gt(0)))) throw new Error("Noncoverage member advances require their actual separate repayment and deduction method.");
@@ -17,7 +17,7 @@ export function calculateMarketplaceCoverageFamilyHealth(input: MarketplaceCover
     const outsidePremiumPool = row.sourcePremium.minus(taxFamilyPremium);
     if (outsidePremiumPool.lt(0) || row.outsideCash.plus(row.outsideAdvance).gt(outsidePremiumPool)) throw new Error('Actual outside-person cash and advances exceed their independently allocated outside premium pool.');
     const cashDiffers = !taxFamilyPremium.eq(row.ownCash.plus(row.ownAdvance));
-    if (!advancePremiumTaxCredit.eq(row.ownAdvance) || (cashDiffers && (mode !== 'actual-cash-candidate' && mode !== 'source-only'
+    if (!advancePremiumTaxCredit.eq(row.ownAdvance) || (cashDiffers && mode !== 'actual-paid-candidate' && (mode !== 'actual-cash-candidate' && mode !== 'source-only'
       || !row.sourceAdvance.isZero() || !row.ownAdvance.isZero()))) throw new Error('Coverage-family actual paid shares must reconcile the independently allocated tax-family policy amounts.');
     const denominator = row.coverageFamilySlcsp.plus(row.nonCoverageFamilySlcsp);
     if (denominator.lte(0) && !taxFamilyPremium.isZero()) throw new Error('Coverage-family positive premiums require actual applicable benchmark sources.');

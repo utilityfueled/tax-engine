@@ -1,5 +1,6 @@
 /** Canonical owner/business binding. Spec: spec/federal/form-7206-return.yaml. */
 import Decimal from "decimal.js";
+import type { MarketplaceActualPaidAdjustment } from "./marketplace-actual-paid-repayment.js";
 import type { MarketplaceReportedRepaymentPayment } from "./marketplace-reported-repayment-payment.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
@@ -24,7 +25,7 @@ interface Params {
   foreignIncomeExclusion: Decimal;
   selfEmploymentSourcesVerified: boolean;
   /** Engine-computed Pub974 stage; not a taxpayer amount or source fact. */
-  marketplace?: { stage: "actual-cash" } | { stage: "full-repayment"; reportedPayment?: MarketplaceReportedRepaymentPayment } | { stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult } | { stage: "final" | "ordered"; deduction: MarketplaceHealthDeductionResult };
+  marketplace?: { stage: "actual-paid"; actualPaidAdjustment?: MarketplaceActualPaidAdjustment } | { stage: "actual-cash" } | { stage: "full-repayment"; reportedPayment?: MarketplaceReportedRepaymentPayment } | { stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult } | { stage: "final" | "ordered"; deduction: MarketplaceHealthDeductionResult };
   /** Canonical gross income, never a taxpayer supplied profit override. */
   businessGrossIncomes?: { sourceId: string; amount: Decimal }[];
 }
@@ -47,9 +48,10 @@ export function calculateForm7206Return(params: Params) {
   const year = input.taxpayer.taxYear, joint = input.taxpayer.filingStatus === "married_filing_jointly";
   if (input.seHealthInsuranceWorksheet || !d(input.adjustments?.selfEmployedHealthInsurance).isZero()) throw new Error("Reconcile legacy health-insurance amounts with actual Form7206; duplicate claim representations are unsupported.");
   const reportedPayment = params.marketplace?.stage === "full-repayment" ? params.marketplace.reportedPayment : undefined;
-  const marketplaceHandling = params.marketplace?.stage === 'actual-cash' ? 'actual-cash-zero-credit' as const : params.marketplace?.stage === "full-repayment" ? (reportedPayment ? "reported-advance-repayment" as const : "full-advance-repayment" as const)
+  const actualPaidAdjustment = params.marketplace?.stage === "actual-paid" ? params.marketplace.actualPaidAdjustment : undefined;
+  const marketplaceHandling = params.marketplace?.stage === "actual-paid" ? "actual-paid-repayment" as const : params.marketplace?.stage === 'actual-cash' ? 'actual-cash-zero-credit' as const : params.marketplace?.stage === "full-repayment" ? (reportedPayment ? "reported-advance-repayment" as const : "full-advance-repayment" as const)
     : params.marketplace ? "separate-specified-premiums" as const : undefined;
-  const source = calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, marketplaceSourceInput: input, marketplaceHandling, reportedPayment });
+  const source = calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, marketplaceSourceInput: input, marketplaceHandling, reportedPayment, actualPaidAdjustment });
   if (source.businesses.some(row => row.kind !== "s_corporation") && !params.selfEmploymentSourcesVerified) throw new Error("Actual Form7206 requires verified business and payroll sources for the canonical SE deduction.");
   const householdName = (person: { firstName: string; lastName: string }) => name(`${person.firstName} ${person.lastName}`);
   for (const person of facts.persons ?? []) {
@@ -150,9 +152,9 @@ export function calculateForm7206Return(params: Params) {
       }
     }
   }
-  const form7206 = calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, marketplaceSourceInput: input, businesses, marketplaceHandling, reportedPayment });
+  const form7206 = calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, marketplaceSourceInput: input, businesses, marketplaceHandling, reportedPayment, actualPaidAdjustment });
   if (form7206.deduction === undefined) throw new Error("Canonical Form7206 deduction is incomplete.");
-  const marketplacePremiums = params.marketplace && params.marketplace.stage !== "full-repayment" && params.marketplace.stage !== 'actual-cash' ? calculateMarketplaceHealthPremiums({ input, healthInsurance: form7206 }) : undefined;
+  const marketplacePremiums = params.marketplace && params.marketplace.stage !== "full-repayment" && params.marketplace.stage !== 'actual-cash' && params.marketplace.stage !== 'actual-paid' ? calculateMarketplaceHealthPremiums({ input, healthInsurance: form7206 }) : undefined;
   const result = params.marketplace?.stage === "final" || params.marketplace?.stage === "ordered" ? params.marketplace.deduction : undefined;
   const marketplaceAudit = new AuditTrail();
   const healthSources: QBIDeductionSourceAmount[] = form7206.businesses.map(row => ({ sourceId: row.businessSourceId,

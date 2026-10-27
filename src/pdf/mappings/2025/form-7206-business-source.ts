@@ -14,6 +14,7 @@ import { calculateK1OrdinarySelfEmployment } from "@/engine/forms/k1-ordinary-se
 import { calculateForm2555 } from "@/engine/forms/form-2555.js";
 import { calculateForm7206Return } from "@/engine/forms/form-7206-return.js";
 import { calculateMarketplaceReportedRepaymentPayment } from "@/engine/forms/marketplace-reported-repayment-payment.js";
+import { calculateMarketplaceActualPaidRepayment } from "@/engine/forms/marketplace-actual-paid-repayment.js";
 import { d, sum } from "@/utils/decimal.js";
 
 function same(actual: Decimal | undefined, expected: Decimal) {
@@ -58,7 +59,9 @@ export function calculateForm7206ReviewSources(input: TaxYearInput, result: TaxR
     foreignIncomeExclusion: foreign?.totalIncomeReduction ?? d(0), selfEmploymentSourcesVerified: scheduleSE.sourceFactsVerified,
     businessGrossIncomes: [{ sourceId: "scheduleC", amount: scheduleC.grossIncome }, { sourceId: "scheduleF", amount: scheduleF.grossFarmIncome }, { sourceId: "cryptoBusiness", amount: cryptoGross }] };
   const marketplace = result.marketplaceHealthInsurance;
-  const physical = calculateForm7206Return({ ...params, marketplace: result.marketplaceActualCashHealth ? { stage: "actual-cash" } : result.marketplaceReportedRepaymentHealth
+  const physical = calculateForm7206Return({ ...params, marketplace: result.marketplaceActualPaidRepaymentHealth
+    ? { stage: 'actual-paid', actualPaidAdjustment: calculateMarketplaceActualPaidRepayment(input, result).reportedPayment }
+    : result.marketplaceActualCashHealth ? { stage: "actual-cash" } : result.marketplaceReportedRepaymentHealth
     ? { stage: "full-repayment", reportedPayment: calculateMarketplaceReportedRepaymentPayment(input, result) }
     : result.marketplaceFullRepaymentHealth ? { stage: "full-repayment" }
     : marketplace ? { stage: "final", deduction: marketplace } : undefined }).form7206;

@@ -9,6 +9,8 @@ import { calculateMarketplaceCoverageFamilyHealth } from "./marketplace-coverage
 import type { MarketplaceCoverageFamilyInput } from "./marketplace-coverage-family-sources.js";
 import type { MarketplaceReportedRepaymentPayment } from "./marketplace-reported-repayment-payment.js";
 import { calculateMarketplaceActualCashSources } from "./marketplace-actual-cash-health.js";
+import type { MarketplaceActualPaidAdjustment } from "./marketplace-actual-paid-repayment.js";
+import { calculateMarketplaceActualPaidSources } from "./marketplace-actual-paid-sources.js";
 import { d, sum, roundDollar } from "@/utils/decimal.js";
 
 type Owner = "primary" | "spouse";
@@ -57,7 +59,7 @@ export interface Form7206Result {
   calculationComplete: boolean;
   grossSourcePremiums: Decimal;
   paidSourcePremiums: Decimal;
-  marketplaceHandling?: "separate-specified-premiums" | "ordinary-no-ptc" | "full-advance-repayment" | "reported-advance-repayment" | "actual-cash-zero-credit";
+  marketplaceHandling?: "separate-specified-premiums" | "ordinary-no-ptc" | "full-advance-repayment" | "reported-advance-repayment" | "actual-cash-zero-credit" | "actual-paid-repayment";
   businesses: Form7206BusinessResult[];
   coverageFamilyAllocations?: ReturnType<typeof calculateMarketplaceCoverageFamilyHealth>;
   sourceRecords: { sourceId: string; planId: string; accountHolder: Owner; businessSourceId: string; personId: string; payer: "owner_after_tax" | "business_paid_or_reimbursed"; amountPaid: Decimal; advancePremiumTaxCredit: Decimal; coverageTaxYear: number; coverageMonth: number; excludedFunding: Decimal; eligiblePremium: Decimal; marketplaceSpecifiedPremium: Decimal }[];
@@ -102,11 +104,12 @@ export function calculateForm7206(options: {
   facts: Form7206Input;
   /** Internal original-source payment proof, never a taxpayer-entered claim. */
   reportedPayment?: MarketplaceReportedRepaymentPayment;
+  actualPaidAdjustment?: MarketplaceActualPaidAdjustment;
   businesses?: Form7206BusinessContext[];
   /** Original household/policy context. Never a calculated allocation override. */
   marketplaceSourceInput?: Omit<MarketplaceCoverageFamilyInput, "form7206">;
   /** Internal worksheet preparation: never itself allows a specified deduction. */
-  marketplaceHandling?: "separate-specified-premiums" | "ordinary-no-ptc" | "full-advance-repayment" | "reported-advance-repayment" | "actual-cash-zero-credit";
+  marketplaceHandling?: "separate-specified-premiums" | "ordinary-no-ptc" | "full-advance-repayment" | "reported-advance-repayment" | "actual-cash-zero-credit" | "actual-paid-repayment";
 }): Form7206Result {
   const { facts, taxYear } = options;
   if (taxYear !== 2025 && taxYear !== 2026) throw new Error("Form7206 supports actual 2025 and 2026 sources.");
@@ -130,11 +133,14 @@ export function calculateForm7206(options: {
     people.set(id, person);
   }
   const hasFamilySources = facts.plans.some(plan => plan.coverageFamilySources !== undefined);
-  const actualCash = options.marketplaceHandling === 'actual-cash-zero-credit';
-  if (actualCash && (!options.marketplaceSourceInput || !calculateMarketplaceActualCashSources({ ...options.marketplaceSourceInput, form7206: facts }))) throw new Error('Actual cash health calculation requires complete original source context.');
+  const actualPaid = options.marketplaceHandling === 'actual-paid-repayment';
+  const actualCash = options.marketplaceHandling === 'actual-cash-zero-credit' || actualPaid;
+  const actualPaidSources = actualPaid && options.marketplaceSourceInput ? calculateMarketplaceActualPaidSources({ ...options.marketplaceSourceInput, form7206: facts }) : undefined;
+  if (actualPaid && !actualPaidSources) throw new Error('Actual paid repayment requires complete original source context.');
+  if (!actualPaid && actualCash && (!options.marketplaceSourceInput || !calculateMarketplaceActualCashSources({ ...options.marketplaceSourceInput, form7206: facts }))) throw new Error('Actual cash health calculation requires complete original source context.');
   if (hasFamilySources && options.businesses && !options.marketplaceSourceInput) throw new Error("Coverage-family business calculation requires its actual original policy and household context.");
   const coverageFamilyAllocations = hasFamilySources && options.marketplaceSourceInput
-    ? calculateMarketplaceCoverageFamilyHealth({ ...options.marketplaceSourceInput, form7206: facts }, actualCash ? 'actual-cash-candidate' : options.marketplaceHandling === "full-advance-repayment" || options.marketplaceHandling === "reported-advance-repayment" ? "full-repayment-candidate" : undefined) : undefined;
+    ? calculateMarketplaceCoverageFamilyHealth({ ...options.marketplaceSourceInput, form7206: facts }, actualPaid ? 'actual-paid-candidate' : actualCash ? 'actual-cash-candidate' : options.marketplaceHandling === "full-advance-repayment" || options.marketplaceHandling === "reported-advance-repayment" ? "full-repayment-candidate" : undefined) : undefined;
   const groups = new Map<string, Form7206BusinessResult>();
   const ltc = new Map<string, Map<string, Decimal>>();
   const paymentIds = new Set<string>();
@@ -367,6 +373,27 @@ export function calculateForm7206(options: {
     audit.record("Form 7206", "reported-payment", "Actual paid medical premiums after reported repayment", group.medicalPremiums,
       "min(original eligible costs, actual source cash + reported repayment); final zero-credit proof required",
       { "Original eligible costs": payment.originalEligiblePremiums, "Actual cash": cash, "Exact advances": exactAdvances, "Reported repayment": reported });
+  }
+  const actualPayment = options.actualPaidAdjustment;
+  if (actualPayment) {
+    const group = [...groups.values()][0];
+    const rows = actualPaidSources?.months ?? [];
+    const cash = sum(...rows.map(row => row.actualSpecifiedCash.plus(row.actualNonspecifiedCash).plus(row.actualOutsideCash)));
+    const advances = sum(...rows.map(row => row.advancePremiumTaxCredit));
+    const reported = actualPayment.reportingMethod === 'annual' ? roundDollar(advances) : sum(...rows.map(row => roundDollar(row.advancePremiumTaxCredit)));
+    if (!actualPaid || groups.size !== 1 || facts.plans.length !== 1 || !group || !group.longTermCarePremiums.isZero()
+      || !['annual', 'monthly'].includes(actualPayment.reportingMethod) || !reported.eq(actualPayment.reportedAdvances)
+      || group.accountHolder !== actualPayment.accountHolder || group.businessSourceId !== actualPayment.businessSourceId
+      || !group.medicalPremiums.eq(actualPayment.originalEligiblePremiums) || !group.medicalPremiums.eq(cash.plus(advances))
+      || !cash.eq(actualPayment.actualCash) || !advances.eq(actualPayment.exactSourceAdvances)
+      || !actualPayment.reportedAdvances.isFinite() || actualPayment.reportedAdvances.lt(0)
+      || !actualPayment.eligiblePremiums.eq(Decimal.min(group.medicalPremiums, cash.plus(actualPayment.reportedAdvances)))) {
+      throw new Error('Actual paid reporting adjustment does not match its single fully eligible original cost pool.');
+    }
+    group.medicalPremiums = actualPayment.eligiblePremiums;
+    audit.record('Form 7206', 'actual-paid-repayment', 'Actual eligible cost after reported repayment', group.medicalPremiums,
+      'min(original actual eligible cost, actual cash + reported repayment); completed zero-credit proof remains required',
+      { 'Original eligible cost': actualPayment.originalEligiblePremiums, 'Actual cash': cash, 'Exact own advances': advances, 'Reported repayment': actualPayment.reportedAdvances });
   }
   for (const group of groups.values()) {
     group.eligiblePremiums = group.medicalPremiums.plus(group.longTermCarePremiums);
