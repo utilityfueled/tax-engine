@@ -2,23 +2,25 @@
 
 ## Current checkpoint — 2026-10-27 UTC
 
-Latest implementation is `bc35f5d2`. The shared-policy marriage calculation is
-now integrated in `7dd7fab5`, following independent source and saved-output
-review. Form 8815 packets now disclose their reference-only limitation
-(`499dc198`), and every reference body line stays above the review footer
-(`bc35f5d2`). Rule provenance is `2025.174` /
-`2026.171-law-integration-draft`; inventory has 557 entries, 5,921 specification
-test references and 146 explicit shared-method associations.
-
+Latest implementation is `05c5819`. Actual monthly enrollment and eligibility
+now compose with marriage-year health calculations after independent source
+and saved-output reviews. Actual savings-bond reissue histories (`c6abb245`)
+and the separate compression patch (`25f71f06`) are also delivered. Rule
+provenance is `2025.176` / `2026.173-law-integration-draft`; inventory has
+562 entries, 5,961 specification test references and 148 explicit shared-method
+associations.
 The completed remote `87e37df0` run passed all 19,475 unit tests and both
 488-case browser suites. Coverage passed 19,455 cases and failed 20 unchanged
 five-second deadlines across 19 PDF/workspace files; no complete coverage report
 was produced. All six native recovery phases pass. The scan retains the same
-67 OS advisories, pending owner review. This evidence includes passive capital
-but excludes the three later packages above. Final bond reissue integration is
-regenerating the saved covers and the page that exposed the footer overlap;
-its original half-dollar and output findings remain retained. Calculation,
-filing, human-review and model-promotion gates remain unchanged.
+67 OS advisories, pending owner review. That evidence excludes the later shared
+marriage, bond, Form 8815 output and compression packages. The new `25f71f06`
+remote run has passed unit tests, the self-host browser suite, types, lint,
+spec validation and both builds. At the recorded observation, coverage and
+container browser/SBOM jobs remain in progress; their results are not inferred.
+A fresh full package audit reports zero advisories; runtime OS acceptance
+remains separate. Calculation, filing, human-review and model-promotion gates
+remain unchanged.
 
 | Delivered package | Commit | Bounded verification |
 | --- | --- | --- |
@@ -49,6 +51,9 @@ filing, human-review and model-promotion gates remain unchanged.
 | Form 8815 reference-only packet completeness | `499dc198` | Main 24/3 and independent 29/4 including five private controls pass; actual saved cover is partial. No calculation or filing gate changes. See [ledger](upgrade-2026-form8815-readiness-work.md). |
 | Actual shared full-family policies with marriage-year health calculation | `7dd7fab5` | Parent final source 24/8 including eight private controls; main 40/9 plus all static/build checks. Independent original review checks 15 PDFs/153 pages/480 fields with 9,030 assertions. Final author 597/140; original production browser 2/2 with zero retries. See [ledger](upgrade-2025-shared-marriage-health-work.md). |
 | Form 8815 reference text pagination | `bc35f5d2` | Main 56/5 and independent 13/5 including four private controls pass. Twelve candidate PDF pages preserve all text and notices above the body margin; the original overflow remains reproduced. See [ledger](upgrade-2026-form8815-pagination-work.md). |
+| Actual savings-bond reissue and prior income histories | `c6abb245` | Final source passes 1,633 tests/171 files plus final regression/static/build/browser checks; parent source 33/10 includes seven private controls; main 92/10 passes. Independent original/PDF review reopens 76 PDFs/301 pages/293 populated fields with 7,867 checks and separate reference-body geometry verification. Original half-dollar, cover and footer findings remain retained. See [ledger](upgrade-2026-savings-bond-reissue-work.md). |
+| Native clearing of compression buffers | `25f71f06` | Complete private PDF cohort passes 1,350 tests/225 files; main 30/5 passes. Independent review compares 70 exact byte cases, 12 streams and four PDF pairs/eight paired pages. Production builds and four desktop/mobile workflows pass with zero retries; a local dependency-stage container verifies the exact patch. No final runtime or remote coverage pass is inferred. See [ledger](upgrade-2026-pdf-compression-work.md). |
+| Actual monthly coverage in marriage-year health worksheets | `05c5819` | Final private source passes 64 tests/14 files including six independent controls; main 58/13 passes. Independent saved-output review reopens 14 PDFs/148 pages/443 fields, with 4,084 comparisons plus flattened/privacy/footer checks. Final static/build checks and production desktop/mobile 2/2 pass with zero retries; original PDF producer and final browser evidence remain distinct. See [ledger](upgrade-2025-marriage-coverage-family-work.md). |
 
 Original-source browser and PDF evidence remains attributed to its recorded
 producer. Later source checks do not turn those artifacts into a new integrated
@@ -71,8 +76,8 @@ The finite internal queue is now reconciled against actual source reachability:
 - **Education:** common per-expense composition and actual current-year retained
   refund records and determined annual category/borrower limits are delivered.
   The bounded annual interest-only route is now delivered. Mixed July4 chronology,
-  mixed-purpose interest attribution, actual bond reissue/ownership history and
-  rational-source reporting remain. See [the education queue](upgrade-2026-education-method-queue.md).
+  mixed-purpose interest attribution and educator/MAGI rational-source reporting
+  remain. Actual bond reissue/ownership history is delivered in `c6abb245`. See [the education queue](upgrade-2026-education-method-queue.md).
 - **Charity:** prior K-1 basis release and ordinary operating K-1 current
   Form 172 classification and current binding at-risk allocation are delivered.
   Prior at-risk character/history and passive capital releases are delivered.
@@ -83,8 +88,9 @@ The finite internal queue is now reconciled against actual source reachability:
   gross-income source handoff and actual own-family zero-credit cash are also
   delivered, along with actual eligible outside-family persons and their separate
   return evidence. The unshared and shared full-family marriage compositions are delivered.
-  Monthly partial-family and outside-family marriage composition and determined
-  positive advance/payment attribution remain in the finite health queue.
+  Actual monthly partial-family composition is delivered in `05c5819`.
+  Outside-family marriage composition and determined positive advance/payment
+  attribution remain in the finite health queue.
 - **Verification:** investigate the retained remote coverage failures, then run
   the complete integrated checks and final native images, SBOM/scans and
   recovery rehearsal. The reviewed PDF and evaluation performance changes are delivered;
@@ -123,7 +129,7 @@ No human tax or final-year qualification is claimed.
 
 The unshared marriage-year health package is delivered in `9c077851`, with
 independent source/original/PDF evidence in its ledger. The separate shared-policy
-composition remains in review; neither package establishes human qualification.
+composition is delivered in `7dd7fab5`; neither package establishes human qualification.
 
 The page-copy package [ledger](upgrade-2026-pdf-page-merge-work.md) records the
 orphan-widget rejection fix and exact saved-output comparisons. Temporary byte
