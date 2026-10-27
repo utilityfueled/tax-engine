@@ -391,6 +391,8 @@ export interface FillReturnOptions {
   flatten?: boolean;
   /** Disable only for temporary merge inputs; downloaded files keep compression. */
   useObjectStreams?: boolean;
+  /** Only flattened, uncompressed inputs for a later page-only workspace merge. */
+  pageOnlyTemporaryMerge?: boolean;
   /** Prepared from complete original facts before review identifiers are cleared. */
   capitalGainReview?: PreparedForm8949Review;
   /** Original COD and loss records, validated before review identifier removal. */
@@ -426,6 +428,9 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  if (options.pageOnlyTemporaryMerge && (options.flatten !== true || options.useObjectStreams !== false)) {
+    throw new Error("Page-only temporary merge packets require flattened, uncompressed components");
+  }
   const scheduleEReview = requiresScheduleEReview(input, result) || options.scheduleEReview
     ? options.scheduleEReview ?? prepareScheduleEReview(input) : undefined;
   if (scheduleEReview) assertScheduleEReview(input, result, scheduleEReview);
@@ -491,7 +496,7 @@ export async function fillReturn(
     // Finalize the visible notice while the completed form is still in memory.
     // Track only successful writes, scoped to this packet rather than a cache.
     await markReviewPdf(doc);
-    await savePdfDocument(doc, outputPath, { useObjectStreams: options.useObjectStreams });
+    await savePdfDocument(doc, outputPath, { useObjectStreams: options.useObjectStreams, pageOnlyTemporaryMerge: options.pageOnlyTemporaryMerge });
     finalizedPaths.add(outputPath);
   };
   const { outputDir, flatten = false } = options;

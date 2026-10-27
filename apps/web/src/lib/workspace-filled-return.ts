@@ -655,6 +655,7 @@ export async function buildWorkspaceFilledReturnDownload(
       flatten: true,
       // These files are read once for the final compressed download, then removed.
       useObjectStreams: false,
+      pageOnlyTemporaryMerge: true,
     });
     const filledForms = [...fillResult.filledForms];
 

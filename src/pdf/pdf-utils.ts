@@ -3,7 +3,7 @@
  * Formatting and field-setting helpers for IRS fillable PDFs.
  */
 
-import { PDFDocument, PDFForm, PDFTextField, PDFCheckBox, StandardFonts, ParseSpeeds } from "pdf-lib";
+import { PDFDocument, PDFForm, PDFTextField, PDFCheckBox, StandardFonts, ParseSpeeds, PDFDict, PDFName } from "pdf-lib";
 import { readFile, writeFile, mkdir } from "fs/promises";
 import { basename, dirname } from "path";
 import Decimal from "decimal.js";
@@ -138,10 +138,37 @@ export async function loadReviewTemplate(pdfPath: string, taxYear: number): Prom
 export async function savePdf(
   doc: PDFDocument,
   outputPath: string,
-  options: { useObjectStreams?: boolean } = {},
+  options: { useObjectStreams?: boolean; pageOnlyTemporaryMerge?: boolean } = {},
 ): Promise<void> {
+  if (options.pageOnlyTemporaryMerge && options.useObjectStreams !== false) {
+    throw new Error("Page-only temporary merge inputs require explicit uncompressed serialization");
+  }
+  if (options.pageOnlyTemporaryMerge) {
+    const hasPageWidget = doc.getPages().some((page) => {
+      const annotations = page.node.Annots();
+      if (!annotations) return false;
+      for (let i = 0; i < annotations.size(); i++) {
+        const annotation = doc.context.lookup(annotations.get(i));
+        // Flattening can leave dangling annotation references. Only a resolved
+        // widget is interactive, including widgets omitted from catalog Fields.
+        if (annotation instanceof PDFDict
+          && annotation.lookupMaybe(PDFName.of("Subtype"), PDFName) === PDFName.of("Widget")) {
+          return true;
+        }
+      }
+      return false;
+    });
+    if (doc.getForm().getFields().length !== 0 || hasPageWidget) {
+      throw new Error("Page-only temporary merge inputs must be fully flattened, without interactive fields or widgets");
+    }
+  }
+  // The workspace merger reads page content only. Copying those completed pages
+  // omits unreachable widgets and appearance objects left by form flattening.
+  // Catalog-level forms/outlines are intentionally outside this opt-in route;
+  // ordinary saved documents retain their original document and field structure.
+  const output = options.pageOnlyTemporaryMerge ? await doc.copy() : doc;
   await mkdir(dirname(outputPath), { recursive: true });
-  const bytes = await doc.save({ objectsPerTick: 500, useObjectStreams: options.useObjectStreams ?? true });
+  const bytes = await output.save({ objectsPerTick: 500, useObjectStreams: options.useObjectStreams ?? true });
   await writeFile(outputPath, bytes);
 }
 
