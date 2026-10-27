@@ -117,6 +117,7 @@ function drawWrappedText(
     maxWidth,
     lineHeight = size * 1.25,
     color = HEADER_COLOR,
+    onPageBreak,
   }: {
     font: PDFFont;
     size: number;
@@ -125,12 +126,17 @@ function drawWrappedText(
     maxWidth: number;
     lineHeight?: number;
     color?: ReturnType<typeof rgb>;
+    onPageBreak: () => PDFPage;
   },
 ) {
   const lines = wrapText(text, font, size, maxWidth);
   let cursorY = y;
 
   for (const line of lines) {
+    if (cursorY < PAGE_MARGIN) {
+      page = onPageBreak();
+      cursorY = PAGE_HEIGHT - PAGE_MARGIN;
+    }
     page.drawText(line, { x, y: cursorY, font, size, color });
     cursorY -= lineHeight;
   }
@@ -217,9 +223,11 @@ export async function fillForm8815Reference(
   const newPage = () => {
     page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
     y = PAGE_HEIGHT - PAGE_MARGIN;
+    return page;
   };
 
   y = drawWrappedText(page, summary.title, {
+    onPageBreak: newPage,
     font: bold,
     size: 20,
     x: PAGE_MARGIN,
@@ -229,6 +237,7 @@ export async function fillForm8815Reference(
   });
 
   y = drawWrappedText(page, summary.warningLabel, {
+    onPageBreak: newPage,
     font: bold,
     size: 12,
     x: PAGE_MARGIN,
@@ -239,6 +248,7 @@ export async function fillForm8815Reference(
   });
 
   y = drawWrappedText(page, summary.introduction, {
+    onPageBreak: newPage,
     font: regular,
     size: BODY_FONT_SIZE,
     x: PAGE_MARGIN,
@@ -251,6 +261,7 @@ export async function fillForm8815Reference(
     page,
     "This page summarizes supported savings-bond redemption inputs and the resulting Form 8815 outputs that feed Schedule B Line 3. It is not an official filed Form 8815 copy.",
     {
+      onPageBreak: newPage,
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN,
@@ -268,6 +279,7 @@ export async function fillForm8815Reference(
     }
 
     y = drawWrappedText(page, `Redemption ${redemption.redemptionNumber}`, {
+      onPageBreak: newPage,
       font: bold,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN,
@@ -277,6 +289,7 @@ export async function fillForm8815Reference(
     });
 
     y = drawWrappedText(page, `Proceeds: ${redemption.proceeds}`, {
+      onPageBreak: newPage,
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN + 12,
@@ -286,6 +299,7 @@ export async function fillForm8815Reference(
     });
 
     y = drawWrappedText(page, `Current-year interest: ${redemption.interest}`, {
+      onPageBreak: newPage,
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN + 12,
@@ -295,6 +309,7 @@ export async function fillForm8815Reference(
     });
 
     y = drawWrappedText(page, `Principal: ${redemption.principal}`, {
+      onPageBreak: newPage,
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN + 12,
@@ -304,6 +319,7 @@ export async function fillForm8815Reference(
     });
 
     y = drawWrappedText(page, redemption.eligibility, {
+      onPageBreak: newPage,
       font: regular, size: BODY_FONT_SIZE, x: PAGE_MARGIN + 12, y: y - 2,
       maxWidth: PAGE_WIDTH - PAGE_MARGIN * 2 - 12, lineHeight: 13,
     });
@@ -317,6 +333,7 @@ export async function fillForm8815Reference(
     }
 
     y = drawWrappedText(page, `Line ${line.line}: ${line.description}`, {
+      onPageBreak: newPage,
       font: bold,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN,
@@ -326,6 +343,7 @@ export async function fillForm8815Reference(
     });
 
     y = drawWrappedText(page, `Value: ${line.value}`, {
+      onPageBreak: newPage,
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN + 12,
@@ -335,6 +353,7 @@ export async function fillForm8815Reference(
     });
 
     y = drawWrappedText(page, `Formula: ${line.formula}`, {
+      onPageBreak: newPage,
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN + 12,
@@ -351,6 +370,7 @@ export async function fillForm8815Reference(
   }
 
   y = drawWrappedText(page, "Computed totals", {
+    onPageBreak: newPage,
     font: bold,
     size: BODY_FONT_SIZE,
     x: PAGE_MARGIN,
@@ -361,6 +381,7 @@ export async function fillForm8815Reference(
 
   for (const total of summary.totals) {
     y = drawWrappedText(page, `${total.label}: ${total.value}`, {
+      onPageBreak: newPage,
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN + 12,

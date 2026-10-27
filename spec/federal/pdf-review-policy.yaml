@@ -9,6 +9,10 @@ notes: |
   Existing document Subject metadata never establishes a visible page notice.
   Unchanged template hashes, year and filing gates remain mandatory.
 lines:
+  - line: "form8815-reference-pagination"
+    description: "Every Form8815 reference body line remains above the review footer"
+    formula: "Paginate each wrapped text line before it crosses the existing40-point body margin, including long audit explanations and every computed-source total. Preserve all text and amounts in order, and stamp every added page with the review-only notice."
+    testRef: "tests/pdf/form8815-reference-pagination.test.ts::keeps every wrapped Form8815 audit line above the review footer"
   - line: "mapped-write-batch"
     description: "One current field lookup pass for a bounded batch of mapped writes"
     formula: "Resolve names and types from the current form once at apply time; reject missing or wrong-type fields even for blank values before writes. Apply exact original text/currency/checkbox values in order, retain no cross-document index, and close the batch after application. Template, privacy and year gates remain unchanged."
