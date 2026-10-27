@@ -19,6 +19,15 @@ export interface SharedMarketplaceHealthData {
   allCoveredPersonsLinkedConfirmed: boolean | null; allThisReturnPersonsInCoverageFamilyConfirmed: boolean | null;
   persons: { personId: string; coveredIndividualSsn: string }[];
 }
+export interface HealthChildRelationshipData {
+  sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null;
+  accountHolder: "" | Owner; ownerSsn: string; coveredIndividualSsn: string;
+  childRelationship: "" | "son_or_daughter" | "stepchild" | "adopted_child" | "foster_child";
+  relationshipStartDate: string;
+}
+export function emptyHealthChildRelationship(): HealthChildRelationshipData {
+  return { sourceTaxYear: "", sourceReference: "", sourceFactsConfirmed: null, accountHolder: "", ownerSsn: "", coveredIndividualSsn: "", childRelationship: "", relationshipStartDate: "" };
+}
 export interface HealthInsurancePlanData {
   planId: string; policyReference: string; accountHolder: "" | Owner; businessSourceId: string; businessKind: "" | "self_employed" | "partnership" | "s_corporation";
   kind: "" | "medical" | "qualified_ltc"; policyHolder: "" | "individual" | "business";
@@ -27,7 +36,7 @@ export interface HealthInsurancePlanData {
   marketplacePolicySourceIds?: string[]; allCoveredPersonsInCoverageFamilyConfirmed?: boolean | null;
   sharedMarketplaceSources?: SharedMarketplaceHealthData;
   coverageFamilySources?: CoverageFamilyHealthData;
-  coveredPersons: { personId: string; relationshipToOwner: "" | "self" | "spouse" | "dependent" | "child_under_27" | "other"; dependencyEligibilityConfirmed: boolean | null }[];
+  coveredPersons: { personId: string; relationshipToOwner: "" | "self" | "spouse" | "dependent" | "child_under_27" | "other"; dependencyEligibilityConfirmed: boolean | null; childRelationshipSources?: HealthChildRelationshipData }[];
   months: { month: string; employerSubsidizedPlanEligible: boolean | null; employerOfferPtcException?: "" | "unaffordable" | "does_not_provide_minimum_value"; employerCoverageEnrolled?: boolean | null; employerOfferSourceReference?: string }[];
   payments: HealthInsurancePaymentData[];
 }
@@ -55,7 +64,9 @@ export function invalidateHealthInsuranceSources(data: HealthInsuranceData): Hea
     ...(data.partnershipGrossIncomeSources ? { partnershipGrossIncomeSources: { ...data.partnershipGrossIncomeSources, sourceFactsConfirmed: null, statements: data.partnershipGrossIncomeSources.statements.map(row => ({ ...row, sourceFactsConfirmed: null })) } } : {}),
     ...(data.marketplaceCreditAllocation ? { marketplaceCreditAllocation: { ...data.marketplaceCreditAllocation, sourceFactsConfirmed: null } } : {}),
     ...(data.incomeDeductions ? { incomeDeductions: { ...data.incomeDeductions, sourceFactsConfirmed: null } } : {}),
-    plans: data.plans.map(plan => ({ ...plan, ...(plan.sharedMarketplaceSources ? { sharedMarketplaceSources: { ...plan.sharedMarketplaceSources, sourceFactsConfirmed: null } } : {}),
+    plans: data.plans.map(plan => ({ ...plan,
+      coveredPersons: plan.coveredPersons.map(person => ({ ...person, ...(person.childRelationshipSources ? { childRelationshipSources: { ...person.childRelationshipSources, sourceFactsConfirmed: null } } : {}) })),
+      ...(plan.sharedMarketplaceSources ? { sharedMarketplaceSources: { ...plan.sharedMarketplaceSources, sourceFactsConfirmed: null } } : {}),
       ...(plan.coverageFamilySources ? { coverageFamilySources: { ...plan.coverageFamilySources, sourceFactsConfirmed: null } } : {}) })),
   };
 }
@@ -120,7 +131,14 @@ export function buildHealthInsuranceInput(data: HealthInsuranceData | undefined,
         persons: plan.sharedMarketplaceSources.persons.map(person => ({ personId: person.personId.trim(), coveredIndividualSsn: person.coveredIndividualSsn.trim() })),
       } : undefined,
       coverageFamilySources: buildCoverageFamilyHealthSources(plan.coverageFamilySources),
-      coveredPersons: plan.coveredPersons?.map(person => ({ ...person, relationshipToOwner: person.relationshipToOwner || undefined, dependencyEligibilityConfirmed: person.dependencyEligibilityConfirmed ?? undefined })),
+      coveredPersons: plan.coveredPersons?.map(person => ({ ...person, relationshipToOwner: person.relationshipToOwner || undefined, dependencyEligibilityConfirmed: person.dependencyEligibilityConfirmed ?? undefined,
+        childRelationshipSources: person.childRelationshipSources ? {
+          sourceTaxYear: integer(person.childRelationshipSources.sourceTaxYear, "child relationship source year"),
+          sourceReference: person.childRelationshipSources.sourceReference.trim(), sourceFactsConfirmed: person.childRelationshipSources.sourceFactsConfirmed ?? undefined,
+          accountHolder: person.childRelationshipSources.accountHolder || undefined, ownerSsn: person.childRelationshipSources.ownerSsn.trim(),
+          coveredIndividualSsn: person.childRelationshipSources.coveredIndividualSsn.trim(), childRelationship: person.childRelationshipSources.childRelationship || undefined,
+          relationshipStartDate: person.childRelationshipSources.relationshipStartDate.trim() || undefined,
+        } : undefined })),
       months: plan.months?.map(month => ({ month: integer(month.month, "coverage month"), employerSubsidizedPlanEligible: month.employerSubsidizedPlanEligible ?? undefined,
         employerOfferPtcException: month.employerOfferPtcException || undefined, employerCoverageEnrolled: month.employerCoverageEnrolled ?? undefined, employerOfferSourceReference: month.employerOfferSourceReference?.trim() || undefined })),
       payments: plan.payments?.map(payment => ({ ...payment, coverageTaxYear: integer(payment.coverageTaxYear, "coverage year"), coverageMonth: integer(payment.coverageMonth, "payment coverage month"),

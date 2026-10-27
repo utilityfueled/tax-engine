@@ -83,7 +83,34 @@ export function calculateMarketplaceMarriageHealthSources(input: Form8962Marriag
         const id = allocation.personId === undefined ? undefined : linked.get(allocation.personId);
         const covered = coveredPersons.find(row => row.personId === allocation.personId);
         if (!id || !covered) throw new Error('Marriage health payment person contradicts the original coverage.');
-        if (!ownPeople.has(id) && !amount(allocation.amountPaid).isZero()) throw new Error('Marriage health owner-paid outside-family persons require their separate actual qualification and credit method.');
+        const outside = !ownPeople.has(id);
+        const person = persons.find(row => row.personId === allocation.personId)!;
+        const outsideChildCash = outside && covered.relationshipToOwner === 'child_under_27'
+          && person.attainedAgeAtYearEnd !== undefined && person.attainedAgeAtYearEnd < 27 && amount(allocation.amountPaid).gt(0);
+        if (outside && amount(allocation.amountPaid).gt(0) && !monthlyFamily) {
+          throw new Error('Marriage health outside-family cash requires complete actual monthly qualification and other-return sources.');
+        }
+        if (outsideChildCash) {
+          // The completed coverage-family reader already binds outside advances,
+          // the other return and its original claimant/policies. Separately prove
+          // this owner's health relationship; a PartV family assignment cannot
+          // supply it for a nondependent child. Spec: marriage-outside-person.
+          const relationship = covered.childRelationshipSources;
+          if (!relationship || relationship.sourceTaxYear !== year || relationship.sourceFactsConfirmed !== true
+            || !relationship.sourceReference?.trim() || relationship.accountHolder !== plan.accountHolder
+            || identity(relationship.ownerSsn) !== identity(input.taxpayer[plan.accountHolder]?.ssn)
+            || identity(relationship.coveredIndividualSsn) !== id
+            || !['son_or_daughter', 'stepchild', 'adopted_child', 'foster_child'].includes(relationship.childRelationship ?? '')) {
+            throw new Error('Marriage health requires actual confirmed owner and child relationship source identities.');
+          }
+          const start = relationship.relationshipStartDate;
+          const parsed = new Date(`${start}T00:00:00Z`);
+          const coverageStart = `${year}-${String(month).padStart(2, '0')}-01`;
+          if (!start || !/^\d{4}-\d{2}-\d{2}$/.test(start) || !Number.isFinite(parsed.getTime())
+            || parsed.toISOString().slice(0, 10) !== start || start > datePaid || start > coverageStart) {
+            throw new Error('Marriage health child relationship must already cover the actual payment and coverage period; other timing needs its separate qualification method.');
+          }
+        }
         if (amount(allocation.amountPaid).plus(amount(allocation.advancePremiumTaxCredit)).isZero()) continue;
         if (!originalPeople.some(person => person.id === id && person.first <= month && person.last >= month)) {
           throw new Error('Marriage health payment month contradicts the original coverage.');
@@ -91,7 +118,7 @@ export function calculateMarketplaceMarriageHealthSources(input: Form8962Marriag
         const coverageStart = `${year}-${String(month).padStart(2, '0')}-01`;
         if (datePaid < marriageDate && coverageStart < marriageDate) {
           if (covered.relationshipToOwner === 'spouse') throw new Error('Premarital spouse premiums require actual qualification before marriage; an end-year spouse label is insufficient.');
-          if (covered.relationshipToOwner === 'dependent' || covered.relationshipToOwner === 'child_under_27') {
+          if (!outside && (covered.relationshipToOwner === 'dependent' || covered.relationshipToOwner === 'child_under_27')) {
             const dependent = packet.dependents?.find(person => identity(person.ssn) === id);
             if (!dependent || (plan.accountHolder === 'primary' ? dependent.qualifiesForPrimary : dependent.qualifiesForSpouse) !== true) {
               throw new Error('Premarital health dependent or child needs actual separate owner qualification before marriage.');

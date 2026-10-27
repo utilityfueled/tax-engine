@@ -1120,6 +1120,16 @@
       "note": "Own-spec controls bind actual unshared marriage and health sources to the existing health worksheets and historical2025 Form8962 review output. Actual joint eligibility, computed repayment limit, owner deductions and original sources remain separate. No additional source cohort, filing readiness or independent human qualification is claimed."
     },
     {
+      "key": "federal/marketplace-marriage-outside-person",
+      "enginePath": "src/engine/forms/marketplace-marriage-health-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marriage-outside-person.test.ts::composes actual outside child cash with allocated marriage and later own advances",
+        "tests/pdf/marriage-outside-person-review.test.ts::prints and binds actual child relationship separately from marriage family amounts"
+      ],
+      "note": "Actual relationship/payment/month/other-return sources qualify the bounded historical marriage calculation and bind saved review output. No final2026 or independent human filing qualification."
+    },
+    {
       "key": "federal/marketplace-net-operating-loss",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [

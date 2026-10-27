@@ -177,6 +177,10 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
   for (const plan of facts.plans ?? []) {
     if (plan.businessSourceId !== businessSourceId || plan.accountHolder !== accountHolder) continue;
     write(`Plan ${plan.planId}: policy ${plan.policyReference}; ${plan.kind}; policy held by ${plan.policyHolder}.`);
+    for (const person of plan.coveredPersons ?? []) {
+      const relationship = person.childRelationshipSources;
+      if (relationship) write(`Actual child relationship ${relationship.childRelationship ?? "Unknown"}; began ${relationship.relationshipStartDate ?? "Unknown"}; health person ${person.personId}; business owner ${relationship.accountHolder ?? "Unknown"}; source tax year ${relationship.sourceTaxYear ?? "Unknown"}; source ${relationship.sourceReference ?? "Unknown"}. Owner and child identifiers withheld from this review copy. This relationship does not establish a PartV alternative-family assignment.`);
+    }
     for (const sourceId of plan.marketplacePolicySourceIds ?? []) {
       const index = /^form1095A:(\d+)$/.exec(sourceId)?.[1];
       const policy = index === undefined ? undefined : input.form1095A[Number(index)];

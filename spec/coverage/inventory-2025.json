@@ -6778,6 +6778,29 @@
       ]
     },
     {
+      "key": "federal/marketplace-marriage-outside-person",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p974",
+      "specPath": "spec/federal/marketplace-marriage-outside-person.yaml",
+      "enginePath": "src/engine/forms/marketplace-marriage-health-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-marriage-outside-person.test.ts::composes actual outside child cash with allocated marriage and later own advances",
+        "tests/pdf/marriage-outside-person-review.test.ts::prints and binds actual child relationship separately from marriage family amounts"
+      ],
+      "implementationNote": "Actual relationship/payment/month/other-return sources qualify the bounded historical marriage calculation and bind saved review output. No final2026 or independent human filing qualification.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/marketplace-net-operating-loss",
       "jurisdiction": "federal",
       "taxYear": 2025,

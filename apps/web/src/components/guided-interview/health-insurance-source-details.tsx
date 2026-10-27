@@ -5,6 +5,7 @@ import { guidedSourceValuesChanged } from "@/lib/guided-source-confirmation";
 import { SharedMarketplaceHealthDetails } from "./shared-marketplace-health-details";
 import { CoverageFamilyHealthDetails } from './coverage-family-health-details';
 import { PartnershipHealthGrossDetails } from './partnership-health-gross-details';
+import { HealthChildRelationshipDetails } from './health-child-relationship-details';
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
 import type { MarketplacePolicyOption } from "@/lib/guided-marketplace-health-facts";
@@ -100,6 +101,7 @@ export function HealthInsuranceSourceDetails({ data, sources = [], marketplacePo
             <Choice label={`${label}: Covered person`} value={person.personId} choices={people} onChange={personId => setPerson({ personId })} />
             <Choice label={`${label}: Relationship to business owner`} value={person.relationshipToOwner} choices={[["self", "Business owner"], ["spouse", "Owner's spouse"], ["dependent", "Qualifying dependent"], ["child_under_27", "Child under 27 at year end"], ["other", "Other person"]]} onChange={relationshipToOwner => setPerson({ relationshipToOwner: relationshipToOwner as typeof person.relationshipToOwner })} />
             {(person.relationshipToOwner === "dependent" || person.dependencyEligibilityConfirmed !== null) && <BooleanFact label={`${label}: Dependent qualifies under the health insurance rules`} value={person.dependencyEligibilityConfirmed} onChange={dependencyEligibilityConfirmed => setPerson({ dependencyEligibilityConfirmed })} />}
+            {(person.relationshipToOwner === "child_under_27" || person.childRelationshipSources) && <HealthChildRelationshipDetails prefix={`${label} child relationship`} data={person.childRelationshipSources} onChange={childRelationshipSources => setPerson({ childRelationshipSources })} />}
             <button type="button" onClick={() => set({ coveredPersons: plan.coveredPersons.filter((_, position) => position !== personIndex) })}>{label}: Remove covered person</button>
           </div>;
         })}

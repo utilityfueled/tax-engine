@@ -4307,6 +4307,18 @@ export const Form7206Schema = z.object({
       personId: z.string().optional(),
       relationshipToOwner: z.enum(["self", "spouse", "dependent", "child_under_27", "other"]).optional(),
       dependencyEligibilityConfirmed: z.boolean().optional(),
+      /** Actual child relationship before the marriage-year payments; distinct
+       * from dependency or membership in a Form8962 alternative family. */
+      childRelationshipSources: z.object({
+        sourceTaxYear: z.number().int().optional(),
+        sourceReference: z.string().optional(),
+        sourceFactsConfirmed: z.boolean().optional(),
+        accountHolder: z.enum(["primary", "spouse"]).optional(),
+        ownerSsn: z.string().optional(),
+        coveredIndividualSsn: z.string().optional(),
+        childRelationship: z.enum(["son_or_daughter", "stepchild", "adopted_child", "foster_child"]).optional(),
+        relationshipStartDate: z.string().optional(),
+      }).strict().optional(),
     })).optional(),
     months: z.array(z.object({
       month: z.number().int().min(1).max(12).optional(),
