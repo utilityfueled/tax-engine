@@ -61,6 +61,7 @@ import { adoptionFactErrors, type AdoptionCreditData } from "./guided-adoption-f
 import { invalidateAdoptionHistories } from "./guided-adoption-prior-benefits";
 import { educationDistributionFactErrors, invalidateEducationPeriodSources, type EducationDistributionData } from "./guided-education-distributions";
 import { savingsBondFactErrors, type SavingsBondEducationData } from "./guided-savings-bond-facts";
+import { invalidateSavingsBondSources, savingsBondSourceValuesChanged } from "./guided-savings-bond-reissues";
 import { buildActualEducationInput } from "./guided-education-facts";
 import { guidedSourceValuesChanged } from "./guided-source-confirmation";
 import { guidedNiitFactErrors, type NiitSourceData } from "./guided-niit-facts";
@@ -1622,7 +1623,8 @@ export function updateSectionData(
   );
   const bondSourcesChanged = !!nextCredits?.savingsBondEducation && (
     (["personal-info", "income-investments", "adjustments"].includes(sectionId) && sourceValuesChanged) ||
-    (sectionId === "credits" && (guidedSourceValuesChanged(credits?.education, nextCredits.education) || guidedSourceValuesChanged(credits?.educationDistributions, nextCredits.educationDistributions)))
+    (sectionId === "credits" && (guidedSourceValuesChanged(credits?.education, nextCredits.education) || guidedSourceValuesChanged(credits?.educationDistributions, nextCredits.educationDistributions)
+      || (nextCredits.savingsBondEducation?.reissueSources !== undefined && savingsBondSourceValuesChanged(credits?.savingsBondEducation, nextCredits.savingsBondEducation))))
   );
   const ohioStateReturn = state.sectionData["state-return"];
   const ohioInterestChanged = sectionId === "income-investments" && ohioStateReturn?.ohioInterestAllocation;
@@ -1667,7 +1669,7 @@ export function updateSectionData(
         ...(benefitSourcesChanged ? { dependentCareBenefits: { ...nextCredits.dependentCareBenefits, sourceFactsConfirmed: null, earnedIncomeWorksheetConfirmed: null, creditExpenseCoordinationConfirmed: null } } : {}),
         ...(educationSourcesChanged ? { educationDistributions: invalidateEducationPeriodSources(nextCredits.educationDistributions) } : {}),
         ...(premiumTaxCreditSourcesChanged ? { premiumTaxCredit: { ...premiumTaxCreditSourcesChanged, sourceFactsConfirmed: null, ...(premiumTaxCreditSourcesChanged.sharedPolicyAllocations ? { sharedPolicyAllocations: invalidateSharedPolicySources(premiumTaxCreditSourcesChanged.sharedPolicyAllocations) } : {}), ...(premiumTaxCreditSourcesChanged.marriageSources ? { marriageSources: invalidateMarriageSources(premiumTaxCreditSourcesChanged.marriageSources) } : {}) } } : {}),
-        ...(bondSourcesChanged ? { savingsBondEducation: { ...nextCredits.savingsBondEducation, sourceFactsConfirmed: null } } : {}),
+        ...(bondSourcesChanged ? { savingsBondEducation: invalidateSavingsBondSources(nextCredits.savingsBondEducation) } : {}),
       } } : {}),
     },
   };

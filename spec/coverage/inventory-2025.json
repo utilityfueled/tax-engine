@@ -5528,6 +5528,26 @@
       ]
     },
     {
+      "key": "federal/guided-savings-bond-reissues",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p550",
+      "specPath": "spec/federal/guided-savings-bond-reissues.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-savings-bond-sources",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -7319,6 +7339,48 @@
       ]
     },
     {
+      "key": "federal/savings-bond-reissue-return",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p550",
+      "specPath": "spec/federal/savings-bond-reissue-return.yaml",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8815.ts",
+      "implementationTestRefs": [
+        "tests/engine/savings-bond-reissue-return.test.ts::preserves current transfer interest outside the education exclusion",
+        "tests/pdf/savings-bond-reissue-review.test.ts::binds original bond history and income before saved review output"
+      ],
+      "implementationNote": "Actual original coowner reissue and current statement histories preserve exact recognition/redemption fractions through the canonical return and source-bound historical 2025 Form8815 reference. This is partial reference output, not a qualified official form, e-file support, final2026 qualification or independent human review.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/savings-bond-reissue-sources",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/publications/p550",
+      "specPath": "spec/federal/savings-bond-reissue-sources.yaml",
+      "enginePath": "src/engine/forms/savings-bond-reissue-sources.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/savings-bond-return-identity",
       "jurisdiction": "federal",
       "taxYear": 2026,
@@ -7357,6 +7419,27 @@
       "status": "partial",
       "knownGaps": [
         "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/savings-bond-statement-sources",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/savings-bond-statement-sources.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
         "Missing e-file and business-rule validation coverage"
       ]
     },

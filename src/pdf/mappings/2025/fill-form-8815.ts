@@ -9,8 +9,12 @@ import {
   type PDFFont,
   type PDFPage,
 } from "pdf-lib";
-import type { SavingsBondRedemption } from "@/models/inputs.js";
+import type { SavingsBondRedemption, TaxYearInput } from "@/models/inputs.js";
+import type { TaxReturnResult } from "@/models/outputs.js";
 import type { Form8815Result } from "@/engine/forms/form-8815.js";
+import { calculateSavingsBondStatementSources } from "@/engine/forms/savings-bond-statement-sources.js";
+import { displaySavingsBondRatio } from "@/utils/savings-bond-ratios.js";
+import { savingsBondReviewOriginalInput, type PreparedSavingsBondReview } from "../../savings-bond-review-context.js";
 
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
@@ -36,9 +40,11 @@ const INCLUDED_FORM_8815_LINES = [
   "6-worksheet-1", "6-worksheet-2", "6-worksheet-3", "6-worksheet-4",
   "6-worksheet-5", "6-worksheet-6", "6-worksheet-7", "6-worksheet-8",
   "statement-prior-interest-adjustment",
+  "current-reissue-interest",
 ] as const;
 
 const INCLUDED_FORM_8815_LINE_SET = new Set<string>(INCLUDED_FORM_8815_LINES);
+interface SavingsBondReviewContext { input: TaxYearInput; result: TaxReturnResult; prepared: PreparedSavingsBondReview }
 
 export const FORM_8815_REFERENCE_FILENAME = "f8815-reference-filled.pdf";
 
@@ -152,7 +158,7 @@ function getReferenceLines(result: Form8815Result) {
     if (!line.value.isFinite() || (line.line !== "9" && line.value.isNegative())) throw new Error(`Form 8815 audit line ${line.line} is not a finite allowed amount.`);
     selected.set(line.line, line);
   }
-  const required = result.sourceFactsVerified ? INCLUDED_FORM_8815_LINES : INCLUDED_FORM_8815_LINES.slice(0, 13);
+  const required = result.sourceFactsVerified ? INCLUDED_FORM_8815_LINES.filter(id => id !== "current-reissue-interest" || result.reissueSourcesVerified) : INCLUDED_FORM_8815_LINES.slice(0, 13);
   for (const id of required) if (!selected.has(id)) throw new Error(`Form 8815 missing audited line ${id}.`);
   const totals: Array<[string, Decimal]> = [
     ["2", result.grossQualifiedExpenses], ["3", result.nontaxableEducationalBenefits], ["4", result.qualifiedExpenses],
@@ -170,8 +176,29 @@ function getReferenceLines(result: Form8815Result) {
 export function buildForm8815ReferenceSummary(
   redemptions: SavingsBondRedemption[],
   result: Form8815Result,
+  context?: SavingsBondReviewContext,
 ): Form8815ReferenceSummary {
   assertPdfExportAllowed(2025, result.taxYear);
+  const historyTotals: Form8815ReferenceSummaryTotal[] = [];
+  if (result.reissueSourcesVerified || redemptions.some(row => row.reissueSourceId !== undefined) || context) {
+    if (!context) throw new Error("Savings-bond reissue reference requires its prepared original return context.");
+    const original = savingsBondReviewOriginalInput(context.input, context.result, context.prepared);
+    if (context.result.form8815 !== result && JSON.stringify(context.result.form8815) !== JSON.stringify(result)) throw new Error("Savings-bond reference result does not match its prepared return.");
+    if (JSON.stringify(context.input.savingsBondRedemptions) !== JSON.stringify(redemptions)) throw new Error("Savings-bond reference originals do not match the prepared rendering sources.");
+    const history = calculateSavingsBondStatementSources(original);
+    if (!history) throw new Error("Savings-bond reference is missing its original history.");
+    for (const [index, group] of (original.form8815?.reissueSources?.groups ?? []).entries()) {
+      const computed = history.groups[index]; if (!computed) throw new Error("Savings-bond original group is missing.");
+      for (const [label, value] of [["original face value", group.originalFaceValue], ["your purchase funds", group.taxpayerPurchaseFunds], ["spouse purchase funds", group.spousePurchaseFunds], ["value at reissue", group.valueAtReissue]] as const)
+        historyTotals.push({ label: `Group ${index + 1} ${label}`, value: `$${value}` });
+      historyTotals.push({ label: `Group ${index + 1} actual reissue year`, value: group.reissueDate?.slice(0,4) ?? "" });
+      for (const owner of ["primary", "spouse"] as const) historyTotals.push({ label: `Group ${index + 1} ${owner} transfer recognized`, value: `$${displaySavingsBondRatio(computed.recognizedAtReissue[owner])}` });
+    }
+    for (const [index, statement] of (original.form8815?.reissueSources?.statements ?? []).entries()) {
+      for (const [label, value] of [["original Box 3", statement.box3], ["earlier-year interest included", statement.priorRecognizedInterestIncluded], ["other Box 3 interest", statement.otherBox3Interest]] as const)
+        historyTotals.push({ label: `Statement ${index + 1} ${label}`, value: `$${value}` });
+    }
+  }
   if (result.redemptionResults.length !== redemptions.length) throw new Error("Form 8815 redemption sources do not match the calculation.");
   const rows = result.redemptionResults.map((calculated, index) => {
     const source = redemptions[index];
@@ -182,7 +209,7 @@ export function buildForm8815ReferenceSummary(
     return {
       redemptionNumber: index + 1,
       proceeds: calculated.proceeds.toString(),
-      interest: calculated.currentYearInterest?.toString() ?? "Not applicable to this ineligible bond type",
+      interest: calculated.currentYearInterestRatio ? displaySavingsBondRatio(calculated.currentYearInterestRatio) : calculated.currentYearInterest?.toString() ?? "Not applicable to this ineligible bond type",
       principal: calculated.principal?.toString() ?? "Not applicable to this ineligible bond type",
       eligibility: calculated.eligible === undefined ? "Unverified historical input" : calculated.eligible ? "Eligible from actual source facts" : "Ineligible from actual source facts",
     };
@@ -203,7 +230,7 @@ export function buildForm8815ReferenceSummary(
       {
         label: "Schedule B Line 3 exclusion",
         value: result.excludableSavingsBondInterest.toString(),
-      },
+      }, ...historyTotals,
     ],
   };
 }
@@ -212,11 +239,12 @@ export async function fillForm8815Reference(
   redemptions: SavingsBondRedemption[],
   result: Form8815Result,
   outputDir: string,
+  context?: SavingsBondReviewContext,
 ) {
+  const summary = buildForm8815ReferenceSummary(redemptions, result, context);
   const doc = await PDFDocument.create();
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const regular = await doc.embedFont(StandardFonts.Helvetica);
-  const summary = buildForm8815ReferenceSummary(redemptions, result);
   let page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   let y = PAGE_HEIGHT - PAGE_MARGIN;
 

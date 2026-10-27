@@ -3,6 +3,8 @@
 import { savingsBondFields, savingsBondIncomeOwnershipFields, savingsBondExpenseFields, savingsBondWorksheetFields, type SavingsBondEducationData, type SavingsBondField, type SavingsBondSourceRecord } from "@/lib/guided-savings-bond-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
+import { SavingsBondReissueDetails } from "./savings-bond-reissue-details";
+import { invalidateSavingsBondSources } from "@/lib/guided-savings-bond-reissues";
 
 function SourceFields({ fields, record, onChange }: { fields: SavingsBondField[]; record: SavingsBondSourceRecord; onChange: (key: string, value: string | boolean | null) => void }) {
   return fields.filter(field => !field.when || field.when(record)).map(field => {
@@ -16,7 +18,7 @@ function SourceFields({ fields, record, onChange }: { fields: SavingsBondField[]
 
 export function SavingsBondSourceDetails({ data, onChange }: { data?: SavingsBondEducationData; onChange: (next: SavingsBondEducationData | undefined) => void }) {
   if (!data) return <div className="guided-w2-card" style={{ padding: "12px" }}><h3 className="guided-w2-card-title">Savings-bond education exclusion (Form 8815)</h3><p className="guided-hint">Add actual series EE or I redemption records and coordinated education expenses.</p><button type="button" className="utility-button" onClick={() => onChange({})}>Add savings-bond education records</button></div>;
-  const update = (next: Partial<SavingsBondEducationData>) => onChange({ ...data, ...next, sourceFactsConfirmed: null });
+  const update = (next: Partial<SavingsBondEducationData>) => onChange(invalidateSavingsBondSources({ ...data, ...next }));
   const row = (collection: "redemptions" | "educationExpenses", index: number, key: string, value: string | boolean | null) => update({ [collection]: data[collection]?.map((item, offset) => {
     if (offset !== index) return item;
     const next = { ...item, [key]: value };
@@ -44,6 +46,7 @@ export function SavingsBondSourceDetails({ data, onChange }: { data?: SavingsBon
       <button type="button" className="utility-button" onClick={() => update({ redemptions: [...(data.redemptions ?? []), { sourceId: `bond:${crypto.randomUUID()}` }] })}>Add bond redemption</button>
       {data.redemptions === undefined && <button type="button" className="utility-button" onClick={() => update({ redemptions: [] })}>Confirm no bond redemptions</button>}
     </fieldset>
+    <SavingsBondReissueDetails data={data.reissueSources} redemptions={data.redemptions} onChange={reissueSources => onChange({ ...data, reissueSources, sourceFactsConfirmed: null, currentStatementReconciliationConfirmed: null })} />
     <fieldset className="guided-fieldset"><legend>Education expenses for the bond exclusion</legend>
       <p className="guided-hint">Record each expense once. Reconcile tuition with scholarships, education credits, 529 and Coverdell distributions. A withdrawal or redemption is not proof of an education payment.</p>
       {(data.educationExpenses ?? []).map((record, index) => <fieldset className="guided-fieldset" key={String(record.sourceId ?? index)}><legend>Bond education expense {index + 1}</legend>
@@ -57,7 +60,7 @@ export function SavingsBondSourceDetails({ data, onChange }: { data?: SavingsBon
     <fieldset className="guided-fieldset"><legend>Statement reconciliation and income worksheet</legend>
       <p className="guided-hint">Only previously reported interest included in the current statements is removed from those statements. The royalty adjustment is the signed change in AGI from the actual pre-exclusion interest deduction, not a proposed exclusion or total royalty income.</p>
       <SourceFields fields={savingsBondWorksheetFields} record={{ priorYearInterestIncludedInCurrentStatements: data.priorYearInterestIncludedInCurrentStatements, americanSamoaIncomeExclusion: data.americanSamoaIncomeExclusion, puertoRicoIncomeExclusion: data.puertoRicoIncomeExclusion, royaltyInterestAdjustment: data.royaltyInterestAdjustment }} onChange={(key, value) => update({ [key]: value })} />
-      <BooleanFact label="Current Form 1099-INT interest reconciled with actual bond reporting history" value={data.currentStatementReconciliationConfirmed} onChange={currentStatementReconciliationConfirmed => update({ currentStatementReconciliationConfirmed })} />
+      <BooleanFact label="Current Form 1099-INT interest reconciled with actual bond reporting history" value={data.currentStatementReconciliationConfirmed} onChange={currentStatementReconciliationConfirmed => onChange({ ...data, currentStatementReconciliationConfirmed, sourceFactsConfirmed: null })} />
     </fieldset>
     <BooleanFact label="All bond and education sources checked after the last edit" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed => onChange({ ...data, sourceFactsConfirmed })} />
     <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Remove savings-bond education records</button>

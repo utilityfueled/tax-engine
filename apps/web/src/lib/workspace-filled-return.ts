@@ -1,5 +1,6 @@
 import {preparePARoyaltyReview} from "@/pdf/pa-royalty-review-context.js";
 import { hasInKindEducationReviewSources, prepareEducationReview } from "@/pdf/education-review-context.js";
+import { hasSavingsBondReviewSources, prepareSavingsBondReview } from "@/pdf/savings-bond-review-context.js";
 import { buildGuidedOhioOverlay, buildGuidedPennsylvaniaOverrides } from "./guided-state-engine-inputs";
 import "server-only";
 import Decimal from "decimal.js";
@@ -631,6 +632,7 @@ export async function buildWorkspaceFilledReturnDownload(
   const eicReview = hasEicReviewSources(resolved.taxInput) ? prepareEicReview(resolved.taxInput) : undefined;
   const premiumTaxCreditReview = hasPremiumTaxCreditReviewSources(resolved.taxInput) ? preparePremiumTaxCreditReview(resolved.taxInput) : undefined;
   const educationReview = hasInKindEducationReviewSources(resolved.taxInput) ? prepareEducationReview(resolved.taxInput) : undefined;
+  const savingsBondReview = hasSavingsBondReviewSources(resolved.taxInput) ? prepareSavingsBondReview(resolved.taxInput) : undefined;
   const redactedTaxInput = redactReviewIdentifiers(resolved.taxInput);
   const result = redactReviewIdentifiers(completeResult);
   const blankFormsDir = await resolveBlankFormsDir();
@@ -650,6 +652,7 @@ export async function buildWorkspaceFilledReturnDownload(
       eicReview,
       premiumTaxCreditReview,
       educationReview,
+      savingsBondReview,
       blankFormsDir,
       outputDir,
       flatten: true,

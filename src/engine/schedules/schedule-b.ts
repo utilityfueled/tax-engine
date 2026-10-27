@@ -12,6 +12,8 @@ import type { TaxYearInput } from "@/models/inputs.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { calculateSavingsBondStatementSources } from "../forms/savings-bond-statement-sources.js";
+import { reportSavingsBondRatios, sumSavingsBondRatios } from "@/utils/savings-bond-ratios.js";
 
 export interface InterestPayer {
   name: string;
@@ -48,6 +50,9 @@ export interface ScheduleBResult {
 
 export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOverride?: Decimal): ScheduleBResult {
   const audit = new AuditTrail();
+  // Validates actual current transfer/redemption sources; income still enters
+  // exclusively through the original statements below.
+  const reissueSources = calculateSavingsBondStatementSources(input);
 
   // ── Part I: Interest ──────────────────────────────────
 
@@ -57,7 +62,8 @@ export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOver
   for (const form of input.form1099Int) {
     const box1Interest = d(form.interestIncome);
     const box3Interest = d(form.usSavingsBondInterest);
-    const amount = box1Interest.plus(box3Interest);
+    const amount = reissueSources ? sumSavingsBondRatios([box1Interest, box3Interest]
+      .map(numerator => ({ numerator, denominator: new Decimal(1) }))).numerator : box1Interest.plus(box3Interest);
     interestPayers.push({
       name: form.payer,
       amount,
@@ -135,7 +141,7 @@ export function calculateScheduleB(input: TaxYearInput, savingsBondExclusionOver
   );
 
   // Line 2: Total interest
-  const totalInterest = interestPayers.reduce(
+  const totalInterest = reissueSources ? reportSavingsBondRatios(interestPayers.map(payer => ({ numerator: payer.amount, denominator: new Decimal(1) }))) : interestPayers.reduce(
     (acc, p) => acc.plus(p.amount),
     new Decimal(0)
   );

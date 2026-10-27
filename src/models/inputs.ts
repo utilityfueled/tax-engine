@@ -4,6 +4,7 @@
  */
 
 import { z } from "zod";
+import { SavingsBondReissueSourcesSchema } from "./savings-bond-reissue-sources.js";
 import { EducationRoomBoardPeriodSchema, EducationRoomBoardPeriodExpenseSchema, EducationRoomBoardEsaAllocationSchema, EducationRoomBoardPriorUseSchema, EducationRoomBoardPriorUseExpenseSchema } from "@/models/education-room-board-periods.js";
 import { VehicleRefinancingSourcesSchema } from "@/models/vehicle-refinancing-sources.js";
 import { getNYIT201ResidentConstants } from "@/models/constants.js";
@@ -3728,8 +3729,9 @@ export const AMTCapitalGainsSchema = z.object({
 export const SavingsBondRedemptionSchema = z.preprocess((value) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
   const record = value as Record<string, unknown>;
-  const required = ["sourceId", "proceeds", "bondType", "issueDate", "redemptionDate", "ownerDateOfBirth", "registeredOwner", "ownershipConfirmed", "faceValue", "priorYearInterestReported"];
-  return { ...record, sourceFactsComplete: record.sourceFactsComplete !== false && required.every(key => record[key] !== undefined) };
+  const required = ["sourceId", "proceeds", "bondType", "issueDate", "redemptionDate", "ownerDateOfBirth", "registeredOwner", "ownershipConfirmed", "faceValue"];
+  return { ...record, sourceFactsComplete: record.sourceFactsComplete !== false && required.every(key => record[key] !== undefined)
+    && (record.priorYearInterestReported !== undefined || record.reissueSourceId !== undefined) };
 }, z.object({
   /** Recomputed from original fields; a supplied true marker is not evidence. */
   sourceFactsComplete: z.boolean().optional(),
@@ -3739,6 +3741,9 @@ export const SavingsBondRedemptionSchema = z.preprocess((value) => {
   interest: optionalDecimalInput,
   qualifiedExpenses: optionalDecimalInput,
   sourceId: z.string().trim().min(1).optional(),
+  /** Links this actual redemption to an original successor in the reissue history. */
+  reissueSourceId: z.string().trim().min(1).optional(),
+  bondIdentifier: z.string().trim().min(1).optional(),
   bondType: z.enum(["paper_ee", "electronic_ee", "series_i", "other"]).optional(),
   issueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   redemptionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
@@ -3765,6 +3770,7 @@ export const SavingsBondRedemptionSchema = z.preprocess((value) => {
 
 /** Form 8815 expenses are coordinated once per return, not once per bond. */
 export const Form8815Schema = z.object({
+  reissueSources: SavingsBondReissueSourcesSchema.optional(),
   sourceFactsConfirmed: z.boolean().optional(),
   currentStatementReconciliationConfirmed: z.boolean().optional(),
   priorYearInterestIncludedInCurrentStatements: optionalDecimalInput,

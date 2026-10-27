@@ -1,0 +1,37 @@
+form: "Guided original savings-bond reissue sources"
+fullName: "Actual purchase, reissue, successor and current statement records"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p550"
+notes: |
+  Original records, including explicit zero and false, pass to the same facts-only
+  history and statement reconciliation used by the canonical return. Missing
+  prior reports, statement components and complete lists stay unknown. Successor
+  selections link existing current redemption rows; no duplicate bond or current
+  interest summary is created. A substantive history, redemption, statement,
+  household or education change revokes history, statement and root confirmation.
+  Guide completion is source reachability, not final-year or filing qualification.
+lines:
+  - line: "saved-review"
+    description: "Build the review from reloaded original sources and private context"
+    formula: "Reload the actual guide without deriving or persisting current interest; prepare original history before identifier redaction. The saved review retains transfer100, redemption400 and originalBox3500 once. Because Form8815 is a reference summary, the actual saved cover must identify packet completeness as partial. Missing or revoked history, a stale copied statement and a changed source year block export; original sources are not mutated or sent to unrelated endpoints."
+    testRef: "tests/apps/web/workspace-savings-bond-reissues.test.ts::downloads reloaded original reissue sources without duplicate income"
+  - line: "browser"
+    description: "Edit actual records, reconfirm, reload and download on desktop and mobile"
+    formula: "Clearing a known prior0 revokes all three confirmations and the preview; reload preserves unknown. Restoring actual0 and separately reconfirming history, current statement and return facts restores the same100 taxable interest. Each actual desktop/mobile saved cover identifies packet completeness as partial and Form8815 as a reference; saved review notices and source privacy persist while filing qualification stays closed."
+    testRef: "apps/web/tests/guided-savings-bond-reissues.spec.ts::preserves actual bond reissue sources through edit reload and review"
+  - line: "visible-controls"
+    description: "Complete an original reissue from actual panel controls"
+    formula: "Add original owners, group, two successor bonds and one current statement through visible fields; actual selections create unique links to the existing redemptions. Unknown fields remain blank, current transfer is reported once, and edited original facts revoke every relevant confirmation."
+    testRef: "tests/apps/web/savings-bond-reissue-interactions.test.tsx::completes actual reissue and statement records through visible controls"
+  - line: "originals-to-return"
+    description: "Preserve original history and derived links through the actual guide"
+    formula: "Actual current sole-funder split gives100 current transfer plus400 redemption; reported Box3=500 once, exclusion400, taxable100. Save/reload retains source amounts and no prior-interest override is invented."
+    testRef: "tests/guided-interview/guided-savings-bond-reissues.test.ts::preserves actual reissue sources and current transfer through the guide"
+  - line: "unknown-and-stale"
+    description: "Keep missing sources and contradictory identities incomplete"
+    formula: "Missing prior zero, false completeness, stale originalBox3/owner, duplicate successor link and replaced household block completion. Source facts remain unchanged."
+    testRef: "tests/guided-interview/guided-savings-bond-reissues.test.ts::blocks unknown false and contradictory original records"
+  - line: "confirmation"
+    description: "Revoke nested history and statement confirmation after edits"
+    formula: "Editing a copied original, receipt or household must revoke the three independent confirmations; reconfirmation cannot certify a stale source copy."
+    testRef: "tests/guided-interview/guided-savings-bond-reissues.test.ts::revokes history statement and root confirmation after real source edits"

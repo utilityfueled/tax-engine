@@ -8,6 +8,8 @@ import type { SavingsBondRedemption, TaxYearInput } from "@/models/inputs.js";
 import type { FilingStatus } from "@/models/constants.js";
 import { d, min, zeroFloor, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { calculateSavingsBondReissueSources, type SavingsBondReissueInput, type BondSourceRatio } from "./savings-bond-reissue-sources.js";
+import { reportSavingsBondRatios, sumSavingsBondRatios } from "@/utils/savings-bond-ratios.js";
 
 export interface Form8815RedemptionResult {
   sourceId?: string;
@@ -16,6 +18,9 @@ export interface Form8815RedemptionResult {
   proceeds: Decimal;
   principal?: Decimal;
   currentYearInterest?: Decimal;
+  /** Exact current redemption interest; display quotient is not a new source. */
+  currentYearInterestRatio?: BondSourceRatio;
+  incomeOwner?: "primary" | "spouse";
 }
 export interface Form8815Result {
   taxYear: number;
@@ -33,10 +38,12 @@ export interface Form8815Result {
   excludableSavingsBondInterest: Decimal; // Line 14
   redemptionResults: Form8815RedemptionResult[];
   lines: CalculatedLine[];
+  reissueSourcesVerified?: boolean;
 }
 interface Form8815Options {
   taxYear?: number;
   facts?: TaxYearInput["form8815"];
+  sourceTaxpayer?: SavingsBondReissueInput["taxpayer"];
 }
 
 function amount(value: string | number | Decimal | undefined, name: string): Decimal {
@@ -67,6 +74,11 @@ export function calculateForm8815(
   const taxYear = options.taxYear ?? 2025;
   if (taxYear !== 2025 && taxYear !== 2026) throw new Error(`Form 8815 does not support tax year ${taxYear}.`);
   if (!modifiedAGI.isFinite()) throw new Error("Form 8815 modified AGI must be finite.");
+  const hasReissueSources = options.facts?.reissueSources !== undefined || redemptions.some(row => row.reissueSourceId !== undefined);
+  if (hasReissueSources && (!options.sourceTaxpayer || options.sourceTaxpayer.taxYear !== taxYear || options.sourceTaxpayer.filingStatus !== filingStatus))
+    throw new Error("Form 8815 reissue sources require the actual return household and year.");
+  const reissues = options.sourceTaxpayer ? calculateSavingsBondReissueSources({ taxpayer: options.sourceTaxpayer,
+    redemptions, sources: options.facts?.reissueSources }) : undefined;
   const audit = new AuditTrail();
   const sourceFactsVerified = taxYear === 2026 || options.facts !== undefined;
   if (filingStatus === "married_filing_separately") {
@@ -82,6 +94,7 @@ export function calculateForm8815(
 
   let totalExpenses = d(0), beneficiaryBenefits = d(0), proceeds = d(0), interest = d(0);
   let paperFace = d(0), otherFace = d(0), priorInterest = d(0);
+  const priorRatios: BondSourceRatio[] = [], allPriorRatios: BondSourceRatio[] = [], currentTransferRatios: BondSourceRatio[] = [], eligibleInterestRatios: BondSourceRatio[] = [];
   const redemptionResults: Form8815RedemptionResult[] = [];
   if (sourceFactsVerified) {
     const facts = options.facts;
@@ -103,28 +116,42 @@ export function calculateForm8815(
       if (bond.ageTestOwner && bond.registeredOwner !== "taxpayer_and_spouse" && bond.ageTestOwner !== bond.registeredOwner) throw new Error("Form 8815 age-test owner conflicts with actual bond registration.");
       const gross = amount(bond.proceeds, "redemption proceeds");
       const face = amount(bond.faceValue, "face value");
-      const reported = amount(bond.priorYearInterestReported, "previously reported interest");
+      const historical = reissues?.redemptions.find(row => row.sourceId === sourceId);
+      const reportedRatio = historical?.previouslyRecognizedInterest ?? { numerator: amount(bond.priorYearInterestReported, "previously reported interest"), denominator: d(1) };
+      const reported = reportedRatio.numerator.div(reportedRatio.denominator);
+      allPriorRatios.push(reportedRatio);
       allPriorInterest = allPriorInterest.plus(reported);
       if (bond.qualifiedExpenses !== undefined && !amount(bond.qualifiedExpenses, "legacy expenses").isZero()) throw new Error("Form 8815 legacy per-bond expenses must be reconciled to return-level education sources.");
       if (bond.bondType === "other") {
         redemptionResults.push({ sourceId, eligible: false, reason: "The actual bond type is not series EE or I", proceeds: gross });
         continue;
       }
-      const principal = bond.bondType === "paper_ee" ? face.times("0.5") : face;
-      if (principal.gt(gross) || reported.gt(gross.minus(principal))) throw new Error("Form 8815 principal or prior reported interest exceeds actual redemption proceeds.");
-      const currentYearInterest = gross.minus(principal).minus(reported);
-      if (bond.interest !== undefined && !amount(bond.interest, "legacy interest").eq(currentYearInterest)) throw new Error("Form 8815 legacy interest does not reconcile to the actual source worksheet.");
+      const principal = historical?.principal ?? (bond.bondType === "paper_ee" ? face.times("0.5") : face);
+      if (!historical && (principal.gt(gross) || reported.gt(gross.minus(principal)))) throw new Error("Form 8815 principal or prior reported interest exceeds actual redemption proceeds.");
+      const currentYearInterestRatio = historical?.redemptionInterest;
+      const currentYearInterest = currentYearInterestRatio ? currentYearInterestRatio.numerator.div(currentYearInterestRatio.denominator) : gross.minus(principal).minus(reported);
+      if (!historical && bond.interest !== undefined && !amount(bond.interest, "legacy interest").eq(currentYearInterest)) throw new Error("Form 8815 legacy interest does not reconcile to the actual source worksheet.");
       const ownerAge = Number(issued.slice(0, 4)) - Number(born.slice(0, 4)) - (issued.slice(5) < born.slice(5) ? 1 : 0);
       const ownershipEligible = bond.ownershipConfirmed && (bond.registeredOwner === "taxpayer" || (filingStatus === "married_filing_jointly" && (bond.registeredOwner === "spouse" || bond.registeredOwner === "taxpayer_and_spouse")));
       const eligible = issued >= "1990-01-01" && ownerAge >= 24 && ownershipEligible;
       const reason = eligible ? "Actual source facts satisfy the bond eligibility requirements" : "Actual source facts do not satisfy bond type, issue date, age or ownership requirements";
-      redemptionResults.push({ sourceId, eligible, reason, proceeds: gross, principal, currentYearInterest });
+      redemptionResults.push({ sourceId, eligible, reason, proceeds: gross, principal, currentYearInterest,
+        ...(historical ? { currentYearInterestRatio, incomeOwner: historical.owner } : {}) });
       if (!eligible) continue;
       proceeds = proceeds.plus(gross);
       priorInterest = priorInterest.plus(reported);
+      priorRatios.push(reportedRatio);
+      // Reissue recognition is not an additional printed worksheet line. Keep
+      // the source interest exact until reporting the eligible redemption total.
+      eligibleInterestRatios.push(currentYearInterestRatio ?? sumSavingsBondRatios([
+        { numerator: gross, denominator: d(1) }, { numerator: principal.negated(), denominator: d(1) },
+        { numerator: reportedRatio.numerator.negated(), denominator: reportedRatio.denominator },
+      ]));
+      if (historical) currentTransferRatios.push(historical.currentTransferInterest);
       if (bond.bondType === "paper_ee") paperFace = paperFace.plus(face); else otherFace = otherFace.plus(face);
     }
-    if (statementAdjustment.gt(allPriorInterest)) throw new Error("Form 8815 current statement adjustment exceeds actual previously reported interest.");
+    const allPrior = sumSavingsBondRatios(allPriorRatios);
+    if (reissues ? allPrior.numerator.lt(allPrior.denominator.times(statementAdjustment)) : statementAdjustment.gt(allPriorInterest)) throw new Error("Form 8815 current statement adjustment exceeds actual previously reported interest.");
     audit.record("Form 8815", "statement-prior-interest-adjustment", "Previously reported interest included in current statements", statementAdjustment, "Actual reconciled adjustment applied once on Schedule B");
     const expenseIds = new Set<string>();
     for (const expense of facts.educationExpenses) {
@@ -146,9 +173,14 @@ export function calculateForm8815(
       // Line 3 includes benefits only to the extent they cover this source's line 2 expenses.
       beneficiaryBenefits = beneficiaryBenefits.plus(min(benefits, coordinated));
     }
-    const w1 = roundDollar(proceeds), w2 = roundDollar(paperFace);
-    const w3 = roundDollar(w2.times("0.5")), w4 = roundDollar(otherFace);
-    const w5 = w3.plus(w4), w6 = zeroFloor(w1.minus(w5)), w7 = roundDollar(priorInterest);
+    const sourceEligible = redemptions.filter(row => redemptionResults.some(result => result.sourceId === row.sourceId && result.eligible));
+    const sourceTotal = (rows: SavingsBondRedemption[], field: "proceeds" | "faceValue") => reportSavingsBondRatios(rows.map(row => ({ numerator: amount(row[field], field), denominator: d(1) })));
+    const w1 = reissues ? sourceTotal(sourceEligible, "proceeds") : roundDollar(proceeds);
+    const w2 = reissues ? sourceTotal(sourceEligible.filter(row => row.bondType === "paper_ee"), "faceValue") : roundDollar(paperFace);
+    const w3 = roundDollar(w2.times("0.5"));
+    const w4 = reissues ? sourceTotal(sourceEligible.filter(row => row.bondType !== "paper_ee"), "faceValue") : roundDollar(otherFace);
+    if (reissues) proceeds = w1;
+    const w5 = w3.plus(w4), w6 = zeroFloor(w1.minus(w5)), w7 = reissues ? reportSavingsBondRatios(priorRatios) : roundDollar(priorInterest);
     const w8 = zeroFloor(w6.minus(w7));
     const worksheet: Array<[string, string, Decimal, string]> = [
       ["1", "Eligible redemption proceeds", w1, "Form 8815 line 5"],
@@ -161,7 +193,13 @@ export function calculateForm8815(
       ["8", "Current-year interest", w8, "Worksheet 6 - 7"],
     ];
     for (const [id, description, value, formula] of worksheet) audit.record("Form 8815", `6-worksheet-${id}`, description, value, formula);
-    interest = w8;
+    const currentReissueInterest = reportSavingsBondRatios(currentTransferRatios);
+    if (reissues) {
+      audit.merge(reissues.lines);
+      audit.record("Form 8815", "current-reissue-interest", "Current transfer interest separated from redemption interest", currentReissueInterest,
+        "Interest recognized on current reissue is taxable under Pub550 and is not redemption interest excluded by IRC135(a)");
+    }
+    interest = reissues ? reportSavingsBondRatios(eligibleInterestRatios) : w8;
   } else {
     // Historical 2025 calculations remain available but do not establish source qualification.
     for (const bond of redemptions) {
@@ -193,7 +231,7 @@ export function calculateForm8815(
     ["3", "Nontaxable educational benefits", nontaxableEducationalBenefits, "Beneficiary benefits covering line 2 expenses"],
     ["4", "Net qualified expenses", qualifiedExpenses, "max(0, line 2 - line 3)"],
     ["5", "Qualified bond redemption proceeds", totalProceeds, "Eligible principal and interest"],
-    ["6", "Current-year bond interest", totalInterest, sourceFactsVerified ? "Line 6 worksheet 8" : "Historical aggregate interest; qualification unverified"],
+    ["6", "Current-year bond interest", totalInterest, sourceFactsVerified ? (reissues ? "Exact eligible redemption interest after prior reports and current-transfer recognition; aggregate before rounding this line" : "Line 6 worksheet 8") : "Historical aggregate interest; qualification unverified"],
     ["7", "Expense fraction", expenseRatio, "min(1, line 4 / line 5); zero if no proceeds"],
     ["8", "Exclusion before phaseout", excludableBeforePhaseOut, "line 6 x line 7"],
     ["9", "Modified adjusted gross income", magi, "Completed official Line 9 Worksheet"],
@@ -204,5 +242,5 @@ export function calculateForm8815(
     ["14", "Excludable savings bond interest", excludableSavingsBondInterest, "line 8 - line 13 -> Schedule B line 3"],
   ];
   for (const [id, description, value, formula] of lines) audit.record("Form 8815", id, description, value, formula);
-  return { taxYear, sourceFactsVerified, grossQualifiedExpenses, nontaxableEducationalBenefits, qualifiedExpenses, totalProceeds, totalInterest, expenseRatio, excludableBeforePhaseOut, modifiedAGI: magi, phaseOutThreshold, phaseOutRange, excludableSavingsBondInterest, redemptionResults, lines: audit.getLines() };
+  return { taxYear, sourceFactsVerified, grossQualifiedExpenses, nontaxableEducationalBenefits, qualifiedExpenses, totalProceeds, totalInterest, expenseRatio, excludableBeforePhaseOut, modifiedAGI: magi, phaseOutThreshold, phaseOutRange, excludableSavingsBondInterest, redemptionResults, lines: audit.getLines(), ...(reissues ? { reissueSourcesVerified: true } : {}) };
 }

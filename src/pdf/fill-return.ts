@@ -6,6 +6,7 @@ import {preparePARoyaltyReview,assertPARoyaltyReview,type PreparedPARoyaltyRevie
 
 import { join } from "path";
 import { assertPreparedEducationReturn, hasInKindEducationReviewSources, prepareEducationReview, type PreparedEducationReview } from "./education-review-context.js";
+import { hasSavingsBondReviewSources, prepareSavingsBondReview, savingsBondReviewOriginalInput, type PreparedSavingsBondReview } from "./savings-bond-review-context.js";
 import type { PDFDocument } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
@@ -410,6 +411,8 @@ export interface FillReturnOptions {
   premiumTaxCreditReview?: PreparedPremiumTaxCreditReview;
   /** Original student identities validated privately before render redaction. */
   educationReview?: PreparedEducationReview;
+  /** Complete original bond history and MAGI sources, prepared before redaction. */
+  savingsBondReview?: PreparedSavingsBondReview;
 }
 
 export interface FillReturnResult {
@@ -460,6 +463,9 @@ export async function fillReturn(
     assertPreparedEducationReturn(input, result.form1099Q, educationReview, result.schedule1?.studentLoanInterest);
     buildForm1099QReferenceSummary(input.form1099Q, result.form1099Q, input.qualifiedEducationExpenses, educationReview);
   }
+  const savingsBondReview = hasSavingsBondReviewSources(input) || result.form8815?.reissueSourcesVerified || options.savingsBondReview
+    ? options.savingsBondReview ?? prepareSavingsBondReview(input) : undefined;
+  if (savingsBondReview) savingsBondReviewOriginalInput(input, result, savingsBondReview);
   const capitalGainReview = options.capitalGainReview ?? prepareForm8949Review(
     charitableReview ? charitableReviewOriginalSourceInput(input, result, charitableReview) : input,
   );
@@ -1074,12 +1080,13 @@ export async function fillReturn(
   if (
     (input.savingsBondRedemptions?.length ?? 0) > 0
     && result.form8815
-    && result.form8815.excludableSavingsBondInterest.gt(0)
+    && (result.form8815.excludableSavingsBondInterest.gt(0) || result.form8815.reissueSourcesVerified)
   ) {
     const outputPath8815Reference = await fillForm8815Reference(
       input.savingsBondRedemptions ?? [],
       result.form8815,
       outputDir,
+      savingsBondReview ? { input, result, prepared: savingsBondReview } : undefined,
     );
     filledForms.push(outputPath8815Reference);
   }

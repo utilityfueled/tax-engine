@@ -193,6 +193,16 @@
       "note": "Actual ordinary annual cash category qualification, dated refund and borrower history, completed beneficiary limits and source-bound historical 2025 review are exercised by these own-spec tests. Mixed effective-date and positive qualified-interest attribution remain separate internal methods. No final2026 output, filing qualification or independent human review is claimed."
     },
     {
+      "key": "federal/education-annual-loan-interest",
+      "enginePath": "src/engine/forms/form-1099-q.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-5329.ts",
+      "testRefs": [
+        "tests/engine/education-annual-loan-interest.test.ts::derives the annual interest exclusion and actual lender deduction once",
+        "tests/pdf/education-annual-loan-interest.test.ts::binds original lender records and the calculated deduction before rendering"
+      ],
+      "note": "The own-spec controls exercise actual annual interest-only qualification, original Box2 earnings, independent lender deduction and historical2025 Form5329 output. The private review binds all consumed original return facts before output. Mixed-purpose attribution, mixed effective dates and bond methods remain separate; no final2026 output, filing qualification or independent human review is claimed."
+    },
+    {
       "key": "federal/education-distribution-return",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [
@@ -944,6 +954,16 @@
       "note": "Actual current activity membership and original Form6198 sources permit basis-first deduction allocation with independent known-empty prior at-risk history. Original basis, at-risk and charitable balances stay distinct in review output. This does not qualify a 2026 form or replace independent human review."
     },
     {
+      "key": "federal/k1-passive-capital-sources",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8582.ts",
+      "testRefs": [
+        "tests/engine/federal-k1-passive-capital.test.ts::routes actual passive capital through PartIX once and preserves the portfolio distinction",
+        "tests/pdf/k1-passive-capital-review.test.ts::prints ordinary and capital destinations with exact separate PartIX records"
+      ],
+      "note": "Own-spec controls bind actual ordinary K1 capital character, independent loss histories and exact reporting-part allocation to the historical2025 packet. The mixed ST/LT PartV summary is a derived interpretation, with original term amounts retained. PTP, rental, disposition and special-rate methods remain excluded; no filing readiness, full2026 output or independent human qualification is claimed."
+    },
+    {
       "key": "federal/k1-passive-distribution-gain",
       "enginePath": "src/engine/federal.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-8582.ts",
@@ -1060,6 +1080,16 @@
       "note": "Separate actual plan owners use the shared owner calculation and source-bound 2025 review mapping."
     },
     {
+      "key": "federal/marketplace-marriage-health",
+      "enginePath": "src/engine/forms/marketplace-marriage-health.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-marriage-health.test.ts::composes actual marriage and health sources without changing the joint income",
+        "tests/pdf/marketplace-marriage-health-review.test.ts::prints the source-bound marriage and health worksheets with the computed cap"
+      ],
+      "note": "Own-spec controls bind actual unshared marriage and health sources to the existing health worksheets and historical2025 Form8962 review output. Actual joint eligibility, computed repayment limit, owner deductions and original sources remain separate. No additional source cohort, filing readiness or independent human qualification is claimed."
+    },
+    {
       "key": "federal/marketplace-net-operating-loss",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [
@@ -1106,6 +1136,16 @@
       "note": "One actual eligible owner/business payment pool derives paid cost from original cash and completed reported repayment; private original source binding precedes review output. No allocation across differently qualified pools or independent filing qualification is claimed."
     },
     {
+      "key": "federal/marketplace-shared-marriage-health",
+      "enginePath": "src/engine/forms/form-8962-marriage-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-shared-marriage-health.test.ts::allocates actual agreement and default sources before marriage and health",
+        "tests/pdf/marketplace-shared-marriage-health-review.test.ts::prints both actual allocation and marriage parts with the independent health sources"
+      ],
+      "note": "Own-spec controls bind actual full shared policies, PartIV allocation, alternative marriage groups and independent health payments to the historical2025 Form8962 review packet. Exact source fractions remain distinct from printed percentages. Unresolved within-return grouping, partial-family and payer methods remain explicit; no filing or human qualification is claimed."
+    },
+    {
       "key": "federal/net-operating-loss-vintages",
       "enginePath": "src/engine/forms/net-operating-loss.ts",
       "testRefs": [
@@ -1138,6 +1178,16 @@
         "tests/pdf/qbi-loss-review.test.ts::prints the physical REIT and PTP zero floor without losing its carry"
       ],
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "federal/savings-bond-reissue-return",
+      "enginePath": "src/engine/federal.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-8815.ts",
+      "testRefs": [
+        "tests/engine/savings-bond-reissue-return.test.ts::preserves current transfer interest outside the education exclusion",
+        "tests/pdf/savings-bond-reissue-review.test.ts::binds original bond history and income before saved review output"
+      ],
+      "note": "Actual original coowner reissue and current statement histories preserve exact recognition/redemption fractions through the canonical return and source-bound historical 2025 Form8815 reference. This is partial reference output, not a qualified official form, e-file support, final2026 qualification or independent human review."
     },
     {
       "key": "federal/savings-bond-return-integration",
@@ -1316,46 +1366,6 @@
         "tests/engine/federal-student-loan-sources.test.ts::routes actual loan sources once and preserves eligibility and unknown distinctions"
       ],
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
-    },
-    {
-      "key": "federal/education-annual-loan-interest",
-      "enginePath": "src/engine/forms/form-1099-q.ts",
-      "packetPath": "src/pdf/mappings/2025/fill-form-5329.ts",
-      "testRefs": [
-        "tests/engine/education-annual-loan-interest.test.ts::derives the annual interest exclusion and actual lender deduction once",
-        "tests/pdf/education-annual-loan-interest.test.ts::binds original lender records and the calculated deduction before rendering"
-      ],
-      "note": "The own-spec controls exercise actual annual interest-only qualification, original Box2 earnings, independent lender deduction and historical2025 Form5329 output. The private review binds all consumed original return facts before output. Mixed-purpose attribution, mixed effective dates and bond methods remain separate; no final2026 output, filing qualification or independent human review is claimed."
-    },
-    {
-      "key": "federal/marketplace-marriage-health",
-      "enginePath": "src/engine/forms/marketplace-marriage-health.ts",
-      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
-      "testRefs": [
-        "tests/engine/federal-marketplace-marriage-health.test.ts::composes actual marriage and health sources without changing the joint income",
-        "tests/pdf/marketplace-marriage-health-review.test.ts::prints the source-bound marriage and health worksheets with the computed cap"
-      ],
-      "note": "Own-spec controls bind actual unshared marriage and health sources to the existing health worksheets and historical2025 Form8962 review output. Actual joint eligibility, computed repayment limit, owner deductions and original sources remain separate. No additional source cohort, filing readiness or independent human qualification is claimed."
-    },
-    {
-      "key": "federal/marketplace-shared-marriage-health",
-      "enginePath": "src/engine/forms/form-8962-marriage-sources.ts",
-      "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",
-      "testRefs": [
-        "tests/engine/federal-marketplace-shared-marriage-health.test.ts::allocates actual agreement and default sources before marriage and health",
-        "tests/pdf/marketplace-shared-marriage-health-review.test.ts::prints both actual allocation and marriage parts with the independent health sources"
-      ],
-      "note": "Own-spec controls bind actual full shared policies, PartIV allocation, alternative marriage groups and independent health payments to the historical2025 Form8962 review packet. Exact source fractions remain distinct from printed percentages. Unresolved within-return grouping, partial-family and payer methods remain explicit; no filing or human qualification is claimed."
-    },
-    {
-      "key": "federal/k1-passive-capital-sources",
-      "enginePath": "src/engine/federal.ts",
-      "packetPath": "src/pdf/mappings/2025/fill-form-8582.ts",
-      "testRefs": [
-        "tests/engine/federal-k1-passive-capital.test.ts::routes actual passive capital through PartIX once and preserves the portfolio distinction",
-        "tests/pdf/k1-passive-capital-review.test.ts::prints ordinary and capital destinations with exact separate PartIX records"
-      ],
-      "note": "Own-spec controls bind actual ordinary K1 capital character, independent loss histories and exact reporting-part allocation to the historical2025 packet. The mixed ST/LT PartV summary is a derived interpretation, with original term amounts retained. PTP, rental, disposition and special-rate methods remain excluded; no filing readiness, full2026 output or independent human qualification is claimed."
     }
   ]
 }

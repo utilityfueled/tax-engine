@@ -1,12 +1,15 @@
 import Decimal from "decimal.js";
 import { z } from "zod";
-import { Form8815Schema, SavingsBondRedemptionSchema, type TaxYearInput } from "@/models/inputs.js";
+import { Form8815Schema, SavingsBondRedemptionSchema, Form1099IntSchema, type TaxYearInput } from "@/models/inputs.js";
 import { validateSavingsBondReturnIdentity } from "@/engine/forms/savings-bond-return-identity.js";
 import { calculateSavingsBondIncomeOwnership } from "@/engine/forms/savings-bond-income-ownership.js";
 import type { FilingStatus as EngineFilingStatus } from "@/models/constants.js";
 import type { FilingStatus, InterestEntryData, PersonalInfoData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { isStartedInvestment } from "./guided-investment-facts";
+import { buildSavingsBondReissueSources, linkSavingsBondReissueRedemptions, type SavingsBondReissueData } from "./guided-savings-bond-reissues";
+import { calculateSavingsBondStatementSources } from "@/engine/forms/savings-bond-statement-sources.js";
+import { reportSavingsBondRatios } from "@/utils/savings-bond-ratios.js";
 
 export type SavingsBondSourceRecord = Record<string, string | boolean | null | undefined>;
 export interface SavingsBondEducationData {
@@ -19,6 +22,7 @@ export interface SavingsBondEducationData {
   royaltyInterestAdjustment?: string;
   redemptions?: SavingsBondSourceRecord[];
   educationExpenses?: SavingsBondSourceRecord[];
+  reissueSources?: SavingsBondReissueData;
 }
 export interface SavingsBondField {
   key: string; label: string; kind: "text" | "date" | "money" | "year" | "boolean" | "choice";
@@ -27,6 +31,7 @@ export interface SavingsBondField {
   when?: (record: SavingsBondSourceRecord) => boolean;
 }
 export const savingsBondFields: SavingsBondField[] = [
+  { key: "bondIdentifier", label: "Actual bond serial or security identifier", kind: "text" },
   { key: "bondType", label: "Actual bond type", kind: "choice", choices: [["paper_ee", "Paper series EE"], ["electronic_ee", "Electronic series EE"], ["series_i", "Series I"], ["other", "Other bond"]] },
   { key: "issueDate", label: "Assigned issue date (first day of the issue month)", kind: "date" },
   { key: "redemptionDate", label: "Actual redemption date", kind: "date" },
@@ -111,7 +116,8 @@ function collect(data: SavingsBondEducationData, year?: number | null, status?: 
   if ((year !== 2025 && year !== 2026) || !status || data.taxYear !== String(year)) throw new Error("Match the actual bond source year to the return year and filing status.");
   if (data.sourceFactsConfirmed !== true || data.currentStatementReconciliationConfirmed !== true) throw new Error("Confirm the actual bond and education sources and current statement interest reconciliation.");
   if (!Array.isArray(data.redemptions) || !Array.isArray(data.educationExpenses)) throw new Error("Add actual bond and education records or explicitly confirm an empty list.");
-  const redemptions = data.redemptions.map(record => {
+  const reissueSources = buildSavingsBondReissueSources(data.reissueSources);
+  const redemptions = linkSavingsBondReissueRedemptions(data.redemptions, reissueSources).map(record => {
     const source = normalized(record);
     const incomeOwnership: Record<string, unknown> = {};
     for (const field of savingsBondIncomeOwnershipFields) {
@@ -126,7 +132,7 @@ function collect(data: SavingsBondEducationData, year?: number | null, status?: 
   });
   const worksheet = normalized(Object.fromEntries(savingsBondWorksheetFields.map(field => [field.key, data[field.key as keyof SavingsBondEducationData]])) as SavingsBondSourceRecord);
   for (const field of savingsBondWorksheetFields) if (worksheet[field.key] === undefined) throw new Error(`Enter the actual ${field.label.toLowerCase()}.`);
-  const facts = Form8815Schema.parse({ ...worksheet, sourceFactsConfirmed: data.sourceFactsConfirmed, currentStatementReconciliationConfirmed: data.currentStatementReconciliationConfirmed, educationExpenses: data.educationExpenses.map(normalized) });
+  const facts = Form8815Schema.parse({ ...worksheet, reissueSources, sourceFactsConfirmed: data.sourceFactsConfirmed, currentStatementReconciliationConfirmed: data.currentStatementReconciliationConfirmed, educationExpenses: data.educationExpenses.map(normalized) });
   if (!personal) throw new Error("Complete the actual household personal information before reconciling bond sources.");
   const statuses: Record<FilingStatus, EngineFilingStatus> = {
     single: "single", mfj: "married_filing_jointly", mfs: "married_filing_separately",
@@ -136,6 +142,15 @@ function collect(data: SavingsBondEducationData, year?: number | null, status?: 
     taxYear: year, filingStatus: statuses[status], primary: personal,
     spouse: personal.spouse, dependents: personal.dependents, redemptions, facts,
   });
+  const history = reissueSources || redemptions.some(row => row.reissueSourceId !== undefined)
+    ? calculateSavingsBondStatementSources({ taxpayer: { taxYear: year, filingStatus: statuses[status],
+      primary: { ...personal, dateOfBirth: actualDate(personal.dateOfBirth) },
+      spouse: personal.spouse ? { ...personal.spouse, dateOfBirth: actualDate(personal.spouse.dateOfBirth) } : undefined },
+      savingsBondRedemptions: redemptions, form8815: facts,
+      form1099Int: (interestEntries ?? []).filter(isStartedInvestment).map(entry => Form1099IntSchema.parse({ payer: entry.payer,
+        accountReference: entry.accountReference, accountHolder: entry.accountHolder,
+        interestIncome: actualAmount(entry.interestIncome, "original Box 1").toFixed(),
+        usSavingsBondInterest: actualAmount(entry.usSavingsBondInterest, "original Box 3").toFixed() })) }) : undefined;
   let priorInterest = new Decimal(0), currentInterest = new Decimal(0);
   const bondIds = new Set<string>();
   for (const bond of redemptions) {
@@ -143,20 +158,30 @@ function collect(data: SavingsBondEducationData, year?: number | null, status?: 
     sourceId(bond.sourceId, bondIds);
     const issued = actualDate(bond.issueDate), redeemed = actualDate(bond.redemptionDate), born = actualDate(bond.ownerDateOfBirth);
     if (!issued.endsWith("-01") || issued > redeemed || born > issued || redeemed.slice(0, 4) !== String(year)) throw new Error("Bond dates must use the assigned issue month and the actual redemption year and owner history.");
-    const gross = actualAmount(bond.proceeds, "redemption proceeds"), face = actualAmount(bond.faceValue, "bond face value"), prior = actualAmount(bond.priorYearInterestReported, "previously reported interest");
+    const historical = history?.redemptions.find(row => row.sourceId === bond.sourceId);
+    const gross = actualAmount(bond.proceeds, "redemption proceeds"), face = actualAmount(bond.faceValue, "bond face value"), prior = historical
+      ? historical.previouslyRecognizedInterest.numerator.div(historical.previouslyRecognizedInterest.denominator) : actualAmount(bond.priorYearInterestReported, "previously reported interest");
     if (bond.qualifiedExpenses !== undefined && !actualAmount(bond.qualifiedExpenses, "saved per-bond expenses").isZero()) throw new Error("Reconcile saved per-bond expenses to the actual return-level education records.");
     priorInterest = priorInterest.plus(prior);
     if (bond.bondType === "other") continue;
-    const principal = bond.bondType === "paper_ee" ? face.times("0.5") : face;
-    if (principal.gt(gross) || prior.gt(gross.minus(principal))) throw new Error("Actual principal and previously reported interest cannot exceed redemption proceeds.");
-    if (bond.interest !== undefined && !actualAmount(bond.interest, "saved bond interest").eq(gross.minus(principal).minus(prior))) throw new Error("Saved bond interest does not reconcile to the actual source records.");
-    currentInterest = currentInterest.plus(gross.minus(principal).minus(prior));
+    const principal = historical?.principal ?? (bond.bondType === "paper_ee" ? face.times("0.5") : face);
+    if (!historical && (principal.gt(gross) || prior.gt(gross.minus(principal)))) throw new Error("Actual principal and previously reported interest cannot exceed redemption proceeds.");
+    if (!historical && bond.interest !== undefined && !actualAmount(bond.interest, "saved bond interest").eq(gross.minus(principal).minus(prior))) throw new Error("Saved bond interest does not reconcile to the actual source records.");
+    currentInterest = currentInterest.plus(historical ? historical.redemptionInterest.numerator.div(historical.redemptionInterest.denominator) : gross.minus(principal).minus(prior));
     if (bond.incomeOwnership) calculateSavingsBondIncomeOwnership(bond);
   }
   const adjustment = actualAmount(facts.priorYearInterestIncludedInCurrentStatements, "prior interest included in current statements");
-  if (adjustment.gt(priorInterest)) throw new Error("The statement adjustment exceeds interest actually reported in earlier years.");
+  if (!history && adjustment.gt(priorInterest)) throw new Error("The statement adjustment exceeds interest actually reported in earlier years.");
   const statementInterest = (interestEntries ?? []).filter(isStartedInvestment).reduce((sum, entry) => sum.plus(actualAmount(entry.usSavingsBondInterest, "Form 1099-INT Box 3 amount")), new Decimal(0));
-  if (currentInterest.plus(adjustment).gt(statementInterest)) throw new Error("Reconcile current bond interest and the prior-interest adjustment to actual Form 1099-INT Box 3 records in investment income.");
+  const comparisonInterest = history ? reportSavingsBondRatios(redemptions.map(bond => {
+    const row = history.redemptions.find(value => value.sourceId === bond.sourceId);
+    return row?.redemptionInterest ?? { numerator: actualAmount(bond.proceeds, "proceeds").minus(actualAmount(bond.faceValue, "face value").times(bond.bondType === "paper_ee" ? "0.5" : "1")).minus(actualAmount(bond.priorYearInterestReported, "prior interest")), denominator: new Decimal(1) };
+  })) : currentInterest;
+  const reportedStatements = history ? reportSavingsBondRatios([
+    ...(interestEntries ?? []).filter(isStartedInvestment).map(entry => ({ numerator: actualAmount(entry.usSavingsBondInterest, "Form 1099-INT Box 3 amount"), denominator: new Decimal(1) })),
+    { numerator: adjustment.negated(), denominator: new Decimal(1) },
+  ]) : statementInterest;
+  if (history ? comparisonInterest.gt(reportedStatements) : currentInterest.plus(adjustment).gt(statementInterest)) throw new Error("Reconcile current bond interest and the prior-interest adjustment to actual Form 1099-INT Box 3 records in investment income.");
   const expenseIds = new Set<string>();
   for (const expense of facts.educationExpenses ?? []) {
     sourceId(expense.sourceId, expenseIds);

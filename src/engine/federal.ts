@@ -16,6 +16,7 @@ import { validateQofDispositionFacts } from "./forms/qof-disposition-facts.js";
  */
 
 import Decimal from "decimal.js";
+import { reportSavingsBondRatios } from "@/utils/savings-bond-ratios.js";
 import type { CharitableNolContributionLimit } from "@/utils/charitable-nol-source.js";
 import { usesDeterminedCharitableNolOrigins } from "@/utils/charitable-nol-origins.js";
 import type {
@@ -2214,13 +2215,20 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       adoptionBenefitResult?.allowableExclusion ?? new Decimal(0),
       d(bondMagiFacts?.americanSamoaIncomeExclusion), d(bondMagiFacts?.puertoRicoIncomeExclusion),
       d(bondMagiFacts?.royaltyInterestAdjustment));
-    form8815 = ordered?.bond ?? calculateForm8815(input.savingsBondRedemptions, form8815MAGI, filingStatus, { taxYear: year, facts: bondMagiFacts });
+    form8815 = ordered?.bond ?? calculateForm8815(input.savingsBondRedemptions, form8815MAGI, filingStatus, { taxYear: year, facts: bondMagiFacts, sourceTaxpayer: input.taxpayer });
     savingsBondExclusion = form8815.excludableSavingsBondInterest;
     if (form8815.sourceFactsVerified) {
       const remainingStatementInterest = sum(...input.form1099Int.map(form => d(form.usSavingsBondInterest)))
         .minus(preliminaryScheduleB.previouslyReportedSavingsBondInterest);
-      const sourcedCurrentInterest = sum(...form8815.redemptionResults.map(redemption => redemption.currentYearInterest ?? new Decimal(0)));
-      if (savingsBondExclusion.gt(remainingStatementInterest) || sourcedCurrentInterest.gt(remainingStatementInterest)) {
+      const sourcedCurrentInterest = form8815.reissueSourcesVerified
+        ? reportSavingsBondRatios(form8815.redemptionResults.map(redemption => redemption.currentYearInterestRatio
+          ?? { numerator: redemption.currentYearInterest ?? new Decimal(0), denominator: new Decimal(1) }))
+        : sum(...form8815.redemptionResults.map(redemption => redemption.currentYearInterest ?? new Decimal(0)));
+      const statementBound = form8815.reissueSourcesVerified ? reportSavingsBondRatios([
+        ...input.form1099Int.map(form => ({ numerator: d(form.usSavingsBondInterest), denominator: d(1) })),
+        { numerator: preliminaryScheduleB.previouslyReportedSavingsBondInterest.negated(), denominator: d(1) },
+      ]) : remainingStatementInterest;
+      if (savingsBondExclusion.gt(statementBound) || sourcedCurrentInterest.gt(statementBound)) {
         throw new Error("Form 8815 current bond interest and exclusion must reconcile to remaining reported Box 3 statement interest");
       }
     }

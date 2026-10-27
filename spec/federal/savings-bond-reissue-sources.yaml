@@ -1,0 +1,68 @@
+form: "Savings-bond reissue source history"
+fullName: "Actual joint purchase, ordinary reissue and successor redemption sources"
+taxYear: 2026
+irsReference: "https://www.irs.gov/publications/p550"
+retrievedAt: "2026-10-27"
+notes: |
+  Publication 550, U.S. Savings Bonds, Co-owners, Ownership transferred,
+  Purchased jointly and its Examples 1 and 2 establish this bounded method.
+  The original living co-owners are the current joint filers. Actual noncommunity
+  purchase funds establish income ownership. A complete single reissue record
+  identifies the original assigned issue date, original series and face value,
+  actual value on the reissue date, all successor face values and registrations,
+  and actual owner reporting before and after the event. Dates never interpolate
+  accrued interest. No final exclusion, current gain or owner percentage is input.
+  Whole reissue to one original owner recognizes the departing owner's deferred
+  accrued interest. Separate reissues proportional to both original contributions
+  recognize none. A sole funder's partial reissue recognizes the transferred
+  share of deferred interest. These are the published methods, not a general
+  nonproportional two-funder transfer election. Further transfers, death/trust
+  events and changed community-property history retain their actual source
+  records and require their separate methods.
+  IRC 135(a) limits education exclusion to interest arising by reason of
+  redemption. Current-year reissue recognition remains taxable separately;
+  historical or current transfer interest is not included again as redemption
+  interest. Pub550's Form1099-INT discussion and TreasuryDirect tax guidance
+  distinguish original statement inclusion from ownership. A statement's amount
+  is not inferred from these calculations.
+  Exact rational source components remain separate until a reported aggregate
+  line is rounded. The examples' reissue treatment is published; the assigned
+  accrual/redemption amounts and repeating-fraction controls are derived tests.
+  This source method does not choose attribution of a reduced joint Form8815
+  exclusion between two positive income owners.
+  Authorities: https://uscode.house.gov/us/usc/119-118/t26/s135/ ;
+  https://www.treasurydirect.gov/savings-bonds/tax-information-ee-i-bonds/ ;
+  https://www.irs.gov/pub/irs-pdf/f8815.pdf .
+lines:
+  - line: "original-sources"
+    description: "Preserve draft source unknowns, false answers and exact amounts"
+    formula: "All history fields remain optional in drafts; neither zero, ownership, complete history nor confirmation is defaulted. Calculation requires original year, owner identities, assigned date, series, face value, funds, reissue value/date, complete successors and reporting records."
+    testRef: "tests/engine/forms/savings-bond-reissue-sources.test.ts::preserves unknown false and exact original history values"
+  - line: "published-proportional-split"
+    description: "Retain each co-owner's deferred interest after proportional separate reissue"
+    formula: "Pub550 Example1: an equal-funded 1000 face EE bond split into two 500 face bonds has no reissue recognition. Require the actual successor principal by owner to equal that owner's original contribution, using exact cross-products."
+    testRef: "tests/engine/forms/savings-bond-reissue-sources.test.ts::derives both published separate-reissue examples from original funds"
+  - line: "published-sole-funder-split"
+    description: "Recognize the sole funder's transferred deferred interest"
+    formula: "Pub550 Example2: sole funding followed by the same half transfer recognizes half the accrued interest not previously reported. Retained and transferred successor amounts conserve original principal and accrued interest. Preserve current-year recognition separately from redemption interest."
+    testRef: "tests/engine/forms/savings-bond-reissue-sources.test.ts::separates current reissue recognition from actual redemption interest"
+  - line: "whole-reissue-rational"
+    description: "Retain exact funded-owner fractions until the reporting boundary"
+    formula: "Whole reissue to one existing co-owner recognizes the departing owner's exact funded share of accrued interest minus that owner's actual prior reporting. Carry numerator and positive denominator; do not reject a repeating fraction or invent a penny allocation. Sum exact components before whole-dollar reporting."
+    testRef: "tests/engine/forms/savings-bond-reissue-sources.test.ts::retains one third ownership and aggregates before dollar reporting"
+  - line: "actual-reporting-history"
+    description: "Keep pre-event owner reports and post-event successor reports distinct"
+    formula: "Subtract actual owner interest already reported before reissue, then actual successor interest reported in intervening years. Prior and current reissue recognition are separate calculated components. Require each amount to fit the exact interest it belongs to, and reject a contradictory legacy prior-interest summary."
+    testRef: "tests/engine/forms/savings-bond-reissue-sources.test.ts::conserves actual pre and post reissue reporting separately"
+  - line: "source-membership"
+    description: "Bind every successor and current redemption exactly once"
+    formula: "Unique original/group/successor IDs; complete face-value conservation; original assigned issue date and series preserved; one actual linked current redemption or known held successor. Validate original face, registration, redemption dates and household identity. No missing successor or duplicated current original is supplied by the calculation."
+    testRef: "tests/engine/forms/savings-bond-reissue-sources.test.ts::keeps held successors and reordered originals without duplicate interest"
+  - line: "source-contradictions"
+    description: "Reject missing, contradictory or stale original history"
+    formula: "Reject unknown/false completeness or confirmation, changed household, invalid chronology, unknown community status, false retained-history answers, duplicate normalized source identity, unbalanced actual funds/face, excessive prior reporting and unsupported nonproportional joint-funder splits. No global Decimal precision mutation."
+    testRef: "tests/engine/forms/savings-bond-reissue-sources.test.ts::rejects missing contradictory and stale actual sources"
+  - line: "original-security-identity"
+    description: "Distinguish saved row keys from actual original bond identifiers"
+    formula: "Require the original Treasury security or paper serial identifier and each successor identifier. Normalize only spelling/spacing for duplicate detection. Link the successor identifier to the actual redemption original; changing a row sourceId does not turn a duplicate physical original into another bond."
+    testRef: "tests/engine/forms/savings-bond-reissue-sources.test.ts::binds actual original and successor bond identifiers independently of row keys"
