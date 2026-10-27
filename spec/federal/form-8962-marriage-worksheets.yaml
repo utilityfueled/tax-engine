@@ -65,3 +65,8 @@ lines:
     description: "Do not select an optional calculation that increases full-year repayment"
     formula: "2026joint income126000/family4 is within400percent, primary half63000/family1 is above400; spouse half63000/family3 gives416monthly contribution. Primary-only January1500benchmark yields454ordinary credit, spouse-only February450benchmark yields34alternative credit. WorksheetV covers onlyFebruary, but total34is below ordinary454. Retain454 and ordinary1546repayment of2000advances; do not select1966repayment. Derived statutory calculation, not a published numerical example."
     testRef: "tests/engine/forms/form-8962-marriage-worksheets.test.ts::does not lose ordinary credit hidden by an excluded alternative owner month"
+  - line: "29-explanation-year"
+    description: "Explain uncapped repayment using the actual calculation year"
+    formula: "For an uncapped result, the line29 explanation names the actual tax year. A 2025 household above the historical repayment-limit income ceiling must not be described as applying a 2026 rule. A 2026 result names 2026. Preserve all repayment amounts, the capped min(27,28) explanation and year/readiness gates."
+    irsRef: "Final2025 Form8962 instructions line28/Table5; IRC36B(f)(2), as amended for2026"
+    testRef: "tests/engine/forms/form-8962-marriage-worksheets.test.ts::identifies the actual year when explaining uncapped advance repayment"

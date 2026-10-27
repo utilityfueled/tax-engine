@@ -71,3 +71,24 @@ Final private integration checks passed 186 tests in 30 files with one worker, i
 The parent reran the final immutable candidate plus the unchanged independent reviewer probe: **192 tests in31 files**, one worker,26.70 seconds. All3,560 archived source entries remained unchanged. The six private controls retain their original SHA256 `d99c22d23fabd93c6be79b0527d4aff8f2d9710704c89d3c6770ae0525cb2dbd`. Receipt `parent-marriage-final-tests.json` SHA256 `0b639f1be3ab4fa67fcd24f8838f0e79a5e60ad50b26190ccc09084ad7a72d61`. The final executable delta against the original review contains exactly the already delivered annual-interest and prior465 history changes.
 
 On the shared checkout, the focused seven-file integration cohort passed, followed by root type checking, all5,873 spec references and inventory consistency. Exact commands and hashes are retained in `health-marriage-main-checks.json`; test log SHA256 `3dbe868c22ab427f94d1021fd1b56656da210029c48241ffc5419a706f32943a`. The branch retains all year, coverage, human-review, form-qualification and deployment gates.
+
+
+### Audit explanation year correction
+
+Independent inspection of the saved actual-paid mobile PDF found that a correct
+2025 uncapped repayment was described as “no2026 limitation.” The explanation
+now names the actual input year. All monetary expressions, historical caps,
+branches and readiness gates are unchanged. The source remains final 2025
+Form8962 instructions, line28/Table5, and IRC36B(f)(2) for the corresponding year.
+
+Spec-first regression reproduced the incorrect2025 label (8 passes/1 failure),
+then16 tests in3 files passed, including the existing PDF consumer; both2025 and
+2026 uncapped8423 and historical capped750 results are asserted. Spec validation
+passes6,025 references, the unchanged567-entry inventory is current, and scoped
+lint has zero errors. The separate agent source review verified all three
+frozen source hashes and five check logs with no finding:
+`.local/upgrade-evidence/federal-marriage-audit-year-independent-review.json`,
+SHA256 `c2180dfedd9c3b148d3c825ecbc1d9e6b70d25bbe5832ab5e1cadb8f324f4b26`.
+The original actual-paid V2 numerical/PDF review and its label finding remain
+retained; final integration will separately confirm the corrected download.
+This correction does not qualify a return or change the tax rule version.

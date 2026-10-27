@@ -116,3 +116,20 @@ it('does not lose ordinary credit hidden by an excluded alternative owner month'
   expect(result.electionApplies).toBe(false); expect(result.reason).toBe('no-benefit');
   expect(result.ptcAllowed.toFixed()).toBe('454'); expect(result.excessAPTCRepayment.toFixed()).toBe('1546');
 });
+it('identifies the actual year when explaining uncapped advance repayment', () => {
+  for (const taxYear of [2025, 2026] as const) {
+    const input = example(); input.taxYear = taxYear; input.householdIncome = d('500000');
+    const result = calculateForm8962MarriageWorksheets(input);
+    expect(result.repaymentCap).toBeNull();
+    expect(result.ptcAllowed.toFixed()).toBe('0');
+    expect(result.excessAPTCRepayment.toFixed()).toBe('8423');
+    expect(result.lines.find(row => row.form === 'Form 8962' && row.line === '29')?.formula)
+      .toBe(`Full excess; no repayment cap for ${taxYear}`);
+  }
+  const capped = example(); capped.householdIncome = d('30000'); capped.familySize = 2;
+  capped.months.forEach(row => Object.assign(row, { premium: d('1000'), slcsp: d('900'), advance: d('1000') }));
+  capped.families.forEach(family => { family.familySize = 1; family.months.forEach(row => Object.assign(row, { premium: d('500'), slcsp: d('450') })); });
+  const result = calculateForm8962MarriageWorksheets(capped);
+  expect(result.excessAPTCRepayment.toFixed()).toBe('750');
+  expect(result.lines.find(row => row.form === 'Form 8962' && row.line === '29')?.formula).toBe('min(27,28)');
+});

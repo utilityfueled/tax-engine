@@ -213,7 +213,7 @@ export function calculateForm8962MarriageWorksheets(input: Form8962MarriageWorks
   if (!electionApplies || excessAPTC.gt(0)) {
     audit.record('Form 8962', '27', 'Excess advance payments', excessAPTC, 'max(0,25-24)');
     if (repaymentCap !== null && excessAPTC.gt(0)) audit.record('Form 8962', '28', 'Applicable historical repayment cap', repaymentCap, worksheetLimit === undefined ? '2025 joint Table5 using actual joint household income' : 'Actual computed Pub974 X/Y/Z limitation replaces Table5');
-    audit.record('Form 8962', '29', 'Excess advance repayment', excessAPTCRepayment, repaymentCap === null ? 'Full excess; no2026 limitation' : 'min(27,28)');
+    audit.record('Form 8962', '29', 'Excess advance repayment', excessAPTCRepayment, repaymentCap === null ? `Full excess; no repayment cap for ${input.taxYear}` : 'min(27,28)');
   }
   return { electionApplies, ...(reason ? { reason } : {}), families, partV, ordinaryCredit, ordinaryRepayment,
     ordinaryPreMarriageCredit, alternativePreMarriageCredit, months, ptcAllowed, advancePTCTotal, netPTC, excessAPTC, repaymentCap, excessAPTCRepayment, lines: audit.getLines() };
