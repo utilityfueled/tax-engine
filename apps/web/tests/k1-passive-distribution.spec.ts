@@ -38,7 +38,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       await expect(date).toHaveValue('2025-12-31');
       await page.getByRole('textbox', { name: `${prefix} original report reference`, exact: true }).fill('synthetic-private-passive-valuation');
       await date.fill(''); await expect(hero).toHaveText('Enter more info for an estimate');
-      const confirmations = ['K-1 packet', 'K-1 1 basis', 'K-1 1 at risk', 'K-1 1 prior at-risk history', 'K-1 1 prior passive history',
+      const confirmations = ['K-1 packet', 'Prior ordinary QBI', 'K-1 1 basis', 'K-1 1 at risk', 'K-1 1 prior at-risk history', 'K-1 1 prior passive history',
         ...(!scorp ? ['K-1 1 SE', 'K-1 1 prior SE history'] : []),
         'Charitable K-1 1 basis', 'Charitable K-1 1 at risk', 'Charitable K-1 1 prior at-risk history', 'Charitable K-1 1 distribution', prefix, 'K-1 charitable packet'];
       for (const name of confirmations) await expect(page.getByRole('combobox', { name: `${name} checked after the last edit`, exact: true })).toHaveValue('');

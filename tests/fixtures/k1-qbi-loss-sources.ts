@@ -12,9 +12,12 @@ export function k1QbiLossSourceInput() {
     priorSuspendedLosses:{ordinary:'0'}, form6198:{activityName:'Actual ordinary activity',ordinaryIncome:'-100000.00',
       gainLossFromDispositions:'0',otherIncomeGains:'0',otherDeductionsLosses:'0',adjustedBasisAtEffectiveDate:'0',
       priorYearAmountAtRisk:'60000',currentYearIncreases:'0',currentYearDecreases:'0'},
-  }], priorYear:{suspendedPassiveLosses:[{partnershipName:'Actual ordinary activity',amount:'0',qbiLossTracking:{
+  }], priorYear:{qbiLossCarryforward:'0',suspendedPassiveLosses:[{partnershipName:'Actual ordinary activity',amount:'0',qbiLossTracking:{
     sourceTaxYear:2024,sourceReference:'Prior filed passive/QBI worksheet',sourceFactsConfirmed:true,vintages:[],
   }}]}, qbiLossSources:{sourceTaxYear:2025,sourceReference:'Complete actual K1 source set',sourceFactsConfirmed:true,
+    priorQbiCarry:{sourceTaxYear:2024,sourceReference:'Fictional completed2024 Form8995 ordinary carry record',sourceFactsConfirmed:true,
+      returnSourceId:'fictional-jordan-source-2024',formKind:'form_8995_line_16',primaryName:'Jordan Source',primaryTaxpayerIdLast4:'6789',
+      sameFilingUnit:{priorFilingStatus:'single',sameTaxpayersConfirmed:true},lossCarryforward:'0'},
     allK1ActivitiesIncluded:true,activities:[{k1SourceId:'scheduleK1:0',sourceTaxYear:2025,sourceReference:'Original K1 and199A attachment',
       accountHolder:'primary',entityType:'partnership',entityName:'Actual ordinary activity',entityEIN:'12-3456789',
       recipientName:'Jordan Source',recipientTaxpayerIdLast4:'6789',ordinaryBusinessOnlyConfirmed:true,continuingActivityConfirmed:true,

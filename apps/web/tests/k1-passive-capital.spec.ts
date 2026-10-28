@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { expect, test } from '@playwright/test';
 import type { GuidedInterviewState } from '../src/lib/guided-interview-flow';
-import originalState from '../../../tests/fixtures/guided-k1-passive-capital-browser.json' with { type: 'json' };
+import originalState from '../../../tests/fixtures/guided-k1-passive-capital-prior-qbi-browser.json' with { type: 'json' };
 
 function requireRiskSource<T>(value: T | null | undefined): T {
     if (value == null) throw new Error('Missing fictional original capital source');

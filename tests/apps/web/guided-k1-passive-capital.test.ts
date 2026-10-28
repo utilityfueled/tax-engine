@@ -6,10 +6,13 @@ import { buildGuidedK1CharitableSources, updateK1CharitableSources } from '@/lib
 import { guidedK1PassiveCapitalState } from '../../fixtures/guided-k1-passive-capital';
 import { requireRiskSource } from '../../fixtures/k1-charitable-at-risk';
 import browserOriginal from '../../fixtures/guided-k1-passive-capital-browser.json';
+import completeBrowserOriginal from '../../fixtures/guided-k1-passive-capital-prior-qbi-browser.json';
+import { buildGuidedK1Sources } from '@/lib/guided-k1-qbi-sources';
+import type { GuidedFlowState } from '@/lib/guided-interview-flow';
 
 it('builds linked actual capital originals and independent prior balances once', () => {
     // Spec: K1 Passive Capital Sources, guided-originals.
-    expect(guidedK1PassiveCapitalState('8000')).toEqual(browserOriginal);
+    expect(guidedK1PassiveCapitalState('8000')).toEqual(completeBrowserOriginal);
     const state = guidedK1PassiveCapitalState('8,000.00');
     const packet = requireRiskSource(requireRiskSource(state.sectionData.deductions).k1CharitableSources);
     const source = requireRiskSource(requireRiskSource(packet.statements)[0].capitalCharacter);
@@ -24,6 +27,16 @@ it('builds linked actual capital originals and independent prior balances once',
     expect(result.capitalGainLoss.toDecimalPlaces(8).toString()).toBe('1333.33333333');
     expect(result.carryforwards.k1PassiveByCharacter?.[0].shortTermCapital.toString()).toBe('0');
     expect(JSON.stringify(state)).toBe(before);
+});
+it('keeps the historical missing ordinary carry unknown until separately recorded', () => {
+    // Spec: qbi-prior-carry-sources.yaml historical-packet.
+    const old = structuredClone(browserOriginal) as GuidedFlowState;
+    expect(old.sectionData.adjustments?.k1LossSources?.priorQbiCarry).toBeUndefined();
+    expect(() => buildGuidedK1Sources(old.sectionData.adjustments?.k1LossSources, old)).toThrow(/Prior ordinary QBI/);
+    expect(buildTaxInputFromGuidedData(old)).toBeNull();
+    const complete = guidedK1PassiveCapitalState('8000');
+    delete complete.sectionData.adjustments!.k1LossSources!.priorQbiCarry;
+    expect(complete).toEqual(browserOriginal);
 });
 it('preserves unknown false and original edit invalidation', () => {
     // Spec: K1 Passive Capital Sources, guided-unknown.

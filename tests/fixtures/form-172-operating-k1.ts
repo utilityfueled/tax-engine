@@ -15,6 +15,9 @@ function attachOperatingSources(input: TaxYearInput, original: TaxYearInput) {
   input.k1CharitableSources = original.k1CharitableSources;
   requireOperatingSource(input.priorYear).suspendedPassiveLosses = requireOperatingSource(original.priorYear).suspendedPassiveLosses;
   const qbi = requireOperatingSource(input.qbiLossSources);
+  Object.assign(requireOperatingSource(qbi.priorQbiCarry), { sourceTaxYear: input.taxpayer.taxYear - 1,
+    primaryName: 'Jane Doe', returnSourceId: `fictional-jane-doe-${input.taxpayer.taxYear - 1}` });
+  requireOperatingSource(input.priorYear).qbiLossCarryforward = '0';
   qbi.form461Classification = { method: 'ordinary_k1_only', sourceTaxYear: input.taxpayer.taxYear,
     sourceReference: 'Fictional original complete ordinary business classification', sourceFactsConfirmed: true,
     allNonEmployeeBusinessSourcesIncluded: true, capitalIncomeIsNonbusiness: true, otherBusinessIncome: '0', otherBusinessDeductions: '0' };

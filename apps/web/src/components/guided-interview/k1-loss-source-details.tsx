@@ -149,9 +149,18 @@ export function K1LossSourceDetails({ data, nol, onChange }: { data?: K1LossSour
         <button type="button" className="utility-button" onClick={() => change({ form461Classification: undefined })}>Remove current business classification</button>
       </fieldset>}
       {!data.priorQbiCarry ? <button type="button" className="utility-button" onClick={() => change({ priorQbiCarry: {} })}>Add prior ordinary QBI carry record</button> : <fieldset><legend>Prior ordinary QBI loss carry</legend>
-        <p className="guided-hint">Copy the preceding-year Form 8995 line 16 or Schedule C (Form 8995-A) line 6. A known zero needs an actual completed prior-return record. This balance is separate from suspended EBL losses. The supported joint EBL method requires the same couple on the preceding and current joint returns.</p>
+        <p className="guided-hint">Copy the preceding-year Form 8995 line 16 or Schedule C (Form 8995-A) line 6. A known zero needs an actual completed prior-return record. This balance is separate from suspended losses. Use the same individual or joint couple on both returns; changed ownership needs its separate source method. The spouse owner fields apply to a joint return.</p>
+        {data.priorQbiCarry.sameFilingUnit ? <>
+          <Fields prefix="Prior ordinary QBI" data={data.priorQbiCarry.sameFilingUnit} fields={[
+            ['priorFilingStatus', 'actual prior filing status', [['single', 'Single'], ['married_filing_jointly', 'Married filing jointly'],
+              ['married_filing_separately', 'Married filing separately'], ['head_of_household', 'Head of household'], ['qualifying_surviving_spouse', 'Qualifying surviving spouse']]],
+            ['sameTaxpayersConfirmed', 'same taxpayers on the prior and current returns', 'boolean'],
+          ]} onChange={patch => change({ priorQbiCarry: { ...data.priorQbiCarry, sameFilingUnit: { ...data.priorQbiCarry?.sameFilingUnit, ...patch } } })} />
+          <button type="button" className="utility-button" onClick={() => change({ priorQbiCarry: { ...data.priorQbiCarry, sameFilingUnit: undefined } })}>Use original NOL filing history</button>
+        </> : <button type="button" className="utility-button" onClick={() => change({ priorQbiCarry: { ...data.priorQbiCarry, sameFilingUnit: {} } })}>Use a prior return without NOL history</button>}
         <Fields prefix="Prior ordinary QBI" data={data.priorQbiCarry} fields={[...evidence,
-          ['returnSourceId', 'original preceding-year return', (nol?.filingUnitHistory?.returns ?? []).filter(row => row.sourceId).map(row => [row.sourceId ?? '', `${row.sourceId} — ${row.taxYear ?? 'year unknown'}`] as const)],
+          ['returnSourceId', 'original preceding-year return', data.priorQbiCarry.sameFilingUnit ? 'text'
+            : (nol?.filingUnitHistory?.returns ?? []).filter(row => row.sourceId).map(row => [row.sourceId ?? '', `${row.sourceId} — ${row.taxYear ?? 'year unknown'}`] as const)],
           ['formKind', 'actual record', [['form_8995_line_16', 'Form 8995 line 16'], ['form_8995a_schedule_c_line_6', 'Schedule C (Form 8995-A) line 6'], ['completed_prior_return_no_carry', 'Completed prior-return records establish no carry']]],
           ['primaryName', 'prior return primary name', 'text'], ['primaryTaxpayerIdLast4', 'prior primary taxpayer ID last four', 'text'],
           ['spouseName', 'prior return spouse name', 'text'], ['spouseTaxpayerIdLast4', 'prior spouse taxpayer ID last four', 'text'],

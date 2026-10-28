@@ -39,7 +39,7 @@ print(json.dumps({'pages':[p.extract_text() or '' for p in r.pages], 'fields':{k
 function ebl() {
   const input = actualEblNolInput(), regular = input.netOperatingLoss!.vintages![0], history = input.qbiLossSources!.excessBusinessLossHistories![0];
   regular.openingCarryforward = '100000'; regular.history = []; history.originalNol = structuredClone(regular);
-  history.qualifiedOpeningCarryforward = '80000'; history.history = []; input.priorYear = { shortTermCapitalLoss: '-3000' };
+  history.qualifiedOpeningCarryforward = '80000'; history.history = []; input.priorYear = { ...input.priorYear, shortTermCapitalLoss: '-3000' };
   return input;
 }
 it('retains a completed prior QBI carry without a K1 source packet', async () => {

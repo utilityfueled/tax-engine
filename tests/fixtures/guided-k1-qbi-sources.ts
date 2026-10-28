@@ -5,6 +5,9 @@ import type { K1LossSourcesData } from '@/lib/guided-qbi-loss-data';
 export function actualGuidedK1Sources(): K1LossSourcesData {
   return {
     sourceTaxYear: '2025', sourceReference: 'Complete actual K1 source set', sourceFactsConfirmed: true, allK1ActivitiesIncluded: true,
+    priorQbiCarry: { sourceTaxYear: '2024', sourceReference: 'Fictional completed2024 Form8995 ordinary carry record', sourceFactsConfirmed: true,
+      returnSourceId: 'fictional-jordan-example-2024', formKind: 'form_8995_line_16', primaryName: 'Jordan Example', primaryTaxpayerIdLast4: '3333',
+      sameFilingUnit: { priorFilingStatus: 'single', sameTaxpayersConfirmed: true }, lossCarryforward: '0' },
     activities: [{
       sourceTaxYear: '2025', sourceReference: 'Original K1 and199A attachment', accountHolder: 'primary', entityType: 'partnership',
       entityName: 'Actual ordinary activity', entityEIN: '12-3456789', recipientName: 'Jordan Example', recipientTaxpayerIdLast4: '3333',

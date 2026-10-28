@@ -7614,21 +7614,24 @@
     {
       "key": "federal/qbi-prior-carry-sources",
       "jurisdiction": "federal",
-      "taxYear": null,
-      "sourceAuthority": null,
-      "specPath": null,
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8995",
+      "specPath": "spec/federal/qbi-prior-carry-sources.yaml",
       "enginePath": "src/engine/forms/qbi-prior-carry-sources.ts",
-      "packetPath": null,
-      "specExists": false,
+      "packetPath": "src/pdf/mappings/2025/qbi-loss-review.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/qbi-prior-carry-ordinary.test.ts::combines recorded ordinary carries with positive negative and zero current QBI",
+        "tests/guided-interview/guided-prior-qbi-ordinary.test.ts::bridges actual ordinary prior carry without an NOL history",
+        "tests/pdf/prior-qbi-ordinary-review.test.ts::binds the direct original ordinary carry before saved review output"
+      ],
+      "implementationNote": "Actual preceding-return ordinary QBI records supply the separate incoming carry for the same individual or joint couple, including known zero and unknown active character. Original-source review validates the historical8995 and private appendix; supplied NOL histories still reconcile. Pending interview sections, changed filing units, final2026 forms, filing, staging and independent human qualification remain separate.",
+      "specExists": true,
       "engineExists": true,
-      "packetGenerationExists": false,
-      "testCoverageExists": false,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing spec coverage",
-        "Missing packet generation or inclusion rule",
-        "Missing complete spec-linked regression coverage",
         "Missing e-file and business-rule validation coverage"
       ]
     },

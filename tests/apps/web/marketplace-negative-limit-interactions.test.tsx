@@ -97,6 +97,7 @@ it("reconciles actual gross statements through the full shell", async () => {
       }
     }
     await change("Business classification checked after the last edit", "true");
+    await change("Prior ordinary QBI checked after the last edit", "true");
     await change("K-1 packet checked after the last edit", "true");
     for (const label of ["Gross statement 1: Statement checked after the last edit", "Gross statement 2: Statement checked after the last edit", "Gross statements checked after the last edit", "Health insurance sources checked after the last edit", "Marketplace sources checked after the last edit"]) await change(label, "true");
     expect(validateSection(saved(), "adjustments")).toMatchObject({ status: "complete" });

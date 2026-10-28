@@ -47,7 +47,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
         await page.getByRole('combobox', { name: `${prefix} ${source} checked after the last edit`, exact: true }).selectOption('true');
       }
     }
-    for (const label of ['Business classification checked after the last edit', 'K-1 packet checked after the last edit',
+    for (const label of ['Business classification checked after the last edit', 'Prior ordinary QBI checked after the last edit', 'K-1 packet checked after the last edit',
       'Gross statement 1: Statement checked after the last edit', 'Gross statement 2: Statement checked after the last edit',
       'Gross statements checked after the last edit', 'Health insurance sources checked after the last edit', 'Marketplace sources checked after the last edit']) {
       await page.getByRole('combobox', { name: label, exact: true }).selectOption('true');

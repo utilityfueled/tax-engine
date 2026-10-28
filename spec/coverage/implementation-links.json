@@ -1313,6 +1313,17 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/qbi-prior-carry-sources",
+      "enginePath": "src/engine/forms/qbi-prior-carry-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/qbi-loss-review.ts",
+      "testRefs": [
+        "tests/engine/forms/qbi-prior-carry-ordinary.test.ts::combines recorded ordinary carries with positive negative and zero current QBI",
+        "tests/guided-interview/guided-prior-qbi-ordinary.test.ts::bridges actual ordinary prior carry without an NOL history",
+        "tests/pdf/prior-qbi-ordinary-review.test.ts::binds the direct original ordinary carry before saved review output"
+      ],
+      "note": "Actual preceding-return ordinary QBI records supply the separate incoming carry for the same individual or joint couple, including known zero and unknown active character. Original-source review validates the historical8995 and private appendix; supplied NOL histories still reconcile. Pending interview sections, changed filing units, final2026 forms, filing, staging and independent human qualification remain separate."
+    },
+    {
       "key": "federal/savings-bond-reissue-return",
       "enginePath": "src/engine/federal.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-8815.ts",

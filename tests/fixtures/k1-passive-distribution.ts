@@ -32,7 +32,8 @@ export function k1PassiveDistributionFixture(prior = '1500', scorp = false) {
   a.basis!.beginningBasis='30';
   Object.assign(a.atRisk!,{priorYearAmountAtRisk:'20000',currentYearDecreases:'1030'});
   input.qbiLossSources=q;
-  input.priorYear={...input.priorYear,suspendedPassiveLosses:[{partnershipName:k.partnershipName,amount:prior,qbiLossTracking:{
+  Object.assign(q.priorQbiCarry!, { primaryName:'Jane Doe', returnSourceId:'fictional-jane-doe-2024' });
+  input.priorYear={...input.priorYear,qbiLossCarryforward:'0',suspendedPassiveLosses:[{partnershipName:k.partnershipName,amount:prior,qbiLossTracking:{
     sourceTaxYear:2024,sourceReference:'Fictional preceding filed passive and QBI history',sourceFactsConfirmed:true,
     vintages:prior==='0'?[]:[{taxYear:2024,originalLoss:prior,qualifiedOriginalLoss:prior,remainingLoss:prior,qualifiedRemainingLoss:prior,materiallyParticipatedInCurrentYear:false}],
   }}]};

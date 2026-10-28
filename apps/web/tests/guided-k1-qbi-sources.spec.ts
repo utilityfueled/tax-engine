@@ -40,7 +40,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       await original.fill('-100000.10'); await se.fill('-100000.10'); await se.press('Tab');
       await expect(se).toHaveValue('-100,000.10'); await expect(se).not.toHaveAttribute('aria-invalid', 'true');
       const confirmations = ['K-1 1 basis', 'K-1 1 at risk', 'K-1 1 prior at-risk history', 'K-1 1 prior passive history',
-        'K-1 1 SE', 'K-1 1 prior SE history', 'Business classification', 'K-1 packet'];
+        'K-1 1 SE', 'K-1 1 prior SE history', 'Business classification', 'Prior ordinary QBI', 'K-1 packet'];
       for (const prefix of confirmations) await expect(page.getByRole('combobox', { name: `${prefix} checked after the last edit`, exact: true })).toHaveValue('');
       for (const prefix of confirmations) await page.getByRole('combobox', { name: `${prefix} checked after the last edit`, exact: true }).selectOption('true');
       await expect(page.locator('.guided-ticker-value-hero').first()).not.toHaveText('Enter more info for an estimate');

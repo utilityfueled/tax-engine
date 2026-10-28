@@ -347,7 +347,12 @@ export function guidedK1PriorRiskSources(): { charity: K1CharitableSourcesData; 
           "otherBusinessDeductions": "0"
         },
         "excessBusinessLossHistories": [],
-        "allExcessBusinessLossHistoriesIncluded": true
+        "allExcessBusinessLossHistoriesIncluded": true,
+        "priorQbiCarry": {
+          "sourceTaxYear": "2024", "sourceReference": "Fictional completed2024 Form8995 ordinary carry record", "sourceFactsConfirmed": true,
+          "returnSourceId": "fictional-jordan-source-2024", "formKind": "form_8995_line_16", "primaryName": "Jordan Source", "primaryTaxpayerIdLast4": "6789",
+          "sameFilingUnit": { "priorFilingStatus": "single", "sameTaxpayersConfirmed": true }, "lossCarryforward": "0"
+        }
       }
     };
 }

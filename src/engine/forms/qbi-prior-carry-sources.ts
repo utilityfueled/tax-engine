@@ -1,8 +1,8 @@
 /** Actual prior ordinary QBI carry; separate from still-suspended EBL character.
- * Spec: net-operating-loss-joint-ebl.yaml ordinary-prior-source. */
+ * Spec: qbi-prior-carry-sources.yaml direct-source, known-timeline. */
 import type { TaxYearInput } from '@/models/inputs.js';
 import { d } from '@/utils/decimal.js';
-import { validateNolFilingUnitTimeline } from '@/utils/nol-filing-unit-timeline.js';
+import { assertNolFilingUnitAgreement, validateNolFilingUnitTimeline } from '@/utils/nol-filing-unit-timeline.js';
 
 type SourceInput = Pick<TaxYearInput, 'qbiLossSources' | 'netOperatingLoss'> & {
   priorYear?: Pick<NonNullable<TaxYearInput['priorYear']>, 'qbiLossCarryforward' | 'activeQbiLossCarryforward'>;
@@ -17,40 +17,87 @@ function amount(value: string | undefined, label: string): string {
   return d(value).toFixed();
 }
 function name(value: string | undefined): string { return value?.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-US') ?? ''; }
+type RecordSource = NonNullable<NonNullable<SourceInput['qbiLossSources']>['priorQbiCarry']>;
+function identity(printedName: string | undefined, suffix: string | undefined): string {
+  if (!name(printedName) || !/^\d{4}$/.test(suffix ?? '')) fail('actual prior-return names and taxpayer ID suffixes');
+  return `${name(printedName)}:${suffix}`;
+}
+function currentIdentity(person: SourceInput['taxpayer']['primary'] | undefined): string {
+  const ssn = person?.ssn.replaceAll('-', '');
+  if (!person || !/^\d{9}$/.test(ssn ?? '')) fail('the actual current taxpayer identity');
+  return identity(`${person.firstName} ${person.lastName}`, ssn!.slice(-4));
+}
+function validateDirectUnit(taxpayer: SourceInput['taxpayer'], record: RecordSource): void {
+  const facts = record.sameFilingUnit!;
+  if (facts.sameTaxpayersConfirmed !== true || !['single', 'married_filing_jointly', 'married_filing_separately',
+    'head_of_household', 'qualifying_surviving_spouse'].includes(facts.priorFilingStatus ?? '')) {
+    fail('the actual prior filing status and confirmed continuity of the same taxpayers');
+  }
+  const joint = taxpayer.filingStatus === 'married_filing_jointly';
+  if (joint !== (facts.priorFilingStatus === 'married_filing_jointly')) {
+    fail('the same individual or joint couple; changed filing-unit ownership needs its separate method');
+  }
+  const before = [identity(record.primaryName, record.primaryTaxpayerIdLast4)];
+  const now = [currentIdentity(taxpayer.primary)];
+  if (joint) {
+    before.push(identity(record.spouseName, record.spouseTaxpayerIdLast4)); now.push(currentIdentity(taxpayer.spouse));
+  } else if (record.spouseName !== undefined || record.spouseTaxpayerIdLast4 !== undefined) {
+    fail('only the actual individual on a nonjoint original return');
+  }
+  if (new Set(before).size !== before.length || new Set(now).size !== now.length
+    || before.some(person => !now.includes(person))) {
+    fail('the same actual prior and current taxpayers, without duplicate or changed owners');
+  }
+}
+function validateTimelineRecord(input: SourceInput, record: RecordSource,
+  source: NonNullable<SourceInput['netOperatingLoss']>['filingUnitHistory'], regular: boolean): void {
+  const timeline = validateNolFilingUnitTimeline(input.taxpayer, source);
+  // AMT source IDs are independent. Its relevant actual preceding return must
+  // still agree with the printed original, not merely the current household.
+  const prior = regular ? timeline.returns.get(record.returnSourceId!)
+    : timeline.byPersonYear.get(`${timeline.current.primaryPersonId}:${record.sourceTaxYear}`);
+  const status = record.sameFilingUnit?.priorFilingStatus ?? 'married_filing_jointly';
+  if (!prior || prior.taxYear !== record.sourceTaxYear || prior.filingStatus !== status
+    || prior.members.length !== timeline.current.members.length
+    || prior.members.some(id => !timeline.current.members.includes(id))) {
+    fail('the actual preceding return and unchanged owners to reconcile to each supplied NOL filing history');
+  }
+  const printed = [[prior.primaryPersonId, record.primaryName, record.primaryTaxpayerIdLast4],
+    ...(prior.members.length === 2 ? [[prior.spousePersonId, record.spouseName, record.spouseTaxpayerIdLast4]] : [])];
+  for (const [personId, printedName, suffix] of printed) {
+    const person = personId ? timeline.persons.get(personId) : undefined;
+    if (!person || identity(printedName, suffix) !== identity(person.name, person.taxpayerIdLast4)) {
+      fail('actual prior-return owner identities to match the original filing unit');
+    }
+  }
+}
 
 /** Source-only callers derive the legacy field; canonical callers reconcile it.
  * Neither route accepts an entered current deduction or outgoing carry. */
 export function calculateQbiPriorCarrySources(input: SourceInput, reconcileLegacy = true):
   { qbiLossCarryforward: string; activeQbiLossCarryforward?: string } | undefined {
   const facts = input.netOperatingLoss, record = input.qbiLossSources?.priorQbiCarry;
-  const required = input.taxpayer.filingStatus === 'married_filing_jointly'
+  const required = !!input.qbiLossSources?.activities?.length || !!input.qbiLossSources?.excessBusinessLossHistories?.length
+    || input.taxpayer.filingStatus === 'married_filing_jointly'
     && facts?.returnMembership === 'changed_membership'
     && facts.vintages?.some(row => row.originKind === 'excess_business_loss');
   if (!record && !required) return undefined;
   if (!record) fail('a separate actual preceding-year return record; suspended EBL history does not establish ordinary carry');
-  if (input.taxpayer.filingStatus !== 'married_filing_jointly' || facts?.returnMembership !== 'changed_membership') {
-    fail('the separately supported filing-unit source method for this supplied original record');
-  }
   if (record.sourceFactsConfirmed !== true || !record.sourceReference?.trim()
     || record.sourceTaxYear !== input.taxpayer.taxYear - 1 || !record.returnSourceId?.trim()
     || !['form_8995_line_16', 'form_8995a_schedule_c_line_6', 'completed_prior_return_no_carry'].includes(record.formKind ?? '')) {
     fail('confirmed actual preceding-year form, amount and original return identity');
   }
-  const timeline = validateNolFilingUnitTimeline(input.taxpayer, facts?.filingUnitHistory);
-  const prior = timeline.returns.get(record.returnSourceId);
-  if (!prior || prior.taxYear !== record.sourceTaxYear || prior.filingStatus !== 'married_filing_jointly'
-    || prior.members.length !== 2 || timeline.current.members.length !== 2
-    || prior.members.some(id => !timeline.current.members.includes(id))) {
-    fail('the same actual married couple on the preceding and current joint returns; changed owners need their separate method');
-  }
-  for (const [personId, printedName, suffix] of [
-    [prior.primaryPersonId, record.primaryName, record.primaryTaxpayerIdLast4],
-    [prior.spousePersonId, record.spouseName, record.spouseTaxpayerIdLast4],
-  ] as const) {
-    const person = personId ? timeline.persons.get(personId) : undefined;
-    if (!person || !name(printedName) || name(printedName) !== name(person.name) || suffix !== person.taxpayerIdLast4) {
-      fail('both actual prior-return owner identities to match the original filing unit');
+  if (record.sameFilingUnit) validateDirectUnit(input.taxpayer, record);
+  else {
+    if (input.taxpayer.filingStatus !== 'married_filing_jointly' || facts?.returnMembership !== 'changed_membership') {
+      fail('the actual same-filing-unit source facts or the separately supported NOL filing history');
     }
+  }
+  if (!record.sameFilingUnit || facts?.filingUnitHistory !== undefined) validateTimelineRecord(input, record, facts?.filingUnitHistory, true);
+  if (facts?.alternativeTax?.filingUnitHistory !== undefined) validateTimelineRecord(input, record, facts.alternativeTax.filingUnitHistory, false);
+  if (facts?.filingUnitHistory && facts.alternativeTax?.filingUnitHistory) {
+    assertNolFilingUnitAgreement(input.taxpayer, facts.filingUnitHistory, facts.alternativeTax.filingUnitHistory);
   }
   const total = amount(record.lossCarryforward, 'ordinary loss carry');
   if (record.formKind === 'completed_prior_return_no_carry' && !d(total).isZero()) fail('zero for a completed prior-return no-carry record');

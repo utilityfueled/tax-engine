@@ -40,7 +40,7 @@ it('transfers only actual regular EBL deductions into current QBI through final 
   expect(mixed.carryforwards.qbiLossCarryforward.toFixed()).toBe('0');
 });
 it('uses modified absorption only for EBL qualified closure and never twice in current QBI',()=>{
-  const input=fullOpening();input.priorYear={shortTermCapitalLoss:'-3000'};
+  const input=fullOpening();input.priorYear={...input.priorYear,shortTermCapitalLoss:'-3000'};
   const result=calculateFederalTax(input);
   expect(result.nolDeduction.toFixed()).toBe('65000');expect(result.netOperatingLoss?.absorbed.toFixed()).toBe('67400');
   expect(result.carryforwards.qbiLossCarryforward.toFixed()).toBe('52000');
