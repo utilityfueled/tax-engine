@@ -7,13 +7,13 @@ complete a checkbox.
 
 ## Current integration — 2026-10-28 UTC
 
-Latest implementations are `b385f4a0` (separate-owner health limits) and
-`33ab57d1` (joint loss character with a separate actual prior-QBI record).
-Outside-person health cash (`77e8f663`) and the preceding source packages remain
-delivered. Rule provenance is `2025.187` / `2026.184-law-integration-draft`;
-inventory has 579 entries, 6,129 spec references and 159 explicit associations.
-Package source/PDF agent reviews and integrated checks pass. Human tax review,
-final-source release checks and filing qualification remain open.
+Latest implementations are `6fc4312d` (explicitly nonitemized 2026 prior
+property releases) and `e80a3aba` (workspace advisory readiness wording).
+Separate-owner health (`b385f4a0`), joint EBL/ordinary sources (`33ab57d1`) and
+preceding source packages remain delivered. Rule provenance is `2025.187` /
+`2026.185-law-integration-draft`; inventory has 580 entries, 6,140 spec references
+and 160 explicit associations. Package reviews and integrated checks pass.
+Human tax review, final-source release checks and filing qualification remain open.
 
 The latest completed [remote CI record](upgrade-2026-ci-76d93bb6.json) passes
 19,658 tests in 1,435 files normally and under coverage on `76d93bb6`.
@@ -66,9 +66,23 @@ inspected. Main passes 82/17, all three types, spec/inventory, scoped lint and
 engine build. Browser evidence is focused seeded interaction, and Form 8962
 remains an explicitly unofficial reference in this review packet.
 
-Explicitly nonitemized 2026 prior property release and general ordinary prior-QBI
-intake remain active internal work, followed by section 108 source-research
-closure and final integrated release checks. The [community-bond interpretation](upgrade-2026-community-bond-method-decision.md)
+The [prior-property package](upgrade-2026-k1-prior-property-nonitemized-work.md)
+is delivered in `6fc4312d`. Independent source review passes 37/7, including
+eight private controls; final private checks pass 45/11. Parent independently
+derives the nine canonical and two actual saved browser originals and passes
+8,765 arithmetic, source, handoff and gate checks. No 2026 PDF is generated.
+Main passes 75/13, all three types, spec/inventory, scoped lint and engine build.
+The integrated webpack build and four desktop/mobile browser cases pass with
+one worker and zero retries. The [advisory wording correction](upgrade-2026-workspace-readiness-copy.md)
+is separately delivered in `e80a3aba`; its new capture no longer claims the
+unsupported-year bundle is ready. Existing gates remain closed.
+
+General ordinary prior-QBI intake remains active internal work. Section 108
+research establishes collectable ordinary later-attribute sources and has
+reproduced existing aggregate carry/basis omissions; the bounded implementation
+and repairs remain internal. The precise modified-absorption/charitable-exhaustion
+interaction remains a separate guarded interpretation. Final integrated release
+checks follow the remaining source work. The [community-bond interpretation](upgrade-2026-community-bond-method-decision.md)
 is recorded for a qualified reviewer; no calculation or ownership assumption was
 enabled. Earlier product findings and reader corrections remain retained.
 
