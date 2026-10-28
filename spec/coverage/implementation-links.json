@@ -1130,6 +1130,17 @@
       "note": "Separate actual plan owners use the shared owner calculation and source-bound 2025 review mapping."
     },
     {
+      "key": "federal/marketplace-health-separate-owners",
+      "enginePath": "src/engine/forms/marketplace-health-limit.ts",
+      "packetPath": "src/pdf/mappings/2025/form-7206-marketplace-source.ts",
+      "testRefs": [
+        "tests/engine/forms/marketplace-health-separate-owners.test.ts::conserves separate claims once without transferring business or spouse capacity",
+        "tests/engine/federal-marketplace-health-separate-owners.test.ts::derives the historical joint deduction from three original shareholder sources",
+        "tests/pdf/form7206-health-separate-owners.test.ts::rejects missing duplicate and altered owner residual proofs"
+      ],
+      "note": "Original zero advances and each independently sufficient business, owner and combined residual bind this bounded historical composition. The physical7206 and existing private8962 reference retain exact original source checks; no new physical8962, final2026, filing, staging or independent human qualification."
+    },
+    {
       "key": "federal/marketplace-marriage-coverage-family",
       "enginePath": "src/engine/forms/marketplace-marriage-health-sources.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-8962.ts",

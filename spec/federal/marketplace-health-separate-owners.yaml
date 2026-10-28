@@ -1,0 +1,67 @@
+form: "Publication 974 separate-business deductions with two specified-plan owners"
+fullName: "2025 zero-advance, independently nonbinding owner and business source composition"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p974"
+notes: |
+  Official sources refreshed 2026-10-28: final 2025 Pub974 Worksheet W
+  instructions (W4-13 separately for each specified-plan business, W14-17
+  once), Simplified Calculation Method Step3, final i7206 More than one health
+  plan and business, and Reg1.162(l)-1(a). This is a bounded composition of
+  those existing methods, not an IRS published example for these exact facts.
+  Complete each nonspecified business's actual Form7206 first. Preserve every
+  original plan, business and owner. Do not add the separate businesses'
+  income to W13, transfer spouse capacity, or enter a computed deduction.
+  This cohort requires actual zero original advances and the recorded existing
+  monthly eligible-plan-enrollment credit method. Each specified business can
+  cover its entire specified premium after its own nonspecified claim. The
+  specified businesses of each owner can also cover their entire premiums
+  after that owner's separate-business nonspecified claims; the combined W15
+  test must independently pass. These sufficient predicates avoid choosing an
+  attribution rule for a binding owner, business or combined limit. Positive
+  advances, negative limits and binding residuals keep their named methods.
+  The full 2026 return qualification gate remains unchanged.
+lines:
+  - line: "W13-17"
+    description: "Conserve actual deductions and income across three original businesses"
+    formula: "W13 sums specified businesses' actual remaining income plus their own nonspecified deductions; W14 sums all actual allowed nonspecified deductions once. W15=W13-W14. If each required business, owner and combined limit is nonbinding and all original advances are zero, W16 equals the full specified premiums and W17=W14+W16. Separate-business income is never included in W13."
+    testRef: "tests/engine/forms/marketplace-health-separate-owners.test.ts::conserves separate claims once without transferring business or spouse capacity"
+  - line: "independent-limits"
+    description: "Prove every source-level sufficient predicate before admitting the composition"
+    formula: "Require each specified group's remainingEarnedIncome >= its specifiedPremiums. For each owner require sum(same-owner specified-group remainingEarnedIncome)-sum(same-owner separate-business nonspecifiedDeduction) >= sum(same-owner specifiedPremiums). Also require W15 >= total specified premiums. Reject a one-cent shortfall in any test, negative source income, any positive original monthly advance, or an absent actual recorded credit method. Equality is nonbinding; no other owner can repair a source shortfall."
+    testRef: "tests/engine/forms/marketplace-health-separate-owners.test.ts::rejects one-cent business owner and combined shortfalls and positive original advances"
+  - line: "exact-order"
+    description: "Keep source order and exact monetary boundaries independent"
+    formula: "Use operation-local exact source sums for the independent comparisons and W totals. Reordering original groups leaves amounts unchanged. An actual zero separate claim retains its existing route; missing source answers never become zero. Do not change global Decimal configuration or mutate source groups."
+    testRef: "tests/engine/forms/marketplace-health-separate-owners.test.ts::preserves exact equality source order and explicit zero separately from unknown"
+  - line: "canonical"
+    description: "Carry actual W-2 premiums through the established historical credit method"
+    formula: "Actual W2 wages46000/43000/12400, Medicare wages40000/40000/10000, specified annual premiums6000 primary/3000 spouse and separate primary nonspecified2400 yield W13=80000,W14=2400,W15=77600,W16=9000,W17=11400. Gross wages101400 gives Step1AGI90000. Actual household benchmark12000 and 8.5% contribution7650 give Step2credit4350. Recorded enrollment2:1 gives specified deductions3100/1550; add actual separate2400 once => Schedule1line17 7050 and AGI94350. Final contribution8020 gives PTC3980. These are independently derived fictional controls."
+    testRef: "tests/engine/federal-marketplace-health-separate-owners.test.ts::derives the historical joint deduction from three original shareholder sources"
+  - line: "original-binding"
+    description: "Retain actual ownership, timing and complete original zero facts"
+    formula: "The separate plan may belong to either actual owner with the same independent sufficient-capacity proofs. Original employer/plan/payment links, year and all confirmation requirements remain mandatory. Unknown advances, contradictory W2 owner, missing credit-method confirmation and the unavailable 2026 route reject."
+    testRef: "tests/engine/federal-marketplace-health-separate-owners.test.ts::preserves opposite-owner originals and rejects missing or contradictory facts"
+  - line: "guided-handoff"
+    description: "Collect the third actual shareholder statement and preserve reconfirmation"
+    formula: "Reuse existing W2, health-plan and Marketplace controls. Preserve all three original sources and the actual credit method; no calculated deduction input. Editing a paid source invalidates confirmations and blocks the strict bridge. Actual reconfirmation after a balanced source edit restores the calculation; saved input and reordered plan sources preserve identities."
+    testRef: "tests/guided-interview/guided-health-separate-owners.test.ts::retains three actual source plans through invalidation and reconfirmation"
+  - line: "review-output"
+    description: "Save separate original forms and the once-only combined return transfer"
+    formula: "Each physical7206 and its reference retain its actual original business/owner sources; the combined reference identifies W13/W14/W15 and the sole Schedule1 transfer. Original edits and altered calculated amounts invalidate the private context before PDF I/O. Saved guided downloads retain complete payment facts, visible review notices and identifier privacy."
+    testRef: "tests/pdf/form7206-health-separate-owners.test.ts::saves each original business and the single combined health deduction"
+  - line: "private-context"
+    description: "Bind original owner income and calculated allocation before template access"
+    formula: "An equal-total shift between original owner wages or allocated credit cannot reuse the prepared original context. Reject stale output before reading a PDF template."
+    testRef: "tests/pdf/form7206-health-separate-owners.test.ts::rejects equal-total owner and original source rewrites before PDF I/O"
+  - line: "owner-audit-conservation"
+    description: "Reconcile every actual owner residual proof without weakening output guards"
+    formula: "Include the exact Separate Owner Sources audit rows in the existing historical-to-global audit comparison. Require each owner row exactly once with the recomputed source value; missing, duplicate and one-cent altered rows reject. This changes only the selected audit family, not the exact-length, identity or monetary checks."
+    testRef: "tests/pdf/form7206-health-separate-owners.test.ts::rejects missing duplicate and altered owner residual proofs"
+  - line: "saved-guide"
+    description: "Export only the saved complete source packet"
+    formula: "The original saved three-W2 guide yields health7050 and finalPTC3980 once, preserves all three owner/business references, and excludes private identifiers. A missing actual credit-method confirmation blocks export."
+    testRef: "tests/apps/web/workspace-health-separate-owners.test.ts::exports the saved three-source guide and rejects an unknown credit-method confirmation"
+  - line: "browser"
+    description: "Retain actual zero and source confirmations through focused edit and download"
+    formula: "At desktop and mobile widths, load complete fictional originals with the prior personal and W2 sections visited, edit the third-plan payment label, and observe independent health, credit-method, Marketplace and payment confirmations clear. An erased actual advance remains unknown and blocks continuation. Restore the original zero, reconfirm actual sources, continue through remaining sections, save/reload and download a review PDF with health7050 and finalPTC3980. This is focused seeded edit/reconfirmation evidence, not a full upload-to-deletion release traversal."
+    testRef: "apps/web/tests/guided-health-separate-owners.spec.ts::retains independent owner sources through actual controls and saved review"

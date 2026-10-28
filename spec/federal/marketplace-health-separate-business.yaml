@@ -17,8 +17,10 @@ notes: |
   does not claim the largest deduction possible under every lawful method.
   This extension supports one actual specified-plan owner, including binding
   positive W15, and separately computed same-owner or spouse nonspecified
-  sources. It does not invent attribution when both spouses have specified
-  plans. The separate negative-limit spec implements signed W15 for actual
+  sources. The separate marketplace-health-separate-owners spec adds only
+  actual zero advances with independently nonbinding business, owner and
+  combined limits. Binding two-owner attribution remains separate. The
+  separate negative-limit spec implements signed W15 for actual
   same-owner sources; the separate nonspecified-stop spec implements the
   earlier published stop. Different-owner negative claims remain separate.
 lines:
@@ -28,7 +30,7 @@ lines:
     testRef: "tests/engine/federal-marketplace-health-separate-business.test.ts::retains the separate actual business deduction before the historical cap"
   - line: "W13-17"
     description: "Conserve actual QHP earnings and all nonspecified deductions"
-    formula: "W13=sum(specified-group remainingEarnedIncome+specified-group nonspecifiedDeduction). W14=sum(all groups' actual nonspecifiedDeduction). W15=W13-W14. With external positive nonspecified deduction require one specified-plan owner; signed negative W15 additionally follows the same-owner negative-limit source method. W16=min(actual specified premiums minus attributable advances,W15). W17=W14+W16. Never reconstruct W13 by adding unrelated nonspecified deductions to specified-group remaining income."
+    formula: "W13=sum(specified-group remainingEarnedIncome+specified-group nonspecifiedDeduction). W14=sum(all groups' actual nonspecifiedDeduction). W15=W13-W14. With external positive nonspecified deduction require one specified-plan owner or the separate zero-advance/nonbinding two-owner method; signed negative W15 additionally follows the same-owner negative-limit source method. W16=min(actual specified premiums minus attributable advances,W15). W17=W14+W16. Never reconstruct W13 by adding unrelated nonspecified deductions to specified-group remaining income."
     testRef: "tests/engine/forms/marketplace-health-separate-business.test.ts::subtracts the other business deduction without borrowing its earnings"
   - line: "X-Y-Z"
     description: "Use the completed deduction once in household income and every repayment test"
@@ -40,7 +42,7 @@ lines:
     testRef: "tests/engine/federal-marketplace-health-separate-business.test.ts::uses the binding published limit with exact original business sources"
   - line: "source-boundaries"
     description: "Preserve unknowns and unsupported attribution without fabricated amounts"
-    formula: "Reject empty-month groups with positive specified premiums, duplicate source identities, and invalid amounts. Positive external nonspecified deductions with multiple specified-plan owners remain separate. Negative W15 uses its actual same-owner method; contradictory contributing owners still reject. Existing two-owner positive-advance binding cap guard and final2026 readiness gates stay effective."
+    formula: "Reject empty-month groups with positive specified premiums, duplicate source identities, and invalid amounts. Positive external nonspecified deductions with multiple specified-plan owners remain separate outside the bounded marketplace-health-separate-owners cohort. Negative W15 uses its actual same-owner method; contradictory contributing owners still reject. Existing two-owner positive-advance binding cap guard and final2026 readiness gates stay effective."
     testRef: "tests/engine/forms/marketplace-health-separate-business.test.ts::rejects contradictory source groups and unrepresented owner or negative-limit combinations"
   - line: "guided-handoff"
     description: "Reuse the actual plan and business collector"

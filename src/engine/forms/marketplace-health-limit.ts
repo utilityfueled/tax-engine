@@ -72,7 +72,28 @@ export function calculateMarketplaceHealthLimit(params: {
   const multipleOwners = new Set(specified.map(row => row.accountHolder)).size > 1;
   const negativeLimit = calculateMarketplaceNegativeLimit(params.groups);
   if (separateBusinessNonspecifiedDeduction.gt(0)) {
-    if (multipleOwners) throw new Error("Separate-business nonspecified deductions with multiple specified-plan owners require their actual owner coordination method.");
+    if (multipleOwners) {
+      // Spec: marketplace-health-separate-owners.yaml. Admit only a sufficient
+      // nonbinding cohort. These source proofs do not choose how a binding
+      // separate claim would be allocated between businesses or spouses.
+      if (specified.some(group => group.creditAllocationMethod !== "monthly_eligible_plan_enrollment")) throw new Error("Separate-business nonspecified deductions with multiple owners require the actual consistent credit method.");
+      if (params.groups.some(group => group.months.some(month => !month.advancePremiumTaxCredit.isZero()))) throw new Error("Separate-business nonspecified deductions with multiple owners and positive original advances require their separate advance method.");
+      if (params.groups.some(group => group.remainingEarnedIncome.lt(0))) throw new Error("Separate-business nonspecified deductions with multiple owners and negative source income require their separate method.");
+      if (specified.some(group => group.remainingEarnedIncome.lt(group.specifiedPremiums))) throw new Error("Separate-business nonspecified deductions require each specified business's actual nonbinding income limit.");
+      if (remainingEarnedIncome.lt(specifiedPremiums)) throw new Error("Separate-business nonspecified deductions with a binding combined limit require their separate owner method.");
+      const separate = params.groups.filter(group => !specified.includes(group));
+      for (const owner of ["primary", "spouse"] as const) {
+        const ownedSpecified = specified.filter(group => group.accountHolder === owner);
+        const ownerIncome = sumSourceMoney(...ownedSpecified.map(group => group.remainingEarnedIncome));
+        const ownerSeparateClaim = sumSourceMoney(...separate.filter(group => group.accountHolder === owner).map(group => group.nonspecifiedDeduction));
+        const ownerPremium = sumSourceMoney(...ownedSpecified.map(group => group.specifiedPremiums));
+        const ownerRemaining = sumSourceMoney(ownerIncome, ownerSeparateClaim.negated());
+        if (ownerRemaining.lt(ownerPremium)) throw new Error("Separate-business nonspecified deductions with a binding same-owner residual require their separate owner method.");
+        audit.record("Pub974 Separate Owner Sources", `${owner}:remaining`, "Same-owner residual after separate-business claims", ownerRemaining,
+          "Actual same-owner specified-business remaining income minus that owner's separate nonspecified claims; independently covers all same-owner specified premiums",
+          { Owner: owner, "Specified business income": ownerIncome, "Separate nonspecified claims": ownerSeparateClaim, "Specified premiums": ownerPremium });
+      }
+    }
     audit.record("Pub974 Separate Business Sources", "plan-nonspecified", "Nonspecified deductions from specified-plan businesses", specifiedBusinessNonspecifiedDeduction, "Actual completed Form7206 claims already subtracted in the plan-business source limits");
     audit.record("Pub974 Separate Business Sources", "outside-nonspecified", "Nonspecified deductions from separate businesses", separateBusinessNonspecifiedDeduction, "Actual separate Form7206 deductions; include in W14 once without adding these businesses' earnings to W13");
   }

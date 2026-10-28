@@ -6822,6 +6822,30 @@
       ]
     },
     {
+      "key": "federal/marketplace-health-separate-owners",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p974",
+      "specPath": "spec/federal/marketplace-health-separate-owners.yaml",
+      "enginePath": "src/engine/forms/marketplace-health-limit.ts",
+      "packetPath": "src/pdf/mappings/2025/form-7206-marketplace-source.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/marketplace-health-separate-owners.test.ts::conserves separate claims once without transferring business or spouse capacity",
+        "tests/engine/federal-marketplace-health-separate-owners.test.ts::derives the historical joint deduction from three original shareholder sources",
+        "tests/pdf/form7206-health-separate-owners.test.ts::rejects missing duplicate and altered owner residual proofs"
+      ],
+      "implementationNote": "Original zero advances and each independently sufficient business, owner and combined residual bind this bounded historical composition. The physical7206 and existing private8962 reference retain exact original source checks; no new physical8962, final2026, filing, staging or independent human qualification.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/marketplace-marriage-coverage-family",
       "jurisdiction": "federal",
       "taxYear": 2025,
