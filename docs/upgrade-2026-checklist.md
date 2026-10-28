@@ -7,14 +7,13 @@ complete a checkbox.
 
 ## Current integration — 2026-10-28 UTC
 
-Latest implementation is `77e8f663`: actual outside-person health cash remains
-separate from another return's credits and payments, and annual source ratios
-preserve physical Form 7206 half-dollar rounding. Same-couple joint loss pools
-(`80af6d97`), educator reissue (`2ab4d9ac`) and actual-paid health (`661977aa`)
-remain delivered. Rule provenance is `2025.185` /
-`2026.182-law-integration-draft`; inventory has 575 entries, 6,097 spec references
-and 157 explicit associations. Package agent reviews and scoped checks pass.
-Human tax review, final-source release checks and filing qualification remain open.
+Latest implementations are `b385f4a0` (separate-owner health limits) and
+`33ab57d1` (joint loss character with a separate actual prior-QBI record).
+Outside-person health cash (`77e8f663`) and the preceding source packages remain
+delivered. Rule provenance is `2025.187` / `2026.184-law-integration-draft`;
+inventory has 579 entries, 6,129 spec references and 159 explicit associations.
+Package source/PDF agent reviews and integrated checks pass. Human tax review,
+final-source release checks and filing qualification remain open.
 
 The latest completed [remote CI record](upgrade-2026-ci-76d93bb6.json) passes
 19,658 tests in 1,435 files normally and under coverage on `76d93bb6`.
@@ -25,7 +24,7 @@ each browser suite retains five hosted-only skips. The [native amd64 runtime
 record](upgrade-2026-runtime-76d93bb6.json) verifies all six recovery phases,
 the 2,930-component SBOM and 157 scan matches across the same 67 OS advisories,
 using the October 28 database. This includes the joint-loss package and excludes
-the health, EBL and other internal work still pending.
+the subsequent health, EBL and remaining internal work.
 
 The [October 28 public refresh](upgrade-2026-source-refresh-20261028.md) rechecks
 79 official endpoints: 75 successful bodies, four retained HTTP failures and
@@ -50,12 +49,28 @@ the exact-half control remains $5,001. Earlier failures and reader corrections
 remain retained. Final private checks pass 62/19; main passes 90/18 with all
 three types, spec, inventory, scoped lint and root build. See [the health ledger](upgrade-2025-marketplace-other-return-cash-work.md).
 
-Mixed EBL/ordinary character V2 source review passes 32/10 and rejects the exact
-saved V1 originals missing an actual ordinary prior-QBI record. Parent original/PDF
-review and final integration remain pending. Explicitly nonitemized 2026 prior
-property release, separate-owner health composition and ordinary prior-QBI intake
-remain active internal work. Changed community-property bond treatment remains
-a researched interpretation question, not an enabled method.
+The [joint EBL/ordinary package](upgrade-2026-nol-joint-ebl-work.md) is delivered
+in `33ab57d1`. Its separate source review passes 32/10 and still rejects the saved
+V1 originals missing prior ordinary carry. Parent original-only review passes
+20,906 checks across 11 originals and 93 PDFs/230 pages; visual review covers all
+pages. Final private checks pass 62/18 and production browser 2/2; main passes
+72/13, spec and inventory checks. The ordinary prior-QBI record is separate from
+still-suspended EBL character.
+
+The [separate-owner health package](upgrade-2026-health-separate-owners-work.md)
+is delivered in `b385f4a0`. Independent source review passes 19/7; parent checks
+five canonical originals, one source-complete seeded guide and two actual saved
+browser states across 58 PDFs/341 pages/310 fields with 23,219 checks and no
+failures. All page contacts, readable affected forms and actual UI captures were
+inspected. Main passes 82/17, all three types, spec/inventory, scoped lint and
+engine build. Browser evidence is focused seeded interaction, and Form 8962
+remains an explicitly unofficial reference in this review packet.
+
+Explicitly nonitemized 2026 prior property release and general ordinary prior-QBI
+intake remain active internal work, followed by section 108 source-research
+closure and final integrated release checks. The [community-bond interpretation](upgrade-2026-community-bond-method-decision.md)
+is recorded for a qualified reviewer; no calculation or ownership assumption was
+enabled. Earlier product findings and reader corrections remain retained.
 
 Remote CI on `25f71f06` passes 19,523 tests in 1,384 files both normally and
 under coverage. Coverage is 91.85% statements, 86.88% branches, 90.72% functions

@@ -195,7 +195,7 @@
   },
   "releaseBlockers": [
     "Immutable 76d93bb6 passes 19,658 unit and coverage cases in 1,435 files, all unchanged 90/85/90/90 thresholds, static/build checks and both 510-case browser suites. Five hosted-only skips remain per suite. Later final integrated verification remains internal.",
-    "Outside health cash 77e8f663 and joint loss pools 80af6d97 are delivered. Mixed EBL/ordinary V2 output review and integration, explicit nonitemized 2026 prior property release, separate-owner health and general actual prior-QBI intake remain internal. Full 2026 calculation stays blocked.",
+    "Outside health cash77e8f663, mixed EBL/ordinary sources33ab57d1 and separate-owner healthb385f4a0 are delivered. Nonitemized2026 prior property release, general prior-QBI intake, section108 research and final integrated verification remain internal. Full2026 calculation stays blocked.",
     "Independent human tax review, launch-state demand/qualification and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Mixed-tip/bond, negative-net section 1202/Form 172 and changed community-property bond interpretations remain unresolved.",
     "AI application/scorer bindings are reviewed; 240 draft cases have zero human reviews or live results, unverified provider account availability and no approved spend or model promotion.",
     "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence. Local synthetic and CI checks do not establish staging readiness.",
@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "77e8f6636a4536177a3fe8712c67e030ea4f7079",
+    "lastRecordedCommit": "b385f4a047c247f5cb897d08edf4e49ee09dabcc",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1311,15 +1311,12 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Correct positive-other-return physical7206 source-ratio rounding, preserve all independent controls and original/PDF failures, then final re-review and integration.",
-      "Implement explicitly nonitemized2026 prior property entity basis/465 release.",
-      "Implement source-determined same-year EBL/ordinary character and independent regular/AMT use/absorption vectors, preserving unresolved partial allocation guards.",
-      "Implement two specified health owners plus a separate-business nonspecified deduction only with explicit zero advances and independently nonbinding actual limits; facts owns this after EBL review and corrected health adoption.",
-      "Establish bounded original-source contracts for later section108 attributes and changed community-property events, preserving precise unresolved methods and excluding unrelated regimes.",
-      "Correct independently reproduced missing ordinary priorQBI source in joint EBL guide; then extend the actual source record to existing non-EBL K1/qualified-loss intake without unrelated NOL data.",
-      "Run final integrated/static/browser/coverage/native arm64+amd64/SBOM/scan/recovery evidence. Intermediate76d is exact historical evidence; staging, human, provider and final-form gates remain closed."
+      "Complete independent review and corrected actual browser/source artifacts for explicitly nonitemized2026 prior property basis/465 releases, then final rebase/integration.",
+      "Complete actual prior ordinary QBI intake for ordinary K1/qualified-loss guide without unrelated NOL history. Preserve unknown versus actual zero and explicitly reconcile prior-property source interaction without altering saved missing-source originals.",
+      "Close remaining section108 attribute source research with an implemented proved method or precise unresolved qualified interpretation; community-bond handoff is documented, not enabled.",
+      "Run final integrated/static/browser/coverage/native arm64 and amd64/SBOM/scan/recovery evidence. Immutable76d remains historical; staging, human, provider and final-form gates remain closed."
     ],
-    "latestIntegratedCommit": "80af6d97f6287b0cddca58688d310b8a2d717e1e",
+    "latestIntegratedCommit": "b385f4a047c247f5cb897d08edf4e49ee09dabcc",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1695,12 +1692,10 @@
       "scope": "Exact76d93bb6 synthetic remote evidence through same-couple joint loss delivery. Excludes pending positive-other-return health, EBL composition and later internal work. No staging, production, filing, provider or human-review qualification."
     },
     "remainingInternalWork": [
-      "Finish mixed EBL/ordinary V2 original/PDF review, final rebase and main integration with actual prior ordinary QBI source.",
-      "Implement explicitly nonitemized 2026 prior property entity basis/section 465 release with independent capacity and suspension controls.",
-      "Complete narrow separate-owner zero-advance health with independent nonbinding business/owner limits and output bound to its original sources.",
-      "Complete actual prior ordinary QBI intake for ordinary K1/qualified-loss guide without unrelated NOL history, preserving unknown versus zero.",
-      "Close source research on changed community-property bond and section 108 attribute methods; retain precise unresolved interpretations rather than inventing allocation or approval.",
-      "Run final integrated/static/browser/coverage/native arm64 and amd64/SBOM/scan/recovery evidence. Immutable 76d is historical evidence; staging, human, provider and final-form gates remain closed."
+      "Complete independent review and corrected actual browser/source artifacts for explicitly nonitemized2026 prior property basis/465 releases, then final rebase/integration.",
+      "Complete actual prior ordinary QBI intake for ordinary K1/qualified-loss guide without unrelated NOL history. Preserve unknown versus actual zero and explicitly reconcile prior-property source interaction without altering saved missing-source originals.",
+      "Close remaining section108 attribute source research with an implemented proved method or precise unresolved qualified interpretation; community-bond handoff is documented, not enabled.",
+      "Run final integrated/static/browser/coverage/native arm64 and amd64/SBOM/scan/recovery evidence. Immutable76d remains historical; staging, human, provider and final-form gates remain closed."
     ],
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
@@ -1722,7 +1717,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "77e8f6636a4536177a3fe8712c67e030ea4f7079",
+    "lastPushedCommit": "b385f4a047c247f5cb897d08edf4e49ee09dabcc",
     "currentBrowserRun": {
       "sourceCommit": "76d93bb63a692e9890316ea896339b3f725dfac0",
       "runId": 40706358808,
@@ -5016,11 +5011,11 @@
       }
     },
     "currentInventory": {
-      "entries": 575,
-      "specReferences": 6097,
-      "sourceCommit": "77e8f6636a4536177a3fe8712c67e030ea4f7079",
+      "entries": 579,
+      "specReferences": 6129,
+      "sourceCommit": "b385f4a047c247f5cb897d08edf4e49ee09dabcc",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 157,
+      "explicitAssociations": 159,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -6185,11 +6180,37 @@
           "path": ".local/upgrade-evidence/parent-positive-other-health-v4-artifact-findings.json",
           "sha256": "ed39f4f5bb063836d535269e6ad516e15e30758e9cf06dd007c98bda2210fb6b"
         }
+      },
+      "priorPropertyNonitemized": {
+        "status": "independent source and V2 browser delta review clear; corrected actual browser artifacts and original-only review remain",
+        "tree": "e12aa23a5f4ca5a44e6a30180c8746ed45b54501",
+        "manifest": {
+          "path": ".local/upgrade-evidence/prior-property-nonitemized-v2-review-snapshot.json",
+          "sha256": "bc5554e18ac3f1897eea55d9b75373145863c07eac47851b534d66ab06e95849"
+        },
+        "authorTests": 451,
+        "authorFiles": 142,
+        "humanQualification": false,
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/complete-prior-property-independent-review.json",
+          "sha256": "22e01474cc8285ebc3b8c48e84de5f0b99da4151e4cbd6b27908535df4ec917f",
+          "tests": 37,
+          "files": 7,
+          "privateControls": 8
+        }
+      },
+      "ordinaryPriorQbi": {
+        "status": "approved actual source contract; spec and failing-test preparation before runtime",
+        "contract": {
+          "path": ".local/upgrade-evidence/ordinary-k1-prior-qbi-source-contract.json",
+          "sha256": "2adaeefca0746cddf5d132b0e11ed71f8349842135f6517f8bb5e0b1eb8a89a7"
+        },
+        "humanQualification": false
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.185",
-      "2026": "2026.182-law-integration-draft"
+      "2025": "2025.187",
+      "2026": "2026.184-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -8179,8 +8200,8 @@
       "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
     },
     "currentFullVerificationRequired": {
-      "sourceCommit": "977212bfbe38733ae79977a917a63cc529413cef",
-      "reason": "Intermediate25 complete CI/coverage passes, but final integrated checks and complete native/browser/SBOM/scan/recovery artifacts remain required.",
+      "sourceCommit": "b385f4a047c247f5cb897d08edf4e49ee09dabcc",
+      "reason": "Subsequent reviewed source packages require final full-suite/coverage/static/build/browser/native arm64 and amd64/SBOM/scan/recovery evidence after the remaining finite internal queue.",
       "readiness": "Not release qualified; external reviews, staging, final forms and model evaluation remain open."
     },
     "previousCurrentUnitRunBeforeE91": {
@@ -8406,7 +8427,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-28T16:34:45.288525+00:00",
+    "recordedAt": "2026-10-28T17:22:31.002392+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -11182,7 +11203,7 @@
       "humanQualification": false
     },
     "jointEblV2SourceReview": {
-      "status": "source clear; parent original/PDF review and final integration remain",
+      "status": "Source and original/PDF reviews clear; final integrated delivery33ab57d1 recorded separately.",
       "tree": "115985b5b1fe1ea7c8fc2a6839d0998d202a3362",
       "sourceReview": {
         "path": ".local/upgrade-evidence/complete-joint-ebl-v2-source-review.json",
@@ -11195,6 +11216,72 @@
       "independentTests": 32,
       "files": 10,
       "retainedFinding": "V1 missing prior ordinary QBI source rejected after actual source correction; unchanged original probes and adjusted setup controls retained separately."
+    },
+    "previousWorkInProgressBeforeB385f4a0": [
+      "Correct positive-other-return physical7206 source-ratio rounding, preserve all independent controls and original/PDF failures, then final re-review and integration.",
+      "Implement explicitly nonitemized2026 prior property entity basis/465 release.",
+      "Implement source-determined same-year EBL/ordinary character and independent regular/AMT use/absorption vectors, preserving unresolved partial allocation guards.",
+      "Implement two specified health owners plus a separate-business nonspecified deduction only with explicit zero advances and independently nonbinding actual limits; facts owns this after EBL review and corrected health adoption.",
+      "Establish bounded original-source contracts for later section108 attributes and changed community-property events, preserving precise unresolved methods and excluding unrelated regimes.",
+      "Correct independently reproduced missing ordinary priorQBI source in joint EBL guide; then extend the actual source record to existing non-EBL K1/qualified-loss intake without unrelated NOL data.",
+      "Run final integrated/static/browser/coverage/native arm64+amd64/SBOM/scan/recovery evidence. Intermediate76d is exact historical evidence; staging, human, provider and final-form gates remain closed."
+    ],
+    "jointEblDelivered": {
+      "status": "delivered",
+      "commit": "33ab57d13463792f54930089da3e27ecf022c403",
+      "ledger": "docs/upgrade-2026-nol-joint-ebl-work.md",
+      "delivery": {
+        "path": ".local/upgrade-evidence/parent-joint-ebl-delivery.json",
+        "sha256": "9916d297d75174b3f5125dd9bb29f9a1a180470df1bd5776deebebed96fa0b5d"
+      },
+      "mainTests": 72,
+      "mainFiles": 13,
+      "finalPrivateTests": 62,
+      "finalPrivateFiles": 18,
+      "sourceReviewTests": 32,
+      "sourceReviewFiles": 10,
+      "artifactChecks": 20906,
+      "originals": 11,
+      "pdfs": 93,
+      "pages": 230,
+      "humanQualification": false
+    },
+    "separateOwnerHealthDelivered": {
+      "status": "delivered",
+      "commit": "b385f4a047c247f5cb897d08edf4e49ee09dabcc",
+      "ledger": "docs/upgrade-2026-health-separate-owners-work.md",
+      "delivery": {
+        "path": ".local/upgrade-evidence/parent-health-separate-owners-delivery.json",
+        "sha256": "ddd9ad57931ea355ed4be3404f56efa49978ba655f0939fb56a3339ba87652f0"
+      },
+      "mainTests": 82,
+      "mainFiles": 17,
+      "sourceReviewTests": 19,
+      "sourceReviewFiles": 7,
+      "artifactChecks": 23219,
+      "originals": 8,
+      "pdfs": 58,
+      "pages": 341,
+      "populatedFields": 310,
+      "sourceReview": {
+        "path": ".local/upgrade-evidence/ai-health-separate-owners-source-review.json",
+        "sha256": "12d9bff5174d4671352e710d3269e96c5b1935f8a50e34e6e9134383d9149298"
+      },
+      "pdfReview": {
+        "path": ".local/upgrade-evidence/parent-health-separate-owners-artifact-review/checks.json",
+        "sha256": "8f5f078429baf16c7d421520e55675f1d36aa97e90085e2b68f24d100e98ace6"
+      },
+      "visualReview": {
+        "path": ".local/upgrade-evidence/parent-health-separate-owners-artifact-review/visual-review.json",
+        "sha256": "8640248dc962f8a3a5e568c0a785228efa9c1aaf255f0a45b2ffd7f8d1f0872a"
+      },
+      "humanQualification": false
+    },
+    "communityBondMethodDecision": {
+      "status": "precise qualified interpretation unresolved; no runtime change",
+      "commit": "5806f7dfce5263e3528bb75be78f7246fd906a3d",
+      "ledger": "docs/upgrade-2026-community-bond-method-decision.md",
+      "humanQualification": false
     }
   },
   "historicalReleaseBlockers": {
@@ -11215,6 +11302,14 @@
       "AI application/scorer bindings are reviewed; 240 draft cases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
       "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence; local synthetic checks do not establish staging readiness.",
       "Intermediate 31812714 native amd64 recovery and both 500-case browser suites pass with verified SBOM/archive; later final-source native arm64+amd64 images/scans/recovery remain due. The same exact 157 advisory tuples/67 OS advisories await owner acceptance by 2026-11-07. No critical/npm/fixed-version matches. Historical failed/cancelled runs retained; no staging, publication or human security approval."
+    ],
+    "beforeB385f4a0": [
+      "Immutable 76d93bb6 passes 19,658 unit and coverage cases in 1,435 files, all unchanged 90/85/90/90 thresholds, static/build checks and both 510-case browser suites. Five hosted-only skips remain per suite. Later final integrated verification remains internal.",
+      "Outside health cash 77e8f663 and joint loss pools 80af6d97 are delivered. Mixed EBL/ordinary V2 output review and integration, explicit nonitemized 2026 prior property release, separate-owner health and general actual prior-QBI intake remain internal. Full 2026 calculation stays blocked.",
+      "Independent human tax review, launch-state demand/qualification and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Mixed-tip/bond, negative-net section 1202/Form 172 and changed community-property bond interpretations remain unresolved.",
+      "AI application/scorer bindings are reviewed; 240 draft cases have zero human reviews or live results, unverified provider account availability and no approved spend or model promotion.",
+      "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence. Local synthetic and CI checks do not establish staging readiness.",
+      "Immutable 76d native amd64 recovery and both 510-case browser suites pass with verified SBOM/archive. Final-source native arm64 and amd64 images/scans/recovery remain due. The same 157 advisory tuples/67 OS advisories await owner acceptance by 2026-11-07, with no critical/npm/fixed-version matches. No staging, publication or human security approval."
     ]
   }
 }
