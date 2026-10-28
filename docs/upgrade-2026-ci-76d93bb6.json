@@ -1,0 +1,688 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "76d93bb63a692e9890316ea896339b3f725dfac0",
+  "observedAt": "2026-10-28T15:13:38.701682+00:00",
+  "releaseReady": false,
+  "scope": "Exact76d93bb6 synthetic remote evidence through same-couple joint loss delivery. Excludes pending positive-other-return health, EBL composition and later internal work. No staging, production, filing, provider or human-review qualification.",
+  "runs": {
+    "ci": 40706358802,
+    "web": 40706358808,
+    "attempt": 1
+  },
+  "ciConclusion": "success",
+  "webConclusion": "success",
+  "unit": {
+    "jobId": 122879626554,
+    "tests": 19658,
+    "files": 1435,
+    "workers": 1,
+    "seconds": "1688.50"
+  },
+  "coverage": {
+    "jobId": 122879627232,
+    "tests": 19658,
+    "files": 1435,
+    "workers": 1,
+    "seconds": "1387.54",
+    "path": ".local/upgrade-evidence/76d93bb6-coverage-artifact/coverage-final.json",
+    "sha256": "49b9152d3feb4cd3fd23e40a3a7611adb716ca2965cd23ab956ffd09e71f1c85",
+    "sourceFiles": 952,
+    "recount": {
+      "statements": {
+        "covered": 62661,
+        "total": 68198,
+        "percent": "91.88"
+      },
+      "branches": {
+        "covered": 55218,
+        "total": 63489,
+        "percent": "86.97"
+      },
+      "functions": {
+        "covered": 12185,
+        "total": 13431,
+        "percent": "90.72"
+      },
+      "lines": {
+        "covered": 52556,
+        "total": 55547,
+        "percent": "94.61"
+      }
+    },
+    "unchangedThresholds": {
+      "statements": 90,
+      "branches": 85,
+      "functions": 90,
+      "lines": 90
+    },
+    "archive": {
+      "id": 12825786482,
+      "path": ".local/upgrade-evidence/76d93bb6-coverage-artifact.zip",
+      "sha256": "d74587274fa4f29203c14bbbf0cd1937f07afaf9d75d73860d6b5e5119623dd0",
+      "bytes": 9100576,
+      "zipEntries": 988
+    },
+    "independentReview": {
+      "path": ".local/upgrade-evidence/76d93bb6-ci-independent-review.json",
+      "sha256": "d9efaa5aa42063437090a3277b03c027a9661c15e9f07e9714de4efcd36e7188"
+    }
+  },
+  "selfHostBrowser": {
+    "job": 122879618585,
+    "passed": 510,
+    "hostedSkipped": 5,
+    "configuredRetries": 1,
+    "reportedFlaky": 0,
+    "duration": "24.2m",
+    "log": {
+      "path": ".local/upgrade-evidence/76d93bb6-browser.log",
+      "sha256": "65ba16e357049d21e82ade93b8f6732e4e208391c25dbcff17253c872d8d3e2b"
+    }
+  },
+  "staticAndBuild": "Root/contracts/web types, spec/inventory, lint and root/web builds passed; all job statuses and steps retained.",
+  "container": {
+    "path": "docs/upgrade-2026-runtime-76d93bb6.json",
+    "sha256": "2f7ab65ad5ccfb674f103d6eb9b614e05438ade9056e6841432806b44dfccbd3"
+  },
+  "jobStatuses": [
+    {
+      "name": "Unit Tests",
+      "id": 122879626554,
+      "conclusion": "success",
+      "startedAt": "2026-10-28T14:29:22Z",
+      "completedAt": "2026-10-28T14:58:14Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Initialize containers",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm install --frozen-lockfile",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm test:setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm test --maxWorkers=1",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Stop containers",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Build",
+      "id": 122879626925,
+      "conclusion": "success",
+      "startedAt": "2026-10-28T14:29:21Z",
+      "completedAt": "2026-10-28T14:29:56Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm install --frozen-lockfile",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm build",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Spec Validate",
+      "id": 122879627139,
+      "conclusion": "success",
+      "startedAt": "2026-10-28T14:29:21Z",
+      "completedAt": "2026-10-28T14:29:44Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm install --frozen-lockfile",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm spec:validate",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm spec:inventory:check",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Lint",
+      "id": 122879627193,
+      "conclusion": "success",
+      "startedAt": "2026-10-28T14:29:21Z",
+      "completedAt": "2026-10-28T14:30:13Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm install --frozen-lockfile",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm lint",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Tests and Coverage",
+      "id": 122879627232,
+      "conclusion": "success",
+      "startedAt": "2026-10-28T14:29:21Z",
+      "completedAt": "2026-10-28T14:53:24Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Initialize containers",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm install --frozen-lockfile",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm test:setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm test:coverage --maxWorkers=1",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Stop containers",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Type Check",
+      "id": 122879627328,
+      "conclusion": "success",
+      "startedAt": "2026-10-28T14:29:21Z",
+      "completedAt": "2026-10-28T14:29:54Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm install --frozen-lockfile",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm typecheck",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm typecheck:contracts",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Build Web App",
+      "id": 122879617933,
+      "conclusion": "success",
+      "startedAt": "2026-10-28T14:29:20Z",
+      "completedAt": "2026-10-28T14:31:55Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm install --frozen-lockfile",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm typecheck:web",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm build:web",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Container Recovery, Browser Flows and SBOM",
+      "id": 122879618320,
+      "conclusion": "success",
+      "startedAt": "2026-10-28T14:29:20Z",
+      "completedAt": "2026-10-28T15:01:31Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm install --frozen-lockfile",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm test:setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm --filter @tax-engine/web exec playwright install --with-deps chromium",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm sample-docs:fetch",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install PostgreSQL 16 recovery client",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run docker build --label org.opencontainers.image.revision=\"$GITHUB_SHA\" --tag tax-engine:ci .",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run node scripts/smoke-container.mjs tax-engine:ci | tee container-smoke.log",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build immutable previous application for upgrade and rollback",
+          "conclusion": "success"
+        },
+        {
+          "name": "Rehearse isolated Compose upgrade, recovery and rollback",
+          "conclusion": "success"
+        },
+        {
+          "name": "Start isolated runtime for browser flows",
+          "conclusion": "success"
+        },
+        {
+          "name": "Browser flows against the actual runtime image",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run anchore/sbom-action@v0",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run anchore/scan-action@v7",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Remove this job's browser container",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Browser Flows (self-host)",
+      "id": 122879618585,
+      "conclusion": "success",
+      "startedAt": "2026-10-28T14:29:20Z",
+      "completedAt": "2026-10-28T14:54:23Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm install --frozen-lockfile",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm test:setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm --filter @tax-engine/web exec playwright install --with-deps chromium",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm sample-docs:fetch",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pnpm test:web",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run pnpm/action-setup@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "logs": {
+    "unit": {
+      "path": ".local/upgrade-evidence/76d93bb6-unit.log",
+      "sha256": "aa42a141455116fb2cd2905555801295250798bfda44d61591ac71d60bfee699"
+    },
+    "coverage": {
+      "path": ".local/upgrade-evidence/76d93bb6-coverage.log",
+      "sha256": "fdddb7d0fa0c928a740aac8ee9c650343805d2c2c15aa859b60c98eed26a58ef"
+    },
+    "browser": {
+      "path": ".local/upgrade-evidence/76d93bb6-browser.log",
+      "sha256": "65ba16e357049d21e82ade93b8f6732e4e208391c25dbcff17253c872d8d3e2b"
+    },
+    "runtime": {
+      "path": ".local/upgrade-evidence/76d93bb6-runtime.log",
+      "sha256": "bb244db29db2600fd4163e4bf7568894b8840386a203639209590226bc85c131"
+    }
+  }
+}

@@ -16,15 +16,16 @@ inventory has 573 entries, 6,076 spec references and 156 explicit associations.
 Package agent reviews and scoped checks pass. Human tax review, final-source
 release checks and filing qualification remain open.
 
-The latest completed [remote CI record](upgrade-2026-ci-018f7a61.json) passes
-19,646 tests in 1,429 files normally and under coverage on `018f7a61`.
-Coverage is 91.89% statements, 86.97% branches, 90.74% functions and 94.62%
+The latest completed [remote CI record](upgrade-2026-ci-76d93bb6.json) passes
+19,658 tests in 1,435 files normally and under coverage on `76d93bb6`.
+Coverage is 91.88% statements, 86.97% branches, 90.72% functions and 94.61%
 lines; all unchanged thresholds pass. Independent recounting of 952 source
-files agrees. Static checks, both builds and both 508-case browser suites pass;
+files agrees. Static checks, both builds and both 510-case browser suites pass;
 each browser suite retains five hosted-only skips. The [native amd64 runtime
-record](upgrade-2026-runtime-018f7a61.json) verifies all six recovery phases,
-the 2,930-component SBOM and 157 scan matches across the same 67 OS advisories.
-This evidence excludes the newer joint-loss package and later internal work.
+record](upgrade-2026-runtime-76d93bb6.json) verifies all six recovery phases,
+the 2,930-component SBOM and 157 scan matches across the same 67 OS advisories,
+using the October 28 database. This includes the joint-loss package and excludes
+the health, EBL and other internal work still pending.
 
 The [October 28 public refresh](upgrade-2026-source-refresh-20261028.md) rechecks
 79 official endpoints: 75 successful bodies, four retained HTTP failures and
@@ -39,11 +40,14 @@ checks. Parent independently verifies nine originals and 57 PDFs/165 pages/308
 fields with 14,186 checks, then confirms both final originals and all 34 final
 download pages match in text and pixels. See [the joint-loss ledger](upgrade-2026-nol-joint-pools-work.md).
 
-Positive-other-return health remains unapproved: independent review reproduced
-an excess-refund acceptance and a below-half-dollar deduction rounding error.
-The spec-first precision correction and unchanged independent controls are in
-progress. Determined mixed EBL/ordinary character and explicitly nonitemized
-2026 prior property release remain internal implementation work.
+Positive-other-return health remains unapproved. V4 passes 1,175 affected tests
+and a separate 36-case source review, preserving ten earlier controls. Parent
+review of 14 saved originals and 38 PDFs/321 pages found one remaining physical
+Form 7206 rounding defect at three fields: the below-half-dollar source reports
+$5,001 instead of $5,000, while the final Schedule 1 deduction is correct.
+The original failure and separate reader corrections are retained; the physical
+source correction is in progress. Mixed EBL/ordinary character and explicitly
+nonitemized 2026 prior property release remain internal implementation work.
 
 Remote CI on `25f71f06` passes 19,523 tests in 1,384 files both normally and
 under coverage. Coverage is 91.85% statements, 86.88% branches, 90.72% functions
@@ -186,8 +190,8 @@ It does not reopen delivered ordinary methods or expand every IRS election.
   insurer cash and reimbursements separately from the other
   taxpayer's credit, advances and return tax payment. Binding joint ownership
   interpretation questions remain explicit.
-- **Verification:** intermediate `018f7a61` passes full tests/coverage and all
-  unchanged thresholds, both508-case browser suites and native-amd64 recovery.
+- **Verification:** intermediate `76d93bb6` passes full tests/coverage and all
+  unchanged thresholds, both510-case browser suites and native-amd64 recovery.
   Final integrated local/remote checks, native arm64+amd64 images, SBOM/scans
   and recovery remain due after the source queue. Five hosted-only skips do not
   establish staging readiness; external inputs below remain required.
