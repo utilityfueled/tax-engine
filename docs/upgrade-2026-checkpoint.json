@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "ecdb754d95cfc9b8605ca6a503473b9aaaf347ee",
+    "lastRecordedCommit": "7702ba56968d41d18d1ce4935187bd45f06379b4",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1311,14 +1311,13 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Finish current charitable floor carry correction independently of standard/itemized selection with actual source histories, separate170(p), NOL ordering and independent review.",
       "Implement source-supported basis first-entry attribution while retaining original gift years and previously admitted slices. Independently reproduce and correct ordinary-gift at-risk classification; unknown historical170 use cannot become a new current-year clock.",
-      "Finish ordinary section108 original-attribute sources and signed-capital, liability-cap, outgoing passive/category and unknown-inventory repairs. Keep Form982 reference-only readiness partial and verify saved outputs.",
+      "Finish ordinary section108 original-attribute sources and signed-capital, liability-cap, outgoing passive/category and unknown-inventory repairs. Keep Form982 reference-only readiness partial; verify the direct foreign-credit closing correction and pagination, then implement source-complete zero-NOL foreign-credit composition.",
       "Bind the delivered signed current-source-year minimum-tax-credit primitive to complete canonical source derivation; actual zero AMT alone does not establish zero generated credit.",
       "Reproduce the12 exact183c coverage timeouts and resolve remaining PDF/export performance without changing assertions, deadlines or thresholds.",
       "Run final integrated unit/coverage/static/build/browser/native arm64+amd64/SBOM/scan/recovery evidence after remaining source changes. Staging, human, provider and final-form gates remain closed."
     ],
-    "latestIntegratedCommit": "ecdb754d95cfc9b8605ca6a503473b9aaaf347ee",
+    "latestIntegratedCommit": "7702ba56968d41d18d1ce4935187bd45f06379b4",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1695,9 +1694,8 @@
       "scope": "Exact76d93bb6 synthetic remote evidence through same-couple joint loss delivery. Excludes pending positive-other-return health, EBL composition and later internal work. No staging, production, filing, provider or human-review qualification."
     },
     "remainingInternalWork": [
-      "Finish current charitable floor carry correction independently of standard/itemized selection with actual source histories, separate170(p), NOL ordering and independent review.",
       "Implement source-supported basis first-entry attribution while retaining original gift years and previously admitted slices. Independently reproduce and correct ordinary-gift at-risk classification; unknown historical170 use cannot become a new current-year clock.",
-      "Finish ordinary section108 original-attribute sources and signed-capital, liability-cap, outgoing passive/category and unknown-inventory repairs. Keep Form982 reference-only readiness partial and verify saved outputs.",
+      "Finish ordinary section108 original-attribute sources and signed-capital, liability-cap, outgoing passive/category and unknown-inventory repairs. Keep Form982 reference-only readiness partial; verify the direct foreign-credit closing correction and pagination, then implement source-complete zero-NOL foreign-credit composition.",
       "Bind the delivered signed current-source-year minimum-tax-credit primitive to complete canonical source derivation; actual zero AMT alone does not establish zero generated credit.",
       "Reproduce the12 exact183c coverage timeouts and resolve remaining PDF/export performance without changing assertions, deadlines or thresholds.",
       "Run final integrated unit/coverage/static/build/browser/native arm64+amd64/SBOM/scan/recovery evidence after remaining source changes. Staging, human, provider and final-form gates remain closed."
@@ -1722,7 +1720,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "ecdb754d95cfc9b8605ca6a503473b9aaaf347ee",
+    "lastPushedCommit": "7702ba56968d41d18d1ce4935187bd45f06379b4",
     "currentBrowserRun": {
       "sourceCommit": "183c1bbcb9ed8d53265fb4f36317e291bc8134cc",
       "container": {
@@ -4979,11 +4977,11 @@
       }
     },
     "currentInventory": {
-      "entries": 580,
-      "specReferences": 6153,
-      "sourceCommit": "f4dc51a7de1f2d6a8b56fc472730fb03f174af02",
+      "entries": 582,
+      "specReferences": 6167,
+      "sourceCommit": "7702ba56968d41d18d1ce4935187bd45f06379b4",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 161,
+      "explicitAssociations": 163,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -6215,8 +6213,8 @@
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.188",
-      "2026": "2026.186-law-integration-draft"
+      "2025": "2025.190",
+      "2026": "2026.188-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -8284,7 +8282,13 @@
       "ledger": "docs/upgrade-2026-inventory-links-work.md",
       "receipt": ".local/upgrade-evidence/inventory-source-links-delivery.json",
       "flagsUnchanged": true,
-      "newFullySupportedEntries": 0
+      "newFullySupportedEntries": 0,
+      "current": {
+        "sourceCommit": "7702ba56968d41d18d1ce4935187bd45f06379b4",
+        "explicitAssociations": 163,
+        "inventoryEntries": 582,
+        "readinessPromotion": false
+      }
     },
     "educationFiniteReconciliation": {
       "sourceCommit": "8d97c0f2a4895d43f85c725078863eaa4934c6fd",
@@ -8441,7 +8445,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-28T19:35:50.477271+00:00",
+    "recordedAt": "2026-10-28T19:58:42.186752+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -11343,7 +11347,7 @@
       "qualification": "Local synthetic; exact unsupported-year ready sentence removed, no gate changes."
     },
     "section108SourceDisposition": {
-      "status": "independent source-contract review and four canonical reproductions complete; spec-first source/reduction implementation active",
+      "status": "V1 independent source controls clear; V2 direct foreign-credit export and pagination under verification; current minimum-credit and zero-NOL foreign-method composition remain internal",
       "receipt": {
         "path": ".local/upgrade-evidence/section108-method-disposition-20261028.json",
         "sha256": "ff1fc6135af5586f8934dea281905f418cca4b21cfaa7ac94172d9b7cae6e554"
@@ -11371,7 +11375,14 @@
         "passive aggregate reduction not applied to outgoing activity",
         "omitted property inventory defaults to zero"
       ],
-      "unverifiedStaticRisk": "foreign-credit category/vintage closing rows are not reconciled to aggregate reduction"
+      "unverifiedStaticRisk": "V1 direct foreign-credit output defect reproduced; V2 correction under verification",
+      "parentV1Review": {
+        "path": ".local/upgrade-evidence/parent-cod-attributes-independent-review-v1.json",
+        "sha256": "d95c2820e63dd879ff8c66ebe24ea7a6d9e9a4e27cda2512bcbc1da90b680410",
+        "tests": 37,
+        "files": 5,
+        "privateOriginals": 14
+      }
     },
     "previousWorkInProgressBeforeF4dc51a7": [
       "Complete independently reviewed ordinary prior-QBI intake without unrelated NOL history. Preserve actual-zero versus unknown and the direct-charity prior-property originals that contain no qbiLossSources packet.",
@@ -11420,7 +11431,7 @@
       "fullCurrentHeadReleaseChecks": "pending after internal source corrections"
     },
     "nonitemizedFloorCarryCorrection": {
-      "status": "confirmed source premise error; spec-first internal correction in progress",
+      "status": "delivered and pushed for determined current-floor methods; prior-source attribution remains separate",
       "sourceFinding": "docs/upgrade-2026-charity-floor-source-finding.md",
       "assessment": {
         "path": ".local/upgrade-evidence/complete-nonitemized-floor-carry-assessment-20261028.json",
@@ -11448,7 +11459,8 @@
         "Pre2026 entity gift first released from basis/at-risk suspension; original gift year versus contribution year under new170(d)(1)(C)"
       ],
       "noInventedVintageOrAllocation": true,
-      "humanQualification": false
+      "humanQualification": false,
+      "commit": "7702ba56968d41d18d1ce4935187bd45f06379b4"
     },
     "previousCurrentUnitRunBefore183cObservation": {
       "sourceCommit": "76d93bb63a692e9890316ea896339b3f725dfac0",
@@ -11719,8 +11731,28 @@
       "tests": 48,
       "files": 12,
       "privateControls": 22,
-      "status": "source/software review clear; parent saved-artifact review and main integration pending",
-      "humanQualification": false
+      "status": "delivered and pushed; bounded source/original/gate review clear",
+      "humanQualification": false,
+      "commit": "7702ba56968d41d18d1ce4935187bd45f06379b4",
+      "ledger": "docs/upgrade-2026-nonitemized-allowable-carry-work.md",
+      "mainTests": 132,
+      "mainFiles": 39,
+      "privateAffectedTests": 732,
+      "privateAffectedFiles": 162,
+      "artifactChecks": 7936,
+      "originals": 27,
+      "pdfs": 0,
+      "browserTests": 2,
+      "browserRetries": 0,
+      "finalIntegratedReleaseChecks": "pending after remaining packages",
+      "artifactReview": {
+        "path": ".local/upgrade-evidence/parent-nonitemized-allowable-artifact-review.json",
+        "sha256": "cecd4cd3ce8b5c2bbd9ef828e918c5dad6d01caed01d85097b146f455fb6eaf3"
+      },
+      "mainAdoption": {
+        "path": ".local/upgrade-evidence/parent-nonitemized-allowable-adoption.json",
+        "sha256": "6cc49c7f6ea321b03d590ddae15c547dabe51a083e35d8cd5ed5974cd1a2c776"
+      }
     }
   },
   "historicalReleaseBlockers": {

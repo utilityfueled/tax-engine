@@ -2,23 +2,27 @@
 
 ## Current checkpoint — 2026-10-28 UTC
 
-The latest implementation is `ecdb754d`: a signed minimum-tax-credit calculation
-from actual source-year facts, without future-year inputs. It follows the
-ordinary prior-QBI intake delivered in `f4dc51a7`. Rule provenance is `2025.189`
-/ `2026.187-law-integration-draft`; inventory has 581 entries, 6,159 spec references
-and 162 explicit associations. Independent source review passes 63 tests in
-four files, including six private controls; main integration passes 83 tests in
-eight files, all three types, spec/inventory and engine build. See the
-[source-year ledger](upgrade-2026-minimum-tax-credit-source-year-work.md).
-Canonical current-year source binding and final integrated release checks remain
-internal work; human tax review and filing qualification remain open.
+The latest implementation is `7702ba56`: determined current charitable floor
+carry now follows the allowable deduction calculation under either standard or
+itemized treatment. Rule provenance is `2025.190` /
+`2026.188-law-integration-draft`; inventory has 582 entries, 6,167 spec references
+and 163 explicit associations. The frozen source passes 732 affected tests;
+independent source review passes 48 tests in twelve files, including 22 private
+controls. Parent derives 27 saved originals and passes 7,936 source, arithmetic,
+handoff and gate checks. Main integration passes 132 tests in 39 files, all
+three typechecks, spec/inventory, scoped lint and engine build. The frozen-source
+desktop/mobile browser checks pass 2/2 with zero retries; no 2026 PDF is created.
+See the [charitable carry ledger](upgrade-2026-nonitemized-allowable-carry-work.md).
 
-A subsequent source review supersedes the no-floor-under-standard premise in
-`6fc4312d` and related charitable carry methods. That package's recorded software
-checks remain historical evidence; they do not establish the corrected legal
-premise. The [source finding](upgrade-2026-charity-floor-source-finding.md)
-records the current-source correction and exact unresolved prior-source cases.
-The correction and ordinary section 108 attribute work are active internal work.
+This supersedes the no-floor-under-standard premise in `6fc4312d` and related
+methods. Earlier software evidence remains historical, with the legal correction
+recorded in the [source finding](upgrade-2026-charity-floor-source-finding.md).
+Prior-vintage floor attribution and newly basis-admitted gift portions remain
+separate work. The signed minimum-tax-credit primitive is delivered in
+`ecdb754d`; its [source-year ledger](upgrade-2026-minimum-tax-credit-source-year-work.md)
+records 63 independent and 83 main integration tests. Current-year source binding
+and final integrated release checks remain internal work. Human tax review and
+filing qualification remain open.
 
 The later [183c1bbc CI run](upgrade-2026-ci-183c1bbc.json) passes all 19,735
 unit tests in 1,463 files, static checks, both builds and both 520-case browser
@@ -34,12 +38,13 @@ allowed by an entity basis limit, while retaining its actual historical gift
 and all previously admitted portions. Independent controls reproduce
 four ordinary-gift at-risk classification failures while two controls pass:
 sufficient-basis gifts are incorrectly included in the activity-loss calculation.
-That correction is separate from the first-entry and current-floor packages.
-The frozen current-floor correction passes 732 affected tests and independent
-source review passes 48 tests in twelve files, including 22 private cases;
-saved-output review and main integration remain pending. The section 108 work
-also requires canonical binding of the now-delivered signed current-year
-minimum-tax-credit primitive.
+That correction is separate from first-entry attribution and the delivered
+current-floor package. Section 108 source review passes 37 tests in five files,
+including fourteen separately derived private originals. Saved-output testing
+found a stale pre-cancellation foreign-credit balance and a Form 982 pagination
+overflow; both corrections are under verification. Canonical signed current-year
+minimum-tax-credit binding and zero-NOL foreign-credit composition remain
+internal follow-through, not completed methods established by guards.
 
 The earlier completed [remote CI record](upgrade-2026-ci-76d93bb6.json) passes
 19,658 tests in 1,435 files normally and under coverage on `76d93bb6`.
