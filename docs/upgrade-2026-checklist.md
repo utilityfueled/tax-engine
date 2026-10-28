@@ -7,14 +7,14 @@ complete a checkbox.
 
 ## Current integration — 2026-10-28 UTC
 
-Latest implementation is `80af6d97`, adding same-couple joint loss pools
-while preserving original owner histories and independent alternative-tax
-amounts. Educator reissue (`2ab4d9ac`), actual-paid health (`661977aa`), original
-loss ownership (`a1f63cf2`) and charitable debt reduction (`ced90a20`) remain
-delivered. Rule provenance is `2025.184` / `2026.181-law-integration-draft`;
-inventory has 573 entries, 6,076 spec references and 156 explicit associations.
-Package agent reviews and scoped checks pass. Human tax review, final-source
-release checks and filing qualification remain open.
+Latest implementation is `77e8f663`: actual outside-person health cash remains
+separate from another return's credits and payments, and annual source ratios
+preserve physical Form 7206 half-dollar rounding. Same-couple joint loss pools
+(`80af6d97`), educator reissue (`2ab4d9ac`) and actual-paid health (`661977aa`)
+remain delivered. Rule provenance is `2025.185` /
+`2026.182-law-integration-draft`; inventory has 575 entries, 6,097 spec references
+and 157 explicit associations. Package agent reviews and scoped checks pass.
+Human tax review, final-source release checks and filing qualification remain open.
 
 The latest completed [remote CI record](upgrade-2026-ci-76d93bb6.json) passes
 19,658 tests in 1,435 files normally and under coverage on `76d93bb6`.
@@ -40,14 +40,22 @@ checks. Parent independently verifies nine originals and 57 PDFs/165 pages/308
 fields with 14,186 checks, then confirms both final originals and all 34 final
 download pages match in text and pixels. See [the joint-loss ledger](upgrade-2026-nol-joint-pools-work.md).
 
-Positive-other-return health remains unapproved. V4 passes 1,175 affected tests
-and a separate 36-case source review, preserving ten earlier controls. Parent
-review of 14 saved originals and 38 PDFs/321 pages found one remaining physical
-Form 7206 rounding defect at three fields: the below-half-dollar source reports
-$5,001 instead of $5,000, while the final Schedule 1 deduction is correct.
-The original failure and separate reader corrections are retained; the physical
-source correction is in progress. Mixed EBL/ordinary character and explicitly
-nonitemized 2026 prior property release remain internal implementation work.
+Positive-other-return health is delivered in `77e8f663`. The V5 correction
+passes 1,177 affected tests and a separate 39-case source review preserving all
+twelve private controls. Parent review independently derives 14 saved originals
+and checks 38 PDFs/321 pages with 26,739 assertions and no failures, then inspects
+all page contacts, readable corrected forms and actual browser screenshots. The
+three physical Form 7206 amounts now report $5,000 for the below-half source;
+the exact-half control remains $5,001. Earlier failures and reader corrections
+remain retained. Final private checks pass 62/19; main passes 90/18 with all
+three types, spec, inventory, scoped lint and root build. See [the health ledger](upgrade-2025-marketplace-other-return-cash-work.md).
+
+Mixed EBL/ordinary character V2 source review passes 32/10 and rejects the exact
+saved V1 originals missing an actual ordinary prior-QBI record. Parent original/PDF
+review and final integration remain pending. Explicitly nonitemized 2026 prior
+property release, separate-owner health composition and ordinary prior-QBI intake
+remain active internal work. Changed community-property bond treatment remains
+a researched interpretation question, not an enabled method.
 
 Remote CI on `25f71f06` passes 19,523 tests in 1,384 files both normally and
 under coverage. Coverage is 91.85% statements, 86.88% branches, 90.72% functions
@@ -102,6 +110,7 @@ fully traversed release interview. Human, final-form and filing qualification re
 
 | Delivered package | Commit | Bounded verification |
 | --- | --- | --- |
+| Actual outside health cash and annual rational reporting | `77e8f663` | Main 90/18, final private 62/19 and relevant static/build checks pass. V5 affected 1,177/164 and source 39/13; parent 26,739 original/PDF checks over 38 PDFs/321 pages and separate visual review. Earlier failures retained. See [ledger](upgrade-2025-marketplace-other-return-cash-work.md). |
 | Same-couple joint loss pools with original owner histories | `80af6d97` | Final 57/23 including eight private controls; main 49/22; all relevant static/build checks and production browser 2/2 pass. Parent 14,186 original/PDF checks across 57 PDFs/165 pages/308 fields; final 34 pages match in text and pixels. See [ledger](upgrade-2026-nol-joint-pools-work.md). |
 | Actual educator deductions from reissued bond ownership | `2ab4d9ac` | Final 51/13, main 43/12, all static/build gates and production browser 2/2 pass. Separate source 35/9 includes eight private controls; parent 11,287 original/PDF checks over 53 PDFs/217 pages/224 fields. Final 30 pages match in text and pixels. See [ledger](upgrade-2026-educator-bond-reissue-work.md). |
 | Actual payer cash and fully repaid own-return health advances | `661977aa` | Final 152/23 includes seven private controls; main 145/22 and relevant static/build gates pass. Production browser 2/2; final 64-page comparison verifies only the separately corrected audit-year label changed. Complete payment-source originals and historical review remain partial. See [ledger](upgrade-2025-marketplace-actual-paid-work.md). |
