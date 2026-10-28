@@ -185,16 +185,46 @@ It does not reopen delivered ordinary methods or expand every IRS election.
   Later section108 attributes require a separate original-source worksheet.
 - **Health:** actual-paid/advance sources are delivered in `661977aa`. Actual owner
   cash for an eligible outside child with a positive other-return credit is
-  implemented privately; its independently reproduced precision defect is being
-  corrected before source re-review and saved-output review. It must bind actual
-  insurer cash and reimbursements separately from the other
-  taxpayer's credit, advances and return tax payment. Binding joint ownership
-  interpretation questions remain explicit.
+  implemented privately. V4 source review passes, but independent physical
+  Form 7206 review retains three wrong rounded fields. The V5 correction passes
+  a separate 39-test/13-file source review; its final saved-output checks remain
+  due before adoption. It must bind actual insurer cash and
+  reimbursements separately from the other taxpayer's credit, advances and
+  return tax payment. The October 28 audit adds one bounded internal composition:
+  two specified-plan owners plus a separate-business nonspecified deduction,
+  restricted to explicit zero advances and independently nonbinding actual
+  business limits. Binding joint repayment attribution remains a separate
+  unestablished method.
 - **Verification:** intermediate `76d93bb6` passes full tests/coverage and all
   unchanged thresholds, both510-case browser suites and native-amd64 recovery.
   Final integrated local/remote checks, native arm64+amd64 images, SBOM/scans
   and recovery remain due after the source queue. Five hosted-only skips do not
   establish staging readiness; external inputs below remain required.
+
+The new joint EBL candidate `dc2eb914` remains unadopted. Independent source
+review passes 19 cases but retains two failures: absent ordinary prior QBI carry
+silently becomes zero. An actual prior $7,000 produces $32,000 outgoing QBI loss;
+known zero produces $25,000. Parent original/PDF review agrees with seven complete
+canonical cases and 417 physical amounts across 82 PDFs/209 pages, while three
+saved guided cases lack that source. The actual prior-return record and collector
+are being corrected before a new freeze. Existing non-EBL qualified-loss intake
+needs the same source follow-through; suspended EBL history cannot establish it.
+The retained findings and reader-only corrections are in
+`.local/upgrade-evidence/parent-joint-ebl-artifact-findings.json`, SHA256
+`f1fb530dfa1226bc1c06dd5483c294884a2bc4060791ff51a575678fbd20efb3`.
+
+The October 28 bounded queue audit,
+`.local/upgrade-evidence/complete-finite-queue-76d93bb6-audit.md`,
+checks 27 source/document hashes and ten delivered ancestor commits against
+`76d93bb6`. Its JSON SHA256 is
+`04b3801c937df6aa79e219f1596612c1a937cc2e6ec9cc8832f888822179cb58`.
+The proposed health composition is assigned to the facts agent after EBL review
+with provisional work on the corrected health source; final adoption and tests
+remain due.
+Later section 108 attributes and changed community-property history still need
+bounded original-source contracts and the applicable rule. Neither is completed
+by adding a reviewer checkbox. Existing precise source questions and separately
+excluded regimes retain their documented boundaries.
 
 The annual-category missing-loan-source finding is resolved in `dff617c8`; its
 original failing input and PDF remain retained. The corrected actual lender

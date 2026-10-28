@@ -1314,6 +1314,9 @@
       "Correct positive-other-return physical7206 source-ratio rounding, preserve all independent controls and original/PDF failures, then final re-review and integration.",
       "Implement explicitly nonitemized2026 prior property entity basis/465 release.",
       "Implement source-determined same-year EBL/ordinary character and independent regular/AMT use/absorption vectors, preserving unresolved partial allocation guards.",
+      "Implement two specified health owners plus a separate-business nonspecified deduction only with explicit zero advances and independently nonbinding actual limits; facts owns this after EBL review and corrected health adoption.",
+      "Establish bounded original-source contracts for later section108 attributes and changed community-property events, preserving precise unresolved methods and excluding unrelated regimes.",
+      "Correct independently reproduced missing ordinary priorQBI source in joint EBL guide; then extend the actual source record to existing non-EBL K1/qualified-loss intake without unrelated NOL data.",
       "Run final integrated/static/browser/coverage/native arm64+amd64/SBOM/scan/recovery evidence. Intermediate76d is exact historical evidence; staging, human, provider and final-form gates remain closed."
     ],
     "latestIntegratedCommit": "80af6d97f6287b0cddca58688d310b8a2d717e1e",
@@ -11088,6 +11091,75 @@
     "retained018SbomAdvisoryRefresh20261028": {
       "path": ".local/upgrade-evidence/018f7a61-rescan-20261028-review.json",
       "sha256": "2b11337b0aca8ae60eb29636f53a6c465ce8d1c4729c95f078bee7719a1da102"
+    },
+    "finiteScopeRefresh20261028": {
+      "sourceCommit": "76d93bb63a692e9890316ea896339b3f725dfac0",
+      "path": ".local/upgrade-evidence/complete-finite-queue-76d93bb6-audit.json",
+      "sha256": "04b3801c937df6aa79e219f1596612c1a937cc2e6ec9cc8832f888822179cb58",
+      "markdown": ".local/upgrade-evidence/complete-finite-queue-76d93bb6-audit.md",
+      "markdownSha256": "c0276500ce3e51f24aeeb012e3cf24d68a622f6a9f495b09fca2ce5bf6f56c00",
+      "sourceDocumentHashes": 27,
+      "deliveredAncestorCommits": 10,
+      "newInternalPackage": {
+        "owner": "complete_facts",
+        "scope": "Two specified-plan owners plus a separate-business nonspecified deduction, explicit zero advances, each actual business limit independently nonbinding.",
+        "status": "private-preparation-on-reviewed-V5-before-final-adoption",
+        "implemented": false
+      },
+      "sourceContractsStillInternal": [
+        "Actual later section108 attributes after NOL capacity is exhausted",
+        "Actual community-property jurisdiction, event, property and reporting history with applicable finite local rule"
+      ],
+      "boundary": "No new Node runs or implementation evidence in the audit; historical failures retained. No source confirmation substitutes for a rule or human qualification."
+    },
+    "jointEblPriorQbiFinding": {
+      "sourceTree": "dc2eb914a89e00362012e7089300392466dcafff",
+      "status": "reproduced-correction-contract-reviewed-implementation-pending",
+      "sourceReview": {
+        "path": ".local/upgrade-evidence/complete-joint-ebl-source-review.json",
+        "sha256": "eb2d4e193ff44d8113687053772d9e1a6d25f5f27f6f530b2628594132223ef5",
+        "passed": 19,
+        "failed": 2,
+        "files": 8,
+        "privateArithmeticControlsPassed": 6
+      },
+      "artifactReview": {
+        "path": ".local/upgrade-evidence/parent-joint-ebl-artifact-findings.json",
+        "sha256": "f1fb530dfa1226bc1c06dd5483c294884a2bc4060791ff51a575678fbd20efb3",
+        "canonicalCasesPassed": 7,
+        "guidedCasesBlocked": 3,
+        "pdfs": 82,
+        "pages": 209,
+        "physicalComparisons": 417
+      },
+      "contract": {
+        "path": ".local/upgrade-evidence/nol-joint-ebl-prior-qbi-source-contract.json",
+        "sha256": "22346d4a64fc69b95c39a171580360e0c0e712a90f324ce5449e776494f8f7ee"
+      },
+      "actualFinding": "Absent ordinary prior QBI carry silently becomes zero. Actual 7000 gives 32000 current carry versus 25000 with actual zero. Suspended EBL qualification is a different balance.",
+      "requiredCorrection": "Actual previous-return form/identity/year/carry source, explicit zero distinct from missing, source-bound bridge and output, confirmation invalidation and saved browser evidence.",
+      "followThrough": "Existing non-EBL K1/qualified-loss guide also needs the actual ordinary prior carry source without requiring an unrelated NOL timeline.",
+      "boundary": "No main adoption, human review or filing qualification. Retain first failing source and artifact reports plus reader-only correction evidence."
+    },
+    "positiveOtherHealthV4VisualFinding": {
+      "path": ".local/upgrade-evidence/parent-positive-other-health-v4-visual-review.json",
+      "sha256": "65c9c962dad1e713f232e01d7b5e38342b592e06dbac24204e588e2d7c7f38be",
+      "contactsInspected": 14,
+      "pagesCovered": 321,
+      "readableDetailsInspected": 2,
+      "physical7206DefectStillBlocksV4": true
+    },
+    "positiveOtherHealthV5SourceReview": {
+      "sourceTree": "c925815b016073de65359c80b50b5a0daf76b964",
+      "path": ".local/upgrade-evidence/complete-positive-other-v5-source-review.json",
+      "sha256": "9ad89aeceb3f0cd745648850b9aac2ab5f4dc2df770afc24bb354eb66ade7493",
+      "passed": 39,
+      "files": 13,
+      "ownedFiles": 39,
+      "trackedFiles": 3746,
+      "priorPrivateControlsUnchanged": 11,
+      "status": "source-review-clear-final-artifacts-and-integration-pending",
+      "humanQualification": false
     }
   },
   "historicalReleaseBlockers": {

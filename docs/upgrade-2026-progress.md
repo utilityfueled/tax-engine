@@ -182,6 +182,31 @@ The finite internal queue is now reconciled against actual source reachability:
   source and retain final native images, SBOM/scans and recovery evidence.
   The cancelled container run is not complete runtime qualification.
 
+The new joint EBL candidate `dc2eb914` remains unadopted. Independent source
+review passes 19 cases but retains two failures: absent ordinary prior QBI carry
+silently becomes zero. An actual prior $7,000 produces $32,000 outgoing QBI loss;
+known zero produces $25,000. Parent original/PDF review agrees with seven complete
+canonical cases and 417 physical amounts across 82 PDFs/209 pages, while three
+saved guided cases lack that source. The actual prior-return record and collector
+are being corrected before a new freeze. Existing non-EBL qualified-loss intake
+needs the same source follow-through; suspended EBL history cannot establish it.
+The retained findings and reader-only corrections are in
+`.local/upgrade-evidence/parent-joint-ebl-artifact-findings.json`, SHA256
+`f1fb530dfa1226bc1c06dd5483c294884a2bc4060791ff51a575678fbd20efb3`.
+
+The October 28 bounded queue audit,
+`.local/upgrade-evidence/complete-finite-queue-76d93bb6-audit.md`,
+checks 27 source/document hashes and ten delivered ancestor commits against
+`76d93bb6`. Its JSON SHA256 is
+`04b3801c937df6aa79e219f1596612c1a937cc2e6ec9cc8832f888822179cb58`.
+The proposed health composition is assigned to the facts agent after EBL review
+with provisional work on the corrected health source; final adoption and tests
+remain due.
+Later section 108 attributes and changed community-property history still need
+bounded original-source contracts and the applicable rule. Neither is completed
+by adding a reviewer checkbox. Existing precise source questions and separately
+excluded regimes retain their documented boundaries.
+
 The annual-category missing-loan-source finding is resolved in `dff617c8`; its
 original failing input and PDF remain retained. The corrected actual lender
 packet produces a 1,000 deduction and 58,000 AGI; explicit-zero and outside-owner
