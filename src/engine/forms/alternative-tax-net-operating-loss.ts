@@ -4,6 +4,7 @@ import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
 import type { NetOperatingLossResult, NetOperatingLossVintageResult } from "./net-operating-loss.js";
+import { calculateJointNolComponents } from "./net-operating-loss-joint-components.js";
 
 export interface AlternativeTaxNolResult {
   sourceFactsVerified: true;
@@ -56,7 +57,7 @@ export function calculateAlternativeTaxNol(input: {
     audit.record("Alternative NOL Worksheet", row.sourceId, "Alternative-tax carry absorption", absorbed,
       "Oldest actual vintage first; current claim and modified carry use independent capacities",
       { "Opening carry": row.openingCarryforward, "Current deduction": deduction, "Expired": expired, "Remaining carry": remainingCarryforward });
-    return { ...row, deduction, absorbed, expired, remainingCarryforward };
+    return calculateJointNolComponents({ ...row, deduction, absorbed, expired, remainingCarryforward });
   });
   return { sourceFactsVerified: true, calculationComplete: true, amtiBeforeAtnol, modifiedAmtiBeforeAtnol,
     deduction: sum(...vintages.map(row => row.deduction)), absorbed: sum(...vintages.map(row => row.absorbed)),

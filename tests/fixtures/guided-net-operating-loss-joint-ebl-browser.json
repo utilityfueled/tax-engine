@@ -1,0 +1,776 @@
+{
+  "phase": "interview",
+  "taxYear": 2025,
+  "segmentation": {
+    "filingStatus": "mfj",
+    "incomeTypes": [
+      "w2-wages"
+    ],
+    "lifeEvents": [
+      "net-operating-loss",
+      "k1-loss-sources"
+    ],
+    "stateCode": null
+  },
+  "currentSectionIndex": 0,
+  "completedSections": [],
+  "sectionData": {
+    "deductions": {
+      "method": "standard",
+      "medicalExpenses": "",
+      "stateLocalTaxes": "",
+      "realEstateTaxes": "",
+      "mortgageInterest": "",
+      "charitableContributions": "",
+      "casualtyLosses": "",
+      "otherItemized": ""
+    },
+    "personal-info": {
+      "dateOfBirth": "1990-02-15",
+      "usResidencyMonths": "12",
+      "stateResidency": "full-year",
+      "firstName": "Jordan",
+      "middleName": "",
+      "lastName": "Example",
+      "ssn": "111-22-3333",
+      "addressLine1": "42 Example Road",
+      "addressLine2": "",
+      "city": "Columbus",
+      "state": "OH",
+      "zip": "43215",
+      "dependentCount": "0",
+      "dependents": [],
+      "standardDeductionFacts": {
+        "primaryBlind": false,
+        "spouseBlind": false,
+        "primaryCanBeClaimedAsDependent": false,
+        "spouseCanBeClaimedAsDependent": false,
+        "primaryDeceased": false,
+        "spouseDeceased": false,
+        "dualStatusAlien": false,
+        "nonresidentAlien": false,
+        "shortTaxYear": false,
+        "spouseItemizes": false,
+        "claimSpouseAdditionalDeduction": false
+      },
+      "livedWithSpouseAtAnyTimeDuringYear": true,
+      "employmentValidSsnIssuedByDueDate": true,
+      "tinIssuedByDueDate": true,
+      "childTaxCredit": {
+        "bonaFidePuertoRicoResident": false,
+        "puertoRicoExcludedIncome": "0",
+        "form4563ExcludedIncome": "0"
+      },
+      "spouse": {
+        "firstName": "Taylor",
+        "lastName": "Example",
+        "ssn": "222-33-4444",
+        "dateOfBirth": "1992-09-10",
+        "usResidencyMonths": "12",
+        "employmentValidSsnIssuedByDueDate": true,
+        "tinIssuedByDueDate": true
+      }
+    },
+    "income-w2": {
+      "entries": [
+        {
+          "accountHolder": "primary",
+          "stateTaxReporting": "none",
+          "state": "",
+          "employerName": "Synthetic Employer",
+          "employerEin": "12-3456789",
+          "wages": "200000",
+          "federalWithheld": "20000",
+          "socialSecurityWages": "0",
+          "socialSecurityTips": "0",
+          "socialSecurityWithheld": "0",
+          "medicareWages": "0",
+          "medicareWithheld": "0",
+          "stateWages": "",
+          "stateWithheld": "",
+          "aiSuggestedFields": {},
+          "box10DependentCareBenefits": "0",
+          "box12CodeW": "0"
+        }
+      ]
+    },
+    "adjustments": {
+      "hsaDeduction": "",
+      "studentLoanInterest": "",
+      "selfEmployedHealthInsurance": "",
+      "educatorExpenses": "",
+      "iraDeduction": "",
+      "alimonyPaid": "",
+      "netOperatingLossSources": {
+        "sourceTaxYear": "2025",
+        "sourceReference": "Actual filed carry packet",
+        "sourceFactsConfirmed": true,
+        "allCarryoversIncluded": true,
+        "calendarYearTaxpayer": true,
+        "returnMembership": "changed_membership",
+        "membershipUnchangedConfirmed": false,
+        "filingUnitHistory": {
+          "sourceReference": "Filed same-couple returns",
+          "sourceFactsConfirmed": true,
+          "allRelevantReturnsIncluded": true,
+          "allRelevantCarryoversIncluded": true,
+          "currentReturnSourceId": "joint2025",
+          "persons": [
+            {
+              "sourceId": "jane",
+              "name": "Jordan Example",
+              "taxpayerIdLast4": "3333",
+              "deathStatus": "alive_through_return_year"
+            },
+            {
+              "sourceId": "alex",
+              "name": "Taylor Example",
+              "taxpayerIdLast4": "4444",
+              "deathStatus": "alive_through_return_year"
+            }
+          ],
+          "returns": [
+            {
+              "sourceId": "jane2021",
+              "taxYear": "2021",
+              "filingStatus": "married_filing_separately",
+              "primaryPersonId": "jane",
+              "sourceReference": "Filed separate jane 2021"
+            },
+            {
+              "sourceId": "alex2021",
+              "taxYear": "2021",
+              "filingStatus": "married_filing_separately",
+              "primaryPersonId": "alex",
+              "sourceReference": "Filed separate alex 2021"
+            },
+            {
+              "sourceId": "joint2022",
+              "taxYear": "2022",
+              "filingStatus": "married_filing_jointly",
+              "primaryPersonId": "jane",
+              "spousePersonId": "alex",
+              "sourceReference": "Filed joint 2022"
+            },
+            {
+              "sourceId": "jane2023",
+              "taxYear": "2023",
+              "filingStatus": "married_filing_separately",
+              "primaryPersonId": "jane",
+              "sourceReference": "Filed separate jane 2023"
+            },
+            {
+              "sourceId": "alex2023",
+              "taxYear": "2023",
+              "filingStatus": "married_filing_separately",
+              "primaryPersonId": "alex",
+              "sourceReference": "Filed separate alex 2023"
+            },
+            {
+              "sourceId": "joint2024",
+              "taxYear": "2024",
+              "filingStatus": "married_filing_jointly",
+              "primaryPersonId": "jane",
+              "spousePersonId": "alex",
+              "sourceReference": "Filed joint 2024"
+            },
+            {
+              "sourceId": "joint2025",
+              "taxYear": "2025",
+              "filingStatus": "married_filing_jointly",
+              "primaryPersonId": "jane",
+              "spousePersonId": "alex",
+              "sourceReference": "Filed joint 2025"
+            }
+          ]
+        },
+        "sameCoupleJointHistory": {
+          "sourceReference": "Actual same-couple marital-year records",
+          "sourceFactsConfirmed": true,
+          "allRelevantYearsIncluded": true,
+          "years": [
+            {
+              "taxYear": "2021",
+              "firstPersonId": "jane",
+              "secondPersonId": "alex",
+              "marriedToEachOther": true,
+              "sourceReference": "Actual married filing status 2021"
+            },
+            {
+              "taxYear": "2022",
+              "firstPersonId": "jane",
+              "secondPersonId": "alex",
+              "marriedToEachOther": true,
+              "sourceReference": "Actual married filing status 2022"
+            },
+            {
+              "taxYear": "2023",
+              "firstPersonId": "jane",
+              "secondPersonId": "alex",
+              "marriedToEachOther": true,
+              "sourceReference": "Actual married filing status 2023"
+            },
+            {
+              "taxYear": "2024",
+              "firstPersonId": "jane",
+              "secondPersonId": "alex",
+              "marriedToEachOther": true,
+              "sourceReference": "Actual married filing status 2024"
+            },
+            {
+              "taxYear": "2025",
+              "firstPersonId": "jane",
+              "secondPersonId": "alex",
+              "marriedToEachOther": true,
+              "sourceReference": "Actual married filing status 2025"
+            }
+          ]
+        },
+        "primaryName": "Jordan Example",
+        "primaryTaxpayerIdLast4": "3333",
+        "spouseName": "Taylor Example",
+        "spouseTaxpayerIdLast4": "4444",
+        "vintages": [
+          {
+            "sourceId": "jane-loss2021",
+            "lossTaxYear": "2021",
+            "sourceReference": "Filed2021loss",
+            "originKind": "excess_business_loss",
+            "originalLoss": "60000",
+            "openingCarryforward": "50000",
+            "carrybackTreatment": "not_required",
+            "adjustedThroughTaxYear": "2024",
+            "historySourceReference": "Filed2024carry",
+            "allHistoryIncluded": true,
+            "farmingLossIncluded": false,
+            "filingUnitOrigin": {
+              "ownerPersonId": "jane",
+              "returnSourceId": "jane2021",
+              "originalReturnLoss": "60000",
+              "separateComputations": [
+                {
+                  "personId": "jane",
+                  "netOperatingLoss": "60000",
+                  "sourceReference": "Filed original jane"
+                }
+              ]
+            },
+            "history": [
+              {
+                "taxYear": "2022",
+                "nolUsed": "10000",
+                "attributeReduction": "0",
+                "sourceReference": "Filed jane carry 2022",
+                "filingUnitUses": [
+                  {
+                    "returnSourceId": "joint2022",
+                    "sourceReference": "Filed jane use 2022",
+                    "sourceFactsConfirmed": true,
+                    "allOriginOwnersIncluded": true,
+                    "allOtherNolSourcesIncluded": true,
+                    "claimedDeduction": "10000",
+                    "modifiedAbsorption": "10000",
+                    "attributeReduction": "0",
+                    "owners": [
+                      {
+                        "personId": "jane",
+                        "claimedDeduction": "10000",
+                        "modifiedAbsorption": "10000",
+                        "attributeReduction": "0"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "taxYear": "2023",
+                "nolUsed": "0",
+                "attributeReduction": "0",
+                "sourceReference": "Filed jane carry 2023",
+                "filingUnitUses": [
+                  {
+                    "returnSourceId": "jane2023",
+                    "sourceReference": "Filed jane use 2023",
+                    "sourceFactsConfirmed": true,
+                    "allOriginOwnersIncluded": true,
+                    "allOtherNolSourcesIncluded": true,
+                    "claimedDeduction": "0",
+                    "modifiedAbsorption": "0",
+                    "attributeReduction": "0",
+                    "owners": [
+                      {
+                        "personId": "jane",
+                        "claimedDeduction": "0",
+                        "modifiedAbsorption": "0",
+                        "attributeReduction": "0"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "taxYear": "2024",
+                "nolUsed": "0",
+                "attributeReduction": "0",
+                "sourceReference": "Filed jane carry 2024",
+                "filingUnitUses": [
+                  {
+                    "returnSourceId": "joint2024",
+                    "sourceReference": "Filed jane use 2024",
+                    "sourceFactsConfirmed": true,
+                    "allOriginOwnersIncluded": true,
+                    "allOtherNolSourcesIncluded": true,
+                    "claimedDeduction": "0",
+                    "modifiedAbsorption": "0",
+                    "attributeReduction": "0",
+                    "owners": [
+                      {
+                        "personId": "jane",
+                        "claimedDeduction": "0",
+                        "modifiedAbsorption": "0",
+                        "attributeReduction": "0"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "section1411OriginalLoss": "0"
+          },
+          {
+            "sourceId": "alex-loss2021",
+            "lossTaxYear": "2021",
+            "sourceReference": "Filed2021loss",
+            "originKind": "individual_nol",
+            "originalLoss": "40000",
+            "openingCarryforward": "35000",
+            "carrybackTreatment": "not_required",
+            "adjustedThroughTaxYear": "2024",
+            "historySourceReference": "Filed2024carry",
+            "allHistoryIncluded": true,
+            "farmingLossIncluded": false,
+            "filingUnitOrigin": {
+              "ownerPersonId": "alex",
+              "returnSourceId": "alex2021",
+              "originalReturnLoss": "40000",
+              "separateComputations": [
+                {
+                  "personId": "alex",
+                  "netOperatingLoss": "40000",
+                  "sourceReference": "Filed original alex"
+                }
+              ]
+            },
+            "history": [
+              {
+                "taxYear": "2022",
+                "nolUsed": "5000",
+                "attributeReduction": "0",
+                "sourceReference": "Filed alex carry 2022",
+                "filingUnitUses": [
+                  {
+                    "returnSourceId": "joint2022",
+                    "sourceReference": "Filed alex use 2022",
+                    "sourceFactsConfirmed": true,
+                    "allOriginOwnersIncluded": true,
+                    "allOtherNolSourcesIncluded": true,
+                    "claimedDeduction": "5000",
+                    "modifiedAbsorption": "5000",
+                    "attributeReduction": "0",
+                    "owners": [
+                      {
+                        "personId": "alex",
+                        "claimedDeduction": "5000",
+                        "modifiedAbsorption": "5000",
+                        "attributeReduction": "0"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "taxYear": "2023",
+                "nolUsed": "0",
+                "attributeReduction": "0",
+                "sourceReference": "Filed alex carry 2023",
+                "filingUnitUses": [
+                  {
+                    "returnSourceId": "alex2023",
+                    "sourceReference": "Filed alex use 2023",
+                    "sourceFactsConfirmed": true,
+                    "allOriginOwnersIncluded": true,
+                    "allOtherNolSourcesIncluded": true,
+                    "claimedDeduction": "0",
+                    "modifiedAbsorption": "0",
+                    "attributeReduction": "0",
+                    "owners": [
+                      {
+                        "personId": "alex",
+                        "claimedDeduction": "0",
+                        "modifiedAbsorption": "0",
+                        "attributeReduction": "0"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "taxYear": "2024",
+                "nolUsed": "0",
+                "attributeReduction": "0",
+                "sourceReference": "Filed alex carry 2024",
+                "filingUnitUses": [
+                  {
+                    "returnSourceId": "joint2024",
+                    "sourceReference": "Filed alex use 2024",
+                    "sourceFactsConfirmed": true,
+                    "allOriginOwnersIncluded": true,
+                    "allOtherNolSourcesIncluded": true,
+                    "claimedDeduction": "0",
+                    "modifiedAbsorption": "0",
+                    "attributeReduction": "0",
+                    "owners": [
+                      {
+                        "personId": "alex",
+                        "claimedDeduction": "0",
+                        "modifiedAbsorption": "0",
+                        "attributeReduction": "0"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "section1411OriginalLoss": "10000"
+          }
+        ],
+        "alternativeTax": {
+          "sourceReference": "Actual independent AMT carry worksheet",
+          "sourceFactsConfirmed": true,
+          "filingUnitHistory": {
+            "sourceReference": "Filed same-couple returns",
+            "sourceFactsConfirmed": true,
+            "allRelevantReturnsIncluded": true,
+            "allRelevantCarryoversIncluded": true,
+            "currentReturnSourceId": "joint2025",
+            "persons": [
+              {
+                "sourceId": "jane",
+                "name": "Jordan Example",
+                "taxpayerIdLast4": "3333",
+                "deathStatus": "alive_through_return_year"
+              },
+              {
+                "sourceId": "alex",
+                "name": "Taylor Example",
+                "taxpayerIdLast4": "4444",
+                "deathStatus": "alive_through_return_year"
+              }
+            ],
+            "returns": [
+              {
+                "sourceId": "jane2021",
+                "taxYear": "2021",
+                "filingStatus": "married_filing_separately",
+                "primaryPersonId": "jane",
+                "sourceReference": "Filed separate jane 2021"
+              },
+              {
+                "sourceId": "alex2021",
+                "taxYear": "2021",
+                "filingStatus": "married_filing_separately",
+                "primaryPersonId": "alex",
+                "sourceReference": "Filed separate alex 2021"
+              },
+              {
+                "sourceId": "joint2022",
+                "taxYear": "2022",
+                "filingStatus": "married_filing_jointly",
+                "primaryPersonId": "jane",
+                "spousePersonId": "alex",
+                "sourceReference": "Filed joint 2022"
+              },
+              {
+                "sourceId": "jane2023",
+                "taxYear": "2023",
+                "filingStatus": "married_filing_separately",
+                "primaryPersonId": "jane",
+                "sourceReference": "Filed separate jane 2023"
+              },
+              {
+                "sourceId": "alex2023",
+                "taxYear": "2023",
+                "filingStatus": "married_filing_separately",
+                "primaryPersonId": "alex",
+                "sourceReference": "Filed separate alex 2023"
+              },
+              {
+                "sourceId": "joint2024",
+                "taxYear": "2024",
+                "filingStatus": "married_filing_jointly",
+                "primaryPersonId": "jane",
+                "spousePersonId": "alex",
+                "sourceReference": "Filed joint 2024"
+              },
+              {
+                "sourceId": "joint2025",
+                "taxYear": "2025",
+                "filingStatus": "married_filing_jointly",
+                "primaryPersonId": "jane",
+                "spousePersonId": "alex",
+                "sourceReference": "Filed joint 2025"
+              }
+            ]
+          },
+          "sameCoupleJointHistory": {
+            "sourceReference": "Actual same-couple marital-year records",
+            "sourceFactsConfirmed": true,
+            "allRelevantYearsIncluded": true,
+            "years": [
+              {
+                "taxYear": "2021",
+                "firstPersonId": "jane",
+                "secondPersonId": "alex",
+                "marriedToEachOther": true,
+                "sourceReference": "Actual married filing status 2021"
+              },
+              {
+                "taxYear": "2022",
+                "firstPersonId": "jane",
+                "secondPersonId": "alex",
+                "marriedToEachOther": true,
+                "sourceReference": "Actual married filing status 2022"
+              },
+              {
+                "taxYear": "2023",
+                "firstPersonId": "jane",
+                "secondPersonId": "alex",
+                "marriedToEachOther": true,
+                "sourceReference": "Actual married filing status 2023"
+              },
+              {
+                "taxYear": "2024",
+                "firstPersonId": "jane",
+                "secondPersonId": "alex",
+                "marriedToEachOther": true,
+                "sourceReference": "Actual married filing status 2024"
+              },
+              {
+                "taxYear": "2025",
+                "firstPersonId": "jane",
+                "secondPersonId": "alex",
+                "marriedToEachOther": true,
+                "sourceReference": "Actual married filing status 2025"
+              }
+            ]
+          },
+          "allCarryoversIncluded": true,
+          "specialDisasterCarryIncluded": false,
+          "currentYearAdjustmentsCompleteConfirmed": true,
+          "regularBasisAndLossLimitsSameAsAlternativeConfirmed": true,
+          "vintages": [
+            {
+              "sourceId": "amt-alex-loss2021",
+              "lossTaxYear": "2021",
+              "sourceReference": "Filed2021loss",
+              "originKind": "individual_nol",
+              "originalLoss": "20000",
+              "openingCarryforward": "20000",
+              "carrybackTreatment": "not_required",
+              "adjustedThroughTaxYear": "2024",
+              "historySourceReference": "Filed2024carry",
+              "allHistoryIncluded": true,
+              "farmingLossIncluded": false,
+              "filingUnitOrigin": {
+                "ownerPersonId": "alex",
+                "returnSourceId": "alex2021",
+                "originalReturnLoss": "20000",
+                "separateComputations": [
+                  {
+                    "personId": "alex",
+                    "netOperatingLoss": "20000",
+                    "sourceReference": "Filed original alex"
+                  }
+                ]
+              },
+              "history": [
+                {
+                  "taxYear": "2022",
+                  "nolUsed": "0",
+                  "attributeReduction": "0",
+                  "sourceReference": "Filed alex carry 2022",
+                  "filingUnitUses": [
+                    {
+                      "returnSourceId": "joint2022",
+                      "sourceReference": "Filed alex use 2022",
+                      "sourceFactsConfirmed": true,
+                      "allOriginOwnersIncluded": true,
+                      "allOtherNolSourcesIncluded": true,
+                      "claimedDeduction": "0",
+                      "modifiedAbsorption": "0",
+                      "attributeReduction": "0",
+                      "owners": [
+                        {
+                          "personId": "alex",
+                          "claimedDeduction": "0",
+                          "modifiedAbsorption": "0",
+                          "attributeReduction": "0"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "taxYear": "2023",
+                  "nolUsed": "0",
+                  "attributeReduction": "0",
+                  "sourceReference": "Filed alex carry 2023",
+                  "filingUnitUses": [
+                    {
+                      "returnSourceId": "alex2023",
+                      "sourceReference": "Filed alex use 2023",
+                      "sourceFactsConfirmed": true,
+                      "allOriginOwnersIncluded": true,
+                      "allOtherNolSourcesIncluded": true,
+                      "claimedDeduction": "0",
+                      "modifiedAbsorption": "0",
+                      "attributeReduction": "0",
+                      "owners": [
+                        {
+                          "personId": "alex",
+                          "claimedDeduction": "0",
+                          "modifiedAbsorption": "0",
+                          "attributeReduction": "0"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "taxYear": "2024",
+                  "nolUsed": "0",
+                  "attributeReduction": "0",
+                  "sourceReference": "Filed alex carry 2024",
+                  "filingUnitUses": [
+                    {
+                      "returnSourceId": "joint2024",
+                      "sourceReference": "Filed alex use 2024",
+                      "sourceFactsConfirmed": true,
+                      "allOriginOwnersIncluded": true,
+                      "allOtherNolSourcesIncluded": true,
+                      "claimedDeduction": "0",
+                      "modifiedAbsorption": "0",
+                      "attributeReduction": "0",
+                      "owners": [
+                        {
+                          "personId": "alex",
+                          "claimedDeduction": "0",
+                          "modifiedAbsorption": "0",
+                          "attributeReduction": "0"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "section1411OriginalLoss": "0"
+            }
+          ]
+        }
+      },
+      "k1LossSources": {
+        "sourceTaxYear": "2025",
+        "sourceReference": "Actual qualified original461 packet",
+        "sourceFactsConfirmed": true,
+        "allK1ActivitiesIncluded": true,
+        "allExcessBusinessLossHistoriesIncluded": true,
+        "excessBusinessLossHistories": [
+          {
+            "sourceTaxYear": "2024",
+            "sourceReference": "Filed2024 qualified461 carry",
+            "sourceFactsConfirmed": true,
+            "nolSourceId": "jane-loss2021",
+            "accountHolder": "primary",
+            "recipientName": "Jordan Example",
+            "recipientTaxpayerIdLast4": "3333",
+            "activityName": "Original qualified business",
+            "activityEIN": "12-3456789",
+            "limitationSourceReference": "Filed2021 Form461 and qualified character",
+            "originalNol": {
+              "sourceId": "jane-loss2021",
+              "lossTaxYear": "2021",
+              "sourceReference": "Filed2021loss",
+              "originKind": "excess_business_loss",
+              "originalLoss": "60000",
+              "openingCarryforward": "50000",
+              "carrybackTreatment": "not_required",
+              "adjustedThroughTaxYear": "2024",
+              "historySourceReference": "Filed2024carry",
+              "allHistoryIncluded": true,
+              "farmingLossIncluded": false,
+              "history": [
+                {
+                  "taxYear": "2022",
+                  "nolUsed": "10000",
+                  "attributeReduction": "0",
+                  "sourceReference": "Filed jane carry 2022"
+                },
+                {
+                  "taxYear": "2023",
+                  "nolUsed": "0",
+                  "attributeReduction": "0",
+                  "sourceReference": "Filed jane carry 2023"
+                },
+                {
+                  "taxYear": "2024",
+                  "nolUsed": "0",
+                  "attributeReduction": "0",
+                  "sourceReference": "Filed jane carry 2024"
+                }
+              ]
+            },
+            "originalQualifiedLoss": "30000",
+            "qualifiedOpeningCarryforward": "25000",
+            "allHistoryIncluded": true,
+            "materiallyParticipatedInCurrentYear": false,
+            "history": [
+              {
+                "taxYear": "2022",
+                "qualifiedNolAbsorption": "5000",
+                "qualifiedAttributeReduction": "0",
+                "sourceReference": "Filed qualified carry 2022"
+              },
+              {
+                "taxYear": "2023",
+                "qualifiedNolAbsorption": "0",
+                "qualifiedAttributeReduction": "0",
+                "sourceReference": "Filed qualified carry 2023"
+              },
+              {
+                "taxYear": "2024",
+                "qualifiedNolAbsorption": "0",
+                "qualifiedAttributeReduction": "0",
+                "sourceReference": "Filed qualified carry 2024"
+              }
+            ]
+          }
+        ],
+        "activities": [],
+        "priorQbiCarry": {
+          "sourceTaxYear": "2024",
+          "sourceReference": "Filed2024 Form8995 line16 and ordinary carry records",
+          "sourceFactsConfirmed": true,
+          "returnSourceId": "joint2024",
+          "formKind": "form_8995_line_16",
+          "primaryName": "Jordan Example",
+          "primaryTaxpayerIdLast4": "3333",
+          "spouseName": "Taylor Example",
+          "spouseTaxpayerIdLast4": "4444",
+          "lossCarryforward": "0",
+          "activeLossCarryforward": "0",
+          "activeSourceReference": "Filed2024 ordinary carry character record"
+        }
+      }
+    }
+  }
+}

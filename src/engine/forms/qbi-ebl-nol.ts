@@ -3,11 +3,14 @@ import Decimal from 'decimal.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import type { CalculatedLine } from '@/models/outputs.js';
 import type { CodNolVintageReduction } from './cod-nol-reductions.js';
-import { calculateNetOperatingLoss, type NetOperatingLossResult, type NetOperatingLossVintageSource } from './net-operating-loss.js';
+import { calculateNetOperatingLoss, type NetOperatingLossResult, type NetOperatingLossVintageSource, type NetOperatingLossVintageResult } from './net-operating-loss.js';
+import { calculateJointNolComponents } from './net-operating-loss-joint-components.js';
+import { calculateQbiPriorCarrySources } from './qbi-prior-carry-sources.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, roundDollar, sum } from '@/utils/decimal.js';
 
 export type QbiEblNolInput=Pick<TaxYearInput,'qbiLossSources'|'netOperatingLoss'> & {
+  priorYear?:Pick<NonNullable<TaxYearInput['priorYear']>,'qbiLossCarryforward'|'activeQbiLossCarryforward'>;
   taxpayer:Pick<TaxYearInput['taxpayer'],'taxYear'|'filingStatus'> & {
     primary:Pick<TaxYearInput['taxpayer']['primary'],'firstName'|'lastName'|'ssn'>;
     spouse?:Pick<TaxYearInput['taxpayer']['primary'],'firstName'|'lastName'|'ssn'>;
@@ -53,8 +56,15 @@ function qualifiedPortion(total:Decimal,opening:Decimal,qualifiedOpening:Decimal
   }
   return portion;
 }
+function eblOriginals(result:NetOperatingLossResult):NetOperatingLossVintageResult[] {
+  return result.vintages.flatMap(row=>row.jointPool
+    ? row.jointPool.components.filter(part=>part.originKind==='excess_business_loss')
+      .map(part=>({...part,lossTaxYear:row.lossTaxYear,originKind:'excess_business_loss' as const}))
+    : row.originKind==='excess_business_loss'?[row]:[]);
+}
 
 export function calculateQbiEblNol(input:QbiEblNolInput,context?:{regular:NetOperatingLossResult;codVintages?:CodNolVintageReduction[]}):QbiEblNolResult {
+  calculateQbiPriorCarrySources(input);
   const facts=input.netOperatingLoss,packet=input.qbiLossSources,year=input.taxpayer.taxYear;
   const recorded=packet?.excessBusinessLossHistories;
   if(!facts) {
@@ -62,7 +72,7 @@ export function calculateQbiEblNol(input:QbiEblNolInput,context?:{regular:NetOpe
     return {sourceFactsVerified:true,calculationComplete:context!==undefined,...(context?{currentQualifiedDeduction:d('0')}:{}),vintages:[],lines:[]};
   }
   const source=calculateNetOperatingLoss({taxYear:year,filingStatus:input.taxpayer.filingStatus,taxpayer:input.taxpayer,facts});
-  const originals=source.vintages.filter(row=>row.originKind==='excess_business_loss');
+  const originals=eblOriginals(source);
   if(originals.length===0) {
     if(recorded?.length) throw new Error('EBL QBI history cannot bind an ordinary or alternative-tax NOL');
     return {sourceFactsVerified:true,calculationComplete:context!==undefined,...(context?{currentQualifiedDeduction:d('0')}:{}),vintages:[],lines:[]};
@@ -85,6 +95,13 @@ export function calculateQbiEblNol(input:QbiEblNolInput,context?:{regular:NetOpe
       ||name(text(history.recipientName,'recipient identity'))!==name(`${person.firstName} ${person.lastName}`)
       ||!/^\d{9}$/.test(person.ssn.replaceAll('-',''))||!/^\d{4}$/.test(history.recipientTaxpayerIdLast4??'')
       ||person.ssn.replaceAll('-','').slice(-4)!==history.recipientTaxpayerIdLast4) throw new Error('EBL QBI history owner identity must match the actual continuing taxpayer');
+    if(facts.returnMembership==='changed_membership') {
+      const timeline=facts.filingUnitHistory,current=timeline?.returns?.find(row=>row.sourceId===timeline.currentReturnSourceId);
+      const originalOwner=record.filingUnitOrigin?.ownerPersonId;
+      if(!originalOwner||originalOwner!==(owner==='primary'?current?.primaryPersonId:current?.spousePersonId)) {
+        throw new Error('EBL QBI original filing-unit owner must match the actual current account holder');
+      }
+    }
     text(history.activityName,'origin activity name');text(history.limitationSourceReference,'origin461 and qualified-character record');
     if(!/^\d{2}-?\d{7}$/.test(history.activityEIN??'')) throw new Error('EBL QBI requires the original activity EIN');
     const qualifiedOriginal=amount(history.originalQualifiedLoss,'original qualified loss'),qualifiedOpening=amount(history.qualifiedOpeningCarryforward,'qualified opening carry');
@@ -107,7 +124,7 @@ export function calculateQbiEblNol(input:QbiEblNolInput,context?:{regular:NetOpe
       {'Origin year':String(original.lossTaxYear),'Original regular loss':original.originalLoss,'Original qualified loss':qualifiedOriginal,'Opening regular carry':original.openingCarryforward});
     return {sourceId:id,lossTaxYear:original.lossTaxYear,accountHolder:owner,materiallyParticipatedInCurrentYear:history.materiallyParticipatedInCurrentYear,originalLoss:original.originalLoss,originalQualifiedLoss:qualifiedOriginal,
       openingCarryforward:original.openingCarryforward,qualifiedOpeningCarryforward:qualifiedOpening};
-  }).sort((a,b)=>a.lossTaxYear-b.lossTaxYear);
+  }).sort((a,b)=>a.lossTaxYear-b.lossTaxYear||a.sourceId.localeCompare(b.sourceId));
   if(!context) return {sourceFactsVerified:true,calculationComplete:false,vintages,lines:audit.getLines()};
   const regular=context.regular;
   if(regular.sourceFactsVerified!==true||!regular.calculationComplete||regular.vintages.length!==source.vintages.length
@@ -119,12 +136,34 @@ export function calculateQbiEblNol(input:QbiEblNolInput,context?:{regular:NetOpe
     const matches=regular.vintages.filter(other=>other.sourceId===row.sourceId),actual=matches[0];
     if(matches.length!==1||actual.lossTaxYear!==row.lossTaxYear||actual.originKind!==row.originKind
       ||!actual.originalLoss.eq(row.originalLoss)||!actual.openingCarryforward.eq(row.openingCarryforward)
+      ||Boolean(actual.jointPool)!==Boolean(row.jointPool)
       ||!sum(canonical(actual.absorbed,'absorption'),canonical(actual.expired,'expiry'),canonical(actual.remainingCarryforward,'remaining carry')).eq(row.openingCarryforward)) {
       throw new Error('EBL QBI canonical NOL source and closing balances must conserve the actual original history');
     }
+    if(row.jointPool&&actual.jointPool) {
+      if(actual.jointPool.components.length!==row.jointPool.components.length) throw new Error('EBL QBI original joint component count must reconcile');
+      const resolved=calculateJointNolComponents(actual).jointPool!.components;
+      for(const component of row.jointPool.components) {
+        const found=actual.jointPool.components.filter(part=>part.sourceId===component.sourceId),part=found[0];
+        if(found.length!==1||part.ownerPersonId!==component.ownerPersonId||part.originalReturnSourceId!==component.originalReturnSourceId
+          ||part.originKind!==component.originKind||!part.originalLoss.eq(component.originalLoss)
+          ||!part.openingCarryforward.eq(component.openingCarryforward)||!part.expiredBeforeYear.eq(component.expiredBeforeYear)) {
+          throw new Error('EBL QBI canonical original joint source kind, owner and balances must reconcile');
+        }
+        if(row.jointPool.components.some(value=>value.originKind==='excess_business_loss')) {
+          const expected=resolved.find(value=>value.sourceId===component.sourceId)!;
+          for(const key of ['deduction','absorbed','expired','remainingCarryforward'] as const) {
+            if(!canonical(part[key],`component ${key}`).eq(canonical(expected[key],`determined component ${key}`))) {
+              throw new Error('EBL QBI canonical component use must equal its independently determined source vector');
+            }
+          }
+        }
+      }
+    }
   }
+  const actualOriginals=eblOriginals(regular);
   for(const row of vintages) {
-    const actual=regular.vintages.find(value=>value.sourceId===row.sourceId);
+    const actual=actualOriginals.find(value=>value.sourceId===row.sourceId);
     if(!actual) throw new Error('EBL QBI canonical source vintage is missing');
     const deduction=canonical(actual.deduction,'current deduction'),absorbed=canonical(actual.absorbed,'current absorption');
     const expired=canonical(actual.expired,'current expiry'),remaining=canonical(actual.remainingCarryforward,'remaining carry');

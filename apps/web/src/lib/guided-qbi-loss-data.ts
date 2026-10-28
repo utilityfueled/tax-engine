@@ -22,7 +22,7 @@ const amounts = new Set(['ordinaryIncome', 'section199AQBI', 'section199AW2Wages
   'priorYearAmountAtRisk', 'currentYearIncreases', 'currentYearDecreases', 'priorPassiveLoss', 'amount', 'originalLoss',
   'qualifiedOriginalLoss', 'remainingLoss', 'qualifiedRemainingLoss', 'originalQualifiedLoss', 'qualifiedOpeningCarryforward',
   'openingCarryforward', 'nolUsed', 'attributeReduction', 'qualifiedNolAbsorption', 'qualifiedAttributeReduction',
-  'otherBusinessIncome', 'otherBusinessDeductions']);
+  'otherBusinessIncome', 'otherBusinessDeductions', 'lossCarryforward', 'activeLossCarryforward']);
 export function qbiSourceValues(value: unknown, key = ''): unknown {
   if (value == null || value === '') return undefined;
   if (Array.isArray(value)) return value.map(row => qbiSourceValues(row));

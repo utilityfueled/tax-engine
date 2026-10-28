@@ -3,6 +3,11 @@ const amount=z.string().regex(/^-?\d+(\.\d+)?$/).optional();
 const evidence={sourceTaxYear:z.number().int().optional(),sourceReference:z.string().optional(),sourceFactsConfirmed:z.boolean().optional()};
 /** Actual original records and opening histories; never a current loss/QBI override. */
 export const QbiLossSourcesSchema=z.object({
+  priorQbiCarry:z.object({...evidence,returnSourceId:z.string().optional(),
+    formKind:z.enum(['form_8995_line_16','form_8995a_schedule_c_line_6','completed_prior_return_no_carry']).optional(),
+    primaryName:z.string().optional(),primaryTaxpayerIdLast4:z.string().optional(),
+    spouseName:z.string().optional(),spouseTaxpayerIdLast4:z.string().optional(),
+    lossCarryforward:amount,activeLossCarryforward:amount,activeSourceReference:z.string().optional()}).optional(),
   form461Classification:z.object({...evidence,method:z.enum(['ordinary_k1_only']).optional(),
     allNonEmployeeBusinessSourcesIncluded:z.boolean().optional(),capitalIncomeIsNonbusiness:z.boolean().optional(),
     otherBusinessIncome:amount,otherBusinessDeductions:amount}).optional(),

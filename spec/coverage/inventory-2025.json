@@ -7136,6 +7136,51 @@
       ]
     },
     {
+      "key": "federal/net-operating-loss-joint-components",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/net-operating-loss-joint-components.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/net-operating-loss-joint-ebl",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i172",
+      "specPath": "spec/federal/net-operating-loss-joint-ebl.yaml",
+      "enginePath": "src/engine/forms/net-operating-loss-joint-components.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-net-operating-loss-joint-ebl.test.ts::composes fully consumed actual EBL and ordinary sources once",
+        "tests/engine/forms/qbi-prior-carry-sources.test.ts::requires an actual ordinary prior carry separately from EBL suspension",
+        "tests/pdf/net-operating-loss-joint-ebl-review.test.ts::separates actual ordinary prior carry from released EBL in the saved review"
+      ],
+      "implementationNote": "Actual original component histories determine current regular and alternative use only within the proved vectors. The separate src/engine/forms/qbi-prior-carry-sources.ts helper requires actual preceding-year ordinary QBI carry and binds the source-bound guide and historical review. No current owner allocation, final2026 form, filing, staging or independent human qualification is established.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/net-operating-loss-joint-pools",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -7514,6 +7559,27 @@
       "status": "partial",
       "knownGaps": [
         "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/qbi-prior-carry-sources",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/qbi-prior-carry-sources.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
         "Missing e-file and business-rule validation coverage"
       ]
     },

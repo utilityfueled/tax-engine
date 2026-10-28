@@ -148,6 +148,19 @@ export function K1LossSourceDetails({ data, nol, onChange }: { data?: K1LossSour
         <p className="guided-hint">The supported classification requires actual zero other business sources. SE, health and retirement deductions are calculated separately from the return records.</p>
         <button type="button" className="utility-button" onClick={() => change({ form461Classification: undefined })}>Remove current business classification</button>
       </fieldset>}
+      {!data.priorQbiCarry ? <button type="button" className="utility-button" onClick={() => change({ priorQbiCarry: {} })}>Add prior ordinary QBI carry record</button> : <fieldset><legend>Prior ordinary QBI loss carry</legend>
+        <p className="guided-hint">Copy the preceding-year Form 8995 line 16 or Schedule C (Form 8995-A) line 6. A known zero needs an actual completed prior-return record. This balance is separate from suspended EBL losses. The supported joint EBL method requires the same couple on the preceding and current joint returns.</p>
+        <Fields prefix="Prior ordinary QBI" data={data.priorQbiCarry} fields={[...evidence,
+          ['returnSourceId', 'original preceding-year return', (nol?.filingUnitHistory?.returns ?? []).filter(row => row.sourceId).map(row => [row.sourceId ?? '', `${row.sourceId} — ${row.taxYear ?? 'year unknown'}`] as const)],
+          ['formKind', 'actual record', [['form_8995_line_16', 'Form 8995 line 16'], ['form_8995a_schedule_c_line_6', 'Schedule C (Form 8995-A) line 6'], ['completed_prior_return_no_carry', 'Completed prior-return records establish no carry']]],
+          ['primaryName', 'prior return primary name', 'text'], ['primaryTaxpayerIdLast4', 'prior primary taxpayer ID last four', 'text'],
+          ['spouseName', 'prior return spouse name', 'text'], ['spouseTaxpayerIdLast4', 'prior spouse taxpayer ID last four', 'text'],
+          ['lossCarryforward', 'filed ordinary loss carry', 'money'], ['activeLossCarryforward', 'independently recorded active portion (optional)', 'money'],
+          ['activeSourceReference', 'active portion source reference (optional)', 'text'],
+        ]} onChange={patch => change({ priorQbiCarry: { ...data.priorQbiCarry, ...patch } })} />
+        <p className="guided-hint">Leave the active portion unknown unless its separate source is available. A missing ordinary carry record cannot be replaced by an EBL completeness answer.</p>
+        <button type="button" className="utility-button" onClick={() => change({ priorQbiCarry: undefined })}>Remove prior ordinary QBI carry record</button>
+      </fieldset>}
       <fieldset><legend>Prior EBL qualified character</legend>
         <Fields prefix="EBL sources" data={data} fields={[[ 'allExcessBusinessLossHistoriesIncluded', 'all actual regular EBL histories included', 'boolean' ]]} onChange={change} />
         {data.excessBusinessLossHistories === undefined && <p role="status">The prior qualified EBL history list is unknown.</p>}

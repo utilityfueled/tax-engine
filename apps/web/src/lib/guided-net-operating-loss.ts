@@ -8,6 +8,7 @@ import { parseGuidedCurrency } from './guided-currency';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
 import { parseGuidedQbiLossPacket, type K1LossSourcesData } from './guided-qbi-loss-data';
 import { calculateQbiEblNol } from '@/engine/forms/qbi-ebl-nol';
+import { calculateQbiPriorCarrySources } from '@/engine/forms/qbi-prior-carry-sources';
 import { resolveCharitableRecipient } from '@/utils/charitable-recipient';
 import { validateCharitableNolOriginHistories } from '@/utils/charitable-nol-origins';
 import { buildGuidedCharitableCarryover, type CharitableCarryoverData } from './guided-charitable-carryover';
@@ -150,8 +151,12 @@ function collectGuidedNetOperatingLoss(validateDeductions: boolean, data: NetOpe
   calculateNetOperatingLoss({ ...context, facts: { ...facts, ...facts.alternativeTax,
     filingUnitHistory: facts.alternativeTax?.filingUnitHistory, sameCoupleJointHistory: facts.alternativeTax?.sameCoupleJointHistory } });
   if (facts.returnMembership === 'changed_membership') assertNolFilingUnitAgreement({ ...taxpayer, taxYear, filingStatus: statuses[filingStatus] }, facts.filingUnitHistory, facts.alternativeTax?.filingUnitHistory, standardDeductionFacts);
-  if (qbiSources) calculateQbiEblNol({ taxpayer: { ...taxpayer, taxYear, filingStatus: statuses[filingStatus] },
-    qbiLossSources: parseGuidedQbiLossPacket(qbiSources), netOperatingLoss: facts });
+  if (qbiSources) {
+    const original = { taxpayer: { ...taxpayer, taxYear, filingStatus: statuses[filingStatus] },
+      qbiLossSources: parseGuidedQbiLossPacket(qbiSources), netOperatingLoss: facts };
+    const priorYear = calculateQbiPriorCarrySources(original, false);
+    calculateQbiEblNol({ ...original, priorYear });
+  }
   return facts;
 }
 export function netOperatingLossFactErrors(data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, required = false, deductions?: DeductionData, qbiSources?: K1LossSourcesData): Record<string, string> {

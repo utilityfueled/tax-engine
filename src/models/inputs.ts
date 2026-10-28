@@ -2772,7 +2772,7 @@ export const PriorYearCarryforwardSchema = z.object({
     z.enum(["passive", "general"]),
     z.array(z.object({ taxYear: z.number().int(), amount: decimal }))
   ).optional(),
-  qbiLossCarryforward: optionalDecimal,
+  qbiLossCarryforward: optionalDecimalInput,
   /** Actual active portion of the QBI loss carryover; unknown is not zero. */
   activeQbiLossCarryforward: optionalDecimalInput,
   /** Form 8995-A Part IV aggregation elections per Reg. §1.199A-4 */

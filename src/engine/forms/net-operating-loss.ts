@@ -6,6 +6,7 @@ import Decimal from "decimal.js";
 import type { FilingUnitHistory } from "@/models/filing-unit-sources.js";
 import type { NolFilingUnitOrigin, NolFilingUnitUse, NolSameCoupleJointHistory } from "@/models/net-operating-loss-filing-unit.js";
 import { calculateNolFilingUnitHistory } from "./net-operating-loss-filing-unit-history.js";
+import { calculateJointNolComponents } from "./net-operating-loss-joint-components.js";
 import type { FilingStatus } from "@/models/constants.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { AuditTrail } from "@/utils/audit.js";
@@ -65,9 +66,12 @@ export interface NetOperatingLossVintageResult {
   originalLoss: Decimal;
   openingCarryforward: Decimal;
   expiredBeforeYear: Decimal;
-  /** Original incoming components, never an allocation of current joint use. */
+  /** Incoming originals. Only a determined461 pool receives component use;
+   * ordinary-only pools retain their existing aggregate ownership boundary. */
   jointPool?: { components: Array<{ sourceId: string; ownerPersonId: string; originalReturnSourceId: string;
-    originalLoss: Decimal; openingCarryforward: Decimal; expiredBeforeYear: Decimal }> };
+    originKind?: "individual_nol" | "excess_business_loss";
+    originalLoss: Decimal; openingCarryforward: Decimal; expiredBeforeYear: Decimal;
+    deduction?: Decimal; absorbed?: Decimal; expired?: Decimal; remainingCarryforward?: Decimal }> };
   deduction?: Decimal;
   earlierClaimedNolDeductions?: Decimal;
   earlierModifiedNolDeductions?: Decimal;
@@ -196,13 +200,12 @@ export function calculateNetOperatingLoss(input: {
     const byYear = new Map<number, NetOperatingLossVintageResult[]>();
     for (const row of vintages) byYear.set(row.lossTaxYear, [...(byYear.get(row.lossTaxYear) ?? []), row]);
     vintages = [...byYear.entries()].map(([year, rows]) => {
-      if (rows.some(row => row.originKind === 'excess_business_loss')) {
-        if (rows.length > 1) throw new Error('NOL same-year joint EBL mixture requires its separate original component character method');
-        return rows[0]!;
-      }
+      const containsEbl = rows.some(row => row.originKind === 'excess_business_loss');
+      if (containsEbl && rows.length === 1) return rows[0]!;
       const components = rows.map(row => {
         const owner = filingHistory.jointOwners!.find(item => item.sourceId === row.sourceId)!;
         return { sourceId: row.sourceId, ownerPersonId: owner.ownerPersonId, originalReturnSourceId: owner.originalReturnSourceId,
+          ...(containsEbl ? { originKind: row.originKind } : {}),
           originalLoss: row.originalLoss, openingCarryforward: row.openingCarryforward, expiredBeforeYear: row.expiredBeforeYear };
       }).sort((a, b) => a.sourceId.localeCompare(b.sourceId, 'en-US'));
       const pooled = { sourceId: `joint-nol:${year}`, lossTaxYear: year, originKind: 'individual_nol' as const,
@@ -210,7 +213,8 @@ export function calculateNetOperatingLoss(input: {
         expiredBeforeYear: sum(...rows.map(row => row.expiredBeforeYear)), jointPool: { components } };
       if (sourceIds.has(pooled.sourceId)) throw new Error('NOL original source identity conflicts with an internally derived joint pool');
       audit.record('Section172 Joint Carry Pool', pooled.sourceId, 'Actual incoming same-couple loss-year pool', pooled.openingCarryforward,
-        'Sum of verified incoming owner balances by original year; current use and closing carry remain joint, without an owner allocation',
+        containsEbl ? 'Verified incoming original kinds and owner balances by year; completed component use requires separately determined claim and absorption'
+          : 'Sum of verified incoming owner balances by original year; current use and closing carry remain joint, without an owner allocation',
         { 'Loss year': String(year), 'Original owner components': String(components.length), 'Original owner loss total': pooled.originalLoss });
       return pooled;
     });
@@ -293,6 +297,7 @@ export function calculateNetOperatingLoss(input: {
     row.expired = row.expiredBeforeYear.plus(expiresAfterYear ? unused : d("0"));
     row.remainingCarryforward = expiresAfterYear ? d("0") : unused;
     if (!sum(row.absorbed, row.expired, row.remainingCarryforward).eq(row.openingCarryforward)) throw new Error("NOL closing source balance does not conserve opening carry");
+    if (row.jointPool) row.jointPool = calculateJointNolComponents(row).jointPool;
     if (row.lossTaxYear < 2018) precedingPre2018 = precedingPre2018.plus(available(row));
     else precedingPost2017 = precedingPost2017.plus(available(row));
   }

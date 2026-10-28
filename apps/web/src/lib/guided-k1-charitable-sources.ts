@@ -28,7 +28,8 @@ export function buildGuidedK1CharitableSources(state: GuidedFlowState) {
     primary: { firstName: [personal.firstName.trim(), middle].filter(Boolean).join(' '), lastName: personal.lastName, ssn: personal.ssn },
     ...(segmentation.filingStatus === 'mfj' && personal.spouse ? { spouse: personal.spouse } : {}) };
   calculateK1CharitableReturnSources({ taxpayer, scheduleK1, k1CharitableSources: parsed.packet, qbiLossSources: existing?.qbiLossSources, ...k1CashDistributionKnownTreatment(state) });
-  return { scheduleK1, k1CharitableSources: parsed.packet, qbiLossSources: existing?.qbiLossSources, suspendedPassiveLosses: existing?.suspendedPassiveLosses ?? [] };
+  return { scheduleK1, k1CharitableSources: parsed.packet, qbiLossSources: existing?.qbiLossSources,
+    suspendedPassiveLosses: existing?.suspendedPassiveLosses ?? [], priorQbiCarry: existing?.priorQbiCarry };
 }
 export function k1CharitableSourceFactErrors(state: GuidedFlowState): Record<string, string> {
   if (!state.sectionData.deductions?.k1CharitableSources) return {};

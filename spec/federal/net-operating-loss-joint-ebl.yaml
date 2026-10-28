@@ -1,0 +1,133 @@
+form: "Section172 joint pool with determined461 character"
+fullName: "Actual EBL and ordinary carry components with uniquely determined current use"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  Reg1.172-7(b),(e),(f) provides current same-couple incoming pooling, while
+  Reg1.199A-3(b)(1)(iv),(v) preserves actual originating qualified461 character.
+  Current deduction and modified absorption are separate quantities. A component
+  vector is resolved separately within its actual loss-year pool after existing
+  statutory oldest-year ordering and expiry. It is determined only when its
+  loss-year total is zero, equals all available amounts,
+  or has exactly one positive available original. No owner priority or current
+  allocation is an input. Every positive source must be known, validated and
+  conserved. Source-only validation can retain an incomplete aggregate; a completed
+  tax/QBI/output result must resolve every necessary component vector.
+  Original EBL qualified opening/history and account-holder identity stay bound
+  to the actual original source. Regular and AMT originals remain independent.
+  Different original1411 fractions retain their separate existing method. A
+  partial multi-positive same-year EBL pool remains guarded even if QBI is known
+  zero. Determined partial use of a different-year pool remains available.
+  Released negative QBI and still-suspended qualified EBL are different carries.
+  Wages-only controls have no other current QBI. Their actual ordinary prior
+  QBI carry is explicitly recorded: zero in the original controls, with7000
+  in the named positive-prior and saved-guide controls below.
+  Current joint COD and future partial owner allocation remain separate methods.
+  These literals are independently derived arithmetic controls, not a published
+  matching example or human qualification. No2026 readiness gate is changed.
+lines:
+  - line: "fully-consumed"
+    description: "Compose actual ordinary and EBL originals after full current consumption"
+    formula: "Actual2021 EBL60000 less filed10000 gives50000; qualified30000 less filed5000 gives25000. Actual2021 ordinary40000 less5000 gives35000. Joint wages200000 and standard31500 give sufficient80percent capacity to deduct and absorb85000. Qualified current deduction25000; each NOL source and qualified EBL suspension closes0; Form8995 line16 separately carries negative QBI25000; AGI115000. Ordinary original1411fraction10000/40000 gives8750, separate from qualified EBL character. With an additional original current K1 income/QBI100000 and actual zero SE, the25000 released qualified loss leaves75000 QBI and15000 deduction; AGI215000, AMTI265000 after independent20000 ATNOLD."
+    irsRef: "Reg1.172-7(b),(e),(f); IRC172(a),(b); Reg1.199A-3(b)(1)(iv),(v); Reg1.1411-4(h)"
+    testRef: "tests/engine/federal-net-operating-loss-joint-ebl.test.ts::composes fully consumed actual EBL and ordinary sources once"
+  - line: "independent-vectors"
+    description: "Resolve actual claim and modified absorption independently"
+    formula: "At signed regular limit and modified income minus1500, both amounts0 preserve actual2021 EBL50000/ordinary35000 source openings and25000 qualified opening. Zero actual deduction with positive partial modified absorption still rejects unresolved closing character; it is not zero use. Full modified consumption with zero deduction has0 current qualified deduction and no remaining qualified EBL suspension and no new current negative QBI carry."
+    irsRef: "IRC172(a),(b)(2); Reg1.172-5; Reg1.199A-3(b)(1)(v)"
+    testRef: "tests/engine/forms/net-operating-loss-joint-ebl.test.ts::keeps deduction absorption and closing component proofs independent"
+  - line: "single-positive"
+    description: "Keep a known-zero source while the other source uniquely determines partial use"
+    formula: "Actual2021 EBL opening50000 and actual2021 ordinary opening0 (original40000 fully used in filed2022) with limit and modified income18500 give14800 current use,35200 remaining,7400 qualified use at fixed1/2, and17600 still-suspended qualified EBL. Wages-only actual current return separately carries negative QBI7400 on Form8995 line16. Conversely, actual EBL60000 and its qualified30000 fully used historically leave ordinary35000: current14800 use leaves20200 ordinary carry and zero current qualified deduction or qualified EBL suspension. The original with known-zero opening remains in the ledger; source order has no effect."
+    irsRef: "IRC172(a),(b)(2); Reg1.199A-3(b)(1)(iv),(v); original-source conservation"
+    testRef: "tests/engine/forms/net-operating-loss-joint-ebl.test.ts::retains known-zero originals without inventing a partial source priority"
+  - line: "independent-alternative"
+    description: "Use separate actual AMT source components and90percent capacities"
+    formula: "Alternative original histories and component IDs may differ. Their current deduction and modified absorption are derived separately from canonical AMTI, never copied from regular results. An unresolved positive AMT component vector rejects even if the regular vectors are determined."
+    irsRef: "IRC56(d); Reg1.55-1; IRC172(b)(2)"
+    testRef: "tests/engine/federal-net-operating-loss-joint-ebl.test.ts::resolves independent alternative components from their own actual histories"
+  - line: "source-qualified-owner"
+    description: "Bind actual qualified histories to the correct original component and owner"
+    formula: "Each regular EBL original has its actual complete qualified opening history and owner. Missing, duplicated, stale or other-owner character cannot qualify an ordinary source or the other spouse's source. Known-zero qualified amounts remain recorded facts, not permission to assign partial tax carry."
+    irsRef: "Reg1.199A-3(b)(1)(iv)(C); Form8995 Tracking Losses; Reg1.172-7"
+    testRef: "tests/engine/forms/net-operating-loss-joint-ebl.test.ts::binds original qualified character and owner before current aggregation"
+  - line: "multiple-qualified-originals"
+    description: "Retain each461 origin's actual qualified character in a fully used pool"
+    formula: "If both actual2021 originals are461 losses, Jane's qualified30000 less5000 history gives25000 opening while Alex's qualified10000 less1250 gives8750. Full85000 tax consumption releases33750 qualified loss, closes both suspended balances and separately carries33750 negative QBI. Original and qualified-history array order cannot change source identities or amounts."
+    irsRef: "Reg1.199A-3(b)(1)(iv),(v); actual original character and whole-pool conservation"
+    testRef: "tests/engine/federal-net-operating-loss-joint-ebl.test.ts::keeps distinct qualified origins stable when their complete year pool is used"
+  - line: "unresolved-partial"
+    description: "Preserve the precise undetermined positive-component boundary"
+    formula: "Positive actual2021 EBL50000/ordinary35000 sources with54800 total current use do not determine either component's use or closing amount. Reject rather than choose order, blend fractions or infer qualified character from the current owner."
+    irsRef: "Reg1.172-7; Reg1.199A-3(b)(1)(iv),(v); source allocation boundary"
+    testRef: "tests/engine/forms/net-operating-loss-joint-ebl.test.ts::rejects partial multi-positive use even with known-zero qualified fractions"
+  - line: "year-order"
+    description: "Resolve each actual loss-year after statutory oldest-year use"
+    formula: "Actual2021 EBL50000 and actual2023 ordinary35000, with wages100000 and standard31500, give54800 total claim and absorption: older EBL50000 then ordinary4800. EBL qualified suspension closes0 while negative QBI25000 carries separately; ordinary30200 remains and actual original1411fraction1/4 gives1200. Reversing source order preserves every result."
+    irsRef: "IRC172(b)(2); Reg1.172-7; Reg1.199A-3(b)(1)(iv),(v)"
+    testRef: "tests/engine/federal-net-operating-loss-joint-ebl.test.ts::retains determined partial use across different original loss years"
+  - line: "actual-guide"
+    description: "Reach the composition through existing actual owner and qualified history collectors"
+    formula: "Use original filed owner records and copied original EBL history; preserve blank, zero and false. Original edits invalidate confirmation; reconfirmation and actual source reconciliation restore calculation without entered current amounts."
+    irsRef: "Form172 Keeping records; Form8995 Tracking Losses"
+    testRef: "tests/guided-interview/guided-net-operating-loss-joint-ebl.test.ts::retains actual joint and qualified source histories through the bridge"
+  - line: "bound-review"
+    description: "Validate determined component amounts and qualified carry before output"
+    formula: "Print original kinds and derived component claim/absorption/closing only after original source and total reconciliation. Altered origin, balanced component redistribution, owner replacement, stale original or changed result rejects before template I/O. The saved workspace keeps review notices and identifier redaction."
+    irsRef: "Form172 and8995 recordkeeping; review-only output policy"
+    testRef: "tests/pdf/net-operating-loss-joint-ebl-review.test.ts::rejects stale or redistributed component character before output"
+  - line: "source-panel"
+    description: "Use actual qualified-history and original owner controls"
+    formula: "Changing qualified history revokes its confirmation. Selecting the other current spouse cannot reassign the original owner; matching that spouse's name and ID still rejects. Original values remain editable without entering current allowance or closing shares."
+    irsRef: "Reg1.199A-3(b)(1)(iv); Form8995 Tracking Losses; original-source UI contract"
+    testRef: "tests/apps/web/net-operating-loss-joint-ebl-interactions.test.tsx::keeps original ownership and qualified history bound through actual controls"
+  - line: "actual-workspace"
+    description: "Save physical and reference output from the actual guided source"
+    formula: "Full regular85000 use, alternative20000 use, AGI115000, AMTI180000, qualified EBL remaining0 and negative QBI carry25000 are derived from original histories. The actual completed workspace PDF contains review notices and redacted identifiers. Missing history blocks export."
+    irsRef: "Form172 and8995 recordkeeping; original-source output policy"
+    testRef: "tests/apps/web/workspace-net-operating-loss-joint-ebl.test.ts::exports separate original component and qualified carry results from actual guide data"
+  - line: "production-source"
+    description: "Edit, retain and download the actual composition at desktop and mobile widths"
+    formula: "Use the existing original NOL and qualified EBL controls, revoke and restore confirmations, reload actual saved source values, and inspect the downloaded review PDF. No current allocation, aggregate allowance or invented qualification is entered."
+    irsRef: "Original-source collector and review-only export contract"
+    testRef: "apps/web/tests/net-operating-loss-joint-ebl.spec.ts::preserves actual EBL character through edit reload and review download"
+  - line: "ordinary-prior-source"
+    description: "Require the separate actual ordinary QBI carry from the preceding return"
+    formula: "For this determined joint EBL composition, bind the actual preceding-year joint Form8995 line16 or ScheduleC(Form8995-A) line6 to the original return ID and both actual owners. The prior and current returns must contain the same married couple; changing their primary/spouse order does not change the couple. Actual source amount and confirmation are required, including recorded zero. A complete prior-return no-carry record admits only exact zero. Suspended EBL qualified history cannot establish ordinary priorQBI carry. Missing legacy priorYear.qbiLossCarryforward stays missing and must not default to zero."
+    irsRef: "Form8995 lines3,16; ScheduleC(Form8995-A) lines2,6; Reg1.199A-1(c)(2)(i),(d)(2)(iii)(B)"
+    testRef: "tests/engine/forms/qbi-prior-carry-sources.test.ts::requires an actual ordinary prior carry separately from EBL suspension"
+  - line: "ordinary-prior-amounts"
+    description: "Compose the original ordinary prior carry without changing suspended EBL history"
+    formula: "With full85000 tax use and25000 released qualified EBL, actual ordinary prior0 leaves25000 ordinary QBI carry; actual prior7000 leaves32000. Qualified EBL suspension still closes0, and regular85000/AMT20000 NOL remain unchanged. With actual additional K1QBI100000, net QBI is68000 after25000 released EBL and7000 prior ordinary loss, giving13600 deduction and266400 AMTI. No current EBL use plus prior7000 preserves25000 qualified EBL suspension and7000 ordinary QBI carry."
+    irsRef: "Form8995 lines2-5,16; Reg1.199A-1(e)(5); separate original qualified histories"
+    testRef: "tests/engine/forms/qbi-prior-carry-sources.test.ts::composes recorded zero and positive prior ordinary carries independently"
+  - line: "ordinary-prior-identity"
+    description: "Reconcile source year identity and amount without assigning a new owner share"
+    formula: "Wrong year, prior return ID, either original owner, unknown or false confirmation, positive no-carry record, negative amount, inconsistent legacy amount, or an active portion beyond total rejects. A positive balance with no active-character source remains unknown for the existing2026 minimum-deduction method. No previous-EBL fraction or current participation answer supplies it."
+    irsRef: "Reg1.199A-1(c)(2)(i); Form8995 recordkeeping; original return identity and character"
+    testRef: "tests/engine/forms/qbi-prior-carry-sources.test.ts::rejects conflicting original return facts and legacy carry values"
+  - line: "ordinary-prior-presence"
+    description: "Preserve unknown ordinary prior carry through canonical parsing"
+    formula: "Omitted priorYear or omitted qbiLossCarryforward does not become an actual zero. The narrow new joint EBL method requires the explicit original packet and a matching bridge/canonical prior balance. Explicit source zero remains zero; legacy saved guide packets remain unknown until the actual source is entered."
+    irsRef: "Form8995 lines3,16; original-source absence preservation"
+    testRef: "tests/engine/forms/qbi-prior-carry-sources.test.ts::preserves absent prior ordinary carry when parsing canonical input"
+  - line: "ordinary-prior-guide"
+    description: "Collect and retain the actual prior ordinary carry in the existing qualified-loss guide"
+    formula: "A distinct prior ordinary QBI carry source control records preceding-year return identity, source form/record, actual amount and confirmation. The bridge reconciles the record and adds the actual priorYear amount without changing capital/passive histories. Missing source blocks section completion, canonical preview and export; actual source edits revoke confirmation. Entering original7000 produces32000 outgoing ordinary QBI carry and preserves separate EBL suspension0."
+    irsRef: "Form8995 lines3,16; actual source collector and review binding"
+    testRef: "tests/guided-interview/guided-joint-ebl-prior-qbi.test.ts::requires and bridges the actual prior ordinary carry without a zero migration"
+  - line: "ordinary-prior-unit"
+    description: "Preserve the actual prior filing unit without assigning an owner share"
+    formula: "The same two validated people may reverse primary/spouse positions on the preceding joint return. Both printed identities still match that original unit. A different preceding-year member is rejected. The applicable8995-A closing line6 and a completed known-zero record use the same source reconciliation; optional active character stays unknown unless supplied."
+    irsRef: "Reg1.199A-1(c)(2)(i),(d)(2)(iii)(B); actual filed return identity"
+    testRef: "tests/engine/forms/qbi-prior-carry-sources.test.ts::preserves prior spouse order and actual source form without allocating a changed couple"
+  - line: "ordinary-prior-review"
+    description: "Expose the actual ordinary opening source separately from EBL suspension and current closing carry"
+    formula: "Prior2024 ordinary source7000 plus released25000 qualified EBL gives Form8995 lines3 and16 of32000 in the wages-only case. The appendix separately labels original ordinary7000, source form/year, released EBL25000 and closing32000. Active character is explicitly unknown when absent. Stale source, missing original packet or a forged result fails before file I/O. Render only validated year, enum and monetary values, with no source reference or personal identifiers."
+    irsRef: "Form8995 lines3,16; source-bound review output policy"
+    testRef: "tests/pdf/net-operating-loss-joint-ebl-review.test.ts::separates actual ordinary prior carry from released EBL in the saved review"
+  - line: "ordinary-prior-controls"
+    description: "Enter and retain original zero and positive amounts through actual guided controls"
+    formula: "Clearing the original ordinary amount remains unknown and revokes source confirmation. Actual0 restores the original25000 closing result; actual7000 gives32000. Editing the EBL opening to25002 independently gives32002 with that same actual ordinary7000. Reload retains both source values; browser download and reference must reflect them without leaking identities."
+    irsRef: "Original-source completeness, edit invalidation and review-only export contract"
+    testRef: "tests/apps/web/net-operating-loss-joint-ebl-interactions.test.tsx::keeps original ownership and qualified history bound through actual controls"

@@ -825,8 +825,9 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
     form8814: buildGuidedChildElections(investData?.childElections, state.taxYear),
     qofDispositionFacts: buildGuidedQofFacts(investData?.qofDispositionFacts, state.taxYear),
     ...scheduleDInputs,
-    priorYear: scheduleDInputs.priorYear || currentCapitalCarry || rentalCarryovers.length || k1Sources?.suspendedPassiveLosses.length ? {
+    priorYear: scheduleDInputs.priorYear || currentCapitalCarry || rentalCarryovers.length || k1Sources?.suspendedPassiveLosses.length || k1Sources?.priorQbiCarry ? {
       ...scheduleDInputs.priorYear,
+      ...k1Sources?.priorQbiCarry,
       ...(currentCapitalCarry ? { shortTermCapitalLoss: currentCapitalCarry.shortTermCapitalLoss, longTermCapitalLoss: currentCapitalCarry.longTermCapitalLoss } : {}),
       ...(rentalCarryovers.length || k1Sources?.suspendedPassiveLosses.length ? { suspendedPassiveLosses: [...rentalCarryovers, ...(k1Sources?.suspendedPassiveLosses ?? [])] } : {}),
     } : undefined,

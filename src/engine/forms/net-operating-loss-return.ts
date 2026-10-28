@@ -95,7 +95,9 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   if (input.priorYear?.nolCarryforward !== undefined && !d(input.priorYear.nolCarryforward).eq(source.availableCarryforward)) {
     throw new Error("Legacy NOL aggregate must reconcile with actual source vintages");
   }
-  const eblCarry = sum(...source.vintages.filter(row => row.originKind === "excess_business_loss").map(row => row.openingCarryforward.minus(row.expiredBeforeYear)));
+  const eblCarry = sum(...source.vintages.flatMap(row => row.jointPool
+    ? row.jointPool.components.filter(part => part.originKind === 'excess_business_loss').map(part => part.openingCarryforward.minus(part.expiredBeforeYear))
+    : row.originKind === 'excess_business_loss' ? [row.openingCarryforward.minus(row.expiredBeforeYear)] : []));
   if (input.priorYear?.excessBusinessLossNOL !== undefined && !d(input.priorYear.excessBusinessLossNOL).eq(eblCarry)) {
     throw new Error("Legacy EBL carry must reconcile with the actual EBL source vintages");
   }

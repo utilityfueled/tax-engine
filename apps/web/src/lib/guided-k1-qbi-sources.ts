@@ -6,6 +6,7 @@ import { calculateK1OrdinarySelfEmployment } from '@/engine/forms/k1-ordinary-se
 import { calculateK1PassiveDistributionSources } from '@/engine/forms/k1-passive-distribution-sources';
 import { calculateK1PassiveCapitalSources } from '@/engine/forms/k1-passive-capital-sources';
 import { calculateQbiEblNol } from '@/engine/forms/qbi-ebl-nol';
+import { calculateQbiPriorCarrySources } from '@/engine/forms/qbi-prior-carry-sources';
 import { d } from '@/utils/decimal';
 import type { GuidedFlowState } from './guided-interview-flow';
 import { parseGuidedQbiLossPacket, qbiSourceValues, type K1LossSourcesData } from './guided-qbi-loss-data';
@@ -107,8 +108,9 @@ export function buildGuidedK1Sources(data: K1LossSourcesData | undefined, state:
   }
   const netOperatingLoss = buildGuidedNetOperatingLoss(sectionData.adjustments?.netOperatingLossSources, taxYear, segmentation.filingStatus,
     personal, sectionData.deductions, data);
-  calculateQbiEblNol({ taxpayer, qbiLossSources: packet, netOperatingLoss });
-  return { scheduleK1, qbiLossSources: packet, suspendedPassiveLosses };
+  const priorQbiCarry = calculateQbiPriorCarrySources({ taxpayer, qbiLossSources: packet, netOperatingLoss }, false);
+  calculateQbiEblNol({ taxpayer, qbiLossSources: packet, netOperatingLoss, priorYear: priorQbiCarry });
+  return { scheduleK1, qbiLossSources: packet, suspendedPassiveLosses, priorQbiCarry };
 }
 export function k1LossSourceFactErrors(state: GuidedFlowState): Record<string, string> {
   try {

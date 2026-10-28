@@ -4,6 +4,7 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import type { TaxYearInput } from '@/models/inputs.js';
 import type { TaxReturnResult } from '@/models/outputs.js';
 import { calculateK1QbiLossReturn } from '@/engine/forms/k1-qbi-loss-return.js';
+import { calculateQbiPriorCarrySources } from '@/engine/forms/qbi-prior-carry-sources.js';
 import { qbiLossReviewOriginalSourceInput, type PreparedQbiLossReview } from '@/pdf/qbi-loss-review-context.js';
 import { assertPdfExportAllowed, markReviewPdf } from '@/pdf/export-policy.js';
 
@@ -26,6 +27,15 @@ export function buildQbiLossReview(input: TaxYearInput, result: TaxReturnResult,
       ? `Independent AMT NOL carryforward: $${amount(result.carryforwards.alternativeTaxNolCarryforward ?? result.netOperatingLoss?.alternativeTax.carryforward)}`
       : 'Independent AMT NOL source history was not supplied.',
   ];
+  const prior = calculateQbiPriorCarrySources(original), priorSource = original.qbiLossSources?.priorQbiCarry;
+  if (prior && priorSource) {
+    const form = priorSource.formKind === 'form_8995_line_16' ? 'Form 8995 line 16'
+      : priorSource.formKind === 'form_8995a_schedule_c_line_6' ? 'Schedule C (Form 8995-A) line 6' : 'completed prior-return no-carry record';
+    rows.push(`Prior ordinary QBI source: ${priorSource.sourceTaxYear}, ${form}`,
+      `Actual opening ordinary QBI loss carry: $${prior.qbiLossCarryforward}`,
+      prior.activeQbiLossCarryforward === undefined ? 'Active-character portion of the ordinary prior carry: unknown'
+        : `Independently sourced active-character portion of the ordinary prior carry: $${prior.activeQbiLossCarryforward}`);
+  }
   if (result.form461?.nolCarryforward.gt(0)) rows.push(`Current section461 regular NOL origin: $${amount(result.form461.nolCarryforward)}`);
   if (original.qbiLossSources?.activities?.length) {
     if (!result.scheduleE || !result.form8582 || !result.form461) throw new Error('QBI review requires completed original loss limitation results');

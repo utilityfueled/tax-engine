@@ -1237,6 +1237,17 @@
       "note": "Original owner allocation and filed historical use determine a current one-owner carry, with independent AMT sources and original-bound historical review. Current joint pooling, human review and final 2026 filing qualification remain distinct."
     },
     {
+      "key": "federal/net-operating-loss-joint-ebl",
+      "enginePath": "src/engine/forms/net-operating-loss-joint-components.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-net-operating-loss-joint-ebl.test.ts::composes fully consumed actual EBL and ordinary sources once",
+        "tests/engine/forms/qbi-prior-carry-sources.test.ts::requires an actual ordinary prior carry separately from EBL suspension",
+        "tests/pdf/net-operating-loss-joint-ebl-review.test.ts::separates actual ordinary prior carry from released EBL in the saved review"
+      ],
+      "note": "Actual original component histories determine current regular and alternative use only within the proved vectors. The separate src/engine/forms/qbi-prior-carry-sources.ts helper requires actual preceding-year ordinary QBI carry and binds the source-bound guide and historical review. No current owner allocation, final2026 form, filing, staging or independent human qualification is established."
+    },
+    {
       "key": "federal/net-operating-loss-joint-pools",
       "enginePath": "src/engine/forms/net-operating-loss.ts",
       "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
