@@ -12,7 +12,7 @@ import { buildOhioResidentReturnInput } from '@/engine/state/oh-input-adapter.js
 
 it('selects public and other-recipient cash carry after the actual deduction election', () => {
   for (const [election, method, carry] of [
-    ['automatic', 'standard', '1000'], ['itemized', 'itemized', '1050'], ['nonitemized', 'nonitemized', '1000'],
+    ['automatic', 'standard', '1050'], ['itemized', 'itemized', '1050'], ['nonitemized', 'nonitemized', '1050'],
   ] as const) {
     const input = nonitemizerCarryFixture('4000'); input.deductionElection = election;
     if (!input.standardDeductionFacts) throw new Error('Missing synthetic eligibility source');

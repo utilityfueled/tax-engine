@@ -13,7 +13,7 @@ import { calculateK1CashDistributionGain, type K1CashDistributionGain } from './
 import { resolveCharitableRecipient } from '@/utils/charitable-recipient.js';
 import { d, sum } from '@/utils/decimal.js';
 import { AuditTrail } from '@/utils/audit.js';
-import { isNonitemizedPriorPropertyMethod } from '@/utils/k1-nonitemized-prior-property.js';
+import { isNonitemizedPriorPropertySource } from '@/utils/k1-nonitemized-prior-property.js';
 type Identity = Pick<TaxYearInput['taxpayer']['primary'], 'firstName' | 'lastName' | 'ssn'>;
 type Taxpayer = {
     taxYear: number;
@@ -152,7 +152,7 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
             if (row.current ? paid !== original?.contributionDate : Number(paid.slice(0, 4)) > row.originTaxYear)
                 throw new Error('K1 charitable original payment date conflicts with its basis source year');
             if (year === 2026 && !row.current && row.availableAfterBasis.gt(0)
-                && !isNonitemizedPriorPropertyMethod(year, input.deductionElection, row.category))
+                && !isNonitemizedPriorPropertySource(year, input.deductionElection, row.category))
                 throw new Error('K1 charitable prior-basis release in2026 requires its separate section170(p) timing and floor/carry-year method');
             if (row.category === 'cash_60') {
                 let eligibleCurrentCash = false;

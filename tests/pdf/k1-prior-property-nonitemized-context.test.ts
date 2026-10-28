@@ -13,7 +13,11 @@ import { releaseFixtureSource as required } from '../fixtures/charitable-k1-basi
 
 it('binds original choice and every independent balance before output while keeping2026 export closed', async () => {
   // Spec: K1 Prior Property Nonitemized 2026, context-and-release.
-  const input = priorPropertyNonitemizedInput({ method: 'both' }), before = JSON.stringify(input);
+  const oldOriginal = priorPropertyNonitemizedInput({ method: 'both' });
+  expect(()=>calculateFederalTax(oldOriginal)).toThrow(/prior.*(carry|floor|contribution.year)/i);
+  // A distinct actual synthetic no-residual source; retained old originals are not rewritten.
+  const input = structuredClone(oldOriginal);input.w2s[0].wages='200000';input.w2s[0].federalWithheld='60000';
+  const before = JSON.stringify(input);
   const result = calculateFederalTax(input), token = prepareCharitableReview(input);
   expect(charitableReviewOriginalSourceInput(redactReviewIdentifiers(input), redactReviewIdentifiers(result), token)).toEqual(input);
   for (const edit of [

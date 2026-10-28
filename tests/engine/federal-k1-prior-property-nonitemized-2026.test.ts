@@ -17,10 +17,12 @@ it('derives below equal and above capacity prior basis releases without carrying
     ['20000', '40000', '0'], ['30000', '30000', '0'], ['40000', '20000', '10000'],
   ]) {
     const input = priorPropertyNonitemizedInput({ capacity, sCorp }), before = JSON.stringify(input);
-    const source = required(calculateK1CharitableReturnSources(input)), result = calculateFederalTax(input);
+    const source = required(calculateK1CharitableReturnSources(input));
     const row = required(source.statements[0].basis.charitableSources).records[0];
     expect(row.originTaxYear).toBe(2018); expect(row.availableAfterBasis.toFixed()).toBe(capacity);
     expect(row.basisSuspended.toFixed()).toBe(suspended); expect(row.appreciationExempt.toFixed()).toBe('0');
+    if(carry!=='0'){expect(()=>calculateFederalTax(input)).toThrow(/prior.*(carry|floor|contribution.year)/i);expect(JSON.stringify(input)).toBe(before);continue;}
+    const result=calculateFederalTax(input);
     expect(result.agi.toFixed()).toBe('100000'); expect(result.deductionUsed).toBe('standard');
     expect(required(result.scheduleA).charitableTotal.toFixed()).toBe('0');
     expect(result.nonitemizerCharitableDeduction?.toFixed() ?? '0').toBe('0');
@@ -38,10 +40,12 @@ it('preserves prior risk sources and percentage capacity independently of curren
   ]) {
     const input = priorPropertyNonitemizedInput({ method: 'risk', capacity, sCorp, election: 'nonitemized' });
     const before = JSON.stringify(input), source = required(calculateK1CharitableReturnSources(input));
-    const row = required(source.statements[0].atRiskAllocation).prior[0], result = calculateFederalTax(input);
+    const row = required(source.statements[0].atRiskAllocation).prior[0];
     expect(row.taxYear).toBe(2024); expect(row.gift?.basisOriginTaxYear).toBe(2024);
     expect(row.allowed.toFixed()).toBe(capacity); expect(row.suspended.toFixed()).toBe(suspended);
     expect(source.statements[0].basis.charitableSources?.records).toEqual([]);
+    if(carry!=='0'){expect(()=>calculateFederalTax(input)).toThrow(/prior.*(carry|floor|contribution.year)/i);expect(JSON.stringify(input)).toBe(before);continue;}
+    const result=calculateFederalTax(input);
     expect(result.deductionUsed).toBe('nonitemized'); expect(result.agi.toFixed()).toBe('100000');
     expect(required(result.scheduleA).charitableTotal.toFixed()).toBe('0');
     expect(result.nonitemizerCharitableDeduction?.toFixed() ?? '0').toBe('0');
@@ -56,13 +60,15 @@ it('conserves simultaneous prior basis and risk sources without repeated appreci
   // Spec: K1 Prior Property Nonitemized 2026, combined-limitations.
   const input = priorPropertyNonitemizedInput({ method: 'both' });
   const source = required(calculateK1CharitableReturnSources(input)), statement = source.statements[0];
-  const risk = required(statement.atRiskAllocation), result = calculateFederalTax(input);
+  const risk = required(statement.atRiskAllocation);
   expect(required(statement.basis.charitableSources).records[0].basisSuspended.toFixed()).toBe('20000');
   expect(risk.charitable[0].allowed.toFixed()).toBe('20000'); expect(risk.charitable[0].suspended.toFixed()).toBe('20000');
   expect(risk.prior[0].allowed.toFixed()).toBe('30000'); expect(risk.prior[0].suspended.toFixed()).toBe('30000');
   expect(source.amounts.capitalGainPublic.toFixed()).toBe('50000');
-  expect(result.carryforwards.charitableContributions.toFixed()).toBe('20000');
-  expect(result.carryforwards.charitableContributionsByYear.map(v => v.taxYear)).toEqual([2026]);
+  expect(()=>calculateFederalTax(input)).toThrow(/prior.*(carry|floor|contribution.year)/i);
+  const noResidual=structuredClone(input);noResidual.w2s[0].wages='200000';noResidual.w2s[0].federalWithheld='60000';
+  expect(calculateFederalTax(noResidual).carryforwards.charitableContributionsByYear).toEqual([]);
+  expect(calculateK1CharitableReturnSources(noResidual)).toEqual(source);
 });
 
 it('retains the original other recipient twenty percent property capacity', () => {
@@ -79,6 +85,8 @@ it('retains the original other recipient twenty percent property capacity', () =
       required(gift).category = 'capital_gain_20';
       Object.assign(required(required(gift).receipt), { originalCode: 'F', recipientCategory: 'private-nonoperating', qualifiedAppreciatedStock: true });
     }
+    expect(required(calculateK1CharitableReturnSources(input)).amounts.capitalGainPrivate.toFixed()).toBe(capacity);
+    if(carry!=='0'){expect(()=>calculateFederalTax(input)).toThrow(/prior.*(carry|floor|contribution.year)/i);continue;}
     const result = calculateFederalTax(input);
     expect(required(result.scheduleA).charitableTotal.toFixed()).toBe('0');
     expect(result.carryforwards.charitableContributions.toFixed()).toBe(carry);
@@ -89,14 +97,16 @@ it('retains the original other recipient twenty percent property capacity', () =
 
 it('keeps actual current cash separate from prior property release', () => {
   // Spec: K1 Prior Property Nonitemized 2026, separate-current-cash.
-  const input = priorPropertyNonitemizedInput();
+  const input = priorPropertyNonitemizedInput({capacity:'20000'});
   input.donations = [{ organization: 'Fictional current cash recipient', type: 'cash', amount: '1000',
     dateOfDonation: '2026-09-01', qualifiedOrganization: true, isPrivateFoundation: false,
     recipientCategory: 'fifty-percent', supportingOrganization: false, donorAdvisedFund: false }];
   const result = calculateFederalTax(input);
   expect(required(result.nonitemizerCharitableDeduction).toFixed()).toBe('1000');
   expect(required(result.scheduleA).charitableTotal.toFixed()).toBe('0');
-  expect(result.carryforwards.charitableContributions.toFixed()).toBe('10000');
+  expect(result.carryforwards.charitableContributions.toFixed()).toBe('0');
+  const residual=priorPropertyNonitemizedInput();residual.donations=structuredClone(input.donations);
+  expect(()=>calculateFederalTax(residual)).toThrow(/prior.*(carry|floor|contribution.year)/i);
 });
 
 it('composes actual property release with the established nonitemized NOL method', () => {
@@ -106,7 +116,13 @@ it('composes actual property release with the established nonitemized NOL method
   ]) {
     const input = priorPropertyNonitemizedInput({ method, capacity });
     input.netOperatingLoss = charitableNolOriginsInput({ year: 2026 }).netOperatingLoss;
-    const before = JSON.stringify(input), result = calculateFederalTax(input);
+    const before = JSON.stringify(input);
+    if(carry!=='0'){expect(()=>calculateFederalTax(input)).toThrow(/prior.*(carry|floor|contribution.year)/i);expect(JSON.stringify(input)).toBe(before);continue;}
+    const result = calculateFederalTax(input);
+    const zeroRelease=priorPropertyNonitemizedInput({method,capacity:'0'});zeroRelease.netOperatingLoss=structuredClone(input.netOperatingLoss);
+    const baseline=calculateFederalTax(zeroRelease);
+    expect([result.nolDeduction,result.agi,result.carryforwards.nolCarryforward].map(x=>x.toFixed()))
+      .toEqual([baseline.nolDeduction,baseline.agi,baseline.carryforwards.nolCarryforward].map(x=>x.toFixed()));
     expect(result.nolDeduction.toFixed()).toBe('67120'); expect(result.agi.toFixed()).toBe('32880');
     expect(result.nonitemizerCharitableDeduction?.toFixed() ?? '0').toBe('0');
     expect(required(result.scheduleA).charitableTotal.toFixed()).toBe('0');
@@ -137,7 +153,7 @@ it('requires explicit nonitemization and original property history', () => {
     }
     expect(() => calculateFederalTax(priorPropertyNonitemizedInput({ method, cash: true }))).toThrow(/prior.*(floor|contribution-year)/i);
   }
-  const noStandard = priorPropertyNonitemizedInput({ election: 'nonitemized' });
+  const noStandard = priorPropertyNonitemizedInput({ election: 'nonitemized', capacity:'20000' });
   noStandard.taxpayer.filingStatus = 'married_filing_separately';
   required(noStandard.standardDeductionFacts).spouseItemizes = true;
   expect(calculateFederalTax(noStandard).deductionUsed).toBe('nonitemized');

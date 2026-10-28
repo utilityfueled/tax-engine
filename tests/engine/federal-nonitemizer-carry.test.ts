@@ -18,9 +18,9 @@ it('separates actual nonitemizer carry from the itemized floor and standard enti
     expect(result.deductionUsed).toBe(method);
     expect(result.deductionAmount.toFixed()).toBe(method === 'standard' ? '16100' : '0');
     expect(result.nonitemizerCharitableDeduction?.toFixed()).toBe('1000');
-    expect(result.carryforwards.charitableContributions.toFixed()).toBe('3000');
+    expect(result.carryforwards.charitableContributions.toFixed()).toBe('3050');
     expect(result.carryforwards.charitableContributionsByYear?.map(row => [row.taxYear, row.category, row.amount.toFixed()]))
-      .toEqual([[2026, 'cash_60', '3000']]);
+      .toEqual([[2026, 'cash_60', '3050']]);
     expect(result.scheduleA?.charitableTotal.toFixed()).toBe('0');
     expect(result.scheduleA?.charitableTreatment?.deduction.toFixed()).toBe('1000');
     expect(result.scheduleA?.charitableTreatment?.priorDeduction.toFixed()).toBe('0');
@@ -34,18 +34,15 @@ it('separates actual nonitemizer carry from the itemized floor and standard enti
 
 it('retains prior use without increasing the current cash deduction', () => {
   const input = nonitemizerCarryFixture('2000', [{ taxYear: 2025, amount: '5000' }]), before = JSON.stringify(input);
-  const result = calculateFederalTax(input);
-  expect(result.nonitemizerCharitableDeduction?.toFixed()).toBe('1000');
-  expect(result.scheduleA?.charitableTreatment?.priorTreatedAsPaid.toFixed()).toBe('4000');
-  expect(result.scheduleA?.charitableTreatment?.priorDeduction.toFixed()).toBe('0');
-  expect(result.carryforwards.charitableContributions.toFixed()).toBe('1000');
-  expect(result.carryforwards.charitableContributionsByYear?.map(row => [row.taxYear, row.amount.toFixed()])).toEqual([[2025, '1000']]);
+  expect(() => calculateFederalTax(input)).toThrow(/floor.*prior|prior.*floor/i);
   expect(JSON.stringify(input)).toBe(before);
   const onlyPrior = nonitemizerCarryFixture('0', [{ taxYear: 2025, amount: '5000' }]);
+  expect(() => calculateFederalTax(onlyPrior)).toThrow(/floor.*prior|prior.*floor/i);
+  onlyPrior.w2s[0].wages='0'; onlyPrior.w2s[0].federalWithheld='0';
   const priorResult = calculateFederalTax(onlyPrior);
   expect(priorResult.nonitemizerCharitableDeduction?.toFixed()).toBe('0');
-  expect(priorResult.scheduleA?.charitableTreatment?.priorTreatedAsPaid.toFixed()).toBe('5000');
-  expect(priorResult.carryforwards.charitableContributions.toFixed()).toBe('0');
+  expect(priorResult.scheduleA?.charitableTreatment?.priorTreatedAsPaid.toFixed()).toBe('0');
+  expect(priorResult.carryforwards.charitableContributionsByYear.map(row=>[row.taxYear,row.amount.toFixed()])).toEqual([[2025,'5000']]);
 });
 
 it('rejects unverified candidate carry and unsupported selection changes', () => {

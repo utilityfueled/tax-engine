@@ -11,7 +11,7 @@ import { extractMetricsFromResult } from '@/lib/guided-preview-compute';
 import { nonitemizerCarryFixture } from '../fixtures/nonitemizer-carry.js';
 
 it('selects the correct carry after the final automatic or explicit deduction choice', () => {
-  for (const [election, expectedMethod, expectedCarry] of [['automatic', 'standard', '3000'], ['itemized', 'itemized', '3050']] as const) {
+  for (const [election, expectedMethod, expectedCarry] of [['automatic', 'standard', '3050'], ['itemized', 'itemized', '3050']] as const) {
     const input = nonitemizerCarryFixture(); input.deductionElection = election;
     if (!input.standardDeductionFacts) throw new Error('Missing actual eligibility');
     input.standardDeductionFacts.spouseItemizes = false;

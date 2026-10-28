@@ -9,7 +9,7 @@ import Decimal from 'decimal.js';
 import { resolveCharitableRecipient } from '@/utils/charitable-recipient.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, sum } from '@/utils/decimal.js';
-import { isNonitemizedPriorPropertyMethod } from '@/utils/k1-nonitemized-prior-property.js';
+import { isNonitemizedPriorPropertySource } from '@/utils/k1-nonitemized-prior-property.js';
 
 type Person = Pick<TaxYearInput['taxpayer']['primary'], 'firstName' | 'lastName' | 'ssn'>;
 type Character = 'ordinary' | 'short_term_capital' | 'long_term_capital' | 'charitable';
@@ -157,7 +157,7 @@ export function calculateK1PriorAtRiskSources(input: {
                 if (!qualified.eq(contributionShare)) throw new Error('K1 charitable prior at-risk original gift value must reconcile to recipient and basis facts');
             }
             if (originalPostBasisDeduction.gt(contributionShare)) throw new Error('K1 charitable prior at-risk original deduction exceeds the qualified gift');
-            if (year === 2026 && remaining.gt(0) && !isNonitemizedPriorPropertyMethod(year, input.deductionElection, category))
+            if (year === 2026 && remaining.gt(0) && !isNonitemizedPriorPropertySource(year, input.deductionElection, category))
                 throw new Error('K1 charitable prior at-risk 2026 prior gift release requires its separate contribution-year and floor method');
             gift = { basisSourceId, basisOriginTaxYear: basisOrigin, category, contributionShare, adjustedBasisShare, contributionDate: paid, receipt };
         } else if (row.gift !== undefined) throw new Error('K1 charitable prior at-risk noncharitable character conflicts with original gift facts');

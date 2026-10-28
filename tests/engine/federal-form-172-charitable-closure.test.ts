@@ -59,7 +59,7 @@ it('requires internal current-origin source proof and keeps the real year gate c
   for (const originSourceDigest of [undefined, 'wrong-source-digest']) {
     expect(() => calculateCurrentCharitableCandidates(input, { ...context, originSourceDigest })).toThrow(/source|loss method/i);
   }
-  expect(calculateCurrentCharitableCandidates(input, { ...context, originSourceDigest: source.sourceDigest }).nonitemizedCarryforwards[0].amount.toFixed()).toBe('14000');
+  expect(calculateCurrentCharitableCandidates(input, { ...context, originSourceDigest: source.sourceDigest }).nonitemizedCarryforwards[0].amount.toFixed()).toBe('14050');
   input.donations[0].organization = 'Changed fictional qualified recipient';
   expect(() => calculateCurrentCharitableCandidates(input, { ...context, originSourceDigest: source.sourceDigest })).toThrow(/source|loss method/i);
   expect(() => calculateFederalTax(input)).toThrow(/2026|qualified|support|enabled/i);

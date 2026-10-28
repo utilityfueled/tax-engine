@@ -6,9 +6,9 @@ import {d} from '@/utils/decimal.js';
 const carry=(rows:{category:string;medium?:string;amount:{toFixed():string}}[])=>rows.map(row=>[row.category,row.medium,row.amount.toFixed()]);
 it('conserves the current five category allowances and final carry candidates',()=>{
  for(const [g,a,b,c,other,total,cash,noncash,itemized,nonitemized] of [
-  ['10000','5000','10000','20000','15000','54500','20000','34500',[['capital_gain_20','noncash','5500']],[['capital_gain_20','noncash','5000']]],
-  ['40000','10000','30000','20000','10000','59500','49500','10000',[['capital_gain_30','noncash','20000'],['other_30','cash','20500'],['capital_gain_20','noncash','10000']],[['capital_gain_30','noncash','20000'],['other_30','cash','20000'],['capital_gain_20','noncash','10000']]],
-  ['0','40000','10000','5000','5000','49500','5000','44500',[['capital_gain_30','noncash','500'],['other_30','cash','5000'],['capital_gain_20','noncash','5000']],[['other_30','cash','5000'],['capital_gain_20','noncash','5000']]],
+  ['10000','5000','10000','20000','15000','54500','20000','34500',[['capital_gain_20','noncash','5500']],[['capital_gain_20','noncash','5500']]],
+  ['40000','10000','30000','20000','10000','59500','49500','10000',[['capital_gain_30','noncash','20000'],['other_30','cash','20500'],['capital_gain_20','noncash','10000']],[['capital_gain_30','noncash','20000'],['other_30','cash','20500'],['capital_gain_20','noncash','10000']]],
+  ['0','40000','10000','5000','5000','49500','5000','44500',[['capital_gain_30','noncash','500'],['other_30','cash','5000'],['capital_gain_20','noncash','5000']],[['capital_gain_30','noncash','500'],['other_30','cash','5000'],['capital_gain_20','noncash','5000']]],
  ] as const){
   const input=currentCategoryFixture(g,a,b,c,other),before=JSON.stringify(input);
   const r=calculateCurrentCharitableCandidates(input,currentCategoryContext(g,a,b,c,other));
@@ -25,7 +25,7 @@ it('binds exact original stock and ordinary property valuation without invented 
  const ordinary=currentCategoryFixture('40000','0','0','0','0');
  ordinary.donations[2]={...ordinary.donations[2],type:'property',amount:'50000',costBasis:'30000',isLongTermCapitalGain:false};
  const ordinaryContext=currentCategoryContext('40000','0','0','0','0');ordinaryContext.current.noncashPrivate=d('30000');
- const r=calculateCurrentCharitableCandidates(ordinary,ordinaryContext);expect(carry(r.itemized.carryforwards)).toEqual([['other_30','noncash','10500']]);expect(carry(r.nonitemizedCarryforwards)).toEqual([['other_30','noncash','10000']]);
+ const r=calculateCurrentCharitableCandidates(ordinary,ordinaryContext);expect(carry(r.itemized.carryforwards)).toEqual([['other_30','noncash','10500']]);expect(carry(r.nonitemizedCarryforwards)).toEqual([['other_30','noncash','10500']]);
  for(const mutate of [
   (i:ReturnType<typeof currentCategoryFixture>)=>{i.donations[4].recipientCategory=undefined;},
   (i:ReturnType<typeof currentCategoryFixture>)=>{i.donations[4].recipientCategory='private-nonoperating';i.donations[4].qualifiedAppreciatedStock=undefined;},
@@ -47,5 +47,5 @@ it('keeps media and exact current receipt values distinct from unsupported parti
  expect(carry(calculateCurrentCharitableCandidates(zero,zctx).itemized.carryforwards)).toEqual([['cash_60','cash','500'],['other_30','cash','100'],['other_30','noncash','200']]);
  const partial=currentCategoryFixture('0','0','100','0','0');partial.donations.push({...input.donations[5]});const pctx=currentCategoryContext('0','0','100','0','0','10000');pctx.current.noncashPrivate=d('200');expect(()=>calculateCurrentCharitableCandidates(partial,pctx)).toThrow(/partial.*cash\/noncash|allocation method/i);
  const cents=currentCategoryFixture('4000.11','1000.01','3000.99','0','0');const cctx=currentCategoryContext('4000.11','1000.01','3000.99','0','0','10000.49');
- const exact=calculateCurrentCharitableCandidates(cents,cctx);expect(exact.itemized.allowedBeforeFloor.other_30.toFixed()).toBe('1000.174');expect(exact.itemized.allowedAfterFloor.other_30.toFixed()).toBe('950.17155');expect(carry(exact.nonitemizedCarryforwards)).toEqual([['other_30','cash','2000.816']]);
+ const exact=calculateCurrentCharitableCandidates(cents,cctx);expect(exact.itemized.allowedBeforeFloor.other_30.toFixed()).toBe('1000.174');expect(exact.itemized.allowedAfterFloor.other_30.toFixed()).toBe('950.17155');expect(carry(exact.nonitemizedCarryforwards)).toEqual([['other_30','cash','2050.81845']]);
 });

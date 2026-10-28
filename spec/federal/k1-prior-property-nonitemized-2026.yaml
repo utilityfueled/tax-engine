@@ -4,8 +4,9 @@ taxYear: 2026
 irsReference: "https://www.ecfr.gov/current/title-26/section-1.170A-10"
 retrievedAt: "2026-10-28"
 notes: |
-  Reg1.170A-10(a)(2) preserves only applicable percentage excess when the
-  taxpayer chooses the standard deduction. Paragraphs(b)(2)/(c)(2) separately
+  Corrected by nonitemized-allowable-charitable-carry.yaml: choosing standard
+  alone does not remove eligible floor carry under IRC63(e)(1)/170(d)(1)(C).
+  Reg1.170A-10(a)(2) preserves applicable percentage excess under nonitemization. Paragraphs(b)(2)/(c)(2) separately
   treat available prior section170 amounts as paid within annual capacity even
   without an itemized deduction. Nonitemization does not preserve every dollar.
   IRC170(p), as amended by PL119-21 section70424, is limited to cash. Original
@@ -15,7 +16,11 @@ notes: |
   IRC1366(d)(2), Reg1.1366-2(a)(3), IRC704(d), Reg1.704-1(d) and IRC465(a)(2)
   retain disallowed deduction character as it becomes available in a succeeding
   year. Original gift/payment/basis/risk years and unreleased balances remain
-  separate from a new section170 percentage excess first arising in2026.
+  separate from section170 use and carry. Positive release-origin residual
+  requires actual first-section170-entry binding and its source-year method.
+  This collectable proof remains internal work, not legal unknowability.
+  Zero floor alone does not justify silently dating a positive residual2026.
+  A separately proved no-residual/no-other-effect case avoids that clock issue.
   https://www.ecfr.gov/current/title-26/section-1.1366-2
   https://www.ecfr.gov/current/title-26/section-1.704-1
   https://uscode.house.gov/us/usc/119-121/t26/s465/
@@ -29,27 +34,27 @@ notes: |
 lines:
   - line: "basis-capacity"
     description: "Preserve actual basis release and only percentage excess"
-    formula: "Original2018 property180000/basis80000, appreciation already taken100000 and prior basis use20000 leaves60000 basis suspension. Actual2026 basis20000/30000/40000 releases those amounts and leaves40000/30000/20000 suspended. Contribution base100000 and C30% capacity30000 give section170 excess0/0/10000 in2026, while selected charity and170(p) are0."
+    formula: "Original2018 property180000/basis80000, appreciation already taken100000 and prior basis use20000 leaves60000 basis suspension. Actual2026 basis20000/30000/40000 releases those amounts and leaves40000/30000/20000 suspended. Contribution base100000 and C30% capacity30000 give no residual for20000/30000;40000 has positive residual and is guarded pending first-entry/floor proof. Source-only validation preserves each release and suspension. Actual nonitemized charity and170(p) are0 in the no-residual cases."
     testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::derives below equal and above capacity prior basis releases without carrying every undeducted dollar"
   - line: "risk-capacity"
     description: "An already basis-allowed prior gift is not subjected to basis again"
-    formula: "Original2024 property and post-basis deduction60000, original465disallowance60000 and actual2025use0 leave60000 at risk. Actual2026risk20000/30000/40000 releases20000/30000/40000, retains40000/30000/20000 at risk, and gives C percentage excess0/0/10000. Original gift and risk year remain2024."
+    formula: "Original2024 property and post-basis deduction60000, original465disallowance60000 and actual2025use0 leave60000 at risk. Actual2026risk20000/30000/40000 releases20000/30000/40000, retains40000/30000/20000 at risk, and has no C residual for20000/30000. The40000 positive-residual case remains guarded pending first-entry/floor proof. Original gift and risk year remain2024."
     testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::preserves prior risk sources and percentage capacity independently of current basis"
   - line: "combined-limitations"
     description: "Combine separate basis and prior-risk originals exactly once"
-    formula: "Original prior basis release40000 and separate prior-risk opening60000 give100000 activity deductions. Risk50000 allows half:20000 basis-released gift and30000 old-risk gift. Basis suspension20000, new465suspension20000 and old465suspension30000 remain distinct; available C50000 has2026 percentage excess20000."
+    formula: "Original prior basis release40000 and separate prior-risk opening60000 give100000 activity deductions. Risk50000 allows half:20000 basis-released gift and30000 old-risk gift. Basis suspension20000, new465suspension20000 and old465suspension30000 remain distinct; available C50000 atbase100000 has positive residual, so final calculation rejects pending first-entry/floor proof. The same actual releases atbase200000 have no residual; source balances are unchanged."
     testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::conserves simultaneous prior basis and risk sources without repeated appreciation"
   - line: "other-property-capacity"
     description: "Retain the original other-recipient property character"
-    formula: "Actual qualified appreciated stock to the original other-recipient organization retains D20% character. Releases10000/20000/30000 against100000 base give percentage excess0/0/10000; no selected property deduction or floor carry."
+    formula: "Actual qualified appreciated stock to the original other-recipient organization retains D20% character. Releases10000/20000/30000 against100000 base give no residual for10000/20000 and a guarded positive residual for30000. Source-only originalD character remains; no selected property deduction is claimed."
     testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::retains the original other recipient twenty percent property capacity"
   - line: "separate-current-cash"
     description: "Current cash eligibility is independent of the original property release"
-    formula: "Actual eligible current cash1000 plus C property release40000 at base100000 gives current170(p)1000 and C percentage excess10000. Property release is not entered or attributed as current cash."
+    formula: "Actual eligible current cash1000 plus C property release20000 atbase100000 gives current170(p)1000 and no residual; the otherwise identical40000release has guarded positive residual. Property release is not entered or attributed as current cash."
     testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::keeps actual current cash separate from prior property release"
   - line: "existing-nol-composition"
     description: "Compose only with the existing source-bound nonitemized NOL comparison"
-    formula: "Wages100000, actual standard16100 and prior post2017 NOL100000 give current NOLD67120 and AGI32880. C capacity9864 gives percentage excess0/0/10136 for property releases5000/9864/20000. Actual nonitemized charitable deduction remains0 and comparison benefit0. Independent AMT history is still required; no new NOL attribution or floor method is introduced."
+    formula: "Wages100000, actual standard16100 and prior post2017 NOL100000 give current NOLD67120 and AGI32880. C capacity9864 leaves no residual for property releases5000/9864; current claim, AGI and succeeding NOL equal the actual zero-release source control because selected property deduction0 and no charitable comparison is needed. The20000release has positive residual and rejects pending source-year proof. Independent AMT history is still required; no new NOL attribution or floor method is introduced."
     testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::composes actual property release with the established nonitemized NOL method"
   - line: "choice-proof"
     description: "Internal source proof includes the applicable explicit choice"
@@ -57,7 +62,7 @@ lines:
     testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::binds the actual deduction choice in original NOL source proof"
   - line: "explicit-choice"
     description: "Do not infer nonitemization or treat prior property as current cash"
-    formula: "Only explicit standard/nonitemized admits this property method. Missing/automatic/itemized choices and prior cash remain guarded. An explicit nonitemized choice with independently established zero standard entitlement still uses percentage capacity. Missing source history remains unknown."
+    formula: "Only explicit standard/nonitemized admits this property method. Missing/automatic/itemized choices and prior cash remain guarded. An explicit nonitemized choice with independently established zero standard entitlement still admits a source-proved no-residual release; selection does not clear positive carry. Missing source history remains unknown."
     testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::requires explicit nonitemization and original property history"
   - line: "guided-originals"
     description: "Forward actual choice alongside unchanged original histories"
@@ -65,7 +70,7 @@ lines:
     testRef: "tests/guided-interview/guided-k1-prior-property-nonitemized.test.ts::forwards explicit nonitemization and preserves the complete original property histories"
   - line: "context-and-release"
     description: "Bind source choice and balances without opening the2026 export gate"
-    formula: "Private review context binds original choice, income, receipts, identity, basis and465 histories and calculated carry. Changed or removed sources and forged carry reject before I/O. Production2026 calculation/export remains unavailable; no2025 form is relabeled."
+    formula: "A separate no-residual both-limitations original atincome200000/withholding60000 binds choice, receipts, identity, basis and465 histories and calculated zero carry. The unchanged original100000 positive-carry input rejects before output. Changed or removed sources and forged carry reject before I/O. Production2026 calculation/export remains unavailable; no2025 form is relabeled."
     testRef: "tests/pdf/k1-prior-property-nonitemized-context.test.ts::binds original choice and every independent balance before output while keeping2026 export closed"
   - line: "browser-sources"
     description: "Retain original source edits and the actual year gate in both viewports"

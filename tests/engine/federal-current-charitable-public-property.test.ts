@@ -10,7 +10,7 @@ import { nonitemizerCarryFixture } from '../fixtures/nonitemizer-carry.js';
 
 it('binds mixed current category carry to final selection without granting standard entitlement', () => {
   for (const [election, method, expectedCarry] of [
-    ['automatic', 'standard', '2000'], ['itemized', 'itemized', '2050'], ['nonitemized', 'nonitemized', '2000'],
+    ['automatic', 'standard', '2050'], ['itemized', 'itemized', '2050'], ['nonitemized', 'nonitemized', '2050'],
   ] as const) {
     const input = nonitemizerCarryFixture('4000'); input.deductionElection = election;
     if (!input.standardDeductionFacts) throw new Error('Missing actual synthetic eligibility');

@@ -34,7 +34,7 @@ it('preserves actual current candidates without opening year or export gates', a
   const schedule = calculateScheduleA(input, d('10000.49'), 'married_filing_separately', FEDERAL_2026_CONSTANTS);
   expect(schedule.charitableTotal.toFixed()).toBe('5950');
   expect(schedule.charitableCarryforward.toFixed()).toBe('3050.69845');
-  expect(schedule.currentCharitableCandidates?.nonitemizedCarryforwards.map(row => row.amount.toFixed())).toEqual(['3000.696']);
+  expect(schedule.currentCharitableCandidates?.nonitemizedCarryforwards.map(row => row.amount.toFixed())).toEqual(['3050.69845']);
   expect(schedule.nonitemizerCharitableDeduction.toFixed()).toBe('1000');
   expect(schedule.currentCharitableCandidates?.currentCashPaid.toFixed()).toBe('9000.99');
   expect(computeGuidedPreview(state)).toBeNull();

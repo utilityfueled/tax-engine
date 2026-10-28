@@ -38,7 +38,7 @@ it('preserves actual prior cash and current property without opening the year ga
   expect([schedule.charitableCurrentCash, schedule.charitableCurrentNoncash, schedule.charitablePriorYearUsed, schedule.charitableTotal].map(value => value.toFixed()))
     .toEqual(['1000', '1950', '2000', '4950']);
   expect(schedule.charitableCarryforward.toFixed()).toBe('1050');
-  expect(schedule.determinedCharitableFloor?.nonitemizedCarryforwards.map(row => row.amount.toFixed())).toEqual(['1000']);
+  expect(schedule.determinedCharitableFloor?.nonitemizedCarryforwards.map(row => row.amount.toFixed())).toEqual(['1050']);
   expect(computeGuidedPreview(state)).toBeNull();
   expect(() => calculateFederalTax(input)).toThrow(/not.*ready|incomplete|unavailable|not.*available/i);
   const historical = calculateFederalTax(simpleW2Fixture);

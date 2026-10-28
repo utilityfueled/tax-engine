@@ -10,7 +10,7 @@ it('reconciles verified crypto and direct receipts once by original category',()
  expect(r.itemized.totalDeduction.toFixed()).toBe('54500');
  expect([r.itemized.exactCashDeduction,r.itemized.exactNonCashDeduction].map(x=>x.toFixed())).toEqual(['20000','34500']);
  expect(carries(r.itemized.carryforwards)).toEqual([['capital_gain_20','noncash','5500']]);
- expect(carries(r.nonitemizedCarryforwards)).toEqual([['capital_gain_20','noncash','5000']]);
+ expect(carries(r.nonitemizedCarryforwards)).toEqual([['capital_gain_20','noncash','5500']]);
  const reordered=structuredClone(input);reordered.cryptoIncome?.donations.reverse();reordered.donations.reverse();
  expect(calculateCurrentCharitableCandidates(reordered,ctx)).toEqual(r);
  const cents=currentCryptoFixture(),gift=cents.cryptoIncome?.donations[0];if(!gift)throw Error('Missing synthetic source');gift.costBasis='5000.01';const centsCtx=currentCryptoContext();centsCtx.current.noncashPublic=d('5000.01');

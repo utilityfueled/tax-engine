@@ -12,7 +12,7 @@ import type { CharitableNolOriginLimit } from "./charitable-nol-origins.js";
 import { calculateK1CharitableReturnSources } from "@/engine/forms/k1-charitable-return-sources.js";
 import { calculateCryptoDonations } from "@/engine/forms/crypto-lot-matching.js";
 import { calculateForm172CharitableSources } from "@/engine/forms/form-172-charitable-sources.js";
-import { isNonitemizedPriorPropertyMethod } from "./k1-nonitemized-prior-property.js";
+import { isNonitemizedPriorPropertySource } from "./k1-nonitemized-prior-property.js";
 
 type AmountKey = keyof CharitableContributionWorksheetInput["amounts"];
 export interface CurrentCharitableNolSource {
@@ -74,10 +74,10 @@ export function readCurrentCharitableSourceForNol(input: TaxYearInput): CurrentC
   }
   // A validated 2025 basis release is available under section 170 in 2025;
   // the original basis vintage and prior appreciation remain in the K1 ledger.
-  // Explicit 2026 nonitemization of property uses percentage capacity only;
-  // automatic/itemized floor and prior-cash timing are not inferred here.
+  // This validates original property availability only. The actual ScheduleA
+  // allowable-carry computation separately proves no prior-release floor ambiguity.
   if (taxYear !== 2025 && k1?.statements.some(row => row.basis.charitableSources?.records.some(record => !record.current
-    && record.availableAfterBasis.gt(0) && !isNonitemizedPriorPropertyMethod(taxYear, input.deductionElection, record.category)))) {
+    && record.availableAfterBasis.gt(0) && !isNonitemizedPriorPropertySource(taxYear, input.deductionElection, record.category)))) {
     throw new Error("Prior K1 charitable basis releases require their separate NOL contribution-year method");
   }
   if (k1) for (const key of Object.keys(amounts) as AmountKey[]) amounts[key] = amounts[key].plus(k1.amounts[key]);

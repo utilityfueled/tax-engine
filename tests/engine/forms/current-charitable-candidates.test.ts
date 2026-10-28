@@ -15,9 +15,9 @@ it('retains both exact current cash carry candidates without prior attribution',
   expect(result.method).toBe('2026_current_public_cash_dual');
   expect(result.itemized.exactCashDeduction.toFixed()).toBe('5950.29155');
   expect(result.itemized.carryforwards.map(row => row.amount.toFixed())).toEqual(['3050.69845']);
-  expect(result.nonitemizedCarryforwards.map(row => row.amount.toFixed())).toEqual(['3000.696']);
+  expect(result.nonitemizedCarryforwards.map(row => row.amount.toFixed())).toEqual(['3050.69845']);
   expect(JSON.stringify(input)).toBe(before);
-  for (const [cash, itemizedCarry, nonitemizedCarry] of [['6000', [], []], ['6000.01', ['50.01'], ['0.01']]] as const) {
+  for (const [cash, itemizedCarry, nonitemizedCarry] of [['6000', [], []], ['6000.01', ['50.01'], ['50.01']]] as const) {
     const boundary = calculateCurrentCharitableCandidates(nonitemizerCarryFixture(cash), context(cash));
     expect(boundary.itemized.carryforwards.map(row => row.amount.toFixed())).toEqual(itemizedCarry);
     expect(boundary.nonitemizedCarryforwards.map(row => row.amount.toFixed())).toEqual(nonitemizedCarry);

@@ -34,7 +34,7 @@ it('preserves actual cash recipient categories without changing the closed year 
   expect(input.donations.map(row => row.recipientCategory)).toEqual(['fifty-percent', 'private-nonoperating']);
   const result = calculateScheduleA(input, d('10000'), 'married_filing_separately', FEDERAL_2026_CONSTANTS);
   expect(result.currentCharitableCandidates?.nonitemizedCarryforwards.map(row => [row.category, row.medium, row.amount.toFixed()]))
-    .toEqual([['other_30', 'cash', '1000']]);
+    .toEqual([['other_30', 'cash', '1050']]);
   expect(result.nonitemizerCharitableDeduction.toFixed()).toBe('1000');
   expect(computeGuidedPreview(state)).toBeNull();
   expect(() => calculateFederalTax(input)).toThrow(/not.*ready|incomplete|unavailable|not.*available/i);

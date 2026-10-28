@@ -5,6 +5,9 @@ irsReference: "https://www.irs.gov/pub/irs-pdf/p6196.pdf"
 retrievedAt: "2026-10-25"
 reviewStatus: "independent-review-pending"
 notes: |
+  Corrected2026 carry premise: nonitemized-allowable-charitable-carry.yaml
+  applies IRC63(e)(1) and170(d)(1)(C) before actual deduction selection.
+  Prior no-floor-selection expectations remain historical evidence only.
   Section170(p) and IRS Publication6196 distinguish not electing to itemize
   from eligibility for the standard deduction. This package adds an explicit
   nonitemized choice for an actual2026 taxpayer whose completed standard
@@ -26,7 +29,7 @@ lines:
     testRef: "tests/engine/federal-nonitemized-charity.test.ts::claims only actual current eligible cash when the standard deduction is unavailable"
   - line: "year-and-nol-boundaries"
     description: "Retain unavailable year and carry methods"
-    formula: "Unknown/2025 nonitemized choice rejects. The new election does not open general2026 calculation/export, prior charity carry/floor or current/prior NOL coordination. A positive current itemized-candidate carry also requires its separate nonitemizer carry method; do not transfer an itemized floor increase to the final return. The section170(p) worksheet retains its 60-percent cap. No zero standard amount may be relabeled an allowed standard deduction."
+    formula: "Unknown/2025 nonitemized choice rejects. The new election does not open general2026 calculation/export, prior charity carry/floor or current/prior NOL coordination. A positive current itemized-candidate carry also requires its separate nonitemizer carry method; retain eligible current floor only after the same actual-source allowable-carry proof. The section170(p) worksheet retains its 60-percent cap. No zero standard amount may be relabeled an allowed standard deduction."
     testRef: "tests/engine/federal-nonitemized-charity.test.ts::preserves historical elections source facts and unsupported carry methods"
   - line: "final-selection-audit"
     description: "Record the choice after all itemized limitations"

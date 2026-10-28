@@ -7320,6 +7320,31 @@
       ]
     },
     {
+      "key": "federal/nonitemized-allowable-charitable-carry",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://uscode.house.gov/us/usc/119-118/t26/s63/",
+      "specPath": "spec/federal/nonitemized-allowable-charitable-carry.yaml",
+      "enginePath": "src/engine/forms/selected-charitable-carryover.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-nonitemized-allowable-charitable-carry-2026.test.ts::preserves common carry with separately selected deductions and current cash cap",
+        "tests/engine/federal-nonitemized-allowable-charitable-carry-2026.test.ts::orders the current floor before independent regular and alternative loss origins",
+        "tests/engine/federal-nonitemized-allowable-charitable-carry-2026.test.ts::requires actual prior release floor proof independently of standard selection"
+      ],
+      "implementationNote": "Current determined floor and ordinary percentage excess retain the same carry across actual deduction choices. Original amounts, prior-vintage attribution guards, independent NOL comparisons and section170(p) remain separate; source/software review and production2026 rejection receipts are not filing or human qualification.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/nonitemized-charitable-carryover",
       "jurisdiction": "federal",
       "taxYear": 2026,

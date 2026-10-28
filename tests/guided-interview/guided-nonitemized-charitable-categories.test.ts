@@ -30,7 +30,7 @@ it('preserves all actual current and prior categories through existing intake',a
   expect(input.charitableCarryoverSources?.vintages?.map(row=>[row.contributionYear,row.category,row.medium,row.openingCarryforward]))
     .toEqual(history.vintages.map(row=>[2025,row.category,row.medium,row.openingCarryforward]));
   const r=calculateScheduleA(input,d('100000'),'married_filing_separately',FEDERAL_2026_CONSTANTS);
-  expect(r.charitableTotal.toFixed()).toBe('0');expect(r.charitableCarryforward.toFixed()).toBe('53000');
+  expect(r.charitableTotal.toFixed()).toBe('0');expect(r.charitableCarryforward.toFixed()).toBe('53500');
   expect(r.nonitemizedCharitableCarryover?.priorTreatedAsPaid.toFixed()).toBe('15000');
   expect(r.nonitemizedCharitableCarryover?.method).toBe('2026_nonitemized_ordinary_categories');
   expect(computeGuidedPreview(state)).toBeNull();expect(()=>calculateFederalTax(input)).toThrow(/not.*ready|incomplete|unavailable|not.*available/i);

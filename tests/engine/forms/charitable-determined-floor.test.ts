@@ -14,7 +14,7 @@ it('uses the actual percentage ledger before a determined current-category floor
   expect([r.currentCash,r.currentNoncash,r.priorDeduction,r.totalDeduction,r.floorDisallowed].map(x=>x.toFixed())).toEqual(['10000','29500','20000','59500','500']);
   expect(r.currentBeforeFloor).toEqual({cash_60:d('10000'),noncash_50:d('0'),other_30:d('0'),capital_gain_30:d('20000'),capital_gain_20:d('10000')});
   expect(balances(r.carryforwards)).toEqual([[2026,'capital_gain_30','noncash','20000'],[2026,'capital_gain_20','noncash','500']]);
-  expect(balances(r.nonitemizedCarryforwards)).toEqual([[2026,'capital_gain_30','noncash','20000']]);
+  expect(balances(r.nonitemizedCarryforwards)).toEqual([[2026,'capital_gain_30','noncash','20000'],[2026,'capital_gain_20','noncash','500']]);
   expect(r.detail[0].treatedAsPaid.toFixed()).toBe('20000');expect(r.detail[0].amountUsed.toFixed()).toBe('20000');
   expect(r.currentFloorByCategory.capital_gain_20.toFixed()).toBe('500');
   expect(JSON.stringify(input)).toBe(before);
@@ -24,7 +24,7 @@ it('preserves shared capacities and current percentage versus floor carry',()=>{
   input.deductionElection='itemized';const r=calculate(input,context('10000','0','40000','20000','1000'));
   expect([r.currentCash,r.currentNoncash,r.priorDeduction,r.totalDeduction].map(x=>x.toFixed())).toEqual(['35000','9500','5000','49500']);
   expect(balances(r.carryforwards)).toEqual([[2026,'capital_gain_30','noncash','10500'],[2026,'other_30','cash','15000'],[2026,'capital_gain_20','noncash','1000']]);
-  expect(balances(r.nonitemizedCarryforwards)).toEqual([[2026,'capital_gain_30','noncash','10000'],[2026,'other_30','cash','15000'],[2026,'capital_gain_20','noncash','1000']]);
+  expect(balances(r.nonitemizedCarryforwards)).toEqual([[2026,'capital_gain_30','noncash','10500'],[2026,'other_30','cash','15000'],[2026,'capital_gain_20','noncash','1000']]);
   const noExcess=fixture('10000','0','0','0','600',[{taxYear:2025,category:'capital_gain_30',amount:'5000'}]);
   expect(calculate(noExcess,context('10000','0','0','0','600')).carryforwards).toEqual([]);
 });
@@ -83,7 +83,7 @@ it('retains actual crypto and K1 source values before the determined floor',()=>
   expect(calculateK1CharitableReturnSources(input)?.statements[0].basis.charitableSources?.basisSuspended.toFixed()).toBe('20000');
   expect([r.currentNoncash,r.priorDeduction,r.totalDeduction,r.floorDisallowed].map(x=>x.toFixed())).toEqual(['29500','20000','49500','500']);
   expect(balances(r.carryforwards)).toEqual([[2026,'capital_gain_30','noncash','90500']]);
-  expect(balances(r.nonitemizedCarryforwards)).toEqual([[2026,'capital_gain_30','noncash','90000']]);
+  expect(balances(r.nonitemizedCarryforwards)).toEqual([[2026,'capital_gain_30','noncash','90500']]);
   const changed=structuredClone(input),statement=charitableStatement(changed);
   if(!statement.basis?.currentContributions?.[0] || !statement.receipts?.[0])throw Error('Missing actual synthetic source');
   changed.scheduleK1[0].charitableCapitalGain30='90000';

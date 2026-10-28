@@ -10,7 +10,7 @@ import { nonitemizerCarryFixture } from '../fixtures/nonitemizer-carry.js';
 
 it('selects the prior-cash current-property carry only after the actual deduction choice', () => {
   for (const [election, method, carry] of [
-    ['automatic', 'standard', '1000'], ['itemized', 'itemized', '1050'], ['nonitemized', 'nonitemized', '1000'],
+    ['automatic', 'standard', '1050'], ['itemized', 'itemized', '1050'], ['nonitemized', 'nonitemized', '1050'],
   ] as const) {
     const input = nonitemizerCarryFixture('1000', [{ taxYear: 2025, amount: '2000' }]);
     input.deductionElection = election;

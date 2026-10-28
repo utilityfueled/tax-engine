@@ -449,7 +449,7 @@ export function calculateScheduleA(
     nonCashCharitable = charitable.exactNonCashDeduction;
     charitableCarryforwards = charitable.carryforwards;
   }
-  const limitDescription = nonitemizedCharitableCarryover ? "Actual explicit nonitemization: no ScheduleA charity deduction; section170(p) and percentage carry are separate"
+  const limitDescription = nonitemizedCharitableCarryover ? "Actual explicit nonitemization: no ScheduleA charity deduction; section170(p) and otherwise-allowable ordinary carry are separate"
     : input.taxpayer.taxYear === 2026 ? "2026 category worksheet, including 0.5% floor" : "Final2025 Pub526 Worksheet2 current-contribution category limits";
   audit.record("Charitable Computation", "cash", "Cash charitable after applicable limitations", cashCharitable, limitDescription);
   audit.record("Charitable Computation", "noncash", "Noncash charitable after applicable limitations", nonCashCharitable, limitDescription);

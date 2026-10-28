@@ -64,5 +64,5 @@ lines:
     testRef: "tests/engine/forms/charitable-contribution-worksheet.test.ts::keeps capital gifts inside the shared amended other-contribution ceiling"
   - line: "shared-other-transfer"
     description: "Transfer corrected current allowance and selected carry from original receipts"
-    formula: "Actual2026 G10000/B20000/C30000/D10000 on base100000 yields candidate cash30000/noncash19500. Itemized selection carries20500 including floor; explicitstandard carries20000 percentage excess and preserves actual standard16100 plus current170(p)1000. Original facts and closed2026 qualification remain unchanged."
+    formula: "Actual2026 G10000/B20000/C30000/D10000 on base100000 yields candidate cash30000/noncash19500. Both itemized and explicitstandard retain otherwise-allowable carry20500 including the proven current floor. Standard selection preserves actual standard16100 plus current170(p)1000. Original facts and closed2026 qualification remain unchanged."
     testRef: "tests/engine/federal-charitable-shared-other-cap.test.ts::transfers the shared other ceiling through actual current receipts and selected carry"

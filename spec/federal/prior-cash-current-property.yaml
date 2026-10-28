@@ -5,6 +5,9 @@ irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s170/"
 retrievedAt: "2026-10-25"
 reviewStatus: "independent-review-pending"
 notes: |
+  Corrected2026 carry premise: nonitemized-allowable-charitable-carry.yaml
+  applies IRC63(e)(1) and170(d)(1)(C) before actual deduction selection.
+  Prior no-floor-selection expectations remain historical evidence only.
   Bounded statutory derivation under section 170(G)(i)/(iii), I(v)/(vi),
   d(1)(C) and Reg. 1.170A-10. Current G precedes original FIFO G carry. All current A
   values are per-receipt min(FMV,basis), and actual prior categories are G
@@ -14,8 +17,8 @@ notes: |
   No part of that floor is assigned to current or prior G. A percentage
   excess allows the current A floor amount to retain its current origin;
   without percentage excess, the current floor amount does not carry.
-  Nonitemization retains only percentage excess and original unused prior
-  balances. It does not create carry from the170(p) cap or grant a standard
+  Nonitemization retains the same eligible current floor, percentage excess
+  and original unused prior balances. It does not create carry from the170(p) cap or grant a standard
   deduction. Prior G use/expiry remains separate from its actual deduction.
   Positive-base G capacity cannot bind while A absorbs a positive floor;
   zero-base and expired-source cases retain actual vintage conservation.
@@ -27,15 +30,15 @@ notes: |
   The canonical handoff now uses charitable-determined-floor.yaml, which
   derives this same result from the shared actual percentage ledger and
   proves that every floor-hit category contains only current allowance.
-  This standalone original helper remains covered by its unchanged literals.
+  This standalone original helper remains covered by literals corrected under nonitemized-allowable-charitable-carry.yaml.
 lines:
   - line: "category-separated-floor"
     description: "Use actual prior G before current A and apply the floor entirely to current A"
-    formula: "Base100000/currentG10000/priorG20000/currentA30000 gives before-floor G30000/A20000; current cash10000/property19500/prior20000; current A carry10500 itemized or10000 nonitemized. No percentage excess means no floor-only carry."
+    formula: "Base100000/currentG10000/priorG20000/currentA30000 gives before-floor G30000/A20000; current cash10000/property19500/prior20000; current A carry10500 under either selection. No percentage excess means no floor-only carry."
     testRef: "tests/engine/forms/prior-cash-current-property.test.ts::keeps the current property floor separate from original prior cash usage"
   - line: "floor-source-boundary"
     description: "Accept the exact floor boundary and retain unsupported attribution as a guard"
-    formula: "Base100000/currentG0/priorG49500/A5000 leaves currentA500 equal to the floor; itemized currentA carry5000 and nonitemized4500. PriorG49500.01 leaves499.99, so reject instead of assigning the remaining.01 floor to prior cash. Missing identity/history/basis, changed receipt totals, other prior categories and NOL sources reject."
+    formula: "Base100000/currentG0/priorG49500/A5000 leaves currentA500 equal to the floor; itemized currentA carry5000 and nonitemized5000. PriorG49500.01 leaves499.99, so reject instead of assigning the remaining.01 floor to prior cash. Missing identity/history/basis, changed receipt totals, other prior categories and NOL sources reject."
     testRef: "tests/engine/forms/prior-cash-current-property.test.ts::requires the whole floor to have an actual current property source"
   - line: "original-expiry"
     description: "Preserve source cents, FIFO order and original fifth-year expiration"
@@ -43,7 +46,7 @@ lines:
     testRef: "tests/engine/forms/prior-cash-current-property.test.ts::conserves original cash vintages through the zero-base and expiration boundaries"
   - line: "canonical-selection"
     description: "Transfer separate current/prior lines and select carry after the actual deduction method"
-    formula: "Base10000/currentG1000/priorG2000/A3000 gives itemized/automatic ScheduleA candidate11=1000,12=1950,13=2000,14=4950. Explicit nonitemization now uses the separate all-category selected ledger with ScheduleA charity0. Automatic standard and explicit nonitemization keep Acarry1000/current170p1000/prior actual deduction0; itemized keeps Acarry1050/current170p0/prior deduction2000. Prior treated-paid2000 is retained under every selection."
+    formula: "Base10000/currentG1000/priorG2000/A3000 gives itemized/automatic ScheduleA candidate11=1000,12=1950,13=2000,14=4950. Explicit nonitemization now uses the separate all-category selected ledger with ScheduleA charity0. Automatic standard and explicit nonitemization keep Acarry1050/current170p1000/prior actual deduction0; itemized keeps Acarry1050/current170p0/prior deduction2000. Prior treated-paid2000 is retained under every selection."
     testRef: "tests/engine/federal-prior-cash-current-property.test.ts::selects the prior-cash current-property carry only after the actual deduction choice"
   - line: "guided-source-gates"
     description: "Reuse actual source history and property inputs while retaining closed full-year gates"

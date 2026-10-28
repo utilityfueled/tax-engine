@@ -12,11 +12,11 @@ it('transfers actual selected category balances without claiming itemization',()
     const before=JSON.stringify(input),r=calculateFederalTax(input);
     expect(r.deductionUsed).toBe(method);expect(r.deductionAmount.toFixed()).toBe(method==='standard'?'16100':'0');
     expect(r.nonitemizerCharitableDeduction?.toFixed()).toBe('1000');expect(r.taxableIncome.toFixed()).toBe(method==='standard'?'82900':'99000');
-    expect(r.carryforwards.charitableContributions.toFixed()).toBe('53000');
+    expect(r.carryforwards.charitableContributions.toFixed()).toBe('53500');
     expect(r.scheduleA?.charitableTotal.toFixed()).toBe('0');
     expect(r.scheduleA?.charitableTreatment?.priorTreatedAsPaid.toFixed()).toBe('15000');expect(r.scheduleA?.charitableTreatment?.priorDeduction.toFixed()).toBe('0');
     expect(r.carryforwards.charitableContributionsByYear.map(row=>[row.taxYear,row.category,row.medium,row.amount.toFixed()]))
-      .toEqual([[2022,'capital_gain_20','noncash','8000'],[2023,'capital_gain_30','noncash','10000'],[2025,'other_30','cash','10000'],[2026,'capital_gain_30','noncash','10000'],[2026,'capital_gain_20','noncash','15000']]);
+      .toEqual([[2022,'capital_gain_20','noncash','8000'],[2023,'capital_gain_30','noncash','10000'],[2025,'other_30','cash','10000'],[2026,'capital_gain_30','noncash','10500'],[2026,'capital_gain_20','noncash','15000']]);
     expect(buildOhioResidentReturnInput(input,r).federalAgi.toFixed()).toBe('100000');expect(extractMetricsFromResult(r).taxableIncome).toBe(r.taxableIncome.toFixed());
     expect(r.allLines.filter(row=>row.form==='Charitable Carryover'&&row.line==='selected-deduction')).toHaveLength(1);
     expect(JSON.stringify(input)).toBe(before);

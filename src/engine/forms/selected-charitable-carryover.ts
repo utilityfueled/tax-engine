@@ -48,10 +48,7 @@ export function calculateSelectedCharitableCarryover(input: {
     : input.taxYear === 2026 ? input.scheduleA.nonitemizerCharitableDeduction : d("0");
   const priorDeduction = sum(...detail.map(row => row.amountUsed));
   const priorTreatedAsPaid = sum(...detail.map(row => row.treatedAsPaid ?? d("0")));
-  const carryforwards = currentOnly && input.deductionMethod !== "itemized"
-    ? current.nonitemizedCarryforwards : separatePriorFloor && input.deductionMethod !== "itemized"
-      ? priorCashProperty.nonitemizedCarryforwards : separateDeterminedFloor && input.deductionMethod !== "itemized"
-        ? determinedFloor.nonitemizedCarryforwards : input.scheduleA.charitableCarryforwardByYear;
+  const carryforwards = input.scheduleA.charitableCarryforwardByYear;
   const audit = new AuditTrail();
   audit.record("Charitable Carryover", "selected-deduction", "Charity under the final deduction method", deduction,
     input.deductionMethod === "itemized" ? "Selected itemized deduction retains actual prior use"
@@ -60,7 +57,7 @@ export function calculateSelectedCharitableCarryover(input: {
     { "Actual prior deduction": priorDeduction, "Prior treated as paid": priorTreatedAsPaid });
   if (currentOnly || separatePriorFloor || separateDeterminedFloor) audit.record(separateDeterminedFloor ? "Charitable Determined Floor"
     : separatePriorFloor ? "Prior Cash Current Property" : "Current Charitable Candidates", "selected-carry", "Charitable carry under the final deduction method", sum(...carryforwards.map(row => row.amount)),
-    input.deductionMethod === "itemized" ? "Actual itemized selection retains the eligible floor carry" : "Actual nonitemized selection uses percentage excess only");
+    "Otherwise-allowable carry retains eligible current floor independently of the selected current deduction");
   return { deductionMethod: input.deductionMethod, deduction, priorDeduction, priorTreatedAsPaid, detail,
     carryforwards: carryforwards.map(row => ({ ...row })), lines: audit.getLines() };
 }

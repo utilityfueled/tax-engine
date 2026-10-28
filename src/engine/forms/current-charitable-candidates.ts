@@ -12,7 +12,8 @@ import {
   validateCharitableCarryoverSources,
   type CharitableCarryoverBalance,
 } from './charitable-carryover-source-validation.js';
-import { allocateCharitablePrivateMedia } from './charitable-private-media.js';
+import { calculateK1CharitableReturnSources } from './k1-charitable-return-sources.js';
+import { assertPriorPropertyAllowableCarryProof } from '@/utils/k1-nonitemized-prior-property.js';
 import { calculateCryptoDonations } from './crypto-lot-matching.js';
 import { calculateForm172CharitableSources } from './form-172-charitable-sources.js';
 import { readCurrentCharitableReceiptAmounts } from '@/utils/charitable-current-receipts.js';
@@ -72,24 +73,24 @@ export function calculateCurrentCharitableCandidates(input: TaxYearInput, contex
   const percentageCapacity = zeroFloor(context.contributionBase).times('0.60');
   const offered: Record<CharitableCategory, Decimal> = { cash_60: cash, noncash_50: property,
     capital_gain_30: actual.capitalGainPublic, other_30: otherCash.plus(actual.noncashPrivate), capital_gain_20: actual.capitalGainPrivate };
-  const nonitemizedCarryforwards = (Object.keys(offered) as CharitableCategory[]).flatMap<CharitableCarryoverBalance>(category => {
-    const excess = offered[category].minus(itemized.allowedBeforeFloor[category]);
-    if (category === 'other_30') {
-      const carry = allocateCharitablePrivateMedia(otherCash, actual.noncashPrivate, excess);
-      return (['cash', 'noncash'] as const).flatMap(medium => carry[medium].gt(0)
-        ? [{ sourceId: `current-${category}-${medium}`, taxYear: 2026, category, medium, amount: carry[medium] }] : []);
-    }
-    const medium = category === 'cash_60' ? 'cash' : 'noncash';
-    return excess.gt(0) ? [{ sourceId: `current-${category}-${medium}`, taxYear: 2026, category, medium, amount: excess }] : [];
+  const floorByCategory = Object.fromEntries((Object.keys(offered) as CharitableCategory[])
+    .map(category => [category, itemized.allowedBeforeFloor[category].minus(itemized.allowedAfterFloor[category])])) as Record<CharitableCategory, Decimal>;
+  const percentageExcessByCategory = Object.fromEntries((Object.keys(offered) as CharitableCategory[])
+    .map(category => [category, offered[category].minus(itemized.allowedBeforeFloor[category])])) as Record<CharitableCategory, Decimal>;
+  assertPriorPropertyAllowableCarryProof(calculateK1CharitableReturnSources(input), {
+    hasCurrentPercentageExcess: Object.values(percentageExcessByCategory).some(amount => amount.gt(0)),
+    percentageExcessByCategory, floorByCategory,
   });
   itemized.carryforwards = itemized.carryforwards.map(row => ({ ...row,
     medium: row.medium ?? (row.category === 'cash_60' ? 'cash' : 'noncash') }));
+  const nonitemizedCarryforwards: CharitableCarryoverBalance[] = itemized.carryforwards.map(row => ({ ...row,
+    sourceId: `current-${row.category}-${row.medium}`, medium: row.medium! }));
   const audit = new AuditTrail();
   audit.merge(itemized.lines);
   audit.record('Current Charitable Candidates', 'itemized-carry', 'Current itemized charitable carry candidate', sum(...itemized.carryforwards.map(row => row.amount)),
-    'Exact current percentage excess plus eligible itemized floor; confirmed empty actual prior history');
+    'Exact current percentage excess plus eligible current floor; allowable carry is independent of deduction selection');
   audit.record('Current Charitable Candidates', 'nonitemized-carry', 'Current nonitemized charitable carry candidate', sum(...nonitemizedCarryforwards.map(row => row.amount)),
-    'Current percentage excess only; no itemized floor or section 170(p) cap-created carry',
+    'Same otherwise-allowable carry including eligible current floor; section170(p) current cap creates no carry',
     { 'Current cash': cash, 'Current ordinary property value': property, 'Cash percentage ceiling': percentageCapacity,
       'Allowed cash before floor': itemized.allowedBeforeFloor.cash_60, 'Allowed property before floor': itemized.allowedBeforeFloor.noncash_50,
       'Current other-recipient cash': otherCash, 'Current other-recipient ordinary property': actual.noncashPrivate,

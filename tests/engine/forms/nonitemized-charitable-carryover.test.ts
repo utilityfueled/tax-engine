@@ -1,5 +1,6 @@
 // Spec: spec/federal/nonitemized-charitable-carryover.yaml.
 import { expect, it } from 'vitest';
+import { calculateCharitableCategoryUse } from '@/engine/forms/charitable-category-use.js';
 import { calculateNonitemizedCharitableCarryover } from '@/engine/forms/nonitemized-charitable-carryover.js';
 import { d } from '@/utils/decimal.js';
 import { nonitemizerCarryFixture } from '../../fixtures/nonitemizer-carry.js';
@@ -15,7 +16,7 @@ it('preserves exact percentage excess separately from the current deduction cap'
   expect(result.currentWithinPercentageLimit.toFixed()).toBe('6000.294');
   expect(result.currentExcess.toFixed()).toBe('3000.696');
   expect(result.carryforwards.map(row => [row.taxYear, row.category, row.medium, row.amount.toFixed()]))
-    .toEqual([[2026, 'cash_60', 'cash', '3000.696']]);
+    .toEqual([[2026, 'cash_60', 'cash', '3050.69845']]);
   expect(result.totalDeduction.toFixed()).toBe('0');
   expect(JSON.stringify(input)).toBe(before);
   for (const [current, base, expected] of [['5999.99', '10000', '0'], ['6000', '10000', '0'], ['6000.01', '10000', '0.01'], ['0.01', '0', '0.01'], ['0', '-1', '0']]) {
@@ -26,24 +27,28 @@ it('preserves exact percentage excess separately from the current deduction cap'
 
 it('uses actual prior capacity without treating it as current deductible cash', () => {
   const input = nonitemizerCarryFixture('2000', [{ taxYear: 2025, amount: '5000' }]), before = JSON.stringify(input);
-  const result = calculateNonitemizedCharitableCarryover(input, context('2000'));
+  const result = calculateCharitableCategoryUse(input, context('2000'));
+  expect(() => calculateNonitemizedCharitableCarryover(input, context('2000'))).toThrow(/floor.*prior|prior.*floor/i);
   expect(result.priorTreatedAsPaid.toFixed()).toBe('4000');
-  expect(result.priorDeduction.toFixed()).toBe('0');
   expect(result.detail.map(row => [row.sourceId, row.amountAvailable.toFixed(), row.treatedAsPaid.toFixed(), row.amountUsed.toFixed(), row.amountRemaining.toFixed()]))
     .toEqual([['actual-cash-2025', '5000', '4000', '0', '1000']]);
   expect(result.carryforwards[0].sourceId).toBe('actual-cash-2025');
   expect(result.carryforwards[0].taxYear).toBe(2025);
-  expect(result.currentExcess.toFixed()).toBe('0');
+  expect(result.currentWithinPercentageLimit.cash_60.toFixed()).toBe('2000');
   expect(JSON.stringify(input)).toBe(before);
 });
 
 it('conserves FIFO use and expiration at the original fifth year', () => {
   const input = nonitemizerCarryFixture('5700', [{ taxYear: 2024, amount: '200' }, { taxYear: 2020, amount: '100' }, { taxYear: 2021, amount: '400' }]);
-  const result = calculateNonitemizedCharitableCarryover(input, context('5700'));
+  const result = calculateCharitableCategoryUse(input, context('5700'));
+  expect(() => calculateNonitemizedCharitableCarryover(input, context('5700'))).toThrow(/floor.*prior|prior.*floor/i);
   expect(result.detail.map(row => [row.taxYear, row.treatedAsPaid.toFixed(), row.amountExpired.toFixed(), row.amountRemaining.toFixed()]))
     .toEqual([[2020, '0', '100', '0'], [2021, '300', '100', '0'], [2024, '0', '0', '200']]);
   expect(result.priorTreatedAsPaid.toFixed()).toBe('300'); expect(result.expired.toFixed()).toBe('200');
   expect(result.carryforwards.map(row => [row.taxYear, row.amount.toFixed()])).toEqual([[2024, '200']]);
+  const zeroFloor = calculateNonitemizedCharitableCarryover(input, context('5700', '0'));
+  expect(zeroFloor.expired.toFixed()).toBe('500');
+  expect(zeroFloor.carryforwards.map(row => [row.taxYear, row.amount.toFixed()])).toEqual([[2024, '200'], [2026, '5700']]);
 });
 
 it('preserves missing sources and rejects unimplemented category and loss methods', () => {

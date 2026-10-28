@@ -5,6 +5,9 @@ irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s170/"
 retrievedAt: "2026-10-25"
 reviewStatus: "independent-review-pending"
 notes: |
+  Corrected2026 carry premise: nonitemized-allowable-charitable-carry.yaml
+  applies IRC63(e)(1) and170(d)(1)(C) before actual deduction selection.
+  Prior no-floor-selection expectations remain historical evidence only.
   This is a current-source extension, not a prior-vintage floor allocation.
   IRC170(e)(1)(A) values ordinary/short-term property at the smaller of FMV
   and actual basis. Actual recipient qualification, payment year, public
@@ -15,8 +18,8 @@ notes: |
   Thus the enacted G ceiling less A is satisfied, including at B=0, without
   assuming a taxpayer ordering election. Historical 2025 rules do not change.
   Apply the itemized floor to A before G. Percentage excess plus eligible
-  floor retains the original current category. Nonitemization keeps only the
-  percentage excess under Reg1.170A-10(a)(2), separately from current170(p).
+  floor retains the original current category under either choice, separately
+  from current170(p), under IRC63(e)(1) and170(d)(1)(C).
   Confirmed empty prior history excludes vintage attribution. Positive prior,
   capital-gain property, private gifts, pass-through, crypto and NOL methods
   are outside this source route. Values below are statutory derivations, not
@@ -24,7 +27,7 @@ notes: |
 lines:
   - line: "reciprocal-current-limits"
     description: "Resolve current G and A limits while retaining both carry candidates"
-    formula: "Base100000/currentG40000/A30000 yields before-floor G40000/A10000, deduction G40000/A9500, itemized Acarry20500 and nonitemized Acarry20000. G70000/A30000 yields G60000/A0 before floor, cash deduction59500 and itemized Gcarry10500/Acarry30000; nonitemized Gcarry10000/Acarry30000. No percentage excess means floor-only amounts do not carry."
+    formula: "Base100000/currentG40000/A30000 yields before-floor G40000/A10000, deduction G40000/A9500, itemized Acarry20500 and nonitemized Acarry20500. G70000/A30000 yields G60000/A0 before floor, cash deduction59500 and itemized Gcarry10500/Acarry30000; nonitemized Gcarry10500/Acarry30000. No percentage excess means floor-only amounts do not carry."
     testRef: "tests/engine/forms/current-charitable-public-property.test.ts::resolves the enacted reciprocal public gift limits without a source priority election"
   - line: "original-valued-sources"
     description: "Bind category values to actual original property and cash facts"
@@ -32,9 +35,9 @@ lines:
     testRef: "tests/engine/forms/current-charitable-public-property.test.ts::requires exact original public property valuation and supported source character"
   - line: "final-current-selection"
     description: "Select current category carries only after the actual deduction decision"
-    formula: "Base10000/currentG4000/A3000 yields itemized4950, Gcarry0 and Acarry2050. Automatic eligible standard selects Acarry2000 and current170(p)1000. Explicit itemized selects Acarry2050/no170(p); explicit ineligible-standard nonitemization selects Acarry2000 and zero standard entitlement. Actual property basis0 gives value0 without treating the source as missing. Input remains unchanged."
+    formula: "Base10000/currentG4000/A3000 yields itemized4950, Gcarry0 and Acarry2050. Automatic eligible standard selects Acarry2050 and current170(p)1000. Explicit itemized selects Acarry2050/no170(p); explicit ineligible-standard nonitemization selects Acarry2050 and zero standard entitlement. Actual property basis0 gives value0 without treating the source as missing. Input remains unchanged."
     testRef: "tests/engine/federal-current-charitable-public-property.test.ts::binds mixed current category carry to final selection without granting standard entitlement"
   - line: "guided-property-boundary"
     description: "Keep actual property value, basis and empty history through the source bridge"
-    formula: "Base10000.49/currentG4000.11/propertyFMV5000.49/basis3000.24 yields A capacity1000.135 and floor50.00245; itemized property carry2050.10745 and nonitemized carry2000.105. Missing basis or revoked history confirmation blocks the bridge. Actual2026 canonical, preview and PDF gates remain closed."
+    formula: "Base10000.49/currentG4000.11/propertyFMV5000.49/basis3000.24 yields A capacity1000.135 and floor50.00245; itemized property carry2050.10745 and nonitemized carry2050.10745. Missing basis or revoked history confirmation blocks the bridge. Actual2026 canonical, preview and PDF gates remain closed."
     testRef: "tests/guided-interview/guided-current-charitable-public-property.test.ts::preserves actual property sources and both carries while retaining the closed year gates"

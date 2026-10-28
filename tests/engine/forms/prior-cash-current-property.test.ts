@@ -24,7 +24,7 @@ it('keeps the current property floor separate from original prior cash usage', (
   expect([result.currentCash, result.currentNoncash, result.priorDeduction, result.totalDeduction].map(value => value.toFixed()))
     .toEqual(['10000', '19500', '20000', '49500']);
   expect(balances(result.carryforwards)).toEqual([[2026, 'noncash_50', '10500']]);
-  expect(balances(result.nonitemizedCarryforwards)).toEqual([[2026, 'noncash_50', '10000']]);
+  expect(balances(result.nonitemizedCarryforwards)).toEqual([[2026, 'noncash_50', '10500']]);
   expect(result.detail.map(row => [row.taxYear, row.treatedAsPaid.toFixed(), row.amountRemaining.toFixed()])).toEqual([[2025, '20000', '0']]);
   expect(JSON.stringify(input)).toBe(before);
   const noExcess = calculatePriorCashCurrentProperty(source('0', '500', [{ taxYear: 2025, amount: '1' }]), context('0', '500'));
@@ -38,7 +38,7 @@ it('requires the whole floor to have an actual current property source', () => {
   const result = calculatePriorCashCurrentProperty(exact, context('0', '5000'));
   expect(result.currentNoncash.toFixed()).toBe('0');
   expect(balances(result.carryforwards)).toEqual([[2026, 'noncash_50', '5000']]);
-  expect(balances(result.nonitemizedCarryforwards)).toEqual([[2026, 'noncash_50', '4500']]);
+  expect(balances(result.nonitemizedCarryforwards)).toEqual([[2026, 'noncash_50', '5000']]);
   expect(() => calculatePriorCashCurrentProperty(source('0', '5000', [{ taxYear: 2025, amount: '49500.01' }]), context('0', '5000')))
     .toThrow(/floor.*current.*property|current.*property.*floor/i);
   for (const mutate of [

@@ -7,7 +7,6 @@ import { d, roundDollar, sum } from '@/utils/decimal.js';
 import { charitableNolOriginRows, charitableNolAmountKinds, createCharitableNolOriginLimit, readCharitableNolOrigins,
   type CharitableNolOrigin, type CharitableNolOriginLimit } from '@/utils/charitable-nol-origins.js';
 import { calculateCharitableCarryover, type CharitableCarryoverBalance, type CharitableCarryoverResult } from './charitable-carryover.js';
-import { calculateCharitableCategoryUse } from './charitable-category-use.js';
 import { calculateCharitableDeterminedFloor } from './charitable-determined-floor.js';
 import { allocateCharitablePrivateMedia } from './charitable-private-media.js';
 
@@ -35,17 +34,14 @@ export function calculateDeterminedCharitableNol(params:{
   let normal:CharitableCarryoverResult;
   let currentUsed:typeof sources.current|undefined;
   if(year===2025) normal=calculateCharitableCarryover(input,{...context,itemizes});
-  else if(itemizes) {
+  else {
     const floor=calculateCharitableDeterminedFloor(input,context);
-    normal=floor;
+    normal=itemizes?floor:{...floor,currentCash:zero,currentNoncash:zero,priorDeduction:zero,priorCashDeduction:zero,
+      priorNoncashDeduction:zero,totalDeduction:zero,detail:floor.detail.map(row=>({...row,amountUsed:zero}))};
     const after=Object.fromEntries(Object.entries(floor.currentBeforeFloor).map(([key,value])=>[key,value.minus(floor.currentFloorByCategory[key as keyof typeof floor.currentFloorByCategory])])) as typeof floor.currentBeforeFloor;
     const media=allocateCharitablePrivateMedia(sources.current.cashPrivate,sources.current.noncashPrivate,after.other_30);
     currentUsed={cashPublic:after.cash_60,noncashPublic:after.noncash_50,capitalGainPublic:after.capital_gain_30,
       cashPrivate:media.cash,noncashPrivate:media.noncash,capitalGainPrivate:after.capital_gain_20};
-  } else {
-    const use=calculateCharitableCategoryUse(input,context);
-    normal={currentCash:zero,currentNoncash:zero,priorDeduction:zero,priorCashDeduction:zero,priorNoncashDeduction:zero,
-      priorTreatedAsPaid:use.priorTreatedAsPaid,totalDeduction:zero,detail:use.detail,carryforwards:use.carryforwards,expired:use.expired,lines:use.lines};
   }
   const rows=charitableNolOriginRows(input,sources,ledger).map<DeterminedCharitableNolRow>(origin=>{
     if(origin.kind==='prior') {

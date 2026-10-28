@@ -80,7 +80,7 @@ lines:
     testRef: "tests/apps/web/charitable-filing-unit-interactions.test.tsx::edits actual charitable filing units without default identity or money"
   - line: "nonitemized-retained-source"
     description: "Retain ownership evidence when a prior gift is treated as paid without a current deduction"
-    formula: "The existing2026 public-cash nonitemizer method keeps original ownership histories and retained-audit binding. Derived6,000 opening on5,000 income uses3,000 of percentage capacity, leaves3,000, and creates no current section170(p) deduction from old cash. Removing the source still rejects before rendering."
+    formula: "The percentage helper keeps original ownership histories: derived6000 opening on5000 base uses3000 and leaves3000, with no current170(p) deduction from old cash. The final positive25floor reaches prior cash, so nonitemization no longer bypasses its pending original-vintage method. An actual zero-base source preserves all6000 and the original owner ledger without floor attribution;2026 output remains closed."
     testRef: "tests/pdf/charitable-filing-unit-review.test.ts::retains original filing history through nonitemized public cash consumption"
   - line: "review-appendix"
     description: "Render original allocation provenance beside the physical ScheduleA"

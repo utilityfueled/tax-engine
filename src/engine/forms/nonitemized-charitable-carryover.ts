@@ -7,6 +7,7 @@ import { validateCharitableCarryoverSources, type CharitableCarryoverBalance } f
 import { eligibleCurrentCharitableDonations } from './charitable-current-sources.js';
 import { resolveCharitableRecipient } from '@/utils/charitable-recipient.js';
 import { calculateK1CharitableReturnSources } from './k1-charitable-return-sources.js';
+import { calculateCharitableDeterminedFloor } from './charitable-determined-floor.js';
 import { charitableFilingUnitAmount } from '@/utils/charitable-filing-unit-ratios.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, sum, zeroFloor } from '@/utils/decimal.js';
@@ -69,7 +70,7 @@ export function calculateNonitemizedCharitableCarryover(input: TaxYearInput, con
   audit.record('Nonitemized Charitable Carry', 'percentage-capacity', 'Current public-cash percentage limit', percentageCapacity,
     '60% of actual nonnegative contribution base; no intermediate dollar rounding', { 'Contribution base': contributionBase });
   audit.record('Nonitemized Charitable Carry', 'current-excess', 'New percentage-limit cash carryover', currentExcess,
-    'Current cash less current percentage allowance; section170(p) cap does not create carry and no itemized-floor increase applies',
+    'Current cash less current percentage allowance; section170(p) cap does not create carry; eligible floor is added separately to otherwise-allowable carry',
     { 'Current cash': currentCashPaid, 'Current percentage allowance': currentWithinPercentageLimit });
   const detail = records.map((row, index) => {
     const treatedAsPaid = row.taxYear + 5 < taxYear ? zero : Decimal.min(row.amount, capacity);
@@ -83,13 +84,12 @@ export function calculateNonitemizedCharitableCarryover(input: TaxYearInput, con
       ...(row.filingUnitSources ? { filingUnitSources: row.filingUnitSources } : {}),
       amountAvailable: row.amount, treatedAsPaid, amountUsed: zero, amountExpired, amountRemaining };
   });
-  const carryforwards: CharitableCarryoverBalance[] = detail.filter(row => row.amountRemaining.gt(0))
-    .map(row => ({ sourceId: row.sourceId, taxYear: row.taxYear, category: row.category, medium: row.medium, amount: row.amountRemaining,
-      ...(row.filingUnitSources ? { filingUnitSources: row.filingUnitSources } : {}) }));
-  if (currentExcess.gt(0)) carryforwards.push({ sourceId: 'current-cash_60-cash', taxYear, category: 'cash_60', medium: 'cash', amount: currentExcess });
+  const allowable = calculateCharitableDeterminedFloor(input, context);
+  const carryforwards: CharitableCarryoverBalance[] = allowable.carryforwards.map(row => ({ ...row }));
+  audit.merge(allowable.lines);
   const priorTreatedAsPaid = sum(...detail.map(row => row.treatedAsPaid)), expired = sum(...detail.map(row => row.amountExpired));
   audit.record('Nonitemized Charitable Carry', 'remaining', 'Actual succeeding-year charitable carry', sum(...carryforwards.map(row => row.amount)),
-    'Original surviving vintages plus exact current percentage excess; no fabricated current deduction');
+    'Original surviving vintages plus exact current percentage excess and eligible current floor; no fabricated current deduction');
   audit.record('Nonitemized Charitable Carry', 'expired', 'Expired actual charitable carry', expired, 'Original fifth-year remainder and older unused sources');
   return { method: '2026_nonitemized_public_cash', deductionMethod: input.deductionElection, contributionBase, currentCashPaid,
     percentageCapacity, currentWithinPercentageLimit, currentExcess,

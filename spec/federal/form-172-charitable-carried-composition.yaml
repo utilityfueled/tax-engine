@@ -26,6 +26,13 @@ notes: |
   fit both original modified vectors; exhaustion retains its precise boundary.
   These are independently derived controls, not matching published numeric
   examples or human qualification. Real2026 calculation gates stay closed.
+  The nonitemized-allowable-charitable-carry correction supersedes the old
+  standard-choice floor bypass. Original2026 controls whose normal or modified
+  replay reaches prior C remain retained as rejected inputs. A separately
+  recorded current A4000 occupies3000 of available public capacity and absorbs
+  the full50 floor at the original10000 base;
+  smaller replay bases retain the established current-category proof. This
+  actual source addition is distinct from changing the old original records.
 lines:
   - line: "unused-old-current-loss"
     description: "Preserve unused old carry before adding the independently computed current loss"
@@ -48,12 +55,12 @@ lines:
     formula: "Actual2005 regular100000 is fully deductible under172(a)(2)(A), despite modified absorption0. AGI−90000 means charity0 and personal tax20000; PartI−110000 plus old deduction100000 gives currentNOL10000. Old100000 expires after2025, oldclosing0, newclosing10000. CurrentA1000 and priorC5000 remain charitable carry6000, with comparison reduction0."
     testRef: "tests/engine/federal-form-172-charitable-carried-composition.test.ts::preserves original old loss expiry and separate current origin"
   - line: "nonitemized-2026"
-    description: "Use current170p once while retaining the established independent percentage ledgers"
-    formula: "Isolated2026 source: AGI10000, currentpubliccash2000, priorC5000/500, oldregular/AMT100000 each. Standard16100 plus current170p1000 yields newregular7100, oldregularuse0/closing107100. AMTI9000 beforeATNOL, deduction8100, oldAMTcarry91900, final900, newATNOL0. Prior charity2000/0; floor does not create a nonitemized carry."
+    description: "Use current170p once with an actual current-floor source in both ledgers"
+    formula: "Original2026 AGI10000,currentG2000,priorC5000/500 reaches the priorC floor and now rejects instead of using a standard-choice bypass. A separate original currentA4000 uses3000 before the50floor and displaces priorC use, leaving the floor current. Standard16100 plus current170p1000 yields newregular7100, oldregularuse0/closing107100. AMTI9000 beforeATNOL, deduction8100, oldAMTcarry91900, final900, newATNOL0. CurrentA percentage excess1000 plus floor50 and untouched priorC5000/500 give6050/1550 carry."
     testRef: "tests/engine/federal-form-172-charitable-carried-composition-2026.test.ts::retains current170p once with actual old regular and alternative carries"
   - line: "no-standard-entitlement"
     description: "Retain actual zero standard entitlement and a positive old NOL deduction"
-    formula: "Same2026 originals with actual MFS spouse itemizing and explicit nonitemized choice: standard0,170p1000, oldregularNOLD7200, AGI2800, oldcarry92800; no newregular loss after7200addback. AllowedG1680 exhausts the A shared limit1400, so neither regular nor AMT priorC is treated paid. Cash percentage carry320 plus priorC5000/500 gives5320/820. ATNOLD8100/oldcarry91900/finalAMTI900/newATNOL0."
+    formula: "Without the new actualA4000, the original nonitemized source rejects because its required modified replay reaches priorC floor. With independently recorded A4000 and actual MFS spouse itemizing: standard0,170p1000, oldregularNOLD7200, AGI2800, oldcarry92800; no newregular loss after7200addback. G1680 beforefloor exhausts the A shared limit1400, so priorC and currentA use0. Cash percentage carry320 plus current14floor, A4000 and priorC5000/500 gives9334/4834. ATNOLD8100/oldcarry91900/finalAMTI900/newATNOL0."
     testRef: "tests/engine/federal-form-172-charitable-carried-composition-2026.test.ts::does not invent standard entitlement when old NOL is claimed"
   - line: "guarded-originals"
     description: "Keep independent original histories and unresolved allocation boundaries"

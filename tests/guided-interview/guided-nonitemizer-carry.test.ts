@@ -31,7 +31,7 @@ it('preserves actual cash history while keeping the real year and export gates c
   expect(input.charitableCarryoverSources?.vintages).toEqual([]);
   expect(input.donations[0].amount).toBe('9000.99');
   const schedule = calculateScheduleA(input, d('10000.49'), 'married_filing_separately', FEDERAL_2026_CONSTANTS);
-  expect(schedule.charitableCarryforward.toFixed()).toBe('3000.696');
+  expect(schedule.charitableCarryforward.toFixed()).toBe('3050.69845');
   expect(schedule.nonitemizerCharitableDeduction.toFixed()).toBe('1000');
   expect(schedule.nonitemizedCharitableCarryover?.currentCashPaid.toFixed()).toBe('9000.99');
   expect(computeGuidedPreview(state)).toBeNull();

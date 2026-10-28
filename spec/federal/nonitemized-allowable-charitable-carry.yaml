@@ -1,0 +1,62 @@
+form: "Nonitemized Allowable Charitable Carry"
+fullName: "2026 otherwise-allowable current charitable carry independent of itemization"
+taxYear: 2026
+irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s63/"
+retrievedAt: "2026-10-28"
+reviewStatus: "independent-review-pending"
+notes: |
+  Corrects the former selected-standard percentage-only premise. IRC63(e)(1)
+  determines whether a deduction is allowable without the no-election rule.
+  IRC170(d)(1)(C), enacted by PL119-21 section70425, adds the attributable
+  current-contribution floor when a contribution-year percentage excess
+  exists, before the170(d)(1)(B) adjustment. Section170(p) independently
+  computes current eligible cash and does not create or erase ordinary carry.
+  Reg1.170A-10(a)(2),(b)(2),(c)(2) separates allowable carry and prior treated-paid
+  use from the selected current deduction. Its text predates the new floor.
+  This is a derived statutory method, not a published combined numeric example
+  or human tax qualification. Existing current G,A,B,C,D methods retain exact
+  sources, media, confirmed histories, FIFO and original expiry. Every positive
+  floor hit must remain attributable to current contributions; existing prior
+  vintage and partial-medium guards remain. Original entity first release
+  with no percentage residual and no attributable carry addition remains a
+  determined nonitemized no-deduction case. Positive release-origin residual
+  needs its established carry-clock method even at zero floor or when the
+  floor falls wholly on a different current category. Collectable first170-entry
+  binding remains finite internal work; absence of a combined published example
+  is not legal unknowability. Standard choice alone is not proof. No year is invented.
+  Existing comparison replays use the common tentative excess including floor
+  before the NOL adjustment, preserving actual selected regular/AMT deductions.
+  Isolated2026 controls do not open canonical readiness or PDF export.
+lines:
+  - line: "common-current-carry"
+    description: "Use one otherwise-allowable current carry under either choice"
+    formula: "Base100000 with G70000,A60000,B40000,C40000 orD30000 separately gives percentage excess10000 and attributable floor500, so ordinarycarry10500. A prior recorded empty history is required. Exact cap gives no carry; C30000.01 gives500.01. The selected itemized deduction and current170(p) stay separate."
+    testRef: "tests/engine/forms/nonitemized-allowable-charitable-carry.test.ts::uses one current allowable carry at every established category and exact cap"
+  - line: "wrapper-current-proof"
+    description: "Route direct nonitemized helpers through the same current floor proof"
+    formula: "Explicit standard/nonitemized pureG70000 atbase100000 carries10500 with zero actual ScheduleA charity. Category wrapper C40000 has the same10500; actual170(p) is calculated separately. Missing or false source history remains unknown."
+    testRef: "tests/engine/forms/nonitemized-allowable-charitable-carry.test.ts::keeps wrapper carry distinct from actual nonitemized deductions"
+  - line: "unaffected-prior-use"
+    description: "Preserve known prior use and expiry when every floor hit is current"
+    formula: "CurrentG10000,C40000,D10000 and actualpriorG20000 atbase100000 uses prior20000, carries currentC20000 plus currentD500 under either choice, and takes no prior deduction when standard. Any floor reaching an allowed prior category rejects."
+    testRef: "tests/engine/forms/nonitemized-allowable-charitable-carry.test.ts::retains unaffected prior use while refusing unresolved prior floor attribution"
+  - line: "actual-selected-deduction"
+    description: "Separate current selected deduction from the common ordinary carry"
+    formula: "CurrentG70000 orC40000 atAGI100000 has ordinarycarry10500 for standard,nonitemized,itemized. Single current170(p) is1000 for G under nonitemization and0 for property or itemization. G5000 yields170(p)1000 but no carry."
+    testRef: "tests/engine/federal-nonitemized-allowable-charitable-carry-2026.test.ts::preserves common carry with separately selected deductions and current cash cap"
+  - line: "current-origin-order"
+    description: "Apply the floor before carry coordination without changing current NOL deductions"
+    formula: "Actual wages20000,businessloss40000,interest30000 givesAGI10000. CurrentG20000,standard16100 and170(p)1000 gives regularNOL7100 andAMT0; each otherwise-allowable charitycarry is14050. Explicitnonitemized with actualzero standard retains170(p)1000,noNOL and14050carry. No carry reduction arises only from the new loss."
+    testRef: "tests/engine/federal-nonitemized-allowable-charitable-carry-2026.test.ts::orders the current floor before independent regular and alternative loss origins"
+  - line: "prior-release-proof"
+    description: "Separate harmless no-residual releases from pending carry-clock and floor methods"
+    formula: "Actual prior entity property releases20000/30000 atbase100000 have no C percentage residual, no eligible floor carry and no actual nonitemized property deduction. Release40000 with positive500floor rejects; atbase0 its positive40000 residual also needs the carry-clock method. Adding actual currentG70000 moves all500floor to G but does not resolve the oldC40000 residual. Preserve original gift/basis/risk years and source-only validation; these guards contain a pending method, not completed support."
+    testRef: "tests/engine/federal-nonitemized-allowable-charitable-carry-2026.test.ts::requires actual prior release floor proof independently of standard selection"
+  - line: "guided-source-boundary"
+    description: "Retain actual source edits and a closed future-year calculation boundary"
+    formula: "Saved fictional wages100000, publiccash70000.01 and explicitly complete empty prior history produce an isolated ScheduleA otherwise-allowable carry10500.01 with selected current170(p)1000. Original receipt or packet-reference edits revoke confirmation; missing history does not become empty. Reconfirming actual unchanged amounts restores only source completeness. Production2026 calculation and PDF remain unavailable."
+    testRef: "tests/guided-interview/guided-nonitemized-allowable-carry.test.ts::binds the common carry to actual guided sources while keeping the year closed"
+  - line: "production-source-boundary"
+    description: "Save actual current receipt edits without exposing unqualified2026 output"
+    formula: "Desktop and mobile edit exact70000.01 current cash to70000.02, preserve the actual empty history and revoke its confirmation until reconfirmed. Reload retains original facts and explicit standard choice. Both guided estimate and advanced PDF controls remain closed; no carry, deduction, contribution base or tax result is entered."
+    testRef: "apps/web/tests/nonitemized-allowable-carry.spec.ts::preserves actual current cash and the closed2026 output boundary"

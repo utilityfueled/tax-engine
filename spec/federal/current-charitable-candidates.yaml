@@ -5,6 +5,9 @@ irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s170/"
 retrievedAt: "2026-10-25"
 reviewStatus: "independent-review-pending"
 notes: |
+  Corrected2026 carry premise: nonitemized-allowable-charitable-carry.yaml
+  applies IRC63(e)(1) and170(d)(1)(C) before actual deduction selection.
+  Prior no-floor-selection expectations remain historical evidence only.
   IRC170(G)(i)/(ii),I,d(1)(C) andp define distinct current-only itemized and
   nonitemized results. A confirmed empty actual prior ledger removes the
   current-versus-prior floor-attribution question; it must not be inferred
@@ -12,7 +15,7 @@ notes: |
   years, while170(p) disregards the itemized floor and prior carry for the
   current deduction. This method supports only actual ordinary public cash,
   no positive prior vintages or NOL sources. It retains both candidates and
-  selects the matching carry only after the final canonical deduction choice.
+  retains the same otherwise-allowable carry after either final deduction choice.
   Current ordinary public property is separately source-bound under
   current-charitable-public-property.yaml; the complete current ordinary
   receipt categories are in current-charitable-receipt-categories.yaml.
@@ -21,7 +24,7 @@ notes: |
 lines:
   - line: "two-current-candidates"
     description: "Compute exact current-only candidates from one original source set"
-    formula: "For base10000.49/current9000.99, G capacity6000.294; itemized floor50.00245; exact itemized deduction5950.29155 and carry3050.69845; nonitemized percentage carry3000.696. No early dollar rounding or cap-created nonitemizer carry. At current6000 with base10000, no percentage excess means floor50 is not carried; at6000.01 itemized carry is50.01."
+    formula: "For base10000.49/current9000.99, G capacity6000.294; itemized floor50.00245; exact itemized deduction5950.29155 and carry3050.69845; nonitemized otherwise-allowable carry3050.69845. No early dollar rounding or cap-created nonitemizer carry. At current6000 with base10000, no percentage excess means floor50 is not carried; at6000.01 ordinary carry is50.01 under either choice."
     testRef: "tests/engine/forms/current-charitable-candidates.test.ts::retains both exact current cash carry candidates without prior attribution"
   - line: "actual-empty-history"
     description: "Require an actual reconciled empty history rather than assume no carry"
@@ -29,11 +32,11 @@ lines:
     testRef: "tests/engine/forms/current-charitable-candidates.test.ts::requires actual empty prior history and original ordinary public cash sources"
   - line: "final-selection"
     description: "Bind final carry to the actual selected deduction method"
-    formula: "For base10000/current9000 with confirmed empty history, itemized charity5950/carry3050 remains the candidate; automatic standard selects current170(p)1000 and carry3000. Explicit itemized retains carry3050 and no170(p). At base100000/current90000, automatic itemization selects charity59500/carry30500. No standard entitlement is manufactured."
+    formula: "For base10000/current9000 with confirmed empty history, itemized charity5950/carry3050 remains the candidate; automatic standard selects current170(p)1000 and carry3050. Explicit itemized retains carry3050 and no170(p). At base100000/current90000, automatic itemization selects charity59500/carry30500. No standard entitlement is manufactured."
     testRef: "tests/engine/federal-current-charitable-candidates.test.ts::selects the correct carry after the final automatic or explicit deduction choice"
   - line: "source-preservation"
     description: "Keep unsupported prior and unknown source methods closed"
-    formula: "Actual empty source packets cannot change current-only itemized arithmetic relative to the same complete current receipts. Missing history and positive prior itemized histories still reject; original inputs stay unchanged. Canonical selected carry follows the actual deduction while preview taxable income and state federal AGI retain their correct bases."
+    formula: "Actual empty source packets cannot change current-only itemized arithmetic relative to the same complete current receipts. Missing history and positive prior itemized histories still reject; original inputs stay unchanged. Canonical ordinary carry is independent of the actual deduction selection while preview taxable income and state federal AGI retain their correct bases."
     testRef: "tests/engine/federal-current-charitable-candidates.test.ts::preserves current source arithmetic and rejects an unimplemented prior floor method"
   - line: "guided-and-export-boundaries"
     description: "Preserve actual guided sources and the closed calculation and export boundaries"

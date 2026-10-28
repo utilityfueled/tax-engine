@@ -25,7 +25,7 @@ it('uses actual standard and nonitemized charitable deductions without inventing
       result.form172?.regular.netOperatingLoss, result.form172?.alternativeTax.netOperatingLoss,
       result.form6251?.amti, result.carryforwards.charitableContributions,
       result.carryforwards.amtCharitableContributions].map(value => value?.toFixed()))
-      .toEqual(['10000', method === 'standard' ? '16100' : '0', '1000', method === 'standard' ? '7100' : '0', '0', '9000', '14000', '14000']);
+      .toEqual(['10000', method === 'standard' ? '16100' : '0', '1000', method === 'standard' ? '7100' : '0', '0', '9000', '14050', '14050']);
     expect(result.form172?.regular.partI[6].toFixed()).toBe(method === 'standard' ? '17100' : '1000');
     expect(JSON.stringify(input)).toBe(before);
   }
@@ -34,7 +34,7 @@ it('uses actual standard and nonitemized charitable deductions without inventing
     const result = calculateFederalTax(input);
     expect([result.nonitemizerCharitableDeduction, result.form172?.regular.netOperatingLoss, result.form6251?.amti,
       result.carryforwards.charitableContributions, result.carryforwards.amtCharitableContributions].map(value => value?.toFixed()))
-      .toEqual(['0', '6100', '10000', '57000', '57000']);
+      .toEqual(['0', '6100', '10000', '57050', '57050']);
   }
 });
 

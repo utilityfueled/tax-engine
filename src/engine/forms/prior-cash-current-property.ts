@@ -71,16 +71,17 @@ export function calculatePriorCashCurrentProperty(input: TaxYearInput, context: 
   const currentNoncash = currentPropertyBeforeFloor.minus(floorDisallowed);
   const cashExcess = currentCashPaid.minus(currentCash), propertyExcess = currentPropertyValue.minus(currentPropertyBeforeFloor);
   const hasCurrentPercentageExcess = cashExcess.gt(0) || propertyExcess.gt(0);
-  const nonitemizedCarryforwards: CharitableCarryoverBalance[] = detail.filter(row => row.amountRemaining.gt(0))
+  const percentageCarryforwards: CharitableCarryoverBalance[] = detail.filter(row => row.amountRemaining.gt(0))
     .map(row => ({ sourceId: row.sourceId, taxYear: row.taxYear, category: row.category, medium: row.medium, amount: row.amountRemaining }));
-  if (cashExcess.gt(0)) nonitemizedCarryforwards.push({ sourceId: 'current-cash_60-cash', taxYear, category: 'cash_60', medium: 'cash', amount: cashExcess });
-  if (propertyExcess.gt(0)) nonitemizedCarryforwards.push({ sourceId: 'current-noncash_50-noncash', taxYear, category: 'noncash_50', medium: 'noncash', amount: propertyExcess });
-  const carryforwards = nonitemizedCarryforwards.map(row => ({ ...row }));
+  if (cashExcess.gt(0)) percentageCarryforwards.push({ sourceId: 'current-cash_60-cash', taxYear, category: 'cash_60', medium: 'cash', amount: cashExcess });
+  if (propertyExcess.gt(0)) percentageCarryforwards.push({ sourceId: 'current-noncash_50-noncash', taxYear, category: 'noncash_50', medium: 'noncash', amount: propertyExcess });
+  const carryforwards = percentageCarryforwards.map(row => ({ ...row }));
   if (hasCurrentPercentageExcess && floorDisallowed.gt(0)) {
     const propertyCarry = carryforwards.find(row => row.taxYear === taxYear && row.category === 'noncash_50');
     if (propertyCarry) propertyCarry.amount = propertyCarry.amount.plus(floorDisallowed);
     else carryforwards.push({ sourceId: 'current-noncash_50-noncash', taxYear, category: 'noncash_50', medium: 'noncash', amount: floorDisallowed });
   }
+  const nonitemizedCarryforwards = carryforwards.map(row => ({ ...row }));
   const audit = new AuditTrail();
   audit.record('Prior Cash Current Property', 'current-cash', 'Actual current public cash allowance', currentCash,
     'Current G precedes actual original prior cash; no itemized floor is assigned to this category', { 'Current cash paid': currentCashPaid });
@@ -93,7 +94,7 @@ export function calculatePriorCashCurrentProperty(input: TaxYearInput, context: 
   audit.record('Prior Cash Current Property', 'itemized-carry', 'Itemized charitable carry candidate', sum(...carryforwards.map(row => row.amount)),
     'Original surviving cash plus current category percentage excess and eligible current-property floor');
   audit.record('Prior Cash Current Property', 'nonitemized-carry', 'Nonitemized charitable carry candidate', sum(...nonitemizedCarryforwards.map(row => row.amount)),
-    'Original surviving cash plus current category percentage excess only');
+    'Same otherwise-allowable original balances, current percentage excess and eligible current-property floor');
   return { method: '2026_prior_cash_current_property', currentCashPaid, currentPropertyValue, currentPropertyBeforeFloor, floorDisallowed,
     currentCash, currentNoncash, priorDeduction, priorCashDeduction: priorDeduction, priorNoncashDeduction: zero,
     priorTreatedAsPaid: priorDeduction, totalDeduction: sum(currentCash, currentNoncash, priorDeduction), detail,

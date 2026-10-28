@@ -21,9 +21,9 @@ const rows = (values: { category: string; amount: { toFixed(): string } }[]) => 
 
 it('keeps current public and other-recipient cash carries in their actual categories', () => {
   for (const [g, b, total, itemized, nonitemized] of [
-    ['40000', '30000', '59500', [['other_30', '10500']], [['other_30', '10000']]],
-    ['60000', '1000', '59500', [['cash_60', '500'], ['other_30', '1000']], [['other_30', '1000']]],
-    ['0', '100000', '29500', [['other_30', '70500']], [['other_30', '70000']]],
+    ['40000', '30000', '59500', [['other_30', '10500']], [['other_30', '10500']]],
+    ['60000', '1000', '59500', [['cash_60', '500'], ['other_30', '1000']], [['cash_60', '500'], ['other_30', '1000']]],
+    ['0', '100000', '29500', [['other_30', '70500']], [['other_30', '70500']]],
   ] as const) {
     const input = source(g, b), before = JSON.stringify(input);
     const result = calculateCurrentCharitableCandidates(input, context(g, b));
@@ -41,8 +41,8 @@ it('requires actual cash category sources and preserves exact floor boundaries',
   expect(exact.itemized.allowedBeforeFloor.other_30.toFixed()).toBe('2000.184');
   expect(exact.itemized.floorDisallowed.toFixed()).toBe('50.00245');
   expect(rows(exact.itemized.carryforwards)).toEqual([['other_30', '1050.80845']]);
-  expect(rows(exact.nonitemizedCarryforwards)).toEqual([['other_30', '1000.806']]);
-  for (const [amount, itemized, nonitemized] of [['20000', [], []], ['20000.01', [['other_30', '500.01']], [['other_30', '0.01']]]] as const) {
+  expect(rows(exact.nonitemizedCarryforwards)).toEqual([['other_30', '1050.80845']]);
+  for (const [amount, itemized, nonitemized] of [['20000', [], []], ['20000.01', [['other_30', '500.01']], [['other_30', '500.01']]]] as const) {
     const result = calculateCurrentCharitableCandidates(source('40000', amount), context('40000', amount));
     expect(rows(result.itemized.carryforwards)).toEqual(itemized);
     expect(rows(result.nonitemizedCarryforwards)).toEqual(nonitemized);

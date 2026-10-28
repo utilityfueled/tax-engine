@@ -20,10 +20,10 @@ const balances = (rows: { category: string; amount: { toFixed(): string } }[]) =
 
 it('resolves the enacted reciprocal public gift limits without a source priority election', () => {
   for (const [cash, property, expectedCash, expectedProperty, itemizedCarry, nonitemizedCarry] of [
-    ['40000', '30000', '40000', '9500', [['noncash_50', '20500']], [['noncash_50', '20000']]],
-    ['70000', '30000', '59500', '0', [['cash_60', '10500'], ['noncash_50', '30000']], [['cash_60', '10000'], ['noncash_50', '30000']]],
+    ['40000', '30000', '40000', '9500', [['noncash_50', '20500']], [['noncash_50', '20500']]],
+    ['70000', '30000', '59500', '0', [['cash_60', '10500'], ['noncash_50', '30000']], [['cash_60', '10500'], ['noncash_50', '30000']]],
     ['10000', '20000', '10000', '19500', [], []],
-    ['0', '70000', '0', '49500', [['noncash_50', '20500']], [['noncash_50', '20000']]],
+    ['0', '70000', '0', '49500', [['noncash_50', '20500']], [['noncash_50', '20500']]],
   ] as const) {
     const input = source(cash, property), before = JSON.stringify(input);
     const result = calculateCurrentCharitableCandidates(input, context(cash, property));

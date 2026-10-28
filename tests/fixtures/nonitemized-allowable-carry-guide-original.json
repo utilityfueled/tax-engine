@@ -1,0 +1,128 @@
+{
+  "phase": "interview",
+  "taxYear": 2026,
+  "segmentation": {
+    "filingStatus": "single",
+    "incomeTypes": [
+      "w2-wages"
+    ],
+    "lifeEvents": [],
+    "stateCode": null
+  },
+  "currentSectionIndex": 2,
+  "completedSections": [
+    "personal-info",
+    "income-w2"
+  ],
+  "sectionData": {
+    "deductions": {
+      "method": "standard",
+      "medicalExpenses": "0",
+      "stateLocalTaxes": "0",
+      "realEstateTaxes": "0",
+      "mortgageInterest": "0",
+      "charitableContributions": "70000.01",
+      "casualtyLosses": "0",
+      "otherItemized": "0",
+      "gamblingWinnings": "0",
+      "nonW2IncomeTaxesDeductedElsewhere": "0",
+      "donationEntries": [
+        {
+          "organization": "Fictional current public cash recipient",
+          "type": "cash",
+          "amount": "70000.01",
+          "costBasis": "",
+          "date": "2026-06-01",
+          "qualifiedOrganization": true,
+          "isPrivateFoundation": false,
+          "isLongTermCapitalGain": null,
+          "recipientCategory": "fifty-percent",
+          "supportingOrganization": false,
+          "donorAdvisedFund": false
+        }
+      ],
+      "charitableCarryoverSources": {
+        "sourceTaxYear": "2026",
+        "sourceReference": "Fictional complete prior charitable worksheet",
+        "sourceFactsConfirmed": true,
+        "allCarryoversIncluded": true,
+        "calendarYearTaxpayer": true,
+        "returnMembership": "continuous_individual",
+        "membershipUnchangedConfirmed": true,
+        "primaryName": "Jane Doe",
+        "primaryTaxpayerIdLast4": "6789",
+        "vintages": []
+      }
+    },
+    "personal-info": {
+      "dateOfBirth": "1990-01-15",
+      "usResidencyMonths": "12",
+      "stateResidency": "full-year",
+      "firstName": "Jane",
+      "middleName": "",
+      "lastName": "Doe",
+      "ssn": "123-45-6789",
+      "addressLine1": "42 Example Road",
+      "addressLine2": "",
+      "city": "Columbus",
+      "state": "OH",
+      "zip": "43215",
+      "dependentCount": "0",
+      "dependents": [],
+      "standardDeductionFacts": {
+        "primaryBlind": false,
+        "spouseBlind": false,
+        "primaryCanBeClaimedAsDependent": false,
+        "spouseCanBeClaimedAsDependent": false,
+        "primaryDeceased": false,
+        "spouseDeceased": false,
+        "dualStatusAlien": false,
+        "nonresidentAlien": false,
+        "shortTaxYear": false,
+        "spouseItemizes": false,
+        "claimSpouseAdditionalDeduction": false
+      },
+      "livedWithSpouseAtAnyTimeDuringYear": true,
+      "employmentValidSsnIssuedByDueDate": true,
+      "tinIssuedByDueDate": true,
+      "childTaxCredit": {
+        "bonaFidePuertoRicoResident": false,
+        "puertoRicoExcludedIncome": "0",
+        "form4563ExcludedIncome": "0"
+      },
+      "spouse": {
+        "firstName": "Taylor",
+        "lastName": "Example",
+        "ssn": "222-33-4444",
+        "dateOfBirth": "1992-09-10",
+        "usResidencyMonths": "12",
+        "employmentValidSsnIssuedByDueDate": true,
+        "tinIssuedByDueDate": true
+      },
+      "occupation": "Software Engineer"
+    },
+    "income-w2": {
+      "entries": [
+        {
+          "accountHolder": "primary",
+          "stateTaxReporting": "none",
+          "state": "",
+          "employerName": "Synthetic Employer",
+          "employerEin": "12-3456789",
+          "wages": "100000",
+          "federalWithheld": "30000",
+          "socialSecurityWages": "0",
+          "socialSecurityTips": "0",
+          "socialSecurityWithheld": "0",
+          "medicareWages": "0",
+          "medicareWithheld": "0",
+          "stateWages": "",
+          "stateWithheld": "",
+          "aiSuggestedFields": {},
+          "box10DependentCareBenefits": "0",
+          "box12CodeW": "0"
+        }
+      ]
+    }
+  }
+}

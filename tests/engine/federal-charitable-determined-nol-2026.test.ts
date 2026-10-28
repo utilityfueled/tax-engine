@@ -29,7 +29,7 @@ it('keeps actual nonitemized choice and zero-benefit multiple origins distinct',
     expect(result.nonitemizerCharitableDeduction?.toFixed()).toBe('1000');
     expect([result.nolDeduction,result.agi].map(row=>row.toFixed())).toEqual(method==='standard'?['66320','33680']:['79200','20800']);
     expect(result.carryforwards.charitableContributionsByYear.map(row=>[row.category,row.amount.toFixed()]))
-      .toEqual([['cash_60',method==='standard'?'59792':'67520'],['capital_gain_30','60000']]);
+      .toEqual([['cash_60',method==='standard'?'59960.4':'67624'],['capital_gain_30','60000']]);
     expect(result.netOperatingLoss?.determinedCharitableCarryover?.reduction.toFixed()).toBe('0');
     expect(input).toEqual(before);
   }
@@ -52,7 +52,7 @@ it('preserves a determined cash cap without choosing eligible recipients',()=>{
       recipientCategory:'fifty-percent',supportingOrganization:false,donorAdvisedFund:true}];
   const before=structuredClone(input),result=calculateFederalTax(input);
   expect([result.nolDeduction,result.nonitemizerCharitableDeduction,result.carryforwards.charitableContributions].map(row=>row?.toFixed()))
-    .toEqual(['66320','1000','59792']);
+    .toEqual(['66320','1000','59960.4']);
   expect(result.netOperatingLoss?.determinedCharitableCarryover?.reduction.toFixed()).toBe('0');
   expect(input).toEqual(before);
 });

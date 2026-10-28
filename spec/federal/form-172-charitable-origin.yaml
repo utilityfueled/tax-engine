@@ -70,7 +70,7 @@ lines:
     testRef: "tests/engine/federal-form-172-charitable-origin.test.ts::uses the actual standard choice without inventing charitable excess"
   - line: "isolated-2026-floor"
     description: "Preserve the existing current itemized floor before the loss-origin calculation"
-    formula: "Isolated2026 actualAGI10000/currentcash20000 gives6000 before floor50, currentcharity5950 and carry14050. Propertytax20000 makes selected25950 and newregularNOL15950; newATNOL0. The separately sourced actual standard choice uses16100 plus170(p)1000, producing7100 currentNOL and14000 percentage carry without an itemized floor. The unmocked year/export gates remain closed."
+    formula: "Isolated2026 actualAGI10000/currentcash20000 gives6000 before floor50, currentcharity5950 and carry14050. Propertytax20000 makes selected25950 and newregularNOL15950; newATNOL0. The separately sourced actual standard choice uses16100 plus170(p)1000, producing7100 currentNOL and the same otherwise-allowable carry14050 including the proven current floor. The unmocked year/export gates remain closed."
     irsRef: "IRC170(b)(1)(G)/(I),(d)(1)(C),172(d)(4); isolated statutory method only"
     testRef: "tests/engine/federal-form-172-charitable-origin-2026.test.ts::retains the isolated current floor and the distinct actual standard choice"
   - line: "browser-independent-history"

@@ -10,7 +10,7 @@ import { calculateSelectedCharitableCarryover } from '@/engine/forms/selected-ch
 import { nonitemizedCategoryFixture as fixture } from '../fixtures/nonitemized-charitable-categories.js';
 
 it('selects determined floor carry after the actual deduction choice',()=>{
-  for(const [election,method,carry] of [['itemized','itemized','2050'],['automatic','standard','2000'],['nonitemized','nonitemized','2000']] as const){
+  for(const [election,method,carry] of [['itemized','itemized','2050'],['automatic','standard','2050'],['nonitemized','nonitemized','2050']] as const){
     const i=fixture('1000','0','0','4000','1000',[{taxYear:2025,category:'cash_60',amount:'2000'}]);
     i.w2s[0].wages='10000';i.w2s[0].federalWithheld='1000';i.deductionElection=election;
     if(!i.standardDeductionFacts)throw Error('Missing synthetic entitlement');i.standardDeductionFacts.spouseItemizes=method==='nonitemized';

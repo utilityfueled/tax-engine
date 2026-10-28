@@ -1,6 +1,7 @@
 // Spec: spec/federal/charitable-filing-unit-history.yaml review-binding.
 import { expect, it } from 'vitest';
 import { calculateNonitemizedCharitableCarryover } from '@/engine/forms/nonitemized-charitable-carryover.js';
+import { calculateCharitableCategoryUse } from '@/engine/forms/charitable-category-use.js';
 import { d } from '@/utils/decimal.js';
 import { calculateFederalTax } from '@/engine/federal.js';
 import { prepareCharitableReview, charitableReviewOriginalSourceInput, type PreparedCharitableReview } from '@/pdf/charitable-review-context.js';
@@ -35,13 +36,21 @@ it('retains original filing history through nonitemized public cash consumption'
     filingUnitUses: [{ returnSourceId: 'jane-2025', treatedAsPaid: '0', nolReduction: '0', sourceReference: 'Synthetic2025 zero' }] });
   sources.filingUnitHistory!.returns!.push({ sourceId: 'jane-2026', taxYear: 2026, filingStatus: 'single', primaryPersonId: 'jane', sourceReference: 'Synthetic current return' });
   sources.filingUnitHistory!.currentReturnSourceId = 'jane-2026';
-  const result = calculateNonitemizedCharitableCarryover(input, { contributionBase: d(5000), current: {
+  const context = { contributionBase: d(5000), current: {
     cashPublic: d(0), noncashPublic: d(0), capitalGainPublic: d(0), cashPrivate: d(0), noncashPrivate: d(0), capitalGainPrivate: d(0),
-  } });
+  } };
+  const original = JSON.stringify(input), result = calculateCharitableCategoryUse(input, context);
+  expect(() => calculateNonitemizedCharitableCarryover(input, context)).toThrow(/floor.*prior|prior.*floor/i);
   expect(result.carryforwards[0].amount.toString()).toBe('3000');
-  expect(result.totalDeduction.toString()).toBe('0');
+  expect(result.detail[0].amountUsed.toString()).toBe('0');
   expect(result.lines.some(row => row.form === 'Charitable Filing History')).toBe(true);
   expect(result.detail[0].filingUnitSources?.[0].openingBalance).toEqual({ numerator: '6000', denominator: '1' });
+  const zeroBase = structuredClone(input); zeroBase.w2s[0].wages = '0';
+  const noFloor = calculateNonitemizedCharitableCarryover(zeroBase, { ...context, contributionBase: d('0') });
+  expect(noFloor.carryforwards[0].amount.toString()).toBe('6000');
+  expect(noFloor.totalDeduction.toString()).toBe('0');
+  expect(noFloor.detail[0].filingUnitSources).toEqual(result.detail[0].filingUnitSources);
+  expect(JSON.stringify(input)).toBe(original);
   expect(() => calculateFederalTax(input)).toThrow(/2026.*unavailable|2026.*incomplete/i);
 });
 

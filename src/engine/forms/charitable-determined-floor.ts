@@ -4,14 +4,16 @@ import type { TaxYearInput } from '@/models/inputs.js';
 import type { CharitableCategory, CharitableContributionWorksheetInput } from './charitable-contribution-worksheet.js';
 import type { CharitableCarryoverResult } from './charitable-carryover.js';
 import type { CharitableCarryoverBalance } from './charitable-carryover-source-validation.js';
-import { calculateCharitableCategoryUse } from './charitable-category-use.js';
+import { calculateCharitableCategoryUse, type CharitableCategoryUseResult } from './charitable-category-use.js';
+import { calculateK1CharitableReturnSources } from './k1-charitable-return-sources.js';
+import { assertPriorPropertyAllowableCarryProof } from '@/utils/k1-nonitemized-prior-property.js';
 import { allocateCharitablePrivateMedia } from './charitable-private-media.js';
 import { charitableSourceDigest } from '@/utils/charitable-source-digest.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, sum } from '@/utils/decimal.js';
 import type { CharitableNolOriginLimit } from '@/utils/charitable-nol-origins.js';
 
-export interface CharitableDeterminedFloorResult extends CharitableCarryoverResult {
+export interface CharitableDeterminedFloorResult extends CharitableCarryoverResult, CharitableCategoryUseResult {
   method: '2026_determined_current_category_floor';
   sourceDigest: string;
   currentBeforeFloor: Record<CharitableCategory, Decimal>;
@@ -26,7 +28,6 @@ export function calculateCharitableDeterminedFloor(input: TaxYearInput, context:
   nolOriginLimit?: CharitableNolOriginLimit;
 }): CharitableDeterminedFloorResult {
   const use = calculateCharitableCategoryUse(input, context);
-  if (use.detail.length === 0 && !context.nolOriginLimit) throw new Error('Determined prior charitable floor requires actual original prior history');
   const zero = d('0'), currentBeforeFloor = use.currentWithinPercentageLimit;
   const currentAfterFloor = { ...currentBeforeFloor };
   const currentFloorByCategory = { cash_60:zero, noncash_50:zero, other_30:zero, capital_gain_30:zero, capital_gain_20:zero };
@@ -53,9 +54,14 @@ export function calculateCharitableDeterminedFloor(input: TaxYearInput, context:
   const priorCashDeduction = sum(...detail.filter(row => row.medium === 'cash').map(row => row.amountUsed));
   const priorNoncashDeduction = sum(...detail.filter(row => row.medium === 'noncash').map(row => row.amountUsed));
   const priorDeduction = priorCashDeduction.plus(priorNoncashDeduction);
-  const nonitemizedCarryforwards = use.carryforwards.map(row => ({ ...row }));
-  const hasCurrentPercentageExcess = nonitemizedCarryforwards.some(row => row.taxYear === input.taxpayer.taxYear && row.amount.gt(0));
-  const carryforwards = nonitemizedCarryforwards.map(row => ({ ...row }));
+  const percentageCarryforwards = use.carryforwards.map(row => ({ ...row }));
+  const hasCurrentPercentageExcess = percentageCarryforwards.some(row => row.taxYear === input.taxpayer.taxYear && row.amount.gt(0));
+  const carryforwards = percentageCarryforwards.map(row => ({ ...row }));
+  const percentageExcessByCategory = Object.fromEntries((Object.keys(currentFloorByCategory) as CharitableCategory[])
+    .map(category => [category, sum(...percentageCarryforwards.filter(row => row.taxYear === input.taxpayer.taxYear && row.category === category).map(row => row.amount))])) as Record<CharitableCategory, Decimal>;
+  assertPriorPropertyAllowableCarryProof(calculateK1CharitableReturnSources(input), {
+    hasCurrentPercentageExcess, percentageExcessByCategory, floorByCategory: currentFloorByCategory,
+  });
   if (hasCurrentPercentageExcess) for (const category of Object.keys(currentFloorByCategory) as CharitableCategory[]) {
     const floor = currentFloorByCategory[category];
     if (floor.isZero()) continue;
@@ -70,12 +76,13 @@ export function calculateCharitableDeterminedFloor(input: TaxYearInput, context:
         taxYear:input.taxpayer.taxYear, category, medium, amount:media[medium] });
     }
   }
+  const nonitemizedCarryforwards = carryforwards.map(row => ({ ...row }));
   const floorDisallowed = sum(...Object.values(currentFloorByCategory));
   audit.record('Charitable Determined Floor','itemized-carry','Itemized charitable carry candidate',sum(...carryforwards.map(row => row.amount)),
     'Original surviving balances plus current percentage excess and eligible determined current-year floor');
   audit.record('Charitable Determined Floor','nonitemized-carry','Nonitemized charitable carry candidate',sum(...nonitemizedCarryforwards.map(row => row.amount)),
-    'Original surviving balances plus current percentage excess only; no standard entitlement is inferred');
-  return { method:'2026_determined_current_category_floor', sourceDigest:charitableSourceDigest(input),
+    'Same otherwise-allowable original balances, current percentage excess and eligible current floor; no standard entitlement is inferred');
+  return { ...use, method:'2026_determined_current_category_floor', sourceDigest:charitableSourceDigest(input),
     currentBeforeFloor, currentFloorByCategory, floorDisallowed, currentCash, currentNoncash,
     priorDeduction, priorCashDeduction, priorNoncashDeduction, priorTreatedAsPaid:use.priorTreatedAsPaid,
     totalDeduction:sum(currentCash,currentNoncash,priorDeduction), detail, carryforwards, nonitemizedCarryforwards,

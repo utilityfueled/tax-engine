@@ -46,14 +46,21 @@ notes: |
   https://www.ecfr.gov/current/title-26/section-1.702-1
   https://www.ecfr.gov/current/title-26/section-1.1366-1
   RevRul2008-16 and Reg1.1366-2(a)(3)/1.704-1(d) establish later basis
-  releases while preserving character. They do not expressly settle whether the
-  release year becomes the contribution year for the new170(d)(1)(C) floor carry.
+  releases while preserving character. A positive release's first entry into
+  section170 must be distinguished from amounts already admitted to a prior
+  section170 ledger before assigning a carry year or the new170(d)(1)(C) floor.
   A positive2026 prior-basis release with an automatic/itemized choice preserves
   its original history and rejects this unresolved floor/carry-vintage method;
   zero release remains known zero and preserves basis suspension. The explicit
-  property-only nonitemized method in k1-prior-property-nonitemized-2026.yaml
-  uses percentage capacity without selecting a floor year. Prior cash retains
-  its separate170(p) timing boundary.
+  property-only nonitemized source path in k1-prior-property-nonitemized-2026.yaml
+  preserves original records before the return's otherwise-allowable carry
+  proof. Nonitemization does not avoid the floor. The no-residual cohort has
+  neither closing section170 carry nor a release-dependent floor carry; positive
+  release carry remains pending the separate first-entry source method, even at
+  a zero contribution base or when another current category absorbs the floor.
+  That missing source binding is internal implementation work, not a claim that
+  later availability lacks statutory authority. Prior cash retains its separate
+  section170(p) timing boundary.
   https://www.ecfr.gov/current/title-26/section-1.1366-2
   https://www.ecfr.gov/current/title-26/section-1.704-1
   https://www.irs.gov/pub/irs-irbs/irb08-11.pdf

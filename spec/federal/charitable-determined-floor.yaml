@@ -5,6 +5,9 @@ irsReference: "https://uscode.house.gov/us/usc/119-118/t26/s170/"
 retrievedAt: "2026-10-26"
 reviewStatus: "independent-review-pending"
 notes: |
+  Corrected2026 carry premise: nonitemized-allowable-charitable-carry.yaml
+  applies IRC63(e)(1) and170(d)(1)(C) before actual deduction selection.
+  Prior no-floor-selection expectations remain historical evidence only.
   Source derivation, not a published matching numeric example. Section170(b)(1)
   G/A/B/C/D percentage limits and the existing actual current-before-prior,
   public-before-other, FIFO and expiry method are calculated once before the
@@ -23,7 +26,7 @@ notes: |
   only when a current-year percentage excess is carried under a listed rule.
   Surviving older balances alone do not create a new current floor carry.
   Original prior use and expiry are identical between the itemized and
-  nonitemized candidates. The final actual deduction choice selects the carry;
+  nonitemized candidates, including eligible current floor. Actual choice affects deductions;
   it does not alter original facts, create standard entitlement, or turn the
   section170(p) limit into a percentage carry. NOL replay, prior-basis2026 K1
   release, special receipts, and unresolved same-category floor attribution
@@ -31,11 +34,11 @@ notes: |
 lines:
   - line: "current-category-proof"
     description: "Apply the category-ordered floor only to proven current-year allowance"
-    formula: "Base100000/currentG10000/priorG20000/currentC40000/currentD10000 gives pre-floor G30000/C20000/D10000. Itemized total59500, priorG use20000, current Ccarry20000+Dfloorcarry500. Nonitemized carry only C20000."
+    formula: "Base100000/currentG10000/priorG20000/currentC40000/currentD10000 gives pre-floor G30000/C20000/D10000. Itemized total59500, priorG use20000, current Ccarry20000+Dfloorcarry500. Nonitemized carry is also C20000 plus currentD500."
     testRef: "tests/engine/forms/charitable-determined-floor.test.ts::uses the actual percentage ledger before a determined current-category floor"
   - line: "shared-capacities"
     description: "Retain source reservations and the aggregate other-gift ceiling"
-    formula: "Base100000/currentG10000/priorA5000/currentC20000/currentBcash40000/currentD1000 gives pre G10000/A5000/B25000/C10000/D0. Itemized49500; current Bcarry15000/Ccarry10500/Dcarry1000, versus15000/10000/1000 without itemization."
+    formula: "Base100000/currentG10000/priorA5000/currentC20000/currentBcash40000/currentD1000 gives pre G10000/A5000/B25000/C10000/D0. Itemized49500; current Bcarry15000/Ccarry10500/Dcarry1000, also15000/10500/1000 without itemization."
     testRef: "tests/engine/forms/charitable-determined-floor.test.ts::preserves shared capacities and current percentage versus floor carry"
   - line: "floor-boundary"
     description: "Keep prior-vintage and partial-medium attribution unresolved when the floor reaches it"
@@ -51,15 +54,15 @@ lines:
     testRef: "tests/engine/forms/charitable-determined-floor.test.ts::binds the determined candidates to original current and prior sources"
   - line: "canonical-selection"
     description: "Select the internally derived carry only after the final actual deduction choice"
-    formula: "At base10000/currentG1000/priorG2000/C4000/D1000, itemized candidate currentcash1000/currentnoncash2950/prior2000,total5950; itemized carry2050, automatic standard carry2000 with170p1000. Explicit nonitemized ineligible standard retains no standard deduction. Wrong or missing derived source proof rejects."
+    formula: "At base10000/currentG1000/priorG2000/C4000/D1000, itemized candidate currentcash1000/currentnoncash2950/prior2000,total5950; itemized carry2050, automatic standard carry2050 with170p1000. Explicit nonitemized ineligible standard retains no standard deduction. Wrong or missing derived source proof rejects."
     testRef: "tests/engine/federal-charitable-determined-floor.test.ts::selects determined floor carry after the actual deduction choice"
   - line: "original-k1-crypto-receipts"
     description: "Use the existing original source valuation before the common category floor"
     formula: "Base100000 with priorG20000, actual current cryptoC60000 and K1FMV80000/basis40000/availablebasis20000 gives currentC120000 before percentage limits, currentC29500 after500 floor, priorG20000, and currentCcarry90500. The separate K1 basis suspension20000 does not enter170 carry; balanced original changes still alter the source digest."
     testRef: "tests/engine/forms/charitable-determined-floor.test.ts::retains actual crypto and K1 source values before the determined floor"
   - line: "existing-nonitemized-comparison"
-    description: "Preserve the existing selected nonitemized result while adding its determined itemized candidate"
-    formula: "Base100000/currentG10000/A5000/B10000/C20000/D15000 with actual priorG10000/A5000/C10000/B10000/D8000 has currentC10000 and priorCuse0. Its500 floor is entirely currentC: automatic/itemized deduction49500 and carry53500, versus the unchanged explicit nonitemized carry53000. Prior treated-paid use15000 is unchanged."
+    description: "Preserve actual nonitemized deduction and use while retaining common allowable carry"
+    formula: "Base100000/currentG10000/A5000/B10000/C20000/D15000 with actual priorG10000/A5000/C10000/B10000/D8000 has currentC10000 and priorCuse0. Its500 floor is entirely currentC: automatic/itemized deduction49500 and carry53500, also explicit nonitemized carry53500. Prior treated-paid use15000 is unchanged."
     testRef: "tests/engine/federal-nonitemized-charitable-categories.test.ts::transfers actual selected category balances without claiming itemization"
   - line: "guided-and-reference-gates"
     description: "Reach the method through complete actual histories while keeping year and render gates closed"

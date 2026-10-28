@@ -6,7 +6,7 @@ import {currentCategoryFixture} from '../fixtures/current-charitable-categories.
 import {extractMetricsFromResult} from '@/lib/guided-preview-compute';
 import {buildOhioResidentReturnInput} from '@/engine/state/oh-input-adapter.js';
 it('selects the complete ordinary current category carry without changing source facts',()=>{
- for(const [election,used,carry] of [['automatic','standard','500'],['itemized','itemized','550'],['nonitemized','nonitemized','500']] as const){
+ for(const [election,used,carry] of [['automatic','standard','550'],['itemized','itemized','550'],['nonitemized','nonitemized','550']] as const){
   const input=currentCategoryFixture('1000','500','1000','2000','1500');input.deductionElection=election;
   if(!input.standardDeductionFacts)throw Error('Missing actual facts');input.standardDeductionFacts.spouseItemizes=election==='nonitemized';
   const before=JSON.stringify(input),r=calculateFederalTax(input);

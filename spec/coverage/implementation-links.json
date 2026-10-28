@@ -1297,6 +1297,16 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/nonitemized-allowable-charitable-carry",
+      "enginePath": "src/engine/forms/selected-charitable-carryover.ts",
+      "testRefs": [
+        "tests/engine/federal-nonitemized-allowable-charitable-carry-2026.test.ts::preserves common carry with separately selected deductions and current cash cap",
+        "tests/engine/federal-nonitemized-allowable-charitable-carry-2026.test.ts::orders the current floor before independent regular and alternative loss origins",
+        "tests/engine/federal-nonitemized-allowable-charitable-carry-2026.test.ts::requires actual prior release floor proof independently of standard selection"
+      ],
+      "note": "Current determined floor and ordinary percentage excess retain the same carry across actual deduction choices. Original amounts, prior-vintage attribution guards, independent NOL comparisons and section170(p) remain separate; source/software review and production2026 rejection receipts are not filing or human qualification."
+    },
+    {
       "key": "federal/nonitemized-charitable-election",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [

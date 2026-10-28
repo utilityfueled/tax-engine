@@ -2891,7 +2891,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const { qbiDeduction, form8995Result, form8995AResult } = qbiCalculation;
   if (year === 2026 && deductionUsed !== "itemized" && schedA.charitableCarryforward.gt(0)
     && !schedA.nonitemizedCharitableCarryover && !schedA.currentCharitableCandidates && !schedA.priorCashCurrentProperty && !schedA.determinedCharitableFloor) {
-    throw new Error("Nonitemized charitable carry requires the complete supported source method; retained sources cannot use the itemized floor carry amount");
+    throw new Error("Nonitemized charitable carry requires the complete supported otherwise-allowable source method; retained sources cannot bypass current/prior floor proof");
   }
   audit.merge(calculateFederalDeductionSelection({ taxYear: year, election: deductionElection,
     eligibleForStandardDeduction: standardDeductionWorksheet.eligibleForStandardDeduction, standardDeduction,

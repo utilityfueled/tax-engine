@@ -3,6 +3,9 @@ fullName: "Original charitable sources and actual selected deductions in current
 taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i172"
 notes: |
+  Corrected2026 carry premise: nonitemized-allowable-charitable-carry.yaml
+  applies IRC63(e)(1) and170(d)(1)(C) before actual deduction selection.
+  Prior no-floor-selection expectations remain historical evidence only.
   This source/selection extension reuses the validated section170 receipt,
   entity-basis, percentage, FIFO and independent regular/AMT history methods.
   IRC172(d)(4) and Reg1.172-3(a)(3) limit the selected nonbusiness deduction
@@ -24,6 +27,10 @@ notes: |
   All numerical controls below are independently derived, not published
   matching IRS examples. The four named floor/NOL/mixed-medium interpretation
   questions remain outside this extension.
+  The original-receipts, workspace and browser57000 controls below are2025
+  controls. Their isolated2026 current-property composition has57000 percentage
+  excess plus the proven50 current floor carry, retaining57050 independently of
+  the selected deduction. Only the actually selected deduction enters Form172.
 lines:
   - line: "original-receipts"
     description: "Use original donation-only digital assets and charity-only K1 statements"
@@ -42,7 +49,7 @@ lines:
     testRef: "tests/engine/federal-form-172-charitable-closure.test.ts::retains original prior charity and independent current AMT differences in loss origins"
   - line: "actual-choice"
     description: "Include only the actual170(p) deduction with the selected2026 deduction method"
-    formula: "Wages20000 +activeCloss-40000 +interest30000 givesAGI10000. Current publiccash20000 and actual standard16100 plus170(p)1000 give PartI1=-7100,6=17100,7=30000 and regularNOL7100. AMT retains1000 charity, removes16100 standard and has no new loss. Both percentage carries14000 exclude the itemized50 floor. Actual nonitemized/zero standard entitlement yields no loss and the same14000 carry."
+    formula: "Wages20000 +activeCloss-40000 +interest30000 givesAGI10000. Current publiccash20000 and actual standard16100 plus170(p)1000 give PartI1=-7100,6=17100,7=30000 and regularNOL7100. AMT retains1000 charity, removes16100 standard and has no new loss. Both otherwise-allowable carries14050 include the proven current50 floor. Actual nonitemized/zero standard entitlement yields no loss and the same14050 carry."
     irsRef: "IRC63(b)(4),170(p),172(c)/(d)(4),56(b)(1)(D); Reg1.172-3(a)(3)"
     testRef: "tests/engine/federal-form-172-charitable-closure-2026.test.ts::uses actual standard and nonitemized charitable deductions without inventing floor carry"
   - line: "choice-boundaries"
@@ -52,7 +59,7 @@ lines:
     testRef: "tests/engine/federal-form-172-charitable-closure-2026.test.ts::selects the actual candidate and preserves prior-loss and year boundaries"
   - line: "internal-choice-proof"
     description: "Reject absent wrong and stale original-source proof for a current-origin candidate"
-    formula: "The internal current-origin candidate context must carry the exact freshly derived original charitable digest and the confirmed current-origin year. Missing, wrong or changed-source proof rejects; a client input field cannot supply this internal context. The real2026 calculation gate remains closed."
+    formula: "The internal current-origin candidate context must carry the exact freshly derived original charitable digest and the confirmed current-origin year. CurrentG20000 atbase10000 has otherwise-allowable carry14050, including its50 current floor. Missing, wrong or changed-source proof rejects; a client input field cannot supply this internal context. The real2026 calculation gate remains closed."
     irsRef: "IRC170/172; original current-year source binding and qualification boundary"
     testRef: "tests/engine/federal-form-172-charitable-closure.test.ts::requires internal current-origin source proof and keeps the real year gate closed"
   - line: "original-review"

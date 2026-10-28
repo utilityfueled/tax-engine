@@ -19,5 +19,5 @@ it('retains the isolated current floor and the distinct actual standard choice',
   const standard = calculateFederalTax(input);
   expect([standard.deductionAmount, standard.nonitemizerCharitableDeduction, standard.form172?.regular.netOperatingLoss,
     standard.carryforwards.charitableContributions, standard.carryforwards.amtCharitableContributions].map(value => value?.toFixed()))
-    .toEqual(['16100', '1000', '7100', '14000', '14000']);
+    .toEqual(['16100', '1000', '7100', '14050', '14050']);
 });

@@ -5,6 +5,9 @@ irsReference: "https://uscode.house.gov/us/usc/119-120/t26/s170/"
 retrievedAt: "2026-10-25"
 reviewStatus: "independent-review-pending"
 notes: |
+  Corrected2026 carry premise: nonitemized-allowable-charitable-carry.yaml
+  applies IRC63(e)(1) and170(d)(1)(C) before actual deduction selection.
+  Prior no-floor-selection expectations remain historical evidence only.
   This current-only source method requires actual confirmed empty prior history,
   public cash G and cash B to qualified second-category organizations only.
   Actual recipientCategory uses the shared classification resolver. Qualifying
@@ -17,22 +20,22 @@ notes: |
   max(0,50% base minus allowed G plus min(G,10% base))). This revised offset
   applies after2025 and is not applied to historical2025. I applies the floor
   to B before G. d1C permits current-category floor carry only when current
-  percentage excess exists; nonitemization retains percentage excess only.
+  percentage excess exists; the allowable carry is independent of selection.
   No other-recipient cash is included in the current170(p) deduction. Reg1.170A-10
   supports the separate percentage carry method in nonitemized years.
   Numerical controls are statutory derivations, not published IRS examples.
 lines:
   - line: "current-cash-categories"
     description: "Keep current public and other-recipient cash limits, floor and carries separate"
-    formula: "Base100000/G40000/B30000 gives before-floor G40000/B20000, total59500, Bcarry10500 itemized or10000 nonitemized. At G60000/B1000, B allowance0 and G floor500 yield itemized Gcarry500/Bcarry1000, with only B1000 nonitemized. At G0/B100000, B allowance30000 gives70500 itemized Bcarry or70000 nonitemized."
+    formula: "Base100000/G40000/B30000 gives before-floor G40000/B20000, total59500, Bcarry10500 under either selection. At G60000/B1000, B allowance0 and G floor500 yield itemized Gcarry500/Bcarry1000, with the same G500/B1000 nonitemized. At G0/B100000, B allowance30000 gives70500 Bcarry under either selection."
     testRef: "tests/engine/forms/current-public-other-cash.test.ts::keeps current public and other-recipient cash carries in their actual categories"
   - line: "actual-source-boundary"
     description: "Require actual category and receipt reconciliation without inventing prior history"
-    formula: "Missing category, stale source amount or prior history rejects. Known nonqualified private cash is excluded. Changing a cash receipt to property without reconciling the actual category amounts rejects. At base10000.49/G4000.11/B3000.99, exact Bcapacity2000.184 and floor50.00245 yield itemized Bcarry1050.80845 or nonitemized1000.806. At G40000/B20000 no floor-only carry; B20000.01 adds500.01 itemized or.01 nonitemized."
+    formula: "Missing category, stale source amount or prior history rejects. Known nonqualified private cash is excluded. Changing a cash receipt to property without reconciling the actual category amounts rejects. At base10000.49/G4000.11/B3000.99, exact Bcapacity2000.184 and floor50.00245 yield itemized Bcarry1050.80845 or nonitemized1050.80845. At G40000/B20000 no floor-only carry; B20000.01 adds500.01 under either selection."
     testRef: "tests/engine/forms/current-public-other-cash.test.ts::requires actual cash category sources and preserves exact floor boundaries"
   - line: "canonical-selection"
     description: "Choose actual carry after the deduction method and exclude private cash from170p"
-    formula: "Base10000/G4000/B3000 gives ScheduleA11 and14=5950, current private carry1050 itemized or1000 nonitemized. Prior deduction is0. Only actual public cash is eligible for current170p. Explicit nonitemization does not create standard entitlement."
+    formula: "Base10000/G4000/B3000 gives ScheduleA11 and14=5950, current private carry1050 under either selection. Prior deduction is0. Only actual public cash is eligible for current170p. Explicit nonitemization does not create standard entitlement."
     testRef: "tests/engine/federal-current-public-other-cash.test.ts::selects public and other-recipient cash carry after the actual deduction election"
   - line: "guided-categories"
     description: "Preserve actual second-category cash and unknowns in the existing source collector"

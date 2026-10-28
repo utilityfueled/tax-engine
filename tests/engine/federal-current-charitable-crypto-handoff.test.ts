@@ -5,7 +5,7 @@ import {calculateFederalTax} from '@/engine/federal.js';
 import {currentCryptoFixture} from '../fixtures/current-charitable-crypto.js';
 import {d} from '@/utils/decimal.js';
 it('selects verified crypto carry with the actual deduction method',()=>{
- for(const [election,carry] of [['itemized','5500'],['standard','5000'],['nonitemized','5000']] as const){
+ for(const [election,carry] of [['itemized','5500'],['standard','5500'],['nonitemized','5500']] as const){
   const input=currentCryptoFixture();input.deductionElection=election;if(!input.standardDeductionFacts)throw Error('Missing source');input.standardDeductionFacts.spouseItemizes=election==='nonitemized';const before=JSON.stringify(input),r=calculateFederalTax(input);
   expect(r.deductionUsed).toBe(election);expect(r.agi.toFixed()).toBe('100000');expect(r.cryptoDonations?.totalDeduction.toFixed()).toBe('40000');expect(r.scheduleA?.charitableTotal.toFixed()).toBe('54500');
   expect(r.carryforwards.charitableContributionsByYear.map(row=>[row.category,row.medium,row.amount.toFixed()])).toEqual([['capital_gain_20','noncash',carry]]);
@@ -32,7 +32,7 @@ function expectCryptoOnly(sourceIndex:number, amount:string, basis:string, itemi
   else {
    expect(carry).toHaveLength(1);
    expect(carry[0].category).toBe(category);expect(carry[0].medium).toBe('noncash');
-   expect(carry[0].amount.toFixed()).toBe(election==='itemized'?d(percentageCarry).plus('500').toFixed():percentageCarry);
+   expect(carry[0].amount.toFixed()).toBe(d(percentageCarry).plus('500').toFixed());
   }
   if(election==='nonitemized')expect(result.standardDeduction.toFixed()).toBe('0');
   expect(JSON.stringify(input)).toBe(before);

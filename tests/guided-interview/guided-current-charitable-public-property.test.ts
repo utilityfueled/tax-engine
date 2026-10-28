@@ -37,7 +37,7 @@ it('preserves actual property sources and both carries while retaining the close
   const schedule = calculateScheduleA(input, d('10000.49'), 'married_filing_separately', FEDERAL_2026_CONSTANTS);
   expect(schedule.charitableTotal.toFixed()).toBe('4950');
   expect(schedule.charitableCarryforward.toFixed()).toBe('2050.10745');
-  expect(schedule.currentCharitableCandidates?.nonitemizedCarryforwards.map(row => row.amount.toFixed())).toEqual(['2000.105']);
+  expect(schedule.currentCharitableCandidates?.nonitemizedCarryforwards.map(row => row.amount.toFixed())).toEqual(['2050.10745']);
   expect(schedule.currentCharitableCandidates?.currentPropertyValue.toFixed()).toBe('3000.24');
   expect(computeGuidedPreview(state)).toBeNull();
   expect(() => calculateFederalTax(input)).toThrow(/not.*ready|incomplete|unavailable|not.*available/i);

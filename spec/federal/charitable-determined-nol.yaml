@@ -4,6 +4,9 @@ taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i172"
 retrievedAt: "2026-10-26"
 notes: |
+  Corrected2026 carry premise: nonitemized-allowable-charitable-carry.yaml
+  applies IRC63(e)(1) and170(d)(1)(C) before actual deduction selection.
+  Prior no-floor-selection expectations remain historical evidence only.
   IRC170(d)(1)(B), Reg1.170A-10(d)(1), Reg1.172-5(a)(2)(ii) and
   Form172 line26 require reducing charitable excess only to the extent it
   preserves a succeeding NOL. Each actual current category/medium and each
@@ -83,8 +86,8 @@ lines:
     formula: "Actual2026A10000/C60000 at preNOLbase100000 gives charity39500/NOLD48400. NormalAGI51600 gives A10000+C15480-floor258=25222 and Cexcess44778. Simultaneous retainedC15222 gives modifiedcharity24722 and absorption60222, so actualNOL51600-comparison39778=11822 and Ccarry32956. Known-zeroATNOL preserves independent44778."
     testRef: "tests/engine/federal-charitable-determined-nol-2026.test.ts::preserves determined current floor and the actual NOL claim"
   - line: "determined-2026-choice"
-    description: "Preserve percentage excess without itemized floor under actual nonitemization"
-    formula: "With actual G80000/C60000, income100000, MFS spouse not itemizing, explicit standard16100 plus170(p)1000 gives NOLD66320, AGI33680. Guse20208 leaves G59792 and C60000; the simultaneous comparison does not change170(p), so both origins retain zero NOL reduction. Actual MFS spouse itemizes: explicit nonitemization has standard0, claim79200, AGI20800, Gcarry67520/C60000. No standard entitlement is invented."
+    description: "Preserve otherwise-allowable excess with proven current floor under actual nonitemization"
+    formula: "With actual G80000/C60000, income100000, MFS spouse not itemizing, explicit standard16100 plus170(p)1000 gives NOLD66320, AGI33680. G percentageuse20208 less floor168.4 leaves G59960.4 and C60000; the simultaneous comparison does not change170(p), so both origins retain zero NOL reduction. Actual MFS spouse itemizes: explicit nonitemization has standard0, claim79200, AGI20800, Gcarry67624/C60000. No standard entitlement is invented."
     testRef: "tests/engine/federal-charitable-determined-nol-2026.test.ts::keeps actual nonitemized choice and zero-benefit multiple origins distinct"
   - line: "nonitemizer-source-attribution"
     description: "Retain the actual current cash eligibility in a capped comparison"
@@ -92,7 +95,7 @@ lines:
     testRef: "tests/engine/federal-charitable-determined-nol-2026.test.ts::rejects an undetermined cash-recipient comparison and prior floor attribution"
   - line: "nonitemizer-determined-cap"
     description: "Admit a mixed-receipt comparison when every possible allocation gives the same reported deduction"
-    formula: "Actual eligible cash70000 and ineligible DAF10000, retained G20208: eligible retained cash is between10208 and20208. Both bounds give the same170(p)1000, so the comparison is determined without choosing receipts. If the bounds produce different deductions, retain the existing positive-benefit attribution boundary."
+    formula: "Actual eligible cash70000 and ineligible DAF10000, retained G20039.6: eligible retained cash is between10039.6 and20039.6. Both bounds give the same170(p)1000, so the comparison is determined without choosing receipts. If the bounds produce different deductions, retain the existing positive-benefit attribution boundary."
     testRef: "tests/engine/federal-charitable-determined-nol-2026.test.ts::preserves a determined cash cap without choosing eligible recipients"
   - line: "itemized-recipient-choice"
     description: "Do not demand an unused nonitemizer allocation under an actual itemized election"
