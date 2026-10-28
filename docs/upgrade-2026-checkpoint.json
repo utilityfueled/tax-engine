@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18",
+    "lastRecordedCommit": "80af6d97f6287b0cddca58688d310b8a2d717e1e",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1311,12 +1311,12 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Education: full or sole-owner educator handoff from actual reissue history is active; canonical/source/output cases pass, guided edit/reconfirmation sequences are being verified. Precise mixed-category/allocation and jurisdiction questions remain separate.",
-      "Charity/NOL: bounded COD delivered ced90a20 and changed-current-one-owner sources delivered a1f63cf2. Current same-couple joint pooling and explicitly nonitemized2026 prior property release remain internal. Exact floor/vintage/multiple-positive-benefit/COD-exhaustion questions remain in the audit.",
-      "Health: complete V2 actual payment-source browser/PDF independent review passes. Final integration on a1f63cf2 and separate corrected-download check active. Positive other-return actual cash/reimbursement composition is next internal work.",
-      "Verification: full final integrated/source/browser/coverage/native arm64+amd64/SBOM/scan/recovery remains required. Intermediate 318 evidence is passing within its exact commit; staging, human, provider and final-form gates remain closed."
+      "Correct positive-other-return health source precision, independently re-review all ten unchanged controls and saved originals/PDFs, then integrate.",
+      "Implement explicitly nonitemized2026 prior property entity basis/465 release.",
+      "Implement source-determined same-year EBL/ordinary character and independent regular/AMT use/absorption vectors, preserving unresolved partial allocation guards.",
+      "Run final integrated/static/browser/coverage/native arm64+amd64/SBOM/scan/recovery evidence. Intermediate018 is exact historical evidence; staging, human, provider and final-form gates remain closed."
     ],
-    "latestIntegratedCommit": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18",
+    "latestIntegratedCommit": "80af6d97f6287b0cddca58688d310b8a2d717e1e",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1602,7 +1602,8 @@
       "educatorBondRational": "00089be4fff6299b9d26fd44878b21dd0c80141f",
       "marriageOutsidePerson": "977212bfbe38733ae79977a917a63cc529413cef",
       "marketplaceActualPaidRepayment": "661977aabb6c9f5467ff5d4b1ef450fc81e3cfb3",
-      "educatorBondReissue": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18"
+      "educatorBondReissue": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18",
+      "sameCoupleJointLossPools": "80af6d97f6287b0cddca58688d310b8a2d717e1e"
     },
     "remoteCi": {
       "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
@@ -1634,20 +1635,20 @@
       "amd64": "local QEMU Next.js compilation failed with signal11; native CI rehearsal now configured"
     },
     "currentStableCoverageRun": {
-      "sourceCommit": "318127142879f68472ab8440a95f1b9abdc49234",
-      "runId": 40460532332,
-      "jobId": 122057416711,
-      "status": "passed on unchanged rerun",
-      "passed": 19587,
-      "failed": 0,
-      "files": 1406,
+      "sourceCommit": "018f7a610499c96600a49f2a627ba44c11452148",
+      "runId": 40478588460,
+      "status": "passed on first attempt",
+      "job": 122103023578,
+      "passed": 19646,
+      "files": 1429,
       "workers": 1,
-      "seconds": "1463.80",
+      "seconds": "1424.03",
+      "attempt": 1,
       "percentages": {
-        "statements": "91.90",
-        "branches": "86.98",
-        "functions": "90.79",
-        "lines": "94.63"
+        "statements": "91.89",
+        "branches": "86.97",
+        "functions": "90.74",
+        "lines": "94.62"
       },
       "thresholds": {
         "statements": 90,
@@ -1659,49 +1660,48 @@
       "independentlyRecountedFromArtifact": true,
       "counters": {
         "statements": {
-          "covered": 61912,
-          "total": 67363
+          "covered": 62499,
+          "total": 68015
         },
         "branches": {
-          "covered": 54426,
-          "total": 62569
+          "covered": 55073,
+          "total": 63322
         },
         "functions": {
-          "covered": 12012,
-          "total": 13230
+          "covered": 12140,
+          "total": 13378
         },
         "lines": {
-          "covered": 51961,
-          "total": 54908
+          "covered": 52433,
+          "total": 55409
         }
       },
-      "log": {
-        "path": ".local/upgrade-evidence/ci-31812714-coverage-rerun.log",
-        "sha256": "841c5bb3d9e3a77fa0abe1bbcda48c9eb37279f6d6aeac504299d179cc88b08f"
-      },
+      "sourceFiles": 952,
       "artifact": {
-        "id": 12716624993,
-        "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40460532332/artifacts/12716624993",
+        "id": 12722119966,
+        "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40478588460/artifacts/12722119966",
         "archive": {
-          "path": ".local/upgrade-evidence/coverage-31812714.zip",
-          "sha256": "0f5174cc2c4e602aec868b935a92abcf233f574fc5c7c57a78f0b5b3b7a76b0e"
+          "path": ".local/upgrade-evidence/018f7a61-coverage-artifact.zip",
+          "sha256": "bcb5e8dd9fcc133d960687eb6af0b4db8fc519f54f68227761d9b7b77dbc829b"
         },
-        "archiveBytes": 8998674,
-        "archiveEntries": 978,
-        "coverageSourceFiles": 942,
+        "bytes": 9083454,
+        "entries": 988,
         "raw": {
-          "path": ".local/upgrade-evidence/coverage-31812714/coverage-final.json",
-          "sha256": "e4b6b5831445cc89141fe647159a2a8c058186d2e6cb286f34b93ae221ccaab1"
+          "path": ".local/upgrade-evidence/018f7a61-coverage-artifact/coverage-final.json",
+          "sha256": "9c1e78123370c4f31bbb0362ba5bb65d5395535ba6914d3045c2e49bfb0f2c0f"
         }
       },
-      "finalIntegratedEvidence": false,
-      "record": "docs/upgrade-2026-runtime-31812714.json"
+      "evidence": {
+        "path": "docs/upgrade-2026-ci-018f7a61.json",
+        "sha256": "71725473ed9ee8f5fae0101420a804270829d24d92245b1b6100f03e9ed72fe6"
+      },
+      "scope": "Exact018f7a61 synthetic remote CI through educator reissue and actual-paid health delivery. Excludes subsequent joint NOL, positive-other-return health and remaining internal packages. No staging, production or human qualification."
     },
     "remainingInternalWork": [
-      "Finish same-couple current-joint NOL saved-original/PDF review and final adoption; source review19/7 with8private controls is clear.",
-      "Finish positive-other-return health exact-source checks, independent source and saved-output reviews, then final adoption.",
-      "Implement explicitly nonitemized2026 prior property entity basis/465 release and source-determined same-yearEBL character compositions established by the finite audit. Preserve precise unresolved attribution and excluded-regime boundaries.",
-      "Run final integrated/static/browser/coverage/native arm64+amd64/SBOM/scan/recovery evidence. Intermediate318 remains exact historical evidence; staging, human, provider and final-form gates remain closed."
+      "Correct positive-other-return health source precision, independently re-review all ten unchanged controls and saved originals/PDFs, then integrate.",
+      "Implement explicitly nonitemized2026 prior property entity basis/465 release.",
+      "Implement source-determined same-year EBL/ordinary character and independent regular/AMT use/absorption vectors, preserving unresolved partial allocation guards.",
+      "Run final integrated/static/browser/coverage/native arm64+amd64/SBOM/scan/recovery evidence. Intermediate018 is exact historical evidence; staging, human, provider and final-form gates remain closed."
     ],
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
@@ -1723,31 +1723,22 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18",
+    "lastPushedCommit": "80af6d97f6287b0cddca58688d310b8a2d717e1e",
     "currentBrowserRun": {
-      "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
-      "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
+      "sourceCommit": "018f7a610499c96600a49f2a627ba44c11452148",
+      "runId": 40478588402,
       "status": "passed",
-      "scope": "Immutable 3669b00 local synthetic evidence only; later delivered/private changes excluded. Five hosted skips do not establish staging readiness.",
-      "id": "browser",
-      "command": [
-        "pnpm",
-        "test:web",
-        "--retries=0",
-        "--workers=2"
-      ],
-      "exitCode": 0,
-      "seconds": 655.25,
-      "evidence": ".local/upgrade-evidence/3669b00-complete/browser.log",
-      "sha256": "0ef08c9e23e41237125b9203f3bad55f53c5f24daa66741be5c5a911c4c6fcd1",
-      "passed": 434,
-      "skipped": 5,
-      "retries": 0,
-      "workers": 2,
-      "port": 3255,
-      "portClosed": true,
-      "failed": 0,
-      "serverStopped": true
+      "job": 122103200027,
+      "passed": 508,
+      "hostedSkipped": 5,
+      "configuredRetries": 1,
+      "reportedFlaky": 0,
+      "duration": "24.3m",
+      "evidence": {
+        "path": "docs/upgrade-2026-ci-018f7a61.json",
+        "sha256": "71725473ed9ee8f5fae0101420a804270829d24d92245b1b6100f03e9ed72fe6"
+      },
+      "scope": "Exact018f7a61 synthetic remote CI through educator reissue and actual-paid health delivery. Excludes subsequent joint NOL, positive-other-return health and remaining internal packages. No staging, production or human qualification."
     },
     "currentPackageAudit": {
       "sourceCommit": "25f71f066ae7cf24364e6117cb72e4b2e89f8ab5",
@@ -2379,38 +2370,20 @@
       "register": "docs/upgrade-2026-image-advisories.json"
     },
     "nativeAmd64LatestObserved": {
-      "path": "docs/upgrade-2026-runtime-31812714.json",
-      "sha256": "9f0a3cbd06a60a79cd6eaf1f90360ff3d4aac4e0a3b03f082098f8d5cc317778",
-      "sourceCommit": "318127142879f68472ab8440a95f1b9abdc49234",
-      "runId": 40460532320,
-      "artifactId": 12715805166,
-      "archiveSha256": "52ec115185bbc4117671552f8b278523fe58f248d29f5d326b8bc520d82d3411",
-      "image": "sha256:5596e292ed6955e1ee3b5387ff680442144058d8b1a32fbb5fa477a8ba0644c7",
-      "browser": {
-        "container": {
-          "job": 122043787450,
-          "passed": 500,
-          "hostedSkipped": 5,
-          "configuredRetries": 0,
-          "duration": "21.1m"
-        },
-        "selfHost": {
-          "job": 122043787557,
-          "passed": 500,
-          "hostedSkipped": 5,
-          "configuredRetries": 1,
-          "reportedFlaky": 0,
-          "duration": "22.9m"
-        }
-      },
+      "path": "docs/upgrade-2026-runtime-018f7a61.json",
+      "sha256": "b8de530ee5dd5bd4e0841215552627e8cb084331a1d27c5fbd5351dc5e8d5781",
+      "sourceCommit": "018f7a610499c96600a49f2a627ba44c11452148",
+      "runId": 40478588402,
+      "artifactId": 12723273207,
+      "image": "sha256:19e2cfd540370fafa2a5d6851420dce0f0bf7edfbc6afa270e4fa6aa7485d8df",
       "recoveryPhases": 6,
       "scan": {
         "sbomComponents": 2930,
         "sbomGenerator": "syft1.42.3",
-        "sbomTimestamp": "2026-10-27T06:48:09Z",
+        "sbomTimestamp": "2026-10-27T09:38:15Z",
         "scanner": "grype0.121.0",
-        "scanTimestamp": "2026-10-27T06:49:28.370753786Z",
-        "databaseBuilt": "2026-10-26T06:38:44Z",
+        "scanTimestamp": "2026-10-27T09:39:32.71999915Z",
+        "databaseBuilt": "2026-10-27T06:30:41Z",
         "databaseValid": true,
         "matches": 157,
         "distinctAdvisories": 67,
@@ -2422,7 +2395,7 @@
         },
         "npmMatches": 0,
         "fixedVersionMatches": 0,
-        "exactAdvisoryTuplesUnchangedFrom87": true,
+        "exactAdvisoryTuplesUnchangedFrom31812714": true,
         "tupleFields": [
           "id",
           "namespace",
@@ -2436,7 +2409,7 @@
         "ownerConfirmation": "pending",
         "reviewBy": "2026-11-07"
       },
-      "scope": "Completed synthetic GitHub native-amd64 runtime and recovery evidence through educator and outside-child marriage-health delivery. Excludes unmerged COD, changed-filing-unit NOL and actual-paid health packages. No staging, production, filing or human-review qualification."
+      "scope": "Completed synthetic GitHub native-amd64 runtime and recovery evidence through educator reissue and actual-paid health delivery. Excludes subsequent joint NOL and positive-other-return health packages. No staging, production, filing or human-review qualification."
     },
     "singleWritePdfVerification": {
       "commit": "3adb1f0",
@@ -2844,22 +2817,34 @@
       "humanSecurityQualification": false
     },
     "currentUnitRun": {
-      "sourceCommit": "318127142879f68472ab8440a95f1b9abdc49234",
-      "runId": 40460532332,
+      "sourceCommit": "018f7a610499c96600a49f2a627ba44c11452148",
+      "runId": 40478588460,
       "status": "passed",
-      "passed": 19587,
-      "files": 1406,
+      "job": 122103023780,
+      "passed": 19646,
+      "files": 1429,
       "workers": 1,
-      "seconds": "915.83",
-      "log": {
-        "path": ".local/upgrade-evidence/ci-31812714-unit.log",
-        "sha256": "28199e476aa5fb6a28b9f871b0b22ca7b0c967a7530e488a0327ed8ffaa23f69"
+      "seconds": "1576.64",
+      "attempt": 1,
+      "evidence": {
+        "path": "docs/upgrade-2026-ci-018f7a61.json",
+        "sha256": "71725473ed9ee8f5fae0101420a804270829d24d92245b1b6100f03e9ed72fe6"
       },
-      "scope": "Intermediate318 remote synthetic evidence only; later private packages excluded."
+      "scope": "Exact018f7a61 synthetic remote CI through educator reissue and actual-paid health delivery. Excludes subsequent joint NOL, positive-other-return health and remaining internal packages. No staging, production or human qualification."
     },
     "currentRemoteRuns": {
-      "sourceCommit": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18",
-      "status": "Normal branch push confirmed; exact new run identifiers and completion remain to be observed. Superseded661 workflows were still in progress before this push."
+      "sourceCommit": "80af6d97f6287b0cddca58688d310b8a2d717e1e",
+      "status": "Observed in progress after authorized push; subsequent documentation push may supersede these runs.",
+      "runs": [
+        {
+          "id": 40705005820,
+          "name": "Web"
+        },
+        {
+          "id": 40705006101,
+          "name": "CI"
+        }
+      ]
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
@@ -5027,11 +5012,11 @@
       }
     },
     "currentInventory": {
-      "entries": 572,
-      "specReferences": 6064,
-      "sourceCommit": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18",
+      "entries": 573,
+      "specReferences": 6076,
+      "sourceCommit": "80af6d97f6287b0cddca58688d310b8a2d717e1e",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 155,
+      "explicitAssociations": 156,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -6090,7 +6075,7 @@
         "independentHumanTaxReview": false
       },
       "nolSameCoupleJointPool": {
-        "status": "Frozen source independently reviewed; saved-original/PDF review and final adoption active",
+        "status": "Delivered and pushed; independent source and original/PDF review, final download comparison and main checks pass.",
         "tree": "588c3c8f57d273c39df3520a2798d23c4c5cf340",
         "manifest": {
           "path": ".local/upgrade-evidence/nol-joint-pool-review-snapshot.json",
@@ -6119,10 +6104,50 @@
           "No invented current owner closing shares",
           "Partial differing1411 fractions, jointCOD and same-yearEBL composition remain separate",
           "Human, filing and final release gates remain unchanged"
-        ]
+        ],
+        "deliveredCommit": "80af6d97f6287b0cddca58688d310b8a2d717e1e",
+        "finalTree": "552c0e98c423435aa4c331dd10b8cd41f5b91c4f",
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-joint-nol-final-delivery.json",
+          "sha256": "b9ab9f9bd4ff9c79efb56efd22cf67ecbe7e2cf6f21bc15a7fdafebbb70c329c"
+        },
+        "finalSourceManifest": {
+          "path": ".local/upgrade-evidence/nol-joint-pool-delivery-snapshot.json",
+          "sha256": "b20a7b416ce626b8bad754bcd280b5d99a16133343bf2953bd507fbcb84589a1"
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/parent-joint-nol-artifact-review.json",
+          "sha256": "ff91f18439445ee78d84e766d920b4a6f28e1bf32842b6897f506958dcf21d1c",
+          "checks": 14186,
+          "originals": 9,
+          "pdfs": 57,
+          "pages": 165,
+          "populatedFields": 308
+        },
+        "finalDownloadComparison": {
+          "path": ".local/upgrade-evidence/parent-joint-nol-final-download-comparison.json",
+          "sha256": "8d5969834e1c07c41cb4c2b23d9478ebde3557e29f2ce7b3faeb9d2ee3fb5379",
+          "pages": 34,
+          "originalsExactlyEqual": true,
+          "textAndPixelsExactlyEqual": true
+        },
+        "mainChecks": {
+          "path": ".local/upgrade-evidence/joint-nol-main-checks.json",
+          "sha256": "8938292e618ec6a5276d19b043d9ebbc1d654ad755f096f6c8c78971c0162769",
+          "tests": 49,
+          "files": 22
+        },
+        "finalPrivateChecks": {
+          "tests": 57,
+          "files": 23,
+          "unchangedPrivateControls": 8,
+          "browserCases": 2,
+          "browserRetries": 0,
+          "allTypesSpecInventoryAndBothBuilds": true
+        }
       },
       "positiveOtherReturnHealth": {
-        "status": "Frozen implementation with source-only guide and review adapters; exact frozen checks and separate facts-agent source review active",
+        "status": "Unapproved V3: independent review reproduced excess-refund acceptance and canonical below-half-dollar rounding error. Spec-first correction and unchanged ten-control re-review pending.",
         "tree": "b78a7a41a4ca4eb2b432b9e6b3921d0d6892aeda",
         "manifest": {
           "path": ".local/upgrade-evidence/positive-other-health-review-snapshot.json",
@@ -6133,12 +6158,25 @@
           "files": 6,
           "rootAndWebTypes": true
         },
-        "scope": "Positive completed other-return credit kept separate from actual payer premium cash, actual reimbursements and other-return tax payments. No outside credit or repayment imported into own return."
+        "scope": "Positive completed other-return credit kept separate from actual payer premium cash, actual reimbursements and other-return tax payments. No outside credit or repayment imported into own return.",
+        "v3Tree": "5dc99334295b48b7ce287e827e30c7f741dfedcf",
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/complete-positive-other-v3-source-review.json",
+          "sha256": "c367d469395e4dd1dc863235ca91afc2995f0b62eae6b061d60193dda3476932"
+        },
+        "canonicalPrecisionFindings": {
+          "path": ".local/upgrade-evidence/complete-positive-other-v3-canonical-precision-review.json",
+          "sha256": "0d4e982d4bf2fb6e7be070e3feec03dc76fc3279e3e9a9096e1717144dbfb82b"
+        },
+        "permanentRedEvidence": {
+          "path": ".local/upgrade-evidence/positive-other-health-precision-red.log",
+          "sha256": "65fc9a501b2c53834cfc17899bc0f14f6c2fa8406203314a49e77bdafed3f2db"
+        }
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.183",
-      "2026": "2026.180-law-integration-draft"
+      "2025": "2025.184",
+      "2026": "2026.181-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -6363,35 +6401,14 @@
       }
     },
     "currentProductionPackageAudit": {
-      "sourceTree": "6b1cd55bfbac049374bed5d8aa9093181c79c68f",
-      "sourceBase": "8f1d1baee66efb28fa1f85bf3eb5a6249c2f3cad",
-      "startedAt": "2026-10-26T15:40:09.475321+00:00",
-      "finishedAt": "2026-10-26T15:40:10.403772+00:00",
+      "path": ".local/upgrade-evidence/production-audit-20261028.json",
+      "sha256": "10f2fe9c5229d79b203106ac14f1f8a6ce8a1d15e774554c48f84d14a04a94f9",
+      "date": "2026-10-28",
+      "command": "pnpm audit --prod --json",
       "exitCode": 0,
-      "command": [
-        "pnpm",
-        "audit",
-        "--prod",
-        "--json"
-      ],
-      "lockSha256": "5e31bdcf01a1b632f84baba785c5ff901c63a9e60bd54276bb55c3f2853607be",
-      "auditSha256": "10f2fe9c5229d79b203106ac14f1f8a6ce8a1d15e774554c48f84d14a04a94f9",
-      "metadata": {
-        "vulnerabilities": {
-          "info": 0,
-          "low": 0,
-          "moderate": 0,
-          "high": 0,
-          "critical": 0
-        },
-        "dependencies": 425,
-        "devDependencies": 0,
-        "optionalDependencies": 0,
-        "totalDependencies": 425
-      },
-      "sourceCommit": "f25a2b72f7f21909399a5291e5a30c9f18b4ac1c",
-      "evidence": ".local/upgrade-evidence/audit-2026-10-26-afternoon/audit.json",
-      "limitation": "Production JS packages only; exact source tree6b1cd55b and unchanged lock. Image OS findings and deployed reachability remain separate."
+      "dependencies": 425,
+      "vulnerabilities": 0,
+      "lockfileSha256": "b2ce9d4f49ac0ca0746bf52f50c5b028308860fbdbb268a351cc2c98f675279e"
     },
     "previousUnitRun76e3538": {
       "commit": "76e3538a1b851f1d68f86ca818bb87a8ce5eaf98",
@@ -8376,7 +8393,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-27T09:08:02.610437+00:00",
+    "recordedAt": "2026-10-28T14:27:35.937457+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -10712,6 +10729,192 @@
         "sha256": "273eed7843bba33e4d2b2baa9e01e721db384762d01e119979d2b742fe46bcc9"
       },
       "boundary": "A guard is not completion or evidence of an external ruling. ZeroNOLD alone does not resolve positive modified absorption; zeroQBI character does not assign survivingEBL balance. Continue source-determined ordinary compositions separately."
+    },
+    "nolJointEblContractReview": {
+      "path": ".local/upgrade-evidence/complete-nol-joint-ebl-contract-review.json",
+      "sha256": "048798743019236720e46ceefb1c3d862a7690410d026fced9e93c9d132e8e62"
+    },
+    "previousCurrentUnitRunBefore018Observation": {
+      "sourceCommit": "318127142879f68472ab8440a95f1b9abdc49234",
+      "runId": 40460532332,
+      "status": "passed",
+      "passed": 19587,
+      "files": 1406,
+      "workers": 1,
+      "seconds": "915.83",
+      "log": {
+        "path": ".local/upgrade-evidence/ci-31812714-unit.log",
+        "sha256": "28199e476aa5fb6a28b9f871b0b22ca7b0c967a7530e488a0327ed8ffaa23f69"
+      },
+      "scope": "Intermediate318 remote synthetic evidence only; later private packages excluded."
+    },
+    "previousCurrentStableCoverageRunBefore018Observation": {
+      "sourceCommit": "318127142879f68472ab8440a95f1b9abdc49234",
+      "runId": 40460532332,
+      "jobId": 122057416711,
+      "status": "passed on unchanged rerun",
+      "passed": 19587,
+      "failed": 0,
+      "files": 1406,
+      "workers": 1,
+      "seconds": "1463.80",
+      "percentages": {
+        "statements": "91.90",
+        "branches": "86.98",
+        "functions": "90.79",
+        "lines": "94.63"
+      },
+      "thresholds": {
+        "statements": 90,
+        "branches": 85,
+        "functions": 90,
+        "lines": 90
+      },
+      "allUnchangedThresholdsPassed": true,
+      "independentlyRecountedFromArtifact": true,
+      "counters": {
+        "statements": {
+          "covered": 61912,
+          "total": 67363
+        },
+        "branches": {
+          "covered": 54426,
+          "total": 62569
+        },
+        "functions": {
+          "covered": 12012,
+          "total": 13230
+        },
+        "lines": {
+          "covered": 51961,
+          "total": 54908
+        }
+      },
+      "log": {
+        "path": ".local/upgrade-evidence/ci-31812714-coverage-rerun.log",
+        "sha256": "841c5bb3d9e3a77fa0abe1bbcda48c9eb37279f6d6aeac504299d179cc88b08f"
+      },
+      "artifact": {
+        "id": 12716624993,
+        "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40460532332/artifacts/12716624993",
+        "archive": {
+          "path": ".local/upgrade-evidence/coverage-31812714.zip",
+          "sha256": "0f5174cc2c4e602aec868b935a92abcf233f574fc5c7c57a78f0b5b3b7a76b0e"
+        },
+        "archiveBytes": 8998674,
+        "archiveEntries": 978,
+        "coverageSourceFiles": 942,
+        "raw": {
+          "path": ".local/upgrade-evidence/coverage-31812714/coverage-final.json",
+          "sha256": "e4b6b5831445cc89141fe647159a2a8c058186d2e6cb286f34b93ae221ccaab1"
+        }
+      },
+      "finalIntegratedEvidence": false,
+      "record": "docs/upgrade-2026-runtime-31812714.json"
+    },
+    "previousCurrentBrowserRunBefore018Observation": {
+      "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
+      "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
+      "status": "passed",
+      "scope": "Immutable 3669b00 local synthetic evidence only; later delivered/private changes excluded. Five hosted skips do not establish staging readiness.",
+      "id": "browser",
+      "command": [
+        "pnpm",
+        "test:web",
+        "--retries=0",
+        "--workers=2"
+      ],
+      "exitCode": 0,
+      "seconds": 655.25,
+      "evidence": ".local/upgrade-evidence/3669b00-complete/browser.log",
+      "sha256": "0ef08c9e23e41237125b9203f3bad55f53c5f24daa66741be5c5a911c4c6fcd1",
+      "passed": 434,
+      "skipped": 5,
+      "retries": 0,
+      "workers": 2,
+      "port": 3255,
+      "portClosed": true,
+      "failed": 0,
+      "serverStopped": true
+    },
+    "previousNativeAmd64LatestObservedBefore018Observation": {
+      "path": "docs/upgrade-2026-runtime-31812714.json",
+      "sha256": "9f0a3cbd06a60a79cd6eaf1f90360ff3d4aac4e0a3b03f082098f8d5cc317778",
+      "sourceCommit": "318127142879f68472ab8440a95f1b9abdc49234",
+      "runId": 40460532320,
+      "artifactId": 12715805166,
+      "archiveSha256": "52ec115185bbc4117671552f8b278523fe58f248d29f5d326b8bc520d82d3411",
+      "image": "sha256:5596e292ed6955e1ee3b5387ff680442144058d8b1a32fbb5fa477a8ba0644c7",
+      "browser": {
+        "container": {
+          "job": 122043787450,
+          "passed": 500,
+          "hostedSkipped": 5,
+          "configuredRetries": 0,
+          "duration": "21.1m"
+        },
+        "selfHost": {
+          "job": 122043787557,
+          "passed": 500,
+          "hostedSkipped": 5,
+          "configuredRetries": 1,
+          "reportedFlaky": 0,
+          "duration": "22.9m"
+        }
+      },
+      "recoveryPhases": 6,
+      "scan": {
+        "sbomComponents": 2930,
+        "sbomGenerator": "syft1.42.3",
+        "sbomTimestamp": "2026-10-27T06:48:09Z",
+        "scanner": "grype0.121.0",
+        "scanTimestamp": "2026-10-27T06:49:28.370753786Z",
+        "databaseBuilt": "2026-10-26T06:38:44Z",
+        "databaseValid": true,
+        "matches": 157,
+        "distinctAdvisories": 67,
+        "matchSeverities": {
+          "High": 54,
+          "Negligible": 46,
+          "Medium": 47,
+          "Low": 10
+        },
+        "npmMatches": 0,
+        "fixedVersionMatches": 0,
+        "exactAdvisoryTuplesUnchangedFrom87": true,
+        "tupleFields": [
+          "id",
+          "namespace",
+          "severity",
+          "package name",
+          "package version",
+          "package type",
+          "fix state",
+          "fix versions"
+        ],
+        "ownerConfirmation": "pending",
+        "reviewBy": "2026-11-07"
+      },
+      "scope": "Completed synthetic GitHub native-amd64 runtime and recovery evidence through educator and outside-child marriage-health delivery. Excludes unmerged COD, changed-filing-unit NOL and actual-paid health packages. No staging, production, filing or human-review qualification."
+    },
+    "previousCurrentRemoteRunsBefore018Observation": {
+      "sourceCommit": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18",
+      "status": "Normal branch push confirmed; exact new run identifiers and completion remain to be observed. Superseded661 workflows were still in progress before this push."
+    },
+    "remote018CompletedChecks": {
+      "ci": {
+        "path": "docs/upgrade-2026-ci-018f7a61.json",
+        "sha256": "71725473ed9ee8f5fae0101420a804270829d24d92245b1b6100f03e9ed72fe6"
+      },
+      "runtime": {
+        "path": "docs/upgrade-2026-runtime-018f7a61.json",
+        "sha256": "b8de530ee5dd5bd4e0841215552627e8cb084331a1d27c5fbd5351dc5e8d5781"
+      }
+    },
+    "publicSourceRefresh20261028": {
+      "path": "docs/upgrade-2026-source-refresh-20261028.json",
+      "sha256": "668b29ca27944315f77cd1e1a3ca2ec661b1490c10ca789f320ed0eb2638a178",
+      "summary": "79 direct official requests,75 successful bodies rehashed,four retained HTTP failures,55 unchanged PDFs. Relevant tax HTML and candidate provider prices/capabilities unchanged; no account or paid call."
     }
   },
   "historicalReleaseBlockers": {

@@ -5,17 +5,45 @@ progress log and checkpoint are evidence for their recorded commits, not current
 qualification. Resume here after compaction. Do not remove release gates to
 complete a checkbox.
 
-## Current integration — 2026-10-27 UTC
+## Current integration — 2026-10-28 UTC
 
-Latest implementation is `2ab4d9ac`. Actual educator expenses now use the
-verified savings-bond successor ownership and separate current transfer income.
-Actual-paid health deduction and fully repaid own-return advances are delivered
-in `661977aa`; original loss ownership remains in `a1f63cf2`, charitable debt
-reduction in `ced90a20`, and the repayment audit-year correction in `4752ae46`.
-Rule provenance is `2025.183` / `2026.180-law-integration-draft`; inventory has
-572 entries, 6,064 specification test references and 155 explicit associations.
+Latest implementation is `80af6d97`, adding same-couple joint loss pools
+while preserving original owner histories and independent alternative-tax
+amounts. Educator reissue (`2ab4d9ac`), actual-paid health (`661977aa`), original
+loss ownership (`a1f63cf2`) and charitable debt reduction (`ced90a20`) remain
+delivered. Rule provenance is `2025.184` / `2026.181-law-integration-draft`;
+inventory has 573 entries, 6,076 spec references and 156 explicit associations.
 Package agent reviews and scoped checks pass. Human tax review, final-source
 release checks and filing qualification remain open.
+
+The latest completed [remote CI record](upgrade-2026-ci-018f7a61.json) passes
+19,646 tests in 1,429 files normally and under coverage on `018f7a61`.
+Coverage is 91.89% statements, 86.97% branches, 90.74% functions and 94.62%
+lines; all unchanged thresholds pass. Independent recounting of 952 source
+files agrees. Static checks, both builds and both 508-case browser suites pass;
+each browser suite retains five hosted-only skips. The [native amd64 runtime
+record](upgrade-2026-runtime-018f7a61.json) verifies all six recovery phases,
+the 2,930-component SBOM and 157 scan matches across the same 67 OS advisories.
+This evidence excludes the newer joint-loss package and later internal work.
+
+The [October 28 public refresh](upgrade-2026-source-refresh-20261028.md) rechecks
+79 official endpoints: 75 successful bodies, four retained HTTP failures and
+55 unchanged PDFs. Relevant tax guidance and candidate provider prices remain
+unchanged. The fresh production package audit reports zero vulnerabilities;
+image-advisory ownership, account access and human qualification remain open.
+
+Joint-loss delivery passes final private 57 tests/23 files including eight
+unchanged independent controls, all static/build checks and production browser
+2/2 with zero retries. Main passes 49/22 and all relevant static/engine-build
+checks. Parent independently verifies nine originals and 57 PDFs/165 pages/308
+fields with 14,186 checks, then confirms both final originals and all 34 final
+download pages match in text and pixels. See [the joint-loss ledger](upgrade-2026-nol-joint-pools-work.md).
+
+Positive-other-return health remains unapproved: independent review reproduced
+an excess-refund acceptance and a below-half-dollar deduction rounding error.
+The spec-first precision correction and unchanged independent controls are in
+progress. Determined mixed EBL/ordinary character and explicitly nonitemized
+2026 prior property release remain internal implementation work.
 
 Remote CI on `25f71f06` passes 19,523 tests in 1,384 files both normally and
 under coverage. Coverage is 91.85% statements, 86.88% branches, 90.72% functions
@@ -70,6 +98,7 @@ fully traversed release interview. Human, final-form and filing qualification re
 
 | Delivered package | Commit | Bounded verification |
 | --- | --- | --- |
+| Same-couple joint loss pools with original owner histories | `80af6d97` | Final 57/23 including eight private controls; main 49/22; all relevant static/build checks and production browser 2/2 pass. Parent 14,186 original/PDF checks across 57 PDFs/165 pages/308 fields; final 34 pages match in text and pixels. See [ledger](upgrade-2026-nol-joint-pools-work.md). |
 | Actual educator deductions from reissued bond ownership | `2ab4d9ac` | Final 51/13, main 43/12, all static/build gates and production browser 2/2 pass. Separate source 35/9 includes eight private controls; parent 11,287 original/PDF checks over 53 PDFs/217 pages/224 fields. Final 30 pages match in text and pixels. See [ledger](upgrade-2026-educator-bond-reissue-work.md). |
 | Actual payer cash and fully repaid own-return health advances | `661977aa` | Final 152/23 includes seven private controls; main 145/22 and relevant static/build gates pass. Production browser 2/2; final 64-page comparison verifies only the separately corrected audit-year label changed. Complete payment-source originals and historical review remain partial. See [ledger](upgrade-2025-marketplace-actual-paid-work.md). |
 | Bounded debt reduction after actual and charitable-comparison NOL absorption | `ced90a20` | Main 55/16 and static/build checks pass; source and saved-original reviews are separate. Parent checks 9 originals and 83 PDFs/338 pages/454 fields with 10,430 assertions. Full affected cohort 1,205/167 and desktop/mobile 2/2 pass. See [ledger](upgrade-2026-charitable-cod-work.md). |
@@ -133,7 +162,7 @@ The bounded audit and its24 source/document hashes are retained in
 It does not reopen delivered ordinary methods or expand every IRS election.
 
 - **Education:** educator handoff from actual savings-bond reissue records is
-  being implemented for full exclusion or one actual income owner. Reduced
+  delivered in `2ab4d9ac` for full exclusion or one actual income owner. Reduced
   two-positive-owner exclusion, mixed-purpose loan earnings, mixed July4 annual
   allocation and binding multiple-prepaid-source allocation need their exact
   controlling method; supplied timing or conservation alone is insufficient.
@@ -141,22 +170,24 @@ It does not reopen delivered ordinary methods or expand every IRS election.
   applicable local law, not an invented nationwide rule. Specialized Coverdell
   partial pledges and post-termination regimes remain separate excluded methods.
 - **Charity/NOL:** the reviewed debt-reduction and current one-owner filing
-  histories are delivered. Same-couple current joint pooling and explicitly
-  nonitemized2026 property-only prior entity basis/at-risk release are internal
-  work. Prior floor-vintage, multiple positive NOL-origin attribution, partial
+  histories and same-couple current joint pooling (`80af6d97`) are delivered.
+  Source-determined mixed EBL/ordinary character and explicitly nonitemized2026
+  property-only prior entity basis/at-risk release remain internal work. Prior
+  floor-vintage, multiple positive NOL-origin attribution, partial
   mixed cash/property and prior treated-paid versus final-deduction questions
   remain distinct. Debt reduction beyond either modified residual, or expiry
   changing the charitable benefit, still lacks the controlling composition;
   neither a simple zero-clamp nor a minimum of different residuals is approved.
   Later section108 attributes require a separate original-source worksheet.
-- **Health:** complete actual-paid/advance V2 review passes; its final integration
-  follows the delivered NOL package. Actual owner cash for an eligible outside
-  child with a positive other-return credit is the next internal method. It
-  must bind actual insurer cash and reimbursements separately from the other
+- **Health:** actual-paid/advance sources are delivered in `661977aa`. Actual owner
+  cash for an eligible outside child with a positive other-return credit is
+  implemented privately; its independently reproduced precision defect is being
+  corrected before source re-review and saved-output review. It must bind actual
+  insurer cash and reimbursements separately from the other
   taxpayer's credit, advances and return tax payment. Binding joint ownership
   interpretation questions remain explicit.
-- **Verification:** intermediate `31812714` passes full tests/coverage and all
-  unchanged thresholds, both500-case browser suites and native-amd64 recovery.
+- **Verification:** intermediate `018f7a61` passes full tests/coverage and all
+  unchanged thresholds, both508-case browser suites and native-amd64 recovery.
   Final integrated local/remote checks, native arm64+amd64 images, SBOM/scans
   and recovery remain due after the source queue. Five hosted-only skips do not
   establish staging readiness; external inputs below remain required.
