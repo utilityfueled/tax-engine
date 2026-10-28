@@ -15,7 +15,9 @@ it('retains isolated current K1 floor and source-based standard choice', () => {
     .toEqual(['10000', '5950', '15950', '4050', '4050', '4050']);
   expect(JSON.stringify(input)).toBe(before);
   input.deductionElection = 'standard'; const standard = calculateFederalTax(input);
+  // The otherwise-allowable carry retains the attributable floor under either
+  // deduction choice: 10,000 - 6,000 percentage capacity + 50 current floor.
   expect([standard.deductionAmount, standard.nonitemizerCharitableDeduction, standard.form172?.regular.netOperatingLoss,
     standard.form6251?.amti, standard.carryforwards.charitableContributions, standard.carryforwards.amtCharitableContributions].map(value => value?.toFixed()))
-    .toEqual(['16100', '1000', '7100', '9000', '4000', '4000']);
+    .toEqual(['16100', '1000', '7100', '9000', '4050', '4050']);
 });

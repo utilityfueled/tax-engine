@@ -65,7 +65,7 @@ lines:
     testRef: "tests/engine/federal-form-172-operating-k1.test.ts::conserves ordinary K1 classification beside direct receipts and positive business income"
   - line: "isolated-2026-source-choice"
     description: "Retain the isolated current-year floor and actual nonitemized choice"
-    formula: "2026 original ordinary80000loss/cash20000/basis50000 leaves qualified charity10000; AGI10000. Itemized floor50 gives5950charity,15950regular origin,4050AMTI and4050charity carry. Actual standard16100 plus170(p)1000 gives7100regular origin,9000AMTI and4000percentage carry. No2026 gate is opened."
+    formula: "2026 original ordinary80000loss/cash20000/basis50000 leaves qualified charity10000; AGI10000. Itemized floor50 gives5950charity,15950regular origin,4050AMTI and4050charity carry. Actual standard16100 plus170(p)1000 gives7100regular origin and9000AMTI. Under either choice,4000percentage excess plus the attributable50floor gives4050regular and alternative charitable carry; actual selected deductions stay separate. See nonitemized-allowable-charitable-carry.yaml and IRC63(e)(1),170(d)(1)(C). No2026 gate is opened."
     testRef: "tests/engine/federal-form-172-operating-k1-2026.test.ts::retains isolated current K1 floor and source-based standard choice"
   - line: "browser-original-operating-source"
     description: "Preserve actual K1 source choice through production save and PDF download"

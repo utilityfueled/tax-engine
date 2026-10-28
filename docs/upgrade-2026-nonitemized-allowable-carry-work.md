@@ -76,3 +76,23 @@ and provenance. Exact logs and receipts are retained as
 readiness gate was reduced. The broader private 732-case run and its production
 browser checks remain evidence for their exact frozen source, while final
 integrated release verification is still due after the remaining packages.
+
+## Operating K1 standard-choice assertion follow-through
+
+Exact `d6c9507d` CI unit job `123066662247` passed 19,749 tests and failed one
+adjacent isolated-2026 expectation. Its original gift10,000 and contribution
+base10,000 yield percentage excess4,000 plus attributable floor50 under either
+deduction choice. The old standard-choice expectation omitted that floor. The
+spec now states both components and the test requires carry4,050 in each
+independent tax system. Current standard16,100, section170(p)1,000, regular
+NOL7,100 and AMTI9,000 remain unchanged. This is a spec/test correction to the
+delivered method, with no calculation code or gate changes.
+
+The failed CI log is retained as `d6c9507d-unit.log`, SHA256
+`bc9ddff86ccaaf885b3918ecdfc084d399fd847226aed57d7d0aaf30455f7497`.
+After the spec update, the main operating-K1 and common-carry checks pass
+**12 tests in four files** with one worker, and all **6,167 spec references**
+validate. The focused log SHA256 is
+`1bd8ba9821d2e198a4abce168c43fdcfd194e31cc2c1fafb8484095e008e4794`;
+`parent-form172-standard-carry-main-checks.json` retains both command receipts.
+Final integrated coverage and runtime evidence remain due.
