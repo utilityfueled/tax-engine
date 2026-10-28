@@ -1,6 +1,5 @@
 // Spec: spec/federal/k1-cash-distribution-gain.yaml
 import { expect, it } from 'vitest';
-import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -15,6 +14,7 @@ import { redactReviewIdentifiers } from '@/pdf/redact-review-identifiers.js';
 import { REVIEW_PDF_NOTICE } from '@/pdf/export-policy.js';
 import { k1CashDistributionFixture, cashDistributionSource } from '../fixtures/k1-cash-distribution.js';
 import { charitableStatement } from '../fixtures/k1-charitable-return.js';
+import { readCompletedPdfPages } from './read-completed-pdf-pages.js';
 
 it('rejects replaced distribution sources before capital template access', async () => {
   const input = k1CashDistributionFixture(), result = calculateFederalTax(input);
@@ -65,9 +65,10 @@ it('binds and saves the redacted distribution gain with original basis evidence'
       expect(sd.getForm().getTextField(D.line10GainLoss).getText()).toBe('1');
       expect(sd.getForm().getTextField(D.line15).getText()).toBe('1');
       expect(sd.getForm().getTextField(D.ssn).getText()).toBeUndefined();
-      for (const name of ['/f8949-filled.pdf', '/f1040sd-filled.pdf', '/k1-charitable-reference-filled.pdf']) {
-        const pages: string[] = JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? 'python3', ['-c',
-          'from pypdf import PdfReader\nimport json,sys\nprint(json.dumps([p.extract_text() or "" for p in PdfReader(sys.argv[1]).pages]))', path(name)], { encoding: 'utf8', timeout: 10000 }));
+      const names = ['/f8949-filled.pdf', '/f1040sd-filled.pdf', '/k1-charitable-reference-filled.pdf'];
+      const pageGroups = readCompletedPdfPages(names.map(path), 10000);
+      for (const [index, name] of names.entries()) {
+        const pages = pageGroups[index]!;
         for (const page of pages) {
           expect(page.split(REVIEW_PDF_NOTICE)).toHaveLength(2);
           for (const secret of ['123456789', '6789', 'gift-1', 'Fictional actual annual cash distribution attachment']) expect(page).not.toContain(secret);
