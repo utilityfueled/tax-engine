@@ -194,16 +194,16 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Immutable 76d93bb6 passes 19,658 unit and coverage cases in 1,435 files, all unchanged 90/85/90/90 thresholds, static/build checks and both 510-case browser suites. Five hosted-only skips remain per suite. Later final integrated verification remains internal.",
-    "Reviewed property6fc4312d and readiness-copye80a3aba delivered; ordinary prior-QBI, ordinary section108 later-attribute source implementation/aggregate repairs and final integrated verification remain internal. Full2026 production calculation remains unavailable.",
-    "Independent human tax review, launch-state demand/qualification and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Mixed-tip/bond, negative-net section 1202/Form 172 and changed community-property bond interpretations remain unresolved.",
-    "AI application/scorer bindings are reviewed; 240 draft cases have zero human reviews or live results, unverified provider account availability and no approved spend or model promotion.",
-    "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence. Local synthetic and CI checks do not establish staging readiness.",
-    "Immutable 76d native amd64 recovery and both 510-case browser suites pass with verified SBOM/archive. Final-source native arm64 and amd64 images/scans/recovery remain due. The same 157 advisory tuples/67 OS advisories await owner acceptance by 2026-11-07, with no critical/npm/fixed-version matches. No staging, publication or human security approval."
+    "Final integrated release evidence remains due after active source work. Historical76d coverage passes unchanged thresholds;183c retains12 coverage timeouts. Main23187df3 passes535 focused tests, static/inventory/lint and both builds, not a full release gate.",
+    "Ordinary COD attributes23187df3, common charitable carry7702ba56, source-year MTCecdb754d and ordinary prior-QBIf4dc51a7 are delivered. Ordinary-gift risk, basis first170 entry, source-complete empty-NOL foreign composition and signed current-MTC canonical binding remain internal. Full2026 production calculation remains unavailable.",
+    "Independent human tax review, launch-state demand/qualification and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Mixed-tip/bond, negative-net section1202/Form172 and changed community-property bond interpretations remain unresolved.",
+    "AI application/scorer bindings are reviewed;240 draft cases have zero human reviews or live results, unverified provider account availability and no approved spend or model promotion.",
+    "Hosted auth/security/billing/Redis/provider/database/recovery requires authorized staging credentials and evidence. Local synthetic and CI checks do not establish staging readiness.",
+    "Historical183c native amd64 recovery and both520-case browser suites pass with verified SBOM/archive. Final-source native arm64 and amd64 images/scans/recovery remain due. The same157 advisory tuples/67 OS advisories await owner acceptance by2026-11-07, with no critical/npm/fixed-version matches. No staging, publication or human security approval."
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "7702ba56968d41d18d1ce4935187bd45f06379b4",
+    "lastRecordedCommit": "23187df3aa2c9037e61f0a3f87db422621603394",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1311,13 +1311,13 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Implement source-supported basis first-entry attribution while retaining original gift years and previously admitted slices. Independently reproduce and correct ordinary-gift at-risk classification; unknown historical170 use cannot become a new current-year clock.",
-      "Finish ordinary section108 original-attribute sources and signed-capital, liability-cap, outgoing passive/category and unknown-inventory repairs. Keep Form982 reference-only readiness partial; verify the direct foreign-credit closing correction and pagination, then implement source-complete zero-NOL foreign-credit composition.",
-      "Bind the delivered signed current-source-year minimum-tax-credit primitive to complete canonical source derivation; actual zero AMT alone does not establish zero generated credit.",
+      "Finish ordinary-gift at-risk classification and source-supported basis first170-entry review/integration. Retain original gift years, prior admission and independently recorded historical use; preserve all failed originals.",
+      "Complete source-validated empty regular/AMT NOL composition with ordinary and deduction-year foreign credits, including independent hypothetical absorption before the delivered COD reductions.",
+      "Bind the delivered signed current-source-year minimum-tax-credit primitive to complete canonical source derivation; current zero AMT alone is not proof of zero generation.",
       "Reproduce the12 exact183c coverage timeouts and resolve remaining PDF/export performance without changing assertions, deadlines or thresholds.",
-      "Run final integrated unit/coverage/static/build/browser/native arm64+amd64/SBOM/scan/recovery evidence after remaining source changes. Staging, human, provider and final-form gates remain closed."
+      "Run final integrated unit/coverage/static/build/browser/native arm64+amd64/SBOM/scan/recovery evidence after source work. Staging, human, provider and final-form gates remain closed."
     ],
-    "latestIntegratedCommit": "7702ba56968d41d18d1ce4935187bd45f06379b4",
+    "latestIntegratedCommit": "23187df3aa2c9037e61f0a3f87db422621603394",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1694,11 +1694,11 @@
       "scope": "Exact76d93bb6 synthetic remote evidence through same-couple joint loss delivery. Excludes pending positive-other-return health, EBL composition and later internal work. No staging, production, filing, provider or human-review qualification."
     },
     "remainingInternalWork": [
-      "Implement source-supported basis first-entry attribution while retaining original gift years and previously admitted slices. Independently reproduce and correct ordinary-gift at-risk classification; unknown historical170 use cannot become a new current-year clock.",
-      "Finish ordinary section108 original-attribute sources and signed-capital, liability-cap, outgoing passive/category and unknown-inventory repairs. Keep Form982 reference-only readiness partial; verify the direct foreign-credit closing correction and pagination, then implement source-complete zero-NOL foreign-credit composition.",
-      "Bind the delivered signed current-source-year minimum-tax-credit primitive to complete canonical source derivation; actual zero AMT alone does not establish zero generated credit.",
+      "Finish ordinary-gift at-risk classification and source-supported basis first170-entry review/integration. Retain original gift years, prior admission and independently recorded historical use; preserve all failed originals.",
+      "Complete source-validated empty regular/AMT NOL composition with ordinary and deduction-year foreign credits, including independent hypothetical absorption before the delivered COD reductions.",
+      "Bind the delivered signed current-source-year minimum-tax-credit primitive to complete canonical source derivation; current zero AMT alone is not proof of zero generation.",
       "Reproduce the12 exact183c coverage timeouts and resolve remaining PDF/export performance without changing assertions, deadlines or thresholds.",
-      "Run final integrated unit/coverage/static/build/browser/native arm64+amd64/SBOM/scan/recovery evidence after remaining source changes. Staging, human, provider and final-form gates remain closed."
+      "Run final integrated unit/coverage/static/build/browser/native arm64+amd64/SBOM/scan/recovery evidence after source work. Staging, human, provider and final-form gates remain closed."
     ],
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
@@ -1720,7 +1720,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "7702ba56968d41d18d1ce4935187bd45f06379b4",
+    "lastPushedCommit": "23187df3aa2c9037e61f0a3f87db422621603394",
     "currentBrowserRun": {
       "sourceCommit": "183c1bbcb9ed8d53265fb4f36317e291bc8134cc",
       "container": {
@@ -4977,11 +4977,11 @@
       }
     },
     "currentInventory": {
-      "entries": 582,
-      "specReferences": 6167,
-      "sourceCommit": "7702ba56968d41d18d1ce4935187bd45f06379b4",
+      "entries": 585,
+      "specReferences": 6202,
+      "sourceCommit": "23187df3aa2c9037e61f0a3f87db422621603394",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 163,
+      "explicitAssociations": 164,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -6213,8 +6213,8 @@
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.190",
-      "2026": "2026.188-law-integration-draft"
+      "2025": "2025.191",
+      "2026": "2026.189-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -8212,8 +8212,8 @@
       "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
     },
     "currentFullVerificationRequired": {
-      "sourceCommit": "f4dc51a7de1f2d6a8b56fc472730fb03f174af02",
-      "reason": "Ordinary prior-QBI passes exact integrated-source focused checks; current charity premise correction and ordinary section108 source/repairs precede full release verification.",
+      "sourceCommit": "23187df3aa2c9037e61f0a3f87db422621603394",
+      "reason": "Ordinary COD source/output integration passes focused checks. Risk classification, basis first admission, empty-NOL foreign composition, signed current MTC and bounded timeout correction precede final release verification.",
       "readiness": "Not release qualified; external reviews, staging, final forms and model evaluation remain open."
     },
     "previousCurrentUnitRunBeforeE91": {
@@ -8445,7 +8445,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-28T19:58:42.186752+00:00",
+    "recordedAt": "2026-10-28",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -11753,6 +11753,61 @@
         "path": ".local/upgrade-evidence/parent-nonitemized-allowable-adoption.json",
         "sha256": "6cc49c7f6ea321b03d590ddae15c547dabe51a083e35d8cd5ed5974cd1a2c776"
       }
+    },
+    "previousReleaseBlockersBefore23187df3": [
+      "Immutable 76d93bb6 passes 19,658 unit and coverage cases in 1,435 files, all unchanged 90/85/90/90 thresholds, static/build checks and both 510-case browser suites. Five hosted-only skips remain per suite. Later final integrated verification remains internal.",
+      "Reviewed property6fc4312d and readiness-copye80a3aba delivered; ordinary prior-QBI, ordinary section108 later-attribute source implementation/aggregate repairs and final integrated verification remain internal. Full2026 production calculation remains unavailable.",
+      "Independent human tax review, launch-state demand/qualification and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Mixed-tip/bond, negative-net section 1202/Form 172 and changed community-property bond interpretations remain unresolved.",
+      "AI application/scorer bindings are reviewed; 240 draft cases have zero human reviews or live results, unverified provider account availability and no approved spend or model promotion.",
+      "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence. Local synthetic and CI checks do not establish staging readiness.",
+      "Immutable 76d native amd64 recovery and both 510-case browser suites pass with verified SBOM/archive. Final-source native arm64 and amd64 images/scans/recovery remain due. The same 157 advisory tuples/67 OS advisories await owner acceptance by 2026-11-07, with no critical/npm/fixed-version matches. No staging, publication or human security approval."
+    ],
+    "ordinaryCodAttributesDelivered": {
+      "commit": "23187df3aa2c9037e61f0a3f87db422621603394",
+      "frozenTree": "577b60f54944ce4dc8ec207474ec9def5276a074",
+      "ledger": "docs/upgrade-2026-cod-ordinary-attributes-work.md",
+      "independentReview": {
+        "manifest": ".local/upgrade-evidence/parent-cod-v4-independent-review.json",
+        "sha256": "8815c0ecbdacde01066c41b38952227dbaa545e7fe7d0cb8559d2d67f22431ec",
+        "tests": 59,
+        "files": 8,
+        "privateCases": 25,
+        "canonicalChecks": 4684,
+        "canonicalOriginals": 11,
+        "canonicalPdfs": 130,
+        "canonicalPages": 436,
+        "populatedFields": 357,
+        "browserChecks": 220,
+        "actualBrowserOriginals": 2,
+        "actualBrowserPdfs": 2,
+        "actualBrowserPages": 38
+      },
+      "mainChecks": {
+        "manifest": ".local/upgrade-evidence/parent-cod-v4-main-checks.json",
+        "sha256": "dc8cc814c000247bba4e3f9bfb2a886821888592423f0065ca729a1ee7d687f9",
+        "tests": 535,
+        "files": 46,
+        "allThreeTypes": true,
+        "specReferences": 6202,
+        "inventoryEntries": 585,
+        "explicitAssociations": 164,
+        "lintErrors": 0,
+        "lintWarnings": 31,
+        "engineBuild": true,
+        "productionWebBuild": true
+      },
+      "readiness": "Partial original-bound review only; ordinary empty-NOL foreign and signed current-MTC methods remain internal. No human, final2026, filing or staging qualification."
+    },
+    "operatingK1FloorAssertionFollowthrough": {
+      "commit": "b15003cbded162100a146e737bb751b6b9ba0a98",
+      "failedCiHead": "d6c9507d53c6d064638b71eb1d120fce69d533ef",
+      "unitJob": 123066662247,
+      "passed": 19749,
+      "failed": 1,
+      "correction": "Standard-choice carry includes determined current floor50 in both histories:4000+50=4050. No runtime change.",
+      "focusedTests": 12,
+      "focusedFiles": 4,
+      "specReferences": 6167
     }
   },
   "historicalReleaseBlockers": {

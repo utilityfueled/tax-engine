@@ -2,49 +2,63 @@
 
 ## Current checkpoint — 2026-10-28 UTC
 
-The latest implementation is `7702ba56`: determined current charitable floor
-carry now follows the allowable deduction calculation under either standard or
-itemized treatment. Rule provenance is `2025.190` /
-`2026.188-law-integration-draft`; inventory has 582 entries, 6,167 spec references
-and 163 explicit associations. The frozen source passes 732 affected tests;
-independent source review passes 48 tests in twelve files, including 22 private
-controls. Parent derives 27 saved originals and passes 7,936 source, arithmetic,
-handoff and gate checks. Main integration passes 132 tests in 39 files, all
-three typechecks, spec/inventory, scoped lint and engine build. The frozen-source
-desktop/mobile browser checks pass 2/2 with zero retries; no 2026 PDF is created.
-See the [charitable carry ledger](upgrade-2026-nonitemized-allowable-carry-work.md).
+The latest implementation is `23187df3`: original cancellation-of-debt attributes
+now follow current tax and NOL use in statutory order, with distinct regular and
+alternative histories, actual two-date property limits and reconciled outgoing
+credit, capital and passive balances. Saved references retain current form
+values and separately label final carries. Main checks pass **535 tests in 46
+files**, all three typechecks, **6,202 spec references**, inventory generation
+and freshness (**585 entries and 164 associations**), scoped lint (zero errors,
+31 warnings), engine build and production webpack build. Rule versions are
+`2025.191` / `2026.189-law-integration-draft`.
 
-This supersedes the no-floor-under-standard premise in `6fc4312d` and related
-methods. Earlier software evidence remains historical, with the legal correction
-recorded in the [source finding](upgrade-2026-charity-floor-source-finding.md).
-Prior-vintage floor attribution and newly basis-admitted gift portions remain
-separate work. The signed minimum-tax-credit primitive is delivered in
-`ecdb754d`; its [source-year ledger](upgrade-2026-minimum-tax-credit-source-year-work.md)
-records 63 independent and 83 main integration tests. Current-year source binding
-and final integrated release checks remain internal work. Human tax review and
-filing qualification remain open.
+Independent review passes **59 tests in eight files**, including 25 private
+controls. The same eleven original inputs and diagnostic results remain byte
+identical across the output correction. Parent derives their amounts and passes
+**4,684 checks** across 130 PDFs/436 pages/357 populated fields, plus **220 checks**
+on two actual saved browser originals and downloaded PDFs/38 pages. The frozen
+production browser run passes 2/2 with one worker and zero retries. Source and
+output failures, original cents conflicts and corrected reader expectations are
+retained in the [attribute ledger](upgrade-2026-cod-ordinary-attributes-work.md).
+Form982 remains a reference summary; filing and final2026 gates remain closed.
 
-The later [183c1bbc CI run](upgrade-2026-ci-183c1bbc.json) passes all 19,735
-unit tests in 1,463 files, static checks, both builds and both 520-case browser
-suites; each browser suite retains five hosted-only skips. Coverage retains
-12 five-second timeouts and 19,723 passes, so this run does not establish a
-passing coverage gate. The [amd64 runtime evidence](upgrade-2026-runtime-183c1bbc.json)
-passes all six recovery phases and preserves the same 157 scan matches across
-67 OS advisories. Advisory ownership remains pending. Bounded performance
-investigation and final current-source checks remain internal work.
+The charitable-floor correction `7702ba56` remains delivered. Its adjacent
+operating-K1 standard-choice spec/test is reconciled in `b15003cb`: percentage
+excess4,000 plus attributable floor50 gives carry4,050 under either deduction
+choice. Exact `d6c9507d` CI retained 19,749 unit passes and that one stale
+expectation; the focused correction passes 12/4. See the
+[charitable carry ledger](upgrade-2026-nonitemized-allowable-carry-work.md).
+The signed minimum-tax-credit source-year primitive remains in `ecdb754d`.
 
-Source research supports a new section 170 admission year for a portion newly
-allowed by an entity basis limit, while retaining its actual historical gift
-and all previously admitted portions. Independent controls reproduce
-four ordinary-gift at-risk classification failures while two controls pass:
-sufficient-basis gifts are incorrectly included in the activity-loss calculation.
-That correction is separate from first-entry attribution and the delivered
-current-floor package. Section 108 source review passes 37 tests in five files,
-including fourteen separately derived private originals. Saved-output testing
-found a stale pre-cancellation foreign-credit balance and a Form 982 pagination
-overflow; both corrections are under verification. Canonical signed current-year
-minimum-tax-credit binding and zero-NOL foreign-credit composition remain
-internal follow-through, not completed methods established by guards.
+Remaining internal work is active:
+
+- Finish independent source/output review and integration of ordinary-gift
+  at-risk classification and separately documented first section170 admission
+  after a basis limitation. Preserve original gift years and prior use.
+- Complete ordinary/deduction-year foreign carry composition with independently
+  complete empty NOL histories, then bind signed current-year minimum-tax-credit
+  sources. The delivered attribute guards do not complete those methods.
+- Reproduce the twelve retained `183c1bbc` coverage timeouts and fix their cause
+  without changing deadlines, assertions or thresholds.
+- Run final integrated unit/coverage/static/build/browser and native
+  arm64/amd64 image, scan and recovery evidence after the source changes.
+
+The [183c1bbc CI record](upgrade-2026-ci-183c1bbc.json) remains historical:
+19,735 unit passes, 19,723 coverage passes plus twelve timeouts, and both
+520-case browser runs with five hosted-only skips each. Its
+[amd64 recovery record](upgrade-2026-runtime-183c1bbc.json) passes all six phases
+and retains 157 scan matches across 67 OS advisories. Final-source coverage and
+runtime evidence are still due. The October28 source/provider/package refresh
+is retained; provider account access, authorized live spend and model evaluation
+are unverified. Human tax/AI/security reviews, launch-state and final-form
+qualification, staging credentials/evidence and advisory-owner acceptance remain
+external requirements. No production deployment, filing or model promotion is
+authorized by these checks.
+
+### Earlier delivery evidence
+
+The following entries describe their recorded commits; they do not supersede
+the active queue or qualify the current source for release.
 
 The earlier completed [remote CI record](upgrade-2026-ci-76d93bb6.json) passes
 19,658 tests in 1,435 files normally and under coverage on `76d93bb6`.
