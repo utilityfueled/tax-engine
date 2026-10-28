@@ -316,6 +316,24 @@ export function assessReturnReadiness(
     );
   }
 
+  if (
+    input.federalResult.codNolReduction?.sourceExcludedAmount.gt(0)
+    || input.federalResult.form982?.totalReduction.gt(0)
+    || input.federalResult.form982?.unreducedExclusion.gt(0)
+  ) {
+    const hasForm982Reference = hasIncludedForm(
+      input.includedForms,
+      /^f982-reference-filled\.pdf$/i,
+    );
+
+    packetCompleteness = "partial";
+    findings.push(
+      hasForm982Reference
+        ? "Form 982 is included as a reference summary, not an official filed Form 982."
+        : "Form 982 applies, but no qualified official Form 982 or reference summary was generated.",
+    );
+  }
+
   if (input.federalResult.carryforwards.partnerBasis.length > 0) {
     const hasPartnerBasisReference = hasIncludedForm(
       input.includedForms,

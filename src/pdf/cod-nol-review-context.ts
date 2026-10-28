@@ -15,7 +15,12 @@ function digest(input: TaxYearInput): string { return createHash('sha256').updat
 function calculationDigest(result: TaxReturnResult): string {
   const context = { taxYear: result.taxYear, filingStatus: result.filingStatus, agi: result.agi, nolDeduction: result.nolDeduction,
     netOperatingLoss: result.netOperatingLoss, form172: result.form172, codNolReduction: result.codNolReduction,
-    regularCarry: result.carryforwards.nolCarryforward, alternativeCarry: result.carryforwards.alternativeTaxNolCarryforward };
+    regularCarry: result.carryforwards.nolCarryforward, alternativeCarry: result.carryforwards.alternativeTaxNolCarryforward,
+    ...(result.codAttributeReduction ? { codAttributeReduction: result.codAttributeReduction,
+      laterCarries: result.carryforwards,
+      currentAttributeForms: { form3800: result.form3800, form8801: result.form8801, form8582: result.form8582 },
+      laterAudit: result.allLines.filter(row => row.form.endsWith(' COD Attribute Worksheet')),
+    } : {}) };
   return createHash('sha256').update(JSON.stringify(redactReviewIdentifiers(context))).digest('hex');
 }
 function freeze<T>(value: T): T {

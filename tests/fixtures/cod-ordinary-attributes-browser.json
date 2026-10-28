@@ -1,0 +1,396 @@
+{
+  "phase": "interview",
+  "taxYear": 2025,
+  "segmentation": {
+    "filingStatus": "single",
+    "incomeTypes": [
+      "w2-wages"
+    ],
+    "lifeEvents": [
+      "cancelled-debt"
+    ],
+    "stateCode": null
+  },
+  "currentSectionIndex": 0,
+  "completedSections": [],
+  "sectionData": {
+    "deductions": {
+      "method": "standard",
+      "medicalExpenses": "",
+      "stateLocalTaxes": "",
+      "realEstateTaxes": "",
+      "mortgageInterest": "",
+      "charitableContributions": "",
+      "casualtyLosses": "",
+      "otherItemized": ""
+    },
+    "personal-info": {
+      "dateOfBirth": "1990-02-15",
+      "usResidencyMonths": "12",
+      "stateResidency": "full-year",
+      "firstName": "Jane",
+      "middleName": "",
+      "lastName": "Doe",
+      "ssn": "123-45-6789",
+      "addressLine1": "42 Example Road",
+      "addressLine2": "",
+      "city": "Columbus",
+      "state": "OH",
+      "zip": "43215",
+      "dependentCount": "0",
+      "dependents": [],
+      "standardDeductionFacts": {
+        "primaryBlind": false,
+        "spouseBlind": false,
+        "primaryCanBeClaimedAsDependent": false,
+        "spouseCanBeClaimedAsDependent": false,
+        "primaryDeceased": false,
+        "spouseDeceased": false,
+        "dualStatusAlien": false,
+        "nonresidentAlien": false,
+        "shortTaxYear": false,
+        "spouseItemizes": false,
+        "claimSpouseAdditionalDeduction": false
+      },
+      "livedWithSpouseAtAnyTimeDuringYear": true,
+      "employmentValidSsnIssuedByDueDate": true,
+      "tinIssuedByDueDate": true,
+      "childTaxCredit": {
+        "bonaFidePuertoRicoResident": false,
+        "puertoRicoExcludedIncome": "0",
+        "form4563ExcludedIncome": "0"
+      },
+      "spouse": {
+        "firstName": "Taylor",
+        "lastName": "Example",
+        "ssn": "222-33-4444",
+        "dateOfBirth": "1992-09-10",
+        "usResidencyMonths": "12",
+        "employmentValidSsnIssuedByDueDate": true,
+        "tinIssuedByDueDate": true
+      }
+    },
+    "income-w2": {
+      "entries": [
+        {
+          "accountHolder": "primary",
+          "stateTaxReporting": "none",
+          "state": "",
+          "employerName": "Synthetic Employer",
+          "employerEin": "12-3456789",
+          "wages": "100000",
+          "federalWithheld": "20000",
+          "socialSecurityWages": "85000",
+          "socialSecurityTips": "0",
+          "socialSecurityWithheld": "5270",
+          "medicareWages": "85000",
+          "medicareWithheld": "1232.50",
+          "stateWages": "",
+          "stateWithheld": "",
+          "aiSuggestedFields": {},
+          "box10DependentCareBenefits": "0",
+          "box12CodeW": "0"
+        }
+      ]
+    },
+    "adjustments": {
+      "hsaDeduction": "",
+      "studentLoanInterest": "",
+      "selfEmployedHealthInsurance": "",
+      "educatorExpenses": "",
+      "iraDeduction": "",
+      "alimonyPaid": "",
+      "netOperatingLossSources": {
+        "sourceTaxYear": "2025",
+        "sourceReference": "Actual filed regular carry packet",
+        "sourceFactsConfirmed": true,
+        "allCarryoversIncluded": true,
+        "calendarYearTaxpayer": true,
+        "returnMembership": "continuous_individual",
+        "membershipUnchangedConfirmed": true,
+        "primaryName": "Jane Doe",
+        "primaryTaxpayerIdLast4": "6789",
+        "vintages": [],
+        "alternativeTax": {
+          "sourceReference": "Independent actual AMT worksheets",
+          "sourceFactsConfirmed": true,
+          "allCarryoversIncluded": true,
+          "specialDisasterCarryIncluded": false,
+          "currentYearAdjustmentsCompleteConfirmed": true,
+          "regularBasisAndLossLimitsSameAsAlternativeConfirmed": true,
+          "vintages": []
+        }
+      },
+      "codNolSources": {
+        "sourceTaxYear": "2025",
+        "sourceReference": "Complete original debt and insolvency worksheet",
+        "sourceFactsConfirmed": true,
+        "allDischargesIncluded": true,
+        "title11Case": false,
+        "communityPropertyApplies": false,
+        "electBasisReductionFirst": false,
+        "otherExclusionsOrExceptionsApply": false,
+        "regularAndAlternativeExclusionSameConfirmed": true,
+        "debts": [
+          {
+            "statementId": "Original statement-A",
+            "sourceTaxYear": "2025",
+            "sourceReference": "Original creditor statement",
+            "sourceFactsConfirmed": true,
+            "accountHolder": "primary",
+            "debtorName": "Jane Doe",
+            "debtorSsnLast4": "6789",
+            "creditor": "Original creditor",
+            "creditorTin": "12-3456789",
+            "accountReference": "Original account-A",
+            "dischargeDate": "2025-10-01",
+            "amountDischarged": "1500",
+            "interestIncluded": "0",
+            "fmvOfProperty": "0",
+            "debtDescription": "Unsecured personal loan",
+            "personallyLiable": true,
+            "identifiableEventCode": "F",
+            "unsecuredPersonalDebtConfirmed": true,
+            "noPropertyTransferConfirmed": true
+          }
+        ],
+        "insolvency": {
+          "asOfDate": "2025-10-01",
+          "sourceReference": "Actual immediately-before-discharge worksheet",
+          "sourceFactsConfirmed": true,
+          "immediatelyBeforeDischargeConfirmed": true,
+          "allAssetsIncluded": true,
+          "exemptAndRetirementAssetsIncluded": true,
+          "allLiabilitiesIncluded": true,
+          "assets": [
+            {
+              "sourceId": "furniture-and-jewelry",
+              "description": "Fictional personal property FMV",
+              "amount": "4000",
+              "sourceReference": "Actual fictional valuation before discharge"
+            },
+            {
+              "sourceId": "actual-cash",
+              "description": "Actual cash held before and after discharge",
+              "amount": "600",
+              "sourceReference": "Actual unchanged cash account record"
+            }
+          ],
+          "liabilities": [
+            {
+              "sourceId": "Liability-A",
+              "description": "Original personal recourse loan",
+              "amount": "7500",
+              "sourceReference": "Actual loan balance",
+              "dischargedDebtStatementId": "Original statement-A"
+            }
+          ]
+        },
+        "attributeSources": {
+          "sourceTaxYear": "2025",
+          "sourceReference": "Fictional complete ordinary later-attribute originals",
+          "sourceFactsConfirmed": true,
+          "allAttributesIncluded": true,
+          "accountHolder": "primary",
+          "taxpayerName": "Jane Doe",
+          "taxpayerIdLast4": "6789",
+          "dischargeDate": "2025-10-01",
+          "regular": {
+            "sourceReference": "Fictional complete after-current-tax attribute worksheet",
+            "sourceFactsConfirmed": true,
+            "allAttributesIncluded": true,
+            "records": [],
+            "property": {
+              "immediatelyAfter": {
+                "asOfDate": "2025-10-01",
+                "sourceReference": "Fictional immediately-after property and liability records",
+                "sourceFactsConfirmed": true,
+                "allPropertyAndMoneyIncluded": true,
+                "allLiabilitiesIncluded": true,
+                "money": "600",
+                "properties": [
+                  {
+                    "propertyId": "furniture",
+                    "description": "Fictional furniture",
+                    "adjustedBasis": "5000",
+                    "category": "personal",
+                    "acquiredDate": "2024-01-01",
+                    "sourceReference": "Fictional original furniture basis record",
+                    "sourceFactsConfirmed": true,
+                    "securedDischargedDebt": false,
+                    "priorSnapshotChangeReference": "Fictional documented unchanged basis between the two dates"
+                  },
+                  {
+                    "propertyId": "jewelry",
+                    "description": "Fictional jewelry",
+                    "adjustedBasis": "500",
+                    "category": "personal",
+                    "acquiredDate": "2024-01-01",
+                    "sourceReference": "Fictional original jewelry basis record",
+                    "sourceFactsConfirmed": true,
+                    "securedDischargedDebt": false,
+                    "priorSnapshotChangeReference": "Fictional documented unchanged basis between the two dates"
+                  }
+                ],
+                "liabilities": [
+                  {
+                    "sourceId": "remaining-student-loan",
+                    "amount": "6000",
+                    "sourceReference": "Fictional remaining loan statement after discharge"
+                  }
+                ]
+              },
+              "followingYear": {
+                "asOfDate": "2026-01-01",
+                "sourceReference": "Fictional beginning-next-year property records",
+                "sourceFactsConfirmed": true,
+                "allPropertyIncluded": true,
+                "properties": [
+                  {
+                    "propertyId": "furniture",
+                    "description": "Fictional furniture",
+                    "adjustedBasis": "5000",
+                    "category": "personal",
+                    "acquiredDate": "2024-01-01",
+                    "sourceReference": "Fictional original furniture basis record",
+                    "sourceFactsConfirmed": true,
+                    "securedDischargedDebt": false,
+                    "priorSnapshotChangeReference": "Fictional documented unchanged basis between the two dates"
+                  },
+                  {
+                    "propertyId": "jewelry",
+                    "description": "Fictional jewelry",
+                    "adjustedBasis": "500",
+                    "category": "personal",
+                    "acquiredDate": "2024-01-01",
+                    "sourceReference": "Fictional original jewelry basis record",
+                    "sourceFactsConfirmed": true,
+                    "securedDischargedDebt": false,
+                    "priorSnapshotChangeReference": "Fictional documented unchanged basis between the two dates"
+                  }
+                ],
+                "dispositions": []
+              }
+            }
+          },
+          "alternativeTax": {
+            "sourceReference": "Fictional complete after-current-tax attribute worksheet",
+            "sourceFactsConfirmed": true,
+            "allAttributesIncluded": true,
+            "records": [],
+            "property": {
+              "immediatelyAfter": {
+                "asOfDate": "2025-10-01",
+                "sourceReference": "Fictional immediately-after property and liability records",
+                "sourceFactsConfirmed": true,
+                "allPropertyAndMoneyIncluded": true,
+                "allLiabilitiesIncluded": true,
+                "money": "600",
+                "properties": [
+                  {
+                    "propertyId": "furniture",
+                    "description": "Fictional furniture",
+                    "adjustedBasis": "5000",
+                    "category": "personal",
+                    "acquiredDate": "2024-01-01",
+                    "sourceReference": "Fictional original furniture basis record",
+                    "sourceFactsConfirmed": true,
+                    "securedDischargedDebt": false,
+                    "priorSnapshotChangeReference": "Fictional documented unchanged basis between the two dates"
+                  },
+                  {
+                    "propertyId": "jewelry",
+                    "description": "Fictional jewelry",
+                    "adjustedBasis": "500",
+                    "category": "personal",
+                    "acquiredDate": "2024-01-01",
+                    "sourceReference": "Fictional original jewelry basis record",
+                    "sourceFactsConfirmed": true,
+                    "securedDischargedDebt": false,
+                    "priorSnapshotChangeReference": "Fictional documented unchanged basis between the two dates"
+                  }
+                ],
+                "liabilities": [
+                  {
+                    "sourceId": "remaining-student-loan",
+                    "amount": "6000",
+                    "sourceReference": "Fictional remaining loan statement after discharge"
+                  }
+                ]
+              },
+              "followingYear": {
+                "asOfDate": "2026-01-01",
+                "sourceReference": "Fictional beginning-next-year property records",
+                "sourceFactsConfirmed": true,
+                "allPropertyIncluded": true,
+                "properties": [
+                  {
+                    "propertyId": "furniture",
+                    "description": "Fictional furniture",
+                    "adjustedBasis": "5000",
+                    "category": "personal",
+                    "acquiredDate": "2024-01-01",
+                    "sourceReference": "Fictional original furniture basis record",
+                    "sourceFactsConfirmed": true,
+                    "securedDischargedDebt": false,
+                    "priorSnapshotChangeReference": "Fictional documented unchanged basis between the two dates"
+                  },
+                  {
+                    "propertyId": "jewelry",
+                    "description": "Fictional jewelry",
+                    "adjustedBasis": "500",
+                    "category": "personal",
+                    "acquiredDate": "2024-01-01",
+                    "sourceReference": "Fictional original jewelry basis record",
+                    "sourceFactsConfirmed": true,
+                    "securedDischargedDebt": false,
+                    "priorSnapshotChangeReference": "Fictional documented unchanged basis between the two dates"
+                  }
+                ],
+                "dispositions": []
+              }
+            }
+          },
+          "currentMinimumTaxCredit": {
+            "sourceReference": "Actual complete current regular and AMT adjustment records",
+            "sourceFactsConfirmed": true,
+            "allCurrentAdjustmentSourcesIncluded": true,
+            "noAdditionalDeferralItemsConfirmed": true
+          }
+        }
+      }
+    },
+    "payments": {
+      "estimatedPayments": [],
+      "extensionPayments": [],
+      "priorYearAppliedCredits": [],
+      "otherPayments": "",
+      "estimatedTaxFacts": {
+        "sourceTaxYear": "2025",
+        "sourceReference": "Fictional filed 2024 return and complete payment records through April 15 2026",
+        "sourceFactsConfirmed": true,
+        "allPaymentRecordsIncluded": true,
+        "calendarYearTaxpayer": true,
+        "residentReturn": true,
+        "farmerOrFisher": false,
+        "disasterReliefClaimed": false,
+        "waiverRequested": false,
+        "calculationMethod": "regular",
+        "withholdingMethod": "equal-installments",
+        "priorYearTaxStatus": "return-filed",
+        "priorYearFullYear": true,
+        "priorYearResidentAllYear": true,
+        "priorYearJointReturn": false,
+        "priorYearTaxForForm2210": "3000",
+        "priorYearAgiForForm2210": "100000",
+        "priorYearTaxComputationConfirmed": true,
+        "withholdingPayments": [],
+        "priorYearCreditPayments": [],
+        "returnPayments": [],
+        "earlyReturnExceptionClaimed": false,
+        "returnFiledDate": "",
+        "returnPaidInFullDate": ""
+      }
+    }
+  }
+}

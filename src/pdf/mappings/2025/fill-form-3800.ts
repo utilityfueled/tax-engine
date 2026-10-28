@@ -7,7 +7,8 @@ import {
   type PDFFont,
   type PDFPage,
 } from "pdf-lib";
-import type { CalculatedLine } from "@/models/outputs.js";
+import { codCreditCarryReference } from "./cod-attribute-carry-reference.js";
+import type { CalculatedLine, TaxReturnResult } from "@/models/outputs.js";
 import type { Form3800Result } from "@/engine/forms/form-3800.js";
 
 const PAGE_WIDTH = 612;
@@ -127,14 +128,21 @@ function getReferenceLines(result: Form3800Result) {
     );
 }
 
-export function buildForm3800ReferenceSummary(result: Form3800Result): Form3800ReferenceSummary {
+export function buildForm3800ReferenceSummary(result: Form3800Result, taxReturn?: TaxReturnResult): Form3800ReferenceSummary {
+  const cod = codCreditCarryReference(taxReturn, 'general_business_credit', {
+    available: result.totalCredit, used: result.allowableCredit, carry: result.carryforwardToNextYear,
+  });
+  if (cod) for (const [id, value] of [["Part I Line 5", result.totalCredit], ["Part II Line 21", result.allowableCredit], ["Carryforward", result.carryforwardToNextYear]] as const) {
+    const rows = result.lines.filter(row => row.form === "Form 3800" && row.line === id);
+    if (rows.length !== 1 || !rows[0]?.value.eq(value)) throw new Error("Form3800 COD reference current audit does not reconcile");
+  }
   return {
     title: "Form 3800 General Business Credit Reference Summary",
     warningLabel: "REFERENCE SUMMARY ONLY",
     introduction: "Computed from supported general-business-credit inputs and the engine-calculated Form 3800 limitation lines.",
     lines: getReferenceLines(result).map((line) => ({
       line: line.line,
-      description: line.description,
+      description: cod && line.line === "Carryforward" ? `${line.description} before COD` : line.description,
       value: formatValue(line),
       formula: line.formula,
     })),
@@ -160,9 +168,15 @@ export function buildForm3800ReferenceSummary(result: Form3800Result): Form3800R
         value: result.allowableCredit.toString(),
       },
       {
-        label: "Unused credit carried forward",
+        label: cod ? "Unused credit carried forward before COD" : "Unused credit carried forward",
         value: result.carryforwardToNextYear.toString(),
       },
+      ...(cod ? [
+        { label: "General business credit actual carryback", value: cod.carryback.toFixed() },
+        { label: "General business credit attribute reduction", value: cod.reduction.toFixed() },
+        { label: "General business credit expiry after reduction", value: cod.expiry.toFixed() },
+        { label: "General business credit carry after COD", value: cod.closing.toFixed() },
+      ] : []),
     ],
   };
 }
@@ -170,11 +184,12 @@ export function buildForm3800ReferenceSummary(result: Form3800Result): Form3800R
 export async function fillForm3800Reference(
   result: Form3800Result,
   outputDir: string,
+  taxReturn?: TaxReturnResult,
 ) {
   const doc = await PDFDocument.create();
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const regular = await doc.embedFont(StandardFonts.Helvetica);
-  const summary = buildForm3800ReferenceSummary(result);
+  const summary = buildForm3800ReferenceSummary(result, taxReturn);
   let page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   let y = PAGE_HEIGHT - PAGE_MARGIN;
 
@@ -280,6 +295,8 @@ export async function fillForm3800Reference(
     });
 
     for (const total of summary.totals) {
+      const needed = wrapText(`${total.label}: ${total.value}`, regular, BODY_FONT_SIZE, PAGE_WIDTH - PAGE_MARGIN * 2 - 12).length * 13 + 6;
+      if (y - needed < PAGE_MARGIN) newPage();
       y = drawWrappedText(page, `${total.label}: ${total.value}`, {
         font: regular,
         size: BODY_FONT_SIZE,

@@ -5,6 +5,7 @@ import type { GuidedFlowState } from './guided-interview-flow';
 import { buildGuidedNetOperatingLoss, buildGuidedNetOperatingLossForNavigation } from './guided-net-operating-loss';
 import { parseGuidedCurrency } from './guided-currency';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
+import { buildGuidedCodAttributes, invalidateGuidedCodAttributes, type CodAttributeData } from './guided-cod-attributes';
 
 type Editable<T> = { [K in keyof T]: T[K] extends boolean | undefined ? boolean | null | undefined
   : T[K] extends number | undefined ? string | undefined : T[K] };
@@ -18,7 +19,7 @@ export type CodInsolvencyData = Editable<Omit<OriginalInsolvency, 'assets' | 'li
   assets?: CodInsolvencyItemData[]; liabilities?: CodInsolvencyItemData[];
 };
 export type CodNolData = Editable<Omit<Form982NolSources, 'debts' | 'insolvency'>> & {
-  debts?: CodDebtData[]; insolvency?: CodInsolvencyData;
+  debts?: CodDebtData[]; insolvency?: CodInsolvencyData; attributeSources?: CodAttributeData;
 };
 const statuses = { single: 'single', mfj: 'married_filing_jointly', mfs: 'married_filing_separately', hoh: 'head_of_household', qss: 'qualifying_surviving_spouse' } as const;
 function amount(value: string | undefined, label: string): string {
@@ -89,11 +90,12 @@ function collectGuidedCodNol(buildPrior: typeof buildGuidedNetOperatingLoss, dat
   const codExclusion = { bankruptcy: data.title11Case, electBasisReductionFirst: data.electBasisReductionFirst,
     qualifiedFarmExclusion: '0', qualifiedRealPropertyBusinessExclusion: '0', insolvency: { totalAssets: sum(assets), totalLiabilities: sum(liabilities) } };
   const middleInitial = personal.middleName?.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase();
+  const form982AttributeSources = buildGuidedCodAttributes(data.attributeSources);
   const input: CodNolSourceInput = { taxpayer: { taxYear, filingStatus: statuses[segmentation.filingStatus], primary: {
     firstName: `${personal.firstName.trim()}${middleInitial ? ` ${middleInitial}` : ''}`, lastName: personal.lastName, ssn: personal.ssn,
-  } }, netOperatingLoss: prior, form1099C, codExclusion, form982NolSources: facts };
+  } }, netOperatingLoss: prior, form1099C, codExclusion, form982NolSources: facts, form982AttributeSources };
   calculateCodNolReduction(input);
-  return { form1099C, codExclusion, form982NolSources: facts };
+  return { form1099C, codExclusion, form982NolSources: facts, ...(form982AttributeSources ? { form982AttributeSources } : {}) };
 }
 export function codNolFactErrors(state: GuidedFlowState): Record<string, string> {
   return validateGuidedCodNol(buildGuidedCodNol, state);
@@ -110,7 +112,8 @@ function validateGuidedCodNol(build: typeof buildGuidedCodNol, state: GuidedFlow
 }
 export function invalidateGuidedCodNol(data: CodNolData): CodNolData {
   return { ...data, sourceFactsConfirmed: null, ...(data.debts ? { debts: data.debts.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
-    ...(data.insolvency ? { insolvency: { ...data.insolvency, sourceFactsConfirmed: null } } : {}) };
+    ...(data.insolvency ? { insolvency: { ...data.insolvency, sourceFactsConfirmed: null } } : {}),
+    ...(data.attributeSources ? { attributeSources: invalidateGuidedCodAttributes(data.attributeSources) } : {}) };
 }
 export function updateGuidedCodNol(previous: CodNolData, patch: Partial<CodNolData>): CodNolData {
   const next = { ...previous, ...patch };

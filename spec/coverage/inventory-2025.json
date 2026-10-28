@@ -613,6 +613,48 @@
       ]
     },
     {
+      "key": "federal/cod-attribute-reductions",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/cod-attribute-reductions.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/cod-attribute-return",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/cod-attribute-return.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/cod-nol-reductions",
       "jurisdiction": "federal",
       "taxYear": 2025,
@@ -628,6 +670,30 @@
       "status": "partial",
       "knownGaps": [
         "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/cod-ordinary-attribute-sources",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i982",
+      "specPath": "spec/federal/cod-ordinary-attribute-sources.yaml",
+      "enginePath": "src/engine/forms/cod-attribute-return.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-982.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-cod-ordinary-attributes.test.ts::uses the actual immediately-after cap and next-year bases separately",
+        "tests/engine/federal-cod-ordinary-attributes.test.ts::retains actual minimum passive and independent foreign credit closings",
+        "tests/pdf/cod-attribute-closing-references.test.ts::separates current Form8801 lines from the final minimum-credit carry after COD"
+      ],
+      "implementationNote": "Original regular and alternative attributes reconcile current use before statutory COD reductions. Reference exports preserve current form lines and label source-validated final carries separately. Ordinary foreign/NOL and signed current MTC follow-through remain distinct; no final2026, filing or human qualification.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
         "Missing e-file and business-rule validation coverage"
       ]
     },

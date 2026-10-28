@@ -119,6 +119,17 @@
       "note": "Single-category charitable NOL replay uses the shared regular calculation with independent AMT source handling; the linked packet is the 2025 review mapping."
     },
     {
+      "key": "federal/cod-ordinary-attribute-sources",
+      "enginePath": "src/engine/forms/cod-attribute-return.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-982.ts",
+      "testRefs": [
+        "tests/engine/federal-cod-ordinary-attributes.test.ts::uses the actual immediately-after cap and next-year bases separately",
+        "tests/engine/federal-cod-ordinary-attributes.test.ts::retains actual minimum passive and independent foreign credit closings",
+        "tests/pdf/cod-attribute-closing-references.test.ts::separates current Form8801 lines from the final minimum-credit carry after COD"
+      ],
+      "note": "Original regular and alternative attributes reconcile current use before statutory COD reductions. Reference exports preserve current form lines and label source-validated final carries separately. Ordinary foreign/NOL and signed current MTC follow-through remain distinct; no final2026, filing or human qualification."
+    },
+    {
       "key": "federal/crypto-charitable-integration",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [

@@ -1,0 +1,260 @@
+form: "Form982 ordinary attribute sources"
+fullName: "Actual later attributes after a fully excluded ordinary insolvency discharge"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i982"
+notes: |
+  Source review refreshed2026-10-28: IRC108(b)(2)-(4),1017(a),(b),(d),
+  Reg1.108-7(a),(b), Reg1.1017-1(a),(b), Pub4681 Reduction of Tax Attributes,
+  Form982 PartII, and the independent-AMTI rule in Reg1.55-1(a).
+  https://www.govinfo.gov/link/uscode/26/108
+  https://uscode.house.gov/us/usc/119-118/t26/s1017/
+  https://www.ecfr.gov/current/title-26/section-1.108-7
+  https://www.ecfr.gov/current/title-26/section-1.1017-1
+  https://www.ecfr.gov/current/title-26/section-1.55-1
+  https://www.irs.gov/publications/p4681
+  https://www.irs.gov/pub/irs-pdf/f982.pdf
+  This method composes the existing actual one-date, continuing-individual,
+  noncommunity, fully excluded unsecured personal recourse-debt method with
+  complete later-attribute originals. It does not admit a basis-first election,
+  title11, property transfer, deductible interest, special exclusion, joint
+  ownership, or partial taxable discharge. Current tax is determined first.
+  The original debt/insolvency packet and both actual NOL histories remain
+  mandatory. Empty lists are explicit facts; missing lists are not zero.
+  Do not route a legally determined NOL reduction to a later stage merely
+  because it exceeds its modified-absorption or charitable-comparison vector.
+  Existing R<=B-A, R<=B-Ac and succeeding-difference/expiry guards remain.
+  A genuine remaining exclusion after complete NOL capacity is exhausted can
+  reach general business credit, minimum tax credit, capital loss, basis,
+  passive loss/credit and foreign credit in that order. Capital losses use
+  the current origin before prior origins oldest first. GBC/FTC follow their
+  statutory credit-use order; a list position is never an allocation election.
+  Exact credit reduction is one third of excluded income applied. Preserve
+  that rational source and the remaining credit; do not round it to cents
+  before reducing another attribute. Form982 PartII reports excluded income
+  applied: GBC7, MTC8, capital9, basis10a, passive loss/credit12, FTC13.
+  Attribute units and COD consumed are distinct ledger totals.
+  The immediately-after property basis/money/liability snapshot establishes
+  the1017 cap. Property held on next January1 establishes the reducible pool.
+  Preserve property identities, acquisition/disposition and documented changes
+  between those dates. Basis priorities follow1.1017-1(a), and reductions
+  within a category are proportional to adjusted basis. A surrendered asset
+  from the published personal-property example is outside this debt cohort;
+  the1500/5500/100 control below is a separately derived no-transfer example.
+  A prior row's originalAmount is the actual unused closing carry on its
+  original-year return, after that year's use; it is not a gross original
+  credit or loss. A current-origin row instead records its attribute before
+  current use. An explicit amount-meaning field distinguishes these records.
+  Every intervening filed year reconciles that closing carry, including its
+  lawful expiry. Validate the opening before current use: an expired credit
+  cannot become valid because an entered current use consumes it. A history
+  expiry is only lawful at the original statutory lifetime and consumes the
+  then-unused balance after historical use and reduction.
+  Source rows retain original year, history, current use/carryback/expiry and
+  references. They reconcile with canonical current tax and closing components;
+  they are not entered current deductions or attribute-reduction overrides.
+  Regular and alternative loss/basis/foreign-credit originals stay independent.
+  GBC, minimum-tax and passive-credit originals are shared actual credit
+  attributes, collected once in the regular source records, never manufactured
+  as a second alternative-credit inventory. Positive shared-credit reduction
+  is admitted only when actual NOL reductions and both independently sourced
+  complete nonshared attribute vectors agree in relevant amounts, kinds,
+  original years, histories, current use/carryback/expiry and both property
+  snapshots. References remain independently bound. That is a sufficient same-
+  attributes composition with no separate AMTI consequence, not a rule for
+  cross-chain allocation. Equal final credit alone is insufficient. Both
+  remaining exclusion amounts being zero permits unchanged shared credits.
+  Differing vectors with positive shared credits retain their precise guard.
+  Beginning-next-year MTC is not simply the current Form8801 closing carry:
+  current-year AMT can generate a signed exclusion-only credit difference.
+  Until that source calculation is composed, the ordinary method requires a
+  proved zero current difference: current AMT0, AMTFTC0, ATNOLD0, no deferral or unknown
+  other adjustment in any original K1/1041 record, no differing AMT capital-gain
+  source or Form2555, and an actual complete current-source confirmation.
+  Independently smaller exclusion-only foreign credit can change the signed
+  current credit even when current AMT is zero; actual AMTFTC must also be zero
+  in this sufficient proof. Historical MTFTCE is not copied from AMTFTC.
+  Do not infer zero from an empty MTC inventory or from netted adjustments.
+  This is an internal current-year calculation boundary, not missing authority.
+  Post-discharge property dispositions require current-return transaction and
+  recapture reconciliation before canonical admission. The pure inventory
+  reducer may validate the two snapshots without proving that current tax.
+  No unproved partial split between competing same-priority ST/LT, passive
+  losses/credits/activities or FTC categories is inferred. A single positive
+  component or complete exhaustion is determined without that choice. Preserve
+  any related QBI/character source, rather than returning an unreconciled old
+  balance. Exact source arithmetic uses local Decimal precision and rational
+  numerators; normal Decimal objects leave helpers and global settings do not
+  change. Reporting rounds once at the actual form boundary. This is reference
+  output only; no physical Form982 or full2026 filing qualification is claimed.
+lines:
+  - line: "source"
+    description: "Actual complete records establish every later attribute and both property dates"
+    formula: "Require the bound original debtor/year/event, complete regular/alternative histories and explicit empty stages; original amounts less filed adjustments and canonical current use derive each available balance. Missing property cannot become zero."
+    irsRef: "IRC108(b)(2)/(4); Reg1.108-7(a),(b); IRC1017(b)(2)"
+    testRef: "tests/engine/federal-cod-ordinary-attributes.test.ts::rejects missing later sources instead of claiming exhausted attributes"
+  - line: "9-capital"
+    description: "Positive internal capital capacity and signed canonical closing terms"
+    formula: "Original prior ST10000 less current3000 leaves positive capacity7000. COD5000 reduces that capacity to2000; canonical aggregate/ST closing are both-2000, LT0. Current tax is unchanged."
+    irsRef: "IRC108(b)(2)(D),(b)(4)(A)/(B); Pub4681 item4"
+    testRef: "tests/engine/federal-cod-ordinary-attributes.test.ts::reduces the actual sole capital source and restores both negative closing signs"
+  - line: "original-meaning-expiry"
+    description: "Original-year closing carry and expiry remain valid before current use"
+    formula: "Prior originalAmount is the unused original-year closing carry, explicitly identified; current-origin amount precedes current use. A2014FTC with positive2025opening is invalid even when entered current use exhausts it. A2015FTC may be used in2025, then any residue expires after the COD reduction. Historical early, missing or late expiry cannot manufacture a current attribute."
+    irsRef: "IRC39(a),904(c); IRC108(b)(4)(A)/(C); Reg1.108-7(b)"
+    testRef: "tests/engine/forms/cod-attribute-reductions.test.ts::requires explicit original amount meaning and validates expiry before use"
+  - line: "two-date-membership"
+    description: "Every change between the two actual property inventories has its own source"
+    formula: "A property absent on followingJanuary1 requires an actual intervening disposition record with the same identity and a date after discharge and beforeJanuary1; a new property requires an actual acquisition after discharge. Identity cannot be rewritten to remove a reducible basis."
+    irsRef: "IRC1017(a),(b)(2); Reg1.1017-1(a),(b)"
+    testRef: "tests/engine/forms/cod-attribute-reductions.test.ts::requires actual disposition and acquisition records between property dates"
+  - line: "10a-basis"
+    description: "Separate liability cap and proportional next-year property basis"
+    formula: "Immediately-after furniture5000+jewelry500+cash600-liabilities6000 gives cap100. Same next-January1 bases5500 and COD1500 produce reduction100, remaining5400 and unreducedCOD1400; source property reductions are100*5000/5500 and100*500/5500 (printed91/9)."
+    irsRef: "IRC1017(a),(b)(2); Reg1.1017-1(a),(b)(3); Pub4681 personal-property example arithmetic"
+    testRef: "tests/engine/federal-cod-ordinary-attributes.test.ts::uses the actual immediately-after cap and next-year bases separately"
+  - line: "12-loss"
+    description: "Update the actual passive closing record with its aggregate"
+    formula: "Sole actual passive loss10000, current use0, all preceding stages0 and COD5000 leaves5000 in both the reduction ledger and that activity's outgoing carry. Original history and current tax are unchanged."
+    irsRef: "IRC108(b)(2)(F),(b)(4)(A); Reg1.108-7; IRC469(b)"
+    testRef: "tests/engine/federal-cod-ordinary-attributes.test.ts::reconciles the sole passive activity closing with its reduced aggregate"
+  - line: "credit-units"
+    description: "Credit reduction and excluded income applied are different conserved units"
+    formula: "After NOL3, actual GBC2/MTC1/capital2/basis1/passive-loss1/FTC2 consume19 COD as3+6+3+2+1+1+3, leavingFTC1. A partial credit retains exact one-third and its complement before reporting; no intermediate cent rounding."
+    irsRef: "IRC108(b)(2),(b)(3)(B); Form982 PartII7/8/12/13"
+    testRef: "tests/engine/forms/cod-attribute-reductions.test.ts::preserves statutory order and distinct credit consumption units"
+  - line: "shared-credit-composition"
+    description: "One actual credit inventory and complete equal-attribute context"
+    formula: "With zero current income/use and independently equal noncredit vectors, sole original GBC3000 and COD300 reduce the shared carry to2900. A different original basis vector rejects even if the same2900credit would result. No second alternative credit original is accepted."
+    irsRef: "IRC108(b)(2)/(3)/(4); Reg1.55-1; sufficient equal-attribute composition, no differing-chain rule"
+    testRef: "tests/engine/federal-cod-ordinary-attributes.test.ts::uses one actual shared credit source only in the complete equal-vector composition"
+  - line: "disposition-current-tax"
+    description: "A later sale reference alone cannot establish current capital or recapture use"
+    formula: "A source-complete two-date inventory with a later disposed property remains unadmitted canonically without the corresponding current-return transaction/recapture reconciliation. The helper inventory check is not a current-tax override."
+    irsRef: "IRC108(b)(4)(A),1017; current-use source completeness"
+    testRef: "tests/engine/federal-cod-ordinary-attributes.test.ts::does not infer current disposition tax from an inventory reference"
+  - line: "12-credit"
+    description: "Actual passive credit is included without inventing a loss-first priority"
+    formula: "Sole passive credit2 withCOD3 reduces credit1, leaving1. If partialCOD meets competing passive loss and credit without an established allocation, reject rather than consume a list-order component. Complete exhaustion preserves all identities."
+    irsRef: "IRC108(b)(2)(F),(b)(3)(B); Form98212"
+    testRef: "tests/engine/forms/cod-attribute-reductions.test.ts::reduces actual passive credits and guards undetermined competing components"
+  - line: "canonical-credit-closings"
+    description: "Canonical current tax and original credit carry components remain distinct"
+    formula: "Sole prior MTC3000 with zero current tax/use and COD300 closes2900; sole unallowed passive credit3000 similarly closes2900 in its own outgoing record. Actual904(j) election with zero current credit and independently sourced prior regular600/AMT300 carries has no election-year use; COD300 leaves500/200 with original2024 retained. No unchanged aggregate may conceal a stale component."
+    irsRef: "IRC108(b)(2)(C)/(F)/(G),(b)(3)(B),(b)(4)(A); IRC59(a)/904(c)"
+    testRef: "tests/engine/federal-cod-ordinary-attributes.test.ts::retains actual minimum passive and independent foreign credit closings"
+  - line: "current-mtc"
+    description: "Beginning-next-year minimum tax credit includes the current-year source calculation"
+    formula: "An empty declared inventory cannot erase deferrable AMT generated in the discharge year. Guard the exact missing current-year calculation, including negative or netted deferrals, while retaining the source-proved zero-current-adjustment route and positive prior MTC."
+    irsRef: "IRC53(b),108(b)(2)(C); Form8801 PartI and line21; IRS8801 exclusion-only instructions"
+    testRef: "tests/engine/federal-cod-ordinary-attributes.test.ts::does not infer zero current minimum tax credit from an empty inventory"
+  - line: "original-order"
+    description: "Current loss and credit vintage ordering is independent of input order"
+    formula: "Current capital2000 precedes older5000; COD3000 leaves current0 and older4000. Earlier credit carryovers precede current credits under their applicable use order. Duplicate, expired or conflicting histories reject."
+    irsRef: "IRC108(b)(4)(B)/(C); Reg1.108-7(b); IRC39/904(c)"
+    testRef: "tests/engine/forms/cod-attribute-reductions.test.ts::retains original years and applies only established ordering"
+  - line: "alternative"
+    description: "Independent alternative property facts cannot silently inherit regular amounts"
+    formula: "Regular basis cap100 and separately sourced alternative cap40 produce100/40 reductions with independent closings. Missing alternative records reject; they are not zero or a copy of regular values."
+    irsRef: "Reg1.55-1(a); IRC56/59; IRC1017"
+    testRef: "tests/engine/forms/cod-attribute-reductions.test.ts::requires independently confirmed alternative property records"
+  - line: "context"
+    description: "Bind original records, canonical current use and private output before I/O"
+    formula: "Changing an original reference, date, attribute amount, canonical use or closing component invalidates the prepared private context, even if aggregate money is unchanged; original references/identifiers do not appear in review downloads."
+    irsRef: "Form982 source reconciliation and review-only output policy"
+    testRef: "tests/pdf/cod-ordinary-attributes-review.test.ts::replays original attributes and rejects stale output contexts before I/O"
+  - line: "current-mtc-foreign"
+    description: "Actual AMT foreign credit does not establish the exclusion-only foreign credit"
+    formula: "Current AMT0 with actual AMTFTC200 is not the sufficient zero proof. Without independent MTFTCE comparison, retain the precise current-year MTC calculation guard even if an empty declared credit inventory would otherwise pass."
+    irsRef: "IRC53(d),59(a),108(b)(2)(C); Form8801 line12 instructions"
+    testRef: "tests/engine/federal-cod-ordinary-attributes.test.ts::does not infer exclusion-only foreign credit from current AMT foreign credit"
+  - line: "guided-originals"
+    description: "The guided return collects the original later attributes without a calculated reduction input"
+    formula: "Forward the confirmed debtor/year, independent complete ledgers, original/current use and both property snapshots. Actual empty lists remain empty; unknown amounts/lists remain unknown. Changes invalidate nested confirmations and the complete return recalculates reductions."
+    irsRef: "IRC108(b)(4)(A),1017(a)/(b); actual-source confirmation policy"
+    testRef: "tests/guided-interview/guided-cod-ordinary-attributes.test.ts::forwards independent original ledgers and derives later reductions in the complete return"
+  - line: "guided-boundary"
+    description: "Missing or changed source facts cannot be replaced with zero or a prior confirmation"
+    formula: "Reject absent alternative inventory, blank property money and unconfirmed current-adjustment sources. Editing a basis record clears root and nested confirmations without changing an entered original use or history."
+    irsRef: "Form982 source reconciliation"
+    testRef: "tests/guided-interview/guided-cod-ordinary-attributes.test.ts::retains unknowns and invalidates every changed original confirmation"
+  - line: "guided-controls"
+    description: "Source fields are editable through ordinary guided controls"
+    formula: "New records begin unknown; explicit no-record lists require a user action. Amounts use source currency fields, and no output reduction/closing field is entered. Confirmations persist only after factual edits are complete."
+    irsRef: "Form982 and original after-tax worksheet source record"
+    testRef: "tests/apps/web/cod-ordinary-attributes-interactions.test.tsx::collects original later attribute records and clears stale confirmations"
+  - line: "workspace"
+    description: "Actual saved guided records produce a private reference packet"
+    formula: "The ordinary1500 exclusion with derived100basis reduction leaves5400basis and1400unreduced debt; the actual workspace reference records both independent systems, retains every review notice and hides source names/identifiers. Missing confirmation rejects before output."
+    irsRef: "Form982 PartII; private-output and readiness policy"
+    testRef: "tests/apps/web/workspace-cod-ordinary-attributes.test.ts::reopens the actual guided later attribute packet with independent source amounts"
+  - line: "capital-original-binding"
+    description: "Unchanged closing capital loss does not validate a changed original opening or use"
+    formula: "Actual incoming ST10000/current use3000/normal closing7000 cannot be replaced with11000/use4000 or relabeled as a new current loss. Reconcile each term's prior opening to its actual ScheduleD source and its current-origin pool to current transactions before applying the108 order."
+    irsRef: "IRC108(b)(2)(D)/(b)(4); IRC1212(b); ScheduleD capital loss carryover worksheet"
+    testRef: "tests/engine/federal-cod-ordinary-attributes.test.ts::binds unchanged capital closings to the actual prior and current originals"
+  - line: "capital-transferred-original"
+    description: "A terminating estate carry is not a newly incurred current loss"
+    formula: "Positive final-year K1 capital carry requires its transferred original-year and use history before this ordinary current/prior source method. Do not infer a current-origin attribute merely because ScheduleD receives the amount this year. An unchanged zero carry adds no restriction."
+    irsRef: "IRC642(h)(1),108(b)(4)(B); Reg1.642(h)-1(b)"
+    testRef: "tests/engine/federal-cod-ordinary-attributes.test.ts::does not relabel a transferred estate capital carry as current transactions"
+  - line: "reference-packet-readiness"
+    description: "Every positive Form982 exclusion remains a partial reference-only packet"
+    formula: "Actual excluded debt requires Form982 regardless of whether NOL, later attributes, legacy stages or no remaining attributes absorb it. The included reference summary, missing artifact, or an unqualified official-looking filename all retain partial packet status, supported calculation status and filingQualified=false. Zero/absent exclusion adds no Form982 finding."
+    irsRef: "Form982 instructions and reference-only mapping qualification policy"
+    testRef: "tests/utils/form982-readiness.test.ts::keeps all actual Form982 exclusion routes partial without inferring official qualification"
+  - line: "browser"
+    description: "Actual saved original inventories survive editing, confirmation and review download"
+    formula: "Desktop and mobile preserve explicit zero, unknown and complete independent inventory records; factual edits invalidate source confirmations. Reconfirm the real sources and payments, visit required sections, reopen the saved state and download the partial reference-only packet. Source identities stay out of the PDF and off external requests."
+    irsRef: "Form982 original-source reconciliation and reference-only packet policy"
+    testRef: "apps/web/tests/cod-ordinary-attributes.spec.ts::retains actual later attributes through edits and the partial review download"
+  - line: "foreign-credit-output-composition"
+    description: "Preserve current foreign-credit calculations and reconcile the separate after-tax COD carry"
+    formula: "Direct election prior regular600/AMT300 and COD300 retain the current-credit record but close500/200. Validate original category/year balances, exact COD reductions and final carry vectors without changing current credit or representing the pre-COD carry as final. Missing, duplicate or altered COD records reject."
+    irsRef: "IRC108(b)(2)(G),(b)(3)(B),(b)(4); Reg1.108-7(b); Form982 line13 and Form1116 carryover reconciliation"
+    testRef: "tests/pdf/cod-ordinary-attributes-review.test.ts::reconciles direct foreign-credit packets with independent after-tax COD closings"
+  - line: "reference-pagination"
+    description: "Every actual original property remains readable above the review footer"
+    formula: "Ten actual personal properties each basis550 have total5500, immediately-after cap100, reduction10 and remaining540 per original. Preserve all twenty regular/alternative original rows through page breaks, with each body baseline at least40 points and one review notice on every page."
+    irsRef: "IRC1017 source conservation; reference-only PDF output policy"
+    testRef: "tests/pdf/cod-ordinary-attributes-review.test.ts::keeps all actual property rows above the review footer across page boundaries"
+
+  - line: "ordinary-foreign-output-boundary"
+    description: "Ordinary Form1116 retains its existing original foreign-source NOL allocation boundary"
+    formula: "An ordinary Form1116 election combined with the actual NOL packet rejects before output until the originating foreign-source loss allocation method is supplied. Complete later-attribute records do not remove that independent source requirement. This includes the checked empty-NOL historical source packet; no new coupling rule is inferred here."
+    irsRef: "Existing foreign-source NOL method and IRC904; no new tax allocation in this package"
+    testRef: "tests/pdf/cod-ordinary-attributes-review.test.ts::retains the ordinary foreign-credit and NOL source-allocation boundary"
+  - line: "deduction-foreign-output-boundary"
+    description: "Deduction-year foreign carry retains its coupled hypothetical NOL worksheet boundary"
+    formula: "Actual deduction-year carry combined with the NOL source packet requires the existing coupled foreign-source hypothetical worksheet. Later-attribute inventories cannot bypass that independent method guard. No current credit or carry is invented to make a PDF."
+    irsRef: "Existing foreign deduction-year carry and NOL source method"
+    testRef: "tests/pdf/cod-ordinary-attributes-review.test.ts::retains the deduction-year foreign carry and NOL hypothetical-source boundary"
+  - line: "foreign-credit-output-third"
+    description: "Exact credit units survive the final reference and carry reconciliation"
+    formula: "COD1 reduces regular600 and independently sourced alternative300 by exactly1/3 each. Preserve original ratios1799/3 and899/3 through the final carry and saved output, without rounding the attribute reduction to a whole credit dollar."
+    irsRef: "IRC108(b)(3)(B); Form982 instructions, one-third credit attribute reduction"
+    testRef: "tests/pdf/cod-ordinary-attributes-review.test.ts::preserves exact one-third credit reduction through the saved foreign reference"
+  - line: "minimum-credit-reference-closing"
+    description: "Separate the current Form8801 worksheet from its post-COD credit carry"
+    formula: "Original MTC3000, current use0 and excluded income300 retain actual Form8801 line26=3000 before COD. The separately validated one-third reduction100 closes2900. Label the current line26 and total before COD and print the reconciled final carry after COD; do not change the current credit or infer signed discharge-year generation."
+    irsRef: "IRC108(b)(2)(C),(b)(3)(B),(b)(4); IRS Form982 instructions PartII; Form8801 line26"
+    testRef: "tests/pdf/cod-attribute-closing-references.test.ts::separates current Form8801 lines from the final minimum-credit carry after COD"
+  - line: "general-credit-reference-closing"
+    description: "Show current general-credit limits before the actual COD closing"
+    formula: "Actual unused GBC3000, current use0 and excluded income300 retain Form3800 current worksheet3000, then reduce100 and close2900 after COD. Preserve exact one-third units for excluded income1. Actual carryback and statutory expiry remain separately reconciled, never mislabeled as final carry."
+    irsRef: "IRC108(b)(2)(B),(b)(3)(B),(b)(4); IRS Form982 instructions PartII; Form3800 carryforward instructions"
+    testRef: "tests/pdf/cod-attribute-closing-references.test.ts::separates current Form3800 lines from final general-credit carry including exact thirds"
+  - line: "passive-reference-closing"
+    description: "Keep physical passive limits before COD and state each activity closing"
+    formula: "An actual prior passive loss10000 with no current use remains10000 on current Form8582 and its allocation continuation. Label those current values before COD, then separately show the actual activity reduction5000 and carry5000. Current physical PartVII/PartVIII values do not become after-COD amounts."
+    irsRef: "IRC108(b)(2)(F),(b)(4); IRS Form982 instructions PartII; Form8582 PartsVII/VIII"
+    testRef: "tests/pdf/cod-attribute-closing-references.test.ts::retains physical Form8582 current losses and prints the source-reconciled activity carry after COD"
+  - line: "closing-reference-reconciliation"
+    description: "Reject missing, duplicate or conflicting reference carry sources before output"
+    formula: "Each closing must reconcile the actual normal-year form value, original source identity and amounts, current use/carryback, exact COD ratios, retained stage audit and final canonical carry. Missing or duplicate records, altered before/after amounts, and stale current-form results reject rather than printing a plausible final total. Non-COD references retain their existing labels and values."
+    irsRef: "IRC108(b)(4); source-bound private output policy"
+    testRef: "tests/pdf/cod-attribute-closing-references.test.ts::rejects missing duplicate stale and conflicting COD closing records before output"
+  - line: "current-form-private-context"
+    description: "Bind current credit and passive forms before output"
+    formula: "The private original-input token binds Form3800, Form8801 and Form8582 current calculations as well as the COD ledgers and final carries. Altered current audit or activity facts reject before filesystem access. Non-COD reference labels and values remain unchanged."
+    irsRef: "Original-source review context and after-tax attribute reduction order"
+    testRef: "tests/pdf/cod-attribute-closing-references.test.ts::binds current attribute forms to the private source context before any output"

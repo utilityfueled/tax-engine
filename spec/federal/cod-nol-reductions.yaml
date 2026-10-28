@@ -32,10 +32,13 @@ notes: |
   return; actual unsecured personal recourse debt, one discharge date and a
   complete immediately-before-discharge asset/liability worksheet; no title11,
   deductible interest, property transfer, other exclusions or108(b)(5) election.
-  All cancelled debt must be covered by actual insolvency and the resulting
-  exclusion must be fully absorbed by NOL in EACH independent tax system.
-  Joint/estate ownership, partial taxable COD, basis-first and later attributes
-  remain separately identified internal methods, never guessed zero.
+  All cancelled debt must be covered by actual insolvency. Without the complete
+  separately specified cod-ordinary-attribute-sources packet, the exclusion must
+  be fully absorbed by NOL in EACH independent tax system. That actual-source
+  composition can apply genuine residual exclusion to later attributes; it does
+  not relax the modified-absorption/charitable-comparison capacity guards.
+  Joint/estate ownership, partial taxable COD and basis-first remain separately
+  identified methods, never guessed zero.
   Source-only validation returns no reduction or closing carry. Actual source
   cents are summed before whole-dollar Form9822/6 transfers under6102; no
   individual source row is rounded. The numerical examples are derived controls,
@@ -73,7 +76,7 @@ lines:
     testRef: "tests/engine/federal-cod-nol.test.ts::requires the separate COD method when the actual reduction exceeds modified capacity"
   - line: "conservation"
     description: "Require original debt, insolvency and final carry conservation"
-    formula: "Missing/duplicate/changed sources, unknown elections or ownership, insufficient independent NOL, actual title11 or property/interest complexity rejects. Exact1000.49 reports1000 once; two actual1000.30 sources aggregate2000.60 and report2001, without rounding individual statements. Original cents remain intact."
+    formula: "Missing/duplicate/changed sources, unknown elections or ownership, insufficient independent NOL without complete later-attribute originals, actual title11 or property/interest complexity rejects. Exact1000.49 reports1000 once; two actual1000.30 sources aggregate2000.60 and report2001, without rounding individual statements. Original cents remain intact."
     irsRef: "IRC108(a)/(b); IRC6102(c); Form9822/6"
     testRef: "tests/engine/federal-cod-nol.test.ts::retains source cents and rejects unresolved or conflicting attribute sources"
   - line: "1411"

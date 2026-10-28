@@ -10,6 +10,8 @@ import {
   type PDFPage,
 } from "pdf-lib";
 import type { CalculatedLine, TaxReturnResult } from "@/models/outputs.js";
+import { sumSourceMoney } from '@/utils/sum-source-money.js';
+import { sumSourceMoneyRatios } from '@/utils/sum-source-money-ratios.js';
 
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
@@ -117,6 +119,7 @@ function drawWrappedText(
     maxWidth,
     lineHeight = size * 1.25,
     color = HEADER_COLOR,
+    onPageBreak,
   }: {
     font: PDFFont;
     size: number;
@@ -125,12 +128,17 @@ function drawWrappedText(
     maxWidth: number;
     lineHeight?: number;
     color?: ReturnType<typeof rgb>;
+    onPageBreak: () => PDFPage;
   },
 ) {
   const lines = wrapText(text, font, size, maxWidth);
   let cursorY = y;
 
   for (const line of lines) {
+    if (cursorY < PAGE_MARGIN) {
+      page = onPageBreak();
+      cursorY = PAGE_HEIGHT - PAGE_MARGIN;
+    }
     page.drawText(line, { x, y: cursorY, font, size, color });
     cursorY -= lineHeight;
   }
@@ -165,6 +173,72 @@ function formatCalculatedLineValue(line: CalculatedLine) {
   return line.value.toString();
 }
 
+function laterAttributeSummary(result: TaxReturnResult, same: (actual: Decimal | undefined, expected: Decimal) => void) {
+  const later = result.codAttributeReduction, cod = result.codNolReduction;
+  const totals: Form982ReferenceSummaryTotal[] = [], reductions: Form982ReferenceSummaryReduction[] = [];
+  if (!later) return { totals, reductions };
+  if (!cod?.regular || !cod.alternativeTax || later.sourceFactsVerified !== true) throw new Error('Form982 later attributes require completed original-source results');
+  const stageLines = { general_business_credit: ['7', 'General business credit'], minimum_tax_credit: ['8', 'Minimum tax credit'],
+    capital_loss: ['9', 'Capital loss'], basis: ['10a', 'Property basis'], passive: ['12', 'Passive loss and credit'], foreign_tax_credit: ['13', 'Foreign tax credit'] } as const;
+  for (const [label, ledger, nol] of [['Regular', later.regular, cod.regular], ['Alternative', later.alternativeTax, cod.alternativeTax]] as const) {
+    if (ledger.sourceFactsVerified !== true || JSON.stringify(ledger.stages.map(row => row.kind)) !== JSON.stringify(Object.keys(stageLines))) {
+      throw new Error('Form982 later attribute order or source completeness does not reconcile');
+    }
+    same(sumSourceMoney(nol.reduction, ledger.remainingExclusionBeforeReduction), cod.reportedExcludedAmount);
+    same(sumSourceMoney(ledger.incomeApplied, ledger.unreducedExclusion), ledger.remainingExclusionBeforeReduction);
+    same(sumSourceMoney(...ledger.stages.map(row => row.incomeApplied)), ledger.incomeApplied);
+    for (const row of ledger.records) {
+      same(row.attributeReduction, sumSourceMoneyRatios([row.reductionRatio]));
+      same(sumSourceMoneyRatios([row.reductionRatio, row.remainingRatio]), row.beforeReduction);
+      same(sumSourceMoney(row.remaining, row.expiredAfterReduction), sumSourceMoneyRatios([row.remainingRatio]));
+    }
+    same(sumSourceMoneyRatios(ledger.property.properties.map(row => row.reductionRatio)), ledger.property.attributeReduction);
+    same(sumSourceMoneyRatios(ledger.property.properties.map(row => row.remainingRatio)), ledger.property.remainingBasis);
+    same(sumSourceMoney(ledger.property.attributeReduction, ledger.property.remainingBasis), ledger.property.nextYearBasis);
+    for (const row of ledger.property.properties) {
+      same(row.attributeReduction, sumSourceMoneyRatios([row.reductionRatio]));
+      same(row.remainingBasis, sumSourceMoneyRatios([row.remainingRatio]));
+      same(sumSourceMoneyRatios([row.reductionRatio, row.remainingRatio]), row.adjustedBasis);
+    }
+    for (const stage of ledger.stages) {
+      if (!(stage.kind in stageLines)) throw new Error('Form982 later attribute stage is unknown');
+      const [line, description] = stageLines[stage.kind as keyof typeof stageLines];
+      const audit = result.allLines.filter(row => row.form === `${label} COD Attribute Worksheet` && row.line === stage.kind);
+      if (audit.length !== 1) throw new Error('Form982 later attributes require unique retained stage audits');
+      const attributeReduction = audit[0]?.inputs['Attribute reduction'];
+      if (!Decimal.isDecimal(attributeReduction)) throw new Error('Form982 later attribute audit amount is missing');
+      same(audit[0]?.value, stage.incomeApplied); same(attributeReduction, stage.attributeReduction);
+      if (label === 'Regular') reductions.push({ line, description: `${description}: excluded income applied`, value: stage.incomeApplied.toFixed(),
+        formula: 'After current tax and NOL reduction, in statutory order. Credit attribute units are one third of excluded income applied.' });
+      totals.push({ label: `${label} ${description.toLowerCase()} attribute reduction`, value: stage.attributeReduction.toFixed() });
+    }
+    totals.push({ label: `${label} unreduced excluded debt`, value: ledger.unreducedExclusion.toFixed() },
+      { label: `${label} immediately-after basis cap`, value: ledger.property.basisCap.toFixed() },
+      { label: `${label} remaining property basis`, value: ledger.property.remainingBasis.toFixed() });
+    ledger.records.forEach((row, index) => {
+      totals.push({ label: `${label} attribute ${index + 1} original year`, value: String(row.originTaxYear) },
+        { label: `${label} attribute ${index + 1} before reduction`, value: row.beforeReduction.toFixed() },
+        { label: `${label} attribute ${index + 1} reduction`, value: row.attributeReduction.toFixed() },
+        { label: `${label} attribute ${index + 1} expiry after reduction`, value: row.expiredAfterReduction.toFixed() },
+        { label: `${label} attribute ${index + 1} remaining`, value: row.remaining.toFixed() });
+    });
+    ledger.property.properties.forEach((row, index) => {
+      totals.push({ label: `${label} property ${index + 1} basis before reduction`, value: row.adjustedBasis.toFixed() },
+        { label: `${label} property ${index + 1} basis reduction`, value: row.attributeReduction.toFixed() },
+        { label: `${label} property ${index + 1} remaining basis`, value: row.remainingBasis.toFixed() });
+    });
+  }
+  const records = later.regular.records;
+  const remaining = (kind: typeof records[number]['kind']) => sumSourceMoneyRatios(records.filter(row => row.kind === kind && row.expiredAfterReduction.isZero()).map(row => row.remainingRatio));
+  same(result.carryforwards.generalBusinessCredit, remaining('general_business_credit'));
+  same(result.carryforwards.minimumTaxCredit, remaining('minimum_tax_credit'));
+  same(result.carryforwards.foreignTaxCreditCarryforward, remaining('foreign_tax_credit'));
+  same(result.carryforwards.capitalLoss, remaining('capital_loss').negated());
+  same(sumSourceMoney(...result.carryforwards.suspendedPassiveLosses.map(row => row.amount)), remaining('passive_loss'));
+  same(sumSourceMoney(...(result.carryforwards.suspendedPassiveCredits ?? []).map(row => row.amount)), remaining('passive_credit'));
+  return { totals, reductions };
+}
+
 export function buildForm982ReferenceSummary(result: TaxReturnResult): Form982ReferenceSummary {
   const cod = result.codNolReduction;
   if (cod) {
@@ -184,7 +258,7 @@ export function buildForm982ReferenceSummary(result: TaxReturnResult): Form982Re
       same(ledger.expiredAfterReduction, total("expiredAfterReduction"));
       same(ledger.beforeReduction.minus(ledger.modifiedUseAdjustment), ledger.modifiedAvailableBeforeReduction);
       same(ledger.modifiedAvailableBeforeReduction, ledger.reduction.plus(ledger.expiredAfterReduction).plus(ledger.carryforward));
-      same(ledger.reduction, cod.reportedExcludedAmount);
+      if (!result.codAttributeReduction) same(ledger.reduction, cod.reportedExcludedAmount);
       for (const row of ledger.vintages) {
         same(row.beforeReduction.minus(row.modifiedAbsorption.minus(row.currentTaxUse)), row.modifiedAvailableBeforeReduction);
         same(row.modifiedAvailableBeforeReduction, row.attributeReduction.plus(row.expiredAfterReduction).plus(row.remainingCarryforward));
@@ -212,12 +286,14 @@ export function buildForm982ReferenceSummary(result: TaxReturnResult): Form982Re
         same(rows[0].value, expected);
       }
     }
+    const later = laterAttributeSummary(result, same);
     return {
-      title: "Form 982 Insolvency and NOL Reduction Reference Summary", warningLabel: "REFERENCE SUMMARY ONLY",
-      introduction: "Actual personal-debt insolvency exclusion. Current tax is calculated before the separate regular and alternative loss-vintage reductions. Original sources and every reduced vintage are reconciled in the accompanying NOL statement.",
+      title: result.codAttributeReduction ? "Form 982 Insolvency and Attribute Reduction Reference Summary" : "Form 982 Insolvency and NOL Reduction Reference Summary", warningLabel: "REFERENCE SUMMARY ONLY",
+      introduction: result.codAttributeReduction ? "Actual personal-debt insolvency exclusion. Current tax is calculated before the regular and alternative attribute reductions. Original NOL vintages and later attributes are reconciled separately; this is not an official Form982."
+        : "Actual personal-debt insolvency exclusion. Current tax is calculated before the separate regular and alternative loss-vintage reductions. Original sources and every reduced vintage are reconciled in the accompanying NOL statement.",
       exclusions: [{ line: "1b", description: "Insolvency exclusion", value: cod.reportedExcludedAmount.toString() }],
       reductions: [{ line: "6", description: "Regular net operating loss attribute reduction", value: cod.regular.reduction.toString(),
-        formula: "Current-year original NOL first; then oldest carryover to this year before residual expiry. Actual current deductions are unchanged." }],
+        formula: "Current-year original NOL first; then oldest carryover to this year before residual expiry. Actual current deductions are unchanged." }, ...later.reductions],
       totals: [
         { label: "Line2 reported excluded debt", value: cod.reportedExcludedAmount.toString() },
         { label: "Exact original excluded debt", value: cod.sourceExcludedAmount.toString() },
@@ -238,6 +314,7 @@ export function buildForm982ReferenceSummary(result: TaxReturnResult): Form982Re
             { label: `${label} succeeding NOL difference after COD`, value: ledger.charitableComparison.nolDifferenceAfterReduction.toString() },
           ] : []),
         ]),
+        ...later.totals,
       ],
     };
   }
@@ -299,9 +376,11 @@ export async function fillForm982Reference(
   const newPage = () => {
     page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
     y = PAGE_HEIGHT - PAGE_MARGIN;
+    return page;
   };
 
   y = drawWrappedText(page, summary.title, {
+    onPageBreak: newPage,
     font: bold,
     size: 20,
     x: PAGE_MARGIN,
@@ -311,6 +390,7 @@ export async function fillForm982Reference(
   });
 
   y = drawWrappedText(page, summary.warningLabel, {
+    onPageBreak: newPage,
     font: bold,
     size: 12,
     x: PAGE_MARGIN,
@@ -321,6 +401,7 @@ export async function fillForm982Reference(
   });
 
   y = drawWrappedText(page, summary.introduction, {
+    onPageBreak: newPage,
     font: regular,
     size: BODY_FONT_SIZE,
     x: PAGE_MARGIN,
@@ -333,6 +414,7 @@ export async function fillForm982Reference(
     page,
     "This page summarizes the supported cancellation-of-debt exclusion categories and Form 982 attribute reductions used by the engine. It is not an official filed Form 982 copy.",
     {
+      onPageBreak: newPage,
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN,
@@ -345,6 +427,7 @@ export async function fillForm982Reference(
   y -= 16;
 
   y = drawWrappedText(page, "Exclusion categories", {
+    onPageBreak: newPage,
     font: bold,
     size: BODY_FONT_SIZE,
     x: PAGE_MARGIN,
@@ -359,6 +442,7 @@ export async function fillForm982Reference(
     }
 
     y = drawWrappedText(page, `Line ${exclusion.line}: ${exclusion.description}`, {
+      onPageBreak: newPage,
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN + 12,
@@ -368,6 +452,7 @@ export async function fillForm982Reference(
     });
 
     y = drawWrappedText(page, `Value: ${exclusion.value}`, {
+      onPageBreak: newPage,
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN + 24,
@@ -379,6 +464,7 @@ export async function fillForm982Reference(
 
   y -= 10;
   y = drawWrappedText(page, "Attribute reduction outputs", {
+    onPageBreak: newPage,
     font: bold,
     size: BODY_FONT_SIZE,
     x: PAGE_MARGIN,
@@ -393,6 +479,7 @@ export async function fillForm982Reference(
     }
 
     y = drawWrappedText(page, `Line ${line.line}: ${line.description}`, {
+      onPageBreak: newPage,
       font: bold,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN + 12,
@@ -402,6 +489,7 @@ export async function fillForm982Reference(
     });
 
     y = drawWrappedText(page, `Value: ${line.value}`, {
+      onPageBreak: newPage,
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN + 24,
@@ -411,6 +499,7 @@ export async function fillForm982Reference(
     });
 
     y = drawWrappedText(page, `Formula: ${line.formula}`, {
+      onPageBreak: newPage,
       font: regular,
       size: BODY_FONT_SIZE - 0.5,
       x: PAGE_MARGIN + 24,
@@ -428,6 +517,7 @@ export async function fillForm982Reference(
 
   y -= 6;
   y = drawWrappedText(page, "Summary totals", {
+    onPageBreak: newPage,
     font: bold,
     size: BODY_FONT_SIZE,
     x: PAGE_MARGIN,
@@ -438,6 +528,7 @@ export async function fillForm982Reference(
 
   for (const total of summary.totals) {
     y = drawWrappedText(page, `${total.label}: ${total.value}`, {
+      onPageBreak: newPage,
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN + 12,

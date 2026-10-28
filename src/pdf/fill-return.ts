@@ -1104,7 +1104,7 @@ export async function fillReturn(
 
   // ── Form 3800 reference summary (if applicable — supported general business credit outputs) ──
   if (result.form3800 && result.form3800.totalCredit.gt(0)) {
-    const outputPath3800Reference = await fillForm3800Reference(result.form3800, outputDir);
+    const outputPath3800Reference = await fillForm3800Reference(result.form3800, outputDir, result);
     filledForms.push(outputPath3800Reference);
   }
 
@@ -1122,7 +1122,7 @@ export async function fillReturn(
 
   // ── Form 8801 reference summary (if applicable — supported prior-year minimum tax credit outputs) ──
   if (input.form8801 && result.form8801) {
-    const outputPath8801Reference = await fillForm8801Reference(result.form8801, outputDir);
+    const outputPath8801Reference = await fillForm8801Reference(result.form8801, outputDir, result);
     filledForms.push(outputPath8801Reference);
   }
 

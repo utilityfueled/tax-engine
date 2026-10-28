@@ -12,6 +12,7 @@ import { VehicleRefinancingSourcesSchema } from "@/models/vehicle-refinancing-so
 import { getNYIT201ResidentConstants } from "@/models/constants.js";
 import { d } from "@/utils/decimal.js";
 import { Form982NolSourcesSchema } from "@/models/cod-nol-sources.js";
+import { Form982AttributeSourcesSchema } from "@/models/cod-attribute-sources.js";
 import { IraBasisSourcesSchema } from "@/models/ira-basis-sources.js";
 import { CharitableCarryoverSourcesSchema } from "@/models/charitable-carryover-sources.js";
 import { AdoptionPriorBenefitHistorySchema } from "@/models/adoption-prior-benefits.js";
@@ -6054,6 +6055,7 @@ export const TaxYearInputSchema = z.object({
   form1099C: z.array(Form1099CSchema).default([]),
   codExclusion: CodExclusionSchema.optional(),
   form982NolSources: Form982NolSourcesSchema.optional(),
+  form982AttributeSources: Form982AttributeSourcesSchema.optional(),
   form1099Q: z.array(Form1099QSchema).default([]),
   qualifiedEducationExpenses: QualifiedEducationExpenseSummarySchema.optional(),
   form1099R: z.array(Form1099RSchema).optional(),

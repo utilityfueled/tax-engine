@@ -165,6 +165,8 @@ export interface TaxReturnResult {
     suspendedPassiveLosses: Array<{ partnershipName: string; amount: Decimal;
       /** Calculated history for review; future input still needs its actual filed-source confirmation. */
       qbiVintages?: import("@/engine/forms/passive-loss-qbi.js").PassiveLossQBIVintage[] }>;
+    /** Actual remaining section469 credits after the ordinary108 source method; not a current credit override. */
+    suspendedPassiveCredits?: Array<{ sourceId: string; activityName: string; originTaxYear: number; creditKind: string; amount: Decimal }>;
     /** Derived section469 closing amounts; original source confirmation is still required next year. */
     k1PassiveByCharacter?: Array<{ k1SourceId: string; accountHolder: "primary" | "spouse"; taxYear: number;
       ordinary: Decimal; shortTermCapital: Decimal; longTermCapital: Decimal }>;
@@ -287,6 +289,7 @@ export interface TaxReturnResult {
   form982?: import("@/engine/forms/form-982.js").Form982Result;
   /** Source-bound regular/alternative loss reductions after current tax under108(b). */
   codNolReduction?: import("@/engine/forms/cod-nol-reductions.js").CodNolReductionResult;
+  codAttributeReduction?: import("@/engine/forms/cod-attribute-reductions.js").CodAttributeReductionResult;
   form8824?: import("@/engine/forms/form-8824.js").Form8824AggregateResult;
   form2210?: import("@/engine/forms/form-2210.js").Form2210Result;
   form8815?: import("@/engine/forms/form-8815.js").Form8815Result;

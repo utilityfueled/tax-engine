@@ -4,6 +4,16 @@ taxYear: 2025
 irsReference: "https://www.irs.gov/forms-pubs/about-form-982"
 
 notes: |
+  The raw aggregate calculation entries below describe the legacy helper; they
+  do not establish the complete original histories or the two-date property cap.
+  The ordinary fully excluded one-event insolvency return must use the actual
+  cod-nol-reductions and cod-ordinary-attribute-sources methods instead. Their
+  source-replayed component closings, exact one-third credit ratios, section1017
+  cap and actual current Form982 line transfers supersede aggregate shortcuts
+  for that cohort. Other legacy regimes are not expanded or qualified here.
+  Every positive exclusion remains a partial reference-only packet; filenames
+  cannot establish official form qualification (see reference-packet-readiness
+  in cod-ordinary-attribute-sources.yaml).
   Form 982 is filed when a taxpayer excludes cancellation of debt (COD) income
   under IRC §108. Part I identifies the applicable exclusion (handled by
   Form 1099-C in this engine). Part II applies mandatory tax-attribute
@@ -41,7 +51,7 @@ notes: |
 
 businessRuleValidation:
   - rule: "reference-summary-packet"
-    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported exclusion categories together with the supported Form 982 attribute-reduction outputs."
+    description: "Inventory support counts this form as business-rule validated only when regression coverage proves the emitted packet artifact stays labeled as a non-filing reference summary and only surfaces the supported exclusion categories together with the supported Form 982 attribute-reduction outputs. The ordinary insolvency positive controls require complete actual sources; the retained historical aggregate-only fixture rejects rather than implying that no other attributes exist."
     testRef: "tests/pdf/fill-form-982.test.ts::buildForm982ReferenceSummary keeps the packet artifact reference-only and limited to supported exclusion and attribute-reduction outputs"
 
 lines:
@@ -167,5 +177,11 @@ lines:
     description: "Draft packet inclusion rule for supported Form 982 cancellation-of-debt exclusions"
     formula: "When supported cancellation-of-debt exclusions produce a Form 982 computation, include a non-filing reference-summary PDF in the packet that lists the supported exclusion categories from Form 1099-C and the supported Form 982 attribute-reduction outputs."
     irsRef: "Form 982; IRC §108(b); IRC §1017"
-    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate a filed Form 982, so the draft packet stays honest about the supported COD exclusion inputs and the resulting attribute reductions."
+    notes: "This packet slice intentionally emits a deterministic reference summary instead of attempting to recreate a filed Form 982, so the draft packet stays honest about the supported COD exclusion inputs and the resulting attribute reductions. Actual ordinary later-attribute outputs require the private original-source review context before any PDF I/O; missing histories in a prior aggregate-only specimen remain unknown."
     testRef: "tests/pdf/fill-form-982.test.ts::fillReturn includes a Form 982 reference summary when cancellation-of-debt exclusions produce a Form 982 computation"
+
+  - line: "aggregate-only-packet-source"
+    description: "Historical ordinary insolvency aggregate facts do not establish complete attribute inventories"
+    formula: "Reject the retained aggregate-only ordinary-insolvency fixture before constructing its reference packet. Positive packet controls use actual complete NOL, later-attribute and two-date property originals."
+    irsRef: "IRC §108(b)(2), (4); IRC §1017; Form 982 instructions"
+    testRef: "tests/pdf/fill-form-982.test.ts::retains the original aggregate-only insolvency specimen as an explicit source rejection"

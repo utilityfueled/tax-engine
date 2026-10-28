@@ -10,6 +10,7 @@ import { charitableReviewOriginalSourceInput, type PreparedCharitableReview } fr
 
 import { PDFDocument, PDFPage, StandardFonts } from "pdf-lib";
 import Decimal from "decimal.js";
+import { codPassiveCarryReference, type CodPassiveCarryReference } from "./cod-attribute-carry-reference.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { d, sum, zeroFloor } from "@/utils/decimal.js";
@@ -290,7 +291,7 @@ function printedRatios(rows: Allocation[], read: (row: Allocation) => Decimal): 
   return rounded.map(value => value.div(units).toFixed(6));
 }
 
-async function appendSourceRows(doc: PDFDocument, result: Form8582Result, capital?: K1PassiveCapitalResult): Promise<void> {
+async function appendSourceRows(doc: PDFDocument, result: Form8582Result, capital?: K1PassiveCapitalResult, cod?: CodPassiveCarryReference[]): Promise<void> {
   if (!result.activityRows.length) return;
   const font = await doc.embedFont(StandardFonts.Helvetica);
   let page: PDFPage, y = 0;
@@ -317,6 +318,7 @@ async function appendSourceRows(doc: PDFDocument, result: Form8582Result, capita
     if (current) line(current);
   };
   newPage();
+  if (cod) wrapped("Current Form 8582 values are before COD. The separate after-tax activity closings follow their current allocation rows.");
   wrapped("All sources appear below. Rows beyond the five spaces are included in the printed form totals.");
   wrapped("Original source cents are retained. Each destination line is rounded only after aggregation. Displayed ratios are reconciled separately; no carry or tax character is changed to absorb a printed-dollar difference.");
   const specialRows = result.rentalAllowance.gt(0) ? result.activityAllocations.filter(row => row.isActiveRental && row.overallLoss.gt(0)) : [];
@@ -328,6 +330,12 @@ async function appendSourceRows(doc: PDFDocument, result: Form8582Result, capita
     wrapped(`${index + 1}. ${row.name} | ${row.isActiveRental ? "Part IV" : "Part V"} | ${row.reportingFormAndLine ?? "Reporting form/line unknown: source review required"}`);
     wrapped(`Source income ${row.sourceCurrentIncome.toFixed()} | current loss ${row.sourceCurrentLoss.toFixed()} | prior unallowed loss ${row.sourcePriorYearSuspendedLoss.toFixed()}`);
     wrapped(`Form income ${row.currentIncome.toFixed()} | current loss ${row.currentLoss.toFixed()} | prior loss ${row.priorYearSuspendedLoss.toFixed()} | overall net ${row.overallNet.toFixed()}`);
+    const closing = cod?.find(item => item.name === row.name);
+    if (closing) {
+      wrapped(`Activity ${index + 1} passive loss before COD: ${closing.before.toFixed()}`);
+      wrapped(`Activity ${index + 1} passive loss attribute reduction: ${closing.reduction.toFixed()}`);
+      wrapped(`Activity ${index + 1} passive loss carry after COD: ${closing.closing.toFixed()}`);
+    }
     const allocation = result.activityAllocations.find(item => item.sourceIndex === row.sourceIndex && item.name === row.name);
     if (allocation) {
       wrapped(`Total loss ${allocation.totalLoss.abs().toFixed()} | special allowance ${allocation.specialAllowance.toFixed()} | unallowed ${allocation.suspendedLoss.toFixed()} | allowed ${allocation.allowedLoss.toFixed()}`);
@@ -355,6 +363,7 @@ async function appendSourceRows(doc: PDFDocument, result: Form8582Result, capita
 export async function fillForm8582(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string, charitableReview?: PreparedCharitableReview): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const source = form8582ReviewSource(input, result, charitableReview), retained = source?.retained, capital = source?.capital;
+  const cod = codPassiveCarryReference(result);
   const doc = await loadReviewTemplate(blankPdfPath, 2025), form = doc.getForm();
   setTextField(form, FIELDS.name, input.taxpayer.spouse
     ? `${input.taxpayer.primary.firstName} ${input.taxpayer.primary.lastName} & ${input.taxpayer.spouse.firstName} ${input.taxpayer.spouse.lastName}`
@@ -417,7 +426,7 @@ export async function fillForm8582(input: TaxYearInput, result: TaxReturnResult,
       setCurrencyField(form, FIELDS.part8.totalC, sum(...singleFormRows.map(row => row.allowedLoss)));
     }
   }
-  await appendSourceRows(doc, retained, capital);
+  await appendSourceRows(doc, retained, capital, cod);
   return doc;
 }
 export { FIELDS as FORM_8582_FIELDS };

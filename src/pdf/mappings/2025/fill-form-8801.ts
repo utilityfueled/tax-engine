@@ -9,7 +9,8 @@ import {
   type PDFFont,
   type PDFPage,
 } from "pdf-lib";
-import type { CalculatedLine } from "@/models/outputs.js";
+import { codCreditCarryReference } from "./cod-attribute-carry-reference.js";
+import type { CalculatedLine, TaxReturnResult } from "@/models/outputs.js";
 import type { Form8801Result } from "@/engine/forms/form-8801.js";
 
 const PAGE_WIDTH = 612;
@@ -138,16 +139,19 @@ function getReferenceLines(result: Form8801Result) {
   });
 }
 
-export function buildForm8801ReferenceSummary(result: Form8801Result): Form8801ReferenceSummary {
+export function buildForm8801ReferenceSummary(result: Form8801Result, taxReturn?: TaxReturnResult): Form8801ReferenceSummary {
   assertPdfExportAllowed(2025, result.taxYear);
   if (result.priorYear !== 2024) throw new Error("Form 8801 prior source year must be2024 for this2025 review mapping");
+  const cod = codCreditCarryReference(taxReturn, 'minimum_tax_credit', {
+    available: result.totalAvailableCredit, used: result.creditAllowed, carry: result.carryforwardToNextYear,
+  });
   return {
     title: "Form 8801 Prior Year Minimum Tax Credit Reference Summary",
     warningLabel: "REFERENCE SUMMARY ONLY",
     introduction: `Tax year 2025; prior source year 2024. ${result.sourceFactsVerified ? "Computed from confirmed actual prior-return source worksheets" : "Computed from unverified historical compatibility inputs"}. Values below copy the Form 8801 audit; current-year credit flows to Schedule 3 line 6b.`,
     lines: getReferenceLines(result).map((line) => ({
       line: line.line,
-      description: line.description,
+      description: cod && line.line === "26" ? `${line.description} before COD` : line.description,
       value: formatValue(line),
       formula: line.formula,
     })),
@@ -161,9 +165,13 @@ export function buildForm8801ReferenceSummary(result: Form8801Result): Form8801R
         value: result.creditAllowed.toString(),
       },
       {
-        label: "Carryforward to next year",
+        label: cod ? "Carryforward to next year before COD" : "Carryforward to next year",
         value: result.carryforwardToNextYear.toString(),
       },
+      ...(cod ? [
+        { label: "Minimum tax credit attribute reduction", value: cod.reduction.toFixed() },
+        { label: "Minimum tax credit carry after COD", value: cod.closing.toFixed() },
+      ] : []),
     ],
   };
 }
@@ -171,11 +179,12 @@ export function buildForm8801ReferenceSummary(result: Form8801Result): Form8801R
 export async function fillForm8801Reference(
   result: Form8801Result,
   outputDir: string,
+  taxReturn?: TaxReturnResult,
 ) {
   const doc = await PDFDocument.create();
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const regular = await doc.embedFont(StandardFonts.Helvetica);
-  const summary = buildForm8801ReferenceSummary(result);
+  const summary = buildForm8801ReferenceSummary(result, taxReturn);
   let page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   let y = PAGE_HEIGHT - PAGE_MARGIN;
 
@@ -282,6 +291,8 @@ export async function fillForm8801Reference(
   });
 
   for (const total of summary.totals) {
+    const needed = wrapText(`${total.label}: ${total.value}`, regular, BODY_FONT_SIZE, PAGE_WIDTH - PAGE_MARGIN * 2 - 12).length * 13 + 6;
+    if (y - needed < PAGE_MARGIN) newPage();
     y = drawWrappedText(page, `${total.label}: ${total.value}`, {
       font: regular,
       size: BODY_FONT_SIZE,

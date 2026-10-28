@@ -41,6 +41,7 @@ import type { TaxReturnResult } from "@/models/outputs.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
 import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { sumSourceMoney } from "@/utils/sum-source-money.js";
+import { sumSourceMoneyRatios } from "@/utils/sum-source-money-ratios.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { resolveForm2555Sources } from "./forms/form-2555-source-binding.js";
 import {
@@ -168,6 +169,7 @@ import { calculateForm1099K } from "./forms/form-1099-k.js";
 import { calculateForm1099C } from "./forms/form-1099-c.js";
 import { calculateForm982 } from "./forms/form-982.js";
 import { calculateCodNolReduction } from "./forms/cod-nol-reductions.js";
+import { calculateCodAttributeReturn } from "./forms/cod-attribute-return.js";
 import { calculateSEHealthInsuranceWorksheet, type SEHealthInsuranceWorksheetResult } from "./forms/se-health-insurance-worksheet.js";
 import { calculateMarketplaceNonspecifiedStop } from "./forms/marketplace-nonspecified-stop.js";
 import { calculateScheduleJ } from "./forms/schedule-j.js";
@@ -219,6 +221,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     throw new Error("Explicit nonitemized NOL coordination requires its separate source method");
   }
   validateQofDispositionFacts(input.qofDispositionFacts, input.taxpayer.taxYear);
+  if (input.form982AttributeSources && !input.form982NolSources) throw new Error("COD later attributes require actual complete original debt and NOL sources");
   if (input.form982NolSources) calculateCodNolReduction(input);
   const marketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
   if (!marketplace) return calculateFederalTaxWithNol(input);
@@ -1147,6 +1150,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // and including prior-year deferred amounts.
   let form8915FResult: Form8915FResult | undefined;
   let form982: ReturnType<typeof calculateForm982> | undefined;
+  let codAttributeReduction: TaxReturnResult["codAttributeReduction"];
   if (input.form8915F) {
     form8915FResult = calculateForm8915F(input.form8915F);
     audit.merge(form8915FResult.lines);
@@ -4508,7 +4512,16 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         .plus(excessBusinessLossAddback).plus(form172?.regular.netOperatingLoss ?? d("0"));
       let cfGbc = form3800?.carryforwardToNextYear ?? new Decimal(0);
       let cfMtc = form8801?.carryforwardToNextYear ?? new Decimal(0);
-      let cfCapitalLoss = adjustedCarryforward.carryforwardShortTerm.plus(adjustedCarryforward.carryforwardLongTerm);
+      let cfShortTermCapitalLoss = adjustedCarryforward.carryforwardShortTerm;
+      let cfLongTermCapitalLoss = adjustedCarryforward.carryforwardLongTerm;
+      let cfCapitalLoss = cfShortTermCapitalLoss.plus(cfLongTermCapitalLoss);
+      let cfPassiveRows = form8582.activityAllocations
+        .filter((a) => a.suspendedLoss.greaterThan(0))
+        .map((a) => ({ partnershipName: a.name, amount: a.suspendedLoss,
+          qbiVintages: a.sourceIndex === undefined ? undefined : rentalLossQbi.get(a.sourceIndex)?.remainingVintages
+            ?? k1QbiLosses.activities.find(source => source.passiveSourceIndex === a.sourceIndex)?.stages.find(stage => stage.limitation === "469")?.remainingVintages }));
+      let cfForeignByCategory = foreignTaxCreditCarryforwardByCategory;
+      let cfAlternativeForeignByCategory = foreignTaxDirectCredit?.amtCarryforwardByCategory ?? foreignTaxOrdinaryCredit?.amt.carryforwardByCategory;
       const cfPassive = sum(...form8582.activityAllocations.filter((a) => a.suspendedLoss.greaterThan(0)).map((a) => a.suspendedLoss));
       let cfFtc = foreignTaxCreditCarryforward;
 
@@ -4517,8 +4530,84 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
           if (!form1099CResult.totalExclusions.eq(codNolReduction.sourceExcludedAmount)
             || !cfNol.eq(codNolReduction.regular.carryforwardBeforeReduction)) throw new Error("COD actual excluded debt and canonical loss carries must reconcile");
           cfNol = codNolReduction.regular.carryforward;
+          if (input.form982AttributeSources) {
+            if ((input.scheduleK1Form1041 ?? []).some(row => row.isFinalK1
+              && (!d(row.finalYearShortTermCapitalLoss).isZero() || !d(row.finalYearLongTermCapitalLoss).isZero()))) {
+              throw new Error("COD transferred estate capital carry requires its actual original-year and use history");
+            }
+            // Sufficient zero-current-generation proof only. Form8801's current
+            // carry contains older generation, not a calculated discharge-year
+            // PartI difference. In particular an omitted physical6251line8 does
+            // not erase an actual904(j) AMT foreign credit.
+            const actualAlternativeForeignCredit = foreignTaxDirectCredit?.creditAllowed
+              ?? foreignTaxOrdinaryCredit?.amt.creditAllowed ?? d("0");
+            const currentMinimumTaxCreditZeroProven = amt.isZero() && actualAlternativeForeignCredit.isZero()
+              && nol?.stage === "final" && nol.worksheet.alternativeTax.deduction.isZero()
+              && !input.form2555 && form6251.investmentInterestAdjustment.isZero()
+              && form6251.depreciationAdjustment.isZero() && form6251.dispositionAdjustment.isZero()
+              && form6251.otherAdjustments.isZero()
+              && input.scheduleK1.every(row => [row.amtDepreciationAdjustment, row.amtAdjustedGainOrLoss, row.amtOtherItems].every(value => d(value).isZero()))
+              && (input.scheduleK1Form1041 ?? []).every(row => d(row.amtAdjustment).isZero())
+              && (!amtGainFacts || d(amtGainFacts.qualifiedDividends).eq(roundDollar(qualifiedDividends))
+                && d(amtGainFacts.netCapitalGain).eq(roundDollar(netLTCG))
+                && d(amtGainFacts.section1250Gain).eq(section1250Gain) && d(amtGainFacts.collectiblesGain).eq(collectiblesGain));
+            codAttributeReduction = calculateCodAttributeReturn(input, {
+              nol: codNolReduction, generalBusinessCredit: cfGbc, generalBusinessAvailable: form3800?.totalCredit ?? d("0"),
+              generalBusinessUsed: form3800?.allowableCredit ?? d("0"), minimumTaxCredit: cfMtc,
+              minimumTaxAvailable: form8801?.totalAvailableCredit ?? d("0"), minimumTaxUsed: form8801?.creditAllowed ?? d("0"),
+              currentMinimumTaxCreditZeroProven,
+              shortTermCapitalLoss: cfShortTermCapitalLoss, longTermCapitalLoss: cfLongTermCapitalLoss,
+              capitalOpenings: {
+                short: { prior: zeroFloor(d(input.priorYear?.shortTermCapitalLoss).negated()),
+                  current: zeroFloor(schedD.netShortTerm.minus(d(input.priorYear?.shortTermCapitalLoss)).negated()) },
+                long: { prior: zeroFloor(d(input.priorYear?.longTermCapitalLoss).negated()),
+                  current: zeroFloor(schedD.netLongTerm.minus(d(input.priorYear?.longTermCapitalLoss)).negated()) },
+              },
+              passiveLosses: cfPassiveRows.map(row => ({ name: row.partnershipName, amount: row.amount,
+                qualifiedCarryPresent: Boolean(row.qbiVintages?.some(vintage => vintage.remainingLoss.gt(0))) })),
+              passiveCreditUsed: d(input.form3800?.passiveActivityCredits), foreignCreditUsed: foreignTaxCredit,
+              alternativeForeignCreditUsed: actualAlternativeForeignCredit,
+              foreignCredit: cfFtc, foreignCreditByCategory: cfForeignByCategory,
+              alternativeForeignCreditByCategory: cfAlternativeForeignByCategory,
+            });
+            if (!codAttributeReduction) throw new Error("COD actual later-attribute calculation is missing");
+            const rows = codAttributeReduction.regular.records;
+            const closing = (kind: typeof rows[number]['kind']) => sumSourceMoneyRatios(rows.filter(row => row.kind === kind && row.expiredAfterReduction.isZero()).map(row => row.remainingRatio));
+            cfGbc = closing('general_business_credit'); cfMtc = closing('minimum_tax_credit');
+            cfShortTermCapitalLoss = sumSourceMoney(...rows.filter(row => row.kind === 'capital_loss' && row.term === 'short').map(row => row.remaining)).negated();
+            cfLongTermCapitalLoss = sumSourceMoney(...rows.filter(row => row.kind === 'capital_loss' && row.term === 'long').map(row => row.remaining)).negated();
+            cfCapitalLoss = sumSourceMoney(cfShortTermCapitalLoss, cfLongTermCapitalLoss);
+            cfPassiveRows = cfPassiveRows.map(row => ({ ...row,
+              amount: sumSourceMoney(...rows.filter(source => source.kind === 'passive_loss' && source.activityName === row.partnershipName).map(source => source.remaining)),
+            })).filter(row => row.amount.gt(0));
+            cfFtc = closing('foreign_tax_credit');
+            const foreignRows = (ledger: NonNullable<typeof codAttributeReduction>['regular']) => {
+              const result: typeof cfForeignByCategory = {};
+              for (const row of ledger.records.filter(source => source.kind === 'foreign_tax_credit' && source.remaining.gt(0))) {
+                const category = row.foreignCategory!;
+                const group = result[category] ?? (result[category] = []);
+                const existing = group.find(source => source.taxYear === row.originTaxYear);
+                if (!existing) group.push({ taxYear: row.originTaxYear, amount: sumSourceMoneyRatios(ledger.records
+                  .filter(source => source.kind === 'foreign_tax_credit' && source.foreignCategory === category && source.originTaxYear === row.originTaxYear && source.expiredAfterReduction.isZero())
+                  .map(source => source.remainingRatio)) });
+              }
+              return result;
+            };
+            cfForeignByCategory = foreignRows(codAttributeReduction.regular);
+            cfAlternativeForeignByCategory = foreignRows(codAttributeReduction.alternativeTax);
+            for (const [taxSystem, ledger] of [['Regular', codAttributeReduction.regular], ['Alternative', codAttributeReduction.alternativeTax]] as const) {
+              for (const stage of ledger.stages) audit.record(`${taxSystem} COD Attribute Worksheet`, stage.kind,
+                'Excluded income applied to an original later attribute', stage.incomeApplied,
+                'After current tax and actual NOL reduction; original stage order and independent source records', { 'Attribute reduction': stage.attributeReduction });
+            }
+          }
         } else {
           if (nol) throw new Error("Actual NOL carry with current debt cancellation requires its regular and AMT vintage attribute-reduction worksheets");
+          if (form1099CResult.insolvencyExclusion.gt(0) && !codExclusion.bankruptcy && !codExclusion.electBasisReductionFirst
+            && form1099CResult.qualifiedPrincipalResidenceExclusion.isZero() && form1099CResult.qualifiedFarmExclusion.isZero()
+            && form1099CResult.qualifiedRealPropertyBusinessExclusion.isZero()) {
+            throw new Error("COD ordinary insolvency requires actual complete attribute sources before reducing or claiming exhausted balances");
+          }
           form982 = calculateForm982({
             bankruptcyExclusion: form1099CResult.bankruptcyExclusion,
             insolvencyExclusion: form1099CResult.insolvencyExclusion,
@@ -4566,13 +4655,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       }
       return {
         capitalLoss: cfCapitalLoss,
-        shortTermCapitalLoss: adjustedCarryforward.carryforwardShortTerm,
-        longTermCapitalLoss: adjustedCarryforward.carryforwardLongTerm,
-        suspendedPassiveLosses: form8582.activityAllocations
-          .filter((a) => a.suspendedLoss.greaterThan(0))
-          .map((a) => ({ partnershipName: a.name, amount: a.suspendedLoss,
-            qbiVintages: a.sourceIndex === undefined ? undefined : rentalLossQbi.get(a.sourceIndex)?.remainingVintages
-              ?? k1QbiLosses.activities.find(source => source.passiveSourceIndex === a.sourceIndex)?.stages.find(stage => stage.limitation === "469")?.remainingVintages })),
+        shortTermCapitalLoss: cfShortTermCapitalLoss,
+        longTermCapitalLoss: cfLongTermCapitalLoss,
+        suspendedPassiveLosses: cfPassiveRows,
+        ...(codAttributeReduction ? { suspendedPassiveCredits: codAttributeReduction.regular.records
+          .filter(row => row.kind === 'passive_credit' && row.remaining.gt(0))
+          .map(row => ({ sourceId: row.sourceId, activityName: row.activityName!, originTaxYear: row.originTaxYear,
+            creditKind: row.creditKind!, amount: row.remaining })) } : {}),
         ...(passiveCapital ? { k1PassiveByCharacter: passiveCapital.rows.map(row => ({
           k1SourceId: `scheduleK1:${row.k1Index}`, accountHolder: row.accountHolder,
           taxYear: year, ordinary: row.ordinarySuspended, shortTermCapital: row.shortTermSuspended, longTermCapital: row.longTermSuspended,
@@ -4581,9 +4670,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
           .filter((p) => p.netSuspended.greaterThan(0))
           .map((p) => ({ partnershipName: p.name, amount: p.netSuspended })),
         foreignTaxCreditCarryforward: cfFtc,
-        foreignTaxCreditCarryforwardByCategory,
-        ...(foreignTaxDirectCredit ? { amtForeignTaxCreditCarryforwardByCategory: foreignTaxDirectCredit.amtCarryforwardByCategory } : {}),
-        ...(foreignTaxOrdinaryCredit ? { amtForeignTaxCreditCarryforwardByCategory: foreignTaxOrdinaryCredit.amt.carryforwardByCategory } : {}),
+        foreignTaxCreditCarryforwardByCategory: cfForeignByCategory,
+        ...(cfAlternativeForeignByCategory ? { amtForeignTaxCreditCarryforwardByCategory: cfAlternativeForeignByCategory } : {}),
         qbiLossCarryforward: form8995Result?.qbiLossCarryforward ?? form8995AResult?.qbiLossCarryforward ?? new Decimal(0),
         ...(input.qbiLossSources ? { qbiSuspendedLosses: k1QbiLosses.activities.flatMap(activity => [
           ...activity.stages.filter(stage => stage.remainingVintages.length > 0).map(stage => ({
@@ -4705,6 +4793,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     form8962,
     form8960,
     form982,
+    codAttributeReduction,
     form8824,
     form2210,
     form8815,

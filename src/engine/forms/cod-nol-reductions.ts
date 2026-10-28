@@ -8,6 +8,7 @@ import type { NetOperatingLossReturnResult } from './net-operating-loss-return.j
 import type { Form172ReturnResult } from './form-172-return.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, roundDollar, sum, zeroFloor } from '@/utils/decimal.js';
+import { calculateCodAttributeReturn } from './cod-attribute-return.js';
 
 export interface CodNolVintageReduction {
   sourceId: string; lossTaxYear: number; originalLoss: Decimal;
@@ -60,7 +61,7 @@ function canonical(value: Decimal | undefined, label: string): Decimal {
 }
 
 /** Precisely the actual records consumed; source-only callers need no fabricated return. */
-export type CodNolSourceInput = Pick<TaxYearInput, 'form982NolSources' | 'netOperatingLoss' | 'form1099C' | 'form172'> & {
+export type CodNolSourceInput = Pick<TaxYearInput, 'form982NolSources' | 'form982AttributeSources' | 'netOperatingLoss' | 'form1099C' | 'form172'> & {
   taxpayer: Pick<TaxYearInput['taxpayer'], 'taxYear' | 'filingStatus'> & {
     primary: Pick<TaxYearInput['taxpayer']['primary'], 'firstName' | 'lastName' | 'ssn'>;
   };
@@ -140,6 +141,7 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
   audit.record('Form 982', '2', 'Discharged debt excluded under insolvency', reportedExcludedAmount,
     'Exact full exclusion reconciles to original personal debt and actual insolvency; round the aggregate once', { 'Original excluded debt': sourceExcludedAmount });
   const base: CodNolReductionResult = { sourceFactsVerified: true, calculationComplete: false, sourceExcludedAmount, reportedExcludedAmount, insolvencyAmount, lines: audit.getLines() };
+  if (input.form982AttributeSources) calculateCodAttributeReturn(input);
   if (!context) return base;
   const { priorLoss: prior, currentOrigin } = context;
   if (currentOrigin && (!currentOrigin.currentExcessBusinessLoss.isZero() || !currentOrigin.alternativeExcessBusinessLoss.isZero())) {
@@ -237,7 +239,7 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
         canonical(row.expired, 'comparison expiry').minus(canonical(row.expiredBeforeYear, 'comparison unavailable loss'))))))) {
       throw new Error('COD charitable comparison aggregate does not reconcile with the complete original vector');
     }
-    if (reportedExcludedAmount.gt(beforeReduction)) throw new Error('COD NOL is insufficient in an independent tax system; later-attribute reduction requires its separate actual worksheet');
+    if (reportedExcludedAmount.gt(beforeReduction) && !input.form982AttributeSources) throw new Error('COD NOL is insufficient in an independent tax system; later-attribute reduction requires its separate actual worksheet');
     let remaining = reportedExcludedAmount;
     const vintages = rows.map((row): CodNolVintageReduction => {
       // The same determined108 vector must fit both modified vectors. No
@@ -278,7 +280,7 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
         ...(charitableComparison ? { charitableComparison } : {}),
         ...(row.section1411OriginalLoss === undefined ? {} : { section1411OriginalLoss: row.section1411OriginalLoss, section1411RemainingCarryforward }) };
     });
-    if (!remaining.isZero()) throw new Error('COD original reduction is not conserved by its original vintage vector');
+    if (!remaining.isZero() && !input.form982AttributeSources) throw new Error('COD original reduction is not conserved by its original vintage vector');
     const expiredAfterReduction = sum(...vintages.map(row => row.expiredAfterReduction));
     const carryforward = sum(...vintages.map(row => row.remainingCarryforward));
     let charitableComparison: CodNolLedgerReduction['charitableComparison'];
@@ -296,7 +298,7 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
         'Each original normal and comparison modified loss supports the same actual reduction; their succeeding difference is conserved',
         { 'Before COD difference': beforeDifference, 'Normal succeeding carry': carryforward, 'Comparison succeeding carry': comparedCarry });
     }
-    return { beforeReduction, carryforwardBeforeReduction, reduction: reportedExcludedAmount,
+    return { beforeReduction, carryforwardBeforeReduction, reduction: reportedExcludedAmount.minus(remaining),
       currentTaxUse, modifiedAbsorption, modifiedUseAdjustment, modifiedAvailableBeforeReduction,
       expiredAfterReduction, carryforward, vintages, ...(charitableComparison ? { charitableComparison } : {}) };
   };

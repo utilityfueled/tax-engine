@@ -3,6 +3,7 @@
 import { updateGuidedCodNol, type CodDebtData, type CodInsolvencyData, type CodInsolvencyItemData, type CodNolData } from '@/lib/guided-cod-nol';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
+import { CodAttributeDetails } from './cod-attribute-details';
 
 function Choice({ label, value, options, onChange }: { label: string; value?: string; options: [string, string][]; onChange: (value: string) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value ?? ''} onChange={event => onChange(event.target.value)}>
@@ -21,7 +22,7 @@ export function CodNolDetails({ data, onChange }: { data?: CodNolData; onChange:
   const statements: [string, string][] = (data?.debts ?? []).flatMap(row => row.statementId?.trim() ? [[row.statementId.trim(), row.statementId.trim()]] : []);
   return <details className="guided-expand"><summary className="guided-expand-trigger">Canceled debt and insolvency</summary><div className="guided-expand-body">
     <p className="guided-hint">Use the original Form 1099-C and complete records of everything you owned and owed immediately before the debt was canceled. Include retirement accounts and other assets protected from creditors.</p>
-    <p className="guided-hint">This method covers unsecured personal debt fully excluded because of insolvency and absorbed by available net operating losses. Complete the separate regular and AMT loss histories above. The return calculates the reduction after current tax; do not enter a revised loss balance here.</p>
+    <p className="guided-hint">This method covers unsecured personal debt fully excluded because of insolvency. Complete the separate regular and AMT loss histories above, including explicit empty histories. If canceled debt reaches later attributes, enter those original records below. The return calculates reductions after current tax; do not enter a revised balance.</p>
     {!data ? <button type="button" className="utility-button" onClick={() => onChange({})}>Add canceled-debt sources</button> : <>
       <div className="guided-form-grid">
         <TextFact label="Canceled-debt source tax year" value={data.sourceTaxYear ?? ''} onChange={sourceTaxYear => change({ sourceTaxYear })} />
@@ -96,6 +97,7 @@ export function CodNolDetails({ data, onChange }: { data?: CodNolData; onChange:
         <BooleanFact label="Insolvency worksheet checked after the last edit" value={data.insolvency.sourceFactsConfirmed} onChange={sourceFactsConfirmed => insolvency({ sourceFactsConfirmed })} />
         <button type="button" className="utility-button" onClick={() => change({ insolvency: undefined })}>Remove insolvency worksheet</button>
       </fieldset>}
+      <CodAttributeDetails data={data.attributeSources} onChange={attributeSources => change({ attributeSources })} />
       <BooleanFact label="Canceled-debt packet checked after the last edit" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed => change({ sourceFactsConfirmed })} />
       <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Remove canceled-debt sources</button>
     </>}
