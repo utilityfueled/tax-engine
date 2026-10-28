@@ -7,64 +7,60 @@ complete a checkbox.
 
 ## Current integration — 2026-10-28 UTC
 
-The original basis-admission package is delivered in `69b86517`, and the
-ordinary-gift activity correction in `bf1e2f1b`. Actual annual originals determine
-when a previously basis-limited gift first enters section170, preserving prior
-use, appreciation and independent regular/AMT carry years. Current ordinary
-gifts then remain separate from actual section465 activity deductions; recorded
-historical activity sources retain their existing identity and years.
+Foreign-carry integration is delivered in `92870a8a`. Separate regular and
+AMT originals now support the admitted foreign-carry cases with complete empty
+NOL histories. Export verification binds the complete federal result before any
+file writes, while retaining the independently checked state attachment behavior.
+The [work ledger](upgrade-2026-cod-empty-nol-foreign-work.md) preserves the two
+earlier rejected candidates and their unchanged independent regression controls.
 
-The combined branch passes **116 tests in32 files**, all three type checks,
-**6,221 spec references**, inventory generation/freshness (**587 entries and166
-associations**), scoped lint with zero errors/warnings, and both engine and
-production webpack builds. Rule versions are `2025.193` /
-`2026.191-law-integration-draft`. The [basis ledger](upgrade-2026-basis-first-section170-entry-work.md)
-and [gift/activity ledger](upgrade-2026-k1-ordinary-gift-risk-work.md) retain
-spec-first failures, source inferences and independent review evidence.
+Main passes **250 tests in 48 files**, all three type checks, **6,241 spec
+references**, inventory freshness (**589 entries and 166 associations**), scoped
+lint (**zero errors, 30 warnings**), engine build and production webpack build.
+Rule versions are `2025.194` / `2026.192-law-integration-draft`. Main production
+browser checks pass **2/2**, with one worker and zero retries. Both actual saved
+guide originals and all 46 downloaded pages match the independently reviewed
+originals and PDFs in text and pixels. Four new desktop/mobile captures were
+inspected; these seeded partial interviews do not establish a complete journey.
 
-Parent basis review passes19 tests in five files, including eight private
-originals, and4,403 original/output/hash checks. Gift/activity review passes38
-tests in seven files, including six private originals, and10,622 checks across
-127 PDFs/513 pages/504 populated fields. Six actual PDF pages and four actual
-desktop/mobile captures were inspected for the latter package. Four frozen
-production-browser downloads pass with zero retries. These are seeded partial
-interviews; their evidence does not establish a complete journey or staging.
-The rejected assertion-precision reduction and corrected parent reader mistakes
-remain retained. Exact25-place tests and readiness/privacy gates are unchanged.
-
-The test-only PDF reader package `fa7a4497` reduces six independent Python starts
-to two in one existing K1 case. All22 original assertion lines are byte-identical;
-main passes four tests in two files, root types and scoped lint. Its
-[ledger](upgrade-2026-pdf-reader-batching-work.md) records bounded normal/covered
-timing samples. All twelve earlier CI timeout cases pass locally in both modes;
-that does not reproduce or resolve the full CI failure. Deadlines and global
-coverage thresholds remain unchanged.
+Parent frozen-source review passes **28 tests in six files**, including nine
+unchanged private controls, and **11,099 original/output/hash checks** across
+seven originals and 91 PDFs / 308 pages / 337 populated fields. Six rendered
+canonical pages match the actual inspected prior-version pages. The independent
+reviewer's five unchanged cases pass, including rejection before writes and the
+existing Pennsylvania attachment control. This is agent review, not human tax
+qualification, final-form qualification or staging evidence.
 
 Remaining internal work is active:
 
-- Finish independent review and integration of ordinary/deduction-year foreign
-  carry composition with complete empty regular/AMT NOL histories. Frozen core
-  checks pass; the actual-browser seed's missing existing UI field caused a
-  retained failure. Its fixture-only correction is under verification.
-- Bind the delivered signed minimum-tax-credit source-year primitive to complete
-  actual current deferral/exclusion, MTCNOL and foreign histories. A signed result
-  changes only the beginning-next-year aggregate after current credit use.
-- Finish bounded coverage-timeout diagnosis and run the final unchanged
-  unit/coverage/static/build/browser gates on the integrated source.
+- Review and integrate current-year signed minimum-tax-credit sources. The
+  candidate is composed onto `92870a8a`; current credit use stays separate from
+  the beginning-next-year signed aggregate. Independent originals are retained.
+- Complete ordinary partial-insolvency cancellation using actual personal debt
+  and nondeductible-interest records. Preserve the three incomplete legacy inputs
+  as rejection controls and retain their original monetary assertions in separate
+  complete-source cases. Use the full discharge for post-event liabilities.
+- Resolve the actual CI failures and finish bounded timeout diagnosis, then run
+  all unchanged unit, coverage, static, build and browser gates on the final code.
 - Rehearse final native arm64/amd64 images, SBOM/scans and full recovery after
-  those source packages. No historical artifact qualifies later changes.
+  those source packages. Historical artifacts cannot qualify later changes.
 
-The earlier ordinary-COD package `23187df3` and its
-[source/output evidence](upgrade-2026-cod-ordinary-attributes-work.md) remain
-delivered, as do the charitable-floor correction `7702ba56`, adjacent standard-
-choice assertion `b15003cb`, and signed source-year primitive `ecdb754d`.
-The [183c1bbc CI record](upgrade-2026-ci-183c1bbc.json) remains historical:
-19,735 unit passes,19,723 coverage passes plus twelve timeouts, and both520-case
-browser runs with five hosted-only skips each. Its
-[amd64 recovery record](upgrade-2026-runtime-183c1bbc.json) passes six phases
-and retains157 scan matches across67 OS advisories.
+The completed [036eef86 CI record](upgrade-2026-ci-036eef86.json) is historical:
+unit tests report **19,808 passes and three failures**; coverage reports **19,790
+passes and 21 failures**, comprising the same three source failures and eighteen
+explicit five-second timeouts. No coverage report was produced, so no percentage
+or threshold pass is claimed. Both browser suites pass **526 cases with five
+hosted-only skips each**. The [amd64 runtime record](upgrade-2026-runtime-036eef86.json)
+passes six recovery phases and retains **157 scan matches / 67 OS advisories**,
+all still awaiting owner acceptance with the November 7 review date. Neither the
+skips nor the successful critical-severity scan gate satisfy those open gates.
 
-The October28 official-source/provider/package refresh remains recorded.
+Earlier basis admission `69b86517`, ordinary-gift activity separation `bf1e2f1b`,
+test-only independent PDF-reader batching `fa7a4497`, and ordinary COD attributes
+`23187df3` remain delivered. Original assertions, deadlines, coverage thresholds,
+privacy controls and readiness gates remain unchanged.
+
+The October 28 official-source/provider/package refresh remains recorded.
 Provider account access, approved live spend and model evaluation are unverified.
 Human tax/AI/security reviews, launch-state demand and final-form qualification,
 staging access/evidence and advisory-owner acceptance remain external gates.

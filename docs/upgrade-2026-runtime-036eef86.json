@@ -1,0 +1,403 @@
+{
+  "head": "036eef86406920e1a5bd70110781f494a0cd84a4",
+  "recordedAt": "2026-10-28T22:33:12.789144+00:00",
+  "artifact": {
+    "archive_download_url": "https://api.github.com/repos/utilityfueled/tax-engine/actions/artifacts/12855402276/zip",
+    "created_at": "2026-10-28T22:05:48Z",
+    "digest": "sha256:ba7a476d5720eaefcdf1c22696aa2e9eaffb2ceb9d59100c414bacd159a82557",
+    "downloadLimitation": "Initial restricted-shell DNS access failed. A scoped read-only elevated download succeeded; this note records the tool-transcript observation, not a retained raw DNS log.",
+    "expired": false,
+    "expires_at": "2027-01-26T21:37:45Z",
+    "id": 12855402276,
+    "localPath": "036eef86-container-runtime-evidence.zip",
+    "localSha256": "ba7a476d5720eaefcdf1c22696aa2e9eaffb2ceb9d59100c414bacd159a82557",
+    "name": "container-runtime-evidence",
+    "remoteDigestMatches": true,
+    "safeExtraction": "No absolute paths, parent traversals, or symlink entries; file inventory and hashes retained.",
+    "size_in_bytes": 65698424,
+    "updated_at": "2026-10-28T22:05:48Z",
+    "url": "https://api.github.com/repos/utilityfueled/tax-engine/actions/artifacts/12855402276",
+    "workflow_run": {
+      "head_branch": "upgrade/2026-baseline",
+      "head_repository_id": 1199090938,
+      "head_sha": "036eef86406920e1a5bd70110781f494a0cd84a4",
+      "id": 40773517741,
+      "repository_id": 1199090938
+    }
+  },
+  "artifactInspection": {
+    "artifactZipSha256MatchesRemote": true,
+    "bytes": 86450227,
+    "extensions": {
+      ".json": 73,
+      ".log": 2,
+      ".pdf": 78,
+      ".png": 310
+    },
+    "extractedFiles": 463,
+    "filesUnchangedAfterRead": true,
+    "head": "036eef86406920e1a5bd70110781f494a0cd84a4",
+    "parseErrors": [],
+    "pdfFields": 1621,
+    "pdfPageWidgets": 1112,
+    "pdfPages": 1463,
+    "pdfPopulatedFields": 0,
+    "pdfsReopened": 78,
+    "playwrightHtmlReportRetained": false,
+    "pngsVerified": 310,
+    "savedJsonFiles": 71,
+    "savedJsonKinds": {
+      "encrypted-recovery-envelope": 1,
+      "saved-guided-state": 46,
+      "saved-state-and-workspace": 22,
+      "saved-workspace": 2
+    },
+    "scope": "Read-only artifact integrity and source inventory. No fresh full tax-arithmetic, privacy, or all-page visual qualification."
+  },
+  "containerSmoke": {
+    "architecture": "x64",
+    "assets": true,
+    "healthy": true,
+    "image": "sha256:fbf4efe19107e65b4d78d08068dd422401474e4e1b7844aabdb4ceeb3d5f9df6",
+    "imageCacheFilesystem": 16914836,
+    "imageCacheLimitBytes": 67108864,
+    "imageCacheWritten": true,
+    "node": "v24.22.1",
+    "packageTools": false,
+    "providerKeys": false,
+    "readOnly": true,
+    "result": "passed",
+    "selfHostAuth": true,
+    "templates": 44,
+    "uid": 1001
+  },
+  "recovery": {
+    "browserRecovery": {
+      "deletion": true,
+      "encrypted": true,
+      "exactCents": true,
+      "networkObservation": {
+        "limitation": "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof.",
+        "rawPrivateMarkersAbsent": true,
+        "requests": 404,
+        "startsBeforeUpload": true
+      },
+      "originalBytes": true,
+      "passed": true,
+      "tamperRejected": true,
+      "unknownYearPreserved": true,
+      "wrongPasswordRejected": true
+    },
+    "candidateDigest": "sha256:fbf4efe19107e65b4d78d08068dd422401474e4e1b7844aabdb4ceeb3d5f9df6",
+    "databaseRecovery": {
+      "checksum": "b20f773dc1fa781887ea63e5798ad4b1f46f0800ef47c65094687921993ab7f7",
+      "evidence": "local-synthetic-postgresql-dump-restore",
+      "exactCostRestored": true,
+      "metadataCleanupIdempotent": true,
+      "metadataCleanupReapplied": true,
+      "result": "passed",
+      "tables": 9,
+      "tenantWorkspaces": 2
+    },
+    "kind": "local-synthetic-compose-release-rehearsal",
+    "phases": [
+      {
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "documentSha256": "7579020b955034bf9abc5c41112ec23665bc2ff8af9a98950ff41c7b1f4fab13",
+        "imageDigest": "sha256:487b2618bd487a17080f016083b2a12a73ef46ba1d819b6bdb58be365f8da01a",
+        "phase": "previous",
+        "readOnly": true,
+        "runtimeFacts": {
+          "arch": "x64",
+          "noBoundingCapabilities": true,
+          "noEffectiveCapabilities": true,
+          "noNewPrivileges": true,
+          "node": "v24.22.1",
+          "providerKeys": false,
+          "uid": 1001
+        }
+      },
+      {
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "documentSha256": "7579020b955034bf9abc5c41112ec23665bc2ff8af9a98950ff41c7b1f4fab13",
+        "imageDigest": "sha256:fbf4efe19107e65b4d78d08068dd422401474e4e1b7844aabdb4ceeb3d5f9df6",
+        "phase": "upgrade",
+        "readOnly": true,
+        "runtimeFacts": {
+          "arch": "x64",
+          "noBoundingCapabilities": true,
+          "noEffectiveCapabilities": true,
+          "noNewPrivileges": true,
+          "node": "v24.22.1",
+          "providerKeys": false,
+          "uid": 1001
+        }
+      },
+      {
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "documentSha256": "7579020b955034bf9abc5c41112ec23665bc2ff8af9a98950ff41c7b1f4fab13",
+        "imageDigest": "sha256:fbf4efe19107e65b4d78d08068dd422401474e4e1b7844aabdb4ceeb3d5f9df6",
+        "phase": "database-restart",
+        "readOnly": true,
+        "runtimeFacts": {
+          "arch": "x64",
+          "noBoundingCapabilities": true,
+          "noEffectiveCapabilities": true,
+          "noNewPrivileges": true,
+          "node": "v24.22.1",
+          "providerKeys": false,
+          "uid": 1001
+        }
+      },
+      {
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "documentSha256": "7579020b955034bf9abc5c41112ec23665bc2ff8af9a98950ff41c7b1f4fab13",
+        "imageDigest": "sha256:fbf4efe19107e65b4d78d08068dd422401474e4e1b7844aabdb4ceeb3d5f9df6",
+        "phase": "database-dump-restore",
+        "readOnly": true,
+        "runtimeFacts": {
+          "arch": "x64",
+          "noBoundingCapabilities": true,
+          "noEffectiveCapabilities": true,
+          "noNewPrivileges": true,
+          "node": "v24.22.1",
+          "providerKeys": false,
+          "uid": 1001
+        }
+      },
+      {
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "documentSha256": "7579020b955034bf9abc5c41112ec23665bc2ff8af9a98950ff41c7b1f4fab13",
+        "imageDigest": "sha256:487b2618bd487a17080f016083b2a12a73ef46ba1d819b6bdb58be365f8da01a",
+        "phase": "rollback",
+        "readOnly": true,
+        "runtimeFacts": {
+          "arch": "x64",
+          "noBoundingCapabilities": true,
+          "noEffectiveCapabilities": true,
+          "noNewPrivileges": true,
+          "node": "v24.22.1",
+          "providerKeys": false,
+          "uid": 1001
+        }
+      },
+      {
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "documentSha256": "7579020b955034bf9abc5c41112ec23665bc2ff8af9a98950ff41c7b1f4fab13",
+        "imageDigest": "sha256:fbf4efe19107e65b4d78d08068dd422401474e4e1b7844aabdb4ceeb3d5f9df6",
+        "phase": "re-upgrade",
+        "readOnly": true,
+        "runtimeFacts": {
+          "arch": "x64",
+          "noBoundingCapabilities": true,
+          "noEffectiveCapabilities": true,
+          "noNewPrivileges": true,
+          "node": "v24.22.1",
+          "providerKeys": false,
+          "uid": 1001
+        }
+      }
+    ],
+    "platform": "linux/amd64",
+    "previousDigest": "sha256:487b2618bd487a17080f016083b2a12a73ef46ba1d819b6bdb58be365f8da01a",
+    "project": "tax-rehearsal-f782c1f6",
+    "result": "passed"
+  },
+  "recoveryBoundary": "Existing local synthetic linux/amd64 Compose/PostgreSQL and browser recovery rehearsal; not hosted staging or production recovery.",
+  "security": {
+    "availableFixedVersionMatches": 0,
+    "binding": "Actual image digest comes from smoke/recovery and the matching build log. SBOM/scan carry exact revision label; their short internal imageID is not misrepresented as a Docker digest.",
+    "databaseStatus": {
+      "built": "2026-10-28T06:23:30Z",
+      "from": "https://grype.anchore.io/databases/v6/vulnerability-db_v6.1.10_2026-10-28T00:24:28Z_1793168610.tar.zst?checksum=sha256%3Ab08902b91738f1a9bc7fd61942f331d8e5e76a5df0c0b5f8c17c18bd787ee278",
+      "path": "/home/runner/.cache/grype/db/6/vulnerability.db",
+      "schemaVersion": "v6.1.10",
+      "valid": true
+    },
+    "exactRegisterTupleEquality": true,
+    "fixStates": {
+      "not-fixed": 47,
+      "wont-fix": 110
+    },
+    "gate": "Grype --fail-on critical. Success does not accept the 157 findings or resolve pending release-maintainer/human review.",
+    "matchCounts": {
+      "Critical": 0,
+      "High": 54,
+      "Low": 10,
+      "Medium": 47,
+      "Negligible": 46
+    },
+    "ownerConfirmation": {
+      "pending": 67
+    },
+    "packageTypes": {
+      "deb": 157
+    },
+    "registerDispositions": {
+      "unresolved-release-review-required": 67
+    },
+    "reviewBy": [
+      "2026-11-07"
+    ],
+    "sbomComponents": 2930,
+    "sbomFormat": "CycloneDX",
+    "sbomGenerator": {
+      "components": [
+        {
+          "author": "anchore",
+          "name": "syft",
+          "type": "application",
+          "version": "1.42.3"
+        }
+      ]
+    },
+    "sbomSha256": "dee49c7f2ed4f7cb00f329d116831c1c8852ed394fa30ca150193576ef537ae1",
+    "sbomSpecVersion": "1.6",
+    "sbomTimestamp": "2026-10-28T22:04:40Z",
+    "scanSha256": "5f5679a8e21260f44a156fb03a202e90e2bdcb4938ff9be700337b1e4ee3c227",
+    "scanner": {
+      "name": "grype",
+      "version": "0.121.0"
+    },
+    "suppressionDisclosure": {
+      "conclusion": "Do not infer zero suppressed scanner matches from this output; existing scanner rules are retained.",
+      "configuredIgnoreRules": [
+        {
+          "fix-state": "",
+          "include-aliases": false,
+          "match-type": "exact-indirect-match",
+          "namespace": "",
+          "package": {
+            "language": "",
+            "location": "",
+            "name": "kernel-headers",
+            "type": "rpm",
+            "upstream-name": "kernel",
+            "version": ""
+          },
+          "reason": "",
+          "vex-justification": "",
+          "vex-status": "",
+          "vulnerability": ""
+        },
+        {
+          "fix-state": "",
+          "include-aliases": false,
+          "match-type": "exact-indirect-match",
+          "namespace": "",
+          "package": {
+            "language": "",
+            "location": "",
+            "name": "linux(-.*)?-headers-.*",
+            "type": "deb",
+            "upstream-name": "linux.*",
+            "version": ""
+          },
+          "reason": "",
+          "vex-justification": "",
+          "vex-status": "",
+          "vulnerability": ""
+        },
+        {
+          "fix-state": "",
+          "include-aliases": false,
+          "match-type": "exact-indirect-match",
+          "namespace": "",
+          "package": {
+            "language": "",
+            "location": "",
+            "name": "linux-libc-dev",
+            "type": "deb",
+            "upstream-name": "linux",
+            "version": ""
+          },
+          "reason": "",
+          "vex-justification": "",
+          "vex-status": "",
+          "vulnerability": ""
+        },
+        {
+          "fix-state": "",
+          "include-aliases": false,
+          "match-type": "exact-indirect-match",
+          "namespace": "",
+          "package": {
+            "language": "",
+            "location": "",
+            "name": "linux-kbuild-.*",
+            "type": "deb",
+            "upstream-name": "linux.*",
+            "version": ""
+          },
+          "reason": "",
+          "vex-justification": "",
+          "vex-status": "",
+          "vulnerability": ""
+        }
+      ],
+      "ignoredMatchesFieldPresent": false,
+      "includeMatcherSuppressions": false,
+      "showSuppressed": false
+    },
+    "uniqueAdvisories": 67
+  },
+  "selectedOriginalSourceChecks": [
+    {
+      "checks": [
+        "actual preceding-year 2024 original record retained",
+        "explicit ordinary carry 7000 retained",
+        "optional active carry remains absent",
+        "saved state is interview with two completed sections; not represented as a completed full-shell interview"
+      ],
+      "path": "extracted/apps/web/test-results/prior-qbi-ordinary-Actual--16146-tup-through-review-download-chromium/ordinary-prior-qbi-original-workspace-390.json",
+      "sha256": "c977347f0a033fdac0042b5200b0c1d308388334d5f3a9334daf5bd0ee3c9fe1"
+    },
+    {
+      "checks": [
+        "original receipt 2018 retained",
+        "annual admission records 2018-2025 retained",
+        "actual 2026 saved facts retained",
+        "no PDF in this result directory, consistent with exact-source closed 2026 output assertions"
+      ],
+      "path": "extracted/apps/web/test-results/k1-charitable-first-admiss-61bdf--without-opening2026-output-chromium/basis-first-admission-state-390.json",
+      "sha256": "da5b8089a00a6f23c20f45438a58de6b1adb1d85505d59bab5af5a23ab54ae50"
+    },
+    {
+      "checks": [
+        "actual preceding-year 2024 original record retained",
+        "explicit ordinary carry 7000 retained",
+        "optional active carry remains absent",
+        "saved state is interview with two completed sections; not represented as a completed full-shell interview"
+      ],
+      "path": "extracted/apps/web/test-results/prior-qbi-ordinary-Actual--71d76-tup-through-review-download-chromium/ordinary-prior-qbi-original-workspace-1280.json",
+      "sha256": "c977347f0a033fdac0042b5200b0c1d308388334d5f3a9334daf5bd0ee3c9fe1"
+    },
+    {
+      "checks": [
+        "original receipt 2018 retained",
+        "annual admission records 2018-2025 retained",
+        "actual 2026 saved facts retained",
+        "no PDF in this result directory, consistent with exact-source closed 2026 output assertions"
+      ],
+      "path": "extracted/apps/web/test-results/k1-charitable-first-admiss-cfcf2--without-opening2026-output-chromium/basis-first-admission-state-1280.json",
+      "sha256": "1c0f64b04530127a7df04968f0747934888f47c666a7a788fff8ef7a0be27fa1"
+    }
+  ],
+  "retainedReaderAttempt": {
+    "classification": "Reader assumed saved taxYear was a string. Actual saved taxYear is numeric; representation normalization only, expected years and original files unchanged.",
+    "firstReaderPath": "close-receipt-attempt1.py",
+    "path": "close-receipt-attempt1-failure.json"
+  },
+  "historical": true,
+  "sourceReceipt": {
+    "path": ".local/upgrade-evidence/ai-036eef86-ci-evidence-v1/receipt.json",
+    "sha256": "882f54751ccc091bce1e3702fbe53e8a80200031fd1047d77cc28576ad5f534c"
+  },
+  "releaseReady": false
+}

@@ -1,0 +1,154 @@
+{
+  "sourceCommit": "036eef86406920e1a5bd70110781f494a0cd84a4",
+  "recordedAt": "2026-10-28T22:33:12.789144+00:00",
+  "historical": true,
+  "ci": {
+    "run": 40773517753,
+    "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40773517753",
+    "jobs": [
+      {
+        "id": 123116844523,
+        "name": "Build",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 123116844577,
+        "name": "Lint",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 123116844666,
+        "name": "Spec Validate",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 123116844703,
+        "name": "Unit Tests",
+        "status": "completed",
+        "conclusion": "failure"
+      },
+      {
+        "id": 123116844715,
+        "name": "Tests and Coverage",
+        "status": "completed",
+        "conclusion": "failure"
+      },
+      {
+        "id": 123116844781,
+        "name": "Type Check",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "unit": {
+      "classification": "Three actual-source partial-COD fixture failures; separate source audit is retained.",
+      "durationSeconds": "1334.55",
+      "failed": 3,
+      "failedFiles": 2,
+      "passed": 19808,
+      "passedFiles": 1480,
+      "totalFiles": 1482,
+      "totalTests": 19811
+    },
+    "coverage": {
+      "coverageReportAvailable": false,
+      "durationSeconds": "2519.25",
+      "explicit5000msTimeouts": 18,
+      "failed": 21,
+      "failedFiles": 19,
+      "knownSourceFixtureFailures": 3,
+      "missingReportEvidence": "Upload warns coverage/ contains no files; workflow artifact API returns an empty list.",
+      "noCoveragePercentageOrThresholdPassClaim": true,
+      "passed": 19790,
+      "passedFiles": 1463,
+      "timeoutFiles": 17,
+      "totalFiles": 1482,
+      "totalTests": 19811
+    }
+  },
+  "web": {
+    "run": 40773517741,
+    "url": "https://github.com/utilityfueled/tax-engine/actions/runs/40773517741",
+    "browser": {
+      "container": {
+        "actualCommand": "pnpm test:web --retries=0 --timeout=30000",
+        "configuredRetries": 0,
+        "configuredTimeoutMs": 30000,
+        "duration": "20.9m",
+        "jobId": 123116833551,
+        "passed": 526,
+        "skipped": 5,
+        "workers": 2
+      },
+      "reportLimitation": "The uploaded runtime ZIP contains test-results files but no Playwright HTML/JSON per-test report. No fresh all-case visual or tax arithmetic review is claimed.",
+      "selfHost": {
+        "actualCommand": "pnpm test:web",
+        "configuredDefaultTimeoutMs": 90000,
+        "configuredRetries": 1,
+        "duration": "27.8m",
+        "flakySummaryReported": false,
+        "jobId": 123116833479,
+        "passed": 526,
+        "skipped": 5,
+        "workers": 2
+      },
+      "skipAttribution": {
+        "cases": [
+          "starter signup, checkout smoke, webhook activation, and hosted return flow all work",
+          "managed billing opens the Stripe customer portal for an active hosted subscriber",
+          "plus plan shows active hosted billing without reminder controls",
+          "active hosted subscribers can buy an AI helper credit pack",
+          "real Stripe-delivered webhooks activate a hosted subscription after checkout success"
+        ],
+        "condition": "Group skipped without Stripe/database hosted E2E configuration; AI top-up and real webhook tests have additional scoped guards.",
+        "evidenceBoundary": "Five skips are directly reported in each dot log. Exact-source five-case hosted suite and absent hosted configuration explain the count; per-test skip names are not emitted in the dot logs.",
+        "exactSourceFile": "apps/web/tests/hosted-happy-paths.spec.ts",
+        "notExercised": "Live hosted billing, Stripe subscription/top-up/portal and real webhook qualification are not established by these runs."
+      }
+    }
+  },
+  "evidence": {
+    "path": ".local/upgrade-evidence/ai-036eef86-ci-evidence-v1/receipt.json",
+    "sha256": "882f54751ccc091bce1e3702fbe53e8a80200031fd1047d77cc28576ad5f534c"
+  },
+  "logs": {
+    "container": {
+      "bytes": 124562,
+      "exactHeadPresent": true,
+      "path": "container-full.log",
+      "retrievalFormat": "Complete connector-decoded job log, saved with a terminal newline; not an original raw HTTP byte archive.",
+      "sha256": "c7fb521bed921acf29b90e7592cd4a51314612c5869fbfb0f9aee5988b13f4e7"
+    },
+    "coverage": {
+      "bytes": 1603159,
+      "exactHeadPresent": true,
+      "path": "coverage-full.log",
+      "retrievalFormat": "Complete connector-decoded job log, saved with a terminal newline; not an original raw HTTP byte archive.",
+      "sha256": "2ac03c8c88269fa5aa259d8db06fe543e7ca46367778d61a7fd12696e66295ff"
+    },
+    "self-host-browser": {
+      "bytes": 120661,
+      "exactHeadPresent": true,
+      "path": "self-host-browser-full.log",
+      "retrievalFormat": "Complete connector-decoded job log, saved with a terminal newline; not an original raw HTTP byte archive.",
+      "sha256": "664a31e6a5ec7e54c3fb1777d363e32f6e7f98908b2e04f95b4ed259f84b5353"
+    },
+    "unit": {
+      "bytes": 1539147,
+      "exactHeadPresent": true,
+      "path": "unit-full.log",
+      "retrievalFormat": "Complete connector-decoded job log, saved with a terminal newline; not an original raw HTTP byte archive.",
+      "sha256": "70facb14b1e6ea46e5f323240318073410b037745ae0932fe421c89b3f07459f"
+    }
+  },
+  "remainingReadiness": [
+    "Three ordinary partial-COD source fixtures need the separately scoped source-first method.",
+    "Eighteen coverage timeouts remain actual failures; no deadline/assertion/threshold was changed.",
+    "Final integrated source still needs its own complete CI/runtime evidence.",
+    "Existing hosted, security-advisory and human-review boundaries remain unchanged."
+  ],
+  "boundary": "Exact historical source. No final current coverage pass or hosted staging evidence."
+}
