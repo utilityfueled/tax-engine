@@ -7144,6 +7144,31 @@
       ]
     },
     {
+      "key": "federal/minimum-tax-credit-source-year",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8801",
+      "specPath": "spec/federal/minimum-tax-credit-source-year.yaml",
+      "enginePath": "src/engine/forms/form-8801.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/forms/minimum-tax-credit-source-year.test.ts::calculates the actual source year without reading future-year inputs",
+        "tests/engine/forms/minimum-tax-credit-source-year.test.ts::preserves negative adjustments and actual ancillary worksheet amounts",
+        "tests/engine/forms/minimum-tax-credit-source-year.test.ts::derives the2026 MFS source-period addition and cap without opening filing"
+      ],
+      "implementationNote": "Explicit source-year PartI/III and signed adjustment only, with actual exclusion-only NOL and foreign-credit worksheets. The full-form prior-year API and readiness gates remain unchanged. This is not a future-year form, canonical COD deduction override, final form qualification or independent human review.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/net-operating-loss",
       "jurisdiction": "federal",
       "taxYear": 2025,

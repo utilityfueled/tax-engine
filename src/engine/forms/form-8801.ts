@@ -4,6 +4,7 @@ import type { FilingStatus } from "@/models/constants.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, min, roundDollar, zeroFloor } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { FEDERAL_2026_INDEXED } from "@/models/federal-2026-indexed.js";
 
 interface PriorYearTable {
   exemption: Record<FilingStatus, string>;
@@ -13,20 +14,36 @@ interface PriorYearTable {
   breakpoint: string;
   mfsBreakpoint: string;
   mfsAdditionThreshold: string;
+  phaseOutRate: string;
 }
 function statuses(single: string, joint: string, separate: string, head = single): Record<FilingStatus, string> {
   return { single, married_filing_jointly: joint, married_filing_separately: separate, head_of_household: head, qualifying_surviving_spouse: joint };
 }
-const PRIOR_YEAR_TABLES: Record<2024 | 2025, PriorYearTable> = {
+function sourceAmounts(values: Record<FilingStatus, Decimal>): Record<FilingStatus, string> {
+  return Object.fromEntries(Object.entries(values).map(([status, value]) => [status, value.toFixed()])) as Record<FilingStatus, string>;
+}
+const PRIOR_YEAR_TABLES: Record<2024 | 2025 | 2026, PriorYearTable> = {
   2024: {
     exemption: statuses("85700", "133300", "66650"), phaseout: statuses("609350", "1218700", "609350"),
     zeroRate: statuses("47025", "94050", "47025", "63000"), fifteenRate: statuses("518900", "583750", "291850", "551350"),
-    breakpoint: "232600", mfsBreakpoint: "116300", mfsAdditionThreshold: "875950",
+    breakpoint: "232600", mfsBreakpoint: "116300", mfsAdditionThreshold: "875950", phaseOutRate: "0.25",
   },
   2025: {
     exemption: statuses("88100", "137000", "68500"), phaseout: statuses("626350", "1252700", "626350"),
     zeroRate: statuses("48350", "96700", "48350", "64750"), fifteenRate: statuses("533400", "600050", "300000", "566700"),
-    breakpoint: "239100", mfsBreakpoint: "119550", mfsAdditionThreshold: "900350",
+    breakpoint: "239100", mfsBreakpoint: "119550", mfsAdditionThreshold: "900350", phaseOutRate: "0.25",
+  },
+  // Actual2026 source arithmetic only. This does not enable a2027 form pack.
+  2026: {
+    exemption: sourceAmounts(FEDERAL_2026_INDEXED.amt.exemption),
+    phaseout: sourceAmounts(FEDERAL_2026_INDEXED.amt.phaseOutThreshold),
+    zeroRate: sourceAmounts(FEDERAL_2026_INDEXED.capitalGainsRates.zero.threshold),
+    fifteenRate: sourceAmounts(FEDERAL_2026_INDEXED.capitalGainsRates.fifteen.threshold),
+    breakpoint: FEDERAL_2026_INDEXED.amt.rate26Limit.single.toFixed(),
+    mfsBreakpoint: FEDERAL_2026_INDEXED.amt.rate26Limit.married_filing_separately.toFixed(),
+    mfsAdditionThreshold: FEDERAL_2026_INDEXED.amt.phaseOutThreshold.married_filing_separately
+      .plus(FEDERAL_2026_INDEXED.amt.exemption.married_filing_separately.div(FEDERAL_2026_INDEXED.amt.phaseOutRate)).toFixed(),
+    phaseOutRate: FEDERAL_2026_INDEXED.amt.phaseOutRate.toFixed(),
   },
 };
 
@@ -101,6 +118,21 @@ export interface Form8801Result {
   lines: CalculatedLine[];
 }
 
+/** Same original source fields as PartI/III, without any later-year tax or credit facts.
+ * The historical priorYear-prefixed field names identify the source-period forms.
+ * Current COD callers must separately derive and bind their MTCNOLD/MTFTCE sources. */
+export type Form8801SourceYearInput = Omit<Form8801Input, "taxYear" | "priorYear"
+  | "unusedMinimumTaxCreditCarryforward" | "priorYearUnallowedQualifiedElectricVehicleCredit"
+  | "currentYearRegularTaxBeforeCredits" | "currentYearRegularTaxAfterCredits" | "currentYearTMT"> & {
+  sourceYear: 2024 | 2025 | 2026;
+};
+export type Form8801SourceYearResult = Pick<Form8801Result, "sourceFactsVerified" | "exclusionOnlyAMTI"
+  | "exemption" | "amtBaseOnExclusions" | "exclusionOnlyTMT" | "tentativeMinimumTaxOnExclusionItems"
+  | "netMinTaxOnExclusionItems" | "lines"> & {
+  sourceYear: number;
+  minTaxCreditFromSourceYear: Decimal;
+};
+
 function amount(value: Decimal | undefined, name: string, signed = false): Decimal {
   if (!Decimal.isDecimal(value) || !value.isFinite()) throw new Error(`Form 8801 ${name} requires an actual finite amount`);
   if (!signed && value.isNegative()) throw new Error(`Form 8801 ${name} must be nonnegative`);
@@ -110,16 +142,23 @@ function computeAMTTax(base: Decimal, breakpoint: Decimal): Decimal {
   return roundDollar(min(base, breakpoint).times(d("0.26")).plus(zeroFloor(base.minus(breakpoint)).times(d("0.28"))));
 }
 
-export function calculateForm8801(input: Form8801Input): Form8801Result {
-  const taxYear = input.taxYear ?? 2025;
-  if (taxYear !== 2025 && taxYear !== 2026) throw new Error("Form 8801 supports tax years2025 and2026 only");
-  const priorYear = taxYear === 2026 ? 2025 : 2024;
-  if (input.priorYear !== undefined && input.priorYear !== priorYear) throw new Error("Form 8801 prior year must immediately precede the tax year");
+export function calculateForm8801(input: Form8801SourceYearInput, options: { sourceYearOnly: true }): Form8801SourceYearResult;
+// Keep the established full-form ReturnType used by canonical return callers.
+export function calculateForm8801(input: Form8801Input): Form8801Result;
+export function calculateForm8801(input: Form8801Input | Form8801SourceYearInput,
+  options?: { sourceYearOnly: true }): Form8801Result | Form8801SourceYearResult {
+  const sourceOnly = options?.sourceYearOnly === true;
+  const full = sourceOnly ? undefined : input as Form8801Input;
+  const taxYear = full ? full.taxYear ?? 2025 : undefined;
+  if (full && taxYear !== 2025 && taxYear !== 2026) throw new Error("Form 8801 supports tax years2025 and2026 only");
+  const priorYear = sourceOnly ? (input as Form8801SourceYearInput).sourceYear : taxYear === 2026 ? 2025 : 2024;
+  if (priorYear !== 2024 && priorYear !== 2025 && priorYear !== 2026) throw new Error("Form 8801 source year must be2024,2025 or2026");
+  if (full?.priorYear !== undefined && full.priorYear !== priorYear) throw new Error("Form 8801 prior year must immediately precede the tax year");
   const sourceFactsVerified = input.sourceFactsConfirmed === true;
-  const strict = taxYear === 2026 || input.sourceFactsConfirmed !== undefined || input.priorYearForm6251Line1And2e !== undefined;
+  const strict = sourceOnly || taxYear === 2026 || input.sourceFactsConfirmed !== undefined || input.priorYearForm6251Line1And2e !== undefined;
   if (strict) {
-    if (!sourceFactsVerified || input.sourceFactsComplete === false) throw new Error("Form 8801 requires confirmed complete original source facts");
-    if (input.priorYear !== priorYear) throw new Error("Form 8801 requires the actual prior source year");
+    if (!sourceFactsVerified || input.sourceFactsComplete === false || (sourceOnly && input.sourceFactsComplete !== true)) throw new Error("Form 8801 requires confirmed complete original source facts");
+    if (full && full.priorYear !== priorYear) throw new Error("Form 8801 requires the actual prior source year");
     for (const key of ["priorYearFiledForm2555", "priorYearFiledForm1040NR", "priorYearCapitalGainsRequired"] as const) {
       if (typeof input[key] !== "boolean") throw new Error(`Form 8801 requires known ${key}`);
     }
@@ -133,10 +172,10 @@ export function calculateForm8801(input: Form8801Input): Form8801Result {
   const mtftce = amount(input.priorYearMinimumTaxForeignTaxCredit ?? (strict ? undefined : d(0)), "minimum tax foreign credit");
   const priorRegularTax = amount(strict ? input.priorYearForm6251Line10 : input.priorYearRegularTax, "prior Form6251 line10");
   const priorAMT = amount(input.priorYearAMT, "prior AMT");
-  const carry = amount(input.unusedMinimumTaxCreditCarryforward ?? (strict ? undefined : d(0)), "prior credit carryforward");
-  const legacyVehicle = amount(input.priorYearUnallowedQualifiedElectricVehicleCredit ?? (strict ? undefined : d(0)), "legacy qualified electric vehicle credit");
-  const regularAfterCredits = amount(input.currentYearRegularTaxAfterCredits ?? (strict ? undefined : input.currentYearRegularTaxBeforeCredits), "current regular tax after allowable credits");
-  const currentTMT = amount(input.currentYearTMT, "current tentative minimum tax");
+  const carry = full ? amount(full.unusedMinimumTaxCreditCarryforward ?? (strict ? undefined : d(0)), "prior credit carryforward") : undefined;
+  const legacyVehicle = full ? amount(full.priorYearUnallowedQualifiedElectricVehicleCredit ?? (strict ? undefined : d(0)), "legacy qualified electric vehicle credit") : undefined;
+  const regularAfterCredits = full ? amount(full.currentYearRegularTaxAfterCredits ?? (strict ? undefined : full.currentYearRegularTaxBeforeCredits), "current regular tax after allowable credits") : undefined;
+  const currentTMT = full ? amount(full.currentYearTMT, "current tentative minimum tax") : undefined;
   const legacyCapitalAmounts = [input.priorYearQualifiedDividends, input.priorYearNetLTCG, input.priorYearUnrecapturedSection1250Gain, input.priorYearCollectiblesGain];
   const hasLegacyCapital = legacyCapitalAmounts.map(value => value === undefined ? d(0) : amount(value, "prior capital income")).some(value => value.gt(0));
   const capitalRequired = input.priorYearCapitalGainsRequired ?? (hasLegacyCapital || input.priorYearCapitalGainsWorksheet !== undefined);
@@ -154,18 +193,23 @@ export function calculateForm8801(input: Form8801Input): Form8801Result {
   if (input.priorYearNetUSRealPropertyGain !== undefined && input.priorYearFiledForm1040NR !== true && amount(input.priorYearNetUSRealPropertyGain, "net U.S. real-property gain").gt(0)) throw new Error("Form 8801 real-property floor requires known Form1040-NR applicability");
 
   const audit = new AuditTrail();
-  const record = (line: string, description: string, value: Decimal, formula: string) => audit.record("Form 8801", line, description, value, formula);
-  record("1", "Prior-year Form6251 income and NOL-source sum", line1, `Actual ${priorYear} Form6251 line${priorYear === 2025 ? "1b" : "1"} plus2e`);
+  const sourceLabel = (text: string) => sourceOnly
+    ? text.replace(/\bPrior-year\b|\bPrior\b/g, "Source-year").replace(/\bprior-year\b|\bprior\b/g, "source-year")
+    : text;
+  const record = (line: string, description: string, value: Decimal, formula: string) => audit.record(
+    sourceOnly ? "Minimum tax credit source year" : "Form 8801", line, sourceLabel(description), value, sourceLabel(formula),
+  );
+  record("1", "Prior-year Form6251 income and NOL-source sum", line1, `Actual ${priorYear} Form6251 line${priorYear >= 2025 ? "1b" : "1"} plus2e`);
   record("2", "Exclusion-item adjustments", exclusions, "Actual prior-year exclusion items only");
   record("3", "Minimum tax credit NOL deduction", nol, "Actual exclusion-only section172 worksheet deduction");
   const preliminaryAMTI = zeroFloor(line1.plus(exclusions).minus(nol));
   const baseExemption = d(table.exemption[status]);
-  const mfsAddition = status === "married_filing_separately" ? roundDollar(min(baseExemption, zeroFloor(preliminaryAMTI.minus(d(table.mfsAdditionThreshold))).times(d("0.25")))) : d(0);
+  const mfsAddition = status === "married_filing_separately" ? roundDollar(min(baseExemption, zeroFloor(preliminaryAMTI.minus(d(table.mfsAdditionThreshold))).times(d(table.phaseOutRate)))) : d(0);
   const exclusionOnlyAMTI = record("4", "Exclusion-only AMTI", preliminaryAMTI.plus(mfsAddition), "max(0,line1 + line2 - line3) + applicable MFS addition");
   record("5", "Prior-year AMT exemption", baseExemption, `${priorYear} individual exemption`);
   const threshold = record("6", "Prior-year exemption phaseout threshold", d(table.phaseout[status]), `${priorYear} phaseout threshold`);
   const excess = record("7", "Excess over exemption phaseout threshold", zeroFloor(exclusionOnlyAMTI.minus(threshold)), "max(0,line4 - line6)");
-  const reduction = record("8", "Exemption reduction", roundDollar(excess.times(d("0.25"))), "RoundDollar(line7 * 25%)");
+  const reduction = record("8", "Exemption reduction", roundDollar(excess.times(d(table.phaseOutRate))), `RoundDollar(line7 * ${d(table.phaseOutRate).times(100).toFixed()}%)`);
   const exemption = record("9", "Allowed prior-year AMT exemption", zeroFloor(baseExemption.minus(reduction)), "max(0,line5 - line8)");
   const amtBaseOnExclusions = record("10", "AMT base on exclusion items", Decimal.max(zeroFloor(exclusionOnlyAMTI.minus(exemption)), min(realPropertyGain, exclusionOnlyAMTI)), "max(0,line4 - line9), subject to actual nonresident real-property floor");
   const breakpoint = d(status === "married_filing_separately" ? table.mfsBreakpoint : table.breakpoint);
@@ -222,6 +266,11 @@ export function calculateForm8801(input: Form8801Input): Form8801Result {
   record("16", "Prior-year AMT", priorAMT, `Actual ${priorYear} Form6251 line11`);
   record("17", "Net minimum tax on exclusion items", netMinTaxOnExclusionItems, "Copy line15");
   const minTaxCreditFromPriorYear = record("18", "Signed prior-year credit adjustment", priorAMT.minus(netMinTaxOnExclusionItems), "line16 - line17; retain negative amounts");
+  if (sourceOnly) return { sourceYear: priorYear, sourceFactsVerified, exclusionOnlyAMTI, exemption, amtBaseOnExclusions,
+    exclusionOnlyTMT, tentativeMinimumTaxOnExclusionItems, netMinTaxOnExclusionItems,
+    minTaxCreditFromSourceYear: minTaxCreditFromPriorYear, lines: audit.getLines() };
+  if (taxYear === undefined || carry === undefined || legacyVehicle === undefined
+    || regularAfterCredits === undefined || currentTMT === undefined) throw new Error("Form 8801 current credit source context is missing");
   record("19", "Prior-year credit carryforward", carry, `Actual ${priorYear} Form8801 line26`);
   record("20", "Unallowed legacy qualified electric vehicle credit", legacyVehicle, "Actual pre-2009 section30 credit limitation carryforward");
   const combined = record("21", "Combined credit pool before zero floor", minTaxCreditFromPriorYear.plus(carry).plus(legacyVehicle), "line18 + line19 + line20; if nonpositive no credit or carryforward");

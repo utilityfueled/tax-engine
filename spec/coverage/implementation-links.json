@@ -1248,6 +1248,16 @@
       "note": "Own-spec controls bind actual full shared policies, PartIV allocation, alternative marriage groups and independent health payments to the historical2025 Form8962 review packet. Exact source fractions remain distinct from printed percentages. Unresolved within-return grouping, partial-family and payer methods remain explicit; no filing or human qualification is claimed."
     },
     {
+      "key": "federal/minimum-tax-credit-source-year",
+      "enginePath": "src/engine/forms/form-8801.ts",
+      "testRefs": [
+        "tests/engine/forms/minimum-tax-credit-source-year.test.ts::calculates the actual source year without reading future-year inputs",
+        "tests/engine/forms/minimum-tax-credit-source-year.test.ts::preserves negative adjustments and actual ancillary worksheet amounts",
+        "tests/engine/forms/minimum-tax-credit-source-year.test.ts::derives the2026 MFS source-period addition and cap without opening filing"
+      ],
+      "note": "Explicit source-year PartI/III and signed adjustment only, with actual exclusion-only NOL and foreign-credit worksheets. The full-form prior-year API and readiness gates remain unchanged. This is not a future-year form, canonical COD deduction override, final form qualification or independent human review."
+    },
+    {
       "key": "federal/net-operating-loss-filing-unit-history",
       "enginePath": "src/engine/forms/net-operating-loss-filing-unit-history.ts",
       "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
