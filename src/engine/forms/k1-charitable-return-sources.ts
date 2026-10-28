@@ -13,6 +13,7 @@ import { calculateK1CashDistributionGain, type K1CashDistributionGain } from './
 import { resolveCharitableRecipient } from '@/utils/charitable-recipient.js';
 import { d, sum } from '@/utils/decimal.js';
 import { AuditTrail } from '@/utils/audit.js';
+import { isNonitemizedPriorPropertyMethod } from '@/utils/k1-nonitemized-prior-property.js';
 type Identity = Pick<TaxYearInput['taxpayer']['primary'], 'firstName' | 'lastName' | 'ssn'>;
 type Taxpayer = {
     taxYear: number;
@@ -23,6 +24,7 @@ type Taxpayer = {
 type Receipt = NonNullable<NonNullable<K1CharitableReturnSources['statements']>[number]['receipts']>[number];
 export interface K1CharitableReturnInput {
     taxpayer: Taxpayer;
+    deductionElection?: TaxYearInput['deductionElection'];
     scheduleK1: ScheduleK1[];
     k1CharitableSources?: K1CharitableReturnSources;
     qbiLossSources?: TaxYearInput['qbiLossSources'];
@@ -149,7 +151,8 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
             const original = source.basis.currentContributions?.find(item => item.sourceId === row.sourceId);
             if (row.current ? paid !== original?.contributionDate : Number(paid.slice(0, 4)) > row.originTaxYear)
                 throw new Error('K1 charitable original payment date conflicts with its basis source year');
-            if (year === 2026 && !row.current && row.availableAfterBasis.gt(0))
+            if (year === 2026 && !row.current && row.availableAfterBasis.gt(0)
+                && !isNonitemizedPriorPropertyMethod(year, input.deductionElection, row.category))
                 throw new Error('K1 charitable prior-basis release in2026 requires its separate section170(p) timing and floor/carry-year method');
             if (row.category === 'cash_60') {
                 let eligibleCurrentCash = false;
@@ -197,7 +200,7 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
             }
         }
         const priorAtRisk = calculateK1PriorAtRiskSources({ taxpayer: input.taxpayer, k1, history: risk.priorLossHistory,
-            basisSources: source.basis, receipts: source.receipts });
+            basisSources: source.basis, receipts: source.receipts, deductionElection: input.deductionElection });
         audit.merge(priorAtRisk.lines.map(line => ({ ...line, line: `${line.line}-${index + 1}` })));
         if (k1.atRiskAmount !== undefined)
             throw new Error('K1 charitable calculated at-risk overrides cannot replace original source facts');

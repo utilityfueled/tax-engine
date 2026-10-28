@@ -1,0 +1,388 @@
+{
+  "phase": "interview",
+  "taxYear": 2026,
+  "segmentation": {
+    "filingStatus": "single",
+    "incomeTypes": [
+      "w2-wages"
+    ],
+    "lifeEvents": [],
+    "stateCode": null
+  },
+  "currentSectionIndex": 2,
+  "completedSections": [
+    "personal-info",
+    "income-w2"
+  ],
+  "sectionData": {
+    "deductions": {
+      "method": "standard",
+      "medicalExpenses": "0",
+      "stateLocalTaxes": "0",
+      "realEstateTaxes": "0",
+      "mortgageInterest": "0",
+      "charitableContributions": "0",
+      "casualtyLosses": "0",
+      "otherItemized": "0",
+      "gamblingWinnings": "0",
+      "nonW2IncomeTaxesDeductedElsewhere": "0",
+      "donationEntries": [],
+      "k1CharitableSources": {
+        "sourceTaxYear": "2026",
+        "sourceReference": "Fictional complete K1 attachments",
+        "sourceFactsConfirmed": true,
+        "allK1CharitableSourcesIncluded": true,
+        "statements": [
+          {
+            "k1SourceId": "scheduleK1:0",
+            "sameRegularAmtTreatmentConfirmed": true,
+            "basis": {
+              "sourceTaxYear": "2026",
+              "statementYearStart": "2026-01-01",
+              "statementYearEnd": "2026-12-31",
+              "sourceReference": "Fictional original basis worksheet",
+              "sourceFactsConfirmed": true,
+              "entityName": "Fictional Giving Partners",
+              "entityEIN": "98-7654321",
+              "entityType": "partnership",
+              "accountHolder": "primary",
+              "recipientName": "Jane Doe",
+              "recipientTaxpayerIdLast4": "6789",
+              "basisFactsConfirmed": true,
+              "noOtherBasisChangesConfirmed": true,
+              "cashDistributionsOnlyConfirmed": true,
+              "priorBasisHistoryComplete": true,
+              "currentContributions": [],
+              "priorBasisSuspensions": [
+                {
+                  "sourceId": "actual-prior-basis-2018",
+                  "originTaxYear": "2018",
+                  "category": "capital_gain_30",
+                  "contributionShare": "180000",
+                  "adjustedBasisShare": "80000",
+                  "appreciationPreviouslyTakenIntoAccount": "100000",
+                  "sourceReference": "Fictional original2018 attached basis evidence",
+                  "basisUseHistory": [
+                    {
+                      "taxYear": "2018",
+                      "basisAllowed": "20000"
+                    },
+                    {
+                      "taxYear": "2019",
+                      "basisAllowed": "0"
+                    },
+                    {
+                      "taxYear": "2020",
+                      "basisAllowed": "0"
+                    },
+                    {
+                      "taxYear": "2021",
+                      "basisAllowed": "0"
+                    },
+                    {
+                      "taxYear": "2022",
+                      "basisAllowed": "0"
+                    },
+                    {
+                      "taxYear": "2023",
+                      "basisAllowed": "0"
+                    },
+                    {
+                      "taxYear": "2024",
+                      "basisAllowed": "0"
+                    },
+                    {
+                      "taxYear": "2025",
+                      "basisAllowed": "0"
+                    }
+                  ]
+                }
+              ]
+            },
+            "receipts": [
+              {
+                "basisSourceId": "actual-prior-basis-2018",
+                "originalBox": "13",
+                "originalCode": "E",
+                "recipientName": "Fictional original2018 qualified recipient",
+                "recipientCategory": "fifty-percent",
+                "qualifiedOrganization": true,
+                "donorAdvisedFund": false,
+                "supportingOrganization": false,
+                "sourceReference": "Fictional original2018 receipt",
+                "contributionDate": "2018-06-01",
+                "propertyType": "appreciated_stock",
+                "acquisitionDate": "2016-01-01",
+                "fairMarketValueShare": "180000"
+              }
+            ],
+            "atRisk": {
+              "sourceTaxYear": "2026",
+              "sourceReference": "Fictional complete activity worksheet",
+              "sourceFactsConfirmed": true,
+              "simplifiedMethodEligible": true,
+              "allActivityDeductionsIncluded": true,
+              "computation": "subsequent_year",
+              "adjustedBasisAtEffectiveDate": "0",
+              "priorYearAmountAtRisk": "50000",
+              "currentYearIncreases": "0",
+              "currentYearDecreases": "0",
+              "priorLossHistory": {
+                "sourceTaxYear": "2025",
+                "sourceReference": "Fictional filed2025 Form6198 ledger",
+                "sourceFactsConfirmed": true,
+                "vintages": [
+                  {
+                    "taxYear": "2024",
+                    "amount": "60000"
+                  }
+                ],
+                "characterSources": {
+                  "sourceTaxYear": "2025",
+                  "sourceReference": "Fictional complete original character ledger",
+                  "sourceFactsConfirmed": true,
+                  "sameOwnerAndActivityConfirmed": true,
+                  "recipientName": "Jane Doe",
+                  "recipientTaxpayerIdLast4": "6789",
+                  "entityName": "Fictional Giving Partners",
+                  "entityEIN": "98-7654321",
+                  "records": [
+                    {
+                      "sourceId": "prior-property-risk-2024",
+                      "taxYear": "2024",
+                      "character": "charitable",
+                      "sourceReference": "Fictional original2024 deduction after basis",
+                      "basisLimitationAlreadyAppliedConfirmed": true,
+                      "originalPostBasisDeduction": "60000",
+                      "originalDisallowedAmount": "60000",
+                      "useHistory": [
+                        {
+                          "taxYear": "2025",
+                          "amountAllowed": "0"
+                        }
+                      ],
+                      "gift": {
+                        "basisSourceId": "original-property-2024",
+                        "basisOriginTaxYear": "2024",
+                        "category": "capital_gain_30",
+                        "contributionShare": "60000",
+                        "adjustedBasisShare": "60000",
+                        "receipt": {
+                          "basisSourceId": "original-property-2024",
+                          "originalBox": "13",
+                          "originalCode": "E",
+                          "recipientName": "Fictional Original Qualified Charity",
+                          "recipientCategory": "fifty-percent",
+                          "qualifiedOrganization": true,
+                          "donorAdvisedFund": false,
+                          "supportingOrganization": false,
+                          "sourceReference": "Fictional original2024 receipt retained independently",
+                          "contributionDate": "2024-06-01",
+                          "propertyType": "appreciated_stock",
+                          "acquisitionDate": "2020-01-01",
+                          "fairMarketValueShare": "60000"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "activityAllocation": {
+                "sourceTaxYear": "2026",
+                "sourceReference": "Fictional complete activity source assignment",
+                "sourceFactsConfirmed": true,
+                "allOriginalItemsBelongToActivityConfirmed": true,
+                "charitableSourceIds": [
+                  "actual-prior-basis-2018",
+                  "original-property-2024"
+                ]
+              }
+            },
+            "link": "independent",
+            "originalSourceReference": "Fictional original2026 K1",
+            "allUnlistedAmountsZeroConfirmed": true,
+            "domesticContinuingNonPtpConfirmed": true,
+            "original": {
+              "taxYear": "2026",
+              "partnershipName": "Fictional Giving Partners",
+              "partnershipEIN": "98-7654321",
+              "entityType": "partnership",
+              "accountHolder": "primary",
+              "ordinaryIncome": "0",
+              "interestIncome": "0",
+              "ordinaryDividends": "0",
+              "qualifiedDividends": "0",
+              "netShortTermCapitalGain": "0",
+              "netLongTermCapitalGain": "0",
+              "charitableCash": "0",
+              "charitableCapitalGain30": "0",
+              "charitableCapitalGain20": "0",
+              "beginningBasis": "40000",
+              "taxExemptInterest": "0",
+              "otherTaxExemptIncome": "0",
+              "nondeductibleExpenses": "0",
+              "distributions": "0",
+              "federalIncomeTaxWithheld": "0",
+              "section199AQBI": "0",
+              "section199AW2Wages": "0",
+              "section199AUBIA": "0",
+              "section199AIsSST": false,
+              "isPassiveActivity": false,
+              "qbiMateriallyParticipated": true,
+              "selfEmploymentFactsConfirmed": true,
+              "selfEmploymentIncomeType": "nonfarm",
+              "selfEmploymentEarnings": "0",
+              "selfEmploymentNetEarningsAfterAdjustments": "0",
+              "priorSuspendedLosses": {
+                "ordinary": "0",
+                "rental": "0",
+                "otherRental": "0",
+                "shortTermCapital": "0",
+                "longTermCapital": "0",
+                "section1231": "0",
+                "otherLoss": "0",
+                "section179": "0",
+                "charitable": "60000",
+                "otherDeductions": "0",
+                "investmentInterest": "0",
+                "ebie": "0"
+              },
+              "form6198": {
+                "activityName": "Fictional Giving Partners",
+                "ordinaryIncome": "0",
+                "gainLossFromDispositions": "0",
+                "otherIncomeGains": "0",
+                "otherDeductionsLosses": "100000",
+                "adjustedBasisAtEffectiveDate": "0",
+                "currentYearIncreases": "0",
+                "currentYearDecreases": "0",
+                "priorYearAmountAtRisk": "50000"
+              },
+              "njPassThroughBusinessAlternativeIncomeTaxCredit": "0",
+              "netRentalIncome": "0",
+              "otherNetRentalIncome": "0",
+              "guaranteedPayments": "0",
+              "royalties": "0",
+              "unrecapturedSection1250Gain": "0",
+              "collectiblesGain": "0",
+              "section1231Gain": "0",
+              "otherIncome": "0",
+              "section179Deduction": "0",
+              "otherDeductions": "0",
+              "investmentInterestExpense": "0",
+              "excessBusinessInterest": "0",
+              "foreignTaxPaid": "0",
+              "foreignTaxCategory": "general",
+              "amtDepreciationAdjustment": "0",
+              "amtAdjustedGainOrLoss": "0",
+              "amtDepletion": "0",
+              "amtOtherItems": "0",
+              "investmentIncome": "0",
+              "investmentExpenses": "0",
+              "excessTaxableIncome": "0",
+              "excessBusinessInterestIncome": "0",
+              "section199AQualifiedReitDividends": "0",
+              "section199AQualifiedPTPIncome": "0",
+              "section199APTPW2Wages": "0",
+              "section199APTPUBIA": "0",
+              "section199APTPIsSST": false,
+              "lowIncomeHousingCredit42j5": "0",
+              "lowIncomeHousingCreditOther": "0",
+              "qualifiedRehabilitationExpenditures": "0",
+              "otherRentalRealEstateCredits": "0",
+              "otherRentalCredits": "0",
+              "otherCredits": "0",
+              "isPubliclyTradedPartnership": false,
+              "ptpFullyDisposedInTaxableTransaction": false,
+              "ptpDispositionGainOrLoss": "0",
+              "isForeignPartnership": false,
+              "election1367": false
+            }
+          }
+        ]
+      },
+      "charitableCarryoverSources": {
+        "sourceTaxYear": "2026",
+        "sourceReference": "Synthetic public-cash source packet",
+        "sourceFactsConfirmed": true,
+        "allCarryoversIncluded": true,
+        "calendarYearTaxpayer": true,
+        "returnMembership": "continuous_individual",
+        "membershipUnchangedConfirmed": true,
+        "primaryName": "Jane Doe",
+        "primaryTaxpayerIdLast4": "6789",
+        "vintages": []
+      }
+    },
+    "personal-info": {
+      "dateOfBirth": "1990-01-15",
+      "usResidencyMonths": "12",
+      "stateResidency": "full-year",
+      "firstName": "Jane",
+      "middleName": "",
+      "lastName": "Doe",
+      "ssn": "123-45-6789",
+      "addressLine1": "42 Example Road",
+      "addressLine2": "",
+      "city": "Columbus",
+      "state": "OH",
+      "zip": "43215",
+      "dependentCount": "0",
+      "dependents": [],
+      "standardDeductionFacts": {
+        "primaryBlind": false,
+        "spouseBlind": false,
+        "primaryCanBeClaimedAsDependent": false,
+        "spouseCanBeClaimedAsDependent": false,
+        "primaryDeceased": false,
+        "spouseDeceased": false,
+        "dualStatusAlien": false,
+        "nonresidentAlien": false,
+        "shortTaxYear": false,
+        "spouseItemizes": false,
+        "claimSpouseAdditionalDeduction": false
+      },
+      "livedWithSpouseAtAnyTimeDuringYear": true,
+      "employmentValidSsnIssuedByDueDate": true,
+      "tinIssuedByDueDate": true,
+      "childTaxCredit": {
+        "bonaFidePuertoRicoResident": false,
+        "puertoRicoExcludedIncome": "0",
+        "form4563ExcludedIncome": "0"
+      },
+      "spouse": {
+        "firstName": "Taylor",
+        "lastName": "Example",
+        "ssn": "222-33-4444",
+        "dateOfBirth": "1992-09-10",
+        "usResidencyMonths": "12",
+        "employmentValidSsnIssuedByDueDate": true,
+        "tinIssuedByDueDate": true
+      },
+      "occupation": "Software Engineer"
+    },
+    "income-w2": {
+      "entries": [
+        {
+          "accountHolder": "primary",
+          "stateTaxReporting": "none",
+          "state": "",
+          "employerName": "Synthetic Employer",
+          "employerEin": "12-3456789",
+          "wages": "100000",
+          "federalWithheld": "30000",
+          "socialSecurityWages": "0",
+          "socialSecurityTips": "0",
+          "socialSecurityWithheld": "0",
+          "medicareWages": "0",
+          "medicareWithheld": "0",
+          "stateWages": "",
+          "stateWithheld": "",
+          "aiSuggestedFields": {},
+          "box10DependentCareBenefits": "0",
+          "box12CodeW": "0"
+        }
+      ]
+    }
+  }
+}

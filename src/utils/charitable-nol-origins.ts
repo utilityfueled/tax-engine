@@ -10,6 +10,7 @@ import { calculateCryptoDonations } from '@/engine/forms/crypto-lot-matching.js'
 import { readCurrentCharitableReceiptAmounts } from './charitable-current-receipts.js';
 import { charitableSourceDigest } from './charitable-source-digest.js';
 import { d } from './decimal.js';
+import { isNonitemizedPriorPropertyMethod } from './k1-nonitemized-prior-property.js';
 
 type AmountKey = keyof CharitableContributionWorksheetInput['amounts'];
 type Ledger = 'regular' | 'alternative';
@@ -95,9 +96,10 @@ export function readCharitableNolOrigins(input:TaxYearInput):CharitableNolOrigin
   if(!k1 && input.scheduleK1.some(row=>[row.charitableCash,row.charitableCapitalGain30,row.charitableCapitalGain20,row.priorSuspendedLosses?.charitable].some(value=>!d(value).isZero()))) {
     throw new Error('Charitable NOL origins require complete actual K1 basis and receipt sources');
   }
-  // Only the validated release is current section170 value in 2025. Neither
-  // original basis nor previously used appreciation is altered by this replay.
-  if(input.taxpayer.taxYear!==2025 && k1?.statements.some(row=>row.basis.charitableSources?.records.some(record=>!record.current && record.availableAfterBasis.gt(0)))) {
+  // Only the validated release is available section170 value. The explicit
+  // 2026 nonitemized property method does not select a prior-gift floor year.
+  if(input.taxpayer.taxYear!==2025 && k1?.statements.some(row=>row.basis.charitableSources?.records.some(record=>!record.current
+    && record.availableAfterBasis.gt(0) && !isNonitemizedPriorPropertyMethod(input.taxpayer.taxYear,input.deductionElection,record.category)))) {
     throw new Error('Prior K1 basis releases require their separate NOL contribution-year method');
   }
   const current=readCurrentCharitableReceiptAmounts(input,{capitalStockOnly:true,includeK1:true});

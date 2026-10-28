@@ -1024,6 +1024,16 @@
       "note": "Actual post-basis original deductions, at-risk history and original gifts feed current allowance once. Original section465 histories and new section469 qualified-loss suspensions remain distinct; actual guide and private historical review bind the sources. This does not qualify a 2026 form or replace independent human review."
     },
     {
+      "key": "federal/k1-prior-property-nonitemized-2026",
+      "enginePath": "src/engine/forms/k1-charitable-return-sources.ts",
+      "testRefs": [
+        "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::derives below equal and above capacity prior basis releases without carrying every undeducted dollar",
+        "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::conserves simultaneous prior basis and risk sources without repeated appreciation",
+        "tests/pdf/k1-prior-property-nonitemized-context.test.ts::binds original choice and every independent balance before output while keeping2026 export closed"
+      ],
+      "note": "Actual2026 property release applicability flows through shared original-source calculation and the separate prior-risk helper, with source-bound nonitemized percentage carry. The context regression proves rejection at the unqualified2026 output gate; it is not packet or filing support. No human or final-form qualification is claimed."
+    },
+    {
       "key": "federal/k1-royalty-classification",
       "enginePath": "src/engine/schedules/schedule-e.ts",
       "testRefs": [

@@ -27,7 +27,8 @@ export function buildGuidedK1CharitableSources(state: GuidedFlowState) {
   const taxpayer: K1CharitableReturnInput['taxpayer'] = { taxYear, filingStatus: statuses[segmentation.filingStatus],
     primary: { firstName: [personal.firstName.trim(), middle].filter(Boolean).join(' '), lastName: personal.lastName, ssn: personal.ssn },
     ...(segmentation.filingStatus === 'mfj' && personal.spouse ? { spouse: personal.spouse } : {}) };
-  calculateK1CharitableReturnSources({ taxpayer, scheduleK1, k1CharitableSources: parsed.packet, qbiLossSources: existing?.qbiLossSources, ...k1CashDistributionKnownTreatment(state) });
+  calculateK1CharitableReturnSources({ taxpayer, scheduleK1, k1CharitableSources: parsed.packet,
+    deductionElection: sectionData.deductions?.method, qbiLossSources: existing?.qbiLossSources, ...k1CashDistributionKnownTreatment(state) });
   return { scheduleK1, k1CharitableSources: parsed.packet, qbiLossSources: existing?.qbiLossSources,
     suspendedPassiveLosses: existing?.suspendedPassiveLosses ?? [], priorQbiCarry: existing?.priorQbiCarry };
 }

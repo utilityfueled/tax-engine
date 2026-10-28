@@ -23,7 +23,10 @@ notes: |
   basis release. Operating K1 classification, binding465, positive-benefit COD
   and multiple positive-origin attribution remain separate internal methods.
   A positive2026 prior-basis release retains the separate170(p)/floor-year
-  guard. Missing records are not known zero and do not become current gifts.
+  guard for cash or automatic/itemized choice. Explicit nonitemized property
+  follows k1-prior-property-nonitemized-2026.yaml and the existing source-bound
+  nonitemized NOL comparison; no new priority or monetary formula is inferred.
+  Missing records are not known zero and do not become current gifts.
   Sources refreshed2026-10-26. Derived NOL literals are not published examples.
 lines:
   - line: "released-value"
@@ -48,7 +51,7 @@ lines:
     testRef: "tests/engine/federal-charitable-k1-basis-release-nol.test.ts::composes released charity with complete old histories and current Form172 once"
   - line: "source-boundary"
     description: "Preserve actual histories and the separate2026 question"
-    formula: "Known complete2025 release is admitted; missing annual basis use, inconsistent appreciation, missing independent AMT history or conflicting original receipt rejects before benefit. Positive2026 release remains unsupported by its existing timing/floor-year guard. A basis-origin date is never rewritten or inserted into prior170 carry histories."
+    formula: "Known complete2025 release is admitted; missing annual basis use, inconsistent appreciation, missing independent AMT history or conflicting original receipt rejects before benefit. Positive2026 cash or automatic/itemized release remains unsupported by its timing/floor-year guard. Explicit nonitemized property follows its separate source method. A basis-origin date is never rewritten or inserted into prior170 carry histories."
     irsRef: "IRC704(d),1366(d),170; original-source conservation"
     testRef: "tests/engine/federal-charitable-k1-basis-release-nol.test.ts::rejects unknown release evidence and retains the2026 timing boundary"
   - line: "guided"

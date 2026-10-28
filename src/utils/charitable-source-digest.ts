@@ -6,6 +6,8 @@ import type { TaxYearInput } from "@/models/inputs.js";
 export function charitableSourceDigest(input: TaxYearInput): string {
   const facts = {
     taxYear: input.taxpayer.taxYear,
+    // A 2026 entity-source method can depend on the actual deduction choice.
+    ...(input.taxpayer.taxYear === 2026 && input.k1CharitableSources ? { deductionElection: input.deductionElection } : {}),
     donations: input.donations,
     ...(input.charitableCarryoverSources?.returnMembership === 'changed_filing_unit' ? { filingUnitDeathFacts: {
       primaryDeathDate: input.standardDeductionFacts?.primaryDeathDate,

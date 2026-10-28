@@ -48,9 +48,12 @@ notes: |
   RevRul2008-16 and Reg1.1366-2(a)(3)/1.704-1(d) establish later basis
   releases while preserving character. They do not expressly settle whether the
   release year becomes the contribution year for the new170(d)(1)(C) floor carry.
-  A positive2026 prior-basis release therefore preserves its original history and
-  rejects this unresolved floor/carry-vintage method; zero release remains known
-  zero and preserves basis suspension. This is an internal interpretation gap.
+  A positive2026 prior-basis release with an automatic/itemized choice preserves
+  its original history and rejects this unresolved floor/carry-vintage method;
+  zero release remains known zero and preserves basis suspension. The explicit
+  property-only nonitemized method in k1-prior-property-nonitemized-2026.yaml
+  uses percentage capacity without selecting a floor year. Prior cash retains
+  its separate170(p) timing boundary.
   https://www.ecfr.gov/current/title-26/section-1.1366-2
   https://www.ecfr.gov/current/title-26/section-1.704-1
   https://www.irs.gov/pub/irs-irbs/irb08-11.pdf
@@ -118,7 +121,7 @@ lines:
     testRef: "tests/engine/federal-k1-charitable-sources.test.ts::preserves prior property basis origin without repeating appreciation or charitable carry"
   - line: "prior-release-2026"
     description: "Original basis origin cannot silently become a new floor carry vintage"
-    formula: "Positive2026 release of actual prior property basis requires the separate170 floor/carry contribution-year method. Actual zero release retains20 basis suspension without creating section170 current cash or property."
+    formula: "Positive2026 release of actual prior property basis with automatic/itemized choice requires the separate170 floor/carry contribution-year method. Explicit nonitemized property follows k1-prior-property-nonitemized-2026.yaml; prior cash remains guarded. Actual zero release retains20 basis suspension without creating section170 current cash or property."
     testRef: "tests/engine/forms/k1-charitable-return-sources.test.ts::preserves the unresolved prior basis release year without losing a zero release history"
   - line: "review-health"
     description: "Redacted health reconciliation retains original K1 source identity privately"

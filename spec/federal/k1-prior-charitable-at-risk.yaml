@@ -26,6 +26,9 @@ notes: |
   https://www.ecfr.gov/current/title-26/section-1.199A-3
   This source contract supports the continuing ordinary activity method. The
   separate2026 prior-gift contribution-year/floor interpretation is not inferred.
+  Explicit nonitemized property follows k1-prior-property-nonitemized-2026.yaml
+  through percentage capacity only; automatic/itemized and prior cash keep
+  their separate floor/timing boundaries.
   The bounded source, canonical, guided and saved-review paths preserve these
   distinctions. Agent source/software review does not establish human tax-law
   qualification or support for the separate named interpretation boundaries.
@@ -56,7 +59,7 @@ lines:
     testRef: "tests/engine/forms/k1-prior-charitable-at-risk.test.ts::reconciles the same original gift across separate basis and at-risk histories"
   - line: "exact-and-year"
     description: "Exact source amounts and the separate prior-gift year boundary"
-    formula: "Original1.01 deduction with0.505 historical465disallowance and0.105 actual later use retains0.4 exactly. Reordered records preserve values. Positive2026 prior-gift release requires the separate contribution-year/floor method; no prior gift is silently relabeled as a current cash receipt."
+    formula: "Original1.01 deduction with0.505 historical465disallowance and0.105 actual later use retains0.4 exactly. Reordered records preserve values. Positive2026 prior-gift release with automatic/itemized choice requires the separate contribution-year/floor method; explicit nonitemized property uses its source-bound percentage method. No prior gift is silently relabeled as a current cash receipt."
     testRef: "tests/engine/forms/k1-prior-charitable-at-risk.test.ts::preserves exact historical values and the explicit prior-gift year boundary"
   - line: "same-gift-conservation"
     description: "All risk-origin records for one gift retain one original value"

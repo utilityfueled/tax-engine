@@ -298,6 +298,13 @@ export function calculateScheduleA(
       : "Form 4684 Section A deductible casualty loss (federally declared disaster only, post-TCJA)");
 
   const k1Charitable = calculateK1CharitableReturnSources(input);
+  const nonitemizedPriorProperty = input.taxpayer.taxYear === 2026
+    && (input.deductionElection === "standard" || input.deductionElection === "nonitemized")
+    && k1Charitable?.statements.some(row => row.basis.charitableSources?.records.some(gift => !gift.current && gift.availableAfterBasis.gt(0))
+      || row.priorAtRisk.charitable.some(gift => gift.remaining.gt(0)));
+  if (nonitemizedPriorProperty && !input.charitableCarryoverSources) {
+    throw new Error("Nonitemized prior property release requires complete actual section170 carry history, including none");
+  }
   if (k1Charitable) {
     for (const [field, category] of [["k1CashCharitable", "cashPublic"], ["k1AppreciatedProperty30", "capitalGainPublic"], ["k1AppreciatedProperty20", "capitalGainPrivate"]] as const) {
       if (extra?.[field] !== undefined && !extra[field]!.eq(k1Charitable.amounts[category])) throw new Error("K1 charitable ScheduleA handoff conflicts with original validated sources");
@@ -397,6 +404,9 @@ export function calculateScheduleA(
       } else {
         determinedCharitableFloor = calculateCharitableDeterminedFloor(input, { contributionBase, current: amounts, nolOriginLimit: originLimit });
       }
+    } else if (nonitemizedPriorProperty) {
+      if (nolLimit !== undefined) throw new Error("Nonitemized prior property release requires its supported NOL replay method");
+      nonitemizedCharitableCarryover = calculateNonitemizedCharitableCategories(input, { contributionBase, current: amounts });
     } else if (currentOrigin?.sourceKind === "current") {
       currentCharitableCandidates = calculateCurrentCharitableCandidates(input, { contributionBase, current: amounts, originSourceDigest: currentOrigin.sourceDigest });
     } else if (input.taxpayer.taxYear === 2026 && ((input.deductionElection !== "standard" && input.deductionElection !== "nonitemized")

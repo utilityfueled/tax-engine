@@ -1,0 +1,73 @@
+form: "K1 Prior Property Nonitemized 2026"
+fullName: "Actual prior entity property releases with an explicit nonitemized choice"
+taxYear: 2026
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.170A-10"
+retrievedAt: "2026-10-28"
+notes: |
+  Reg1.170A-10(a)(2) preserves only applicable percentage excess when the
+  taxpayer chooses the standard deduction. Paragraphs(b)(2)/(c)(2) separately
+  treat available prior section170 amounts as paid within annual capacity even
+  without an itemized deduction. Nonitemization does not preserve every dollar.
+  IRC170(p), as amended by PL119-21 section70424, is limited to cash. Original
+  property released from an entity basis or at-risk limitation is not new cash.
+  https://www.irs.gov/taxtopics/tc506
+  https://www.govinfo.gov/content/pkg/PLAW-119publ21/html/PLAW-119publ21.htm
+  IRC1366(d)(2), Reg1.1366-2(a)(3), IRC704(d), Reg1.704-1(d) and IRC465(a)(2)
+  retain disallowed deduction character as it becomes available in a succeeding
+  year. Original gift/payment/basis/risk years and unreleased balances remain
+  separate from a new section170 percentage excess first arising in2026.
+  https://www.ecfr.gov/current/title-26/section-1.1366-2
+  https://www.ecfr.gov/current/title-26/section-1.704-1
+  https://uscode.house.gov/us/usc/119-121/t26/s465/
+  This bounded composition uses the existing source-complete basis,465 and
+  percentage algorithms. It requires an actual standard or nonitemized choice,
+  original capital-gain property records and complete independent histories.
+  Missing/automatic/itemized choices retain the prior-gift floor-method guard.
+  Prior cash is not admitted to170(p); no broader floor priority is inferred.
+  These are independently derived controls, not published combined examples.
+  Isolated2026 tests do not broaden the separate year/release qualification gate.
+lines:
+  - line: "basis-capacity"
+    description: "Preserve actual basis release and only percentage excess"
+    formula: "Original2018 property180000/basis80000, appreciation already taken100000 and prior basis use20000 leaves60000 basis suspension. Actual2026 basis20000/30000/40000 releases those amounts and leaves40000/30000/20000 suspended. Contribution base100000 and C30% capacity30000 give section170 excess0/0/10000 in2026, while selected charity and170(p) are0."
+    testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::derives below equal and above capacity prior basis releases without carrying every undeducted dollar"
+  - line: "risk-capacity"
+    description: "An already basis-allowed prior gift is not subjected to basis again"
+    formula: "Original2024 property and post-basis deduction60000, original465disallowance60000 and actual2025use0 leave60000 at risk. Actual2026risk20000/30000/40000 releases20000/30000/40000, retains40000/30000/20000 at risk, and gives C percentage excess0/0/10000. Original gift and risk year remain2024."
+    testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::preserves prior risk sources and percentage capacity independently of current basis"
+  - line: "combined-limitations"
+    description: "Combine separate basis and prior-risk originals exactly once"
+    formula: "Original prior basis release40000 and separate prior-risk opening60000 give100000 activity deductions. Risk50000 allows half:20000 basis-released gift and30000 old-risk gift. Basis suspension20000, new465suspension20000 and old465suspension30000 remain distinct; available C50000 has2026 percentage excess20000."
+    testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::conserves simultaneous prior basis and risk sources without repeated appreciation"
+  - line: "other-property-capacity"
+    description: "Retain the original other-recipient property character"
+    formula: "Actual qualified appreciated stock to the original other-recipient organization retains D20% character. Releases10000/20000/30000 against100000 base give percentage excess0/0/10000; no selected property deduction or floor carry."
+    testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::retains the original other recipient twenty percent property capacity"
+  - line: "separate-current-cash"
+    description: "Current cash eligibility is independent of the original property release"
+    formula: "Actual eligible current cash1000 plus C property release40000 at base100000 gives current170(p)1000 and C percentage excess10000. Property release is not entered or attributed as current cash."
+    testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::keeps actual current cash separate from prior property release"
+  - line: "existing-nol-composition"
+    description: "Compose only with the existing source-bound nonitemized NOL comparison"
+    formula: "Wages100000, actual standard16100 and prior post2017 NOL100000 give current NOLD67120 and AGI32880. C capacity9864 gives percentage excess0/0/10136 for property releases5000/9864/20000. Actual nonitemized charitable deduction remains0 and comparison benefit0. Independent AMT history is still required; no new NOL attribution or floor method is introduced."
+    testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::composes actual property release with the established nonitemized NOL method"
+  - line: "choice-proof"
+    description: "Internal source proof includes the applicable explicit choice"
+    formula: "Original qualified property amount20000 remains20000 under standard or nonitemized. Their internal applicability proof differs; a retained comparison cannot silently switch the actual deduction choice. Automatic/itemized remains unsupported for prior property."
+    testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::binds the actual deduction choice in original NOL source proof"
+  - line: "explicit-choice"
+    description: "Do not infer nonitemization or treat prior property as current cash"
+    formula: "Only explicit standard/nonitemized admits this property method. Missing/automatic/itemized choices and prior cash remain guarded. An explicit nonitemized choice with independently established zero standard entitlement still uses percentage capacity. Missing source history remains unknown."
+    testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::requires explicit nonitemization and original property history"
+  - line: "guided-originals"
+    description: "Forward actual choice alongside unchanged original histories"
+    formula: "The collector normalizes original basis/risk records and forwards actual standard/nonitemized selection. Source or choice edits invalidate confirmations; unknown choice does not imply standard. The bridge retains original gift years and separate empty section170 history."
+    testRef: "tests/guided-interview/guided-k1-prior-property-nonitemized.test.ts::forwards explicit nonitemization and preserves the complete original property histories"
+  - line: "context-and-release"
+    description: "Bind source choice and balances without opening the2026 export gate"
+    formula: "Private review context binds original choice, income, receipts, identity, basis and465 histories and calculated carry. Changed or removed sources and forged carry reject before I/O. Production2026 calculation/export remains unavailable; no2025 form is relabeled."
+    testRef: "tests/pdf/k1-prior-property-nonitemized-context.test.ts::binds original choice and every independent balance before output while keeping2026 export closed"
+  - line: "browser-sources"
+    description: "Retain original source edits and the actual year gate in both viewports"
+    formula: "The production source panel saves explicit standard selection, original2018 basis history and original2024 risk history. Choice and source edits revoke confirmation; blank historical use remains unknown until supplied. Reload preserves the records. The2026 qualification notice, absent estimate and unavailable PDF download remain visible."
+    testRef: "apps/web/tests/k1-prior-property-nonitemized.spec.ts::preserves prior property sources and explicit choice without opening2026 output"
