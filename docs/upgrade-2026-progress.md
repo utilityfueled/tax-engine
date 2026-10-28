@@ -2,58 +2,68 @@
 
 ## Current checkpoint — 2026-10-28 UTC
 
-The latest implementation is `23187df3`: original cancellation-of-debt attributes
-now follow current tax and NOL use in statutory order, with distinct regular and
-alternative histories, actual two-date property limits and reconciled outgoing
-credit, capital and passive balances. Saved references retain current form
-values and separately label final carries. Main checks pass **535 tests in 46
-files**, all three typechecks, **6,202 spec references**, inventory generation
-and freshness (**585 entries and 164 associations**), scoped lint (zero errors,
-31 warnings), engine build and production webpack build. Rule versions are
-`2025.191` / `2026.189-law-integration-draft`.
+The original basis-admission package is delivered in `69b86517`, and the
+ordinary-gift activity correction in `bf1e2f1b`. Actual annual originals determine
+when a previously basis-limited gift first enters section170, preserving prior
+use, appreciation and independent regular/AMT carry years. Current ordinary
+gifts then remain separate from actual section465 activity deductions; recorded
+historical activity sources retain their existing identity and years.
 
-Independent review passes **59 tests in eight files**, including 25 private
-controls. The same eleven original inputs and diagnostic results remain byte
-identical across the output correction. Parent derives their amounts and passes
-**4,684 checks** across 130 PDFs/436 pages/357 populated fields, plus **220 checks**
-on two actual saved browser originals and downloaded PDFs/38 pages. The frozen
-production browser run passes 2/2 with one worker and zero retries. Source and
-output failures, original cents conflicts and corrected reader expectations are
-retained in the [attribute ledger](upgrade-2026-cod-ordinary-attributes-work.md).
-Form982 remains a reference summary; filing and final2026 gates remain closed.
+The combined branch passes **116 tests in32 files**, all three type checks,
+**6,221 spec references**, inventory generation/freshness (**587 entries and166
+associations**), scoped lint with zero errors/warnings, and both engine and
+production webpack builds. Rule versions are `2025.193` /
+`2026.191-law-integration-draft`. The [basis ledger](upgrade-2026-basis-first-section170-entry-work.md)
+and [gift/activity ledger](upgrade-2026-k1-ordinary-gift-risk-work.md) retain
+spec-first failures, source inferences and independent review evidence.
 
-The charitable-floor correction `7702ba56` remains delivered. Its adjacent
-operating-K1 standard-choice spec/test is reconciled in `b15003cb`: percentage
-excess4,000 plus attributable floor50 gives carry4,050 under either deduction
-choice. Exact `d6c9507d` CI retained 19,749 unit passes and that one stale
-expectation; the focused correction passes 12/4. See the
-[charitable carry ledger](upgrade-2026-nonitemized-allowable-carry-work.md).
-The signed minimum-tax-credit source-year primitive remains in `ecdb754d`.
+Parent basis review passes19 tests in five files, including eight private
+originals, and4,403 original/output/hash checks. Gift/activity review passes38
+tests in seven files, including six private originals, and10,622 checks across
+127 PDFs/513 pages/504 populated fields. Six actual PDF pages and four actual
+desktop/mobile captures were inspected for the latter package. Four frozen
+production-browser downloads pass with zero retries. These are seeded partial
+interviews; their evidence does not establish a complete journey or staging.
+The rejected assertion-precision reduction and corrected parent reader mistakes
+remain retained. Exact25-place tests and readiness/privacy gates are unchanged.
+
+The test-only PDF reader package `fa7a4497` reduces six independent Python starts
+to two in one existing K1 case. All22 original assertion lines are byte-identical;
+main passes four tests in two files, root types and scoped lint. Its
+[ledger](upgrade-2026-pdf-reader-batching-work.md) records bounded normal/covered
+timing samples. All twelve earlier CI timeout cases pass locally in both modes;
+that does not reproduce or resolve the full CI failure. Deadlines and global
+coverage thresholds remain unchanged.
 
 Remaining internal work is active:
 
-- Finish independent source/output review and integration of ordinary-gift
-  at-risk classification and separately documented first section170 admission
-  after a basis limitation. Preserve original gift years and prior use.
-- Complete ordinary/deduction-year foreign carry composition with independently
-  complete empty NOL histories, then bind signed current-year minimum-tax-credit
-  sources. The delivered attribute guards do not complete those methods.
-- Reproduce the twelve retained `183c1bbc` coverage timeouts and fix their cause
-  without changing deadlines, assertions or thresholds.
-- Run final integrated unit/coverage/static/build/browser and native
-  arm64/amd64 image, scan and recovery evidence after the source changes.
+- Finish independent review and integration of ordinary/deduction-year foreign
+  carry composition with complete empty regular/AMT NOL histories. Frozen core
+  checks pass; the actual-browser seed's missing existing UI field caused a
+  retained failure. Its fixture-only correction is under verification.
+- Bind the delivered signed minimum-tax-credit source-year primitive to complete
+  actual current deferral/exclusion, MTCNOL and foreign histories. A signed result
+  changes only the beginning-next-year aggregate after current credit use.
+- Finish bounded coverage-timeout diagnosis and run the final unchanged
+  unit/coverage/static/build/browser gates on the integrated source.
+- Rehearse final native arm64/amd64 images, SBOM/scans and full recovery after
+  those source packages. No historical artifact qualifies later changes.
 
+The earlier ordinary-COD package `23187df3` and its
+[source/output evidence](upgrade-2026-cod-ordinary-attributes-work.md) remain
+delivered, as do the charitable-floor correction `7702ba56`, adjacent standard-
+choice assertion `b15003cb`, and signed source-year primitive `ecdb754d`.
 The [183c1bbc CI record](upgrade-2026-ci-183c1bbc.json) remains historical:
-19,735 unit passes, 19,723 coverage passes plus twelve timeouts, and both
-520-case browser runs with five hosted-only skips each. Its
-[amd64 recovery record](upgrade-2026-runtime-183c1bbc.json) passes all six phases
-and retains 157 scan matches across 67 OS advisories. Final-source coverage and
-runtime evidence are still due. The October28 source/provider/package refresh
-is retained; provider account access, authorized live spend and model evaluation
-are unverified. Human tax/AI/security reviews, launch-state and final-form
-qualification, staging credentials/evidence and advisory-owner acceptance remain
-external requirements. No production deployment, filing or model promotion is
-authorized by these checks.
+19,735 unit passes,19,723 coverage passes plus twelve timeouts, and both520-case
+browser runs with five hosted-only skips each. Its
+[amd64 recovery record](upgrade-2026-runtime-183c1bbc.json) passes six phases
+and retains157 scan matches across67 OS advisories.
+
+The October28 official-source/provider/package refresh remains recorded.
+Provider account access, approved live spend and model evaluation are unverified.
+Human tax/AI/security reviews, launch-state demand and final-form qualification,
+staging access/evidence and advisory-owner acceptance remain external gates.
+No production deployment, filing or model promotion is authorized by these checks.
 
 ### Earlier delivery evidence
 

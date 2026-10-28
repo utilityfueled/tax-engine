@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "23187df3aa2c9037e61f0a3f87db422621603394",
+    "lastRecordedCommit": "fa7a4497cc0d85eab91c6524fe11317a156e5655",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1311,13 +1311,12 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Finish ordinary-gift at-risk classification and source-supported basis first170-entry review/integration. Retain original gift years, prior admission and independently recorded historical use; preserve all failed originals.",
-      "Complete source-validated empty regular/AMT NOL composition with ordinary and deduction-year foreign credits, including independent hypothetical absorption before the delivered COD reductions.",
-      "Bind the delivered signed current-source-year minimum-tax-credit primitive to complete canonical source derivation; current zero AMT alone is not proof of zero generation.",
-      "Reproduce the12 exact183c coverage timeouts and resolve remaining PDF/export performance without changing assertions, deadlines or thresholds.",
-      "Run final integrated unit/coverage/static/build/browser/native arm64+amd64/SBOM/scan/recovery evidence after source work. Staging, human, provider and final-form gates remain closed."
+      "Finish empty regular/AMT NOL ordinary/deduction-year foreign source/output review and integration; preserve original independent AMT absorption. Frozen cc25 core checks pass; fixture-only browser correction e0e5420b remains under verification.",
+      "Bind signed current source-year MTC to complete original adjustment, MTCNOL and foreign histories, preserving actual current use and next-year aggregate treatment. Source contract reviewed; spec/originals/red in progress.",
+      "Finish bounded timeout diagnosis and run the final unchanged full CI coverage gate. All12 exact183c cases pass locally in both modes; no reproduction/root cause or final resolution claimed. Test-only K1 reader batching delivered separately.",
+      "Run final integrated unit/coverage/static/build/browser/native arm64+amd64/SBOM/scan/recovery evidence after source work. Historical evidence does not qualify current source. Staging, human, provider and final-form gates remain closed."
     ],
-    "latestIntegratedCommit": "23187df3aa2c9037e61f0a3f87db422621603394",
+    "latestIntegratedCommit": "fa7a4497cc0d85eab91c6524fe11317a156e5655",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1694,11 +1693,10 @@
       "scope": "Exact76d93bb6 synthetic remote evidence through same-couple joint loss delivery. Excludes pending positive-other-return health, EBL composition and later internal work. No staging, production, filing, provider or human-review qualification."
     },
     "remainingInternalWork": [
-      "Finish ordinary-gift at-risk classification and source-supported basis first170-entry review/integration. Retain original gift years, prior admission and independently recorded historical use; preserve all failed originals.",
-      "Complete source-validated empty regular/AMT NOL composition with ordinary and deduction-year foreign credits, including independent hypothetical absorption before the delivered COD reductions.",
-      "Bind the delivered signed current-source-year minimum-tax-credit primitive to complete canonical source derivation; current zero AMT alone is not proof of zero generation.",
-      "Reproduce the12 exact183c coverage timeouts and resolve remaining PDF/export performance without changing assertions, deadlines or thresholds.",
-      "Run final integrated unit/coverage/static/build/browser/native arm64+amd64/SBOM/scan/recovery evidence after source work. Staging, human, provider and final-form gates remain closed."
+      "Finish empty regular/AMT NOL ordinary/deduction-year foreign source/output review and integration; preserve original independent AMT absorption. Frozen cc25 core checks pass; fixture-only browser correction e0e5420b remains under verification.",
+      "Bind signed current source-year MTC to complete original adjustment, MTCNOL and foreign histories, preserving actual current use and next-year aggregate treatment. Source contract reviewed; spec/originals/red in progress.",
+      "Finish bounded timeout diagnosis and run the final unchanged full CI coverage gate. All12 exact183c cases pass locally in both modes; no reproduction/root cause or final resolution claimed. Test-only K1 reader batching delivered separately.",
+      "Run final integrated unit/coverage/static/build/browser/native arm64+amd64/SBOM/scan/recovery evidence after source work. Historical evidence does not qualify current source. Staging, human, provider and final-form gates remain closed."
     ],
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
@@ -1720,7 +1718,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "23187df3aa2c9037e61f0a3f87db422621603394",
+    "lastPushedCommit": "fa7a4497cc0d85eab91c6524fe11317a156e5655",
     "currentBrowserRun": {
       "sourceCommit": "183c1bbcb9ed8d53265fb4f36317e291bc8134cc",
       "container": {
@@ -4977,11 +4975,11 @@
       }
     },
     "currentInventory": {
-      "entries": 585,
-      "specReferences": 6202,
-      "sourceCommit": "23187df3aa2c9037e61f0a3f87db422621603394",
+      "entries": 587,
+      "specReferences": 6221,
+      "explicitAssociations": 166,
+      "sourceCommit": "bf1e2f1bfcc09af0cfe24b85e425a788e85e13e9",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 164,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -6213,8 +6211,8 @@
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.191",
-      "2026": "2026.189-law-integration-draft"
+      "2025": "2025.193",
+      "2026": "2026.191-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -8212,8 +8210,8 @@
       "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
     },
     "currentFullVerificationRequired": {
-      "sourceCommit": "23187df3aa2c9037e61f0a3f87db422621603394",
-      "reason": "Ordinary COD source/output integration passes focused checks. Risk classification, basis first admission, empty-NOL foreign composition, signed current MTC and bounded timeout correction precede final release verification.",
+      "sourceCommit": "fa7a4497cc0d85eab91c6524fe11317a156e5655",
+      "reason": "Basis admission and ordinary-gift correction pass integrated focused/static/build checks. Foreign composition, signed current MTC and final unchanged coverage/runtime evidence remain.",
       "readiness": "Not release qualified; external reviews, staging, final forms and model evaluation remain open."
     },
     "previousCurrentUnitRunBeforeE91": {
@@ -8445,7 +8443,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-28",
+    "recordedAt": "2026-10-28T21:37:22.079822+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -11808,6 +11806,61 @@
       "focusedTests": 12,
       "focusedFiles": 4,
       "specReferences": 6167
+    },
+    "basisFirstAdmissionDelivered": {
+      "commit": "69b865171595fab307e06bb49fbfc447a7282211",
+      "frozenTree": "b0408dd45604828488de4814ddcc4a870f8e96b6",
+      "mainTests": 59,
+      "mainFiles": 14,
+      "parentTests": 19,
+      "parentFiles": 5,
+      "privateCases": 8,
+      "originalOutputHashChecks": 4403,
+      "mainChecks": {
+        "path": ".local/upgrade-evidence/parent-basis-first-main-checks.json",
+        "sha256": "7c78e81620c75e0e0da3724ee70cb394f71726f274e66a30a9bb2580446f1b2f"
+      },
+      "ledger": "docs/upgrade-2026-basis-first-section170-entry-work.md",
+      "humanQualification": false
+    },
+    "ordinaryGiftRiskDelivered": {
+      "commit": "bf1e2f1bfcc09af0cfe24b85e425a788e85e13e9",
+      "frozenTree": "ff809319b8ca98076ef1264207c89ff6cdf3a093",
+      "mainTests": 116,
+      "mainFiles": 32,
+      "parentTests": 38,
+      "parentFiles": 7,
+      "privateCases": 6,
+      "artifactChecks": 10622,
+      "pdfs": 127,
+      "pages": 513,
+      "fields": 504,
+      "actualPdfPagesVisuallyInspected": 6,
+      "actualUiImagesVisuallyInspected": 4,
+      "mainChecks": {
+        "path": ".local/upgrade-evidence/parent-ordinary-gift-v3-main-checks.json",
+        "sha256": "581de8f5dcf946d3553e43e8f2fb52f169db76175e451af0c146d8c8fc5fb1bd"
+      },
+      "parentReview": {
+        "path": ".local/upgrade-evidence/parent-ordinary-gift-v3-review-closeout.json",
+        "sha256": "3773a47f6c65232e12b10dcf009d4f07fd4aade88ad13d3be4c38e7333e429cd"
+      },
+      "ledger": "docs/upgrade-2026-k1-ordinary-gift-risk-work.md",
+      "boundary": "Seeded partial interview/browser evidence; no human qualification, complete journey, staging or filing readiness."
+    },
+    "independentPdfReaderBatchDelivered": {
+      "commit": "fa7a4497cc0d85eab91c6524fe11317a156e5655",
+      "frozenTree": "dd6881e654808cd2056b2fb31ec5c10b437fb1c9",
+      "testOnly": true,
+      "unchangedOriginalAssertionLines": 22,
+      "mainTests": 4,
+      "mainFiles": 2,
+      "mainChecks": {
+        "path": ".local/upgrade-evidence/parent-pdf-reader-batch-main-checks.json",
+        "sha256": "816fe322315ae90336dde8fefa9d3d07e40e1cd49d60a88c8f4c05b6c7ab4502"
+      },
+      "ledger": "docs/upgrade-2026-pdf-reader-batching-work.md",
+      "coverageFailureResolved": false
     }
   },
   "historicalReleaseBlockers": {
