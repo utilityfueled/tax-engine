@@ -10,8 +10,10 @@ import {
 } from "pdf-lib";
 import type { CalculatedLine, TaxReturnResult } from "@/models/outputs.js";
 import Decimal from "decimal.js";
+import { sumSourceMoney } from '@/utils/sum-source-money.js';
+import type { ForeignTaxDeductionCarryoverResult, ForeignTaxDeductionAmtCarryoverResult } from '@/engine/forms/foreign-tax-deduction-carryover.js';
 import { d, sum } from "@/utils/decimal.js";
-import { DIRECT_FOREIGN_CREDIT_FORM, directForeignCreditReferenceLines } from './foreign-tax-direct-reference.js';
+import { DIRECT_FOREIGN_CREDIT_FORM, directForeignCreditReferenceLines, foreignCreditCarryAfterCod } from './foreign-tax-direct-reference.js';
 import { ordinaryForeignCreditReferenceSections } from './foreign-tax-ordinary-reference.js';
 
 const PAGE_WIDTH = 612;
@@ -131,83 +133,101 @@ function formatLineValue(line: CalculatedLine) {
 
 const DEDUCTION_CARRYOVER_FORM = "Foreign Deduction Carryover WS";
 
-/** A deduction-year record copies canonical audits; it does not compute another credit. */
-function deductionYearReferenceLines(result: TaxReturnResult): CalculatedLine[] | undefined {
-  const carry = result.foreignTaxDeductionCarryover;
-  const canonical = result.allLines.filter(line => line.form === DEDUCTION_CARRYOVER_FORM);
+/** Copy canonical regular/AMT hypothetical worksheets and reconcile their after-tax closing. */
+function deductionYearReferenceSections(result: TaxReturnResult): Array<{ form: string; lines: CalculatedLine[] }> | undefined {
+  const carry = result.foreignTaxDeductionCarryover, amtForm = 'AMT Foreign Deduction Carryover WS';
+  const forms = new Set([DEDUCTION_CARRYOVER_FORM, amtForm]);
+  const canonical = result.allLines.filter(line => forms.has(line.form));
   if (!carry) {
-    if (canonical.length) throw new Error("Foreign carryover audit is missing its calculated source result");
+    if (canonical.length) throw new Error('Foreign carryover audit is missing its calculated source result');
     return undefined;
   }
-  if (result.scheduleA?.foreignTaxElection.election !== "deduction" || !result.foreignTaxCredit.isZero()) {
-    throw new Error("Foreign carryover record requires the actual deduction election and zero current credit");
+  if (result.scheduleA?.foreignTaxElection.election !== 'deduction' || !result.foreignTaxCredit.isZero()) {
+    throw new Error('Foreign carryover record requires the actual deduction election and zero current credit');
   }
   const finite = (value: Decimal): boolean => Decimal.isDecimal(value) && value.isFinite();
   const nonnegative = (value: Decimal): boolean => finite(value) && value.gte(0);
+  const auditId = (row: CalculatedLine) => `${row.form}:${row.line}`;
   const auditById = new Map<string, CalculatedLine>();
-  for (const line of canonical) {
-    if (auditById.has(line.line) || !finite(line.value)) throw new Error("Foreign carryover audit is duplicate or invalid");
-    auditById.set(line.line, line);
+  for (const row of canonical) {
+    if (auditById.has(auditId(row)) || !finite(row.value)) throw new Error('Foreign carryover audit is duplicate or invalid');
+    auditById.set(auditId(row), row);
   }
-  if (!carry.lines.length || canonical.length !== carry.lines.length) throw new Error("Foreign carryover audit is incomplete");
   const copied = new Set<string>();
-  for (const line of carry.lines) {
-    const actual = auditById.get(line.line);
-    if (line.form !== DEDUCTION_CARRYOVER_FORM || copied.has(line.line) || !actual || !finite(line.value)
-      || !actual.value.eq(line.value) || actual.formula !== line.formula || actual.description !== line.description) {
-      throw new Error("Foreign carryover audit does not match its calculated source result");
+  const copyAudit = (row: CalculatedLine) => {
+    const actual = auditById.get(auditId(row));
+    if (!actual || !finite(row.value) || !actual.value.eq(row.value) || actual.formula !== row.formula || actual.description !== row.description
+      || Object.keys(actual.inputs).length !== Object.keys(row.inputs).length
+      || Object.entries(row.inputs).some(([key, value]) => Decimal.isDecimal(value)
+        ? !Decimal.isDecimal(actual.inputs[key]) || !value.eq(actual.inputs[key]) : actual.inputs[key] !== value)) {
+      throw new Error('Foreign carryover audit does not match its calculated source result');
     }
-    copied.add(line.line);
-  }
-  const required = (id: string): CalculatedLine => {
-    const line = auditById.get(id);
-    if (!line) throw new Error(`Foreign carryover audit is missing ${id}`);
-    return line;
+    return actual;
   };
-  for (const id of ["18", "19", "20"]) if (!nonnegative(required(id).value)) throw new Error("Foreign carryover audit is invalid");
-  if (required("19").value.gt(1)) throw new Error("Foreign carryover audit ratio is invalid");
-  for (const [id, value] of [["21", carry.hypotheticalLimitation], ["current-tax", carry.currentQualifiedForeignTaxes],
-    ["absorbed", carry.absorbed], ["expired", carry.expired], ["carryforward", carry.carryforward]] as const) {
-    if (!nonnegative(value) || !required(id).value.eq(value)) throw new Error("Foreign carryover audit totals do not reconcile");
+  for (const row of carry.lines) {
+    if (copied.has(auditId(row))) throw new Error('Foreign carryover calculated audit is duplicate');
+    copyAudit(row); copied.add(auditId(row));
   }
-  const seen = new Set<string>();
-  for (const row of carry.details) {
-    const key = `${row.category}:${row.originTaxYear}`;
-    if (seen.has(key) || !["passive", "general"].includes(row.category) || !Number.isInteger(row.originTaxYear)
-      || row.originTaxYear >= result.taxYear || row.originTaxYear < result.taxYear - 10
-      || ![row.amount, row.absorbed, row.expired, row.remaining].every(nonnegative)
-      || !row.amount.eq(sum(row.absorbed, row.expired, row.remaining))) {
-      throw new Error("Foreign carryover source balances do not conserve their actual prior amounts");
+  if (!carry.lines.length || canonical.length !== copied.size) throw new Error('Foreign carryover audit is incomplete');
+  if (result.codAttributeReduction && !carry.amt) throw new Error('Foreign COD deduction requires separate AMT carry results');
+  const section = (record: ForeignTaxDeductionCarryoverResult | ForeignTaxDeductionAmtCarryoverResult, form: string, alternative: boolean) => {
+    const lines = (alternative ? record.lines : record.lines.filter(row => row.form === form));
+    if (lines.some(row => row.form !== form) || lines.length !== canonical.filter(row => row.form === form).length) throw new Error('Foreign carryover system audit is incomplete');
+    const required = (id: string) => { const row = auditById.get(`${form}:${id}`); if (!row) throw new Error(`Foreign carryover audit is missing ${form}:${id}`); return row; };
+    const empty = 'method' in record && record.method === 'complete_empty_inventory';
+    if (empty) {
+      if (record.details.length || !record.absorbed.isZero() || !record.expired.isZero() || !record.carryforward.isZero()
+        || record.hypotheticalLimitation !== undefined || record.netForeignTaxableIncome !== undefined || record.worldwideTaxableIncome !== undefined
+        || lines.length !== 1 || !required('empty-inventory').value.isZero()) throw new Error('Foreign empty AMT inventory cannot invent a hypothetical method');
+    } else {
+      for (const id of ['18', '19', '20']) if (!nonnegative(required(id).value)) throw new Error('Foreign carryover audit is invalid');
+      if (required('19').value.gt(1)) throw new Error('Foreign carryover audit ratio is invalid');
+      for (const [id, value] of [['21', record.hypotheticalLimitation], ['current-tax', record.currentQualifiedForeignTaxes],
+        ['absorbed', record.absorbed], ['expired', record.expired], ['carryforward', record.carryforward]] as const) {
+        if (!value || !nonnegative(value) || !required(id).value.eq(value)) throw new Error('Foreign carryover audit totals do not reconcile');
+      }
     }
-    seen.add(key);
-    const line = required(`${key}:remaining`);
-    if (!line.value.eq(row.remaining)) throw new Error("Foreign carryover audit balance does not reconcile");
-    for (const [name, value] of [["available", row.amount], ["absorbed", row.absorbed], ["expired", row.expired]] as const) {
-      const actual = line.inputs[name];
-      if (!Decimal.isDecimal(actual) || !actual.eq(value)) throw new Error("Foreign carryover audit inputs do not reconcile");
+    if (!nonnegative(record.currentQualifiedForeignTaxes) || !record.currentQualifiedForeignTaxes.eq(carry.currentQualifiedForeignTaxes)) throw new Error('Foreign current tax sources do not reconcile across their separate worksheets');
+    const seen = new Set<string>();
+    for (const row of record.details) {
+      const key = `${row.category}:${row.originTaxYear}`;
+      if (seen.has(key) || !['passive', 'general'].includes(row.category) || !Number.isInteger(row.originTaxYear)
+        || row.originTaxYear >= result.taxYear || row.originTaxYear < result.taxYear - 10
+        || ![row.amount, row.absorbed, row.expired, row.remaining].every(nonnegative)
+        || !row.amount.eq(sumSourceMoney(row.absorbed, row.expired, row.remaining))) throw new Error('Foreign carryover source balances do not conserve their actual prior amounts');
+      seen.add(key);
+      const line = required(`${key}:remaining`);
+      if (!line.value.eq(row.remaining)) throw new Error('Foreign carryover audit balance does not reconcile');
+      for (const [name, value] of [['available', row.amount], ['absorbed', row.absorbed], ['expired', row.expired]] as const) {
+        const actual = line.inputs[name];
+        if (!Decimal.isDecimal(actual) || !actual.eq(value)) throw new Error('Foreign carryover audit inputs do not reconcile');
+      }
     }
-  }
-  for (const [field, value] of [["absorbed", carry.absorbed], ["expired", carry.expired], ["remaining", carry.carryforward]] as const) {
-    if (!sum(...carry.details.map(row => row[field])).eq(value)) throw new Error("Foreign carryover source totals do not reconcile");
-  }
-  if (!result.carryforwards.foreignTaxCreditCarryforward.eq(carry.carryforward)) throw new Error("Foreign carryover return total does not reconcile");
-  const expected = new Map(carry.details.filter(row => row.remaining.gt(0)).map(row => [`${row.category}:${row.originTaxYear}`, row.remaining]));
-  for (const groups of [carry.carryforwardByCategory, result.carryforwards.foreignTaxCreditCarryforwardByCategory]) {
-    const actual = new Map<string, Decimal>();
-    for (const [category, rows] of Object.entries(groups)) for (const row of rows ?? []) {
-      const key = `${category}:${row.taxYear}`;
-      if (actual.has(key) || !nonnegative(row.amount)) throw new Error("Foreign carryover category records are invalid");
-      if (row.amount.gt(0)) actual.set(key, row.amount);
+    for (const [field, value] of [['absorbed', record.absorbed], ['expired', record.expired], ['remaining', record.carryforward]] as const) {
+      if (!sumSourceMoney(...record.details.map(row => row[field])).eq(value)) throw new Error('Foreign carryover source totals do not reconcile');
     }
-    if (actual.size !== expected.size || [...expected].some(([key, value]) => !value.eq(actual.get(key) ?? d("-1")))) {
-      throw new Error("Foreign carryover category records do not reconcile");
+    const expected = new Map(record.details.filter(row => row.remaining.gt(0)).map(row => [`${row.category}:${row.originTaxYear}`, row.remaining]));
+    const closing = foreignCreditCarryAfterCod(result, alternative, expected, form, record.details);
+    const saved = alternative ? result.carryforwards.amtForeignTaxCreditCarryforwardByCategory : result.carryforwards.foreignTaxCreditCarryforwardByCategory;
+    for (const [groups, requiredGroups] of [[record.carryforwardByCategory, expected], [saved, closing.expected]] as const) {
+      if (!groups) throw new Error('Foreign carryover system closing is missing');
+      const actual = new Map<string, Decimal>();
+      for (const [category, rows] of Object.entries(groups)) for (const row of rows ?? []) {
+        const key = `${category}:${row.taxYear}`;
+        if (actual.has(key) || !['passive', 'general'].includes(category) || !nonnegative(row.amount)) throw new Error('Foreign carryover category records are invalid');
+        if (row.amount.gt(0)) actual.set(key, row.amount);
+      }
+      if (actual.size !== requiredGroups.size || [...requiredGroups].some(([key, value]) => !value.eq(actual.get(key) ?? d('-1')))) throw new Error('Foreign carryover category records do not reconcile');
     }
-  }
-  return carry.lines.map(line => {
-    const actual = required(line.line);
-    const detail = carry.details.find(row => `${row.category}:${row.originTaxYear}:remaining` === line.line);
-    return detail ? { ...actual, formula: `Prior balance ${detail.amount}; deemed absorbed ${detail.absorbed}; expired ${detail.expired}; remaining ${detail.remaining}. No current tax benefit.` } : actual;
-  });
+    if (!alternative && !result.carryforwards.foreignTaxCreditCarryforward.eq(closing.lines.at(-1)?.value ?? record.carryforward)) throw new Error('Foreign carryover return total does not reconcile');
+    return { form, lines: [...lines.map(line => {
+      const actual = copyAudit(line), detail = record.details.find(row => `${row.category}:${row.originTaxYear}:remaining` === line.line);
+      const before = result.codAttributeReduction && (detail || line.line === 'carryforward');
+      return { ...actual, ...(before ? { description: `${actual.description} before COD` } : {}),
+        ...(detail ? { formula: `Prior balance ${detail.amount}; deemed absorbed ${detail.absorbed}; normal expiry ${detail.expired}; remaining ${detail.remaining}. No current tax benefit.${before ? ' Separate after-COD closing follows.' : ''}` } : {}) };
+    }), ...closing.lines] };
+  };
+  return [section(carry, DEDUCTION_CARRYOVER_FORM, false), ...(carry.amt ? [section(carry.amt, amtForm, true)] : [])];
 }
 
 function getReferenceLinesByForm(result: TaxReturnResult) {
@@ -215,8 +235,8 @@ function getReferenceLinesByForm(result: TaxReturnResult) {
   if (ordinarySections) return ordinarySections;
   const directLines = directForeignCreditReferenceLines(result);
   if (directLines) return [{ form: DIRECT_FOREIGN_CREDIT_FORM, lines: directLines }];
-  const deductionLines = deductionYearReferenceLines(result);
-  if (deductionLines) return [{ form: DEDUCTION_CARRYOVER_FORM, lines: deductionLines }];
+  const deductionSections = deductionYearReferenceSections(result);
+  if (deductionSections) return deductionSections;
   const grouped = new Map<string, CalculatedLine[]>();
 
   for (const line of result.allLines) {

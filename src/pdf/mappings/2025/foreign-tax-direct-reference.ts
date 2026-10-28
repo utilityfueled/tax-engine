@@ -1,4 +1,5 @@
 import Decimal from 'decimal.js';
+import type { ForeignTaxCarryoverDetail } from '@/engine/forms/foreign-tax-deduction-carryover.js';
 import type { CalculatedLine, TaxReturnResult } from '@/models/outputs.js';
 import { d, min, roundDollar, sum } from '@/utils/decimal.js';
 import { sumSourceMoney } from '@/utils/sum-source-money.js';
@@ -7,9 +8,13 @@ import { sumSourceMoneyRatios } from '@/utils/sum-source-money-ratios.js';
 export const DIRECT_FOREIGN_CREDIT_FORM = 'Foreign Direct Credit WS';
 
 /** The election-year credit remains unchanged; COD has a separate closing ledger. */
-function afterCodCarry(result: TaxReturnResult, alternative: boolean, before: Map<string, Decimal>) {
+export function foreignCreditCarryAfterCod(result: TaxReturnResult, alternative: boolean, before: Map<string, Decimal>,
+  form = DIRECT_FOREIGN_CREDIT_FORM, deductionDetails?: readonly ForeignTaxCarryoverDetail[]) {
   const cod = result.codAttributeReduction;
-  if (!cod) return { expected: before, lines: [] as CalculatedLine[] };
+  if (!cod) {
+    if (result.allLines.some(row => row.form.endsWith(' COD Attribute Worksheet'))) throw new Error('Foreign credit is missing its COD source ledger');
+    return { expected: before, lines: [] as CalculatedLine[] };
+  }
   const ledger = alternative ? cod.alternativeTax : cod.regular;
   if (cod.sourceFactsVerified !== true || ledger.sourceFactsVerified !== true
     || result.codNolReduction?.sourceFactsVerified !== true || result.codNolReduction.calculationComplete !== true) {
@@ -22,7 +27,9 @@ function afterCodCarry(result: TaxReturnResult, alternative: boolean, before: Ma
     if (!row.sourceId.trim() || seen.has(row.sourceId) || !['passive', 'general'].includes(row.foreignCategory ?? '')
       || !Number.isInteger(row.originTaxYear) || row.originTaxYear < 1900 || row.originTaxYear > result.taxYear
       || (row.originTaxYear < result.taxYear - 10 && row.beforeReduction.gt(0))
-      || ![row.beforeReduction, row.carryforwardBeforeReduction, row.attributeReduction, row.incomeApplied, row.remaining, row.expiredAfterReduction].every(nonnegative)
+      || ![row.opening, row.currentUse, row.carrybackUse, row.deemedAbsorption, row.beforeReduction, row.carryforwardBeforeReduction, row.attributeReduction, row.incomeApplied, row.remaining, row.expiredAfterReduction].every(nonnegative)
+      || !row.opening.eq(sumSourceMoney(row.currentUse, row.carrybackUse, row.deemedAbsorption, row.beforeReduction))
+      || (!deductionDetails && !row.deemedAbsorption.isZero())
       || !row.carryforwardBeforeReduction.eq(row.originTaxYear === result.taxYear - 10 ? d('0') : row.beforeReduction)
       || !row.attributeReduction.eq(sumSourceMoneyRatios([row.reductionRatio]))
       || !row.incomeApplied.eq(sumSourceMoneyRatios([row.reductionRatio, row.reductionRatio, row.reductionRatio]))
@@ -31,6 +38,21 @@ function afterCodCarry(result: TaxReturnResult, alternative: boolean, before: Ma
       throw new Error('Direct foreign-credit COD source records are duplicate or do not conserve their balances');
     }
     seen.add(row.sourceId);
+  }
+  if (deductionDetails) {
+    const keys = new Set<string>();
+    for (const detail of deductionDetails) {
+      const key = `${detail.category}:${detail.originTaxYear}`;
+      if (keys.has(key)) throw new Error('Foreign COD deemed absorption source is duplicated');
+      keys.add(key);
+      const group = rows.filter(row => `${row.foreignCategory}:${row.originTaxYear}` === key);
+      if (!sumSourceMoney(...group.map(row => row.opening)).eq(detail.amount)
+        || !sumSourceMoney(...group.map(row => row.deemedAbsorption)).eq(detail.absorbed)
+        || group.some(row => !row.currentUse.isZero() || !row.carrybackUse.isZero())) {
+        throw new Error('Foreign COD derived absorption does not reconcile with its original deduction-year source');
+      }
+    }
+    if (rows.some(row => !keys.has(`${row.foreignCategory}:${row.originTaxYear}`))) throw new Error('Foreign COD source is missing its deduction-year absorption');
   }
   for (const key of new Set(rows.map(row => `${row.foreignCategory}:${row.originTaxYear}`))) {
     const group = rows.filter(row => `${row.foreignCategory}:${row.originTaxYear}` === key);
@@ -52,11 +74,11 @@ function afterCodCarry(result: TaxReturnResult, alternative: boolean, before: Ma
     throw new Error('Direct foreign-credit COD stage does not reconcile with its retained audit');
   }
   const lines: CalculatedLine[] = [
-    { form: DIRECT_FOREIGN_CREDIT_FORM, line: `cod-${alternative ? 'amt' : 'regular'}-reduction`, description: `${label} foreign credit attribute reduction after current tax`,
+    { form, line: `cod-${alternative ? 'amt' : 'regular'}-reduction`, description: `${label} foreign credit attribute reduction after current tax`,
       value: reduction, formula: 'One third of the excluded income applied after earlier statutory attribute stages.', inputs: { 'Excluded income applied': income } },
-    ...[...expected].map(([key, value]) => ({ form: DIRECT_FOREIGN_CREDIT_FORM, line: `cod-${alternative ? 'amt' : 'regular'}-${key}`,
+    ...[...expected].map(([key, value]) => ({ form, line: `cod-${alternative ? 'amt' : 'regular'}-${key}`,
       description: `${label} ${key} carry after COD`, value, formula: 'Actual normal-year carry less the separately reconciled COD reduction and any residual expiry.', inputs: {} })),
-    { form: DIRECT_FOREIGN_CREDIT_FORM, line: `cod-${alternative ? 'amt' : 'regular'}-carry-total`, description: `${label} total foreign credit carry after COD`,
+    { form, line: `cod-${alternative ? 'amt' : 'regular'}-carry-total`, description: `${label} total foreign credit carry after COD`,
       value: sumSourceMoneyRatios(rows.filter(row => row.expiredAfterReduction.isZero()).map(row => row.remainingRatio)),
       formula: 'Exact remaining original credit ratios after statutory reduction and expiry.', inputs: {} },
   ];
@@ -141,7 +163,7 @@ export function directForeignCreditReferenceLines(result: TaxReturnResult): Calc
       if (row.remaining.gt(0)) expected.set(key, row.remaining);
     }
     if (!sum(...rows.map(row => row.remaining)).eq(retained) || !sum(...rows.map(row => row.expired)).eq(expired)) throw new Error('Direct foreign-credit carry totals do not reconcile');
-    const closing = afterCodCarry(result, prefix === 'amt', expected);
+    const closing = foreignCreditCarryAfterCod(result, prefix === 'amt', expected);
     codLines.push(...closing.lines);
     if (prefix === 'regular') regularClosing = closing.lines.length ? closing.lines[closing.lines.length - 1].value : retained;
     for (const [collection, expectedCollection] of [[groups, expected], [saved, closing.expected]] as const) {

@@ -13,16 +13,20 @@ export interface PreparedCodNolReview { readonly [brand]: true }
 const contexts = new WeakMap<PreparedCodNolReview, { original: TaxYearInput; originalDigest: string; redactedDigest: string; calculationDigest: string }>();
 function digest(input: TaxYearInput): string { return createHash('sha256').update(JSON.stringify(input)).digest('hex'); }
 function calculationDigest(result: TaxReturnResult): string {
-  const context = { taxYear: result.taxYear, filingStatus: result.filingStatus, agi: result.agi, nolDeduction: result.nolDeduction,
-    netOperatingLoss: result.netOperatingLoss, form172: result.form172, codNolReduction: result.codNolReduction,
-    regularCarry: result.carryforwards.nolCarryforward, alternativeCarry: result.carryforwards.alternativeTaxNolCarryforward,
-    ...(result.codAttributeReduction ? { codAttributeReduction: result.codAttributeReduction,
-      laterCarries: result.carryforwards,
-      currentAttributeForms: { form3800: result.form3800, form8801: result.form8801, form8582: result.form8582 },
-      laterAudit: result.allLines.filter(row => row.form.endsWith(' COD Attribute Worksheet')),
-    } : {}) };
-  return createHash('sha256').update(JSON.stringify(redactReviewIdentifiers(context))).digest('hex');
+  // The source replay is the complete current federal return, including actual credit,
+  // Form6251, Schedule3/Form1040 audits and final tax/payment transfers. A
+  // selected carry-only projection cannot prove those physical output values.
+  // Redaction preserves acceptance of the canonical render copy; it never
+  // permits an amount override or a separately manufactured current credit.
+  // The workspace separately calculates/attaches stateReturns after the federal
+  // call. State sources, applicability and review exports keep their own gates;
+  // this federal proof neither validates nor replaces that state-owned object.
+  // Exclude only that object, preserving every federal scalar and audit.
+  const federalResult = { ...result };
+  delete federalResult.stateReturns;
+  return createHash('sha256').update(JSON.stringify(redactReviewIdentifiers(federalResult))).digest('hex');
 }
+
 function freeze<T>(value: T): T {
   if (value !== null && typeof value === 'object') {
     for (const child of Object.values(value)) freeze(child);

@@ -25,14 +25,14 @@ function records(result: TaxReturnResult): CodAttributeReductionRecord[] | undef
   for (const ledger of [later.regular, later.alternativeTax]) {
     const seen = new Set<string>();
     for (const row of ledger.records) {
-      const amounts = [row.opening, row.currentUse, row.carrybackUse, row.beforeReduction,
+      const amounts = [row.opening, row.currentUse, row.carrybackUse, row.deemedAbsorption, row.beforeReduction,
         row.carryforwardBeforeReduction, row.incomeApplied, row.attributeReduction, row.expiredAfterReduction, row.remaining];
       if (!row.sourceId?.trim() || seen.has(row.sourceId) || amounts.some(value => !Decimal.isDecimal(value) || !value.isFinite() || value.lt(0))
         || !Number.isInteger(row.originTaxYear) || row.originTaxYear > result.taxYear) {
         throw new Error('COD closing reference requires unique finite original-source records');
       }
       seen.add(row.sourceId);
-      same(row.opening, sumSourceMoney(row.currentUse, row.carrybackUse, row.beforeReduction));
+      same(row.opening, sumSourceMoney(row.currentUse, row.carrybackUse, row.deemedAbsorption, row.beforeReduction));
       const credit = row.kind !== 'capital_loss' && row.kind !== 'passive_loss';
       same(row.incomeApplied, sumSourceMoneyRatios(credit ? [row.reductionRatio, row.reductionRatio, row.reductionRatio] : [row.reductionRatio]));
       same(row.attributeReduction, sumSourceMoneyRatios([row.reductionRatio]));

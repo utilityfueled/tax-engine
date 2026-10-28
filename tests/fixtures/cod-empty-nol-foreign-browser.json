@@ -1,0 +1,445 @@
+{
+  "phase": "interview",
+  "taxYear": 2025,
+  "segmentation": {
+    "filingStatus": "single",
+    "incomeTypes": [
+      "w2-wages",
+      "investments"
+    ],
+    "lifeEvents": [
+      "cancelled-debt"
+    ],
+    "stateCode": null
+  },
+  "currentSectionIndex": 0,
+  "completedSections": [],
+  "sectionData": {
+    "deductions": {
+      "method": "standard",
+      "medicalExpenses": "",
+      "stateLocalTaxes": "",
+      "realEstateTaxes": "",
+      "mortgageInterest": "",
+      "charitableContributions": "",
+      "casualtyLosses": "",
+      "otherItemized": ""
+    },
+    "personal-info": {
+      "dateOfBirth": "1990-02-15",
+      "usResidencyMonths": "12",
+      "stateResidency": "full-year",
+      "firstName": "Jane",
+      "middleName": "",
+      "lastName": "Doe",
+      "ssn": "123-45-6789",
+      "addressLine1": "42 Example Road",
+      "addressLine2": "",
+      "city": "Columbus",
+      "state": "OH",
+      "zip": "43215",
+      "dependentCount": "0",
+      "dependents": [],
+      "standardDeductionFacts": {
+        "primaryBlind": false,
+        "spouseBlind": false,
+        "primaryCanBeClaimedAsDependent": false,
+        "spouseCanBeClaimedAsDependent": false,
+        "primaryDeceased": false,
+        "spouseDeceased": false,
+        "dualStatusAlien": false,
+        "nonresidentAlien": false,
+        "shortTaxYear": false,
+        "spouseItemizes": false,
+        "claimSpouseAdditionalDeduction": false
+      },
+      "livedWithSpouseAtAnyTimeDuringYear": true,
+      "employmentValidSsnIssuedByDueDate": true,
+      "tinIssuedByDueDate": true,
+      "childTaxCredit": {
+        "bonaFidePuertoRicoResident": false,
+        "puertoRicoExcludedIncome": "0",
+        "form4563ExcludedIncome": "0"
+      },
+      "spouse": {
+        "firstName": "Taylor",
+        "lastName": "Example",
+        "ssn": "222-33-4444",
+        "dateOfBirth": "1992-09-10",
+        "usResidencyMonths": "12",
+        "employmentValidSsnIssuedByDueDate": true,
+        "tinIssuedByDueDate": true
+      }
+    },
+    "income-w2": {
+      "entries": [
+        {
+          "accountHolder": "primary",
+          "stateTaxReporting": "none",
+          "state": "",
+          "employerName": "Synthetic Employer",
+          "employerEin": "12-3456789",
+          "wages": "95000",
+          "federalWithheld": "20000",
+          "socialSecurityWages": "95000",
+          "socialSecurityTips": "0",
+          "socialSecurityWithheld": "5890.000",
+          "medicareWages": "95000",
+          "medicareWithheld": "1377.5000",
+          "stateWages": "",
+          "stateWithheld": "",
+          "aiSuggestedFields": {},
+          "box10DependentCareBenefits": "0",
+          "box12CodeW": "0"
+        }
+      ]
+    },
+    "adjustments": {
+      "hsaDeduction": "",
+      "studentLoanInterest": "",
+      "selfEmployedHealthInsurance": "",
+      "educatorExpenses": "",
+      "iraDeduction": "",
+      "alimonyPaid": "",
+      "netOperatingLossSources": {
+        "sourceTaxYear": "2025",
+        "sourceReference": "Actual filed carry packet",
+        "sourceFactsConfirmed": true,
+        "allCarryoversIncluded": true,
+        "calendarYearTaxpayer": true,
+        "returnMembership": "continuous_individual",
+        "membershipUnchangedConfirmed": true,
+        "primaryName": "Jane Doe",
+        "primaryTaxpayerIdLast4": "6789",
+        "vintages": [],
+        "alternativeTax": {
+          "sourceReference": "Actual independent AMT carry worksheet",
+          "sourceFactsConfirmed": true,
+          "allCarryoversIncluded": true,
+          "specialDisasterCarryIncluded": false,
+          "currentYearAdjustmentsCompleteConfirmed": true,
+          "regularBasisAndLossLimitsSameAsAlternativeConfirmed": true,
+          "vintages": []
+        }
+      },
+      "codNolSources": {
+        "sourceTaxYear": "2025",
+        "sourceReference": "Complete original debt and insolvency worksheet",
+        "sourceFactsConfirmed": true,
+        "allDischargesIncluded": true,
+        "title11Case": false,
+        "communityPropertyApplies": false,
+        "electBasisReductionFirst": false,
+        "otherExclusionsOrExceptionsApply": false,
+        "regularAndAlternativeExclusionSameConfirmed": true,
+        "debts": [
+          {
+            "statementId": "Original statement-A",
+            "sourceTaxYear": "2025",
+            "sourceReference": "Original creditor statement",
+            "sourceFactsConfirmed": true,
+            "accountHolder": "primary",
+            "debtorName": "Jane Doe",
+            "debtorSsnLast4": "6789",
+            "creditor": "Original creditor",
+            "creditorTin": "12-3456789",
+            "accountReference": "Original account-A",
+            "dischargeDate": "2025-10-01",
+            "amountDischarged": "300",
+            "interestIncluded": "0",
+            "fmvOfProperty": "0",
+            "debtDescription": "Unsecured personal loan",
+            "personallyLiable": true,
+            "identifiableEventCode": "F",
+            "unsecuredPersonalDebtConfirmed": true,
+            "noPropertyTransferConfirmed": true
+          }
+        ],
+        "insolvency": {
+          "asOfDate": "2025-10-01",
+          "sourceReference": "Actual immediately-before-discharge worksheet",
+          "sourceFactsConfirmed": true,
+          "immediatelyBeforeDischargeConfirmed": true,
+          "allAssetsIncluded": true,
+          "exemptAndRetirementAssetsIncluded": true,
+          "allLiabilitiesIncluded": true,
+          "assets": [],
+          "liabilities": [
+            {
+              "sourceId": "Liability-A",
+              "description": "Original personal recourse loan",
+              "amount": "300",
+              "sourceReference": "Actual loan balance",
+              "dischargedDebtStatementId": "Original statement-A"
+            }
+          ]
+        },
+        "attributeSources": {
+          "sourceTaxYear": "2025",
+          "sourceReference": "Fictional complete ordinary later-attribute originals",
+          "sourceFactsConfirmed": true,
+          "allAttributesIncluded": true,
+          "accountHolder": "primary",
+          "taxpayerName": "Jane Doe",
+          "taxpayerIdLast4": "6789",
+          "dischargeDate": "2025-10-01",
+          "regular": {
+            "sourceReference": "Fictional complete after-current-tax attribute worksheet",
+            "sourceFactsConfirmed": true,
+            "allAttributesIncluded": true,
+            "records": [
+              {
+                "sourceId": "regular:passive:2024",
+                "kind": "foreign_tax_credit",
+                "originTaxYear": "2024",
+                "originalAmount": "1000",
+                "originalAmountMeaning": "original_year_closing_carry",
+                "sourceReference": "Actual fictional regular 2024 original credit worksheet",
+                "sourceFactsConfirmed": true,
+                "allHistoryIncluded": true,
+                "history": [],
+                "currentYearUse": "0",
+                "currentYearCarryback": "0",
+                "currentYearExpired": "0",
+                "currentYearUseSourceReference": "Actual fictional regular current-tax use worksheet",
+                "foreignCategory": "passive"
+              }
+            ],
+            "property": {
+              "immediatelyAfter": {
+                "asOfDate": "2025-10-01",
+                "sourceReference": "Fictional immediately-after property and liability records",
+                "sourceFactsConfirmed": true,
+                "allPropertyAndMoneyIncluded": true,
+                "allLiabilitiesIncluded": true,
+                "money": "0",
+                "properties": [],
+                "liabilities": []
+              },
+              "followingYear": {
+                "asOfDate": "2026-01-01",
+                "sourceReference": "Fictional beginning-next-year property records",
+                "sourceFactsConfirmed": true,
+                "allPropertyIncluded": true,
+                "properties": [],
+                "dispositions": []
+              }
+            }
+          },
+          "alternativeTax": {
+            "sourceReference": "Fictional complete after-current-tax attribute worksheet",
+            "sourceFactsConfirmed": true,
+            "allAttributesIncluded": true,
+            "records": [
+              {
+                "sourceId": "alternativeTax:passive:2024",
+                "kind": "foreign_tax_credit",
+                "originTaxYear": "2024",
+                "originalAmount": "300",
+                "originalAmountMeaning": "original_year_closing_carry",
+                "sourceReference": "Actual fictional alternativeTax 2024 original credit worksheet",
+                "sourceFactsConfirmed": true,
+                "allHistoryIncluded": true,
+                "history": [],
+                "currentYearUse": "0",
+                "currentYearCarryback": "0",
+                "currentYearExpired": "0",
+                "currentYearUseSourceReference": "Actual fictional alternativeTax current-tax use worksheet",
+                "foreignCategory": "passive"
+              }
+            ],
+            "property": {
+              "immediatelyAfter": {
+                "asOfDate": "2025-10-01",
+                "sourceReference": "Fictional immediately-after property and liability records",
+                "sourceFactsConfirmed": true,
+                "allPropertyAndMoneyIncluded": true,
+                "allLiabilitiesIncluded": true,
+                "money": "0",
+                "properties": [],
+                "liabilities": []
+              },
+              "followingYear": {
+                "asOfDate": "2026-01-01",
+                "sourceReference": "Fictional beginning-next-year property records",
+                "sourceFactsConfirmed": true,
+                "allPropertyIncluded": true,
+                "properties": [],
+                "dispositions": []
+              }
+            }
+          },
+          "currentMinimumTaxCredit": {
+            "sourceReference": "Actual complete current regular and AMT adjustment records",
+            "sourceFactsConfirmed": true,
+            "allCurrentAdjustmentSourcesIncluded": true,
+            "noAdditionalDeferralItemsConfirmed": true
+          }
+        }
+      }
+    },
+    "payments": {
+      "estimatedPayments": [],
+      "extensionPayments": [],
+      "priorYearAppliedCredits": [],
+      "otherPayments": "",
+      "estimatedTaxFacts": {
+        "sourceTaxYear": "2025",
+        "sourceReference": "Fictional filed 2024 return and complete payment records through April 15 2026",
+        "sourceFactsConfirmed": true,
+        "allPaymentRecordsIncluded": true,
+        "calendarYearTaxpayer": true,
+        "residentReturn": true,
+        "farmerOrFisher": false,
+        "disasterReliefClaimed": false,
+        "waiverRequested": false,
+        "calculationMethod": "regular",
+        "withholdingMethod": "equal-installments",
+        "priorYearTaxStatus": "return-filed",
+        "priorYearFullYear": true,
+        "priorYearResidentAllYear": true,
+        "priorYearJointReturn": false,
+        "priorYearTaxForForm2210": "3000",
+        "priorYearAgiForForm2210": "100000",
+        "priorYearTaxComputationConfirmed": true,
+        "withholdingPayments": [],
+        "priorYearCreditPayments": [],
+        "returnPayments": [],
+        "earlyReturnExceptionClaimed": false,
+        "returnFiledDate": "",
+        "returnPaidInFullDate": ""
+      }
+    },
+    "income-investments": {
+      "interestEntries": [
+        {
+          "payer": "Synthetic investment bank",
+          "interestIncome": "5000",
+          "federalWithheld": "0",
+          "accountHolder": "primary",
+          "payerTin": "112233445",
+          "stateTaxReporting": "none",
+          "state": "",
+          "stateWithheld": "0",
+          "earlyWithdrawalPenalty": "0",
+          "usSavingsBondInterest": "0",
+          "foreignTaxPaid": "100",
+          "foreignCountry": "Canada",
+          "taxExemptInterest": "0",
+          "privateActivityBondInterest": "0",
+          "marketDiscount": "0",
+          "bondPremium": "0",
+          "treasuryBondPremium": "0",
+          "taxExemptBondPremium": "0",
+          "accountReference": "Private synthetic account A",
+          "paDirectObligationInterest": "0"
+        }
+      ],
+      "dividendEntries": [],
+      "brokerageEntries": []
+    },
+    "other-taxes": {
+      "householdEmploymentWages": "",
+      "acknowledgedSETax": false,
+      "acknowledgedAdditionalMedicare": false,
+      "acknowledgedNIIT": false,
+      "householdEmployees": [],
+      "foreignTaxElection": {
+        "taxYear": "2025",
+        "election": "deduction",
+        "accountingMethod": "paid",
+        "priorAccruedCreditElection": false,
+        "sourceReference": "Private synthetic annual decision",
+        "sourceFactsConfirmed": true,
+        "allQualifiedForeignTaxesIncludedConfirmed": true,
+        "noUnusedCreditCarryoversConfirmed": false,
+        "noRedeterminationsConfirmed": true,
+        "sources": [
+          {
+            "sourceId": "form1099Int:0",
+            "payerName": "Synthetic investment bank",
+            "payerTin": "112233445",
+            "accountReference": "Private synthetic account A",
+            "owner": "primary",
+            "foreignCountry": "Canada",
+            "jurisdictionType": "foreign_country",
+            "reportedTaxAmount": "100",
+            "qualifiedIncomeTaxConfirmed": true,
+            "creditEligibility": {
+              "passiveIncomeConfirmed": true,
+              "legalTaxLiabilityConfirmed": true,
+              "noRefundOrSubsidyConfirmed": true,
+              "holdingPeriodRequirementMetConfirmed": true,
+              "noRelatedPaymentsConfirmed": true,
+              "noDisallowedCountryOrBoycottConfirmed": true
+            },
+            "taxOnExcludedIncome": "0",
+            "taxDeductedElsewhere": "0",
+            "payments": [
+              {
+                "date": "2025-09-15",
+                "amountUsd": "100"
+              }
+            ],
+            "investmentAllocableAmount": "0",
+            "sourceReference": "Private synthetic statement and payments"
+          }
+        ],
+        "deductionYearCarryover": {
+          "sourceTaxYear": "2025",
+          "sourceReference": "Actual fictional deduction-year regular worksheet",
+          "sourceFactsConfirmed": true,
+          "method": "ordinary_passive",
+          "filingHistory": "continuous_individual",
+          "filingHistoryConfirmed": true,
+          "noCarrybackOrRedeterminationAdjustmentsConfirmed": true,
+          "noForeignOrDomesticLossAccountsConfirmed": true,
+          "noOtherForeignIncomeConfirmed": true,
+          "allCurrentTaxesCreditEligibleConfirmed": true,
+          "passiveCategoryConfirmed": true,
+          "adjustedThroughTaxYear": "2024",
+          "incomeSources": [
+            {
+              "sourceId": "form1099Int:0",
+              "payerName": "Synthetic investment bank",
+              "payerTin": "112233445",
+              "accountReference": "Private synthetic account A",
+              "owner": "primary",
+              "foreignCountry": "Canada",
+              "reportedIncome": "5000",
+              "foreignIncome": "5000",
+              "sourceReference": "Actual fictional foreign interest allocation"
+            }
+          ],
+          "carryovers": [
+            {
+              "originTaxYear": "2024",
+              "category": "passive",
+              "amount": "1000",
+              "sourceReference": "Actual fictional regular adjusted Schedule B"
+            }
+          ],
+          "amt": {
+            "sourceFactsConfirmed": true,
+            "sourceReference": "Actual fictional AMT first-claim election history",
+            "foreignAmountsSameAsRegularConfirmed": true,
+            "firstPost1997CreditClaimTaxYear": "2023",
+            "simplifiedElectionMadeInFirstClaimYear": false,
+            "noRevocationConfirmed": true,
+            "sourceTaxYear": "2025",
+            "adjustedThroughTaxYear": "2024",
+            "carryoverHistoryConfirmed": true,
+            "carryovers": [
+              {
+                "originTaxYear": "2024",
+                "category": "passive",
+                "amount": "300",
+                "sourceReference": "Separate actual fictional AMT adjusted Schedule B"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -6,6 +6,7 @@ import { AuditTrail } from '@/utils/audit.js';
 import { d, sum } from '@/utils/decimal.js';
 import { resolveForeignTaxDirectSources, type ForeignTaxDirectSources } from './foreign-tax-direct-sources.js';
 import { resolveForeignTaxOrdinarySources, type ForeignTaxOrdinarySources } from './foreign-tax-ordinary-sources.js';
+import { sumSourceMoney } from '@/utils/sum-source-money.js';
 
 export interface ForeignTaxElectionResult {
   election: 'credit' | 'deduction' | 'unverified_credit';
@@ -35,9 +36,38 @@ export type ForeignTaxElectionInput = Pick<TaxYearInput, 'foreignTaxElection' | 
   | 'standardDeductionFacts' | 'educationExpenses' | 'form2555'>
   & { taxpayer: Pick<TaxYearInput['taxpayer'], 'taxYear' | 'filingStatus'> };
 
+function reconcileDeductionAmtHistory(input: ForeignTaxElectionInput): boolean {
+  const annual = input.foreignTaxElection;
+  const facts = annual?.election === 'deduction' ? annual.deductionYearCarryover?.amt : undefined;
+  if (!facts) return false;
+  const year = input.taxpayer.taxYear;
+  if (facts.sourceTaxYear !== year || facts.adjustedThroughTaxYear !== year - 1
+    || facts.sourceFactsConfirmed !== true || !facts.sourceReference?.trim()
+    || facts.carryoverHistoryConfirmed !== true || !Array.isArray(facts.carryovers)) {
+    throw new Error('Foreign deduction requires actual complete independent AMT carry history and source year');
+  }
+  for (const category of ['passive', 'general'] as const) {
+    const saved = input.priorYear?.amtForeignTaxCreditCarryforwardByCategory?.[category];
+    if (saved === undefined) continue;
+    const actual = new Map<number, Decimal>(), declared = new Map<number, Decimal>();
+    for (const row of saved) actual.set(row.taxYear,
+      sumSourceMoney(actual.get(row.taxYear) ?? d('0'), amount(row.amount, 'saved AMT carryover')));
+    for (const row of facts.carryovers.filter(row => row.category === category)) {
+      if (row.originTaxYear === undefined) throw new Error('AMT carry history requires the actual original year');
+      declared.set(row.originTaxYear, sumSourceMoney(declared.get(row.originTaxYear) ?? d('0'), amount(row.amount, 'annual AMT carryover')));
+    }
+    if ([...new Set([...actual.keys(), ...declared.keys()])].some(key =>
+      !(actual.get(key) ?? d('0')).eq(declared.get(key) ?? d('0')))) {
+      throw new Error('Annual AMT carry history does not reconcile with the saved AMT origin/category ledger');
+    }
+  }
+  return true;
+}
+
 export function resolveForeignTaxElection(input: ForeignTaxElectionInput): ForeignTaxElectionResult {
   const facts = input.foreignTaxElection;
-  if (!facts?.creditWithoutForm1116 && !facts?.creditWithForm1116 && Object.values(input.priorYear?.amtForeignTaxCreditCarryforwardByCategory ?? {}).flat()
+  const deductionAmtHistory = reconcileDeductionAmtHistory(input);
+  if (!facts?.creditWithoutForm1116 && !facts?.creditWithForm1116 && !deductionAmtHistory && Object.values(input.priorYear?.amtForeignTaxCreditCarryforwardByCategory ?? {}).flat()
     .some(row => !amount(row.amount, 'saved AMT credit carryover').isZero())) {
     throw new Error('Actual AMT foreign-credit carryovers require a supported source method; another election cannot discard them');
   }

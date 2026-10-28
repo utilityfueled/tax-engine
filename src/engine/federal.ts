@@ -169,6 +169,7 @@ import { calculateForm1099K } from "./forms/form-1099-k.js";
 import { calculateForm1099C } from "./forms/form-1099-c.js";
 import { calculateForm982 } from "./forms/form-982.js";
 import { calculateCodNolReduction } from "./forms/cod-nol-reductions.js";
+import { hasCompleteEmptyForeignNolSources } from "./forms/empty-nol-foreign-sources.js";
 import { calculateCodAttributeReturn } from "./forms/cod-attribute-return.js";
 import { calculateSEHealthInsuranceWorksheet, type SEHealthInsuranceWorksheetResult } from "./forms/se-health-insurance-worksheet.js";
 import { calculateMarketplaceNonspecifiedStop } from "./forms/marketplace-nonspecified-stop.js";
@@ -3278,7 +3279,6 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         itemizedReduction: itemizedDeductionReduction },
     };
   };
-  if (hypothetical?.purpose === "foreign-deduction-carryover") return foreignTaxOrdinaryContext();
 
   let amtCapitalGainsSources: Form6251Input["capitalGainsSources"];
   const amtGainFacts = input.amtCapitalGains ?? (schedD.specialGainWorksheets && input.scheduleDSpecialGainSources?.amtBasisAndCarryoversSameAsRegularConfirmed && qualifiedDividends.plus(netLTCG).gt(0) ? {
@@ -3374,6 +3374,12 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     },
     constants
   );
+  if (hypothetical?.purpose === "foreign-deduction-carryover") {
+    const amtContext = calculateReturnAMT();
+    return { ...foreignTaxOrdinaryContext(), amt: { amti: amtContext.amti, grossIncome: totalIncome,
+      taxBeforeCredit: amtContext.tentativeMinimumTax, taxableExcess: amtContext.amtBase,
+      rate26Limit: constants.amt.rate26Limit[filingStatus] } };
+  }
 
   // ── Form 8959: Additional Medicare Tax ────────────────
   // Form 8959 Line 8 requires each person's Schedule SE line6 after the filing threshold.
@@ -3547,7 +3553,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const foreignTaxCreditCarryforwardByCategory: Record<string, Array<{ taxYear: number; amount: Decimal }>> = {};
   const hasForeignTaxActivity = foreignTaxPaid.greaterThan(0) || hasLegacyCarryforward
     || hasPassiveActivity || hasGeneralActivity;
-  if (nol && hasForeignTaxActivity && !directCreditSources && schedA.foreignTaxElection.election !== "deduction") {
+  if (nol && hasForeignTaxActivity && !directCreditSources && schedA.foreignTaxElection.election !== "deduction"
+    && !(ordinaryCreditSources && hasCompleteEmptyForeignNolSources(input))) {
     throw new Error("Actual NOL with general Form1116 requires the originating foreign-source loss allocation worksheet");
   }
 
@@ -3561,7 +3568,12 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     foreignTaxCredit = new Decimal(0);
     if (input.foreignTaxElection?.deductionYearCarryover) {
       if (!foreignTaxOrdinaryIncomeOnly) throw new Error("Foreign carryover requires the supported actual ordinary-income hypothetical method");
-      const hypotheticalInput: TaxYearInput = { ...input, foreignTaxElection: {
+      // The original annual election has already reconciled the saved AMT
+      // ledger. This private request stops before any credit or carry use;
+      // only pre-credit income/tax are recomputed, so no saved credit is an input.
+      const hypotheticalInput: TaxYearInput = { ...input,
+        priorYear: input.priorYear ? { ...input.priorYear, amtForeignTaxCreditCarryforwardByCategory: undefined } : undefined,
+        foreignTaxElection: {
         ...input.foreignTaxElection, election: "credit", sources: undefined, deductionYearCarryover: undefined,
       } };
       const context = calculateFederalTaxCore(hypotheticalInput, undefined, { purpose: "foreign-deduction-carryover" });
@@ -4426,6 +4438,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     unverifiedAnnuitySourceIds: niitOrdinarySources.unverifiedAnnuitySourceIds, priorLoss: nol.worksheet,
   }) : undefined;
   if (form172) audit.merge(form172.lines);
+  if ((ordinaryCreditSources || foreignTaxDeductionCarryover) && input.netOperatingLoss
+    && (excessBusinessLossAddback.gt(0) || form172?.regular.netOperatingLoss.gt(0) || form172?.alternativeTax.netOperatingLoss.gt(0))) {
+    throw new Error("Foreign empty-NOL composition cannot contain a newly calculated current regular or AMT loss");
+  }
   const codNolReduction = input.form982NolSources && nol?.stage === "final"
     ? calculateCodNolReduction(input, { priorLoss: nol.worksheet, currentOrigin: form172 }) : undefined;
   if (codNolReduction) audit.merge(codNolReduction.lines);
@@ -4521,7 +4537,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
           qbiVintages: a.sourceIndex === undefined ? undefined : rentalLossQbi.get(a.sourceIndex)?.remainingVintages
             ?? k1QbiLosses.activities.find(source => source.passiveSourceIndex === a.sourceIndex)?.stages.find(stage => stage.limitation === "469")?.remainingVintages }));
       let cfForeignByCategory = foreignTaxCreditCarryforwardByCategory;
-      let cfAlternativeForeignByCategory = foreignTaxDirectCredit?.amtCarryforwardByCategory ?? foreignTaxOrdinaryCredit?.amt.carryforwardByCategory;
+      let cfAlternativeForeignByCategory = foreignTaxDirectCredit?.amtCarryforwardByCategory ?? foreignTaxOrdinaryCredit?.amt.carryforwardByCategory
+        ?? foreignTaxDeductionCarryover?.amt?.carryforwardByCategory;
       const cfPassive = sum(...form8582.activityAllocations.filter((a) => a.suspendedLoss.greaterThan(0)).map((a) => a.suspendedLoss));
       let cfFtc = foreignTaxCreditCarryforward;
 
@@ -4569,6 +4586,9 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
               alternativeForeignCreditUsed: actualAlternativeForeignCredit,
               foreignCredit: cfFtc, foreignCreditByCategory: cfForeignByCategory,
               alternativeForeignCreditByCategory: cfAlternativeForeignByCategory,
+              foreignDeemedAbsorption: foreignTaxDeductionCarryover?.amt ? {
+                regular: foreignTaxDeductionCarryover.details, alternativeTax: foreignTaxDeductionCarryover.amt.details,
+              } : undefined,
             });
             if (!codAttributeReduction) throw new Error("COD actual later-attribute calculation is missing");
             const rows = codAttributeReduction.regular.records;

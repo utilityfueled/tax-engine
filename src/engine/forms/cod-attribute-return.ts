@@ -7,6 +7,7 @@ import { calculateCodAttributeReductions, type CodAttributeReductionResult, type
 import { sumSourceMoney } from '@/utils/sum-source-money.js';
 import { d } from '@/utils/decimal.js';
 import type { CodAttributeLedgerSources } from '@/models/cod-attribute-sources.js';
+import type { ForeignTaxCarryoverDetail } from './foreign-tax-deduction-carryover.js';
 
 export type CodAttributeSourceInput = CodNolSourceInput & Pick<TaxYearInput, 'form982AttributeSources'>;
 export interface CodAttributeCanonicalContext {
@@ -21,6 +22,7 @@ export interface CodAttributeCanonicalContext {
   foreignCreditUsed: Decimal; alternativeForeignCreditUsed: Decimal; foreignCredit: Decimal;
   foreignCreditByCategory: Record<string, Array<{ taxYear: number; amount: Decimal }>>;
   alternativeForeignCreditByCategory?: Record<string, Array<{ taxYear: number; amount: Decimal }>>;
+  foreignDeemedAbsorption?: { regular: ForeignTaxCarryoverDetail[]; alternativeTax: ForeignTaxCarryoverDetail[] };
 }
 const total = (...values: Decimal[]) => sumSourceMoney(...values);
 const cleanName = (value: string) => value.trim().replace(/\s+/g, ' ').toLowerCase();
@@ -77,11 +79,36 @@ export function calculateCodAttributeReturn(input: CodAttributeSourceInput, cont
   const alternativeSources = { ...facts.alternativeTax, records: [
     ...(facts.alternativeTax.records ?? []), ...(facts.regular?.records?.filter(row => sharedCredit(row.kind)) ?? []),
   ] };
-  const calculate = (sources: CodAttributeLedgerSources | undefined, remainingExclusion: Decimal) => calculateCodAttributeReductions({
-    taxYear: year, dischargeDate: facts.dischargeDate!, remainingExclusion, sources,
+  const deductionHistory = input.foreignTaxElection?.election === 'deduction' && Boolean(input.foreignTaxElection.deductionYearCarryover);
+  const calculate = (sources: CodAttributeLedgerSources | undefined, remainingExclusion: Decimal, absorption?: ReadonlyMap<string, Decimal>, sourceOnly = false) => calculateCodAttributeReductions({
+    taxYear: year, dischargeDate: facts.dischargeDate!, remainingExclusion, sources, foreignDeemedAbsorption: absorption,
+    deferForeignAbsorptionValidation: deductionHistory && sourceOnly,
   });
-  let regular = calculate(facts.regular, d('0')), alternativeTax = calculate(alternativeSources, d('0'));
+  let regular = calculate(facts.regular, d('0'), undefined, true), alternativeTax = calculate(alternativeSources, d('0'), undefined, true);
   if (context) {
+    if (deductionHistory !== Boolean(context.foreignDeemedAbsorption)) throw new Error('COD foreign deduction absorption requires its completed independent canonical worksheets');
+    const bindAbsorption = (ledger: CodAttributeReductionLedger, details: ForeignTaxCarryoverDetail[] | undefined): ReadonlyMap<string, Decimal> | undefined => {
+      if (!details) return undefined;
+      const rows = ledger.records.filter(row => row.kind === 'foreign_tax_credit'), result = new Map<string, Decimal>(), seen = new Set<string>();
+      for (const detail of details) {
+        const key = `${detail.category}:${detail.originTaxYear}`;
+        if (seen.has(key) || [detail.amount, detail.absorbed, detail.expired, detail.remaining].some(value => !Decimal.isDecimal(value) || !value.isFinite() || value.lt(0))) {
+          throw new Error('COD foreign absorption requires unique finite canonical source balances');
+        }
+        seen.add(key);
+        const originals = rows.filter(row => row.foreignCategory === detail.category && row.originTaxYear === detail.originTaxYear);
+        same(total(...originals.map(row => row.opening)), detail.amount, 'foreign-credit original opening before deemed absorption');
+        same(total(detail.absorbed, detail.expired, detail.remaining), detail.amount, 'foreign-credit deemed absorption conservation');
+        if (originals.some(row => !row.currentUse.isZero() || !row.carrybackUse.isZero()) || (detail.absorbed.gt(0) && originals.length !== 1)) {
+          throw new Error('COD foreign deemed absorption requires zero actual credit use and a determined original source');
+        }
+        for (const row of originals) result.set(row.sourceId, detail.absorbed);
+      }
+      if (rows.some(row => !seen.has(`${row.foreignCategory}:${row.originTaxYear}`))) throw new Error('COD foreign absorption is missing an actual original credit source');
+      return result;
+    };
+    const regularAbsorption = bindAbsorption(regular, context.foreignDeemedAbsorption?.regular);
+    const alternativeAbsorption = bindAbsorption(alternativeTax, context.foreignDeemedAbsorption?.alternativeTax);
     const regularRemaining = total(context.nol.reportedExcludedAmount, context.nol.regular!.reduction.negated());
     const alternativeRemaining = total(context.nol.reportedExcludedAmount, context.nol.alternativeTax!.reduction.negated());
     if (regular.records.some(row => sharedCredit(row.kind) && row.beforeReduction.gt(0))
@@ -89,7 +116,7 @@ export function calculateCodAttributeReturn(input: CodAttributeSourceInput, cont
       && (!regularRemaining.eq(alternativeRemaining) || attributeVector(facts.regular) !== attributeVector(facts.alternativeTax))) {
       throw new Error('COD positive shared credit composition requires the complete equal regular/alternative vector and actual NOL reductions');
     }
-    regular = calculate(facts.regular, regularRemaining); alternativeTax = calculate(alternativeSources, alternativeRemaining);
+    regular = calculate(facts.regular, regularRemaining, regularAbsorption); alternativeTax = calculate(alternativeSources, alternativeRemaining, alternativeAbsorption);
   }
   // No property transfer, deductible interest or new borrowing occurs at the
   // single discharge event admitted by this source method.

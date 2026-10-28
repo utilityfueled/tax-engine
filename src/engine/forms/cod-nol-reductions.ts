@@ -61,7 +61,7 @@ function canonical(value: Decimal | undefined, label: string): Decimal {
 }
 
 /** Precisely the actual records consumed; source-only callers need no fabricated return. */
-export type CodNolSourceInput = Pick<TaxYearInput, 'form982NolSources' | 'form982AttributeSources' | 'netOperatingLoss' | 'form1099C' | 'form172'> & {
+export type CodNolSourceInput = Pick<TaxYearInput, 'form982NolSources' | 'form982AttributeSources' | 'netOperatingLoss' | 'form1099C' | 'form172' | 'foreignTaxElection'> & {
   taxpayer: Pick<TaxYearInput['taxpayer'], 'taxYear' | 'filingStatus'> & {
     primary: Pick<TaxYearInput['taxpayer']['primary'], 'firstName' | 'lastName' | 'ssn'>;
   };

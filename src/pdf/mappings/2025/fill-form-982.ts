@@ -188,6 +188,7 @@ function laterAttributeSummary(result: TaxReturnResult, same: (actual: Decimal |
     same(sumSourceMoney(ledger.incomeApplied, ledger.unreducedExclusion), ledger.remainingExclusionBeforeReduction);
     same(sumSourceMoney(...ledger.stages.map(row => row.incomeApplied)), ledger.incomeApplied);
     for (const row of ledger.records) {
+      same(row.opening, sumSourceMoney(row.currentUse, row.carrybackUse, row.deemedAbsorption, row.beforeReduction));
       same(row.attributeReduction, sumSourceMoneyRatios([row.reductionRatio]));
       same(sumSourceMoneyRatios([row.reductionRatio, row.remainingRatio]), row.beforeReduction);
       same(sumSourceMoney(row.remaining, row.expiredAfterReduction), sumSourceMoneyRatios([row.remainingRatio]));
@@ -216,6 +217,10 @@ function laterAttributeSummary(result: TaxReturnResult, same: (actual: Decimal |
       { label: `${label} immediately-after basis cap`, value: ledger.property.basisCap.toFixed() },
       { label: `${label} remaining property basis`, value: ledger.property.remainingBasis.toFixed() });
     ledger.records.forEach((row, index) => {
+      if (row.deemedAbsorption.gt(0)) totals.push(
+        { label: `${label} attribute ${index + 1} opening before use`, value: row.opening.toFixed() },
+        { label: `${label} attribute ${index + 1} actual current use`, value: row.currentUse.toFixed() },
+        { label: `${label} attribute ${index + 1} derived deemed absorption`, value: row.deemedAbsorption.toFixed() });
       totals.push({ label: `${label} attribute ${index + 1} original year`, value: String(row.originTaxYear) },
         { label: `${label} attribute ${index + 1} before reduction`, value: row.beforeReduction.toFixed() },
         { label: `${label} attribute ${index + 1} reduction`, value: row.attributeReduction.toFixed() },

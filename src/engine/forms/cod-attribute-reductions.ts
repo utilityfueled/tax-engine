@@ -7,7 +7,7 @@ import { sumSourceMoneyRatios, type SourceMoneyRatio } from '@/utils/sum-source-
 export interface CodAttributeReductionRecord {
   sourceId: string; kind: CodAttributeKind; originTaxYear: number;
   term?: 'short' | 'long'; activityName?: string; creditKind?: string; foreignCategory?: 'general' | 'passive';
-  originalAmount: Decimal; opening: Decimal; currentUse: Decimal; carrybackUse: Decimal;
+  originalAmount: Decimal; opening: Decimal; currentUse: Decimal; carrybackUse: Decimal; deemedAbsorption: Decimal;
   originalAmountMeaning: 'original_year_closing_carry' | 'current_year_before_use';
   beforeReduction: Decimal; carryforwardBeforeReduction: Decimal;
   incomeApplied: Decimal; attributeReduction: Decimal; reductionRatio: SourceMoneyRatio;
@@ -60,11 +60,18 @@ const isCredit = (kind: CodAttributeKind) => kind !== 'capital_loss' && kind !==
 /** Source-only pure ledger; the caller separately reconciles current uses to the canonical return. */
 export function calculateCodAttributeReductions(input: {
   taxYear: number; dischargeDate: string; remainingExclusion: Decimal; sources: CodAttributeLedgerSources | undefined;
+  /** Canonical deduction-year worksheet result, keyed to the original source. Never an entered use. */
+  foreignDeemedAbsorption?: ReadonlyMap<string, Decimal>;
+  /** Source-only pass cannot check final expiry until the hypothetical calculation exists. */
+  deferForeignAbsorptionValidation?: boolean;
 }): CodAttributeReductionLedger {
   const { taxYear, sources } = input;
   if (!Number.isInteger(taxYear) || !day(input.dischargeDate, 'discharge').startsWith(`${taxYear}-`)
     || !Decimal.isDecimal(input.remainingExclusion) || !input.remainingExclusion.isFinite() || input.remainingExclusion.lt(0)) {
     throw new Error('COD later attributes require the actual year, event and nonnegative remaining exclusion');
+  }
+  if (input.deferForeignAbsorptionValidation && (!input.remainingExclusion.isZero() || input.foreignDeemedAbsorption !== undefined)) {
+    throw new Error('COD deferred foreign absorption is limited to source-only validation');
   }
   if (!sources || sources.sourceFactsConfirmed !== true || sources.allAttributesIncluded !== true || !Array.isArray(sources.records)) {
     throw new Error('COD requires confirmed complete actual attribute sources, including empty lists');
@@ -121,20 +128,29 @@ export function calculateCodAttributeReductions(input: {
     if (carrybackUse.gt(0) && (originTaxYear !== taxYear || (kind !== 'general_business_credit' && kind !== 'foreign_tax_credit'))) {
       throw new Error('COD current carryback must belong to an actual current credit origin');
     }
-    const beforeReduction = subtract(opening, add(currentUse, carrybackUse));
-    if (beforeReduction.lt(0)) throw new Error('COD current use and carryback exceed the original available attribute');
-    if (expired.gt(0) && (expiryYear !== taxYear || !expired.eq(beforeReduction))) {
+    const deemedAbsorption = input.foreignDeemedAbsorption?.get(sourceId) ?? zero();
+    if (!Decimal.isDecimal(deemedAbsorption) || !deemedAbsorption.isFinite() || deemedAbsorption.lt(0)
+      || (!deemedAbsorption.isZero() && (kind !== 'foreign_tax_credit' || originTaxYear >= taxYear))) {
+      throw new Error('COD foreign deemed absorption requires a finite actual prior-source calculation');
+    }
+    const beforeReduction = subtract(opening, add(currentUse, carrybackUse, deemedAbsorption));
+    if (beforeReduction.lt(0)) throw new Error('COD current use, carryback and deemed absorption exceed the original available attribute');
+    const deferred = kind === 'foreign_tax_credit' && input.deferForeignAbsorptionValidation;
+    if (expired.gt(0) && (expiryYear !== taxYear || expired.gt(beforeReduction) || (!deferred && !expired.eq(beforeReduction)))) {
       throw new Error('COD attribute expiry must match the original statutory year');
     }
-    if (expiryYear === taxYear && !expired.eq(beforeReduction)) {
+    if (expiryYear === taxYear && !deferred && !expired.eq(beforeReduction)) {
       throw new Error('COD final-year attribute expiry must be retained separately from its reduction pool');
     }
     return { sourceId, kind, originTaxYear, term: source.term, activityName: source.activityName?.trim(), creditKind: source.creditKind?.trim(),
-      foreignCategory: source.foreignCategory, originalAmount, originalAmountMeaning, opening, currentUse, carrybackUse, beforeReduction,
+      foreignCategory: source.foreignCategory, originalAmount, originalAmountMeaning, opening, currentUse, carrybackUse, deemedAbsorption, beforeReduction,
       carryforwardBeforeReduction: subtract(beforeReduction, expired), incomeApplied: zero(), attributeReduction: zero(),
       reductionRatio: ratio(zero()), remainingRatio: ratio(beforeReduction), expiredAfterReduction: expired,
       remaining: subtract(beforeReduction, expired) };
   });
+  if ([...(input.foreignDeemedAbsorption?.keys() ?? [])].some(id => !records.some(row => row.sourceId === id && row.kind === 'foreign_tax_credit'))) {
+    throw new Error('COD foreign deemed absorption contains an unmatched original source');
+  }
 
   const after = sources.property?.immediatelyAfter, next = sources.property?.followingYear;
   if (!after || !next || after.sourceFactsConfirmed !== true || next.sourceFactsConfirmed !== true

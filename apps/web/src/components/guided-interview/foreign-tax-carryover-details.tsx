@@ -1,6 +1,6 @@
 "use client";
 import { ForeignTaxItemizedAllocationDetails } from './foreign-tax-itemized-allocation-details';
-import { foreignCarryoverStatements, snapshotForeignCarryoverIncome, type ForeignCarryoverData, type ForeignCarryoverIncomeData, type ForeignCarryoverBalanceData } from '@/lib/guided-foreign-tax-carryover';
+import { foreignCarryoverStatements, snapshotForeignCarryoverIncome, type ForeignCarryoverData, type ForeignCarryoverIncomeData, type ForeignCarryoverBalanceData, type ForeignCarryoverAmtData } from '@/lib/guided-foreign-tax-carryover';
 import type { InvestmentData } from '@/lib/guided-investment-facts';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
@@ -16,10 +16,13 @@ export function ForeignTaxCarryoverDetails({data,investment,onChange}:{data?:For
     if('incomeSources' in patch&&next.itemizedAllocation)next.itemizedAllocation={...next.itemizedAllocation,sourceFactsConfirmed:undefined,
       stateAllocation:next.itemizedAllocation.stateAllocation?{...next.itemizedAllocation.stateAllocation,sourceFactsConfirmed:undefined}:undefined,
       stateIncomeTaxes:next.itemizedAllocation.stateIncomeTaxes?.map(row=>({...row,countryIncomeConfirmed:undefined}))};
+    if(('incomeSources' in patch || 'itemizedAllocation' in patch) && next.amt) next.amt={...next.amt,sourceFactsConfirmed:undefined,foreignAmountsSameAsRegularConfirmed:undefined};
     onChange(next);
   };
   const income=(index:number,patch:Partial<ForeignCarryoverIncomeData>)=>update({incomeSources:data.incomeSources?.map((row,i)=>i===index?{...row,...patch}:row)});
   const balance=(index:number,patch:Partial<ForeignCarryoverBalanceData>)=>update({carryovers:data.carryovers?.map((row,i)=>i===index?{...row,...patch}:row)});
+  const amt=(patch:Partial<ForeignCarryoverAmtData>)=>update({amt:{...data.amt,...patch,sourceFactsConfirmed:undefined}});
+  const amtBalance=(index:number,patch:Partial<ForeignCarryoverBalanceData>)=>amt({carryovers:data.amt?.carryovers?.map((row,i)=>i===index?{...row,...patch}:row)});
   return <fieldset className="guided-fieldset"><legend>Deduction-year prior credit balances</legend>
     <p className="guided-hint">Unused credit can be absorbed in a deduction year even though it gives no current tax benefit. Enter actual foreign income and adjusted prior balances. The return calculates the hypothetical credit limit; do not enter a guessed limit. Mixed filing histories, special categories and loss accounts require their own methods.</p>
     <TextFact label="Carryover worksheet tax year" value={data.sourceTaxYear??''} onChange={sourceTaxYear=>update({sourceTaxYear})}/>
@@ -59,6 +62,31 @@ export function ForeignTaxCarryoverDetails({data,investment,onChange}:{data?:For
       <button type="button" className="utility-button" onClick={()=>update({carryovers:[...(data.carryovers??[]),{}]})}>Add prior credit balance</button>
       {data.carryovers===undefined&&<button type="button" className="utility-button" onClick={()=>update({carryovers:[]})}>Confirm no adjusted prior balance remains</button>}
     </fieldset>
+    {!data.amt ? <button type="button" className="utility-button" onClick={()=>update({amt:{}})}>Add independent AMT carry history</button> :
+      <fieldset className="guided-fieldset"><legend>Independent AMT deduction-year history</legend>
+        <p className="guided-hint">Use the separate AMT worksheets and election history. An empty history must be confirmed from the records; regular credit balances are not copied here.</p>
+        <TextFact label="AMT carry source tax year" value={data.amt.sourceTaxYear??''} onChange={sourceTaxYear=>amt({sourceTaxYear})}/>
+        <TextFact label="AMT balances adjusted through year" value={data.amt.adjustedThroughTaxYear??''} onChange={adjustedThroughTaxYear=>amt({adjustedThroughTaxYear})}/>
+        <TextFact label="AMT carry history source reference" value={data.amt.sourceReference??''} onChange={sourceReference=>amt({sourceReference})}/>
+        <BooleanFact label="Complete AMT carry history checked" value={data.amt.carryoverHistoryConfirmed} onChange={value=>amt({carryoverHistoryConfirmed:value??undefined})}/>
+        {(data.amt.carryovers??[]).map((source,index)=><fieldset className="guided-fieldset" key={index}><legend>AMT prior balance {index+1}</legend>
+          <TextFact label={`AMT balance ${index+1} origin tax year`} value={source.originTaxYear??''} onChange={originTaxYear=>amtBalance(index,{originTaxYear})}/>
+          <Choice label={`AMT balance ${index+1} actual category`} value={source.category} options={[["passive","Passive category"],["general","General category"]]} onChange={category=>amtBalance(index,{category:category as ForeignCarryoverBalanceData['category']})}/>
+          <CurrencyField label={`AMT balance ${index+1} adjusted amount`} value={source.amount??''} onChange={amount=>amtBalance(index,{amount})}/>
+          <TextFact label={`AMT balance ${index+1} source reference`} value={source.sourceReference??''} onChange={sourceReference=>amtBalance(index,{sourceReference})}/>
+          <button type="button" className="utility-button" onClick={()=>amt({carryovers:data.amt?.carryovers?.filter((_,i)=>i!==index)})}>Remove prior AMT balance {index+1}</button>
+        </fieldset>)}
+        <button type="button" className="utility-button" onClick={()=>amt({carryovers:[...(data.amt?.carryovers??[]),{}]})}>Add prior AMT credit balance</button>
+        {data.amt.carryovers===undefined&&<button type="button" className="utility-button" onClick={()=>amt({carryovers:[]})}>Confirm no prior AMT credit balance</button>}
+        {Boolean(data.amt.carryovers?.length)&&<>
+          <BooleanFact label="AMT foreign source amounts match the recorded ordinary income" value={data.amt.foreignAmountsSameAsRegularConfirmed} onChange={value=>amt({foreignAmountsSameAsRegularConfirmed:value??undefined})}/>
+          <TextFact label="First post-1997 AMT credit claim year" value={data.amt.firstPost1997CreditClaimTaxYear??''} onChange={firstPost1997CreditClaimTaxYear=>amt({firstPost1997CreditClaimTaxYear})}/>
+          <BooleanFact label="Simplified AMT limitation elected in that first claim year" value={data.amt.simplifiedElectionMadeInFirstClaimYear} onChange={value=>amt({simplifiedElectionMadeInFirstClaimYear:value??undefined})}/>
+          <BooleanFact label="AMT election history includes no revocation" value={data.amt.noRevocationConfirmed} onChange={value=>amt({noRevocationConfirmed:value??undefined})}/>
+        </>}
+        <BooleanFact label="AMT carry sources checked after the last edit" value={data.amt.sourceFactsConfirmed} onChange={value=>update({amt:{...data.amt,sourceFactsConfirmed:value??undefined}})}/>
+        <button type="button" className="utility-button" onClick={()=>update({amt:undefined})}>Remove independent AMT carry history</button>
+      </fieldset>}
     <ForeignTaxItemizedAllocationDetails allocation={data.itemizedAllocation} onChange={itemizedAllocation=>update({itemizedAllocation})}/>
     <BooleanFact label="Carryover worksheet sources checked after the last edit" value={data.sourceFactsConfirmed} onChange={value=>onChange({...data,sourceFactsConfirmed:value??undefined})}/>
     <button type="button" className="utility-button" onClick={()=>onChange(undefined)}>Remove deduction-year carryover worksheet</button>

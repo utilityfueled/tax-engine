@@ -7,8 +7,13 @@ import { parseGuidedCurrency } from './guided-currency';
 type EngineCarryover = NonNullable<NonNullable<TaxYearInput['foreignTaxElection']>['deductionYearCarryover']>;
 export type ForeignCarryoverIncomeData = NonNullable<EngineCarryover['incomeSources']>[number];
 export type ForeignCarryoverBalanceData = Omit<NonNullable<EngineCarryover['carryovers']>[number], 'originTaxYear'> & { originTaxYear?: string };
-export type ForeignCarryoverData = Omit<EngineCarryover, 'sourceTaxYear' | 'adjustedThroughTaxYear' | 'carryovers'> & {
-  sourceTaxYear?: string; adjustedThroughTaxYear?: string; carryovers?: ForeignCarryoverBalanceData[];
+export type ForeignCarryoverAmtData = Omit<NonNullable<EngineCarryover['amt']>,
+  'sourceTaxYear' | 'adjustedThroughTaxYear' | 'firstPost1997CreditClaimTaxYear' | 'carryovers'> & {
+  sourceTaxYear?: string; adjustedThroughTaxYear?: string; firstPost1997CreditClaimTaxYear?: string;
+  carryovers?: ForeignCarryoverBalanceData[];
+};
+export type ForeignCarryoverData = Omit<EngineCarryover, 'sourceTaxYear' | 'adjustedThroughTaxYear' | 'carryovers' | 'amt'> & {
+  sourceTaxYear?: string; adjustedThroughTaxYear?: string; carryovers?: ForeignCarryoverBalanceData[]; amt?: ForeignCarryoverAmtData;
 };
 const text = (value: string | undefined, label: string) => {
   if (!value?.trim()) throw new Error(`Enter the actual ${label}.`);
@@ -50,7 +55,7 @@ export function buildGuidedForeignTaxCarryover(data: ForeignCarryoverData | unde
     if (data[key] !== true) throw new Error('Complete and confirm the actual carryover history, source classification and worksheet facts.');
   }
   if (!data.incomeSources || !data.carryovers) throw new Error('Enter the actual income and prior-balance records.');
-  const statements = foreignCarryoverStatements(investment), sourceIds = new Set<string>(), balanceIds = new Set<string>();
+  const statements = foreignCarryoverStatements(investment), sourceIds = new Set<string>();
   const incomeSources = data.incomeSources.map(source => {
     const actual = statements.find(row => row.sourceId === source.sourceId), id = text(source.sourceId, 'carryover income source');
     if (!actual || sourceIds.has(id)) throw new Error('Select distinct actual carryover income statements.');
@@ -65,16 +70,39 @@ export function buildGuidedForeignTaxCarryover(data: ForeignCarryoverData | unde
     return { ...source, reportedIncome: money(source.reportedIncome, 'reported income'), foreignIncome, sourceReference: text(source.sourceReference, 'foreign income source reference') };
   });
   if (statements.some(row => parseGuidedCurrency(row.entry.foreignTaxPaid).gt(0) && !sourceIds.has(row.sourceId))) throw new Error('Enter actual foreign income for every paid-tax statement.');
-  const carryovers = data.carryovers.map(source => {
-    const originTaxYear = yearValue(source.originTaxYear, 'carryover origin year');
-    if (originTaxYear >= year || originTaxYear < year - 10 || !['passive', 'general'].includes(source.category ?? '')) throw new Error('Enter the actual unexpired prior origin year and income category.');
-    const id = `${source.category}:${originTaxYear}`;
-    if (balanceIds.has(id)) throw new Error('Duplicate carryover origin year and category.');
-    balanceIds.add(id);
-    return { ...source, originTaxYear, amount: money(source.amount, 'adjusted prior balance'), sourceReference: text(source.sourceReference, 'prior balance source reference') };
-  });
+  const balances = (sources: ForeignCarryoverBalanceData[]) => {
+    const ids = new Set<string>();
+    return sources.map(source => {
+      const originTaxYear = yearValue(source.originTaxYear, 'carryover origin year');
+      if (originTaxYear >= year || originTaxYear < year - 10 || !['passive', 'general'].includes(source.category ?? '')) throw new Error('Enter the actual unexpired prior origin year and income category.');
+      const id = `${source.category}:${originTaxYear}`;
+      if (ids.has(id)) throw new Error('Duplicate carryover origin year and category.');
+      ids.add(id);
+      return { ...source, originTaxYear, amount: money(source.amount, 'adjusted prior balance'), sourceReference: text(source.sourceReference, 'prior balance source reference') };
+    });
+  };
+  const carryovers = balances(data.carryovers);
+  let amt: EngineCarryover['amt'];
+  if (data.amt) {
+    const actual = data.amt;
+    if (yearValue(actual.sourceTaxYear, 'AMT carry source year') !== year
+      || yearValue(actual.adjustedThroughTaxYear, 'AMT last adjusted year') !== year - 1
+      || actual.sourceFactsConfirmed !== true || actual.carryoverHistoryConfirmed !== true || !Array.isArray(actual.carryovers)) {
+      throw new Error('Complete and confirm the actual independent AMT carry history, including a known empty history.');
+    }
+    const prior = balances(actual.carryovers);
+    const firstYear = actual.firstPost1997CreditClaimTaxYear === undefined || actual.firstPost1997CreditClaimTaxYear === '' ? undefined
+      : yearValue(actual.firstPost1997CreditClaimTaxYear, 'first post-1997 AMT credit claim year');
+    if (prior.length && (actual.foreignAmountsSameAsRegularConfirmed !== true || actual.noRevocationConfirmed !== true
+      || typeof actual.simplifiedElectionMadeInFirstClaimYear !== 'boolean' || firstYear === undefined || firstYear < 1998 || firstYear > year)) {
+      throw new Error('Confirm the actual AMT foreign amounts and first-claim simplified-election history.');
+    }
+    amt = { ...actual, sourceTaxYear: year, adjustedThroughTaxYear: year - 1,
+      sourceReference: text(actual.sourceReference, 'AMT carry history reference'), carryovers: prior,
+      firstPost1997CreditClaimTaxYear: firstYear };
+  }
   const itemizedAllocation = buildGuidedForeignTaxAllocation(data.itemizedAllocation, incomeSources);
-  return { ...data, sourceTaxYear: year, adjustedThroughTaxYear: year - 1, incomeSources, carryovers, itemizedAllocation };
+  return { ...data, sourceTaxYear: year, adjustedThroughTaxYear: year - 1, incomeSources, carryovers, itemizedAllocation, amt };
 }
 
 /** Normalize actual allowed deduction sources shared by ordinary credit and deduction-year history. */

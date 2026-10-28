@@ -3,6 +3,8 @@ import type { CalculatedLine, TaxReturnResult } from '@/models/outputs.js';
 import type { ForeignTaxPriorReturnCapacity } from '@/engine/forms/foreign-tax-ordinary-credit.js';
 import { d, min, roundDollar, sum, zeroFloor } from '@/utils/decimal.js';
 
+import { foreignCreditCarryAfterCod } from './foreign-tax-direct-reference.js';
+
 const REGULAR = 'Form 1116 (actual passive)', AMT = 'AMT Form 1116 (actual passive)';
 const finite = (value: Decimal): boolean => Decimal.isDecimal(value) && value.isFinite();
 const nonnegative = (value: Decimal): boolean => finite(value) && value.gte(0);
@@ -52,6 +54,8 @@ export function ordinaryForeignCreditReferenceSections(result: TaxReturnResult):
   if (canonical.size !== copied.size || credit.lines.length !== credit.regular.lines.length + credit.amt.lines.length) throw new Error('Ordinary foreign credit audit is incomplete');
   const currentExact = sum(...sources.countries.map(row => row.tax)), currentReported = sum(...sources.countries.map(row => roundDollar(row.tax)));
   if (!currentExact.eq(sources.currentTaxExact) || !nonnegative(currentExact)) throw new Error('Ordinary foreign credit actual paid tax does not reconcile');
+  const closingLines = new Map<string, CalculatedLine[]>();
+  let regularClosing = credit.regular.carryforward;
   for (const [form, category, original, prior, saved] of [
     [REGULAR, credit.regular, sources.carryovers, sources.regularCarryback, result.carryforwards.foreignTaxCreditCarryforwardByCategory],
     [AMT, credit.amt, sources.amtCarryovers, sources.amtCarryback, result.carryforwards.amtForeignTaxCreditCarryforwardByCategory],
@@ -87,7 +91,10 @@ export function ordinaryForeignCreditReferenceSections(result: TaxReturnResult):
     if (!category.carryback.eq(back) || !category.currentTaxExcess.eq(category.carryback.plus(category.currentCarryforward))
       || !category.carryforward.eq(sum(...category.details.map(row => row.remaining), category.currentCarryforward))) throw new Error('Ordinary foreign credit excess and carry balances do not conserve');
     if (category.currentCarryforward.gt(0)) expected.set(`passive:${result.taxYear}`, category.currentCarryforward);
-    for (const collection of [category.carryforwardByCategory, saved]) {
+    const closing = foreignCreditCarryAfterCod(result, form === AMT, expected, form);
+    closingLines.set(form, closing.lines);
+    if (form === REGULAR) regularClosing = closing.lines.at(-1)?.value ?? category.carryforward;
+    for (const [collection, expectedCollection] of [[category.carryforwardByCategory, expected], [saved, closing.expected]] as const) {
       if (!collection) throw new Error('Ordinary foreign credit saved carry ledger is missing');
       const actual = new Map<string, Decimal>();
       for (const [kind, entries] of Object.entries(collection)) for (const row of entries) {
@@ -95,19 +102,21 @@ export function ordinaryForeignCreditReferenceSections(result: TaxReturnResult):
         if (!['passive', 'general'].includes(kind) || actual.has(key) || !nonnegative(row.amount)) throw new Error('Ordinary foreign credit saved carry balances are invalid');
         actual.set(key, row.amount);
       }
-      if (actual.size !== expected.size || [...expected].some(([key, value]) => !value.eq(actual.get(key) ?? d('-1')))) throw new Error('Ordinary foreign credit saved carry balances do not reconcile');
+      if (actual.size !== expectedCollection.size || [...expectedCollection].some(([key, value]) => !value.eq(actual.get(key) ?? d('-1')))) throw new Error('Ordinary foreign credit saved carry balances do not reconcile');
     }
   }
   const amt8 = result.allLines.filter(row => row.form === 'Form 6251' && row.line === '8');
-  if (!result.foreignTaxCredit.eq(credit.regular.creditAllowed) || !result.carryforwards.foreignTaxCreditCarryforward.eq(credit.regular.carryforward)
+  if (!result.foreignTaxCredit.eq(credit.regular.creditAllowed) || !result.carryforwards.foreignTaxCreditCarryforward.eq(regularClosing)
     || amt8.length !== 1 || !amt8[0].value.eq(credit.amt.creditAllowed)) throw new Error('Ordinary foreign credit return amounts do not reconcile');
-  return [REGULAR, AMT].map(form => ({ form, lines: credit.lines.filter(row => row.form === form).map(row => {
+  return [REGULAR, AMT].map(form => ({ form, lines: [...credit.lines.filter(row => row.form === form).map(row => {
     const actual = requireAudit(row), category = form === REGULAR ? credit.regular : credit.amt;
     const detail = category.details.find(item => `${item.category}:${item.originTaxYear}:remaining` === row.line);
-    if (detail) return { ...actual, formula: `Opening ${detail.amount}; used ${detail.used}; expired ${detail.expired}; retained ${detail.remaining}.` };
+    const before = result.codAttributeReduction && (detail || ['carryforward', 'new-carry'].includes(row.line));
+    const copied = before ? { ...actual, description: `${actual.description} before COD` } : actual;
+    if (detail) return { ...copied, formula: `Opening ${detail.amount}; used ${detail.used}; expired ${detail.expired}; retained ${detail.remaining}.` };
     // This allocation helper is also used by a hypothetical deduction-year
     // method. The validated actual-credit record must label its own method.
-    return actual.description === 'Hypothetical net ordinary foreign income'
-      ? { ...actual, description: 'Actual net ordinary foreign income' } : actual;
-  }) }));
+    return copied.description === 'Hypothetical net ordinary foreign income'
+      ? { ...copied, description: 'Actual net ordinary foreign income' } : copied;
+  }), ...(closingLines.get(form) ?? [])] }));
 }

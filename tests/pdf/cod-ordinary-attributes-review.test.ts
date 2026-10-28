@@ -84,7 +84,10 @@ async function checkForeignCreditPacket(method: 'direct' | 'ordinary', excluded 
         sourceId: 'foreign-current', originTaxYear: 2025, originalAmountMeaning: 'current_year_before_use', foreignCategory: 'passive' });
     }
     if (method === 'ordinary') {
-      expect(() => calculateFederalTax(input)).toThrow(/NOL with general Form1116.*foreign-source loss allocation/i);
+      expect(input.netOperatingLoss?.vintages).toEqual([]);
+      expect(input.netOperatingLoss?.alternativeTax?.vintages).toEqual([]);
+      expect(input.form1099Int[0]?.interestIncome).toBe('10000');
+      expect(() => calculateFederalTax(input)).toThrow('Foreign carryover current overall foreign loss requires its separate actual loss-account method');
       return;
     }
     const result = calculateFederalTax(input), context = prepareCodNolReview(input);
@@ -135,7 +138,10 @@ it('retains the deduction-year foreign carry and NOL hypothetical-source boundar
   input.form1099Int = foreign.form1099Int; input.foreignTaxElection = annual;
   input.deductions = foreign.deductions;
   input.form982AttributeSources.regular.records = [{ ...codAttributeRecord('foreign_tax_credit', '600'), foreignCategory: 'passive' }];
-  expect(() => calculateFederalTax(input)).toThrow(/NOL and foreign deduction-year carry.*hypothetical worksheet/i);
+  expect(input.netOperatingLoss?.vintages).toEqual([]);
+  expect(input.netOperatingLoss?.alternativeTax?.vintages).toEqual([]);
+  expect(input.form1099Int[0]?.interestIncome).toBe('5000');
+  expect(() => calculateFederalTax(input)).toThrow('Foreign carryover current overall foreign loss requires its separate actual loss-account method');
 });
 
 it('shows conserved actual later attributes without private original labels', () => {

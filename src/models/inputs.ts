@@ -4607,6 +4607,14 @@ const ForeignTaxDeductionCarryoverSchema = z.object({
     reportedIncome: decimal.optional(), foreignIncome: decimal.optional(), sourceReference: z.string().optional(),
   }).strict()).optional(),
   carryovers: z.array(z.object({ originTaxYear: z.number().int().optional(), category: z.enum(["passive", "general"]).optional(), amount: decimal.optional(), sourceReference: z.string().optional() }).strict()).optional(),
+  /** Separate actual AMT history. Empty is an explicit source answer, never a regular-ledger copy. */
+  amt: z.object({
+    sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+    carryoverHistoryConfirmed: z.boolean().optional(), adjustedThroughTaxYear: z.number().int().optional(),
+    carryovers: z.array(z.object({ originTaxYear: z.number().int().optional(), category: z.enum(["passive", "general"]).optional(), amount: decimal.optional(), sourceReference: z.string().optional() }).strict()).optional(),
+    foreignAmountsSameAsRegularConfirmed: z.boolean().optional(), firstPost1997CreditClaimTaxYear: z.number().int().optional(),
+    simplifiedElectionMadeInFirstClaimYear: z.boolean().optional(), noRevocationConfirmed: z.boolean().optional(),
+  }).strict().optional(),
   itemizedAllocation: z.object({
     sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
     incomeOrSalesTaxes: decimal.optional(), homeRealPropertyTaxes: decimal.optional(), personalPropertyTaxes: decimal.optional(),

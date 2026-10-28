@@ -7,6 +7,7 @@ import { d, min, roundDollar, sum, zeroFloor } from '@/utils/decimal.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { resolveForeignTaxElection } from './foreign-tax-election.js';
 import { calculateForeignTaxOrdinaryAllocation } from './foreign-tax-ordinary-allocation.js';
+import { sumSourceMoney } from '@/utils/sum-source-money.js';
 
 /** Only the canonical private credit-election recomputation may supply this context. */
 export interface ForeignTaxHypotheticalContext {
@@ -14,6 +15,8 @@ export interface ForeignTaxHypotheticalContext {
   totalIncome: Decimal; agi: Decimal; totalDeductions: Decimal; seniorDeduction: Decimal;
   deductionUsed: 'standard'|'itemized'|'nonitemized'; deductionAmount: Decimal; incomeTax: Decimal;
   ordinaryIncomeOnly: boolean;
+  /** Canonical pre-credit6251 amounts; not entered foreign-tax limits. */
+  amt?: { amti: Decimal; grossIncome: Decimal; taxBeforeCredit: Decimal; taxableExcess: Decimal; rate26Limit: Decimal };
   scheduleA: { medical:Decimal; incomeOrSalesTaxes:Decimal; realPropertyTaxes:Decimal; personalPropertyTaxes:Decimal; saltDeduction:Decimal; salesTaxElected:boolean;
     mortgageInterest:Decimal; investmentInterest:Decimal; charitableContributions:Decimal; otherDeductions:Decimal; itemizedReduction:Decimal };
 }
@@ -25,6 +28,14 @@ export interface ForeignTaxDeductionCarryoverResult {
   absorbed:Decimal; expired:Decimal; carryforward:Decimal;
   carryforwardByCategory:Partial<Record<'passive'|'general',Array<{taxYear:number;amount:Decimal}>>>;
   details:ForeignTaxCarryoverDetail[]; lines:CalculatedLine[];
+  amt?: ForeignTaxDeductionAmtCarryoverResult;
+}
+export interface ForeignTaxDeductionAmtCarryoverResult {
+  method: 'complete_empty_inventory' | 'ordinary_hypothetical';
+  hypotheticalLimitation?: Decimal; netForeignTaxableIncome?: Decimal; worldwideTaxableIncome?: Decimal;
+  currentQualifiedForeignTaxes: Decimal; absorbed: Decimal; expired: Decimal; carryforward: Decimal;
+  carryforwardByCategory: ForeignTaxDeductionCarryoverResult['carryforwardByCategory'];
+  details: ForeignTaxCarryoverDetail[]; lines: CalculatedLine[];
 }
 function amount(value:string|undefined,label:string):Decimal {
   if(value===undefined||!/^\d+(?:\.\d+)?$/.test(value))throw new Error(`Foreign carryover requires actual nonnegative ${label}`);
@@ -33,6 +44,27 @@ function amount(value:string|undefined,label:string):Decimal {
 const normal=(value:string|undefined)=>value?.trim().toUpperCase();
 const tin=(value:string|undefined)=>value?.replace(/-/g,'').trim();
 const ratio=(numerator:Decimal,denominator:Decimal)=>denominator.lte(0)?d('0'):min(d('1'),numerator.div(denominator).toDecimalPlaces(4,Decimal.ROUND_HALF_UP));
+const exactSubtract=(left:Decimal,right:Decimal)=>sumSourceMoney(left,right.negated());
+type CarrySource = NonNullable<NonNullable<NonNullable<TaxYearInput['foreignTaxElection']>['deductionYearCarryover']>['carryovers']>[number];
+function readCarrySources(rows: CarrySource[], year: number): ForeignTaxCarryoverDetail[] {
+  const keys=new Set<string>();
+  return rows.map(row=>{
+    const origin=row.originTaxYear,category=row.category;
+    if(origin===undefined||!Number.isInteger(origin)||origin>=year||origin<year-10||!category||!row.sourceReference?.trim())throw new Error('Foreign carryover requires actual unexpired prior origin year and category');
+    const key=`${category}:${origin}`;if(keys.has(key))throw new Error('Foreign carryover duplicate origin/category balance');keys.add(key);
+    return{originTaxYear:origin,category,amount:amount(row.amount,'adjusted prior balance'),absorbed:d('0'),expired:d('0'),remaining:d('0')};
+  }).sort((a,b)=>a.originTaxYear-b.originTaxYear||a.category.localeCompare(b.category));
+}
+function absorbSources(details: ForeignTaxCarryoverDetail[], capacity: Decimal, year: number, audit: AuditTrail, form: string) {
+  const carryforwardByCategory:ForeignTaxDeductionCarryoverResult['carryforwardByCategory']={};
+  for(const row of details){
+    row.absorbed=row.category==='passive'?min(row.amount,capacity):d('0');if(row.category==='passive')capacity=exactSubtract(capacity,row.absorbed);
+    const unused=exactSubtract(row.amount,row.absorbed);row.expired=row.originTaxYear===year-10?unused:d('0');row.remaining=exactSubtract(unused,row.expired);
+    if(row.remaining.gt(0))(carryforwardByCategory[row.category]??=[]).push({taxYear:row.originTaxYear,amount:row.remaining});
+    audit.record(form,`${row.category}:${row.originTaxYear}:remaining`,'Actual prior foreign tax remaining',row.remaining,'Prior balance less deemed absorption and end-of-tenth-year expiration',{available:row.amount,absorbed:row.absorbed,expired:row.expired});
+  }
+  return {details,carryforwardByCategory,absorbed:sumSourceMoney(...details.map(row=>row.absorbed)),expired:sumSourceMoney(...details.map(row=>row.expired)),carryforward:sumSourceMoney(...details.map(row=>row.remaining))};
+}
 
 export function calculateForeignTaxDeductionCarryover(input:TaxYearInput,context:ForeignTaxHypotheticalContext):ForeignTaxDeductionCarryoverResult {
   const election=input.foreignTaxElection;const facts=election?.deductionYearCarryover;const year=input.taxpayer.taxYear;
@@ -77,13 +109,8 @@ export function calculateForeignTaxDeductionCarryover(input:TaxYearInput,context
   const netForeignTaxableIncome=allocation.netForeignTaxableIncome;const worldwide=allocation.worldwideTaxableIncome;
   audit.merge(allocation.lines);
   const limitRatio=ratio(netForeignTaxableIncome,worldwide);const hypotheticalLimitation=roundDollar(context.incomeTax.times(limitRatio));
-  let capacity=zeroFloor(hypotheticalLimitation.minus(currentQualifiedForeignTaxes));
-  const keys=new Set<string>();const details:ForeignTaxCarryoverDetail[]=facts.carryovers.map(row=>{
-    const origin=row.originTaxYear;const category=row.category;
-    if(origin===undefined||!Number.isInteger(origin)||origin>=year||origin<year-10||!category||!row.sourceReference?.trim())throw new Error('Foreign carryover requires actual unexpired prior origin year and category');
-    const key=`${category}:${origin}`;if(keys.has(key))throw new Error('Foreign carryover duplicate origin/category balance');keys.add(key);
-    return{originTaxYear:origin,category,amount:amount(row.amount,'adjusted prior balance'),absorbed:d('0'),expired:d('0'),remaining:d('0')};
-  }).sort((a,b)=>a.originTaxYear-b.originTaxYear||a.category.localeCompare(b.category));
+  const capacity=zeroFloor(hypotheticalLimitation.minus(currentQualifiedForeignTaxes));
+  const details=readCarrySources(facts.carryovers,year);
   const suppliedTotal=sum(...details.map(row=>row.amount));const prior=input.priorYear;
   if(d(prior?.foreignTaxCreditCarryforward).gt(0)&&!d(prior?.foreignTaxCreditCarryforward).eq(suppliedTotal))throw new Error('Foreign carryover actual ledger disagrees with saved aggregate balance');
   for(const [name,rows] of [['by-year',prior?.foreignTaxCreditCarryforwardByYear],['passive',prior?.foreignTaxCreditCarryforwardByCategory?.passive],['general',prior?.foreignTaxCreditCarryforwardByCategory?.general]] as const){
@@ -92,14 +119,47 @@ export function calculateForeignTaxDeductionCarryover(input:TaxYearInput,context
     const actual=new Map<number,Decimal>();for(const row of rows)actual.set(row.taxYear,(actual.get(row.taxYear)??d('0')).plus(amount(row.amount,'saved carry balance')));
     if([...new Set([...actual.keys(),...expected.keys()])].some(key=>!(actual.get(key)??d('0')).eq(expected.get(key)??d('0'))))throw new Error('Foreign carryover actual ledger disagrees with saved origin/category balances');
   }
-  const carryforwardByCategory:ForeignTaxDeductionCarryoverResult['carryforwardByCategory']={};
-  for(const row of details){
-    row.absorbed=row.category==='passive'?min(row.amount,capacity):d('0');if(row.category==='passive')capacity=capacity.minus(row.absorbed);
-    const unused=row.amount.minus(row.absorbed);row.expired=row.originTaxYear===year-10?unused:d('0');row.remaining=unused.minus(row.expired);
-    if(row.remaining.gt(0))(carryforwardByCategory[row.category]??=[]).push({taxYear:row.originTaxYear,amount:row.remaining});
-    audit.record('Foreign Deduction Carryover WS',`${row.category}:${row.originTaxYear}:remaining`,'Actual prior foreign tax remaining',row.remaining,'Prior balance less deemed absorption and end-of-tenth-year expiration',{available:row.amount,absorbed:row.absorbed,expired:row.expired});
-  }
-  const absorbed=sum(...details.map(row=>row.absorbed));const expired=sum(...details.map(row=>row.expired));const carryforward=sum(...details.map(row=>row.remaining));
+  const {carryforwardByCategory,absorbed,expired,carryforward}=absorbSources(details,capacity,year,audit,'Foreign Deduction Carryover WS');
   for(const [line,label,value] of [['18','Hypothetical worldwide taxable income',worldwide],['19','Actual foreign limitation ratio',limitRatio],['20','Hypothetical regular income tax',context.incomeTax],['21','Hypothetical credit limitation',hypotheticalLimitation],['current-tax','Actual current qualified foreign taxes',currentQualifiedForeignTaxes],['absorbed','Prior carry deemed absorbed without tax benefit',absorbed],['expired','Unused tenth-year carry expired',expired],['carryforward','Actual remaining prior carry',carryforward]] as const) audit.record('Foreign Deduction Carryover WS',line,label,value,'Actual deduction-year hypothetical credit method; no current credit or carryover deduction');
-  return{hypotheticalLimitation,netForeignTaxableIncome,currentQualifiedForeignTaxes,absorbed,expired,carryforward,carryforwardByCategory,details,lines:audit.getLines()};
+  const amtFacts=facts.amt;
+  if(input.form982NolSources&&!amtFacts)throw new Error('COD foreign deduction carry requires the actual independent AMT carry history, including known empty');
+  let amt:ForeignTaxDeductionAmtCarryoverResult|undefined;
+  if(amtFacts){
+    if(amtFacts.sourceTaxYear!==year||amtFacts.sourceFactsConfirmed!==true||!amtFacts.sourceReference?.trim()
+      ||amtFacts.carryoverHistoryConfirmed!==true||amtFacts.adjustedThroughTaxYear!==year-1||!Array.isArray(amtFacts.carryovers))throw new Error('Foreign deduction requires actual complete independent AMT carry history and source year');
+    const amtAudit=new AuditTrail(),form='AMT Foreign Deduction Carryover WS';
+    const amtDetails=readCarrySources(amtFacts.carryovers,year);
+    if(amtDetails.length===0){
+      amtAudit.record(form,'empty-inventory','Actual complete empty AMT foreign carry history',d('0'),'No prior AMT balance; annual deduction creates no current foreign-credit carry');
+      amt={method:'complete_empty_inventory',currentQualifiedForeignTaxes,...absorbSources(amtDetails,d('0'),year,amtAudit,form),lines:amtAudit.getLines()};
+    }else{
+      const actual=context.amt;
+      if(!actual||Object.values(actual).some(value=>!Decimal.isDecimal(value)||!value.isFinite()||value.lt(0))
+        ||actual.rate26Limit.isZero()||actual.taxableExcess.gt(actual.amti))throw new Error('Foreign deduction AMT absorption requires actual canonical pre-credit6251 amounts');
+      if(amtFacts.foreignAmountsSameAsRegularConfirmed!==true||amtFacts.noRevocationConfirmed!==true
+        ||typeof amtFacts.simplifiedElectionMadeInFirstClaimYear!=='boolean'||!Number.isInteger(amtFacts.firstPost1997CreditClaimTaxYear)
+        ||amtFacts.firstPost1997CreditClaimTaxYear!<1998||amtFacts.firstPost1997CreditClaimTaxYear!>year)throw new Error('Foreign deduction AMT requires actual source amounts and first-claim simplified election history');
+      const amtDeduction=context.deductionUsed==='itemized'?sum(context.scheduleA.medical,context.scheduleA.mortgageInterest,context.scheduleA.charitableContributions):d('0');
+      if(!actual.grossIncome.eq(context.totalIncome)||!actual.amti.eq(actual.grossIncome.minus(amtDeduction)))throw new Error('Foreign deduction AMTI requires its separate actual ordinary source method');
+      const amtContext={...context,totalIncome:actual.grossIncome,agi:actual.grossIncome,totalDeductions:amtDeduction,
+        seniorDeduction:d('0'),deductionAmount:amtDeduction,incomeTax:actual.taxBeforeCredit};
+      const separate=calculateForeignTaxOrdinaryAllocation({context:amtContext,countries:[...countries].map(([country,row])=>({country,...row})),
+        itemizedAllocation:facts.itemizedAllocation,auditForm:form,amt:true});
+      amtAudit.merge(separate.lines);
+      const highRate=actual.taxableExcess.lte(actual.rate26Limit)?d('.26'):d('.28');
+      if(sum(...[...countries.values()].map(row=>row.tax)).gt(separate.netForeignTaxableIncome.times(highRate)))throw new Error('AMT high-taxed passive income requires its actual reclassification method');
+      const net=amtFacts.simplifiedElectionMadeInFirstClaimYear?netForeignTaxableIncome:separate.netForeignTaxableIncome;
+      const amtRatio=ratio(net,actual.amti),limit=roundDollar(actual.taxBeforeCredit.times(amtRatio));
+      const retained=absorbSources(amtDetails,zeroFloor(limit.minus(currentQualifiedForeignTaxes)),year,amtAudit,form);
+      for(const [line,label,value]of[['18','Hypothetical AMTI before exemption',actual.amti],['19','Actual AMT foreign limitation ratio',amtRatio],
+        ['20','Canonical pre-credit tentative minimum tax',actual.taxBeforeCredit],['21','Hypothetical AMT credit limitation',limit],
+        ['current-tax','Actual current qualified foreign taxes',currentQualifiedForeignTaxes],['absorbed','Prior AMT carry deemed absorbed without credit',retained.absorbed],
+        ['expired','Unused tenth-year AMT carry expired',retained.expired],['carryforward','Actual remaining prior AMT carry',retained.carryforward]]as const){
+        amtAudit.record(form,line,label,value,'Separate actual AMT history and statutory substitutions; no current credit or new deduction-year carry');
+      }
+      amt={method:'ordinary_hypothetical',hypotheticalLimitation:limit,netForeignTaxableIncome:net,worldwideTaxableIncome:actual.amti,currentQualifiedForeignTaxes,...retained,lines:amtAudit.getLines()};
+    }
+  }
+  return{hypotheticalLimitation,netForeignTaxableIncome,currentQualifiedForeignTaxes,absorbed,expired,carryforward,carryforwardByCategory,details,
+    ...(amt?{amt}:{}),lines:[...audit.getLines(),...(amt?.lines??[])]};
 }

@@ -19,6 +19,7 @@ import { createPriorCharitableNolLimit, hasPriorCharitableNolSources, readPriorC
 import { calculatePriorCharitableNolCarryover, type PriorCharitableNolCarryoverResult } from "./charitable-prior-net-operating-loss.js";
 import { createCharitableNolOriginLimit, usesDeterminedCharitableNolOrigins } from "@/utils/charitable-nol-origins.js";
 import { calculateDeterminedCharitableNol, type DeterminedCharitableNolResult } from "./charitable-determined-nol.js";
+import { hasCompleteEmptyForeignNolSources } from "./empty-nol-foreign-sources.js";
 
 export interface NolIncomeContext {
   agi: Decimal;
@@ -84,7 +85,7 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   const originalCharitableSource = !determinedOrigins && hasOriginalCharitableNolSources(input) ? readCurrentCharitableSourceForNol(input) : undefined;
   const priorCharitableSources = !determinedOrigins && hasPriorCharitableNolSources(input) ? readPriorCharitableNolSources(input) : undefined;
   const currentOrigin = input.form172 ? calculateForm172Return(input) : undefined;
-  if (input.foreignTaxElection?.deductionYearCarryover) {
+  if (input.foreignTaxElection?.deductionYearCarryover && !hasCompleteEmptyForeignNolSources(input)) {
     throw new Error("Actual NOL and foreign deduction-year carry require the coupled foreign-source hypothetical worksheet");
   }
   if (input.form8839?.children.some(child => d(child.employerBenefits).gt(0) || (child.isSpecialNeeds && child.employerPlanQualified))) {
@@ -121,6 +122,10 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   }
   const actualIncome = computeIncome(d("0"), false, "current-limit", regularOriginLimit);
   const modifiedIncome = computeIncome(d("0"), true, "modified", regularOriginLimit);
+  if (input.foreignTaxElection?.deductionYearCarryover
+    && (actualIncome.currentExcessBusinessLoss.gt(0) || actualIncome.agi.lt(0) || modifiedIncome.agi.lt(0))) {
+    throw new Error("Foreign deduction-year empty-history composition cannot contain a current loss");
+  }
   if (!currentOrigin && (modifiedIncome.agi.lt(0) || actualIncome.currentExcessBusinessLoss.gt(0))) {
     throw new Error("Existing NOL carry with a potential current-year original loss requires its separate original-loss worksheet");
   }
