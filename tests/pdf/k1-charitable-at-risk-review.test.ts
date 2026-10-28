@@ -43,10 +43,10 @@ it('saves separate original basis at-risk and section170 amounts with source bin
         const packet = await fillReturn(redactReviewIdentifiers(input), redactReviewIdentifiers(result), { charitableReview: token, scheduleEReview, blankFormsDir: 'forms/blank/2025', outputDir: dir, flatten: false });
         const path = (suffix: string) => { const found = packet.filledForms.find(value => value.endsWith(suffix)); if (!found) throw new Error(`Missing ${suffix}`); return found; };
         const a = await PDFDocument.load(await readFile(path('/f1040sa-filled.pdf'))), capital = await PDFDocument.load(await readFile(path('/f1040sd-filled.pdf')));
-        expect(a.getForm().getTextField(A.line12).getText()).toBe('77'); expect(capital.getForm().getTextField(D.line15).getText()).toBe('(8)');
+        expect(a.getForm().getTextField(A.line12).getText()).toBe('154'); expect(capital.getForm().getTextField(D.line15).getText()).toBe('(16)');
         const pages: string[] = JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? 'python3', ['-c', 'from pypdf import PdfReader\nimport json,sys\nprint(json.dumps([p.extract_text() or "" for p in PdfReader(sys.argv[1]).pages]))', path('/k1-charitable-reference-filled.pdf')], { encoding: 'utf8', timeout: 10000 }));
         const text = pages.join(' ').replace(/\s+/g, ' ');
-        for (const label of ['Available after basis: $154', 'Basis suspended: $36', 'At-risk suspended: $77', 'Available for section170: $77', 'Long-term capital amount after at risk: $-8', 'Long-term capital suspended at risk: $8']) expect(text).toContain(label);
+        for (const label of ['Available after basis: $154', 'Basis suspended: $36', 'At-risk suspended: $0', 'Available for section170: $154', 'Long-term capital amount after at risk: $-16', 'Long-term capital suspended at risk: $0']) expect(text).toContain(label);
         for (const page of pages) { expect(page.split(REVIEW_PDF_NOTICE)).toHaveLength(2); for (const secret of ['123456789', '6789', 'gift-1', 'Fictional original receipt', 'Fictional item-by-item']) expect(page).not.toContain(secret); }
         expect(JSON.stringify(input)).toBe(before);
     } finally { await rm(dir, { recursive: true, force: true }); }

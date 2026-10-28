@@ -17,7 +17,7 @@ export function k1PriorCharitableRiskFixture(positiveIncome = false) {
         vintages: [{ taxYear: 2022, originalLoss: '40000', qualifiedOriginalLoss: '40000', remainingLoss: '20000', qualifiedRemainingLoss: '20000', materiallyParticipatedInCurrentYear: true }],
     } });
     Object.assign(requireRiskSource(k.form6198), { ordinaryIncome: positiveIncome ? '-10000' : '-60000',
-        gainLossFromDispositions: capital, otherDeductionsLosses: positiveIncome ? '10000' : '20000', priorYearAmountAtRisk: capacity });
+        gainLossFromDispositions: capital, otherDeductionsLosses: '10000', priorYearAmountAtRisk: capacity });
     risk.priorYearAmountAtRisk = capacity;
     Object.assign(requireRiskSource(requireRiskSource(source.basis).currentContributions)[0], { contributionShare: gift, adjustedBasisShare: gift });
     const receipt = { ...requireRiskSource(source.receipts)[0], basisSourceId: 'old-cash', contributionDate: '2024-06-01' };
@@ -38,7 +38,7 @@ export function k1PriorCharitableRiskFixture(positiveIncome = false) {
             ],
         },
     };
-    requireRiskSource(risk.activityAllocation).charitableSourceIds = ['gift-1', 'old-cash'];
+    requireRiskSource(risk.activityAllocation).charitableSourceIds = ['old-cash'];
     return input;
 }
 
@@ -90,7 +90,7 @@ export function propertyK1PriorRiskFixture() {
         }],
     } };
     risk.priorYearAmountAtRisk = '123.50';
-    requireRiskSource(risk.activityAllocation).charitableSourceIds = ['gift-1', 'prior-property'];
-    Object.assign(requireRiskSource(k.form6198), { otherDeductionsLosses: '231', priorYearAmountAtRisk: '123.50' });
+    requireRiskSource(risk.activityAllocation).charitableSourceIds = ['prior-property'];
+    Object.assign(requireRiskSource(k.form6198), { otherDeductionsLosses: '77', priorYearAmountAtRisk: '123.50' });
     return input;
 }

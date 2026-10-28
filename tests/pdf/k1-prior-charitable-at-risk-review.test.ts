@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js';
 import { expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
@@ -52,7 +53,7 @@ it('saves original historical use separately from current basis and charitable d
             blankFormsDir: 'forms/blank/2025', outputDir: dir, flatten: false,
         });
         const file = (suffix: string) => requireRiskSource(packet.filledForms.find(value => value.endsWith(suffix)));
-        for (const [suffix, field, value] of [['/f1040sa-filled.pdf', A.line11, '10,000'], ['/f1040sd-filled.pdf', D.line15, '20,000'], ['/f8995-filled.pdf', Q.line16, '10,000']]) {
+        for (const [suffix, field, value] of [['/f1040sa-filled.pdf', A.line11, '15,714'], ['/f1040sd-filled.pdf', D.line15, '20,000'], ['/f8995-filled.pdf', Q.line16, '11,429']]) {
             const doc = await PDFDocument.load(await readFile(file(suffix)));
             expect(doc.getForm().getTextField(field).getText()?.replaceAll(',', '')).toBe(value.replaceAll(',', ''));
         }
@@ -60,13 +61,28 @@ it('saves original historical use separately from current basis and charitable d
             'import json,sys;from pypdf import PdfReader;print(json.dumps([p.extract_text() or "" for p in PdfReader(sys.argv[1]).pages]))', file('/k1-charitable-reference-filled.pdf')],
         { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30_000 }));
         const text = pages.join(' ').replace(/\s+/g, ' ');
+        for (const [index, character, year, allowed, suspended] of [[1, 'ordinary', 2022, '80000', '60000'], [2, 'charitable', 2024, '40000', '30000']] as const) {
+            const pattern = new RegExp(`Prior at-risk deduction ${index}: ${character}; suspension year ${year}.*?Allowed this year: \\$([-0-9.]+); closing at-risk suspension: \\$([-0-9.]+)`);
+            const match = text.match(pattern); expect(match).not.toBeNull();
+            if (!match) throw new Error('Missing original risk record output');
+            expect(new Decimal(match[1]).toFixed(25)).toBe(new Decimal(allowed).div(7).toFixed(25));
+            expect(new Decimal(match[2]).toFixed(25)).toBe(new Decimal(suspended).div(7).toFixed(25));
+        }
+
         for (const value of ['Prior at-risk deduction 1: ordinary; suspension year 2022',
             'Original deduction after basis: $60000; original at-risk disallowance: $40000',
-            'Earlier at-risk use: $20000; opening suspension: $20000', 'Allowed this year: $10000; closing at-risk suspension: $10000',
-            'Prior at-risk deduction 2: charitable; suspension year 2024', 'Allowed this year: $5000; closing at-risk suspension: $5000',
+            'Earlier at-risk use: $20000; opening suspension: $20000',
+            'Prior at-risk deduction 2: charitable; suspension year 2024',
             'Original gift basis year: 2024', 'Basis previously allowed: $0; basis allowed this year: $10000']) expect(text).toContain(value);
         for (const secret of ['123456789', '6789', 'old-cash', 'prior-ordinary', 'Fictional original']) expect(text).not.toContain(secret);
         for (const page of pages) expect(page.split(REVIEW_PDF_NOTICE)).toHaveLength(2);
+        const qbiPages: string[] = JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? 'python3', ['-c',
+            'import json,sys;from pypdf import PdfReader;print(json.dumps([p.extract_text() or "" for p in PdfReader(sys.argv[1]).pages]))', file('/qbi-loss-reference-filled.pdf')],
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30_000 }));
+        const qbiText = qbiPages.join(' ').replace(/\s+/g, ' ');
+        expect(qbiText).toContain('465, origin 2022: suspended $8571; qualified $8571');
+        expect(qbiText).toContain('465, origin 2025: suspended $17143; qualified $0');
+        for (const page of qbiPages) expect(page.split(REVIEW_PDF_NOTICE)).toHaveLength(2);
         expect(JSON.stringify(input)).toBe(before);
     } finally { await rm(dir, { recursive: true, force: true }); }
 });

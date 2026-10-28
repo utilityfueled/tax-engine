@@ -193,7 +193,6 @@
                 "sourceFactsConfirmed": true,
                 "allOriginalItemsBelongToActivityConfirmed": true,
                 "charitableSourceIds": [
-                  "actual-prior-basis-2018",
                   "original-property-2024"
                 ]
               }
@@ -252,7 +251,7 @@
                 "ordinaryIncome": "0",
                 "gainLossFromDispositions": "0",
                 "otherIncomeGains": "0",
-                "otherDeductionsLosses": "100000",
+                "otherDeductionsLosses": "60000",
                 "adjustedBasisAtEffectiveDate": "0",
                 "currentYearIncreases": "0",
                 "currentYearDecreases": "0",

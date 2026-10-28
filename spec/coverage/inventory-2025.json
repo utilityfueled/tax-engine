@@ -6268,6 +6268,30 @@
       ]
     },
     {
+      "key": "federal/k1-ordinary-gift-at-risk",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.702-1",
+      "specPath": "spec/federal/k1-ordinary-gift-at-risk.yaml",
+      "enginePath": "src/engine/forms/k1-charitable-at-risk.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-k1-ordinary-gift-at-risk.test.ts::uses actual ordinary gifts at zero activity risk for either entity",
+        "tests/engine/federal-k1-ordinary-gift-at-risk.test.ts::preserves basis ordinary risk and charitable ledgers separately"
+      ],
+      "implementationNote": "Original ordinary gift source classification excludes current gifts from actual activity loss. Recorded prior activity history remains separate. No human tax qualification, final2026 form or filing readiness is claimed.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/k1-ordinary-passive-sources",
       "jurisdiction": "federal",
       "taxYear": null,

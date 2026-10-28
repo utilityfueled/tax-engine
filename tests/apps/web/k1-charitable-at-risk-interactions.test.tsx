@@ -25,6 +25,7 @@ it('collects original activity membership without inventing a gift identity', as
     const assignment = () => latest?.statements?.[0].atRisk?.activityAllocation;
     try {
         await act(async () => root.render(<Harness />));
+        expect(element.textContent).toContain('Current ordinary charitable gifts stay outside this activity list.');
         await click('Add Charitable K-1 1 activity assignment');
         expect(assignment()).toEqual({});
         expect(assignment()?.charitableSourceIds).toBeUndefined();

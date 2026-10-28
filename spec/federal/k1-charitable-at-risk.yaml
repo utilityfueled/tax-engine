@@ -2,7 +2,7 @@ form: "K1 Charitable At Risk"
 fullName: "Actual activity deductions after basis and before charitable limits"
 taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i6198"
-retrievedAt: "2026-10-26"
+retrievedAt: "2026-10-28"
 notes: |
   IRC465(a)(2)/(d), Reg1.469-2T(d)(6)(iii)-(iv), and Pub925 Proration of
   deductions disallowed under at-risk limitation control this source-bound
@@ -14,47 +14,44 @@ notes: |
   https://uscode.house.gov/us/usc/119-120/t26/s465/
   https://www.ecfr.gov/current/title-26/section-1.469-2T
   https://www.irs.gov/publications/p925
-  This does not declare every charitable contribution subject to section465.
-  An actual activity-assignment attachment must identify every original gift
-  source and confirm that the reconciled original items belong to this activity.
-  All eight original simplified Form6198 inputs remain required. Its line4 must
-  equal the full qualified charitable amount after basis, including appreciation.
-  The ordinary K1 amount is already net ordinary income/loss; separately reported
-  income cannot be subtracted from it a second time. Form6198 PartI must agree
-  with the separate ordinary, short-term, long-term, other-income and gift items.
-  No computed allowance, loss fraction, charitable carry, or activity default is
-  accepted from input. The existing source-complete nonbinding route remains
-  valid without this additional attachment. Missing assignment cannot enter a
-  binding method. Independent prior465 history must be known empty in this slice;
-  positive historical at-risk character/release is separately queued internal work.
-  Negative-risk recapture and unrepresented activity items retain their own
-  source boundaries. Same actual regular/AMT treatment is required. Original
-  current gifts and established2025 prior-basis releases preserve source identity;
-  the2026 prior-basis floor-vintage question and year qualification gates remain.
-  Charity passes to section170 only after this allocation and remains excluded
-  from section469 and QBI. Ordinary and capital items keep their own character.
+  Corrected by k1-ordinary-gift-at-risk.yaml: final Reg1.702-1(a)(4),
+  1.703-1(a)(2)(iv), IRC1363(b)(2) and Reg1.1366-1(a)(2)(iii) keep ordinary
+  section170 gifts separate from the actual business/income-producing activity.
+  An all-items checkbox or gift source ID does not establish activity nexus.
+  The denominator excludes current basis-admitted ordinary gifts. Form6198 line4
+  and activity gift IDs must likewise exclude them; actual historical activity
+  sources retain their original recorded amounts, identity and years. Explicit
+  zero/empty sources differ from absent. All eight original Form6198 inputs,
+  source confirmations and actual ordinary/capital/income reconciliation remain.
+  Basis still applies first. Ordinary gifts pass to section170 at their full
+  qualified amount after basis, with no new465 suspension. They do not enter469
+  or QBI. Actual capital and ordinary losses keep their activity character.
+  This current correction does not establish prior170 use, a new first170 year,
+  or the correctness of an old filed activity classification. Separate prior
+  history methods retain their guards; positive old property residual remains
+  subject to its admission/floor-vintage source proof. Production2026 stays closed.
   Raw original capital items in an actual passive activity need their separate
   section469 portfolio-versus-activity character source. An activity465 assignment
   alone cannot supply it. The existing original passive-distribution attachment
   keeps its own established route; ordinary passive loss plus charity is admitted.
-  Suspended465 gifts retain original source/category/payment and basis-origin
-  facts in a separate output ledger, never a new five-year section170 carry.
+  Recorded prior465 gifts retain original source/category/payment and basis-origin
+  facts in their separate ledger; current ordinary gifts have zero new465 suspension.
 lines:
   - line: "basis-first"
     description: "Basis then activity deduction allocation"
-    formula: "Ordinary80k and cash20k share50k basis:40k ordinary and10k gift reach465. Risk25k disallows25k of50k deductions:20k ordinary and5k gift remain allowed;40k/10k basis and20k/5k at-risk suspensions remain distinct. Wages100k yields AGI80k and QBI loss20k."
+    formula: "Ordinary80k and cash20k share50k basis:40k ordinary enters465 and10k ordinary gift remains separate. Risk25k allows25k ordinary and all10k gift;40k/10k basis and15k ordinary at-risk suspensions remain distinct. Wages100k yields AGI75k and QBI loss25k."
     testRef: "tests/engine/federal-k1-charitable-at-risk.test.ts::allocates actual activity deductions after basis without merging suspension ledgers"
   - line: "income-retained"
     description: "Retain income while allocating only the disallowed activity loss"
-    formula: "Separate ordinary deduction40k plus gift10k and actual long-term gain10k give40k net loss. Risk15k leaves25k disallowed: ordinary20k and gift5k allowed, gain10k unchanged. Wages100k yields AGI90k."
+    formula: "Separate ordinary deduction40k and actual long-term gain10k give30k activity loss. Risk15k leaves15k disallowed: ordinary25k allowed and gain10k unchanged. The ordinary10k gift remains separate; wages100k yields AGI85k."
     testRef: "tests/engine/federal-k1-charitable-at-risk.test.ts::retains separately stated income and uses deductions as the allocation denominator"
   - line: "appreciation"
-    description: "Full qualified property value participates after the basis exception"
-    formula: "Published190FMV/100basis gift and25LT loss with80basis produce154gift and16LT loss. At-risk85 with no income allows77gift and8LT loss;36/9 basis suspension remains separate from77/8 at-risk suspension."
+    description: "Full ordinary property value remains separate after the basis exception"
+    formula: "Published190FMV/100basis gift and25LT loss with80basis produce154gift and16LT loss. At-risk85 covers the16LT activity loss; all154gift remains separately available and36/9 basis suspension stays unchanged."
     testRef: "tests/engine/federal-k1-charitable-at-risk.test.ts::allocates full qualified appreciation and capital deductions from the same actual activity"
   - line: "source-proof"
     description: "Original actual activity membership and worksheet values remain required"
-    formula: "Unknown or false assignment, wrong year, duplicate or missing gift IDs, changed Form6198 line4, missing history and negative capacity reject. A derived allowance injected by a caller does not replace proof. Input and original source amounts remain immutable."
+    formula: "Unknown or false assignment, wrong year, duplicate or missing recorded prior activity gift IDs, or a current ordinary gift ID, changed Form6198 line4, missing history and negative capacity reject. A derived allowance injected by a caller does not replace proof. Input and original source amounts remain immutable."
     testRef: "tests/engine/federal-k1-charitable-at-risk.test.ts::rejects unknown contradictory and incomplete activity assignment sources"
   - line: "published-income"
     description: "Published Form6198 income-retention control"
@@ -62,11 +59,11 @@ lines:
     testRef: "tests/engine/forms/k1-charitable-at-risk.test.ts::reproduces the published income retention example before charitable allocation"
   - line: "limits-and-order"
     description: "Zero full and exact fractional activity capacity"
-    formula: "Source deductions8.02ordinary plus1.01cash and2.03property with5.53risk disallow half:4.01ordinary,0.505cash,1.015property remain allowed and equally suspended. Reordering receipt rows changes no source result; zero/full capacity and income covering deductions conserve character."
+    formula: "Source8.02ordinary activity loss with5.53risk allows5.53ordinary and suspends2.49; separate1.01cash and2.03property are fully available with no465 suspension. Reordering receipt rows changes no source result; zero/full capacity and income covering deductions conserve character."
     testRef: "tests/engine/forms/k1-charitable-at-risk.test.ts::conserves exact deduction characters across zero full and fractional capacity"
   - line: "guided-source"
     description: "Actual original activity assignment reaches the return"
-    formula: "Actual linked80kordinary/20kgift/50kbasis/25krisk retains80k/20koriginals and derives20kordinary/5kcharity once. Separately stated10kgain requires the actual nonzero source answer and matching original worksheet; a legacy all-other-zero answer cannot authorize it."
+    formula: "Actual linked80kordinary/20kgift/50kbasis/25krisk retains80k/20koriginals and derives25kordinary/10kcharity once. Separately stated10kgain requires the actual nonzero source answer and matching original worksheet; a legacy all-other-zero answer cannot authorize it."
     testRef: "tests/guided-interview/guided-k1-charitable-at-risk.test.ts::uses actual linked activity assignment without entering a calculated allowance"
   - line: "guided-controls"
     description: "Activity membership and original IDs are editable without defaults"
@@ -74,33 +71,33 @@ lines:
     testRef: "tests/apps/web/k1-charitable-at-risk-interactions.test.tsx::collects original activity membership without inventing a gift identity"
   - line: "review-output"
     description: "Original basis and at-risk balances stay distinct in saved review output"
-    formula: "Property154afterbasis/16LTloss with85risk reports77charity and8LTloss, with36/9basis and77/8at-risk suspensions separately. The original source token binds membership IDs and retained carry even when amounts otherwise match; private references do not print. Direct ScheduleE also binds the actual assignment and retained risk evidence before template access, including a removed entire packet."
+    formula: "Property154afterbasis/16LTloss with85risk reports154charity and16LTloss, with36/9basis suspension and zero new465 suspension. The original source token binds membership IDs and retained carry even when amounts otherwise match; private references do not print. Direct ScheduleE also binds the actual assignment and retained risk evidence before template access, including a removed entire packet."
     testRef: "tests/pdf/k1-charitable-at-risk-review.test.ts::saves separate original basis at-risk and section170 amounts with source binding"
   - line: "passive-separation"
     description: "Charity does not enter passive or qualified-business losses"
-    formula: "Actual40kordinary/10kgift with25krisk permits20kordinary and5kcharity. With known passive activity and no passive income,8582 suspends20kordinary, leaves AGI100k and still permits5kcharity; section46520k/5k remains separate."
+    formula: "Actual40kordinary/10kgift with25krisk permits25kordinary and10kcharity. With known passive activity and no passive income,8582 suspends25kordinary, leaves AGI100k and permits10kcharity; section46515k ordinary suspension remains separate."
     testRef: "tests/engine/federal-k1-charitable-at-risk.test.ts::keeps charitable activity allocation outside passive and qualified loss ledgers"
   - line: "basis-release"
     description: "Current2025 release retains historical basis identity through465"
-    formula: "An actual2018 property basis balance60k with30k2025basis releases30k, with past100kappreciation already used. Risk15k permits15kcharity, suspends15kunder465, and leaves30kunderbasis. Original payment/basis origin remain2018; no appreciation repeats."
+    formula: "An actual2018 property basis balance60k with30k2025basis releases30k, with past100kappreciation already used. The30k ordinary gift is outside465 regardless of15krisk and30k remains underbasis. Original payment/basis origin remain2018; no appreciation repeats."
     testRef: "tests/engine/federal-k1-charitable-at-risk.test.ts::retains original basis release identity through current activity allocation"
   - line: "capital-passive-source"
     description: "Activity membership cannot invent the separate passive capital classification"
-    formula: "Changing the actual property/capital original to a passive activity must not deduct its8capital loss without a section469 character source. Raw positive or negative capital items retain this precise source boundary; ordinary passive loss and charity remain available."
+    formula: "Changing the actual property/capital original to a passive activity must not deduct its16capital loss without a section469 character source. Raw positive or negative capital items retain this precise source boundary; ordinary passive loss and charity remain available."
     testRef: "tests/engine/federal-k1-charitable-at-risk.test.ts::requires separate passive character sources for original capital items"
   - line: "current-origin"
     description: "Operating Form172 consumes only the ordinary amount allowed after465"
-    formula: "Actual wages20k and interest30k with basis-allowed40kordinary/10kgift and25krisk gives20kordinary/5kgift allowed, AGI30k. SALT20k plus5kgift gives25kdeductions and no current regular or AMT NOL. Basis and at-risk carry remain distinct."
+    formula: "Actual wages20k and interest30k with basis-allowed40kordinary/10kgift and25krisk gives25kordinary/10kgift allowed, AGI25k. SALT20k plus10kgift gives30kdeductions and current regularNOL5k; AMTNOL remains0. Basis and at-risk carry remain distinct."
     testRef: "tests/engine/federal-k1-charitable-at-risk.test.ts::reconciles current loss classification after the source-specific at-risk allocation"
   - line: "isolated-2026"
-    description: "Current cash floor and nonitemizer election use only post465 charity"
-    formula: "In isolated2026 sources, AGI30k and5kallowed cash give4850itemized charity after150floor, with no percentage excess and no170carry. Standard choice gives1000section170p and29000AMTI. Original5krisk suspension remains unchanged and public2026 gates stay closed."
+    description: "Current cash floor and nonitemizer election retain the separate ordinary gift"
+    formula: "In isolated2026 sources, AGI25k and10kordinary cash give9875itemized charity after125floor, with no percentage excess or170carry. Current regularNOL4875 and AMTNOL0 remain distinct. Standard choice gives1000section170p and24000AMTI. No current gift465 suspension is created and public2026 gates stay closed."
     testRef: "tests/engine/federal-k1-charitable-at-risk-2026.test.ts::preserves source allocation through isolated current floor and actual choice"
   - line: "workspace"
     description: "Actual guided sources survive original-context preparation and redaction"
-    formula: "An actual linked original80kordinary/20kgift/50kbasis/25krisk produces20kordinary and5kgift allowed in the real saved workspace PDF; basis40k/10k and risk20k/5k remain visible separately. Unknown source membership blocks export."
+    formula: "An actual linked original80kordinary/20kgift/50kbasis/25krisk produces25kordinary and10kgift in the real saved workspace PDF; basis40k/10k and ordinary risk15k remain visible separately. Unknown source membership blocks export."
     testRef: "tests/apps/web/workspace-k1-charitable-at-risk.test.ts::exports source-confirmed guided activity allocation with distinct suspension records"
   - line: "browser"
     description: "Source edits persist and require new confirmation before preview and download"
-    formula: "Desktop/mobile actual assignment confirmation enables the canonical result; changing the referenced original gift blocks it without fabricating an ID or allowance. Local reload preserves source values and a reviewed PDF download uses the same original packet."
+    formula: "Desktop/mobile actual assignment confirmation enables the canonical result; inserting an ordinary current gift into the activity list blocks it without fabricating an ID or allowance. Local reload preserves source values and a reviewed PDF download uses the same original packet."
     testRef: "apps/web/tests/k1-charitable-at-risk.spec.ts::retains actual activity sources through confirmation reload and review download"

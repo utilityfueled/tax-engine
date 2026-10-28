@@ -62,11 +62,11 @@ it('conserves simultaneous prior basis and risk sources without repeated appreci
   const source = required(calculateK1CharitableReturnSources(input)), statement = source.statements[0];
   const risk = required(statement.atRiskAllocation);
   expect(required(statement.basis.charitableSources).records[0].basisSuspended.toFixed()).toBe('20000');
-  expect(risk.charitable[0].allowed.toFixed()).toBe('20000'); expect(risk.charitable[0].suspended.toFixed()).toBe('20000');
-  expect(risk.prior[0].allowed.toFixed()).toBe('30000'); expect(risk.prior[0].suspended.toFixed()).toBe('30000');
-  expect(source.amounts.capitalGainPublic.toFixed()).toBe('50000');
+  expect(risk.charitable[0].allowed.toFixed()).toBe('40000'); expect(risk.charitable[0].suspended.toFixed()).toBe('0');
+  expect(risk.prior[0].allowed.toFixed()).toBe('50000'); expect(risk.prior[0].suspended.toFixed()).toBe('10000');
+  expect(source.amounts.capitalGainPublic.toFixed()).toBe('90000');
   expect(()=>calculateFederalTax(input)).toThrow(/prior.*(carry|floor|contribution.year)/i);
-  const noResidual=structuredClone(input);noResidual.w2s[0].wages='200000';noResidual.w2s[0].federalWithheld='60000';
+  const noResidual=structuredClone(input);noResidual.w2s[0].wages='300000';noResidual.w2s[0].federalWithheld='90000';
   expect(calculateFederalTax(noResidual).carryforwards.charitableContributionsByYear).toEqual([]);
   expect(calculateK1CharitableReturnSources(noResidual)).toEqual(source);
 });

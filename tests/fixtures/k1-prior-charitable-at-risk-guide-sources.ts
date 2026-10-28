@@ -146,7 +146,6 @@ export function guidedK1PriorRiskSources(): { charity: K1CharitableSourcesData; 
                 "sourceFactsConfirmed": true,
                 "allOriginalItemsBelongToActivityConfirmed": true,
                 "charitableSourceIds": [
-                  "gift-1",
                   "old-cash"
                 ]
               }
@@ -222,7 +221,7 @@ export function guidedK1PriorRiskSources(): { charity: K1CharitableSourcesData; 
                 "ordinaryIncome": "-60000",
                 "gainLossFromDispositions": "20000",
                 "otherIncomeGains": "0",
-                "otherDeductionsLosses": "20000",
+                "otherDeductionsLosses": "10000",
                 "adjustedBasisAtEffectiveDate": "0",
                 "currentYearIncreases": "0",
                 "currentYearDecreases": "0",

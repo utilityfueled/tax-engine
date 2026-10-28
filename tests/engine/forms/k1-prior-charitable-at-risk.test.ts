@@ -144,17 +144,21 @@ describe('actual prior charitable at-risk sources', () => {
     source.history.vintages[1].amount = '10000';
     const prior = calculateK1PriorAtRiskSources(source);
     const form = { activityName: source.k1.partnershipName, ordinaryIncome: '-60000', gainLossFromDispositions: '20000',
-      otherIncomeGains: '0', otherDeductionsLosses: '20000', adjustedBasisAtEffectiveDate: '0',
+      otherIncomeGains: '0', otherDeductionsLosses: '10000', adjustedBasisAtEffectiveDate: '0',
       priorYearAmountAtRisk: '20000', currentYearIncreases: '0', currentYearDecreases: '0' };
     const result = calculateK1CharitableAtRisk({ form, ordinaryAmount: d('-40000'), shortTermAmount: d('0'), longTermAmount: d('20000'),
       distributionGain: d('0'), charitable: [{ sourceId: 'current-cash', basisOriginTaxYear: 2025, contributionDate: '2025-06-01',
         category: 'cash_60', amountAfterBasis: d('10000') }], prior });
-    expect(result.totalDeductions.toString()).toBe('80000'); expect(result.totalIncome.toString()).toBe('20000');
-    expect(result.ordinaryAmount.toString()).toBe('-30000'); expect(result.longTermAmount.toString()).toBe('20000');
-    expect(result.charitable[0]?.allowed.toString()).toBe('5000');
-    expect(result.prior.map(item => [item.sourceId, item.taxYear, item.allowed.toString(), item.suspended.toString()])).toEqual([
-      ['old-ordinary', 2022, '10000', '10000'], ['old-gift-risk', 2024, '5000', '5000'],
+    expect(result.totalDeductions.toString()).toBe('70000'); expect(result.totalIncome.toString()).toBe('20000');
+    expect(result.disallowedLoss.toString()).toBe('30000');
+    expect(result.ordinaryAmount.toFixed(25)).toBe(d(-240000).div(7).toFixed(25));
+    expect(result.longTermAmount.toString()).toBe('20000');
+    expect(result.charitable[0]?.allowed.toString()).toBe('10000');
+    expect(result.charitable[0]?.suspended.toString()).toBe('0');
+    expect(result.prior.map(item => [item.sourceId, item.taxYear, item.allowed.toFixed(25), item.suspended.toFixed(25)])).toEqual([
+      ['old-ordinary', 2022, d(80000).div(7).toFixed(25), d(60000).div(7).toFixed(25)],
+      ['old-gift-risk', 2024, d(40000).div(7).toFixed(25), d(30000).div(7).toFixed(25)],
     ]);
-    expect(result.ordinaryDeductionAllowed.toString()).toBe('30000');
+    expect(result.ordinaryDeductionAllowed.toFixed(25)).toBe(d(240000).div(7).toFixed(25));
   });
 });

@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { calculateK1CharitableAtRisk } from '@/engine/forms/k1-charitable-at-risk.js';
 import { d, sum } from '@/utils/decimal.js';
 function fixture() {
-    return { form: { activityName: 'Fictional assigned activity', ordinaryIncome: '-8.02', gainLossFromDispositions: '0', otherIncomeGains: '0', otherDeductionsLosses: '3.04',
+    return { form: { activityName: 'Fictional assigned activity', ordinaryIncome: '-8.02', gainLossFromDispositions: '0', otherIncomeGains: '0', otherDeductionsLosses: '0',
         adjustedBasisAtEffectiveDate: '0', priorYearAmountAtRisk: '5.53', currentYearIncreases: '0', currentYearDecreases: '0' },
         ordinaryAmount: d('-8.02'), shortTermAmount: d(0), longTermAmount: d(0), distributionGain: d(0),
         charitable: [{ sourceId: 'actual-cash', basisOriginTaxYear: 2025, contributionDate: '2025-01-01', category: 'cash_60' as const, amountAfterBasis: d('1.01') },
@@ -19,16 +19,16 @@ it('conserves exact deduction characters across zero full and fractional capacit
     for (const reverse of [false, true]) {
         const input = fixture(); if (reverse) input.charitable.reverse();
         const before = JSON.stringify(input), r = calculateK1CharitableAtRisk(input);
-        expect(r.ordinaryAmount.toFixed()).toBe('-4.01'); expect(r.ordinarySuspended.toFixed()).toBe('4.01');
-        expect(Object.fromEntries(r.charitable.map(row => [row.sourceId, [row.allowed.toFixed(), row.suspended.toFixed()]]))).toEqual({ 'actual-cash': ['0.505', '0.505'], 'actual-stock': ['1.015', '1.015'] });
+        expect(r.ordinaryAmount.toFixed()).toBe('-5.53'); expect(r.ordinarySuspended.toFixed()).toBe('2.49');
+        expect(Object.fromEntries(r.charitable.map(row => [row.sourceId, [row.allowed.toFixed(), row.suspended.toFixed()]]))).toEqual({ 'actual-cash': ['1.01', '0'], 'actual-stock': ['2.03', '0'] });
         expect(sum(r.ordinarySuspended, ...r.charitable.map(row => row.suspended)).eq(r.disallowedLoss)).toBe(true);
         expect(JSON.stringify(input)).toBe(before);
     }
-    for (const risk of ['0', '11.06', '15']) {
+    for (const risk of ['0', '8.02', '15']) {
         const input = fixture(); input.form.priorYearAmountAtRisk = risk;
         const r = calculateK1CharitableAtRisk(input);
-        expect(r.disallowedLoss.toFixed()).toBe(risk === '0' ? '11.06' : '0');
-        expect(sum(r.ordinaryAmount.abs(), ...r.charitable.map(row => row.allowed)).toFixed()).toBe(risk === '0' ? '0' : '11.06');
+        expect(r.disallowedLoss.toFixed()).toBe(risk === '0' ? '8.02' : '0');
+        expect(sum(r.ordinaryAmount.abs(), ...r.charitable.map(row => row.allowed)).toFixed()).toBe(risk === '0' ? '3.04' : '11.06');
     }
     const netIncome = fixture(); netIncome.longTermAmount = d('20'); netIncome.form.gainLossFromDispositions = '20'; netIncome.form.priorYearAmountAtRisk = '0';
     const result = calculateK1CharitableAtRisk(netIncome);

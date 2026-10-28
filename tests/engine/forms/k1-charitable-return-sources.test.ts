@@ -8,10 +8,14 @@ it('binds the published charitable basis result to actual recipient and nonbindi
     const r = calculateK1CharitableReturnSources(input);
     expect(r?.amounts.capitalGainPublic.toString()).toBe('130');
     expect(r?.statements[0].basis.suspendedLossCarryforward.charitable.toString()).toBe('20');
-    expect(r?.statements[0].nonbindingRiskRequired.toString()).toBe('130');
-    source.atRisk!.priorYearAmountAtRisk = '129.99';
-    input.scheduleK1[0].form6198!.priorYearAmountAtRisk = '129.99';
-    expect(() => calculateK1CharitableReturnSources(input)).toThrow(/nonbinding.*at-risk|at-risk.*capacity/i);
+    expect(r?.statements[0].nonbindingRiskRequired.toString()).toBe('0');
+    for (const risk of ['129.99', '0']) {
+        source.atRisk!.priorYearAmountAtRisk = risk;
+        input.scheduleK1[0].form6198!.priorYearAmountAtRisk = risk;
+        expect(calculateK1CharitableReturnSources(input)?.amounts.capitalGainPublic.toString()).toBe('130');
+    }
+    delete source.atRisk!.priorYearAmountAtRisk;
+    expect(() => calculateK1CharitableReturnSources(input)).toThrow(/at-risk|source|amount/i);
     expect(JSON.stringify(fixture())).toBe(before);
 });
 it('rejects changed incomplete and contradictory original source facts', () => {

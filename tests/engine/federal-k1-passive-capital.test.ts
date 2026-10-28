@@ -126,18 +126,26 @@ describe('canonical actual passive capital (spec/federal/k1-passive-capital-sour
             const q = requireRiskSource(requireRiskSource(input.qbiLossSources).activities)[0];
             if (basisBinding) {
                 k.beginningBasis = '25000'; requireRiskSource(q.basis).beginningBasis = '25000';
-                Object.assign(requireRiskSource(k.form6198), { ordinaryIncome: '-20000', gainLossFromDispositions: '0', otherDeductionsLosses: '5000' });
+                Object.assign(requireRiskSource(k.form6198), { ordinaryIncome: '-20000', gainLossFromDispositions: '0', otherDeductionsLosses: '0' });
             } else {
                 requireRiskSource(k.form6198).priorYearAmountAtRisk = '25000';
                 requireRiskSource(source.atRisk).priorYearAmountAtRisk = '25000'; requireRiskSource(q.atRisk).priorYearAmountAtRisk = '25000';
             }
             const r = calculateFederalTax(input);
             expect(r.agi.toString()).toBe('100000'); expect(r.capitalGainLoss.toString()).toBe('0');
-            expect(requireRiskSource(r.scheduleA).cashCharitable.toString()).toBe('5000');
-            expect(r.carryforwards.k1PassiveByCharacter?.[0].ordinary.toString()).toBe('0');
+            expect(requireRiskSource(r.scheduleA).cashCharitable.toString()).toBe(basisBinding ? '5000' : '10000');
+            // Independent source-only Decimal20/ROUND_HALF_UP stage literals retain the
+            // exact25-place assertion. Multiplication before division rounds the
+            // ordinary469 numerator116666666.666666666665 upward at the20-digit tie.
+            const passive = requireRiskSource(r.carryforwards.k1PassiveByCharacter?.[0]);
+            expect(passive.ordinary.toFixed(25)).toBe(basisBinding ? '0.0000000000000000000000000' : '3333.3333333333333334000000000');
+            expect(passive.longTermCapital.toFixed(25)).toBe(basisBinding ? '0.0000000000000000000000000' : '1666.6666666666666667000000000');
             const basis = requireRiskSource(requireRiskSource(r.scheduleE).partnerships[0].basisResult);
             expect(basis.suspendedLossCarryforward.charitable.toString()).toBe(basisBinding ? '5000' : '0');
-            expect(r.carryforwards.k1AtRiskByCharacter?.[0].charitable[0].suspended.toString()).toBe(basisBinding ? '0' : '5000');
+            const risk = requireRiskSource(r.carryforwards.k1AtRiskByCharacter?.[0]);
+            expect(risk.charitable[0].suspended.toString()).toBe('0');
+            expect(risk.ordinary.toFixed(25)).toBe(basisBinding ? '0.0000000000000000000000000' : '16666.6666666666666670000000000');
+            expect(risk.longTermCapital.toFixed(25)).toBe(basisBinding ? '0.0000000000000000000000000' : '8333.3333333333333333000000000');
         }
     });
 });

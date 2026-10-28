@@ -28,8 +28,8 @@ it('exports source-confirmed guided activity allocation with distinct suspension
     }
     for (const page of pages) expect(page.split(REVIEW_PDF_NOTICE)).toHaveLength(2);
     const text = pages.join(' ').replace(/\s+/g, ' ');
-    for (const value of ['Ordinary amount after basis: $-40000', 'Ordinary amount after at risk: $-20000', 'Ordinary suspended at risk: $20000',
-        'Available after basis: $10000', 'Basis suspended: $10000', 'Available for section170: $5000', 'At-risk suspended: $5000']) expect(text).toContain(value);
+    for (const value of ['Ordinary amount after basis: $-40000', 'Ordinary amount after at risk: $-25000', 'Ordinary suspended at risk: $15000',
+        'Available after basis: $10000', 'Basis suspended: $10000', 'Available for section170: $10000', 'At-risk suspended: $0']) expect(text).toContain(value);
     for (const secret of ['111-22-3333', '111223333', 'original-gift-1', 'Fictional original activity membership attachment']) expect(text).not.toContain(secret);
     expect(JSON.stringify(state)).toBe(before);
     requireRiskSource(requireRiskSource(requireRiskSource(requireRiskSource(requireRiskSource(state.sectionData.deductions).k1CharitableSources).statements)[0].atRisk).activityAllocation).sourceFactsConfirmed = false;

@@ -99,9 +99,7 @@
                 "sourceReference": "Fictional item-by-item original activity assignment",
                 "sourceFactsConfirmed": true,
                 "allOriginalItemsBelongToActivityConfirmed": true,
-                "charitableSourceIds": [
-                  "gift-1"
-                ]
+                "charitableSourceIds": []
               }
             },
             "capitalCharacter": {
@@ -205,7 +203,7 @@
                 "ordinaryIncome": "-40000",
                 "gainLossFromDispositions": "-10000",
                 "otherIncomeGains": "0",
-                "otherDeductionsLosses": "10000",
+                "otherDeductionsLosses": "0",
                 "adjustedBasisAtEffectiveDate": "0",
                 "currentYearIncreases": "0",
                 "currentYearDecreases": "0",
@@ -284,7 +282,7 @@
           "employerName": "Synthetic Employer",
           "employerEin": "12-3456789",
           "wages": "100000",
-          "federalWithheld": "0",
+          "federalWithheld": "30000",
           "socialSecurityWages": "0",
           "socialSecurityTips": "0",
           "socialSecurityWithheld": "0",
@@ -471,6 +469,38 @@
         ],
         "excessBusinessLossHistories": [],
         "allExcessBusinessLossHistoriesIncluded": true
+      }
+    },
+    "payments": {
+      "estimatedPayments": [],
+      "extensionPayments": [],
+      "priorYearAppliedCredits": [],
+      "otherPayments": "",
+      "estimatedTaxFacts": {
+        "sourceTaxYear": "2025",
+        "sourceReference": "Fictional filed2024 single return and complete2025 payment records; regular method through2026-04-15",
+        "sourceFactsConfirmed": true,
+        "allPaymentRecordsIncluded": true,
+        "calendarYearTaxpayer": true,
+        "residentReturn": true,
+        "farmerOrFisher": false,
+        "disasterReliefClaimed": false,
+        "waiverRequested": false,
+        "calculationMethod": "regular",
+        "withholdingMethod": "equal-installments",
+        "priorYearTaxStatus": "return-filed",
+        "priorYearFullYear": true,
+        "priorYearResidentAllYear": true,
+        "priorYearJointReturn": false,
+        "priorYearTaxForForm2210": "3000",
+        "priorYearAgiForForm2210": "100000",
+        "priorYearTaxComputationConfirmed": true,
+        "withholdingPayments": [],
+        "priorYearCreditPayments": [],
+        "returnPayments": [],
+        "earlyReturnExceptionClaimed": false,
+        "returnFiledDate": "",
+        "returnPaidInFullDate": ""
       }
     }
   }

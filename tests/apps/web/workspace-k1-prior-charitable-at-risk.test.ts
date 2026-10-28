@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -21,9 +22,17 @@ it('exports actual guided prior histories with separate use and closing balances
         { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30_000 }));
         for (const page of pages) expect(page.split(REVIEW_PDF_NOTICE)).toHaveLength(2);
         const text = pages.join(' ').replace(/\s+/g, ' ');
+        for (const [index, character, year, allowed, suspended] of [[1, 'ordinary', 2022, '80000', '60000'], [2, 'charitable', 2024, '40000', '30000']] as const) {
+            const pattern = new RegExp(`Prior at-risk deduction ${index}: ${character}; suspension year ${year}.*?Allowed this year: \\$([-0-9.]+); closing at-risk suspension: \\$([-0-9.]+)`);
+            const match = text.match(pattern); expect(match).not.toBeNull();
+            if (!match) throw new Error('Missing original risk record output');
+            expect(new Decimal(match[1]).toFixed(25)).toBe(new Decimal(allowed).div(7).toFixed(25));
+            expect(new Decimal(match[2]).toFixed(25)).toBe(new Decimal(suspended).div(7).toFixed(25));
+        }
+
         for (const value of ['Prior at-risk deduction 1: ordinary; suspension year 2022', 'Earlier at-risk use: $20000; opening suspension: $20000',
-            'Allowed this year: $10000; closing at-risk suspension: $10000', 'Allowed this year: $5000; closing at-risk suspension: $5000',
-            '465, origin 2022: suspended $10000; qualified $10000']) expect(text).toContain(value);
+
+            ]) expect(text).toContain(value);
         for (const secret of ['123456789', '123-45-6789', 'prior-ordinary', 'old-cash']) expect(text).not.toContain(secret);
         expect(JSON.stringify(state)).toBe(before);
     } finally { await rm(dir, { recursive: true, force: true }); }

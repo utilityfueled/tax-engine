@@ -11,37 +11,37 @@ it('allocates actual activity deductions after basis without merging suspension 
     const input = fixture(true), before = JSON.stringify(input), result = calculateFederalTax(input);
     const activity = requireRiskSource(result.scheduleE).partnerships[0];
     expect(activity.basisAdjustedNetAmount.toFixed()).toBe('-40000');
-    expect(activity.netAmount.toFixed()).toBe('-20000');
-    expect(activity.suspendedAtRiskLoss.toFixed()).toBe('-20000');
+    expect(activity.netAmount.toFixed()).toBe('-25000');
+    expect(activity.suspendedAtRiskLoss.toFixed()).toBe('-15000');
     expect(requireRiskSource(activity.basisResult).suspendedLossCarryforward.ordinary.toFixed()).toBe('40000');
     expect(requireRiskSource(activity.basisResult).suspendedLossCarryforward.charitable.toFixed()).toBe('10000');
-    expect(result.agi.toFixed()).toBe('80000');
-    expect(requireRiskSource(result.scheduleA).cashCharitable.toFixed()).toBe('5000');
-    expect(result.carryforwards.qbiLossCarryforward.toFixed()).toBe('20000');
+    expect(result.agi.toFixed()).toBe('75000');
+    expect(requireRiskSource(result.scheduleA).cashCharitable.toFixed()).toBe('10000');
+    expect(result.carryforwards.qbiLossCarryforward.toFixed()).toBe('25000');
     expect(result.carryforwards.charitableContributions.toFixed()).toBe('0');
     const riskCarry = Reflect.get(result.carryforwards, 'k1AtRiskByCharacter');
     expect(riskCarry).toBeDefined();
     expect(JSON.parse(JSON.stringify(riskCarry))).toMatchObject([{ k1SourceId: 'scheduleK1:0', accountHolder: 'primary', taxYear: 2025,
-        ordinary: '20000', shortTermCapital: '0', longTermCapital: '0',
-        charitable: [{ sourceId: 'gift-1', basisOriginTaxYear: 2025, contributionDate: '2025-06-01', category: 'cash_60', amountAfterBasis: '10000', allowed: '5000', suspended: '5000' }] }]);
+        ordinary: '15000', shortTermCapital: '0', longTermCapital: '0',
+        charitable: [{ sourceId: 'gift-1', basisOriginTaxYear: 2025, contributionDate: '2025-06-01', category: 'cash_60', amountAfterBasis: '10000', allowed: '10000', suspended: '0' }] }]);
     expect(JSON.stringify(input)).toBe(before);
 });
 
 it('retains separately stated income and uses deductions as the allocation denominator', () => {
     const input = fixture(false, true), before = JSON.stringify(input), result = calculateFederalTax(input);
-    expect(requireRiskSource(result.scheduleE).partnerships[0].netAmount.toFixed()).toBe('-20000');
+    expect(requireRiskSource(result.scheduleE).partnerships[0].netAmount.toFixed()).toBe('-25000');
     expect(requireRiskSource(result.scheduleD).netLongTerm.toFixed()).toBe('10000');
-    expect(requireRiskSource(result.scheduleA).cashCharitable.toFixed()).toBe('5000');
-    expect(result.agi.toFixed()).toBe('90000');
-    expect(result.carryforwards.qbiLossCarryforward.toFixed()).toBe('20000');
+    expect(requireRiskSource(result.scheduleA).cashCharitable.toFixed()).toBe('10000');
+    expect(result.agi.toFixed()).toBe('85000');
+    expect(result.carryforwards.qbiLossCarryforward.toFixed()).toBe('25000');
     expect(JSON.stringify(input)).toBe(before);
 });
 
 it('allocates full qualified appreciation and capital deductions from the same actual activity', () => {
     const input = k1CharitablePropertyRiskFixture(), result = calculateFederalTax(input), basis = requireRiskSource(requireRiskSource(result.scheduleE).partnerships[0].basisResult);
-    expect(requireRiskSource(result.scheduleA).nonCashCharitable.toFixed()).toBe('77');
-    expect(requireRiskSource(result.scheduleD).netLongTerm.toFixed()).toBe('-8');
-    expect(result.agi.toFixed()).toBe('99992');
+    expect(requireRiskSource(result.scheduleA).nonCashCharitable.toFixed()).toBe('154');
+    expect(requireRiskSource(result.scheduleD).netLongTerm.toFixed()).toBe('-16');
+    expect(result.agi.toFixed()).toBe('99984');
     expect(basis.suspendedLossCarryforward.charitable.toFixed()).toBe('36');
     expect(basis.suspendedLossCarryforward.longTermCapital.toFixed()).toBe('9');
 });
@@ -54,7 +54,7 @@ it('rejects unknown contradictory and incomplete activity assignment sources', (
         (x: ReturnType<typeof fixture>) => { requireRiskSource(requireRiskSource(charitableStatement(x).atRisk).activityAllocation).sourceTaxYear = 2024; },
         (x: ReturnType<typeof fixture>) => { requireRiskSource(requireRiskSource(charitableStatement(x).atRisk).activityAllocation).sourceReference = ''; },
         (x: ReturnType<typeof fixture>) => { requireRiskSource(requireRiskSource(charitableStatement(x).atRisk).activityAllocation).charitableSourceIds = ['gift-1', 'gift-1']; },
-        (x: ReturnType<typeof fixture>) => { requireRiskSource(requireRiskSource(charitableStatement(x).atRisk).activityAllocation).charitableSourceIds = []; },
+        (x: ReturnType<typeof fixture>) => { requireRiskSource(requireRiskSource(charitableStatement(x).atRisk).activityAllocation).charitableSourceIds = undefined; },
         (x: ReturnType<typeof fixture>) => { Reflect.deleteProperty(requireRiskSource(charitableStatement(x).atRisk), 'activityAllocation'); },
         (x: ReturnType<typeof fixture>) => { requireRiskSource(x.scheduleK1[0].form6198).otherDeductionsLosses = '9999.99'; },
         (x: ReturnType<typeof fixture>) => { x.scheduleK1[0].atRiskAmount = '25000'; },
@@ -73,12 +73,12 @@ it('keeps charitable activity allocation outside passive and qualified loss ledg
     Object.assign(k, { isPassiveActivity: true, qbiMateriallyParticipated: false });
     Object.assign(requireRiskSource(q.statement), { isPassiveActivity: true, qbiMateriallyParticipated: false });
     const before = JSON.stringify(input), result = calculateFederalTax(input);
-    expect(requireRiskSource(result.scheduleE).partnerships[0].netAmount.toFixed()).toBe('-20000');
-    expect(result.agi.toFixed()).toBe('100000'); expect(requireRiskSource(result.scheduleA).cashCharitable.toFixed()).toBe('5000');
-    expect(requireRiskSource(result.form8582).activityAllocations[0].suspendedLoss.toFixed()).toBe('20000');
+    expect(requireRiskSource(result.scheduleE).partnerships[0].netAmount.toFixed()).toBe('-25000');
+    expect(result.agi.toFixed()).toBe('100000'); expect(requireRiskSource(result.scheduleA).cashCharitable.toFixed()).toBe('10000');
+    expect(requireRiskSource(result.form8582).activityAllocations[0].suspendedLoss.toFixed()).toBe('25000');
     expect(result.carryforwards.qbiLossCarryforward.toFixed()).toBe('0');
-    expect(requireRiskSource(result.carryforwards.k1AtRiskByCharacter)[0].ordinary.toFixed()).toBe('20000');
-    expect(requireRiskSource(result.carryforwards.k1AtRiskByCharacter)[0].charitable[0].suspended.toFixed()).toBe('5000');
+    expect(requireRiskSource(result.carryforwards.k1AtRiskByCharacter)[0].ordinary.toFixed()).toBe('15000');
+    expect(requireRiskSource(result.carryforwards.k1AtRiskByCharacter)[0].charitable[0].suspended.toFixed()).toBe('0');
     expect(JSON.stringify(input)).toBe(before);
 });
 it('requires separate passive character sources for original capital items', () => {
@@ -96,22 +96,22 @@ it('requires separate passive character sources for original capital items', () 
 it('retains original basis release identity through current activity allocation', () => {
     const input = attachReleasedCharitableBasis(k1CharitableReturnFixture(), { amount: '60000', ownerBasis: '30000' });
     const source = charitableStatement(input);
-    Object.assign(requireRiskSource(input.scheduleK1[0].form6198), { otherDeductionsLosses: '30000', priorYearAmountAtRisk: '15000' });
+    Object.assign(requireRiskSource(input.scheduleK1[0].form6198), { otherDeductionsLosses: '0', priorYearAmountAtRisk: '15000' });
     requireRiskSource(source.atRisk).priorYearAmountAtRisk = '15000'; attachCharitableActivity(input);
     const before = JSON.stringify(input), result = calculateFederalTax(input), basis = requireRiskSource(requireRiskSource(requireRiskSource(result.scheduleE).partnerships[0].basisResult).charitableSources);
     expect(basis.appreciationExempt.toFixed()).toBe('0'); expect(basis.basisSuspended.toFixed()).toBe('30000');
-    expect(requireRiskSource(result.scheduleA).nonCashCharitable.toFixed()).toBe('15000');
+    expect(requireRiskSource(result.scheduleA).nonCashCharitable.toFixed()).toBe('30000');
     expect(requireRiskSource(result.carryforwards.k1AtRiskByCharacter)[0].charitable[0]).toMatchObject({ sourceId: 'actual-prior-basis-2018', basisOriginTaxYear: 2018, contributionDate: '2018-06-01', category: 'capital_gain_30' });
-    expect(requireRiskSource(result.carryforwards.k1AtRiskByCharacter)[0].charitable[0].suspended.toFixed()).toBe('15000');
+    expect(requireRiskSource(result.carryforwards.k1AtRiskByCharacter)[0].charitable[0].suspended.toFixed()).toBe('0');
     expect(result.carryforwards.charitableContributions.toFixed()).toBe('0'); expect(JSON.stringify(input)).toBe(before);
 });
 
 it('reconciles current loss classification after the source-specific at-risk allocation', () => {
     const input = k1CharitableRiskOriginFixture(), before = JSON.stringify(input), r = calculateFederalTax(input);
-    expect(r.agi.toFixed()).toBe('30000'); expect(requireRiskSource(r.scheduleA).cashCharitable.toFixed()).toBe('5000');
-    expect(r.deductionAmount.toFixed()).toBe('25000'); expect(requireRiskSource(r.form172).regular.netOperatingLoss.toFixed()).toBe('0');
-    expect(requireRiskSource(r.form172).alternativeTax.netOperatingLoss.toFixed()).toBe('0'); expect(requireRiskSource(r.form6251).amti.toFixed()).toBe('25000');
-    expect(requireRiskSource(r.carryforwards.k1AtRiskByCharacter)[0].ordinary.toFixed()).toBe('20000');
-    expect(requireRiskSource(r.carryforwards.k1AtRiskByCharacter)[0].charitable[0].suspended.toFixed()).toBe('5000');
+    expect(r.agi.toFixed()).toBe('25000'); expect(requireRiskSource(r.scheduleA).cashCharitable.toFixed()).toBe('10000');
+    expect(r.deductionAmount.toFixed()).toBe('30000'); expect(requireRiskSource(r.form172).regular.netOperatingLoss.toFixed()).toBe('5000');
+    expect(requireRiskSource(r.form172).alternativeTax.netOperatingLoss.toFixed()).toBe('0'); expect(requireRiskSource(r.form6251).amti.toFixed()).toBe('15000');
+    expect(requireRiskSource(r.carryforwards.k1AtRiskByCharacter)[0].ordinary.toFixed()).toBe('15000');
+    expect(requireRiskSource(r.carryforwards.k1AtRiskByCharacter)[0].charitable[0].suspended.toFixed()).toBe('0');
     expect(JSON.stringify(input)).toBe(before);
 });

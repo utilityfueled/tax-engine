@@ -226,9 +226,10 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
             || !d(form.otherIncomeGains).eq(sum(d(k1.interestIncome), d(k1.ordinaryDividends))))
             throw new Error('K1 charitable original at-risk income sources must reconcile to basis-allowed character');
         const allCharity = sum(...Object.values(charity.availableAfterBasis), ...priorAtRisk.charitable.map(row => row.remaining));
-        if (!d(form.otherDeductionsLosses).isZero() && !d(form.otherDeductionsLosses).eq(allCharity))
-            throw new Error('K1 charitable at-risk other deductions contain an unreconciled source');
-        const nonbindingRiskRequired = basis.totalAllowedLosses.minus(charity.basisAllowed).plus(allCharity)
+        const priorActivityCharity = sum(...priorAtRisk.charitable.map(row => row.remaining));
+        if (!d(form.otherDeductionsLosses).eq(priorActivityCharity))
+            throw new Error('K1 charitable at-risk other deductions must exclude ordinary section170 gifts and reconcile actual recorded prior activity sources');
+        const nonbindingRiskRequired = basis.totalAllowedLosses.minus(charity.basisAllowed).plus(priorActivityCharity)
             .plus(priorAtRisk.ordinary).plus(priorAtRisk.shortTerm).plus(priorAtRisk.longTerm);
         const amountAtRisk = calculateForm6198(form).amountAtRisk;
         let atRiskAllocation: K1CharitableAtRiskResult | undefined;
@@ -238,11 +239,9 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
                 throw new Error('K1 charitable at-risk allocation requires actual confirmed activity assignment');
             text(assignment.sourceReference, 'at-risk activity assignment reference');
             const ids = assignment.charitableSourceIds;
-            const assignedGiftIds = new Set([...receiptIds, ...priorAtRisk.charitable.map(row => row.gift.basisSourceId)]);
+            const assignedGiftIds = new Set(priorAtRisk.charitable.map(row => row.gift.basisSourceId));
             if (!Array.isArray(ids) || ids.length !== assignedGiftIds.size || new Set(ids).size !== ids.length || ids.some(id => !assignedGiftIds.has(id)))
-                throw new Error('K1 charitable at-risk activity assignment must identify every original charitable source exactly once');
-            if (!d(form.otherDeductionsLosses).eq(allCharity))
-                throw new Error('K1 charitable at-risk activity line4 must include all assigned charitable deductions after basis');
+                throw new Error('K1 charitable at-risk activity assignment must exclude ordinary gifts and identify every recorded prior activity gift exactly once, including explicit none');
             if (!d(k1.guaranteedPayments).isZero())
                 throw new Error('K1 charitable at-risk guaranteed payment assignment requires its separate original activity method');
             if (k1.isPassiveActivity && !source.capitalCharacter && (!d(k1.netShortTermCapitalGain).isZero() || !d(k1.netLongTermCapitalGain).isZero()
@@ -260,7 +259,7 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
         else if (priorAtRisk.total.gt(0))
             throw new Error('K1 prior at-risk release requires actual current activity assignment and complete character allocation');
         else if (amountAtRisk.lt(nonbindingRiskRequired))
-            throw new Error('K1 charitable nonbinding at-risk capacity must cover all basis-allowed deductions and full charitable value');
+            throw new Error('K1 charitable nonbinding at-risk capacity must cover the actual basis-allowed activity deductions; ordinary section170 gifts are separate');
         const capitalCharacter = source.capitalCharacter ? calculateK1CapitalCharacterSources({ taxYear: year, k1,
             source: source.capitalCharacter, priorAtRisk: priorAtRisk.records }) : undefined;
         if (capitalCharacter && !input.qbiLossSources?.activities?.some(row => row.k1SourceId === source.k1SourceId))
@@ -280,7 +279,7 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
             throw new Error('K1 charitable ordinary loss requires its independent actual QBI source history');
         audit.record('K1 Charitable Return', `source-${index + 1}`, 'Original attached charity after basis and actual activity proof', allCharity, 'Separate charity; no passive-loss deduction or taxpayer-entered final allowance', {
             'Charitable basis allowed': charity.basisAllowed, 'Appreciation outside basis limit': charity.appreciationExempt, 'Charitable basis suspended': charity.basisSuspended,
-            'Conservative at-risk requirement': nonbindingRiskRequired, 'Actual amount at risk': amountAtRisk,
+            'Activity deductions for nonbinding risk check': nonbindingRiskRequired, 'Actual amount at risk': amountAtRisk,
             'Ordinary amount after basis': ordinaryAmount, 'Short-term amount after basis': shortTermAmount, 'Long-term amount after basis': longTermAmount,
         });
         if (distributionGain) audit.merge(distributionGain.lines.map(line => ({ ...line, line: `${line.line}-${index + 1}` })));

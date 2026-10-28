@@ -1014,6 +1014,15 @@
       "note": "Actual annual original sources determine only the current basis-admitted portion and retain earlier carry years. No final2026 packet or filing qualification is claimed."
     },
     {
+      "key": "federal/k1-ordinary-gift-at-risk",
+      "enginePath": "src/engine/forms/k1-charitable-at-risk.ts",
+      "testRefs": [
+        "tests/engine/federal-k1-ordinary-gift-at-risk.test.ts::uses actual ordinary gifts at zero activity risk for either entity",
+        "tests/engine/federal-k1-ordinary-gift-at-risk.test.ts::preserves basis ordinary risk and charitable ledgers separately"
+      ],
+      "note": "Original ordinary gift source classification excludes current gifts from actual activity loss. Recorded prior activity history remains separate. No human tax qualification, final2026 form or filing readiness is claimed."
+    },
+    {
       "key": "federal/k1-passive-capital-sources",
       "enginePath": "src/engine/federal.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-8582.ts",

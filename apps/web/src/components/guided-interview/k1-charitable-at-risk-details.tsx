@@ -5,7 +5,7 @@ type Assignment = NonNullable<K1CharitableRiskData['activityAllocation']>;
 export function K1CharitableAtRiskDetails({ prefix, data, onChange }: { prefix: string; data?: Assignment; onChange: (next: Assignment | undefined) => void }) {
     const change = (patch: Partial<Assignment>) => onChange({ ...data, ...patch });
     return <fieldset><legend>{prefix} actual activity assignment</legend>
-        <p className="guided-hint">Use the original item statement to identify which gifts and other reported items belong to this Form 6198 activity. The return calculates the allowed and suspended amounts after basis. Entering an assignment does not establish that an unrelated gift belongs to the activity.</p>
+        <p className="guided-hint">Current ordinary charitable gifts stay outside this activity list. Use the original records for separately reported historical activity deductions and other Form 6198 items. The return calculates the allowed and suspended amounts after basis. Entering an assignment does not establish that an unrelated gift belongs to the activity.</p>
         {data === undefined ? <button type="button" className="utility-button" onClick={() => onChange({})}>Add {prefix} activity assignment</button> : <>
             <div className="guided-form-grid">
                 <TextFact label={`${prefix} activity assignment source year`} value={data.sourceTaxYear ?? ''} onChange={sourceTaxYear => change({ sourceTaxYear })} />

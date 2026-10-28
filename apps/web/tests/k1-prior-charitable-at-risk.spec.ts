@@ -1,5 +1,8 @@
+import Decimal from 'decimal.js';
 import { execFileSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+import { guidedK1CharitableAtRiskPayments } from '../../../tests/fixtures/k1-charitable-at-risk-guide-sources';
 import { guidedK1PriorRiskSources } from '../../../tests/fixtures/k1-prior-charitable-at-risk-guide-sources';
 import { taxpayerFacts2025 } from './guided-fixtures';
 function requireRiskSource<T>(value: T | null | undefined): T {
@@ -20,8 +23,8 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
             const state = { factsVersion: 2, phase: 'interview', taxYear: 2025, currentSectionIndex: 2, completedSections: ['personal-info', 'income-w2'],
                 segmentation: { filingStatus: 'single', incomeTypes: ['w2-wages'], lifeEvents: ['k1-loss-sources'], stateCode: null },
                 sectionData: { 'personal-info': { ...taxpayerFacts2025, firstName: 'Jordan', lastName: 'Source', ssn: '123-45-6789' },
-                    'income-w2': { entries: [{ employerName: 'Fictional original employer', employerEin: '12-3456789', accountHolder: 'primary', wages: '100000', federalWithheld: '0', socialSecurityWages: '100000', socialSecurityTips: '0', socialSecurityWithheld: '6200', medicareWages: '100000', medicareWithheld: '1450', box10DependentCareBenefits: '0', box12CodeW: '0', stateTaxReporting: 'none' }] },
-                    adjustments: { k1LossSources: sources.qualifiedLoss }, deductions: { method: 'itemized', medicalExpenses: '0', stateLocalTaxes: '0', realEstateTaxes: '0', mortgageInterest: '0', charitableContributions: '0', casualtyLosses: '0', otherItemized: '0', gamblingWinnings: '0', nonW2IncomeTaxesDeductedElsewhere: '0', donationEntries: [], k1CharitableSources: sources.charity } } };
+                    'income-w2': { entries: [{ employerName: 'Fictional original employer', employerEin: '12-3456789', accountHolder: 'primary', wages: '100000', federalWithheld: '30000', socialSecurityWages: '100000', socialSecurityTips: '0', socialSecurityWithheld: '6200', medicareWages: '100000', medicareWithheld: '1450', box10DependentCareBenefits: '0', box12CodeW: '0', stateTaxReporting: 'none' }] },
+                    payments: guidedK1CharitableAtRiskPayments(), adjustments: { k1LossSources: sources.qualifiedLoss }, deductions: { method: 'itemized', medicalExpenses: '0', stateLocalTaxes: '0', realEstateTaxes: '0', mortgageInterest: '0', charitableContributions: '0', casualtyLosses: '0', otherItemized: '0', gamblingWinnings: '0', nonW2IncomeTaxesDeductedElsewhere: '0', donationEntries: [], k1CharitableSources: sources.charity } } };
             const history = requireRiskSource(requireRiskSource(requireRiskSource(requireRiskSource(requireRiskSource(requireRiskSource(state.sectionData.deductions).k1CharitableSources).statements)[0].atRisk).priorLossHistory).characterSources);
             history.sourceFactsConfirmed = null;
             await page.evaluate(({ id, state }) => {
@@ -40,12 +43,16 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
             await expect(confirmation).toHaveValue(''); await confirmation.selectOption('true');
             await expect(hero).not.toHaveText('Enter more info for an estimate');
             await page.getByRole('button', { name: 'Expand Ticker', exact: true }).click(); await page.locator('.guided-ticker-clickable').first().click();
-            await expect(page.locator('.guided-ticker-breakdown-row').filter({ hasText: 'Adjusted Gross Income' })).toContainText('$90,000');
+            await expect(page.locator('.guided-ticker-breakdown-row').filter({ hasText: 'Adjusted Gross Income' })).toContainText('$85,714');
             await page.reload(); await open(); await expect(confirmation).toHaveValue('true');
             await page.getByText(`${prefix} deduction 1`, { exact: true }).click();
             const use = page.getByRole('textbox', { name: `${prefix} deduction 1 use 1 amount allowed`, exact: true });
             await expect(use).toHaveValue('10000');
-            const saved = await page.evaluate(id => JSON.parse(localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`) ?? '{}').sectionData, id);
+            const savedState = await page.evaluate(id => JSON.parse(localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`) ?? '{}'), id);
+            const saved = savedState.sectionData;
+            writeFileSync(testInfo.outputPath(`prior-risk-actual-source-${viewport.width}.json`), JSON.stringify(savedState, null, 2) + '\n');
+            expect(saved.payments).toEqual(state.sectionData.payments);
+            expect(saved['income-w2'].entries[0].federalWithheld).toBe('30000');
             history.sourceFactsConfirmed = true;
             expect(saved.deductions.k1CharitableSources).toEqual(state.sectionData.deductions?.k1CharitableSources);
             expect(saved.adjustments.k1LossSources).toEqual(state.sectionData.adjustments?.k1LossSources);
@@ -62,8 +69,16 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
                 'import sys,json;from pypdf import PdfReader;print(json.dumps([p.extract_text() or "" for p in PdfReader(sys.argv[1]).pages]))', output],
             { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 30_000 }));
             const text = pages.join(' ').replace(/\s+/g, ' ');
-            for (const value of ['Earlier at-risk use: $20000; opening suspension: $20000', 'Allowed this year: $10000; closing at-risk suspension: $10000',
-                'Allowed this year: $5000; closing at-risk suspension: $5000', '465, origin 2022: suspended $10000; qualified $10000']) expect(text).toContain(value);
+            for (const [index, character, year, allowed, suspended] of [[1, 'ordinary', 2022, '80000', '60000'], [2, 'charitable', 2024, '40000', '30000']] as const) {
+                const pattern = new RegExp(`Prior at-risk deduction ${index}: ${character}; suspension year ${year}.*?Allowed this year: \\$([-0-9.]+); closing at-risk suspension: \\$([-0-9.]+)`);
+                const match = text.match(pattern); expect(match).not.toBeNull();
+                if (!match) throw new Error('Missing original risk record output');
+                expect(new Decimal(match[1]).toFixed(25)).toBe(new Decimal(allowed).div(7).toFixed(25));
+                expect(new Decimal(match[2]).toFixed(25)).toBe(new Decimal(suspended).div(7).toFixed(25));
+            }
+            for (const value of ['Earlier at-risk use: $20000; opening suspension: $20000',
+                '465, origin 2022: suspended $8571; qualified $8571',
+                '465, origin 2025: suspended $17143; qualified $0']) expect(text).toContain(value);
             for (const pageText of pages) expect(pageText.split('FOR REVIEW ONLY - NOT FOR FILING')).toHaveLength(2);
             for (const secret of ['123-45-6789', '123456789', 'old-ordinary', 'old-cash']) expect(text).not.toContain(secret);
             for (const request of requests.filter(request => request.body.includes('Fictional character and use attachment'))) {

@@ -32,11 +32,15 @@ it('keeps the historical missing ordinary carry unknown until separately recorde
     // Spec: qbi-prior-carry-sources.yaml historical-packet.
     const old = structuredClone(browserOriginal) as GuidedFlowState;
     expect(old.sectionData.adjustments?.k1LossSources?.priorQbiCarry).toBeUndefined();
-    expect(() => buildGuidedK1Sources(old.sectionData.adjustments?.k1LossSources, old)).toThrow(/Prior ordinary QBI/);
+    // The retained historical packet also assigns its ordinary gift to465.
+    // That earlier original-source contradiction now rejects before QBI history.
+    expect(() => buildGuidedK1Sources(old.sectionData.adjustments?.k1LossSources, old)).toThrow(/exclude ordinary section170 gifts/);
     expect(buildTaxInputFromGuidedData(old)).toBeNull();
     const complete = guidedK1PassiveCapitalState('8000');
     delete complete.sectionData.adjustments!.k1LossSources!.priorQbiCarry;
-    expect(complete).toEqual(browserOriginal);
+    expect(complete.sectionData.adjustments?.k1LossSources?.priorQbiCarry).toBeUndefined();
+    expect(() => buildGuidedK1Sources(complete.sectionData.adjustments?.k1LossSources, complete)).toThrow(/Prior ordinary QBI/);
+    expect(buildTaxInputFromGuidedData(complete)).toBeNull();
 });
 it('preserves unknown false and original edit invalidation', () => {
     // Spec: K1 Passive Capital Sources, guided-unknown.

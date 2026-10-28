@@ -19,6 +19,11 @@ notes: |
   separate from section170 use and carry. Positive release-origin residual
   requires actual first-section170-entry binding and its source-year method.
   This collectable proof remains internal work, not legal unknowability.
+  Recorded prior465 property in these historical fixtures is preserved as
+  reported activity history, not newly qualified as an ordinary gift subject
+  to465. The current ordinary-gift correction leaves that historical
+  classification and its separate170 admission question untouched. A newly
+  basis-admitted ordinary gift is outside the current465 activity.
   Zero floor alone does not justify silently dating a positive residual2026.
   A separately proved no-residual/no-other-effect case avoids that clock issue.
   https://www.ecfr.gov/current/title-26/section-1.1366-2
@@ -42,7 +47,7 @@ lines:
     testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::preserves prior risk sources and percentage capacity independently of current basis"
   - line: "combined-limitations"
     description: "Combine separate basis and prior-risk originals exactly once"
-    formula: "Original prior basis release40000 and separate prior-risk opening60000 give100000 activity deductions. Risk50000 allows half:20000 basis-released gift and30000 old-risk gift. Basis suspension20000, new465suspension20000 and old465suspension30000 remain distinct; available C50000 atbase100000 has positive residual, so final calculation rejects pending first-entry/floor proof. The same actual releases atbase200000 have no residual; source balances are unchanged."
+    formula: "Original prior basis release40000 is an ordinary gift outside the current465activity; only the separate recorded prior-risk opening60000 appears in actual line4 and its gift assignment. Risk50000 permits50000 of that recorded prior activity deduction. Basis suspension20000, new465suspension0 and old465suspension10000 remain distinct; available C90000 atbase100000 has positive residual, so final calculation rejects pending first-entry/floor proof. The same actual releases atbase300000 have no residual; source balances and original receipt years are unchanged."
     testRef: "tests/engine/federal-k1-prior-property-nonitemized-2026.test.ts::conserves simultaneous prior basis and risk sources without repeated appreciation"
   - line: "other-property-capacity"
     description: "Retain the original other-recipient property character"
@@ -70,7 +75,7 @@ lines:
     testRef: "tests/guided-interview/guided-k1-prior-property-nonitemized.test.ts::forwards explicit nonitemization and preserves the complete original property histories"
   - line: "context-and-release"
     description: "Bind source choice and balances without opening the2026 export gate"
-    formula: "A separate no-residual both-limitations original atincome200000/withholding60000 binds choice, receipts, identity, basis and465 histories and calculated zero carry. The unchanged original100000 positive-carry input rejects before output. Changed or removed sources and forged carry reject before I/O. Production2026 calculation/export remains unavailable; no2025 form is relabeled."
+    formula: "A separate no-residual both-limitations original atincome300000/withholding90000 binds choice, receipts, identity, basis and465 histories and calculated zero carry. The unchanged original100000 positive-carry input rejects before output. Changed or removed sources and forged carry reject before I/O. Production2026 calculation/export remains unavailable; no2025 form is relabeled."
     testRef: "tests/pdf/k1-prior-property-nonitemized-context.test.ts::binds original choice and every independent balance before output while keeping2026 export closed"
   - line: "browser-sources"
     description: "Retain original source edits and the actual year gate in both viewports"

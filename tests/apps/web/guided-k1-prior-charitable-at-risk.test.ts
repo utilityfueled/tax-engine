@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { d } from '@/utils/decimal';
 import { calculateFederalTax } from '@/engine/federal';
 import { TaxYearInputSchema } from '@/models/inputs';
 import { buildTaxInputFromGuidedData } from '@/lib/guided-interview-bridge';
@@ -23,8 +24,8 @@ it('uses actual linked prior records without an entered current allowance', () =
     expect(requireRiskSource(actual)[0].originalPostBasisDeduction).toBe('60000.00');
     expect(requireRiskSource(requireRiskSource(actual)[1].gift).basisOriginTaxYear).toBe(2024);
     const input = TaxYearInputSchema.parse(requireRiskSource(buildTaxInputFromGuidedData(state))), result = calculateFederalTax(input);
-    expect(result.agi.toString()).toBe('90000'); expect(requireRiskSource(result.scheduleA).cashCharitable.toString()).toBe('10000');
-    expect(result.carryforwards.qbiLossCarryforward.toString()).toBe('10000'); expect(JSON.stringify(state)).toBe(before);
+    expect(result.agi.toFixed(0)).toBe('85714'); expect(requireRiskSource(result.scheduleA).cashCharitable.toFixed(25)).toBe(d(110000).div(7).toFixed(25));
+    expect(result.carryforwards.qbiLossCarryforward.toFixed(0)).toBe('11429'); expect(JSON.stringify(state)).toBe(before);
 });
 it('retains unknown and false source history and invalidates original edits', () => {
     // Spec: K1 Prior Charitable At Risk, guided-invalidation.

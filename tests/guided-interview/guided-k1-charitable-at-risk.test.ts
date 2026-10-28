@@ -13,9 +13,9 @@ it('uses actual linked activity assignment without entering a calculated allowan
         expect(validateSection(state, 'adjustments').status).toBe('complete');
         const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state)), r = calculateFederalTax(input);
         expect(input.scheduleK1).toHaveLength(1); expect(input.scheduleK1[0].ordinaryIncome).toBe('-80000'); expect(input.scheduleK1[0].charitableCash).toBe('20000');
-        expect(input.k1CharitableSources?.statements?.[0].atRisk?.activityAllocation?.charitableSourceIds).toEqual(['original-gift-1']);
-        expect(r.scheduleE?.partnerships[0].netAmount.toFixed()).toBe('-20000'); expect(r.scheduleA?.cashCharitable.toFixed()).toBe('5000');
-        expect(r.agi.toFixed()).toBe(gain ? '90000' : '80000'); expect(r.carryforwards.qbiLossCarryforward.toFixed()).toBe('20000');
+        expect(input.k1CharitableSources?.statements?.[0].atRisk?.activityAllocation?.charitableSourceIds).toEqual([]);
+        expect(r.scheduleE?.partnerships[0].netAmount.toFixed()).toBe('-25000'); expect(r.scheduleA?.cashCharitable.toFixed()).toBe('10000');
+        expect(r.agi.toFixed()).toBe(gain ? '85000' : '75000'); expect(r.carryforwards.qbiLossCarryforward.toFixed()).toBe('25000');
         expect(JSON.stringify(state)).toBe(before);
     }
     const contradict = guidedK1CharitableAtRiskState(true); requireRiskSource(requireRiskSource(requireRiskSource(contradict.sectionData.adjustments).k1LossSources).activities)[0].allOtherNonCharitableAmountsZeroConfirmed = true;

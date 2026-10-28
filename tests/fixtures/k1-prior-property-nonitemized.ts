@@ -62,8 +62,8 @@ export function priorPropertyNonitemizedInput(options: {
     risk.priorYearAmountAtRisk = method === 'both' ? '50000' : capacity;
     risk.activityAllocation = { sourceTaxYear: 2026, sourceReference: 'Fictional complete activity source assignment',
       sourceFactsConfirmed: true, allOriginalItemsBelongToActivityConfirmed: true,
-      charitableSourceIds: [...required(source.receipts).map(row => required(row.basisSourceId)), 'original-property-2024'] };
-    Object.assign(required(k1.form6198), { otherDeductionsLosses: method === 'both' ? '100000' : '60000',
+      charitableSourceIds: ['original-property-2024'] };
+    Object.assign(required(k1.form6198), { otherDeductionsLosses: '60000',
       priorYearAmountAtRisk: risk.priorYearAmountAtRisk });
   }
   return input;

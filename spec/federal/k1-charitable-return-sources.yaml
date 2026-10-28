@@ -18,24 +18,29 @@ notes: |
   https://uscode.house.gov/us/usc/119-120/t26/s170/
   https://www.irs.gov/instructions/i1120ssk
   https://www.irs.gov/instructions/i6198
-  Section469 excludes charity from8582 but does not establish a465 exemption.
-  Without an actual activity-assignment attachment, this source cohort requires
-  actual simplified6198 capacity
-  sufficient for every basis-allowed deduction plus the entire charity, including
-  appreciation, with independent known-empty prior465 history. Therefore either
-  activity classification leaves the same allowance. The optional source-bound
-  current activity assignment in k1-charitable-at-risk.yaml reconciles every
-  actual item and gift ID, then allocates a binding465 loss over deductions after
-  basis while retaining all income. Independent prior465 history is still known
-  empty; positive historical character/release is separate internal work.
+  Section465(c)/(d) requires an actual activity nexus. Final Regulations
+  1.702-1(a)(4),1.703-1(a)(2)(iv),1.1366-1(a)(2)(iii) and section1363(b)(2)
+  separately state these ordinary section170 gifts. After basis, the current
+  ordinary gift stays outside the actual Form6198 activity, including its
+  appreciation. An all-items confirmation or assigned gift ID does not create
+  that nexus. Without an activity attachment, actual simplified6198 capacity
+  must cover the remaining activity deductions; it need not cover the gift.
+  With the source-bound attachment, actual PartI amounts and assigned historical
+  activity IDs reconcile before the binding allocation, retaining all income.
+  Recorded prior465 deductions keep their actual character and history through
+  the separate prior-source method; this current classification does not
+  establish the validity of an old filed classification or its first170 year.
+  See k1-ordinary-gift-at-risk.yaml and k1-prior-charitable-at-risk.yaml.
   Special gain/179/4952 deductions, royalties and unrepresented activity methods
   remain separate. Positive prior ordinary basis release requires independent
   QBI-history work; original prior charitable/property basis can be retained.
   Actual recipient class, qualification, original stock holding dates, FMV/basis,
   Box13/12 A/E/F and direct source IDs must reconcile. No invented valuation,
   cash source, public recipient, prior history or affirmative confirmation.
-  For170(p), current entity-year cash uses actual DAF/supporting answers and only
-  the amount remaining after basis and any actual activity465 allocation.
+  For170(p), current entity-year ordinary cash uses actual DAF/supporting answers
+  and the amount remaining after basis; it is not reduced by a different
+  ordinary or capital activity loss. Recorded prior activity sources retain
+  their separate timing and original-history guards.
   Reg1.702-1(a)(4) treats partnership-year contributions
   as paid by the partner, with the706 inclusion year; Reg1.1366-1(a)(1)/(2)(iii)
   likewise includes the separately stated corporation-year contribution in the
@@ -80,7 +85,7 @@ notes: |
 lines:
   - line: "published-130"
     description: "Original charity basis and nonbinding activity evidence"
-    formula: "Published150property/50basis/30outside produces130 after basis and20 basis suspended. Actual6198 capacity130 passes exactly;129.99 rejects the unresolved binding allocation."
+    formula: "Published150property/50basis/30outside produces130 after basis and20 basis suspended. This ordinary gift supplies no current activity deduction: required risk is0 and actual130,129.99 or explicit0 risk leave the gift130 unchanged. Missing actual risk remains unknown and rejects. Separately sourced actual activity losses retain their own capacity rules."
     testRef: "tests/engine/forms/k1-charitable-return-sources.test.ts::binds the published charitable basis result to actual recipient and nonbinding risk sources"
   - line: "source-identity"
     description: "Complete original statement receipt and history binding"

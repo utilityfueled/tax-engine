@@ -14,7 +14,7 @@ export function attachCharitableActivity(input: ReturnType<typeof k1CharitableRe
         sourceReference: 'Fictional item-by-item original activity assignment',
         sourceFactsConfirmed: true,
         allOriginalItemsBelongToActivityConfirmed: true,
-        charitableSourceIds: requireRiskSource(source.receipts).map(row => requireRiskSource(row.basisSourceId)),
+        charitableSourceIds: [],
     } });
     return input;
 }
@@ -28,7 +28,7 @@ export function k1CharitableAtRiskFixture(basisBinding = false, separateGain = f
     Object.assign(requireRiskSource(q.statement), { ordinaryIncome: ordinary, section199AQBI: ordinary });
     requireRiskSource(q.basis).beginningBasis = basis;
     requireRiskSource(q.atRisk).priorYearAmountAtRisk = risk;
-    Object.assign(requireRiskSource(k.form6198), { ordinaryIncome: '-40000', gainLossFromDispositions: separateGain ? '10000' : '0', otherDeductionsLosses: '10000', priorYearAmountAtRisk: risk });
+    Object.assign(requireRiskSource(k.form6198), { ordinaryIncome: '-40000', gainLossFromDispositions: separateGain ? '10000' : '0', otherDeductionsLosses: '0', priorYearAmountAtRisk: risk });
     requireRiskSource(source.atRisk).priorYearAmountAtRisk = risk;
     Object.assign(requireRiskSource(requireRiskSource(source.basis).currentContributions)[0], { contributionShare: gift, adjustedBasisShare: gift });
     return attachCharitableActivity(input);
@@ -40,14 +40,14 @@ export function k1CharitablePropertyRiskFixture() {
     requireRiskSource(source.basis).entityType = 's_corporation';
     Object.assign(requireRiskSource(requireRiskSource(source.basis).currentContributions)[0], { contributionShare: '190', adjustedBasisShare: '100' });
     Object.assign(requireRiskSource(source.receipts)[0], { originalBox: '12', fairMarketValueShare: '190' });
-    Object.assign(requireRiskSource(k.form6198), { gainLossFromDispositions: '-16', otherDeductionsLosses: '154', priorYearAmountAtRisk: '85' });
+    Object.assign(requireRiskSource(k.form6198), { gainLossFromDispositions: '-16', otherDeductionsLosses: '0', priorYearAmountAtRisk: '85' });
     requireRiskSource(source.atRisk).priorYearAmountAtRisk = '85';
     return attachCharitableActivity(input);
 }
 
 export function k1CharitableRiskOriginFixture(year = 2025) {
     const input = operatingK1CharitableOriginInput(false, year), source = charitableStatement(input);
-    Object.assign(requireRiskSource(input.scheduleK1[0].form6198), { otherDeductionsLosses: '10000', priorYearAmountAtRisk: '25000' });
+    Object.assign(requireRiskSource(input.scheduleK1[0].form6198), { otherDeductionsLosses: '0', priorYearAmountAtRisk: '25000' });
     requireRiskSource(source.atRisk).priorYearAmountAtRisk = '25000'; requireRiskSource(requireRiskSource(requireRiskSource(input.qbiLossSources).activities)[0].atRisk).priorYearAmountAtRisk = '25000';
     requireRiskSource(requireRiskSource(input.form172).businessSources)[0].allInvestmentAtRisk = false;
     return attachCharitableActivity(input);
