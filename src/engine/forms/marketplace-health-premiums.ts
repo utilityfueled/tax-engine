@@ -3,6 +3,8 @@ import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { Form7206Result } from "./form-7206.js";
 import { d, sum } from "@/utils/decimal.js";
+import { sumSourceMoney } from "@/utils/sum-source-money.js";
+import { sumSourceMoneyRatios, type SourceMoneyRatio } from "@/utils/sum-source-money-ratios.js";
 import { calculateMarketplaceCoverageFamilyHealth } from "./marketplace-coverage-family-health.js";
 import { calculateSharedMarketplaceHealthSources } from "./shared-marketplace-health.js";
 import { readMarketplaceCreditAllocationSource } from "./marketplace-credit-allocation-source.js";
@@ -16,7 +18,7 @@ export interface MarketplaceHealthPremiumGroup {
   creditAllocationMethod?: "monthly_eligible_plan_enrollment";
   /** Derived only from actual qualified plan sources, never a user override. */
   includedInEarnedIncomeLimit?: boolean;
-  months: { month: number; specifiedPremium: Decimal; sourcePremium: Decimal; advancePremiumTaxCredit: Decimal; specifiedAdvancePremiumTaxCredit?: Decimal; fullCorrespondingCredit?: true; creditAllocationPremium?: Decimal }[];
+  months: { month: number; specifiedPremium: Decimal; specifiedPremiumSources?: SourceMoneyRatio[]; sourcePremium: Decimal; advancePremiumTaxCredit: Decimal; specifiedAdvancePremiumTaxCredit?: Decimal; fullCorrespondingCredit?: true; creditAllocationPremium?: Decimal }[];
 }
 function actual(value: string | undefined): Decimal {
   if (value === undefined || !/^\d+(\.\d+)?$/.test(value) || !d(value).isFinite()) throw new Error("Marketplace premium source amounts must be actual finite nonnegative amounts, including known zero.");
@@ -25,7 +27,7 @@ function actual(value: string | undefined): Decimal {
 function remainingIncome(business: Form7206Result["businesses"][number]): Decimal {
   const income = business.kind === "s_corporation" ? business.sCorporationMedicareWages : business.incomeAfterRetirement;
   if (income === undefined || business.attributableForeignExclusion === undefined || business.deduction === undefined) throw new Error("Marketplace WorksheetW requires actual signed business income sources.");
-  const result = income.minus(business.attributableForeignExclusion).minus(business.deduction);
+  const result = sumSourceMoney(income, business.attributableForeignExclusion.negated(), business.deduction.negated());
   if (!result.isFinite()) throw new Error("Marketplace WorksheetW requires finite actual business income.");
   return result;
 }
@@ -101,9 +103,15 @@ export function calculateMarketplaceHealthPremiums(params: { input: TaxYearInput
       const qualified = familyMonth ? specified.plus(nonspecified!).gt(0) : specified.gt(0);
       qualifiedMonthly.set(month, (qualifiedMonthly.get(month) ?? d(0)).plus(qualified ? attributable.premium : d(0)));
       if (specified.gt(attributable.premium)) throw new Error("Marketplace specified premiums exceed their actual allocated policy source.");
+      const benchmarkTotal = familyMonth ? sumSourceMoney(familyMonth.coverageFamilySlcsp, familyMonth.nonCoverageFamilySlcsp) : d(1);
+      const specifiedSource: SourceMoneyRatio = familyMonth
+        ? { amount: specified.isZero() ? d(0) : familyMonth.taxFamilyPremium, numerator: familyMonth.coverageFamilySlcsp, denominator: benchmarkTotal.isZero() ? d(1) : benchmarkTotal }
+        : { amount: specified };
       const combined = group.months.find(row => row.month === month);
-      if (combined) { combined.specifiedPremium = combined.specifiedPremium.plus(specified); combined.sourcePremium = combined.sourcePremium.plus(attributable.premium); combined.advancePremiumTaxCredit = combined.advancePremiumTaxCredit.plus(attributable.advance); }
-      else group.months.push({ month, specifiedPremium: specified, sourcePremium: attributable.premium, advancePremiumTaxCredit: attributable.advance });
+      if (combined) {
+        combined.specifiedPremiumSources = [...combined.specifiedPremiumSources ?? [{ amount: combined.specifiedPremium }], specifiedSource];
+        combined.specifiedPremium = sumSourceMoney(combined.specifiedPremium, specified); combined.sourcePremium = combined.sourcePremium.plus(attributable.premium); combined.advancePremiumTaxCredit = combined.advancePremiumTaxCredit.plus(attributable.advance);
+      } else group.months.push({ month, specifiedPremium: specified, specifiedPremiumSources: [specifiedSource], sourcePremium: attributable.premium, advancePremiumTaxCredit: attributable.advance });
       if (creditAllocationMethod) {
         const current = group.months.find(row => row.month === month)!;
         current.creditAllocationPremium = (current.creditAllocationPremium ?? d(0)).plus(qualified ? attributable.premium : d(0));
@@ -113,7 +121,6 @@ export function calculateMarketplaceHealthPremiums(params: { input: TaxYearInput
         const current = group.months.find(row => row.month === month)!;
         current.specifiedAdvancePremiumTaxCredit = (current.specifiedAdvancePremiumTaxCredit ?? d(0)).plus(qualified ? familyMonth.advancePremiumTaxCredit : d(0));
       }
-      group.specifiedPremiums = group.specifiedPremiums.plus(specified);
       const recorded = recordedMonthly.get(month) ?? { premium: d(0), advance: d(0) };
       recorded.premium = recorded.premium.plus(attributable.premium); recorded.advance = recorded.advance.plus(attributable.advance); recordedMonthly.set(month,recorded);
     }
@@ -153,6 +160,7 @@ export function calculateMarketplaceHealthPremiums(params: { input: TaxYearInput
     }
   }
   for (const group of groups.values()) {
+    group.specifiedPremiums = sumSourceMoneyRatios(group.months.flatMap(month => month.specifiedPremiumSources ?? [{ amount: month.specifiedPremium }]));
     group.months.sort((a,b) => a.month - b.month);
     if (group.creditAllocationMethod) group.includedInEarnedIncomeLimit = group.months.some(month => month.creditAllocationPremium?.gt(0));
   }

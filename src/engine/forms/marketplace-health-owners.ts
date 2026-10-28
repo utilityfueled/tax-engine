@@ -2,8 +2,9 @@
 import Decimal from "decimal.js";
 import type { FilingStatus } from "@/models/inputs.js";
 import type { MarketplaceHealthPremiumGroup } from "./marketplace-health-premiums.js";
+import { sumSourceMoney } from "@/utils/sum-source-money.js";
 import { AuditTrail } from "@/utils/audit.js";
-import { d, min, roundDollar, sum, zeroFloor } from "@/utils/decimal.js";
+import { d, min, roundDollar, zeroFloor } from "@/utils/decimal.js";
 
 type Owner = "primary" | "spouse";
 interface CompletedBusiness {
@@ -46,12 +47,12 @@ export function calculateMarketplaceOwnerDeductions(params: Params) {
       for (const value of [month.specifiedPremium, month.sourcePremium, month.advancePremiumTaxCredit]) finite(value);
       if (month.specifiedPremium.gt(month.sourcePremium) || month.advancePremiumTaxCredit.gt(month.sourcePremium)) throw new Error("Pub974 owner amounts exceed their actual source month.");
       if (month.specifiedAdvancePremiumTaxCredit !== undefined && finite(month.specifiedAdvancePremiumTaxCredit).gt(month.advancePremiumTaxCredit)) throw new Error("Pub974 owner specified advances exceed the actual source advance.");
-      monthlyPremiums = monthlyPremiums.plus(month.specifiedPremium);
+      monthlyPremiums = sumSourceMoney(monthlyPremiums, month.specifiedPremium);
       if (month.sourcePremium.gt(0)) advances = advances.plus((month.specifiedAdvancePremiumTaxCredit ?? month.advancePremiumTaxCredit.times(month.specifiedPremium).div(month.sourcePremium)));
     }
     if (!monthlyPremiums.eq(premiums)) throw new Error("Pub974 owner monthly premiums do not reconcile their business source.");
     let credit = d(0);
-    let deduction = params.stage.kind === "worksheet-w" ? premiums.minus(advances) : premiums;
+    let deduction = params.stage.kind === "worksheet-w" ? sumSourceMoney(premiums, advances.negated()) : premiums;
     if (completed) {
       const row = completed.find(item => item.businessSourceId === group.businessSourceId);
       if (!row || row.accountHolder !== group.accountHolder) throw new Error("Pub974 completed business must match its actual owner.");
@@ -60,14 +61,14 @@ export function calculateMarketplaceOwnerDeductions(params: Params) {
       // Rounded Form8962 credit can exceed the exact source premium by cents;
       // preserve the recorded method's signed difference; the legacy path
       // retains its existing zero floor without changing originals.
-      const sourcePremium = group.creditAllocationMethod ? sum(...group.months.map(month => finite(month.creditAllocationPremium!))) : premiums;
-      const expected = group.creditAllocationMethod ? premiums.minus(credit) : zeroFloor(premiums.minus(credit));
+      const sourcePremium = group.creditAllocationMethod ? sumSourceMoney(...group.months.map(month => finite(month.creditAllocationPremium!))) : premiums;
+      const expected = group.creditAllocationMethod ? sumSourceMoney(premiums, credit.negated()) : zeroFloor(sumSourceMoney(premiums, credit.negated()));
       if (roundDollar(credit).gt(roundDollar(sourcePremium)) || !deduction.eq(expected)) throw new Error("Pub974 final owner net premiums do not reconcile the calculated credit.");
     }
     byBusiness.set(group.businessSourceId, { premiums, advances, credit, deduction });
   }
   const audit = new AuditTrail();
-  const hasHistoricalAdvances = params.taxYear === 2025 && sum(...[...byBusiness.values()].map(row => row.advances)).gt(0);
+  const hasHistoricalAdvances = params.taxYear === 2025 && sumSourceMoney(...[...byBusiness.values()].map(row => row.advances)).gt(0);
   const owners = (["primary", "spouse"] as const).map(accountHolder => {
     const groups = specified.filter(row => row.accountHolder === accountHolder);
     const records = groups.map(row => {
@@ -75,12 +76,12 @@ export function calculateMarketplaceOwnerDeductions(params: Params) {
       if (!record) throw new Error("Pub974 actual owner source is incomplete.");
       return record;
     });
-    const specifiedPremiums = sum(...records.map(row => row.premiums));
-    const remainingEarnedIncome = sum(...groups.map(row => row.remainingEarnedIncome));
+    const specifiedPremiums = sumSourceMoney(...records.map(row => row.premiums));
+    const remainingEarnedIncome = sumSourceMoney(...groups.map(row => row.remainingEarnedIncome));
     if (hasHistoricalAdvances && remainingEarnedIncome.lt(specifiedPremiums)) throw new Error("Pub974 binding owner earned-income limits with historical advances require the separate capped-repayment coordination method.");
-    const specifiedAdvances = sum(...records.map(row => row.advances));
-    const allocatedCredit = sum(...records.map(row => row.credit));
-    const specifiedDeduction = min(sum(...records.map(row => row.deduction)), zeroFloor(remainingEarnedIncome));
+    const specifiedAdvances = sumSourceMoney(...records.map(row => row.advances));
+    const allocatedCredit = sumSourceMoney(...records.map(row => row.credit));
+    const specifiedDeduction = min(sumSourceMoney(...records.map(row => row.deduction)), zeroFloor(remainingEarnedIncome));
     for (const [line, description, value, formula] of [
       ["premiums", "Actual owner specified premiums", specifiedPremiums, "Sum actual plan premiums bound to this owner"],
       ["earned-income", "Actual owner remaining earned income", remainingEarnedIncome, "Sum same-owner completed business limits; no spouse income transfer"],
@@ -91,7 +92,7 @@ export function calculateMarketplaceOwnerDeductions(params: Params) {
     ] as const) audit.record("Pub974 Owner Allocation", `${accountHolder}:${line}`, description, value, formula, { "Owner": accountHolder, "Stage": params.stage.kind });
     return { accountHolder, specifiedPremiums, remainingEarnedIncome, specifiedAdvances, allocatedCredit, specifiedDeduction };
   });
-  const specifiedDeduction = sum(...owners.map(row => row.specifiedDeduction));
+  const specifiedDeduction = sumSourceMoney(...owners.map(row => row.specifiedDeduction));
   if (params.specifiedDeduction !== undefined && !specifiedDeduction.eq(params.specifiedDeduction)) throw new Error("Pub974 combined deduction must reconcile actual owner limits; a binding repayment-cap deduction requires its separate owner attribution method.");
   return { owners, specifiedDeduction, lines: audit.getLines() };
 }

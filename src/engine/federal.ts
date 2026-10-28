@@ -40,6 +40,7 @@ import type {
 import type { TaxReturnResult } from "@/models/outputs.js";
 import { getConstants, type FilingStatus } from "@/models/constants.js";
 import { d, sum, zeroFloor, min, roundDollar } from "@/utils/decimal.js";
+import { sumSourceMoney } from "@/utils/sum-source-money.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { resolveForm2555Sources } from "./forms/form-2555-source-binding.js";
 import {
@@ -276,8 +277,8 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
       || !result.schedule1?.seHealthInsurance.eq(roundDollar(final.nonspecifiedDeduction))) throw new Error("Pub974 stopped deduction must reconcile its completed actual business claims.");
     for (const owner of ["primary", "spouse"] as const) {
       const actual = final.businesses.filter(row => row.accountHolder === owner);
-      const premiums = sum(...actual.map(row => row.specifiedPremiums), ...(result.form7206?.businesses ?? []).filter(row => row.accountHolder === owner).map(row => row.eligiblePremiums));
-      if (roundDollar(sum(...actual.map(row => row.nonspecifiedDeduction.plus(row.allocatedCredit)))).gt(roundDollar(premiums))) {
+      const premiums = sumSourceMoney(...actual.map(row => row.specifiedPremiums), ...(result.form7206?.businesses ?? []).filter(row => row.accountHolder === owner).map(row => row.eligiblePremiums));
+      if (roundDollar(sumSourceMoney(...actual.flatMap(row => [row.nonspecifiedDeduction, row.allocatedCredit]))).gt(roundDollar(premiums))) {
         throw new Error("Pub974 stopped deduction and credit exceed the actual owner's premium sources; separate coverage-family coordination is required.");
       }
     }
@@ -313,7 +314,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     orderedAmounts.push({ kind, amount });
     orderedAudit.record("Pub974 Ordered Deductions", kind, "Interim ordered deduction or exclusion", amount,
       "Actual next worksheet using preceding Step3 health; retained unless finalStep2 requires ordinary no-credit refiguring",
-      { "Preceding Step3 health": roundDollar(deduction.specifiedDeduction.plus(deduction.nonspecifiedDeduction)),
+      { "Preceding Step3 health": roundDollar(sumSourceMoney(deduction.specifiedDeduction, deduction.nonspecifiedDeduction)),
         "Auxiliary Step2 percentage": intermediate.credit.fplPercentageForTable,
         "Auxiliary actual household income": intermediate.credit.modifiedAGI });
     if (historicalLimit) historicalLimit = calculateMarketplaceHealthLimit({ taxYear: 2025, filingStatus: input.taxpayer.filingStatus,
@@ -339,14 +340,14 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   }
   const result = calculateFederalTaxWithNol(input, { stage: "final", deduction, ordered: ordinary ? undefined : ordered });
   if (ordinary && !reentered && kinds.length) orderedAudit.record("Pub974 Ordered Deductions", "ordinary-refigure", "Ordinary health deduction used to refigure all listed claims",
-    roundDollar(deduction.specifiedDeduction.plus(deduction.nonspecifiedDeduction)), "FinalStep2 ineligible: discard retained interim claims and recalculate ordinary source worksheets");
+    roundDollar(sumSourceMoney(deduction.specifiedDeduction, deduction.nonspecifiedDeduction)), "FinalStep2 ineligible: discard retained interim claims and recalculate ordinary source worksheets");
   if (!result.form8962 || result.form8962.orderedDeductionInterim) throw new Error("Pub974 final premium tax credit is incomplete.");
   if (ordinary && !reentered && result.form8962.taxpayerEligible) throw new Error("Pub974 ordinary-method eligibility changed after the actual refiguring calculation.");
   const finalAllocation = calculateMarketplaceHealthDeduction({ input, groups: intermediate.groups, credit: result.form8962, historicalLimit });
-  if (roundDollar(deduction.specifiedDeduction.plus(sum(...finalAllocation.businesses.map(row => row.allocatedCredit))))
-    .gt(roundDollar(sum(...deduction.businesses.map(row => row.specifiedPremiums))))) throw new Error("Pub974 final deduction plus actual allocated credit exceeds source premiums.");
+  if (roundDollar(sumSourceMoney(deduction.specifiedDeduction, ...finalAllocation.businesses.map(row => row.allocatedCredit)))
+    .gt(roundDollar(sumSourceMoney(...deduction.businesses.map(row => row.specifiedPremiums))))) throw new Error("Pub974 final deduction plus actual allocated credit exceeds source premiums.");
   result.marketplaceHealthInsurance = { ...deduction, step2Credit: intermediate.credit.ptcAllowed, finalCredit: result.form8962.ptcAllowed,
-    maximumDeduction: deduction.maximumSpecifiedDeduction.plus(deduction.nonspecifiedDeduction) };
+    maximumDeduction: sumSourceMoney(deduction.maximumSpecifiedDeduction, deduction.nonspecifiedDeduction) };
   result.allLines.push(...(historicalLimit?.lines ?? []), ...(reentered ? [] : orderedAudit.getLines()), ...deduction.lines);
   return result;
 }

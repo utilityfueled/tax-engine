@@ -1,7 +1,7 @@
 /** Signed Pub974 W15. Spec: spec/federal/marketplace-health-negative-limit.yaml. */
 import type { MarketplaceHealthPremiumGroup } from "./marketplace-health-premiums.js";
 import { calculateMarketplaceNonspecifiedStop } from "./marketplace-nonspecified-stop.js";
-import { sum } from "@/utils/decimal.js";
+import { sumSourceMoney } from "@/utils/sum-source-money.js";
 
 /** Derived canonical sources only; never a current deduction or owner override. */
 export function calculateMarketplaceNegativeLimit(groups: MarketplaceHealthPremiumGroup[]) {
@@ -9,9 +9,9 @@ export function calculateMarketplaceNegativeLimit(groups: MarketplaceHealthPremi
   if (calculateMarketplaceNonspecifiedStop(groups)) return undefined;
   const specified = groups.filter(group => group.months.length > 0 && group.includedInEarnedIncomeLimit !== false);
   if (!specified.some(group => group.specifiedPremiums.gt(0))) return undefined;
-  const specifiedBusinessIncome = sum(...specified.map(group => group.remainingEarnedIncome.plus(group.nonspecifiedDeduction)));
-  const nonspecifiedDeduction = sum(...groups.map(group => group.nonspecifiedDeduction));
-  const remainingEarnedIncome = specifiedBusinessIncome.minus(nonspecifiedDeduction);
+  const specifiedBusinessIncome = sumSourceMoney(...specified.map(group => sumSourceMoney(group.remainingEarnedIncome, group.nonspecifiedDeduction)));
+  const nonspecifiedDeduction = sumSourceMoney(...groups.map(group => group.nonspecifiedDeduction));
+  const remainingEarnedIncome = sumSourceMoney(specifiedBusinessIncome, nonspecifiedDeduction.negated());
   if (remainingEarnedIncome.gte(0)) return undefined;
   const contributing = groups.filter(group => specified.includes(group) || group.nonspecifiedDeduction.gt(0));
   const owners = new Set(contributing.map(group => group.accountHolder));

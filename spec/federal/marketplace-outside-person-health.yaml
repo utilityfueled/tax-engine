@@ -3,6 +3,10 @@ fullName: "Actual nonspecified cash remains separate from Form8962 family alloca
 taxYear: 2025
 irsReference: "https://www.irs.gov/irb/2014-33_IRB"
 notes: |
+  This entry retains the original zero-outside-advance/zero-other-credit cohort.
+  The separate complete positive-credit/advance cash method is specified in
+  marketplace-other-return-cash.yaml. Missing completed other-return/cash source
+  records still reject; neither advances nor an agreement establishes cash.
   Refreshed 2026-10-26: IRC162(l)(1), 26CFR1.162(l)-1(a), RevProc2014-41
   sections3-4 and section7 Example3, final2025 i7206, and Pub974 WorksheetP,
   Nonspecified Premiums and Plan covering individuals in another tax family.
@@ -60,7 +64,7 @@ lines:
     testRef: "tests/guided-interview/guided-marketplace-outside-person.test.ts::reaches actual outside child sources without overriding the family calculation"
   - line: "own-limits"
     description: "Actual employer eligibility and each own business limit still apply"
-    formula: "Actual cash6600 remains source cash when employer eligibility makes the health deduction0. With primary business5000 and spouse wages300000, the primary earned-income limit is4646, not the spouse's wages. Positive actual outside-child advances require their separate payment method."
+    formula: "Actual cash6600 remains source cash when employer eligibility makes the health deduction0. With primary business5000 and spouse wages300000, the primary earned-income limit is4646, not the spouse's wages. Positive actual outside-child advances without a completed linked other return and complete cash trace reject at that missing-source boundary."
     testRef: "tests/engine/federal-marketplace-outside-person.test.ts::preserves own business and employer limits without treating outside advances as cash"
   - line: "ordinary-controls"
     description: "The full interview reaches original outside-person qualification"

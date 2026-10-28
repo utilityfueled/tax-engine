@@ -2,7 +2,7 @@
 import type Decimal from 'decimal.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import type { CalculatedLine, TaxReturnResult } from '@/models/outputs.js';
-import { d, sum, roundDollar } from '@/utils/decimal.js';
+import { sum, roundDollar } from '@/utils/decimal.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { calculateMarketplaceCoverageFamilySources } from './marketplace-coverage-family-sources.js';
 import { calculateMarketplaceCoverageFamilyHealth } from './marketplace-coverage-family-health.js';
@@ -33,7 +33,7 @@ export function calculateMarketplaceActualCashSources(input: SharedMarketplaceHe
     return { planId: row.planId, month: row.month, taxFamilyPremium: row.taxFamilyPremium,
       specifiedPremium: row.specifiedPremium, nonspecifiedPremium: row.nonspecifiedPremium,
       actualSpecifiedCash: actual.ownCoverageCash, actualNonspecifiedCash: actual.ownNoncoverageCash,
-      actualOutsideCash: actual.outsideCash, outsidePremiumPool: row.outsidePremiumPool };
+      actualOutsideCash: actual.outsideNetCash, outsidePremiumPool: row.outsidePremiumPool };
   });
   if (!allocations.some(row => {
     const actual = families.find(plan => plan.planId === row.planId)!.months.find(month => month.month === row.month)!;
@@ -41,10 +41,8 @@ export function calculateMarketplaceActualCashSources(input: SharedMarketplaceHe
   })) return undefined;
   const plans = input.form7206!.plans!.filter(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
   if (plans.some(plan => !families.some(source => source.planId === plan.planId))) throw new Error('Actual cash health needs complete monthly coverage-family and payment sources for every actual Marketplace plan.');
-  for (const policy of input.form1095A) for (const row of policy.monthlyPremiums) {
-    if (row.advancePremiumTaxCredit === undefined || !/^\d+(?:\.\d+)?$/.test(row.advancePremiumTaxCredit)
-      || !d(row.advancePremiumTaxCredit).isFinite() || !d(row.advancePremiumTaxCredit).isZero()) throw new Error('Actual cash health requires known zero original advances; positive advances require their separate payment method.');
-  }
+  if (new Set(families.flatMap(plan => plan.policyIndexes)).size !== input.form1095A.length
+    || families.some(plan => plan.months.some(row => !row.ownAdvance.isZero()))) throw new Error('Actual cash health requires complete original policies and known zero own-return advances; outside advances retain their independent cash proof.');
   for (const row of months) if (row.actualSpecifiedCash.gt(row.specifiedPremium) || row.actualNonspecifiedCash.gt(row.nonspecifiedPremium)) throw new Error('Actual cash component exceeds its independently allocated premium pool.');
   calculateSharedMarketplaceHealthSources(input);
   return months;
@@ -82,7 +80,7 @@ export function calculateMarketplaceActualCashHealth(input: TaxYearInput, result
       'Original cash only; each person separately qualifies under Form7206 before business limits', { 'Plan': row.planId, 'Month': String(row.month), 'Outside premium pool': row.outsidePremiumPool });
   }
   audit.record('Marketplace Actual Cash', '24', 'Actual final premium tax credit', credit.ptcAllowed, 'Completed actual ordinary deduction; no entered credit or hypothetical income');
-  audit.record('Marketplace Actual Cash', '29', 'Actual advance repayment', credit.excessAPTCRepayment, 'All original advances explicitly zero');
+  audit.record('Marketplace Actual Cash', '29', 'Actual advance repayment', credit.excessAPTCRepayment, 'All advances attributable to this return explicitly zero; outside advances remain separate');
   audit.record('Marketplace Actual Cash', '17', 'Actual Schedule1 health deduction', deduction, 'Actual qualified cash subject to each own-business limit; one transfer');
   return { method: 'ordinary-actual-cash-zero-credit', months, finalCredit: credit.ptcAllowed, finalRepayment: credit.excessAPTCRepayment, deduction, businesses, lines: audit.getLines() };
 }

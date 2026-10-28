@@ -3,6 +3,7 @@
 import { calculateMarketplaceCoverageFamilySources, type MarketplaceCoverageFamilyInput } from './marketplace-coverage-family-sources.js';
 import { calculateForm8962SharedPolicy } from './form-8962-shared-policy.js';
 import { d, sum } from '@/utils/decimal.js';
+import { sumSourceMoney } from '@/utils/sum-source-money.js';
 
 export function calculateMarketplaceCoverageFamilyHealth(input: MarketplaceCoverageFamilyInput, mode?: "full-repayment-candidate" | "actual-cash-candidate" | "actual-paid-candidate" | "source-only") {
   const sources = calculateMarketplaceCoverageFamilySources(input);
@@ -18,16 +19,16 @@ export function calculateMarketplaceCoverageFamilyHealth(input: MarketplaceCover
     if (outsidePremiumPool.lt(0) || row.outsideCash.plus(row.outsideAdvance).gt(outsidePremiumPool)) throw new Error('Actual outside-person cash and advances exceed their independently allocated outside premium pool.');
     const cashDiffers = !taxFamilyPremium.eq(row.ownCash.plus(row.ownAdvance));
     if (!advancePremiumTaxCredit.eq(row.ownAdvance) || (cashDiffers && mode !== 'actual-paid-candidate' && (mode !== 'actual-cash-candidate' && mode !== 'source-only'
-      || !row.sourceAdvance.isZero() || !row.ownAdvance.isZero()))) throw new Error('Coverage-family actual paid shares must reconcile the independently allocated tax-family policy amounts.');
+      || !row.ownAdvance.isZero()))) throw new Error('Coverage-family actual paid shares must reconcile the independently allocated tax-family policy amounts.');
     const denominator = row.coverageFamilySlcsp.plus(row.nonCoverageFamilySlcsp);
     if (denominator.lte(0) && !taxFamilyPremium.isZero()) throw new Error('Coverage-family positive premiums require actual applicable benchmark sources.');
     const specifiedPremium = !row.coveragePersonIds.length || denominator.isZero() ? d(0) : taxFamilyPremium.times(row.coverageFamilySlcsp).div(denominator);
-    const nonspecifiedPremium = taxFamilyPremium.minus(specifiedPremium);
+    const nonspecifiedPremium = sumSourceMoney(taxFamilyPremium, specifiedPremium.negated());
     if (cashDiffers && (row.ownCoverageCash.gt(specifiedPremium) || row.ownNoncoverageCash.gt(nonspecifiedPremium))) throw new Error('Actual cash component exceeds its independently allocated premium pool; a separate paid-share method is required.');
     return { planId: plan.planId, policyIndexes: plan.policyIndexes, month: row.month, taxFamilyPremium, advancePremiumTaxCredit,
       coverageFamilySlcsp: row.coverageFamilySlcsp, nonCoverageFamilySlcsp: row.nonCoverageFamilySlcsp,
       coveragePersonIds: row.coveragePersonIds, nonCoveragePersonIds: row.nonCoveragePersonIds, outsidePersonIds: row.outsidePersonIds,
-      outsidePremiumPool, outsideCash: row.outsideCash, outsideAdvance: row.outsideAdvance,
+      outsidePremiumPool, outsideCash: row.outsideCash, outsideAdvance: row.outsideAdvance, outsideNetCash: row.outsideNetCash, outsideCashPayments: row.outsideCashPayments,
       specifiedPremium, nonspecifiedPremium };
   }));
 }

@@ -5,6 +5,7 @@ import { captureCoverageFamilyHealthSources, emptyCoverageFamilyHealth, emptyCov
 import type { MarketplacePolicyOption } from '@/lib/guided-marketplace-health-facts';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
+import { OutsidePersonCashDetails } from './outside-person-cash-details';
 
 function PersonChoice({ label, value, people, onChange }: { label: string; value: string; people: readonly (readonly [string, string])[]; onChange: (value: string) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value} onChange={event => onChange(event.target.value)}>
@@ -51,7 +52,7 @@ export function CoverageFamilyHealthDetails({ prefix, data, people, sourceIds, p
       </div>;
     })}
     <button type="button" onClick={() => update({ persons: [...data.persons, { personId: '', coveredIndividualSsn: '' }] })}>{label}: Add person link</button>
-    <p className="guided-hint">If you paid for a child outside your tax family, retain the other claimant's completed Form 8962. Zero advance payments do not establish zero final credit. Enter the original result and policies; do not enter a proposed credit waiver.</p>
+    <p className="guided-hint">If you paid for a child outside your tax family, retain the other claimant's completed Form 8962. Zero advance payments do not establish zero final credit. Enter the original result and policies; do not enter a proposed credit waiver. When the other return has a credit or outside advances, also retain the complete insurer cash, reimbursement and other-return tax-payment records below.</p>
     {(data.outsidePersonReturns ?? []).map((record, index) => {
       const row = `${label} other return ${index + 1}`;
       const records = data.outsidePersonReturns ?? [];
@@ -77,6 +78,7 @@ export function CoverageFamilyHealthDetails({ prefix, data, people, sourceIds, p
           <button type="button" onClick={() => change({ policySourceIds: record.policySourceIds.filter((_, i) => i !== position) })}>{row} policy {position + 1}: Remove</button>
         </div>)}
         <button type="button" onClick={() => change({ policySourceIds: [...record.policySourceIds, ''] })}>{row}: Add original policy</button>
+        <OutsidePersonCashDetails prefix={`${row} cash`} data={record.cashPaymentSources} onChange={cashPaymentSources => change({ cashPaymentSources })} />
         <button type="button" onClick={() => update({ outsidePersonReturns: records.filter((_, position) => position !== index) })}>{row}: Remove other return</button>
       </fieldset>;
     })}

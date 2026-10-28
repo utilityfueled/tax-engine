@@ -1,5 +1,6 @@
 /** Actual 2025 Form7206 review mapping. Spec: spec/federal/form-7206-pdf.yaml. */
 import Decimal from "decimal.js";
+import { sumSourceMoney } from "@/utils/sum-source-money.js";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
@@ -64,7 +65,7 @@ function reconcileSources(input: TaxYearInput, result: NonNullable<TaxReturnResu
     if (matches.length !== 1 || source.planIds.join("\0") !== matches[0].planIds.join("\0")) throw new Error("Form7206 business source identity is missing or duplicated.");
     for (const key of ["medicalPremiums", "longTermCarePremiums", "eligiblePremiums", "specifiedPremiums"] as const) if (!source[key].eq(exact(matches[0][key], key))) throw new Error("Form7206 business premium sources disagree with the persisted calculation.");
   }
-  if (!sum(...result.businesses.map(group => exact(group.deduction, "business deduction"))).eq(exact(result.deduction, "total source deduction"))) throw new Error("Form7206 business deductions disagree with their calculated source total.");
+  if (!sumSourceMoney(...result.businesses.map(group => exact(group.deduction, "business deduction"))).eq(exact(result.deduction, "total source deduction"))) throw new Error("Form7206 business deductions disagree with their calculated source total.");
   const fresh = calculateForm7206ReviewSources(input, fullReturn);
   for (const source of fresh.physical.businesses) {
     const persisted = result.businesses.find(group => group.businessSourceId === source.businessSourceId && group.accountHolder === source.accountHolder);
@@ -170,7 +171,7 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
   }
   if (actualCash) {
     write('ACTUAL CASH WITH ZERO FINAL CREDIT');
-    write('The completed return has zero premium tax credit and all original advances are zero. Actual qualified owner/business cash enters this ordinary Form7206 subject to its own business income limit. Tax-family and coverage-family premium allocations remain separate from payment records.');
+    write('The completed return has zero premium tax credit and all advances attributable to this return are zero. Actual qualified owner/business cash enters this ordinary Form7206 subject to its own business income limit. Tax-family and coverage-family premium allocations remain separate from payment records. Other-return advances are not included in deductible insurer cash.');
     write(`Return-level actual final credit $${actualCash.finalCredit.toFixed()}; repayment $${actualCash.finalRepayment.toFixed()}; Schedule1 health deduction $${actualCash.deduction.toFixed()}. These shared return totals are not additional deductions and must not be added across business appendices.`);
     for (const row of actualCash.months) if (group.planIds.includes(row.planId)) write(`Plan ${row.planId}, month ${row.month}: actual coverage-family cash $${row.actualSpecifiedCash.toFixed()}; actual noncoverage-family cash $${row.actualNonspecifiedCash.toFixed()}; allocated tax-family premium $${row.taxFamilyPremium.toFixed()}; specified premium pool $${row.specifiedPremium.toFixed()}; nonspecified premium pool $${row.nonspecifiedPremium.toFixed()}.`);
   }
@@ -222,10 +223,23 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
       if (outsideMonths.length) {
         write("OUTSIDE-TAX-FAMILY CASH: actual owner/business cash for each outside person remains separate from this return's family premiums and credit. Only independently qualified cash enters nonspecified Form7206 premiums, subject to the actual business limit. Another family's advances or repayment are not treated as cash.");
         for (const record of plan.coverageFamilySources.outsidePersonReturns ?? []) {
-          if (!(calculation.sourceRecords ?? []).some(source => source.planId === plan.planId && source.personId === record.personId && source.eligiblePremium.gt(0))) continue;
+          const traced = outsideMonths.flatMap(row => row.outsideCashPayments).filter(payment => payment.personId === record.personId);
+          if (!traced.length && !(calculation.sourceRecords ?? []).some(source => source.planId === plan.planId && source.personId === record.personId && source.eligiblePremium.gt(0))) continue;
           write(`Completed other-return Form8962 line24 $${record.form8962Line24}; tax year ${record.sourceTaxYear}; claimant ${record.claimantName}; covered health person ${record.personId}; source ${record.sourceReference}; original policy links ${(record.policySourceIds ?? []).join(', ')}. Claimant identifier withheld from this review copy.`);
+          if (record.cashPaymentSources && traced.length) {
+            const cash = record.cashPaymentSources;
+            write(`Actual insurer cash source year ${cash.sourceTaxYear}; source ${cash.sourceReference}. These original records distinguish premium payments, reimbursements and other-return tax payments.`);
+            for (const payment of traced) {
+              write(`Outside insurer receipt ${payment.paymentSourceId}; person ${payment.personId}; payer ${payment.payer}; date ${payment.datePaid}; source ${payment.sourceReference}; gross insurer cash $${payment.grossCash.toFixed()}; actual reimbursements $${payment.reimbursements.toFixed()}; net insurer cash $${payment.netCash.toFixed()}. Actual person and month qualification and business limits are applied separately.`);
+              const original = cash.premiumPayments?.find(row => row.paymentSourceId?.trim() === payment.paymentSourceId && row.payer === payment.payer);
+              if (!original?.reimbursements?.length) write(`Receipt ${payment.paymentSourceId}: actual reimbursement history is known empty.`);
+              for (const refund of original?.reimbursements ?? []) write(`Actual reimbursement ${refund.sourceId}; received ${refund.dateReceived}; amount $${refund.amount}; source ${refund.sourceReference}; original insurer receipt ${payment.paymentSourceId}.`);
+            }
+            if (!cash.otherReturnTaxPayments?.length) write('Actual other-return tax-payment history is known empty. Other-return tax payments are not included in deductible insurer cash.');
+            for (const payment of cash.otherReturnTaxPayments ?? []) write(`Other-return tax payment ${payment.sourceId}; date ${payment.datePaid}; amount $${payment.amount}; source ${payment.sourceReference}; not included in deductible insurer cash.`);
+          }
         }
-        for (const row of outsideMonths) write(`Outside-person month ${row.month}: outside-person cash $${row.outsideCash.toFixed()}; outside premium pool $${row.outsidePremiumPool.toFixed()}; original outside advances $${row.outsideAdvance.toFixed()}.`);
+        for (const row of outsideMonths) write(`Outside-person month ${row.month}: outside-person cash $${row.outsideCash.toFixed()} (gross original paid); net insurer cash after actual reimbursements $${row.outsideNetCash.toFixed()}; outside premium pool $${row.outsidePremiumPool.toFixed()}; original outside advances $${row.outsideAdvance.toFixed()}.`);
       }
     }
     for (const month of plan.months ?? []) {

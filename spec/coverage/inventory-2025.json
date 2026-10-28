@@ -6958,6 +6958,51 @@
       ]
     },
     {
+      "key": "federal/marketplace-other-return-cash",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/irb/2017-33_IRB",
+      "specPath": "spec/federal/marketplace-other-return-cash.yaml",
+      "enginePath": "src/engine/forms/marketplace-outside-cash-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-marketplace-other-return-cash.test.ts::retains actual outside cash independently of the other taxpayers positive credit",
+        "tests/engine/federal-marketplace-other-return-cash-precision.test.ts::preserves exact outside net cash through ordinary worksheet coordination",
+        "tests/pdf/marketplace-other-return-cash-review.test.ts::rounds physical nonspecified fields from exact annual source ratios"
+      ],
+      "implementationNote": "Original insurer receipts, reimbursements and independent completed other-return sources bind the canonical health path and private2025 review. Exact aggregation uses src/utils/sum-source-money.ts and src/utils/sum-source-money-ratios.ts before existing report boundaries. The linked precision and physical regressions retain both half-minus-tail and exact-half outcomes. No final2026 form, filing, staging or independent human qualification is established.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/marketplace-outside-cash-sources",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/marketplace-outside-cash-sources.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/marketplace-outside-person-health",
       "jurisdiction": "federal",
       "taxYear": 2025,

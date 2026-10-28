@@ -3,6 +3,7 @@ import Decimal from 'decimal.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import type { CalculatedLine, TaxReturnResult } from '@/models/outputs.js';
 import { d, sum, roundDollar } from '@/utils/decimal.js';
+import { sumSourceMoney } from '@/utils/sum-source-money.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { calculateMarketplaceMarriageHealth } from './marketplace-marriage-health.js';
 import { calculateForm7206 } from './form-7206.js';
@@ -43,15 +44,15 @@ export function calculateMarketplaceActualPaidRepayment(input: TaxYearInput, res
   let reportedPayment: MarketplaceActualPaidAdjustment | undefined;
   if (!reportedAdvances.eq(sources.exactSourceAdvances)) {
     const business = original.businesses[0];
-    const actualCash = sum(...sources.months.map(row => row.actualSpecifiedCash.plus(row.actualNonspecifiedCash).plus(row.actualOutsideCash)));
-    const originalEligiblePremiums = actualCash.plus(sources.exactSourceAdvances);
+    const actualCash = sumSourceMoney(...sources.months.flatMap(row => [row.actualSpecifiedCash, row.actualNonspecifiedCash, row.actualOutsideCash]));
+    const originalEligiblePremiums = sumSourceMoney(actualCash, sources.exactSourceAdvances);
     if (input.form7206!.plans!.length !== 1 || original.businesses.length !== 1 || !business
       || !business.longTermCarePremiums.isZero() || !business.eligiblePremiums.eq(originalEligiblePremiums)) {
       throw new Error('Reported actual payment cents require a single fully eligible owner/business cost pool.');
     }
     reportedPayment = { accountHolder: business.accountHolder, businessSourceId: business.businessSourceId, reportingMethod: credit.calculationMethod,
       originalEligiblePremiums, actualCash, exactSourceAdvances: sources.exactSourceAdvances, reportedAdvances,
-      eligiblePremiums: Decimal.min(originalEligiblePremiums, actualCash.plus(reportedAdvances)) };
+      eligiblePremiums: Decimal.min(originalEligiblePremiums, sumSourceMoney(actualCash, reportedAdvances)) };
   }
   let deduction: Decimal | undefined;
   if (stage === 'final') {

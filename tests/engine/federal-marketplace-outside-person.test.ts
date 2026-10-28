@@ -87,7 +87,7 @@ describe('actual outside-tax-family Marketplace health payments', () => {
     const advances = sharedCoverageFamilyHealthInput().input;
     advances.form7206!.persons!.find(person => person.personId === 'outside')!.attainedAgeAtYearEnd = 26;
     advances.form7206!.plans![0].coveredPersons!.find(person => person.personId === 'outside')!.relationshipToOwner = 'child_under_27';
-    expect(() => calculateFederalTax(advances)).toThrow(/outside child advances.*separate/i);
+    expect(() => calculateFederalTax(advances)).toThrow(/outside child return sources.*completed other-return Form8962/i);
   });
   it('requires the completed other return independently of zero advances', () => {
     for (const kind of ['missing', 'unknown-credit', 'positive-credit', 'draft'] as const) {

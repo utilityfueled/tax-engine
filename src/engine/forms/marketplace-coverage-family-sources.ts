@@ -3,6 +3,8 @@
 import type Decimal from 'decimal.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import { d, sum } from '@/utils/decimal.js';
+import { sumSourceMoney } from '@/utils/sum-source-money.js';
+import { calculateMarketplaceOutsideCashSources, type MarketplaceOutsideCashPayment } from './marketplace-outside-cash-sources.js';
 
 type Person = Pick<TaxYearInput['taxpayer']['primary'], 'firstName' | 'lastName' | 'ssn'>;
 export type MarketplaceCoverageFamilyInput = Pick<TaxYearInput, 'form7206' | 'form1095A' | 'form8962'> & {
@@ -11,7 +13,7 @@ export type MarketplaceCoverageFamilyInput = Pick<TaxYearInput, 'form7206' | 'fo
 export interface MarketplaceCoverageFamilyMonth {
   month: number; coverageFamilySlcsp: Decimal; nonCoverageFamilySlcsp: Decimal;
   coveragePersonIds: string[]; nonCoveragePersonIds: string[]; outsidePersonIds: string[]; coverageSsns: string[]; nonCoverageSsns: string[];
-  sourcePremium: Decimal; sourceAdvance: Decimal; ownCash: Decimal; ownCoverageCash: Decimal; ownNoncoverageCash: Decimal; ownAdvance: Decimal; ownNoncoverageAdvance: Decimal; outsideCash: Decimal; outsideAdvance: Decimal;
+  sourcePremium: Decimal; sourceAdvance: Decimal; ownCash: Decimal; ownCoverageCash: Decimal; ownNoncoverageCash: Decimal; ownAdvance: Decimal; ownNoncoverageAdvance: Decimal; outsideCash: Decimal; outsideAdvance: Decimal; outsideNetCash: Decimal; outsideCashPayments: MarketplaceOutsideCashPayment[];
 }
 export interface MarketplaceCoverageFamilyPlan {
   planId: string; policyIndexes: number[]; months: MarketplaceCoverageFamilyMonth[];
@@ -56,7 +58,7 @@ function original(value: NonNullable<Original>[number]['original'], year: number
  * and Reg1.36B-3(c)(3) also cover premiums paid by another person. */
 type HealthPlan = NonNullable<NonNullable<TaxYearInput['form7206']>['plans']>[number];
 function validateOutsideReturn(input: MarketplaceCoverageFamilyInput, plan: HealthPlan,
-  personId: string, identity: string): void {
+  personId: string, identity: string): MarketplaceOutsideCashPayment[] | undefined {
   const packet = plan.coverageFamilySources!;
   const records = packet.outsidePersonReturns?.filter(row => row.personId?.trim() === personId);
   if (records?.length !== 1) throw new Error('Outside child return sources require one actual completed other-return Form8962 record.');
@@ -64,7 +66,7 @@ function validateOutsideReturn(input: MarketplaceCoverageFamilyInput, plan: Heal
   if (row.sourceTaxYear !== input.taxpayer.taxYear || row.returnStatus !== 'completed' || row.allPoliciesIncludedConfirmed !== true
     || !row.sourceReference?.trim() || !row.claimantName?.trim() || !row.claimantSsn?.trim()) throw new Error('Outside child return requires actual completed year, claimant, reference and complete policy sources.');
   if (row.form8962Line24 === undefined || !/^\d+(?:\.\d+)?$/.test(row.form8962Line24) || !d(row.form8962Line24).isFinite()
-    || !d(row.form8962Line24).isZero()) throw new Error('Outside child return credit must be an explicit actual zero on completed Form8962 line24; positive or unknown credit needs its separate method.');
+    ) throw new Error('Outside child return credit requires the actual completed nonnegative Form8962 line24; unknown credit is not zero.');
   const expected = packet.policies!.filter(policy => policy.original!.coveredIndividuals!.some(person => ssn(person.ssn) === identity)).map(policy => policy.sourceId!).sort();
   const actual = row.policySourceIds?.map(value => value.trim()).sort();
   if (!actual || new Set(actual).size !== actual.length || JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error('Outside child return policy links must include every actual original policy for that covered person.');
@@ -74,6 +76,7 @@ function validateOutsideReturn(input: MarketplaceCoverageFamilyInput, plan: Heal
       || name(source.otherTaxpayerName) !== name(row.claimantName)
       || source.coveredFamilyAssignments?.find(member => ssn(member.ssn) === identity)?.family !== 'other_return') throw new Error('Outside child return claimant and covered person must match the actual original shared-policy sources.');
   }
+  return calculateMarketplaceOutsideCashSources(plan, personId, row, input.taxpayer.taxYear);
 }
 function sameMembers(actual: string[] | undefined, expected: string[], label: string) {
   if (!actual) throw new Error(`Coverage-family ${label} member sources are unknown.`);
@@ -141,7 +144,7 @@ export function calculateMarketplaceCoverageFamilySources(input: MarketplaceCove
     if (packet.months?.length !== sourceMonths.size) throw new Error('Coverage-family source needs actual evidence for every original policy month.');
     const outsideReturnIds = packet.outsidePersonReturns?.map(row => text(row.personId, 'outside return person ID')) ?? [];
     if (new Set(outsideReturnIds).size !== outsideReturnIds.length || outsideReturnIds.some(id => !linked.has(id) || linked.get(id)!.own)) throw new Error('Outside child return person sources are duplicated or not an original outside person.');
-    const validatedOutsideReturns = new Set<string>();
+    const validatedOutsideReturns = new Map<string, MarketplaceOutsideCashPayment[] | undefined>();
     const seenMonths = new Set<number>();
     const months = packet.months.map(row => {
       const m = month(row.month), originalMonth = sourceMonths.get(m);
@@ -168,7 +171,8 @@ export function calculateMarketplaceCoverageFamilySources(input: MarketplaceCove
       if (nonCoverageSsns.length ? nonCoverageFamilySlcsp.lte(0) : !nonCoverageFamilySlcsp.isZero()) throw new Error('Coverage-family actual benchmark amount conflicts with its empty or nonempty person group.');
       const receipts = plan.payments?.filter(payment => payment.coverageMonth === m);
       if (!receipts?.length) throw new Error('Coverage-family source needs actual monthly premium receipts.');
-      let fullPremium = d(0), fullAdvance = d(0), ownCash = d(0), ownCoverageCash = d(0), ownNoncoverageCash = d(0), ownAdvance = d(0), ownNoncoverageAdvance = d(0), outsideCash = d(0), outsideAdvance = d(0);
+      let fullPremium = d(0), fullAdvance = d(0), ownCash = d(0), ownCoverageCash = d(0), ownNoncoverageCash = d(0), ownAdvance = d(0), ownNoncoverageAdvance = d(0), outsideCash = d(0), outsideAdvance = d(0), outsideNetCash = d(0);
+      const outsideCashPayments: MarketplaceOutsideCashPayment[] = [];
       const paidPeople = new Set<string>();
       for (const receipt of receipts) {
         if (receipt.coverageTaxYear !== year || !receipt.personAmounts) throw new Error('Coverage-family payment source year or person allocations are incomplete.');
@@ -185,13 +189,16 @@ export function calculateMarketplaceCoverageFamilySources(input: MarketplaceCove
           paymentPeople.add(payer); paidPeople.add(id);
           if (!amount(allocation.excludedPublicSafetyOfficerAmount).isZero() || !amount(allocation.otherTaxFreeFunding).isZero()) throw new Error('Coverage-family separate tax-free premium funding needs its actual method.');
           if (!person.own) {
-            // Actual child cash is nonspecified under Rev. Proc. 2014-41 section4.
-            // No other family's advance or repayment is treated as this owner's cash.
-            if (person.eligibleOutsideChild && !credit.isZero()) throw new Error('Outside child advances require their separate actual payment and repayment method.');
-            if (person.eligibleOutsideChild && paid.gt(0) && !validatedOutsideReturns.has(id)) {
-              validateOutsideReturn(input, plan, id, person.ssn); validatedOutsideReturns.add(id);
+            // The other taxpayer's credit is not this owner's credit. The
+            // complete source trace admits only actual net insurer cash.
+            const suppliedCash = packet.outsidePersonReturns?.find(row => row.personId?.trim() === id)?.cashPaymentSources !== undefined;
+            if (person.eligibleOutsideChild && (paid.gt(0) || credit.gt(0) || suppliedCash) && !validatedOutsideReturns.has(id)) {
+              validatedOutsideReturns.set(id, validateOutsideReturn(input, plan, id, person.ssn));
             }
+            const traced = validatedOutsideReturns.get(id)?.find(row => row.paymentSourceId === receipt.sourceId?.trim() && row.payer === allocation.payer);
+            if (traced) outsideCashPayments.push(traced);
             outsideCash = outsideCash.plus(paid); outsideAdvance = outsideAdvance.plus(credit);
+            outsideNetCash = sumSourceMoney(outsideNetCash, traced?.netCash ?? paid);
           }
           // Positive advances are actual facts. Their deduction method is checked
           // separately, after preserving exact person and original-policy sources.
@@ -207,7 +214,7 @@ export function calculateMarketplaceCoverageFamilySources(input: MarketplaceCove
       }
       if (!fullPremium.eq(originalMonth.premium) || !fullAdvance.eq(originalMonth.advance) || [...linked].some(([id, person]) => person.months.has(m) && !paidPeople.has(id))) throw new Error('Coverage-family original premium/advance source or complete monthly people do not reconcile.');
       return { month: m, coverageFamilySlcsp, nonCoverageFamilySlcsp, coveragePersonIds, nonCoveragePersonIds, outsidePersonIds, coverageSsns, nonCoverageSsns,
-        sourcePremium: fullPremium, sourceAdvance: fullAdvance, ownCash, ownCoverageCash, ownNoncoverageCash, ownAdvance, ownNoncoverageAdvance, outsideCash, outsideAdvance };
+        sourcePremium: fullPremium, sourceAdvance: fullAdvance, ownCash, ownCoverageCash, ownNoncoverageCash, ownAdvance, ownNoncoverageAdvance, outsideCash, outsideAdvance, outsideNetCash, outsideCashPayments };
     }).sort((a,b) => a.month - b.month);
     const allOwnCovered = months.every(row => row.nonCoveragePersonIds.length === 0), outside = [...linked.values()].some(person => !person.own);
     if (plan.allCoveredPersonsInCoverageFamilyConfirmed !== (allOwnCovered && !outside)) throw new Error('Coverage-family plan answer contradicts actual original and monthly member sources.');

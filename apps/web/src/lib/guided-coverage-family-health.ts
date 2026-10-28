@@ -12,10 +12,25 @@ export interface CoverageFamilyHealthMonthData {
   coverageFamilyMemberSsns: string[]; nonCoverageFamilyMemberSsns: string[];
   allCoverageFamilyMembersIncludedConfirmed: boolean | null; allNonCoverageFamilyMembersIncludedConfirmed: boolean | null;
 }
+export interface OutsidePersonCashData {
+  sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null;
+  allPremiumPaymentsIncludedConfirmed: boolean | null; allOtherReturnTaxPaymentsIncludedConfirmed: boolean | null;
+  premiumPayments?: {
+    paymentSourceId: string; payer: '' | 'owner_after_tax' | 'business_paid_or_reimbursed';
+    datePaid: string; sourceReference: string; cashPaidToInsurer: string;
+    reimbursements?: { sourceId: string; dateReceived: string; amount: string; sourceReference: string }[];
+  }[];
+  otherReturnTaxPayments?: { sourceId: string; datePaid: string; amount: string; sourceReference: string }[];
+}
+export function emptyOutsidePersonCash(): OutsidePersonCashData {
+  return { sourceTaxYear: '', sourceReference: '', sourceFactsConfirmed: null,
+    allPremiumPaymentsIncludedConfirmed: null, allOtherReturnTaxPaymentsIncludedConfirmed: null };
+}
 export interface OutsidePersonReturnData {
   personId: string; sourceTaxYear: string; sourceReference: string; returnStatus: '' | 'draft' | 'completed';
   claimantName: string; claimantSsn: string; policySourceIds: string[]; allPoliciesIncludedConfirmed: boolean | null;
   form8962Line24: string;
+  cashPaymentSources?: OutsidePersonCashData;
 }
 export function emptyOutsidePersonReturn(): OutsidePersonReturnData {
   return { personId: '', sourceTaxYear: '', sourceReference: '', returnStatus: '', claimantName: '', claimantSsn: '',
@@ -55,10 +70,10 @@ function integer(value: string, label: string): number | undefined {
   if (!/^\d{1,4}$/.test(value.trim())) throw new Error(`Enter the actual whole number for ${label}.`);
   return Number(value);
 }
-function money(value: string): string | undefined {
+function money(value: string, label = 'Coverage-family benchmarks'): string | undefined {
   if (!value?.trim()) return undefined;
   const amount = parseGuidedCurrency(value);
-  if (!amount.isFinite() || amount.lt(0)) throw new Error('Coverage-family benchmarks must be actual finite nonnegative amounts.');
+  if (!amount.isFinite() || amount.lt(0)) throw new Error(`${label} must be actual finite nonnegative amounts.`);
   return amount.toFixed();
 }
 type Family = NonNullable<NonNullable<Form7206Input['plans']>[number]['coverageFamilySources']>;
@@ -75,6 +90,22 @@ export function buildCoverageFamilyHealthSources(data: CoverageFamilyHealthData 
       returnStatus: row.returnStatus || undefined, claimantName: row.claimantName.trim(), claimantSsn: row.claimantSsn.trim(),
       policySourceIds: row.policySourceIds.map(id => id.trim()), allPoliciesIncludedConfirmed: row.allPoliciesIncludedConfirmed ?? undefined,
       form8962Line24: money(row.form8962Line24),
+      cashPaymentSources: row.cashPaymentSources ? {
+        sourceTaxYear: integer(row.cashPaymentSources.sourceTaxYear, 'outside cash source year'),
+        sourceReference: row.cashPaymentSources.sourceReference.trim(), sourceFactsConfirmed: row.cashPaymentSources.sourceFactsConfirmed ?? undefined,
+        allPremiumPaymentsIncludedConfirmed: row.cashPaymentSources.allPremiumPaymentsIncludedConfirmed ?? undefined,
+        allOtherReturnTaxPaymentsIncludedConfirmed: row.cashPaymentSources.allOtherReturnTaxPaymentsIncludedConfirmed ?? undefined,
+        premiumPayments: row.cashPaymentSources.premiumPayments?.map(payment => ({
+          paymentSourceId: payment.paymentSourceId.trim(), payer: payment.payer || undefined,
+          datePaid: payment.datePaid.trim(), sourceReference: payment.sourceReference.trim(),
+          cashPaidToInsurer: money(payment.cashPaidToInsurer, 'Outside insurer cash payments'),
+          reimbursements: payment.reimbursements?.map(refund => ({ sourceId: refund.sourceId.trim(), dateReceived: refund.dateReceived.trim(),
+            amount: money(refund.amount, 'Actual reimbursements'), sourceReference: refund.sourceReference.trim() })),
+        })),
+        otherReturnTaxPayments: row.cashPaymentSources.otherReturnTaxPayments?.map(payment => ({
+          sourceId: payment.sourceId.trim(), datePaid: payment.datePaid.trim(), amount: money(payment.amount, 'Other-return tax payments'), sourceReference: payment.sourceReference.trim(),
+        })),
+      } : undefined,
     })),
     months: data.months.map(row => ({ month: integer(row.month, 'coverage-family month'), sourceReference: row.sourceReference.trim(),
       allCoveredPersonsIncludedConfirmed: row.allCoveredPersonsIncludedConfirmed ?? undefined,

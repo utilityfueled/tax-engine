@@ -4,6 +4,8 @@ import type { FilingStatus } from "@/models/inputs.js";
 import type { MarketplaceHealthPremiumGroup } from "./marketplace-health-premiums.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { d, min, zeroFloor } from "@/utils/decimal.js";
+import { sumSourceMoney } from "@/utils/sum-source-money.js";
+import { sumSourceMoneyRatios } from "@/utils/sum-source-money-ratios.js";
 import { calculateMarketplaceOwnerDeductions } from "./marketplace-health-owners.js";
 import { calculateMarketplaceNegativeLimit } from "./marketplace-health-negative-limit.js";
 
@@ -41,33 +43,32 @@ export function calculateMarketplaceHealthLimit(params: {
     seen.add(group.businessSourceId);
     for (const value of [group.specifiedPremiums,group.nonspecifiedDeduction]) if (!Decimal.isDecimal(value) || !value.isFinite() || value.lt(0)) throw new Error("Marketplace limit requires finite nonnegative source amounts.");
     if (!Decimal.isDecimal(group.remainingEarnedIncome) || !group.remainingEarnedIncome.isFinite()) throw new Error("Marketplace limit requires finite signed earned income.");
-    nonspecifiedDeduction = nonspecifiedDeduction.plus(group.nonspecifiedDeduction);
+    nonspecifiedDeduction = sumSourceMoney(nonspecifiedDeduction, group.nonspecifiedDeduction);
     if (!group.months.length || group.includedInEarnedIncomeLimit === false) {
       if (!group.specifiedPremiums.isZero()) throw new Error("Positive specified premiums require actual source months.");
-      separateBusinessNonspecifiedDeduction = separateBusinessNonspecifiedDeduction.plus(group.nonspecifiedDeduction);
+      separateBusinessNonspecifiedDeduction = sumSourceMoney(separateBusinessNonspecifiedDeduction, group.nonspecifiedDeduction);
       continue;
     }
-    specifiedBusinessNonspecifiedDeduction = specifiedBusinessNonspecifiedDeduction.plus(group.nonspecifiedDeduction);
+    specifiedBusinessNonspecifiedDeduction = sumSourceMoney(specifiedBusinessNonspecifiedDeduction, group.nonspecifiedDeduction);
     const months = new Set<number>();
-    let groupPremium = d(0);
+    const groupPremium = sumSourceMoneyRatios(group.months.flatMap(month => month.specifiedPremiumSources ?? [{ amount: month.specifiedPremium }]));
     for (const month of group.months) {
       if (!Number.isInteger(month.month) || month.month < 1 || month.month > 12 || months.has(month.month)) throw new Error("Duplicate or invalid Marketplace limit month.");
       months.add(month.month);
       for (const value of [month.specifiedPremium,month.sourcePremium,month.advancePremiumTaxCredit]) if (!Decimal.isDecimal(value) || !value.isFinite() || value.lt(0)) throw new Error("Marketplace limit requires finite actual monthly amounts.");
       if (month.specifiedPremium.gt(month.sourcePremium) || month.advancePremiumTaxCredit.gt(month.sourcePremium)) throw new Error("Marketplace specified premiums or advances exceed the actual enrollment source.");
       if (month.specifiedAdvancePremiumTaxCredit !== undefined && (!Decimal.isDecimal(month.specifiedAdvancePremiumTaxCredit) || !month.specifiedAdvancePremiumTaxCredit.isFinite() || month.specifiedAdvancePremiumTaxCredit.lt(0) || month.specifiedAdvancePremiumTaxCredit.gt(month.advancePremiumTaxCredit))) throw new Error("Marketplace specified advances must reconcile the actual original advance source.");
-      groupPremium = groupPremium.plus(month.specifiedPremium);
       if (month.sourcePremium.gt(0)) specifiedAdvances = specifiedAdvances.plus((month.specifiedAdvancePremiumTaxCredit ?? month.advancePremiumTaxCredit.times(month.specifiedPremium).div(month.sourcePremium)));
     }
     if (!groupPremium.eq(group.specifiedPremiums)) throw new Error("Marketplace monthly specified premiums must reconcile the business total.");
-    specifiedPremiums = specifiedPremiums.plus(groupPremium);
-    remainingEarnedIncome = remainingEarnedIncome.plus(group.remainingEarnedIncome);
+    specifiedPremiums = sumSourceMoney(specifiedPremiums, groupPremium);
+    remainingEarnedIncome = sumSourceMoney(remainingEarnedIncome, group.remainingEarnedIncome);
   }
   if (!specified.length && !params.groups.every(group => group.creditAllocationMethod && group.specifiedPremiums.isZero() && group.nonspecifiedDeduction.isZero())) throw new Error("Marketplace limit requires actual specified-plan sources.");
   // Group remaining income already subtracts that business's nonspecified
   // claim. W13 must restore only those claims, never another business's income.
-  const specifiedBusinessEarnedIncome = remainingEarnedIncome.plus(specifiedBusinessNonspecifiedDeduction);
-  remainingEarnedIncome = remainingEarnedIncome.minus(separateBusinessNonspecifiedDeduction);
+  const specifiedBusinessEarnedIncome = sumSourceMoney(remainingEarnedIncome, specifiedBusinessNonspecifiedDeduction);
+  remainingEarnedIncome = sumSourceMoney(remainingEarnedIncome, separateBusinessNonspecifiedDeduction.negated());
   const multipleOwners = new Set(specified.map(row => row.accountHolder)).size > 1;
   const negativeLimit = calculateMarketplaceNegativeLimit(params.groups);
   if (separateBusinessNonspecifiedDeduction.gt(0)) {
@@ -76,11 +77,11 @@ export function calculateMarketplaceHealthLimit(params: {
     audit.record("Pub974 Separate Business Sources", "outside-nonspecified", "Nonspecified deductions from separate businesses", separateBusinessNonspecifiedDeduction, "Actual separate Form7206 deductions; include in W14 once without adding these businesses' earnings to W13");
   }
   const earnedLimit = negativeLimit?.remainingEarnedIncome ?? zeroFloor(remainingEarnedIncome);
-  const taxpayerPaidSpecifiedPremiums = specifiedPremiums.minus(specifiedAdvances);
+  const taxpayerPaidSpecifiedPremiums = sumSourceMoney(specifiedPremiums, specifiedAdvances.negated());
   const preliminarySpecifiedDeduction = multipleOwners
     ? calculateMarketplaceOwnerDeductions({ taxYear: params.taxYear, filingStatus: params.filingStatus, groups: params.groups, stage: { kind: "worksheet-w" } }).specifiedDeduction
     : min(taxpayerPaidSpecifiedPremiums, earnedLimit);
-  const remainingAfterW = earnedLimit.minus(preliminarySpecifiedDeduction);
+  const remainingAfterW = sumSourceMoney(earnedLimit, preliminarySpecifiedDeduction.negated());
   for (const [line,label,value,formula] of [
     ["1","Specified premiums",specifiedPremiums,"Actual source total"],
     ["2","Advances attributable to specified premiums",specifiedAdvances,params.groups.some(group => group.months.some(month => month.specifiedAdvancePremiumTaxCredit !== undefined)) ? "Sum independently attributed actual source advances; no coverage-family benchmark ratio" : "Actual monthly advance times specified enrollment share"],
@@ -89,7 +90,7 @@ export function calculateMarketplaceHealthLimit(params: {
     ["14","Nonspecified health deduction",nonspecifiedDeduction,"Actual completed nonspecified worksheets"],
     ["15","Remaining combined earned income",remainingEarnedIncome,"Line13-line14"],
     ["16","Initial specified deduction",preliminarySpecifiedDeduction,negativeLimit ? "min(line3,signed line15); combine with actual line14 before claiming a deduction" : multipleOwners ? "Sum each owner's min(actual net premiums, nonnegative same-owner line15); no spouse income transfer" : "min(line3,nonnegative line15)"],
-    ["17","Initial total health deduction",nonspecifiedDeduction.plus(preliminarySpecifiedDeduction),"Line14+line16"],
+    ["17","Initial total health deduction",sumSourceMoney(nonspecifiedDeduction, preliminarySpecifiedDeduction),"Line14+line16"],
   ] as const) audit.record("Pub974 Worksheet W",line,label,value,formula);
   const requiresWorksheetX = specifiedAdvances.gt(0);
   const worksheetXCompleted = requiresWorksheetX && params.stage !== "w";
@@ -121,7 +122,7 @@ export function calculateMarketplaceHealthLimit(params: {
       return specifiedAdvances;
     };
     repaymentLimit = testTiers(income, "Pub974 Worksheet X", false);
-    const beforePremiumLimit = preliminarySpecifiedDeduction.plus(repaymentLimit);
+    const beforePremiumLimit = sumSourceMoney(preliminarySpecifiedDeduction, repaymentLimit);
     const premiumLimit = min(beforePremiumLimit,specifiedPremiums);
     maximumSpecifiedDeduction = min(premiumLimit,earnedLimit);
     for (const [line,label,value,formula] of [
@@ -131,7 +132,7 @@ export function calculateMarketplaceHealthLimit(params: {
       ["28","Premium-limited maximum",premiumLimit,"min(line26,line27)"],
       ["29","Remaining earned income",remainingEarnedIncome,"WorksheetW15"],
       ["30","Maximum specified deduction",maximumSpecifiedDeduction,negativeLimit ? "min(line28,signed line29)" : "min(line28,nonnegative line29)"],
-      ["31","Maximum total health deduction",maximumSpecifiedDeduction.plus(nonspecifiedDeduction),"Line5+line30"],
+      ["31","Maximum total health deduction",sumSourceMoney(maximumSpecifiedDeduction, nonspecifiedDeduction),"Line5+line30"],
     ] as const) audit.record("Pub974 Worksheet X",line,label,value,formula);
     let revisedIncome = income;
     orderedDeductions.forEach((deduction, index) => {
@@ -143,7 +144,7 @@ export function calculateMarketplaceHealthLimit(params: {
       audit.record(form, "3", "Revised household income", revisedIncome, "Line1-line2");
       audit.record(form, "6", "Actual federal poverty line", poverty, "WorksheetX17b");
       repaymentLimit = testTiers(revisedIncome, form, true);
-      const beforePremiumLimit = preliminarySpecifiedDeduction.plus(repaymentLimit);
+      const beforePremiumLimit = sumSourceMoney(preliminarySpecifiedDeduction, repaymentLimit);
       const premiumLimit = min(beforePremiumLimit, specifiedPremiums);
       maximumSpecifiedDeduction = min(premiumLimit, earnedLimit);
       for (const [line, label, value, formula] of [
@@ -155,12 +156,12 @@ export function calculateMarketplaceHealthLimit(params: {
         ["19", "Remaining earned income", remainingEarnedIncome, "WorksheetX29"],
         ["20", "Revised specified maximum", maximumSpecifiedDeduction, negativeLimit ? "min(line18,signed line19)" : "min(line18,nonnegative line19)"],
         ["21", "Nonspecified health deduction", nonspecifiedDeduction, "WorksheetX5"],
-        ["22", "Revised total maximum", maximumSpecifiedDeduction.plus(nonspecifiedDeduction), "Line20+line21"],
+        ["22", "Revised total maximum", sumSourceMoney(maximumSpecifiedDeduction, nonspecifiedDeduction), "Line20+line21"],
       ] as const) audit.record(form, line, label, value, formula);
     });
   }
   return { taxYear: 2025, orderedDeductions: [...orderedDeductions], worksheetXCompleted, requiresWorksheetX, householdIncomeAfterW: params.householdIncomeAfterW, federalPovertyLine: params.federalPovertyLine,
     specifiedPremiums, specifiedAdvances, remainingEarnedIncome, nonspecifiedDeduction, specifiedBusinessNonspecifiedDeduction, separateBusinessNonspecifiedDeduction,
-    preliminarySpecifiedDeduction, repaymentLimit, maximumSpecifiedDeduction, maximumHealthDeduction: maximumSpecifiedDeduction.plus(nonspecifiedDeduction), lines: audit.getLines() };
+    preliminarySpecifiedDeduction, repaymentLimit, maximumSpecifiedDeduction, maximumHealthDeduction: sumSourceMoney(maximumSpecifiedDeduction, nonspecifiedDeduction), lines: audit.getLines() };
 }
 export type MarketplaceHealthLimitResult = ReturnType<typeof calculateMarketplaceHealthLimit>;

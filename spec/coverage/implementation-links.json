@@ -1178,6 +1178,17 @@
       "note": "Actual completed business income limits determine the published P/Form7206 stop; the shared 2025 mapper prints the completed nonspecified claim and final-credit review. No positive noncoverage-advance allocation, new ordinary physical8962 mapping, or filing qualification is claimed."
     },
     {
+      "key": "federal/marketplace-other-return-cash",
+      "enginePath": "src/engine/forms/marketplace-outside-cash-sources.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",
+      "testRefs": [
+        "tests/engine/federal-marketplace-other-return-cash.test.ts::retains actual outside cash independently of the other taxpayers positive credit",
+        "tests/engine/federal-marketplace-other-return-cash-precision.test.ts::preserves exact outside net cash through ordinary worksheet coordination",
+        "tests/pdf/marketplace-other-return-cash-review.test.ts::rounds physical nonspecified fields from exact annual source ratios"
+      ],
+      "note": "Original insurer receipts, reimbursements and independent completed other-return sources bind the canonical health path and private2025 review. Exact aggregation uses src/utils/sum-source-money.ts and src/utils/sum-source-money-ratios.ts before existing report boundaries. The linked precision and physical regressions retain both half-minus-tail and exact-half outcomes. No final2026 form, filing, staging or independent human qualification is established."
+    },
+    {
       "key": "federal/marketplace-outside-person-health",
       "enginePath": "src/engine/forms/marketplace-coverage-family-sources.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-7206.ts",

@@ -12,6 +12,16 @@ export const MarketplaceCoverageFamilySchema = z.object({
     returnStatus: z.enum(['draft', 'completed']).optional(), claimantName: z.string().optional(), claimantSsn: z.string().optional(),
     policySourceIds: z.array(z.string()).optional(), allPoliciesIncludedConfirmed: z.boolean().optional(),
     form8962Line24: z.string().optional(),
+    cashPaymentSources: z.object({
+      sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+      allPremiumPaymentsIncludedConfirmed: z.boolean().optional(), allOtherReturnTaxPaymentsIncludedConfirmed: z.boolean().optional(),
+      premiumPayments: z.array(z.object({
+        paymentSourceId: z.string().optional(), payer: z.enum(['owner_after_tax', 'business_paid_or_reimbursed']).optional(),
+        datePaid: z.string().optional(), sourceReference: z.string().optional(), cashPaidToInsurer: z.string().optional(),
+        reimbursements: z.array(z.object({ sourceId: z.string().optional(), dateReceived: z.string().optional(), amount: z.string().optional(), sourceReference: z.string().optional() })).optional(),
+      })).optional(),
+      otherReturnTaxPayments: z.array(z.object({ sourceId: z.string().optional(), datePaid: z.string().optional(), amount: z.string().optional(), sourceReference: z.string().optional() })).optional(),
+    }).optional(),
   })).optional(),
   months: z.array(z.object({
     month: z.number().int().optional(), sourceReference: z.string().optional(), allCoveredPersonsIncludedConfirmed: z.boolean().optional(),

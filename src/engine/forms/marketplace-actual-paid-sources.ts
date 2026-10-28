@@ -14,7 +14,7 @@ export function calculateMarketplaceActualPaidSources(input: SharedMarketplaceHe
     const actual = families.find(plan => plan.planId === row.planId)!.months.find(month => month.month === row.month)!;
     return { ...row, actualSpecifiedCash: actual.ownCoverageCash, actualNonspecifiedCash: actual.ownNoncoverageCash,
       actualSpecifiedAdvance: actual.ownAdvance.minus(actual.ownNoncoverageAdvance), actualNonspecifiedAdvance: actual.ownNoncoverageAdvance,
-      actualOutsideCash: actual.outsideCash, originalPolicyAdvance: actual.sourceAdvance };
+      actualOutsideCash: actual.outsideNetCash, originalPolicyAdvance: actual.sourceAdvance };
   });
   const cashDiffers = months.some(row => !row.actualSpecifiedCash.plus(row.actualNonspecifiedCash).plus(row.advancePremiumTaxCredit).eq(row.taxFamilyPremium));
   const marriageNoncoverage = input.form8962?.alternativeMarriageCalculationElected === true && months.some(row => row.actualNonspecifiedAdvance.gt(0));

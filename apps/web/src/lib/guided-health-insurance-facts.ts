@@ -67,7 +67,11 @@ export function invalidateHealthInsuranceSources(data: HealthInsuranceData): Hea
     plans: data.plans.map(plan => ({ ...plan,
       coveredPersons: plan.coveredPersons.map(person => ({ ...person, ...(person.childRelationshipSources ? { childRelationshipSources: { ...person.childRelationshipSources, sourceFactsConfirmed: null } } : {}) })),
       ...(plan.sharedMarketplaceSources ? { sharedMarketplaceSources: { ...plan.sharedMarketplaceSources, sourceFactsConfirmed: null } } : {}),
-      ...(plan.coverageFamilySources ? { coverageFamilySources: { ...plan.coverageFamilySources, sourceFactsConfirmed: null } } : {}) })),
+      ...(plan.coverageFamilySources ? { coverageFamilySources: { ...plan.coverageFamilySources, sourceFactsConfirmed: null,
+        outsidePersonReturns: plan.coverageFamilySources.outsidePersonReturns?.map(record => ({ ...record,
+          ...(record.cashPaymentSources ? { cashPaymentSources: { ...record.cashPaymentSources, sourceFactsConfirmed: null } } : {}),
+        })),
+      } } : {}) })),
   };
 }
 export const emptyHealthInsurancePerson: HealthInsurancePersonData = { personId: "", name: "", householdRole: "", attainedAgeAtYearEnd: "" };

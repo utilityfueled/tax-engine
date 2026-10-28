@@ -4,6 +4,7 @@ import type { MarketplaceActualPaidAdjustment } from "./marketplace-actual-paid-
 import type { MarketplaceReportedRepaymentPayment } from "./marketplace-reported-repayment-payment.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
+import { sumSourceMoney } from "@/utils/sum-source-money.js";
 import { calculateForm7206, type Form7206BusinessContext } from "./form-7206.js";
 import type { QBIDeductionSourceAmount } from "./qbi-source-deductions.js";
 import { calculateMarketplaceHealthPremiums } from "./marketplace-health-premiums.js";
@@ -168,7 +169,7 @@ export function calculateForm7206Return(params: Params) {
     const multipleOwners = new Set(specified.map(row => row.accountHolder)).size > 1;
     const uncappedMaximum = nonspecifiedStop ? d(0) : multipleOwners
       ? calculateMarketplaceOwnerDeductions({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups, stage: { kind: "maximum" } }).specifiedDeduction
-      : Decimal.min(sum(...specified.map(row => row.specifiedPremiums)), Decimal.max(0,sum(...specified.map(row => row.remainingEarnedIncome))));
+      : Decimal.min(sumSourceMoney(...specified.map(row => row.specifiedPremiums)), Decimal.max(0,sumSourceMoney(...specified.map(row => row.remainingEarnedIncome))));
     const suppliedLimit = params.marketplace?.stage === "maximum" ? params.marketplace.historicalLimit : result?.historicalLimit;
     const historicalLimit = year === 2025 && !nonspecifiedStop ? calculateMarketplaceHealthLimit({ taxYear: year, filingStatus: input.taxpayer.filingStatus, groups,
       stage: params.marketplace?.stage === "worksheet-w" ? "w" : "complete", householdIncomeAfterW: suppliedLimit?.householdIncomeAfterW, federalPovertyLine: suppliedLimit?.federalPovertyLine, orderedDeductions: suppliedLimit?.orderedDeductions }) : undefined;
@@ -200,7 +201,7 @@ export function calculateForm7206Return(params: Params) {
           ? [...allocation.groups].sort((left, right) => left.businessSourceId.localeCompare(right.businessSourceId, "en"))
           : allocation.groups;
         const combinedClaim = negativeLimit !== undefined || ownerGroups.some(group => group.creditAllocationMethod !== undefined);
-        const attributable = combinedClaim ? allocation.amount.plus(sum(...ownerGroups.map(group => group.nonspecifiedDeduction))) : allocation.amount;
+        const attributable = combinedClaim ? sumSourceMoney(allocation.amount, ...ownerGroups.map(group => group.nonspecifiedDeduction)) : allocation.amount;
         if (combinedClaim) {
           if (roundDollar(attributable).lt(0)) throw new Error("Pub974 actual owner combined deduction needs its separate stop-worksheet method.");
           for (const group of ownerGroups) {
@@ -209,7 +210,7 @@ export function calculateForm7206Return(params: Params) {
             // These businesses' nonspecified claims and signed Step3 amount
             // form one allowable owner deduction. Do not allocate a negative
             // intermediate as though it were a separate QBI deduction.
-            target.amount = target.amount.minus(group.nonspecifiedDeduction);
+            target.amount = sumSourceMoney(target.amount, group.nonspecifiedDeduction.negated());
           }
         }
         if (attributable.isZero()) continue;
@@ -226,7 +227,7 @@ export function calculateForm7206Return(params: Params) {
           const target = healthSources.find(row => row.sourceId === group.businessSourceId && row.accountHolder === group.accountHolder);
           if (!target) throw new Error("Pub974 QBI deduction has no matching actual business source.");
           const share = index === ownerGroups.length - 1 ? remaining : attributable.times(gross[index]).div(denominator);
-          target.amount = target.amount.plus(share); remaining = remaining.minus(share);
+          target.amount = sumSourceMoney(target.amount, share); remaining = sumSourceMoney(remaining, share.negated());
           marketplaceAudit.record("Pub974 QBI Allocation", group.businessSourceId, combinedClaim ? "Combined allowable health deduction attributable to this income source" : "Specified deduction attributable to this income source", share,
             ownerGroups.length === 1 ? "Only actual business income used in the owner's deduction" : combinedClaim ? "Owner combined allowable health deduction times actual same-owner business gross income / same-owner combined gross income;199A only" : "Owner specified deduction times actual same-owner business gross income / same-owner combined gross income;199A only",
             { "Owner": group.accountHolder, "Combined deduction": attributable,
@@ -248,21 +249,21 @@ export function calculateForm7206Return(params: Params) {
         if (!recorded || recorded.accountHolder !== group.accountHolder || !recorded.specifiedPremiums.eq(group.specifiedPremiums)
           || !recorded.remainingEarnedIncome.eq(group.remainingEarnedIncome) || !recorded.nonspecifiedDeduction.eq(group.nonspecifiedDeduction)) throw new Error("Pub974 computed deduction contradicts actual business sources.");
       }
-      const limit = result.method.startsWith("ordinary-no-ptc-") ? sum(...result.businesses.map(row => row.ordinaryDeduction)) : maximum;
-      if (!result.specifiedDeduction.isFinite() || roundDollar(result.specifiedDeduction.plus(form7206.deduction)).lt(0) || result.specifiedDeduction.gt(limit)) throw new Error("Pub974 specified deduction exceeds the actual method limit.");
+      const limit = result.method.startsWith("ordinary-no-ptc-") ? sumSourceMoney(...result.businesses.map(row => row.ordinaryDeduction)) : maximum;
+      if (!result.specifiedDeduction.isFinite() || roundDollar(sumSourceMoney(result.specifiedDeduction, form7206.deduction)).lt(0) || result.specifiedDeduction.gt(limit)) throw new Error("Pub974 specified deduction exceeds the actual method limit.");
       specifiedDeduction = result.specifiedDeduction;
       if (result.method.startsWith("ordinary-no-ptc-")) {
         for (const group of result.businesses) {
           const target = healthSources.find(row => row.sourceId === group.businessSourceId);
           if (!target) throw new Error("Ordinary health deduction has no actual business source.");
-          target.amount = target.amount.plus(group.ordinaryDeduction);
+          target.amount = sumSourceMoney(target.amount, group.ordinaryDeduction);
         }
       } else attributeSpecified(result.specifiedDeduction);
     }
-    deductionToSchedule1 = roundDollar(form7206.deduction.plus(specifiedDeduction));
+    deductionToSchedule1 = roundDollar(sumSourceMoney(form7206.deduction, specifiedDeduction));
     // Allocate the single printed-dollar transfer without manufacturing another deduction.
-    const exact = sum(...healthSources.map(row => row.amount));
-    if (!exact.eq(form7206.deduction.plus(specifiedDeduction))) throw new Error("Pub974 QBI sources do not conserve the allowed health deduction.");
+    const exact = sumSourceMoney(...healthSources.map(row => row.amount));
+    if (!exact.eq(sumSourceMoney(form7206.deduction, specifiedDeduction))) throw new Error("Pub974 QBI sources do not conserve the allowed health deduction.");
     // Signed source cents can round to a zero total when the printed credit
     // covers the full premium. A zero transfer has no QBI deduction to allocate.
     if (deductionToSchedule1.isZero()) for (const row of healthSources) row.amount = d(0);
@@ -272,7 +273,7 @@ export function calculateForm7206Return(params: Params) {
     // Stable source identity, rather than plan-entry order, assigns the final
     // printed-dollar residual. Exact source and proportional amounts stay above.
     if (selectedAllocation || nonspecifiedStop || negativeLimit) positive.sort((left, right) => `${left.accountHolder}:${left.sourceId}`.localeCompare(`${right.accountHolder}:${right.sourceId}`, "en"));
-    const roundingWeight = selectedAllocation ? sum(...positive.map(row => row.amount)) : exact;
+    const roundingWeight = selectedAllocation ? sumSourceMoney(...positive.map(row => row.amount)) : exact;
     if (selectedAllocation) for (const row of healthSources) if (row.amount.lt(0)) row.amount = d(0);
     positive.forEach((row,index) => {
       row.amount = index === positive.length - 1 ? remainder : Decimal.min(remainder, roundDollar(deductionToSchedule1.times(row.amount).div(roundingWeight)));

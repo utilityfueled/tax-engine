@@ -8,6 +8,7 @@ import { calculateMarketplaceHealthLimit } from "@/engine/forms/marketplace-heal
 import { calculateMarketplaceHealthDeduction } from "@/engine/forms/marketplace-health-deduction.js";
 import { calculateMarketplaceOwnerDeductions } from "@/engine/forms/marketplace-health-owners.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
+import { sumSourceMoney } from "@/utils/sum-source-money.js";
 
 function exact(value: unknown): Decimal {
   if (!Decimal.isDecimal(value) || !value.isFinite()) throw new Error("Pub974 review requires actual finite calculation amounts.");
@@ -41,7 +42,7 @@ export function assertMarketplaceHealthReviewSources(input: TaxYearInput, result
   if ((!ordinary && !stopped && marketplace.method !== "pub974-simplified-2025")
     || calculation.marketplaceHandling !== (ordinary ? "ordinary-no-ptc" : "separate-specified-premiums")
     || (!stopped && credit.taxpayerEligible !== !ordinary)) throw new Error("Pub974 review method contradicts the final actual calculation.");
-  for (const amount of [marketplace.step2Credit, marketplace.finalCredit, roundDollar(marketplace.specifiedDeduction.plus(marketplace.nonspecifiedDeduction)), marketplace.nonspecifiedDeduction, marketplace.maximumDeduction]) {
+  for (const amount of [marketplace.step2Credit, marketplace.finalCredit, roundDollar(sumSourceMoney(marketplace.specifiedDeduction, marketplace.nonspecifiedDeduction)), marketplace.nonspecifiedDeduction, marketplace.maximumDeduction]) {
     if (exact(amount).lt(0)) throw new Error("Pub974 review requires nonnegative source calculation amounts.");
   }
   same(marketplace.finalCredit, credit.ptcAllowed);
@@ -77,8 +78,8 @@ export function assertMarketplaceHealthReviewSources(input: TaxYearInput, result
     }
     for (const owner of ["primary", "spouse"] as const) {
       const actual = checked.businesses.filter(row => row.accountHolder === owner);
-      const premiums = sum(...actual.map(row => row.specifiedPremiums), ...nonspecified.businesses.filter(row => row.accountHolder === owner).map(row => row.eligiblePremiums));
-      if (roundDollar(sum(...actual.map(row => row.nonspecifiedDeduction.plus(row.allocatedCredit)))).gt(roundDollar(premiums))) {
+      const premiums = sumSourceMoney(...actual.map(row => row.specifiedPremiums), ...nonspecified.businesses.filter(row => row.accountHolder === owner).map(row => row.eligiblePremiums));
+      if (roundDollar(sumSourceMoney(...actual.flatMap(row => [row.nonspecifiedDeduction, row.allocatedCredit]))).gt(roundDollar(premiums))) {
         throw new Error("Pub974 stopping review exceeds the actual owner's premium sources.");
       }
     }
@@ -94,7 +95,7 @@ export function assertMarketplaceHealthReviewSources(input: TaxYearInput, result
     if (!actual || actual.accountHolder !== group.accountHolder) throw new Error("Pub974 review business source owner does not reconcile.");
     for (const key of ["specifiedPremiums", "remainingEarnedIncome", "nonspecifiedDeduction"] as const) same(actual[key], group[key]);
     if (exact(actual.allocatedCredit).lt(0) || roundDollar(actual.allocatedCredit).gt(roundDollar(sum(...group.months.map(row => row.sourcePremium))))) throw new Error("Pub974 review credit allocation exceeds the actual source premium.");
-    const difference = group.specifiedPremiums.minus(actual.allocatedCredit);
+    const difference = sumSourceMoney(group.specifiedPremiums, actual.allocatedCredit.negated());
     same(actual.netPremiumsAfterCredit, group.creditAllocationMethod || group.months.some(month => month.fullCorrespondingCredit === true) ? difference : Decimal.max(0, difference));
     same(actual.ordinaryDeduction, Decimal.min(group.specifiedPremiums, Decimal.max(0, group.remainingEarnedIncome)));
     for (const [number, amount] of [["1", group.specifiedPremiums], ["6", actual.allocatedCredit], ["7", actual.netPremiumsAfterCredit]] as const) {
@@ -114,13 +115,13 @@ export function assertMarketplaceHealthReviewSources(input: TaxYearInput, result
   audits(historical.lines, result.allLines.filter(row => /^Pub974 Worksheet [WXYZ]/.test(row.form) || row.form === "Pub974 Separate Business Sources"));
   same(marketplace.maximumSpecifiedDeduction, checkedLimit.maximumSpecifiedDeduction);
   same(marketplace.nonspecifiedDeduction, exact(nonspecified.deduction));
-  same(marketplace.maximumDeduction, checkedLimit.maximumSpecifiedDeduction.plus(marketplace.nonspecifiedDeduction));
-  const net = sum(...marketplace.businesses.map(row => row.netPremiumsAfterCredit));
+  same(marketplace.maximumDeduction, sumSourceMoney(checkedLimit.maximumSpecifiedDeduction, marketplace.nonspecifiedDeduction));
+  const net = sumSourceMoney(...marketplace.businesses.map(row => row.netPremiumsAfterCredit));
   const ownerDeduction = !ordinary && new Set(groups.filter(row => row.months.length > 0 && row.includedInEarnedIncomeLimit !== false).map(row => row.accountHolder)).size > 1
     ? calculateMarketplaceOwnerDeductions({ taxYear: 2025, filingStatus: input.taxpayer.filingStatus, groups,
       stage: { kind: "final", businesses: marketplace.businesses } }).specifiedDeduction : undefined;
-  same(marketplace.specifiedDeduction, ordinary ? sum(...marketplace.businesses.map(row => row.ordinaryDeduction)) : Decimal.min(ownerDeduction ?? net, checkedLimit.maximumSpecifiedDeduction));
-  const combined = marketplace.specifiedDeduction.plus(marketplace.nonspecifiedDeduction);
+  same(marketplace.specifiedDeduction, ordinary ? sumSourceMoney(...marketplace.businesses.map(row => row.ordinaryDeduction)) : Decimal.min(ownerDeduction ?? net, checkedLimit.maximumSpecifiedDeduction));
+  const combined = sumSourceMoney(marketplace.specifiedDeduction, marketplace.nonspecifiedDeduction);
   for (const [number, amount] of [["7", net], ["8", marketplace.maximumSpecifiedDeduction], ["9", marketplace.specifiedDeduction], ["10", marketplace.nonspecifiedDeduction], ["11", combined]] as const) line(marketplace.lines, "Pub974 Simplified", number, amount);
   if (marketplace.lines.length !== groups.length * 3 + 5) throw new Error("Pub974 review has unexpected or duplicated business audits.");
   audits(marketplace.lines, result.allLines.filter(row => row.form === "Pub974 Simplified" || row.form.startsWith("Pub974 Simplified ")));
@@ -136,6 +137,6 @@ export function assertMarketplaceHealthReviewSources(input: TaxYearInput, result
   // The final credit differs from Step2. Reuse the actual final monthly credit
   // audit only to validate premium conservation, not to replace Step3's deduction.
   const finalAllocation = calculateMarketplaceHealthDeduction({ input, groups, credit, historicalLimit: checkedLimit });
-  if (roundDollar(marketplace.specifiedDeduction.plus(sum(...finalAllocation.businesses.map(row => row.allocatedCredit))))
-    .gt(roundDollar(sum(...groups.map(row => row.specifiedPremiums))))) throw new Error("Pub974 review deduction and final credit exceed actual source premiums.");
+  if (roundDollar(sumSourceMoney(marketplace.specifiedDeduction, ...finalAllocation.businesses.map(row => row.allocatedCredit)))
+    .gt(roundDollar(sumSourceMoney(...groups.map(row => row.specifiedPremiums))))) throw new Error("Pub974 review deduction and final credit exceed actual source premiums.");
 }
