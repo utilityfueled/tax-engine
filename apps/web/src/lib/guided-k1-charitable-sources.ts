@@ -3,6 +3,7 @@ import type { GuidedFlowState } from './guided-interview-flow';
 import { buildGuidedK1Sources } from './guided-k1-qbi-sources';
 import { parseGuidedK1CharitableSources, type K1CharitableSourcesData } from './guided-k1-charitable-data';
 import { guidedSourceValuesChanged } from './guided-source-confirmation';
+import { buildGuidedCharitableCarryover } from './guided-charitable-carryover';
 import { k1CashDistributionKnownTreatment } from './guided-k1-cash-distribution';
 const statuses = { single: 'single', mfj: 'married_filing_jointly', mfs: 'married_filing_separately', hoh: 'head_of_household', qss: 'qualifying_surviving_spouse' } as const;
 
@@ -27,8 +28,16 @@ export function buildGuidedK1CharitableSources(state: GuidedFlowState) {
   const taxpayer: K1CharitableReturnInput['taxpayer'] = { taxYear, filingStatus: statuses[segmentation.filingStatus],
     primary: { firstName: [personal.firstName.trim(), middle].filter(Boolean).join(' '), lastName: personal.lastName, ssn: personal.ssn },
     ...(segmentation.filingStatus === 'mfj' && personal.spouse ? { spouse: personal.spouse } : {}) };
+  const hasFirstAdmission = parsed.packet.statements?.some(statement => statement.basis?.priorBasisSuspensions?.some(row => row.section170AdmissionSources !== undefined));
+  const alternativeHistory = sectionData.adjustments?.netOperatingLossSources?.alternativeTax?.charitableCarryoverHistory?.alternativeCarryoverSources;
+  const admissionHistories: Pick<K1CharitableReturnInput, 'charitableCarryoverSources' | 'netOperatingLoss'> = hasFirstAdmission ? {
+    charitableCarryoverSources: buildGuidedCharitableCarryover(sectionData.deductions?.charitableCarryoverSources, taxYear, segmentation.filingStatus, personal),
+    ...(alternativeHistory ? { netOperatingLoss: { alternativeTax: { charitableCarryoverHistory: {
+      alternativeCarryoverSources: buildGuidedCharitableCarryover(alternativeHistory, taxYear, segmentation.filingStatus, personal),
+    } } } } : {}),
+  } : {};
   calculateK1CharitableReturnSources({ taxpayer, scheduleK1, k1CharitableSources: parsed.packet,
-    deductionElection: sectionData.deductions?.method, qbiLossSources: existing?.qbiLossSources, ...k1CashDistributionKnownTreatment(state) });
+    deductionElection: sectionData.deductions?.method, qbiLossSources: existing?.qbiLossSources, ...admissionHistories, ...k1CashDistributionKnownTreatment(state) });
   return { scheduleK1, k1CharitableSources: parsed.packet, qbiLossSources: existing?.qbiLossSources,
     suspendedPassiveLosses: existing?.suspendedPassiveLosses ?? [], priorQbiCarry: existing?.priorQbiCarry };
 }

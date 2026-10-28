@@ -8,6 +8,7 @@ import { CurrencyField } from './currency-field';
 import { K1CashDistributionDetails } from './k1-cash-distribution-details';
 import { K1CharitableAtRiskDetails } from './k1-charitable-at-risk-details';
 import { K1PriorAtRiskDetails } from './k1-prior-at-risk-details';
+import { K1CharitableFirstAdmissionDetails } from './k1-charitable-first-admission-details';
 import { K1CapitalCharacterDetails } from './k1-capital-character-details';
 
 type Field = readonly [string, string, 'text' | 'money' | 'signed' | 'boolean' | readonly (readonly [string, string])[]];
@@ -101,6 +102,8 @@ function Basis({ prefix, data, onChange }: { prefix: string; data?: K1Charitable
           <button type="button" className="utility-button" onClick={() => update({ basisUseHistory: row.basisUseHistory?.filter((_, n) => n !== i) })}>Remove {label} use {i + 1}</button></div>)}
         <button type="button" className="utility-button" onClick={() => update({ basisUseHistory: [...(row.basisUseHistory ?? []), {}] })}>Add {label} use year</button>
         <button type="button" className="utility-button" onClick={() => update({ basisUseHistory: [] })}>Record no {label} use years</button>
+        <K1CharitableFirstAdmissionDetails prefix={`${label} section170 admission`} data={row.section170AdmissionSources}
+          onChange={section170AdmissionSources => update({ section170AdmissionSources })} />
         <button type="button" className="utility-button" onClick={() => change({ priorBasisSuspensions: data.priorBasisSuspensions?.filter((_, i) => i !== index) })}>Remove {label}</button>
       </fieldset>;
     })}

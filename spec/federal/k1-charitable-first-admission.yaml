@@ -1,0 +1,77 @@
+form: "K1 Charitable First Admission"
+fullName: "Original basis-suspended property first admitted to section 170"
+taxYear: 2026
+irsReference: "https://www.ecfr.gov/current/title-26/section-1.1366-2"
+retrievedAt: "2026-10-28"
+notes: |
+  IRC704(d)(2)-(3), Reg1.704-1(d), IRC1366(d)(2) and Reg1.1366-2(a)(3)
+  preserve the character of basis-disallowed amounts and permit them in a later
+  year as actual basis becomes available. The current first-admission year is
+  derived for only that never-before-basis-allowed portion. The original gift,
+  basis origin, earlier admitted appreciation and basis uses are not re-aged.
+  IRC170(d)(1)(A)/(C) and PL119-21 section70425 then govern the ordinary five
+  succeeding years and the current eligible floor. This ordering is a reasoned
+  statutory inference, not a published matching numeric example. RevRul2008-16
+  corroborates later-incurred treatment within its stated2005-2007 period.
+  https://www.ecfr.gov/current/title-26/section-1.704-1
+  https://www.govinfo.gov/content/pkg/PLAW-119publ21/html/PLAW-119publ21.htm
+  https://www.irs.gov/pub/irs-drop/rr-08-16.pdf
+  Source originals bind every annual basis/charitable worksheet, the same owner
+  and entity, and separately identified surviving regular/AMT section170 rows.
+  Linked original excess and annual use/reduction/expiry histories must reconcile;
+  an opening balance alone is insufficient. Unlinked carry is not inferred to
+  belong to a different gift merely because a reference differs. The bounded
+  route keeps an explicit original-receipt binding guard for such records.
+  No supplied current allowance, admission year or closing carry is accepted.
+  Historical ordinary-gift465 records remain separate and are not re-aged.
+  Legacy records lacking first-entry proof keep the harmless no-residual route
+  and otherwise reject. Production2026 calculation and final PDF gates stay closed.
+lines:
+  - line: "new-admission"
+    description: "Only newly basis-admitted property receives the current carry year"
+    formula: "Original2018 FMV180000/basis80000, appreciation100000 already admitted and prior basis use20000 leave60000 suspended. Actual current basis40000 admits40000 and leaves20000 suspended. Atbase100000 C capacity30000 gives10000 excess plus500 eligible floor; carry10500 is2026 through2031. Original receipt remains2018. Partnership and S corporation and each actual deduction choice preserve this result."
+    testRef: "tests/engine/federal-k1-charitable-first-admission.test.ts::derives the current admission year without reusing historical basis or appreciation"
+  - line: "category-and-zero-base"
+    description: "Apply the existing current category and floor method after admission"
+    formula: "D admission30000 atbase100000 gives10500 carry. C admission40000 atbase0 gives40000 carry and0floor. C admission30000 atbase100000 has no percentage excess and therefore no floor carry. Current eligible cash1000 is separately eligible under170(p); property is not cash."
+    testRef: "tests/engine/federal-k1-charitable-first-admission.test.ts::keeps category capacity zero base and current cash separate"
+  - line: "earlier-slice"
+    description: "Preserve already-admitted portions and their complete history"
+    formula: "Move the actual prior20000 basis use to2024 and link an original2024 C excess7000 reduced by actual2025 use2000, leaving5000. Current C40000 uses capacity first; the old5000 remains2024 through2029 and the new10500 is2026 through2031. Independent AMT original6000/use2000 leaves4000, with separate source IDs and annual links."
+    testRef: "tests/engine/federal-k1-charitable-first-admission.test.ts::preserves linked earlier section170 slices and independent alternative history"
+  - line: "original-binding"
+    description: "Do not infer missing source identity or history"
+    formula: "Missing or false confirmation, missing annual year, changed original owner/entity, duplicate carry links, wrong admission category/year, original excess above the actual admitted amount, unreconciled annual use and an unlinked carry reject. Supplied but invalid provenance rejects even at zero current release. Different references alone do not prove unrelated gifts."
+    testRef: "tests/engine/federal-k1-charitable-first-admission.test.ts::requires actual annual identity and original admitted amount conservation"
+  - line: "legacy-and-risk-boundary"
+    description: "Preserve older originals and the distinct historical risk question"
+    formula: "The unchanged legacy40000 basis-release record retains its positive-carry guard; legacy20000 no-residual remains accepted. Adding source proof does not re-age prior465 gifts, and a still-risk-disallowed basis portion is not silently treated as admitted."
+    testRef: "tests/engine/federal-k1-charitable-first-admission.test.ts::preserves legacy and historical risk boundaries"
+  - line: "established-nol"
+    description: "Compose with complete independent established NOL sources"
+    formula: "Wages100000, actual standard16100 and old post2017 NOL100000 give actual NOLD67120/AGI32880. Newly basis-admitted C40000 has normal capacity9864, floor164.4 and normal use9699.6, so carry30300.4; actual selected charity0 means the established comparison benefit0 and succeeding NOL32880. Independent alternative original history is supplied separately."
+    testRef: "tests/engine/federal-k1-charitable-first-admission.test.ts::composes the proved admission with the established zero-benefit NOL method"
+  - line: "guided-originals"
+    description: "Collect and normalize actual annual records without filling unknowns"
+    formula: "The source editor retains annual owner/entity identity and separately explicit regular/alternative link lists. The builder passes the complete actual prior charitable packet to the first-admission validator. Empty and absent lists differ. Source edits revoke confirmations; save/reload keeps the original2018 receipt and annual years. Synthetic NOL variants explicitly select the NOL interview route, with Adjustments visible and not falsely marked complete. Production2026 preview remains unavailable."
+    testRef: "tests/guided-interview/guided-k1-charitable-first-admission.test.ts::forwards actual annual records and complete earlier charitable histories"
+  - line: "guided-invalidation"
+    description: "Source edits cannot reuse an earlier completed result"
+    formula: "Changed annual source reference, owner or carry links invalidates the source packet; missing history and false confirmation remain incomplete. Reconfirming an actual same-owner replacement cannot silently repair a contradictory owner. No current admission or carry override is collected."
+    testRef: "tests/guided-interview/guided-k1-charitable-first-admission.test.ts::invalidates actual annual edits and preserves unknown history"
+  - line: "source-editor"
+    description: "Enter actual source records and separately record empty carry links"
+    formula: "Adding the source group or annual row initializes no year, identity, link list or confirmation. Explicit none records only the selected regular or alternative list. Editing an annual reference clears both nested and packet source confirmation."
+    testRef: "tests/apps/web/k1-charitable-first-admission-interactions.test.tsx::collects annual admission originals without creating unknown links or amounts"
+  - line: "private-output-binding"
+    description: "Bind admission history and result before any output I/O"
+    formula: "Same-money annual worksheet replacement, changed identity or forged ordinary carry rejects with the existing original-source token. Original/redacted identities are bound privately. Isolated2026 source/carry calculation does not qualify final2026 forms; fillReturn continues to reject before templates."
+    testRef: "tests/pdf/k1-charitable-first-admission-context.test.ts::binds every admission original while retaining the2026 output gate"
+  - line: "multiple-originals"
+    description: "Preserve the existing allocation among actual original basis portions"
+    formula: "Two distinct original properties each have80000basis/20000prior allowance/60000opening suspension. Actual current basis40000.02 admits20000.01 from each, with no current appreciation. Current total40000.02 atbase100000 gives10500.02 carry regardless of original or receipt order; each original basis year and gift date is retained."
+    testRef: "tests/engine/federal-k1-charitable-first-admission.test.ts::preserves multiple original basis allocations and exact cents under reordering"
+  - line: "production-source-boundary"
+    description: "Save actual annual source edits while keeping unqualified2026 output closed"
+    formula: "Desktop/mobile production controls edit the annual original reference and an explicit regular carry link list, observe nested/root confirmation revocation, reconfirm actual records, save/reload and retain original2018 basis and gift dates. Source-only2026 state exposes no estimated result or final PDF; no private original reference or SSN is posted."
+    testRef: "apps/web/tests/k1-charitable-first-admission.spec.ts::preserves first-admission source edits without opening2026 output"

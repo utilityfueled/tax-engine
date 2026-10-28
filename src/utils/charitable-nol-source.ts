@@ -77,7 +77,7 @@ export function readCurrentCharitableSourceForNol(input: TaxYearInput): CurrentC
   // This validates original property availability only. The actual ScheduleA
   // allowable-carry computation separately proves no prior-release floor ambiguity.
   if (taxYear !== 2025 && k1?.statements.some(row => row.basis.charitableSources?.records.some(record => !record.current
-    && record.availableAfterBasis.gt(0) && !isNonitemizedPriorPropertySource(taxYear, input.deductionElection, record.category)))) {
+    && record.availableAfterBasis.gt(0) && !row.firstAdmissions?.some(admission => admission.sourceId === record.sourceId) && !isNonitemizedPriorPropertySource(taxYear, input.deductionElection, record.category)))) {
     throw new Error("Prior K1 charitable basis releases require their separate NOL contribution-year method");
   }
   if (k1) for (const key of Object.keys(amounts) as AmountKey[]) amounts[key] = amounts[key].plus(k1.amounts[key]);

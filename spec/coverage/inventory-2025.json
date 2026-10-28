@@ -6206,6 +6206,30 @@
       ]
     },
     {
+      "key": "federal/k1-charitable-first-admission",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.ecfr.gov/current/title-26/section-1.1366-2",
+      "specPath": "spec/federal/k1-charitable-first-admission.yaml",
+      "enginePath": "src/engine/forms/k1-charitable-first-admission.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-k1-charitable-first-admission.test.ts::derives the current admission year without reusing historical basis or appreciation",
+        "tests/engine/federal-k1-charitable-first-admission.test.ts::preserves linked earlier section170 slices and independent alternative history"
+      ],
+      "implementationNote": "Actual annual original sources determine only the current basis-admitted portion and retain earlier carry years. No final2026 packet or filing qualification is claimed.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/k1-charitable-return-sources",
       "jurisdiction": "federal",
       "taxYear": 2025,

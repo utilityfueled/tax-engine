@@ -28,7 +28,11 @@ export function charitableSourceDigest(input: TaxYearInput): string {
       statements: input.k1CharitableSources.statements?.map(statement => ({ ...statement,
         basis: statement.basis === undefined ? undefined : (() => {
           const { recipientTaxpayerIdLast4: _identifier, ...facts } = statement.basis;
-          return facts;
+          return { ...facts, ...(facts.priorBasisSuspensions ? { priorBasisSuspensions: facts.priorBasisSuspensions.map(row => ({ ...row,
+            ...(row.section170AdmissionSources ? { section170AdmissionSources: { ...row.section170AdmissionSources,
+              records: row.section170AdmissionSources.records?.map(({ recipientTaxpayerIdLast4: _annualIdentifier, ...annual }) => annual),
+            } } : {}),
+          })) } : {}) };
         })(),
         ...(statement.atRisk?.priorLossHistory?.characterSources ? { atRisk: {
           ...statement.atRisk, priorLossHistory: { ...statement.atRisk.priorLossHistory,

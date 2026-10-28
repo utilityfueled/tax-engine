@@ -28,7 +28,8 @@ export function assertPriorPropertyAllowableCarryProof(source: K1CharitableRetur
   for (const statement of source?.statements ?? []) {
     for (const row of statement.basis.charitableSources?.records ?? []) {
       const available = statement.atRiskAllocation?.charitable.find(item => item.sourceId === row.sourceId)?.allowed ?? row.availableAfterBasis;
-      if (!row.current && available.gt(0)) assertReleasedCategory(row.category);
+      const firstAdmission = statement.firstAdmissions?.find(admission => admission.sourceId === row.sourceId);
+      if (!row.current && available.gt(0) && !firstAdmission?.currentAdmission.eq(available)) assertReleasedCategory(row.category);
     }
     for (const row of statement.atRiskAllocation?.prior ?? []) {
       if (row.gift && row.allowed.gt(0)) assertReleasedCategory(row.gift.category);

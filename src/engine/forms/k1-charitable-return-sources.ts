@@ -13,6 +13,7 @@ import { calculateK1CashDistributionGain, type K1CashDistributionGain } from './
 import { resolveCharitableRecipient } from '@/utils/charitable-recipient.js';
 import { d, sum } from '@/utils/decimal.js';
 import { AuditTrail } from '@/utils/audit.js';
+import { calculateK1CharitableFirstAdmission, type K1CharitableFirstAdmission } from './k1-charitable-first-admission.js';
 import { isNonitemizedPriorPropertySource } from '@/utils/k1-nonitemized-prior-property.js';
 type Identity = Pick<TaxYearInput['taxpayer']['primary'], 'firstName' | 'lastName' | 'ssn'>;
 type Taxpayer = {
@@ -28,6 +29,9 @@ export interface K1CharitableReturnInput {
     scheduleK1: ScheduleK1[];
     k1CharitableSources?: K1CharitableReturnSources;
     qbiLossSources?: TaxYearInput['qbiLossSources'];
+    charitableCarryoverSources?: TaxYearInput['charitableCarryoverSources'];
+    netOperatingLoss?: TaxYearInput['netOperatingLoss'];
+    priorYear?: Partial<NonNullable<TaxYearInput['priorYear']>>;
     standardDeductionFacts?: TaxYearInput['standardDeductionFacts'];
     eic?: Pick<NonNullable<TaxYearInput['eic']>, 'claimantEligibility'>;
 }
@@ -44,6 +48,7 @@ export interface K1CharitableStatementResult {
     atRiskAllocation?: K1CharitableAtRiskResult;
     priorAtRisk: K1PriorAtRiskSourcesResult;
     capitalCharacter?: K1CapitalCharacterResult;
+    firstAdmissions?: K1CharitableFirstAdmission[];
 }
 export interface K1CharitableReturnResult {
     sourceFactsVerified: true;
@@ -151,9 +156,6 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
             const original = source.basis.currentContributions?.find(item => item.sourceId === row.sourceId);
             if (row.current ? paid !== original?.contributionDate : Number(paid.slice(0, 4)) > row.originTaxYear)
                 throw new Error('K1 charitable original payment date conflicts with its basis source year');
-            if (year === 2026 && !row.current && row.availableAfterBasis.gt(0)
-                && !isNonitemizedPriorPropertySource(year, input.deductionElection, row.category))
-                throw new Error('K1 charitable prior-basis release in2026 requires its separate section170(p) timing and floor/carry-year method');
             if (row.category === 'cash_60') {
                 let eligibleCurrentCash = false;
                 if (year === 2026) {
@@ -286,5 +288,24 @@ export function calculateK1CharitableReturnSources(input: K1CharitableReturnInpu
     });
     if (input.scheduleK1.some((row, index) => needsSource(row) && !seen.has(index)))
         throw new Error('K1 charitable complete packet omits an actual current or prior basis source');
+    const firstAdmissions = calculateK1CharitableFirstAdmission(input, statements);
+    for (const statement of statements) {
+        const admissions = firstAdmissions.get(statement.k1Index);
+        if (admissions) statement.firstAdmissions = admissions;
+        for (const row of statement.basis.charitableSources?.records ?? []) {
+            if (year === 2026 && !row.current && row.availableAfterBasis.gt(0)
+                && !admissions?.some(admission => admission.sourceId === row.sourceId)
+                && !isNonitemizedPriorPropertySource(year, input.deductionElection, row.category))
+                throw new Error('K1 charitable prior-basis release in2026 requires its separate section170(p) timing and floor/carry-year method');
+        }
+        for (const [index, admission] of (admissions ?? []).entries()) audit.record('K1 Charitable First Admission',
+            `${statement.k1Index + 1}-${index + 1}`, 'New basis-admitted property portion entering section170', admission.currentAdmission,
+            'Original receipt and earlier admitted amounts remain separate; the current portion alone receives the current carry year', {
+                'Original gift date': admission.originalGiftDate, 'Basis origin year': String(admission.basisOriginTaxYear),
+                'Current admission year': String(admission.admissionTaxYear), 'Last ordinary carry year': String(admission.lastCarryYear),
+                'Original property basis': admission.originalBasis, 'Earlier basis already admitted': admission.previouslyAllowedBasis,
+                'Basis still suspended': admission.remainingBasisSuspension,
+            });
+    }
     return { sourceFactsVerified: true, statements, amounts, nonitemizedEligibleCash, lines: audit.getLines() };
 }

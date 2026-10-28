@@ -99,7 +99,7 @@ export function readCharitableNolOrigins(input:TaxYearInput):CharitableNolOrigin
   // Only the validated release is available section170 value. The explicit
   // 2026 property-source admission still requires the later actual floor proof.
   if(input.taxpayer.taxYear!==2025 && k1?.statements.some(row=>row.basis.charitableSources?.records.some(record=>!record.current
-    && record.availableAfterBasis.gt(0) && !isNonitemizedPriorPropertySource(input.taxpayer.taxYear,input.deductionElection,record.category)))) {
+    && record.availableAfterBasis.gt(0) && !row.firstAdmissions?.some(admission => admission.sourceId === record.sourceId) && !isNonitemizedPriorPropertySource(input.taxpayer.taxYear,input.deductionElection,record.category)))) {
     throw new Error('Prior K1 basis releases require their separate NOL contribution-year method');
   }
   const current=readCurrentCharitableReceiptAmounts(input,{capitalStockOnly:true,includeK1:true});

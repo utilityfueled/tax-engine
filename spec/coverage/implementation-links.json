@@ -1005,6 +1005,15 @@
       "note": "Actual current activity membership and original Form6198 sources permit basis-first deduction allocation with independent known-empty prior at-risk history. Original basis, at-risk and charitable balances stay distinct in review output. This does not qualify a 2026 form or replace independent human review."
     },
     {
+      "key": "federal/k1-charitable-first-admission",
+      "enginePath": "src/engine/forms/k1-charitable-first-admission.ts",
+      "testRefs": [
+        "tests/engine/federal-k1-charitable-first-admission.test.ts::derives the current admission year without reusing historical basis or appreciation",
+        "tests/engine/federal-k1-charitable-first-admission.test.ts::preserves linked earlier section170 slices and independent alternative history"
+      ],
+      "note": "Actual annual original sources determine only the current basis-admitted portion and retain earlier carry years. No final2026 packet or filing qualification is claimed."
+    },
+    {
       "key": "federal/k1-passive-capital-sources",
       "enginePath": "src/engine/federal.ts",
       "packetPath": "src/pdf/mappings/2025/fill-form-8582.ts",
