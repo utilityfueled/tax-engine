@@ -1,5 +1,5 @@
 import { FilingUnitHistorySchema, type FilingUnitHistory } from '@/models/filing-unit-sources';
-import { NolFilingUnitOriginSchema, NolFilingUnitUseSchema, type NolFilingUnitOrigin, type NolFilingUnitUse } from '@/models/net-operating-loss-filing-unit';
+import { NolFilingUnitOriginSchema, NolFilingUnitUseSchema, NolSameCoupleJointHistorySchema, type NolFilingUnitOrigin, type NolFilingUnitUse, type NolSameCoupleJointHistory } from '@/models/net-operating-loss-filing-unit';
 import { parseGuidedCurrency } from './guided-currency';
 
 type Editable<T> = { [K in keyof T]: NonNullable<T[K]> extends boolean ? boolean | null | undefined
@@ -9,6 +9,7 @@ type Editable<T> = { [K in keyof T]: NonNullable<T[K]> extends boolean ? boolean
 export type NolFilingUnitHistoryData = Editable<FilingUnitHistory>;
 export type NolFilingUnitOriginData = Editable<NolFilingUnitOrigin>;
 export type NolFilingUnitUseData = Editable<NolFilingUnitUse>;
+export type NolSameCoupleJointHistoryData = Editable<NolSameCoupleJointHistory>;
 function year(value: string | undefined, label: string): number {
   if (!value || !/^\d{4}$/.test(value)) throw new Error(`Enter the actual ${label}.`);
   return Number(value);
@@ -33,6 +34,12 @@ export function buildNolFilingUnitOrigin(data?: NolFilingUnitOriginData): NolFil
   return NolFilingUnitOriginSchema.parse({ ...data, originalReturnLoss: filed(data.originalReturnLoss, 'original return NOL'),
     separateComputations: data.separateComputations?.map(row => ({ ...row, netOperatingLoss: filed(row.netOperatingLoss, 'separate original NOL') })),
   });
+}
+export function buildNolSameCoupleJointHistory(data?: NolSameCoupleJointHistoryData): NolSameCoupleJointHistory | undefined {
+  if (!data) return undefined;
+  return NolSameCoupleJointHistorySchema.parse({ ...data, sourceFactsConfirmed: data.sourceFactsConfirmed ?? undefined,
+    allRelevantYearsIncluded: data.allRelevantYearsIncluded ?? undefined,
+    years: data.years?.map(row => ({ ...row, taxYear: year(row.taxYear, 'actual marital year'), marriedToEachOther: row.marriedToEachOther ?? undefined })) });
 }
 export function buildNolFilingUnitUses(data?: NolFilingUnitUseData[]): NolFilingUnitUse[] | undefined {
   return data?.map(use => NolFilingUnitUseSchema.parse({ ...use, sourceFactsConfirmed: use.sourceFactsConfirmed ?? undefined,

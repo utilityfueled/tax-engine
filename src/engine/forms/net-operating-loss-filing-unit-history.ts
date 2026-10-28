@@ -11,27 +11,68 @@ function required(value: string | undefined, label: string): string {
   if (!value?.trim() || value !== value.trim()) throw new Error(`NOL filing history requires actual ${label}`);
   return value;
 }
+interface JointOwner { sourceId: string; ownerPersonId: string; originalReturnSourceId: string }
+function firstRelevantYear(row: NonNullable<NetOperatingLossSources['vintages']>[number]): number {
+  const year = row.lossTaxYear!;
+  return row.carrybackTreatment === 'completed' ? year - (year >= 2018 && year <= 2020 ? 5 : 2) : year;
+}
+function validateSameCouple(facts: NetOperatingLossSources, timeline: ReturnType<typeof validateNolFilingUnitTimeline>, taxYear: number): void {
+  const proof = facts.sameCoupleJointHistory;
+  if (!proof || proof.sourceFactsConfirmed !== true || proof.allRelevantYearsIncluded !== true || !Array.isArray(proof.years)) {
+    throw new Error('NOL changed membership on a current joint return requires complete actual same-couple marital-year history');
+  }
+  required(proof.sourceReference, 'same-couple history reference');
+  const pair = timeline.current.members;
+  if (pair.length !== 2) throw new Error('NOL current joint same-couple pooling requires two actual joint owners');
+  const years = new Set<number>();
+  for (const record of proof.years) {
+    const year = record.taxYear;
+    required(record.sourceReference, 'marital-year reference');
+    if (!Number.isInteger(year) || year === undefined || year < 1900 || year > taxYear || years.has(year)
+      || record.marriedToEachOther !== true || record.firstPersonId === record.secondPersonId
+      || !pair.includes(record.firstPersonId ?? '') || !pair.includes(record.secondPersonId ?? '')) {
+      throw new Error('NOL same-couple marital years require the actual same pair, distinct years and affirmative married-to-each-other facts');
+    }
+    years.add(year);
+    for (const owner of pair) {
+      const unit = timeline.byPersonYear.get(`${owner}:${year}`);
+      if (!unit || !['married_filing_jointly', 'married_filing_separately'].includes(unit.filingStatus!)
+        || unit.members.some(id => !pair.includes(id))) {
+        throw new Error('NOL same-couple history conflicts with the actual filed owners or marital-year filing status');
+      }
+    }
+  }
+  const start = Math.min(taxYear, ...(facts.vintages ?? []).map(firstRelevantYear));
+  if (!Number.isInteger(start) || start < 1900) throw new Error('NOL same-couple history requires each actual original loss year');
+  for (let year = start; year <= taxYear; year++) {
+    if (!years.has(year)) throw new Error('NOL same-couple history requires every relevant actual marital year, including the current joint year');
+  }
+}
 export function calculateNolFilingUnitHistory(input: {
   taxYear: number; filingStatus: FilingStatus;
   taxpayer: { taxYear: number; filingStatus: FilingStatus; primary: { firstName: string; lastName: string; ssn: string }; spouse?: { firstName: string; lastName: string; ssn: string } };
   standardDeductionFacts?: { primaryDeathDate?: string | null; spouseDeathDate?: string | null };
   facts: NetOperatingLossSources;
-}) {
+}): { lines: ReturnType<AuditTrail['getLines']>; jointOwners?: JointOwner[] } {
   const { facts, taxYear } = input, audit = new AuditTrail();
-  const attached = facts.filingUnitHistory !== undefined || facts.vintages?.some(row => row.filingUnitOrigin !== undefined
+  const attached = facts.filingUnitHistory !== undefined || facts.sameCoupleJointHistory !== undefined || facts.vintages?.some(row => row.filingUnitOrigin !== undefined
     || row.history?.some(year => year.filingUnitUses !== undefined));
   if (facts.returnMembership !== 'changed_membership') {
     if (attached) throw new Error('NOL filing history cannot be hidden under an unchanged-membership confirmation');
     return { lines: audit.getLines() };
   }
-  if (input.filingStatus === 'married_filing_jointly') {
-    throw new Error('NOL changed membership on a current joint return requires its actual owner-income and current joint-limit method');
-  }
   if (facts.membershipUnchangedConfirmed !== false || !Array.isArray(facts.vintages)) {
     throw new Error('NOL changed membership requires an actual false unchanged answer and complete original vintages');
   }
+  if (input.filingStatus === 'married_filing_jointly' && facts.sameCoupleJointHistory === undefined) {
+    throw new Error('NOL changed membership on a current joint return requires complete actual same-couple marital-year history');
+  }
   const timeline = validateNolFilingUnitTimeline(input.taxpayer, facts.filingUnitHistory, input.standardDeductionFacts);
-  const currentOwner = timeline.current.primaryPersonId;
+  const joint = input.filingStatus === 'married_filing_jointly';
+  if (joint) validateSameCouple(facts, timeline, taxYear);
+  else if (facts.sameCoupleJointHistory !== undefined) throw new Error('NOL current separate return cannot hide a current joint-pooling source attachment');
+  const jointOwners: JointOwner[] = [], ownerYears = new Set<string>(), sourceIds = new Set<string>();
+  const sharedOriginals = new Map<string, { value: string; owners: Set<string>; expected: string[] }>();
   audit.record('Section172 Filing Unit History', 'timeline', 'Actual filing-unit source history verified', new Decimal(0),
     'Complete original identity and filed-unit evidence, independent of any current deduction', { 'Current year': String(taxYear) });
   // Products and owner sums are exact at the precision of every supplied filed
@@ -50,6 +91,16 @@ export function calculateNolFilingUnitHistory(input: {
     if (!origin || !Array.isArray(origin.separateComputations) || !Array.isArray(row.history)
       || !Number.isInteger(row.lossTaxYear) || row.lossTaxYear === undefined || row.lossTaxYear >= taxYear) {
       throw new Error('NOL filing history requires each original return, separate computations and intervening records');
+    }
+    const currentOwner = joint ? required(origin.ownerPersonId, 'original current-joint owner') : timeline.current.primaryPersonId;
+    if (!timeline.current.members.includes(currentOwner) || !joint && origin.ownerPersonId !== undefined && origin.ownerPersonId !== currentOwner) {
+      throw new Error('NOL original owner must match an actual current filing-unit member');
+    }
+    if (joint) {
+      const sourceId = required(row.sourceId, 'original carry source identity'), ownerYear = `${currentOwner}:${row.lossTaxYear}`;
+      if (sourceIds.has(sourceId) || ownerYears.has(ownerYear)) throw new Error('NOL current joint pool has duplicate original source identity or same-owner loss year');
+      sourceIds.add(sourceId); ownerYears.add(ownerYear);
+      jointOwners.push({ sourceId, ownerPersonId: currentOwner, originalReturnSourceId: required(origin.returnSourceId, 'origin return identity') });
     }
     const originUnit = timeline.returns.get(required(origin.returnSourceId, 'origin return identity'));
     if (!originUnit || originUnit.taxYear !== row.lossTaxYear || !originUnit.members.includes(currentOwner)) {
@@ -87,8 +138,28 @@ export function calculateNolFilingUnitHistory(input: {
       }
       history.set(year.taxYear, year);
     }
-    const firstYear = row.carrybackTreatment === 'completed'
-      ? row.lossTaxYear - (row.lossTaxYear >= 2018 && row.lossTaxYear <= 2020 ? 5 : 2) : row.lossTaxYear;
+    const firstYear = firstRelevantYear(row);
+    if (joint && originUnit.members.length === 2) {
+      // Both incoming owner records refer to the same filed original and later
+      // allocation worksheets. Their owner summaries differ; the filed totals
+      // and each owner's actual uses cannot differ between the two copies.
+      const filed = JSON.stringify({ original: originalTotal.toFixed(),
+        separate: [...separate.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([owner, value]) => [owner, value.toFixed()]),
+        carryback: [row.carrybackTreatment, row.ordinaryHistoricalCarrybackConfirmed],
+        periods: [...history.entries()].sort(([a], [b]) => a - b).map(([year, record]) => [year,
+          record.filingUnitUses!.map(use => ({ id: use.returnSourceId,
+            claimed: amount(use.claimedDeduction, 'historical return deduction').toFixed(),
+            absorbed: amount(use.modifiedAbsorption, 'historical return absorption').toFixed(),
+            attributes: amount(use.attributeReduction, 'historical return attribute reduction').toFixed(),
+            owners: (use.owners ?? []).map(owner => [owner.personId, amount(owner.claimedDeduction, 'historical owner deduction').toFixed(),
+              amount(owner.modifiedAbsorption, 'historical owner absorption').toFixed(), amount(owner.attributeReduction, 'historical owner attribute reduction').toFixed()])
+              .sort(([a], [b]) => String(a).localeCompare(String(b))),
+          })).sort((a, b) => String(a.id).localeCompare(String(b.id)))]) });
+      const shared = sharedOriginals.get(originUnit.sourceId);
+      if (shared && shared.value !== filed) throw new Error('NOL same original joint return contains conflicting filed owner histories');
+      if (shared) shared.owners.add(currentOwner);
+      else sharedOriginals.set(originUnit.sourceId, { value: filed, owners: new Set([currentOwner]), expected: originUnit.members });
+    }
     // Trace only owners whose filed balances can feed this return. A former
     // owner's later unrelated return is not presumed to exist or to have no use.
     const needed = new Set([currentOwner]);
@@ -174,5 +245,8 @@ export function calculateNolFilingUnitHistory(input: {
       { 'Loss year': String(row.lossTaxYear), 'Original return loss': money(originalTotal), 'Original owner allocation': money(originalOwner),
         'Current-owner separate original NOL': money(separate.get(currentOwner)!), 'All separate original NOLs': money(totalSeparate) });
   }
-  return { lines: audit.getLines() };
+  for (const original of sharedOriginals.values()) {
+    if (original.expected.some(owner => !original.owners.has(owner))) throw new Error('NOL current joint pooling requires each original owner, including an actual zero share');
+  }
+  return { lines: audit.getLines(), ...(joint ? { jointOwners } : {}) };
 }

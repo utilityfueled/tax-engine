@@ -1,5 +1,5 @@
 "use client";
-import type { NolFilingUnitHistoryData, NolFilingUnitOriginData, NolFilingUnitUseData } from '@/lib/guided-nol-filing-unit';
+import type { NolFilingUnitHistoryData, NolFilingUnitOriginData, NolFilingUnitUseData, NolSameCoupleJointHistoryData } from '@/lib/guided-nol-filing-unit';
 import { CharitableFilingUnitDetails } from './charitable-filing-unit-details';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
@@ -17,8 +17,34 @@ function returns(data?: NolFilingUnitHistoryData): [string, string][] { return (
 
 export function NolFilingUnitDetails({ label, data, onChange }: { label: string; data?: NolFilingUnitHistoryData; onChange: (data: NolFilingUnitHistoryData | undefined) => void }) {
   return <fieldset className="panel-stack" style={nestedSourceStyle}><legend>{label} original ownership timeline</legend>
-    <p className="guided-hint">Use the original filed returns and each owner&apos;s historical loss worksheets. Keep regular and AMT histories separate, including an explicitly empty carry list. The current return must have one owner for this method. Historical joint returns need both owners&apos; actual computations.</p>
+    <p className="guided-hint">Use the original filed returns and each owner&apos;s historical loss worksheets. Keep regular and AMT histories separate, including an explicitly empty carry list. A current joint return also needs the actual same-couple marital years below. Historical joint returns need both owners&apos; actual computations.</p>
     <CharitableFilingUnitDetails data={data} onChange={onChange} />
+  </fieldset>;
+}
+
+export function NolSameCoupleJointDetails({ label, timeline, data, onChange }: { label: string; timeline?: NolFilingUnitHistoryData; data?: NolSameCoupleJointHistoryData; onChange: (data: NolSameCoupleJointHistoryData | undefined) => void }) {
+  if (!data) return <button type="button" className="utility-button" onClick={() => onChange({})}>Add same-couple marital history for {label}</button>;
+  const change = (patch: Partial<NolSameCoupleJointHistoryData>) => onChange({ ...data, ...patch });
+  return <fieldset className="panel-stack" style={nestedSourceStyle}><legend>{label} current joint marital history</legend>
+    <p className="guided-hint">For a current joint return, identify the same two spouses in every relevant original and intervening year. Separate-return status alone does not identify the spouse. Copy actual marital records; do not enter this year&apos;s deduction or divide the joint closing carry.</p>
+    <TextFact label={`${label} marital history source reference`} value={data.sourceReference ?? ''} onChange={sourceReference => change({ sourceReference })} />
+    <BooleanFact label={`${label} all relevant marital years included`} value={data.allRelevantYearsIncluded} onChange={allRelevantYearsIncluded => change({ allRelevantYearsIncluded })} />
+    {data.years === undefined && <p role="status">The actual marital years are unknown.</p>}
+    {(data.years ?? []).map((row, index) => {
+      const prefix = `${label} marital year ${index + 1}`;
+      const edit = (patch: Partial<typeof row>) => change({ years: data.years!.map((item, i) => i === index ? { ...item, ...patch } : item) });
+      return <fieldset className="panel-stack" style={nestedSourceStyle} key={index}><legend>{prefix}</legend><div className="guided-form-grid">
+        <TextFact label={`${prefix} tax year`} value={row.taxYear ?? ''} onChange={taxYear => edit({ taxYear })} />
+        <SourceChoice label={`${prefix} first spouse`} value={row.firstPersonId} options={people(timeline)} onChange={firstPersonId => edit({ firstPersonId })} />
+        <SourceChoice label={`${prefix} second spouse`} value={row.secondPersonId} options={people(timeline)} onChange={secondPersonId => edit({ secondPersonId })} />
+        <BooleanFact label={`${prefix} married to each other`} value={row.marriedToEachOther} onChange={marriedToEachOther => edit({ marriedToEachOther })} />
+        <TextFact label={`${prefix} source reference`} value={row.sourceReference ?? ''} onChange={sourceReference => edit({ sourceReference })} />
+      </div><button type="button" className="utility-button" onClick={() => change({ years: data.years!.filter((_, i) => i !== index) })}>Remove {prefix}</button></fieldset>;
+    })}
+    <button type="button" className="utility-button" onClick={() => change({ years: [...(data.years ?? []), {}] })}>Add marital year for {label}</button>
+    <button type="button" className="utility-button" onClick={() => change({ years: undefined })}>Mark marital years unknown for {label}</button>
+    <BooleanFact label={`${label} marital sources checked after the last edit`} value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed => change({ sourceFactsConfirmed })} />
+    <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Remove same-couple marital history for {label}</button>
   </fieldset>;
 }
 
@@ -27,6 +53,7 @@ export function NolFilingUnitOrigin({ prefix, timeline, data, onChange }: { pref
   return <fieldset className="panel-stack" style={nestedSourceStyle}><legend>{prefix} original ownership</legend>
     <p className="guided-hint">Copy the original return&apos;s full NOL and each owner&apos;s separately computed NOL. The original filed loss above is the present owner&apos;s portion. These facts establish ownership; they do not enter this year&apos;s deduction.</p>
     <div className="guided-form-grid">
+      <SourceChoice label={`${prefix} original carry owner`} value={data?.ownerPersonId} options={people(timeline)} onChange={ownerPersonId => change({ ownerPersonId })} />
       <SourceChoice label={`${prefix} original filed return`} value={data?.returnSourceId} options={returns(timeline)} onChange={returnSourceId => change({ returnSourceId })} />
       <CurrencyField label={`${prefix} original joint or separate return NOL`} value={data?.originalReturnLoss ?? ''} onChange={originalReturnLoss => change({ originalReturnLoss })} />
     </div>

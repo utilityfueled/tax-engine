@@ -192,27 +192,49 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
     throw new Error("NOL review requires actual complete regular and alternative source packets");
   }
   const ledger = (sources: typeof facts.vintages, computed: NetOperatingLossResult, label: string): string[] => {
-    if (!sources || computed.sourceFactsVerified !== true || !computed.calculationComplete || sources.length !== computed.vintages.length) {
+    if (!sources || computed.sourceFactsVerified !== true || !computed.calculationComplete) {
       throw new Error("NOL review source vintages do not reconcile");
     }
-    const ids = new Set<string>();
-    const rows = computed.vintages.map(row => {
-      const original = sources.filter(source => source.sourceId === row.sourceId);
-      if (ids.has(row.sourceId) || original.length !== 1) throw new Error("NOL review source identities do not reconcile");
-      ids.add(row.sourceId); const source = original[0];
+    const ids = new Set<string>(), usedOriginals = new Set<string>();
+    const checkedSource = (id: string, row: NetOperatingLossResult['vintages'][number], amounts: Pick<typeof row, 'originalLoss' | 'openingCarryforward' | 'expiredBeforeYear'>) => {
+      const original = sources.filter(source => source.sourceId === id);
+      if (usedOriginals.has(id) || original.length !== 1) throw new Error('NOL review original source identities do not reconcile');
+      usedOriginals.add(id); const source = original[0];
       if (!source || source.lossTaxYear !== row.lossTaxYear || source.originKind !== row.originKind
         || source.allHistoryIncluded !== true || source.adjustedThroughTaxYear !== result.taxYear - 1 || !source.history
         || source.originalLoss === undefined || source.openingCarryforward === undefined) throw new Error("NOL review source history is incomplete");
-      eq(row.originalLoss, d(source.originalLoss)); eq(row.openingCarryforward, d(source.openingCarryforward));
+      eq(amounts.originalLoss, d(source.originalLoss)); eq(amounts.openingCarryforward, d(source.openingCarryforward));
       const priorReductions = sum(...source.history.map(history => {
         if (history.nolUsed === undefined || history.attributeReduction === undefined) throw new Error("NOL review source history is incomplete");
         return d(history.nolUsed).plus(history.attributeReduction);
       }));
-      eq(row.originalLoss.minus(priorReductions), row.openingCarryforward);
+      eq(amounts.originalLoss.minus(priorReductions), amounts.openingCarryforward);
+      eq(amounts.expiredBeforeYear, row.lossTaxYear < 2018 && result.taxYear > row.lossTaxYear + 20 ? amounts.openingCarryforward : d('0'));
+      return source;
+    };
+    const rows = computed.vintages.flatMap(row => {
+      if (ids.has(row.sourceId)) throw new Error('NOL review calculated pool identities do not reconcile');
+      ids.add(row.sourceId);
+      const componentRows: string[] = [];
+      if (row.jointPool) {
+        if (input.taxpayer.filingStatus !== 'married_filing_jointly' || facts.returnMembership !== 'changed_membership'
+          || row.sourceId !== `joint-nol:${row.lossTaxYear}` || row.originKind !== 'individual_nol' || row.jointPool.components.length === 0) {
+          throw new Error('NOL review requires the actual source-bound joint pool');
+        }
+        for (const [index, component] of row.jointPool.components.entries()) {
+          const source = checkedSource(component.sourceId, row, component);
+          if (source.filingUnitOrigin?.ownerPersonId !== component.ownerPersonId
+            || source.filingUnitOrigin.returnSourceId !== component.originalReturnSourceId) throw new Error('NOL joint incoming component ownership does not reconcile');
+          componentRows.push(`${row.lossTaxYear} incoming component ${index + 1}: original owner loss ${component.originalLoss}; opening ${component.openingCarryforward}; expired before year ${component.expiredBeforeYear}`);
+        }
+        for (const key of ['originalLoss', 'openingCarryforward', 'expiredBeforeYear'] as const) eq(row[key], sum(...row.jointPool.components.map(part => part[key])));
+        componentRows.push('Joint loss-year pool; no current owner allocation of deduction, absorption or remaining carry is made.');
+      } else checkedSource(row.sourceId, row, row);
       eq(row.openingCarryforward, amount(row.absorbed).plus(amount(row.expired)).plus(amount(row.remainingCarryforward)));
       if (amount(row.deduction).lt(0) || amount(row.deduction).gt(row.openingCarryforward.minus(row.expiredBeforeYear))) throw new Error("NOL review claim does not reconcile with available source carry");
-      return `${row.lossTaxYear}: opening ${row.openingCarryforward}; claimed ${row.deduction}; absorbed ${row.absorbed}; expired ${row.expired}; remaining ${row.remainingCarryforward}`;
+      return [...componentRows, `${row.lossTaxYear}: opening ${row.openingCarryforward}; claimed ${row.deduction}; absorbed ${row.absorbed}; expired ${row.expired}; remaining ${row.remainingCarryforward}`];
     });
+    if (usedOriginals.size !== sources.length) throw new Error('NOL review omitted an actual original source component');
     for (const [total, key] of [[computed.deduction, "deduction"], [computed.absorbed, "absorbed"],
       [computed.expired, "expired"], [computed.carryforward, "remainingCarryforward"]] as const) {
       eq(total, sum(...computed.vintages.map(row => amount(row[key]))));

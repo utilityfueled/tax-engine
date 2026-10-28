@@ -1,0 +1,89 @@
+form: "Section172 same-couple joint carry pools"
+fullName: "Actual separate and recurrent same-couple histories entering one current joint loss-year pool"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  Reg1.172-7(b),(e),(f) treats the same couple's separately determined incoming
+  carries as a joint carry in the current joint year. The published historical
+  examples establish that incoming treatment, not a post2017 owner split of
+  current deduction, modified absorption, or the succeeding joint pool.
+  This extension requires actual current MFJ identities and a confirmed actual
+  same-couple record for every relevant tax year. Every supplied original owner
+  and historical claim/modified absorption/attribute reduction stays distinct.
+  One internally derived pool per loss year enters the existing172/56 canonical
+  income calculations. No calculated current allowance or closing owner shares
+  are source inputs. Returning to separate filing later still requires actual
+  filed owner worksheets; this result must not be copied as an owner allocation.
+  Independent regular and AMT monetary records are required. Actual marital
+  years, people and filing statuses must agree even when source IDs differ.
+  Ordinary individual NOL pools are covered. Existing single-source EBL/QBI
+  treatment remains; a same-year EBL mixture needs its component character
+  method. Joint COD retains its separate actual attribute-allocation guard.
+  Reg1.1411-4(h) retains each original applicable fraction. Equal fractions,
+  known zero, and fully used pools have a determined sum. Different original
+  fractions in a partially used same-year pool need an established attribution
+  method; neither averaging nor an owner order is inferred here.
+  These are independently derived statutory controls, not published matching
+  examples or human tax qualification. 2026 calculation support does not enable
+  2026 filing output or change rule readiness.
+lines:
+  - line: "separate-to-joint"
+    description: "Pool two actual separate owner originals by loss year"
+    formula: "2021 original owner losses60000/40000 with actual intervening modified uses10000/5000 give current joint opening85000. Canonical limit income60000 gives post2017 deduction48000; modified income65000 gives52000 absorption and33000 joint carry. Both source orders produce the same pool; no current owner shares are output."
+    irsRef: "Reg1.172-7(b),(f); IRC172(a)(2),(b)(2); Form172 Change in Filing Status"
+    testRef: "tests/engine/forms/net-operating-loss-joint-pools.test.ts::pools separate originals once by year without assigning current owner amounts"
+  - line: "recurrent-joint"
+    description: "Use actual intervening owner reductions before a recurrent joint year"
+    formula: "Joint100000 original allocated60000/40000; separate use5000/10000 then joint use7000/3000 then separate use0/2000 yields48000/25000 incoming. The joint opening is73000, not a new60/40 split of73000. Original records are preserved and both owners of a joint origin must be included, even a known-zero share."
+    irsRef: "Reg1.172-7(d),(e),(f); Form172 Change in Filing Status"
+    testRef: "tests/engine/forms/net-operating-loss-joint-pools.test.ts::retains recurrent filed owner allocations and rejects inconsistent duplicated histories"
+  - line: "year-order-and-expiry"
+    description: "Apply annual limits and original expiry to joint pools in loss-year order"
+    formula: "Original2005 pre2018 joint carry10000 is deducted first in2025, then post2017 joint carry85000 uses80percent of(60000-10000)=40000. Modified65000 gives pre2018 absorption10000 and post2017 absorption44000; remaining41000 is joint. A surviving2005 remainder expires in2025, while2004 carry already expired."
+    irsRef: "IRC172(a)(2),(b)(1),(b)(2); Reg1.172-7; Form172 Carryover period"
+    testRef: "tests/engine/forms/net-operating-loss-joint-pools.test.ts::keeps loss-year ordering and expiry with independent modified contexts"
+  - line: "actual-same-couple"
+    description: "Require actual marital-year evidence and complete owner-source conservation"
+    formula: "Absent/false same-couple confirmation, a missing or duplicate year, new spouse, unrelated owner, altered opening, missing joint-origin owner, same owner duplicated in one loss year, and conflicting source totals reject. Unknown is not an empty or zero history."
+    irsRef: "Form172 Change in Marital Status and Change in Filing Status; Reg1.172-7(b)-(f)"
+    testRef: "tests/engine/forms/net-operating-loss-joint-pools.test.ts::requires actual same-couple years and every original owner without invented shares"
+  - line: "independent-amt"
+    description: "Apply canonical joint172 and independent56 calculations"
+    formula: "2025 wages100000 and joint standard deduction31500 give regular limit68500, NOLD54800, AGI45200 and regular carry30200 from85000. Independent AMT opening20000 gives ATNOLD20000 and AMTI80000; it is not the regular pool or80percent limit."
+    irsRef: "IRC172(a)(2),56(d); Reg1.55-1; Reg1.172-7(b),(e)"
+    testRef: "tests/engine/federal-net-operating-loss-joint-pools.test.ts::computes independent regular and alternative joint pools from the original return"
+  - line: "fixed-niit-character"
+    description: "Retain original investment fractions without inventing current component priority"
+    formula: "At common original fraction1/2, actual joint NOLD54800 contributes27400 to1411 regardless of owner order. Different fractions are summed when the whole pool is deducted, contribute zero at zero deduction, and reject partial use where an owner allocation changes the answer. Full incoming1/1 at original fractions1/3 and1/6 sum exactly0.5 and report1, not independently rounded component amounts. Known-zero original shares do not divide by zero."
+    irsRef: "Reg1.1411-4(h)(1)-(4); actual deduction rather than modified absorption"
+    testRef: "tests/engine/federal-net-operating-loss-joint-pools.test.ts::preserves determined original investment character and rejects partial differing fractions"
+  - line: "independent-identities"
+    description: "Reconcile actual marital years across the independent monetary systems"
+    formula: "Regular/AMT source IDs may differ while actual people/years agree; a different pair, missing own timeline, hidden positive history or conflicting filed status rejects. Source-complete2026 pooling retains the established separate output gate."
+    irsRef: "IRC56(d); Form172 Keeping records; Reg1.172-7"
+    testRef: "tests/engine/federal-net-operating-loss-joint-pools.test.ts::keeps actual year and independent history identity boundaries"
+  - line: "source-guide"
+    description: "Collect only actual owner, marital-year and filed history facts"
+    formula: "Actual source-only guided rows retain blank/zero/false and exact filed integers. Edits invalidate the marital-year and filed-use confirmations; no current allowance or owner closing split is collected."
+    irsRef: "Form172 Keeping records; Reg1.172-7(b),(e)"
+    testRef: "tests/guided-interview/guided-net-operating-loss-joint-pools.test.ts::preserves actual same-couple sources and invalidates their confirmation"
+  - line: "source-panel"
+    description: "Reach same-couple proof and original-owner selectors through the real panel"
+    formula: "Add/edit/remove marital-year records and original-owner selection, preserve hidden records and stale choices, and require reconfirmation through actual section navigation."
+    irsRef: "Form172 Keeping records; original-source guided workflow"
+    testRef: "tests/apps/web/net-operating-loss-joint-pools-interactions.test.tsx::edits actual marital years and original owners without a calculated allowance field"
+  - line: "bound-review"
+    description: "Bind each original component and the derived joint pool before template I/O"
+    formula: "The review retains source-component amounts and aggregate joint claim/absorption/carry without owner closing shares. Same-total component identity/history changes, a removed source, forged pool membership or changed result reject before I/O; exact identifier redaction remains allowed."
+    irsRef: "Form172 Keeping records; review-only output policy"
+    testRef: "tests/pdf/net-operating-loss-joint-pools-review.test.ts::binds original components and joint totals before saving the review"
+  - line: "actual-workspace"
+    description: "Produce the source-complete guided current joint review packet"
+    formula: "Unmocked source bridge gives NOLD54800/AGI45200/regularcarry30200 and physical6251 adjustments54800/20000 withAMTI80000. Saved PDF pages retain notices and source privacy; incomplete originals block export."
+    irsRef: "Form6251 lines2e,2f,4; Form172 Keeping records; review-only workspace policy"
+    testRef: "tests/apps/web/workspace-net-operating-loss-joint-pools.test.ts::exports the actual joint source ledger and physical alternative tax adjustments"
+  - line: "production-joint-source"
+    description: "Complete actual source edits, save, reload and review download on both viewports"
+    formula: "Desktop and mobile preserve actual same-couple years, original owners and unknown confirmation through edit/save/reload/reconfirm and a retained review download. No new deadline or filing-readiness gate is introduced."
+    irsRef: "Form172 Keeping records; original-source guided workflow"
+    testRef: "apps/web/tests/net-operating-loss-joint-pools.spec.ts::preserves actual joint source histories through reload and review download"

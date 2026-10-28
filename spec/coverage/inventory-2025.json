@@ -7091,6 +7091,29 @@
       ]
     },
     {
+      "key": "federal/net-operating-loss-joint-pools",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i172",
+      "specPath": "spec/federal/net-operating-loss-joint-pools.yaml",
+      "enginePath": "src/engine/forms/net-operating-loss.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "implementationTestRefs": [
+        "tests/engine/forms/net-operating-loss-joint-pools.test.ts::pools separate originals once by year without assigning current owner amounts",
+        "tests/pdf/net-operating-loss-joint-pools-review.test.ts::binds original components and joint totals before saving the review"
+      ],
+      "implementationNote": "Actual same-couple originals and historical owner use determine current joint loss-year totals. Independent regular and alternative sources and fixed investment fractions are retained. Review output does not assign current owner closing shares or establish human, final2026 or filing qualification.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/net-operating-loss-return",
       "jurisdiction": "federal",
       "taxYear": 2025,

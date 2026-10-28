@@ -1226,6 +1226,16 @@
       "note": "Original owner allocation and filed historical use determine a current one-owner carry, with independent AMT sources and original-bound historical review. Current joint pooling, human review and final 2026 filing qualification remain distinct."
     },
     {
+      "key": "federal/net-operating-loss-joint-pools",
+      "enginePath": "src/engine/forms/net-operating-loss.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/forms/net-operating-loss-joint-pools.test.ts::pools separate originals once by year without assigning current owner amounts",
+        "tests/pdf/net-operating-loss-joint-pools-review.test.ts::binds original components and joint totals before saving the review"
+      ],
+      "note": "Actual same-couple originals and historical owner use determine current joint loss-year totals. Independent regular and alternative sources and fixed investment fractions are retained. Review output does not assign current owner closing shares or establish human, final2026 or filing qualification."
+    },
+    {
       "key": "federal/net-operating-loss-vintages",
       "enginePath": "src/engine/forms/net-operating-loss.ts",
       "testRefs": [

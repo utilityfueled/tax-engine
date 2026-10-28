@@ -108,7 +108,8 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
     || !Array.isArray(alternative.vintages)) {
     throw new Error("NOL requires the separate actual complete AMT carry history and special-loss classification");
   }
-  const alternativeTaxSources = calculateNetOperatingLoss({ ...params, facts: { ...facts, ...alternative, filingUnitHistory: alternative.filingUnitHistory } });
+  const alternativeTaxSources = calculateNetOperatingLoss({ ...params, facts: { ...facts, ...alternative,
+    filingUnitHistory: alternative.filingUnitHistory, sameCoupleJointHistory: alternative.sameCoupleJointHistory } });
   if (facts.returnMembership === "changed_membership") assertNolFilingUnitAgreement(input.taxpayer, facts.filingUnitHistory, alternative.filingUnitHistory, input.standardDeductionFacts);
   if (input.scheduleK1.some(row => !d(row.amtDepletion).isZero())) {
     throw new Error("ATNOL with depletion requires its refigured AMT taxable-income limitation worksheet");
@@ -253,21 +254,64 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
         "Removed senior deduction": context.seniorDeduction,
       });
   }
+  const exactRatios: Array<{ numerator: Decimal; denominator: Decimal }> = [];
+  const Exact = Decimal.clone({ precision: Math.max(80, JSON.stringify(facts.vintages).length * 2 + 32) });
   const section1411Amounts = result.vintages.map(row => {
+    if (row.jointPool) {
+      const parts = row.jointPool.components.map(component => {
+        const value = facts.vintages?.find(item => item.sourceId === component.sourceId)?.section1411OriginalLoss;
+        if (value === undefined || !/^\d+$/.test(value) || !d(value).isFinite() || d(value).gt(component.originalLoss)
+          || row.lossTaxYear < 2013 && !d(value).isZero()) throw new Error('NOL requires each actual originating Section1411 loss, including known zero');
+        return { original: new Exact(component.originalLoss.toFixed()), investment: new Exact(value),
+          available: new Exact(component.openingCarryforward.minus(component.expiredBeforeYear).toFixed()) };
+      });
+      const active = parts.filter(part => part.available.gt(0)), claimed = new Exact((row.deduction ?? d('0')).toFixed());
+      const available = active.reduce((total, part) => total.plus(part.available), new Exact(0));
+      const ratios: typeof exactRatios = [];
+      if (claimed.gt(0)) {
+        if (claimed.eq(available)) {
+          for (const part of active) ratios.push({ numerator: part.available.times(part.investment), denominator: part.original });
+        } else {
+          const first = active[0]!;
+          if (active.some(part => !part.investment.times(first.original).eq(first.investment.times(part.original)))) {
+            throw new Error('NOL partially used joint pool with different original Section1411 fractions requires its component attribution method');
+          }
+          ratios.push({ numerator: claimed.times(first.investment), denominator: first.original });
+        }
+      }
+      exactRatios.push(...ratios);
+      const amount = new Decimal(ratios.reduce((total, ratio) => total.plus(ratio.numerator.div(ratio.denominator)), new Exact(0)).toFixed());
+      audit.record('Section1411 NOL Worksheet', row.sourceId, 'Applicable portion of joint NOL deduction', amount,
+        'Actual original component fractions; zero use, equal active fractions, or full pool consumption determines the amount without owner priority',
+        { 'Original owner components': String(parts.length), 'Regular joint deduction': row.deduction ?? d('0'),
+          'Available joint carry': new Decimal(available.toFixed()) });
+      return amount;
+    }
     const record = facts.vintages?.find(item => item.sourceId === row.sourceId);
     const value = record?.section1411OriginalLoss;
     if (value === undefined || !/^\d+$/.test(value) || !d(value).isFinite() || d(value).gt(row.originalLoss)
       || (row.lossTaxYear < 2013 && !d(value).isZero())) throw new Error("NOL requires each actual originating Section1411 loss, including known zero");
     const amount = row.originalLoss.isZero() ? d("0") : (row.deduction ?? d("0")).times(d(value)).div(row.originalLoss);
+    if (!row.originalLoss.isZero()) exactRatios.push({ numerator: new Exact((row.deduction ?? d('0')).toFixed()).times(value), denominator: new Exact(row.originalLoss.toFixed()) });
     audit.record("Section1411 NOL Worksheet", row.sourceId, "Applicable portion of regular NOL deduction", amount,
       "Actual current regular deduction times fixed originating1411loss/originalNOL fraction; basis is the claimed deduction, not carry absorption",
       { "Original regular loss": row.originalLoss, "Original1411 loss": d(value), "Regular deduction": row.deduction ?? d("0") });
     return amount;
   });
+  // A pooled method retains the exact component fractions through the final
+  // line round; independently rounded owner amounts are not a source allocation.
+  let exactNumerator = new Exact(0), exactDenominator = new Exact(1);
+  for (const ratio of exactRatios) {
+    exactNumerator = exactNumerator.times(ratio.denominator).plus(ratio.numerator.times(exactDenominator));
+    exactDenominator = exactDenominator.times(ratio.denominator);
+  }
+  const section1411Deduction = result.vintages.some(row => row.jointPool)
+    ? new Decimal(exactNumerator.times(2).plus(exactDenominator).divToInt(exactDenominator.times(2)).toFixed())
+    : roundDollar(sum(...section1411Amounts));
   return { ...result, calculationComplete: true,
     ...(facts.returnMembership === "changed_membership" ? { filingUnitSourceDigest: nolFilingUnitSourceDigest(input) } : {}), deduction: result.deduction, absorbed: result.absorbed,
     expired: result.expired, carryforward: result.carryforward, actualIncome, modifiedIncome, finalIncome,
-    modifiedVintageIncome, section1411Deduction: roundDollar(sum(...section1411Amounts)),
+    modifiedVintageIncome, section1411Deduction,
     alternativeTaxSources, alternativeTax, charitableCarryover, charitableCounterfactual,
     alternativeCharitableCarryover, alternativeCharitableCounterfactual,
     priorCharitableCarryover, priorAlternativeCharitableCarryover, priorCharitableAlternativeAdjustment,

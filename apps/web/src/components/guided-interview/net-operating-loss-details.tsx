@@ -4,7 +4,7 @@ import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
 import { CharitableCarryoverDetails } from './charitable-carryover-details';
 import type { NolFilingUnitHistoryData } from '@/lib/guided-nol-filing-unit';
-import { NolFilingUnitDetails, NolFilingUnitOrigin, NolFilingUnitUses } from './nol-filing-unit-details';
+import { NolFilingUnitDetails, NolFilingUnitOrigin, NolFilingUnitUses, NolSameCoupleJointDetails } from './nol-filing-unit-details';
 
 const sourceGroupStyle = { border: 0, margin: 0, padding: 0, minWidth: 0 };
 
@@ -112,19 +112,21 @@ export function NetOperatingLossDetails({ data, onChange }: { data?: NetOperatin
         {([['sourceTaxYear', 'NOL source return tax year'], ['sourceReference', 'NOL carry packet reference'], ['primaryName', 'NOL primary taxpayer source name'], ['primaryTaxpayerIdLast4', 'NOL primary taxpayer source ID last four'], ['spouseName', 'NOL spouse source name, when applicable'], ['spouseTaxpayerIdLast4', 'NOL spouse source ID last four, when applicable']] as const).map(([key, label]) => <TextFact key={key} label={label} value={data[key] ?? ''} onChange={value => change({ [key]: value })} />)}
         <Choice label="NOL continuing return membership" value={data.returnMembership} options={[
           ['continuous_individual', 'Same individual throughout the source history'], ['same_spouses_joint', 'Same spouses filing jointly throughout the source history'],
-          ['changed_membership', 'Actual changed ownership history; current return has one owner'],
+          ['changed_membership', 'Actual changed filing history with original owner records'],
         ]} onChange={value => change({ returnMembership: value as NetOperatingLossData['returnMembership'] })} />
         <BooleanFact label="NOL taxpayer membership unchanged throughout history" value={data.membershipUnchangedConfirmed} onChange={membershipUnchangedConfirmed => change({ membershipUnchangedConfirmed })} />
         <BooleanFact label="NOL calendar-year taxpayer confirmed" value={data.calendarYearTaxpayer} onChange={calendarYearTaxpayer => change({ calendarYearTaxpayer })} />
         <BooleanFact label="All actual regular NOL carryovers included" value={data.allCarryoversIncluded} onChange={allCarryoversIncluded => change({ allCarryoversIncluded })} />
       </div>
       {(changedMembership || data.filingUnitHistory) && <NolFilingUnitDetails label="Regular NOL" data={data.filingUnitHistory} onChange={filingUnitHistory => change({ filingUnitHistory })} />}
+      {(changedMembership || data.sameCoupleJointHistory) && <NolSameCoupleJointDetails label="Regular NOL" timeline={data.filingUnitHistory} data={data.sameCoupleJointHistory} onChange={sameCoupleJointHistory => change({ sameCoupleJointHistory })} />}
       <Vintages label="Regular" data={data.vintages} regular changedMembership={changedMembership} timeline={data.filingUnitHistory} onChange={vintages => change({ vintages })} />
       {!alternative ? <button type="button" className="utility-button" onClick={() => change({ alternativeTax: {} })}>Add independent AMT carry sources</button> : <fieldset className="panel-stack" style={sourceGroupStyle}><legend>Independent AMT carry sources</legend>
         <div className="guided-form-grid"><TextFact label="AMT NOL source packet reference" value={alternative.sourceReference ?? ''} onChange={sourceReference => changeAlternative({ sourceReference })} />
           {([['allCarryoversIncluded', 'All actual AMT NOL carryovers included'], ['specialDisasterCarryIncluded', 'AMT carry includes special-disaster loss'], ['currentYearAdjustmentsCompleteConfirmed', 'All current AMT adjustments and preferences represented'], ['regularBasisAndLossLimitsSameAsAlternativeConfirmed', 'Current regular and AMT bases and loss limits are the same']] as const).map(([key, label]) => <BooleanFact key={key} label={label} value={alternative[key]} onChange={value => changeAlternative({ [key]: value })} />)}
         </div>
         {(changedMembership || alternative.filingUnitHistory) && <NolFilingUnitDetails label="AMT NOL" data={alternative.filingUnitHistory} onChange={filingUnitHistory => changeAlternative({ filingUnitHistory })} />}
+        {(changedMembership || alternative.sameCoupleJointHistory) && <NolSameCoupleJointDetails label="AMT NOL" timeline={alternative.filingUnitHistory} data={alternative.sameCoupleJointHistory} onChange={sameCoupleJointHistory => changeAlternative({ sameCoupleJointHistory })} />}
         <Vintages label="AMT" data={alternative.vintages} regular={false} changedMembership={changedMembership} timeline={alternative.filingUnitHistory} onChange={vintages => changeAlternative({ vintages })} />
         <CharitableHistories data={alternative.charitableCarryoverHistory} onChange={charitableCarryoverHistory => changeAlternative({ charitableCarryoverHistory })} />
         <BooleanFact label="AMT NOL sources checked after the last edit" value={alternative.sourceFactsConfirmed} onChange={sourceFactsConfirmed => changeAlternative({ sourceFactsConfirmed })} />

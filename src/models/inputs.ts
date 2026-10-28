@@ -5,7 +5,7 @@
 
 import { z } from "zod";
 import { FilingUnitHistorySchema } from "./filing-unit-sources.js";
-import { NolFilingUnitOriginSchema, NolFilingUnitUseSchema } from "./net-operating-loss-filing-unit.js";
+import { NolFilingUnitOriginSchema, NolFilingUnitUseSchema, NolSameCoupleJointHistorySchema } from "./net-operating-loss-filing-unit.js";
 import { SavingsBondReissueSourcesSchema } from "./savings-bond-reissue-sources.js";
 import { EducationRoomBoardPeriodSchema, EducationRoomBoardPeriodExpenseSchema, EducationRoomBoardEsaAllocationSchema, EducationRoomBoardPriorUseSchema, EducationRoomBoardPriorUseExpenseSchema } from "@/models/education-room-board-periods.js";
 import { VehicleRefinancingSourcesSchema } from "@/models/vehicle-refinancing-sources.js";
@@ -2641,10 +2641,12 @@ export const NetOperatingLossSourcesSchema = z.object({
   allCarryoversIncluded: z.boolean().optional(), calendarYearTaxpayer: z.boolean().optional(),
   returnMembership: z.enum(["continuous_individual", "same_spouses_joint", "changed_membership"]).optional(), membershipUnchangedConfirmed: z.boolean().optional(),
   filingUnitHistory: FilingUnitHistorySchema.optional(),
+  sameCoupleJointHistory: NolSameCoupleJointHistorySchema.optional(),
   primaryName: z.string().optional(), primaryTaxpayerIdLast4: z.string().optional(), spouseName: z.string().optional(), spouseTaxpayerIdLast4: z.string().optional(),
   vintages: z.array(NetOperatingLossVintageSchema).optional(),
   alternativeTax: z.object({ sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
     filingUnitHistory: FilingUnitHistorySchema.optional(),
+    sameCoupleJointHistory: NolSameCoupleJointHistorySchema.optional(),
     allCarryoversIncluded: z.boolean().optional(), specialDisasterCarryIncluded: z.boolean().optional(),
     currentYearAdjustmentsCompleteConfirmed: z.boolean().optional(), regularBasisAndLossLimitsSameAsAlternativeConfirmed: z.boolean().optional(),
     /** Independent actual charity histories; absence never establishes either history is empty. */
