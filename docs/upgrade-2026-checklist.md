@@ -7,13 +7,19 @@ complete a checkbox.
 
 ## Current integration — 2026-10-28 UTC
 
-Latest implementations are `6fc4312d` (explicitly nonitemized 2026 prior
-property releases) and `e80a3aba` (workspace advisory readiness wording).
-Separate-owner health (`b385f4a0`), joint EBL/ordinary sources (`33ab57d1`) and
-preceding source packages remain delivered. Rule provenance is `2025.187` /
-`2026.185-law-integration-draft`; inventory has 580 entries, 6,140 spec references
-and 160 explicit associations. Package reviews and integrated checks pass.
-Human tax review, final-source release checks and filing qualification remain open.
+The latest implementation is `f4dc51a7`: ordinary prior-QBI records for the
+same actual taxpayer or joint couple, without requiring unrelated NOL history.
+Rule provenance is `2025.188` / `2026.186-law-integration-draft`; inventory has
+580 entries, 6,153 spec references and 161 explicit associations. The reviewed
+source, final builds and focused checks pass. Full current-source release
+checks, human tax review and filing qualification remain open.
+
+A subsequent source review supersedes the no-floor-under-standard premise in
+`6fc4312d` and related charitable carry methods. That package's recorded software
+checks remain historical evidence; they do not establish the corrected legal
+premise. The [source finding](upgrade-2026-charity-floor-source-finding.md)
+records the current-source correction and exact unresolved prior-source cases.
+The correction and ordinary section 108 attribute work are active internal work.
 
 The latest completed [remote CI record](upgrade-2026-ci-76d93bb6.json) passes
 19,658 tests in 1,435 files normally and under coverage on `76d93bb6`.
@@ -67,7 +73,8 @@ engine build. Browser evidence is focused seeded interaction, and Form 8962
 remains an explicitly unofficial reference in this review packet.
 
 The [prior-property package](upgrade-2026-k1-prior-property-nonitemized-work.md)
-is delivered in `6fc4312d`. Independent source review passes 37/7, including
+was delivered in `6fc4312d` under the now-superseded no-floor premise.
+The following checks are historical: source review passed 37/7, including
 eight private controls; final private checks pass 45/11. Parent independently
 derives the nine canonical and two actual saved browser originals and passes
 8,765 arithmetic, source, handoff and gate checks. No 2026 PDF is generated.
@@ -77,14 +84,29 @@ one worker and zero retries. The [advisory wording correction](upgrade-2026-work
 is separately delivered in `e80a3aba`; its new capture no longer claims the
 unsupported-year bundle is ready. Existing gates remain closed.
 
-General ordinary prior-QBI intake remains active internal work. Section 108
-research establishes collectable ordinary later-attribute sources and has
-reproduced existing aggregate carry/basis omissions; the bounded implementation
-and repairs remain internal. The precise modified-absorption/charitable-exhaustion
+The [ordinary prior-QBI package](upgrade-2026-prior-qbi-ordinary-work.md)
+is delivered and pushed in `f4dc51a7`. Independent source review passes 25 tests
+in eight files, including eight private controls. Parent review derives nine
+saved originals and checks 69 PDFs, 174 pages and 334 populated fields with
+12,204 checks and no failures; separate visual review covers all page contacts.
+Final private integration passes 75/23, all three types, spec/inventory, lint
+with no errors, both builds and desktop/mobile browser 2/2 with zero retries.
+Parent verifies all 3,822 tracked regular files and six symlinks before adoption;
+the two final saved originals and all 40 downloaded pages match the reviewed
+source in bytes or extracted text and pixels as applicable. No invented prior
+zero, filing-unit allocation or interview completion is introduced.
+
+Section 108 research establishes collectable ordinary later-attribute sources.
+Independent reproduction confirms incorrect capital-carry sign handling, a
+missing section 1017 liability cap, stale outgoing passive-activity balances,
+and omitted property inventory becoming zero. The spec-first source/reduction
+package is in progress; its first five canonical controls fail as expected
+before implementation. The precise modified-absorption/charitable-exhaustion
 interaction remains a separate guarded interpretation. Final integrated release
-checks follow the remaining source work. The [community-bond interpretation](upgrade-2026-community-bond-method-decision.md)
-is recorded for a qualified reviewer; no calculation or ownership assumption was
-enabled. Earlier product findings and reader corrections remain retained.
+checks follow the charity and section 108 corrections. The
+[community-bond interpretation](upgrade-2026-community-bond-method-decision.md)
+remains recorded for a qualified reviewer. Earlier findings and reader-only
+corrections remain retained; agent review does not replace human qualification.
 
 Remote CI on `25f71f06` passes 19,523 tests in 1,384 files both normally and
 under coverage. Coverage is 91.85% statements, 86.88% branches, 90.72% functions
@@ -196,6 +218,10 @@ and scan retain 157 matches across 67 OS advisories, with no Critical, npm or
 available-fixed-version matches. Every advisory tuple matches the preceding
 995 scan; owner acceptance by November 7 remains pending. These are synthetic
 remote checks, not staging or production evidence.
+
+The following queue and candidate observations are retained October 27–28
+history. The current integration section above and checkpoint workInProgress
+list supersede their pending/delivered labels.
 
 The finite internal queue was refreshed against the actual source on October27.
 The bounded audit and its24 source/document hashes are retained in

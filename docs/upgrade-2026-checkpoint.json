@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "e80a3aba6905d1f42bb17067f445e6099811a0be",
+    "lastRecordedCommit": "f4dc51a7de1f2d6a8b56fc472730fb03f174af02",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1311,11 +1311,11 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Complete independently reviewed ordinary prior-QBI intake without unrelated NOL history. Preserve actual-zero versus unknown and the direct-charity prior-property originals that contain no qbiLossSources packet.",
-      "Implement bounded ordinary section108 later-attribute sources and reproduce/repair exposed aggregate carry/basis handoffs; actual original attributes and two property snapshots are collectable internal facts. Preserve the exact unresolved modified-absorption/charitable-exhaustion guards.",
+      "Correct the established current charitable floor carry independently of standard/itemized selection, preserving separate170(p) and NOL ordering. Supersede prior no-floor premise; precisely guard unresolved old-vintage/first-release interactions without inventing years or allocation.",
+      "Finish ordinary section108 complete original-attribute sources and repair signed capital, liability-cap, outgoing passive/category and unknown-inventory handoffs. Independently review source and saved outputs; preserve exact modified-absorption/charity guards.",
       "Run final integrated unit/coverage/static/build/browser/native arm64 and amd64/SBOM/scan/recovery evidence after remaining source changes. Historical76d evidence is not final; staging, human, provider and final-form gates remain closed."
     ],
-    "latestIntegratedCommit": "e80a3aba6905d1f42bb17067f445e6099811a0be",
+    "latestIntegratedCommit": "f4dc51a7de1f2d6a8b56fc472730fb03f174af02",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1602,7 +1602,8 @@
       "marriageOutsidePerson": "977212bfbe38733ae79977a917a63cc529413cef",
       "marketplaceActualPaidRepayment": "661977aabb6c9f5467ff5d4b1ef450fc81e3cfb3",
       "educatorBondReissue": "2ab4d9ac7d675762bd9cdb658b8fdf6bb77ffa18",
-      "sameCoupleJointLossPools": "80af6d97f6287b0cddca58688d310b8a2d717e1e"
+      "sameCoupleJointLossPools": "80af6d97f6287b0cddca58688d310b8a2d717e1e",
+      "ordinaryPriorQbiSource": "f4dc51a7de1f2d6a8b56fc472730fb03f174af02"
     },
     "remoteCi": {
       "commit": "054cd59f9d0c8a53fb5794bbebcfd10e110f213b",
@@ -1691,8 +1692,8 @@
       "scope": "Exact76d93bb6 synthetic remote evidence through same-couple joint loss delivery. Excludes pending positive-other-return health, EBL composition and later internal work. No staging, production, filing, provider or human-review qualification."
     },
     "remainingInternalWork": [
-      "Complete independently reviewed ordinary prior-QBI intake without unrelated NOL history. Preserve actual-zero versus unknown and the direct-charity prior-property originals that contain no qbiLossSources packet.",
-      "Implement bounded ordinary section108 later-attribute sources and reproduce/repair exposed aggregate carry/basis handoffs; actual original attributes and two property snapshots are collectable internal facts. Preserve the exact unresolved modified-absorption/charitable-exhaustion guards.",
+      "Correct the established current charitable floor carry independently of standard/itemized selection, preserving separate170(p) and NOL ordering. Supersede prior no-floor premise; precisely guard unresolved old-vintage/first-release interactions without inventing years or allocation.",
+      "Finish ordinary section108 complete original-attribute sources and repair signed capital, liability-cap, outgoing passive/category and unknown-inventory handoffs. Independently review source and saved outputs; preserve exact modified-absorption/charity guards.",
       "Run final integrated unit/coverage/static/build/browser/native arm64 and amd64/SBOM/scan/recovery evidence after remaining source changes. Historical76d evidence is not final; staging, human, provider and final-form gates remain closed."
     ],
     "previousStableCoverageRun": {
@@ -1715,7 +1716,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "e80a3aba6905d1f42bb17067f445e6099811a0be",
+    "lastPushedCommit": "f4dc51a7de1f2d6a8b56fc472730fb03f174af02",
     "currentBrowserRun": {
       "sourceCommit": "76d93bb63a692e9890316ea896339b3f725dfac0",
       "runId": 40706358808,
@@ -5010,10 +5011,10 @@
     },
     "currentInventory": {
       "entries": 580,
-      "specReferences": 6140,
-      "sourceCommit": "6fc4312d18b160cc3d00303526bc2e3364fad44a",
+      "specReferences": 6153,
+      "sourceCommit": "f4dc51a7de1f2d6a8b56fc472730fb03f174af02",
       "path": "spec/coverage/inventory-2025.json",
-      "explicitAssociations": 160,
+      "explicitAssociations": 161,
       "qualification": "Traceability only; no readiness or human-review promotion"
     },
     "previousCoverageDiagnostic": {
@@ -6180,7 +6181,7 @@
         }
       },
       "priorPropertyNonitemized": {
-        "status": "delivered6fc4312d after independent V3/final source review and original/gate review; separate copy correctione80a3aba",
+        "status": "historically delivered; no-floor-under-standard interpretation superseded; source correction/precise containment pending",
         "tree": "e12aa23a5f4ca5a44e6a30180c8746ed45b54501",
         "manifest": {
           "path": ".local/upgrade-evidence/prior-property-nonitemized-v2-review-snapshot.json",
@@ -6198,18 +6199,55 @@
         }
       },
       "ordinaryPriorQbi": {
-        "status": "spec-linked red retained; implementation11/5 and roottypes pass; affected/finalchecks and independent review in progress",
+        "status": "delivered and pushed; bounded independent source/original/PDF review clear",
         "contract": {
           "path": ".local/upgrade-evidence/ordinary-k1-prior-qbi-source-contract.json",
           "sha256": "2adaeefca0746cddf5d132b0e11ed71f8349842135f6517f8bb5e0b1eb8a89a7"
         },
         "humanQualification": false,
-        "propertyInteraction": "Exact11 retained property originals have no qbiLossSources packet, so new complete-QBI-source requirement does not apply. Preserve existing direct-charity boundary; missing-prior rejects apply to actual complete-QBI-source/EBL records."
+        "propertyInteraction": "Exact11 retained property originals have no qbiLossSources packet, so new complete-QBI-source requirement does not apply. Preserve existing direct-charity boundary; missing-prior rejects apply to actual complete-QBI-source/EBL records.",
+        "commit": "f4dc51a7de1f2d6a8b56fc472730fb03f174af02",
+        "ledger": "docs/upgrade-2026-prior-qbi-ordinary-work.md",
+        "delivery": {
+          "path": ".local/upgrade-evidence/parent-ordinary-prior-qbi-final-adoption.json",
+          "sha256": "40ddb94f16e5e8b10940cb3f76297ec21eaae440227579a317fc10133ad96342"
+        },
+        "finalManifest": {
+          "path": ".local/upgrade-evidence/ordinary-prior-qbi-final-review-snapshot.json",
+          "sha256": "fb14c13f7ca61d65c520b7eec657ef60388ed98ced8d4c7265118c966990076c"
+        },
+        "sourceReview": {
+          "path": ".local/upgrade-evidence/complete-ordinary-prior-qbi-independent-review.json",
+          "sha256": "cf9f293774dd9e9af9e9901ea27d8bef20f3b138ee21123ccf30cd0a5253bab3"
+        },
+        "artifactReview": {
+          "path": ".local/upgrade-evidence/parent-ordinary-prior-qbi-artifact-review/checks.json",
+          "sha256": "e39810f1c82f1a82324ca5839f57f08394d67f3e2bade0267a4c35434c4ef17e"
+        },
+        "visualReview": {
+          "path": ".local/upgrade-evidence/parent-ordinary-prior-qbi-artifact-review/visual-review.json",
+          "sha256": "a5007b195b0d4045ca5796784eec0281d09f6b05764f1ca2076823d4f8155cf3"
+        },
+        "sourceTests": 25,
+        "sourceFiles": 8,
+        "privateControls": 8,
+        "finalPrivateTests": 75,
+        "finalPrivateFiles": 23,
+        "originals": 9,
+        "pdfs": 69,
+        "pages": 174,
+        "populatedFields": 334,
+        "artifactChecks": 12204,
+        "finalBrowserTests": 2,
+        "finalBrowserRetries": 0,
+        "finalPageComparisons": 40,
+        "adoptionChecks": 11634,
+        "fullCurrentHeadReleaseChecks": "pending after internal source corrections"
       }
     },
     "currentRuleVersions": {
-      "2025": "2025.187",
-      "2026": "2026.185-law-integration-draft"
+      "2025": "2025.188",
+      "2026": "2026.186-law-integration-draft"
     },
     "historicalCoverageEvidence": [
       {
@@ -8199,8 +8237,8 @@
       "scope": "Immutable 603fc1b software snapshot, not the later source tree, hosted staging, tax qualification or final release evidence."
     },
     "currentFullVerificationRequired": {
-      "sourceCommit": "e80a3aba6905d1f42bb17067f445e6099811a0be",
-      "reason": "Reviewed property and UI packages pass scoped integrated checks; final full verification remains after ordinary prior-QBI and bounded section108 source/repair work.",
+      "sourceCommit": "f4dc51a7de1f2d6a8b56fc472730fb03f174af02",
+      "reason": "Ordinary prior-QBI passes exact integrated-source focused checks; current charity premise correction and ordinary section108 source/repairs precede full release verification.",
       "readiness": "Not release qualified; external reviews, staging, final forms and model evaluation remain open."
     },
     "previousCurrentUnitRunBeforeE91": {
@@ -8426,7 +8464,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-28T17:53:38.073532+00:00",
+    "recordedAt": "2026-10-28T18:25:16.609623+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -11289,7 +11327,7 @@
       "Run final integrated/static/browser/coverage/native arm64 and amd64/SBOM/scan/recovery evidence. Immutable76d remains historical; staging, human, provider and final-form gates remain closed."
     ],
     "priorPropertyDelivered": {
-      "status": "delivered",
+      "status": "historically delivered; no-floor-under-standard interpretation superseded; source correction/precise containment pending",
       "commit": "6fc4312d18b160cc3d00303526bc2e3364fad44a",
       "ledger": "docs/upgrade-2026-k1-prior-property-nonitemized-work.md",
       "delivery": {
@@ -11307,7 +11345,8 @@
       "artifactChecks": 8765,
       "pdfs": 0,
       "integratedBrowserTests": 4,
-      "humanQualification": false
+      "humanQualification": false,
+      "supersededByFinding": "nonitemizedFloorCarryCorrection"
     },
     "workspaceReadinessCopyDelivered": {
       "status": "delivered",
@@ -11327,7 +11366,7 @@
       "qualification": "Local synthetic; exact unsupported-year ready sentence removed, no gate changes."
     },
     "section108SourceDisposition": {
-      "status": "author source research complete; independent source-contract review and practical aggregate reproduction ongoing before implementation",
+      "status": "independent source-contract review and four canonical reproductions complete; spec-first source/reduction implementation active",
       "receipt": {
         "path": ".local/upgrade-evidence/section108-method-disposition-20261028.json",
         "sha256": "ff1fc6135af5586f8934dea281905f418cca4b21cfaa7ac94172d9b7cae6e554"
@@ -11338,6 +11377,100 @@
       },
       "ordinaryLaterAttributes": "internal source implementation, not an external-law blocker",
       "modifiedAbsorptionCharityExhaustion": "precise unresolved guarded sequence; no arbitrary clamp or invented priority",
+      "humanQualification": false,
+      "independentReview": {
+        "path": ".local/upgrade-evidence/federal-section108-disposition-review.json",
+        "sha256": "8ba604f62fc75eddddaa150c25231ec1d31cd99b3b694cb0989fd362fb9a1e60"
+      },
+      "redLog": {
+        "path": ".local/upgrade-evidence/cod-ordinary-attributes-canonical-red.log",
+        "sha256": "849aec551a22caff0a24eb8bd2033b6ca9193c95ad42850c7dfbf1db0e3d5068"
+      },
+      "redTests": 5,
+      "redFiles": 1,
+      "confirmedDefects": [
+        "negative capital carry consumed as negative capacity",
+        "missing1017 liability cap",
+        "passive aggregate reduction not applied to outgoing activity",
+        "omitted property inventory defaults to zero"
+      ],
+      "unverifiedStaticRisk": "foreign-credit category/vintage closing rows are not reconciled to aggregate reduction"
+    },
+    "previousWorkInProgressBeforeF4dc51a7": [
+      "Complete independently reviewed ordinary prior-QBI intake without unrelated NOL history. Preserve actual-zero versus unknown and the direct-charity prior-property originals that contain no qbiLossSources packet.",
+      "Implement bounded ordinary section108 later-attribute sources and reproduce/repair exposed aggregate carry/basis handoffs; actual original attributes and two property snapshots are collectable internal facts. Preserve the exact unresolved modified-absorption/charitable-exhaustion guards.",
+      "Run final integrated unit/coverage/static/build/browser/native arm64 and amd64/SBOM/scan/recovery evidence after remaining source changes. Historical76d evidence is not final; staging, human, provider and final-form gates remain closed."
+    ],
+    "ordinaryPriorQbiDelivered": {
+      "status": "delivered and pushed; bounded independent source/original/PDF review clear",
+      "commit": "f4dc51a7de1f2d6a8b56fc472730fb03f174af02",
+      "ledger": "docs/upgrade-2026-prior-qbi-ordinary-work.md",
+      "delivery": {
+        "path": ".local/upgrade-evidence/parent-ordinary-prior-qbi-final-adoption.json",
+        "sha256": "40ddb94f16e5e8b10940cb3f76297ec21eaae440227579a317fc10133ad96342"
+      },
+      "finalManifest": {
+        "path": ".local/upgrade-evidence/ordinary-prior-qbi-final-review-snapshot.json",
+        "sha256": "fb14c13f7ca61d65c520b7eec657ef60388ed98ced8d4c7265118c966990076c"
+      },
+      "sourceReview": {
+        "path": ".local/upgrade-evidence/complete-ordinary-prior-qbi-independent-review.json",
+        "sha256": "cf9f293774dd9e9af9e9901ea27d8bef20f3b138ee21123ccf30cd0a5253bab3"
+      },
+      "artifactReview": {
+        "path": ".local/upgrade-evidence/parent-ordinary-prior-qbi-artifact-review/checks.json",
+        "sha256": "e39810f1c82f1a82324ca5839f57f08394d67f3e2bade0267a4c35434c4ef17e"
+      },
+      "visualReview": {
+        "path": ".local/upgrade-evidence/parent-ordinary-prior-qbi-artifact-review/visual-review.json",
+        "sha256": "a5007b195b0d4045ca5796784eec0281d09f6b05764f1ca2076823d4f8155cf3"
+      },
+      "sourceTests": 25,
+      "sourceFiles": 8,
+      "privateControls": 8,
+      "finalPrivateTests": 75,
+      "finalPrivateFiles": 23,
+      "originals": 9,
+      "pdfs": 69,
+      "pages": 174,
+      "populatedFields": 334,
+      "artifactChecks": 12204,
+      "finalBrowserTests": 2,
+      "finalBrowserRetries": 0,
+      "finalPageComparisons": 40,
+      "adoptionChecks": 11634,
+      "humanQualification": false,
+      "fullCurrentHeadReleaseChecks": "pending after internal source corrections"
+    },
+    "nonitemizedFloorCarryCorrection": {
+      "status": "confirmed source premise error; spec-first internal correction in progress",
+      "sourceFinding": "docs/upgrade-2026-charity-floor-source-finding.md",
+      "assessment": {
+        "path": ".local/upgrade-evidence/complete-nonitemized-floor-carry-assessment-20261028.json",
+        "sha256": "1994039fbbf72d204aa427e2f43b5b2eaf984c20634372a9248ff805670e175e"
+      },
+      "assessmentNote": {
+        "path": ".local/upgrade-evidence/complete-nonitemized-floor-carry-assessment-20261028.md",
+        "sha256": "d3c0b2cf0da6b72b5a0c27004cb4cfd4fca14d250735874f4b4747399f786864"
+      },
+      "correctionContract": {
+        "path": ".local/upgrade-evidence/nonitemized-allowable-carry-source-contract.json",
+        "sha256": "c2e1f76a19713a58bed118d4d8cc55ffcee410846cdd020fba518632aa4f22ab"
+      },
+      "supersededPremise": "Choosing standard/nonitemized treatment alone removes a determined current floor addition from ordinary charitable carry.",
+      "determinedControl": {
+        "contributionBase": "100000",
+        "currentCategoryC": "40000",
+        "percentageExcess": "10000",
+        "attributableFloor": "500",
+        "ordinaryCarry": "10500",
+        "selectedPropertyDeduction": "0"
+      },
+      "remainingPriorQuestions": [
+        "Floor reaching an existing section170 contribution-year vintage or final-year expiry",
+        "Pre2026 entity gift first released from basis/at-risk suspension; original gift year versus contribution year under new170(d)(1)(C)"
+      ],
+      "noInventedVintageOrAllocation": true,
       "humanQualification": false
     }
   },
