@@ -78,6 +78,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       await expect(checklist.locator("li").filter({ hasText: "Check tax year and source facts" })).toContainText("blocked");
       await expect(checklist.locator("li").filter({ hasText: "Review summary and completed return" })).toContainText("blocked");
       await expect(page.getByRole("region", { name: "Draft Return Bundle", exact: true })).toBeVisible();
+      await expect(page.getByText("Your return bundle is ready.", { exact: false })).toHaveCount(0);
       await expect(page.getByRole("button", { name: "Download Review PDF", exact: true })).toHaveCount(0);
       await expect(page.getByRole("button", { name: "Download Draft Filled Return PDF", exact: true })).toHaveCount(0);
     }

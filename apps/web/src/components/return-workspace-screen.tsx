@@ -1228,7 +1228,7 @@ export function ReturnWorkspaceScreen({
       <p className="panel-text">
         {hasBlockingActions
           ? "Some items need your attention before your return can be finalized. Please review them in order."
-          : "Your return bundle is ready. These follow-ups are advisory and can help you review uploaded documents that were not deterministically mapped into the return."}
+          : "Review these advisory follow-ups and any uploaded documents that still need attention."}
       </p>
       <div className="route-grid section-heading">
         {unsupportedRoutes.map((route) => {
