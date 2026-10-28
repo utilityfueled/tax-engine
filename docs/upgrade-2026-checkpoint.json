@@ -1311,9 +1311,12 @@
       "final multi-platform release images"
     ],
     "workInProgress": [
-      "Correct the established current charitable floor carry independently of standard/itemized selection, preserving separate170(p) and NOL ordering. Supersede prior no-floor premise; precisely guard unresolved old-vintage/first-release interactions without inventing years or allocation.",
-      "Finish ordinary section108 complete original-attribute sources and repair signed capital, liability-cap, outgoing passive/category and unknown-inventory handoffs. Independently review source and saved outputs; preserve exact modified-absorption/charity guards.",
-      "Run final integrated unit/coverage/static/build/browser/native arm64 and amd64/SBOM/scan/recovery evidence after remaining source changes. Historical76d evidence is not final; staging, human, provider and final-form gates remain closed."
+      "Finish current charitable floor carry correction independently of standard/itemized selection with actual source histories, separate170(p), NOL ordering and independent review.",
+      "Implement source-supported basis first-entry attribution while retaining original gift years and previously admitted slices. Independently reproduce and correct ordinary-gift at-risk classification; unknown historical170 use cannot become a new current-year clock.",
+      "Finish ordinary section108 original-attribute sources and signed-capital, liability-cap, outgoing passive/category and unknown-inventory repairs. Keep Form982 reference-only readiness partial and verify saved outputs.",
+      "Complete signed current-source-year minimum-tax-credit arithmetic and canonical source derivation/binding; actual zero AMT alone does not establish zero generated credit.",
+      "Reproduce the12 exact183c coverage timeouts and resolve remaining PDF/export performance without changing assertions, deadlines or thresholds.",
+      "Run final integrated unit/coverage/static/build/browser/native arm64+amd64/SBOM/scan/recovery evidence after remaining source changes. Staging, human, provider and final-form gates remain closed."
     ],
     "latestIntegratedCommit": "f4dc51a7de1f2d6a8b56fc472730fb03f174af02",
     "activeIntegrationRun": {
@@ -1692,9 +1695,12 @@
       "scope": "Exact76d93bb6 synthetic remote evidence through same-couple joint loss delivery. Excludes pending positive-other-return health, EBL composition and later internal work. No staging, production, filing, provider or human-review qualification."
     },
     "remainingInternalWork": [
-      "Correct the established current charitable floor carry independently of standard/itemized selection, preserving separate170(p) and NOL ordering. Supersede prior no-floor premise; precisely guard unresolved old-vintage/first-release interactions without inventing years or allocation.",
-      "Finish ordinary section108 complete original-attribute sources and repair signed capital, liability-cap, outgoing passive/category and unknown-inventory handoffs. Independently review source and saved outputs; preserve exact modified-absorption/charity guards.",
-      "Run final integrated unit/coverage/static/build/browser/native arm64 and amd64/SBOM/scan/recovery evidence after remaining source changes. Historical76d evidence is not final; staging, human, provider and final-form gates remain closed."
+      "Finish current charitable floor carry correction independently of standard/itemized selection with actual source histories, separate170(p), NOL ordering and independent review.",
+      "Implement source-supported basis first-entry attribution while retaining original gift years and previously admitted slices. Independently reproduce and correct ordinary-gift at-risk classification; unknown historical170 use cannot become a new current-year clock.",
+      "Finish ordinary section108 original-attribute sources and signed-capital, liability-cap, outgoing passive/category and unknown-inventory repairs. Keep Form982 reference-only readiness partial and verify saved outputs.",
+      "Complete signed current-source-year minimum-tax-credit arithmetic and canonical source derivation/binding; actual zero AMT alone does not establish zero generated credit.",
+      "Reproduce the12 exact183c coverage timeouts and resolve remaining PDF/export performance without changing assertions, deadlines or thresholds.",
+      "Run final integrated unit/coverage/static/build/browser/native arm64+amd64/SBOM/scan/recovery evidence after remaining source changes. Staging, human, provider and final-form gates remain closed."
     ],
     "previousStableCoverageRun": {
       "commit": "36d5fabbe06b54f56bf012bdfe5b11418115f291",
@@ -1718,24 +1724,31 @@
     },
     "lastPushedCommit": "f4dc51a7de1f2d6a8b56fc472730fb03f174af02",
     "currentBrowserRun": {
-      "sourceCommit": "76d93bb63a692e9890316ea896339b3f725dfac0",
-      "runId": 40706358808,
-      "status": "passed",
-      "job": 122879618585,
-      "passed": 510,
-      "hostedSkipped": 5,
-      "configuredRetries": 1,
-      "reportedFlaky": 0,
-      "duration": "24.2m",
-      "log": {
-        "path": ".local/upgrade-evidence/76d93bb6-browser.log",
-        "sha256": "65ba16e357049d21e82ade93b8f6732e4e208391c25dbcff17253c872d8d3e2b"
+      "sourceCommit": "183c1bbcb9ed8d53265fb4f36317e291bc8134cc",
+      "container": {
+        "job": 123016997780,
+        "passed": 520,
+        "hostedSkipped": 5,
+        "configuredRetries": 0,
+        "reportedFlaky": 0,
+        "duration": "19.6m",
+        "log": {
+          "path": ".local/upgrade-evidence/183c1bbc-container-job.log",
+          "sha256": "46d8fa9a6091c12d6be9bc4e11adb4a48392c037827263a27fe66635bc517579"
+        }
       },
-      "evidence": {
-        "path": "docs/upgrade-2026-ci-76d93bb6.json",
-        "sha256": "8a68034d95b1c1bc64128ff2788c336a56010cbd1b22413667fa561b9553b766"
-      },
-      "scope": "Exact76d93bb6 synthetic remote evidence through same-couple joint loss delivery. Excludes pending positive-other-return health, EBL composition and later internal work. No staging, production, filing, provider or human-review qualification."
+      "selfHost": {
+        "job": 123016998187,
+        "passed": 520,
+        "hostedSkipped": 5,
+        "configuredRetries": 1,
+        "reportedFlaky": 0,
+        "duration": "26.6m",
+        "log": {
+          "path": ".local/upgrade-evidence/183c1bbc-browser.log",
+          "sha256": "a9d09a91ecc5b57b11bf06dd2a6c9306357802b1cf683de34089f5f17cca4a56"
+        }
+      }
     },
     "currentPackageAudit": {
       "sourceCommit": "25f71f066ae7cf24364e6117cb72e4b2e89f8ab5",
@@ -2367,46 +2380,8 @@
       "register": "docs/upgrade-2026-image-advisories.json"
     },
     "nativeAmd64LatestObserved": {
-      "path": "docs/upgrade-2026-runtime-76d93bb6.json",
-      "sha256": "2f7ab65ad5ccfb674f103d6eb9b614e05438ade9056e6841432806b44dfccbd3",
-      "sourceCommit": "76d93bb63a692e9890316ea896339b3f725dfac0",
-      "runId": 40706358808,
-      "artifactId": 12826103894,
-      "image": "sha256:180ef597a7ed20284acf07068bacba86b91719ca0a2b904ec6f69541ba2f5814",
-      "recoveryPhases": 6,
-      "scan": {
-        "sbomComponents": 2930,
-        "sbomGenerator": "syft1.42.3",
-        "sbomTimestamp": "2026-10-28T14:59:55Z",
-        "scanner": "grype0.121.0",
-        "scanTimestamp": "2026-10-28T15:01:22.675355381Z",
-        "databaseBuilt": "2026-10-28T06:23:30Z",
-        "databaseValid": true,
-        "matches": 157,
-        "distinctAdvisories": 67,
-        "matchSeverities": {
-          "High": 54,
-          "Negligible": 46,
-          "Medium": 47,
-          "Low": 10
-        },
-        "npmMatches": 0,
-        "fixedVersionMatches": 0,
-        "exactAdvisoryTuplesUnchangedFrom018f7a61": true,
-        "tupleFields": [
-          "id",
-          "namespace",
-          "severity",
-          "package name",
-          "package version",
-          "package type",
-          "fix state",
-          "fix versions"
-        ],
-        "ownerConfirmation": "pending",
-        "reviewBy": "2026-11-07"
-      },
-      "scope": "Exact76d93bb6 synthetic remote evidence through same-couple joint loss delivery. Excludes pending positive-other-return health, EBL composition and later internal work. No staging, production, filing, provider or human-review qualification."
+      "path": "docs/upgrade-2026-runtime-183c1bbc.json",
+      "sha256": "4674da948dd5c3eff90f0acc73b453baa66238acde03b5f969a7a6db13903538"
     },
     "singleWritePdfVerification": {
       "commit": "3adb1f0",
@@ -2814,35 +2789,29 @@
       "humanSecurityQualification": false
     },
     "currentUnitRun": {
-      "sourceCommit": "76d93bb63a692e9890316ea896339b3f725dfac0",
-      "runId": 40706358802,
-      "status": "passed",
-      "jobId": 122879626554,
-      "tests": 19658,
-      "files": 1435,
+      "sourceCommit": "183c1bbcb9ed8d53265fb4f36317e291bc8134cc",
+      "jobId": 123017000522,
+      "tests": 19735,
+      "files": 1463,
       "workers": 1,
-      "seconds": "1688.50",
-      "evidence": {
-        "path": "docs/upgrade-2026-ci-76d93bb6.json",
-        "sha256": "8a68034d95b1c1bc64128ff2788c336a56010cbd1b22413667fa561b9553b766"
-      },
-      "scope": "Exact76d93bb6 synthetic remote evidence through same-couple joint loss delivery. Excludes pending positive-other-return health, EBL composition and later internal work. No staging, production, filing, provider or human-review qualification."
+      "seconds": "1294.46",
+      "log": {
+        "path": ".local/upgrade-evidence/183c1bbc-unit.log",
+        "sha256": "4963421a83554bb56957c4ec5dadda0e0b95767511f207f5035e2de7bed3f40a"
+      }
     },
     "currentRemoteRuns": {
-      "sourceCommit": "76d93bb63a692e9890316ea896339b3f725dfac0",
-      "status": "both completed successfully",
-      "runs": [
-        {
-          "id": 40706358802,
-          "name": "CI",
-          "conclusion": "success"
-        },
-        {
-          "id": 40706358808,
-          "name": "Web",
-          "conclusion": "success"
-        }
-      ]
+      "sourceCommit": "183c1bbcb9ed8d53265fb4f36317e291bc8134cc",
+      "ci": {
+        "run": 40745155416,
+        "status": "completed",
+        "conclusion": "failure"
+      },
+      "web": {
+        "run": 40745155383,
+        "status": "completed",
+        "conclusion": "success"
+      }
     },
     "charityHistoryParentReview": {
       "tree": "7dac725be8526c9d18ce326b84187807cab03958",
@@ -6444,32 +6413,40 @@
       ]
     },
     "latestFailedCoverageRun": {
-      "sourceCommit": "318127142879f68472ab8440a95f1b9abdc49234",
-      "runId": 40460532332,
-      "jobId": 122044171339,
-      "conclusion": "failure",
-      "passed": 19580,
-      "failed": 7,
-      "passedFiles": 1399,
-      "failedFiles": 7,
-      "totalFiles": 1406,
-      "seconds": "2203.35",
+      "sourceCommit": "183c1bbcb9ed8d53265fb4f36317e291bc8134cc",
+      "jobId": 123017000663,
+      "testsPassed": 19723,
+      "testsFailed": 12,
+      "filesPassed": 1451,
+      "filesFailed": 12,
       "workers": 1,
-      "failureKind": "Seven cases hit the unchanged5000ms deadline; no complete coverage report was produced.",
+      "seconds": "2384.73",
+      "failure": "Twelve unchanged five-second test deadlines; no passing coverage report produced.",
+      "unchangedThresholds": {
+        "statements": 90,
+        "branches": 85,
+        "functions": 90,
+        "lines": 90
+      },
       "failedCases": [
-        " tests/pdf/k1-cash-distribution-review.test.ts > binds and saves the redacted distribution gain with original basis evidence",
-        " tests/pdf/marriage-coverage-family-review.test.ts > prints monthly coverage marriage and signed health from bound originals",
-        " tests/pdf/temporary-component-serialization.test.ts > preserves actual form values and notices in temporary component serialization (flatten=false)",
-        " tests/apps/web/marriage-outside-person-interactions.test.tsx > edits actual outside child relationship in the full marriage health shell",
-        " tests/apps/web/workspace-annual-cash-qtp.test.ts > replays annual cash originals before workspace redaction",
-        " tests/apps/web/workspace-room-board-periods.test.ts > binds actual cash and prepaid period records before workspace redaction",
-        " tests/apps/web/workspace-room-board-prior-use.test.ts > replays actual historical room and board sources before workspace redaction"
+        "tests/pdf/k1-cash-distribution-review.test.ts > binds and saves the redacted distribution gain with original basis evidence",
+        "tests/pdf/marketplace-actual-paid-review.test.ts > prints actual payer repayment with private source and result binding",
+        "tests/pdf/marriage-coverage-family-review.test.ts > prints monthly coverage marriage and signed health from bound originals",
+        "tests/pdf/temporary-component-serialization.test.ts > preserves actual form values and notices in temporary component serialization (flatten=false)",
+        "tests/apps/web/marriage-outside-person-interactions.test.tsx > edits actual outside child relationship in the full marriage health shell",
+        "tests/apps/web/workspace-annual-cash-qtp.test.ts > replays annual cash originals before workspace redaction",
+        "tests/apps/web/workspace-marketplace-actual-cash.test.ts > downloads the actual cash payment review without replacing original policies",
+        "tests/apps/web/workspace-marketplace-actual-paid.test.ts > downloads actual marriage payer sources without importing other repayment",
+        "tests/apps/web/workspace-marketplace-other-return-cash.test.ts > downloads completed actual other return sources without transferring its credit or repayment",
+        "tests/apps/web/workspace-marketplace-reported-repayment.test.ts > downloads the actual source-cent payment review without replacing originals",
+        "tests/apps/web/workspace-room-board-periods.test.ts > binds actual cash and prepaid period records before workspace redaction",
+        "tests/apps/web/workspace-room-board-prior-use.test.ts > replays actual historical room and board sources before workspace redaction"
       ],
-      "coverageGatePassed": false,
       "log": {
-        "path": ".local/upgrade-evidence/ci-31812714-coverage.log",
-        "sha256": "15962293bb3b91f98bab76e231307b7dbeebc6fc443daa8b7f9a530bdd52057c"
-      }
+        "path": ".local/upgrade-evidence/183c1bbc-coverage-failed.log",
+        "sha256": "e27e1caff748f88ed77d8c6f365cdd48ce729f1c38335ff8f6da13dd903ddca6"
+      },
+      "nextAction": "Reproduce the bounded affected coverage paths, investigate common PDF/export cost, and complete final integrated checks without changing assertions or deadlines."
     },
     "currentProductionPackageAudit": {
       "path": ".local/upgrade-evidence/production-audit-20261028.json",
@@ -8464,7 +8441,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-28T18:25:16.609623+00:00",
+    "recordedAt": "2026-10-28T19:16:32.579573+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -11472,6 +11449,160 @@
       ],
       "noInventedVintageOrAllocation": true,
       "humanQualification": false
+    },
+    "previousCurrentUnitRunBefore183cObservation": {
+      "sourceCommit": "76d93bb63a692e9890316ea896339b3f725dfac0",
+      "runId": 40706358802,
+      "status": "passed",
+      "jobId": 122879626554,
+      "tests": 19658,
+      "files": 1435,
+      "workers": 1,
+      "seconds": "1688.50",
+      "evidence": {
+        "path": "docs/upgrade-2026-ci-76d93bb6.json",
+        "sha256": "8a68034d95b1c1bc64128ff2788c336a56010cbd1b22413667fa561b9553b766"
+      },
+      "scope": "Exact76d93bb6 synthetic remote evidence through same-couple joint loss delivery. Excludes pending positive-other-return health, EBL composition and later internal work. No staging, production, filing, provider or human-review qualification."
+    },
+    "previousCurrentBrowserRunBefore183cObservation": {
+      "sourceCommit": "76d93bb63a692e9890316ea896339b3f725dfac0",
+      "runId": 40706358808,
+      "status": "passed",
+      "job": 122879618585,
+      "passed": 510,
+      "hostedSkipped": 5,
+      "configuredRetries": 1,
+      "reportedFlaky": 0,
+      "duration": "24.2m",
+      "log": {
+        "path": ".local/upgrade-evidence/76d93bb6-browser.log",
+        "sha256": "65ba16e357049d21e82ade93b8f6732e4e208391c25dbcff17253c872d8d3e2b"
+      },
+      "evidence": {
+        "path": "docs/upgrade-2026-ci-76d93bb6.json",
+        "sha256": "8a68034d95b1c1bc64128ff2788c336a56010cbd1b22413667fa561b9553b766"
+      },
+      "scope": "Exact76d93bb6 synthetic remote evidence through same-couple joint loss delivery. Excludes pending positive-other-return health, EBL composition and later internal work. No staging, production, filing, provider or human-review qualification."
+    },
+    "previousNativeAmd64LatestObservedBefore183cObservation": {
+      "path": "docs/upgrade-2026-runtime-76d93bb6.json",
+      "sha256": "2f7ab65ad5ccfb674f103d6eb9b614e05438ade9056e6841432806b44dfccbd3",
+      "sourceCommit": "76d93bb63a692e9890316ea896339b3f725dfac0",
+      "runId": 40706358808,
+      "artifactId": 12826103894,
+      "image": "sha256:180ef597a7ed20284acf07068bacba86b91719ca0a2b904ec6f69541ba2f5814",
+      "recoveryPhases": 6,
+      "scan": {
+        "sbomComponents": 2930,
+        "sbomGenerator": "syft1.42.3",
+        "sbomTimestamp": "2026-10-28T14:59:55Z",
+        "scanner": "grype0.121.0",
+        "scanTimestamp": "2026-10-28T15:01:22.675355381Z",
+        "databaseBuilt": "2026-10-28T06:23:30Z",
+        "databaseValid": true,
+        "matches": 157,
+        "distinctAdvisories": 67,
+        "matchSeverities": {
+          "High": 54,
+          "Negligible": 46,
+          "Medium": 47,
+          "Low": 10
+        },
+        "npmMatches": 0,
+        "fixedVersionMatches": 0,
+        "exactAdvisoryTuplesUnchangedFrom018f7a61": true,
+        "tupleFields": [
+          "id",
+          "namespace",
+          "severity",
+          "package name",
+          "package version",
+          "package type",
+          "fix state",
+          "fix versions"
+        ],
+        "ownerConfirmation": "pending",
+        "reviewBy": "2026-11-07"
+      },
+      "scope": "Exact76d93bb6 synthetic remote evidence through same-couple joint loss delivery. Excludes pending positive-other-return health, EBL composition and later internal work. No staging, production, filing, provider or human-review qualification."
+    },
+    "previousCurrentRemoteRunsBefore183cObservation": {
+      "sourceCommit": "76d93bb63a692e9890316ea896339b3f725dfac0",
+      "status": "both completed successfully",
+      "runs": [
+        {
+          "id": 40706358802,
+          "name": "CI",
+          "conclusion": "success"
+        },
+        {
+          "id": 40706358808,
+          "name": "Web",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "previousLatestFailedCoverageRunBefore183cObservation": {
+      "sourceCommit": "318127142879f68472ab8440a95f1b9abdc49234",
+      "runId": 40460532332,
+      "jobId": 122044171339,
+      "conclusion": "failure",
+      "passed": 19580,
+      "failed": 7,
+      "passedFiles": 1399,
+      "failedFiles": 7,
+      "totalFiles": 1406,
+      "seconds": "2203.35",
+      "workers": 1,
+      "failureKind": "Seven cases hit the unchanged5000ms deadline; no complete coverage report was produced.",
+      "failedCases": [
+        " tests/pdf/k1-cash-distribution-review.test.ts > binds and saves the redacted distribution gain with original basis evidence",
+        " tests/pdf/marriage-coverage-family-review.test.ts > prints monthly coverage marriage and signed health from bound originals",
+        " tests/pdf/temporary-component-serialization.test.ts > preserves actual form values and notices in temporary component serialization (flatten=false)",
+        " tests/apps/web/marriage-outside-person-interactions.test.tsx > edits actual outside child relationship in the full marriage health shell",
+        " tests/apps/web/workspace-annual-cash-qtp.test.ts > replays annual cash originals before workspace redaction",
+        " tests/apps/web/workspace-room-board-periods.test.ts > binds actual cash and prepaid period records before workspace redaction",
+        " tests/apps/web/workspace-room-board-prior-use.test.ts > replays actual historical room and board sources before workspace redaction"
+      ],
+      "coverageGatePassed": false,
+      "log": {
+        "path": ".local/upgrade-evidence/ci-31812714-coverage.log",
+        "sha256": "15962293bb3b91f98bab76e231307b7dbeebc6fc443daa8b7f9a530bdd52057c"
+      }
+    },
+    "remote183cCompletedChecks": {
+      "sourceCommit": "183c1bbcb9ed8d53265fb4f36317e291bc8134cc",
+      "ciRecord": {
+        "path": "docs/upgrade-2026-ci-183c1bbc.json",
+        "sha256": "d0c7397cb5f9a02402edcca041f997bd8d453a82c02fef353d50001768885dfb"
+      },
+      "runtimeRecord": {
+        "path": "docs/upgrade-2026-runtime-183c1bbc.json",
+        "sha256": "4674da948dd5c3eff90f0acc73b453baa66238acde03b5f969a7a6db13903538"
+      },
+      "ciConclusion": "failure",
+      "webConclusion": "success",
+      "coverageTimeouts": 12,
+      "finalReleaseEvidence": false
+    },
+    "minimumTaxCreditSourceYearCandidate": {
+      "status": "private arithmetic primitive; independent source review and canonical COD integration pending",
+      "manifest": ".local/upgrade-evidence/parent-mtc-source-year-review-snapshot.json",
+      "manifestSha256": "36a2c92014033d459309134c45a82ca5c5bc8692fedd69694e05d01cb407022e",
+      "tree": "0415ca372b19a31088b6e19e56973ec7c6ab7c81",
+      "tests": 83,
+      "files": 8,
+      "sourceYearOnly": true,
+      "humanQualification": false
+    },
+    "firstSection170EntrySourceAssessment": {
+      "status": "source-supported basis first-entry contract; separate ordinary-gift risk classification probe pending",
+      "contract": ".local/upgrade-evidence/complete-first-entry-170-contract-20261028/contract.md",
+      "contractSha256": "53e8149d6c0c372aac6e51be55caef54babdaf5a02d9f44286717c0edda5abdc",
+      "sourceReviewOnly": true,
+      "humanQualification": false,
+      "historicalRiskFixtureReagingApproved": false
     }
   },
   "historicalReleaseBlockers": {

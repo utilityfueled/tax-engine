@@ -16,7 +16,26 @@ premise. The [source finding](upgrade-2026-charity-floor-source-finding.md)
 records the current-source correction and exact unresolved prior-source cases.
 The correction and ordinary section 108 attribute work are active internal work.
 
-The latest completed [remote CI record](upgrade-2026-ci-76d93bb6.json) passes
+The later [183c1bbc CI run](upgrade-2026-ci-183c1bbc.json) passes all 19,735
+unit tests in 1,463 files, static checks, both builds and both 520-case browser
+suites; each browser suite retains five hosted-only skips. Coverage retains
+12 five-second timeouts and 19,723 passes, so this run does not establish a
+passing coverage gate. The [amd64 runtime evidence](upgrade-2026-runtime-183c1bbc.json)
+passes all six recovery phases and preserves the same 157 scan matches across
+67 OS advisories. Advisory ownership remains pending. Bounded performance
+investigation and final current-source checks remain internal work.
+
+Source research supports a new section 170 admission year for a portion newly
+allowed by an entity basis limit, while retaining its actual historical gift
+and all previously admitted portions. Ordinary-gift classification under the
+at-risk rules is being independently tested; a source-assignment checkbox
+cannot establish the legal classification. This is separate from the current
+charitable-floor correction. The section 108 work also requires the signed
+current-year minimum-tax-credit adjustment. Its source-year arithmetic passes
+83 related tests and static/build checks privately; independent review and
+canonical source integration remain pending.
+
+The earlier completed [remote CI record](upgrade-2026-ci-76d93bb6.json) passes
 19,658 tests in 1,435 files normally and under coverage on `76d93bb6`.
 Coverage is 91.88% statements, 86.97% branches, 90.72% functions and 94.61%
 lines; all unchanged thresholds pass. Independent recounting of 952 source

@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "183c1bbcb9ed8d53265fb4f36317e291bc8134cc",
+  "observedAt": "2026-10-28T19:13:17.481801+00:00",
+  "releaseReady": false,
+  "scope": "Exact183c1bbc synthetic remote evidence through ordinary prior-QBI delivery. The current charitable floor and section108 source corrections remain separate internal work; coverage has12 retained timeouts. No staging, production, filing, provider or human-review qualification.",
+  "runs": {
+    "ci": 40745155416,
+    "web": 40745155383,
+    "attempt": 1
+  },
+  "ciConclusion": "failure",
+  "webConclusion": "success",
+  "unit": {
+    "jobId": 123017000522,
+    "tests": 19735,
+    "files": 1463,
+    "workers": 1,
+    "seconds": "1294.46",
+    "log": {
+      "path": ".local/upgrade-evidence/183c1bbc-unit.log",
+      "sha256": "4963421a83554bb56957c4ec5dadda0e0b95767511f207f5035e2de7bed3f40a"
+    }
+  },
+  "coverage": {
+    "jobId": 123017000663,
+    "testsPassed": 19723,
+    "testsFailed": 12,
+    "filesPassed": 1451,
+    "filesFailed": 12,
+    "workers": 1,
+    "seconds": "2384.73",
+    "failure": "Twelve unchanged five-second test deadlines; no passing coverage report produced.",
+    "unchangedThresholds": {
+      "statements": 90,
+      "branches": 85,
+      "functions": 90,
+      "lines": 90
+    },
+    "failedCases": [
+      "tests/pdf/k1-cash-distribution-review.test.ts > binds and saves the redacted distribution gain with original basis evidence",
+      "tests/pdf/marketplace-actual-paid-review.test.ts > prints actual payer repayment with private source and result binding",
+      "tests/pdf/marriage-coverage-family-review.test.ts > prints monthly coverage marriage and signed health from bound originals",
+      "tests/pdf/temporary-component-serialization.test.ts > preserves actual form values and notices in temporary component serialization (flatten=false)",
+      "tests/apps/web/marriage-outside-person-interactions.test.tsx > edits actual outside child relationship in the full marriage health shell",
+      "tests/apps/web/workspace-annual-cash-qtp.test.ts > replays annual cash originals before workspace redaction",
+      "tests/apps/web/workspace-marketplace-actual-cash.test.ts > downloads the actual cash payment review without replacing original policies",
+      "tests/apps/web/workspace-marketplace-actual-paid.test.ts > downloads actual marriage payer sources without importing other repayment",
+      "tests/apps/web/workspace-marketplace-other-return-cash.test.ts > downloads completed actual other return sources without transferring its credit or repayment",
+      "tests/apps/web/workspace-marketplace-reported-repayment.test.ts > downloads the actual source-cent payment review without replacing originals",
+      "tests/apps/web/workspace-room-board-periods.test.ts > binds actual cash and prepaid period records before workspace redaction",
+      "tests/apps/web/workspace-room-board-prior-use.test.ts > replays actual historical room and board sources before workspace redaction"
+    ],
+    "log": {
+      "path": ".local/upgrade-evidence/183c1bbc-coverage-failed.log",
+      "sha256": "e27e1caff748f88ed77d8c6f365cdd48ce729f1c38335ff8f6da13dd903ddca6"
+    },
+    "nextAction": "Reproduce the bounded affected coverage paths, investigate common PDF/export cost, and complete final integrated checks without changing assertions or deadlines."
+  },
+  "staticAndBuild": "Spec/inventory, root/contracts/web types, lint and both builds passed.",
+  "browser": {
+    "container": {
+      "job": 123016997780,
+      "passed": 520,
+      "hostedSkipped": 5,
+      "configuredRetries": 0,
+      "reportedFlaky": 0,
+      "duration": "19.6m",
+      "log": {
+        "path": ".local/upgrade-evidence/183c1bbc-container-job.log",
+        "sha256": "46d8fa9a6091c12d6be9bc4e11adb4a48392c037827263a27fe66635bc517579"
+      }
+    },
+    "selfHost": {
+      "job": 123016998187,
+      "passed": 520,
+      "hostedSkipped": 5,
+      "configuredRetries": 1,
+      "reportedFlaky": 0,
+      "duration": "26.6m",
+      "log": {
+        "path": ".local/upgrade-evidence/183c1bbc-browser.log",
+        "sha256": "a9d09a91ecc5b57b11bf06dd2a6c9306357802b1cf683de34089f5f17cca4a56"
+      }
+    }
+  },
+  "container": {
+    "path": "docs/upgrade-2026-runtime-183c1bbc.json",
+    "sha256": "4674da948dd5c3eff90f0acc73b453baa66238acde03b5f969a7a6db13903538"
+  },
+  "jobEvidence": {
+    "183c1bbc-ci-jobs-final.json": {
+      "path": ".local/upgrade-evidence/183c1bbc-ci-jobs-final.json",
+      "sha256": "de57e055f8a46875038a189e1f24ff72d6a7d0cb83b87f4acb4faa235200a88e"
+    },
+    "183c1bbc-web-jobs.json": {
+      "path": ".local/upgrade-evidence/183c1bbc-web-jobs.json",
+      "sha256": "b8d4d08a137ce04d2eca44336a6f17c465a2fafa6b427685d56668a514378483"
+    }
+  }
+}
