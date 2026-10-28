@@ -203,7 +203,7 @@
   ],
   "ongoingExecution": {
     "status": "active",
-    "lastRecordedCommit": "f4dc51a7de1f2d6a8b56fc472730fb03f174af02",
+    "lastRecordedCommit": "ecdb754d95cfc9b8605ca6a503473b9aaaf347ee",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1314,11 +1314,11 @@
       "Finish current charitable floor carry correction independently of standard/itemized selection with actual source histories, separate170(p), NOL ordering and independent review.",
       "Implement source-supported basis first-entry attribution while retaining original gift years and previously admitted slices. Independently reproduce and correct ordinary-gift at-risk classification; unknown historical170 use cannot become a new current-year clock.",
       "Finish ordinary section108 original-attribute sources and signed-capital, liability-cap, outgoing passive/category and unknown-inventory repairs. Keep Form982 reference-only readiness partial and verify saved outputs.",
-      "Complete signed current-source-year minimum-tax-credit arithmetic and canonical source derivation/binding; actual zero AMT alone does not establish zero generated credit.",
+      "Bind the delivered signed current-source-year minimum-tax-credit primitive to complete canonical source derivation; actual zero AMT alone does not establish zero generated credit.",
       "Reproduce the12 exact183c coverage timeouts and resolve remaining PDF/export performance without changing assertions, deadlines or thresholds.",
       "Run final integrated unit/coverage/static/build/browser/native arm64+amd64/SBOM/scan/recovery evidence after remaining source changes. Staging, human, provider and final-form gates remain closed."
     ],
-    "latestIntegratedCommit": "f4dc51a7de1f2d6a8b56fc472730fb03f174af02",
+    "latestIntegratedCommit": "ecdb754d95cfc9b8605ca6a503473b9aaaf347ee",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -1698,7 +1698,7 @@
       "Finish current charitable floor carry correction independently of standard/itemized selection with actual source histories, separate170(p), NOL ordering and independent review.",
       "Implement source-supported basis first-entry attribution while retaining original gift years and previously admitted slices. Independently reproduce and correct ordinary-gift at-risk classification; unknown historical170 use cannot become a new current-year clock.",
       "Finish ordinary section108 original-attribute sources and signed-capital, liability-cap, outgoing passive/category and unknown-inventory repairs. Keep Form982 reference-only readiness partial and verify saved outputs.",
-      "Complete signed current-source-year minimum-tax-credit arithmetic and canonical source derivation/binding; actual zero AMT alone does not establish zero generated credit.",
+      "Bind the delivered signed current-source-year minimum-tax-credit primitive to complete canonical source derivation; actual zero AMT alone does not establish zero generated credit.",
       "Reproduce the12 exact183c coverage timeouts and resolve remaining PDF/export performance without changing assertions, deadlines or thresholds.",
       "Run final integrated unit/coverage/static/build/browser/native arm64+amd64/SBOM/scan/recovery evidence after remaining source changes. Staging, human, provider and final-form gates remain closed."
     ],
@@ -1722,7 +1722,7 @@
       "evidenceSha256": "a8d5edcb0a4f65965a99b76f1d4dbdc72efe347d3331634e70af87cd91f828ee",
       "scope": "Exact36d5fab source only; later code requires current integration"
     },
-    "lastPushedCommit": "f4dc51a7de1f2d6a8b56fc472730fb03f174af02",
+    "lastPushedCommit": "ecdb754d95cfc9b8605ca6a503473b9aaaf347ee",
     "currentBrowserRun": {
       "sourceCommit": "183c1bbcb9ed8d53265fb4f36317e291bc8134cc",
       "container": {
@@ -8441,7 +8441,7 @@
       "trackedSourceUnchanged": true,
       "browserServerStopped": true
     },
-    "recordedAt": "2026-10-28T19:16:32.579573+00:00",
+    "recordedAt": "2026-10-28T19:35:50.477271+00:00",
     "fullVerification3669b00": {
       "commit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
@@ -11587,22 +11587,140 @@
       "finalReleaseEvidence": false
     },
     "minimumTaxCreditSourceYearCandidate": {
-      "status": "private arithmetic primitive; independent source review and canonical COD integration pending",
+      "status": "delivered pure primitive; canonical current-year source derivation/binding remains internal",
       "manifest": ".local/upgrade-evidence/parent-mtc-source-year-review-snapshot.json",
       "manifestSha256": "36a2c92014033d459309134c45a82ca5c5bc8692fedd69694e05d01cb407022e",
       "tree": "0415ca372b19a31088b6e19e56973ec7c6ab7c81",
       "tests": 83,
       "files": 8,
       "sourceYearOnly": true,
-      "humanQualification": false
+      "humanQualification": false,
+      "commit": "ecdb754d95cfc9b8605ca6a503473b9aaaf347ee",
+      "ledger": "docs/upgrade-2026-minimum-tax-credit-source-year-work.md",
+      "independentReview": {
+        "path": ".local/upgrade-evidence/complete-mtc-source-year-independent-review.json",
+        "sha256": "66e129985d54c785c8591c315b1dd8d8a6309aa8c6f90b76737f227c3e10799e",
+        "tests": 63,
+        "files": 4,
+        "privateControls": 6
+      },
+      "mainChecks": [
+        {
+          "command": [
+            "pnpm",
+            "test",
+            "tests/engine/forms/minimum-tax-credit-source-year.test.ts",
+            "tests/engine/forms/form-8801.test.ts",
+            "tests/engine/forms/form-8801-2026.test.ts",
+            "tests/engine/forms/form-6251-direct-credit.test.ts",
+            "tests/engine/federal-minimum-tax-credit.test.ts",
+            "tests/models/form-8801-source-facts.test.ts",
+            "tests/pdf/fill-form-8801.test.ts",
+            "tests/engine/forms/form-6251-2025-regression.test.ts",
+            "--maxWorkers=1"
+          ],
+          "exitCode": 0,
+          "durationSeconds": 5.384,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/parent-mtc-source-year-main-adjacency.log",
+          "sha256": "5923c778bbbfe14be63d89fee8884c723bcbf08c31ddf750a2571a6f1bf08ac5",
+          "sourceHead": "6f8aa98e208947ed9e12d31b5753000d0edd1752",
+          "finishedAt": "2026-10-28T19:32:22.869649+00:00"
+        },
+        {
+          "command": [
+            "pnpm",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "durationSeconds": 4.631,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/parent-mtc-source-year-main-types.log",
+          "sha256": "5888bcaa4f681b3f7bf48999ae0817c16b3af178b8c13f7d91414fdef8ea04d9",
+          "sourceHead": "6f8aa98e208947ed9e12d31b5753000d0edd1752",
+          "finishedAt": "2026-10-28T19:32:27.511284+00:00"
+        },
+        {
+          "command": [
+            "pnpm",
+            "typecheck:contracts"
+          ],
+          "exitCode": 0,
+          "durationSeconds": 0.507,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/parent-mtc-source-year-main-contracts.log",
+          "sha256": "0c2a6bff203db409d0f68d48f7b21a6ac6bd6098310256e72a9c6e558bc3943d",
+          "sourceHead": "6f8aa98e208947ed9e12d31b5753000d0edd1752",
+          "finishedAt": "2026-10-28T19:32:28.028735+00:00"
+        },
+        {
+          "command": [
+            "pnpm",
+            "typecheck:web"
+          ],
+          "exitCode": 0,
+          "durationSeconds": 8.925,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/parent-mtc-source-year-main-web-types.log",
+          "sha256": "249e0be3cf6277994e8d22e8440bebe6db10861cab79fe97aa4952837f3ff073",
+          "sourceHead": "6f8aa98e208947ed9e12d31b5753000d0edd1752",
+          "finishedAt": "2026-10-28T19:32:36.967027+00:00"
+        },
+        {
+          "command": [
+            "pnpm",
+            "spec:validate"
+          ],
+          "exitCode": 0,
+          "durationSeconds": 0.728,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/parent-mtc-source-year-main-spec.log",
+          "sha256": "6cf9b88ced2aff35c948f2e4e480b10f2b2e1688e123e533176b66b287db7cc0",
+          "sourceHead": "6f8aa98e208947ed9e12d31b5753000d0edd1752",
+          "finishedAt": "2026-10-28T19:32:37.705879+00:00"
+        },
+        {
+          "command": [
+            "pnpm",
+            "spec:inventory:check"
+          ],
+          "exitCode": 0,
+          "durationSeconds": 1.14,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/parent-mtc-source-year-main-inventory.log",
+          "sha256": "846ee1105cfb137b691fc9b9faa383c54ef9f9e367b6b3416b2abe4ccb15cdef",
+          "sourceHead": "6f8aa98e208947ed9e12d31b5753000d0edd1752",
+          "finishedAt": "2026-10-28T19:32:38.855886+00:00"
+        },
+        {
+          "command": [
+            "pnpm",
+            "build"
+          ],
+          "exitCode": 0,
+          "durationSeconds": 4.649,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/parent-mtc-source-year-main-build.log",
+          "sha256": "d075c8ab15a7843462a88f3304147338e40a1fb638a358eeb51b2b7984d778ec",
+          "sourceHead": "6f8aa98e208947ed9e12d31b5753000d0edd1752",
+          "finishedAt": "2026-10-28T19:32:43.516063+00:00"
+        }
+      ]
     },
     "firstSection170EntrySourceAssessment": {
-      "status": "source-supported basis first-entry contract; separate ordinary-gift risk classification probe pending",
+      "status": "source-supported basis first-entry contract; ordinary-gift risk classification reproduced4fail2pass and correction in progress",
       "contract": ".local/upgrade-evidence/complete-first-entry-170-contract-20261028/contract.md",
       "contractSha256": "53e8149d6c0c372aac6e51be55caef54babdaf5a02d9f44286717c0edda5abdc",
       "sourceReviewOnly": true,
       "humanQualification": false,
-      "historicalRiskFixtureReagingApproved": false
+      "historicalRiskFixtureReagingApproved": false,
+      "classificationReview": {
+        "path": ".local/upgrade-evidence/complete-ordinary-gift-risk-classification-review.json",
+        "sha256": "a8c42168a0720b05fedae165070b12ee52394921e6c92a95b89a6038b681777c"
+      }
+    },
+    "charityFloorIndependentReview": {
+      "tree": "90ce95f50f8e5d0a25ba85a7aeca06fca4fd0618",
+      "report": ".local/upgrade-evidence/complete-nonitemized-allowable-carry-independent-review.json",
+      "sha256": "5a57f16f7b06cbd63c9d835672a431e052189000841e72d0aacaa97f15488940",
+      "tests": 48,
+      "files": 12,
+      "privateControls": 22,
+      "status": "source/software review clear; parent saved-artifact review and main integration pending",
+      "humanQualification": false
     }
   },
   "historicalReleaseBlockers": {

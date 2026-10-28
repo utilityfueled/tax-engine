@@ -2,12 +2,16 @@
 
 ## Current checkpoint — 2026-10-28 UTC
 
-The latest implementation is `f4dc51a7`: ordinary prior-QBI records for the
-same actual taxpayer or joint couple, without requiring unrelated NOL history.
-Rule provenance is `2025.188` / `2026.186-law-integration-draft`; inventory has
-580 entries, 6,153 spec references and 161 explicit associations. The reviewed
-source, final builds and focused checks pass. Full current-source release
-checks, human tax review and filing qualification remain open.
+The latest implementation is `ecdb754d`: a signed minimum-tax-credit calculation
+from actual source-year facts, without future-year inputs. It follows the
+ordinary prior-QBI intake delivered in `f4dc51a7`. Rule provenance is `2025.189`
+/ `2026.187-law-integration-draft`; inventory has 581 entries, 6,159 spec references
+and 162 explicit associations. Independent source review passes 63 tests in
+four files, including six private controls; main integration passes 83 tests in
+eight files, all three types, spec/inventory and engine build. See the
+[source-year ledger](upgrade-2026-minimum-tax-credit-source-year-work.md).
+Canonical current-year source binding and final integrated release checks remain
+internal work; human tax review and filing qualification remain open.
 
 A subsequent source review supersedes the no-floor-under-standard premise in
 `6fc4312d` and related charitable carry methods. That package's recorded software
@@ -27,13 +31,15 @@ investigation and final current-source checks remain internal work.
 
 Source research supports a new section 170 admission year for a portion newly
 allowed by an entity basis limit, while retaining its actual historical gift
-and all previously admitted portions. Ordinary-gift classification under the
-at-risk rules is being independently tested; a source-assignment checkbox
-cannot establish the legal classification. This is separate from the current
-charitable-floor correction. The section 108 work also requires the signed
-current-year minimum-tax-credit adjustment. Its source-year arithmetic passes
-83 related tests and static/build checks privately; independent review and
-canonical source integration remain pending.
+and all previously admitted portions. Independent controls reproduce
+four ordinary-gift at-risk classification failures while two controls pass:
+sufficient-basis gifts are incorrectly included in the activity-loss calculation.
+That correction is separate from the first-entry and current-floor packages.
+The frozen current-floor correction passes 732 affected tests and independent
+source review passes 48 tests in twelve files, including 22 private cases;
+saved-output review and main integration remain pending. The section 108 work
+also requires canonical binding of the now-delivered signed current-year
+minimum-tax-credit primitive.
 
 The earlier completed [remote CI record](upgrade-2026-ci-76d93bb6.json) passes
 19,658 tests in 1,435 files normally and under coverage on `76d93bb6`.
