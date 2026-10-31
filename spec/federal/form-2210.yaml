@@ -16,9 +16,10 @@ notes: |
   The final 2026 Form 2210 and the 2027 first-quarter rate are not yet qualified.
   Positive exposure in an unpublished rate period rejects calculation rather
   than assuming a rate or reporting zero. A fully timely paid return can prove
-  zero without a future rate. Annualized-income Schedule AI, Form 2210-F,
-  nonresident/fiscal-year rules and relief/waiver decisions require separate
-  implementation or actual adjudicated evidence; they are explicitly blocked.
+  zero without a future rate. Annualized-income Schedule AI uses
+  spec/federal/form-2210-schedule-ai.yaml. Form 2210-F, nonresident/fiscal-year
+  rules and relief/waiver decisions require separate implementation or actual
+  adjudicated evidence; they are explicitly blocked.
 
 sources:
   - "https://www.irs.gov/instructions/i2210"

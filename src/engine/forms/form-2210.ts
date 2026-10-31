@@ -5,6 +5,7 @@ import type { TaxYearInput } from "@/models/inputs.js";
 import type { FilingStatus } from "@/models/constants.js";
 import { zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { calculateForm2210ScheduleAi } from "./form-2210-schedule-ai.js";
 
 export interface Form2210Payment {
   /** Actual IRS-effective date; a prior-credit origin date is not inferred. */
@@ -19,6 +20,8 @@ export interface Form2210Input {
   /** Actual Form 1040 line 22. Omission is unverified historical compatibility only. */
   incomeTaxAfterCredits?: Decimal;
   withholding: Decimal;
+  /** Form1040 standard deduction for Schedule AI line7. */
+  standardDeduction?: Decimal;
   /** Estimated payments plus applied prior-year credits, reconciled to payments. */
   estimatedPayments: Decimal;
   refundableCredits: Decimal;
@@ -114,7 +117,7 @@ function validateScope(facts: NonNullable<Form2210Input["facts"]>): void {
     if (facts[key] !== supported) throw new Error(`Form 2210 ${key} scenario is unsupported; requires a separate calculation or relief determination`);
   }
   if (facts.calculationMethod === undefined) throw new Error("Form 2210 requires calculationMethod");
-  if (facts.calculationMethod !== "regular") throw new Error("Form 2210 annualized-income method is unsupported; requires actual Schedule AI period facts and calculation");
+  if (facts.calculationMethod !== "regular" && !facts.annualizedIncomePeriods) throw new Error("Form 2210 annualized-income method requires actual Schedule AI period facts");
   if (facts.withholdingMethod === undefined) throw new Error("Form 2210 requires withholdingMethod");
 }
 
@@ -268,6 +271,13 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
   }
 
   const quarter = required.div(4);
+  let requiredInstallments = schedule.map(() => quarter);
+  if (facts?.calculationMethod === "annualized") {
+    const scheduleAi = calculateForm2210ScheduleAi({ taxYear, filingStatus: input.filingStatus, requiredAnnualPayment: required, facts,
+      standardDeduction: amount(input.standardDeduction, "standardDeduction") });
+    requiredInstallments = scheduleAi.installments;
+    audit.merge(scheduleAi.lines);
+  }
   let previousOverpayment = new Decimal(0);
   let previousUnpaid = new Decimal(0);
   let allTimely = true;
@@ -281,10 +291,11 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
     const available = intervalPayments.plus(previousOverpayment);
     const applied = zeroFloor(available.minus(previousUnpaid));
     const remainingPrior = zeroFloor(previousUnpaid.minus(available));
-    const shortfall = zeroFloor(quarter.minus(applied));
-    const overpayment = zeroFloor(applied.minus(quarter));
+    const installmentRequired = requiredInstallments[index]!;
+    const shortfall = zeroFloor(installmentRequired.minus(applied));
+    const overpayment = zeroFloor(applied.minus(installmentRequired));
     const rowValues: Array<[number, Decimal, string]> = [
-      [10, quarter, "line9/4"],
+      [10, installmentRequired, facts?.calculationMethod === "annualized" ? "Schedule AI line27" : "line9/4"],
       [11, intervalPayments, "Dated payments in interval plus statutory/actual withholding"],
       [12, previousOverpayment, "Previous column line18"],
       [13, available, "line11+line12"],
@@ -295,7 +306,7 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
       [18, overpayment, "max(0,line15-line10)"],
     ];
     for (const [line, value, formula] of rowValues) audit.record(FORM, `${line}${suffix}`, `Installment ${index + 1} line ${line}`, value, formula);
-    installments.push({ installment: index + 1, dueDate: due.dueDate, timelyPaymentDeadline: dateString(due.deadline), required: quarter, payments: intervalPayments, underpayment: shortfall, overpayment });
+    installments.push({ installment: index + 1, dueDate: due.dueDate, timelyPaymentDeadline: dateString(due.deadline), required: installmentRequired, payments: intervalPayments, underpayment: shortfall, overpayment });
     allTimely &&= shortfall.isZero() || (index === 3 && earlyReturn);
     previousOverpayment = overpayment;
     previousUnpaid = remainingPrior.plus(shortfall);
@@ -323,7 +334,7 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
     if (start <= until) throw new Error(`Form 2210 ${dateString(start)} rate is unpublished; final penalty unavailable`);
   };
   for (const [index, due] of schedule.entries()) {
-    let outstanding = quarter;
+    let outstanding = requiredInstallments[index]!;
     for (const payment of allocations) {
       if (outstanding.isZero()) break;
       if (payment.remaining.isZero() || payment.day > endDay) continue;

@@ -106,11 +106,18 @@ export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult,
   const line9Greater = required("9").gt(required("6"));
   setCheckBox(form, F.line9No, !stopsAtPartI && !line9Greater);
   setCheckBox(form, F.line9Yes, !stopsAtPartI && line9Greater);
-  // Unsupported relief/annualized calculations never reach this mapping. Missing
-  // physical source facts remain disclosed; unchecked is not an inferred answer.
+  // Unsupported relief calculations never reach this mapping. Missing physical
+  // source facts remain disclosed; unchecked is not an inferred answer.
+  const annualized = source?.calculationMethod === "annualized";
+  const scheduleAi = calculation.lines.filter(entry => entry.form === "Form 2210 Schedule AI");
+  if (annualized !== (scheduleAi.length > 0) && calculation.installments.length > 0) throw new Error("Form 2210 Schedule AI audit does not reconcile to the source method");
+  for (const [index, installment] of calculation.installments.entries()) {
+    const line27 = scheduleAi.filter(entry => entry.line === `27${String.fromCharCode(97 + index)}`);
+    if (annualized && (line27.length !== 1 || !line27[0]!.value.eq(installment.required))) throw new Error("Form 2210 line10 does not reconcile to Schedule AI line27");
+  }
   setCheckBox(form, F.boxA, false);
   setCheckBox(form, F.boxB, false);
-  setCheckBox(form, F.boxC, false);
+  setCheckBox(form, F.boxC, annualized && scheduleAi.length > 0);
   setCheckBox(form, F.boxD, source?.withholdingMethod === "actual-dates");
   const changedJointStatus = source?.priorYearJointReturn !== undefined
     && source.priorYearJointReturn !== (input.taxpayer.filingStatus === "married_filing_jointly");
@@ -128,9 +135,11 @@ export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult,
       cursor -= 14;
     }
   };
-  write("FORM 2210 REVIEW - dated regular-method evidence");
+  write(`FORM 2210 REVIEW - dated ${annualized ? "annualized-income" : "regular-method"} evidence`);
   write(calculation.sourceFactsVerified ? "Calculation uses the supported actual-source contract." : "Historical or exception-only calculation: complete source qualification has not been established.");
   write("This is a review worksheet. The default return packet omits Form 2210; no filing qualification is implied.");
+  if (scheduleAi.length > 0) write("Schedule AI page 3 is not completed in this packet. Its calculated lines follow.");
+  for (const entry of scheduleAi) write(`Schedule AI line ${entry.line}: ${entry.description} ${entry.value.toFixed()}`);
   if (source?.priorYearJointReturn === undefined && priorRequired !== undefined) write("Prior joint-return status is unknown; Part II box E remains unanswered.");
   if (!source) write("Physical filing-reason source facts are uncollected; unchecked boxes are not confirmed negative answers.");
   if (calculation.interestPeriods.length === 0) write(`No dated interest accrues. ${calculation.safeHarborReason}.`);

@@ -4322,7 +4322,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     refundableCredits:estimatedTaxRefundableCredits,
     priorYearTax:input.priorYear?.priorYearTax === undefined ? undefined : d(input.priorYear.priorYearTax),
     priorYearAGI:input.priorYear?.priorYearAGI === undefined ? undefined : d(input.priorYear.priorYearAGI),
-    filingStatus,facts:input.form2210,
+    filingStatus,facts:input.form2210,standardDeduction,
     payments:[
       ...(input.adjustments?.estimatedTaxPayments ?? []).filter(payment=>payment.type === "federal")
         .map(payment=>({date:payment.date,amount:payment.amount,kind:"estimated" as const})),

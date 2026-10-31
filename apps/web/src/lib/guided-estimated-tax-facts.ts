@@ -8,6 +8,7 @@ export interface EstimatedTaxFactsData {
   sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null; allPaymentRecordsIncluded: boolean | null;
   calendarYearTaxpayer: boolean | null; residentReturn: boolean | null; farmerOrFisher: boolean | null; disasterReliefClaimed: boolean | null; waiverRequested: boolean | null;
   calculationMethod: "" | "regular" | "annualized"; withholdingMethod: "" | "equal-installments" | "actual-dates";
+  annualizedIncomePeriods?: AnnualizedPeriodData[]; bothSpousesSelfEmployed?: boolean | null;
   priorYearTaxStatus: "" | "return-filed" | "no-return" | "no-tax-liability";
   priorYearFullYear: boolean | null; priorYearResidentAllYear: boolean | null; priorYearJointReturn: boolean | null;
   priorYearTaxForForm2210: string; priorYearAgiForForm2210: string; priorYearTaxComputationConfirmed: boolean | null;
@@ -29,6 +30,20 @@ function money(value: string | undefined, label: string, required = true, signed
   if (signed) { if (!value?.trim()) throw new Error(`Enter the actual ${label}.`); return parseGuidedCurrency(value).toFixed(); }
   const error = amountError(value, label); if (error) throw new Error(error); return parseGuidedCurrency(value).toFixed();
 }
+export const ANNUALIZED_PERIOD_FIELDS = [
+  ["adjustedGrossIncome", "Adjusted gross income", true], ["itemizedDeductions", "Itemized deductions, or 0 if you do not itemize", false],
+  ["qbiDeduction", "QBI deduction", false], ["qualifiedDividends", "Qualified dividends", false], ["netCapitalGain", "Net capital gain", false],
+  ["netProfitFromSelfEmployment", "Net profit from self-employment", true], ["socialSecurityWages", "Wages subject to social security tax", false],
+  ["otherTaxes", "Other taxes", false], ["credits", "Credits", false],
+] as const;
+export type AnnualizedPeriodData = Record<(typeof ANNUALIZED_PERIOD_FIELDS)[number][0], string>;
+export const emptyAnnualizedPeriods = (): AnnualizedPeriodData[] => Array.from({ length: 4 }, () =>
+  Object.fromEntries(ANNUALIZED_PERIOD_FIELDS.map(([key]) => [key, ""])) as AnnualizedPeriodData);
+function buildAnnualizedPeriods(facts: EstimatedTaxFactsData): AnnualizedPeriodData[] {
+  if (facts.annualizedIncomePeriods?.length !== 4) throw new Error("Annualized income needs all four actual cumulative periods.");
+  return facts.annualizedIncomePeriods.map((period, index) => Object.fromEntries(ANNUALIZED_PERIOD_FIELDS.map(([key, label, signed]) =>
+    [key, money(period[key], `period ${index + 1} ${label.toLowerCase()}`, true, signed)])) as AnnualizedPeriodData);
+}
 export function buildEstimatedTaxFacts(data: PaymentData | undefined, taxYear?: number | null): TaxYearInput["form2210"] {
   const facts = data?.estimatedTaxFacts; if (!facts) return undefined;
   if (taxYear !== 2025 && taxYear !== 2026) throw new Error("Select the actual supported return year before the estimated-tax worksheet.");
@@ -39,7 +54,8 @@ export function buildEstimatedTaxFacts(data: PaymentData | undefined, taxYear?: 
     ["calendarYearTaxpayer", true, "calendar-year taxpayer"], ["residentReturn", true, "resident return"], ["farmerOrFisher", false, "farmer or fisher special rule"],
     ["disasterReliefClaimed", false, "disaster relief"], ["waiverRequested", false, "penalty waiver"],
   ] as const) if (known(facts[key], label) !== expected) throw new Error(`The ${label} scenario needs its separate estimated-tax method; retain these actual facts for review.`);
-  if (facts.calculationMethod !== "regular") throw new Error("Choose the actual estimated-tax method. Annualized income needs the separate Schedule AI source calculation.");
+  if (facts.calculationMethod !== "regular" && facts.calculationMethod !== "annualized") throw new Error("Choose the actual estimated-tax method.");
+  const annualizedIncomePeriods = facts.calculationMethod === "annualized" ? buildAnnualizedPeriods(facts) : undefined;
   if (facts.withholdingMethod !== "equal-installments" && facts.withholdingMethod !== "actual-dates") throw new Error("Choose the actual withholding timing method.");
   if (!["return-filed", "no-return", "no-tax-liability"].includes(facts.priorYearTaxStatus)) throw new Error("Confirm actual prior-year return/tax status.");
   if (facts.priorYearTaxStatus !== "no-return") {
@@ -92,6 +108,7 @@ export function buildEstimatedTaxFacts(data: PaymentData | undefined, taxYear?: 
   return Form2210Schema.parse({
     calendarYearTaxpayer: facts.calendarYearTaxpayer, residentReturn: facts.residentReturn, farmerOrFisher: facts.farmerOrFisher,
     disasterReliefClaimed: facts.disasterReliefClaimed, waiverRequested: facts.waiverRequested, calculationMethod: facts.calculationMethod, withholdingMethod: facts.withholdingMethod,
+    annualizedIncomePeriods, bothSpousesSelfEmployed: facts.bothSpousesSelfEmployed ?? undefined,
     priorYearTaxStatus: facts.priorYearTaxStatus, priorYearFullYear: facts.priorYearFullYear ?? undefined, priorYearResidentAllYear: facts.priorYearResidentAllYear ?? undefined,
     priorYearJointReturn: facts.priorYearJointReturn ?? undefined, priorYearTaxComputationConfirmed: facts.priorYearTaxComputationConfirmed ?? undefined,
     priorYearTaxForForm2210: priorTax, priorYearAgiForForm2210: priorAgi, withholdingPayments, priorYearCreditPayments, returnPayments,

@@ -3493,7 +3493,15 @@ const Form2210DateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((value
   return Number.isFinite(instant.getTime()) && instant.toISOString().slice(0, 10) === value;
 }, "Must be an actual calendar date");
 const Form2210PaymentSchema = z.object({ date: Form2210DateSchema, amount: decimal });
+const Form2210AnnualizedPeriodSchema = z.object({
+  adjustedGrossIncome: z.string().optional(), itemizedDeductions: z.string().optional(), qbiDeduction: z.string().optional(),
+  qualifiedDividends: z.string().optional(), netCapitalGain: z.string().optional(), netProfitFromSelfEmployment: z.string().optional(),
+  socialSecurityWages: z.string().optional(), otherTaxes: z.string().optional(), credits: z.string().optional(),
+}).strict();
+
 export const Form2210Schema = z.object({
+  annualizedIncomePeriods: z.array(Form2210AnnualizedPeriodSchema).optional(),
+  bothSpousesSelfEmployed: z.boolean().optional(),
   calendarYearTaxpayer: z.boolean().optional(),
   residentReturn: z.boolean().optional(),
   farmerOrFisher: z.boolean().optional(),

@@ -1,0 +1,61 @@
+form: "Form 2210 Schedule AI"
+fullName: "Annualized income installment method for calendar-year individuals"
+taxYear: 2025
+supportedTaxYears: [2025, 2026]
+irsReference: "https://www.irs.gov/instructions/i2210"
+sourceRetrievedAt: "2026-10-31"
+notes: |
+  Form2210 (2025) page3 and Instructions for Form2210 (2025) Schedule AI. The 2026
+  form is not final; only its wage base differs here, from SSA 184500.
+  https://www.irs.gov/pub/irs-pdf/f2210.pdf https://www.irs.gov/instructions/i2210
+  Bounded method. Period amounts are the taxpayer's actual cumulative figures.
+  Lines 9, 16 and 18 are collected as filed amounts, because they depend on
+  period-specific worksheets. The instructions do not state whether the line14
+  worksheet's qualified dividends and net capital gain are annualized, so a
+  positive amount in any period rejects instead of choosing a convention.
+  Spouses both reporting self-employment need separate PartII sheets and reject.
+sources:
+  - "https://www.irs.gov/pub/irs-pdf/f2210.pdf"
+  - "https://www.irs.gov/instructions/i2210"
+lines:
+  - line: "part-i-columns"
+    description: "Annualize income and tax for all four periods"
+    formula: "Single2025, standard15750, AGI30000/60000/120000/200000: line13 104250/128250/164250/184250, tax17867/23627/32267/37067, line21 4020.075/10632.15/21780.225/33360.3."
+    irsRef: "Schedule AI PartI lines1-21; multipliers4,2.4,1.5,1; percentages22.5,45,67.5,90"
+    testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::annualizes each column and limits installments"
+  - line: "part-i-installments"
+    description: "Apply lines22 to27 in column order"
+    formula: "Line9 33360, line24 8340: line27 4020.075/6612.075/11148.075/11579.775, total exactly33360."
+    irsRef: "Schedule AI lines22-27; complete one column before the next"
+    testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::annualizes each column and limits installments"
+  - line: "itemized"
+    description: "Use the larger annualized itemized or standard deduction"
+    formula: "Period itemized5000 with multiplier4 gives20000 against standard15750, so line8 is20000. Itemized3000 gives12000, so line8 is15750."
+    irsRef: "Schedule AI lines4-8"
+    testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::uses the larger annualized itemized or standard deduction"
+  - line: "part-ii"
+    description: "Annualize self-employment tax with the prorated wage base"
+    formula: "Profit40000, wages0, column a: 36940*.496+36940*.116=22607.28. Column b wages50000: limit73375, 23375*.2976+36940*.0696=9527.424. Profit399.99 gives0; profit400 does not. 2026 limits use 184500 prorated by .25,5/12,2/3,1."
+    irsRef: "Schedule AI lines28-36"
+    testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::annualizes self-employment tax around its limits"
+  - line: "penalty"
+    description: "Use Schedule AI line27 as Form2210 line10 in the dated penalty"
+    formula: "One payment33361 on2026-01-15: regular exact penalty 8340*.07*611/365=977.27; Schedule AI exact 744.22, rounded744. Days after each due date are275,214,122 and0."
+    irsRef: "Form2210 PartIII line10 box C; IRC6654(d)(2)"
+    testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::replaces regular installments in the dated penalty"
+  - line: "unknown"
+    description: "Reject missing facts and unresolved branches"
+    formula: "Fewer than four periods, a blank amount, positive preferential income, both spouses self-employed or an unanswered joint self-employment question reject. Entered zero stays zero."
+    irsRef: "Original-source contract; Schedule AI all-dates rule"
+    testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::rejects missing facts and unresolved branches"
+  - line: "guide"
+    description: "Collect four cumulative periods without defaults"
+    formula: "Choosing annualized requires all four periods. Blank stays unknown, zero stays zero, and a positive preferential amount explains the rejection."
+    irsRef: "Schedule AI PartI and PartII columns"
+    testRef: "tests/guided-interview/guided-estimated-tax-schedule-ai.test.ts::builds four complete periods and keeps blanks unknown"
+  - line: "review"
+    description: "Mark the method and print calculated lines on the review copy"
+    formula: "An annualized return checks PartII box C, prints line10 from Schedule AI line27 and lists calculated Schedule AI lines. A regular return leaves box C unchecked. A changed source method or line27 mismatch rejects."
+    irsRef: "Form2210 PartII box C; PartIII line10"
+    testRef: "tests/pdf/form-2210-schedule-ai-review.test.ts::marks box C and reconciles line10 to Schedule AI"
+

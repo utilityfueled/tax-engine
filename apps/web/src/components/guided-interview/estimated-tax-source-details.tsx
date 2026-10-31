@@ -1,6 +1,6 @@
 "use client";
 
-import { emptyEstimatedTaxFacts, type EstimatedTaxFactsData } from "@/lib/guided-estimated-tax-facts";
+import { ANNUALIZED_PERIOD_FIELDS, emptyAnnualizedPeriods, emptyEstimatedTaxFacts, type EstimatedTaxFactsData } from "@/lib/guided-estimated-tax-facts";
 import type { EstimatedPaymentEntry, PaymentData } from "@/lib/guided-interview-flow";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
@@ -28,9 +28,10 @@ export function EstimatedTaxSourceDetails({ data, appliedCredits = [], taxYear, 
       <BooleanFact label="Farmer or fisher estimated-tax special rule applies" value={data.farmerOrFisher} onChange={farmerOrFisher => update({ farmerOrFisher })} />
       <BooleanFact label="Disaster relief applies to these payments" value={data.disasterReliefClaimed} onChange={disasterReliefClaimed => update({ disasterReliefClaimed })} />
       <BooleanFact label="A penalty waiver is requested" value={data.waiverRequested} onChange={waiverRequested => update({ waiverRequested })} />
-      <Choice label="Estimated-tax calculation method" value={data.calculationMethod} choices={[["regular", "Regular installments"], ["annualized", "Annualized income (separate Schedule AI required)"]]} onChange={calculationMethod => update({ calculationMethod: calculationMethod as EstimatedTaxFactsData["calculationMethod"] })} />
+      <Choice label="Estimated-tax calculation method" value={data.calculationMethod} choices={[["regular", "Regular installments"], ["annualized", "Annualized income (Schedule AI)"]]} onChange={calculationMethod => update({ calculationMethod: calculationMethod as EstimatedTaxFactsData["calculationMethod"] })} />
       <Choice label="Withholding timing method" value={data.withholdingMethod} choices={[["equal-installments", "Statutory equal installments"], ["actual-dates", "Elect actual withholding dates"]]} onChange={withholdingMethod => update({ withholdingMethod: withholdingMethod as EstimatedTaxFactsData["withholdingMethod"] })} />
     </div>
+    {data.calculationMethod === "annualized" && <AnnualizedPeriods data={data} update={update} />}
     <fieldset><legend>Actual prior-year history</legend><div className="guided-form-grid">
       <Choice label="Prior-year return and tax status" value={data.priorYearTaxStatus} choices={[["return-filed", "A return was filed"], ["no-return", "No prior return for the tax comparison"], ["no-tax-liability", "No prior-year tax liability"]]} onChange={priorYearTaxStatus => update({ priorYearTaxStatus: priorYearTaxStatus as EstimatedTaxFactsData["priorYearTaxStatus"] })} />
       <BooleanFact label="Prior return covered a full 12 months" value={data.priorYearFullYear} onChange={priorYearFullYear => update({ priorYearFullYear })} />
@@ -59,4 +60,17 @@ export function EstimatedTaxSourceDetails({ data, appliedCredits = [], taxYear, 
     </div>
     <button type="button" onClick={() => onChange(undefined)}>Remove estimated-tax worksheet</button>
   </section>;
+}
+
+const ANNUALIZED_LABELS = ["January 1 to March 31", "January 1 to May 31", "January 1 to August 31", "January 1 to December 31"];
+function AnnualizedPeriods({ data, update }: { data: EstimatedTaxFactsData; update: (patch: Partial<EstimatedTaxFactsData>) => void }) {
+  const periods = data.annualizedIncomePeriods ?? emptyAnnualizedPeriods();
+  return <fieldset style={{ minWidth: 0 }}><legend>Schedule AI cumulative income by period</legend>
+    <p className="guided-hint">Enter actual totals from January 1 through each period end, including 0 where that is the amount. Amounts with qualified dividends or net capital gain above 0 cannot be calculated here. Use the same Schedule AI method for all four dates.</p>
+    <BooleanFact label="Both spouses had self-employment earnings" value={data.bothSpousesSelfEmployed ?? null} onChange={bothSpousesSelfEmployed => update({ bothSpousesSelfEmployed })} />
+    {periods.map((period, index) => <fieldset key={ANNUALIZED_LABELS[index]} style={{ minWidth: 0 }}><legend>{ANNUALIZED_LABELS[index]}</legend><div className="guided-form-grid">
+      {ANNUALIZED_PERIOD_FIELDS.map(([key, label, signed]) => <CurrencyField key={key} label={`Period ${index + 1}: ${label}`} allowNegative={signed} value={period[key]}
+        onChange={value => update({ annualizedIncomePeriods: periods.map((row, at) => at === index ? { ...row, [key]: value } : row) })} />)}
+    </div></fieldset>)}
+  </fieldset>;
 }
