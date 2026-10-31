@@ -44,9 +44,7 @@ import { careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitsData
 import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
 import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
-import { investmentFactErrors, investmentRowsStarted, isStartedInvestment, type InvestmentSourceData, type InvestmentData } from "./guided-investment-facts";
-import { isStartedDigitalAsset } from "./guided-digital-asset-facts";
-import { isStartedOid } from "./guided-oid-facts";
+import { investmentFactErrors, investmentRowsStarted, type InvestmentSourceData, type InvestmentData } from "./guided-investment-facts";
 import { businessFactErrors, hasBusinessSourceData, type BusinessSourceData } from "./guided-business-facts";
 import { isStartedRental, rentalFactErrors, type RentalSourceData } from "./guided-rental-facts";
 import { nonW2TaxAllocationErrors } from "./guided-salt-facts";
