@@ -197,12 +197,12 @@
     "Independent human tax review, launch-state demand and qualification, and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Six interpretation questions await a qualified reviewer.",
     "The AI corpus has zero human reviews and no live results. Provider account access and spend are not approved. No model is promoted.",
     "Hosted auth, security, billing, Redis, provider, database and recovery rehearsals require authorized staging access. Local and CI checks do not establish staging readiness.",
-    "The image register holds 157 matches and 67 OS advisories awaiting owner acceptance by 2026-11-07. There are no critical, npm or fixed-version matches. No artifact is published and no human security review exists.",
+    "The image register holds 159 matches and 68 OS advisories awaiting owner acceptance by 2026-11-07. There are no critical, npm or fixed-version matches. No artifact is published and no human security review exists.",
     "The 2026 federal calculation remains incomplete and unavailable in production. The final 2026 Tax Table and forms are not published."
   ],
   "ongoingExecution": {
     "status": "internal-packages-delivered-external-gates-open",
-    "lastRecordedCommit": "7e668c8",
+    "lastRecordedCommit": "9e37c119",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -11947,7 +11947,7 @@
       "humanQualification": false
     },
     "latestRemoteCi": "docs/upgrade-2026-ci-ad8fd777.json",
-    "latestRuntimeRecord": "docs/upgrade-2026-runtime-7e668c86-arm64.json"
+    "latestRuntimeRecord": "docs/upgrade-2026-runtime-12faedf5.json"
   },
   "historicalReleaseBlockers": {
     "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",

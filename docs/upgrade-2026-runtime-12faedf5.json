@@ -81,8 +81,12 @@
       "deb": 159
     },
     "fixedVersionAvailable": 0,
-    "identicalToRegister": false,
-    "sha256": "9717197ba069cb44d42135477dc0734bfe1de0d8c6d5674e8920098477f5a18a"
+    "sha256": "9717197ba069cb44d42135477dc0734bfe1de0d8c6d5674e8920098477f5a18a",
+    "identicalToRegisterAtScan": false,
+    "newSinceRegister": [
+      "CVE-2026-84243"
+    ],
+    "registerUpdated": "2026-10-31"
   },
   "advisoryAcceptance": "Pending owner. The register review date is 2026-11-07. This scan accepts nothing."
 }

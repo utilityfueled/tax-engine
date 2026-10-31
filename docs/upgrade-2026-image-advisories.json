@@ -2495,6 +2495,44 @@
       }
     },
     {
+      "id": "CVE-2026-84243",
+      "severity": "High",
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-84243",
+      "packages": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4",
+          "type": "deb",
+          "fixState": "not-fixed",
+          "fixedVersions": []
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4",
+          "type": "deb",
+          "fixState": "not-fixed",
+          "fixedVersions": []
+        }
+      ],
+      "disposition": "unresolved-release-review-required",
+      "ownerRole": "release maintainer",
+      "ownerConfirmation": "pending",
+      "reviewBy": "2026-11-07",
+      "exposure": "Observed component and deployment evidence is recorded in exposureEvidence.glibc-gettext-language. Reachability is bounded by that evidence; this finding remains unaccepted.",
+      "sourceReview": {
+        "retrievedAt": "2026-10-31",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "2.41-12+deb13u4",
+            "status": "vulnerable"
+          }
+        ],
+        "fixedVersion": "none listed",
+        "upstream": "Sourceware bug 17142; GLIBC-SA-2026-0025; Debian bug 1152640"
+      }
+    },
+    {
       "id": "CVE-2026-85091",
       "severity": "High",
       "source": "https://security-tracker.debian.org/tracker/CVE-2026-85091",
@@ -2850,6 +2888,10 @@
     "cli-tools": {
       "assessment": "Affected command-line tools may be installed. Tracked application source only spawns a fixed pdftotext command with generated temporary input, a15-second bound and cleanup; that optional executable is absent in this image. No listed advisory tool invocation was found. This static search does not prove dependency or future runtime behavior.",
       "status": "bounded-agent-assessment-not-acceptance"
+    },
+    "glibc-gettext-language": {
+      "assessment": "CVE-2026-84243 needs attacker control of LANGUAGE, selection of another installed locale and a crafted readable catalog. On the 7e668c86 arm64 image, LANG, LC_* and LANGUAGE are unset, C.utf8 is the only locale, /usr/share/locale is empty, and tracked application source has no gettext use. This is one image observation. Native dependencies and operator-supplied environments are not ruled out.",
+      "status": "bounded-agent-assessment-not-acceptance"
     }
   },
   "sourceReviewEvidence": {
@@ -2963,5 +3005,30 @@
       "qualification": "intermediate-native-CI-evidence-not-final-release",
       "record": "docs/upgrade-2026-runtime-fdfeedf.json"
     }
-  ]
+  ],
+  "latestScan": {
+    "recordedAt": "2026-10-31",
+    "databaseBuilt": "2026-10-31T06:18:17Z",
+    "matches": 159,
+    "uniqueAdvisories": 68,
+    "matchCounts": {
+      "High": 56,
+      "Medium": 47,
+      "Negligible": 46,
+      "Low": 10
+    },
+    "fixedVersionAvailable": 0,
+    "npmMatches": 0,
+    "platforms": {
+      "arm64": {
+        "sourceCommit": "7e668c86",
+        "scan": ".local/upgrade-evidence/scan-7e668c86-arm64-db20261031.json",
+        "scanSha256": "3a16e3ef57d3515bf9ee5ee698321668bf1c34a6585043aaec297b07a650b309"
+      },
+      "amd64": {
+        "record": "docs/upgrade-2026-runtime-12faedf5.json"
+      }
+    },
+    "note": "The top-level counts describe the original 4aef633 scan. Use this block for the current state."
+  }
 }

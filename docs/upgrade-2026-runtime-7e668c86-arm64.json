@@ -102,5 +102,15 @@
     "sha256": "3503a941904c19c33840d3fcac9f83be4bdea21c294a871d2420fdaeaf0d197f"
   },
   "advisoryAcceptance": "Pending owner. The register review date is 2026-11-07. This scan accepts nothing.",
-  "cleanup": "No tax-rehearsal containers or volumes remain."
+  "cleanup": "No tax-rehearsal containers or volumes remain.",
+  "rescan": {
+    "databaseBuilt": "2026-10-31T06:18:17Z",
+    "matches": 159,
+    "distinctAdvisories": 68,
+    "path": ".local/upgrade-evidence/scan-7e668c86-arm64-db20261031.json",
+    "sha256": "3a16e3ef57d3515bf9ee5ee698321668bf1c34a6585043aaec297b07a650b309",
+    "newSinceRegister": [
+      "CVE-2026-84243"
+    ]
+  }
 }
