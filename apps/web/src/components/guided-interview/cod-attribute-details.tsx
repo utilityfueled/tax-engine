@@ -70,7 +70,7 @@ function Properties({ data, prefix, onChange }: { data?: CodAttributePropertyDat
           { key: 'propertyId', label: 'original ID' }, { key: 'description', label: 'description' }, { key: 'adjustedBasis', label: 'adjusted tax basis', type: 'money' },
           { key: 'category', label: 'property category', options: [['other_business', 'Trade or business / investment property'], ['inventory', 'Inventory or property held for sale'], ['personal', 'Personal property']] },
           { key: 'acquiredDate', label: 'actual acquisition date', type: 'date' }, { key: 'sourceReference', label: 'basis record reference' },
-          { key: 'securedDischargedDebt', label: 'secured the discharged debt', type: 'boolean' }, { key: 'priorSnapshotChangeReference', label: 'record reconciling the two dates' },
+          { key: 'securedDischargedDebt', label: 'secured the discharged debt', type: 'boolean' }, { key: 'exemptUnderSection522', label: 'treated as exempt property in the bankruptcy, title 11 cases only', type: 'boolean' }, { key: 'priorSnapshotChangeReference', label: 'record reconciling the two dates' },
         ]} />
         {confirmation(label, row, change)}
         <button type="button" className="utility-button" onClick={() => onChange(data!.filter((_, i) => i !== index))}>Remove {label.toLowerCase()}</button>

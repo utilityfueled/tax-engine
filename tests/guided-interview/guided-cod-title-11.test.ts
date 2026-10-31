@@ -6,7 +6,9 @@ import { guidedCodPartialPersonalState } from '../fixtures/guided-cod-partial-pe
 const court = { sourceReference: 'Fictional discharge order', sourceFactsConfirmed: true, debtorUnderCourtJurisdictionConfirmed: true, dischargeByCourtOrApprovedPlanConfirmed: true };
 function setup(patch = {}) {
   const state = guidedCodPartialPersonalState(), data = state.sectionData.adjustments!.codNolSources!;
-  const edited = { ...data, title11Case: true, title11Chapter: '13' as const, title11Source: court, debts: data.debts!.map(row => ({ ...row, identifiableEventCode: 'A' })), ...patch };
+  const answered = (ledger: NonNullable<typeof data.attributeSources>['regular']) => ledger && { ...ledger, property: { ...ledger.property, followingYear: { ...ledger.property?.followingYear, properties: ledger.property?.followingYear?.properties?.map(row => ({ ...row, exemptUnderSection522: false })) } } };
+  const attributeSources = data.attributeSources && { ...data.attributeSources, regular: answered(data.attributeSources.regular), alternativeTax: answered(data.attributeSources.alternativeTax) };
+  const edited = { ...data, attributeSources, title11Case: true, title11Chapter: '13' as const, title11Source: court, debts: data.debts!.map(row => ({ ...row, identifiableEventCode: 'A' })), ...patch };
   return { state, data: edited };
 }
 

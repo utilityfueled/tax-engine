@@ -506,6 +506,7 @@ export async function fillReturn(
   // Bind the prepared sources and result before output, even when both copies
   // omit the loss records that the separate review below would replay.
   if (codNolReview) codNolReviewOriginalSourceInput(input, result, codNolReview);
+  if (Boolean(result.codNolReduction?.title11) !== (Boolean(result.codNolReduction) && input.form982NolSources?.title11Case === true)) throw new Error("Form982 exclusion route must match its original title 11 answer");
   if (input.netOperatingLoss || result.netOperatingLoss) buildNetOperatingLossReview(input, result, capitalGainReview, codNolReview, charitableReview, qbiLossReview, nolFilingUnitReview);
   const filledForms: string[] = [];
   const finalizedPaths = new Set<string>();

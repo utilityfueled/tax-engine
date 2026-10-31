@@ -8,6 +8,7 @@ const property = z.object({
   category: z.enum(['other_business', 'inventory', 'personal']).optional(),
   acquiredDate: z.string().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
   securedDischargedDebt: z.boolean().optional(), priorSnapshotChangeReference: z.string().optional(),
+  exemptUnderSection522: z.boolean().optional(),
 });
 export const CodAttributeLedgerSourcesSchema = z.object({
   sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(), allAttributesIncluded: z.boolean().optional(),

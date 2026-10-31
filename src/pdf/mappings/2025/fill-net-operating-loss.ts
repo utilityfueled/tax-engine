@@ -423,7 +423,8 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
     if (retained?.sourceFactsVerified !== true || retained.calculationComplete !== true || !retained.regular || !retained.alternativeTax
       || !checked.regular || !checked.alternativeTax) throw new Error("COD review requires complete independent loss reductions");
     for (const key of ["sourceExcludedAmount", "reportedExcludedAmount", "insolvencyAmount"] as const) eq(retained[key], checked[key]);
-    codRows.push(`Form982 line1b: insolvency exclusion; Form982 line2 excluded insolvency amount ${checked.reportedExcludedAmount}; original source amount ${checked.sourceExcludedAmount}`,
+    if (retained.title11 !== checked.title11) throw new Error("COD review requires the exclusion route of its original sources");
+    codRows.push(`Form982 line${checked.title11 ? "1a: title 11" : "1b: insolvency"} exclusion; Form982 line2 excluded ${checked.title11 ? "title 11" : "insolvency"} amount ${checked.reportedExcludedAmount}; original source amount ${checked.sourceExcludedAmount}`,
       `Form982 line6 regular NOL reduction ${checked.regular.reduction}; actual current claims are unchanged.`);
     for (const [key, label] of [["regular", "Regular"], ["alternativeTax", "Alternative"]] as const) {
       const saved = retained[key], fresh = checked[key];

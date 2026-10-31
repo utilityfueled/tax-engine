@@ -324,7 +324,7 @@ export function buildForm982ReferenceSummary(result: TaxReturnResult): Form982Re
         { label: "Nondeductible interest included in original debt", value: cod.sourceIncludedInterest.toString() },
         { label: "Exact original excluded debt", value: cod.sourceExcludedAmount.toString() },
         { label: "Exact taxable personal canceled debt", value: cod.sourceTaxableAmount.toString() },
-        { label: "Actual immediately-before-discharge insolvency", value: cod.insolvencyAmount.toString() },
+        ...(cod.title11 ? [] : [{ label: "Actual immediately-before-discharge insolvency", value: cod.insolvencyAmount.toString() }]),
         { label: "Regular remaining NOL", value: cod.regular.carryforward.toString() },
         { label: "Regular residual expiry after COD", value: cod.regular.expiredAfterReduction.toString() },
         { label: "Alternative-tax NOL reduction", value: cod.alternativeTax.reduction.toString() },

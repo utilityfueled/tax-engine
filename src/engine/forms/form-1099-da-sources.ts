@@ -108,10 +108,11 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
           // Each lot ties to its own receipt by asset, date, units and per-unit value.
           const receipts = { mining: input.cryptoIncome?.miningIncome, staking: input.cryptoIncome?.stakingIncome, airdrop: input.cryptoIncome?.airdropIncome }[row.assetOrigin as 'mining' | 'staking' | 'airdrop'] ?? [];
           const names = [row.ticker, row.digitalAssetCode, row.digitalAssetName].map(name => name?.trim().toUpperCase());
-          const receipt = receipts.find(entry => entry.dateReceived === acquired && names.includes(entry.asset.trim().toUpperCase()));
-          const used = receipt ? (receiptUnits.get(receipt) ?? new Decimal(0)).plus(quantity) : quantity;
-          if (!receipt || used.gt(receipt.quantity) || quantity.times(receipt.fairMarketValuePerUnit).minus(basis).abs().gt('0.01')) throw new Error('Form1099DA lot received in the return year needs that income on this return.');
-          receiptUnits.set(receipt, used);
+          const units = (entry: object) => (receiptUnits.get(entry) ?? new Decimal(0)).plus(quantity);
+          const receipt = receipts.find(entry => entry.dateReceived === acquired && names.includes(entry.asset.trim().toUpperCase())
+            && units(entry).lte(entry.quantity) && quantity.times(entry.fairMarketValuePerUnit).minus(basis).abs().lte('0.01'));
+          if (!receipt) throw new Error('Form1099DA lot received in the return year needs that income on this return.');
+          receiptUnits.set(receipt, units(receipt));
         }
         if (row.reportedDateAcquired !== null && row.reportedDateAcquired !== acquired) throw new Error('Original Form1099DA acquisition date conflicts with the completed ordinary basis source.');
         const reportedBasis = row.reportedCostBasis === null ? undefined : amount(row.reportedCostBasis, 'reported Box1g basis');

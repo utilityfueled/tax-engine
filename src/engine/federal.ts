@@ -1339,9 +1339,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     ...(cryptoInput?.liquidations ?? []).map((liquidation) => liquidation.collateralAsset.trim().toUpperCase()),
     ...form1099DAForms.filter((form) => form.sourceFactsConfirmed !== true).flatMap((form) => form.transactions.filter((t) => !t.basisReportedToIRS && d(t.costBasis).isZero()).flatMap(rowNames)),
   ]);
-  const anyAssetConsumed = Boolean(cryptoInput?.nftTransactions?.length);
   // A row with no ticker cannot be tied to a lot symbol, so any consumed lot could be its own.
-  if (allLots.some((lot) => (anyAssetConsumed || consumedAssets.has(lot.asset.trim().toUpperCase()))
+  if (allLots.some((lot) => consumedAssets.has(lot.asset.trim().toUpperCase())
     && confirmedRows.some((row) => !row.ticker?.trim() || rowNames(row).includes(lot.asset.trim().toUpperCase())))) {
     throw new Error("Form1099DA confirmed rows and lot-consuming crypto sources for the same asset need a separate lot method.");
   }

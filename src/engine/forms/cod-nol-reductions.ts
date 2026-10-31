@@ -103,7 +103,7 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
   // Spec: cod-title-11-chapter-13. IRC1398 gives chapter 7 and 11 attributes to a separate estate.
   const title11 = facts.title11Case;
   if (title11) {
-    if (facts.title11Chapter !== '13') throw new Error('COD title11 chapter 7, 11, 12 or unknown needs its separate bankruptcy estate method');
+    if (facts.title11Chapter !== '13') throw new Error('COD title11 chapter 7 or 11 needs its separate bankruptcy estate method; chapter 12 or an unknown chapter needs its own');
     const source = facts.title11Source;
     if (source?.sourceFactsConfirmed !== true || !source.sourceReference?.trim() || source.debtorUnderCourtJurisdictionConfirmed !== true
       || source.dischargeByCourtOrApprovedPlanConfirmed !== true) throw new Error('COD title11 requires the actual court record of the discharge');
@@ -111,7 +111,7 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
   const exclusion = input.codExclusion;
   if (!exclusion?.insolvency || Boolean(exclusion.bankruptcy) !== title11 || exclusion.electBasisReductionFirst || exclusion.qualifiedPrincipalResidence
     || !d(exclusion.qualifiedFarmExclusion).isZero() || !d(exclusion.qualifiedRealPropertyBusinessExclusion).isZero()) {
-    throw new Error('COD source route requires its actual insolvency-only exclusion and no conflicting legacy election');
+    throw new Error('COD source route requires its actual insolvency or title11 exclusion and no conflicting legacy election');
   }
   if (!Array.isArray(facts.debts) || facts.debts.length === 0 || facts.debts.length !== input.form1099C.length) {
     throw new Error('COD requires each actual original statement exactly once');
@@ -179,7 +179,7 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
   audit.record('Form 982', '2', `Discharged debt excluded under ${title11 ? 'title11' : 'insolvency'}`, reportedExcludedAmount,
     title11 ? 'Complete original discharge in a title11 case; round the excluded aggregate once' : 'Lesser of complete original discharge and actual insolvency; round the excluded aggregate once', { 'Original excluded debt': sourceExcludedAmount });
   audit.record('Form982 NOL Sources', 'taxablePersonalDebt', 'Actual taxable personal canceled debt', sourceTaxableAmount,
-    'Complete original discharge less exact insolvency exclusion; nondeductible interest is already included in the original discharge',
+    'Complete original discharge less exact exclusion; nondeductible interest is already included in the original discharge',
     { 'Complete original discharge': sourceDischargedAmount, 'Included original interest': sourceIncludedInterest, 'Original excluded debt': sourceExcludedAmount });
   const base: CodNolReductionResult = { sourceFactsVerified: true, calculationComplete: false, sourceDischargedAmount, sourceIncludedInterest,
     sourceTaxableAmount, sourceExcludedAmount, reportedExcludedAmount, insolvencyAmount, ...(title11 ? { title11: true as const } : {}), lines: audit.getLines() };

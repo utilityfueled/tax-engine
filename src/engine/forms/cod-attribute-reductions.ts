@@ -70,7 +70,7 @@ const isCredit = (kind: CodAttributeKind) => kind !== 'capital_loss' && kind !==
 
 /** Source-only pure ledger; the caller separately reconciles current uses to the canonical return. */
 export function calculateCodAttributeReductions(input: {
-  taxYear: number; dischargeDate: string; remainingExclusion: Decimal; sources: CodAttributeLedgerSources | undefined;
+  taxYear: number; dischargeDate: string; remainingExclusion: Decimal; sources: CodAttributeLedgerSources | undefined; title11?: boolean;
   /** Canonical deduction-year worksheet result, keyed to the original source. Never an entered use. */
   foreignDeemedAbsorption?: ReadonlyMap<string, Decimal>;
   /** Source-only pass cannot check final expiry until the hypothetical calculation exists. */
@@ -240,6 +240,14 @@ export function calculateCodAttributeReductions(input: {
   const immediatelyAfterMoney = actual(after.money, 'immediately-after money');
   const basisCap = Decimal.max(0, subtract(add(immediatelyAfterBasis, immediatelyAfterMoney), immediatelyAfterLiabilities));
   const nextYearBasis = add(...nextProperties.map(row => row.adjustedBasis));
+  // IRC1017(c)(1): exempt property keeps its basis, for the title11 exclusion only.
+  for (const row of nextProperties) {
+    if (input.title11 ? typeof row.source.exemptUnderSection522 !== 'boolean' : row.source.exemptUnderSection522 === true) {
+      throw new Error('COD title11 property requires its actual exempt-property answer, which applies only in a title11 case');
+    }
+  }
+  const exemptIds = new Set(nextProperties.filter(row => row.source.exemptUnderSection522 === true).map(row => row.propertyId));
+  const reducibleBasis = add(...nextProperties.filter(row => !exemptIds.has(row.propertyId)).map(row => row.adjustedBasis));
   let remaining = new Decimal(input.remainingExclusion);
   const stages: CodAttributeReductionLedger['stages'] = [];
   const applyRecord = (row: CodAttributeReductionRecord, incomeApplied: Decimal) => {
@@ -283,13 +291,13 @@ export function calculateCodAttributeReductions(input: {
     stages.push({ kind: 'minimum_tax_credit', incomeApplied, attributeReduction: minimumTaxCreditPool.attributeReduction });
   } else applyStage('minimum_tax_credit', records.filter(row => row.kind === 'minimum_tax_credit'), () => 0);
   applyStage('capital_loss', records.filter(row => row.kind === 'capital_loss'), row => row.originTaxYear === taxYear ? 0 : row.originTaxYear);
-  const basisReduction = Decimal.min(remaining, basisCap, nextYearBasis);
+  const basisReduction = Decimal.min(remaining, basisCap, reducibleBasis);
   let unallocatedBasis = basisReduction;
   const propertyRows: CodPropertyReductionRecord[] = nextProperties.map(row => ({ propertyId: row.propertyId, category: row.category,
     adjustedBasis: row.adjustedBasis, incomeApplied: zero(), attributeReduction: zero(), reductionRatio: ratio(zero()),
     remainingRatio: ratio(row.adjustedBasis), remainingBasis: row.adjustedBasis }));
   for (const category of ['other_business', 'inventory', 'personal'] as const) {
-    const group = propertyRows.filter(row => row.category === category), total = add(...group.map(row => row.adjustedBasis));
+    const group = propertyRows.filter(row => row.category === category && !exemptIds.has(row.propertyId)), total = add(...group.map(row => row.adjustedBasis));
     const applied = Decimal.min(total, unallocatedBasis);
     for (const row of group) {
       if (total.isZero()) continue;

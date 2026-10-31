@@ -21,9 +21,9 @@ export function CodNolDetails({ data, onChange }: { data?: CodNolData; onChange:
     [kind]: data?.insolvency?.[kind]?.map((row, i) => i === index ? { ...row, ...patch } : row),
   });
   const statements: [string, string][] = (data?.debts ?? []).flatMap(row => row.statementId?.trim() ? [[row.statementId.trim(), row.statementId.trim()]] : []);
-  return <details className="guided-expand"><summary className="guided-expand-trigger">Canceled debt and insolvency</summary><div className="guided-expand-body">
+  return <details className="guided-expand"><summary className="guided-expand-trigger">Canceled debt, insolvency and bankruptcy</summary><div className="guided-expand-body">
     <p className="guided-hint">Use the original Form 1099-C and complete records of everything you owned and owed immediately before the debt was canceled. Include retirement accounts and other assets protected from creditors.</p>
-    <p className="guided-hint">This method covers unsecured personal borrowing and insolvency. If some debt remains taxable or the canceled amount includes interest, also provide the original personal borrowing records below. Complete the separate regular and AMT loss histories above, including explicit empty histories. If canceled debt reaches later attributes, enter those original records below. The return calculates reductions after current tax; do not enter a revised balance.</p>
+    <p className="guided-hint">This method covers unsecured personal borrowing, insolvency and chapter 13 discharges. If some debt remains taxable or the canceled amount includes interest, also provide the original personal borrowing records below. Complete the separate regular and AMT loss histories above, including explicit empty histories. If canceled debt reaches later attributes, enter those original records below. The return calculates reductions after current tax; do not enter a revised balance.</p>
     {!data ? <button type="button" className="utility-button" onClick={() => onChange({})}>Add canceled-debt sources</button> : <>
       <div className="guided-form-grid">
         <TextFact label="Canceled-debt source tax year" value={data.sourceTaxYear ?? ''} onChange={sourceTaxYear => change({ sourceTaxYear })} />

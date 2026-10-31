@@ -92,7 +92,7 @@ export function calculateCodAttributeReturn(input: CodAttributeSourceInput, cont
   ] };
   const deductionHistory = input.foreignTaxElection?.election === 'deduction' && Boolean(input.foreignTaxElection.deductionYearCarryover);
   const calculate = (sources: CodAttributeLedgerSources | undefined, remainingExclusion: Decimal, absorption?: ReadonlyMap<string, Decimal>, sourceOnly = false) => calculateCodAttributeReductions({
-    taxYear: year, dischargeDate: facts.dischargeDate!, remainingExclusion, sources, foreignDeemedAbsorption: absorption,
+    taxYear: year, dischargeDate: facts.dischargeDate!, remainingExclusion, sources, title11: input.form982NolSources?.title11Case === true, foreignDeemedAbsorption: absorption,
     deferForeignAbsorptionValidation: deductionHistory && sourceOnly,
     minimumTaxCreditPool: context?.currentMinimumTaxCredit,
   });

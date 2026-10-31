@@ -2,13 +2,22 @@
 import { expect, it } from 'vitest';
 import { calculateFederalTax } from '@/engine/federal.js';
 import { buildForm982ReferenceSummary } from '@/pdf/mappings/2025/fill-form-982.js';
-import { actualPartialPersonalCodInput } from '../fixtures/cod-partial-personal.js';
+import { actualPartialPersonalCodInput, partialPersonalBasisInput } from '../fixtures/cod-partial-personal.js';
 
 const court = { sourceReference: 'Fictional chapter 13 discharge order', sourceFactsConfirmed: true, debtorUnderCourtJurisdictionConfirmed: true, dischargeByCourtOrApprovedPlanConfirmed: true };
 function title11(options: Parameters<typeof actualPartialPersonalCodInput>[0] = {}, patch: Record<string, unknown> = {}) {
   const input = actualPartialPersonalCodInput({ debt: '18000', interest: '0', liabilities: '90000', assets: '80000', eventCode: 'A', ...options });
   Object.assign(input.form982NolSources!, { title11Case: true, title11Chapter: '13', title11Source: court, ...patch });
   input.codExclusion!.bankruptcy = true;
+  for (const ledger of [input.form982AttributeSources.regular, input.form982AttributeSources.alternativeTax]) {
+    for (const row of ledger.property.followingYear.properties) Object.assign(row, { exemptUnderSection522: false });
+  }
+  return input;
+}
+function withProperty(exemptUnderSection522: boolean | undefined, bankruptcy = true) {
+  const base = partialPersonalBasisInput(), input = bankruptcy ? title11({}) : base;
+  if (bankruptcy) { input.form982NolSources.insolvency!.assets = base.form982NolSources.insolvency!.assets; input.form982AttributeSources = base.form982AttributeSources; }
+  for (const ledger of [input.form982AttributeSources.regular, input.form982AttributeSources.alternativeTax]) Object.assign(ledger.property.followingYear.properties[0]!, { exemptUnderSection522 });
   return input;
 }
 
@@ -46,6 +55,14 @@ it('reduces attributes from the full exclusion', () => {
   const result = calculateFederalTax(title11());
   expect(result.codAttributeReduction!.regular.property.immediatelyAfterLiabilities.toFixed()).toBe('72000');
   expect(result.codAttributeReduction!.alternativeTax.property.immediatelyAfterLiabilities.toFixed()).toBe('72000');
+  const reducible = calculateFederalTax(withProperty(false)).codAttributeReduction!.regular;
+  expect([reducible.property.basisCap.toFixed(), reducible.property.attributeReduction.toFixed(), reducible.unreducedExclusion.toFixed()]).toEqual(['3000', '3000', '15000']);
+  const exempt = calculateFederalTax(withProperty(true)).codAttributeReduction!.regular;
+  expect([exempt.property.attributeReduction.toFixed(), exempt.unreducedExclusion.toFixed(), exempt.property.remainingBasis.toFixed()]).toEqual(['0', '18000', '75000']);
+  expect(exempt.property.properties[0]!.attributeReduction.toFixed()).toBe('0');
+  expect(() => calculateFederalTax(withProperty(undefined))).toThrow(/exempt-property answer/);
+  expect(() => calculateFederalTax(withProperty(true, false))).toThrow(/exempt-property answer/);
+  expect(() => calculateFederalTax(withProperty(false, false))).not.toThrow();
 });
 
 it('reports line 1a on the review summary', () => {
@@ -53,6 +70,7 @@ it('reports line 1a on the review summary', () => {
   expect(summary.exclusions).toEqual([{ line: '1a', description: 'Title 11 exclusion', value: '18000' }]);
   expect(summary.title).toContain('Title 11');
   expect(JSON.stringify(summary)).not.toContain('Insolvency exclusion');
+  expect(JSON.stringify(summary)).not.toContain('immediately-before-discharge insolvency');
   const insolvency = buildForm982ReferenceSummary(calculateFederalTax(actualPartialPersonalCodInput({ debt: '18000', interest: '0', liabilities: '90000', assets: '80000' })));
   expect(insolvency.exclusions[0]!.line).toBe('1b');
   const tampered = { ...result, codNolReduction: { ...result.codNolReduction!, sourceExcludedAmount: result.codNolReduction!.sourceExcludedAmount.minus(1), sourceTaxableAmount: result.codNolReduction!.sourceTaxableAmount.plus(1), reportedExcludedAmount: result.codNolReduction!.reportedExcludedAmount.minus(1) } };

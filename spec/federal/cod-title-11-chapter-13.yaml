@@ -11,7 +11,7 @@ notes: |
   order. Line10a's basis limit reads liabilities immediately after the discharge,
   so the complete asset and liability records are still required.
   Limits: IRC1398 names chapters 7 and 11, where a separate bankruptcy estate
-  takes the attributes, so those stay rejected. Chapter 12 also stays rejected.
+  takes the attributes, so those stay rejected. Chapter 12 stays rejected as a scope choice: IRC1399 gives it no separate estate, but its farm provisions are not reviewed here.
   Creditors generally need not report a consumer discharge in bankruptcy, so this
   route covers a discharge shown on a statement, with code A.
 lines:
@@ -26,13 +26,13 @@ lines:
     irsRef: "Form982 instructions Definitions; IRC1398(a); Forms1099-A and C instructions Box6"
     testRef: "tests/engine/federal-cod-title-11.test.ts::requires the chapter, court and code facts"
   - line: "attributes"
-    description: "Reduce attributes as an exclusion in the same order"
-    formula: "Immediately-after liabilities are the worksheet liabilities less the discharge, and the regular and alternative ledgers reconcile as they do for insolvency."
-    irsRef: "IRC108(b); IRC1017(b)(2); Form982 instructions line10a"
+    description: "Reduce attributes in the same order, protecting exempt property"
+    formula: "Immediately-after liabilities are the worksheet liabilities less the discharge, and the regular and alternative ledgers reconcile as they do for insolvency. IRC1017(c)(1) bars basis reduction on property the debtor treats as exempt under title11 section522, for the title11 exclusion only. Each following-year property answers that question on a title11 return, an exempt property keeps its basis, and any unreduced exclusion is reported. The answer rejects outside title11."
+    irsRef: "IRC108(b); IRC1017(b)(2),(c)(1); Form982 instructions line10a"
     testRef: "tests/engine/federal-cod-title-11.test.ts::reduces attributes from the full exclusion"
   - line: "review"
     description: "Report line1a on the review summary"
-    formula: "The summary shows line1a with the excluded amount, not line1b, and rejects an exclusion that does not equal the discharge."
+    formula: "The Form982 summary and the NOL statement show line1a with the excluded amount, not line1b. The summary rejects an exclusion that does not equal the discharge, and output rejects a title11 flag that disagrees with the source answer."
     irsRef: "Pub4681 Bankruptcy; Form982 line1a"
     testRef: "tests/engine/federal-cod-title-11.test.ts::reports line 1a on the review summary"
   - line: "guide"

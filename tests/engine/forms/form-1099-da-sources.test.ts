@@ -165,6 +165,8 @@ it('ties a lot received in the return year to income on this return', () => {
   expect(gain(lotRow({ assetOrigin: 'airdrop' }, { airdropIncome: [receipt({ source: 'airdrop' })] }))).toBe('10.25');
   expect(gain(lotRow({}, { miningIncome: [receipt({ quantity: '0.002' })] }))).toBe('10.25');
   expect(gain(lotRow({ costBasis: '0' }, { miningIncome: [receipt({ fairMarketValuePerUnit: '0' })] }))).toBe('100.49');
+  expect(gain(lotRow({}, { miningIncome: [receipt({ asset: 'ACTUAL-DTIF' })] }))).toBe('10.25');
+  expect(gain(lotRow({}, { miningIncome: [receipt({ fairMarketValuePerUnit: '50000' }), receipt()] }))).toBe('10.25');
   for (const income of [{ miningIncome: [receipt({ asset: 'ETH' })] }, { miningIncome: [receipt({ dateReceived: '2024-01-15' })] }, { miningIncome: [receipt({ dateReceived: '2025-01-16' })] }, { stakingIncome: [receipt()] },
     { miningIncome: [receipt({ quantity: '0.0009' })] }, { miningIncome: [receipt({ fairMarketValuePerUnit: '50000' })] }, { miningIncome: [receipt({ fairMarketValuePerUnit: '90251' })] }]) {
     expect(() => calculateForm8949(lotRow({}, income)), JSON.stringify(income)).toThrow(message);
@@ -174,6 +176,7 @@ it('ties a lot received in the return year to income on this return', () => {
   for (const row of twoRows.transactions) Object.assign(row, { assetOrigin: 'mining', originIncomeIncludedConfirmed: true });
   expect(() => calculateForm8949({ ...input([twoRows]), cryptoIncome: { miningIncome: [receipt()], stakingIncome: [], airdropIncome: [] } } as ReturnType<typeof input>)).toThrow(message);
   expect(calculateForm8949({ ...input([twoRows]), cryptoIncome: { miningIncome: [receipt({ quantity: '0.002' })], stakingIncome: [], airdropIncome: [] } } as ReturnType<typeof input>).shortTermBoxH.transactions).toHaveLength(2);
+  expect(calculateForm8949({ ...input([twoRows]), cryptoIncome: { miningIncome: [receipt(), receipt()], stakingIncome: [], airdropIncome: [] } } as ReturnType<typeof input>).shortTermBoxH.transactions).toHaveLength(2);
 });
 
 it('rejects a confirmed row beside a lot-consuming source for the same asset', () => {
@@ -184,6 +187,8 @@ it('rejects a confirmed row beside a lot-consuming source for the same asset', (
   expect(() => run({ lots: [lot('BTC')], tokenSwaps: [swap('BTC')] })).toThrow(message);
   expect(() => run({ lots: [lot('btc')], tokenSwaps: [swap('btc')] })).toThrow(message);
   expect(() => run({ lots: [lot('ACTUAL-DTIF')], tokenSwaps: [swap('ACTUAL-DTIF')] })).toThrow(message);
+  expect(() => run({ lots: [lot('BTC')], liquidations: [{ platform: 'Fictional', collateralAsset: 'BTC', collateralQuantity: '0.1', fairMarketValueAtLiquidation: '30', dateOfLiquidation: '2025-07-01' }] })).toThrow(message);
+  expect(() => run({ lots: [lot('BTC')], lpPositions: [{ protocol: 'Fictional', poolAssets: ['BTC', 'USDC'], lpTokensReceived: '1', underlyingAssetsDeposited: [{ asset: 'BTC', quantity: '0.1', costBasisPerUnit: '100' }], dateEntered: '2025-07-01' }] })).toThrow(message);
   // Lots that are not at risk still calculate.
   expect(() => run({ lots: [lot('BTC')] })).not.toThrow();
   expect(() => run({ lots: [lot('BTC'), lot('ETH')], tokenSwaps: [swap('ETH')] })).not.toThrow();

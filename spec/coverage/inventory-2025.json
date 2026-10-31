@@ -765,16 +765,19 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/publications/p4681",
       "specPath": "spec/federal/cod-title-11-chapter-13.yaml",
-      "enginePath": null,
+      "enginePath": "src/engine/forms/cod-nol-reductions.ts",
       "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/federal-cod-title-11.test.ts::excludes the complete chapter 13 discharge"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
+      "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]

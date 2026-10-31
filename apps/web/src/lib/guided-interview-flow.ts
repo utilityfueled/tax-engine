@@ -123,7 +123,7 @@ export type LifeEvent =
 
 export const lifeEventOptions: { value: LifeEvent; label: string; hint: string }[] = [
   { value: "k1-loss-sources", label: "Have K-1 income or suspended business losses", hint: "Original partnership or S corporation statements, basis and loss histories" },
-  { value: "cancelled-debt", label: "Had personal debt canceled while insolvent", hint: "Original debt statements, complete asset and liability records, and actual loss carry histories" },
+  { value: "cancelled-debt", label: "Had personal debt canceled while insolvent or in chapter 13 bankruptcy", hint: "Original debt statements, complete asset and liability records, and actual loss carry histories" },
   { value: "current-year-loss", label: "Calculate a current-year net operating loss", hint: "Actual current business, deduction and independent AMT source records" },
   { value: "net-operating-loss", label: "Have a net operating loss carryforward", hint: "Actual filed regular and AMT loss worksheets and complete carry history" },
   { value: "foreign-earned-income", label: "Worked abroad", hint: "Actual foreign earnings, tax home and qualification records" },

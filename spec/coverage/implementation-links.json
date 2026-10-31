@@ -140,6 +140,14 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/cod-title-11-chapter-13",
+      "enginePath": "src/engine/forms/cod-nol-reductions.ts",
+      "testRefs": [
+        "tests/engine/federal-cod-title-11.test.ts::excludes the complete chapter 13 discharge"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
       "key": "federal/crypto-charitable-integration",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [
