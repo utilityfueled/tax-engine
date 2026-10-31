@@ -100,6 +100,18 @@ it('requires actual2026 source boxes without inferring noncovered basis', () => 
   expect(FEDERAL_RULE_PACKS[2026].filingQualified).toBe(false);
 });
 
+it('treats payments and income-origin assets from their actual records', () => {
+  const run = (patch: Record<string, unknown>) => { const source = fixture(); Object.assign(source.transactions[0]!, patch); return input([source]); };
+  expect(calculateForm8949(run({ transactionType: 'payment' })).shortTermBoxH.transactions[0]!.gainLoss.toFixed()).toBe('10.25');
+  for (const assetOrigin of ['mining', 'staking', 'airdrop']) {
+    expect(() => calculateForm8949(run({ assetOrigin }))).toThrow(/special disposition or original acquisition/);
+    expect(() => calculateForm8949(run({ assetOrigin, originIncomeIncludedConfirmed: false }))).toThrow(/special disposition or original acquisition/);
+    expect(calculateForm8949(run({ assetOrigin, originIncomeIncludedConfirmed: true })).shortTermBoxH.transactions[0]!.gainLoss.toFixed()).toBe('10.25');
+  }
+  for (const assetOrigin of ['gift', 'inheritance', 'other']) expect(() => calculateForm8949(run({ assetOrigin, originIncomeIncludedConfirmed: true }))).toThrow(/special disposition/);
+  expect(() => calculateForm8949(run({ transactionType: 'gift' }))).toThrow(/special disposition/);
+});
+
 const corrected = (patch: Record<string, unknown>) => {
   const form = fixture();
   Object.assign(form.transactions[0]!, { dateAcquired: '2024-01-15', reportedDateAcquired: '2024-01-15', holdingPeriod: 'long', proceeds: '10000', costBasis: '6000', reportedCostBasis: '9000',

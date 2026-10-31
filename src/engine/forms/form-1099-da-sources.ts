@@ -28,7 +28,7 @@ function actualDate(value: string, label: string): string {
 
 function isActualSource(form: Form1099DA, year: number): boolean {
   const statementFields = ['sourceId', 'taxYear', 'sourceReference', 'sourceFactsConfirmed', 'allTransactionsIncluded', 'federalWithheld', 'stateTaxReporting', 'accountReference'] as const;
-  const transactionFields = ['sourceId', 'digitalAssetCode', 'reportedDateAcquired', 'reportedCostBasis', 'basisSource', 'basisSourceReference', 'basisFactsConfirmed', 'basisCorrectionConfirmed', 'sellingCostsNotInProceedsConfirmed',
+  const transactionFields = ['sourceId', 'digitalAssetCode', 'reportedDateAcquired', 'reportedCostBasis', 'basisSource', 'basisSourceReference', 'basisFactsConfirmed', 'basisCorrectionConfirmed', 'sellingCostsNotInProceedsConfirmed', 'originIncomeIncludedConfirmed',
     'proceedsType', 'sellingExpenses', 'marketDiscount', 'qof', 'lossNotAllowed', 'ordinaryIncome', 'onlyCashProceeds', 'customerProvidedAcquisitionInformation',
     'noncoveredSecurity', 'optionalReportingMethod', 'assetOrigin', 'capitalAssetConfirmed', 'nftOrCollectible',
     'paCostBasis', 'paBasisSourceReference', 'paBasisFactsConfirmed', 'paTransactionForProfitConfirmed'] as const;
@@ -97,9 +97,12 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
         if (row.basisSource === 'broker_statement' && (row.reportedCostBasis === null || row.reportedDateAcquired === null)) throw new Error('Blank broker basis or acquisition date requires actual taxpayer records.');
         if (row.basisReportedToIRS && row.reportedCostBasis === null) throw new Error('Form1099DA reported-basis checkbox conflicts with blank original basis.');
         if (input.taxpayer.taxYear >= 2026 && row.noncoveredSecurity === false && (!row.basisReportedToIRS || row.reportedCostBasis === null)) throw new Error('Covered Form1099DA source requires its actual reported basis.');
-        if (row.capitalAssetConfirmed !== true || row.assetOrigin !== 'purchase' || row.nftOrCollectible !== false
+        // Spec: form-1099-da-sources.yaml income-origin. Income-origin basis is the amount
+        // already included in income, so the taxpayer must confirm it was reported.
+        const incomeOrigin = row.assetOrigin === 'mining' || row.assetOrigin === 'staking' || row.assetOrigin === 'airdrop';
+        if (row.capitalAssetConfirmed !== true || !(row.assetOrigin === 'purchase' || (incomeOrigin && row.originIncomeIncludedConfirmed === true)) || row.nftOrCollectible !== false
           || row.qof !== false || row.lossNotAllowed !== false || row.ordinaryIncome !== false || row.optionalReportingMethod !== 'none'
-          || !['sale', 'exchange'].includes(row.transactionType)) throw new Error('Form1099DA special disposition or original acquisition requires a separate supported source method.');
+          || !['sale', 'exchange', 'payment'].includes(row.transactionType)) throw new Error('Form1099DA special disposition or original acquisition requires a separate supported source method.');
         const sellingExpenses = amount(row.sellingExpenses, 'selling expenses');
         if (sellingExpenses.gt(0) && row.sellingCostsNotInProceedsConfirmed !== true) throw new Error('Form1099DA costs need confirmation that Box 1f does not already reflect them.');
         if (!['gross', 'net'].includes(row.proceedsType ?? '')

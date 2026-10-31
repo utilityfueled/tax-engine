@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.201",
+    ruleVersion: "2025.202",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-virtual-currency-transactions", section: "Digital asset payments and income-origin lots", revision: "IRS virtual currency FAQs Q13-17 and Q25, Notice2014-21 and Rev.Rul.2023-14; confirmed income inclusion required. Gift and inherited lots remain separate. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/pub/irs-pdf/i2210f.pdf", section: "Form 2210-F and estimated-tax waiver requests", revision: "Form2210-F and Instructions (2025) and Instructions for Form2210 (2025) Waiver of Penalty. Two-thirds test, 0.667 line7, January15 date, one payment date and a requested waiver is not a granted waiver. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/publications/p525", section: "Repaid earlier-year unemployment compensation", revision: "Pub525 (2025) Repayments Methods 1 and 2 and IRC1341; lesser-tax comparison with actual earlier-return figures, Schedule A line16 and Schedule 3 line13b. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/instructions/i8949", section: "Form 1099-DA basis corrections and costs not on the form", revision: "Instructions for Form8949 (2025) column f codes B and E, boxes G,H,J,K. Confirmed taxpayer basis records and gross-proceeds costs only. Pennsylvania rejects these rows. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
@@ -238,11 +239,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.199-law-integration-draft",
+    ruleVersion: "2026.200-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-virtual-currency-transactions", section: "Digital asset payments and income-origin lots", revision: "IRS virtual currency FAQs Q13-17 and Q25, Notice2014-21 and Rev.Rul.2023-14; confirmed income inclusion required. Gift and inherited lots remain separate. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/pub/irs-pdf/i2210f.pdf", section: "Form 2210-F and estimated-tax waiver requests", revision: "Form2210-F and Instructions (2025) and Instructions for Form2210 (2025) Waiver of Penalty. Two-thirds test, 0.667 line7, January15 date, one payment date and a requested waiver is not a granted waiver. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/publications/p525", section: "Repaid earlier-year unemployment compensation", revision: "Pub525 (2025) Repayments Methods 1 and 2 and IRC1341; lesser-tax comparison with actual earlier-return figures, Schedule A line16 and Schedule 3 line13b. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/instructions/i8949", section: "Form 1099-DA basis corrections and costs not on the form", revision: "Instructions for Form8949 (2025) column f codes B and E, boxes G,H,J,K. Confirmed taxpayer basis records and gross-proceeds costs only. Pennsylvania rejects these rows. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },

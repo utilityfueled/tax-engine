@@ -94,4 +94,9 @@ lines:
     formula: "Reported95, actual90.24 with a gold coin row: net long-term110.25, unchanged by the correction. Costs5 with worksheet adjustment-5 give105.25. A different actual basis rejects."
     irsRef: "Schedule D worksheets; Instructions for Form8949 codes B and E"
     testRef: "tests/engine/schedules/schedule-d-digital-sources.test.ts::reconciles corrected digital rows to the actual basis worksheet"
+  - line: "income-origin"
+    description: "Treat payments and income-origin assets from their actual records"
+    formula: "IRS virtual currency FAQs Q13-17 and Q25, Notice2014-21 and Rev.Rul.2023-14, retrieved2026-10-31. A payment for goods or services is an exchange with capital gain or loss. Mining, staking and airdrop assets use the amount included in income as basis, and the taxpayer must confirm that income was reported. Gifts, inheritances and other origins still reject."
+    irsRef: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-virtual-currency-transactions"
+    testRef: "tests/engine/forms/form-1099-da-sources.test.ts::treats payments and income-origin assets from their actual records"
 
