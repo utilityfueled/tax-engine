@@ -82,7 +82,7 @@ lines:
     testRef: "tests/engine/federal-cod-partial-personal.test.ts::retains the personal income classification and its actual NIIT threshold effect"
   - line: "source-boundaries"
     description: "Retain exact source amounts and explicit personal-interest proof"
-    formula: "Debt18000.37/interest1200.12/liabilities90000.40/assets80000.11 => sourceE10000.29/T8000.08/afterLiabilities72000.03; reportE10000 once. Equal/full/zero insolvency endpoints remain derived. Missing or false proof, deductible/mixed/investment/business use, contradictory actual totals, positive omitted charges, I>D, unknown owner/year and unchanged original-loss method boundaries reject."
+    formula: "Debt18000.37/interest1200.12/liabilities90000.40/assets80000.11 => sourceE10000.29/T8000.08/afterLiabilities72000.03 (asserted through the complete return); reportE10000 once. Equal/full/zero insolvency endpoints remain derived. Missing or false proof, deductible/mixed/investment/business use, contradictory actual totals, positive omitted charges, I>D, unknown owner/year and unchanged original-loss method boundaries reject."
     irsRef: "IRC108(a),(d)(3),(e)(2); IRC163(h); IRC6102(c); actual original-source reconciliation"
     testRef: "tests/engine/federal-cod-partial-personal.test.ts::preserves source cents and the finite personal-use and reporting boundaries"
   - line: "guide"

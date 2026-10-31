@@ -2,6 +2,7 @@
 import { expect, it } from 'vitest';
 import Decimal from 'decimal.js';
 import { calculateFederalTax } from '@/engine/federal.js';
+import { calculateCodNolReduction } from '@/engine/forms/cod-nol-reductions.js';
 import { calculateCodZeroMinimumTaxCreditBound } from '@/engine/forms/cod-zero-minimum-tax-credit-bound.js';
 import { codAttributeRecord } from '../fixtures/cod-ordinary-attributes.js';
 import { partialPersonalLegacyNolInput, partialPersonalLargeNolInput } from '../fixtures/cod-partial-personal.js';
@@ -55,6 +56,15 @@ it('rejects absent or contradictory premises without treating unknown current le
     const input = partialPersonalLegacyNolZeroPoolInput(); change(input);
     expect(() => calculateFederalTax(input)).toThrow(/COD.*minimum tax credit|COD.*zero.*pool/i);
   }
+});
+
+it('keeps a blank or signed current legacy credit out of source-only validation', () => {
+  for (const value of ['', ' ', '-0', null]) {
+    const input = partialPersonalLegacyNolZeroPoolInput();
+    Object.assign(input.form982AttributeSources!.currentMinimumTaxCredit!, { currentYearUnallowedQualifiedElectricVehicleCredit: value });
+    expect(() => calculateCodNolReduction(input)).toThrow(/COD current-year minimum tax credit/);
+  }
+  expect(calculateCodNolReduction(partialPersonalLegacyNolZeroPoolInput()).calculationComplete).toBe(false);
 });
 
 it('rejects a positive current AMT and a stale full Form8801 at the bound itself', () => {

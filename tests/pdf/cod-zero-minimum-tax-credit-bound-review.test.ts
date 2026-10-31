@@ -11,7 +11,9 @@ import { prepareQbiLossReview } from '@/pdf/qbi-loss-review-context';
 import { redactReviewIdentifiers } from '@/pdf/redact-review-identifiers';
 import { fillReturn } from '@/pdf/fill-return';
 import { d } from '@/utils/decimal';
-import { partialPersonalLegacyNolZeroPoolInput } from '../fixtures/cod-zero-minimum-tax-credit-bound';
+import { currentMinimumTaxCreditReference } from '@/pdf/mappings/2025/current-minimum-tax-credit-reference';
+import type { TaxReturnResult } from '@/models/outputs';
+import { partialPersonalLargeNolZeroPoolInput, partialPersonalLegacyNolZeroPoolInput } from '../fixtures/cod-zero-minimum-tax-credit-bound';
 
 it('prints the zero pool proof while leaving signed generation explicitly undetermined', async () => {
   const input = partialPersonalLegacyNolZeroPoolInput(), result = calculateFederalTax(input), token = prepareCodNolReview(input);
@@ -35,11 +37,15 @@ it('prints the zero pool proof while leaving signed generation explicitly undete
   } finally { await rm(directory, { recursive: true, force: true }); }
 });
 
+const staleSource = /COD review original source records are stale or conflicting/;
+const staleResult = /COD review retained current-tax and loss calculation contexts do not reconcile/;
+
 it('rejects changed zero-proof source and result premises before any output', async () => {
-  const input = partialPersonalLegacyNolZeroPoolInput(), token = prepareCodNolReview(input), qbiLossReview = prepareQbiLossReview(input);
+  const input = partialPersonalLargeNolZeroPoolInput(), token = prepareCodNolReview(input);
   const directory = await mkdtemp(join(tmpdir(), 'cod-zero-mtc-bound-context-'));
   try {
-    for (const variant of ['source-reference', 'current-legacy', 'actual-amt', 'current-carry', 'following-pool', 'missing-proof'] as const) {
+    for (const [variant, expected] of [['source-reference', staleSource], ['current-legacy', staleSource], ['actual-amt', staleResult],
+      ['current-carry', staleResult], ['following-pool', staleResult], ['missing-proof', staleResult]] as const) {
       const source = redactReviewIdentifiers(input), result = calculateFederalTax(input);
       if (variant === 'source-reference') source.form982AttributeSources!.currentMinimumTaxCredit!.sourceReference = 'Different actual same-money record';
       if (variant === 'current-legacy') source.form982AttributeSources!.currentMinimumTaxCredit!.currentYearUnallowedQualifiedElectricVehicleCredit = '1';
@@ -50,10 +56,65 @@ it('rejects changed zero-proof source and result premises before any output', as
       for (const present of [false, true]) {
         const outputDir = join(directory, `${variant}-${present}`);
         if (present) { await mkdir(outputDir); await writeFile(join(outputDir, 'unrelated.txt'), 'Preserved original file'); }
-        await expect(fillReturn(source, result, { outputDir, blankFormsDir: 'forms/blank', codNolReview: token, qbiLossReview })).rejects.toThrow(/COD.*source|COD.*reconcile|QBI loss review original sources/i);
+        await expect(fillReturn(source, result, { outputDir, blankFormsDir: 'forms/blank', codNolReview: token })).rejects.toThrow(expected);
         if (present) { expect(await readdir(outputDir)).toEqual(['unrelated.txt']); expect(await readFile(join(outputDir, 'unrelated.txt'), 'utf8')).toBe('Preserved original file'); }
         else expect(await stat(outputDir).then(() => true, () => false)).toBe(false);
       }
     }
   } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+it('keeps the QBI source digest in front of the other changed-source controls', async () => {
+  const input = partialPersonalLegacyNolZeroPoolInput(), token = prepareCodNolReview(input), qbiLossReview = prepareQbiLossReview(input);
+  const directory = await mkdtemp(join(tmpdir(), 'cod-zero-mtc-bound-qbi-'));
+  try {
+    const source = redactReviewIdentifiers(input);
+    source.form982AttributeSources!.currentMinimumTaxCredit!.sourceReference = 'Different actual same-money record';
+    await expect(fillReturn(source, calculateFederalTax(input), { outputDir: join(directory, 'output'), blankFormsDir: 'forms/blank', codNolReview: token, qbiLossReview }))
+      .rejects.toThrow(/QBI loss review original sources are stale or conflicting/);
+    expect(await readdir(directory)).toEqual([]);
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+it('binds the prepared review when both copies omit their loss records', async () => {
+  const input = partialPersonalLargeNolZeroPoolInput(), token = prepareCodNolReview(input);
+  const directory = await mkdtemp(join(tmpdir(), 'cod-zero-mtc-bound-omitted-'));
+  try {
+    const source = redactReviewIdentifiers(input); delete source.netOperatingLoss;
+    const result = calculateFederalTax(input); result.netOperatingLoss = undefined; result.totalTax = result.totalTax.plus(1000);
+    await expect(fillReturn(source, result, { outputDir: join(directory, 'source'), blankFormsDir: 'forms/blank', codNolReview: token })).rejects.toThrow(staleSource);
+    const altered = redactReviewIdentifiers(input), other = calculateFederalTax(input);
+    other.totalTax = other.totalTax.plus(1000);
+    await expect(fillReturn(altered, other, { outputDir: join(directory, 'result'), blankFormsDir: 'forms/blank', codNolReview: token })).rejects.toThrow(staleResult);
+    expect(await readdir(directory)).toEqual([]);
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+it('rejects every stale zero-proof premise in the reference itself', () => {
+  const result = calculateFederalTax(partialPersonalLegacyNolZeroPoolInput());
+  expect(currentMinimumTaxCreditReference(result).map(row => row.value)).toEqual(['0', '0', '0', '0', 'Not determined by the zero-pool proof']);
+  const stale = /COD zero minimum tax credit reference does not reconcile/;
+  const auditRows = (form: string, line: string) => (row: TaxReturnResult['allLines'][number]) => !(row.form === form && row.line === line);
+  const changes: Array<(copy: TaxReturnResult) => void> = [
+    copy => { copy.form6251 = undefined; },
+    copy => { copy.form6251!.amt = d('1'); },
+    copy => { copy.form8801 = undefined; },
+    copy => { copy.form8801!.sourceFactsVerified = false; },
+    copy => { copy.form8801!.taxYear = 2024; },
+    copy => { copy.form8801!.totalAvailableCredit = d('500'); copy.codZeroMinimumTaxCreditBound!.currentCreditAvailable = d('500'); },
+    copy => { copy.form8801!.carryforwardToNextYear = d('7'); copy.codZeroMinimumTaxCreditBound!.currentFormCarry = d('7'); },
+    copy => { copy.carryforwards.minimumTaxCredit = d('1'); },
+    copy => { Object.assign(copy.codZeroMinimumTaxCreditBound!, { method: 'other' }); },
+    copy => { copy.codZeroMinimumTaxCreditBound!.lines = []; },
+    copy => { copy.codZeroMinimumTaxCreditBound!.sourceTaxYear = 2024; },
+    copy => { copy.allLines = copy.allLines.filter(auditRows('COD zero minimum tax credit bound', 'following-pool')); },
+    copy => { copy.allLines = copy.allLines.filter(auditRows('Form 8801', '26')); },
+    copy => { copy.allLines = copy.allLines.filter(auditRows('Form 6251', '11')); },
+  ];
+  for (const change of changes) {
+    const copy: TaxReturnResult = { ...result, form6251: result.form6251 && { ...result.form6251 }, form8801: result.form8801 && { ...result.form8801 },
+      carryforwards: { ...result.carryforwards }, codZeroMinimumTaxCreditBound: { ...result.codZeroMinimumTaxCreditBound! } };
+    change(copy);
+    expect(() => currentMinimumTaxCreditReference(copy)).toThrow(stale);
+  }
 });

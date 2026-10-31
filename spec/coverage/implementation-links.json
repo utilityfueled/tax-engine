@@ -130,6 +130,16 @@
       "note": "Original regular and alternative attributes reconcile current use before statutory COD reductions. Reference exports preserve current form lines and label source-validated final carries separately. Ordinary foreign/NOL and signed current MTC follow-through remain distinct; no final2026, filing or human qualification."
     },
     {
+      "key": "federal/cod-partial-personal-insolvency",
+      "enginePath": "src/engine/forms/cod-nol-reductions.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-982.ts",
+      "testRefs": [
+        "tests/engine/federal-cod-partial-personal.test.ts::uses the published personal partial-insolvency amounts from complete originals",
+        "tests/pdf/cod-partial-personal-review.test.ts::retains the original personal interest and after-tax closing evidence before any output"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
       "key": "federal/crypto-charitable-integration",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [

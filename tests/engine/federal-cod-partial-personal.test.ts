@@ -112,7 +112,9 @@ it('preserves source cents and the finite personal-use and reporting boundaries'
   expect(source.insolvencyAmount.toFixed()).toBe('10000.29');
   expect(source.sourceExcludedAmount.toFixed()).toBe('10000.29');
   expect(source.reportedExcludedAmount.toFixed()).toBe('10000');
+  expect(source.sourceTaxableAmount.toFixed()).toBe('8000.08');
   expect(source.calculationComplete).toBe(false);
+  expect(calculateFederalTax(input).codAttributeReduction!.regular.property.immediatelyAfterLiabilities.toFixed()).toBe('72000.03');
   for (const [assets, expectedExcluded] of [['72000', '18000'], ['70000', '18000'], ['90000', '0']] as const) {
     expect(calculateCodNolReduction(actualPartialPersonalCodInput({ assets })).sourceExcludedAmount.toFixed()).toBe(expectedExcluded);
   }

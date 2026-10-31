@@ -11,14 +11,24 @@ export function currentMinimumTaxCreditReference(result: TaxReturnResult): Array
   if (bound) {
     // Spec: cod-zero-minimum-tax-credit-bound.yaml review. The proof states only
     // the zero pool, so it never prints a signed amount or a source PartI.
-    const zero = new Decimal(0), form = result.form8801;
-    if (source || pools.some(pool => pool !== undefined) || bound.sourceFactsVerified !== true || bound.sourceTaxYear !== result.taxYear
-      || !later || !form || !bound.currentAmt.eq(zero) || !(result.form6251?.amt ?? zero).eq(zero)
+    const zero = new Decimal(0), form = result.form8801, amt = result.form6251;
+    const fail = () => new Error('COD zero minimum tax credit reference does not reconcile with its actual source proof');
+    const audit = (formName: string, line: string): Decimal => {
+      const rows = result.allLines.filter(row => row.form === formName && row.line === line);
+      if (rows.length !== 1 || !Decimal.isDecimal(rows[0]!.value) || !rows[0]!.value.isFinite()) throw fail();
+      return rows[0]!.value;
+    };
+    if (source || pools.some(pool => pool !== undefined) || bound.method !== 'zero_available_pool_bound'
+      || bound.sourceFactsVerified !== true || bound.sourceTaxYear !== result.taxYear || !later || !form || !amt
+      || form.sourceFactsVerified !== true || form.taxYear !== result.taxYear || !bound.currentAmt.eq(zero) || !amt.amt.eq(zero)
       || !bound.currentFormCarry.eq(form.carryforwardToNextYear) || !bound.currentFormCarry.eq(zero)
       || !bound.currentCreditAvailable.eq(form.totalAvailableCredit) || !bound.currentCreditUsed.eq(form.creditAllowed)
+      || !sumSourceMoney(form.totalAvailableCredit, form.creditAllowed.negated()).eq(form.carryforwardToNextYear)
       || !bound.currentYearUnallowedQualifiedElectricVehicleCredit.eq(zero) || !bound.followingYearPool.eq(zero)
-      || !result.carryforwards.minimumTaxCredit.eq(zero)) {
-      throw new Error('COD zero minimum tax credit reference does not reconcile with its actual source proof');
+      || !result.carryforwards.minimumTaxCredit.eq(zero) || !audit('Form 6251', '11').eq(zero) || !audit('Form 8801', '26').eq(zero)
+      || !audit('COD zero minimum tax credit bound', 'following-pool').eq(zero)
+      || bound.lines.filter(row => row.form === 'COD zero minimum tax credit bound' && row.line === 'following-pool').length !== 1) {
+      throw fail();
     }
     return [
       { label: 'Current AMT for the zero-pool bound', value: bound.currentAmt.toFixed() },

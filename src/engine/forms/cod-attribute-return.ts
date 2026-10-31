@@ -67,10 +67,11 @@ export function calculateCodAttributeReturn(input: CodAttributeSourceInput, cont
   if (!facts.alternativeTax) throw new Error('COD requires actual independent alternative attribute sources');
   const currentMinimum = facts.currentMinimumTaxCredit;
   const currentSource = readCurrentMinimumTaxCreditSources(input);
-  const boundRequested = currentMinimum?.currentYearUnallowedQualifiedElectricVehicleCredit !== undefined;
+  const legacyCredit = currentMinimum?.currentYearUnallowedQualifiedElectricVehicleCredit;
+  const boundRequested = legacyCredit !== undefined;
   if (currentMinimum?.sourceFactsConfirmed !== true || !currentMinimum.sourceReference?.trim()
     || currentMinimum.allCurrentAdjustmentSourcesIncluded !== true
-    || (boundRequested && (currentSource || !d(currentMinimum.currentYearUnallowedQualifiedElectricVehicleCredit).isZero()
+    || (boundRequested && (currentSource || typeof legacyCredit !== 'string' || !/^\d+(\.\d+)?$/.test(legacyCredit) || !d(legacyCredit).isZero()
       || (context && context.codZeroMinimumTaxCreditBound?.sourceFactsVerified !== true)))
     || (!currentSource && !boundRequested && (currentMinimum.noAdditionalDeferralItemsConfirmed !== true || (context && context.currentMinimumTaxCreditZeroProven !== true)))
     || (currentSource && context && context.currentMinimumTaxCredit?.sourceFactsVerified !== true)) {

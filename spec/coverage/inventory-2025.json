@@ -723,17 +723,20 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.irs.gov/publications/p4681",
       "specPath": "spec/federal/cod-partial-personal-insolvency.yaml",
-      "enginePath": null,
-      "packetPath": null,
+      "enginePath": "src/engine/forms/cod-nol-reductions.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-form-982.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-cod-partial-personal.test.ts::uses the published personal partial-insolvency amounts from complete originals",
+        "tests/pdf/cod-partial-personal-review.test.ts::retains the original personal interest and after-tax closing evidence before any output"
+      ],
+      "implementationNote": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review.",
       "specExists": true,
-      "engineExists": false,
-      "packetGenerationExists": false,
+      "engineExists": true,
+      "packetGenerationExists": true,
       "testCoverageExists": true,
       "efileBusinessRuleCoverageExists": false,
-      "status": "unsupported",
+      "status": "partial",
       "knownGaps": [
-        "Missing engine implementation",
-        "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
     },

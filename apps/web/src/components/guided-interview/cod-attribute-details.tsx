@@ -157,7 +157,7 @@ export function CodAttributeDetails({ data, onChange }: { data?: CodAttributeDat
       ]} />
       {!data.currentMinimumTaxCredit ? <button type="button" className="utility-button" onClick={() => change({ currentMinimumTaxCredit: {} })}>Add current regular and AMT adjustment sources</button>
         : <fieldset style={{ minWidth: 0 }}><legend>Current regular and AMT adjustment sources</legend>
-          <p className="guided-hint">These answers identify the complete source records. The return checks whether it has the required current-year minimum tax credit calculation; an empty credit list does not prove that amount is zero.</p>
+          <p className="guided-hint">These answers identify the complete source records. The return checks whether it has the required current-year minimum tax credit calculation; an empty credit list does not prove that amount is zero. Answer the electric vehicle credit question only for the zero-pool proof, which also needs the complete current Form 8801 sources. Leave it blank for any other method.</p>
           <Fields data={data.currentMinimumTaxCredit} prefix="Current adjustments" onChange={patch => change({ currentMinimumTaxCredit: { ...data.currentMinimumTaxCredit, ...patch } })} fields={[
             { key: 'sourceReference', label: 'source reference' }, { key: 'allCurrentAdjustmentSourcesIncluded', label: 'all current regular and AMT sources included', type: 'boolean' },
             { key: 'noAdditionalDeferralItemsConfirmed', label: 'no additional deferral items for the zero-credit method', type: 'boolean' },

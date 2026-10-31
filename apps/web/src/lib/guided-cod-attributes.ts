@@ -18,7 +18,10 @@ export function buildGuidedCodAttributes(data: CodAttributeData | undefined): Fo
     if (value === null || value === undefined) return undefined;
     if (key === 'sourceYearCalculation') return buildGuidedCurrentMtcSources(value as CurrentMtcData);
     if (Array.isArray(value)) return value.map(row => convert(row));
-    if (typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([name, child]) => [name, convert(child, name)]));
+    if (typeof value === 'object') return Object.fromEntries(Object.entries(value)
+      // A cleared optional zero-pool answer returns to unknown rather than zero.
+      .filter(([name, child]) => !(name === 'currentYearUnallowedQualifiedElectricVehicleCredit' && typeof child === 'string' && !child.trim()))
+      .map(([name, child]) => [name, convert(child, name)]));
     if (amounts.has(key)) {
       if (typeof value !== 'string' || !value.trim()) throw new Error(`Enter the actual later-attribute ${key}, including zero when shown.`);
       const result = parseGuidedCurrency(value);

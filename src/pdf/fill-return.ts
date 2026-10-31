@@ -35,7 +35,7 @@ import { fillForm2441 } from "./fill-form-2441.js";
 import { fillForm8863 } from "./fill-form-8863.js";
 import { fillForm6251 } from "./fill-form-6251.js";
 import { form8949ReviewCalculation, prepareForm8949Review, type PreparedForm8949Review } from "./form-8949-review-context.js";
-import { prepareCodNolReview, type PreparedCodNolReview } from "./cod-nol-review-context.js";
+import { codNolReviewOriginalSourceInput, prepareCodNolReview, type PreparedCodNolReview } from "./cod-nol-review-context.js";
 import { fillCharitableFilingUnitReview, CHARITABLE_FILING_UNIT_REFERENCE_FILENAME } from './mappings/2025/charitable-filing-unit-review.js';
 import { prepareNolFilingUnitReview, nolFilingUnitReviewOriginalSourceInput, requiresNolFilingUnitReview, type PreparedNolFilingUnitReview } from "./nol-filing-unit-review-context.js";
 import { prepareCharitableReview, charitableReviewOriginalSourceInput, requiresCharitableNolReview, requiresK1CharitableReview, requiresCharitableFilingHistoryReview, type PreparedCharitableReview } from "./charitable-review-context.js";
@@ -501,6 +501,9 @@ export async function fillReturn(
   if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result, charitableReview, premiumTaxCreditReview);
   const codNolReview = input.form982NolSources || result.codNolReduction
     ? options.codNolReview ?? prepareCodNolReview(input) : undefined;
+  // Bind the prepared sources and result before output, even when both copies
+  // omit the loss records that the separate review below would replay.
+  if (codNolReview) codNolReviewOriginalSourceInput(input, result, codNolReview);
   if (input.netOperatingLoss || result.netOperatingLoss) buildNetOperatingLossReview(input, result, capitalGainReview, codNolReview, charitableReview, qbiLossReview, nolFilingUnitReview);
   const filledForms: string[] = [];
   const finalizedPaths = new Set<string>();

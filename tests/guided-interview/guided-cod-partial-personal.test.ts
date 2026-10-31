@@ -36,8 +36,10 @@ it('retains the separate current-year legacy vehicle credit fact without default
   expect(buildGuidedCodAttributes(data.attributeSources)!.currentMinimumTaxCredit).not.toHaveProperty('currentYearUnallowedQualifiedElectricVehicleCredit');
   const entered = { ...data.attributeSources!, currentMinimumTaxCredit: { ...current, currentYearUnallowedQualifiedElectricVehicleCredit: '0' } };
   expect(buildGuidedCodAttributes(entered)!.currentMinimumTaxCredit!.currentYearUnallowedQualifiedElectricVehicleCredit).toBe('0');
-  const blank = { ...entered, currentMinimumTaxCredit: { ...current, currentYearUnallowedQualifiedElectricVehicleCredit: ' ' } };
-  expect(() => buildGuidedCodAttributes(blank)).toThrow(/actual later-attribute/);
+  for (const cleared of ['', ' ']) {
+    const blank = { ...entered, currentMinimumTaxCredit: { ...current, currentYearUnallowedQualifiedElectricVehicleCredit: cleared } };
+    expect(buildGuidedCodAttributes(blank)!.currentMinimumTaxCredit).not.toHaveProperty('currentYearUnallowedQualifiedElectricVehicleCredit');
+  }
   const changed = invalidateGuidedCodAttributes(entered);
   expect(changed.sourceFactsConfirmed).toBeNull();
   expect(changed.currentMinimumTaxCredit!.sourceFactsConfirmed).toBeNull();
