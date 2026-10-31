@@ -144,7 +144,47 @@
         }
       },
       "artifactDigest": "sha256:32bcdf7a96ed374bf17a175ea9fb5f2dae15f63f45487bf8741ba86f999b56b4"
+    },
+    {
+      "sourceCommit": "9e37c119",
+      "ci": 41180004917,
+      "web": 41180004898,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19880,
+        "files": 1500,
+        "workers": 1,
+        "seconds": 1398.56,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 19880,
+        "files": 1500,
+        "workers": 1,
+        "seconds": 1948.59,
+        "statements": "91.74",
+        "branches": "86.97",
+        "functions": "90.22",
+        "lines": "94.49",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:6f5b6b3581050be271edc5565c7bd7bb240cb4bb775a3a9ca298563cf58f2af7"
     }
   ],
-  "hostedSkips": "The five skipped browser cases are hosted-only and establish nothing about hosted readiness."
+  "hostedSkips": "The five skipped browser cases are hosted-only and establish nothing about hosted readiness.",
+  "latestSourceCommit": "9e37c1190e5e3a9ebe8e1eaff520844d31dc1c95"
 }

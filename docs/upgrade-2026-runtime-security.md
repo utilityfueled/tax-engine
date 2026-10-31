@@ -213,3 +213,7 @@ retained, but duration alone does not establish each cause. These failures remai
 internal work. This intermediate image predates the signed health and operating
 K-1 packages. Final-source verification, staging and independent human review
 remain required. No release image was published or production gate changed.
+
+## October 31 scans
+
+Both final native images were scanned with the October 31 database, built 2026-10-31T06:18:17Z. They report 159 matches across 68 advisories: 56 high, 47 medium, 10 low and 46 negligible. None is critical, none is in npm and none has a fixed version. One advisory is new: CVE-2026-84243 in glibc. It is in the [register](upgrade-2026-image-advisories.json) as unaccepted, with its observed exposure. Earlier counts in this file describe their own dates.

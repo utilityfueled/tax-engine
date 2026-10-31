@@ -11946,7 +11946,7 @@
       "implementationComplete": false,
       "humanQualification": false
     },
-    "latestRemoteCi": "docs/upgrade-2026-ci-ad8fd777.json",
+    "latestRemoteCi": "docs/upgrade-2026-ci-9e37c119.json",
     "latestRuntimeRecord": "docs/upgrade-2026-runtime-12faedf5.json"
   },
   "historicalReleaseBlockers": {

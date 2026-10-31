@@ -9,9 +9,9 @@ complete a checkbox.
 
 Every internal package queued on October 28 is delivered. What remains needs people, accounts or authorization that this work cannot supply.
 
-Delivered and pushed: Form 8962 field batching `0ad4c804`, signed current-year minimum tax credit `8c38d963`, partial personal cancellation with the zero-pool proof `ba1cbaf8`, review corrections `d06f2e44` and `7e668c86`, dependency fixes `ad8fd777`, and the browser budget change `96a1a47a`. Rule versions are `2025.196` and `2026.194-law-integration-draft`.
+Delivered and pushed: Form 8962 field batching `0ad4c804`, signed current-year minimum tax credit `8c38d963`, partial personal cancellation with the zero-pool proof `ba1cbaf8`, review corrections `d06f2e44` and `7e668c86`, dependency fixes `ad8fd777`, and test and job budget changes `96a1a47a`, `c238ae4f` and `9e37c119`. Rule versions are `2025.196` and `2026.194-law-integration-draft`.
 
-- **Tests.** The three unit failures open since October 28 are fixed. Remote `12faedf5` passes 19,880 tests in 1,500 files under coverage: 91.74% statements, 86.97% branches, 90.22% functions and 94.49% lines, and every unchanged threshold passes. Its unit job hit the 30-minute job cap with no failing test, so that cap is now 60 minutes, as the coverage job's already was. Functions clear their gate by only 0.22 points, and a local run without Postgres reports 89.91% and fails it. See the [CI record](upgrade-2026-ci-ad8fd777.json).
+- **Tests.** Remote `9e37c119` is fully green. It passes 19,880 tests in 1,500 files normally and under coverage: 91.74% statements, 86.97% branches, 90.22% functions and 94.49% lines, and every unchanged threshold passes. Lint, three type checks, spec, inventory and both builds pass. The three unit failures open since October 28 are fixed. An earlier unit job hit the 30-minute job cap with no failing test, so that cap is now 60 minutes, as the coverage job's already was. Functions clear their gate by only 0.22 points, and a local run without Postgres reports 89.91% and fails it. See the [CI record](upgrade-2026-ci-9e37c119.json).
 - **Coverage timeouts.** These are a test-budget problem under instrumentation. `036eef86` had eighteen timeouts, `a17f8237` had eight, and the runs between them had none. All eight took 5.0–6.1s, in a coverage run that took 2,480 seconds, while the normal job passed the same 19,880 tests at its 5s limit. Coverage runs now get a 15s per-test deadline and the normal job keeps 5s. A six-second probe fails normally and passes under coverage. This replaces the earlier rule of keeping 5s under coverage. No test, assertion or threshold changed. The Form 8962 change removed one measured cost, but no complete cause of the slowdown is proven.
 - **Browser.** Self-host passes 530 with five hosted-only skips. The container job failed two 390px tests in two of three runs by exhausting its 30-second budget. Those two tests now use the 90-second repository default, and `a17f8237` passes 530 in both suites. This is a changed test deadline, not a code fix, and no assertion changed.
 - **Advisories.** The October 31 audit found two moderate advisories, both fixed; [details](upgrade-2026-dependency-advisories-20261031.md). The production and full audits are clean.
@@ -1450,12 +1450,13 @@ qualification blockers.
 - [x] Refresh IRS Rev. Proc. 2025-32, Schedule A and 8812 instructions, AFTR
   Publication 6079 (May 2026), SSA wage bases and Publication 4557 (May 2024).
   The generic Schedule A/8812 instruction pages still identify 2025.
-- [ ] Inspect current remote CI and run required workflows on this branch.
+- [x] Inspect current remote CI and run required workflows on this branch: `9e37c119` passes.
 - [x] Frozen offline lockfile/strict-peer check in an isolated manifest copy;
   no checkout dependency or lockfile change. Sentry 11 reviewed separately in
   `upgrade-2026-telemetry-review.md`; version 10.76.2 retained.
 - [ ] Scan final runtime images with current vulnerability data; document any
-  unresolved exposure with owner and expiry.
+  unresolved exposure with owner and expiry. Scans ran on October 31 for arm64 and amd64.
+  The named owner is still missing.
 - [x] Raise branch coverage to at least 85% using meaningful tests: immutable `5d32549` passes all 16,770 tests with 86.50% branches. Every newer
   integrated commit and the final release still require fresh verification.
 
@@ -1499,11 +1500,12 @@ Requested in this task while independent implementation proceeds:
 - [ ] Complete facts and reviewed specs with independent expected outputs.
 - [ ] Complete federal pack and demand-selected state scenarios qualified.
 - [ ] Final physical year/revision maps and complete-data exports qualified.
-- [ ] `pnpm test` and `pnpm test:coverage` (85% branches unchanged).
-- [ ] `pnpm typecheck`, `pnpm typecheck:contracts`, `pnpm typecheck:web`.
-- [ ] `pnpm spec:validate`, `pnpm spec:inventory:check`.
-- [ ] `pnpm build`, `pnpm build:web`, `pnpm lint`, `pnpm test:web`.
-- [ ] Remote CI on exact committed code; advisory disposition complete.
+- [x] `pnpm test` and `pnpm test:coverage` (85% branches unchanged): remote `9e37c119`, 86.97% branches.
+- [x] `pnpm typecheck`, `pnpm typecheck:contracts`, `pnpm typecheck:web`: remote `9e37c119`.
+- [x] `pnpm spec:validate`, `pnpm spec:inventory:check`: remote `9e37c119`.
+- [x] `pnpm build`, `pnpm build:web`, `pnpm lint`, `pnpm test:web`: remote `9e37c119`; five hosted-only browser skips remain.
+- [x] Remote CI on exact committed code.
+- [ ] Advisory disposition complete: 68 OS advisories await owner acceptance by 2026-11-07.
 - [ ] AI representative corpus independently reviewed; repeated held-out live
   evaluation and baselines, exact costs/January prices, privacy/quality/latency
   budgets pass; route promotion separately authorized.
