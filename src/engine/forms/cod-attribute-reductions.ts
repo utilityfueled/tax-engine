@@ -241,6 +241,8 @@ export function calculateCodAttributeReductions(input: {
   const basisCap = Decimal.max(0, subtract(add(immediatelyAfterBasis, immediatelyAfterMoney), immediatelyAfterLiabilities));
   const nextYearBasis = add(...nextProperties.map(row => row.adjustedBasis));
   // IRC1017(c)(1): exempt property keeps its basis, for the title11 exclusion only.
+  // IRC1017(a) reduces property held in the following year, so only that list answers.
+  if (afterProperties.some(row => row.source.exemptUnderSection522 !== undefined)) throw new Error('COD exempt-property answer belongs on the following-year property list');
   for (const row of nextProperties) {
     if (input.title11 ? typeof row.source.exemptUnderSection522 !== 'boolean' : row.source.exemptUnderSection522 === true) {
       throw new Error('COD title11 property requires its actual exempt-property answer, which applies only in a title11 case');

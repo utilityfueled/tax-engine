@@ -3,6 +3,7 @@ import { expect, it } from 'vitest';
 import { calculateFederalTax } from '@/engine/federal.js';
 import { buildForm982ReferenceSummary } from '@/pdf/mappings/2025/fill-form-982.js';
 import { actualPartialPersonalCodInput, partialPersonalBasisInput } from '../fixtures/cod-partial-personal.js';
+import { codPropertyRecord } from '../fixtures/cod-ordinary-attributes.js';
 
 const court = { sourceReference: 'Fictional chapter 13 discharge order', sourceFactsConfirmed: true, debtorUnderCourtJurisdictionConfirmed: true, dischargeByCourtOrApprovedPlanConfirmed: true };
 function title11(options: Parameters<typeof actualPartialPersonalCodInput>[0] = {}, patch: Record<string, unknown> = {}) {
@@ -61,6 +62,19 @@ it('reduces attributes from the full exclusion', () => {
   expect([exempt.property.attributeReduction.toFixed(), exempt.unreducedExclusion.toFixed(), exempt.property.remainingBasis.toFixed()]).toEqual(['0', '18000', '75000']);
   expect(exempt.property.properties[0]!.attributeReduction.toFixed()).toBe('0');
   expect(() => calculateFederalTax(withProperty(undefined))).toThrow(/exempt-property answer/);
+  const mixed = withProperty(false);
+  for (const ledger of [mixed.form982AttributeSources.regular, mixed.form982AttributeSources.alternativeTax]) {
+    ledger.property.immediatelyAfter.properties = [codPropertyRecord('retained-personal-property', '75000'), codPropertyRecord('second-property', '2000')];
+    ledger.property.followingYear.properties = [{ ...codPropertyRecord('retained-personal-property', '75000'), exemptUnderSection522: true }, { ...codPropertyRecord('second-property', '2000'), exemptUnderSection522: false }];
+  }
+  const split = calculateFederalTax(mixed).codAttributeReduction!.regular.property;
+  expect(split.properties.map(row => [row.propertyId, row.attributeReduction.toFixed()])).toEqual([['retained-personal-property', '0'], ['second-property', '2000']]);
+  const differ = withProperty(true);
+  Object.assign(differ.form982AttributeSources.alternativeTax.property.followingYear.properties[0]!, { exemptUnderSection522: false });
+  expect(() => calculateFederalTax(differ)).toThrow(/match on the regular and alternative/);
+  const misplaced = withProperty(false);
+  Object.assign(misplaced.form982AttributeSources.regular.property.immediatelyAfter.properties[0]!, { exemptUnderSection522: true });
+  expect(() => calculateFederalTax(misplaced)).toThrow(/following-year property list/);
   expect(() => calculateFederalTax(withProperty(true, false))).toThrow(/exempt-property answer/);
   expect(() => calculateFederalTax(withProperty(false, false))).not.toThrow();
 });

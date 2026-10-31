@@ -70,7 +70,7 @@ lines:
     testRef: "tests/engine/federal-form-2210-waiver.test.ts::carries a waiver request through Form 1040 without treating it as granted"
   - line: "full-payment-total-tax"
     description: "Test a claimed full payment against total tax due"
-    formula: "Payments through the claimed date plus withholding must reach Form1040 line24 less refundable credits, including taxes outside Form2210 line2."
+    formula: "Payments through the claimed date plus withholding must reach Form1040 line24 less refundable credits, including taxes outside Form2210 line2. The return rounds to whole dollars, so payments must reach the smaller of the exact and rounded balance."
     irsRef: "Form2210-F instructions: file and pay the tax due by March2"
     testRef: "tests/engine/federal-form-2210-waiver.test.ts::tests a claimed full payment against total tax due"
 

@@ -58,7 +58,7 @@ function AttributeRecord({ data, prefix, onChange, alternative }: { data: CodAtt
     {confirmation(prefix, data, onChange)}
   </>;
 }
-function Properties({ data, prefix, onChange }: { data?: CodAttributePropertyData[]; prefix: string; onChange: (next: CodAttributePropertyData[]) => void }) {
+function Properties({ data, prefix, askExempt, onChange }: { data?: CodAttributePropertyData[]; prefix: string; askExempt?: boolean; onChange: (next: CodAttributePropertyData[]) => void }) {
   return <fieldset style={{ minWidth: 0 }}><legend>{prefix} property</legend>
     {data === undefined && <p role="status">The property list is unknown.</p>}
     {data?.length === 0 && <p>Explicitly recorded: no property.</p>}
@@ -70,7 +70,7 @@ function Properties({ data, prefix, onChange }: { data?: CodAttributePropertyDat
           { key: 'propertyId', label: 'original ID' }, { key: 'description', label: 'description' }, { key: 'adjustedBasis', label: 'adjusted tax basis', type: 'money' },
           { key: 'category', label: 'property category', options: [['other_business', 'Trade or business / investment property'], ['inventory', 'Inventory or property held for sale'], ['personal', 'Personal property']] },
           { key: 'acquiredDate', label: 'actual acquisition date', type: 'date' }, { key: 'sourceReference', label: 'basis record reference' },
-          { key: 'securedDischargedDebt', label: 'secured the discharged debt', type: 'boolean' }, { key: 'exemptUnderSection522', label: 'treated as exempt property in the bankruptcy, title 11 cases only', type: 'boolean' }, { key: 'priorSnapshotChangeReference', label: 'record reconciling the two dates' },
+          { key: 'securedDischargedDebt', label: 'secured the discharged debt', type: 'boolean' }, ...(askExempt ? [{ key: 'exemptUnderSection522' as const, label: 'treated as exempt property in the bankruptcy, title 11 cases only', type: 'boolean' as const }] : []), { key: 'priorSnapshotChangeReference', label: 'record reconciling the two dates' },
         ]} />
         {confirmation(label, row, change)}
         <button type="button" className="utility-button" onClick={() => onChange(data!.filter((_, i) => i !== index))}>Remove {label.toLowerCase()}</button>
@@ -123,7 +123,7 @@ function Ledger({ data, prefix, onChange, alternative }: { data: CodAttributeLed
       <Fields data={next} prefix={`${prefix} following year`} onChange={changeNext} fields={[
         { key: 'asOfDate', label: 'date', type: 'date' }, { key: 'sourceReference', label: 'inventory reference' }, { key: 'allPropertyIncluded', label: 'all property included', type: 'boolean' },
       ]} />
-      <Properties data={next.properties} prefix={`${prefix} following year`} onChange={properties => changeNext({ properties })} />
+      <Properties data={next.properties} prefix={`${prefix} following year`} askExempt onChange={properties => changeNext({ properties })} />
       <fieldset style={{ minWidth: 0 }}><legend>{prefix} intervening dispositions</legend>
         <p className="guided-hint">A property disposed of after cancellation also needs its actual current-return sale and recapture calculation. A date or reference alone does not establish that tax result.</p>
         {next.dispositions === undefined && <p role="status">The disposition list is unknown.</p>}

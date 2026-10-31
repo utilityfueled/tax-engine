@@ -179,7 +179,7 @@ function calculateForm2210F(input: Form2210Input, taxYear: number, facts: NonNul
     const filed = dateNumber(facts.returnFiledDate, "returnFiledDate"), paid = dateNumber(facts.returnPaidInFullDate, "returnPaidInFullDate"), yearEnd = dateNumber(`${taxYear}-12-31`, "tax year end");
     if (filed <= yearEnd || paid <= yearEnd) throw new Error("Form 2210 return filing/full payment dates must follow the tax year");
     if (!safeReason && filed <= lastDay && paid <= lastDay) {
-      if (roundDollar(line8.plus(total(payments.filter(payment => payment.day <= paid).map(payment => payment.amount)))).lt(roundDollar(line6))) throw new Error("Form 2210 claimed full return payment does not reconcile to actual payments");
+      if (line8.plus(total(payments.filter(payment => payment.day <= paid).map(payment => payment.amount))).lt(min(line6, roundDollar(line6)))) throw new Error("Form 2210 claimed full return payment does not reconcile to actual payments");
       safeReason = `Filed and paid by ${dateString(lastDay)}`;
     }
   }
@@ -358,7 +358,7 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
       throw new Error("Form 2210 return filing/full payment dates must follow the tax year");
     }
     const paidByDate = withholding.plus(total(payments.filter((p) => p.actualDay <= paid).map((p) => p.amount)));
-    if (roundDollar(paidByDate).lt(roundDollar(taxShown))) throw new Error("Form 2210 claimed full return payment does not reconcile to actual payments");
+    if (paidByDate.lt(min(taxShown, roundDollar(taxShown)))) throw new Error("Form 2210 claimed full return payment does not reconcile to actual payments");
     const earlyDeadline = dateNumber(taxYear === 2025 ? "2026-02-02" : "2027-02-01", "early return deadline");
     earlyReturn = filed <= earlyDeadline && paid <= earlyDeadline;
     if (earlyReturn) earlyPaidDay = paid;

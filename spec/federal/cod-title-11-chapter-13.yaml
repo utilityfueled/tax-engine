@@ -27,7 +27,7 @@ lines:
     testRef: "tests/engine/federal-cod-title-11.test.ts::requires the chapter, court and code facts"
   - line: "attributes"
     description: "Reduce attributes in the same order, protecting exempt property"
-    formula: "Immediately-after liabilities are the worksheet liabilities less the discharge, and the regular and alternative ledgers reconcile as they do for insolvency. IRC1017(c)(1) bars basis reduction on property the debtor treats as exempt under title11 section522, for the title11 exclusion only. Each following-year property answers that question on a title11 return, an exempt property keeps its basis, and any unreduced exclusion is reported. The answer rejects outside title11."
+    formula: "Immediately-after liabilities are the worksheet liabilities less the discharge, and the regular and alternative ledgers reconcile as they do for insolvency. IRC1017(c)(1) bars basis reduction on property the debtor treats as exempt under title11 section522, for the title11 exclusion only. Each following-year property answers that question on a title11 return, the answer must match on both ledgers, an exempt property keeps its basis, and any unreduced exclusion is reported. The answer rejects outside title11."
     irsRef: "IRC108(b); IRC1017(b)(2),(c)(1); Form982 instructions line10a"
     testRef: "tests/engine/federal-cod-title-11.test.ts::reduces attributes from the full exclusion"
   - line: "review"

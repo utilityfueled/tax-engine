@@ -4416,7 +4416,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const paidInFullDate = input.form2210?.returnPaidInFullDate;
   if (paidInFullDate) {
     const paid = sum(estimatedTaxInput.withholding, ...estimatedTaxInput.payments.filter((payment) => payment.date <= paidInFullDate).map((payment) => d(payment.amount)));
-    if (roundDollar(paid).lt(roundDollar(totalTax.minus(estimatedTaxRefundableCredits)))) throw new Error("Form 2210 claimed full return payment does not reconcile to total tax due");
+    const due = totalTax.minus(estimatedTaxRefundableCredits);
+    if (paid.lt(min(due, roundDollar(due)))) throw new Error("Form 2210 claimed full return payment does not reconcile to total tax due");
   }
   audit.record("1040", "24", "Total tax", totalTax,
     `Line 22 $${taxAfterCredits} + Line 23 $${totalAdditionalTaxes}`);

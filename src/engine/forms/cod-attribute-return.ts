@@ -96,6 +96,11 @@ export function calculateCodAttributeReturn(input: CodAttributeSourceInput, cont
     deferForeignAbsorptionValidation: deductionHistory && sourceOnly,
     minimumTaxCreditPool: context?.currentMinimumTaxCredit,
   });
+  const exemptAnswers = (sources: CodAttributeLedgerSources | undefined) => new Map(sources?.property?.followingYear?.properties?.map(row => [row.propertyId, row.exemptUnderSection522]));
+  const regularExempt = exemptAnswers(facts.regular);
+  for (const [propertyId, answer] of exemptAnswers(alternativeSources)) {
+    if (regularExempt.has(propertyId) && regularExempt.get(propertyId) !== answer) throw new Error('COD exempt-property answer must match on the regular and alternative ledgers');
+  }
   let regular = calculate(facts.regular, d('0'), undefined, true), alternativeTax = calculate(alternativeSources, d('0'), undefined, true);
   if (context) {
     if (deductionHistory !== Boolean(context.foreignDeemedAbsorption)) throw new Error('COD foreign deduction absorption requires its completed independent canonical worksheets');
