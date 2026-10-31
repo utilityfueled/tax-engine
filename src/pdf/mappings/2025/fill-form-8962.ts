@@ -16,7 +16,7 @@ import { calculateForm8962SharedPolicy, type Form8962SharedPolicyResult } from "
 import { calculateForm8962MarriageSources } from "@/engine/forms/form-8962-marriage-sources.js";
 import { calculateForm8962MarriageWorksheets, type Form8962MarriageWorksheetResult } from "@/engine/forms/form-8962-marriage-worksheets.js";
 import { premiumTaxCreditReviewOriginalSourceInput, type PreparedPremiumTaxCreditReview } from "../../premium-tax-credit-review-context.js";
-import { loadReviewTemplate, setCheckBox, setTextField } from "../../pdf-utils.js";
+import { loadReviewTemplate, createPdfFieldBatch } from "../../pdf-utils.js";
 
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
@@ -539,37 +539,39 @@ async function fillForm8962SourceReview(input: TaxYearInput, result: TaxReturnRe
   if ((!summary.allocations?.length && !summary.marriage && !result.form7206?.coverageFamilyAllocations?.length) || !result.form8962) throw new Error('Form8962 physical review requires actual allocation, marriage or coverage-family sources');
   const values = new Map(summary.lines.map(row => [row.line, row.value]));
   const doc = await loadReviewTemplate(blankPdfPath, 2025), form = doc.getForm(), F = FORM_8962_FIELDS;
-  setTextField(form, F.name, [input.taxpayer.primary, ...(input.taxpayer.filingStatus === 'married_filing_jointly' && input.taxpayer.spouse ? [input.taxpayer.spouse] : [])].map(person => `${person.firstName} ${person.lastName}`).join(' & '));
-  setTextField(form, F.ssn, ''); setCheckBox(form, F.marriedSeparate, false);
+  const mappedFields = createPdfFieldBatch(form);
+  mappedFields.setText(F.name, [input.taxpayer.primary, ...(input.taxpayer.filingStatus === 'married_filing_jointly' && input.taxpayer.spouse ? [input.taxpayer.spouse] : [])].map(person => `${person.firstName} ${person.lastName}`).join(' & '));
+  mappedFields.setText(F.ssn, ''); mappedFields.setCheckBox(F.marriedSeparate, false);
   for (const line of ['1', '2a', '2b', '3', '4', '5', '7', '8a', '8b', '24', '25'] as const) {
     const value = values.get(line);
-    setTextField(form, F[`line${line}`], value === undefined ? '' : line === '7' ? new Decimal(value).toFixed(4) : new Decimal(value).toFixed(0));
+    mappedFields.setText(F[`line${line}`], value === undefined ? '' : line === '7' ? new Decimal(value).toFixed(4) : new Decimal(value).toFixed(0));
   }
   const region = input.form8962?.fplRegion;
-  for (const [index, name] of ['alaska', 'hawaii', 'contiguous'].entries()) setCheckBox(form, F.regions[index], region === name);
+  for (const [index, name] of ['alaska', 'hawaii', 'contiguous'].entries()) mappedFields.setCheckBox(F.regions[index], region === name);
   const specialMethod = Boolean(summary.allocations?.length || summary.marriage?.electionApplies);
   const annual = result.form8962.calculationMethod === 'annual';
-  for (const [name, state] of [[F.line9Yes, specialMethod], [F.line9No, !specialMethod], [F.line10Yes, annual], [F.line10No, !annual]] as const) setCheckBox(form, name, state);
+  for (const [name, state] of [[F.line9Yes, specialMethod], [F.line9No, !specialMethod], [F.line10Yes, annual], [F.line10No, !annual]] as const) mappedFields.setCheckBox(name, state);
   for (const [index, name] of F.annual.entries()) {
     const value = annual ? values.get(`11${'abcdef'[index]}`) : undefined;
-    setTextField(form, name, value === undefined ? '' : new Decimal(value).toFixed(0));
+    mappedFields.setText(name, value === undefined ? '' : new Decimal(value).toFixed(0));
   }
   for (const [month, fields] of F.monthly.entries()) for (const [index, name] of fields.entries()) {
-    const value = values.get(`${month + 12}${'abcdef'[index]}`); setTextField(form, name, value === undefined ? '' : new Decimal(value).toFixed(0));
+    const value = values.get(`${month + 12}${'abcdef'[index]}`); mappedFields.setText(name, value === undefined ? '' : new Decimal(value).toFixed(0));
   }
   const excess = result.form8962.excessAPTC.gt(0);
-  setTextField(form, F.line26, summary.marriage?.electionApplies ? '0' : excess ? '' : result.form8962.netPTC.toFixed(0));
-  for (const line of ['27', '28', '29'] as const) setTextField(form, F[`line${line}`], excess && values.has(line) ? new Decimal(values.get(line)!).toFixed(0) : '');
+  mappedFields.setText(F.line26, summary.marriage?.electionApplies ? '0' : excess ? '' : result.form8962.netPTC.toFixed(0));
+  for (const line of ['27', '28', '29'] as const) mappedFields.setText(F[`line${line}`], excess && values.has(line) ? new Decimal(values.get(line)!).toFixed(0) : '');
   for (const [index, fields] of F.allocations.entries()) {
     const period = summary.allocations?.[index];
     const row = period ? [period.policyNumber, '', String(period.firstMonth).padStart(2, '0'), String(period.lastMonth).padStart(2, '0'), period.fraction, period.method === 'no_advance_benchmark' ? '' : period.fraction, period.method === 'no_advance_benchmark' ? '' : period.fraction] : Array<string>(7).fill('');
-    fields.forEach((name, column) => setTextField(form, name, row[column]));
+    fields.forEach((name, column) => mappedFields.setText(name, row[column]));
   }
-  setCheckBox(form, F.line34Yes, Boolean(summary.allocations?.length && summary.allocations.length <= 4)); setCheckBox(form, F.line34No, Boolean(summary.allocations && summary.allocations.length > 4));
+  mappedFields.setCheckBox(F.line34Yes, Boolean(summary.allocations?.length && summary.allocations.length <= 4)); mappedFields.setCheckBox(F.line34No, Boolean(summary.allocations && summary.allocations.length > 4));
   F.marriage.forEach((name, index) => {
     const column = index % 4, value = values.get(`${index < 4 ? '35' : '36'}${'abcd'[column]}`);
-    setTextField(form, name, value === undefined ? '' : column >= 2 ? new Decimal(value).toFixed(0).padStart(2, '0') : new Decimal(value).toFixed(0));
+    mappedFields.setText(name, value === undefined ? '' : column >= 2 ? new Decimal(value).toFixed(0).padStart(2, '0') : new Decimal(value).toFixed(0));
   });
+  mappedFields.apply();
   await markReviewPdf(doc);
   return doc;
 }
