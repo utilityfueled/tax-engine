@@ -109,6 +109,41 @@
         }
       },
       "artifactDigest": "sha256:e9e5e322f3528e4f0109d291c322fea47c9aed5c18cae203fd1c55c5c76f336e"
+    },
+    {
+      "sourceCommit": "12faedf5",
+      "ci": 41177713206,
+      "web": 41177713248,
+      "ciConclusion": "cancelled",
+      "webConclusion": "success",
+      "unit": {
+        "conclusion": "cancelled",
+        "cause": "Exceeded the 30m job cap with no reported test failure. The job cap is raised to 60m in the next commit."
+      },
+      "coverage": {
+        "tests": 19880,
+        "files": 1500,
+        "seconds": 1953.46,
+        "statements": "91.74",
+        "branches": "86.97",
+        "functions": "90.22",
+        "lines": "94.49",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:32bcdf7a96ed374bf17a175ea9fb5f2dae15f63f45487bf8741ba86f999b56b4"
     }
   ],
   "hostedSkips": "The five skipped browser cases are hosted-only and establish nothing about hosted readiness."

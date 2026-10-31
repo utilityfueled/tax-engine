@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "12faedf5",
+  "runtimeSourceSameAs": "7e668c86",
+  "recordedAt": "2026-10-31T07:17:15+00:00",
+  "releaseReady": false,
+  "scope": "Remote CI native amd64 synthetic evidence. Not staging, production or human security review.",
+  "platform": "linux/amd64",
+  "web": 41177713248,
+  "artifact": {
+    "name": "container-runtime-evidence",
+    "digest": "sha256:32bcdf7a96ed374bf17a175ea9fb5f2dae15f63f45487bf8741ba86f999b56b4"
+  },
+  "smoke": {
+    "result": "passed",
+    "readOnly": true,
+    "healthy": true,
+    "assets": true,
+    "sha256": "e992e7c2b084e2aa36f3ae63d026ba55725d3207ef543129ffdcffb081803352"
+  },
+  "recovery": {
+    "result": "passed",
+    "phases": [
+      "previous",
+      "upgrade",
+      "database-restart",
+      "database-dump-restore",
+      "rollback",
+      "re-upgrade"
+    ],
+    "databaseRecovery": {
+      "result": "passed",
+      "evidence": "local-synthetic-postgresql-dump-restore",
+      "tables": 9,
+      "tenantWorkspaces": 2,
+      "exactCostRestored": true,
+      "metadataCleanupReapplied": true,
+      "metadataCleanupIdempotent": true,
+      "checksum": "28bcd6b91fd9b51660b948ae04b66ff3986eadf0178ab3cc936b9eccea317ad3"
+    },
+    "browserRecovery": {
+      "passed": true,
+      "encrypted": true,
+      "wrongPasswordRejected": true,
+      "tamperRejected": true,
+      "originalBytes": true,
+      "unknownYearPreserved": true,
+      "exactCents": true,
+      "deletion": true,
+      "networkObservation": {
+        "requests": 404,
+        "startsBeforeUpload": true,
+        "rawPrivateMarkersAbsent": true,
+        "limitation": "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof."
+      }
+    },
+    "sha256": "b791d8e0d0d1f8a340d1dedf7572d986630c1210905bfd7a9554bb45e6ec24a0"
+  },
+  "browser": {
+    "passed": 530,
+    "skipped": 5,
+    "timeoutMs": 30000,
+    "retries": 0,
+    "note": "Two long journeys keep the 90s repository default."
+  },
+  "sbom": {
+    "components": 2930,
+    "sha256": "f7b222a22c815e59a5c0a8960f35177b451bba901ffcbe8d177ede3b77d04044"
+  },
+  "scan": {
+    "databaseBuilt": "2026-10-31T06:18:17Z",
+    "matches": 159,
+    "distinctAdvisories": 68,
+    "severity": {
+      "High": 56,
+      "Negligible": 46,
+      "Medium": 47,
+      "Low": 10
+    },
+    "artifactTypes": {
+      "deb": 159
+    },
+    "fixedVersionAvailable": 0,
+    "identicalToRegister": false,
+    "sha256": "9717197ba069cb44d42135477dc0734bfe1de0d8c6d5674e8920098477f5a18a"
+  },
+  "advisoryAcceptance": "Pending owner. The register review date is 2026-11-07. This scan accepts nothing."
+}
