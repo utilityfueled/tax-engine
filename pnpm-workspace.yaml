@@ -8,6 +8,12 @@ allowBuilds:
 overrides:
   # The installed OTel SDK peers require <1.10.0 throughout Sentry's tree.
   '@opentelemetry/api': 1.9.0
+  # Sentry's build plugin still requires glob ^13; 14.0.3 carries both advisory fixes.
+  '@sentry/bundler-plugins>glob': 14.0.3
+  # Lint tooling still allows minimatch 10; 11.0.3 carries the advisory fix.
+  'eslint>minimatch': 11.0.3
+  '@eslint/config-array>minimatch': 11.0.3
+  '@typescript-eslint/typescript-estree>minimatch': 11.0.3
 
 # Keep pdf-lib pinned; retain the original compression bytes and fallback.
 patchedDependencies:
