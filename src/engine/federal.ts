@@ -11,6 +11,7 @@ import { calculateForm172Return } from "./forms/form-172-return.js";
 import { calculateForm172CharitableSources } from "./forms/form-172-charitable-sources.js";
 import { validateQofDispositionFacts } from "./forms/qof-disposition-facts.js";
 import { assertNoDerivedCapitalFields, calculateQofInclusion } from "./forms/qof-inclusion.js";
+import { calculateClaimOfRightSources, claimOfRightStage, withClaimOfRightStage } from "./forms/claim-of-right.js";
 /**
  * Federal tax calculation orchestrator.
  * Coordinates all schedules, forms, and worksheets to produce a complete Form 1040.
@@ -211,7 +212,19 @@ import {
 import { calculateIllinoisReturn, type ILStateInput } from "./state/il-orchestrator.js";
 import type { ILScheduleWITRecord } from "./state/il-schedule-il-wit.js";
 
+/** Spec: claim-of-right.yaml. Pub525 compares each method's tax for the year of repayment. */
 export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
+  const claim = claimOfRightStage(input) ? undefined : calculateClaimOfRightSources(input);
+  if (!claim) return calculateFederalTaxForSources(input);
+  if (input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true)) throw new Error("Repaid earlier-year income with Marketplace worksheets needs a separate method");
+  if (claim.eligibleAmount.isZero()) return { ...calculateFederalTaxForSources(input), claimOfRight: { ...claim, method: "not_deductible" } };
+  const deduction = calculateFederalTaxForSources(withClaimOfRightStage(input, { deduction: claim.eligibleAmount, credit: d("0") }));
+  const credit = calculateFederalTaxForSources(withClaimOfRightStage(input, { deduction: d("0"), credit: claim.availableCredit }));
+  return credit.totalTax.minus(claim.availableCredit).lt(deduction.totalTax)
+    ? { ...credit, claimOfRight: { ...claim, method: "credit" } } : { ...deduction, claimOfRight: { ...claim, method: "deduction" } };
+}
+
+function calculateFederalTaxForSources(input: TaxYearInput): TaxReturnResult {
   if (input.k1CharitableSources && (input.form982NolSources
     || [input.priorYear?.nolCarryforward, input.priorYear?.excessBusinessLossNOL,
       ...(input.scheduleK1Form1041 ?? []).map(row => row.finalYearNOLCarryover)].some(value => !d(value).isZero()))) {
@@ -4101,7 +4114,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     energyImprovementCredit: form5695.energyImprovementCredit, priorYearMinimumTaxCredit, generalBusinessCredit,
     adoptionCredit, elderlyOrDisabledCredit, newCleanVehicleCredit: form8936?.totalNewVehicleCredit,
     previouslyOwnedCleanVehicleCredit: form8936?.totalPreviouslyOwnedCredit, netPremiumTaxCredit,
-    excessSocialSecurityWithholding: excessSSWithholding,
+    excessSocialSecurityWithholding: excessSSWithholding, section1341Credit: claimOfRightStage(input)?.credit,
   });
   audit.merge(sched3.lines);
   const totalOtherCredits = sched3.totalNonrefundableCredits;

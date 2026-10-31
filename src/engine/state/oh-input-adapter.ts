@@ -14,6 +14,7 @@
  * from an overlay input.
  */
 
+import { assertClaimOfRightStateMethod } from "@/engine/forms/claim-of-right.js";
 import { assertQofStateMethod } from "@/engine/forms/qof-inclusion.js";
 import Decimal from "decimal.js";
 import { calculateDigitalAssetStateSources } from "./digital-asset-sources.js";
@@ -736,6 +737,7 @@ export function buildOhioResidentReturnInput(
   overlay: OhioOverlayInput = {},
 ): OhioResidentReturnInput {
   assertQofStateMethod(taxInput, "Ohio");
+  assertClaimOfRightStateMethod(taxInput, "Ohio");
   const digitalCapitalInput = calculateDigitalAssetStateSources(taxInput, "OH");
   const filingStatus = mapFilingStatus(federalResult.filingStatus);
   const w2s = taxInput.w2s ?? [];

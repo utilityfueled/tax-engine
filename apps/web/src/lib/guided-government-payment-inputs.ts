@@ -29,6 +29,12 @@ export function buildGovernmentPaymentSourceRecords(entries: UnemploymentEntryDa
     tradeOrBusinessRefund: entry.tradeOrBusinessRefund ?? undefined, marketGain: money(entry.marketGain, "Box 9 market gain"),
     familyLeaveBenefits: money(entry.familyLeaveBenefits, "Box 10 family leave"), familyLeaveProgramType: entry.familyLeaveProgramType || undefined,
     currentYearRepaid: money(entry.currentYearRepaid, "current-year repayment"), priorYearRepaid: money(entry.priorYearRepaid, "earlier-year repayment"),
+    ...(entry.priorRepaymentReference?.trim() || entry.priorRepaymentConfirmed != null ? { priorYearRepaymentSource: {
+      sourceReference: entry.priorRepaymentReference?.trim() || undefined, sourceFactsConfirmed: entry.priorRepaymentConfirmed ?? undefined,
+      originalTaxYear: entry.priorRepaymentOriginalYear?.trim() ? Number(entry.priorRepaymentOriginalYear) : undefined,
+      earlierReturnTax: entry.priorRepaymentEarlierTax?.trim() ? parseGuidedCurrency(entry.priorRepaymentEarlierTax).toFixed() : undefined,
+      refiguredEarlierTax: entry.priorRepaymentRefiguredTax?.trim() ? parseGuidedCurrency(entry.priorRepaymentRefiguredTax).toFixed() : undefined,
+    } } : {}),
     unemploymentReceivedBeforeRepayment: money(entry.unemploymentReceivedBeforeRepayment, "actual receipts before repayment"),
     box1IncludesCurrentYearRepayment: entry.box1IncludesCurrentYearRepayment ?? undefined, repaymentSourceReference: entry.repaymentSourceReference?.trim() || undefined,
     unrecoveredAfterTaxContributions: money(entry.unrecoveredAfterTaxContributions, "available nondeductible contributions"),

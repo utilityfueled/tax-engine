@@ -33,6 +33,8 @@ export interface Schedule3Input {
   /** Previously owned clean vehicle credit — Form 8936 Part IV, Schedule 3 Line 6m */
   previouslyOwnedCleanVehicleCredit?: Decimal;
   netPremiumTaxCredit?: Decimal;
+  /** Pub525 Method 2 repayment credit, Schedule 3 Line 13b. */
+  section1341Credit?: Decimal;
   excessSocialSecurityWithholding?: Decimal;
   /** Additional Child Tax Credit (ACTC) from Form 8812 — refundable directly on Form 1040 line 28; excluded from Schedule 3 */
   additionalChildTaxCredit?: Decimal;
@@ -58,6 +60,7 @@ export interface Schedule3Result {
   extensionPayment: Decimal;
   netPremiumTaxCredit: Decimal;
   excessSSWithholding: Decimal;
+  section1341Credit: Decimal; // Line 13b
   additionalChildTaxCredit: Decimal; // Form 1040 line 28, retained for API compatibility
   aocRefundablePortion: Decimal;     // Form 1040 line 29, retained for API compatibility
   totalRefundableCredits: Decimal;   // Line 15
@@ -186,12 +189,15 @@ export function calculateSchedule3(
   const aocRefundablePortion = extra?.aocRefundablePortion ?? new Decimal(0);
 
 
+  const section1341Credit = extra?.section1341Credit ?? new Decimal(0);
+  audit.record("Sched 3", "13b", "Section 1341 credit", section1341Credit, "Pub525 Method 2 credit for income repaid this year");
   const totalRefundableCredits = sum(
+    section1341Credit,
     netPremiumTaxCredit,
     extensionPayment,
     excessSSWithholding
   );
-  audit.record("Sched 3", "14", "Other payment subtotal", new Decimal(0), "No supported line 13 payment input");
+  audit.record("Sched 3", "14", "Other payment subtotal", section1341Credit, "Line13b, the only supported line13 payment input");
   audit.record("Sched 3", "15", "Total refundable credits", totalRefundableCredits, "Sum Lines 9-14 → 1040 Line 31");
 
   return {
@@ -211,6 +217,7 @@ export function calculateSchedule3(
     extensionPayment,
     netPremiumTaxCredit,
     excessSSWithholding,
+    section1341Credit,
     additionalChildTaxCredit,
     aocRefundablePortion,
     totalRefundableCredits,

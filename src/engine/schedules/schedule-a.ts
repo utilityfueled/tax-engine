@@ -6,6 +6,7 @@
  * and charitable contributions. Compared against standard deduction.
  */
 
+import { claimOfRightStage } from "@/engine/forms/claim-of-right.js";
 import Decimal from "decimal.js";
 import { calculateHomeMortgageInterest, type HomeMortgageInterestResult } from "../forms/home-mortgage-interest.js";
 import { calculateEducatorExpensesDeduction } from "../forms/educator-expenses.js";
@@ -505,7 +506,8 @@ export function calculateScheduleA(
     "2026 section67 eligible unreimbursed expenses less actual above-line deduction; historical2025 zero", educatorWorksheet.inputs);
   if (input.taxpayer.taxYear >= 2026) audit.record("Sched A", "17k", "Deductible educator expenses not reported on Schedule1", educatorExpenseDeduction,
     "Draft2026 printed identity; actual section67 source worksheet, not a qualified final mapping");
-  const otherItemizedDeductions = sum(gamblingLossDeduction, bondPremiumDeduction, oidOrdinaryLossDeduction, estateTaxDeduction, educatorExpenseDeduction);
+  const claimOfRightDeduction = claimOfRightStage(input)?.deduction ?? new Decimal(0);
+  const otherItemizedDeductions = sum(gamblingLossDeduction, bondPremiumDeduction, oidOrdinaryLossDeduction, estateTaxDeduction, educatorExpenseDeduction, claimOfRightDeduction);
   audit.record("Sched A", "16", "Other itemized deductions", otherItemizedDeductions,
     "Allowed wagering deduction + allowable excess bond premium + TIPS ordinary loss + K1 estate tax on IRD + actual educator excess; unused source carries excluded");
 

@@ -1,6 +1,6 @@
 # Unsupported method register
 
-Recorded October 31, 2026 at `298c254c`, then updated as packages shipped: Form 1099-DA basis corrections and gross-proceeds costs are delivered. This classifies the engine's explicit rejections so the remaining work can be reviewed and prioritized. An unsupported return stops with a named error. The engine does not estimate it.
+Recorded October 31, 2026 at `298c254c`, then updated as packages shipped: Form 1099-DA basis corrections, gross-proceeds costs and repaid earlier-year unemployment are delivered. This classifies the engine's explicit rejections so the remaining work can be reviewed and prioritized. An unsupported return stops with a named error. The engine does not estimate it.
 
 A rejection here is not an external blocker unless its class says so. Year guards are excluded: they reject unsupported years on purpose and are not missing work.
 
@@ -16,7 +16,6 @@ A rejection here is not an external blocker unless its class says so. Year guard
 
 | Method | Rejection location | Who it affects |
 | --- | --- | --- |
-| Form 1099-G prior-year repayment | `form-1099-g.ts` | Filers who repaid unemployment or a state refund |
 | Form 2210 farmer or fisher rule, and waiver | `form-2210.ts` | Farmers, fishers and filers requesting relief |
 | Form 1099-G business state refund | `form-1099-g.ts` | Business owners with a business tax refund |
 | Schedule AI with preferential income | `form-2210-schedule-ai.ts` | Depends on a ruling on annualizing qualified dividends and gains |

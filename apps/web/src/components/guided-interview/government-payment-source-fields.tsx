@@ -1,8 +1,10 @@
 "use client";
 
+import { parseGuidedCurrency } from "@/lib/guided-currency";
 import { governmentOtherAmounts, type UnemploymentEntryData } from "@/lib/guided-unemployment-facts";
 import { CurrencyField } from "./currency-field";
 
+const parseGuidedCurrencySafe = (value?: string) => { try { return parseGuidedCurrency(value).gt(0); } catch { return false; } };
 function Fact({ label, value, onChange }: { label: string; value: boolean | null | undefined; onChange: (value: boolean | null) => void }) {
   return <label className="guided-field"><span className="guided-field-label">{label}</span><select className="guided-input" value={value == null ? "" : String(value)} onChange={event => onChange(event.target.value === "" ? null : event.target.value === "true")}><option value="">Confirm from actual records</option><option value="true">Yes</option><option value="false">No</option></select></label>;
 }
@@ -28,6 +30,14 @@ export function GovernmentPaymentSourceFields({ entry, onChange }: { entry: Unem
       <CurrencyField label="Actual benefits received before this year's repayment" value={entry.unemploymentReceivedBeforeRepayment ?? ""} onChange={unemploymentReceivedBeforeRepayment => onChange({ unemploymentReceivedBeforeRepayment })} />
       <Fact label="Does Box 1 include the benefits you repaid this year?" value={entry.box1IncludesCurrentYearRepayment} onChange={box1IncludesCurrentYearRepayment => onChange({ box1IncludesCurrentYearRepayment })} />
       <Text label="Actual current-year repayment source reference" value={entry.repaymentSourceReference} onChange={repaymentSourceReference => onChange({ repaymentSourceReference })} />
+      {parseGuidedCurrencySafe(entry.priorYearRepaid) && <>
+        <p className="guided-hint">For an earlier-year repayment over $3,000, the return uses a Schedule A deduction or a credit, whichever gives less tax. $3,000 or less is not deductible.</p>
+        <Text label="Earlier year that included the repaid income" value={entry.priorRepaymentOriginalYear} onChange={priorRepaymentOriginalYear => onChange({ priorRepaymentOriginalYear })} />
+        <CurrencyField label="Tax shown on that earlier return" value={entry.priorRepaymentEarlierTax ?? ""} onChange={priorRepaymentEarlierTax => onChange({ priorRepaymentEarlierTax })} />
+        <CurrencyField label="That earlier tax refigured without the repaid income" value={entry.priorRepaymentRefiguredTax ?? ""} onChange={priorRepaymentRefiguredTax => onChange({ priorRepaymentRefiguredTax })} />
+        <Text label="Earlier return record reference" value={entry.priorRepaymentReference} onChange={priorRepaymentReference => onChange({ priorRepaymentReference })} />
+        <Fact label="Earlier return figures checked after the last edit" value={entry.priorRepaymentConfirmed} onChange={priorRepaymentConfirmed => onChange({ priorRepaymentConfirmed })} />
+      </>}
       <Text label="Actual unemployment contribution program reference" value={entry.contributionProgramId} onChange={contributionProgramId => onChange({ contributionProgramId })} />
       <Text label="Actual contribution history source reference" value={entry.contributionHistoryReference} onChange={contributionHistoryReference => onChange({ contributionHistoryReference })} />
       <Fact label="Has the available nondeductible contribution balance been reconciled?" value={entry.contributionBalanceReconciled} onChange={contributionBalanceReconciled => onChange({ contributionBalanceReconciled })} />

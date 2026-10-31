@@ -92,7 +92,7 @@ export function calculateForm1099G(forms: Form1099G[], taxYear = 2025, filingSta
       if (form.additionalWorksheetRequired !== false) throw new Error("Form1099G has a separate unresolved source worksheet.");
       if (form.programType !== "government-unemployment" && form.programType !== "other-government") throw new Error("Form1099G employer/private/union program requires separate source classification.");
       repayment = amount(form.currentYearRepaid, "current-year repayment");
-      if (!amount(form.priorYearRepaid, "prior-year repayment").isZero()) throw new Error("Form1099G prior-year repayment requires the separate actual claim-of-right worksheet.");
+      if (!amount(form.priorYearRepaid, "prior-year repayment").isZero() && !form.priorYearRepaymentSource) throw new Error("Form1099G prior-year repayment requires its actual earlier-return records.");
       if (repayment.gt(0)) {
         text(form.repaymentSourceReference, "repayment source reference");
         received = amount(form.unemploymentReceivedBeforeRepayment, "gross receipts before repayment");

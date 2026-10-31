@@ -613,6 +613,25 @@
       ]
     },
     {
+      "key": "federal/claim-of-right",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p525",
+      "specPath": "spec/federal/claim-of-right.yaml",
+      "enginePath": "src/engine/forms/claim-of-right.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/cod-attribute-reductions",
       "jurisdiction": "federal",
       "taxYear": null,

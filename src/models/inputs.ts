@@ -650,6 +650,11 @@ export const Form1099GSchema = z.preprocess((value) => {
   familyLeaveProgramType: z.enum(["state-pfml-family", "state-pfml-medical", "private-family-leave"]).optional(),
   currentYearRepaid: optionalDecimalInput,
   priorYearRepaid: optionalDecimalInput,
+  // Actual earlier-return records for a Pub525 repayment of income from an earlier year.
+  priorYearRepaymentSource: z.object({
+    sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(), originalTaxYear: z.number().int().optional(),
+    earlierReturnTax: z.string().optional(), refiguredEarlierTax: z.string().optional(),
+  }).strict().optional(),
   unemploymentReceivedBeforeRepayment: optionalDecimalInput,
   box1IncludesCurrentYearRepayment: z.boolean().optional(),
   repaymentSourceReference: z.string().optional(),

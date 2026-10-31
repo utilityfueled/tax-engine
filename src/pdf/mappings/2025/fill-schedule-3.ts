@@ -100,7 +100,7 @@ export async function fillSchedule3(
 
   // Copy each printed line from the engine audit. In particular line 7 is
   // only the line-6 subtotal, and extension payments belong on line 10.
-  for (const line of ["1", "2", "3", "4", "5a", "5b", "6a", "6b", "6c", "6d", "6f", "6m", "7", "8", "9", "10", "11", "14", "15"] as const) {
+  for (const line of ["1", "2", "3", "4", "5a", "5b", "6a", "6b", "6c", "6d", "6f", "6m", "7", "8", "9", "10", "11", "13b", "14", "15"] as const) {
     const matches = s3.lines.filter(entry => entry.line === line);
     if (matches.length !== 1 || !matches[0].value.isFinite()) {
       throw new Error(`Missing, duplicate or invalid Schedule 3 audit entry ${line}`);

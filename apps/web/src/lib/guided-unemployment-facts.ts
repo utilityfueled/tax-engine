@@ -31,6 +31,11 @@ export interface UnemploymentEntryData {
   tradeOrBusinessRefund?: boolean | null;
   currentYearRepaid?: string;
   priorYearRepaid?: string;
+  priorRepaymentOriginalYear?: string;
+  priorRepaymentEarlierTax?: string;
+  priorRepaymentRefiguredTax?: string;
+  priorRepaymentReference?: string;
+  priorRepaymentConfirmed?: boolean | null;
   unemploymentReceivedBeforeRepayment?: string;
   box1IncludesCurrentYearRepayment?: boolean | null;
   repaymentSourceReference?: string;
@@ -99,7 +104,14 @@ export function unemploymentFactErrors(data: UnemploymentData | undefined, filin
     for (const [field, label] of [["compensation", "unemployment compensation in Box 1"], ["federalWithheld", "federal withholding in Box 4"], ...governmentOtherAmounts] as const) {
       const error = amountError(entry[field], label); if (error) fail(field, error);
     }
-    for (const field of ["priorYearRepaid", "agriculturePayments", "marketGain"] as const) if (!amountError(entry[field], field) && parseGuidedCurrency(entry[field]).gt(0)) fail(field, "This actual source amount is saved. Complete its separate claim-of-right or farm worksheet before this guided route can calculate.");
+    for (const field of ["agriculturePayments", "marketGain"] as const) if (!amountError(entry[field], field) && parseGuidedCurrency(entry[field]).gt(0)) fail(field, "This actual source amount is saved. Complete its separate claim-of-right or farm worksheet before this guided route can calculate.");
+    if (!amountError(entry.priorYearRepaid, "priorYearRepaid") && parseGuidedCurrency(entry.priorYearRepaid).gt(0)) {
+      if (entry.priorRepaymentConfirmed !== true || !entry.priorRepaymentReference?.trim()) fail("prior-repayment", "Confirm the earlier return records for this repayment.");
+      if (!/^\d{4}$/.test(entry.priorRepaymentOriginalYear ?? "")) fail("prior-repayment-year", "Enter the earlier year that included this income.");
+      for (const [field, label] of [["priorRepaymentEarlierTax", "tax shown on the earlier return"], ["priorRepaymentRefiguredTax", "earlier tax refigured without the repaid income"]] as const) {
+        const error = amountError(entry[field], label); if (error) fail(field, error);
+      }
+    }
     if (entry.sourceTaxYear === "2026" || entry.sourceFormRevision === "2026-12" || hasEnteredAmount(entry.familyLeaveBenefits)) {
       const error = amountError(entry.familyLeaveBenefits, "actual family leave benefits (2026 Box 10)");
       if (error) fail("family-leave", error);

@@ -1,3 +1,4 @@
+import { assertClaimOfRightStateMethod } from "@/engine/forms/claim-of-right.js";
 import { assertQofStateMethod } from "@/engine/forms/qof-inclusion.js";
 import { calculatePARoyaltyPropertySources } from "./pa-royalty-property-sources.js";
 /**
@@ -1460,6 +1461,7 @@ export function calculatePAReturn(
   overrides: PAOrchestratorOverrides = {},
 ): PAOrchestratorResult {
   assertQofStateMethod(input, "Pennsylvania");
+  assertClaimOfRightStateMethod(input, "Pennsylvania");
   if (input.royaltyPropertySources !== undefined) {
     calculatePARoyaltyPropertySources(input);
   }
