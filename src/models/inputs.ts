@@ -207,6 +207,7 @@ export const CapitalTransactionSchema = z.object({
   washSaleDisallowed: optionalDecimal,
   digitalAsset: z.boolean().default(false), // PA Schedule D digital-asset disclosure support
   qofInclusion: z.boolean().optional(), // Previously deferred QOF gain, Form8949 code Y.
+  adjustmentCodes: z.string().optional(), // Source-derived Form8949 column f codes such as B or E.
   sourceDocumentType: z.enum(["1099-b", "1099-da", "not-reported"]).optional(), // Actual reporting source; omission in the original Form1099B collection retains its legacy1099-B meaning.
 });
 
@@ -321,6 +322,7 @@ export const Form1099DATransactionSchema = z.preprocess((value) => {
   basisSource: z.enum(["broker_statement", "taxpayer_records"]).optional(),
   basisSourceReference: z.string().optional(),
   basisFactsConfirmed: z.boolean().optional(),
+  basisCorrectionConfirmed: z.boolean().optional(), // Taxpayer records replace a differing Box1g.
   proceedsType: z.enum(["gross", "net"]).optional(), // Box3a.
   sellingExpenses: decimal.optional(),
   marketDiscount: decimal.optional(), // Box1h.

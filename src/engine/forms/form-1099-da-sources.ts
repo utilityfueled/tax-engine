@@ -71,6 +71,7 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
     const transactions = form.transactions.map((row, transactionIndex) => {
       const description = `${row.digitalAssetName}${row.ticker ? ` (${row.ticker})` : ''}`;
       let costBasis = row.costBasis;
+      let rowAdjustment = row.adjustments, adjustmentCodes: string | undefined;
       let dateAcquired = row.dateAcquired;
       if (actual) {
         const transactionId = row.sourceId?.trim();
@@ -87,7 +88,11 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
         const anniversary = `${Number(acquired.slice(0, 4)) + 1}${acquired.slice(4)}`;
         if (row.holdingPeriod !== (sold > anniversary ? 'long' : 'short')) throw new Error('Form1099DA holding period conflicts with the actual purchase and sale dates.');
         if (row.reportedDateAcquired !== null && row.reportedDateAcquired !== acquired) throw new Error('Original Form1099DA acquisition date conflicts with the completed ordinary basis source.');
-        if (row.reportedCostBasis !== null && !amount(row.reportedCostBasis, 'reported Box1g basis').eq(basis)) throw new Error('Original Form1099DA basis correction requires a separate supported adjustment method.');
+        const reportedBasis = row.reportedCostBasis === null ? undefined : amount(row.reportedCostBasis, 'reported Box1g basis');
+        const basisCorrected = reportedBasis !== undefined && !reportedBasis.eq(basis);
+        if (basisCorrected && (row.basisSource !== 'taxpayer_records' || row.basisCorrectionConfirmed !== true)) {
+          throw new Error('Original Form1099DA basis correction requires confirmed taxpayer basis records.');
+        }
         if (row.basisSource !== 'taxpayer_records' && row.basisSource !== 'broker_statement') throw new Error('Form1099DA basis source is unknown.');
         if (row.basisSource === 'broker_statement' && (row.reportedCostBasis === null || row.reportedDateAcquired === null)) throw new Error('Blank broker basis or acquisition date requires actual taxpayer records.');
         if (row.basisReportedToIRS && row.reportedCostBasis === null) throw new Error('Form1099DA reported-basis checkbox conflicts with blank original basis.');
@@ -95,20 +100,27 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
         if (row.capitalAssetConfirmed !== true || row.assetOrigin !== 'purchase' || row.nftOrCollectible !== false
           || row.qof !== false || row.lossNotAllowed !== false || row.ordinaryIncome !== false || row.optionalReportingMethod !== 'none'
           || !['sale', 'exchange'].includes(row.transactionType)) throw new Error('Form1099DA special disposition or original acquisition requires a separate supported source method.');
-        if (!['gross', 'net'].includes(row.proceedsType ?? '') || !amount(row.sellingExpenses, 'selling expenses').isZero()
-          || !amount(row.marketDiscount, 'market discount').isZero() || !amount(row.adjustments, 'other adjustments').isZero()) throw new Error('Form1099DA selling expenses, market discount or other adjustments require a separate source method.');
+        const sellingExpenses = amount(row.sellingExpenses, 'selling expenses');
+        if (!['gross', 'net'].includes(row.proceedsType ?? '') || (sellingExpenses.gt(0) && row.proceedsType !== 'gross')
+          || !amount(row.marketDiscount, 'market discount').isZero() || !amount(row.adjustments, 'other adjustments').isZero()) throw new Error('Form1099DA net-proceeds selling expenses, market discount or other adjustments require a separate source method.');
         if (!row.washSale && !amount(row.washSaleDisallowed, 'Box1i wash-sale loss').isZero()) throw new Error('Form1099DA wash-sale amount conflicts with its actual applicability.');
         const wash = amount(row.washSaleDisallowed, 'Box1i wash-sale loss');
         if (wash.gt(Decimal.max(0, basis.minus(proceeds)))) throw new Error('Form1099DA disallowed wash loss exceeds its actual original loss.');
-        if (row.gainOrLoss !== undefined && !d(row.gainOrLoss).eq(proceeds.minus(basis).plus(wash))) throw new Error('Form1099DA statement gain conflicts with its actual proceeds, basis and wash adjustment.');
+        // Spec: form-1099-da-sources.yaml basis-correction. Form8949 keeps reported
+        // basis in column e only when the box reports it to the IRS; column g corrects it.
+        const reportedColumn = basisCorrected && row.basisReportedToIRS ? reportedBasis : undefined;
+        if (reportedColumn) costBasis = reportedColumn.toFixed();
+        rowAdjustment = (reportedColumn?.minus(basis) ?? new Decimal(0)).minus(sellingExpenses).toFixed();
+        adjustmentCodes = `${basisCorrected ? 'B' : ''}${sellingExpenses.gt(0) ? 'E' : ''}` || undefined;
+        if (row.gainOrLoss !== undefined && !d(row.gainOrLoss).eq(proceeds.minus(reportedBasis ?? basis).plus(wash))) throw new Error('Form1099DA statement gain conflicts with its actual proceeds, basis and wash adjustment.');
       } else {
         const matched = options.resolvedLegacyBasis?.get(`${description} via ${form.brokerName}|${row.dateSold}`);
         if (matched) { costBasis = matched.costBasis.toFixed(); dateAcquired = matched.dateAcquired; }
       }
-      audit.record('Form1099DA', `capital:${formIndex}:${transactionIndex}`, 'Digital disposition capital source amount', d(row.proceeds).minus(d(costBasis)).plus(d(row.adjustments)).plus(row.washSale ? d(row.washSaleDisallowed) : d(0)),
+      audit.record('Form1099DA', `capital:${formIndex}:${transactionIndex}`, 'Digital disposition capital source amount', d(row.proceeds).minus(d(costBasis)).plus(d(rowAdjustment)).plus(row.washSale ? d(row.washSaleDisallowed) : d(0)),
         'Original proceeds minus completed taxpayer basis plus actual supported adjustments; source cents retained', { sourceVerified: String(actual), sourceTaxYear: String(form.taxYear ?? 'unknown'), owner: form.accountHolder ?? 'unknown' });
       return { description, dateAcquired, dateSold: row.dateSold, proceeds: row.proceeds, costBasis,
-        adjustments: row.adjustments, basisReportedToIRS: row.basisReportedToIRS, holdingPeriod: row.holdingPeriod,
+        adjustments: rowAdjustment, ...(adjustmentCodes ? { adjustmentCodes } : {}), basisReportedToIRS: row.basisReportedToIRS, holdingPeriod: row.holdingPeriod,
         washSale: row.washSale, washSaleDisallowed: row.washSaleDisallowed, digitalAsset: true, sourceDocumentType: '1099-da' as const };
     });
     capitalForms.push({ broker: form.brokerName, sourceId: id ? `1099-da:${id}` : undefined, taxYear: form.taxYear,

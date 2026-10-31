@@ -5,6 +5,7 @@ import { Form1099DASchema, TaxYearInputSchema } from '@/models/inputs.js';
 import { calculateForm1099DASources } from '@/engine/forms/form-1099-da-sources.js';
 import { normalizeDigitalAssetCapitalInput, assertOrdinaryDigitalAssetReview } from '@/engine/forms/digital-asset-capital-input.js';
 import { calculateFederalTax } from '@/engine/federal.js';
+import { calculateForm8949 } from '@/engine/forms/form-8949.js';
 import { FEDERAL_RULE_PACKS } from '@/models/rule-pack-metadata.js';
 import { actualDigitalAssetSource } from '../../fixtures/digital-asset-sources.js';
 import { simpleW2Fixture } from '../../fixtures/simple-w2.js';
@@ -31,7 +32,7 @@ it('rejects unknown conflicting and unsupported actual digital sources', () => {
   for (const patch of [{ basisFactsConfirmed: undefined }, { reportedCostBasis: undefined }, { quantity: undefined }, { basisReportedToIRS: undefined },
     { basisSource: 'broker_statement' }, { basisReportedToIRS: true }, { reportedCostBasis: '90.25', basisSource: 'broker_statement' },
     { ordinaryIncome: true }, { qof: true }, { lossNotAllowed: true }, { marketDiscount: '0.01' }, { nftOrCollectible: true },
-    { assetOrigin: 'staking' }, { optionalReportingMethod: 'stablecoins' }, { transactionType: 'gift' }, { sellingExpenses: '1' },
+    { assetOrigin: 'staking' }, { optionalReportingMethod: 'stablecoins' }, { transactionType: 'gift' }, { sellingExpenses: '1', proceedsType: 'net' },
     { adjustments: '0.01' }, { washSale: false, washSaleDisallowed: '1' }, { dateSold: '2025-02-30' }, { dateSold: '2024-06-01' },
     { holdingPeriod: 'long' }, { costBasis: '-1' }, { quantity: 'NaN' }]) {
     const source = fixture(); Object.assign(source.transactions[0], patch); const original = JSON.stringify(source);
@@ -96,4 +97,40 @@ it('requires actual2026 source boxes without inferring noncovered basis', () => 
   expect(() => calculateForm1099DASources(incomplete)).toThrow(/complete/i);
   expect(FEDERAL_RULE_PACKS[2026].calculationStatus).toBe('incomplete');
   expect(FEDERAL_RULE_PACKS[2026].filingQualified).toBe(false);
+});
+
+const corrected = (patch: Record<string, unknown>) => {
+  const form = fixture();
+  Object.assign(form.transactions[0]!, { dateAcquired: '2024-01-15', reportedDateAcquired: '2024-01-15', holdingPeriod: 'long', proceeds: '10000', costBasis: '6000', reportedCostBasis: '9000',
+    basisReportedToIRS: true, noncoveredSecurity: false, basisCorrectionConfirmed: true, ...patch });
+  return input([form]);
+};
+const row = (source: ReturnType<typeof input>) => calculateForm8949(source).longTermBoxJ.transactions[0] ?? calculateForm8949(source).longTermBoxK.transactions[0];
+
+it('corrects differing broker basis with code B', () => {
+  expect(row(corrected({}))).toMatchObject({ adjustmentCode: 'B' });
+  expect(row(corrected({}))!.costBasis.toFixed()).toBe('9000');
+  expect(row(corrected({}))!.adjustment.toFixed()).toBe('3000');
+  expect(row(corrected({}))!.gainLoss.toFixed()).toBe('4000');
+  expect(row(corrected({ costBasis: '9500' }))!.adjustment.toFixed()).toBe('-500');
+  expect(row(corrected({ costBasis: '9500' }))!.gainLoss.toFixed()).toBe('500');
+  const unreported = calculateForm8949(corrected({ basisReportedToIRS: false, noncoveredSecurity: true })).longTermBoxK.transactions[0]!;
+  expect([unreported.costBasis.toFixed(), unreported.adjustment.toFixed(), unreported.adjustmentCode, unreported.gainLoss.toFixed()]).toEqual(['6000', '0', 'B', '4000']);
+  expect(() => calculateForm8949(corrected({ basisCorrectionConfirmed: undefined }))).toThrow(/basis correction/);
+  expect(() => calculateForm8949(corrected({ basisCorrectionConfirmed: false }))).toThrow(/basis correction/);
+  expect(() => calculateForm8949(corrected({ basisSource: 'broker_statement' }))).toThrow(/basis correction/);
+  const same = row(corrected({ costBasis: '9000' }))!;
+  expect([same.adjustmentCode, same.adjustment.toFixed()]).toEqual(['', '0']);
+  expect(calculateFederalTax(corrected({})).capitalGainLoss.toFixed()).toBe('4000');
+  expect(calculateForm8949(corrected({ gainOrLoss: '1000' })).totalLongTermGainLoss.toFixed()).toBe('4000');
+  expect(() => calculateForm8949(corrected({ gainOrLoss: '4000' }))).toThrow(/statement gain/);
+});
+
+it('reduces gain for costs not on the form with code E', () => {
+  const both = row(corrected({ sellingExpenses: '25' }))!;
+  expect([both.adjustmentCode, both.adjustment.toFixed(), both.gainLoss.toFixed()]).toEqual(['BE', '2975', '3975']);
+  const expense = row(corrected({ reportedCostBasis: '6000', sellingExpenses: '25', basisCorrectionConfirmed: undefined }))!;
+  expect([expense.adjustmentCode, expense.adjustment.toFixed(), expense.gainLoss.toFixed()]).toEqual(['E', '-25', '3975']);
+  expect(() => calculateForm8949(corrected({ reportedCostBasis: '6000', sellingExpenses: '25', proceedsType: 'net' }))).toThrow(/net-proceeds/);
+  expect(() => calculateForm8949(corrected({ reportedCostBasis: '6000', marketDiscount: '1' }))).toThrow(/market discount/);
 });

@@ -1,6 +1,6 @@
 # Unsupported method register
 
-Recorded October 31, 2026 at `298c254c`. This classifies the engine's explicit rejections so the remaining work can be reviewed and prioritized. An unsupported return stops with a named error. The engine does not estimate it.
+Recorded October 31, 2026 at `298c254c`, then updated as packages shipped: Form 1099-DA basis corrections and gross-proceeds costs are delivered. This classifies the engine's explicit rejections so the remaining work can be reviewed and prioritized. An unsupported return stops with a named error. The engine does not estimate it.
 
 A rejection here is not an external blocker unless its class says so. Year guards are excluded: they reject unsupported years on purpose and are not missing work.
 
@@ -16,8 +16,6 @@ A rejection here is not an external blocker unless its class says so. Year guard
 
 | Method | Rejection location | Who it affects |
 | --- | --- | --- |
-| Form 1099-DA basis corrections | `form-1099-da-sources.ts` | Holders whose broker reported missing or wrong basis, common in the first reporting years |
-| Form 1099-DA selling expenses and adjustments | `form-1099-da-sources.ts` | Digital-asset sellers with fees or adjustments |
 | Form 1099-G prior-year repayment | `form-1099-g.ts` | Filers who repaid unemployment or a state refund |
 | Form 2210 farmer or fisher rule, and waiver | `form-2210.ts` | Farmers, fishers and filers requesting relief |
 | Form 1099-G business state refund | `form-1099-g.ts` | Business owners with a business tax refund |
@@ -36,7 +34,7 @@ A rejection here is not an external blocker unless its class says so. Year guard
 | Education | Partial in-kind allocation, Coverdell disqualification with later activity | `form-1099-q.ts` |
 | Foreign earned income | Partnership or prior non-W2 income mappings | `form-2555-source-binding.ts` |
 | EIC | Active appeal, competing nonparent priority, married-child dependency | `eic-*.ts` |
-| Digital assets | Multiple-state reporting, special dispositions, derived crypto dispositions | `form-1099-da-sources.ts` |
+| Digital assets | Multiple-state reporting, special dispositions, market discount, derived crypto dispositions | `form-1099-da-sources.ts` |
 
 ## Ruling
 

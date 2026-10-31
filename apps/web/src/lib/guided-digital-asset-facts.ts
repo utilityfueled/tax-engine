@@ -19,7 +19,7 @@ export const digitalBooleanFields = [
   ['capitalAssetConfirmed', 'Actual asset was held as capital property'], ['nftOrCollectible', 'Actual asset is an NFT or collectible'],
 ] as const;
 export type DigitalAssetTransactionData = Partial<Record<typeof digitalAmountFields[number][0] | 'sourceId' | 'digitalAssetCode' | 'digitalAssetName' | 'ticker' | 'quantity' | 'dateAcquired' | 'dateSold' | 'reportedDateAcquired' | 'reportedCostBasis' | 'basisSourceReference' | 'gainOrLoss' | 'paCostBasis' | 'paBasisSourceReference', string>>
-  & Partial<Record<typeof digitalBooleanFields[number][0] | 'reportedDateAcquiredBlank' | 'reportedCostBasisBlank' | 'basisFactsConfirmed' | 'paBasisFactsConfirmed' | 'paTransactionForProfitConfirmed', boolean | null>> & {
+  & Partial<Record<typeof digitalBooleanFields[number][0] | 'reportedDateAcquiredBlank' | 'reportedCostBasisBlank' | 'basisFactsConfirmed' | 'basisCorrectionConfirmed' | 'paBasisFactsConfirmed' | 'paTransactionForProfitConfirmed', boolean | null>> & {
     holdingPeriod?: 'short' | 'long' | ''; transactionType?: 'sale' | 'exchange' | 'payment' | 'other' | '';
     basisSource?: 'broker_statement' | 'taxpayer_records' | ''; proceedsType?: 'gross' | 'net' | '';
     optionalReportingMethod?: 'none' | 'stablecoins' | 'specified_nfts' | '';
@@ -67,6 +67,7 @@ function toSource(entry: DigitalAssetEntryData): Form1099DA {
       reportedDateAcquired: originalBlank(row.reportedDateAcquiredBlank, row.reportedDateAcquired, 'Box 1d acquisition date'),
       reportedCostBasis: originalBlank(row.reportedCostBasisBlank, row.reportedCostBasis, 'Box 1g basis', true),
       basisSource: row.basisSource, basisSourceReference: actual(row.basisSourceReference, 'basis record reference'), basisFactsConfirmed: row.basisFactsConfirmed ?? undefined,
+      basisCorrectionConfirmed: row.basisCorrectionConfirmed ?? undefined,
       holdingPeriod: row.holdingPeriod, transactionType: row.transactionType, proceedsType: row.proceedsType,
       optionalReportingMethod: row.optionalReportingMethod, assetOrigin: row.assetOrigin,
       paCostBasis: row.paCostBasis?.trim() ? amount(row.paCostBasis, 'Pennsylvania adjusted basis') : undefined,

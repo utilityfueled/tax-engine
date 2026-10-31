@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.198",
+    ruleVersion: "2025.199",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8949", section: "Form 1099-DA basis corrections and costs not on the form", revision: "Instructions for Form8949 (2025) column f codes B and E, boxes G,H,J,K. Confirmed taxpayer basis records and gross-proceeds costs only. Pennsylvania rejects these rows. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/instructions/i2210", section: "Form 2210 Schedule AI annualized income installments", revision: "Form2210 (2025) page3 PartsI-II and Instructions (2025), Part III line10 box C. Actual cumulative periods; preferential-income periods and two self-employed spouses reject. Final 2026 form, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.law.cornell.edu/uscode/text/26/1400Z-2", section: "Deferred Qualified Opportunity Fund gain included on a complete sale or December 31, 2026", revision: "IRC1400Z-2(b),(c); Reg1.1400Z2(b)-1(e),(f)(5),(g) and 1.1400Z2(a)-1(c); Form8949 (2025) codes Y/Z; Form8997 (2025) PartIII. Bounded to an individual's complete investment; final 2026 reporting layout, state treatment, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/publications/p4681", section: "Partial personal insolvency and source-proved zero minimum tax credit pool", revision: "Final2025 Pub4681 Insolvency Example2, i1099ac Boxes2/3, f8801/i8801 lines15-26 and IRC108(a)(3),(e)(2),163(h),53(d)(1)(B); complete personal-debt originals, included nondeductible interest and the sufficient zero-pool bound. Human, final2026 form, filing and staging qualification remain open.", retrievedAt: "2026-10-28" },
@@ -235,11 +236,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.196-law-integration-draft",
+    ruleVersion: "2026.197-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8949", section: "Form 1099-DA basis corrections and costs not on the form", revision: "Instructions for Form8949 (2025) column f codes B and E, boxes G,H,J,K. Confirmed taxpayer basis records and gross-proceeds costs only. Pennsylvania rejects these rows. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/instructions/i2210", section: "Form 2210 Schedule AI annualized income installments", revision: "Form2210 (2025) page3 PartsI-II and Instructions (2025), Part III line10 box C. Actual cumulative periods; preferential-income periods and two self-employed spouses reject. Final 2026 form, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.law.cornell.edu/uscode/text/26/1400Z-2", section: "Deferred Qualified Opportunity Fund gain included on a complete sale or December 31, 2026", revision: "IRC1400Z-2(b),(c); Reg1.1400Z2(b)-1(e),(f)(5),(g) and 1.1400Z2(a)-1(c); Form8949 (2025) codes Y/Z; Form8997 (2025) PartIII. Bounded to an individual's complete investment; final 2026 reporting layout, state treatment, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/publications/p4681", section: "Partial personal insolvency and source-proved zero minimum tax credit pool", revision: "Final2025 Pub4681 Insolvency Example2, i1099ac Boxes2/3, f8801/i8801 lines15-26 and IRC108(a)(3),(e)(2),163(h),53(d)(1)(B); complete personal-debt originals, included nondeductible interest and the sufficient zero-pool bound. Human, final2026 form, filing and staging qualification remain open.", retrievedAt: "2026-10-28" },

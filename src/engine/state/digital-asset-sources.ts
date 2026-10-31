@@ -18,7 +18,7 @@ export function calculateDigitalAssetStateSources<T extends DigitalAssetCapitalI
       || !original.paBasisSourceReference?.trim() || original.paBasisFactsConfirmed !== true || original.paTransactionForProfitConfirmed !== true) {
       throw new Error('Pennsylvania digital-asset sources require actual PA adjusted basis, its reference and confirmation, and actual for-profit transaction facts.');
     }
-    if (original.washSale || !d(original.washSaleDisallowed).isZero() || !d(original.adjustments).isZero()) {
+    if (original.washSale || original.basisCorrectionConfirmed === true || !d(original.sellingExpenses).isZero() || !d(original.washSaleDisallowed).isZero() || !d(original.adjustments).isZero()) {
       throw new Error('Pennsylvania digital wash-sale or special adjustments require their separate actual source method.');
     }
     return { ...row, costBasis: original.paCostBasis };
