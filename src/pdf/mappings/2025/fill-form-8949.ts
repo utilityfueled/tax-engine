@@ -139,7 +139,8 @@ function fillTransactionRows(
     if (t.adjustmentCode) {
       setTextField(form, r.code, t.adjustmentCode);
     }
-    setCurrencyField(form, r.adjustment, t.adjustment);
+    if (t.adjustmentCode && t.adjustment.isZero()) setTextField(form, r.adjustment, "-0-");
+    else setCurrencyField(form, r.adjustment, t.adjustment);
     setTextField(form, r.gainLoss, formatCurrency(t.gainLoss));
   }
 }

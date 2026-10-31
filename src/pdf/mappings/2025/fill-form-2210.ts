@@ -4,6 +4,7 @@ import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
+import { calculateForm2210ScheduleAi } from "@/engine/forms/form-2210-schedule-ai.js";
 import { formatCurrency, loadReviewTemplate, setCheckBox, setTextField } from "../../pdf-utils.js";
 
 const p1 = (name: string) => `topmostSubform[0].Page1[0].${name}`;
@@ -111,6 +112,12 @@ export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult,
   const annualized = source?.calculationMethod === "annualized";
   const scheduleAi = calculation.lines.filter(entry => entry.form === "Form 2210 Schedule AI");
   if (annualized !== (scheduleAi.length > 0) && calculation.installments.length > 0) throw new Error("Form 2210 Schedule AI audit does not reconcile to the source method");
+  if (scheduleAi.length > 0) {
+    if (!calculation.scheduleAi || !source) throw new Error("Form 2210 Schedule AI audit does not reconcile to the source method");
+    const recomputed = calculateForm2210ScheduleAi({ ...calculation.scheduleAi, facts: source }).lines;
+    const text = (rows: typeof scheduleAi) => JSON.stringify(rows.map(row => [row.line, row.value.toFixed()]));
+    if (text(recomputed) !== text(scheduleAi)) throw new Error("Form 2210 Schedule AI lines do not reconcile to the original period sources");
+  }
   for (const [index, installment] of calculation.installments.entries()) {
     const line27 = scheduleAi.filter(entry => entry.line === `27${String.fromCharCode(97 + index)}`);
     if (annualized && (line27.length !== 1 || !line27[0]!.value.eq(installment.required))) throw new Error("Form 2210 line10 does not reconcile to Schedule AI line27");
@@ -135,7 +142,7 @@ export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult,
       cursor -= 14;
     }
   };
-  write(`FORM 2210 REVIEW - dated ${annualized ? "annualized-income" : "regular-method"} evidence`);
+  write(`FORM 2210 REVIEW - dated ${scheduleAi.length > 0 ? "annualized-income" : "regular-method"} evidence`);
   write(calculation.sourceFactsVerified ? "Calculation uses the supported actual-source contract." : "Historical or exception-only calculation: complete source qualification has not been established.");
   write("This is a review worksheet. The default return packet omits Form 2210; no filing qualification is implied.");
   if (scheduleAi.length > 0) write("Schedule AI page 3 is not completed in this packet. Its calculated lines follow.");

@@ -14,7 +14,7 @@ const base = { calendarYearTaxpayer: true, residentReturn: true, farmerOrFisher:
   withholdingMethod: 'equal-installments' as const, priorYearTaxStatus: 'no-return' as const };
 const facts = (annualized: boolean) => annualized ? { ...base, calculationMethod: 'annualized' as const, annualizedIncomePeriods: ['30000', '60000', '120000', '200000'].map(period) } : { ...base, calculationMethod: 'regular' as const };
 const calculate = (annualized: boolean) => calculateForm2210({ currentYearTax: new Decimal(37067), incomeTaxAfterCredits: new Decimal(37067), withholding: new Decimal(0), estimatedPayments: new Decimal(33361),
-  refundableCredits: new Decimal(0), filingStatus: 'single', taxYear: 2025, standardDeduction: new Decimal(15750), payments: [{ date: '2026-01-15', amount: '33361', kind: 'estimated' }], facts: facts(annualized) });
+  refundableCredits: new Decimal(0), filingStatus: 'single', taxYear: 2025, scheduleAiReturn: { standardDeduction: new Decimal(15750), agi: new Decimal(200000), taxableIncome: new Decimal(184250), preferentialIncome: false, selfEmployedOwners: 0, specialTaxMethod: false }, payments: [{ date: '2026-01-15', amount: '33361', kind: 'estimated' }], facts: facts(annualized) });
 const render = async (annualized: boolean, form2210 = calculate(annualized)) => {
   const input = { ...simpleW2Fixture, form2210: facts(annualized) } as TaxYearInput;
   const doc = await fillForm2210(input, { taxYear: 2025, form2210 } as TaxReturnResult, 'forms/blank/2025/f2210.pdf');
@@ -30,7 +30,10 @@ it('marks box C and reconciles line10 to Schedule AI', async () => {
   expect(regular.getTextField(F.line10a).getText()).toBe('8340');
   const stale = calculate(true);
   stale.lines = stale.lines.filter(row => row.line !== '27b');
-  await expect(render(true, stale)).rejects.toThrow(/line27/);
+  await expect(render(true, stale)).rejects.toThrow(/original period sources/);
+  const tampered = calculate(true);
+  tampered.lines = tampered.lines.map(row => row.line === '14a' ? { ...row, value: new Decimal(1) } : row);
+  await expect(render(true, tampered)).rejects.toThrow(/original period sources/);
   await expect(render(false, calculate(true))).rejects.toThrow(/Schedule AI audit/);
   await expect(render(true, calculate(false))).rejects.toThrow(/Schedule AI audit/);
 });

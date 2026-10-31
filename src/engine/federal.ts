@@ -4336,7 +4336,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     refundableCredits:estimatedTaxRefundableCredits,
     priorYearTax:input.priorYear?.priorYearTax === undefined ? undefined : d(input.priorYear.priorYearTax),
     priorYearAGI:input.priorYear?.priorYearAGI === undefined ? undefined : d(input.priorYear.priorYearAGI),
-    filingStatus,facts:input.form2210,standardDeduction,
+    filingStatus,facts:input.form2210,
+    scheduleAiReturn:{standardDeduction,agi,taxableIncome,itemizedDeductions:deductionUsed === "itemized" ? deductionAmount : undefined,
+      preferentialIncome:qualifiedDividends.gt(0) || netLTCG.gt(0),selfEmployedOwners:schedSE.perTaxpayer.filter(row => row.netSEEarnings.gt(0)).length,
+      specialTaxMethod:Boolean(input.form8615 || input.scheduleJ || input.form2555)},
     payments:[
       ...(input.adjustments?.estimatedTaxPayments ?? []).filter(payment=>payment.type === "federal")
         .map(payment=>({date:payment.date,amount:payment.amount,kind:"estimated" as const})),

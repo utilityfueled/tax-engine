@@ -109,6 +109,7 @@ export function calculateScheduleDSourceBinding(input: TaxYearInput, context: {
       || row.washSale !== transaction.washSale) throw new Error('ScheduleD asset identity or original dates are stale or conflicting');
     if (!actualDate(row.dateSold) || (row.dateAcquired !== 'VARIOUS' && !actualDate(row.dateAcquired))) throw new Error('ScheduleD original acquisition and sale dates must be actual calendar dates');
     if (!row.dateSold.startsWith(`${input.taxpayer.taxYear}-`)) throw new Error('ScheduleD asset sale year conflicts with the actual source year');
+    if (transaction.adjustmentCodes) throw new Error('ScheduleD worksheets with corrected digital-asset rows need a separate source method');
     for (const key of ['proceeds', 'costBasis', 'adjustments', 'washSaleDisallowed'] as const) reconcile(transaction[key], row[key], `asset ${key}`);
     if (originalDigitalId !== undefined && (row.sourceReference !== originalDigitalId || row.character !== 'ordinary')) throw new Error('ScheduleD original digital identity or ordinary source classification conflicts');
     const originalQsbs = context.section1202?.bindings.some(binding => binding.sourceKind === 'broker' && binding.originalSourceId === id) ?? false;

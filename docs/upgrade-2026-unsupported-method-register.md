@@ -18,7 +18,8 @@ A rejection here is not an external blocker unless its class says so. Year guard
 | --- | --- | --- |
 | Form 2210 farmer or fisher rule, and waiver | `form-2210.ts` | Farmers, fishers and filers requesting relief |
 | Form 1099-G business state refund | `form-1099-g.ts` | Business owners with a business tax refund |
-| Schedule AI with preferential income | `form-2210-schedule-ai.ts` | Depends on a ruling on annualizing qualified dividends and gains |
+| Schedule AI with preferential income, Schedule 1-A or Schedule J | `form-2210-schedule-ai.ts` | Depends on a ruling on annualizing qualified dividends and gains; the rest need period methods |
+| Schedule D worksheet with a corrected digital-asset row | `schedule-d-source-binding.ts` | A long-term corrected row beside a collectible or section 1250 row |
 
 ## Specialist
 

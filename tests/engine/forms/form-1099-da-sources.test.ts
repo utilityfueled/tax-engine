@@ -6,6 +6,7 @@ import { calculateForm1099DASources } from '@/engine/forms/form-1099-da-sources.
 import { normalizeDigitalAssetCapitalInput, assertOrdinaryDigitalAssetReview } from '@/engine/forms/digital-asset-capital-input.js';
 import { calculateFederalTax } from '@/engine/federal.js';
 import { calculateForm8949 } from '@/engine/forms/form-8949.js';
+import { calculatePAReturn } from '@/engine/state/pa-orchestrator.js';
 import { FEDERAL_RULE_PACKS } from '@/models/rule-pack-metadata.js';
 import { actualDigitalAssetSource } from '../../fixtures/digital-asset-sources.js';
 import { simpleW2Fixture } from '../../fixtures/simple-w2.js';
@@ -105,7 +106,7 @@ const corrected = (patch: Record<string, unknown>) => {
     basisReportedToIRS: true, noncoveredSecurity: false, basisCorrectionConfirmed: true, ...patch });
   return input([form]);
 };
-const row = (source: ReturnType<typeof input>) => calculateForm8949(source).longTermBoxJ.transactions[0] ?? calculateForm8949(source).longTermBoxK.transactions[0];
+const row = (source: ReturnType<typeof input>) => calculateForm8949(source).longTermBoxJ.transactions[0];
 
 it('corrects differing broker basis with code B', () => {
   expect(row(corrected({}))).toMatchObject({ adjustmentCode: 'B' });
@@ -127,10 +128,25 @@ it('corrects differing broker basis with code B', () => {
 });
 
 it('reduces gain for costs not on the form with code E', () => {
-  const both = row(corrected({ sellingExpenses: '25' }))!;
+  const both = row(corrected({ sellingExpenses: '25', sellingCostsNotInProceedsConfirmed: true }))!;
   expect([both.adjustmentCode, both.adjustment.toFixed(), both.gainLoss.toFixed()]).toEqual(['BE', '2975', '3975']);
-  const expense = row(corrected({ reportedCostBasis: '6000', sellingExpenses: '25', basisCorrectionConfirmed: undefined }))!;
+  const expense = row(corrected({ reportedCostBasis: '6000', sellingExpenses: '25', sellingCostsNotInProceedsConfirmed: true, basisCorrectionConfirmed: undefined }))!;
   expect([expense.adjustmentCode, expense.adjustment.toFixed(), expense.gainLoss.toFixed()]).toEqual(['E', '-25', '3975']);
-  expect(() => calculateForm8949(corrected({ reportedCostBasis: '6000', sellingExpenses: '25', proceedsType: 'net' }))).toThrow(/net-proceeds/);
+  for (const proceedsType of ['gross', 'net']) {
+    expect(() => calculateForm8949(corrected({ reportedCostBasis: '6000', sellingExpenses: '25', proceedsType }))).toThrow(/Box 1f/);
+    expect(row(corrected({ reportedCostBasis: '6000', sellingExpenses: '25', proceedsType, sellingCostsNotInProceedsConfirmed: true }))!.gainLoss.toFixed()).toBe('3975');
+  }
   expect(() => calculateForm8949(corrected({ reportedCostBasis: '6000', marketDiscount: '1' }))).toThrow(/market discount/);
+});
+
+it('keeps corrected rows out of methods that cannot read them', () => {
+  const pa = { paCostBasis: '6000', paBasisSourceReference: 'Fictional PA basis', paBasisFactsConfirmed: true, paTransactionForProfitConfirmed: true };
+  expect(() => calculatePAReturn(corrected(pa))).toThrow(/Pennsylvania digital wash-sale or special adjustments/);
+  expect(() => calculatePAReturn(corrected({ ...pa, reportedCostBasis: '6000', sellingExpenses: '25', sellingCostsNotInProceedsConfirmed: true }))).toThrow(/Pennsylvania digital wash-sale or special adjustments/);
+  const wash = row(corrected({ proceeds: '5000', costBasis: '6000', reportedCostBasis: '9000', washSale: true, washSaleDisallowed: '200' }))!;
+  expect([wash.adjustmentCode, wash.adjustment.toFixed(), wash.gainLoss.toFixed()]).toEqual(['BW', '3200', '-800']);
+  const audited = calculateFederalTax(corrected({})).allLines.find(line => line.form === 'Form1099DA' && line.line.startsWith('capital:'));
+  expect(audited!.value.toFixed()).toBe('4000');
+  expect(() => TaxYearInputSchema.parse({ ...simpleW2Fixture, form1099B: [{ broker: 'Actual', stateWithheld: '0', transactions: [{ description: 'X', dateAcquired: '2024-01-01', dateSold: '2025-06-30',
+    proceeds: '1', costBasis: '0', basisReportedToIRS: true, holdingPeriod: 'long', adjustmentCodes: 'ZZ' }] }] })).toThrow();
 });

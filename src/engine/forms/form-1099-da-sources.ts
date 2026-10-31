@@ -28,7 +28,7 @@ function actualDate(value: string, label: string): string {
 
 function isActualSource(form: Form1099DA, year: number): boolean {
   const statementFields = ['sourceId', 'taxYear', 'sourceReference', 'sourceFactsConfirmed', 'allTransactionsIncluded', 'federalWithheld', 'stateTaxReporting', 'accountReference'] as const;
-  const transactionFields = ['sourceId', 'digitalAssetCode', 'reportedDateAcquired', 'reportedCostBasis', 'basisSource', 'basisSourceReference', 'basisFactsConfirmed',
+  const transactionFields = ['sourceId', 'digitalAssetCode', 'reportedDateAcquired', 'reportedCostBasis', 'basisSource', 'basisSourceReference', 'basisFactsConfirmed', 'basisCorrectionConfirmed', 'sellingCostsNotInProceedsConfirmed',
     'proceedsType', 'sellingExpenses', 'marketDiscount', 'qof', 'lossNotAllowed', 'ordinaryIncome', 'onlyCashProceeds', 'customerProvidedAcquisitionInformation',
     'noncoveredSecurity', 'optionalReportingMethod', 'assetOrigin', 'capitalAssetConfirmed', 'nftOrCollectible',
     'paCostBasis', 'paBasisSourceReference', 'paBasisFactsConfirmed', 'paTransactionForProfitConfirmed'] as const;
@@ -101,8 +101,9 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
           || row.qof !== false || row.lossNotAllowed !== false || row.ordinaryIncome !== false || row.optionalReportingMethod !== 'none'
           || !['sale', 'exchange'].includes(row.transactionType)) throw new Error('Form1099DA special disposition or original acquisition requires a separate supported source method.');
         const sellingExpenses = amount(row.sellingExpenses, 'selling expenses');
-        if (!['gross', 'net'].includes(row.proceedsType ?? '') || (sellingExpenses.gt(0) && row.proceedsType !== 'gross')
-          || !amount(row.marketDiscount, 'market discount').isZero() || !amount(row.adjustments, 'other adjustments').isZero()) throw new Error('Form1099DA net-proceeds selling expenses, market discount or other adjustments require a separate source method.');
+        if (sellingExpenses.gt(0) && row.sellingCostsNotInProceedsConfirmed !== true) throw new Error('Form1099DA costs need confirmation that Box 1f does not already reflect them.');
+        if (!['gross', 'net'].includes(row.proceedsType ?? '')
+          || !amount(row.marketDiscount, 'market discount').isZero() || !amount(row.adjustments, 'other adjustments').isZero()) throw new Error('Form1099DA market discount or other adjustments require a separate source method.');
         if (!row.washSale && !amount(row.washSaleDisallowed, 'Box1i wash-sale loss').isZero()) throw new Error('Form1099DA wash-sale amount conflicts with its actual applicability.');
         const wash = amount(row.washSaleDisallowed, 'Box1i wash-sale loss');
         if (wash.gt(Decimal.max(0, basis.minus(proceeds)))) throw new Error('Form1099DA disallowed wash loss exceeds its actual original loss.');

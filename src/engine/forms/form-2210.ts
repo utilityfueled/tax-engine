@@ -5,7 +5,7 @@ import type { TaxYearInput } from "@/models/inputs.js";
 import type { FilingStatus } from "@/models/constants.js";
 import { zeroFloor, min, roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
-import { calculateForm2210ScheduleAi } from "./form-2210-schedule-ai.js";
+import { calculateForm2210ScheduleAi, type Form2210ScheduleAiInput, type Form2210ScheduleAiReturn } from "./form-2210-schedule-ai.js";
 
 export interface Form2210Payment {
   /** Actual IRS-effective date; a prior-credit origin date is not inferred. */
@@ -20,8 +20,8 @@ export interface Form2210Input {
   /** Actual Form 1040 line 22. Omission is unverified historical compatibility only. */
   incomeTaxAfterCredits?: Decimal;
   withholding: Decimal;
-  /** Form1040 standard deduction for Schedule AI line7. */
-  standardDeduction?: Decimal;
+  /** Completed return facts Schedule AI must reconcile to. */
+  scheduleAiReturn?: Form2210ScheduleAiReturn;
   /** Estimated payments plus applied prior-year credits, reconciled to payments. */
   estimatedPayments: Decimal;
   refundableCredits: Decimal;
@@ -65,6 +65,8 @@ export interface Form2210Result {
   /** Known Part II D/E reasons; uncollected physical filing facts are not inferred. */
   requiresForm2210: boolean;
   withholdingMethod: "equal-installments" | "actual-dates";
+  /** Retained so the review copy can recompute every Schedule AI line. */
+  scheduleAi?: Omit<Form2210ScheduleAiInput, "facts">;
   installments: Form2210Installment[];
   interestPeriods: Form2210InterestPeriod[];
   lines: CalculatedLine[];
@@ -118,6 +120,7 @@ function validateScope(facts: NonNullable<Form2210Input["facts"]>): void {
   }
   if (facts.calculationMethod === undefined) throw new Error("Form 2210 requires calculationMethod");
   if (facts.calculationMethod !== "regular" && !facts.annualizedIncomePeriods) throw new Error("Form 2210 annualized-income method requires actual Schedule AI period facts");
+  if (facts.calculationMethod === "regular" && facts.annualizedIncomePeriods) throw new Error("Form 2210 regular method conflicts with its Schedule AI period facts");
   if (facts.withholdingMethod === undefined) throw new Error("Form 2210 requires withholdingMethod");
 }
 
@@ -154,11 +157,12 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
   let noPriorTaxException = false;
   const installments: Form2210Installment[] = [];
   const interestPeriods: Form2210InterestPeriod[] = [];
+  let scheduleAi: Form2210Result["scheduleAi"];
   const basePayments = withholding.plus(estimates);
   const finish = (safe: boolean, reason: string, balance: Decimal, exactPenalty: Decimal, payments = basePayments): Form2210Result => {
     const penalty = roundDollar(exactPenalty);
     audit.record(FORM, "9", "Required annual payment", required, "min(line5, applicable line8)");
-    audit.record(FORM, "19", "Regular-method estimated-tax penalty", penalty, "roundDollar(sum(exact dated penalty periods))");
+    audit.record(FORM, "19", "Estimated-tax penalty", penalty, "roundDollar(sum(exact dated penalty periods))");
     audit.record(FORM, "safe_harbor", "No installment penalty", new Decimal(safe ? 1 : 0), reason);
     audit.record(FORM, "source_facts_verified", "Complete supported source facts", new Decimal(sourceFactsVerified ? 1 : 0), "Actual year, tax components, method and prior-return facts validated");
     const priorRequired = audit.getLine(FORM, "8")?.value;
@@ -168,7 +172,7 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
     return {
       taxYear, sourceFactsVerified, safeHarborMet: safe, safeHarborReason: reason,
       requiredAnnualPayment: required, totalPayments: payments, underpayment: balance,
-      exactPenalty, penalty, requiresForm2210: withholdingMethod === "actual-dates" || jointFilingReason, withholdingMethod, installments, interestPeriods,
+      exactPenalty, penalty, requiresForm2210: withholdingMethod === "actual-dates" || jointFilingReason || scheduleAi !== undefined, withholdingMethod, scheduleAi, installments, interestPeriods,
       lines: audit.getLines(),
     };
   };
@@ -273,10 +277,11 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
   const quarter = required.div(4);
   let requiredInstallments = schedule.map(() => quarter);
   if (facts?.calculationMethod === "annualized") {
-    const scheduleAi = calculateForm2210ScheduleAi({ taxYear, filingStatus: input.filingStatus, requiredAnnualPayment: required, facts,
-      standardDeduction: amount(input.standardDeduction, "standardDeduction") });
-    requiredInstallments = scheduleAi.installments;
-    audit.merge(scheduleAi.lines);
+    if (!input.scheduleAiReturn) throw new Error("Form 2210 Schedule AI requires the completed return");
+    scheduleAi = { taxYear, filingStatus: input.filingStatus, requiredAnnualPayment: required, taxAfterRefundableCredits: taxShown, returnContext: input.scheduleAiReturn };
+    const worksheet = calculateForm2210ScheduleAi({ ...scheduleAi, facts });
+    requiredInstallments = worksheet.installments;
+    audit.merge(worksheet.lines);
   }
   let previousOverpayment = new Decimal(0);
   let previousUnpaid = new Decimal(0);

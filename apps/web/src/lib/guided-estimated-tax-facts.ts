@@ -32,15 +32,18 @@ function money(value: string | undefined, label: string, required = true, signed
 }
 export const ANNUALIZED_PERIOD_FIELDS = [
   ["adjustedGrossIncome", "Adjusted gross income", true], ["itemizedDeductions", "Itemized deductions, or 0 if you do not itemize", false],
-  ["qbiDeduction", "QBI deduction", false], ["qualifiedDividends", "Qualified dividends", false], ["netCapitalGain", "Net capital gain", false],
-  ["netProfitFromSelfEmployment", "Net profit from self-employment", true], ["socialSecurityWages", "Wages subject to social security tax", false],
-  ["otherTaxes", "Other taxes", false], ["credits", "Credits", false],
+  ["qbiDeduction", "Schedule AI line 9 QBI deduction", false], ["qualifiedDividends", "Qualified dividends", false], ["netCapitalGain", "Net capital gain", false],
+  ["netProfitFromSelfEmployment", "Net profit from self-employment", true], ["socialSecurityWages", "Self-employed person's wages subject to social security tax", false],
+  ["otherTaxes", "Schedule AI line 16 other taxes", false], ["credits", "Schedule AI line 18 credits", false],
 ] as const;
 export type AnnualizedPeriodData = Record<(typeof ANNUALIZED_PERIOD_FIELDS)[number][0], string>;
 export const emptyAnnualizedPeriods = (): AnnualizedPeriodData[] => Array.from({ length: 4 }, () =>
   Object.fromEntries(ANNUALIZED_PERIOD_FIELDS.map(([key]) => [key, ""])) as AnnualizedPeriodData);
 function buildAnnualizedPeriods(facts: EstimatedTaxFactsData): AnnualizedPeriodData[] {
   if (facts.annualizedIncomePeriods?.length !== 4) throw new Error("Annualized income needs all four actual cumulative periods.");
+  if (facts.annualizedIncomePeriods.some(period => [period.qualifiedDividends, period.netCapitalGain].some(value => value?.trim() && parseGuidedCurrency(value).gt(0)))) {
+    throw new Error("Annualized income with qualified dividends or net capital gain cannot be calculated here. Use the regular method or a separate Schedule AI worksheet.");
+  }
   return facts.annualizedIncomePeriods.map((period, index) => Object.fromEntries(ANNUALIZED_PERIOD_FIELDS.map(([key, label, signed]) =>
     [key, money(period[key], `period ${index + 1} ${label.toLowerCase()}`, true, signed)])) as AnnualizedPeriodData);
 }

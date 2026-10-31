@@ -13,7 +13,13 @@ notes: |
   period-specific worksheets. The instructions do not state whether the line14
   worksheet's qualified dividends and net capital gain are annualized, so a
   positive amount in any period rejects instead of choosing a convention.
-  Spouses both reporting self-employment need separate PartII sheets and reject.
+  Column (d) covers the full year, so its AGI, taxable income, itemized deductions and
+  tax after credits must reconcile to the completed return, within $1 for tax after
+  credits. A mismatch rejects, which also stops Schedule 1-A and other deductions with
+  no line here. A return's own qualified dividends, net capital gain, Schedule J, Form
+  8615, Form 2555 or two self-employed owners reject, whatever the periods say.
+  The $400 test uses net earnings, following IRC1402(b) and Schedule SE line4c. The
+  instructions say self-employment income, so a human reviewer should confirm this.
 sources:
   - "https://www.irs.gov/pub/irs-pdf/f2210.pdf"
   - "https://www.irs.gov/instructions/i2210"
@@ -35,7 +41,7 @@ lines:
     testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::uses the larger annualized itemized or standard deduction"
   - line: "part-ii"
     description: "Annualize self-employment tax with the prorated wage base"
-    formula: "Profit40000, wages0, column a: 36940*.496+36940*.116=22607.28. Column b wages50000: limit73375, 23375*.2976+36940*.0696=9527.424. Profit399.99 gives0; profit400 does not. 2026 limits use 184500 prorated by .25,5/12,2/3,1."
+    formula: "Profit40000, wages0, column a: 36940*.496+36940*.116=22607.28. Column b wages50000: limit73375, 23375*.2976+36940*.0696=9527.424. Profit433.13 gives net earnings399.996 and0; profit433.14 gives400.004 and does not. 2026 limits use 184500 prorated by .25,5/12,2/3,1."
     irsRef: "Schedule AI lines28-36"
     testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::annualizes self-employment tax around its limits"
   - line: "penalty"
@@ -45,17 +51,27 @@ lines:
     testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::replaces regular installments in the dated penalty"
   - line: "unknown"
     description: "Reject missing facts and unresolved branches"
-    formula: "Fewer than four periods, a blank amount, positive preferential income, both spouses self-employed or an unanswered joint self-employment question reject. Entered zero stays zero."
+    formula: "Fewer than four periods, a blank amount, positive preferential income in the periods or on the return, both spouses self-employed, an unanswered joint self-employment question, or periods supplied with the regular method reject. Entered zero stays zero."
     irsRef: "Original-source contract; Schedule AI all-dates rule"
     testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::rejects missing facts and unresolved branches"
   - line: "guide"
     description: "Collect four cumulative periods without defaults"
-    formula: "Choosing annualized requires all four periods. Blank stays unknown, zero stays zero, and a positive preferential amount explains the rejection."
+    formula: "Choosing annualized requires all four periods. Blank stays unknown, zero stays zero, and a positive preferential amount shows a specific error before calculation."
     irsRef: "Schedule AI PartI and PartII columns"
     testRef: "tests/guided-interview/guided-estimated-tax-schedule-ai.test.ts::builds four complete periods and keeps blanks unknown"
   - line: "review"
     description: "Mark the method and print calculated lines on the review copy"
-    formula: "An annualized return checks PartII box C, prints line10 from Schedule AI line27 and lists calculated Schedule AI lines. A regular return leaves box C unchecked. A changed source method or line27 mismatch rejects."
+    formula: "An annualized return checks PartII box C, prints line10 from Schedule AI line27 and lists calculated Schedule AI lines. A regular return leaves box C unchecked. Every retained line is recomputed from the source periods, so a changed source, method or line rejects."
     irsRef: "Form2210 PartII box C; PartIII line10"
     testRef: "tests/pdf/form-2210-schedule-ai-review.test.ts::marks box C and reconciles line10 to Schedule AI"
+  - line: "return-reconciliation"
+    description: "Tie column d to the completed return"
+    formula: "AGI200000, no payments: all-zero periods reject instead of erasing penalty1553, as do column d AGI1000 and itemized amounts on a standard return. Return qualified dividends40000 reject even when periods show0. Form2210 is required whenever Schedule AI is used, including at zero penalty."
+    irsRef: "Schedule AI column d; Instructions for Form2210 box C filing requirement"
+    testRef: "tests/engine/federal-form-2210-schedule-ai.test.ts::reconciles the full year column to the completed return"
+  - line: "isolated-2026"
+    description: "Use the 2026 wage base under isolated constants"
+    formula: "Wage base184500: wages184500 give line31 0 and line36d 267.815 on profit10000; wages184499 add .124 to line36d."
+    irsRef: "SSA 2026 contribution and benefit base; Schedule AI line29"
+    testRef: "tests/engine/forms/form-2210-schedule-ai-2026.test.ts::uses the 2026 wage base under isolated constants"
 

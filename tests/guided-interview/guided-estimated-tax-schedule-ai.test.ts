@@ -17,6 +17,8 @@ it('builds four complete periods and keeps blanks unknown', () => {
   expect(built.annualizedIncomePeriods![1]!.credits).toBe('0');
   expect(() => buildEstimatedTaxFacts(data({ annualizedIncomePeriods: undefined }), 2025)).toThrow(/four actual/);
   expect(() => buildEstimatedTaxFacts(data({ annualizedIncomePeriods: rows.slice(0, 3) }), 2025)).toThrow(/four actual/);
+  const dividends = periods(); dividends[3]!.qualifiedDividends = '40000';
+  expect(() => buildEstimatedTaxFacts(data({ annualizedIncomePeriods: dividends }), 2025)).toThrow(/cannot be calculated here/);
   for (const key of Object.keys(rows[0]!) as Array<keyof typeof rows[number]>) {
     const blank = periods(); blank[2]![key] = '';
     expect(() => buildEstimatedTaxFacts(data({ annualizedIncomePeriods: blank }), 2025), key).toThrow(/period 3/);

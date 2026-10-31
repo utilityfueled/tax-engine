@@ -66,7 +66,7 @@ const ANNUALIZED_LABELS = ["January 1 to March 31", "January 1 to May 31", "Janu
 function AnnualizedPeriods({ data, update }: { data: EstimatedTaxFactsData; update: (patch: Partial<EstimatedTaxFactsData>) => void }) {
   const periods = data.annualizedIncomePeriods ?? emptyAnnualizedPeriods();
   return <fieldset style={{ minWidth: 0 }}><legend>Schedule AI cumulative income by period</legend>
-    <p className="guided-hint">Enter actual totals from January 1 through each period end, including 0 where that is the amount. Amounts with qualified dividends or net capital gain above 0 cannot be calculated here. Use the same Schedule AI method for all four dates.</p>
+    <p className="guided-hint">Enter income, deductions and wages as actual totals from January 1 through each period end, including 0 where that is the amount. Figure lines 9, 16 and 18 as the Schedule AI instructions describe, because some of those amounts are annualized first. The full-year column must match your return. Returns with qualified dividends or net capital gain cannot be calculated here. Use the same Schedule AI method for all four dates.</p>
     <BooleanFact label="Both spouses had self-employment earnings" value={data.bothSpousesSelfEmployed ?? null} onChange={bothSpousesSelfEmployed => update({ bothSpousesSelfEmployed })} />
     {periods.map((period, index) => <fieldset key={ANNUALIZED_LABELS[index]} style={{ minWidth: 0 }}><legend>{ANNUALIZED_LABELS[index]}</legend><div className="guided-form-grid">
       {ANNUALIZED_PERIOD_FIELDS.map(([key, label, signed]) => <CurrencyField key={key} label={`Period ${index + 1}: ${label}`} allowNegative={signed} value={period[key]}
