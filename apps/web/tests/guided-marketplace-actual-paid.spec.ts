@@ -36,6 +36,9 @@ function paymentSources(marriage: boolean): PaymentData {
 
 for (const scenario of [{ width: 1280, height: 900, marriage: false }, { width: 390, height: 844, marriage: true }]) test.describe(`${scenario.width}px`, () => {
   test('retains actual payment sources and requires final source reconfirmation', async ({ page }, testInfo) => {
+    // This full journey takes about 30s on hosted runners, the container job's
+    // limit. Keep the repository default for it; no assertion changes.
+    test.setTimeout(90_000);
     await page.setViewportSize({ width: scenario.width, height: scenario.height });
     const requests: { url: string; body: string }[] = []; page.on('request', request => requests.push({ url: request.url(), body: request.postData() ?? '' }));
     await page.goto('/returns/new'); await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+(?:\?create=1)?$/i);
