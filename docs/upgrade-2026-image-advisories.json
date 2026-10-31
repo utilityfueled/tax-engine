@@ -3021,12 +3021,10 @@
     "npmMatches": 0,
     "platforms": {
       "arm64": {
-        "sourceCommit": "7e668c86",
-        "scan": ".local/upgrade-evidence/scan-7e668c86-arm64-db20261031.json",
-        "scanSha256": "3a16e3ef57d3515bf9ee5ee698321668bf1c34a6585043aaec297b07a650b309"
+        "record": "docs/upgrade-2026-runtime-74f3994e-arm64.json"
       },
       "amd64": {
-        "record": "docs/upgrade-2026-runtime-12faedf5.json"
+        "record": "docs/upgrade-2026-runtime-74f3994e.json"
       }
     },
     "note": "The top-level counts describe the original 4aef633 scan. Use this block for the current state."
