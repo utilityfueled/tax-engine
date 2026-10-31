@@ -16,7 +16,7 @@ A rejection here is not an external blocker unless its class says so. Year guard
 
 | Method | Rejection location | Who it affects |
 | --- | --- | --- |
-| Schedule AI with preferential income, Schedule 1-A or Schedule J | `form-2210-schedule-ai.ts` | Depends on a ruling on annualizing qualified dividends and gains; the rest need period methods |
+| Schedule AI with preferential income or Schedule J | `form-2210-schedule-ai.ts` | Depends on a ruling on annualizing qualified dividends and gains; Schedule J needs a period method |
 
 ## Specialist
 

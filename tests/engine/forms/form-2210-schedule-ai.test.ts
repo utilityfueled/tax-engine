@@ -32,6 +32,22 @@ describe('Form 2210 Schedule AI', () => {
     expect(() => run([period('30000', { itemizedDeductions: '50000' }), ...rising().slice(1)])).toThrow(/only to a return that itemizes/);
   });
 
+  it('adjusts line 14 tax for Schedule 1-A from entered amounts', () => {
+    const adjust = (...amounts: (string | undefined)[]) => rising().map((row, index) => ({ ...row, schedule1AAdjustment: amounts[index] }));
+    const onReturn = (total = '6000') => ({ taxAfterRefundableCredits: new Decimal(35627), returnContext: context({ taxableIncome: new Decimal(178250), schedule1ADeduction: new Decimal(total) }) });
+    const result = run(adjust('2000', '0', '6000', '6000'), onReturn());
+    expect(['13a', '13d'].map(name => line(result, name))).toEqual(['104250', '184250']);
+    expect(['14a', '14b', '14c', '14d'].map(name => line(result, name))).toEqual(['17409', '23627', '30827', '35627']);
+    expect(line(result, '14-adjustment-a')).toBe('2000');
+    expect(() => run(adjust('2000', '0', '6000', '5999'), onReturn())).toThrow(/column \(d\) Schedule 1-A adjustment must equal/);
+    expect(() => run(adjust('6000.01', '0', '6000', '6000'), onReturn())).toThrow(/cannot exceed/);
+    expect(() => run(adjust(undefined, '0', '6000', '6000'), onReturn())).toThrow(/period Schedule 1-A adjustment/);
+    expect(() => run(adjust('1', '0', '0', '0'))).toThrow(/cannot exceed/);
+    expect(run(adjust('0', '0', '0', '0')).lines.some(row => row.line.startsWith('14-adjustment'))).toBe(false);
+    expect(() => run(rising(), onReturn())).toThrow(/period Schedule 1-A adjustment/);
+    expect(line(run([period('1000', { schedule1AAdjustment: '6000' }), ...adjust(undefined, '0', '6000', '6000').slice(1)], onReturn()), '14a')).toBe('0');
+  });
+
   it('annualizes self-employment tax around its limits', () => {
     const twoColumns = [period('30000', { netProfitFromSelfEmployment: '40000' }), period('60000', { netProfitFromSelfEmployment: '40000', socialSecurityWages: '50000' }), ...rising().slice(2)];
     expect(line(run(twoColumns), '36a')).toBe('22607.28');

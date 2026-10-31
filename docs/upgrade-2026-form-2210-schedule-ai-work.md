@@ -10,6 +10,7 @@ Form 2210 (2025) page 3 fixes the multipliers (4, 2.4, 1.5, 1), applicable perce
 
 - The instructions do not say whether the line 14 worksheet's qualified dividends and net capital gain are annualized. A positive amount rejects instead of choosing a convention.
 - Lines 9, 16 and 18 are actual entered amounts because each depends on its own period worksheet.
+- Schedule 1-A follows the line 14 instruction, which lets a filer adjust taxable income for a provision with no line elsewhere and names Schedule 1-A, but gives no period rule. So each period is an actual entered amount. Column (d) must equal the deduction on the return, and earlier columns cannot exceed it. Entering 0 for an earlier period is allowed and can only raise the required installment. Whether an earlier amount should be annualized is a reviewer question.
 - Two self-employed spouses need separate Part II sheets and reject. A joint return must answer this explicitly.
 - Page 3 of the physical form is not mapped. The review copy checks box C, fills line 10 and lists the calculated Schedule AI lines.
 - The 2026 form is not final. Only the wage base changes in this calculation.

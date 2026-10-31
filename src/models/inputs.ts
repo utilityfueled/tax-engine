@@ -3507,7 +3507,7 @@ const Form2210PaymentSchema = z.object({ date: Form2210DateSchema, amount: decim
 const Form2210AnnualizedPeriodSchema = z.object({
   adjustedGrossIncome: z.string().optional(), itemizedDeductions: z.string().optional(), qbiDeduction: z.string().optional(),
   qualifiedDividends: z.string().optional(), netCapitalGain: z.string().optional(), netProfitFromSelfEmployment: z.string().optional(),
-  socialSecurityWages: z.string().optional(), otherTaxes: z.string().optional(), credits: z.string().optional(),
+  socialSecurityWages: z.string().optional(), otherTaxes: z.string().optional(), credits: z.string().optional(), schedule1AAdjustment: z.string().optional(),
 }).strict();
 
 export const Form2210Schema = z.object({

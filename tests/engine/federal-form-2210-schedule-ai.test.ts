@@ -28,3 +28,17 @@ it('passes return facts into Schedule AI', () => {
   const itemizer = base([zero, zero, zero, { ...zero, adjustedGrossIncome: '200000', itemizedDeductions: '1' }], { scheduleA: { realEstateTaxes: '25000' } });
   expect(() => calculateFederalTax(itemizer)).toThrow(/reconcile to the completed return/);
 });
+
+it('reconciles a return with Schedule 1-A through line 14', () => {
+  const senior = { w2s: [{ ...simpleW2Fixture.w2s[0], wages: '100000', federalWithheld: '0', socialSecurityWages: '100000', medicareWages: '100000' }],
+    taxpayer: { ...simpleW2Fixture.taxpayer, primary: { ...simpleW2Fixture.taxpayer.primary, dateOfBirth: '1950-01-01' } },
+    schedule1A: { primarySsnEligible: true, excludedPuertoRicoIncome: '0', form4563Exclusion: '0', employeeTips: [], businessTips: [], vehicleLoans: [], seniorOwners: ['primary'], overtime: [] } };
+  const periods = (last: string) => [{ ...zero, adjustedGrossIncome: '25000', schedule1AAdjustment: '0' }, { ...zero, adjustedGrossIncome: '41666.67', schedule1AAdjustment: '0' }, { ...zero, adjustedGrossIncome: '66666.67', schedule1AAdjustment: '0' }, { ...zero, adjustedGrossIncome: '100000', schedule1AAdjustment: last }];
+  const result = calculateFederalTax(base(periods('4500'), senior));
+  expect(result.schedule1A?.totalDeduction.toFixed()).toBe('4500');
+  const adjustment = result.form2210!.lines.find(row => row.line === '14-adjustment-d');
+  expect(adjustment?.value.toFixed()).toBe('4500');
+  expect(result.form2210!.lines.find(row => row.line === '13d')?.value.toFixed()).toBe(result.taxableIncome.plus(4500).toFixed());
+  expect(() => calculateFederalTax(base(periods('4499'), senior))).toThrow(/must equal the deduction/);
+});
+

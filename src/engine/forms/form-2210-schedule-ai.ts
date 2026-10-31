@@ -16,7 +16,7 @@ const MONEY = /^\d+(\.\d+)?$/, SIGNED = /^-?\d+(\.\d+)?$/;
 /** Completed return facts. Column (d) covers the full year, so it must reconcile. */
 export interface Form2210ScheduleAiReturn {
   standardDeduction: Decimal; agi: Decimal; taxableIncome: Decimal; itemizedDeductions?: Decimal; preferentialIncome: boolean;
-  selfEmployedOwners: number; specialTaxMethod: boolean;
+  selfEmployedOwners: number; specialTaxMethod: boolean; schedule1ADeduction?: Decimal;
 }
 export interface Form2210ScheduleAiInput {
   taxYear: number; filingStatus: FilingStatus; requiredAnnualPayment: Decimal; taxAfterRefundableCredits: Decimal;
@@ -52,7 +52,13 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
     if (returnContext.itemizedDeductions === undefined && !itemized.isZero()) throw new Error('Form 2210 Schedule AI itemized deductions apply only to a return that itemizes');
     const line7 = returnContext.standardDeduction, deduction = Decimal.max(itemized, line7), line9 = amount(period.qbiDeduction, 'period QBI deduction');
     const line13 = Decimal.max(0, annualized.minus(deduction).minus(line9));
-    const tax = calculateRegularIncomeTax(line13, filingStatus, constants);
+    // Spec: line-14-schedule-1a. The instructions give no period rule, so the amount is entered.
+    const schedule1A = returnContext.schedule1ADeduction ?? new Decimal(0);
+    const adjustment = schedule1A.isZero() && period.schedule1AAdjustment === undefined ? new Decimal(0) : amount(period.schedule1AAdjustment, 'period Schedule 1-A adjustment');
+    if (adjustment.gt(schedule1A)) throw new Error('Form 2210 Schedule AI period Schedule 1-A adjustment cannot exceed the deduction on the return');
+    if (index === 3 && !adjustment.eq(schedule1A)) throw new Error('Form 2210 Schedule AI column (d) Schedule 1-A adjustment must equal the deduction on the return');
+    const taxable = Decimal.max(0, line13.minus(adjustment));
+    const tax = calculateRegularIncomeTax(taxable, filingStatus, constants);
     const profit = amount(period.netProfitFromSelfEmployment, 'period self-employment profit', true);
     // Schedule SE rounds net earnings before its $400 test, and column (d) must match it.
     const netEarnings = roundDollar(Decimal.max(0, profit.times('0.9235'))), line28 = netEarnings.lt(400) ? new Decimal(0) : netEarnings;
@@ -63,9 +69,9 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
     const line19 = Decimal.max(0, line17.minus(line18));
     const line21 = line19.times(PERCENTS[index]!), line23 = Decimal.max(0, line21.minus(priorInstallments));
     if (index === 3) {
-      const reconciled = roundDollar(annualized).eq(roundDollar(returnContext.agi)) && roundDollar(line13).eq(roundDollar(returnContext.taxableIncome))
+      const reconciled = roundDollar(annualized).eq(roundDollar(returnContext.agi)) && roundDollar(taxable).eq(roundDollar(returnContext.taxableIncome))
         && (returnContext.itemizedDeductions === undefined || roundDollar(itemized).eq(roundDollar(returnContext.itemizedDeductions)));
-      if (!reconciled) throw new Error('Form 2210 Schedule AI column (d) income and deductions must reconcile to the completed return; Schedule 1-A and other deductions with no line here need a separate method');
+      if (!reconciled) throw new Error('Form 2210 Schedule AI column (d) income and deductions must reconcile to the completed return; other deductions with no line here need a separate method');
       // The return rounds Schedule SE parts separately, so tax can differ by small dollars.
       if (line19.minus(input.taxAfterRefundableCredits).abs().gt(2)) throw new Error('Form 2210 Schedule AI column (d) tax after credits must reconcile to Form 2210 line 4');
     }
@@ -77,6 +83,7 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
       ['26', line26, 'Line24 plus line25'], ['27', line27, 'Required installment']] as const) {
       audit.record(FORM, `${line}${column}`, description, value, `Schedule AI line${line}`);
     }
+    if (!schedule1A.isZero()) audit.record(FORM, `14-adjustment-${column}`, 'Schedule 1-A amount subtracted from line13 before tax', adjustment, 'Schedule AI line14 instruction');
     installments.push(line27);
     priorInstallments = priorInstallments.plus(line27);
     line25 = line26.minus(line27);

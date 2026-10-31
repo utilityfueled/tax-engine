@@ -4342,7 +4342,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     filingStatus,facts:input.form2210,
     scheduleAiReturn:{standardDeduction,agi,taxableIncome,itemizedDeductions:deductionUsed === "itemized" ? deductionAmount : undefined,
       preferentialIncome:qualifiedDividends.gt(0) || netLTCG.gt(0),selfEmployedOwners:schedSE.perTaxpayer.filter(row => row.netSEEarnings.gt(0)).length,
-      specialTaxMethod:Boolean(input.form8615 || input.scheduleJ || input.form2555)},
+      specialTaxMethod:Boolean(input.form8615 || input.scheduleJ || input.form2555),schedule1ADeduction:schedule1A?.totalDeduction},
     payments:[
       ...(input.adjustments?.estimatedTaxPayments ?? []).filter(payment=>payment.type === "federal")
         .map(payment=>({date:payment.date,amount:payment.amount,kind:"estimated" as const})),
