@@ -74,4 +74,9 @@ lines:
     formula: "Wage base184500: wages184500 give line31 0 and line36d 267.815 on profit10000; wages184499 add .124 to line36d."
     irsRef: "SSA 2026 contribution and benefit base; Schedule AI line29"
     testRef: "tests/engine/forms/form-2210-schedule-ai-2026.test.ts::uses the 2026 wage base under isolated constants"
+  - line: "return-wiring"
+    description: "Pass completed return facts into the worksheet"
+    formula: "Two self-employed spouses reject despite a false answer. An itemizer whose column d differs from the return rejects."
+    irsRef: "Schedule AI PartII; column d"
+    testRef: "tests/engine/federal-form-2210-schedule-ai.test.ts::passes return facts into Schedule AI"
 

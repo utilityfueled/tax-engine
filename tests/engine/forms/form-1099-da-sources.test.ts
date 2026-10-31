@@ -145,6 +145,10 @@ it('keeps corrected rows out of methods that cannot read them', () => {
   expect(() => calculatePAReturn(corrected({ ...pa, reportedCostBasis: '6000', sellingExpenses: '25', sellingCostsNotInProceedsConfirmed: true }))).toThrow(/Pennsylvania digital wash-sale or special adjustments/);
   const wash = row(corrected({ proceeds: '5000', costBasis: '6000', reportedCostBasis: '9000', washSale: true, washSaleDisallowed: '200' }))!;
   expect([wash.adjustmentCode, wash.adjustment.toFixed(), wash.gainLoss.toFixed()]).toEqual(['BW', '3200', '-800']);
+  const legacy = fixture().transactions[0]!;
+  const fieldsOnly = { ...input(), form1099DA: [{ brokerName: 'Legacy broker', transactions: [{ digitalAssetName: 'BTC', dateAcquired: legacy.dateAcquired, dateSold: legacy.dateSold, proceeds: legacy.proceeds, costBasis: legacy.costBasis,
+    basisReportedToIRS: false, holdingPeriod: 'short', transactionType: 'sale', washSale: false, washSaleDisallowed: '0', adjustments: '0', sellingCostsNotInProceedsConfirmed: true }] }] };
+  expect(() => calculateForm1099DASources(TaxYearInputSchema.parse(fieldsOnly))).toThrow(/actual|complete|unknown/i);
   const audited = calculateFederalTax(corrected({})).allLines.find(line => line.form === 'Form1099DA' && line.line.startsWith('capital:'));
   expect(audited!.value.toFixed()).toBe('4000');
   expect(() => TaxYearInputSchema.parse({ ...simpleW2Fixture, form1099B: [{ broker: 'Actual', stateWithheld: '0', transactions: [{ description: 'X', dateAcquired: '2024-01-01', dateSold: '2025-06-30',

@@ -2,6 +2,10 @@
 import { describe, expect, it } from 'vitest';
 import { calculateFederalTax } from '@/engine/federal.js';
 import { calculatePAReturn } from '@/engine/state/pa-orchestrator.js';
+import { calculatePANonresidentReturn } from '@/engine/state/pa-nonresident-orchestrator.js';
+import { buildOhioResidentReturnInput } from '@/engine/state/oh-input-adapter.js';
+import { fillSchedule3, SCHEDULE_3_FIELDS as SCHEDULE_3 } from '@/pdf/fill-schedule-3.js';
+import { fillScheduleA, SCHEDULE_A_FIELDS as SCHEDULE_A } from '@/pdf/fill-schedule-a.js';
 import { TaxYearInputSchema } from '@/models/inputs.js';
 import { simpleW2Fixture } from '../../fixtures/simple-w2.js';
 
@@ -34,6 +38,23 @@ describe('Repaid earlier-year income', () => {
     expect(() => calculateFederalTax(conflict)).toThrow(/share the same/);
     expect(() => calculateFederalTax({ ...source('5000'), form8814: [{} as never] })).toThrow(/Schedule AI or Form 8814/);
     expect(() => calculateFederalTax({ ...source('3000'), stateReturns: { illinois: {} } } as never)).toThrow(/Illinois/);
+  });
+
+  it('stops every state path and unsupported worksheet', () => {
+    const input = source('5000'), result = calculateFederalTax(input);
+    expect(() => calculatePANonresidentReturn(input)).toThrow(/earlier-year income.*Pennsylvania/);
+    expect(() => buildOhioResidentReturnInput(input, result)).toThrow(/earlier-year income.*Ohio/);
+    expect(() => calculateFederalTax({ ...input, form7206: { plans: [{ marketplaceCoverage: true }] } } as never)).toThrow(/Marketplace worksheets/);
+    expect(() => calculateFederalTax({ ...input, form2210: { calculationMethod: 'annualized' } } as never)).toThrow(/Schedule AI or Form 8814/);
+  });
+
+  it('prints the repayment on Schedule 3 and describes the deduction on Schedule A', async () => {
+    const credit = source('5000'), creditResult = calculateFederalTax(credit);
+    const schedule3 = (await fillSchedule3(credit, creditResult, 'forms/blank/2025/f1040s3.pdf')).getForm();
+    expect([SCHEDULE_3.line13b, SCHEDULE_3.line14].map(name => schedule3.getTextField(name).getText())).toEqual(['1100', '1100']);
+    const deduction = source('5000', earlier('11000')), deductionResult = calculateFederalTax(deduction);
+    const scheduleA = (await fillScheduleA(deduction, deductionResult, 'forms/blank/2025/f1040sa.pdf')).getForm();
+    expect(scheduleA.getTextField(SCHEDULE_A.line16Desc).getText()).toContain('Repaid income');
   });
 
   it('counts the repayment credit on Form 2210 line 3', () => {

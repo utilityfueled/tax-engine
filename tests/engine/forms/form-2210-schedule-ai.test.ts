@@ -76,6 +76,7 @@ describe('Form 2210 Schedule AI', () => {
     expect(() => run(rising(), { returnContext: context({ taxableIncome: new Decimal(180000) }) })).toThrow(/reconcile to the completed return/);
     expect(run(rising(), { taxAfterRefundableCredits: new Decimal(37069) }).installments).toHaveLength(4);
     expect(() => run(rising(), { taxAfterRefundableCredits: new Decimal(37069.01) })).toThrow(/line 4/);
+    expect(() => run(rising(), { returnContext: context({ itemizedDeductions: new Decimal(20000) }) })).toThrow(/reconcile to the completed return/);
     expect(run(rising(), { returnContext: context({ agi: new Decimal(200000.4) }) }).installments).toHaveLength(4);
     const joint = { filingStatus: 'married_filing_jointly' as const };
     expect(() => run(rising(), joint)).toThrow(/both spouses/);

@@ -27,7 +27,11 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
     await expect.poll(() => page.evaluate(id => JSON.parse(localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`) ?? '{}').sectionData?.['income-investments']?.qofDispositionFacts?.sourceFactsConfirmed, id)).toBe(true);
     await page.reload(); await expect(answer).toHaveValue('false'); await expect(confirmation).toHaveValue('true');
     await answer.selectOption('true'); await expect(confirmation).toHaveValue('');
-    await expect(page.getByRole('status').filter({ hasText: 'Your Yes answer is saved.' })).toContainText('Form 8997');
+    await expect(page.getByRole('status').filter({ hasText: 'Add each investment' })).toContainText('Form 8997');
+    await page.getByRole('button', { name: 'Add QOF investment', exact: true }).click();
+    await page.getByRole('combobox', { name: 'QOF investment 1: Inclusion event', exact: true }).selectOption('sale_or_exchange');
+    await expect(page.getByLabel('QOF investment 1: Sale proceeds', { exact: true })).toHaveValue('');
+    await expect(page.getByRole('combobox', { name: 'QOF investment 1: No Form 8997 special gain code applies', exact: true })).toHaveValue('');
     await expect(page.getByLabel('QOF investment record reference', { exact: true })).toHaveValue('synthetic-private-QOF-review-reference');
     await expect.poll(() => page.evaluate(id => JSON.parse(localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`) ?? '{}').sectionData?.['income-investments']?.qofDispositionFacts?.disposedOfQofInvestment, id)).toBe(true);
     await page.getByRole('heading', { name: 'Qualified opportunity fund investments', exact: true }).scrollIntoViewIfNeeded();
