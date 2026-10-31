@@ -2,7 +2,7 @@
 import { mkdtemp, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync } from "../helpers/file-stdin-exec";
 import { PDFDocument } from "pdf-lib";
 import { expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";

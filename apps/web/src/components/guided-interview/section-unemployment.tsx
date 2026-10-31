@@ -16,7 +16,7 @@ export function SectionUnemployment({ data, onDataChange }: { data: Unemployment
     <p className="guided-hint">Ordinary government unemployment generally goes to Schedule 1, line 7. Other programs, refunds, contribution history and repayments can change the tax treatment. Preserve their original facts separately.</p>
     <div className="guided-w2-stack">{entries.map((entry, index) => <div className="guided-w2-card" key={index}>
       <div className="guided-w2-card-header"><h3 className="guided-w2-card-title">Government statement #{index + 1}</h3>{entries.length > 1 && <button type="button" className="utility-button utility-button-small" aria-label={`Remove government statement ${index + 1}`} onClick={() => onDataChange(withUnemploymentEntries(current, entries.filter((_, position) => position !== index)))}>Remove</button>}</div>
-      <div className="guided-form-grid"><GovernmentPaymentSourceFields entry={entry} onChange={change => updateEntry(index, change)} /></div>
+      <div className="guided-form-grid"><GovernmentPaymentSourceFields entry={entry} onChange={change => updateEntry(index, "priorYearRepaid" in change ? { ...change, priorRepaymentConfirmed: null } : change)} /></div>
     </div>)}</div>
     <button type="button" className="utility-button" onClick={() => onDataChange(withUnemploymentEntries(current, [...entries, { ...emptyUnemploymentEntry }]))}>Add government statement</button>
     <TaxRefundSourceDetails data={current.taxRefund} entries={entries} onChange={taxRefund => onDataChange({ ...current, taxRefund })} />

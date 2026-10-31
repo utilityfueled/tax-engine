@@ -1,5 +1,5 @@
 // Spec: spec/federal/form-172-charitable-closure.yaml workspace-originals.
-import { execFileSync } from 'node:child_process';
+import { execFileSync } from '../../helpers/file-stdin-exec';
 import { expect, it, vi } from 'vitest';
 import { buildWorkspaceFilledReturnDownload } from '@/lib/workspace-filled-return';
 import { createWorkspaceRecord } from '@/lib/workspace-storage';

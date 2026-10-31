@@ -36,6 +36,7 @@ it('rejects a Pennsylvania attachment until state treatment exists', () => {
   expect(() => calculatePAReturn(input)).toThrow(/QOF.*Pennsylvania/);
   expect(() => calculatePANonresidentReturn(input)).toThrow(/QOF.*Pennsylvania/);
   expect(() => buildOhioResidentReturnInput(input, base)).toThrow(/QOF.*Ohio/);
+  expect(() => calculateFederalTax({ ...input, stateReturns: { illinois: {} } } as never)).toThrow(/QOF.*Illinois/);
   expect(() => assertQofStateMethod(simpleW2Fixture, 'Pennsylvania')).not.toThrow();
 });
 

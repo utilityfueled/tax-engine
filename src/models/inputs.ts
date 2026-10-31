@@ -654,7 +654,7 @@ export const Form1099GSchema = z.preprocess((value) => {
   // Actual earlier-return records for a Pub525 repayment of income from an earlier year.
   priorYearRepaymentSource: z.object({
     sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(), originalTaxYear: z.number().int().optional(),
-    earlierReturnTax: z.string().optional(), refiguredEarlierTax: z.string().optional(),
+    earlierReturnTax: z.string().optional(), refiguredEarlierTax: z.string().optional(), separateEarlierReturn: z.boolean().optional(),
   }).strict().optional(),
   unemploymentReceivedBeforeRepayment: optionalDecimalInput,
   box1IncludesCurrentYearRepayment: z.boolean().optional(),

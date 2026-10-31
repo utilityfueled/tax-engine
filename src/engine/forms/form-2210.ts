@@ -172,7 +172,7 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
     return {
       taxYear, sourceFactsVerified, safeHarborMet: safe, safeHarborReason: reason,
       requiredAnnualPayment: required, totalPayments: payments, underpayment: balance,
-      exactPenalty, penalty, requiresForm2210: withholdingMethod === "actual-dates" || jointFilingReason || scheduleAi !== undefined, withholdingMethod, scheduleAi, installments, interestPeriods,
+      exactPenalty, penalty, requiresForm2210: withholdingMethod === "actual-dates" || jointFilingReason || (scheduleAi !== undefined && withholding.lt(required)), withholdingMethod, scheduleAi, installments, interestPeriods,
       lines: audit.getLines(),
     };
   };

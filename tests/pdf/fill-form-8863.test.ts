@@ -11,7 +11,7 @@ import { calculateForm8863 } from "@/engine/forms/form-8863.js";
 import { fillForm8863, FORM_8863_FIELDS } from "@/pdf/fill-form-8863.js";
 import { formatCurrency } from "@/pdf/pdf-utils.js";
 import type { TaxYearInput } from "@/models/inputs.js";
-import { execFileSync } from "node:child_process";
+import { execFileSync } from "../helpers/file-stdin-exec";
 
 /** Helper: get text value from a filled PDF field. */
 function getFieldText(doc: PDFDocument, fieldName: string): string | undefined {

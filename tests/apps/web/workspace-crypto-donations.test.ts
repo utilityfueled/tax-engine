@@ -1,5 +1,5 @@
 // Spec: spec/federal/guided-crypto-donations.yaml saved-review.
-import { execFileSync } from 'node:child_process';
+import { execFileSync } from '../../helpers/file-stdin-exec';
 import { resolve } from 'node:path';
 import { expect, it, vi } from 'vitest';
 import { buildWorkspaceFilledReturnDownload } from '@/lib/workspace-filled-return';

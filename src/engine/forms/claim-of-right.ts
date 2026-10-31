@@ -23,7 +23,7 @@ const amount = (value: string | undefined, label: string) => {
 };
 
 export function calculateClaimOfRightSources(input: Pick<TaxYearInput, 'form1099G' | 'taxpayer'>): Omit<ClaimOfRightResult, 'method'> | undefined {
-  const yearFigures = new Map<number, { earlier: Decimal; refigured: Decimal }>();
+  const yearFigures = new Map<string, { earlier: Decimal; refigured: Decimal }>();
   const rows = (input.form1099G ?? []).filter(form => !new Decimal(form.priorYearRepaid || 0).isZero()).map((form, index): ClaimOfRightRow => {
     const repaid = amount(form.priorYearRepaid, 'repaid amount'), source = form.priorYearRepaymentSource;
     if (source?.sourceFactsConfirmed !== true || !source.sourceReference?.trim()) throw new Error('Repaid earlier-year income requires confirmed earlier-return records');
@@ -31,10 +31,11 @@ export function calculateClaimOfRightSources(input: Pick<TaxYearInput, 'form1099
     if (!Number.isInteger(year) || year === undefined || year < 2000 || year >= input.taxpayer.taxYear) throw new Error('Repaid earlier-year income requires the actual earlier tax year');
     const earlier = amount(source.earlierReturnTax, 'tax shown on the earlier return'), refigured = amount(source.refiguredEarlierTax, 'refigured earlier tax');
     if (refigured.gt(earlier)) throw new Error('Repaid earlier-year income cannot increase the refigured earlier tax');
-    const prior = yearFigures.get(year);
-    // The refigured tax removes all income repaid from that year, so rows share one figure.
-    if (prior && (!prior.earlier.eq(earlier) || !prior.refigured.eq(refigured))) throw new Error('Repaid earlier-year income rows for one year must share the same earlier-return figures');
-    yearFigures.set(year, { earlier, refigured });
+    if (typeof source.separateEarlierReturn !== 'boolean') throw new Error('Repaid earlier-year income requires the actual earlier filing answer');
+    // The refigured tax removes all income repaid from that return, so its rows share one figure.
+    const earlierReturn = `${year}:${source.separateEarlierReturn ? form.accountHolder ?? '' : 'joint-or-single'}`, prior = yearFigures.get(earlierReturn);
+    if (prior && (!prior.earlier.eq(earlier) || !prior.refigured.eq(refigured))) throw new Error('Repaid earlier-year income rows for one earlier return must share the same figures');
+    yearFigures.set(earlierReturn, { earlier, refigured });
     return { sourceId: form.sourceId ?? `1099-g:${index}`, amount: repaid, originalTaxYear: year };
   });
   if (rows.length === 0) return undefined;

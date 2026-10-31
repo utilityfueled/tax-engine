@@ -1,5 +1,5 @@
 // Spec: spec/federal/charitable-k1-basis-release-nol.yaml review.
-import { execFileSync } from 'node:child_process';
+import { execFileSync } from '../helpers/file-stdin-exec';
 import { expect, it } from 'vitest';
 import { calculateFederalTax } from '@/engine/federal';
 import { prepareCharitableReview } from '@/pdf/charitable-review-context';

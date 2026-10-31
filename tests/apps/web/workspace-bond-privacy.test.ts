@@ -1,6 +1,6 @@
 // Spec: spec/federal/guided-savings-bond-sources.yaml.
 import { expect, it, vi } from "vitest";
-import { execFileSync } from "node:child_process";
+import { execFileSync } from "../../helpers/file-stdin-exec";
 import { actualSavingsBondData } from "../../fixtures/guided-savings-bond";
 import { completeInterestSource, startCompleteInterview } from "../../guided-interview/complete-facts";
 import { emptyCreditsData, getGuidedFlowStorageKey } from "@/lib/guided-interview-flow";

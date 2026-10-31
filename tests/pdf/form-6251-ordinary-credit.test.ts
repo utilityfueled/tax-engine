@@ -1,5 +1,5 @@
 // Spec: spec/federal/foreign-tax-ordinary-credit.yaml,6251-review.
-import { execFileSync } from 'node:child_process';
+import { execFileSync } from '../helpers/file-stdin-exec';
 import { PDFDocument } from 'pdf-lib';
 import { expect, it } from 'vitest';
 import { calculateFederalTax } from '@/engine/federal.js';

@@ -1,5 +1,5 @@
 // Source: spec/federal/form-4952-child-sources.yaml, review.
-import { execFileSync } from 'node:child_process';
+import { execFileSync } from '../helpers/file-stdin-exec';
 import { PDFDocument } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
 import { calculateFederalTax } from '@/engine/federal.js';

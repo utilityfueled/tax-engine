@@ -33,6 +33,7 @@ export function buildGovernmentPaymentSourceRecords(entries: UnemploymentEntryDa
     ...(hasPriorRepayment(entry) ? { priorYearRepaymentSource: {
       sourceReference: entry.priorRepaymentReference?.trim() || undefined, sourceFactsConfirmed: entry.priorRepaymentConfirmed ?? undefined,
       originalTaxYear: entry.priorRepaymentOriginalYear?.trim() ? Number(entry.priorRepaymentOriginalYear) : undefined,
+      separateEarlierReturn: entry.priorRepaymentSeparateReturn ?? undefined,
       earlierReturnTax: entry.priorRepaymentEarlierTax?.trim() ? parseGuidedCurrency(entry.priorRepaymentEarlierTax).toFixed() : undefined,
       refiguredEarlierTax: entry.priorRepaymentRefiguredTax?.trim() ? parseGuidedCurrency(entry.priorRepaymentRefiguredTax).toFixed() : undefined,
     } } : {}),

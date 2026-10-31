@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync } from "../helpers/file-stdin-exec";
 import { describe, expect, it } from "vitest";
 import { PDFDocument } from "pdf-lib";
 import { calculateFederalTax } from "@/engine/federal.js";

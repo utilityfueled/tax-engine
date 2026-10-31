@@ -5,7 +5,7 @@
 import { access, mkdtemp, readFile, rm } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
-import { execFileSync } from "node:child_process";
+import { execFileSync } from "../helpers/file-stdin-exec";
 import { describe, expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
 import {

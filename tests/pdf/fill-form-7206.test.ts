@@ -1,6 +1,6 @@
 // Spec: spec/federal/form-7206-pdf.yaml; official 2025 Form7206 inspected field-by-field.
 import Decimal from "decimal.js";
-import { execFileSync } from "node:child_process";
+import { execFileSync } from "../helpers/file-stdin-exec";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

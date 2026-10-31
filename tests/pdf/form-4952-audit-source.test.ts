@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
+import { execFileSync } from "../helpers/file-stdin-exec";
 import { REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
 import { FORM_4952_2026_SOURCE } from "@/pdf/mappings/2026/form-4952-source.js";
 import { PDFDocument } from "pdf-lib";

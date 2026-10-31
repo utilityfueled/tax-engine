@@ -36,6 +36,7 @@ export interface UnemploymentEntryData {
   priorRepaymentRefiguredTax?: string;
   priorRepaymentReference?: string;
   priorRepaymentConfirmed?: boolean | null;
+  priorRepaymentSeparateReturn?: boolean | null;
   unemploymentReceivedBeforeRepayment?: string;
   box1IncludesCurrentYearRepayment?: boolean | null;
   repaymentSourceReference?: string;
@@ -84,7 +85,7 @@ export function withUnemploymentEntries(data: UnemploymentData, entries: Unemplo
 export function unemploymentFactErrors(data: UnemploymentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, personalInfo?: PersonalInfoData, stateData?: StateReturnData, otherRecoveries?: RefundRecoveryContext): Record<string, string> {
   const errors: Record<string, string> = {};
   const entries = unemploymentEntries(data).filter(isStartedUnemployment);
-  const sourceKeys = new Set<string>();
+  const sourceKeys = new Set<string>(), repaymentFigures = new Map<string, string>();
   entries.forEach((entry, index) => {
     const fail = (field: string, message: string) => { errors[`government-${index}-${field}`] = message; };
     if (!entry.payer?.trim()) fail("payer", "Enter the actual government payer from the source.");
@@ -107,6 +108,10 @@ export function unemploymentFactErrors(data: UnemploymentData | undefined, filin
     for (const field of ["agriculturePayments", "marketGain"] as const) if (!amountError(entry[field], field) && parseGuidedCurrency(entry[field]).gt(0)) fail(field, "This actual source amount is saved. Complete its separate claim-of-right or farm worksheet before this guided route can calculate.");
     if (!amountError(entry.priorYearRepaid, "priorYearRepaid") && parseGuidedCurrency(entry.priorYearRepaid).gt(0)) {
       if (entry.priorRepaymentConfirmed !== true || !entry.priorRepaymentReference?.trim()) fail("prior-repayment", "Confirm the earlier return records for this repayment.");
+      if (typeof entry.priorRepaymentSeparateReturn !== "boolean") fail("prior-repayment-separate", "Answer whether this person filed a separate return for that year.");
+      const earlierReturn = `${entry.priorRepaymentOriginalYear}:${entry.priorRepaymentSeparateReturn ? entry.accountHolder : ""}`, figures = `${entry.priorRepaymentEarlierTax}|${entry.priorRepaymentRefiguredTax}`;
+      if ((repaymentFigures.get(earlierReturn) ?? figures) !== figures) fail("prior-repayment-figures", "Repayments from one earlier return must use the same two tax figures, refigured without all of that income.");
+      repaymentFigures.set(earlierReturn, figures);
       const repaidYear = Number(entry.priorRepaymentOriginalYear);
       if (!/^\d{4}$/.test(entry.priorRepaymentOriginalYear ?? "") || repaidYear < 2000 || repaidYear >= (taxYear ?? Number(entry.sourceTaxYear))) fail("prior-repayment-year", "Enter the earlier year that included this income.");
       for (const [field, label] of [["priorRepaymentEarlierTax", "tax shown on the earlier return"], ["priorRepaymentRefiguredTax", "earlier tax refigured without the repaid income"]] as const) {

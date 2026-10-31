@@ -1,5 +1,5 @@
 /** Spec: spec/federal/form-8960-ordinary-sources.yaml, final2025 review template. */
-import { execFileSync } from 'node:child_process';
+import { execFileSync } from '../helpers/file-stdin-exec';
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
 import { calculateFederalTax } from '@/engine/federal.js';

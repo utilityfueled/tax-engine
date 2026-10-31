@@ -1,5 +1,5 @@
 // Spec: spec/federal/section-1202-review-pdf.yaml.
-import { execFileSync } from 'node:child_process';
+import { execFileSync } from '../helpers/file-stdin-exec';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import Decimal from 'decimal.js';

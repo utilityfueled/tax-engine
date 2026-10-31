@@ -11,13 +11,15 @@ notes: |
   Over $3,000: deduct on Schedule A line16, or claim Schedule 3 line13b, whichever
   gives less tax. The credit is the earlier tax shown less that tax refigured
   without the repaid income. Pub525's caution tests the total repaid on the return,
-  so rows are summed first. Rows from one earlier year must share one set of figures.
+  so rows are summed first. Rows from one earlier return share one set of figures,
+  refigured without all income repaid from that return. Spouses who filed separately
+  that year have separate figures, and credits from different returns sum.
   The earlier-return amounts are actual entered figures. This method does not
   recalculate an earlier year. A tie uses the deduction.
   The comparison uses refund less amount owed, after all credits. IRC1341(a) speaks of
   tax imposed, so a human reviewer should confirm that measure.
-  Bounded to Form1099G repayments. Marketplace, Schedule AI, Form8814 and state paths
-  reject. Form2210 line3 includes this credit under i2210.
+  Bounded to Form1099G repayments. Marketplace, Schedule AI, Form8814, an early-return
+  payment date and state paths reject above $3,000; state paths reject at any amount. Form2210 line3 includes this credit under i2210.
 lines:
   - line: "threshold"
     description: "Test both sides of the $3,000 threshold"
@@ -64,4 +66,9 @@ lines:
     formula: "Credit1100 prints on Schedule3 lines13b and14. A deduction is described on Schedule A line16 as Repaid income."
     irsRef: "Schedule3 line13b; Schedule A instructions line16"
     testRef: "tests/engine/forms/claim-of-right.test.ts::prints the repayment on Schedule 3 and describes the deduction on Schedule A"
+  - line: "earlier-returns"
+    description: "Group repayment figures by earlier return"
+    formula: "Spouses repaying 2024 income from separate returns, 9000/8500 and 7000/6400, give credit1100. Differing figures for one return reject, and the guide says so before calculation."
+    irsRef: "Pub525 Method 2 steps2 and3"
+    testRef: "tests/engine/forms/claim-of-right.test.ts::groups repayment figures by earlier return"
 

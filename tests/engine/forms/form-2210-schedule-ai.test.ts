@@ -56,6 +56,8 @@ describe('Form 2210 Schedule AI', () => {
     expect(annualized.exactPenalty.toDecimalPlaces(2).toFixed()).toBe('744.22');
     expect(annualized.penalty.toFixed()).toBe('744');
     expect(annualized.requiresForm2210).toBe(true);
+    const withheld = calculateForm2210({ ...base, withholding: new Decimal(33361), estimatedPayments: new Decimal(0), payments: [], facts: { ...facts, calculationMethod: 'annualized', annualizedIncomePeriods: rising() } });
+    expect(withheld.requiresForm2210).toBe(false);
     expect(regular.requiresForm2210).toBe(false);
     expect(() => calculateForm2210({ ...base, scheduleAiReturn: undefined, facts: { ...facts, calculationMethod: 'annualized', annualizedIncomePeriods: rising() } })).toThrow(/completed return/);
     expect(() => calculateForm2210({ ...base, facts: { ...facts, calculationMethod: 'regular', annualizedIncomePeriods: rising() } })).toThrow(/conflicts/);

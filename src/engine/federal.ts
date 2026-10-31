@@ -219,7 +219,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   if (input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true)) throw new Error("Repaid earlier-year income with Marketplace worksheets needs a separate method");
   if (claim.eligibleAmount.isZero()) return { ...calculateFederalTaxForSources(input), claimOfRight: { ...claim, method: "not_deductible" } };
   // Both stages must complete, so a single entered worksheet figure cannot match both.
-  if (input.form2210?.calculationMethod === "annualized" || (input.form8814?.length ?? 0) > 0) throw new Error("Repaid earlier-year income with Schedule AI or Form 8814 needs a separate method");
+  if (input.form2210?.calculationMethod === "annualized" || input.form2210?.returnPaidInFullDate !== undefined || (input.form8814?.length ?? 0) > 0) throw new Error("Repaid earlier-year income with Schedule AI, an early-return payment date or Form 8814 needs a separate method");
   const deduction = calculateFederalTaxForSources(withClaimOfRightStage(input, { deduction: claim.eligibleAmount, credit: d("0") }));
   const credit = calculateFederalTaxForSources(withClaimOfRightStage(input, { deduction: d("0"), credit: claim.availableCredit }));
   if (deduction.deductionUsed !== "itemized" && claim.availableCredit.isZero()) return { ...credit, claimOfRight: { ...claim, method: "no_benefit" } };

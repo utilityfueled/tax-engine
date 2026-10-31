@@ -3,7 +3,7 @@ import { expect, it } from "vitest";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync } from "../helpers/file-stdin-exec";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { buildNetOperatingLossReview } from "@/pdf/fill-net-operating-loss.js";
 import { fillReturn } from "@/pdf/fill-return.js";

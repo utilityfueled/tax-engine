@@ -1,5 +1,5 @@
 // Spec: alternative-charitable-net-operating-loss.yaml review.
-import { execFileSync } from "node:child_process";
+import { execFileSync } from "../helpers/file-stdin-exec";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

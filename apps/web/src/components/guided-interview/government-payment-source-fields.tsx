@@ -31,10 +31,11 @@ export function GovernmentPaymentSourceFields({ entry, onChange }: { entry: Unem
       <Fact label="Does Box 1 include the benefits you repaid this year?" value={entry.box1IncludesCurrentYearRepayment} onChange={box1IncludesCurrentYearRepayment => onChange({ box1IncludesCurrentYearRepayment })} />
       <Text label="Actual current-year repayment source reference" value={entry.repaymentSourceReference} onChange={repaymentSourceReference => onChange({ repaymentSourceReference })} />
       {parseGuidedCurrencySafe(entry.priorYearRepaid) && <>
-        <p className="guided-hint">For an earlier-year repayment over $3,000, the return uses a Schedule A deduction or a credit, whichever gives less tax. $3,000 or less is not deductible.</p>
+        <p className="guided-hint">When total earlier-year repayments on this return are over $3,000, the return uses a Schedule A deduction or a credit, whichever gives less tax. A total of $3,000 or less is not deductible. Enter the same two tax figures on each statement repaying income from the same earlier return.</p>
         <Text label="Earlier year that included the repaid income" value={entry.priorRepaymentOriginalYear} onChange={priorRepaymentOriginalYear => onChange({ priorRepaymentOriginalYear, priorRepaymentConfirmed: null })} />
         <CurrencyField label="Tax shown on that earlier return" value={entry.priorRepaymentEarlierTax ?? ""} onChange={priorRepaymentEarlierTax => onChange({ priorRepaymentEarlierTax, priorRepaymentConfirmed: null })} />
-        <CurrencyField label="That earlier tax refigured without the repaid income" value={entry.priorRepaymentRefiguredTax ?? ""} onChange={priorRepaymentRefiguredTax => onChange({ priorRepaymentRefiguredTax, priorRepaymentConfirmed: null })} />
+        <Fact label="This person filed a separate return for that year" value={entry.priorRepaymentSeparateReturn} onChange={priorRepaymentSeparateReturn => onChange({ priorRepaymentSeparateReturn, priorRepaymentConfirmed: null })} />
+        <CurrencyField label="That earlier tax refigured without all income repaid from that return" value={entry.priorRepaymentRefiguredTax ?? ""} onChange={priorRepaymentRefiguredTax => onChange({ priorRepaymentRefiguredTax, priorRepaymentConfirmed: null })} />
         <Text label="Earlier return record reference" value={entry.priorRepaymentReference} onChange={priorRepaymentReference => onChange({ priorRepaymentReference, priorRepaymentConfirmed: null })} />
         <Fact label="Earlier return figures checked after the last edit" value={entry.priorRepaymentConfirmed} onChange={priorRepaymentConfirmed => onChange({ priorRepaymentConfirmed })} />
       </>}
