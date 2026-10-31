@@ -732,6 +732,14 @@
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
     },
     {
+      "key": "federal/form-2210-f",
+      "enginePath": "src/engine/forms/form-2210.ts",
+      "testRefs": [
+        "tests/engine/forms/form-2210-f.test.ts::figures the required payment and underpayment"
+      ],
+      "note": "The named method is exercised through this shared engine module by this specification's own regression references. The linked historical review output does not qualify any 2026 form. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
       "key": "federal/form-2441-return-integration",
       "enginePath": "src/engine/federal.ts",
       "testRefs": [

@@ -4357,11 +4357,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (householdTax.gt(0) && federalWithholding.gt(0)) {
     form2210=calculateForm2210({...estimatedTaxInput,currentYearTax:estimatedTaxBase.plus(householdTax)});
   } else {
-    form2210=calculateForm2210(estimatedTaxInput);
+    // A waiver amount is tested against the final penalty, not this first pass.
+    const firstPass=householdTax.gt(0) && input.form2210 ? {...estimatedTaxInput,facts:{...input.form2210,waiverRequested:false}} : estimatedTaxInput;
+    form2210=calculateForm2210(firstPass);
     const paymentsRequiredWithoutHousehold=estimatedTaxBase.minus(estimatedTaxRefundableCredits).gte(1000)
       && form2210.requiredAnnualPayment.gt(0);
-    if (householdTax.gt(0) && paymentsRequiredWithoutHousehold) {
-      form2210=calculateForm2210({...estimatedTaxInput,currentYearTax:estimatedTaxBase.plus(householdTax)});
+    if (householdTax.gt(0)) {
+      form2210=calculateForm2210(paymentsRequiredWithoutHousehold ? {...estimatedTaxInput,currentYearTax:estimatedTaxBase.plus(householdTax)} : estimatedTaxInput);
     }
   }
   audit.merge(form2210.lines);

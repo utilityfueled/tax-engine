@@ -401,16 +401,20 @@ function buildPacketSummary(
   }
 
   if (result.form2210?.waiver) {
-    missingBullets.push("This return requests an estimated tax penalty waiver. The IRS decides, and may bill the penalty. Attach the form and your statement.");
+    missingBullets.push(`This return requests an estimated tax penalty waiver. The IRS decides, and may bill the penalty. Attach ${result.form2210.farmerMethod ? "Form 2210-F" : "Form 2210"} and your statement.`);
   }
 
   if (result.form2210?.scheduleAi && result.form2210.requiresForm2210) {
     missingBullets.push("This return uses the annualized income method, so Form 2210 with Schedule AI must be filed with it even when the penalty is zero. Neither is attached to this draft.");
   }
 
+  if (result.form2210?.farmerMethod && result.form2210.requiresForm2210 && !result.form2210.waiver) {
+    missingBullets.push("Form 2210-F must be filed with this return because the joint filing status changed. It is not attached to this draft.");
+  }
+
   if (result.estimatedTaxPenalty.gt(0)) {
     missingBullets.push(
-      `The return currently includes an estimated tax penalty of ${formatCurrencyWholeDollars(result.estimatedTaxPenalty)}, but Form 2210 is not auto-attached to this draft packet.`
+      `The return currently includes an estimated tax penalty of ${formatCurrencyWholeDollars(result.estimatedTaxPenalty)}, but ${result.form2210?.farmerMethod ? "Form 2210-F" : "Form 2210"} is not auto-attached to this draft packet.`
     );
   }
 

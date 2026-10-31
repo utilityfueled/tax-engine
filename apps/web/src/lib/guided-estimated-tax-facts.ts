@@ -60,6 +60,7 @@ export function buildEstimatedTaxFacts(data: PaymentData | undefined, taxYear?: 
   ] as const) if (known(facts[key], label) !== expected) throw new Error(`The ${label} scenario needs its separate estimated-tax method; retain these actual facts for review.`);
   const farmer = known(facts.farmerOrFisher, "farmer or fisher rule"), waiver = known(facts.waiverRequested, "penalty waiver request");
   if (farmer && facts.farmingIncomeTwoThirdsConfirmed !== true) throw new Error("Confirm that at least two-thirds of gross income for either year came from farming or fishing.");
+  if (farmer && facts.calculationMethod === "annualized") throw new Error("Form 2210-F has no annualized method. Choose regular installments.");
   if (waiver && (!facts.waiverKind || !facts.waiverReason || !facts.waiverStatementReference?.trim() || (facts.waiverKind === "partial" && !facts.waiverAmount?.trim()))) throw new Error("Enter the waiver kind, reason, amount if partial, and the statement you will attach.");
   if (facts.calculationMethod !== "regular" && facts.calculationMethod !== "annualized") throw new Error("Choose the actual estimated-tax method.");
   const annualizedIncomePeriods = facts.calculationMethod === "annualized" ? buildAnnualizedPeriods(facts) : undefined;
@@ -109,7 +110,7 @@ export function buildEstimatedTaxFacts(data: PaymentData | undefined, taxYear?: 
   if (early || hasDates) {
     if (!isActualDate(facts.returnFiledDate) || !isActualDate(facts.returnPaidInFullDate)
       || [facts.returnFiledDate, facts.returnPaidInFullDate].some(date => date <= `${taxYear}-12-31` || date > `${taxYear + 1}-12-31`)) throw new Error("Enter both actual filing and full-payment dates after the tax year.");
-    const deadline = taxYear === 2025 ? "2026-02-02" : "2027-02-01";
+    const deadline = facts.farmerOrFisher === true ? (taxYear === 2025 ? "2026-03-02" : "2027-03-01") : (taxYear === 2025 ? "2026-02-02" : "2027-02-01");
     if (early !== (facts.returnFiledDate <= deadline && facts.returnPaidInFullDate <= deadline)) throw new Error("Actual filing/payment dates conflict with the early-return exception answer.");
   }
   return Form2210Schema.parse({

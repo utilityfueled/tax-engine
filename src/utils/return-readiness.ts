@@ -260,10 +260,11 @@ export function assessReturnReadiness(
   let packetCompleteness: ReturnCompletenessStatus = "supported";
   let lineCompleteness: ReturnCompletenessStatus = "supported";
 
-  if (input.federalResult.estimatedTaxPenalty.gt(0)) {
+  const estimatedTax = input.federalResult.form2210;
+  if (input.federalResult.estimatedTaxPenalty.gt(0) || estimatedTax?.requiresForm2210 || estimatedTax?.waiver) {
     packetCompleteness = "partial";
     findings.push(
-      "Form 2210 is still suppressed from the draft packet even when an estimated tax penalty is present.",
+      `${estimatedTax?.farmerMethod ? "Form 2210-F" : "Form 2210"} is still suppressed from the draft packet even when ${input.federalResult.estimatedTaxPenalty.gt(0) ? "an estimated tax penalty" : "a waiver request or required filing"} is present.`,
     );
   }
 

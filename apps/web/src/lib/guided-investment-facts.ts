@@ -52,7 +52,7 @@ function rejectUnsupportedAmount(value: string | undefined, key: string, message
 export function investmentFactErrors(data: InvestmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData, stateCode?: string | null, personal?: PersonalInfoData): Record<string, string> {
   const errors: Record<string, string> = {};
   if (!data) return errors;
-  Object.assign(errors, qofDispositionFactErrors(data.qofDispositionFacts, taxYear));
+  Object.assign(errors, qofDispositionFactErrors(data.qofDispositionFacts, taxYear, data.interestEntries.length + data.dividendEntries.length + data.brokerageEntries.length + (data.oidEntries?.length ?? 0) + (data.digitalAssetEntries?.length ?? 0) > 0));
   Object.assign(errors, oidFactErrors(data.oidEntries, filingStatus, taxYear, stateCode, stateData));
   Object.assign(errors, digitalAssetFactErrors(data.digitalAssetEntries, filingStatus, taxYear, personal, data.brokerageEntries, stateData, stateCode));
   Object.assign(errors, childElectionFactErrors(data.childElections, taxYear));

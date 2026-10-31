@@ -18,6 +18,11 @@ const line = (result: ReturnType<typeof run>, name: string) => result.lines.find
 
 describe('Form 2210-F', () => {
   it('figures the required payment and underpayment', () => {
+    expect(line(run({ refundableCredits: new Decimal(3000) }), '9')).toBe('22000');
+    expect(line(run({ refundableCredits: new Decimal(3000) }), '7')).toBe('18009');
+    expect(line(run({ currentYearTax: new Decimal(30001) }), '7')).toBe('20011');
+    const extension = run({ payments: [{ date: '2026-01-15', amount: '8000', kind: 'estimated' }, { date: '2026-01-10', amount: '1000', kind: 'extension' }] });
+    expect(line(extension, '12')).toBe('14000');
     const result = run();
     expect(['7', '11', '12', '13'].map(name => line(result, name))).toEqual(['20010', '18000', '13000', '5000']);
     expect(line(run({}, { priorYearTaxStatus: 'no-return' }), '13')).toBe('7010');
@@ -39,9 +44,14 @@ describe('Form 2210-F', () => {
     const atThousand = run({ currentYearTax: new Decimal(1000), withholding: new Decimal(0), estimatedPayments: new Decimal(0), payments: [] }, { priorYearTaxForForm2210: '5000' });
     expect([atThousand.safeHarborMet, line(atThousand, '13')]).toEqual([false, '667']);
     expect(run({ withholding: new Decimal(18000), estimatedPayments: new Decimal(0), payments: [] }).safeHarborReason).toMatch(/Withholding/);
-    const early = { returnFiledDate: '2026-03-02', returnPaidInFullDate: '2026-03-02' };
-    expect(run({}, early).penalty.toFixed()).toBe('0');
-    expect(run({}, { ...early, returnPaidInFullDate: '2026-03-03' }).penalty.toFixed()).toBe('86');
+    const early = { returnFiledDate: '2026-03-02', returnPaidInFullDate: '2026-03-02' }, paidUp = [{ date: '2026-03-02', amount: '17000' }];
+    expect(run({}, early, paidUp).penalty.toFixed()).toBe('0');
+    expect(run({}, { ...early, returnPaidInFullDate: '2026-03-03' }, [{ date: '2026-03-03', amount: '17000' }]).penalty.toFixed()).toBe('45');
+    expect(() => run({}, early)).toThrow(/does not reconcile to actual payments/);
+    expect(() => run({}, { returnFiledDate: '2026-03-02' })).toThrow(/both returnFiledDate/);
+    expect(() => run({}, { returnFiledDate: '2025-03-01', returnPaidInFullDate: '2025-03-01' })).toThrow(/must follow the tax year/);
+    const nonresident = run({ withholding: new Decimal(0), estimatedPayments: new Decimal(0), payments: [] }, { priorYearTaxStatus: 'no-tax-liability', priorYearTaxForForm2210: '0', priorYearResidentAllYear: false });
+    expect([line(nonresident, '11'), nonresident.penalty.toFixed()]).toEqual(['20010', '345']);
     expect(run({}, { priorYearTaxStatus: 'no-tax-liability', priorYearTaxForForm2210: '0' }).penalty.toFixed()).toBe('0');
     expect(run({ estimatedPayments: new Decimal(13000), payments: [{ date: '2026-01-15', amount: '13000', kind: 'estimated' }] }).safeHarborReason).toMatch(/January 15/);
   });
@@ -50,6 +60,16 @@ describe('Form 2210-F', () => {
     expect(() => run({}, { farmingIncomeTwoThirdsConfirmed: undefined })).toThrow(/two-thirds/);
     expect(() => run({}, { calculationMethod: 'annualized' })).toThrow(/no annualized/);
     expect(() => run({}, {}, [{ date: '2026-02-01', amount: '1000' }, { date: '2026-03-01', amount: '4000' }])).toThrow(/one payment date/);
+    for (const [patch, message] of [[{ disasterReliefClaimed: true }, /disasterReliefClaimed scenario/], [{ calendarYearTaxpayer: false }, /calendarYearTaxpayer scenario/], [{ residentReturn: false }, /residentReturn scenario/],
+      [{ disasterReliefClaimed: undefined }, /requires disasterReliefClaimed/], [{ waiverRequested: undefined }, /requires waiverRequested/], [{ withholdingMethod: undefined }, /requires withholdingMethod/],
+      [{ priorYearTaxStatus: undefined }, /requires priorYearTaxStatus/], [{ priorYearFullYear: undefined }, /requires priorYearFullYear/], [{ priorYearTaxComputationConfirmed: undefined }, /requires priorYearTaxComputationConfirmed/]] as const) {
+      expect(() => run({}, patch), JSON.stringify(patch)).toThrow(message);
+    }
+    expect(() => run({}, { priorYearTaxStatus: 'no-tax-liability', priorYearResidentAllYear: undefined, priorYearTaxForForm2210: '0' })).toThrow(/requires priorYearResidentAllYear/);
+    expect(() => run({}, { priorYearTaxStatus: 'no-tax-liability', priorYearTaxForForm2210: '1' })).toThrow(/conflicts with priorYearTaxForForm2210/);
+    expect(() => run({ incomeTaxAfterCredits: undefined })).toThrow(/incomeTaxAfterCredits/);
+    expect(() => run({ payments: [{ date: '2020-01-15', amount: '8000', kind: 'estimated' }] })).toThrow(/outside the tax-year/);
+    expect(() => run({ estimatedPayments: new Decimal(9000) })).toThrow(/reconcile to estimatedPayments/);
     expect(() => run({ taxYear: 2026, payments: [{ date: '2027-01-15', amount: '8000', kind: 'estimated' }] })).toThrow(/unpublished/);
   });
 
@@ -61,6 +81,19 @@ describe('Form 2210-F', () => {
     expect(() => run({}, { ...waiver, waiverKind: 'partial', waiverAmount: '87' })).toThrow(/no more than the penalty/);
     expect(() => run({}, { ...waiver, waiverKind: 'partial', waiverAmount: '' })).toThrow(/kind and amount/);
     expect(() => run({}, { ...waiver, waiverKind: 'full', waiverReason: undefined })).toThrow(/reason and statement/);
+    expect(() => run({}, { ...waiver, waiverKind: 'full', waiverStatementReference: ' ' })).toThrow(/reason and statement/);
+    expect(() => run({}, { ...waiver, waiverKind: 'partial', waiverAmount: '0' })).toThrow(/positive/);
+    expect(run({}, { ...waiver, waiverKind: 'partial', waiverAmount: '86' }).penalty.toFixed()).toBe('0');
+    expect(run({}, { ...waiver, waiverKind: 'partial', waiverAmount: '30.25' }).penalty.toFixed()).toBe('56');
+  });
+
+  it('keeps a 2026 farmer penalty out until its rate is published', () => {
+    const paid2026 = [{ date: '2027-01-15', amount: '8000', kind: 'estimated' as const }, { date: '2027-03-01', amount: '17000', kind: 'return' as const }];
+    expect(run({ taxYear: 2026, payments: paid2026 }, { returnFiledDate: '2027-03-01', returnPaidInFullDate: '2027-03-01' }).penalty.toFixed()).toBe('0');
+    expect(() => run({ taxYear: 2026, payments: paid2026 }, { returnFiledDate: '2027-03-02', returnPaidInFullDate: '2027-03-02' })).toThrow(/unpublished/);
+    const changed = run({ filingStatus: 'married_filing_jointly' }, { priorYearJointReturn: false });
+    expect(changed.requiresForm2210).toBe(true);
+    expect(run({ filingStatus: 'married_filing_jointly' }, { priorYearJointReturn: false, priorYearTaxForForm2210: '25000' }).requiresForm2210).toBe(false);
   });
 
   it('marks waiver boxes on Form 2210 and has no Form 2210-F map', async () => {

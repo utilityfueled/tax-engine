@@ -156,6 +156,7 @@ export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult,
     write(`Exact penalty $${period.exactPenalty.toFixed()}. Published rate: ${period.rateSource}`);
   }
   write(`Exact combined penalty $${calculation.exactPenalty.toFixed()}; whole-dollar Form 2210 line 19 $${calculation.penalty.toFixed()}.`);
+  if (calculation.waiver) write(`Waiver requested for $${calculation.waiver.requestedAmount.toFixed()} of the $${calculation.waiver.penaltyBeforeWaiver.toFixed()} penalty. Enter that amount in parentheses by line 19 and attach the statement. The IRS decides.`);
   write("Payments retire the oldest installment first. Statutory withholding is allocated by law; estimated-payment dates are never invented.");
   await markReviewPdf(doc);
   return doc;

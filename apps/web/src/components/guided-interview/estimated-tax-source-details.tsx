@@ -60,7 +60,7 @@ export function EstimatedTaxSourceDetails({ data, appliedCredits = [], taxYear, 
     </fieldset>
     {dateRows("returnPayments", "Return payment")}
     <div className="guided-form-grid">
-      <p className="guided-hint">{taxYear === 2025 ? "For 2025, the early-return deadline is February 2, 2026." : taxYear === 2026 ? "For 2026, the early-return deadline is February 1, 2027." : "Use the applicable early-return deadline."} Actual records must establish filing and full payment. Do not assume a future event.</p>
+      <p className="guided-hint">{data.farmerOrFisher === true ? (taxYear === 2025 ? "For 2025, the farmer and fisher deadline is March 2, 2026." : "For 2026, the farmer and fisher deadline is March 1, 2027.") : taxYear === 2025 ? "For 2025, the early-return deadline is February 2, 2026." : taxYear === 2026 ? "For 2026, the early-return deadline is February 1, 2027." : "Use the applicable early-return deadline."} Actual records must establish filing and full payment. Do not assume a future event.</p>
       <BooleanFact label="Filed and paid in full by the early-return exception deadline" value={data.earlyReturnExceptionClaimed} onChange={earlyReturnExceptionClaimed => update({ earlyReturnExceptionClaimed })} />
       <TextFact label="Actual return filing date" type="date" value={data.returnFiledDate} onChange={returnFiledDate => update({ returnFiledDate })} />
       <TextFact label="Actual return paid-in-full date" type="date" value={data.returnPaidInFullDate} onChange={returnPaidInFullDate => update({ returnPaidInFullDate })} />

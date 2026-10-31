@@ -143,10 +143,17 @@ function form2210Waiver(facts: Form2210Input["facts"], penalty: Decimal): Form22
 function calculateForm2210F(input: Form2210Input, taxYear: number, facts: NonNullable<Form2210Input["facts"]>): Form2210Result {
   if (facts.farmingIncomeTwoThirdsConfirmed !== true) throw new Error("Form 2210-F requires confirmation of the two-thirds farming or fishing gross income test");
   if (facts.calculationMethod === "annualized") throw new Error("Form 2210-F has no annualized method");
+  validateScope(facts);
+  amount(input.incomeTaxAfterCredits, "incomeTaxAfterCredits");
   const FARM = "Form 2210-F", audit = new AuditTrail(), line3 = amount(input.currentYearTax, "currentYearTax"), line4 = amount(input.refundableCredits, "refundableCredits");
   const line6 = zeroFloor(line3.minus(line4)), line7 = roundDollar(line6.times("0.667")), line8 = amount(input.withholding, "withholding"), line9 = zeroFloor(line6.minus(line8));
   const estimates = amount(input.estimatedPayments, "estimatedPayments"), dueDay = dateNumber(`${taxYear + 1}-01-15`, "Form 2210-F due date"), endDay = dateNumber(`${taxYear + 1}-04-15`, "penalty end date");
-  const payments = (input.payments ?? []).map(payment => ({ day: dateNumber(payment.date, "payment date"), amount: amount(payment.amount, "payment amount"), kind: payment.kind }));
+  const firstDay = dateNumber(`${taxYear}-01-01`, "tax year start"), lastPaymentDay = dateNumber(`${taxYear + 1}-12-31`, "payment history end");
+  const payments = (input.payments ?? []).map(payment => {
+    const day = dateNumber(payment.date, "payment date");
+    if (day < firstDay || day > lastPaymentDay) throw new Error("Form 2210 payment date is outside the tax-year payment history");
+    return { day, amount: amount(payment.amount, "payment amount"), kind: payment.kind };
+  });
   let required = line7, safeReason: string | undefined;
   if (line3.lt(1000) || line6.lt(1000) || line9.lt(1000)) safeReason = "Tax is less than $1,000";
   else if (facts.priorYearTaxStatus === undefined) throw new Error("Form 2210 requires priorYearTaxStatus");
@@ -160,14 +167,21 @@ function calculateForm2210F(input: Form2210Input, taxYear: number, facts: NonNul
         if (facts.priorYearResidentAllYear === undefined) throw new Error("Form 2210 requires priorYearResidentAllYear");
         if (facts.priorYearResidentAllYear) safeReason = "No prior-year tax liability for a full year";
       }
-      required = min(line7, prior);
-      audit.record(FARM, "10", "Prior-year tax", prior, "Actual prior-year tax");
+      if (facts.priorYearTaxStatus === "return-filed") {
+        required = min(line7, prior);
+        audit.record(FARM, "10", "Prior-year tax", prior, "Actual prior-year tax");
+      }
     }
   }
   const lastDay = dateNumber(taxYear === 2025 ? "2026-03-02" : "2027-03-01", "Form 2210-F early date");
-  if (!safeReason && facts.returnFiledDate && facts.returnPaidInFullDate) {
-    const filed = dateNumber(facts.returnFiledDate, "returnFiledDate"), paid = dateNumber(facts.returnPaidInFullDate, "returnPaidInFullDate");
-    if (filed <= lastDay && paid <= lastDay) safeReason = `Filed and paid by ${dateString(lastDay)}`;
+  if (facts.returnFiledDate !== undefined || facts.returnPaidInFullDate !== undefined) {
+    if (!facts.returnFiledDate || !facts.returnPaidInFullDate) throw new Error("Form 2210 requires both returnFiledDate and returnPaidInFullDate");
+    const filed = dateNumber(facts.returnFiledDate, "returnFiledDate"), paid = dateNumber(facts.returnPaidInFullDate, "returnPaidInFullDate"), yearEnd = dateNumber(`${taxYear}-12-31`, "tax year end");
+    if (filed <= yearEnd || paid <= yearEnd) throw new Error("Form 2210 return filing/full payment dates must follow the tax year");
+    if (!safeReason && filed <= lastDay && paid <= lastDay) {
+      if (line8.plus(total(payments.filter(payment => payment.day <= paid).map(payment => payment.amount))).lt(line6)) throw new Error("Form 2210 claimed full return payment does not reconcile to actual payments");
+      safeReason = `Filed and paid by ${dateString(lastDay)}`;
+    }
   }
   if (!safeReason && line8.gte(required)) safeReason = "Withholding meets the required annual payment";
   const line12 = line8.plus(total(payments.filter(payment => payment.day <= dueDay).map(payment => payment.amount)));
@@ -187,7 +201,7 @@ function calculateForm2210F(input: Form2210Input, taxYear: number, facts: NonNul
     exact = line13.times(days).div(365).times(rate);
   }
   const waiver = form2210Waiver(facts, roundDollar(exact));
-  const penalty = waiver ? waiver.penaltyBeforeWaiver.minus(waiver.requestedAmount) : roundDollar(exact);
+  const penalty = waiver ? roundDollar(waiver.penaltyBeforeWaiver.minus(waiver.requestedAmount)) : roundDollar(exact);
   for (const [line, value, description] of [["3", line3, "Current tax"], ["4", line4, "Refundable credits"], ["6", line6, "Current-year tax"], ["7", line7, "66 2/3 percent of line 6"], ["8", line8, "Withholding"],
     ["9", line9, "Line 6 less line 8"], ["11", required, "Required annual payment"], ["12", line12, "Payments by January 15"], ["13", line13, "Underpayment"], ["15", new Decimal(days), "Days"], ["16", penalty, "Penalty"]] as const) {
     audit.record(FARM, line, description, value, `Form 2210-F line ${line}`);
@@ -236,7 +250,7 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
   const basePayments = withholding.plus(estimates);
   const finish = (safe: boolean, reason: string, balance: Decimal, exactPenalty: Decimal, payments = basePayments): Form2210Result => {
     const waiver = form2210Waiver(facts, roundDollar(exactPenalty));
-    const penalty = waiver ? waiver.penaltyBeforeWaiver.minus(waiver.requestedAmount) : roundDollar(exactPenalty);
+    const penalty = waiver ? roundDollar(waiver.penaltyBeforeWaiver.minus(waiver.requestedAmount)) : roundDollar(exactPenalty);
     audit.record(FORM, "9", "Required annual payment", required, "min(line5, applicable line8)");
     audit.record(FORM, "19", "Estimated-tax penalty", penalty, "roundDollar(sum(exact dated penalty periods))");
     audit.record(FORM, "safe_harbor", "No installment penalty", new Decimal(safe ? 1 : 0), reason);
