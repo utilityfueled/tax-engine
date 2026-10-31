@@ -1,7 +1,7 @@
 # External actions needed to finish the 2026 upgrade
 
 Prepared October 26, 2026, after `e3dcc3f`, and rechecked October 31 after
-`7e668c86`. No listed input has been supplied. Internal packages are delivered; see the
+`5b2eb5fb`. No listed input has been supplied. Internal packages are delivered; see the
 [execution checklist](upgrade-2026-checklist.md).
 This handoff records missing external inputs; it does not declare the remaining
 software finished. The [execution brief](upgrade-2026-execution-brief.md) retains
@@ -37,6 +37,8 @@ the linked ledgers; the owner is not being asked to choose a preferred answer.
 | Equal partition of an actual community savings bond into separate successor bonds | [Community bond investigation](upgrade-2026-community-bond-method-decision.md) records the actual ownership/payment contract, current official sources and unresolved section 454 treatment. Establish recognition, successor basis and operative state-law conditions; do not infer zero recognition from unchanged wealth or invent two purchase payments. |
 | Broader Coverdell account disqualification events | The same [education decisions](upgrade-2026-education-method-decisions.md) identify partial pledge, positive expenses and later account activity. Resolve each specific event/basis/expense interaction before its source routing is implemented. The existing whole-account, zero-expense case does not answer those questions. |
 | Two-owner health deduction when a joint 2025 advance-credit repayment cap binds | [Owner-income source ledger](upgrade-2026-marketplace-owner-income-work.md) retains the two different owner-limit results from the same joint repayment. Supply the rule assigning capped repayment to the owners before their separate earned-income limits. |
+
+Three narrower questions are also open. Should the repayment comparison use tax imposed or the final refund? Does line 28's $400 test use net earnings, as implemented? Are Schedule AI worksheet dividends and gains annualized? See the [method register](upgrade-2026-unsupported-method-register.md).
 
 The charity source-method investigation is still active in the
 [finite charity queue](upgrade-2026-charity-method-queue.md) and

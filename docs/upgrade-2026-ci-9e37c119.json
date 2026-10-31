@@ -183,8 +183,53 @@
         }
       },
       "artifactDigest": "sha256:6f5b6b3581050be271edc5565c7bd7bb240cb4bb775a3a9ca298563cf58f2af7"
+    },
+    {
+      "sourceCommit": "c632be9e",
+      "web": 41192516682,
+      "ci": 41192516819,
+      "ciConclusion": "success",
+      "webConclusion": "failure",
+      "failure": "tests/qof-source.spec.ts at both widths still expected a replaced status message. Corrected in 51a87661."
+    },
+    {
+      "sourceCommit": "5b2eb5fb",
+      "ci": 41207278152,
+      "web": 41207278175,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19930,
+        "files": 1512,
+        "workers": 1,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 19930,
+        "files": 1512,
+        "workers": 1,
+        "statements": "91.76",
+        "branches": "87.00",
+        "functions": "90.16",
+        "lines": "94.48",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:c73d8a9a27e92ba2b2516121d067e84a34872307ce1dc521ec93003c25f6c3bb"
     }
   ],
   "hostedSkips": "The five skipped browser cases are hosted-only and establish nothing about hosted readiness.",
-  "latestSourceCommit": "9e37c1190e5e3a9ebe8e1eaff520844d31dc1c95"
+  "latestSourceCommit": "5b2eb5fb66f1510322aa6462b16237fafdbb8fb9"
 }

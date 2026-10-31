@@ -201,8 +201,8 @@
     "The 2026 federal calculation remains incomplete and unavailable in production. The final 2026 Tax Table and forms are not published."
   ],
   "ongoingExecution": {
-    "status": "internal-packages-delivered-external-gates-open",
-    "lastRecordedCommit": "9e37c119",
+    "status": "internal-queue-delivered-external-gates-and-registered-methods-open",
+    "lastRecordedCommit": "5b2eb5fb",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -11947,7 +11947,8 @@
       "humanQualification": false
     },
     "latestRemoteCi": "docs/upgrade-2026-ci-9e37c119.json",
-    "latestRuntimeRecord": "docs/upgrade-2026-runtime-12faedf5.json"
+    "latestRuntimeRecord": "docs/upgrade-2026-runtime-5b2eb5fb.json",
+    "methodRegister": "docs/upgrade-2026-unsupported-method-register.md"
   },
   "historicalReleaseBlockers": {
     "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",

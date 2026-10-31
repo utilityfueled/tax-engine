@@ -2,6 +2,29 @@
 
 ## Current checkpoint — 2026-10-31 UTC
 
+Remote CI is fully green on `5b2eb5fb`. All queued internal packages are delivered, plus four more from the unsupported-method register. The upgrade is not complete: the remaining criteria need people, accounts, authorization or final IRS forms, and some registered methods remain unbuilt.
+
+Delivered on top of the October 28 queue:
+
+- Signed current-year minimum tax credit `8c38d963`, partial personal cancellation `ba1cbaf8`, and Form 8962 batching `0ad4c804`.
+- [QOF deferred gain inclusion](upgrade-2026-qof-inclusion-work.md) `70f79573`, corrected in `3834065a`. Gain included on a complete sale or December 31, 2026.
+- [Form 2210 Schedule AI](upgrade-2026-form-2210-schedule-ai-work.md) `298c254c`, corrected in `c4807c59`.
+- Form 1099-DA basis corrections and costs not on the form, `6acda74b` and `c4807c59`.
+- [Repaid earlier-year unemployment](upgrade-2026-claim-of-right-work.md) `3cf8fd51`, corrected in `c632be9e` and `5b2eb5fb`.
+- Dependency advisories [fixed](upgrade-2026-dependency-advisories-20261031.md) in `ad8fd777`.
+- A shared file-stdin test helper in `5b2eb5fb`. Thirty-nine test files piped PDFs to a synchronous Python child with no timeout. Two local runs stalled that way, one in a reviewer's run with a child idle at a stdin read. A later full run did not stall, but the root cause of the missing EOF was not proven.
+
+Rule versions are `2025.200` and `2026.198-law-integration-draft`.
+
+- **Remote CI.** `5b2eb5fb` passes 19,930 tests in 1,512 files normally and under coverage: 91.76% statements, 87.00% branches, 90.16% functions and 94.48% lines. Lint, three type checks, spec, inventory and both builds pass. Both browser suites pass 530 with five hosted-only skips. See the [CI record](upgrade-2026-ci-9e37c119.json). Functions clear their gate by only 0.16 points.
+- **Test budgets.** These changes are deliberate and reverse the earlier rule of keeping 5s under coverage. Coverage runs use a 15s per-test deadline, because eight tests exceeded 5s on a slow runner while the normal job passed them at 5s. Two long browser journeys use the 90s repository default in the 30s container job. The unit job cap is 60 minutes. No assertion or threshold changed.
+- **Runtime.** The [native arm64](upgrade-2026-runtime-5b2eb5fb-arm64.json) and [native amd64](upgrade-2026-runtime-5b2eb5fb.json) records each pass smoke and all six recovery phases, with SBOMs and scans. On the October 31 database both report 159 matches across 68 OS advisories, none critical, no npm matches and no fixed versions. [CVE-2026-84243](https://security-tracker.debian.org/tracker/CVE-2026-84243) in glibc is new and registered as unaccepted. Owners have accepted none, and the review date is November 7.
+- **Review.** Independent agents reviewed each package, derived amounts by hand and ran mutation tests. They found no wrong core amount in the delivered formulas but many real gaps around them, including a broker label that could delete a QOF inclusion, all-zero Schedule AI periods erasing a penalty, a Box 3a misreading that double-counted costs and a per-row $3,000 test that contradicted Pub 525. All were corrected. Corrections in `5b2eb5fb` have passed tests but no further agent re-check. This is agent review, not human qualification.
+
+The [method register](upgrade-2026-unsupported-method-register.md) lists what remains unbuilt. Tax year 2026 stays `incomplete`, final 2026 forms and the Tax Table are unpublished, and filing and model promotion stay disabled. [External actions](upgrade-2026-external-actions.md) lists what only others can supply.
+
+## Checkpoint before the October 31 packages
+
 Every internal package queued on October 28 is delivered. What remains needs people, accounts or authorization that this work cannot supply.
 
 Delivered and pushed: Form 8962 field batching `0ad4c804`, signed current-year minimum tax credit `8c38d963`, partial personal cancellation with the zero-pool proof `ba1cbaf8`, review corrections `d06f2e44` and `7e668c86`, dependency fixes `ad8fd777`, and test and job budget changes `96a1a47a`, `c238ae4f` and `9e37c119`. Rule versions are `2025.196` and `2026.194-law-integration-draft`.
