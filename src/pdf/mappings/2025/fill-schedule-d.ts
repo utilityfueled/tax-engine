@@ -164,8 +164,9 @@ export async function fillScheduleD(
   setTextField(form, F.ssn, input.taxpayer.primary.ssn.replace(/-/g, ""));
   if (!sd) return doc;
 
-  // An omitted answer remains unknown. A positive event needs its actual method.
+  // An omitted answer remains unknown. A positive event needs complete records.
   if (qofDisposition === false) setCheckBox(form, F.qofDispositionNo, true);
+  if (qofDisposition === true) setCheckBox(form, F.qofDispositionYes, true);
 
   // All current dispositions appear on8949. Combine both original reporting
   // categories printed on each ScheduleD row before whole-dollar presentation.

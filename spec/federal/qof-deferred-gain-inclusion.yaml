@@ -1,0 +1,94 @@
+form: "QOF deferred gain inclusion"
+fullName: "Qualified Opportunity Fund deferred gain included on sale or December 31, 2026"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8949"
+notes: |
+  Retrieved 2026-10-31. IRC1400Z-2(a)(1)(B),(b)(1),(b)(2)(A),(b)(2)(B)(i)-(iv),(c)
+  https://www.law.cornell.edu/uscode/text/26/1400Z-2 ; Pub.L.119-21 changes apply
+  only to amounts invested after 2026-12-31, so this method rejects those.
+  Reg1.1400Z2(b)-1(b)(2),(c),(d)(1)(i),(e)(1),(e)(3),(e)(4),(e)(5),(f)(5),(g)(1),(g)(2)
+  https://www.law.cornell.edu/cfr/text/26/1.1400Z2(b)-1
+  Reg1.1400Z2(a)-1(c)(1)(i),(c)(4) attributes https://www.law.cornell.edu/cfr/text/26/1.1400Z2(a)-1
+  Instructions for Form8949 (2025) codes Y/Z and How To Report Gain Previously
+  Deferred in a QOF Investment https://www.irs.gov/instructions/i8949
+  Form8997 (2025) PartIII https://www.irs.gov/pub/irs-pdf/f8997.pdf
+  Let R=remaining deferred gain, B=section1400Z-2(b)(2)(B)(iii),(iv) basis increase.
+  Held at least 5 years: B=.10R. Held at least 7 years: B=.15R, under the (g)(2)
+  limit on remaining deferred gain. The holding period starts at the QOF
+  investment and is not tacked. The last dates reaching 5 and 7 years at
+  2026-12-31 are 2021-12-31 and 2019-12-31.
+  Corporation: included=max(0,min(R,FMV)-B), Reg(e)(1)/(e)(3).
+  Partnership or S corporation: included=min(R-B, gain on a fully taxable disposition
+  at FMV), floored at zero, Reg(e)(4).
+  Included gain keeps its original short-term or long-term character, so it uses
+  Form8949 box C or F with code Y and a positive column (g) amount.
+  The 2025 Form8949 instructions describe a sale and state December 31, 2026 as a
+  recognition date, but give no row layout for an inclusion with no sale. This
+  method uses zero columns (d) and (e) with the included amount in (g), which
+  yields the statutory amount. Final 2026 instructions must confirm the layout.
+  Bounded method: an individual's complete investment. Partial dispositions, other
+  inclusion events, special gain codes, section1231, section1256 and collectibles
+  attributes, post-2026 investments and the 10-year election reject explicitly.
+  State treatment is not determined here; attached state returns reject.
+lines:
+  - line: "regulation-example"
+    description: "Reproduce the published partnership inclusion"
+    formula: "Reg(f)(5): partner A deferred200, invested2019-01-01, held7 years at2026-12-31 => basis increase30 and recognized170. Partner C deferred600 => increase90 and recognized510."
+    irsRef: "Reg1.1400Z2(b)-1(e)(4),(f)(5)"
+    testRef: "tests/engine/forms/qof-inclusion.test.ts::reproduces the published partnership inclusion"
+  - line: "holding-boundaries"
+    description: "Test both sides of the five and seven year boundaries"
+    formula: "R100000 FMV120000 at2026-12-31: invested2022-01-01 => B0, included100000; 2021-12-31 => B10000, included90000; 2020-01-01 => B10000, included90000; 2019-12-31 => B15000, included85000."
+    irsRef: "IRC1400Z-2(b)(2)(B)(iii),(iv); Reg1.1400Z2(b)-1(d)(1)(i)"
+    testRef: "tests/engine/forms/qof-inclusion.test.ts::applies each basis increase on the exact holding boundary"
+  - line: "value-limits"
+    description: "Apply the lesser-of limits and never produce negative inclusion"
+    formula: "Corporation R100000 invested2021-06-30: FMV40000 => 30000; FMV10000 => 0; FMV5000 => 0. Partnership same R: disposition gain50000 => 50000; 95000 => 90000; -1000 => 0. Cents: R100000.37 FMV120000 invested2022-06-30 => 100000.37."
+    irsRef: "IRC1400Z-2(b)(2)(A); Reg1.1400Z2(b)-1(e)(3),(e)(4),(e)(5)"
+    testRef: "tests/engine/forms/qof-inclusion.test.ts::applies the lesser-of limits by interest type"
+  - line: "sale-row"
+    description: "Report a complete sale with one code Y row"
+    formula: "2025 corporation sale of a long-term investment: R100000, invested2020-03-01, sold2025-06-30, proceeds and FMV130000, prior basis0 => B10000, included90000, cost100000, column g90000, row gain120000 = proceeds less B."
+    irsRef: "Form8949 How To Report Gain Previously Deferred; Reg1.1400Z2(b)-1(g)(1)"
+    testRef: "tests/engine/forms/qof-inclusion.test.ts::reports a complete sale on one code Y row"
+  - line: "character"
+    description: "Keep the original character in Form8949 and ScheduleD"
+    formula: "Short-term deferred gain uses Part I box C and ScheduleD line7; long-term uses Part II box F and line15. Long-term gain reaches the preferential rate as ordinary net capital gain."
+    irsRef: "Reg1.1400Z2(a)-1(c)(1)(i),(c)(4)(i); Form8949 codes Y"
+    testRef: "tests/engine/federal-qof-inclusion.test.ts::keeps original character through Form8949 and ScheduleD"
+  - line: "isolated-2026"
+    description: "Include deferred gain at December31 2026 with no sale"
+    formula: "Isolated2026 constants, single wages85000, R100000, invested2021-06-30, FMV120000 => included90000, Form8949 box F row with code Y, net long-term90000 and AGI175000. Production2026 stays closed."
+    irsRef: "IRC1400Z-2(b)(1)(B); Reg1.1400Z2(b)-1(b)(2),(e)(3)"
+    testRef: "tests/engine/federal-qof-inclusion-2026.test.ts::includes deferred gain at the statutory date without a sale"
+  - line: "year-end-answer"
+    description: "A 2026 return requires an actual year-end deferred gain answer"
+    formula: "With a 2026 QOF record, deferredGainHeldAtYearEnd must be boolean. True requires a december_31_2026 row for held gain. Unknown stays rejected, and a false answer with such a row conflicts."
+    irsRef: "IRC1400Z-2(b)(1)(B); Form8997 PartIV"
+    testRef: "tests/engine/forms/qof-inclusion.test.ts::requires an actual year-end answer for 2026"
+  - line: "boundaries"
+    description: "Reject missing facts and methods outside this bounded route"
+    formula: "Blank or negative amounts, remaining above original, unconfirmed rows, a 2026 date on a 2025 return, a mismatched term on sale, a post-2026 investment, partial or other events, and duplicate IDs reject. Zero is retained only when entered."
+    irsRef: "Original-source contract; Pub.L.119-21 effective date; Reg1.1400Z2(b)-1(c)"
+    testRef: "tests/engine/forms/qof-inclusion.test.ts::rejects missing facts and methods outside the bounded route"
+  - line: "state"
+    description: "Keep state treatment explicit"
+    formula: "A return with QOF inclusion rejects Pennsylvania attachment until state treatment is implemented, instead of silently using or omitting the federal row."
+    irsRef: "State conformity is not established by this federal method"
+    testRef: "tests/engine/federal-qof-inclusion.test.ts::rejects a Pennsylvania attachment until state treatment exists"
+  - line: "review"
+    description: "Print inclusion evidence and answer the ScheduleD question"
+    formula: "A complete sale checks ScheduleD Yes, prints the code Y row and a Form8997 PartIII reference with QOF EIN, event date, description and included amounts, all marked review-only. Changed sources reject before output."
+    irsRef: "Form8997 PartIII; Form8949 column f; ScheduleD QOF question"
+    testRef: "tests/pdf/qof-inclusion-review.test.ts::prints the sale row and PartIII reference from complete sources"
+  - line: "guide"
+    description: "Collect complete investment rows and revoke changed confirmations"
+    formula: "Every amount, date and answer stays unknown until entered. Edits revoke confirmation. Zero stays zero. Yes with no rows stays blocked. No calculated value is collected."
+    irsRef: "Form8997 PartsI and III; original-source contract"
+    testRef: "tests/guided-interview/guided-qof-facts.test.ts::builds complete inclusion rows and keeps unknown answers unknown"
+  - line: "guide-controls"
+    description: "Add, edit and remove investment rows without defaults"
+    formula: "A new row starts unknown and revokes confirmation. Editing a row clears its confirmation, a zero value stays zero, sale-only fields appear only for a sale, and removal leaves no row."
+    irsRef: "Original-source contract"
+    testRef: "tests/apps/web/qof-facts-interactions.test.tsx::adds complete QOF investment rows and revokes changed confirmations"
+

@@ -74,6 +74,7 @@ function processTransaction(t: CapitalTransaction, exclusion = new Decimal(0)): 
     adjustment = adjustment.minus(exclusion);
     adjustmentCode = `Q${adjustmentCode}`;
   }
+  if (t.qofInclusion) adjustmentCode = `Y${adjustmentCode}`;
 
   const gainLoss = proceeds.minus(costBasis).plus(adjustment);
 

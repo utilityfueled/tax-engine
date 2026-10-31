@@ -61,6 +61,7 @@ import {
 } from "./fill-form-1116.js";
 import { fillForm3903Reference } from "./fill-form-3903.js";
 import { fillForm1099CReference } from "./fill-form-1099-c.js";
+import { buildForm8997ReferenceSummary, fillForm8997Reference } from "./mappings/2025/fill-form-8997-reference.js";
 import { fillForm982Reference } from "./fill-form-982.js";
 import { fillForm1099KReference } from "./fill-form-1099-k.js";
 import { buildForm1099QReferenceSummary, fillForm1099QReference } from "./fill-form-1099-q.js";
@@ -499,6 +500,7 @@ export async function fillReturn(
     }
   }
   if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result, charitableReview, premiumTaxCreditReview);
+  if (input.qofDispositionFacts?.investments?.length || result.qofInclusion) buildForm8997ReferenceSummary(input, result);
   const codNolReview = input.form982NolSources || result.codNolReduction || options.codNolReview
     ? options.codNolReview ?? prepareCodNolReview(input) : undefined;
   // Bind the prepared sources and result before output, even when both copies
@@ -960,6 +962,11 @@ export async function fillReturn(
     }
     const outputPath8962Reference = await fillForm8962Reference(input.form1095A, result, outputDir, premiumTaxCreditContext);
     filledForms.push(outputPath8962Reference);
+  }
+
+  // ── Form 8997 PartIII reference (if applicable — actual QOF inclusion records) ──
+  if (input.qofDispositionFacts?.investments?.length) {
+    filledForms.push(await fillForm8997Reference(input, result, outputDir));
   }
 
   // ── Form 1099-C reference summary (if applicable — supported cancellation-of-debt statements) ──

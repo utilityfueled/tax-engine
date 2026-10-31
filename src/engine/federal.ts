@@ -10,6 +10,7 @@ import { normalizeDigitalAssetCapitalInput } from "./forms/digital-asset-capital
 import { calculateForm172Return } from "./forms/form-172-return.js";
 import { calculateForm172CharitableSources } from "./forms/form-172-charitable-sources.js";
 import { validateQofDispositionFacts } from "./forms/qof-disposition-facts.js";
+import { calculateQofInclusion } from "./forms/qof-inclusion.js";
 /**
  * Federal tax calculation orchestrator.
  * Coordinates all schedules, forms, and worksheets to produce a complete Form 1040.
@@ -224,6 +225,7 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
     throw new Error("Explicit nonitemized NOL coordination requires its separate source method");
   }
   validateQofDispositionFacts(input.qofDispositionFacts, input.taxpayer.taxYear);
+  calculateQofInclusion(input);
   if (input.form982AttributeSources && !input.form982NolSources) throw new Error("COD later attributes require actual complete original debt and NOL sources");
   if (input.form982NolSources) calculateCodNolReduction(input);
   const marketplace = input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true && plan.premiumTaxCreditInvolved === true);
@@ -4090,6 +4092,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (currentMinimumTaxCredit) audit.merge(currentMinimumTaxCredit.lines);
   const codZeroMinimumTaxCreditBound = calculateCodZeroMinimumTaxCreditBound(input, { form6251, form8801 });
   if (codZeroMinimumTaxCreditBound) audit.merge(codZeroMinimumTaxCreditBound.lines);
+  const qofInclusion = calculateQofInclusion(input);
+  if (qofInclusion) audit.merge(qofInclusion.lines);
   const sched3 = calculateSchedule3(input, {
     foreignTaxCredit, childDependentCareCredit: dependentCareCredit, educationCredits: educationNonrefundable,
     retirementSavingsCredit, residentialCleanEnergyCredit: form5695.residentialCleanEnergyCredit,
@@ -4844,6 +4848,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     form8801,
     currentMinimumTaxCredit,
     codZeroMinimumTaxCreditBound,
+    qofInclusion,
     form4684,
     form4952,
     form4952Amt,

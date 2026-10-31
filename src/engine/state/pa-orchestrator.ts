@@ -1,3 +1,4 @@
+import { assertQofStateMethod } from "@/engine/forms/qof-inclusion.js";
 import { calculatePARoyaltyPropertySources } from "./pa-royalty-property-sources.js";
 /**
  * Pennsylvania Personal Income Tax Return Orchestrator
@@ -1453,10 +1454,12 @@ function buildScheduleEK1FromPAPassThroughStatement(statement: PAPassThroughStat
   } as ScheduleK1;
 }
 
+/** Spec: qof-deferred-gain-inclusion.yaml state. */
 export function calculatePAReturn(
   input: TaxYearInput,
   overrides: PAOrchestratorOverrides = {},
 ): PAOrchestratorResult {
+  assertQofStateMethod(input, "Pennsylvania");
   if (input.royaltyPropertySources !== undefined) {
     calculatePARoyaltyPropertySources(input);
   }

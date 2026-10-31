@@ -11,7 +11,7 @@ lines:
     testRef: "tests/engine/forms/qof-disposition-facts.test.ts::preserves actual QOF answers without inventing an omitted No"
   - line: "positive-method"
     description: "Do not silently calculate a known QOF event as an ordinary disposal"
-    formula: "A known positive QOF disposition is retained but the canonical return rejects until actual Form8997 PartIII investment/deferred-gain history and Form8949 inclusion/election handling are represented. A No answer leaves the ordinary actual return amounts unchanged."
+    formula: "A known positive QOF disposition with no actual sale record is retained but the canonical return rejects. Complete sale records use spec/federal/qof-deferred-gain-inclusion.yaml."
     irsRef: "ScheduleD Disposal of QOF Investment; Form8949 How To Report Gain Previously Deferred; Form8997 PartIII"
     testRef: "tests/engine/forms/qof-disposition-facts.test.ts::keeps positive QOF history outside the ordinary return calculation"
   - line: "review-checkbox"

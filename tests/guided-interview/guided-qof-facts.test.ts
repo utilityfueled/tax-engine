@@ -1,6 +1,6 @@
 // Spec: spec/federal/qof-disposition-facts.yaml.
 import { expect, it } from "vitest";
-import { buildGuidedQofFacts } from "@/lib/guided-qof-facts";
+import { buildGuidedQofFacts, emptyQofInvestment, type QofDispositionData } from "@/lib/guided-qof-facts";
 import { initialFlowState, updateSectionData, type GuidedFlowState } from "@/lib/guided-interview-flow";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { completePersonalInfo, completeW2Entry } from "./complete-facts";
@@ -26,4 +26,22 @@ it("preserves actual QOF facts and revokes changed investment confirmation", () 
   expect(changed.sectionData["income-investments"]?.qofDispositionFacts).toMatchObject({ sourceFactsConfirmed: null, disposedOfQofInvestment: false, sourceReference: "Corrected original statement" });
   const household = updateSectionData(state, "personal-info", { ...completePersonalInfo, lastName: "Changed" });
   expect(household.sectionData["income-investments"]?.qofDispositionFacts?.sourceFactsConfirmed).toBeNull();
+});
+
+it("builds complete inclusion rows and keeps unknown answers unknown", () => {
+  // Spec: spec/federal/qof-deferred-gain-inclusion.yaml guide.
+  const row = { ...emptyQofInvestment, sourceId: "qof-1", sourceReference: "Fictional QOF records", sourceFactsConfirmed: true, qofEin: "98-7654321", description: "Fictional 25% interest",
+    investmentDate: "2021-06-30", interestType: "corporation", gainCharacter: "long_term", originalDeferredGain: "100,000", remainingDeferredGain: "100,000", event: "december_31_2026",
+    eventDate: "2026-12-31", entireInvestment: true, fairMarketValue: "0" };
+  const facts: QofDispositionData = { sourceTaxYear: "2026", sourceReference: "Fictional complete records", sourceFactsConfirmed: true, allInvestmentsReviewed: true,
+    disposedOfQofInvestment: false, deferredGainHeldAtYearEnd: true, investments: [row] };
+  const built = buildGuidedQofFacts(facts, 2026)!;
+  expect(built.investments![0]).toMatchObject({ remainingDeferredGain: "100000", fairMarketValue: "0", entireInvestment: true });
+  expect(built.investments![0]).not.toHaveProperty("proceeds");
+  for (const patch of [{ remainingDeferredGain: "" }, { fairMarketValue: "" }, { investmentDate: "" }, { sourceFactsConfirmed: null }, { entireInvestment: null }, { gainCharacter: "" }]) {
+    expect(() => buildGuidedQofFacts({ ...facts, investments: [{ ...row, ...patch }] }, 2026), JSON.stringify(patch)).toThrow(/QOF/);
+  }
+  expect(() => buildGuidedQofFacts({ ...facts, deferredGainHeldAtYearEnd: null }, 2026)).toThrow(/year-end/);
+  expect(() => buildGuidedQofFacts({ ...facts, investments: [] }, 2026)).toThrow(/year-end/);
+  expect(buildGuidedQofFacts({ ...facts, deferredGainHeldAtYearEnd: false, investments: [] }, 2026)).toMatchObject({ deferredGainHeldAtYearEnd: false });
 });

@@ -9,6 +9,7 @@ import { NolFilingUnitOriginSchema, NolFilingUnitUseSchema, NolSameCoupleJointHi
 import { SavingsBondReissueSourcesSchema } from "./savings-bond-reissue-sources.js";
 import { EducationRoomBoardPeriodSchema, EducationRoomBoardPeriodExpenseSchema, EducationRoomBoardEsaAllocationSchema, EducationRoomBoardPriorUseSchema, EducationRoomBoardPriorUseExpenseSchema } from "@/models/education-room-board-periods.js";
 import { VehicleRefinancingSourcesSchema } from "@/models/vehicle-refinancing-sources.js";
+import { QofInvestmentSourceSchema } from "@/models/qof-investment-sources.js";
 import { getNYIT201ResidentConstants } from "@/models/constants.js";
 import { d } from "@/utils/decimal.js";
 import { Form982NolSourcesSchema } from "@/models/cod-nol-sources.js";
@@ -205,6 +206,7 @@ export const CapitalTransactionSchema = z.object({
   washSale: z.boolean().default(false),
   washSaleDisallowed: optionalDecimal,
   digitalAsset: z.boolean().default(false), // PA Schedule D digital-asset disclosure support
+  qofInclusion: z.boolean().optional(), // Previously deferred QOF gain, Form8949 code Y.
   sourceDocumentType: z.enum(["1099-b", "1099-da", "not-reported"]).optional(), // Actual reporting source; omission in the original Form1099B collection retains its legacy1099-B meaning.
 });
 
@@ -6041,6 +6043,8 @@ export const TaxYearInputSchema = z.object({
     sourceFactsConfirmed: z.boolean().optional(),
     allInvestmentsReviewed: z.boolean().optional(),
     disposedOfQofInvestment: z.boolean().optional(),
+    deferredGainHeldAtYearEnd: z.boolean().optional(),
+    investments: z.array(QofInvestmentSourceSchema).optional(),
   }).optional(),
   childTaxCredit: z.object({
     bonaFidePuertoRicoResident: z.boolean().optional(),
