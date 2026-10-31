@@ -1,0 +1,59 @@
+form: "COD zero available minimum tax credit bound"
+fullName: "Source-proved zero next-year pool without an inferred signed source adjustment"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8801"
+notes: |
+  Official Form8801 lines15/17 are nonnegative; signed line18 is actual AMT
+  less line17. Line21 combines signed18, the current full-form closing and
+  the applicable unallowed legacy qualified electric vehicle credit; a
+  nonpositive result produces no credit or carryforward. IRC53(d)(1)(B)
+  distinguishes the signed adjustment; IRC108(b)(2)(C) reduces the minimum
+  tax credit available at the beginning of the following year.
+  https://www.irs.gov/pub/irs-pdf/f8801.pdf
+  https://uscode.house.gov/view.xhtml?req=granuleid:USC-prelim-title26-section53
+  https://uscode.house.gov/view.xhtml?req=granuleid:USC-prelim-title26-section108
+  This is a sufficient zero-pool bound, not an exclusion-only calculation.
+  Require actual canonical current Form6251 AMT A=0, PRESENT verified full
+  current Form8801 with C=line26=0 and available/use/carry reconciliation,
+  and separately confirmed current-year unallowed legacy vehicle amount L=0.
+  The current full Form8801 line20 describes the preceding year and cannot
+  supply L. Unknown L, absent full8801, positive A or C do not qualify.
+  For every unknown exclusion-only net tax X>=0, max(0,C+A-X+L)=0.
+  No value for X, signed18, MTCNOLD or MTFTCE is inferred, and no current
+  source PartI or aggregate signed pool is manufactured. Existing ordinary
+  original credit records/current use and the zero MTC reduction stage stay
+  reconciled. Complete positive original NOL histories remain positive.
+  The source-year signed calculation and this distinct proof are separate
+  methods. Existing signed calculation/reference and federal review digest
+  remain unchanged. All source premises/results are bound by that digest.
+lines:
+  - line: "bound"
+    description: "Bound the next-year pool from complete canonical zero premises"
+    formula: "A=0; verified full current8801 C=0; explicit current L=0; X>=0 => max(0,C+A-X+L)=0, without assigning X or signed18."
+    irsRef: "Form8801 lines15-21/26; IRC53(d)(1)(B); IRC108(b)(2)(C)"
+    testRef: "tests/engine/cod-zero-minimum-tax-credit-bound.test.ts::proves the zero next pool without inventing signed generation for actual positive NOL sources"
+  - line: "current-use"
+    description: "Retain real prior credit records and their current use"
+    formula: "Current full8801 available minus current allowed use equals zero closing. Original records reconcile each amount; no synthetic aggregate pool replaces the records."
+    irsRef: "Form8801 lines21/25/26; IRC108(b)(4)"
+    testRef: "tests/engine/cod-zero-minimum-tax-credit-bound.test.ts::retains ordinary prior credit sources that were fully used before the zero pool bound"
+  - line: "unknown"
+    description: "Unknown or positive premises do not prove a zero next pool"
+    formula: "Reject missing full current8801, missing current legacy amount, unconfirmed original source, positive AMT or positive closing; the preceding-year legacy amount is not a substitute."
+    irsRef: "Form8801 annual source periods and original-source contract"
+    testRef: "tests/engine/cod-zero-minimum-tax-credit-bound.test.ts::rejects absent or contradictory premises without treating unknown current legacy credit as zero"
+  - line: "bound-rejections"
+    description: "A positive AMT or stale full form fails at the bound"
+    formula: "Mutating actual AMT to1, Form8801 carry to1, sourceFactsVerified to false or omitting the full form rejects. High wages alone leave AMT0 and keep the proof."
+    irsRef: "Form6251 line11; Form8801 lines21/25/26"
+    testRef: "tests/engine/cod-zero-minimum-tax-credit-bound.test.ts::rejects a positive current AMT and a stale full Form8801 at the bound itself"
+  - line: "guide"
+    description: "Collect the separate current-year legacy vehicle credit fact"
+    formula: "The guide keeps a blank current-year unallowed vehicle credit as unknown, retains an entered 0 and revokes confirmations after edits. Zero is never defaulted."
+    irsRef: "Form8801 line20 annual source period"
+    testRef: "tests/guided-interview/guided-cod-partial-personal.test.ts::retains the separate current-year legacy vehicle credit fact without defaulting zero"
+  - line: "review"
+    description: "Label only the bounded pool and preserve signed-method output"
+    formula: "Reference states current AMT/current full8801 closing/current legacy source and proved pool0; states signed current adjustment not determined. No current-source PartI or aggregate signed rows; stale source/result fails before I/O."
+    irsRef: "Original-source output reconciliation; Form982 reference-only review policy"
+    testRef: "tests/pdf/cod-zero-minimum-tax-credit-bound-review.test.ts::prints the zero pool proof while leaving signed generation explicitly undetermined"

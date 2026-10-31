@@ -32,13 +32,18 @@ notes: |
   return; actual unsecured personal recourse debt, one discharge date and a
   complete immediately-before-discharge asset/liability worksheet; no title11,
   deductible interest, property transfer, other exclusions or108(b)(5) election.
-  All cancelled debt must be covered by actual insolvency. Without the complete
+  The original cohort covers all cancelled debt with actual insolvency. The
+  separately specified cod-partial-personal-insolvency.yaml admits a taxable
+  remainder only with complete actual personal borrowing/use/discharge and
+  nondeductible-interest proof. It preserves actual D, exclusion E and taxable
+  D-E separately; included nondeductible interest is not added or subtracted.
+  Without the complete
   separately specified cod-ordinary-attribute-sources packet, the exclusion must
   be fully absorbed by NOL in EACH independent tax system. That actual-source
   composition can apply genuine residual exclusion to later attributes; it does
   not relax the modified-absorption/charitable-comparison capacity guards.
-  Joint/estate ownership, partial taxable COD and basis-first remain separately
-  identified methods, never guessed zero.
+  Joint/estate ownership, other taxable-COD classifications and basis-first
+  remain separately identified methods, never guessed zero.
   Source-only validation returns no reduction or closing carry. Actual source
   cents are summed before whole-dollar Form9822/6 transfers under6102; no
   individual source row is rounded. The numerical examples are derived controls,
@@ -46,7 +51,7 @@ notes: |
 lines:
   - line: "source"
     description: "Bind every original cancelled-debt statement and actual insolvency source"
-    formula: "Require complete explicit original boxes, actual owner/year/date/identity, all original forms exactly once, actual known-zero interest/property value, and complete assets including exempt and retirement assets. Source-only result has no reduction or carry."
+    formula: "Require complete explicit original boxes, actual owner/year/date/identity, all original forms exactly once, known-zero property and either known-zero interest or the separately specified complete personal-interest proof, and complete assets including exempt and retirement assets. Source-only result has no reduction or carry."
     irsRef: "IRC108(a)(1)(B),(a)(3),(d)(3); Pub4681 Insolvency worksheet"
     testRef: "tests/engine/forms/cod-nol-reductions.test.ts::validates actual insolvency sources without inventing a loss reduction"
   - line: "6-prior"

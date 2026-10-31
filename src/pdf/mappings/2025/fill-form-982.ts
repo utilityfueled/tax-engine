@@ -255,6 +255,23 @@ export function buildForm982ReferenceSummary(result: TaxReturnResult): Form982Re
     const same = (actual: Decimal | undefined, expected: Decimal) => {
       if (!Decimal.isDecimal(actual) || !actual.isFinite() || !actual.eq(expected)) throw new Error("Form982 NOL reference amounts do not reconcile");
     };
+    if ([cod.sourceDischargedAmount, cod.sourceIncludedInterest, cod.sourceExcludedAmount, cod.sourceTaxableAmount, cod.insolvencyAmount]
+      .some(value => !Decimal.isDecimal(value) || !value.isFinite() || value.lt(0))
+      || cod.sourceIncludedInterest.gt(cod.sourceDischargedAmount)) throw new Error("Form982 original personal debt amounts do not reconcile");
+    same(cod.sourceDischargedAmount, sumSourceMoney(cod.sourceExcludedAmount, cod.sourceTaxableAmount));
+    same(cod.sourceExcludedAmount, Decimal.min(cod.sourceDischargedAmount, cod.insolvencyAmount));
+    same(cod.reportedExcludedAmount, cod.sourceExcludedAmount.toDecimalPlaces(0, Decimal.ROUND_HALF_UP));
+    for (const lines of [cod.lines, result.allLines]) {
+      const rows = lines.filter(row => row.form === 'Form982 NOL Sources' && row.line === 'taxablePersonalDebt');
+      if (rows.length !== 1) throw new Error('Form982 requires unique original personal debt source audits');
+      same(rows[0].value, cod.sourceTaxableAmount);
+      for (const [key, value] of [['Complete original discharge', cod.sourceDischargedAmount],
+        ['Included original interest', cod.sourceIncludedInterest], ['Original excluded debt', cod.sourceExcludedAmount]] as const) {
+        const retained = rows[0].inputs[key];
+        if (!Decimal.isDecimal(retained)) throw new Error('Form982 original personal debt source audit is incomplete');
+        same(retained, value);
+      }
+    }
     for (const ledger of [cod.regular, cod.alternativeTax]) {
       const total = (key: "beforeReduction" | "currentTaxUse" | "modifiedAbsorption" | "modifiedAvailableBeforeReduction"
         | "attributeReduction" | "expiredAfterReduction" | "remainingCarryforward") => ledger.vintages.reduce((value, row) => value.plus(row[key]), new Decimal(0));
@@ -303,7 +320,10 @@ export function buildForm982ReferenceSummary(result: TaxReturnResult): Form982Re
         formula: "Current-year original NOL first; then oldest carryover to this year before residual expiry. Actual current deductions are unchanged." }, ...later.reductions],
       totals: [
         { label: "Line2 reported excluded debt", value: cod.reportedExcludedAmount.toString() },
+        { label: "Complete original discharged debt", value: cod.sourceDischargedAmount.toString() },
+        { label: "Nondeductible interest included in original debt", value: cod.sourceIncludedInterest.toString() },
         { label: "Exact original excluded debt", value: cod.sourceExcludedAmount.toString() },
+        { label: "Exact taxable personal canceled debt", value: cod.sourceTaxableAmount.toString() },
         { label: "Actual immediately-before-discharge insolvency", value: cod.insolvencyAmount.toString() },
         { label: "Regular remaining NOL", value: cod.regular.carryforward.toString() },
         { label: "Regular residual expiry after COD", value: cod.regular.expiredAfterReduction.toString() },
@@ -311,8 +331,8 @@ export function buildForm982ReferenceSummary(result: TaxReturnResult): Form982Re
         { label: "Alternative-tax remaining NOL", value: cod.alternativeTax.carryforward.toString() },
         { label: "Alternative residual expiry after COD", value: cod.alternativeTax.expiredAfterReduction.toString() },
         ...([ ["Regular", cod.regular], ["Alternative", cod.alternativeTax] ] as const).flatMap(([label, ledger]) => [
+          { label: `${label} actual current-tax NOL use`, value: ledger.currentTaxUse.toString() },
           ...(!ledger.modifiedUseAdjustment.isZero() ? [
-            { label: `${label} actual current-tax NOL use`, value: ledger.currentTaxUse.toString() },
             { label: `${label} modified NOL absorption`, value: ledger.modifiedAbsorption.toString() },
             { label: `${label} modified loss available before COD`, value: ledger.modifiedAvailableBeforeReduction.toString() },
           ] : []),

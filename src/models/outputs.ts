@@ -302,6 +302,7 @@ export interface TaxReturnResult {
   form8936?: import("@/engine/forms/form-8936.js").Form8936Result;
   form8801?: import("@/engine/forms/form-8801.js").Form8801Result;
   currentMinimumTaxCredit?: import("@/engine/forms/current-minimum-tax-credit.js").CurrentMinimumTaxCreditResult;
+  codZeroMinimumTaxCreditBound?: import("@/engine/forms/cod-zero-minimum-tax-credit-bound.js").CodZeroMinimumTaxCreditBound;
   form4684?: import("@/engine/forms/form-4684.js").Form4684Result;
   form4952?: import("@/engine/forms/form-4952.js").Form4952Result;
   form4952Amt?: import("@/engine/forms/form-4952.js").Form4952Result;

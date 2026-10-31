@@ -13,6 +13,7 @@ import {
 } from "@/pdf/fill-form-1099-c.js";
 import { fillReturn } from "@/pdf/fill-return.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
+import { actualPartialPersonalCodInput } from "../fixtures/cod-partial-personal.js";
 
 async function makeOutputDir() {
   return mkdtemp(join(tmpdir(), "tax-engine-1099c-"));
@@ -170,8 +171,16 @@ describe("Form 1099-C packet reference summary", () => {
         },
       };
 
-      const result = calculateFederalTax(codFixture);
-      const { filledForms } = await fillReturn(codFixture, result, {
+      // Spec: cod-partial-personal-insolvency.yaml included-interest/review.
+      // Keep every original reporting box and the incomplete-source rejection.
+      expect(() => calculateFederalTax(codFixture)).toThrow(/COD.*complete|COD.*actual/i);
+      const complete = actualPartialPersonalCodInput();
+      expect(complete.form1099C[0]).toMatchObject(codFixture.form1099C[0]);
+      expect(complete.codExclusion!.insolvency).toEqual(codFixture.codExclusion.insolvency);
+      expect(complete.w2s).toMatchObject(codFixture.w2s);
+      const result = calculateFederalTax(complete);
+      expect(result.schedule1!.cancelledDebtIncome.toFixed()).toBe("8000");
+      const { filledForms } = await fillReturn(complete, result, {
         blankFormsDir: "forms/blank",
         outputDir,
       });

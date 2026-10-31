@@ -1,6 +1,6 @@
 "use client";
 
-import { updateGuidedCodNol, type CodDebtData, type CodInsolvencyData, type CodInsolvencyItemData, type CodNolData } from '@/lib/guided-cod-nol';
+import { updateGuidedCodNol, type CodDebtData, type CodInsolvencyData, type CodInsolvencyItemData, type CodNolData, type CodPersonalDebtData } from '@/lib/guided-cod-nol';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
 import { CodAttributeDetails } from './cod-attribute-details';
@@ -15,6 +15,7 @@ function Choice({ label, value, options, onChange }: { label: string; value?: st
 export function CodNolDetails({ data, onChange }: { data?: CodNolData; onChange: (next: CodNolData | undefined) => void }) {
   const change = (patch: Partial<CodNolData>) => onChange(updateGuidedCodNol(data ?? {}, patch));
   const debt = (index: number, patch: Partial<CodDebtData>) => change({ debts: data?.debts?.map((row, i) => i === index ? { ...row, ...patch } : row) });
+  const personalDebt = (index: number, patch: Partial<CodPersonalDebtData>) => debt(index, { personalDebt: { ...data?.debts?.[index]?.personalDebt, ...patch } });
   const insolvency = (patch: Partial<CodInsolvencyData>) => change({ insolvency: { ...data?.insolvency, ...patch } });
   const item = (kind: 'assets' | 'liabilities', index: number, patch: Partial<CodInsolvencyItemData>) => insolvency({
     [kind]: data?.insolvency?.[kind]?.map((row, i) => i === index ? { ...row, ...patch } : row),
@@ -22,7 +23,7 @@ export function CodNolDetails({ data, onChange }: { data?: CodNolData; onChange:
   const statements: [string, string][] = (data?.debts ?? []).flatMap(row => row.statementId?.trim() ? [[row.statementId.trim(), row.statementId.trim()]] : []);
   return <details className="guided-expand"><summary className="guided-expand-trigger">Canceled debt and insolvency</summary><div className="guided-expand-body">
     <p className="guided-hint">Use the original Form 1099-C and complete records of everything you owned and owed immediately before the debt was canceled. Include retirement accounts and other assets protected from creditors.</p>
-    <p className="guided-hint">This method covers unsecured personal debt fully excluded because of insolvency. Complete the separate regular and AMT loss histories above, including explicit empty histories. If canceled debt reaches later attributes, enter those original records below. The return calculates reductions after current tax; do not enter a revised balance.</p>
+    <p className="guided-hint">This method covers unsecured personal borrowing and insolvency. If some debt remains taxable or the canceled amount includes interest, also provide the original personal borrowing records below. Complete the separate regular and AMT loss histories above, including explicit empty histories. If canceled debt reaches later attributes, enter those original records below. The return calculates reductions after current tax; do not enter a revised balance.</p>
     {!data ? <button type="button" className="utility-button" onClick={() => onChange({})}>Add canceled-debt sources</button> : <>
       <div className="guided-form-grid">
         <TextFact label="Canceled-debt source tax year" value={data.sourceTaxYear ?? ''} onChange={sourceTaxYear => change({ sourceTaxYear })} />
@@ -60,7 +61,33 @@ export function CodNolDetails({ data, onChange }: { data?: CodNolData; onChange:
               ['personallyLiable', 'Box 5 personally liable'], ['unsecuredPersonalDebtConfirmed', 'was unsecured personal debt'],
               ['noPropertyTransferConfirmed', 'involved no property transfer'],
             ] as const).map(([key, label]) => <BooleanFact key={key} label={`${prefix} ${label}`} value={row[key]} onChange={value => debt(index, { [key]: value })} />)}
-          </div><BooleanFact label={`${prefix} sources checked after the last edit`} value={row.sourceFactsConfirmed} onChange={sourceFactsConfirmed => debt(index, { sourceFactsConfirmed })} />
+          </div>
+            {!row.personalDebt ? <button type="button" className="utility-button" onClick={() => personalDebt(index, {})}>Add debt {index + 1} personal borrowing records</button>
+              : <fieldset style={{ minWidth: 0 }}><legend>{prefix} personal borrowing records</legend>
+                <p className="guided-hint">Use the original borrowing, purchase, interest and settlement records. The complete canceled amount already includes any interest shown in Box 3. A blank box alone does not establish zero interest or a complete discharge amount.</p>
+                <div className="guided-form-grid">
+                  {([
+                    ['sourceReference', 'complete discharge record reference'], ['useSourceReference', 'personal use record reference'],
+                    ['interestSourceReference', 'interest record reference'],
+                  ] as const).map(([key, label]) => <TextFact key={key} label={`${prefix} ${label}`} value={row.personalDebt?.[key] ?? ''} onChange={value => personalDebt(index, { [key]: value })} />)}
+                  <Choice label={`${prefix} use of borrowed funds`} value={row.personalDebt.proceedsUse} options={[
+                    ['personal_living_expenses', 'Personal living expenses'], ['business', 'Business'], ['investment', 'Investment'], ['mixed_or_other', 'Mixed or another use'],
+                  ]} onChange={value => personalDebt(index, { proceedsUse: value === 'personal_living_expenses' || value === 'business' || value === 'investment' || value === 'mixed_or_other' ? value : undefined })} />
+                  <Choice label={`${prefix} interest treatment from original records`} value={row.personalDebt.interestTreatment} options={[
+                    ['nondeductible_personal', 'Nondeductible personal interest'], ['potentially_deductible', 'Deductible or potentially deductible interest'],
+                  ]} onChange={value => personalDebt(index, { interestTreatment: value === 'nondeductible_personal' || value === 'potentially_deductible' ? value : undefined })} />
+                  <CurrencyField label={`${prefix} actual total discharged`} value={row.personalDebt.actualDischargedAmount ?? ''} onChange={actualDischargedAmount => personalDebt(index, { actualDischargedAmount })} />
+                  <CurrencyField label={`${prefix} actual interest discharged`} value={row.personalDebt.actualDischargedInterest ?? ''} onChange={actualDischargedInterest => personalDebt(index, { actualDischargedInterest })} />
+                  {([
+                    ['allDischargedAmountsIncluded', 'all actual canceled amounts are included in the statement amounts'],
+                    ['borrowingNotDeductibleUnpaidExpenseConfirmed', 'was borrowing, not an unpaid expense deductible if paid'],
+                    ['noPaymentOrNewBorrowingAtDischargeConfirmed', 'involved no simultaneous payment or new borrowing'],
+                  ] as const).map(([key, label]) => <BooleanFact key={key} label={`${prefix} ${label}`} value={row.personalDebt?.[key]} onChange={value => personalDebt(index, { [key]: value })} />)}
+                </div>
+                <BooleanFact label={`${prefix} personal borrowing records checked after the last edit`} value={row.personalDebt.sourceFactsConfirmed} onChange={sourceFactsConfirmed => personalDebt(index, { sourceFactsConfirmed })} />
+                <button type="button" className="utility-button" onClick={() => debt(index, { personalDebt: undefined })}>Remove debt {index + 1} personal borrowing records</button>
+              </fieldset>}
+            <BooleanFact label={`${prefix} sources checked after the last edit`} value={row.sourceFactsConfirmed} onChange={sourceFactsConfirmed => debt(index, { sourceFactsConfirmed })} />
             <button type="button" className="utility-button" onClick={() => change({ debts: data.debts?.filter((_, i) => i !== index) })}>Remove original debt statement {index + 1}</button>
           </div>;
         })}

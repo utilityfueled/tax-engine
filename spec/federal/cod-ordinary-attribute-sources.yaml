@@ -1,5 +1,5 @@
 form: "Form982 ordinary attribute sources"
-fullName: "Actual later attributes after a fully excluded ordinary insolvency discharge"
+fullName: "Actual later attributes after an ordinary insolvency exclusion"
 taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i982"
 notes: |
@@ -14,10 +14,15 @@ notes: |
   https://www.irs.gov/publications/p4681
   https://www.irs.gov/pub/irs-pdf/f982.pdf
   This method composes the existing actual one-date, continuing-individual,
-  noncommunity, fully excluded unsecured personal recourse-debt method with
+  noncommunity, unsecured personal recourse-debt method with
   complete later-attribute originals. It does not admit a basis-first election,
   title11, property transfer, deductible interest, special exclusion, joint
-  ownership, or partial taxable discharge. Current tax is determined first.
+  ownership, or unsupported taxable-debt classifications. A partially taxable
+  personal borrowing discharge is admitted only through the complete proof in
+  cod-partial-personal-insolvency.yaml. All original discharged liabilities,
+  including nondeductible personal interest, leave the after-event liability
+  inventory; only the exclusion enters the108 reduction budget. Current tax is
+  determined first.
   The original debt/insolvency packet and both actual NOL histories remain
   mandatory. Empty lists are explicit facts; missing lists are not zero.
   Do not route a legally determined NOL reduction to a later stage merely

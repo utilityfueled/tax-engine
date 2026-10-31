@@ -8,6 +8,7 @@ import type { NetOperatingLossReturnResult } from './net-operating-loss-return.j
 import type { Form172ReturnResult } from './form-172-return.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d, roundDollar, sum, zeroFloor } from '@/utils/decimal.js';
+import { sumSourceMoney } from '@/utils/sum-source-money.js';
 import { calculateCodAttributeReturn } from './cod-attribute-return.js';
 
 export interface CodNolVintageReduction {
@@ -27,6 +28,7 @@ export interface CodNolLedgerReduction {
 }
 export interface CodNolReductionResult {
   sourceFactsVerified: true; calculationComplete: boolean; sourceExcludedAmount: Decimal;
+  sourceDischargedAmount: Decimal; sourceIncludedInterest: Decimal; sourceTaxableAmount: Decimal;
   reportedExcludedAmount: Decimal; insolvencyAmount: Decimal;
   regular?: CodNolLedgerReduction; alternativeTax?: CodNolLedgerReduction; lines: CalculatedLine[];
 }
@@ -48,7 +50,7 @@ function date(value: string | undefined, year: number): string {
 function sourceTotal(rows: NonNullable<NonNullable<Form982NolSources['insolvency']>['assets']> | undefined, label: string): Decimal {
   if (!Array.isArray(rows)) throw new Error(`COD requires actual complete insolvency ${label}, including an explicit empty list when none`);
   const ids = new Set<string>();
-  return sum(...rows.map(row => {
+  return sumSourceMoney(...rows.map(row => {
     const id = text(row.sourceId, `${label} source identity`);
     if (ids.has(id)) throw new Error(`COD duplicate insolvency ${label} source`);
     ids.add(id); text(row.description, `${label} description`); text(row.sourceReference, `${label} record`);
@@ -58,6 +60,25 @@ function sourceTotal(rows: NonNullable<NonNullable<Form982NolSources['insolvency
 function canonical(value: Decimal | undefined, label: string): Decimal {
   if (!Decimal.isDecimal(value) || !value.isFinite() || value.lt(0) || !value.isInteger()) throw new Error(`COD requires complete canonical whole-dollar ${label}`);
   return value;
+}
+
+/** IRC108(e)(2)/163(h): the included interest is neither added to nor deducted
+ * from the complete personal borrowing discharge. Blank boxes prove no zeros.
+ * Spec: spec/federal/cod-partial-personal-insolvency.yaml. */
+function personalDebtSource(debt: NonNullable<Form982NolSources['debts']>[number], amount: Decimal, interest: Decimal): void {
+  const source = debt.personalDebt;
+  if (!source || source.sourceFactsConfirmed !== true || source.allDischargedAmountsIncluded !== true
+    || source.proceedsUse !== 'personal_living_expenses' || source.borrowingNotDeductibleUnpaidExpenseConfirmed !== true
+    || source.interestTreatment !== 'nondeductible_personal' || source.noPaymentOrNewBorrowingAtDischargeConfirmed !== true) {
+    throw new Error('COD personal borrowing requires complete actual personal-use, nondeductible interest and discharge records; other debt uses or omitted amounts need their separate source method');
+  }
+  text(source.sourceReference, 'personal discharge source record');
+  text(source.useSourceReference, 'personal borrowing use source record');
+  text(source.interestSourceReference, 'personal interest source record');
+  if (!actual(source.actualDischargedAmount, 'personal actual discharge').eq(amount)
+    || !actual(source.actualDischargedInterest, 'personal actual interest discharge').eq(interest)) {
+    throw new Error('COD actual personal discharge and interest must reconcile exactly to the represented original statement');
+  }
 }
 
 /** Precisely the actual records consumed; source-only callers need no fabricated return. */
@@ -90,6 +111,7 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
   const used = new Set<string>(), statements = new Set<string>(), accounts = new Set<string>(), days = new Set<string>();
   const primary = input.taxpayer.primary, primaryId = primary.ssn.replace(/-/g, '');
   const sourceAmounts = new Map<string, Decimal>();
+  const sourceInterest: Decimal[] = [];
   for (const debt of facts.debts) {
     const id = text(debt.sourceId, 'original statement source ID');
     const match = /^form1099C:(0|[1-9]\d*)$/.exec(id);
@@ -110,13 +132,16 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
     if (debt.unsecuredPersonalDebtConfirmed !== true || debt.noPropertyTransferConfirmed !== true || debt.personallyLiable !== true
       || !/^[B-H]$/.test(debt.identifiableEventCode ?? '')) throw new Error('COD requires actual personal recourse debt without title11 or property disposition');
     const amount = actual(debt.amountDischarged, 'original Box2'), interest = actual(debt.interestIncluded, 'original Box3'), property = actual(debt.fmvOfProperty, 'original Box7');
-    if (!amount.gt(0) || !interest.isZero() || !property.isZero()) throw new Error('COD interest, property or zero-debt source requires its separate exclusion method');
+    if (!amount.gt(0) || !property.isZero()) throw new Error('COD property or zero-debt source requires its separate exclusion method');
+    if (interest.gt(amount)) throw new Error('COD included interest cannot exceed the complete original discharged amount');
+    if (debt.personalDebt || interest.gt(0)) personalDebtSource(debt, amount, interest);
     if (creditor !== original.creditor.trim() || text(debt.debtDescription, 'original debt description') !== original.debtDescription?.trim()
       || debt.personallyLiable !== original.personallyLiable || debt.identifiableEventCode !== original.identifiableEventCode
       || !amount.eq(d(original.amountDischarged)) || !interest.eq(d(original.interestIncluded)) || !property.eq(d(original.fmvOfProperty))) {
       throw new Error('COD original statement amounts and facts must reconcile exactly');
     }
     sourceAmounts.set(id, amount);
+    sourceInterest.push(interest);
   }
   const insolvency = facts.insolvency;
   if (days.size !== 1 || !insolvency || insolvency.sourceFactsConfirmed !== true || !insolvency.sourceReference?.trim()
@@ -133,14 +158,23 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
     linked.add(row.dischargedDebtSourceId);
   }
   if (linked.size !== sourceAmounts.size || insolvency.assets?.some(row => row.dischargedDebtSourceId !== undefined)) throw new Error('COD each discharged liability must bind its actual debt source');
-  const sourceExcludedAmount = sum(...sourceAmounts.values()), insolvencyAmount = zeroFloor(liabilities.minus(assets));
-  if (sourceExcludedAmount.gt(insolvencyAmount)) throw new Error('COD partially taxable discharge requires its separate regular and investment income classification method');
+  const sourceDischargedAmount = sumSourceMoney(...sourceAmounts.values()), sourceIncludedInterest = sumSourceMoney(...sourceInterest);
+  const insolvencyAmount = zeroFloor(sumSourceMoney(liabilities, assets.negated()));
+  const sourceExcludedAmount = Decimal.min(sourceDischargedAmount, insolvencyAmount);
+  const sourceTaxableAmount = sumSourceMoney(sourceDischargedAmount, sourceExcludedAmount.negated());
+  if (sourceTaxableAmount.gt(0)) {
+    for (const debt of facts.debts) personalDebtSource(debt, actual(debt.amountDischarged, 'original Box2'), actual(debt.interestIncluded, 'original Box3'));
+  }
   const reportedExcludedAmount = roundDollar(sourceExcludedAmount), audit = new AuditTrail();
   audit.record('Form982 NOL Sources', 'insolvency', 'Actual immediately-before-discharge insolvency', insolvencyAmount,
     'Complete actual liabilities less all actual asset FMV, including exempt and retirement property', { Assets: assets, Liabilities: liabilities });
   audit.record('Form 982', '2', 'Discharged debt excluded under insolvency', reportedExcludedAmount,
-    'Exact full exclusion reconciles to original personal debt and actual insolvency; round the aggregate once', { 'Original excluded debt': sourceExcludedAmount });
-  const base: CodNolReductionResult = { sourceFactsVerified: true, calculationComplete: false, sourceExcludedAmount, reportedExcludedAmount, insolvencyAmount, lines: audit.getLines() };
+    'Lesser of complete original discharge and actual insolvency; round the excluded aggregate once', { 'Original excluded debt': sourceExcludedAmount });
+  audit.record('Form982 NOL Sources', 'taxablePersonalDebt', 'Actual taxable personal canceled debt', sourceTaxableAmount,
+    'Complete original discharge less exact insolvency exclusion; nondeductible interest is already included in the original discharge',
+    { 'Complete original discharge': sourceDischargedAmount, 'Included original interest': sourceIncludedInterest, 'Original excluded debt': sourceExcludedAmount });
+  const base: CodNolReductionResult = { sourceFactsVerified: true, calculationComplete: false, sourceDischargedAmount, sourceIncludedInterest,
+    sourceTaxableAmount, sourceExcludedAmount, reportedExcludedAmount, insolvencyAmount, lines: audit.getLines() };
   if (input.form982AttributeSources) calculateCodAttributeReturn(input);
   if (!context) return base;
   const { priorLoss: prior, currentOrigin } = context;

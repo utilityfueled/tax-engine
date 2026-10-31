@@ -161,6 +161,7 @@ export function CodAttributeDetails({ data, onChange }: { data?: CodAttributeDat
           <Fields data={data.currentMinimumTaxCredit} prefix="Current adjustments" onChange={patch => change({ currentMinimumTaxCredit: { ...data.currentMinimumTaxCredit, ...patch } })} fields={[
             { key: 'sourceReference', label: 'source reference' }, { key: 'allCurrentAdjustmentSourcesIncluded', label: 'all current regular and AMT sources included', type: 'boolean' },
             { key: 'noAdditionalDeferralItemsConfirmed', label: 'no additional deferral items for the zero-credit method', type: 'boolean' },
+            { key: 'currentYearUnallowedQualifiedElectricVehicleCredit', label: 'current-year unallowed qualified electric vehicle credit for the zero-pool proof', type: 'money' },
             { key: 'sourceFactsConfirmed', label: 'sources checked after the last edit', type: 'boolean' },
           ]} />
           <CurrentMinimumTaxCreditDetails data={data.currentMinimumTaxCredit.sourceYearCalculation}

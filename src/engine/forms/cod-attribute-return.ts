@@ -10,6 +10,7 @@ import type { CodAttributeLedgerSources } from '@/models/cod-attribute-sources.j
 import type { ForeignTaxCarryoverDetail } from './foreign-tax-deduction-carryover.js';
 import { readCurrentMinimumTaxCreditSources } from '@/utils/current-minimum-tax-credit-source.js';
 import type { CurrentMinimumTaxCreditResult } from './current-minimum-tax-credit.js';
+import type { CodZeroMinimumTaxCreditBound } from './cod-zero-minimum-tax-credit-bound.js';
 
 export type CodAttributeSourceInput = CodNolSourceInput & Pick<TaxYearInput, 'form982AttributeSources'>;
 export interface CodAttributeCanonicalContext {
@@ -18,6 +19,7 @@ export interface CodAttributeCanonicalContext {
   minimumTaxCredit: Decimal; minimumTaxAvailable: Decimal; minimumTaxUsed: Decimal;
   currentMinimumTaxCreditZeroProven: boolean;
   currentMinimumTaxCredit?: CurrentMinimumTaxCreditResult;
+  codZeroMinimumTaxCreditBound?: CodZeroMinimumTaxCreditBound;
   shortTermCapitalLoss: Decimal; longTermCapitalLoss: Decimal;
   capitalOpenings: Record<'short' | 'long', { prior: Decimal; current: Decimal }>;
   passiveLosses: Array<{ name: string; amount: Decimal; qualifiedCarryPresent: boolean }>;
@@ -65,9 +67,12 @@ export function calculateCodAttributeReturn(input: CodAttributeSourceInput, cont
   if (!facts.alternativeTax) throw new Error('COD requires actual independent alternative attribute sources');
   const currentMinimum = facts.currentMinimumTaxCredit;
   const currentSource = readCurrentMinimumTaxCreditSources(input);
+  const boundRequested = currentMinimum?.currentYearUnallowedQualifiedElectricVehicleCredit !== undefined;
   if (currentMinimum?.sourceFactsConfirmed !== true || !currentMinimum.sourceReference?.trim()
     || currentMinimum.allCurrentAdjustmentSourcesIncluded !== true
-    || (!currentSource && (currentMinimum.noAdditionalDeferralItemsConfirmed !== true || (context && context.currentMinimumTaxCreditZeroProven !== true)))
+    || (boundRequested && (currentSource || !d(currentMinimum.currentYearUnallowedQualifiedElectricVehicleCredit).isZero()
+      || (context && context.codZeroMinimumTaxCreditBound?.sourceFactsVerified !== true)))
+    || (!currentSource && !boundRequested && (currentMinimum.noAdditionalDeferralItemsConfirmed !== true || (context && context.currentMinimumTaxCreditZeroProven !== true)))
     || (currentSource && context && context.currentMinimumTaxCredit?.sourceFactsVerified !== true)) {
     throw new Error('COD current-year minimum tax credit requires its actual exclusion-only calculation or the complete source-proved zero method');
   }
@@ -132,6 +137,18 @@ export function calculateCodAttributeReturn(input: CodAttributeSourceInput, cont
     same(ledger.property.immediatelyAfterLiabilities, total(beforeLiabilities, discharged.negated()), 'immediately-after liabilities');
   }
   if (!context) return undefined;
+  if (context.codZeroMinimumTaxCreditBound) {
+    const bound = context.codZeroMinimumTaxCreditBound;
+    if (!boundRequested || bound.method !== 'zero_available_pool_bound' || bound.sourceFactsVerified !== true
+      || bound.sourceTaxYear !== year || context.currentMinimumTaxCredit) throw new Error('COD zero minimum tax credit pool requires its separate verified canonical proof');
+    same(bound.currentAmt, d('0'), 'zero-pool actual AMT');
+    same(bound.currentCreditAvailable, context.minimumTaxAvailable, 'zero-pool current available credit');
+    same(bound.currentCreditUsed, context.minimumTaxUsed, 'zero-pool actual current credit use');
+    same(bound.currentFormCarry, context.minimumTaxCredit, 'zero-pool current form carry');
+    same(bound.currentFormCarry, d('0'), 'zero-pool current form closing');
+    same(bound.currentYearUnallowedQualifiedElectricVehicleCredit, d('0'), 'zero-pool current legacy credit');
+    same(bound.followingYearPool, d('0'), 'zero-pool next-year bound');
+  }
   const kinds = (ledger: CodAttributeReductionLedger, kind: string) => ledger.records.filter(row => row.kind === kind);
   const checkCredit = (kind: 'general_business_credit' | 'minimum_tax_credit', closing: Decimal, available: Decimal, used: Decimal) => {
     const rows = kind === 'minimum_tax_credit' && regular.minimumTaxCreditPool ? regular.minimumTaxCreditPool.priorSourceRecords : kinds(regular, kind);

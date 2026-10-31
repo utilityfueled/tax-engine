@@ -8,6 +8,8 @@ import Decimal from "decimal.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { simpleW2Fixture, complexMFJFixture } from "../fixtures/simple-w2.js";
+import { actualPartialPersonalCodInput } from "../fixtures/cod-partial-personal.js";
+import { partialPersonalLegacyNolZeroPoolInput } from "../fixtures/cod-zero-minimum-tax-credit-bound.js";
 
 const d = (n: number | string) => new Decimal(n);
 
@@ -12107,7 +12109,7 @@ describe("Form 1099-C cancellation of debt through federal pipeline", () => {
         { creditor: "Creditor", amountDischarged: "25000", personallyLiable: true },
       ],
     });
-    const partiallyExcluded = calculateFederalTax({
+    const incompleteOriginal = {
       ...simpleW2Fixture,
       form1099C: [
         { creditor: "Creditor", amountDischarged: "25000", personallyLiable: true },
@@ -12119,7 +12121,13 @@ describe("Form 1099-C cancellation of debt through federal pipeline", () => {
           // Insolvent by $15,000 → $10,000 remains taxable
         },
       },
-    });
+    };
+    // Spec: cod-partial-personal-insolvency.yaml legacy-agi. Preserve the old
+    // incomplete input as rejection evidence; only the complete successor runs.
+    expect(() => calculateFederalTax(incompleteOriginal)).toThrow(/COD.*complete|COD.*actual/i);
+    const partiallyExcluded = calculateFederalTax(actualPartialPersonalCodInput({
+      debt: "25000", interest: "0", liabilities: "200000", assets: "185000", creditor: "Creditor",
+    }));
 
     expect(fullyTaxable.schedule1!.cancelledDebtIncome.toNumber()).toBe(25000);
     expect(partiallyExcluded.schedule1!.cancelledDebtIncome.toNumber()).toBe(10000);
@@ -12685,7 +12693,7 @@ describe("Form 6252 installment sales through federal pipeline", () => {
 
 describe("Form 982 federal integration", () => {
   it("Form 982 Part II - insolvency exclusion reduces NOL carryforward through federal pipeline", () => {
-    const result = calculateFederalTax({
+    const incompleteOriginal = {
       ...simpleW2Fixture,
       form1099C: [
         {
@@ -12704,18 +12712,25 @@ describe("Form 982 federal integration", () => {
         nolCarryforward: "15000",
         excessBusinessLossNOL: "15000",
       },
-    });
+    };
+    // Spec: cod-partial-personal-insolvency.yaml current-use. The original two
+    // aggregate aliases do not establish a loss origin or its actual use.
+    expect(() => calculateFederalTax(incompleteOriginal)).toThrow(/COD.*complete|COD.*actual/i);
+    const result = calculateFederalTax(partialPersonalLegacyNolZeroPoolInput());
 
     // Insolvency amount = 200K - 180K = 20K → exclude 20K of 30K COD
     // Taxable COD = 10K flows to Schedule 1 Line 8c
     expect(result.schedule1!.cancelledDebtIncome.toNumber()).toBe(10000);
 
-    // Without Form 982: NOL carryforward would be 15000 - nolDeduction
-    // With Form 982: the $20K exclusion reduces NOL in the general order
-    // NOL after 80% deduction limit and then Form 982 reduction
-    // The exact reduction depends on the NOL deduction applied, but the
-    // carryforward should be less than it would be without Form 982
+    // Preserve the original inequality and strengthen the actual source result:
+    // the same15,000 carry is entirely used for current tax, so its subsequent
+    // section108 NOL reduction is zero in each independently sourced ledger.
     expect(result.carryforwards.nolCarryforward.toNumber()).toBeLessThan(15000);
+    for (const ledger of [result.codNolReduction!.regular!, result.codNolReduction!.alternativeTax!]) {
+      expect(ledger.currentTaxUse.toFixed()).toBe("15000");
+      expect(ledger.reduction.toFixed()).toBe("0");
+      expect(ledger.carryforward.toFixed()).toBe("0");
+    }
   });
 
   it("Form 982 Part II - bankruptcy exclusion with no carryforwards leaves carryforwards unchanged", () => {

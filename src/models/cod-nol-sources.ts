@@ -19,6 +19,17 @@ export const Form982NolSourcesSchema = z.object({
     amountDischarged: sourceAmount, interestIncluded: sourceAmount, fmvOfProperty: sourceAmount,
     debtDescription: z.string().optional(), personallyLiable: z.boolean().optional(), identifiableEventCode: z.string().optional(),
     unsecuredPersonalDebtConfirmed: z.boolean().optional(), noPropertyTransferConfirmed: z.boolean().optional(),
+    /** Actual use and complete discharge records, not an inferred Box2/3 treatment. */
+    personalDebt: z.object({
+      sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+      allDischargedAmountsIncluded: z.boolean().optional(),
+      proceedsUse: z.enum(['personal_living_expenses', 'business', 'investment', 'mixed_or_other']).optional(),
+      useSourceReference: z.string().optional(), borrowingNotDeductibleUnpaidExpenseConfirmed: z.boolean().optional(),
+      interestTreatment: z.enum(['nondeductible_personal', 'potentially_deductible']).optional(),
+      interestSourceReference: z.string().optional(),
+      actualDischargedAmount: sourceAmount, actualDischargedInterest: sourceAmount,
+      noPaymentOrNewBorrowingAtDischargeConfirmed: z.boolean().optional(),
+    }).optional(),
   })).optional(),
   insolvency: z.object({
     asOfDate: z.string().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),

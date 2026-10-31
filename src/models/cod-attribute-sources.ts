@@ -45,6 +45,7 @@ export const Form982AttributeSourcesSchema = z.object({
   currentMinimumTaxCredit: z.object({
     sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
     allCurrentAdjustmentSourcesIncluded: z.boolean().optional(), noAdditionalDeferralItemsConfirmed: z.boolean().optional(),
+    currentYearUnallowedQualifiedElectricVehicleCredit: amount,
     sourceYearCalculation: CurrentMinimumTaxCreditSourcesSchema.optional(),
   }).optional(),
   regular: CodAttributeLedgerSourcesSchema.optional(), alternativeTax: CodAttributeLedgerSourcesSchema.optional(),

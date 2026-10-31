@@ -11,7 +11,8 @@ type Editable<T> = { [K in keyof T]: T[K] extends boolean | undefined ? boolean 
   : T[K] extends number | undefined ? string | undefined : T[K] };
 type OriginalDebt = NonNullable<Form982NolSources['debts']>[number];
 type OriginalInsolvency = NonNullable<Form982NolSources['insolvency']>;
-export type CodDebtData = Editable<Omit<OriginalDebt, 'sourceId'>>;
+export type CodPersonalDebtData = Editable<NonNullable<OriginalDebt['personalDebt']>>;
+export type CodDebtData = Editable<Omit<OriginalDebt, 'sourceId' | 'personalDebt'>> & { personalDebt?: CodPersonalDebtData };
 export type CodInsolvencyItemData = Omit<NonNullable<OriginalInsolvency['assets']>[number], 'dischargedDebtSourceId'> & {
   dischargedDebtStatementId?: string;
 };
@@ -60,11 +61,20 @@ function collectGuidedCodNol(buildPrior: typeof buildGuidedNetOperatingLoss, dat
     if (!id) throw new Error('Enter the actual original statement identity.');
     if (identities.has(id)) throw new Error('Duplicate original debt statement identity.');
     const sourceId = `form1099C:${index}`; identities.set(id, sourceId);
+    const personal = debt.personalDebt;
     return { ...debt, sourceId, statementId: id, sourceTaxYear: year(debt.sourceTaxYear),
       amountDischarged: amount(debt.amountDischarged, 'Box 2 canceled debt'), interestIncluded: amount(debt.interestIncluded, 'Box 3 interest'),
       fmvOfProperty: amount(debt.fmvOfProperty, 'Box 7 property value'), personallyLiable: boolean(debt.personallyLiable),
       unsecuredPersonalDebtConfirmed: boolean(debt.unsecuredPersonalDebtConfirmed), noPropertyTransferConfirmed: boolean(debt.noPropertyTransferConfirmed),
-      sourceFactsConfirmed: boolean(debt.sourceFactsConfirmed) };
+      sourceFactsConfirmed: boolean(debt.sourceFactsConfirmed),
+      ...(personal ? { personalDebt: { ...personal,
+        sourceFactsConfirmed: boolean(personal.sourceFactsConfirmed),
+        allDischargedAmountsIncluded: boolean(personal.allDischargedAmountsIncluded),
+        borrowingNotDeductibleUnpaidExpenseConfirmed: boolean(personal.borrowingNotDeductibleUnpaidExpenseConfirmed),
+        noPaymentOrNewBorrowingAtDischargeConfirmed: boolean(personal.noPaymentOrNewBorrowingAtDischargeConfirmed),
+        actualDischargedAmount: amount(personal.actualDischargedAmount, 'complete personal debt discharged'),
+        actualDischargedInterest: amount(personal.actualDischargedInterest, 'actual personal interest discharged'),
+      } } : {}) };
   });
   const items = (rows: CodInsolvencyItemData[] | undefined, kind: 'assets' | 'liabilities') => {
     if (!Array.isArray(rows)) throw new Error(`Enter the complete actual ${kind} list, or explicitly record none.`);
@@ -111,7 +121,8 @@ function validateGuidedCodNol(build: typeof buildGuidedCodNol, state: GuidedFlow
   } catch (error) { return { codNolSources: error instanceof Error ? error.message : 'Reconcile the actual canceled-debt sources.' }; }
 }
 export function invalidateGuidedCodNol(data: CodNolData): CodNolData {
-  return { ...data, sourceFactsConfirmed: null, ...(data.debts ? { debts: data.debts.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}),
+  return { ...data, sourceFactsConfirmed: null, ...(data.debts ? { debts: data.debts.map(row => ({ ...row, sourceFactsConfirmed: null,
+    ...(row.personalDebt ? { personalDebt: { ...row.personalDebt, sourceFactsConfirmed: null } } : {}) })) } : {}),
     ...(data.insolvency ? { insolvency: { ...data.insolvency, sourceFactsConfirmed: null } } : {}),
     ...(data.attributeSources ? { attributeSources: invalidateGuidedCodAttributes(data.attributeSources) } : {}) };
 }

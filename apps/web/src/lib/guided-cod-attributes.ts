@@ -8,7 +8,7 @@ export type CodAttributeData = EditableSource<Form982AttributeSources>;
 export type CodAttributeLedgerData = NonNullable<CodAttributeData['regular']>;
 export type CodAttributeRecordData = NonNullable<CodAttributeLedgerData['records']>[number];
 export type CodAttributePropertyData = NonNullable<NonNullable<NonNullable<CodAttributeLedgerData['property']>['followingYear']>['properties']>[number];
-const amounts = new Set(['originalAmount', 'used', 'reduced', 'expired', 'currentYearUse', 'currentYearCarryback', 'currentYearExpired', 'adjustedBasis', 'money', 'amount']);
+const amounts = new Set(['originalAmount', 'used', 'reduced', 'expired', 'currentYearUse', 'currentYearCarryback', 'currentYearExpired', 'adjustedBasis', 'money', 'amount', 'currentYearUnallowedQualifiedElectricVehicleCredit']);
 const years = new Set(['sourceTaxYear', 'originTaxYear', 'taxYear']);
 
 /** Only formatting changes here; source and canonical validation own every calculation. */

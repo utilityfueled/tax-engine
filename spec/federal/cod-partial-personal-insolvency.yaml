@@ -1,0 +1,97 @@
+form: "Partial personal insolvency cancellation"
+fullName: "Actual personal debt use, nondeductible interest and partial insolvency"
+taxYear: 2025
+irsReference: "https://www.irs.gov/publications/p4681"
+notes: |
+  Refreshed 2026-10-28 before runtime edits. IRC108(a)(1)(B),(a)(3),(d)(3),
+  (e)(2), and (b)(1)-(4); IRC163(h); Reg1.163-8T; IRC61(a)(11),1411(a)-(d)
+  and Reg1.1411-4(a),(c),(d). IRS2025 Pub17 Canceled Debts/Interest included;
+  IRS2025 Pub4681 Insolvency Example2 and Reduction of Tax Attributes;
+  current1099-A/C instructions Exceptions/Interest and Boxes2/3;
+  Form172/982 instructions and Reg1.108-7 current-tax-before-reduction ordering.
+  https://uscode.house.gov/us/usc/119-124/t26/s108/
+  https://uscode.house.gov/us/usc/119-124/t26/s163/
+  https://www.ecfr.gov/current/title-26/section-1.163-8T
+  https://www.irs.gov/publications/p17
+  https://www.irs.gov/instructions/i1099ac
+  https://uscode.house.gov/us/usc/119-124/t26/s1411/
+  https://www.ecfr.gov/current/title-26/section-1.1411-4
+  https://www.irs.gov/instructions/i172
+  https://www.irs.gov/instructions/i982
+  Continue the existing one-event/continuing-individual/noncommunity source
+  contract. Actual unsecured consumer borrowing has no business/investment
+  purpose, deductible unpaid-expense liability, deductible interest, property
+  transfer, simultaneous payment/new borrowing or other exception. Complete
+  original use/discharge records must establish the treatment; an original
+  debt description, personal-liability box or blank interest box does not.
+  The additional proof reconciles actual complete discharged debt and interest
+  to represented Boxes2/3. Positive omitted amounts require their separately
+  reconciled reporting bridge; no absence is silently zero. This is an internal
+  source boundary, not a legal-uncertainty finding.
+  Let D=actual complete debt, I=nondeductible interest already included in D,
+  L=immediately-before liabilities and A=all asset FMV. Insolvency=max(0,L-A),
+  E=min(D,insolvency), and taxable personal COD T=D-E. Do not add or subtract I.
+  Keep exact source amounts and the existing final destination reporting rule;
+  round aggregate Form982 excluded income once, not individual debt rows.
+  T enters Schedule1 line8c and AGI/MAGI. Under the actual personal/no-disposition
+  source contract T is outside enumerated NII itself, a statutory derivation
+  rather than a published matching personal-COD/NIIT example. It can still
+  increase NIIT on other actual investment income through MAGI.
+  Compute current tax and independent regular/AMT loss use first, then apply
+  E only through the existing complete ordinary attribute vectors. Retain
+  modified absorption, charitable comparison, expiry, shared-credit and current
+  MTC proof boundaries. Immediately-after liabilities use L-D, not L-E.
+  Legacy aggregate-only originals remain explicit rejection controls. Their
+  complete synthetic successors retain the original amounts and assertions.
+  No2026 full-return or PDF qualification is supplied by this method.
+lines:
+  - line: "partial-example"
+    description: "Use the published personal debt and partial insolvency amounts"
+    formula: "Pub4681 Example2: debt5000, liabilities10000, assets7000 => insolvency/exclusion3000 and taxable2000; original debt and independently sourced attributes remain complete."
+    irsRef: "IRC108(a)(1)(B),(a)(3),(d)(3); Pub4681 Insolvency Example2"
+    testRef: "tests/engine/federal-cod-partial-personal.test.ts::uses the published personal partial-insolvency amounts from complete originals"
+  - line: "legacy-agi"
+    description: "Preserve the original AGI comparison with complete personal sources"
+    formula: "Wages85000/debt25000/liabilities200000/assets185000 => excluded15000, taxableCOD10000 and AGI95000. Fully taxable debt gives AGI110000; difference15000. The old aggregate-only input still rejects."
+    irsRef: "IRC108(a)(3); Pub17 Canceled Debts; Schedule1line8c"
+    testRef: "tests/engine/federal-cod-partial-personal.test.ts::preserves the legacy taxable amount and AGI difference without admitting its incomplete original"
+  - line: "included-interest"
+    description: "Keep documented nondeductible interest inside the original discharged amount"
+    formula: "Box2=18000 includes Box3=1200. Complete personal-use proof and liabilities90000/assets80000 give exclusion10000, taxable8000 and immediately-after liabilities72000. Neither19200 nor16800 is the discharge."
+    irsRef: "IRC108(e)(2); IRC163(h); Pub17 Interest included in canceled debt; i1099ac Boxes2/3"
+    testRef: "tests/engine/federal-cod-partial-personal.test.ts::retains included personal interest and separates actual discharge from excluded income"
+  - line: "current-use"
+    description: "Distinguish one original EBL carry's current use from after-tax reduction"
+    formula: "Wages85000/taxableCOD10000 with one actual2024EBL/NOL15000: regular pre-NOL income79250 and80%limit63400 permit actual use15000; independent AMT income95000 permits15000. Both NOL closings and NOL108 reductions are0. The two legacy15000 aliases identify the same source, not30000. Keep the original closing<15000 assertion as well."
+    irsRef: "IRC172(a); IRC108(b)(4); i172; actual EBL/QBI source histories"
+    testRef: "tests/engine/federal-cod-partial-personal.test.ts::uses the single documented legacy carry before applying the exclusion to attributes"
+  - line: "positive-after-tax-reduction"
+    description: "Demonstrate positive NOL reduction after actual current use"
+    formula: "Wages85000/taxableCOD10000 and independently sourced100000 regular/AMT NOLs: current use63400/85500. Excluded20000 reduces regular36600 by20000 to16600 and AMT14500 by14500 to0; only the genuine remaining5500 enters later alternative attributes."
+    irsRef: "IRC108(b)(2)(A),(b)(4); IRC172(a); IRC56(d); Reg1.55-1"
+    testRef: "tests/engine/federal-cod-partial-personal.test.ts::reduces only the surviving independently computed loss balances"
+  - line: "basis-full-discharge"
+    description: "Use all discharged liabilities in the actual section1017 cap"
+    formula: "Debt18000/interest1200/liabilities90000/assets80000 => E10000/T8000. Actual after-event personal basis75000 and money0, liabilities72000, same property at next-year start: cap3000 and closing basis72000. No earlier attributes; remaining excluded7000 is unreduced, not taxable income."
+    irsRef: "IRC1017(b)(2); Reg1.1017-1; IRC108(b)(2)(E); i982"
+    testRef: "tests/engine/federal-cod-partial-personal.test.ts::uses the full discharged liability in the independently sourced basis cap"
+  - line: "niit"
+    description: "Keep personal COD outside NII while retaining its MAGI effect"
+    formula: "Single wages195000 plus actual interest5000 gives MAGI200000/NII5000/NIIT0. Add personal taxableCOD8000: MAGI208000, NII5000, NIIT190. With no investment income, taxable personal COD alone creates no NII or NIIT."
+    irsRef: "IRC61(a)(11); IRC1411(a)-(d); Reg1.1411-4(a),(c),(d), bounded category derivation"
+    testRef: "tests/engine/federal-cod-partial-personal.test.ts::retains the personal income classification and its actual NIIT threshold effect"
+  - line: "source-boundaries"
+    description: "Retain exact source amounts and explicit personal-interest proof"
+    formula: "Debt18000.37/interest1200.12/liabilities90000.40/assets80000.11 => sourceE10000.29/T8000.08/afterLiabilities72000.03; reportE10000 once. Equal/full/zero insolvency endpoints remain derived. Missing or false proof, deductible/mixed/investment/business use, contradictory actual totals, positive omitted charges, I>D, unknown owner/year and unchanged original-loss method boundaries reject."
+    irsRef: "IRC108(a),(d)(3),(e)(2); IRC163(h); IRC6102(c); actual original-source reconciliation"
+    testRef: "tests/engine/federal-cod-partial-personal.test.ts::preserves source cents and the finite personal-use and reporting boundaries"
+  - line: "guide"
+    description: "Collect and reconfirm original purpose and discharge evidence"
+    formula: "Actual debt-use, complete discharge and interest-if-paid records survive the guide round trip; edits revoke debt and packet confirmations. Blank answers remain unknown. The guide never accepts an excluded amount, revised attribute closing or NII override."
+    irsRef: "Original debt and insolvency source contract"
+    testRef: "tests/guided-interview/guided-cod-partial-personal.test.ts::binds the original personal use and interest records after actual reconfirmation"
+  - line: "review"
+    description: "Bind complete originals and federal results before private output"
+    formula: "Unchanged canonical and permitted identifier-redacted inputs render physical/reference amounts. Equal-money debt-use/interest-source replacements or altered current tax reject before both missing/existing-directory output. Actual D/E/T, current NOL use, separate reductions and post-COD basis are labeled distinctly; packet stays partial/reference-only."
+    irsRef: "Form1099C Boxes2/3; Schedule1line8c; Form9821b/2/6/10b; original-source review contract"
+    testRef: "tests/pdf/cod-partial-personal-review.test.ts::retains the original personal interest and after-tax closing evidence before any output"

@@ -718,6 +718,45 @@
       ]
     },
     {
+      "key": "federal/cod-partial-personal-insolvency",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/publications/p4681",
+      "specPath": "spec/federal/cod-partial-personal-insolvency.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/cod-zero-minimum-tax-credit-bound",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8801",
+      "specPath": "spec/federal/cod-zero-minimum-tax-credit-bound.yaml",
+      "enginePath": "src/engine/forms/cod-zero-minimum-tax-credit-bound.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/crypto-charitable-integration",
       "jurisdiction": "federal",
       "taxYear": 2026,

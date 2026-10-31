@@ -7,6 +7,27 @@ import { sumSourceMoneyRatios } from '@/utils/sum-source-money-ratios.js';
 export function currentMinimumTaxCreditReference(result: TaxReturnResult): Array<{ label: string; value: string }> {
   const source = result.currentMinimumTaxCredit, later = result.codAttributeReduction;
   const pools = [later?.regular.minimumTaxCreditPool, later?.alternativeTax.minimumTaxCreditPool];
+  const bound = result.codZeroMinimumTaxCreditBound;
+  if (bound) {
+    // Spec: cod-zero-minimum-tax-credit-bound.yaml review. The proof states only
+    // the zero pool, so it never prints a signed amount or a source PartI.
+    const zero = new Decimal(0), form = result.form8801;
+    if (source || pools.some(pool => pool !== undefined) || bound.sourceFactsVerified !== true || bound.sourceTaxYear !== result.taxYear
+      || !later || !form || !bound.currentAmt.eq(zero) || !(result.form6251?.amt ?? zero).eq(zero)
+      || !bound.currentFormCarry.eq(form.carryforwardToNextYear) || !bound.currentFormCarry.eq(zero)
+      || !bound.currentCreditAvailable.eq(form.totalAvailableCredit) || !bound.currentCreditUsed.eq(form.creditAllowed)
+      || !bound.currentYearUnallowedQualifiedElectricVehicleCredit.eq(zero) || !bound.followingYearPool.eq(zero)
+      || !result.carryforwards.minimumTaxCredit.eq(zero)) {
+      throw new Error('COD zero minimum tax credit reference does not reconcile with its actual source proof');
+    }
+    return [
+      { label: 'Current AMT for the zero-pool bound', value: bound.currentAmt.toFixed() },
+      { label: 'Current full Form8801 carry for the zero-pool bound', value: bound.currentFormCarry.toFixed() },
+      { label: 'Current-year unallowed legacy vehicle credit', value: bound.currentYearUnallowedQualifiedElectricVehicleCredit.toFixed() },
+      { label: 'Beginning-next-year minimum tax credit: zero-pool bound', value: bound.followingYearPool.toFixed() },
+      { label: 'Signed current-year minimum tax credit adjustment', value: 'Not determined by the zero-pool proof' },
+    ];
+  }
   if (!source && pools.every(pool => pool === undefined)) return [];
   if (!source || source.sourceFactsVerified !== true || source.sourceTaxYear !== result.taxYear || !later || pools.some(pool => !pool)) {
     throw new Error('Current MTC reference requires its complete signed source and both aggregate ledgers');

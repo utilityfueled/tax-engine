@@ -91,6 +91,7 @@ import { calculateForm1099OID } from "./forms/form-1099-oid.js";
 import { calculateForm6251, type Form6251Input, type Form6251IncomeInput } from "./forms/form-6251.js";
 import { calculateForm8801 } from "./forms/form-8801.js";
 import { calculateCurrentMinimumTaxCredit } from "./forms/current-minimum-tax-credit.js";
+import { calculateCodZeroMinimumTaxCreditBound } from "./forms/cod-zero-minimum-tax-credit-bound.js";
 import { calculateForm8582 } from "./forms/form-8582.js";
 import { calculatePassiveLossQBI, type PassiveLossQBIResult } from "./forms/passive-loss-qbi.js";
 import { calculateK1QbiLossReturn } from "./forms/k1-qbi-loss-return.js";
@@ -4087,6 +4088,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       nol?.stage === "final" ? nol.worksheet.priorCharitableAlternativeAdjustment?.amount ?? d("0") : d("0"),
       deductionUsed === "itemized" ? itemizedDeductionReduction.negated() : d("0")] });
   if (currentMinimumTaxCredit) audit.merge(currentMinimumTaxCredit.lines);
+  const codZeroMinimumTaxCreditBound = calculateCodZeroMinimumTaxCreditBound(input, { form6251, form8801 });
+  if (codZeroMinimumTaxCreditBound) audit.merge(codZeroMinimumTaxCreditBound.lines);
   const sched3 = calculateSchedule3(input, {
     foreignTaxCredit, childDependentCareCredit: dependentCareCredit, educationCredits: educationNonrefundable,
     retirementSavingsCredit, residentialCleanEnergyCredit: form5695.residentialCleanEnergyCredit,
@@ -4525,6 +4528,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
         ? calculateForm1099C(form1099CForms, codExclusion, filingStatus, constants)
         : undefined;
       const hasCodExclusions = form1099CResult && form1099CResult.totalExclusions.greaterThan(0);
+      if (codNolReduction && (!form1099CResult
+        || !form1099CResult.totalCancelledDebt.eq(codNolReduction.sourceDischargedAmount)
+        || !form1099CResult.totalInterestIncluded.eq(codNolReduction.sourceIncludedInterest)
+        || !form1099CResult.totalExclusions.eq(codNolReduction.sourceExcludedAmount)
+        || !form1099CResult.taxableCodIncome.eq(codNolReduction.sourceTaxableAmount))) {
+        throw new Error("COD complete original discharge, included interest, exclusion and current taxable income must reconcile");
+      }
 
       // Pre-reduction carryforward values
       // Preserve the same selected prior source used for the deduction, including
@@ -4578,7 +4588,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
               nol: codNolReduction, generalBusinessCredit: cfGbc, generalBusinessAvailable: form3800?.totalCredit ?? d("0"),
               generalBusinessUsed: form3800?.allowableCredit ?? d("0"), minimumTaxCredit: cfMtc,
               minimumTaxAvailable: form8801?.totalAvailableCredit ?? d("0"), minimumTaxUsed: form8801?.creditAllowed ?? d("0"),
-              currentMinimumTaxCreditZeroProven, currentMinimumTaxCredit,
+              currentMinimumTaxCreditZeroProven, currentMinimumTaxCredit, codZeroMinimumTaxCreditBound,
               shortTermCapitalLoss: cfShortTermCapitalLoss, longTermCapitalLoss: cfLongTermCapitalLoss,
               capitalOpenings: {
                 short: { prior: zeroFloor(d(input.priorYear?.shortTermCapitalLoss).negated()),
@@ -4833,6 +4843,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     form8936,
     form8801,
     currentMinimumTaxCredit,
+    codZeroMinimumTaxCreditBound,
     form4684,
     form4952,
     form4952Amt,
