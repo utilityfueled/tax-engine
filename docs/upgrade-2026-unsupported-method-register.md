@@ -1,6 +1,6 @@
 # Unsupported method register
 
-Recorded October 31, 2026 at `298c254c`, then updated as packages shipped: Form 1099-DA basis corrections, gross-proceeds costs and repaid earlier-year unemployment, Form 2210-F, waiver requests and Schedule D worksheets with corrected digital rows, crypto payments, and mining, staking, airdrop, gift and inherited lots are delivered. Form 1099-G business refunds moved to Ruling, because source research found no recipient rule. This classifies the engine's explicit rejections so the remaining work can be reviewed and prioritized. An unsupported return stops with a named error. The engine does not estimate it.
+Recorded October 31, 2026 at `298c254c`, then updated as packages shipped: Form 1099-DA basis corrections, gross-proceeds costs and repaid earlier-year unemployment, Form 2210-F, waiver requests and Schedule D worksheets with corrected digital rows, crypto payments, mining, staking, airdrop, gift and inherited lots, Schedule 1-A on Schedule AI line 14, and chapter 13 discharges are delivered. Form 1099-G business refunds moved to Ruling, because source research found no recipient rule. This classifies the engine's explicit rejections so the remaining work can be reviewed and prioritized. An unsupported return stops with a named error. The engine does not estimate it.
 
 A rejection here is not an external blocker unless its class says so. Year guards are excluded: they reject unsupported years on purpose and are not missing work.
 
@@ -26,7 +26,7 @@ A rejection here is not an external blocker unless its class says so. Year guard
 | Form 172 origins | Farming, estate, cancelled-debt, other classified income and deductions | `form-172-*.ts` |
 | K-1 histories | Basis, at-risk, passive recharacterization, decreased-value gifts, Form 461 classification | `k1-*.ts` |
 | Charitable with loss histories | Multi-vintage attribution, prior carry with the 2026 floor, recurrent joint attribution | `charitable-*.ts` |
-| COD | Title 11, joint or community ownership, modified-loss exhaustion, current EBL origin | `cod-nol-reductions.ts` |
+| COD | Chapters 7, 11 and 12 of title 11, joint or community ownership, modified-loss exhaustion, current EBL origin | `cod-nol-reductions.ts` |
 | Premium tax credit | Separate-return allocation, overlapping shared policies, no-APTC allocation, below-poverty marriage | `form-8962-*.ts` |
 | Education | Partial in-kind allocation, Coverdell disqualification with later activity | `form-1099-q.ts` |
 | Foreign earned income | Partnership or prior non-W2 income mappings | `form-2555-source-binding.ts` |

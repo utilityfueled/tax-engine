@@ -19,7 +19,8 @@ export type CodInsolvencyItemData = Omit<NonNullable<OriginalInsolvency['assets'
 export type CodInsolvencyData = Editable<Omit<OriginalInsolvency, 'assets' | 'liabilities'>> & {
   assets?: CodInsolvencyItemData[]; liabilities?: CodInsolvencyItemData[];
 };
-export type CodNolData = Editable<Omit<Form982NolSources, 'debts' | 'insolvency'>> & {
+export type CodNolData = Editable<Omit<Form982NolSources, 'debts' | 'insolvency' | 'title11Chapter' | 'title11Source'>> & {
+  title11Chapter?: Form982NolSources['title11Chapter'] | ''; title11Source?: Editable<NonNullable<Form982NolSources['title11Source']>>;
   debts?: CodDebtData[]; insolvency?: CodInsolvencyData; attributeSources?: CodAttributeData;
 };
 const statuses = { single: 'single', mfj: 'married_filing_jointly', mfs: 'married_filing_separately', hoh: 'head_of_household', qss: 'qualifying_surviving_spouse' } as const;
@@ -51,7 +52,7 @@ function collectGuidedCodNol(buildPrior: typeof buildGuidedNetOperatingLoss, dat
   }
   const prior = buildPrior(sectionData.adjustments?.netOperatingLossSources, taxYear, segmentation.filingStatus, personal, sectionData.deductions, sectionData.adjustments?.k1LossSources, data.attributeSources);
   if (!prior) throw new Error('Enter the actual independent regular and AMT loss carry histories, including explicit empty histories when none.');
-  if (data.title11Case !== false || data.electBasisReductionFirst !== false || data.otherExclusionsOrExceptionsApply !== false) {
+  if (typeof data.title11Case !== 'boolean' || data.electBasisReductionFirst !== false || data.otherExclusionsOrExceptionsApply !== false) {
     throw new Error('Confirm the actual bankruptcy, basis-first election and other exclusion answers. Positive or unknown answers require their separate debt method.');
   }
   if (!data.debts?.length || !data.insolvency) throw new Error('Enter all actual original debt statements and the complete insolvency worksheet.');
@@ -88,6 +89,9 @@ function collectGuidedCodNol(buildPrior: typeof buildGuidedNetOperatingLoss, dat
   const facts = Form982NolSourcesSchema.parse({ ...data, sourceTaxYear: year(data.sourceTaxYear),
     sourceFactsConfirmed: boolean(data.sourceFactsConfirmed), allDischargesIncluded: boolean(data.allDischargesIncluded),
     communityPropertyApplies: boolean(data.communityPropertyApplies), regularAndAlternativeExclusionSameConfirmed: boolean(data.regularAndAlternativeExclusionSameConfirmed),
+    title11Chapter: data.title11Case && data.title11Chapter ? data.title11Chapter : undefined,
+    title11Source: data.title11Case ? { sourceReference: data.title11Source?.sourceReference, sourceFactsConfirmed: boolean(data.title11Source?.sourceFactsConfirmed),
+      debtorUnderCourtJurisdictionConfirmed: boolean(data.title11Source?.debtorUnderCourtJurisdictionConfirmed), dischargeByCourtOrApprovedPlanConfirmed: boolean(data.title11Source?.dischargeByCourtOrApprovedPlanConfirmed) } : undefined,
     debts, insolvency: { ...data.insolvency, sourceFactsConfirmed: boolean(data.insolvency.sourceFactsConfirmed),
       immediatelyBeforeDischargeConfirmed: boolean(data.insolvency.immediatelyBeforeDischargeConfirmed), allAssetsIncluded: boolean(data.insolvency.allAssetsIncluded),
       exemptAndRetirementAssetsIncluded: boolean(data.insolvency.exemptAndRetirementAssetsIncluded), allLiabilitiesIncluded: boolean(data.insolvency.allLiabilitiesIncluded), assets, liabilities } });
@@ -124,6 +128,7 @@ export function invalidateGuidedCodNol(data: CodNolData): CodNolData {
   return { ...data, sourceFactsConfirmed: null, ...(data.debts ? { debts: data.debts.map(row => ({ ...row, sourceFactsConfirmed: null,
     ...(row.personalDebt ? { personalDebt: { ...row.personalDebt, sourceFactsConfirmed: null } } : {}) })) } : {}),
     ...(data.insolvency ? { insolvency: { ...data.insolvency, sourceFactsConfirmed: null } } : {}),
+    ...(data.title11Source ? { title11Source: { ...data.title11Source, sourceFactsConfirmed: null } } : {}),
     ...(data.attributeSources ? { attributeSources: invalidateGuidedCodAttributes(data.attributeSources) } : {}) };
 }
 export function updateGuidedCodNol(previous: CodNolData, patch: Partial<CodNolData>): CodNolData {

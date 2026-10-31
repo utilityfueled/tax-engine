@@ -29,7 +29,7 @@ export interface CodNolLedgerReduction {
 export interface CodNolReductionResult {
   sourceFactsVerified: true; calculationComplete: boolean; sourceExcludedAmount: Decimal;
   sourceDischargedAmount: Decimal; sourceIncludedInterest: Decimal; sourceTaxableAmount: Decimal;
-  reportedExcludedAmount: Decimal; insolvencyAmount: Decimal;
+  reportedExcludedAmount: Decimal; insolvencyAmount: Decimal; title11?: true;
   regular?: CodNolLedgerReduction; alternativeTax?: CodNolLedgerReduction; lines: CalculatedLine[];
 }
 function actual(value: string | undefined, label: string): Decimal {
@@ -98,10 +98,18 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
     || facts.allDischargesIncluded !== true || !facts.sourceReference?.trim()) throw new Error('COD requires complete actual Form982 NOL source records and year');
   if (!input.netOperatingLoss) throw new Error('COD vintage attribute reduction requires complete independent regular and AMT NOL carry sources');
   if (joint || facts.communityPropertyApplies !== false) throw new Error('COD joint or community ownership needs its separate actual attribute allocation method');
-  if (facts.title11Case !== false || facts.electBasisReductionFirst !== false || facts.otherExclusionsOrExceptionsApply !== false
+  if (typeof facts.title11Case !== 'boolean' || facts.electBasisReductionFirst !== false || facts.otherExclusionsOrExceptionsApply !== false
     || facts.regularAndAlternativeExclusionSameConfirmed !== true) throw new Error('COD title11, unknown exclusions, basis-first or different AMT exclusions require their separate source method');
+  // Spec: cod-title-11-chapter-13. IRC1398 gives chapter 7 and 11 attributes to a separate estate.
+  const title11 = facts.title11Case;
+  if (title11) {
+    if (facts.title11Chapter !== '13') throw new Error('COD title11 chapter 7, 11, 12 or unknown needs its separate bankruptcy estate method');
+    const source = facts.title11Source;
+    if (source?.sourceFactsConfirmed !== true || !source.sourceReference?.trim() || source.debtorUnderCourtJurisdictionConfirmed !== true
+      || source.dischargeByCourtOrApprovedPlanConfirmed !== true) throw new Error('COD title11 requires the actual court record of the discharge');
+  }
   const exclusion = input.codExclusion;
-  if (!exclusion?.insolvency || exclusion.bankruptcy || exclusion.electBasisReductionFirst || exclusion.qualifiedPrincipalResidence
+  if (!exclusion?.insolvency || Boolean(exclusion.bankruptcy) !== title11 || exclusion.electBasisReductionFirst || exclusion.qualifiedPrincipalResidence
     || !d(exclusion.qualifiedFarmExclusion).isZero() || !d(exclusion.qualifiedRealPropertyBusinessExclusion).isZero()) {
     throw new Error('COD source route requires its actual insolvency-only exclusion and no conflicting legacy election');
   }
@@ -130,7 +138,7 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
     if (debt.accountHolder !== 'primary' || !/^\d{9}$/.test(primaryId) || debt.debtorSsnLast4 !== primaryId.slice(-4)
       || name(text(debt.debtorName, 'actual debtor name')) !== name(`${primary.firstName} ${primary.lastName}`)) throw new Error('COD actual source owner must match the continuing individual');
     if (debt.unsecuredPersonalDebtConfirmed !== true || debt.noPropertyTransferConfirmed !== true || debt.personallyLiable !== true
-      || !/^[B-H]$/.test(debt.identifiableEventCode ?? '')) throw new Error('COD requires actual personal recourse debt without title11 or property disposition');
+      || !(title11 ? debt.identifiableEventCode === 'A' : /^[B-H]$/.test(debt.identifiableEventCode ?? ''))) throw new Error('COD requires actual personal recourse debt with the event code of its exclusion and no property disposition');
     const amount = actual(debt.amountDischarged, 'original Box2'), interest = actual(debt.interestIncluded, 'original Box3'), property = actual(debt.fmvOfProperty, 'original Box7');
     if (!amount.gt(0) || !property.isZero()) throw new Error('COD property or zero-debt source requires its separate exclusion method');
     if (interest.gt(amount)) throw new Error('COD included interest cannot exceed the complete original discharged amount');
@@ -160,7 +168,7 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
   if (linked.size !== sourceAmounts.size || insolvency.assets?.some(row => row.dischargedDebtSourceId !== undefined)) throw new Error('COD each discharged liability must bind its actual debt source');
   const sourceDischargedAmount = sumSourceMoney(...sourceAmounts.values()), sourceIncludedInterest = sumSourceMoney(...sourceInterest);
   const insolvencyAmount = zeroFloor(sumSourceMoney(liabilities, assets.negated()));
-  const sourceExcludedAmount = Decimal.min(sourceDischargedAmount, insolvencyAmount);
+  const sourceExcludedAmount = title11 ? sourceDischargedAmount : Decimal.min(sourceDischargedAmount, insolvencyAmount);
   const sourceTaxableAmount = sumSourceMoney(sourceDischargedAmount, sourceExcludedAmount.negated());
   if (sourceTaxableAmount.gt(0)) {
     for (const debt of facts.debts) personalDebtSource(debt, actual(debt.amountDischarged, 'original Box2'), actual(debt.interestIncluded, 'original Box3'));
@@ -168,13 +176,13 @@ export function calculateCodNolReduction(input: CodNolSourceInput, context?: {
   const reportedExcludedAmount = roundDollar(sourceExcludedAmount), audit = new AuditTrail();
   audit.record('Form982 NOL Sources', 'insolvency', 'Actual immediately-before-discharge insolvency', insolvencyAmount,
     'Complete actual liabilities less all actual asset FMV, including exempt and retirement property', { Assets: assets, Liabilities: liabilities });
-  audit.record('Form 982', '2', 'Discharged debt excluded under insolvency', reportedExcludedAmount,
-    'Lesser of complete original discharge and actual insolvency; round the excluded aggregate once', { 'Original excluded debt': sourceExcludedAmount });
+  audit.record('Form 982', '2', `Discharged debt excluded under ${title11 ? 'title11' : 'insolvency'}`, reportedExcludedAmount,
+    title11 ? 'Complete original discharge in a title11 case; round the excluded aggregate once' : 'Lesser of complete original discharge and actual insolvency; round the excluded aggregate once', { 'Original excluded debt': sourceExcludedAmount });
   audit.record('Form982 NOL Sources', 'taxablePersonalDebt', 'Actual taxable personal canceled debt', sourceTaxableAmount,
     'Complete original discharge less exact insolvency exclusion; nondeductible interest is already included in the original discharge',
     { 'Complete original discharge': sourceDischargedAmount, 'Included original interest': sourceIncludedInterest, 'Original excluded debt': sourceExcludedAmount });
   const base: CodNolReductionResult = { sourceFactsVerified: true, calculationComplete: false, sourceDischargedAmount, sourceIncludedInterest,
-    sourceTaxableAmount, sourceExcludedAmount, reportedExcludedAmount, insolvencyAmount, lines: audit.getLines() };
+    sourceTaxableAmount, sourceExcludedAmount, reportedExcludedAmount, insolvencyAmount, ...(title11 ? { title11: true as const } : {}), lines: audit.getLines() };
   if (input.form982AttributeSources) calculateCodAttributeReturn(input);
   if (!context) return base;
   const { priorLoss: prior, currentOrigin } = context;

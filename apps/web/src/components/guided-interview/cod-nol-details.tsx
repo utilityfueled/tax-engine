@@ -34,6 +34,14 @@ export function CodNolDetails({ data, onChange }: { data?: CodNolData; onChange:
           ['otherExclusionsOrExceptionsApply', 'Other debt exclusions or exceptions apply'],
           ['regularAndAlternativeExclusionSameConfirmed', 'Independent regular and AMT worksheets use the same debt exclusion'],
         ] as const).map(([key, label]) => <BooleanFact key={key} label={label} value={data[key]} onChange={value => change({ [key]: value })} />)}
+        {data.title11Case === true && <>
+          <Choice label="Bankruptcy chapter" value={data.title11Chapter} options={[['13', 'Chapter 13'], ['7', 'Chapter 7 — separate estate method'], ['11', 'Chapter 11 — separate estate method'], ['12', 'Chapter 12 — separate method']]} onChange={value => change({ title11Chapter: value as CodNolData['title11Chapter'] })} />
+          <TextFact label="Bankruptcy discharge order or plan reference" value={data.title11Source?.sourceReference ?? ''} onChange={sourceReference => change({ title11Source: { ...data.title11Source, sourceReference } })} />
+          <BooleanFact label="You were a debtor under the court's jurisdiction" value={data.title11Source?.debtorUnderCourtJurisdictionConfirmed ?? null} onChange={debtorUnderCourtJurisdictionConfirmed => change({ title11Source: { ...data.title11Source, debtorUnderCourtJurisdictionConfirmed } })} />
+          <BooleanFact label="The court granted the discharge, or it follows a plan the court approved" value={data.title11Source?.dischargeByCourtOrApprovedPlanConfirmed ?? null} onChange={dischargeByCourtOrApprovedPlanConfirmed => change({ title11Source: { ...data.title11Source, dischargeByCourtOrApprovedPlanConfirmed } })} />
+          <BooleanFact label="Bankruptcy records checked" value={data.title11Source?.sourceFactsConfirmed ?? null} onChange={sourceFactsConfirmed => change({ title11Source: { ...data.title11Source, sourceFactsConfirmed } })} />
+          <p className="guided-hint">The debt is fully excluded, but the asset and liability records below are still needed to limit basis reduction.</p>
+        </>}
       </div>
       <fieldset><legend>Original debt statements</legend>
         {data.debts === undefined && <p role="status">The original statement list is unknown.</p>}

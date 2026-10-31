@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.204",
+    ruleVersion: "2025.205",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p4681", section: "Chapter 13 title 11 exclusion", revision: "IRC108(a)(1)(A), IRC1017(b)(2), IRC1398(a), Pub4681 Bankruptcy and Form982 instructions; chapters 7, 11 and 12 remain rejected. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/instructions/i2210", section: "Schedule AI line 14 Schedule 1-A adjustment", revision: "Instructions for Form 2210 (2025) line 14 name Schedule 1-A and give no period rule; each period is an entered amount, column d equals the return deduction. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-virtual-currency-transactions", section: "Digital asset payments, income-origin, gift and inherited lots", revision: "IRS virtual currency FAQs Q13-17, Q25 and Q31-33, Notice2014-21, Rev.Rul.2023-14, Pub551, IRC1015 and IRC1223(2),(9); confirmed income inclusion or gift and inheritance records required. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/pub/irs-pdf/i2210f.pdf", section: "Form 2210-F and estimated-tax waiver requests", revision: "Form2210-F and Instructions (2025) and Instructions for Form2210 (2025) Waiver of Penalty. Two-thirds test, 0.667 line7, January15 date, one payment date and a requested waiver is not a granted waiver. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
@@ -240,11 +241,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.202-law-integration-draft",
+    ruleVersion: "2026.203-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/publications/p4681", section: "Chapter 13 title 11 exclusion", revision: "IRC108(a)(1)(A), IRC1017(b)(2), IRC1398(a), Pub4681 Bankruptcy and Form982 instructions; chapters 7, 11 and 12 remain rejected. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/instructions/i2210", section: "Schedule AI line 14 Schedule 1-A adjustment", revision: "Instructions for Form 2210 (2025) line 14 name Schedule 1-A and give no period rule; each period is an entered amount, column d equals the return deduction. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-virtual-currency-transactions", section: "Digital asset payments, income-origin, gift and inherited lots", revision: "IRS virtual currency FAQs Q13-17, Q25 and Q31-33, Notice2014-21, Rev.Rul.2023-14, Pub551, IRC1015 and IRC1223(2),(9); confirmed income inclusion or gift and inheritance records required. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/pub/irs-pdf/i2210f.pdf", section: "Form 2210-F and estimated-tax waiver requests", revision: "Form2210-F and Instructions (2025) and Instructions for Form2210 (2025) Waiver of Penalty. Two-thirds test, 0.667 line7, January15 date, one payment date and a requested waiver is not a granted waiver. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },

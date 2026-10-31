@@ -259,7 +259,7 @@ export function buildForm982ReferenceSummary(result: TaxReturnResult): Form982Re
       .some(value => !Decimal.isDecimal(value) || !value.isFinite() || value.lt(0))
       || cod.sourceIncludedInterest.gt(cod.sourceDischargedAmount)) throw new Error("Form982 original personal debt amounts do not reconcile");
     same(cod.sourceDischargedAmount, sumSourceMoney(cod.sourceExcludedAmount, cod.sourceTaxableAmount));
-    same(cod.sourceExcludedAmount, Decimal.min(cod.sourceDischargedAmount, cod.insolvencyAmount));
+    same(cod.sourceExcludedAmount, cod.title11 ? cod.sourceDischargedAmount : Decimal.min(cod.sourceDischargedAmount, cod.insolvencyAmount));
     same(cod.reportedExcludedAmount, cod.sourceExcludedAmount.toDecimalPlaces(0, Decimal.ROUND_HALF_UP));
     for (const lines of [cod.lines, result.allLines]) {
       const rows = lines.filter(row => row.form === 'Form982 NOL Sources' && row.line === 'taxablePersonalDebt');
@@ -310,12 +310,12 @@ export function buildForm982ReferenceSummary(result: TaxReturnResult): Form982Re
         same(rows[0].value, expected);
       }
     }
-    const later = laterAttributeSummary(result, same);
+    const later = laterAttributeSummary(result, same), exclusionName = cod.title11 ? "title 11" : "insolvency";
     return {
-      title: result.codAttributeReduction ? "Form 982 Insolvency and Attribute Reduction Reference Summary" : "Form 982 Insolvency and NOL Reduction Reference Summary", warningLabel: "REFERENCE SUMMARY ONLY",
-      introduction: result.codAttributeReduction ? "Actual personal-debt insolvency exclusion. Current tax is calculated before the regular and alternative attribute reductions. Original NOL vintages and later attributes are reconciled separately; this is not an official Form982."
-        : "Actual personal-debt insolvency exclusion. Current tax is calculated before the separate regular and alternative loss-vintage reductions. Original sources and every reduced vintage are reconciled in the accompanying NOL statement.",
-      exclusions: [{ line: "1b", description: "Insolvency exclusion", value: cod.reportedExcludedAmount.toString() }],
+      title: `Form 982 ${cod.title11 ? "Title 11" : "Insolvency"} and ${result.codAttributeReduction ? "Attribute" : "NOL"} Reduction Reference Summary`, warningLabel: "REFERENCE SUMMARY ONLY",
+      introduction: result.codAttributeReduction ? `Actual personal-debt ${exclusionName} exclusion. Current tax is calculated before the regular and alternative attribute reductions. Original NOL vintages and later attributes are reconciled separately; this is not an official Form982.`
+        : `Actual personal-debt ${exclusionName} exclusion. Current tax is calculated before the separate regular and alternative loss-vintage reductions. Original sources and every reduced vintage are reconciled in the accompanying NOL statement.`,
+      exclusions: [{ line: cod.title11 ? "1a" : "1b", description: cod.title11 ? "Title 11 exclusion" : "Insolvency exclusion", value: cod.reportedExcludedAmount.toString() }],
       reductions: [{ line: "6", description: "Regular net operating loss attribute reduction", value: cod.regular.reduction.toString(),
         formula: "Current-year original NOL first; then oldest carryover to this year before residual expiry. Actual current deductions are unchanged." }, ...later.reductions],
       totals: [
