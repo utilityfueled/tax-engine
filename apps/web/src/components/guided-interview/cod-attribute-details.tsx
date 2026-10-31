@@ -3,6 +3,7 @@
 import type { CodAttributeData, CodAttributeLedgerData, CodAttributePropertyData, CodAttributeRecordData } from '@/lib/guided-cod-attributes';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
+import { CurrentMinimumTaxCreditDetails } from './current-minimum-tax-credit-details';
 
 type Field<T> = { key: keyof T & string; label: string; type?: 'money' | 'boolean' | 'date'; options?: [string, string][] };
 function Fields<T extends object>({ data, fields, prefix, onChange }: { data: T; fields: Field<T>[]; prefix: string; onChange: (patch: Partial<T>) => void }) {
@@ -159,9 +160,11 @@ export function CodAttributeDetails({ data, onChange }: { data?: CodAttributeDat
           <p className="guided-hint">These answers identify the complete source records. The return checks whether it has the required current-year minimum tax credit calculation; an empty credit list does not prove that amount is zero.</p>
           <Fields data={data.currentMinimumTaxCredit} prefix="Current adjustments" onChange={patch => change({ currentMinimumTaxCredit: { ...data.currentMinimumTaxCredit, ...patch } })} fields={[
             { key: 'sourceReference', label: 'source reference' }, { key: 'allCurrentAdjustmentSourcesIncluded', label: 'all current regular and AMT sources included', type: 'boolean' },
-            { key: 'noAdditionalDeferralItemsConfirmed', label: 'no additional unreported deferral items', type: 'boolean' },
+            { key: 'noAdditionalDeferralItemsConfirmed', label: 'no additional deferral items for the zero-credit method', type: 'boolean' },
             { key: 'sourceFactsConfirmed', label: 'sources checked after the last edit', type: 'boolean' },
           ]} />
+          <CurrentMinimumTaxCreditDetails data={data.currentMinimumTaxCredit.sourceYearCalculation}
+            onChange={sourceYearCalculation => change({ currentMinimumTaxCredit: { ...data.currentMinimumTaxCredit, sourceYearCalculation } })} />
         </fieldset>}
       {(['regular', 'alternativeTax'] as const).map(key => {
         const label = key === 'regular' ? 'Regular' : 'Alternative';

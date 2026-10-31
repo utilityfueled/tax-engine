@@ -90,6 +90,7 @@ import { calculateStateLocalIncomeTaxDeduction } from "./forms/state-local-incom
 import { calculateForm1099OID } from "./forms/form-1099-oid.js";
 import { calculateForm6251, type Form6251Input, type Form6251IncomeInput } from "./forms/form-6251.js";
 import { calculateForm8801 } from "./forms/form-8801.js";
+import { calculateCurrentMinimumTaxCredit } from "./forms/current-minimum-tax-credit.js";
 import { calculateForm8582 } from "./forms/form-8582.js";
 import { calculatePassiveLossQBI, type PassiveLossQBIResult } from "./forms/passive-loss-qbi.js";
 import { calculateK1QbiLossReturn } from "./forms/k1-qbi-loss-return.js";
@@ -4081,6 +4082,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     priorYearMinimumTaxCredit = form8801.creditAllowed;
     audit.merge(form8801.lines);
   }
+  const currentMinimumTaxCredit = calculateCurrentMinimumTaxCredit(input, { form6251, form8801,
+    otherAdjustmentComponents: [k1Agg.amtOtherItems, k1Form1041AmtAdjustment,
+      nol?.stage === "final" ? nol.worksheet.priorCharitableAlternativeAdjustment?.amount ?? d("0") : d("0"),
+      deductionUsed === "itemized" ? itemizedDeductionReduction.negated() : d("0")] });
+  if (currentMinimumTaxCredit) audit.merge(currentMinimumTaxCredit.lines);
   const sched3 = calculateSchedule3(input, {
     foreignTaxCredit, childDependentCareCredit: dependentCareCredit, educationCredits: educationNonrefundable,
     retirementSavingsCredit, residentialCleanEnergyCredit: form5695.residentialCleanEnergyCredit,
@@ -4572,7 +4578,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
               nol: codNolReduction, generalBusinessCredit: cfGbc, generalBusinessAvailable: form3800?.totalCredit ?? d("0"),
               generalBusinessUsed: form3800?.allowableCredit ?? d("0"), minimumTaxCredit: cfMtc,
               minimumTaxAvailable: form8801?.totalAvailableCredit ?? d("0"), minimumTaxUsed: form8801?.creditAllowed ?? d("0"),
-              currentMinimumTaxCreditZeroProven,
+              currentMinimumTaxCreditZeroProven, currentMinimumTaxCredit,
               shortTermCapitalLoss: cfShortTermCapitalLoss, longTermCapitalLoss: cfLongTermCapitalLoss,
               capitalOpenings: {
                 short: { prior: zeroFloor(d(input.priorYear?.shortTermCapitalLoss).negated()),
@@ -4593,7 +4599,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
             if (!codAttributeReduction) throw new Error("COD actual later-attribute calculation is missing");
             const rows = codAttributeReduction.regular.records;
             const closing = (kind: typeof rows[number]['kind']) => sumSourceMoneyRatios(rows.filter(row => row.kind === kind && row.expiredAfterReduction.isZero()).map(row => row.remainingRatio));
-            cfGbc = closing('general_business_credit'); cfMtc = closing('minimum_tax_credit');
+            cfGbc = closing('general_business_credit');
+            cfMtc = codAttributeReduction.regular.minimumTaxCreditPool?.remaining ?? closing('minimum_tax_credit');
             cfShortTermCapitalLoss = sumSourceMoney(...rows.filter(row => row.kind === 'capital_loss' && row.term === 'short').map(row => row.remaining)).negated();
             cfLongTermCapitalLoss = sumSourceMoney(...rows.filter(row => row.kind === 'capital_loss' && row.term === 'long').map(row => row.remaining)).negated();
             cfCapitalLoss = sumSourceMoney(cfShortTermCapitalLoss, cfLongTermCapitalLoss);
@@ -4825,6 +4832,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     form8995A: form8995AResult,
     form8936,
     form8801,
+    currentMinimumTaxCredit,
     form4684,
     form4952,
     form4952Amt,

@@ -1,3 +1,4 @@
+import { currentMinimumTaxCreditReference } from './current-minimum-tax-credit-reference.js';
 import { assertPdfExportAllowed } from "../../export-policy.js";
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
@@ -233,10 +234,11 @@ function laterAttributeSummary(result: TaxReturnResult, same: (actual: Decimal |
         { label: `${label} property ${index + 1} remaining basis`, value: row.remainingBasis.toFixed() });
     });
   }
+  totals.push(...currentMinimumTaxCreditReference(result));
   const records = later.regular.records;
   const remaining = (kind: typeof records[number]['kind']) => sumSourceMoneyRatios(records.filter(row => row.kind === kind && row.expiredAfterReduction.isZero()).map(row => row.remainingRatio));
   same(result.carryforwards.generalBusinessCredit, remaining('general_business_credit'));
-  same(result.carryforwards.minimumTaxCredit, remaining('minimum_tax_credit'));
+  same(result.carryforwards.minimumTaxCredit, later.regular.minimumTaxCreditPool?.remaining ?? remaining('minimum_tax_credit'));
   same(result.carryforwards.foreignTaxCreditCarryforward, remaining('foreign_tax_credit'));
   same(result.carryforwards.capitalLoss, remaining('capital_loss').negated());
   same(sumSourceMoney(...result.carryforwards.suspendedPassiveLosses.map(row => row.amount)), remaining('passive_loss'));

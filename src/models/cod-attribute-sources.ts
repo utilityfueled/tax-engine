@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CurrentMinimumTaxCreditSourcesSchema } from './current-minimum-tax-credit-sources.js';
 
 const amount = z.string().regex(/^\d+(\.\d+)?$/).optional();
 export const CodAttributeKindSchema = z.enum(['general_business_credit', 'minimum_tax_credit', 'capital_loss', 'passive_loss', 'passive_credit', 'foreign_tax_credit']);
@@ -44,6 +45,7 @@ export const Form982AttributeSourcesSchema = z.object({
   currentMinimumTaxCredit: z.object({
     sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
     allCurrentAdjustmentSourcesIncluded: z.boolean().optional(), noAdditionalDeferralItemsConfirmed: z.boolean().optional(),
+    sourceYearCalculation: CurrentMinimumTaxCreditSourcesSchema.optional(),
   }).optional(),
   regular: CodAttributeLedgerSourcesSchema.optional(), alternativeTax: CodAttributeLedgerSourcesSchema.optional(),
 });

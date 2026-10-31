@@ -50,6 +50,7 @@ function records(result: TaxReturnResult): CodAttributeReductionRecord[] | undef
 
 export interface CodCreditCarryReference {
   reduction: Decimal; carryback: Decimal; expiry: Decimal; closing: Decimal;
+  signedCurrentAdjustment?: Decimal; followingYearPool?: Decimal;
 }
 export function codCreditCarryReference(result: TaxReturnResult | undefined,
   kind: 'general_business_credit' | 'minimum_tax_credit', current: { available: Decimal; used: Decimal; carry: Decimal },
@@ -60,6 +61,12 @@ export function codCreditCarryReference(result: TaxReturnResult | undefined,
   if (!all) {
     if (result.codNolReduction) same(closing, current.carry);
     return undefined;
+  }
+  const pool = kind === 'minimum_tax_credit' ? result.codAttributeReduction?.regular.minimumTaxCreditPool : undefined;
+  if (pool) {
+    same(current.available, pool.currentCreditAvailable); same(current.used, pool.currentCreditUsed); same(current.carry, pool.currentFormCarry);
+    return { reduction: pool.attributeReduction, carryback: new Decimal(0), expiry: new Decimal(0), closing: pool.remaining,
+      signedCurrentAdjustment: pool.signedCurrentAdjustment, followingYearPool: pool.beforeReduction };
   }
   const rows = all.filter(row => row.kind === kind);
   same(sumSourceMoney(...rows.map(row => row.opening)), current.available);

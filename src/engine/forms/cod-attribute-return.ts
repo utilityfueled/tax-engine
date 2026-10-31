@@ -8,6 +8,8 @@ import { sumSourceMoney } from '@/utils/sum-source-money.js';
 import { d } from '@/utils/decimal.js';
 import type { CodAttributeLedgerSources } from '@/models/cod-attribute-sources.js';
 import type { ForeignTaxCarryoverDetail } from './foreign-tax-deduction-carryover.js';
+import { readCurrentMinimumTaxCreditSources } from '@/utils/current-minimum-tax-credit-source.js';
+import type { CurrentMinimumTaxCreditResult } from './current-minimum-tax-credit.js';
 
 export type CodAttributeSourceInput = CodNolSourceInput & Pick<TaxYearInput, 'form982AttributeSources'>;
 export interface CodAttributeCanonicalContext {
@@ -15,6 +17,7 @@ export interface CodAttributeCanonicalContext {
   generalBusinessCredit: Decimal; generalBusinessAvailable: Decimal; generalBusinessUsed: Decimal;
   minimumTaxCredit: Decimal; minimumTaxAvailable: Decimal; minimumTaxUsed: Decimal;
   currentMinimumTaxCreditZeroProven: boolean;
+  currentMinimumTaxCredit?: CurrentMinimumTaxCreditResult;
   shortTermCapitalLoss: Decimal; longTermCapitalLoss: Decimal;
   capitalOpenings: Record<'short' | 'long', { prior: Decimal; current: Decimal }>;
   passiveLosses: Array<{ name: string; amount: Decimal; qualifiedCarryPresent: boolean }>;
@@ -61,9 +64,11 @@ export function calculateCodAttributeReturn(input: CodAttributeSourceInput, cont
   }
   if (!facts.alternativeTax) throw new Error('COD requires actual independent alternative attribute sources');
   const currentMinimum = facts.currentMinimumTaxCredit;
+  const currentSource = readCurrentMinimumTaxCreditSources(input);
   if (currentMinimum?.sourceFactsConfirmed !== true || !currentMinimum.sourceReference?.trim()
-    || currentMinimum.allCurrentAdjustmentSourcesIncluded !== true || currentMinimum.noAdditionalDeferralItemsConfirmed !== true
-    || (context && context.currentMinimumTaxCreditZeroProven !== true)) {
+    || currentMinimum.allCurrentAdjustmentSourcesIncluded !== true
+    || (!currentSource && (currentMinimum.noAdditionalDeferralItemsConfirmed !== true || (context && context.currentMinimumTaxCreditZeroProven !== true)))
+    || (currentSource && context && context.currentMinimumTaxCredit?.sourceFactsVerified !== true)) {
     throw new Error('COD current-year minimum tax credit requires its actual exclusion-only calculation or the complete source-proved zero method');
   }
   if (!Array.isArray(facts.alternativeTax.records)) throw new Error('COD requires an explicit complete alternative attribute list, including empty');
@@ -83,6 +88,7 @@ export function calculateCodAttributeReturn(input: CodAttributeSourceInput, cont
   const calculate = (sources: CodAttributeLedgerSources | undefined, remainingExclusion: Decimal, absorption?: ReadonlyMap<string, Decimal>, sourceOnly = false) => calculateCodAttributeReductions({
     taxYear: year, dischargeDate: facts.dischargeDate!, remainingExclusion, sources, foreignDeemedAbsorption: absorption,
     deferForeignAbsorptionValidation: deductionHistory && sourceOnly,
+    minimumTaxCreditPool: context?.currentMinimumTaxCredit,
   });
   let regular = calculate(facts.regular, d('0'), undefined, true), alternativeTax = calculate(alternativeSources, d('0'), undefined, true);
   if (context) {
@@ -111,7 +117,7 @@ export function calculateCodAttributeReturn(input: CodAttributeSourceInput, cont
     const alternativeAbsorption = bindAbsorption(alternativeTax, context.foreignDeemedAbsorption?.alternativeTax);
     const regularRemaining = total(context.nol.reportedExcludedAmount, context.nol.regular!.reduction.negated());
     const alternativeRemaining = total(context.nol.reportedExcludedAmount, context.nol.alternativeTax!.reduction.negated());
-    if (regular.records.some(row => sharedCredit(row.kind) && row.beforeReduction.gt(0))
+    if ((regular.records.some(row => sharedCredit(row.kind) && row.beforeReduction.gt(0)) || regular.minimumTaxCreditPool?.beforeReduction.gt(0))
       && !(regularRemaining.isZero() && alternativeRemaining.isZero())
       && (!regularRemaining.eq(alternativeRemaining) || attributeVector(facts.regular) !== attributeVector(facts.alternativeTax))) {
       throw new Error('COD positive shared credit composition requires the complete equal regular/alternative vector and actual NOL reductions');
@@ -128,7 +134,7 @@ export function calculateCodAttributeReturn(input: CodAttributeSourceInput, cont
   if (!context) return undefined;
   const kinds = (ledger: CodAttributeReductionLedger, kind: string) => ledger.records.filter(row => row.kind === kind);
   const checkCredit = (kind: 'general_business_credit' | 'minimum_tax_credit', closing: Decimal, available: Decimal, used: Decimal) => {
-    const rows = kinds(regular, kind);
+    const rows = kind === 'minimum_tax_credit' && regular.minimumTaxCreditPool ? regular.minimumTaxCreditPool.priorSourceRecords : kinds(regular, kind);
     same(total(...rows.map(row => row.opening)), available, `${kind} original available amounts`);
     same(total(...rows.map(row => row.currentUse)), used, `${kind} current use`);
     same(total(...rows.map(row => total(row.beforeReduction, row.carrybackUse))), closing, `${kind} before reduction`);

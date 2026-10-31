@@ -1997,7 +1997,7 @@ export function validateSection(
       // This later section owns the regular charitable history. Navigation from
       // Adjustments must not confirm it, while completion here binds both originals.
       const charitableNolErrors = state.sectionData.adjustments?.netOperatingLossSources?.alternativeTax?.charitableCarryoverHistory?.alternativeCarryoverSources
-        ? netOperatingLossFactErrors(state.sectionData.adjustments.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], false, state.sectionData.deductions, state.sectionData.adjustments.k1LossSources) : {};
+        ? netOperatingLossFactErrors(state.sectionData.adjustments.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], false, state.sectionData.deductions, state.sectionData.adjustments.k1LossSources, state.sectionData.adjustments.codNolSources?.attributeSources) : {};
       return validateDeductionsSection(getSectionData(state, "deductions"), state.taxYear, { ...charitableNolErrors, ...nonitemizedElectionFactErrors(state), ...nonW2TaxAllocationErrors(state), ...investmentInterestFactErrors(state.sectionData.deductions, state.sectionData["income-investments"]?.childElections, state.taxYear), ...charitableCarryoverFactErrors(state.sectionData.deductions?.charitableCarryoverSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"]), ...k1CharitableSourceFactErrors(state), ...cryptoDonationFactErrors(state.sectionData.deductions?.cryptoDonations, state.taxYear) }, state.segmentation.filingStatus, state.sectionData["personal-info"]?.spouse);
     }
     case "adjustments": {
@@ -2005,7 +2005,7 @@ export function validateSection(
       Object.assign(errors, currentLossOriginNavigationFactErrors(state));
       Object.assign(errors, codNolNavigationFactErrors(state));
       Object.assign(errors, k1LossSourceFactErrors(state));
-      Object.assign(errors, netOperatingLossNavigationFactErrors(state.sectionData.adjustments?.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], state.segmentation.lifeEvents.includes("net-operating-loss"), state.sectionData.deductions, state.sectionData.adjustments?.k1LossSources));
+      Object.assign(errors, netOperatingLossNavigationFactErrors(state.sectionData.adjustments?.netOperatingLossSources, state.taxYear, state.segmentation.filingStatus, state.sectionData["personal-info"], state.segmentation.lifeEvents.includes("net-operating-loss"), state.sectionData.deductions, state.sectionData.adjustments?.k1LossSources, state.sectionData.adjustments?.codNolSources?.attributeSources));
       let loanEducation: StudentLoanEducationSources = [];
       try {
         if (state.sectionData.adjustments?.studentLoanFacts || state.sectionData.credits?.educationDistributions?.expenses?.some(expense => expense.category === "student_loan")) loanEducation = studentLoanEducationSources(state.sectionData.credits, state.segmentation.filingStatus, state.taxYear, state.sectionData["personal-info"], state.sectionData.adjustments?.studentLoanFacts);

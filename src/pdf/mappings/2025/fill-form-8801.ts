@@ -151,7 +151,7 @@ export function buildForm8801ReferenceSummary(result: Form8801Result, taxReturn?
     introduction: `Tax year 2025; prior source year 2024. ${result.sourceFactsVerified ? "Computed from confirmed actual prior-return source worksheets" : "Computed from unverified historical compatibility inputs"}. Values below copy the Form 8801 audit; current-year credit flows to Schedule 3 line 6b.`,
     lines: getReferenceLines(result).map((line) => ({
       line: line.line,
-      description: cod && line.line === "26" ? `${line.description} before COD` : line.description,
+      description: cod && line.line === "26" ? `${line.description} ${cod.signedCurrentAdjustment !== undefined ? 'before signed current adjustment and COD' : 'before COD'}` : line.description,
       value: formatValue(line),
       formula: line.formula,
     })),
@@ -165,10 +165,14 @@ export function buildForm8801ReferenceSummary(result: Form8801Result, taxReturn?
         value: result.creditAllowed.toString(),
       },
       {
-        label: cod ? "Carryforward to next year before COD" : "Carryforward to next year",
+        label: cod?.signedCurrentAdjustment !== undefined ? "Current full Form8801 carry before signed adjustment" : cod ? "Carryforward to next year before COD" : "Carryforward to next year",
         value: result.carryforwardToNextYear.toString(),
       },
       ...(cod ? [
+        ...(cod.signedCurrentAdjustment !== undefined && cod.followingYearPool !== undefined ? [
+          { label: "Signed current-year minimum tax credit adjustment", value: cod.signedCurrentAdjustment.toFixed() },
+          { label: "Beginning-next-year minimum tax credit before COD", value: cod.followingYearPool.toFixed() },
+        ] : []),
         { label: "Minimum tax credit attribute reduction", value: cod.reduction.toFixed() },
         { label: "Minimum tax credit carry after COD", value: cod.closing.toFixed() },
       ] : []),

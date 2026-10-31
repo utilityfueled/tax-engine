@@ -3,6 +3,7 @@ import Decimal from 'decimal.js';
 import type { CodAttributeKind, CodAttributeLedgerSources } from '@/models/cod-attribute-sources.js';
 import { sumSourceMoney } from '@/utils/sum-source-money.js';
 import { sumSourceMoneyRatios, type SourceMoneyRatio } from '@/utils/sum-source-money-ratios.js';
+import type { CurrentMinimumTaxCreditResult } from './current-minimum-tax-credit.js';
 
 export interface CodAttributeReductionRecord {
   sourceId: string; kind: CodAttributeKind; originTaxYear: number;
@@ -18,9 +19,19 @@ export interface CodPropertyReductionRecord {
   incomeApplied: Decimal; attributeReduction: Decimal; reductionRatio: SourceMoneyRatio;
   remainingRatio: SourceMoneyRatio; remainingBasis: Decimal;
 }
+export interface CodMinimumTaxCreditPool {
+  /** Original prior records are provenance before the aggregate adjustment,
+   * never invented per-vintage allocations of negative generation or COD. */
+  priorSourceRecords: CodAttributeReductionRecord[];
+  currentCreditAvailable: Decimal; currentCreditUsed: Decimal; currentFormCarry: Decimal;
+  signedCurrentAdjustment: Decimal; beforeReduction: Decimal;
+  incomeApplied: Decimal; attributeReduction: Decimal; reductionRatio: SourceMoneyRatio;
+  remainingRatio: SourceMoneyRatio; remaining: Decimal;
+}
 export interface CodAttributeReductionLedger {
   sourceFactsVerified: true; remainingExclusionBeforeReduction: Decimal; incomeApplied: Decimal; unreducedExclusion: Decimal;
   records: CodAttributeReductionRecord[];
+  minimumTaxCreditPool?: CodMinimumTaxCreditPool;
   stages: Array<{ kind: CodAttributeKind | 'basis' | 'passive'; incomeApplied: Decimal; attributeReduction: Decimal }>;
   property: { immediatelyAfterBasis: Decimal; immediatelyAfterMoney: Decimal; immediatelyAfterLiabilities: Decimal;
     basisCap: Decimal; nextYearBasis: Decimal; attributeReduction: Decimal; remainingBasis: Decimal; properties: CodPropertyReductionRecord[] };
@@ -64,6 +75,7 @@ export function calculateCodAttributeReductions(input: {
   foreignDeemedAbsorption?: ReadonlyMap<string, Decimal>;
   /** Source-only pass cannot check final expiry until the hypothetical calculation exists. */
   deferForeignAbsorptionValidation?: boolean;
+  minimumTaxCreditPool?: CurrentMinimumTaxCreditResult;
 }): CodAttributeReductionLedger {
   const { taxYear, sources } = input;
   if (!Number.isInteger(taxYear) || !day(input.dischargeDate, 'discharge').startsWith(`${taxYear}-`)
@@ -78,7 +90,7 @@ export function calculateCodAttributeReductions(input: {
   }
   text(sources.sourceReference, 'attribute worksheet reference');
   const ids = new Set<string>();
-  const records: CodAttributeReductionRecord[] = sources.records.map(source => {
+  const validatedRecords: CodAttributeReductionRecord[] = sources.records.map(source => {
     const sourceId = unique(ids, source.sourceId, 'attribute');
     if (!source.kind || !['general_business_credit', 'minimum_tax_credit', 'capital_loss', 'passive_loss', 'passive_credit', 'foreign_tax_credit'].includes(source.kind)
       || !Number.isInteger(source.originTaxYear) || source.originTaxYear! < 1900 || source.originTaxYear! > taxYear
@@ -148,9 +160,32 @@ export function calculateCodAttributeReductions(input: {
       reductionRatio: ratio(zero()), remainingRatio: ratio(beforeReduction), expiredAfterReduction: expired,
       remaining: subtract(beforeReduction, expired) };
   });
-  if ([...(input.foreignDeemedAbsorption?.keys() ?? [])].some(id => !records.some(row => row.sourceId === id && row.kind === 'foreign_tax_credit'))) {
+  if ([...(input.foreignDeemedAbsorption?.keys() ?? [])].some(id => !validatedRecords.some(row => row.sourceId === id && row.kind === 'foreign_tax_credit'))) {
     throw new Error('COD foreign deemed absorption contains an unmatched original source');
   }
+  const currentMinimum = input.minimumTaxCreditPool;
+  let minimumTaxCreditPool: CodMinimumTaxCreditPool | undefined;
+  if (currentMinimum) {
+    const priorSourceRecords = validatedRecords.filter(row => row.kind === 'minimum_tax_credit');
+    const values = [currentMinimum.currentCreditAvailable, currentMinimum.currentCreditUsed, currentMinimum.currentFormCarry,
+      currentMinimum.signedCurrentAdjustment, currentMinimum.followingYearPool];
+    if (currentMinimum.sourceFactsVerified !== true || currentMinimum.sourceTaxYear !== taxYear
+      || values.some(value => !Decimal.isDecimal(value) || !value.isFinite())
+      || values.filter((_value, index) => index !== 3).some(value => value.lt(0))
+      || priorSourceRecords.some(row => row.originTaxYear >= taxYear || !row.carrybackUse.isZero() || !row.expiredAfterReduction.isZero())
+      || !add(...priorSourceRecords.map(row => row.opening)).eq(currentMinimum.currentCreditAvailable)
+      || !add(...priorSourceRecords.map(row => row.currentUse)).eq(currentMinimum.currentCreditUsed)
+      || !add(...priorSourceRecords.map(row => row.beforeReduction)).eq(currentMinimum.currentFormCarry)
+      || !Decimal.max(0, add(currentMinimum.currentFormCarry, currentMinimum.signedCurrentAdjustment)).eq(currentMinimum.followingYearPool)) {
+      throw new Error('COD current MTC aggregate must reconcile actual prior originals, current use and signed current generation');
+    }
+    minimumTaxCreditPool = { priorSourceRecords,
+      currentCreditAvailable: currentMinimum.currentCreditAvailable, currentCreditUsed: currentMinimum.currentCreditUsed,
+      currentFormCarry: currentMinimum.currentFormCarry, signedCurrentAdjustment: currentMinimum.signedCurrentAdjustment,
+      beforeReduction: currentMinimum.followingYearPool, incomeApplied: zero(), attributeReduction: zero(),
+      reductionRatio: ratio(zero()), remainingRatio: ratio(currentMinimum.followingYearPool), remaining: currentMinimum.followingYearPool };
+  }
+  const records = currentMinimum ? validatedRecords.filter(row => row.kind !== 'minimum_tax_credit') : validatedRecords;
 
   const after = sources.property?.immediatelyAfter, next = sources.property?.followingYear;
   if (!after || !next || after.sourceFactsConfirmed !== true || next.sourceFactsConfirmed !== true
@@ -237,7 +272,16 @@ export function calculateCodAttributeReductions(input: {
     stages.push({ kind, incomeApplied: subtract(before, remaining), attributeReduction: sumSourceMoneyRatios(selected.map(row => row.reductionRatio)) });
   };
   applyStage('general_business_credit', records.filter(row => row.kind === 'general_business_credit'), row => row.originTaxYear);
-  applyStage('minimum_tax_credit', records.filter(row => row.kind === 'minimum_tax_credit'), () => 0);
+  if (minimumTaxCreditPool) {
+    const capacity = triple(minimumTaxCreditPool.beforeReduction), incomeApplied = Decimal.min(remaining, capacity);
+    minimumTaxCreditPool.incomeApplied = incomeApplied;
+    minimumTaxCreditPool.reductionRatio = ratio(incomeApplied, new Decimal(3));
+    minimumTaxCreditPool.attributeReduction = quotient(minimumTaxCreditPool.reductionRatio);
+    minimumTaxCreditPool.remainingRatio = ratio(subtract(capacity, incomeApplied), new Decimal(3));
+    minimumTaxCreditPool.remaining = quotient(minimumTaxCreditPool.remainingRatio);
+    remaining = subtract(remaining, incomeApplied);
+    stages.push({ kind: 'minimum_tax_credit', incomeApplied, attributeReduction: minimumTaxCreditPool.attributeReduction });
+  } else applyStage('minimum_tax_credit', records.filter(row => row.kind === 'minimum_tax_credit'), () => 0);
   applyStage('capital_loss', records.filter(row => row.kind === 'capital_loss'), row => row.originTaxYear === taxYear ? 0 : row.originTaxYear);
   const basisReduction = Decimal.min(remaining, basisCap, nextYearBasis);
   let unallocatedBasis = basisReduction;
@@ -262,7 +306,7 @@ export function calculateCodAttributeReductions(input: {
   applyStage('passive', records.filter(row => row.kind === 'passive_loss' || row.kind === 'passive_credit'), () => 0);
   applyStage('foreign_tax_credit', records.filter(row => row.kind === 'foreign_tax_credit'), row => row.originTaxYear);
   return { sourceFactsVerified: true, remainingExclusionBeforeReduction: new Decimal(input.remainingExclusion),
-    incomeApplied: subtract(input.remainingExclusion, remaining), unreducedExclusion: remaining, records, stages,
+    incomeApplied: subtract(input.remainingExclusion, remaining), unreducedExclusion: remaining, records, minimumTaxCreditPool, stages,
     property: { immediatelyAfterBasis, immediatelyAfterMoney, immediatelyAfterLiabilities, basisCap, nextYearBasis,
       attributeReduction: basisReduction, remainingBasis: subtract(nextYearBasis, basisReduction), properties: propertyRows } };
 }

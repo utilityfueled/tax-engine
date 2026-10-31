@@ -12,6 +12,8 @@ import { calculateQbiPriorCarrySources } from '@/engine/forms/qbi-prior-carry-so
 import { resolveCharitableRecipient } from '@/utils/charitable-recipient';
 import { validateCharitableNolOriginHistories } from '@/utils/charitable-nol-origins';
 import { buildGuidedCharitableCarryover, type CharitableCarryoverData } from './guided-charitable-carryover';
+import { buildGuidedCodAttributes, type CodAttributeData } from './guided-cod-attributes';
+import { readCurrentMinimumTaxCreditSources } from '@/utils/current-minimum-tax-credit-source';
 
 export interface NolHistoryData { filingUnitUses?: NolFilingUnitUseData[]; taxYear?: string; nolUsed?: string; attributeReduction?: string; sourceReference?: string }
 export interface NolVintageData {
@@ -80,20 +82,28 @@ function vintages(rows: NolVintageData[] | undefined, regular: boolean, actualEb
     };
   });
 }
-export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, deductions?: DeductionData, qbiSources?: K1LossSourcesData): TaxYearInput['netOperatingLoss'] {
-  return collectGuidedNetOperatingLoss(true, data, taxYear, filingStatus, personal, deductions, qbiSources);
+export function buildGuidedNetOperatingLoss(data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, deductions?: DeductionData, qbiSources?: K1LossSourcesData, currentAttributes?: CodAttributeData): TaxYearInput['netOperatingLoss'] {
+  return collectGuidedNetOperatingLoss(true, data, taxYear, filingStatus, personal, deductions, qbiSources, currentAttributes);
 }
 /** Section navigation validates this section's originals; the strict builder binds later Deductions too. */
 export function buildGuidedNetOperatingLossForNavigation(...args: Parameters<typeof buildGuidedNetOperatingLoss>): TaxYearInput['netOperatingLoss'] {
   return collectGuidedNetOperatingLoss(false, ...args);
 }
-function collectGuidedNetOperatingLoss(validateDeductions: boolean, data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, deductions?: DeductionData, qbiSources?: K1LossSourcesData): TaxYearInput['netOperatingLoss'] {
+function collectGuidedNetOperatingLoss(validateDeductions: boolean, data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, deductions?: DeductionData, qbiSources?: K1LossSourcesData, currentAttributes?: CodAttributeData): TaxYearInput['netOperatingLoss'] {
   if (!data) return undefined;
   if ((taxYear !== 2025 && taxYear !== 2026) || !filingStatus || !personal) throw new Error('Confirm the actual return year, filing status and household before binding NOL sources.');
   const alternative = data.alternativeTax;
+  const currentMtc = currentAttributes?.currentMinimumTaxCredit?.sourceYearCalculation === undefined ? undefined
+    : readCurrentMinimumTaxCreditSources({ taxpayer: { taxYear, filingStatus: statuses[filingStatus], primary: {
+      firstName: [personal.firstName.trim(), personal.middleName?.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase()].filter(Boolean).join(' '),
+      lastName: personal.lastName, ssn: personal.ssn,
+    } }, form982AttributeSources: buildGuidedCodAttributes(currentAttributes) });
+  const emptyCurrentMtc = currentMtc !== undefined && Array.isArray(data.vintages) && data.vintages.length === 0
+    && Array.isArray(alternative?.vintages) && alternative.vintages.length === 0;
   if (!alternative || alternative.sourceFactsConfirmed !== true || !alternative.sourceReference?.trim()
     || alternative.allCarryoversIncluded !== true || alternative.specialDisasterCarryIncluded !== false
-    || alternative.currentYearAdjustmentsCompleteConfirmed !== true || alternative.regularBasisAndLossLimitsSameAsAlternativeConfirmed !== true) {
+    || alternative.currentYearAdjustmentsCompleteConfirmed !== true
+    || (emptyCurrentMtc ? typeof alternative.regularBasisAndLossLimitsSameAsAlternativeConfirmed !== 'boolean' : alternative.regularBasisAndLossLimitsSameAsAlternativeConfirmed !== true)) {
     throw new Error('Confirm the separate actual AMT carry history and current source classification. Special-disaster or differing basis/loss-limit methods need their separate worksheet.');
   }
   const history = alternative.charitableCarryoverHistory;
@@ -131,7 +141,7 @@ function collectGuidedNetOperatingLoss(validateDeductions: boolean, data: NetOpe
       filingUnitHistory: buildNolFilingUnitTimeline(alternative.filingUnitHistory),
       sameCoupleJointHistory: buildNolSameCoupleJointHistory(alternative.sameCoupleJointHistory),
       allCarryoversIncluded: true, specialDisasterCarryIncluded: false, currentYearAdjustmentsCompleteConfirmed: true,
-      regularBasisAndLossLimitsSameAsAlternativeConfirmed: true, vintages: vintages(alternative.vintages, false, qbiSources !== undefined),
+      regularBasisAndLossLimitsSameAsAlternativeConfirmed: alternative.regularBasisAndLossLimitsSameAsAlternativeConfirmed, vintages: vintages(alternative.vintages, false, qbiSources !== undefined),
       ...(history ? { charitableCarryoverHistory: { sourceTaxYear: year(history.sourceTaxYear, 'charitable histories source year'),
         sourceReference: history.sourceReference?.trim(), sourceFactsConfirmed: history.sourceFactsConfirmed ?? undefined,
         allCarryoversIncluded: history.allCarryoversIncluded ?? undefined,
@@ -159,16 +169,16 @@ function collectGuidedNetOperatingLoss(validateDeductions: boolean, data: NetOpe
   }
   return facts;
 }
-export function netOperatingLossFactErrors(data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, required = false, deductions?: DeductionData, qbiSources?: K1LossSourcesData): Record<string, string> {
-  return validateGuidedNetOperatingLoss(buildGuidedNetOperatingLoss, data, taxYear, filingStatus, personal, required, deductions, qbiSources);
+export function netOperatingLossFactErrors(data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, required = false, deductions?: DeductionData, qbiSources?: K1LossSourcesData, currentAttributes?: CodAttributeData): Record<string, string> {
+  return validateGuidedNetOperatingLoss(buildGuidedNetOperatingLoss, data, taxYear, filingStatus, personal, required, deductions, qbiSources, currentAttributes);
 }
 export function netOperatingLossNavigationFactErrors(...args: Parameters<typeof netOperatingLossFactErrors>): Record<string, string> {
   return validateGuidedNetOperatingLoss(buildGuidedNetOperatingLossForNavigation, ...args);
 }
-function validateGuidedNetOperatingLoss(build: typeof buildGuidedNetOperatingLoss, data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, required = false, deductions?: DeductionData, qbiSources?: K1LossSourcesData): Record<string, string> {
+function validateGuidedNetOperatingLoss(build: typeof buildGuidedNetOperatingLoss, data: NetOperatingLossData | undefined, taxYear?: number | null, filingStatus?: FilingStatus | null, personal?: PersonalInfoData, required = false, deductions?: DeductionData, qbiSources?: K1LossSourcesData, currentAttributes?: CodAttributeData): Record<string, string> {
   try {
     if (required && !data) throw new Error('Enter the actual NOL source packet or remove the NOL carry life event if it does not apply.');
-    build(data, taxYear, filingStatus, personal, deductions, qbiSources); return {};
+    build(data, taxYear, filingStatus, personal, deductions, qbiSources, currentAttributes); return {};
   } catch (error) { return { netOperatingLoss: error instanceof Error ? error.message : 'Reconcile the actual NOL source packet.' }; }
 }
 export function updateNetOperatingLossSources(previous: NetOperatingLossData, patch: Partial<NetOperatingLossData>): NetOperatingLossData {

@@ -898,6 +898,47 @@
       ]
     },
     {
+      "key": "federal/current-minimum-tax-credit",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/current-minimum-tax-credit.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/current-minimum-tax-credit-sources",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8801",
+      "specPath": "spec/federal/current-minimum-tax-credit-sources.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/current-public-other-cash",
       "jurisdiction": "federal",
       "taxYear": 2026,

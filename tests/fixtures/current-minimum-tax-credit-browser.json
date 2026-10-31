@@ -1,0 +1,456 @@
+{
+  "phase": "interview",
+  "taxYear": 2025,
+  "segmentation": {
+    "filingStatus": "single",
+    "incomeTypes": [
+      "w2-wages"
+    ],
+    "lifeEvents": [
+      "cancelled-debt"
+    ],
+    "stateCode": null
+  },
+  "currentSectionIndex": 0,
+  "completedSections": [],
+  "sectionData": {
+    "deductions": {
+      "method": "standard",
+      "medicalExpenses": "",
+      "stateLocalTaxes": "",
+      "realEstateTaxes": "",
+      "mortgageInterest": "",
+      "charitableContributions": "",
+      "casualtyLosses": "",
+      "otherItemized": ""
+    },
+    "personal-info": {
+      "dateOfBirth": "1990-02-15",
+      "usResidencyMonths": "12",
+      "stateResidency": "full-year",
+      "firstName": "Jane",
+      "middleName": "",
+      "lastName": "Doe",
+      "ssn": "123-45-6789",
+      "addressLine1": "42 Example Road",
+      "addressLine2": "",
+      "city": "Columbus",
+      "state": "OH",
+      "zip": "43215",
+      "dependentCount": "0",
+      "dependents": [],
+      "standardDeductionFacts": {
+        "primaryBlind": false,
+        "spouseBlind": false,
+        "primaryCanBeClaimedAsDependent": false,
+        "spouseCanBeClaimedAsDependent": false,
+        "primaryDeceased": false,
+        "spouseDeceased": false,
+        "dualStatusAlien": false,
+        "nonresidentAlien": false,
+        "shortTaxYear": false,
+        "spouseItemizes": false,
+        "claimSpouseAdditionalDeduction": false
+      },
+      "livedWithSpouseAtAnyTimeDuringYear": true,
+      "employmentValidSsnIssuedByDueDate": true,
+      "tinIssuedByDueDate": true,
+      "childTaxCredit": {
+        "bonaFidePuertoRicoResident": false,
+        "puertoRicoExcludedIncome": "0",
+        "form4563ExcludedIncome": "0"
+      },
+      "spouse": {
+        "firstName": "Taylor",
+        "lastName": "Example",
+        "ssn": "222-33-4444",
+        "dateOfBirth": "1992-09-10",
+        "usResidencyMonths": "12",
+        "employmentValidSsnIssuedByDueDate": true,
+        "tinIssuedByDueDate": true
+      }
+    },
+    "income-w2": {
+      "entries": [
+        {
+          "accountHolder": "primary",
+          "stateTaxReporting": "none",
+          "state": "",
+          "employerName": "Synthetic Employer",
+          "employerEin": "12-3456789",
+          "wages": "100000",
+          "federalWithheld": "60000",
+          "socialSecurityWages": "85000",
+          "socialSecurityTips": "0",
+          "socialSecurityWithheld": "5270",
+          "medicareWages": "85000",
+          "medicareWithheld": "1232.50",
+          "stateWages": "",
+          "stateWithheld": "",
+          "aiSuggestedFields": {},
+          "box10DependentCareBenefits": "0",
+          "box12CodeW": "0"
+        }
+      ]
+    },
+    "adjustments": {
+      "hsaDeduction": "",
+      "studentLoanInterest": "",
+      "selfEmployedHealthInsurance": "",
+      "educatorExpenses": "",
+      "iraDeduction": "",
+      "alimonyPaid": "",
+      "netOperatingLossSources": {
+        "sourceTaxYear": "2025",
+        "sourceReference": "Actual filed regular carry packet",
+        "sourceFactsConfirmed": true,
+        "allCarryoversIncluded": true,
+        "calendarYearTaxpayer": true,
+        "returnMembership": "continuous_individual",
+        "membershipUnchangedConfirmed": true,
+        "primaryName": "Jane Doe",
+        "primaryTaxpayerIdLast4": "6789",
+        "vintages": [],
+        "alternativeTax": {
+          "sourceReference": "Independent actual AMT worksheets",
+          "sourceFactsConfirmed": true,
+          "allCarryoversIncluded": true,
+          "specialDisasterCarryIncluded": false,
+          "currentYearAdjustmentsCompleteConfirmed": true,
+          "regularBasisAndLossLimitsSameAsAlternativeConfirmed": false,
+          "vintages": []
+        }
+      },
+      "codNolSources": {
+        "sourceTaxYear": "2025",
+        "sourceReference": "Complete original debt and insolvency worksheet",
+        "sourceFactsConfirmed": true,
+        "allDischargesIncluded": true,
+        "title11Case": false,
+        "communityPropertyApplies": false,
+        "electBasisReductionFirst": false,
+        "otherExclusionsOrExceptionsApply": false,
+        "regularAndAlternativeExclusionSameConfirmed": true,
+        "debts": [
+          {
+            "statementId": "Original statement-A",
+            "sourceTaxYear": "2025",
+            "sourceReference": "Original creditor statement",
+            "sourceFactsConfirmed": true,
+            "accountHolder": "primary",
+            "debtorName": "Jane Doe",
+            "debtorSsnLast4": "6789",
+            "creditor": "Original creditor",
+            "creditorTin": "12-3456789",
+            "accountReference": "Original account-A",
+            "dischargeDate": "2025-10-01",
+            "amountDischarged": "300",
+            "interestIncluded": "0",
+            "fmvOfProperty": "0",
+            "debtDescription": "Unsecured personal loan",
+            "personallyLiable": true,
+            "identifiableEventCode": "F",
+            "unsecuredPersonalDebtConfirmed": true,
+            "noPropertyTransferConfirmed": true
+          }
+        ],
+        "insolvency": {
+          "asOfDate": "2025-10-01",
+          "sourceReference": "Actual immediately-before-discharge worksheet",
+          "sourceFactsConfirmed": true,
+          "immediatelyBeforeDischargeConfirmed": true,
+          "allAssetsIncluded": true,
+          "exemptAndRetirementAssetsIncluded": true,
+          "allLiabilitiesIncluded": true,
+          "assets": [],
+          "liabilities": [
+            {
+              "sourceId": "Liability-A",
+              "description": "Original personal recourse loan",
+              "amount": "300",
+              "sourceReference": "Actual loan balance",
+              "dischargedDebtStatementId": "Original statement-A"
+            }
+          ]
+        },
+        "attributeSources": {
+          "sourceTaxYear": "2025",
+          "sourceReference": "Fictional complete ordinary later-attribute originals",
+          "sourceFactsConfirmed": true,
+          "allAttributesIncluded": true,
+          "accountHolder": "primary",
+          "taxpayerName": "Jane Doe",
+          "taxpayerIdLast4": "6789",
+          "dischargeDate": "2025-10-01",
+          "currentMinimumTaxCredit": {
+            "sourceReference": "Fictional complete signed current-source calculation",
+            "sourceFactsConfirmed": true,
+            "allCurrentAdjustmentSourcesIncluded": true,
+            "noAdditionalDeferralItemsConfirmed": false,
+            "sourceYearCalculation": {
+              "sourceTaxYear": "2025",
+              "sourceReference": "Fictional current exclusion and deferral originals",
+              "sourceFactsConfirmed": true,
+              "allAdjustmentSourcesIncluded": true,
+              "taxpayerName": "Jane Doe",
+              "taxpayerIdLast4": "6789",
+              "filingStatus": "single",
+              "filedForm2555": false,
+              "filedForm1040NR": false,
+              "capitalGainsRequired": false,
+              "unallowedQualifiedElectricVehicleCredit": "0",
+              "k1Statements": [
+                {
+                  "sourceId": "adjustment-original-A",
+                  "sourceTaxYear": "2025",
+                  "sourceReference": "Fictional original2025 K1 and AMT statement",
+                  "sourceFactsConfirmed": true,
+                  "entityName": "Actual depreciation source",
+                  "entityEin": "12-3456789",
+                  "accountHolder": "primary",
+                  "depreciationAdjustment": "-200000",
+                  "dispositionAdjustment": "0",
+                  "depletionAdjustment": "200000",
+                  "otherAdjustment": "0",
+                  "standaloneOriginal": {
+                    "sourceReference": "Fictional complete original K1 with all other boxes zero",
+                    "entityType": "partnership",
+                    "allOtherAmountsZeroConfirmed": true,
+                    "domesticContinuingNonPtpConfirmed": true,
+                    "isPassiveActivity": false
+                  }
+                }
+              ],
+              "trustStatements": [],
+              "minimumTaxCreditNolHistory": {
+                "sourceTaxYear": "2025",
+                "sourceReference": "Fictional independent exclusion-only NOL carryover and carryback worksheet",
+                "sourceFactsConfirmed": true,
+                "allCarryoversAndCarrybacksIncluded": true,
+                "carryoverSources": [],
+                "carrybackSources": []
+              },
+              "exclusionOnlyForeignHistory": {
+                "sourceTaxYear": "2025",
+                "sourceReference": "Fictional independent exclusion-only foreign tax current and history worksheet",
+                "sourceFactsConfirmed": true,
+                "allCurrentAndHistoricalSourcesIncluded": true,
+                "currentSources": [],
+                "carryoverSources": [],
+                "carrybackSources": []
+              }
+            }
+          },
+          "regular": {
+            "sourceReference": "Fictional complete after-current-tax attribute worksheet",
+            "sourceFactsConfirmed": true,
+            "allAttributesIncluded": true,
+            "records": [
+              {
+                "sourceId": "actual-origin-2022",
+                "kind": "minimum_tax_credit",
+                "originTaxYear": "2022",
+                "originalAmount": "40000",
+                "originalAmountMeaning": "original_year_closing_carry",
+                "sourceReference": "Fictional original minimum_tax_credit worksheet",
+                "sourceFactsConfirmed": true,
+                "allHistoryIncluded": true,
+                "history": [
+                  {
+                    "taxYear": "2023",
+                    "used": "0",
+                    "reduced": "0",
+                    "expired": "0",
+                    "sourceReference": "Actual filed2023 original-source reconciliation"
+                  },
+                  {
+                    "taxYear": "2024",
+                    "used": "0",
+                    "reduced": "0",
+                    "expired": "0",
+                    "sourceReference": "Actual filed2024 original-source reconciliation"
+                  }
+                ],
+                "currentYearUse": "10361",
+                "currentYearCarryback": "0",
+                "currentYearExpired": "0",
+                "currentYearUseSourceReference": "Fictional current return use and carryback worksheet",
+                "term": "short",
+                "activityName": "Fictional retained passive activity",
+                "creditKind": "other",
+                "foreignCategory": "general"
+              },
+              {
+                "sourceId": "actual-origin-2023",
+                "kind": "minimum_tax_credit",
+                "originTaxYear": "2023",
+                "originalAmount": "30000",
+                "originalAmountMeaning": "original_year_closing_carry",
+                "sourceReference": "Fictional original minimum_tax_credit worksheet",
+                "sourceFactsConfirmed": true,
+                "allHistoryIncluded": true,
+                "history": [
+                  {
+                    "taxYear": "2024",
+                    "used": "0",
+                    "reduced": "0",
+                    "expired": "0",
+                    "sourceReference": "Actual filed2024 original-source reconciliation"
+                  }
+                ],
+                "currentYearUse": "0",
+                "currentYearCarryback": "0",
+                "currentYearExpired": "0",
+                "currentYearUseSourceReference": "Fictional current return use and carryback worksheet",
+                "term": "short",
+                "activityName": "Fictional retained passive activity",
+                "creditKind": "other",
+                "foreignCategory": "general"
+              }
+            ],
+            "property": {
+              "immediatelyAfter": {
+                "asOfDate": "2025-10-01",
+                "sourceReference": "Fictional immediately-after property and liability records",
+                "sourceFactsConfirmed": true,
+                "allPropertyAndMoneyIncluded": true,
+                "allLiabilitiesIncluded": true,
+                "money": "0",
+                "properties": [],
+                "liabilities": []
+              },
+              "followingYear": {
+                "asOfDate": "2026-01-01",
+                "sourceReference": "Fictional beginning-next-year property records",
+                "sourceFactsConfirmed": true,
+                "allPropertyIncluded": true,
+                "properties": [],
+                "dispositions": []
+              }
+            }
+          },
+          "alternativeTax": {
+            "sourceReference": "Fictional complete after-current-tax attribute worksheet",
+            "sourceFactsConfirmed": true,
+            "allAttributesIncluded": true,
+            "records": [],
+            "property": {
+              "immediatelyAfter": {
+                "asOfDate": "2025-10-01",
+                "sourceReference": "Fictional immediately-after property and liability records",
+                "sourceFactsConfirmed": true,
+                "allPropertyAndMoneyIncluded": true,
+                "allLiabilitiesIncluded": true,
+                "money": "0",
+                "properties": [],
+                "liabilities": []
+              },
+              "followingYear": {
+                "asOfDate": "2026-01-01",
+                "sourceReference": "Fictional beginning-next-year property records",
+                "sourceFactsConfirmed": true,
+                "allPropertyIncluded": true,
+                "properties": [],
+                "dispositions": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "payments": {
+      "estimatedPayments": [],
+      "extensionPayments": [],
+      "priorYearAppliedCredits": [],
+      "otherPayments": "",
+      "estimatedTaxFacts": {
+        "sourceTaxYear": "2025",
+        "sourceReference": "Fictional filed 2024 return and complete payment records through April 15 2026",
+        "sourceFactsConfirmed": true,
+        "allPaymentRecordsIncluded": true,
+        "calendarYearTaxpayer": true,
+        "residentReturn": true,
+        "farmerOrFisher": false,
+        "disasterReliefClaimed": false,
+        "waiverRequested": false,
+        "calculationMethod": "regular",
+        "withholdingMethod": "equal-installments",
+        "priorYearTaxStatus": "return-filed",
+        "priorYearFullYear": true,
+        "priorYearResidentAllYear": true,
+        "priorYearJointReturn": false,
+        "priorYearTaxForForm2210": "3000",
+        "priorYearAgiForForm2210": "100000",
+        "priorYearTaxComputationConfirmed": true,
+        "withholdingPayments": [],
+        "priorYearCreditPayments": [],
+        "returnPayments": [],
+        "earlyReturnExceptionClaimed": false,
+        "returnFiledDate": "",
+        "returnPaidInFullDate": ""
+      }
+    },
+    "credits": {
+      "dependentCare": {
+        "expenses": "",
+        "qualifyingIndividuals": ""
+      },
+      "education": {
+        "aocStudents": [],
+        "llcExpenses": ""
+      },
+      "energy": {
+        "solarElectricCost": "",
+        "solarWaterHeatingCost": "",
+        "insulationCost": "",
+        "exteriorDoorsWindowsCost": "",
+        "roofCost": "",
+        "energyEfficientHvacCost": "",
+        "waterHeaterHeatPumpCost": ""
+      },
+      "minimumTaxCredit": {
+        "sourceTaxYear": "2025",
+        "priorYear": "2024",
+        "sourceReference": "Fictional actual2024 Form8801 and original worksheets",
+        "sourceFactsConfirmed": true,
+        "allSourcesIncluded": true,
+        "sameTaxpayersAsPriorYear": true,
+        "primaryName": "Jane Doe",
+        "primaryTaxIdLast4": "6789",
+        "spouseName": "",
+        "spouseTaxIdLast4": "",
+        "priorYearFilingStatus": "single",
+        "priorYearForm6251Line1And2e": "0",
+        "priorYearExclusionItemAdjustments": "0",
+        "priorYearMinimumTaxCreditNOLDeduction": "0",
+        "priorYearMinimumTaxForeignTaxCredit": "0",
+        "priorYearForm6251Line10": "0",
+        "priorYearAMT": "0",
+        "unusedMinimumTaxCreditCarryforward": "70000",
+        "priorYearUnallowedQualifiedElectricVehicleCredit": "0",
+        "priorYearFiledForm2555": false,
+        "priorYearFiledForm1040NR": false,
+        "priorYearCapitalGainsRequired": false,
+        "priorYearNetUSRealPropertyGain": "",
+        "foreignEarnedIncome": {
+          "form2555Lines45And50": "",
+          "disallowedDeductions": "",
+          "capitalGainAdjustmentsConfirmed": null
+        },
+        "capitalGainsWorksheet": {
+          "method": "",
+          "preferentialIncome": "",
+          "ordinaryIncomeForZeroRate": "",
+          "ordinaryIncomeForFifteenRate": "",
+          "section1250Gain": "",
+          "scheduleDTaxWorksheetLine10": ""
+        },
+        "sourceFactsComplete": true,
+        "priorYearQualifiedDividends": "0",
+        "priorYearNetLTCG": "0",
+        "priorYearUnrecapturedSection1250Gain": "0",
+        "priorYearCollectiblesGain": "0"
+      }
+    }
+  }
+}

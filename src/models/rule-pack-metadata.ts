@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.194",
+    ruleVersion: "2025.195",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8801", section: "Signed current-year minimum tax credit from actual sources", revision: "Final2025 f8801/i8801 Part I and IRC53(d),108(b)(2)(C); actual adjustment originals, explicit empty MTCNOL and exclusion-only foreign inventories, next-year aggregate only. Refreshed2026-10-28.", retrievedAt: "2026-10-28" },
       { url: "https://www.irs.gov/instructions/i6251", section: "Independent foreign carries after actual empty NOL histories and debt exclusion", revision: "Final2025 i1116/i6251, Reg1.904-2(c)(3)(ii)/(d) and IRC108(b); actual deduction-year deemed absorption stays separate from current credit, with independent regular/AMT originals, election history, expiry and exact credit-thirds. Complete federal result replay rejects altered output before any file creation while preserving separately calculated state attachments. Human, final2026 form, filing and staging qualification remain open.", retrievedAt: "2026-10-28" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.702-1", section: "Ordinary separately stated gifts outside actual section465 activity deductions", revision: "IRC465(c),(d),1363(b)(2) and final Reg1.702-1(a)(4),1.703-1(a)(2)(iv),1.1366-1(a)(2)(iii). Basis-admitted ordinary gifts remain separate from current activity risk deductions. Actual Form6198 sources must reconcile; recorded prior activity sources and carry years remain unchanged. Bounded statutory inference, no human qualification or final2026 filing readiness; proposed1.465-13 is corroboration only.", retrievedAt: "2026-10-28" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.1366-2", section: "Actual first section170 admission of previously basis-disallowed property", revision: "IRC704(d),1366(d),170(d), final Reg1.704-1(d)/1.1366-2(a)(3) and IRS partnership basis FAQ. Complete annual owner/entity originals and independent earlier regular/AMT links preserve prior basis use, appreciation, original gift dates and carry expiry. Only the current basis-admitted portion receives the current carry year; historical risk and unlinked-receipt methods retain guards. This statutory inference and agent review do not establish human qualification, final2026 forms or filing readiness.", retrievedAt: "2026-10-28" },
@@ -231,11 +232,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.192-law-integration-draft",
+    ruleVersion: "2026.193-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8801", section: "Signed current-year minimum tax credit from actual sources", revision: "Final2025 f8801/i8801 Part I and IRC53(d),108(b)(2)(C); actual adjustment originals, explicit empty MTCNOL and exclusion-only foreign inventories, next-year aggregate only. Refreshed2026-10-28.", retrievedAt: "2026-10-28" },
       { url: "https://www.irs.gov/instructions/i6251", section: "Independent foreign carries after actual empty NOL histories and debt exclusion", revision: "Final2025 i1116/i6251, Reg1.904-2(c)(3)(ii)/(d) and IRC108(b); actual deduction-year deemed absorption stays separate from current credit, with independent regular/AMT originals, election history, expiry and exact credit-thirds. Complete federal result replay rejects altered output before any file creation while preserving separately calculated state attachments. Human, final2026 form, filing and staging qualification remain open.", retrievedAt: "2026-10-28" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.702-1", section: "Ordinary separately stated gifts outside actual section465 activity deductions", revision: "IRC465(c),(d),1363(b)(2) and final Reg1.702-1(a)(4),1.703-1(a)(2)(iv),1.1366-1(a)(2)(iii). Basis-admitted ordinary gifts remain separate from current activity risk deductions. Actual Form6198 sources must reconcile; recorded prior activity sources and carry years remain unchanged. Bounded statutory inference, no human qualification or final2026 filing readiness; proposed1.465-13 is corroboration only.", retrievedAt: "2026-10-28" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.1366-2", section: "Actual first section170 admission of previously basis-disallowed property", revision: "IRC704(d),1366(d),170(d), final Reg1.704-1(d)/1.1366-2(a)(3) and IRS partnership basis FAQ. Complete annual owner/entity originals and independent earlier regular/AMT links preserve prior basis use, appreciation, original gift dates and carry expiry. Only the current basis-admitted portion receives the current carry year; historical risk and unlinked-receipt methods retain guards. This statutory inference and agent review do not establish human qualification, final2026 forms or filing readiness.", retrievedAt: "2026-10-28" },

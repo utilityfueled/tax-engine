@@ -1,3 +1,4 @@
+import { buildGuidedCurrentMtcOriginals } from './guided-current-minimum-tax-credit';
 import type { z } from "zod";
 import type { TaxYearInputSchema } from "@/models/inputs";
 import { buildGuidedCryptoDonations, cryptoDonationFactErrors } from './guided-crypto-donations';
@@ -689,7 +690,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
     assertKnownFacts(studentLoanFactErrors(adjustmentData, segmentation.filingStatus, state.taxYear, loanEducation, segmentation.lifeEvents.includes("student-loans")));
     assertKnownFacts(healthInsuranceSourceErrors(state));
     assertKnownFacts(foreignIncomeFactErrors(state));
-    assertKnownFacts(netOperatingLossFactErrors(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, segmentation.lifeEvents.includes("net-operating-loss"), deductionData, adjustmentData?.k1LossSources));
+    assertKnownFacts(netOperatingLossFactErrors(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, segmentation.lifeEvents.includes("net-operating-loss"), deductionData, adjustmentData?.k1LossSources, adjustmentData?.codNolSources?.attributeSources));
     assertKnownFacts(k1LossSourceFactErrors(state));
     assertKnownFacts(k1CharitableSourceFactErrors(state));
     assertKnownFacts(cryptoDonationFactErrors(deductionData?.cryptoDonations, state.taxYear));
@@ -806,9 +807,9 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
     w2s,
     form2210: buildEstimatedTaxFacts(paymentData, state.taxYear),
     form2555: buildForeignIncomeInput(adjustmentData?.foreignIncome, state),
-    netOperatingLoss: buildGuidedNetOperatingLoss(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, deductionData, adjustmentData?.k1LossSources),
+    netOperatingLoss: buildGuidedNetOperatingLoss(adjustmentData?.netOperatingLossSources, state.taxYear, segmentation.filingStatus, personalInfo, deductionData, adjustmentData?.k1LossSources, adjustmentData?.codNolSources?.attributeSources),
     ...(cryptoDonations !== undefined ? { cryptoIncome: { donations: cryptoDonations } } : {}),
-    scheduleK1: k1Sources?.scheduleK1,
+    scheduleK1: buildGuidedCurrentMtcOriginals(codSources?.form982AttributeSources?.currentMinimumTaxCredit?.sourceYearCalculation, k1Sources?.scheduleK1),
     qbiLossSources: k1Sources?.qbiLossSources,
     k1CharitableSources: k1Sources?.k1CharitableSources,
     form172,

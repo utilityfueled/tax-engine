@@ -1,5 +1,6 @@
 import { Form982AttributeSourcesSchema, type Form982AttributeSources } from '@/models/cod-attribute-sources';
 import { parseGuidedCurrency } from './guided-currency';
+import { buildGuidedCurrentMtcSources, type CurrentMtcData } from './guided-current-minimum-tax-credit';
 
 type EditableSource<T> = T extends boolean ? boolean | null : T extends number ? string
   : T extends Array<infer U> ? EditableSource<U>[] : T extends object ? { [K in keyof T]: EditableSource<T[K]> } : T;
@@ -15,6 +16,7 @@ export function buildGuidedCodAttributes(data: CodAttributeData | undefined): Fo
   if (data === undefined) return undefined;
   const convert = (value: unknown, key = ''): unknown => {
     if (value === null || value === undefined) return undefined;
+    if (key === 'sourceYearCalculation') return buildGuidedCurrentMtcSources(value as CurrentMtcData);
     if (Array.isArray(value)) return value.map(row => convert(row));
     if (typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([name, child]) => [name, convert(child, name)]));
     if (amounts.has(key)) {

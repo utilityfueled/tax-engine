@@ -48,7 +48,7 @@ function collectGuidedCodNol(buildPrior: typeof buildGuidedNetOperatingLoss, dat
   if ((taxYear !== 2025 && taxYear !== 2026) || !segmentation.filingStatus || !personal) {
     throw new Error('Confirm the actual year, filing status and household before entering cancellation sources.');
   }
-  const prior = buildPrior(sectionData.adjustments?.netOperatingLossSources, taxYear, segmentation.filingStatus, personal, sectionData.deductions, sectionData.adjustments?.k1LossSources);
+  const prior = buildPrior(sectionData.adjustments?.netOperatingLossSources, taxYear, segmentation.filingStatus, personal, sectionData.deductions, sectionData.adjustments?.k1LossSources, data.attributeSources);
   if (!prior) throw new Error('Enter the actual independent regular and AMT loss carry histories, including explicit empty histories when none.');
   if (data.title11Case !== false || data.electBasisReductionFirst !== false || data.otherExclusionsOrExceptionsApply !== false) {
     throw new Error('Confirm the actual bankruptcy, basis-first election and other exclusion answers. Positive or unknown answers require their separate debt method.');

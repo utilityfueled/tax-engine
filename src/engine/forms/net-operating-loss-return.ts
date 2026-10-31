@@ -20,6 +20,7 @@ import { calculatePriorCharitableNolCarryover, type PriorCharitableNolCarryoverR
 import { createCharitableNolOriginLimit, usesDeterminedCharitableNolOrigins } from "@/utils/charitable-nol-origins.js";
 import { calculateDeterminedCharitableNol, type DeterminedCharitableNolResult } from "./charitable-determined-nol.js";
 import { hasCompleteEmptyForeignNolSources } from "./empty-nol-foreign-sources.js";
+import { readCurrentMinimumTaxCreditSources } from "@/utils/current-minimum-tax-credit-source.js";
 
 export interface NolIncomeContext {
   agi: Decimal;
@@ -105,19 +106,28 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   if (input.scheduleK1Form1041?.some(row => d(row.finalYearNOLCarryover).gt(0))) throw new Error("Estate NOL carry requires its actual vintage and origin binding");
   calculateQbiEblNol(input);
   const alternative = facts.alternativeTax;
+  // A current MTC adjustment is not an NOL carry-basis amount. Only actual
+  // empty original inventories can use this exception; exhausted and expired
+  // originals still retain their existing source/basis method. Source-level
+  // current adjustments and MTCNOL/MTFTCE histories are independently checked.
+  const emptyCurrentMtcHistories = Boolean(readCurrentMinimumTaxCreditSources(input, input))
+    && facts.vintages?.length === 0 && alternative?.vintages?.length === 0 && !currentOrigin;
   if (alternative?.sourceFactsConfirmed !== true || !alternative.sourceReference?.trim()
     || alternative.allCarryoversIncluded !== true || alternative.specialDisasterCarryIncluded !== false
-    || alternative.currentYearAdjustmentsCompleteConfirmed !== true || alternative.regularBasisAndLossLimitsSameAsAlternativeConfirmed !== true
+    || alternative.currentYearAdjustmentsCompleteConfirmed !== true
+    || (emptyCurrentMtcHistories
+      ? typeof alternative.regularBasisAndLossLimitsSameAsAlternativeConfirmed !== 'boolean'
+      : alternative.regularBasisAndLossLimitsSameAsAlternativeConfirmed !== true)
     || !Array.isArray(alternative.vintages)) {
     throw new Error("NOL requires the separate actual complete AMT carry history and special-loss classification");
   }
   const alternativeTaxSources = calculateNetOperatingLoss({ ...params, facts: { ...facts, ...alternative,
     filingUnitHistory: alternative.filingUnitHistory, sameCoupleJointHistory: alternative.sameCoupleJointHistory } });
   if (facts.returnMembership === "changed_membership") assertNolFilingUnitAgreement(input.taxpayer, facts.filingUnitHistory, alternative.filingUnitHistory, input.standardDeductionFacts);
-  if (input.scheduleK1.some(row => !d(row.amtDepletion).isZero())) {
+  if (!emptyCurrentMtcHistories && input.scheduleK1.some(row => !d(row.amtDepletion).isZero())) {
     throw new Error("ATNOL with depletion requires its refigured AMT taxable-income limitation worksheet");
   }
-  if (input.scheduleK1.some(row => !d(row.amtDepreciationAdjustment).isZero() || !d(row.amtAdjustedGainOrLoss).isZero())) {
+  if (!emptyCurrentMtcHistories && input.scheduleK1.some(row => !d(row.amtDepreciationAdjustment).isZero() || !d(row.amtAdjustedGainOrLoss).isZero())) {
     throw new Error("Actual AMT basis differences contradict the confirmed same-basis NOL method");
   }
   const actualIncome = computeIncome(d("0"), false, "current-limit", regularOriginLimit);
@@ -198,6 +208,9 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   const actualAlternativeIncome = computeAlternativeIncome(result.deduction, false, alternativePriorSourceLimit, result,
     actualRegularDeductionMethod, regularLedgerIncome?.qbiDeduction);
   const modifiedAlternativeIncome = computeAlternativeIncome(result.deduction, true, alternativePriorSourceLimit, result, actualRegularDeductionMethod);
+  if (emptyCurrentMtcHistories && (actualAlternativeIncome.amti.lt(0) || modifiedAlternativeIncome.amti.lt(0))) {
+    throw new Error("Current MTC empty NOL histories require the actual current original-loss worksheet for negative actual or modified AMTI");
+  }
   // The separate opening changes this year's AMT deduction even with known-zero
   // ATNOL. Retain the regular choice and actual199A deduction (1.199A-1(e)(5)),
   // then carry the source-derived signed AMTI difference to final6251line3.

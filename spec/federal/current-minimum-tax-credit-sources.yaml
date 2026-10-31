@@ -1,0 +1,151 @@
+form: "Current minimum tax credit sources"
+fullName: "Actual current exclusion and deferral sources, signed generation and following-year aggregate credit"
+taxYear: 2026
+irsReference: "https://www.irs.gov/instructions/i8801"
+sources:
+  - "https://uscode.house.gov/us/usc/119-124/t26/s53/ (53(b),(c),(d)(1)(B); refreshed2026-10-28)"
+  - "https://uscode.house.gov/us/usc/119-124/t26/s108/ (108(b)(2)(C),(3)(B),(4)(A); refreshed2026-10-28)"
+  - "https://www.irs.gov/instructions/i8801 (2025 PartI lines2,3,12 and PartII21; refreshed2026-10-28)"
+  - "https://www.irs.gov/pub/irs-pdf/f8801.pdf (2025 lines16-26)"
+  - "https://www.govinfo.gov/content/pkg/CFR-2025-title26-vol2/pdf/CFR-2025-title26-vol2-sec1-108-7.pdf (final1.108-7(a),(b))"
+notes: |
+  The actual current full Form8801 still uses prior-source facts. Its current
+  credit and line26 are unchanged by current signed generation. Independently
+  bind the current canonical6251 to complete original adjustment statements and
+  invoke the delivered sourceYearOnly8801 calculation through signed line18.
+  Combine that signed18 with current full8801line26, then floor the aggregate at
+  zero. This is the beginning-next-year section53(b) amount reached by108, after
+  actual current tax and before ordinary credit-unit attribute reduction.
+  No current source-year generation offsets current tax. There is no invented
+  source vintage for the aggregate and no allocation of a negative adjustment
+  between prior originals. All prior original records remain available for
+  current available/use/carry reconciliation and provenance.
+  Actual empty MTCNOL carryover/carryback worksheets and actual empty exclusion-
+  only foreign current/carryover/carryback inventories are separate required
+  facts. Ordinary NOL, ATNOLD, FTC and AMTFTC zeros cannot establish those facts.
+  Current original K1 depreciation/disposition/depletion/other amounts reconcile
+  separately. Opposing original adjustments cannot disappear through netting.
+  The bounded route accepts fixed canonical exclusion lines and identified
+  depreciation/disposition deferrals. Nonzero unclassified other/trust items,
+  preferential capital,2555/nonresident calculations, positive MTCNOL/MTFTCE and
+  a legacy unallowed electric vehicle credit require their actual additional
+  source method. Missing answers are not actual zeros. Existing legacy sufficient
+  zero sources remain available unchanged when no signed-source packet is used.
+  A validated signed-source packet may accompany exactly empty original regular
+  and alternative NOL histories. Current AMT basis differences do not create a
+  carry-basis amount in those empty inventories. Do not demand the same-basis
+  confirmation be true when the actual current originals differ. An explicit boolean answer remains required; absence is unknown, not false.
+  Complete independent NOL histories and adjustment confirmations remain mandatory.
+  Absence of Form172 alone proves nothing about a current loss: reject positive
+  current EBL and negative actual or modified AMTI before admitting this route.
+  Every nonempty original inventory, including exhausted or expired vintages,
+  retains the existing NOL basis/depletion method and its source requirements.
+  Preserve the existing regular/alternative shared-credit vector guard, exact
+  Decimal credit ratios, current-source input binding and private/redacted
+  output context. This calculation does not qualify a2026 or later filing.
+lines:
+  - line: "guided-originals"
+    description: "Collect actual signed original statements without changing unknown facts into zero"
+    formula: "The narrow standalone K1 intake requires original reference, entity type, owner, continuing domestic non-PTP status and explicit all-other-boxes-zero confirmation. Preserve every signed adjustment and independent inventory through save/reload. A blank amount, omitted inventory, conflicting existing K1 packet, wrong owner/year, or unconfirmed source blocks the strict bridge. Exact empty NOL inventories may preserve actual false current-basis sameness only with this validated source packet."
+    irsRef: "Form8801 instructions lines2,3,12; complete original-source contract"
+    testRef: "tests/guided-interview/guided-current-minimum-tax-credit.test.ts::preserves signed original statements and separate empty histories through the strict bridge"
+  - line: "guided-edit-confirmation"
+    description: "Invalidate edited source confirmations without guessing a replacement value"
+    formula: "Changing the actual signed source clears root, statement and independent-history confirmations. Unknown remains unknown. The signed input and inventory controls must be reachable in the existing cancellation sources."
+    irsRef: "Original-source reconciliation and review policy"
+    testRef: "tests/guided-interview/guided-current-minimum-tax-credit.test.ts::retains unknown source answers and rejects mixed original packets"
+  - line: "aggregate-reference"
+    description: "Show the signed source calculation separately from current credit and next-year aggregate"
+    formula: "Actual reversal originals print current full8801 line26=59639, signed source18=-41639, next-year pool18000, reduction100 and closing17900. Prior2022/2023 records remain provenance without a fabricated allocation. Positive generation with no current8801 still prints its source PartI and aggregate in the982 reference. Missing, duplicate or altered source/pool/audit amounts reject."
+    irsRef: "53(b);108(b)(2)(C); Form8801 lines18,25,26; review policy"
+    testRef: "tests/pdf/current-minimum-tax-credit-review.test.ts::prints separate source current-use and following-year aggregate amounts"
+  - line: "guided-controls"
+    description: "Expose signed originals and independently empty inventories without defaults"
+    formula: "Adding a packet or statement leaves amounts, identities and confirmations unknown. Actual signed decimals and explicit empty inventories survive edits; false is not converted to true. No computed signed credit or next-year carry is entered."
+    irsRef: "Form8801 source facts and guided review policy"
+    testRef: "tests/apps/web/current-minimum-tax-credit-interactions.test.tsx::collects signed current originals without default source facts"
+  - line: "aggregate-context"
+    description: "Bind original source and canonical source-year output before any PDF write"
+    formula: "A prepared complete-original digest admits only that original or its exact identifier-redacted input and unchanged canonical6251/current-source/current8801/aggregate outputs. Coherent altered source18, actual6251 or a changed standalone statement cannot reuse the token. The saved review references retain notices and omit private source identities."
+    irsRef: "Original-source binding and PDF review policy"
+    testRef: "tests/pdf/current-minimum-tax-credit-review.test.ts::rejects changed signed and canonical contexts before writing"
+  - line: "workspace-output"
+    description: "Reopen the source-complete guided review packet with unchanged current tax"
+    formula: "Positive signed41639 closes41539 afterCOD300; actual tax55094 and withholding60000 give4906refund. Reversal signed-41639 with prior70000 leaves17900, currentuse10361 and actualtax3094 give56906refund. The source-year worksheet, current-use worksheet and aggregate are separate labels; all pages retain review notices and omit private identifiers. Missing reconfirmation prevents output."
+    irsRef: "53(b),(c),(d); review policy"
+    testRef: "tests/apps/web/workspace-current-minimum-tax-credit.test.ts::reopens source-complete signed MTC guided packets (reversal=%s)"
+  - line: "browser-output"
+    description: "Edit and reconfirm signed originals in the actual production interview"
+    formula: "At390/1280px, blanking signed depreciation makes the source unknown and blocks the estimate. Restore actual-200000, reconfirm all invalidated originals and payments, traverse eligible later sections, reload and download. Saved actual source/workspace and actual PDF retain signed-41639,currentuse10361,nextpool18000,closing17900 without raw-identifier disclosure or filing qualification."
+    irsRef: "Guided original-source and PDF review policy"
+    testRef: "apps/web/tests/current-minimum-tax-credit.spec.ts::retains actual signed MTC originals through edit reload and review download"
+  - line: "positive-generation"
+    description: "Generate a following-year credit from actual current depreciation without current use"
+    formula: "2025single wages100000, standard15750, actual depreciation+200000: taxable84250, tabletax13455, actualAMTI300000,TMT55094,AMT41639. ExclusionAMTI100000,TMT3094,exclusionAMT0; signed18=41639. Priorpool0; excludedCOD300 reduces nextpool by100 to41539, current totalTax55094 unchanged."
+    irsRef: "53(d)(1)(B); Form8801 lines1-18;108(b)(2)(C),(4)(A)"
+    testRef: "tests/engine/federal-current-minimum-tax-credit.test.ts::generates signed current credit only for the next-year aggregate"
+  - line: "negative-generation"
+    description: "Retain a negative signed result even though actual current AMT is zero"
+    formula: "Same wages; original depreciation-200000 and distinct depletion+200000 give actualAMTI100000,TMT3094,AMT0. ExclusionAMTI300000,TMT55094,exclusionAMT41639; signed18=-41639. Prioravailable70000,currentuse10361,line2659639; nextpool18000,CODreduction100,closing17900. Current tax3094 unchanged."
+    irsRef: "53(b),(c),(d); Form8801 lines18,21,25,26"
+    testRef: "tests/engine/federal-current-minimum-tax-credit.test.ts::combines a negative signed adjustment with the actual aggregate after current use"
+  - line: "aggregate-zero-floor"
+    description: "Floor only the combined following-year pool, not signed generation"
+    formula: "Negative source18=-41639 with prioravailable30000,currentuse10361 gives full8801line2619639, combined-22000, followingpool0 and no credit reduction; the excluded300 remains for later108 stages."
+    irsRef: "53(b) excess if any; Form8801 line21 instructions"
+    testRef: "tests/engine/federal-current-minimum-tax-credit.test.ts::floors the combined negative pool without changing the current credit"
+  - line: "prior-original-order"
+    description: "Preserve several prior originals without imposing a new vintage priority"
+    formula: "Actual2022 source40000 and2023 source30000 include every intervening zero-use year and actual current use10361/0. Both input orders give currentcarry59639 and nextpool18000, then closing17900. Original rows remain provenance; no per-vintage negative generation or COD allocation is fabricated."
+    irsRef: "53(b) aggregate;108(b)(4)(C) only assigns the named GBC/FTC order"
+    testRef: "tests/engine/federal-current-minimum-tax-credit.test.ts::retains distinct prior-source identities and ignores their input order"
+  - line: "original-adjustment-membership"
+    description: "Every consumed original adjustment is independently identified and checked"
+    formula: "Omitted, duplicate, contradictory and balanced changed K1 sources reject even when total depreciation/disposition/other remains unchanged. Names,EINs,owner,year and exact signed amounts must reconcile."
+    irsRef: "Form8801 line2 exclusion versus deferral source distinction"
+    testRef: "tests/engine/federal-current-minimum-tax-credit.test.ts::rejects omitted duplicate and balanced changed adjustment originals"
+  - line: "independent-ancillary-histories"
+    description: "Require independently complete actual MTCNOL and MTFTCE histories"
+    formula: "Explicit confirmed empty current/carryover/carryback inventories establish the admitted zeros. Missing,unconfirmed,nonempty,wrong-year and contradictory foreign originals reject independently of ordinary NOL/AMTFTC output."
+    irsRef: "Form8801 instructions lines3 and12"
+    testRef: "tests/engine/federal-current-minimum-tax-credit.test.ts::requires independent actual empty ancillary histories"
+  - line: "owner-method-and-shared-vector"
+    description: "Keep identity, method and shared-credit composition boundaries"
+    formula: "Actual source owner/year/status and known-zero legacy credit must match; nonzero other items,unknown source answers and unequal positive shared-credit vectors reject. No current-tax credit is imported from the new packet."
+    irsRef: "Form8801 source instructions; existing ordinary108 shared source contract"
+    testRef: "tests/engine/federal-current-minimum-tax-credit.test.ts::preserves owner method and independent shared-credit boundaries"
+  - line: "empty-original-nol-basis"
+    description: "Separate empty carry inventories from actual current AMT basis differences"
+    formula: "The signed41639 source with both actual original histories=[] accepts an explicit false same-basis answer; an omitted same-basis answer or missing/unconfirmed independent history rejects. A source-complete current original does not erase any nonempty positive,exhausted or expired NOL history."
+    irsRef: "172 and56(d) require actual loss amounts; Form8801 line3 independently requires MTCNOL history"
+    testRef: "tests/engine/current-mtc-empty-nol.test.ts::requires complete empty originals without a false same-basis confirmation"
+  - line: "current-original-loss-containment"
+    description: "Do not infer absence of a new loss from absence of an entered Form172"
+    formula: "Negative actual AMTI,negative modified AMTI,positive current EBL and an actual current Form172 origin cannot use the empty-carry exception. Keep positive,exhausted and expired original histories outside it."
+    irsRef: "172 and56(d) current original loss and alternative taxable income source contract"
+    testRef: "tests/engine/current-mtc-empty-nol.test.ts::retains current-loss and nonempty-history limitations"
+  - line: "empty-original-confirmation-presence"
+    description: "Require an actual same-basis answer even when empty originals make false admissible"
+    formula: "The canonical path and strict guide both accept explicit false with complete empty original histories. Deleting only that confirmation rejects; no missing answer is inferred from the current adjustment packet. Other history confirmations and every nonempty-source method remain unchanged."
+    irsRef: "Complete original-source contract; unknown fact preservation"
+    testRef: "tests/engine/current-mtc-empty-nol.test.ts::rejects an omitted same-basis answer while preserving explicit false"
+  - line: "signed-mobile-control"
+    description: "Keep actual signed inputs usable inside nested source fieldsets"
+    formula: "At390px the actual signed amount control remains at least180px wide without horizontal page overflow. Preserve accessible fieldset labels, all unknown/false answers and existing source/reconfirmation assertions. Grouped saved display -200,000 retains original numerical -200000."
+    irsRef: "Guided original-source and review policy"
+    testRef: "apps/web/tests/current-minimum-tax-credit.spec.ts::retains actual signed MTC originals through edit reload and review download"
+  - line: "isolated-2026-signed-generation"
+    description: "Exercise current indexed source-year arithmetic without opening production2026"
+    formula: "In a test-only2026 constants injection: single wages100000 less standard16100 gives taxable83900 and rate calculation5800+0.22*(83900-50400)=13170. AMTI300000 less exemption90100 givesTMT54574; exclusionAMTI100000 givesTMT2574 and exclusionAMT0. Signed18=41404; currentuse0, nextpool41404 and afterCOD300=41304."
+    irsRef: "Rev.Proc.2025-32 sections4.01,4.10,4.14;53(d); no2026 filing qualification"
+    testRef: "tests/engine/federal-current-minimum-tax-credit-2026.test.ts::retains isolated2026 positive signed generation and current tax"
+  - line: "isolated-2026-reversal-boundaries"
+    description: "Preserve actual older credit years at the indexed zero and dollar boundaries"
+    formula: "Actual current depreciation-200000/depletion200000 givesAMTI100000,TMT2574,AMT0; exclusionAMTI300000,TMT54574,exclusionAMT41404,signed18=-41404. Currentcredituse13170-2574=10596. Actual2022original52000 with2023/24/25zero histories leaves currentline2641404 and nextpool0; actual52001 leavesline2641405,nextpool1,thenCOD300 reduces1 and leaves297unapplied. No vintage is re-aged."
+    irsRef: "53(b),(c),(d); Rev.Proc.2025-32;108(b)(3)(B)"
+    testRef: "tests/engine/federal-current-minimum-tax-credit-2026.test.ts::retains actual2022 sources at isolated2026 aggregate zero and dollar boundaries"
+  - line: "production-2026-closed"
+    description: "Keep actual2026 calculation and PDF export gates unchanged"
+    formula: "The normal unmocked calculation rejects2026 readiness; the isolated draft result still cannot export2026 PDFs and creates no files. The indexed arithmetic tests do not promote rules, forms or filing readiness."
+    irsRef: "Existing annual source/form readiness policy"
+    testRef: "tests/engine/federal-current-minimum-tax-credit-2026.test.ts::keeps2026 export closed after isolated source calculation"
