@@ -44,7 +44,8 @@ it('cannot be suppressed or asserted by original capital records', () => {
   const labelled = TaxYearInputSchema.parse({ ...input, form1099B: [{ broker: 'Qualified Opportunity Fund records', stateWithheld: '0', transactions: [] }] });
   expect(calculateFederalTax(labelled).scheduleD!.netLongTerm.toFixed()).toBe('12000');
   const row = { description: 'Ordinary stock', dateAcquired: '2024-01-01', dateSold: '2025-06-30', proceeds: '100', costBasis: '50', basisReportedToIRS: true, holdingPeriod: 'long' };
-  for (const patch of [{ qofInclusion: true }, { adjustmentCodes: 'Y' }]) {
+  expect(() => TaxYearInputSchema.parse({ ...simpleW2Fixture, form1099B: [{ broker: 'Actual broker', stateWithheld: '0', transactions: [{ ...row, adjustmentCodes: 'Y' }] }] })).toThrow(/Invalid string/);
+  for (const patch of [{ qofInclusion: true }, { adjustmentCodes: 'B' }]) {
     const spoofed = TaxYearInputSchema.parse({ ...simpleW2Fixture, form1099B: [{ broker: 'Actual broker', stateWithheld: '0', transactions: [{ ...row, ...patch }] }] });
     expect(() => calculateFederalTax(spoofed)).toThrow(/derived QOF/);
   }

@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PDFDocument } from 'pdf-lib';
 import { buildDigitalAssetInputs } from '@/lib/guided-digital-asset-facts';
+import type { PersonalInfoData } from '@/lib/guided-interview-flow';
 import { calculateFederalTax } from '@/engine/federal';
 import { TaxYearInputSchema } from '@/models/inputs';
 import { fillReturn } from '@/pdf/fill-return';
@@ -12,13 +13,15 @@ import { actualDigitalAssetSource } from '../fixtures/digital-asset-sources';
 import { actualGuidedDigitalAsset } from '../fixtures/guided-digital-asset-sources';
 import { simpleW2Fixture } from '../fixtures/simple-w2';
 
+const personal = { firstName: 'Jane', lastName: 'Doe' } as PersonalInfoData;
+
 it('passes both guided correction answers without defaulting them', () => {
   const entry = actualGuidedDigitalAsset();
   Object.assign(entry.transactions![0]!, { reportedCostBasis: '120', reportedCostBasisBlank: false, basisCorrectionConfirmed: true, sellingExpenses: '5', sellingCostsNotInProceedsConfirmed: true });
-  const row = buildDigitalAssetInputs([entry], 'single', 2025)![0]!.transactions[0]!;
+  const row = buildDigitalAssetInputs([entry], 'single', 2025, personal, [])![0]!.transactions[0]!;
   expect(row).toMatchObject({ basisCorrectionConfirmed: true, sellingCostsNotInProceedsConfirmed: true, sellingExpenses: '5' });
   Object.assign(entry.transactions![0]!, { basisCorrectionConfirmed: null, sellingCostsNotInProceedsConfirmed: null });
-  expect(() => buildDigitalAssetInputs([entry], 'single', 2025)).toThrow(/basis correction|Box 1f/);
+  expect(() => buildDigitalAssetInputs([entry], 'single', 2025, personal, [])).toThrow(/basis correction|Box 1f/);
 });
 
 it('prints a zero column g for a code B row', async () => {

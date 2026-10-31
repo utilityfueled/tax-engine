@@ -91,7 +91,7 @@ describe('Actual government payment return integration',()=>{
  });
  it('does not bypass actual source facts in the full return',()=>{
   expect(()=>calculateFederalTax(input(2026,{currentYearRepaid:undefined}))).toThrow(/actual|complete/i);
-  expect(()=>calculateFederalTax(input(2025,{priorYearRepaid:'100'}))).toThrow(/prior.year.*repayment/i);
+  expect(()=>calculateFederalTax(input(2025,{priorYearRepaid:'100'}))).toThrow(/earlier-return records/i);
   expect(()=>calculateFederalTax(input(2025,{accountHolder:'spouse'}))).toThrow(/spouse.*joint/i);
  });
  it('prints the actual repayment alongside canonical unemployment',async()=>{
