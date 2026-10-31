@@ -86,6 +86,11 @@ it('binds the prepared review when both copies omit their loss records', async (
     const altered = redactReviewIdentifiers(input), other = calculateFederalTax(input);
     other.totalTax = other.totalTax.plus(1000);
     await expect(fillReturn(altered, other, { outputDir: join(directory, 'result'), blankFormsDir: 'forms/blank', codNolReview: token })).rejects.toThrow(staleResult);
+    const stripped = redactReviewIdentifiers(input), strippedResult = calculateFederalTax(input);
+    for (const key of ['netOperatingLoss', 'form982NolSources', 'form982AttributeSources', 'form8801'] as const) delete stripped[key];
+    strippedResult.netOperatingLoss = undefined; strippedResult.codNolReduction = undefined; strippedResult.codAttributeReduction = undefined;
+    strippedResult.form8801 = undefined; strippedResult.codZeroMinimumTaxCreditBound = undefined; strippedResult.totalTax = strippedResult.totalTax.plus(1000);
+    await expect(fillReturn(stripped, strippedResult, { outputDir: join(directory, 'stripped'), blankFormsDir: 'forms/blank', codNolReview: token })).rejects.toThrow(staleSource);
     expect(await readdir(directory)).toEqual([]);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });
@@ -110,6 +115,7 @@ it('rejects every stale zero-proof premise in the reference itself', () => {
     copy => { copy.allLines = copy.allLines.filter(auditRows('COD zero minimum tax credit bound', 'following-pool')); },
     copy => { copy.allLines = copy.allLines.filter(auditRows('Form 8801', '26')); },
     copy => { copy.allLines = copy.allLines.filter(auditRows('Form 6251', '11')); },
+    copy => { copy.allLines = [...copy.allLines, ...copy.allLines.filter(row => row.form === 'Form 8801' && row.line === '26')]; },
   ];
   for (const change of changes) {
     const copy: TaxReturnResult = { ...result, form6251: result.form6251 && { ...result.form6251 }, form8801: result.form8801 && { ...result.form8801 },

@@ -499,7 +499,7 @@ export async function fillReturn(
     }
   }
   if (input.form7206 || result.form7206) assertForm7206ReviewSource(input, result, charitableReview, premiumTaxCreditReview);
-  const codNolReview = input.form982NolSources || result.codNolReduction
+  const codNolReview = input.form982NolSources || result.codNolReduction || options.codNolReview
     ? options.codNolReview ?? prepareCodNolReview(input) : undefined;
   // Bind the prepared sources and result before output, even when both copies
   // omit the loss records that the separate review below would replay.
