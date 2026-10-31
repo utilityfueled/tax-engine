@@ -42,7 +42,7 @@ export function captureScheduleDRecords(investments: InvestmentSources): { longT
         sourceReference: form.sourceId?.trim() && transaction.sourceId?.trim() ? JSON.stringify([form.sourceId.trim(), transaction.sourceId.trim()]) : undefined,
         accountHolder: form.accountHolder, payerName: form.brokerName,
         description: transaction.digitalAssetName ? `${transaction.digitalAssetName.trim()}${transaction.ticker?.trim() ? ` (${transaction.ticker.trim()})` : ''}` : undefined,
-        dateAcquired: transaction.dateAcquired, dateSold: transaction.dateSold, proceeds: transaction.proceeds, costBasis: transaction.costBasis,
+        dateAcquired: transaction.assetOrigin === 'inheritance' ? 'INHERITED' : transaction.dateAcquired, dateSold: transaction.dateSold, proceeds: transaction.proceeds, costBasis: transaction.costBasis,
         adjustments: parseGuidedCurrency(transaction.adjustments).minus(parseGuidedCurrency(transaction.sellingExpenses)).toFixed(), washSale: transaction.washSale, washSaleDisallowed: transaction.washSaleDisallowed,
         character: transaction.capitalAssetConfirmed === true && transaction.nftOrCollectible === false && transaction.ordinaryIncome === false ? 'ordinary' : undefined,
       }]))],

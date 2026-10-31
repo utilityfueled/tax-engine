@@ -107,7 +107,7 @@ export function calculateScheduleDSourceBinding(input: TaxYearInput, context: {
     assets.delete(id); owner(input, row, form.accountHolder);
     if (normalized(row.payerName) !== normalized(form.broker) || row.description !== transaction.description || row.dateAcquired !== transaction.dateAcquired || row.dateSold !== transaction.dateSold
       || row.washSale !== transaction.washSale) throw new Error('ScheduleD asset identity or original dates are stale or conflicting');
-    if (!actualDate(row.dateSold) || (row.dateAcquired !== 'VARIOUS' && !actualDate(row.dateAcquired))) throw new Error('ScheduleD original acquisition and sale dates must be actual calendar dates');
+    if (!actualDate(row.dateSold) || (!['VARIOUS', 'INHERITED'].includes(row.dateAcquired) && !actualDate(row.dateAcquired))) throw new Error('ScheduleD original acquisition and sale dates must be actual calendar dates');
     if (!row.dateSold.startsWith(`${input.taxpayer.taxYear}-`)) throw new Error('ScheduleD asset sale year conflicts with the actual source year');
     // A corrected row keeps reported basis in column e and the fix in column g. The
     // worksheet holds actual basis, so compare what each one leaves after adjustments.

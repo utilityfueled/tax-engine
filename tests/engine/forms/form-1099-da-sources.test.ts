@@ -108,8 +108,34 @@ it('treats payments and income-origin assets from their actual records', () => {
     expect(() => calculateForm8949(run({ assetOrigin, originIncomeIncludedConfirmed: false }))).toThrow(/special disposition or original acquisition/);
     expect(calculateForm8949(run({ assetOrigin, originIncomeIncludedConfirmed: true })).shortTermBoxH.transactions[0]!.gainLoss.toFixed()).toBe('10.25');
   }
-  for (const assetOrigin of ['gift', 'inheritance', 'other']) expect(() => calculateForm8949(run({ assetOrigin, originIncomeIncludedConfirmed: true }))).toThrow(/special disposition/);
+  expect(() => calculateForm8949(run({ assetOrigin: 'other', originIncomeIncludedConfirmed: true }))).toThrow(/special disposition/);
   expect(() => calculateForm8949(run({ transactionType: 'gift' }))).toThrow(/special disposition/);
+});
+
+const lot = (patch: Record<string, unknown>) => { const form = fixture(); Object.assign(form.transactions[0]!, { dateAcquired: '2023-03-01', holdingPeriod: 'long', ...patch }); return input([form]); };
+const gift = (sold: string, basis: string, patch: Record<string, unknown> = {}, source: Record<string, unknown> = {}) => lot({ assetOrigin: 'gift', proceeds: sold, costBasis: basis,
+  giftSource: { donorBasis: '10000', fairMarketValueAtGift: '8000', giftDate: '2023-03-01', sourceFactsConfirmed: true, ...source }, ...patch });
+const longRow = (source: ReturnType<typeof input>) => calculateForm8949(source).longTermBoxK.transactions[0]!;
+
+it('applies the donor basis and value rule to gifts', () => {
+  expect(longRow(gift('12000', '10000', { dateAcquired: '2020-01-15' })).gainLoss.toFixed()).toBe('2000');
+  expect(longRow(gift('9000', '9000')).gainLoss.toFixed()).toBe('0');
+  expect(longRow(gift('7000', '8000')).gainLoss.toFixed()).toBe('-1000');
+  expect(longRow(gift('3000', '5000', { dateAcquired: '2020-01-15' }, { donorBasis: '5000' })).gainLoss.toFixed()).toBe('-2000');
+  expect(() => calculateForm8949(gift('9000', '10000'))).toThrow(/donor basis and value rule/);
+  expect(() => calculateForm8949(gift('7000', '8000', { dateAcquired: '2020-01-15' }))).toThrow(/acquisition date conflicts/);
+  expect(() => calculateForm8949(gift('12000', '10000', { dateAcquired: '2023-04-01' }))).toThrow(/acquisition date conflicts/);
+  expect(() => calculateForm8949(gift('12000', '10000', {}, { sourceFactsConfirmed: false }))).toThrow(/confirmed donor basis/);
+  expect(() => calculateForm8949(gift('12000', '10000', {}, { donorBasis: '' }))).toThrow(/donor basis/);
+  expect(() => calculateForm8949(gift('12000', '10000', { giftSource: undefined }))).toThrow(/confirmed donor basis/);
+});
+
+it('reports inherited lots as long-term', () => {
+  const row = longRow(lot({ assetOrigin: 'inheritance', inheritedBasisConfirmed: true, dateAcquired: '2025-05-01' }));
+  expect([row.dateAcquired, row.gainLoss.toFixed()]).toEqual(['INHERITED', '10.25']);
+  expect(calculateFederalTax(lot({ assetOrigin: 'inheritance', inheritedBasisConfirmed: true, dateAcquired: '2025-05-01' })).scheduleD!.netLongTerm.toFixed()).toBe('10.25');
+  expect(() => calculateForm8949(lot({ assetOrigin: 'inheritance', dateAcquired: '2025-05-01' }))).toThrow(/special disposition/);
+  expect(() => calculateForm8949(lot({ assetOrigin: 'inheritance', inheritedBasisConfirmed: true, dateAcquired: '2025-05-01', holdingPeriod: 'short' }))).toThrow(/holding period/);
 });
 
 const corrected = (patch: Record<string, unknown>) => {

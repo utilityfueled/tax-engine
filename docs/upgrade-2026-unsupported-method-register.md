@@ -1,6 +1,6 @@
 # Unsupported method register
 
-Recorded October 31, 2026 at `298c254c`, then updated as packages shipped: Form 1099-DA basis corrections, gross-proceeds costs and repaid earlier-year unemployment, Form 2210-F, waiver requests and Schedule D worksheets with corrected digital rows, crypto payments and mining, staking or airdrop lots are delivered. Form 1099-G business refunds moved to Ruling, because source research found no recipient rule. This classifies the engine's explicit rejections so the remaining work can be reviewed and prioritized. An unsupported return stops with a named error. The engine does not estimate it.
+Recorded October 31, 2026 at `298c254c`, then updated as packages shipped: Form 1099-DA basis corrections, gross-proceeds costs and repaid earlier-year unemployment, Form 2210-F, waiver requests and Schedule D worksheets with corrected digital rows, crypto payments, and mining, staking, airdrop, gift and inherited lots are delivered. Form 1099-G business refunds moved to Ruling, because source research found no recipient rule. This classifies the engine's explicit rejections so the remaining work can be reviewed and prioritized. An unsupported return stops with a named error. The engine does not estimate it.
 
 A rejection here is not an external blocker unless its class says so. Year guards are excluded: they reject unsupported years on purpose and are not missing work.
 
@@ -31,7 +31,7 @@ A rejection here is not an external blocker unless its class says so. Year guard
 | Education | Partial in-kind allocation, Coverdell disqualification with later activity | `form-1099-q.ts` |
 | Foreign earned income | Partnership or prior non-W2 income mappings | `form-2555-source-binding.ts` |
 | EIC | Active appeal, competing nonparent priority, married-child dependency | `eic-*.ts` |
-| Digital assets | Multiple-state reporting, gift and inherited lots, market discount, derived crypto dispositions | `form-1099-da-sources.ts` |
+| Digital assets | Multiple-state reporting, market discount, derived crypto dispositions | `form-1099-da-sources.ts` |
 
 ## Ruling
 

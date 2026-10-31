@@ -325,6 +325,8 @@ export const Form1099DATransactionSchema = z.preprocess((value) => {
   basisCorrectionConfirmed: z.boolean().optional(), // Taxpayer records replace a differing Box1g.
   sellingCostsNotInProceedsConfirmed: z.boolean().optional(), // Box1f already reflects transaction costs by rule.
   originIncomeIncludedConfirmed: z.boolean().optional(), // Mining, staking or airdrop value was reported as income.
+  inheritedBasisConfirmed: z.boolean().optional(), // Basis is the actual section1014 value.
+  giftSource: z.object({ donorBasis: z.string().optional(), fairMarketValueAtGift: z.string().optional(), giftDate: z.string().optional(), sourceFactsConfirmed: z.boolean().optional() }).strict().optional(),
   proceedsType: z.enum(["gross", "net"]).optional(), // Box3a.
   sellingExpenses: decimal.optional(),
   marketDiscount: decimal.optional(), // Box1h.

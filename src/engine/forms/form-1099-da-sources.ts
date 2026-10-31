@@ -28,7 +28,7 @@ function actualDate(value: string, label: string): string {
 
 function isActualSource(form: Form1099DA, year: number): boolean {
   const statementFields = ['sourceId', 'taxYear', 'sourceReference', 'sourceFactsConfirmed', 'allTransactionsIncluded', 'federalWithheld', 'stateTaxReporting', 'accountReference'] as const;
-  const transactionFields = ['sourceId', 'digitalAssetCode', 'reportedDateAcquired', 'reportedCostBasis', 'basisSource', 'basisSourceReference', 'basisFactsConfirmed', 'basisCorrectionConfirmed', 'sellingCostsNotInProceedsConfirmed', 'originIncomeIncludedConfirmed',
+  const transactionFields = ['sourceId', 'digitalAssetCode', 'reportedDateAcquired', 'reportedCostBasis', 'basisSource', 'basisSourceReference', 'basisFactsConfirmed', 'basisCorrectionConfirmed', 'sellingCostsNotInProceedsConfirmed', 'originIncomeIncludedConfirmed', 'inheritedBasisConfirmed', 'giftSource',
     'proceedsType', 'sellingExpenses', 'marketDiscount', 'qof', 'lossNotAllowed', 'ordinaryIncome', 'onlyCashProceeds', 'customerProvidedAcquisitionInformation',
     'noncoveredSecurity', 'optionalReportingMethod', 'assetOrigin', 'capitalAssetConfirmed', 'nftOrCollectible',
     'paCostBasis', 'paBasisSourceReference', 'paBasisFactsConfirmed', 'paTransactionForProfitConfirmed'] as const;
@@ -86,7 +86,20 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
         const acquired = actualDate(row.dateAcquired, 'completed acquisition'), sold = actualDate(row.dateSold, 'sale');
         if (!sold.startsWith(`${input.taxpayer.taxYear}-`) || acquired > sold) throw new Error('Form1099DA actual dates do not match the return year or holding period.');
         const anniversary = `${Number(acquired.slice(0, 4)) + 1}${acquired.slice(4)}`;
-        if (row.holdingPeriod !== (sold > anniversary ? 'long' : 'short')) throw new Error('Form1099DA holding period conflicts with the actual purchase and sale dates.');
+        // IRC1223(9): property from a decedent is long-term whatever the dates show.
+        const inherited = row.assetOrigin === 'inheritance';
+        if (inherited ? row.holdingPeriod !== 'long' : row.holdingPeriod !== (sold > anniversary ? 'long' : 'short')) throw new Error('Form1099DA holding period conflicts with the actual purchase and sale dates.');
+        if (row.assetOrigin === 'gift') {
+          const gift = row.giftSource;
+          if (gift?.sourceFactsConfirmed !== true) throw new Error('Form1099DA gift requires confirmed donor basis, value and date records.');
+          const giftDate = actualDate(gift.giftDate ?? '', 'gift');
+          if (giftDate > sold) throw new Error('Form1099DA gift requires confirmed donor basis, value and date records.');
+          const donor = amount(gift.donorBasis, 'donor basis'), value = amount(gift.fairMarketValueAtGift, 'value at gift'), sale = amount(row.proceeds, 'proceeds');
+          const lossBasis = value.lt(donor) && sale.lte(donor), expected = !lossBasis ? donor : sale.lt(value) ? value : sale;
+          if (!basis.eq(expected)) throw new Error('Form1099DA gift basis must follow the donor basis and value rule.');
+          // Tacking needs the donor's basis. A value or no-gain basis starts at the gift.
+          if (lossBasis ? acquired !== giftDate : acquired > giftDate) throw new Error('Form1099DA gift acquisition date conflicts with its basis.');
+        }
         if (row.reportedDateAcquired !== null && row.reportedDateAcquired !== acquired) throw new Error('Original Form1099DA acquisition date conflicts with the completed ordinary basis source.');
         const reportedBasis = row.reportedCostBasis === null ? undefined : amount(row.reportedCostBasis, 'reported Box1g basis');
         const basisCorrected = reportedBasis !== undefined && !reportedBasis.eq(basis);
@@ -100,7 +113,8 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
         // Spec: form-1099-da-sources.yaml income-origin. Income-origin basis is the amount
         // already included in income, so the taxpayer must confirm it was reported.
         const incomeOrigin = row.assetOrigin === 'mining' || row.assetOrigin === 'staking' || row.assetOrigin === 'airdrop';
-        if (row.capitalAssetConfirmed !== true || !(row.assetOrigin === 'purchase' || (incomeOrigin && row.originIncomeIncludedConfirmed === true)) || row.nftOrCollectible !== false
+        const transferOrigin = row.assetOrigin === 'gift' || (inherited && row.inheritedBasisConfirmed === true);
+        if (row.capitalAssetConfirmed !== true || !(row.assetOrigin === 'purchase' || transferOrigin || (incomeOrigin && row.originIncomeIncludedConfirmed === true)) || row.nftOrCollectible !== false
           || row.qof !== false || row.lossNotAllowed !== false || row.ordinaryIncome !== false || row.optionalReportingMethod !== 'none'
           || !['sale', 'exchange', 'payment'].includes(row.transactionType)) throw new Error('Form1099DA special disposition or original acquisition requires a separate supported source method.');
         const sellingExpenses = amount(row.sellingExpenses, 'selling expenses');
@@ -121,6 +135,7 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
         const matched = options.resolvedLegacyBasis?.get(`${description} via ${form.brokerName}|${row.dateSold}`);
         if (matched) { costBasis = matched.costBasis.toFixed(); dateAcquired = matched.dateAcquired; }
       }
+      if (actual && row.assetOrigin === 'inheritance') dateAcquired = 'INHERITED';
       audit.record('Form1099DA', `capital:${formIndex}:${transactionIndex}`, 'Digital disposition capital source amount', d(row.proceeds).minus(d(costBasis)).plus(d(rowAdjustment)).plus(row.washSale ? d(row.washSaleDisallowed) : d(0)),
         'Original proceeds minus completed taxpayer basis plus actual supported adjustments; source cents retained', { sourceVerified: String(actual), sourceTaxYear: String(form.taxYear ?? 'unknown'), owner: form.accountHolder ?? 'unknown' });
       return { description, dateAcquired, dateSold: row.dateSold, proceeds: row.proceeds, costBasis,

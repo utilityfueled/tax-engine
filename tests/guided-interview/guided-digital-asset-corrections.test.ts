@@ -24,6 +24,19 @@ it('passes both guided correction answers without defaulting them', () => {
   expect(() => buildDigitalAssetInputs([entry], 'single', 2025, personal, [])).toThrow(/basis correction|Box 1f/);
 });
 
+it('carries origin answers from the guide without defaulting them', () => {
+  const row = (patch: Record<string, unknown>) => { const entry = actualGuidedDigitalAsset(); Object.assign(entry.transactions![0]!, patch); return buildDigitalAssetInputs([entry], 'single', 2025, personal, [])![0]!.transactions[0]!; };
+  const gift = { assetOrigin: 'gift', proceeds: '12000', costBasis: '10000', dateAcquired: '2023-03-01', holdingPeriod: 'long', giftDonorBasis: '10,000', giftFairMarketValue: '8,000', giftDate: '2023-03-01', giftSourceConfirmed: true };
+  expect(row({ assetOrigin: 'staking', originIncomeIncludedConfirmed: true })).toMatchObject({ assetOrigin: 'staking', originIncomeIncludedConfirmed: true });
+  expect(() => row({ assetOrigin: 'staking' })).toThrow(/special disposition/);
+  expect(row({ assetOrigin: 'inheritance', holdingPeriod: 'long', inheritedBasisConfirmed: true })).toMatchObject({ assetOrigin: 'inheritance', inheritedBasisConfirmed: true });
+  expect(() => row({ assetOrigin: 'inheritance', holdingPeriod: 'long' })).toThrow(/special disposition/);
+  expect(row(gift).giftSource).toEqual({ donorBasis: '10000', fairMarketValueAtGift: '8000', giftDate: '2023-03-01', sourceFactsConfirmed: true });
+  expect(() => row({ ...gift, giftSourceConfirmed: null })).toThrow(/confirmed donor basis/);
+  expect(() => row({ ...gift, giftDonorBasis: ' ' })).toThrow(/donor basis/);
+  expect(row({ assetOrigin: 'purchase', giftDonorBasis: '10000' }).giftSource).toBeUndefined();
+});
+
 it('prints a zero column g for a code B row', async () => {
   const form = structuredClone(actualDigitalAssetSource);
   Object.assign(form.transactions[0]!, { reportedCostBasis: '95', basisCorrectionConfirmed: true });
