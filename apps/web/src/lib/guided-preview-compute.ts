@@ -151,6 +151,17 @@ function tryComputeStatePreview(
 // ── Main preview computation ────────────────────────────────────────────────
 
 export function computeGuidedPreview(state: GuidedFlowState | null | undefined): GuidedPreviewMetrics | null {
+  return computeGuidedPreviewOutcome(state).metrics;
+}
+
+/** An engine rejection is a reason to show, unlike missing facts or a schema failure. */
+export function computeGuidedPreviewOutcome(state: GuidedFlowState | null | undefined): { metrics: GuidedPreviewMetrics | null; blockedBy: string | null } {
+  let blockedBy: string | null = null;
+  const metrics = runGuidedPreview(state, message => { blockedBy = message; });
+  return { metrics, blockedBy };
+}
+
+function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: (message: string) => void): GuidedPreviewMetrics | null {
   if (!state || typeof state !== "object" || state.segmentation == null || state.sectionData == null) {
     return null;
   }
@@ -159,7 +170,13 @@ export function computeGuidedPreview(state: GuidedFlowState | null | undefined):
     const rawInput = buildTaxInputFromGuidedData(state);
     if (!rawInput) return null;
     const taxInput = TaxYearInputSchema.parse(rawInput);
-    const result = calculateFederalTax(taxInput);
+    let result: ReturnType<typeof calculateFederalTax>;
+    try {
+      result = calculateFederalTax(taxInput);
+    } catch (error) {
+      onBlocked(error instanceof Error ? error.message : "This return cannot be figured yet.");
+      return null;
+    }
 
     let stateResult: StatePreviewResult | null = null;
     const stateCode = state.segmentation.stateCode;

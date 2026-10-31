@@ -28,7 +28,7 @@ import {
   buildGuidedFactAnswers,
   buildGuidedSyntheticDocuments,
 } from "@/lib/guided-interview-bridge";
-import { computeGuidedPreview } from "@/lib/guided-preview-compute";
+import { computeGuidedPreviewOutcome } from "@/lib/guided-preview-compute";
 import { collectW2Suggestions } from "@/lib/workspace-assistant";
 import {
   type AdjustmentData,
@@ -762,6 +762,7 @@ function SectionContent({
 function InterviewPhase({
   state,
   guidedPreview,
+  guidedPreviewBlockedBy,
   onStateChange,
   workspace,
   onUploadDocuments,
@@ -769,6 +770,7 @@ function InterviewPhase({
 }: {
   state: GuidedFlowState;
   guidedPreview: GuidedPreviewMetrics | null;
+  guidedPreviewBlockedBy: string | null;
   onStateChange: (next: GuidedFlowState) => void;
   workspace: ReturnWorkspaceRecord;
   onUploadDocuments?: (files: File[]) => Promise<string>;
@@ -894,6 +896,7 @@ function InterviewPhase({
       <SectionProgressBar state={state} onJump={handleJump} />
 
       <RefundTicker guidedPreview={guidedPreview} workspace={workspace} progress={progress} />
+      {guidedPreviewBlockedBy && <p role="status" className="guided-hint">This return cannot be figured yet: {guidedPreviewBlockedBy}</p>}
 
       <div key={currentSection?.id} className="guided-section-transition">
         {currentSection ? (
@@ -983,6 +986,7 @@ function InterviewPhase({
 
 function CompletionScreen({
   guidedPreview,
+  guidedPreviewBlockedBy,
   workspace,
   state,
   onBack,
@@ -991,6 +995,7 @@ function CompletionScreen({
   onContinueToWorkspace,
 }: {
   guidedPreview: GuidedPreviewMetrics | null;
+  guidedPreviewBlockedBy: string | null;
   workspace: ReturnWorkspaceRecord;
   state: GuidedFlowState;
   onBack: () => void;
@@ -1008,6 +1013,7 @@ function CompletionScreen({
       <SectionProgressBar state={state} onJump={onResumeSection} />
 
       <RefundTicker guidedPreview={guidedPreview} workspace={workspace} progress={progress} />
+      {guidedPreviewBlockedBy && <p role="status" className="guided-hint">This return cannot be figured yet: {guidedPreviewBlockedBy}</p>}
 
       <CompletionSummaryContent
         guidedPreview={guidedPreview}
@@ -1210,8 +1216,8 @@ export function GuidedInterviewShell({
   // Compute live preview from the guided interview data. This runs the
   // tax engine on every state change so the refund ticker updates in
   // real time as the user enters data.
-  const guidedPreview = useMemo(
-    () => workspace.returnSummary.targetTaxYear != null && flowState.taxYear !== workspace.returnSummary.targetTaxYear ? null : computeGuidedPreview(flowState),
+  const { metrics: guidedPreview, blockedBy: guidedPreviewBlockedBy } = useMemo(
+    () => workspace.returnSummary.targetTaxYear != null && flowState.taxYear !== workspace.returnSummary.targetTaxYear ? { metrics: null, blockedBy: null } : computeGuidedPreviewOutcome(flowState),
     [flowState, workspace.returnSummary.targetTaxYear],
   );
   const currentSection = flowState.phase === "interview"
@@ -1288,6 +1294,7 @@ export function GuidedInterviewShell({
         <InterviewPhase
           state={flowState}
           guidedPreview={guidedPreview}
+          guidedPreviewBlockedBy={guidedPreviewBlockedBy}
           onStateChange={handleFlowStateChange}
           workspace={workspace}
           onUploadDocuments={onUploadDocuments}
@@ -1298,6 +1305,7 @@ export function GuidedInterviewShell({
       {flowState.phase === "complete" && (
         <CompletionScreen
           guidedPreview={guidedPreview}
+          guidedPreviewBlockedBy={guidedPreviewBlockedBy}
           workspace={workspace}
           state={flowState}
           onBack={() => {

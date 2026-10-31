@@ -45,6 +45,11 @@ it('reconciles corrected digital rows to the actual basis worksheet', () => {
   expect(calculateFederalTax(corrected({})).scheduleD!.netLongTerm.toFixed()).toBe('110.25');
   expect(calculateFederalTax(corrected({ sellingExpenses: '5', sellingCostsNotInProceedsConfirmed: true }, { adjustments: '-5' })).scheduleD!.netLongTerm.toFixed()).toBe('105.25');
   expect(() => calculateFederalTax(corrected({}, { costBasis: '91' }))).toThrow(/asset adjusted basis/);
+  expect(() => calculateFederalTax(corrected({}, { proceeds: '101' }))).toThrow();
+  const inherited = { assetOrigin: 'inheritance', inheritedBasisConfirmed: true };
+  expect(calculateFederalTax(corrected(inherited, { dateAcquired: 'INHERITED' })).scheduleD!.netLongTerm.toFixed()).toBe('110.25');
+  expect(() => calculateFederalTax(corrected(inherited))).toThrow();
+  expect(() => calculateFederalTax(corrected({}, { washSaleDisallowed: '1' }))).toThrow();
 });
 
 it('rejects missing duplicated and stale normalized digital source copies', () => {

@@ -1,3 +1,5 @@
+import { emptyEstimatedTaxFacts } from "@/lib/guided-estimated-tax-facts";
+import { emptyPaymentData } from "@/lib/guided-interview-flow";
 import { guidedSharedMarketplaceHealthState } from "../../fixtures/guided-shared-marketplace-health";
 import { energySource, sourceCleanProperty } from "../../fixtures/energy-source";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -690,6 +692,19 @@ describe("workspace filled return download", () => {
         "E-file and business-rule validation: not-validated.",
         "Form 2210 is still suppressed from the draft packet even when an estimated tax penalty is present.",
       ],
+    });
+  });
+
+  it("warns in the packet when an estimated tax penalty waiver is requested", async () => {
+    const base = createGuidedFlowStateWithUnderpayment();
+    const estimatedTaxFacts = { ...emptyEstimatedTaxFacts, sourceTaxYear: "2025", sourceReference: "Fictional records", sourceFactsConfirmed: true, allPaymentRecordsIncluded: true, calendarYearTaxpayer: true, residentReturn: true,
+      farmerOrFisher: false, disasterReliefClaimed: false, waiverRequested: true, waiverKind: "partial" as const, waiverAmount: "1", waiverReason: "retirement_or_disability" as const, waiverStatementReference: "Fictional statement",
+      calculationMethod: "regular" as const, withholdingMethod: "equal-installments" as const, priorYearTaxStatus: "no-return" as const, earlyReturnExceptionClaimed: false };
+    const state = { ...base, sectionData: { ...base.sectionData, payments: { ...emptyPaymentData, ...base.sectionData.payments, estimatedTaxFacts } } };
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
+    await assertPacketParity(download, {
+      suppressedForms: ["f2210-filled.pdf"],
+      expectedText: ["This return requests an estimated tax penalty waiver."],
     });
   });
 

@@ -1330,6 +1330,14 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     form.sourceFactsConfirmed !== true && form.transactions.some((t) => !t.basisReportedToIRS && d(t.costBasis).isZero())
   );
 
+  // Confirmed rows carry their own basis and consume no lot, so a lot path could reuse it.
+  const lotConsumers = (input.form1099DA ?? []).some((form) => form.sourceFactsConfirmed !== true) || Boolean(cryptoInput
+    && (cryptoInput.tokenSwaps?.length || cryptoInput.lpPositions?.length || cryptoInput.nftTransactions?.length || cryptoInput.liquidations?.length));
+  const confirmedAssets = new Set(form1099DAForms.filter((form) => form.sourceFactsConfirmed === true).flatMap((form) => form.transactions.flatMap((row) => [row.ticker, row.digitalAssetCode, row.digitalAssetName].map((name) => name?.toUpperCase()))));
+  if (lotConsumers && allLots.some((lot) => confirmedAssets.has(lot.asset.toUpperCase()))) {
+    throw new Error("Form1099DA confirmed rows and lot-consuming crypto sources for the same asset need a separate lot method.");
+  }
+
   let lotMatchedBasis: Map<string, { costBasis: Decimal; dateAcquired: string }> | undefined;
   let lotMatchedDispositions: MatchedDisposition[] = [];
   if (needsLotMatching && allLots.length > 0) {
@@ -4398,6 +4406,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // ═══════════════════════════════════════════════════════════
 
   const totalTax = taxAfterCredits.plus(totalAdditionalTaxes);
+  const paidInFullDate = input.form2210?.returnPaidInFullDate;
+  if (paidInFullDate) {
+    const paid = sum(estimatedTaxInput.withholding, ...estimatedTaxInput.payments.filter((payment) => payment.date <= paidInFullDate).map((payment) => d(payment.amount)));
+    if (paid.lt(totalTax.minus(estimatedTaxRefundableCredits))) throw new Error("Form 2210 claimed full return payment does not reconcile to total tax due");
+  }
   audit.record("1040", "24", "Total tax", totalTax,
     `Line 22 $${taxAfterCredits} + Line 23 $${totalAdditionalTaxes}`);
 

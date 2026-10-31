@@ -48,6 +48,9 @@ describe('Form 2210-F', () => {
     expect(run({}, early, paidUp).penalty.toFixed()).toBe('0');
     expect(run({}, { ...early, returnPaidInFullDate: '2026-03-03' }, [{ date: '2026-03-03', amount: '17000' }]).penalty.toFixed()).toBe('45');
     expect(() => run({}, early)).toThrow(/does not reconcile to actual payments/);
+    expect(() => run({}, early, [{ date: '2026-03-03', amount: '17000' }])).toThrow(/does not reconcile to actual payments/);
+    expect(run({ refundableCredits: new Decimal(5000) }, early, [{ date: '2026-03-02', amount: '12000' }]).penalty.toFixed()).toBe('0');
+    expect(() => run({ refundableCredits: new Decimal(5000) }, early, [{ date: '2026-03-02', amount: '11999.99' }])).toThrow(/does not reconcile to actual payments/);
     expect(() => run({}, { returnFiledDate: '2026-03-02' })).toThrow(/both returnFiledDate/);
     expect(() => run({}, { returnFiledDate: '2025-03-01', returnPaidInFullDate: '2025-03-01' })).toThrow(/must follow the tax year/);
     const nonresident = run({ withholding: new Decimal(0), estimatedPayments: new Decimal(0), payments: [] }, { priorYearTaxStatus: 'no-tax-liability', priorYearTaxForForm2210: '0', priorYearResidentAllYear: false });
@@ -69,6 +72,7 @@ describe('Form 2210-F', () => {
     expect(() => run({}, { priorYearTaxStatus: 'no-tax-liability', priorYearTaxForForm2210: '1' })).toThrow(/conflicts with priorYearTaxForForm2210/);
     expect(() => run({ incomeTaxAfterCredits: undefined })).toThrow(/incomeTaxAfterCredits/);
     expect(() => run({ payments: [{ date: '2020-01-15', amount: '8000', kind: 'estimated' }] })).toThrow(/outside the tax-year/);
+    expect(() => run({ payments: [{ date: '2027-01-01', amount: '8000', kind: 'estimated' }] })).toThrow(/outside the tax-year/);
     expect(() => run({ estimatedPayments: new Decimal(9000) })).toThrow(/reconcile to estimatedPayments/);
     expect(() => run({ taxYear: 2026, payments: [{ date: '2027-01-15', amount: '8000', kind: 'estimated' }] })).toThrow(/unpublished/);
   });

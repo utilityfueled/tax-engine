@@ -2,6 +2,7 @@
 import { expect, it } from "vitest";
 import { buildGuidedQofFacts, emptyQofInvestment, qofDispositionFactErrors, type QofDispositionData } from "@/lib/guided-qof-facts";
 import { initialFlowState, updateSectionData, type GuidedFlowState } from "@/lib/guided-interview-flow";
+import { investmentFactErrors, investmentRowsStarted, type InvestmentData } from "@/lib/guided-investment-facts";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { completePersonalInfo, completeW2Entry } from "./complete-facts";
 
@@ -58,3 +59,14 @@ it("requires a QOF answer on a 2026 investment section", () => {
   expect(qofDispositionFactErrors(undefined, 2025)).toEqual({});
   expect(qofDispositionFactErrors({ sourceTaxYear: "2026", sourceReference: "Fictional complete records", sourceFactsConfirmed: true, allInvestmentsReviewed: true, disposedOfQofInvestment: false, deferredGainHeldAtYearEnd: false }, 2026)).toEqual({});
 });
+
+it("asks 2026 returns for QOF facts only once a row is started", () => {
+  const blank = { interestEntries: [{}], dividendEntries: [], brokerageEntries: [] } as unknown as InvestmentData;
+  const started = { ...blank, interestEntries: [{ payer: "Actual bank", taxableInterest: "10" }] } as unknown as InvestmentData;
+  expect(investmentRowsStarted(blank)).toBe(false);
+  expect(investmentRowsStarted(started)).toBe(true);
+  expect(Object.keys(investmentFactErrors(blank, "single", 2026)).filter(key => /qof/i.test(key))).toEqual([]);
+  expect(Object.keys(investmentFactErrors(started, "single", 2026)).filter(key => /qof/i.test(key)).length).toBeGreaterThan(0);
+  expect(Object.keys(investmentFactErrors(started, "single", 2025)).filter(key => /qof/i.test(key))).toEqual([]);
+});
+

@@ -44,7 +44,7 @@ import { careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitsData
 import { careFactErrors } from "./guided-credit-facts";
 import { energyFactErrors } from "./guided-energy-facts";
 import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
-import { investmentFactErrors, isStartedInvestment, type InvestmentSourceData, type InvestmentData } from "./guided-investment-facts";
+import { investmentFactErrors, investmentRowsStarted, isStartedInvestment, type InvestmentSourceData, type InvestmentData } from "./guided-investment-facts";
 import { isStartedDigitalAsset } from "./guided-digital-asset-facts";
 import { isStartedOid } from "./guided-oid-facts";
 import { businessFactErrors, hasBusinessSourceData, type BusinessSourceData } from "./guided-business-facts";
@@ -1907,7 +1907,7 @@ function validateInvestmentSection(
   stateCode?: string | null,
   personal?: PersonalInfoData,
 ): SectionValidationResult {
-  if (!data || (![...data.interestEntries, ...data.dividendEntries, ...data.brokerageEntries].some(isStartedInvestment) && !data.brokerageEntries.some(entry => entry.transactions.some(isStartedInvestment)) && !data.oidEntries?.some(isStartedOid) && !data.digitalAssetEntries?.some(isStartedDigitalAsset) && !data.childElections?.length && !data.scheduleDSources && !data.qofDispositionFacts && !data.section1202Sources)) return EMPTY_SECTION("investment info");
+  if (!data || (!investmentRowsStarted(data) && !data.childElections?.length && !data.scheduleDSources && !data.qofDispositionFacts && !data.section1202Sources)) return EMPTY_SECTION("investment info");
   const errors = investmentFactErrors(data, filingStatus, taxYear, stateData, stateCode, personal);
   if (Object.keys(errors).length) return { status: "partial", message: "Complete the actual investment source amounts, ownership and classifications.", fieldErrors: errors, allowSkip: true };
   return VALID_SECTION;

@@ -5,13 +5,13 @@ import { calculateBrokerageWithholding } from "@/engine/forms/form-1099-b-withho
 import type { BrokerageEntryData, CapitalGainTransactionData, DividendEntryData, FilingStatus, InterestEntryData, PersonalInfoData, StateReturnData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount, isActualDate } from "./guided-required-facts";
-import { oidFactErrors, type OidEntryData } from "./guided-oid-facts";
+import { isStartedOid, oidFactErrors, type OidEntryData } from "./guided-oid-facts";
 import { buildGuidedPrivateActivityFacts, type PrivateActivitySourceData } from "./guided-private-activity-facts";
 import { calculateForm6251BondSources } from "@/engine/forms/form-6251-bond-sources.js";
 import { Form1099IntSchema, Form1099DivSchema } from "@/models/inputs.js";
 import { childElectionFactErrors, type ChildElectionData } from "./guided-child-election-facts";
 import { qsbsSourceFactErrors, type QsbsSourceData } from "./guided-qsbs-sources";
-import { digitalAssetFactErrors, type DigitalAssetEntryData } from "./guided-digital-asset-facts";
+import { digitalAssetFactErrors, isStartedDigitalAsset, type DigitalAssetEntryData } from "./guided-digital-asset-facts";
 
 export interface InvestmentSourceData extends PrivateActivitySourceData {
   payerTin?: string;
@@ -49,10 +49,15 @@ function rejectUnsupportedAmount(value: string | undefined, key: string, message
   if (hasEnteredAmount(value) && !errors[key] && !parseGuidedCurrency(value).isZero()) errors[key] = message;
 }
 
+export function investmentRowsStarted(data: InvestmentData): boolean {
+  return [...data.interestEntries, ...data.dividendEntries, ...data.brokerageEntries].some(isStartedInvestment) || data.brokerageEntries.some(entry => entry.transactions.some(isStartedInvestment))
+    || Boolean(data.oidEntries?.some(isStartedOid)) || Boolean(data.digitalAssetEntries?.some(isStartedDigitalAsset));
+}
+
 export function investmentFactErrors(data: InvestmentData | undefined, filingStatus?: FilingStatus | null, taxYear?: number | null, stateData?: StateReturnData, stateCode?: string | null, personal?: PersonalInfoData): Record<string, string> {
   const errors: Record<string, string> = {};
   if (!data) return errors;
-  Object.assign(errors, qofDispositionFactErrors(data.qofDispositionFacts, taxYear, data.interestEntries.length + data.dividendEntries.length + data.brokerageEntries.length + (data.oidEntries?.length ?? 0) + (data.digitalAssetEntries?.length ?? 0) > 0));
+  Object.assign(errors, qofDispositionFactErrors(data.qofDispositionFacts, taxYear, investmentRowsStarted(data)));
   Object.assign(errors, oidFactErrors(data.oidEntries, filingStatus, taxYear, stateCode, stateData));
   Object.assign(errors, digitalAssetFactErrors(data.digitalAssetEntries, filingStatus, taxYear, personal, data.brokerageEntries, stateData, stateCode));
   Object.assign(errors, childElectionFactErrors(data.childElections, taxYear));

@@ -7,6 +7,7 @@ import { TaxYearInputSchema } from "@/models/inputs.js";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { emptyPaymentData, updateSectionData, validateSection, type PaymentData } from "@/lib/guided-interview-flow";
 import { buildEstimatedTaxFacts, emptyEstimatedTaxFacts, estimatedTaxFactErrors, type EstimatedTaxFactsData } from "@/lib/guided-estimated-tax-facts";
+import { computeGuidedPreviewOutcome } from "@/lib/guided-preview-compute";
 import { completeW2Entry, startCompleteInterview } from "./complete-facts";
 function facts(): EstimatedTaxFactsData {
   return { ...structuredClone(emptyEstimatedTaxFacts), sourceTaxYear: "2025", sourceReference: "Actual prior return and IRS payment history", sourceFactsConfirmed: true,
@@ -122,3 +123,32 @@ it("applies the prior-tax high-income multiplier once to the original amount", (
   expect(result.form2210?.requiredAnnualPayment.toFixed()).toBe("5500");
   expect(result.form2210?.penalty.toFixed()).toBe("0");
 });
+
+it("uses the farmer deadline, keeps waiver answers exact and leaves unknown answers unknown", () => {
+  const farmer = { ...facts(), farmerOrFisher: true, farmingIncomeTwoThirdsConfirmed: true };
+  const build = (patch: Partial<EstimatedTaxFactsData>, year = 2025, base = farmer) => buildEstimatedTaxFacts({ ...emptyPaymentData, estimatedTaxFacts: { ...base, sourceTaxYear: String(year), ...patch } }, year);
+  const dates = (date: string) => ({ earlyReturnExceptionClaimed: true, returnFiledDate: date, returnPaidInFullDate: date });
+  expect(build(dates("2026-03-02"))?.returnFiledDate).toBe("2026-03-02");
+  expect(() => build(dates("2026-03-03"))).toThrow(/conflict/);
+  expect(() => build(dates("2026-02-20"), 2025, facts())).toThrow(/conflict/);
+  expect(build(dates("2027-03-01"), 2026)?.returnFiledDate).toBe("2027-03-01");
+  expect(() => build(dates("2027-03-02"), 2026)).toThrow(/conflict/);
+  expect(() => build({ calculationMethod: "annualized" })).toThrow(/no annualized method/);
+  const waiver = { waiverRequested: true, waiverKind: "full" as const, waiverReason: "retirement_or_disability" as const, waiverStatementReference: "Fictional statement" };
+  expect(build(waiver, 2025, facts())).toMatchObject(waiver);
+  for (const patch of [{ waiverKind: "" as const }, { waiverReason: "" as const }, { waiverStatementReference: " " }]) expect(() => build({ ...waiver, ...patch }, 2025, facts()), JSON.stringify(patch)).toThrow(/waiver/i);
+  expect(() => build({ farmerOrFisher: null }, 2025, facts())).toThrow(/farmer or fisher/);
+  expect(() => build({ waiverRequested: null }, 2025, facts())).toThrow(/penalty waiver/);
+});
+
+it("names the engine rejection instead of a silent empty preview", () => {
+  const waiver = { waiverRequested: true, waiverKind: "partial" as const, waiverAmount: "999999", waiverReason: "retirement_or_disability" as const, waiverStatementReference: "Fictional statement" };
+  const blocked = computeGuidedPreviewOutcome(stateWith({ ...emptyPaymentData, estimatedTaxFacts: { ...facts(), ...waiver } }));
+  expect(blocked.metrics).toBeNull();
+  expect(blocked.blockedBy).toMatch(/no more than the penalty/);
+  const fine = computeGuidedPreviewOutcome(stateWith({ ...emptyPaymentData, estimatedTaxFacts: facts() }));
+  expect(fine.blockedBy).toBeNull();
+  expect(fine.metrics).not.toBeNull();
+  expect(computeGuidedPreviewOutcome(null)).toEqual({ metrics: null, blockedBy: null });
+});
+

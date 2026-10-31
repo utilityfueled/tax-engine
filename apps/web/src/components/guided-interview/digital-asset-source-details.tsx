@@ -24,10 +24,12 @@ function Disposition({ row, prefix, stateCode, onChange, onRemove }: { row: Digi
       <BooleanFact label={`${prefix} — My records correct a different broker Box 1g basis`} value={row.basisCorrectionConfirmed ?? null} onChange={basisCorrectionConfirmed => onChange({ basisCorrectionConfirmed })} />
       {row.assetOrigin === 'inheritance' && <BooleanFact label={`${prefix} — The basis above is the value at the decedent's death, or the elected alternate value`} value={row.inheritedBasisConfirmed ?? null} onChange={inheritedBasisConfirmed => onChange({ inheritedBasisConfirmed })} />}
       {row.assetOrigin === 'gift' && <>
-        <CurrencyField label={`${prefix} — Donor's adjusted basis`} value={row.giftDonorBasis ?? ''} onChange={giftDonorBasis => onChange({ giftDonorBasis })} />
+        <BooleanFact label={`${prefix} — This came from a spouse, or a former spouse in a divorce`} value={row.giftFromSpouse ?? null} onChange={giftFromSpouse => onChange({ giftFromSpouse })} />
+        <CurrencyField label={`${prefix} — Donor's adjusted basis, plus any gift tax you may add, or 0 if it cannot be documented`} value={row.giftDonorBasis ?? ''} onChange={giftDonorBasis => onChange({ giftDonorBasis })} />
         <CurrencyField label={`${prefix} — Value on the gift date`} value={row.giftFairMarketValue ?? ''} onChange={giftFairMarketValue => onChange({ giftFairMarketValue })} />
         <TextFact label={`${prefix} — Gift date`} type="date" value={row.giftDate ?? ''} onChange={giftDate => onChange({ giftDate })} />
-        <BooleanFact label={`${prefix} — Gift records checked`} value={row.giftSourceConfirmed ?? null} onChange={giftSourceConfirmed => onChange({ giftSourceConfirmed })} />
+        <BooleanFact label={`${prefix} — Records support the donor's basis, the value and the gift date`} value={row.giftSourceConfirmed ?? null} onChange={giftSourceConfirmed => onChange({ giftSourceConfirmed })} />
+        <BooleanFact label={`${prefix} — Records show how long the donor held it`} value={row.giftHoldingDocumented ?? null} onChange={giftHoldingDocumented => onChange({ giftHoldingDocumented })} />
       </>}
       {['mining', 'staking', 'airdrop'].includes(row.assetOrigin ?? '') && <BooleanFact label={`${prefix} — Its value when received was reported as income, and that amount is the basis above`} value={row.originIncomeIncludedConfirmed ?? null} onChange={originIncomeIncludedConfirmed => onChange({ originIncomeIncludedConfirmed })} />}
       <BooleanFact label={`${prefix} — These selling costs are not already reflected in Box 1f, which brokers usually reduce by transaction costs`} value={row.sellingCostsNotInProceedsConfirmed ?? null} onChange={sellingCostsNotInProceedsConfirmed => onChange({ sellingCostsNotInProceedsConfirmed })} />

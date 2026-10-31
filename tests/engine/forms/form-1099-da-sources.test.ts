@@ -101,12 +101,12 @@ it('requires actual2026 source boxes without inferring noncovered basis', () => 
 });
 
 it('treats payments and income-origin assets from their actual records', () => {
-  const run = (patch: Record<string, unknown>) => { const source = fixture(); Object.assign(source.transactions[0]!, patch); return input([source]); };
-  expect(calculateForm8949(run({ transactionType: 'payment' })).shortTermBoxH.transactions[0]!.gainLoss.toFixed()).toBe('10.25');
+  const run = (patch: Record<string, unknown>) => { const source = fixture(); Object.assign(source.transactions[0]!, { dateAcquired: '2024-01-15', holdingPeriod: 'long', ...patch }); return input([source]); };
+  expect(calculateForm8949(run({ transactionType: 'payment' })).longTermBoxK.transactions[0]!.gainLoss.toFixed()).toBe('10.25');
   for (const assetOrigin of ['mining', 'staking', 'airdrop']) {
     expect(() => calculateForm8949(run({ assetOrigin }))).toThrow(/special disposition or original acquisition/);
     expect(() => calculateForm8949(run({ assetOrigin, originIncomeIncludedConfirmed: false }))).toThrow(/special disposition or original acquisition/);
-    expect(calculateForm8949(run({ assetOrigin, originIncomeIncludedConfirmed: true })).shortTermBoxH.transactions[0]!.gainLoss.toFixed()).toBe('10.25');
+    expect(calculateForm8949(run({ assetOrigin, originIncomeIncludedConfirmed: true })).longTermBoxK.transactions[0]!.gainLoss.toFixed()).toBe('10.25');
   }
   expect(() => calculateForm8949(run({ assetOrigin: 'other', originIncomeIncludedConfirmed: true }))).toThrow(/special disposition/);
   expect(() => calculateForm8949(run({ transactionType: 'gift' }))).toThrow(/special disposition/);
@@ -114,7 +114,7 @@ it('treats payments and income-origin assets from their actual records', () => {
 
 const lot = (patch: Record<string, unknown>) => { const form = fixture(); Object.assign(form.transactions[0]!, { dateAcquired: '2023-03-01', holdingPeriod: 'long', ...patch }); return input([form]); };
 const gift = (sold: string, basis: string, patch: Record<string, unknown> = {}, source: Record<string, unknown> = {}) => lot({ assetOrigin: 'gift', proceeds: sold, costBasis: basis,
-  giftSource: { donorBasis: '10000', fairMarketValueAtGift: '8000', giftDate: '2023-03-01', sourceFactsConfirmed: true, ...source }, ...patch });
+  giftSource: { donorBasis: '10000', fairMarketValueAtGift: '8000', giftDate: '2023-03-01', sourceFactsConfirmed: true, donorHoldingDocumented: true, fromSpouse: false, ...source }, ...patch });
 const longRow = (source: ReturnType<typeof input>) => calculateForm8949(source).longTermBoxK.transactions[0]!;
 
 it('applies the donor basis and value rule to gifts', () => {
@@ -128,6 +128,22 @@ it('applies the donor basis and value rule to gifts', () => {
   expect(() => calculateForm8949(gift('12000', '10000', {}, { sourceFactsConfirmed: false }))).toThrow(/confirmed donor basis/);
   expect(() => calculateForm8949(gift('12000', '10000', {}, { donorBasis: '' }))).toThrow(/donor basis/);
   expect(() => calculateForm8949(gift('12000', '10000', { giftSource: undefined }))).toThrow(/confirmed donor basis/);
+  expect(() => calculateForm8949(gift('12000', '10000', {}, { fromSpouse: undefined }))).toThrow(/confirmed donor basis/);
+  expect(() => calculateForm8949(gift('12000', '10000', {}, { giftDate: '2025-06-02' }))).toThrow(/confirmed donor basis/);
+  // Selling costs: the rule reads the amount realized, not Box 1f.
+  const costs = { sellingExpenses: '500', sellingCostsNotInProceedsConfirmed: true };
+  expect(longRow(gift('9000', '8500', costs)).gainLoss.toFixed()).toBe('0');
+  expect(longRow(gift('10300', '9800', costs)).gainLoss.toFixed()).toBe('0');
+  expect(longRow(gift('8100', '8000', costs)).gainLoss.toFixed()).toBe('-400');
+  expect(() => calculateForm8949(gift('9000', '9000', costs))).toThrow(/donor basis and value rule/);
+  // Without documented donor holding, holding starts at the gift.
+  expect(() => calculateForm8949(gift('12000', '10000', { dateAcquired: '2020-01-15' }, { donorHoldingDocumented: false }))).toThrow(/acquisition date conflicts/);
+  expect(longRow(gift('12000', '10000', {}, { donorHoldingDocumented: false })).gainLoss.toFixed()).toBe('2000');
+  const short = calculateForm8949(gift('9000', '0', { dateAcquired: '2025-03-01', holdingPeriod: 'short' }, { donorBasis: '0', fairMarketValueAtGift: '0', giftDate: '2025-03-01', donorHoldingDocumented: false }));
+  expect(short.shortTermBoxH.transactions[0]!.gainLoss.toFixed()).toBe('9000');
+  // A spouse's transfer keeps the spouse's basis with no value test, and holding tacks.
+  expect(longRow(gift('7000', '10000', { dateAcquired: '2020-01-15' }, { fromSpouse: true })).gainLoss.toFixed()).toBe('-3000');
+  expect(() => calculateForm8949(gift('7000', '8000', {}, { fromSpouse: true }))).toThrow(/donor basis and value rule/);
 });
 
 it('reports inherited lots as long-term', () => {
@@ -136,6 +152,34 @@ it('reports inherited lots as long-term', () => {
   expect(calculateFederalTax(lot({ assetOrigin: 'inheritance', inheritedBasisConfirmed: true, dateAcquired: '2025-05-01' })).scheduleD!.netLongTerm.toFixed()).toBe('10.25');
   expect(() => calculateForm8949(lot({ assetOrigin: 'inheritance', dateAcquired: '2025-05-01' }))).toThrow(/special disposition/);
   expect(() => calculateForm8949(lot({ assetOrigin: 'inheritance', inheritedBasisConfirmed: true, dateAcquired: '2025-05-01', holdingPeriod: 'short' }))).toThrow(/holding period/);
+});
+
+it('ties a lot received in the return year to income on this return', () => {
+  const lotRow = (patch: Record<string, unknown>, income?: Record<string, unknown>) => { const form = fixture(); Object.assign(form.transactions[0]!, { assetOrigin: 'mining', originIncomeIncludedConfirmed: true, ...patch });
+    return { ...input([form]), ...(income ? { cryptoIncome: { miningIncome: [], stakingIncome: [], airdropIncome: [], ...income } } : {}) } as ReturnType<typeof input>; };
+  const receipt = (value: string, dateReceived = '2025-01-15') => ({ asset: 'BTC', dateReceived, quantity: '1', fairMarketValuePerUnit: value });
+  const message = /received in the return year needs that income/;
+  expect(() => calculateForm8949(lotRow({}))).toThrow(message);
+  expect(() => calculateForm8949(lotRow({}, { miningIncome: [receipt('90.23')] }))).toThrow(message);
+  expect(() => calculateForm8949(lotRow({}, { miningIncome: [receipt('90.24', '2024-01-15')] }))).toThrow(message);
+  expect(() => calculateForm8949(lotRow({}, { stakingIncome: [receipt('90.24')] }))).toThrow(message);
+  expect(calculateForm8949(lotRow({}, { miningIncome: [receipt('90.24')] })).shortTermBoxH.transactions[0]!.gainLoss.toFixed()).toBe('10.25');
+  expect(calculateForm8949(lotRow({ assetOrigin: 'staking' }, { stakingIncome: [receipt('50'), receipt('40.24')] })).shortTermBoxH.transactions[0]!.gainLoss.toFixed()).toBe('10.25');
+  expect(calculateForm8949(lotRow({ assetOrigin: 'airdrop' }, { airdropIncome: [{ ...receipt('90.24'), source: 'airdrop' }] })).shortTermBoxH.transactions[0]!.gainLoss.toFixed()).toBe('10.25');
+  const twoRows = fixture(); twoRows.transactions[1] = { ...twoRows.transactions[0]!, sourceId: 'second' };
+  for (const row of twoRows.transactions) Object.assign(row, { assetOrigin: 'mining', originIncomeIncludedConfirmed: true });
+  expect(() => calculateForm8949({ ...input([twoRows]), cryptoIncome: { miningIncome: [receipt('100')], stakingIncome: [], airdropIncome: [] } } as ReturnType<typeof input>)).toThrow(message);
+});
+
+it('rejects a confirmed row beside a lot-consuming source for the same asset', () => {
+  const form = fixture(), code = form.transactions[0]!.digitalAssetCode;
+  const crypto = (asset: string, fromAsset = asset) => ({ lots: [{ asset, dateAcquired: '2024-01-15', quantity: '1', costBasisPerUnit: '100', source: 'purchase' }],
+    tokenSwaps: [{ fromAsset, fromQuantity: '0.1', toAsset: 'USDC', toQuantity: '30', fairMarketValueAtSwap: '30', dateSwapped: '2025-07-01' }] });
+  const run = (cryptoIncome: unknown, source = form) => calculateFederalTax(TaxYearInputSchema.parse({ ...input([source]), cryptoIncome }));
+  expect(() => run(crypto(code!))).toThrow(/separate lot method/);
+  expect(() => run(crypto(code!.toLowerCase()))).toThrow(/separate lot method/);
+  expect(() => run(crypto('UNRELATED'))).not.toThrow();
+  expect(() => run({ lots: crypto(code!).lots })).not.toThrow();
 });
 
 const corrected = (patch: Record<string, unknown>) => {

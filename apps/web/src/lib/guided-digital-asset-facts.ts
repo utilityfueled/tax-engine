@@ -19,7 +19,7 @@ export const digitalBooleanFields = [
   ['capitalAssetConfirmed', 'Actual asset was held as capital property'], ['nftOrCollectible', 'Actual asset is an NFT or collectible'],
 ] as const;
 export type DigitalAssetTransactionData = Partial<Record<typeof digitalAmountFields[number][0] | 'sourceId' | 'digitalAssetCode' | 'digitalAssetName' | 'ticker' | 'quantity' | 'dateAcquired' | 'dateSold' | 'reportedDateAcquired' | 'reportedCostBasis' | 'basisSourceReference' | 'gainOrLoss' | 'paCostBasis' | 'paBasisSourceReference', string>>
-  & Partial<Record<typeof digitalBooleanFields[number][0] | 'reportedDateAcquiredBlank' | 'reportedCostBasisBlank' | 'basisFactsConfirmed' | 'basisCorrectionConfirmed' | 'sellingCostsNotInProceedsConfirmed' | 'originIncomeIncludedConfirmed' | 'inheritedBasisConfirmed' | 'giftSourceConfirmed' | 'paBasisFactsConfirmed' | 'paTransactionForProfitConfirmed', boolean | null>> & {
+  & Partial<Record<typeof digitalBooleanFields[number][0] | 'reportedDateAcquiredBlank' | 'reportedCostBasisBlank' | 'basisFactsConfirmed' | 'basisCorrectionConfirmed' | 'sellingCostsNotInProceedsConfirmed' | 'originIncomeIncludedConfirmed' | 'inheritedBasisConfirmed' | 'giftSourceConfirmed' | 'giftHoldingDocumented' | 'giftFromSpouse' | 'paBasisFactsConfirmed' | 'paTransactionForProfitConfirmed', boolean | null>> & {
     giftDonorBasis?: string; giftFairMarketValue?: string; giftDate?: string;
     holdingPeriod?: 'short' | 'long' | ''; transactionType?: 'sale' | 'exchange' | 'payment' | 'other' | '';
     basisSource?: 'broker_statement' | 'taxpayer_records' | ''; proceedsType?: 'gross' | 'net' | '';
@@ -69,7 +69,7 @@ function toSource(entry: DigitalAssetEntryData): Form1099DA {
       reportedCostBasis: originalBlank(row.reportedCostBasisBlank, row.reportedCostBasis, 'Box 1g basis', true),
       basisSource: row.basisSource, basisSourceReference: actual(row.basisSourceReference, 'basis record reference'), basisFactsConfirmed: row.basisFactsConfirmed ?? undefined,
       basisCorrectionConfirmed: row.basisCorrectionConfirmed ?? undefined, sellingCostsNotInProceedsConfirmed: row.sellingCostsNotInProceedsConfirmed ?? undefined, originIncomeIncludedConfirmed: row.originIncomeIncludedConfirmed ?? undefined, inheritedBasisConfirmed: row.inheritedBasisConfirmed ?? undefined,
-      ...(row.assetOrigin === 'gift' ? { giftSource: { donorBasis: row.giftDonorBasis?.trim() ? parseGuidedCurrency(row.giftDonorBasis).toFixed() : undefined, fairMarketValueAtGift: row.giftFairMarketValue?.trim() ? parseGuidedCurrency(row.giftFairMarketValue).toFixed() : undefined, giftDate: row.giftDate || undefined, sourceFactsConfirmed: row.giftSourceConfirmed ?? undefined } } : {}),
+      ...(row.assetOrigin === 'gift' ? { giftSource: { donorBasis: row.giftDonorBasis?.trim() ? parseGuidedCurrency(row.giftDonorBasis).toFixed() : undefined, fairMarketValueAtGift: row.giftFairMarketValue?.trim() ? parseGuidedCurrency(row.giftFairMarketValue).toFixed() : undefined, giftDate: row.giftDate || undefined, sourceFactsConfirmed: row.giftSourceConfirmed ?? undefined, donorHoldingDocumented: row.giftHoldingDocumented ?? undefined, fromSpouse: row.giftFromSpouse ?? undefined } } : {}),
       holdingPeriod: row.holdingPeriod, transactionType: row.transactionType, proceedsType: row.proceedsType,
       optionalReportingMethod: row.optionalReportingMethod, assetOrigin: row.assetOrigin,
       paCostBasis: row.paCostBasis?.trim() ? amount(row.paCostBasis, 'Pennsylvania adjusted basis') : undefined,
@@ -103,8 +103,11 @@ export function digitalAssetFactErrors(entries: DigitalAssetEntryData[] | undefi
   } catch (error) { return { digitalAssetSources: error instanceof Error ? error.message : 'Complete the actual digital-asset source facts.' }; }
 }
 export function updateDigitalAssetTransaction(row: DigitalAssetTransactionData, patch: Partial<DigitalAssetTransactionData>): DigitalAssetTransactionData {
-  const next = { ...row, ...patch };
-  return Object.keys(patch).every(key => key === 'basisFactsConfirmed' || key === 'paBasisFactsConfirmed') ? next : { ...next, basisFactsConfirmed: null, paBasisFactsConfirmed: null };
+  const next = { ...row, ...patch }, origin = ['originIncomeIncludedConfirmed', 'inheritedBasisConfirmed', 'giftSourceConfirmed', 'giftHoldingDocumented'];
+  const keys = Object.keys(patch);
+  if (keys.every(key => key === 'basisFactsConfirmed' || key === 'paBasisFactsConfirmed')) return next;
+  const edited = keys.some(key => !origin.includes(key));
+  return { ...next, basisFactsConfirmed: null, paBasisFactsConfirmed: null, ...(edited ? { originIncomeIncludedConfirmed: null, inheritedBasisConfirmed: null, giftSourceConfirmed: null, giftHoldingDocumented: null } : {}) };
 }
 export function updateDigitalAssetEntry(entry: DigitalAssetEntryData, patch: Partial<DigitalAssetEntryData>): DigitalAssetEntryData {
   const next = { ...entry, ...patch };

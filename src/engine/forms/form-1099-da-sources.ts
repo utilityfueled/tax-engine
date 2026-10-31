@@ -4,7 +4,7 @@ import type { Form1099B, Form1099DA, TaxYearInput } from '@/models/inputs.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { d } from '@/utils/decimal.js';
 
-type DigitalSourceInput = Pick<TaxYearInput, 'form1099DA'> & {
+type DigitalSourceInput = Pick<TaxYearInput, 'form1099DA'> & Partial<Pick<TaxYearInput, 'cryptoIncome'>> & {
   form1099B: Array<Pick<Form1099B, 'sourceId'>>;
   taxpayer: Pick<TaxYearInput['taxpayer'], 'taxYear' | 'filingStatus'> & {
     spouse?: Pick<NonNullable<TaxYearInput['taxpayer']['spouse']>, 'firstName' | 'lastName'>;
@@ -40,7 +40,7 @@ function isActualSource(form: Form1099DA, year: number): boolean {
 export function calculateForm1099DASources(input: DigitalSourceInput, options: { resolvedLegacyBasis?: ResolvedBasis } = {}) {
   const audit = new AuditTrail();
   const capitalForms: Form1099B[] = [];
-  const identifiers = new Set<string>();
+  const identifiers = new Set<string>(), sameYearOriginBasis = new Map<string, Decimal>();
   const existing = new Set(input.form1099B.flatMap(form => form.sourceId?.trim() ? [form.sourceId.trim()] : []));
   let federalWithheld = d(0);
   let sourceFactsComplete = true;
@@ -91,14 +91,25 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
         if (inherited ? row.holdingPeriod !== 'long' : row.holdingPeriod !== (sold > anniversary ? 'long' : 'short')) throw new Error('Form1099DA holding period conflicts with the actual purchase and sale dates.');
         if (row.assetOrigin === 'gift') {
           const gift = row.giftSource;
-          if (gift?.sourceFactsConfirmed !== true) throw new Error('Form1099DA gift requires confirmed donor basis, value and date records.');
+          if (gift?.sourceFactsConfirmed !== true || typeof gift.fromSpouse !== 'boolean') throw new Error('Form1099DA gift requires confirmed donor basis, value and date records.');
           const giftDate = actualDate(gift.giftDate ?? '', 'gift');
           if (giftDate > sold) throw new Error('Form1099DA gift requires confirmed donor basis, value and date records.');
-          const donor = amount(gift.donorBasis, 'donor basis'), value = amount(gift.fairMarketValueAtGift, 'value at gift'), sale = amount(row.proceeds, 'proceeds');
-          const lossBasis = value.lt(donor) && sale.lte(donor), expected = !lossBasis ? donor : sale.lt(value) ? value : sale;
+          // The test is on the amount realized, so costs entered on the row count. A spouse's transfer has no value test.
+          const donor = amount(gift.donorBasis, 'donor basis'), value = amount(gift.fairMarketValueAtGift, 'value at gift');
+          const sale = amount(row.proceeds, 'proceeds').minus(amount(row.sellingExpenses, 'selling expenses'));
+          const lossBasis = !gift.fromSpouse && value.lt(donor) && sale.lte(donor), expected = !lossBasis ? donor : sale.lt(value) ? value : sale;
           if (!basis.eq(expected)) throw new Error('Form1099DA gift basis must follow the donor basis and value rule.');
-          // Tacking needs the donor's basis. A value or no-gain basis starts at the gift.
-          if (lossBasis ? acquired !== giftDate : acquired > giftDate) throw new Error('Form1099DA gift acquisition date conflicts with its basis.');
+          // Tacking needs the donor's basis and documented holding. Otherwise holding starts at the gift.
+          if (lossBasis || gift.donorHoldingDocumented !== true ? acquired !== giftDate : acquired > giftDate) throw new Error('Form1099DA gift acquisition date conflicts with its basis.');
+        }
+        const incomeOrigin = row.assetOrigin === 'mining' || row.assetOrigin === 'staking' || row.assetOrigin === 'airdrop';
+        const year = input.taxpayer.taxYear;
+        if (incomeOrigin && acquired.startsWith(`${year}-`)) {
+          const receipts = { mining: input.cryptoIncome?.miningIncome, staking: input.cryptoIncome?.stakingIncome, airdrop: input.cryptoIncome?.airdropIncome }[row.assetOrigin as 'mining' | 'staking' | 'airdrop'] ?? [];
+          const received = receipts.filter(receipt => receipt.dateReceived.startsWith(`${year}-`)).reduce((sum, receipt) => sum.plus(new Decimal(receipt.quantity).times(receipt.fairMarketValuePerUnit)), new Decimal(0));
+          const claimed = (sameYearOriginBasis.get(row.assetOrigin as string) ?? new Decimal(0)).plus(basis);
+          sameYearOriginBasis.set(row.assetOrigin as string, claimed);
+          if (claimed.gt(received)) throw new Error('Form1099DA lot received in the return year needs that income on this return.');
         }
         if (row.reportedDateAcquired !== null && row.reportedDateAcquired !== acquired) throw new Error('Original Form1099DA acquisition date conflicts with the completed ordinary basis source.');
         const reportedBasis = row.reportedCostBasis === null ? undefined : amount(row.reportedCostBasis, 'reported Box1g basis');
@@ -112,7 +123,6 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
         if (input.taxpayer.taxYear >= 2026 && row.noncoveredSecurity === false && (!row.basisReportedToIRS || row.reportedCostBasis === null)) throw new Error('Covered Form1099DA source requires its actual reported basis.');
         // Spec: form-1099-da-sources.yaml income-origin. Income-origin basis is the amount
         // already included in income, so the taxpayer must confirm it was reported.
-        const incomeOrigin = row.assetOrigin === 'mining' || row.assetOrigin === 'staking' || row.assetOrigin === 'airdrop';
         const transferOrigin = row.assetOrigin === 'gift' || (inherited && row.inheritedBasisConfirmed === true);
         if (row.capitalAssetConfirmed !== true || !(row.assetOrigin === 'purchase' || transferOrigin || (incomeOrigin && row.originIncomeIncludedConfirmed === true)) || row.nftOrCollectible !== false
           || row.qof !== false || row.lossNotAllowed !== false || row.ordinaryIncome !== false || row.optionalReportingMethod !== 'none'

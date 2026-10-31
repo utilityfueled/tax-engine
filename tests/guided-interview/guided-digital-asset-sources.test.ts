@@ -83,6 +83,14 @@ it('requires separate actual Pennsylvania digital basis without changing federal
   const confirmed = updateDigitalAssetTransaction(changed, { basisFactsConfirmed: true, paBasisFactsConfirmed: true });
   expect(updateDigitalAssetEntry({ ...investments.digitalAssetEntries[0], sourceFactsConfirmed: true }, { transactions: [confirmed] }).sourceFactsConfirmed).toBeNull();
 });
+it('captures selling costs and an inherited date for the worksheet', () => {
+  const state = stateFor(), investments = state.sectionData['income-investments']; if (!investments?.digitalAssetEntries?.[0]?.transactions?.[0]) throw new Error('Missing source');
+  const row = investments.digitalAssetEntries[0].transactions![0]; Object.assign(row, { holdingPeriod: 'long', dateAcquired: '2025-05-01', sellingExpenses: '1,000', adjustments: '25' });
+  expect(captureScheduleDRecords(investments).longTermAssets[0]).toMatchObject({ adjustments: '-975', dateAcquired: '2025-05-01' });
+  row.assetOrigin = 'inheritance';
+  expect(captureScheduleDRecords(investments).longTermAssets[0]).toMatchObject({ dateAcquired: 'INHERITED' });
+});
+
 it('captures original long-term DA identities beside other capital sources', () => {
   const state = stateFor(), investments = state.sectionData['income-investments']; if (!investments?.digitalAssetEntries?.[0]?.transactions?.[0]) throw new Error('Missing synthetic sources');
   const da = investments.digitalAssetEntries[0], row = da.transactions![0]; row.holdingPeriod = 'long'; row.dateAcquired = '2020-01-15';

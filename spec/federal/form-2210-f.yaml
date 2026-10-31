@@ -21,7 +21,7 @@ notes: |
   amount. The IRS decides, so the packet warns that this is only a request.
   Federally declared disasters stay rejected, because the IRS applies that relief itself.
   The same source gates as Form 2210 apply. The March date needs payments that reach the
-  tax. A prior year with no liability but not resident all year uses line7.
+  tax, and any claimed full-payment date must reach total tax due on the return. A prior year with no liability but not resident all year uses line7.
   Not modeled: section1062 farmland elections and Form 4136 fuel credits on line4.
 sources:
   - "https://www.irs.gov/pub/irs-pdf/f2210f.pdf"
@@ -68,4 +68,9 @@ lines:
     formula: "A partial request lowers line38 and amount owed by the requested amount, and a full request reports0. penaltyBeforeWaiver is retained, Form2210 is required and readiness stays partial."
     irsRef: "Instructions for Form2210, Waiver of Penalty"
     testRef: "tests/engine/federal-form-2210-waiver.test.ts::carries a waiver request through Form 1040 without treating it as granted"
+  - line: "full-payment-total-tax"
+    description: "Test a claimed full payment against total tax due"
+    formula: "Payments through the claimed date plus withholding must reach Form1040 line24 less refundable credits, including taxes outside Form2210 line2."
+    irsRef: "Form2210-F instructions: file and pay the tax due by March2"
+    testRef: "tests/engine/federal-form-2210-waiver.test.ts::tests a claimed full payment against total tax due"
 
