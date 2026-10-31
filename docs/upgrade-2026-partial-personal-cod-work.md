@@ -40,6 +40,12 @@ It reported five items, all corrected here:
 
 The inventory listed this spec as missing an engine, so it now has an implementation link. That records where the code is; it qualifies nothing.
 
+## Re-review of the corrections
+
+The same reviewer then checked `d06f2e44` (`.local/upgrade-evidence/ai-cod-delivery-review/fix-report.md`, SHA256 `6cb1bf2ba6c4b0ddf0a8cd101a9affebf8e71fe63c3a692c4ff0d51df8776734`). Findings two to five were closed and no new defect was found. Thirteen of fourteen mutants were caught. The first item was only partly closed: the gate ignored a supplied token, so a caller who stripped every COD field from both copies could still avoid the comparison, and the surviving mutant showed no test covered a duplicate audit row.
+
+`7e668c86` closes both. A supplied token now always enters the comparison, as the other review gates already do, and the fully stripped and duplicate-row cases are regression tests. A caller with no token and no COD records is an ordinary non-COD return, and `fillReturn` has nothing to bind for it. Filing stays disabled, so this path can only reach a review copy. The reviewer did not re-check `7e668c86`.
+
 ## Delivery checks
 
 All COD, current-credit, 1099-C, spec and inventory tests pass with the three type checks. Full-suite and remote CI results are recorded in the progress ledger for the final commit. Local coverage of `ba1cbaf8` passes 19,843 tests with 33 Postgres skips; remote CI is the record for its thresholds.

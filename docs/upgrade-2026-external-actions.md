@@ -1,7 +1,8 @@
 # External actions needed to finish the 2026 upgrade
 
-Prepared October 26, 2026, after `e3dcc3f`. Internal implementation and final
-verification continue in the [execution checklist](upgrade-2026-checklist.md).
+Prepared October 26, 2026, after `e3dcc3f`, and rechecked October 31 after
+`7e668c86`. No listed input has been supplied. Internal packages are delivered; see the
+[execution checklist](upgrade-2026-checklist.md).
 This handoff records missing external inputs; it does not declare the remaining
 software finished. The [execution brief](upgrade-2026-execution-brief.md) retains
 all completion criteria.
@@ -18,7 +19,7 @@ engineering cannot substitute for that review.
 | Authorize a specific staging rehearsal and provide secure configuration | Staging project/host, allowed operations and a secure location for test-mode auth, PostgreSQL, Redis, Stripe/webhook and SMTP settings; approved sender and test recipients. The repository's staging hostname alone is not authority to deploy or modify it. Do not paste secrets into chat or Git. | Actual hosted authentication/recovery, tenant isolation, outages, billing reconciliation, migrations, restore and rollback. |
 | Supply provider account access and approve a bounded synthetic evaluation budget | Securely configured keys for the selected provider accounts, exact permitted candidates, maximum total spend and permitted test period. Availability must then be checked against those accounts; public model documentation is insufficient. | Repeated live evaluation, actual failed/retried/escalated costs, latency and provider availability. No live spending or model promotion is currently authorized. |
 | Assign independent human AI-case reviewers | Review the 240 draft cases, original synthetic inputs, expected monetary/date fields, answerability and safety labels; preserve the held-out partition and record reviewer provenance. Revise or remove unsuitable cases without counting generated variants as independent review. | Representative 200–300-case corpus and qualification metrics. The [executor guide](ai-evaluation-executor.md) describes the evidence and approval boundaries. |
-| Assign an independent security/privacy reviewer and an advisory owner | Review the exact application/runtime revisions and staging evidence; provide findings and their disposition. For each remaining image advisory, record the accountable owner and an evidence-backed fix or acceptance with expiry. The [advisory register](upgrade-2026-image-advisories.json) has pending owner confirmation and a November 7, 2026 review deadline. | Independent security/privacy review and resolved or owned, expiring advisories. No acceptance is implied by the existing component exposure notes. |
+| Assign an independent security/privacy reviewer and an advisory owner | Review the exact application/runtime revisions and staging evidence; provide findings and their disposition. For each remaining image advisory, record the accountable owner and an evidence-backed fix or acceptance with expiry. The [advisory register](upgrade-2026-image-advisories.json) has pending owner confirmation and a November 7, 2026 review date. The October 31 scan matches all 67 advisories and none has a fixed version. | Independent security/privacy review and resolved or owned, expiring advisories. No acceptance is implied by the existing component exposure notes. |
 | Qualify final official forms as they become available | Final published year/revision PDFs, authoritative hashes and line/field mapping review for each enabled scenario, plus the required independent signoff. The [source refresh](upgrade-2026-release-source-refresh.md) distinguishes available historical, draft and final forms. | Final physical maps and complete-data filing exports. Draft or historical mappings cannot be approved into a different year. |
 
 ## Tax interpretation handoff

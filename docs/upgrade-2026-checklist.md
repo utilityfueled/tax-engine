@@ -5,7 +5,22 @@ progress log and checkpoint are evidence for their recorded commits, not current
 qualification. Resume here after compaction. Do not remove release gates to
 complete a checkbox.
 
-## Current integration — 2026-10-28 UTC
+## Current integration — 2026-10-31 UTC
+
+Every internal package queued on October 28 is delivered. What remains needs people, accounts or authorization that this work cannot supply.
+
+Delivered and pushed: Form 8962 field batching `0ad4c804`, signed current-year minimum tax credit `8c38d963`, partial personal cancellation with the zero-pool proof `ba1cbaf8`, review corrections `d06f2e44` and `7e668c86`, dependency fixes `ad8fd777`, and the browser budget change `96a1a47a`. Rule versions are `2025.196` and `2026.194-law-integration-draft`.
+
+- **Tests.** The three unit failures open since October 28 are fixed. Remote `ad8fd777` passes 19,880 tests in 1,500 files. Coverage is 91.74% statements, 86.97% branches, 90.22% functions and 94.49% lines, and every unchanged threshold passes. Functions clear their gate by only 0.22 points, and a local run without Postgres reports 89.91% and fails it. See the [CI record](upgrade-2026-ci-ad8fd777.json).
+- **Coverage timeouts.** The eighteen timeouts in the `036eef86` run did not recur in the last three remote coverage runs. The Form 8962 change removed one measured cost, but no cause is proven for all of them, and the five-second deadlines remain tight.
+- **Browser.** Self-host passes 530 with five hosted-only skips. The container job failed two 390px tests in two of its last three runs by exhausting its 30-second budget. Those two tests now use the 90-second repository default. This is a changed test deadline, not a code fix, and no assertion changed.
+- **Advisories.** The October 31 audit found two moderate advisories, both fixed; [details](upgrade-2026-dependency-advisories-20261031.md). The production and full audits are clean.
+- **Runtime.** The [native arm64 record](upgrade-2026-runtime-7e668c86-arm64.json) passes smoke and all six recovery phases, with a 2,930-component SBOM. Its scan matches the register exactly: 157 matches, 67 OS advisories, none critical, no npm matches and no fixed versions available. Owners have not accepted these, and the review date is November 7.
+- **Review.** An independent agent derived the amounts by hand and found no wrong tax amount. It found one gate gap and four lesser items, all corrected. See the [package ledger](upgrade-2026-partial-personal-cod-work.md). This is agent review, not human qualification.
+
+The same evidence does not show that the 2026 return is complete. Tax year 2026 stays `incomplete`, the final Tax Table and forms are unpublished, and filing and model promotion stay disabled. Rejected special methods and the six questions in [external actions](upgrade-2026-external-actions.md) remain unsupported by design.
+
+## Integration — 2026-10-28 UTC
 
 Foreign-carry integration is delivered in `92870a8a`. Separate regular and
 AMT originals now support the admitted foreign-carry cases with complete empty

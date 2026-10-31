@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assessedDate": "2026-10-26",
+  "assessedDate": "2026-10-31",
   "baseCommit": "f1f79ec5c38a770cc1f4989e67a12d6ac44f3fda",
   "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
   "branch": "upgrade/2026-baseline",
@@ -194,16 +194,15 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Final integrated release evidence remains due after active source work. Historical76d coverage passes unchanged thresholds;183c retains12 coverage timeouts. Main23187df3 passes535 focused tests, static/inventory/lint and both builds, not a full release gate.",
-    "Ordinary COD attributes23187df3, common charitable carry7702ba56, source-year MTCecdb754d and ordinary prior-QBIf4dc51a7 are delivered. Ordinary-gift risk, basis first170 entry, source-complete empty-NOL foreign composition and signed current-MTC canonical binding remain internal. Full2026 production calculation remains unavailable.",
-    "Independent human tax review, launch-state demand/qualification and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Mixed-tip/bond, negative-net section1202/Form172 and changed community-property bond interpretations remain unresolved.",
-    "AI application/scorer bindings are reviewed;240 draft cases have zero human reviews or live results, unverified provider account availability and no approved spend or model promotion.",
-    "Hosted auth/security/billing/Redis/provider/database/recovery requires authorized staging credentials and evidence. Local synthetic and CI checks do not establish staging readiness.",
-    "Historical183c native amd64 recovery and both520-case browser suites pass with verified SBOM/archive. Final-source native arm64 and amd64 images/scans/recovery remain due. The same157 advisory tuples/67 OS advisories await owner acceptance by2026-11-07, with no critical/npm/fixed-version matches. No staging, publication or human security approval."
+    "Independent human tax review, launch-state demand and qualification, and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Six interpretation questions await a qualified reviewer.",
+    "The AI corpus has zero human reviews and no live results. Provider account access and spend are not approved. No model is promoted.",
+    "Hosted auth, security, billing, Redis, provider, database and recovery rehearsals require authorized staging access. Local and CI checks do not establish staging readiness.",
+    "The image register holds 157 matches and 67 OS advisories awaiting owner acceptance by 2026-11-07. There are no critical, npm or fixed-version matches. No artifact is published and no human security review exists.",
+    "The 2026 federal calculation remains incomplete and unavailable in production. The final 2026 Tax Table and forms are not published."
   ],
   "ongoingExecution": {
-    "status": "active",
-    "lastRecordedCommit": "92870a8aff4094d58e7b63fb4aa55036df44a36b",
+    "status": "internal-packages-delivered-external-gates-open",
+    "lastRecordedCommit": "7e668c8",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -8865,88 +8864,88 @@
           "suite": "tests/apps/web/workspace-filled-return.test.ts",
           "reportedFailures": 3,
           "cases": [
-            "2026-10-26T19:56:10.4838875Z      \u00d7 binds actual K1 loss sources before redacting the workspace packet 5007ms",
-            "2026-10-26T19:56:10.4840586Z      \u00d7 prepares the actual passive distribution context before workspace redaction 5001ms",
-            "2026-10-26T19:56:10.4863010Z    \u00d7 exports actual shared health through the original workspace source context 5878ms"
+            "2026-10-26T19:56:10.4838875Z      × binds actual K1 loss sources before redacting the workspace packet 5007ms",
+            "2026-10-26T19:56:10.4840586Z      × prepares the actual passive distribution context before workspace redaction 5001ms",
+            "2026-10-26T19:56:10.4863010Z    × exports actual shared health through the original workspace source context 5878ms"
           ]
         },
         {
           "suite": "tests/pdf/qbi-loss-review.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T19:58:53.1118173Z    \u00d7 retains a saved zero-deduction QBI packet and separate loss limits 5026ms"
+            "2026-10-26T19:58:53.1118173Z    × retains a saved zero-deduction QBI packet and separate loss limits 5026ms"
           ]
         },
         {
           "suite": "tests/engine/provider-model-eval.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:00:23.7035272Z      \u00d7 requires reviewed repeated comparisons and a measured benefit, then only permits human promotion review 12293ms"
+            "2026-10-26T20:00:23.7035272Z      × requires reviewed repeated comparisons and a measured benefit, then only permits human promotion review 12293ms"
           ]
         },
         {
           "suite": "tests/pdf/form-8862-review.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:00:58.6929815Z    \u00d7 uses actual current child presence for printed claimant restrictions 5322ms"
+            "2026-10-26T20:00:58.6929815Z    × uses actual current child presence for printed claimant restrictions 5322ms"
           ]
         },
         {
           "suite": "tests/pdf/form8839-history-review.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:02:14.1862248Z    \u00d7 preserves source cents and private identity through redacted review rendering 5007ms"
+            "2026-10-26T20:02:14.1862248Z    × preserves source cents and private identity through redacted review rendering 5007ms"
           ]
         },
         {
           "suite": "tests/pdf/form-8949-digital-reporting.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:04:04.1852439Z    \u00d7 retains all categories and digital continuation rows after reopening 5856ms"
+            "2026-10-26T20:04:04.1852439Z    × retains all categories and digital continuation rows after reopening 5856ms"
           ]
         },
         {
           "suite": "tests/pdf/schedule-e-passive-distribution-review.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:04:50.5198938Z    \u00d7 saves and reopens the redacted complete passive distribution packet 5598ms"
+            "2026-10-26T20:04:50.5198938Z    × saves and reopens the redacted complete passive distribution packet 5598ms"
           ]
         },
         {
           "suite": "tests/pdf/eic-additional-checkboxes.test.ts",
           "reportedFailures": 3,
           "cases": [
-            "2026-10-26T20:08:16.9722518Z    \u00d7 uses actual death and either-spouse ages only on the childless route 5014ms",
-            "2026-10-26T20:08:16.9724560Z    \u00d7 prints actual joint homes while preserving false and unknown sources 5008ms",
-            "2026-10-26T20:08:16.9725880Z    \u00d7 binds military and source conditions without treating every zero as an opt-out 5080ms"
+            "2026-10-26T20:08:16.9722518Z    × uses actual death and either-spouse ages only on the childless route 5014ms",
+            "2026-10-26T20:08:16.9724560Z    × prints actual joint homes while preserving false and unknown sources 5008ms",
+            "2026-10-26T20:08:16.9725880Z    × binds military and source conditions without treating every zero as an opt-out 5080ms"
           ]
         },
         {
           "suite": "tests/pdf/k1-cash-distribution-review.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:11:56.5439427Z    \u00d7 binds and saves the redacted distribution gain with original basis evidence 5068ms"
+            "2026-10-26T20:11:56.5439427Z    × binds and saves the redacted distribution gain with original basis evidence 5068ms"
           ]
         },
         {
           "suite": "tests/pdf/marketplace-business-credit-method-review.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:16:30.6923670Z    \u00d7 binds the chosen method and signed business rows before redacted PDF output 5132ms"
+            "2026-10-26T20:16:30.6923670Z    × binds the chosen method and signed business rows before redacted PDF output 5132ms"
           ]
         },
         {
           "suite": "tests/pdf/shared-owner-marketplace-health-review.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:18:29.7176781Z    \u00d7 renders separate shared-plan owners from the original private context 5608ms"
+            "2026-10-26T20:18:29.7176781Z    × renders separate shared-plan owners from the original private context 5608ms"
           ]
         },
         {
           "suite": "tests/apps/web/workspace-room-board-prior-use.test.ts",
           "reportedFailures": 1,
           "cases": [
-            "2026-10-26T20:21:52.1035404Z    \u00d7 replays actual historical room and board sources before workspace redaction 5165ms"
+            "2026-10-26T20:21:52.1035404Z    × replays actual historical room and board sources before workspace redaction 5165ms"
           ]
         }
       ],
@@ -11946,7 +11945,9 @@
       },
       "implementationComplete": false,
       "humanQualification": false
-    }
+    },
+    "latestRemoteCi": "docs/upgrade-2026-ci-ad8fd777.json",
+    "latestRuntimeRecord": "docs/upgrade-2026-runtime-7e668c86-arm64.json"
   },
   "historicalReleaseBlockers": {
     "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
@@ -11962,7 +11963,7 @@
     "beforeHealth77e8f663": [
       "Intermediate 318 passes 19,587 unit and coverage cases in 1,406 files. Coverage is 91.90% statements, 86.98% branches, 90.79% functions and 94.63% lines; all unchanged 90/85/90/90 thresholds pass. The first seven 5000 ms timeout failures remain retained. Later packages and final integrated verification remain internal.",
       "The2026 pack and finite carryover/health methods remain incomplete. COD ced90a20, changed one-owner filing histories a1f63cf2, actual-paid health661977aa and educator/reissue2ab4d9ac are delivered. Current joint-pool artifact/final integration, positive other-return health, explicit nonitemized2026 prior property release and source-determined EBL composition remain internal. Precise unresolved source interpretations stay documented; full2026 calculation remains blocked.",
-      "Independent human tax review, selected-state demand/qualification and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net \u00a71202/Form172 interpretations remain unresolved.",
+      "Independent human tax review, selected-state demand/qualification and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Qualified mixed-tip/bond and negative-net §1202/Form172 interpretations remain unresolved.",
       "AI application/scorer bindings are reviewed; 240 draft cases still have zero human reviews/live results, unverified provider account availability and no approved spend or model promotion.",
       "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence; local synthetic checks do not establish staging readiness.",
       "Intermediate 31812714 native amd64 recovery and both 500-case browser suites pass with verified SBOM/archive; later final-source native arm64+amd64 images/scans/recovery remain due. The same exact 157 advisory tuples/67 OS advisories await owner acceptance by 2026-11-07. No critical/npm/fixed-version matches. Historical failed/cancelled runs retained; no staging, publication or human security approval."

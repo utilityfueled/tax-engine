@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "7e668c86a0ee07777d512e55eebe560812a72c90",
+  "recordedAt": "2026-10-31T05:57:45+00:00",
+  "releaseReady": false,
+  "scope": "Local synthetic native arm64 evidence built with Podman from a clean archive of this commit. Not staging, production or human security review.",
+  "platform": "linux/arm64",
+  "builder": "podman build --format docker",
+  "image": {
+    "id": "sha256:ce4580a50e514b84accf65c27357bfa1d3fb492355b64bca7e0ce28771028ce0",
+    "archiveSha256": "9356ef1bccad1f675ffab6983b0ca0a0a1131ff93f0be063558a98e513575608",
+    "revisionLabel": "7e668c86a0ee07777d512e55eebe560812a72c90"
+  },
+  "retainedAttempt": {
+    "path": ".local/upgrade-evidence/container-ad8fd777-arm64-smoke-oci-format-attempt1.log",
+    "cause": "An earlier ad8fd777 build used the default OCI format, which dropped the HEALTHCHECK, and the smoke test rejected it. Docker format keeps it."
+  },
+  "smoke": {
+    "result": "passed",
+    "image": "ce4580a50e514b84accf65c27357bfa1d3fb492355b64bca7e0ce28771028ce0",
+    "readOnly": true,
+    "healthy": true,
+    "assets": true,
+    "imageCacheWritten": true,
+    "selfHostAuth": true,
+    "uid": 1001,
+    "node": "v24.22.1",
+    "architecture": "arm64",
+    "imageCacheFilesystem": 16914836,
+    "imageCacheLimitBytes": 67108864,
+    "packageTools": false,
+    "providerKeys": false,
+    "templates": 44,
+    "evidence": {
+      "path": ".local/upgrade-evidence/container-7e668c86-arm64-smoke.log",
+      "sha256": "b4b17cf198b34326d85575bb6a90dab68d012e2134d5f93bb65500b75958d8c1"
+    }
+  },
+  "recovery": {
+    "result": "passed",
+    "previousImage": "localhost/tax-engine:2026-d32cb8c-arm64",
+    "phases": [
+      "previous",
+      "upgrade",
+      "database-restart",
+      "database-dump-restore",
+      "rollback",
+      "re-upgrade"
+    ],
+    "databaseRecovery": {
+      "result": "passed",
+      "evidence": "local-synthetic-postgresql-dump-restore",
+      "tables": 9,
+      "tenantWorkspaces": 2,
+      "exactCostRestored": true,
+      "metadataCleanupReapplied": true,
+      "metadataCleanupIdempotent": true,
+      "checksum": "60d7375c849be03f6ffb6722009385100dc338b9f2e17a58ede003dca66d9194"
+    },
+    "browserRecovery": {
+      "passed": true,
+      "encrypted": true,
+      "wrongPasswordRejected": true,
+      "tamperRejected": true,
+      "originalBytes": true,
+      "unknownYearPreserved": true,
+      "exactCents": true,
+      "deletion": true,
+      "networkObservation": {
+        "requests": 400,
+        "startsBeforeUpload": true,
+        "rawPrivateMarkersAbsent": true,
+        "limitation": "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof."
+      }
+    },
+    "evidence": {
+      "path": ".local/upgrade-evidence/recovery-7e668c86-arm64.log",
+      "sha256": "fe74b7228b056072bad5ffb5352c4721baccc8f8054e76d4eb22317fcbec75a6"
+    }
+  },
+  "sbom": {
+    "components": 2930,
+    "path": ".local/upgrade-evidence/sbom-7e668c86-arm64.cdx.json",
+    "sha256": "d9977e48e5e74ca0779ae49e27e8fa47dd862fec45693e1240652810c56fa10d"
+  },
+  "scan": {
+    "databaseBuilt": "2026-10-30T06:23:28Z",
+    "matches": 157,
+    "distinctAdvisories": 67,
+    "severity": {
+      "High": 54,
+      "Negligible": 46,
+      "Medium": 47,
+      "Low": 10
+    },
+    "artifactTypes": {
+      "deb": 157
+    },
+    "fixedVersionAvailable": 0,
+    "identicalToRegister": true,
+    "path": ".local/upgrade-evidence/scan-7e668c86-arm64.json",
+    "sha256": "3503a941904c19c33840d3fcac9f83be4bdea21c294a871d2420fdaeaf0d197f"
+  },
+  "advisoryAcceptance": "Pending owner. The register review date is 2026-11-07. This scan accepts nothing.",
+  "cleanup": "No tax-rehearsal containers or volumes remain."
+}

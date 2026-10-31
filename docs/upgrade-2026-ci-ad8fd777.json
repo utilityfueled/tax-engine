@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-31T05:58:29+00:00",
+  "releaseReady": false,
+  "scope": "Synthetic remote CI evidence. Not staging, production or human review.",
+  "runs": [
+    {
+      "sourceCommit": "ba1cbaf8",
+      "ci": 41168954959,
+      "web": 41168954956,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19876,
+        "files": 1500,
+        "workers": 1
+      },
+      "coverage": {
+        "tests": 19876,
+        "files": 1500,
+        "statements": "91.73",
+        "branches": "86.96",
+        "functions": "90.22",
+        "lines": "94.48",
+        "thresholdsPassed": true
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:8af308f837ba176e7b0deec416c85f376d9ed2af5e616e99ee50e759488771fe"
+    },
+    {
+      "sourceCommit": "ad8fd777",
+      "ci": 41171202159,
+      "web": 41171202207,
+      "ciConclusion": "success",
+      "webConclusion": "failure",
+      "unit": {
+        "tests": 19880,
+        "files": 1500,
+        "workers": 1
+      },
+      "coverage": {
+        "tests": 19880,
+        "files": 1500,
+        "statements": "91.74",
+        "branches": "86.97",
+        "functions": "90.22",
+        "lines": "94.49",
+        "thresholdsPassed": true
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 528,
+          "failed": 2,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0,
+          "failures": [
+            "guided-marketplace-actual-paid.spec.ts 390px",
+            "guided-marketplace-other-return-cash.spec.ts 390px"
+          ],
+          "cause": "Both ran out of the 30s test budget at different steps, the same two tests as f70258c3. Locally they take 11.9s and 13.1s and pass. Corrected in 96a1a47a by giving these two tests the 90s repository default; no assertion changed."
+        }
+      }
+    }
+  ],
+  "hostedSkips": "The five skipped browser cases are hosted-only and establish nothing about hosted readiness."
+}
