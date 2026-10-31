@@ -400,6 +400,10 @@ function buildPacketSummary(
     );
   }
 
+  if (result.form2210?.scheduleAi) {
+    missingBullets.push("This return uses the annualized income method, so Form 2210 with Schedule AI must be filed with it even when the penalty is zero. Neither is attached to this draft.");
+  }
+
   if (result.estimatedTaxPenalty.gt(0)) {
     missingBullets.push(
       `The return currently includes an estimated tax penalty of ${formatCurrencyWholeDollars(result.estimatedTaxPenalty)}, but Form 2210 is not auto-attached to this draft packet.`

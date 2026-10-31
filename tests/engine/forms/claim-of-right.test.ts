@@ -25,6 +25,22 @@ describe('Repaid earlier-year income', () => {
     expect(over.claimOfRight!.method).not.toBe('not_deductible');
   });
 
+  it('tests the total repaid across statements and counts each earlier year once', () => {
+    const second = statement({ sourceId: 'g2', accountReference: 'statement-2', priorYearRepaid: '2000' });
+    const two = TaxYearInputSchema.parse({ ...source('2000'), form1099G: [statement({ priorYearRepaid: '2000' }), second] });
+    const result = calculateFederalTax(two);
+    expect([result.claimOfRight!.method, result.claimOfRight!.eligibleAmount.toFixed(), result.schedule3!.section1341Credit.toFixed()]).toEqual(['credit', '4000', '1100']);
+    const conflict = TaxYearInputSchema.parse({ ...two, form1099G: [statement({ priorYearRepaid: '2000' }), { ...second, priorYearRepaymentSource: earlier('10000').priorYearRepaymentSource }] });
+    expect(() => calculateFederalTax(conflict)).toThrow(/share the same/);
+    expect(() => calculateFederalTax({ ...source('5000'), form8814: [{} as never] })).toThrow(/Schedule AI or Form 8814/);
+    expect(() => calculateFederalTax({ ...source('3000'), stateReturns: { illinois: {} } } as never)).toThrow(/Illinois/);
+  });
+
+  it('counts the repayment credit on Form 2210 line 3', () => {
+    const line = (result: ReturnType<typeof calculateFederalTax>) => result.form2210!.lines.find(row => row.line === '3')!.value.toFixed();
+    expect(line(calculateFederalTax(source('5000')))).toBe('1100');
+  });
+
   it('chooses the method that gives less tax', () => {
     const credit = calculateFederalTax(source('5000'));
     expect(credit.claimOfRight!.method).toBe('credit');
@@ -35,8 +51,8 @@ describe('Repaid earlier-year income', () => {
     expect([deduction.totalTax.toFixed(), deduction.schedule3!.section1341Credit.toFixed(), deduction.scheduleA!.otherItemizedDeductions.toFixed()]).toEqual(['15820', '0', '5000']);
     const nonitemizer = calculateFederalTax(source('5000', earlier('11999'), false));
     expect([nonitemizer.claimOfRight!.method, nonitemizer.schedule3!.section1341Credit.toFixed()]).toEqual(['credit', '1']);
-    const tie = calculateFederalTax(source('5000', earlier('12000'), false));
-    expect(tie.claimOfRight!.method).toBe('deduction');
+    const none = calculateFederalTax(source('5000', earlier('12000'), false));
+    expect(none.claimOfRight!.method).toBe('no_benefit');
   });
 
   it('rejects missing or conflicting earlier return facts', () => {

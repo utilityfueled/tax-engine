@@ -54,7 +54,8 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
     const line13 = Decimal.max(0, annualized.minus(deduction).minus(line9));
     const tax = calculateRegularIncomeTax(line13, filingStatus, constants);
     const profit = amount(period.netProfitFromSelfEmployment, 'period self-employment profit', true);
-    const netEarnings = profit.times('0.9235'), line28 = netEarnings.lt(400) ? new Decimal(0) : netEarnings;
+    // Schedule SE rounds net earnings before its $400 test, and column (d) must match it.
+    const netEarnings = roundDollar(Decimal.max(0, profit.times('0.9235'))), line28 = netEarnings.lt(400) ? new Decimal(0) : netEarnings;
     const line31 = Decimal.max(0, wageBase.times(WAGE_LIMIT_TWELFTHS[index]!).div(12).minus(amount(period.socialSecurityWages, 'period social security wages')));
     const line36 = Decimal.min(line28, line31).times(SOCIAL_SECURITY[index]!).plus(line28.times(MEDICARE[index]!));
     const line16 = amount(period.otherTaxes, 'period other taxes'), line18 = amount(period.credits, 'period credits');
@@ -62,10 +63,11 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
     const line19 = Decimal.max(0, line17.minus(line18));
     const line21 = line19.times(PERCENTS[index]!), line23 = Decimal.max(0, line21.minus(priorInstallments));
     if (index === 3) {
-      const reconciled = annualized.eq(returnContext.agi) && roundDollar(line13).eq(roundDollar(returnContext.taxableIncome))
-        && (returnContext.itemizedDeductions === undefined || itemized.eq(returnContext.itemizedDeductions))
-        && line19.minus(input.taxAfterRefundableCredits).abs().lt(1);
-      if (!reconciled) throw new Error('Form 2210 Schedule AI column (d) must reconcile to the completed return; Schedule 1-A or other unsupported deductions need a separate method');
+      const reconciled = roundDollar(annualized).eq(roundDollar(returnContext.agi)) && roundDollar(line13).eq(roundDollar(returnContext.taxableIncome))
+        && (returnContext.itemizedDeductions === undefined || roundDollar(itemized).eq(roundDollar(returnContext.itemizedDeductions)));
+      if (!reconciled) throw new Error('Form 2210 Schedule AI column (d) income and deductions must reconcile to the completed return; Schedule 1-A and other deductions with no line here need a separate method');
+      // The return rounds Schedule SE parts separately, so tax can differ by small dollars.
+      if (line19.minus(input.taxAfterRefundableCredits).abs().gt(2)) throw new Error('Form 2210 Schedule AI column (d) tax after credits must reconcile to Form 2210 line 4');
     }
     const line26 = line24.plus(line25), line27 = Decimal.min(line23, line26);
     for (const [line, value, description] of [['3', annualized, 'Annualized income'], ['6', itemized, 'Annualized itemized deductions'], ['7', line7, 'Standard deduction'],

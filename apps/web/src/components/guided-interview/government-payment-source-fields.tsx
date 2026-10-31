@@ -32,10 +32,10 @@ export function GovernmentPaymentSourceFields({ entry, onChange }: { entry: Unem
       <Text label="Actual current-year repayment source reference" value={entry.repaymentSourceReference} onChange={repaymentSourceReference => onChange({ repaymentSourceReference })} />
       {parseGuidedCurrencySafe(entry.priorYearRepaid) && <>
         <p className="guided-hint">For an earlier-year repayment over $3,000, the return uses a Schedule A deduction or a credit, whichever gives less tax. $3,000 or less is not deductible.</p>
-        <Text label="Earlier year that included the repaid income" value={entry.priorRepaymentOriginalYear} onChange={priorRepaymentOriginalYear => onChange({ priorRepaymentOriginalYear })} />
-        <CurrencyField label="Tax shown on that earlier return" value={entry.priorRepaymentEarlierTax ?? ""} onChange={priorRepaymentEarlierTax => onChange({ priorRepaymentEarlierTax })} />
-        <CurrencyField label="That earlier tax refigured without the repaid income" value={entry.priorRepaymentRefiguredTax ?? ""} onChange={priorRepaymentRefiguredTax => onChange({ priorRepaymentRefiguredTax })} />
-        <Text label="Earlier return record reference" value={entry.priorRepaymentReference} onChange={priorRepaymentReference => onChange({ priorRepaymentReference })} />
+        <Text label="Earlier year that included the repaid income" value={entry.priorRepaymentOriginalYear} onChange={priorRepaymentOriginalYear => onChange({ priorRepaymentOriginalYear, priorRepaymentConfirmed: null })} />
+        <CurrencyField label="Tax shown on that earlier return" value={entry.priorRepaymentEarlierTax ?? ""} onChange={priorRepaymentEarlierTax => onChange({ priorRepaymentEarlierTax, priorRepaymentConfirmed: null })} />
+        <CurrencyField label="That earlier tax refigured without the repaid income" value={entry.priorRepaymentRefiguredTax ?? ""} onChange={priorRepaymentRefiguredTax => onChange({ priorRepaymentRefiguredTax, priorRepaymentConfirmed: null })} />
+        <Text label="Earlier return record reference" value={entry.priorRepaymentReference} onChange={priorRepaymentReference => onChange({ priorRepaymentReference, priorRepaymentConfirmed: null })} />
         <Fact label="Earlier return figures checked after the last edit" value={entry.priorRepaymentConfirmed} onChange={priorRepaymentConfirmed => onChange({ priorRepaymentConfirmed })} />
       </>}
       <Text label="Actual unemployment contribution program reference" value={entry.contributionProgramId} onChange={contributionProgramId => onChange({ contributionProgramId })} />

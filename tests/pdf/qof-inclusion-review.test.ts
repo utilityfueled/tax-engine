@@ -70,7 +70,7 @@ it('rejects changed QOF sources and retained amounts before any output', async (
     const missing = input(), absent = calculateFederalTax(missing); absent.qofInclusion = undefined;
     await expect(fillReturn(missing, absent, { outputDir: join(directory, 'missing'), blankFormsDir: 'forms/blank' })).rejects.toThrow(/8997/);
     const stale = prepareForm8949Review(input()), changed = input(); row(changed).remainingDeferredGain = '50000';
-    await expect(fillReturn(changed, calculateFederalTax(changed), { outputDir: join(directory, 'stale'), blankFormsDir: 'forms/blank', capitalGainReview: stale })).rejects.toThrow(/stale|conflict|8949/i);
+    await expect(fillReturn(changed, calculateFederalTax(changed), { outputDir: join(directory, 'stale'), blankFormsDir: 'forms/blank', capitalGainReview: stale })).rejects.toThrow(/Form8949 review source facts are stale or conflicting/);
     expect(await readdir(directory)).toEqual([]);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });

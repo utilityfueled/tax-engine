@@ -10,8 +10,8 @@ import { normalizeDigitalAssetCapitalInput } from "./forms/digital-asset-capital
 import { calculateForm172Return } from "./forms/form-172-return.js";
 import { calculateForm172CharitableSources } from "./forms/form-172-charitable-sources.js";
 import { validateQofDispositionFacts } from "./forms/qof-disposition-facts.js";
-import { assertNoDerivedCapitalFields, calculateQofInclusion } from "./forms/qof-inclusion.js";
-import { calculateClaimOfRightSources, claimOfRightStage, withClaimOfRightStage } from "./forms/claim-of-right.js";
+import { assertNoDerivedCapitalFields, assertQofStateMethod, calculateQofInclusion } from "./forms/qof-inclusion.js";
+import { assertClaimOfRightStateMethod, calculateClaimOfRightSources, claimOfRightNetRefund, claimOfRightStage, withClaimOfRightStage } from "./forms/claim-of-right.js";
 /**
  * Federal tax calculation orchestrator.
  * Coordinates all schedules, forms, and worksheets to produce a complete Form 1040.
@@ -218,9 +218,12 @@ export function calculateFederalTax(input: TaxYearInput): TaxReturnResult {
   if (!claim) return calculateFederalTaxForSources(input);
   if (input.form7206?.plans?.some(plan => plan.marketplaceCoverage === true)) throw new Error("Repaid earlier-year income with Marketplace worksheets needs a separate method");
   if (claim.eligibleAmount.isZero()) return { ...calculateFederalTaxForSources(input), claimOfRight: { ...claim, method: "not_deductible" } };
+  // Both stages must complete, so a single entered worksheet figure cannot match both.
+  if (input.form2210?.calculationMethod === "annualized" || (input.form8814?.length ?? 0) > 0) throw new Error("Repaid earlier-year income with Schedule AI or Form 8814 needs a separate method");
   const deduction = calculateFederalTaxForSources(withClaimOfRightStage(input, { deduction: claim.eligibleAmount, credit: d("0") }));
   const credit = calculateFederalTaxForSources(withClaimOfRightStage(input, { deduction: d("0"), credit: claim.availableCredit }));
-  return credit.totalTax.minus(claim.availableCredit).lt(deduction.totalTax)
+  if (deduction.deductionUsed !== "itemized" && claim.availableCredit.isZero()) return { ...credit, claimOfRight: { ...claim, method: "no_benefit" } };
+  return claimOfRightNetRefund(credit).gt(claimOfRightNetRefund(deduction))
     ? { ...credit, claimOfRight: { ...claim, method: "credit" } } : { ...deduction, claimOfRight: { ...claim, method: "deduction" } };
 }
 
@@ -4329,7 +4332,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const estimatedTaxBase = taxAfterCredits.plus(sum(selfEmploymentTax,
     form5329?.line4 ?? d("0"), form5329?.line8 ?? d("0"), form1099Q?.netPenalty ?? d("0"),
     additionalMedicareTax,niitTax,sched1.hsaAdditionalTax,sched1.hsaRecaptureTax));
-  const estimatedTaxRefundableCredits = sum(educationRefundable,refundableAdoptionCredit,netPremiumTaxCredit,form8812.actc,eic);
+  const estimatedTaxRefundableCredits = sum(educationRefundable,refundableAdoptionCredit,netPremiumTaxCredit,form8812.actc,eic,sched3.section1341Credit);
   const estimatedTaxInput = {
     taxYear:year,incomeTaxAfterCredits:taxAfterCredits,currentYearTax:estimatedTaxBase,
     withholding:federalWithholding.plus(excessSSWithholding),estimatedPayments,
@@ -4911,6 +4914,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     return baseResult;
   }
 
+  assertQofStateMethod(input, "Illinois");
+  assertClaimOfRightStateMethod(input, "Illinois");
   return {
     ...baseResult,
     stateReturns: {

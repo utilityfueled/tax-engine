@@ -20,6 +20,6 @@ export function SectionUnemployment({ data, onDataChange }: { data: Unemployment
     </div>)}</div>
     <button type="button" className="utility-button" onClick={() => onDataChange(withUnemploymentEntries(current, [...entries, { ...emptyUnemploymentEntry }]))}>Add government statement</button>
     <TaxRefundSourceDetails data={current.taxRefund} entries={entries} onChange={taxRefund => onDataChange({ ...current, taxRefund })} />
-    <p className="guided-hint">Missing source amounts stay unknown; enter zero only when confirmed. Repayments and contribution balances need matching source records. Income-tax refunds use the historical worksheet. Earlier-year repayments, farm payments, medical leave and private programs need their separate worksheets. State withholding belongs to the source state, which may differ from your address.</p>
+    <p className="guided-hint">Missing source amounts stay unknown; enter zero only when confirmed. Repayments and contribution balances need matching source records. Income-tax refunds use the historical worksheet. Earlier-year repayments need the earlier return figures. Farm payments, medical leave and private programs need their separate worksheets. State withholding belongs to the source state, which may differ from your address.</p>
   </div></RetroShell>;
 }

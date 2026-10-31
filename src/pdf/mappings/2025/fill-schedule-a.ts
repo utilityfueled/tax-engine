@@ -243,7 +243,7 @@ export async function fillScheduleA(
     throw new Error("Schedule A line16 requires a unique reconciled audit");
   }
   const otherDescriptions = [sa.gamblingLossDeduction.gt(0) ? "Gambling losses" : "", sa.bondPremiumDeduction.gt(0) ? "Excess bond premium" : "", sa.oidOrdinaryLossDeduction.gt(0) ? "TIPS ordinary loss" : "", sa.estateTaxDeduction.gt(0) ? "Estate tax on IRD" : ""].filter(Boolean);
-  setTextField(form, F.line16Desc, otherDescriptions.join("; "));
+  setTextField(form, F.line16Desc, [...otherDescriptions, result.claimOfRight?.method === "deduction" ? "Repaid income" : ""].filter(Boolean).join("; "));
   setCurrencyField(form, F.line16, line16Audit[0].value);
 
   // ── Total Itemized Deductions (Line 17) ──

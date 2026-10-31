@@ -36,8 +36,8 @@ describe('Form 2210 Schedule AI', () => {
     const twoColumns = [period('30000', { netProfitFromSelfEmployment: '40000' }), period('60000', { netProfitFromSelfEmployment: '40000', socialSecurityWages: '50000' }), ...rising().slice(2)];
     expect(line(run(twoColumns), '36a')).toBe('22607.28');
     expect(line(run(twoColumns), '36b')).toBe('9527.424');
-    expect(line(run([period('30000', { netProfitFromSelfEmployment: '433.13' }), ...rising().slice(1)]), '36a')).toBe('0');
-    expect(line(run([period('30000', { netProfitFromSelfEmployment: '433.14' }), ...rising().slice(1)]), '36a')).toBe('244.80293148');
+    expect(line(run([period('30000', { netProfitFromSelfEmployment: '432.50' }), ...rising().slice(1)]), '36a')).toBe('0');
+    expect(line(run([period('30000', { netProfitFromSelfEmployment: '432.60' }), ...rising().slice(1)]), '36a')).toBe('244.8');
     const wages = period('200000', { netProfitFromSelfEmployment: '10000', socialSecurityWages: '176100' });
     expect(line(run([...rising().slice(0, 3), wages], { taxAfterRefundableCredits: new Decimal(37334.815) }), '36d')).toBe('267.815');
     const negative = run([period('-30000'), ...rising().slice(1)]);
@@ -74,7 +74,9 @@ describe('Form 2210 Schedule AI', () => {
     expect(() => run(rising(), { returnContext: context({ selfEmployedOwners: 2 }) })).toThrow(/separate PartII/);
     expect(() => run(rising(), { returnContext: context({ agi: new Decimal(200001) }) })).toThrow(/reconcile to the completed return/);
     expect(() => run(rising(), { returnContext: context({ taxableIncome: new Decimal(180000) }) })).toThrow(/reconcile to the completed return/);
-    expect(() => run(rising(), { taxAfterRefundableCredits: new Decimal(37068) })).toThrow(/reconcile to the completed return/);
+    expect(run(rising(), { taxAfterRefundableCredits: new Decimal(37069) }).installments).toHaveLength(4);
+    expect(() => run(rising(), { taxAfterRefundableCredits: new Decimal(37069.01) })).toThrow(/line 4/);
+    expect(run(rising(), { returnContext: context({ agi: new Decimal(200000.4) }) }).installments).toHaveLength(4);
     const joint = { filingStatus: 'married_filing_jointly' as const };
     expect(() => run(rising(), joint)).toThrow(/both spouses/);
     expect(() => run(rising(), { ...joint, facts: { annualizedIncomePeriods: rising(), bothSpousesSelfEmployed: true } })).toThrow(/separate PartII/);

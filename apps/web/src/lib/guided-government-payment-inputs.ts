@@ -11,6 +11,7 @@ function money(value: string | undefined, label: string): string | undefined {
 }
 
 /** Source conversion only. The caller validates ownership and canonical worksheets. */
+const hasPriorRepayment = (entry: UnemploymentEntryData) => { try { return parseGuidedCurrency(entry.priorYearRepaid).gt(0); } catch { return false; } };
 export function buildGovernmentPaymentSourceRecords(entries: UnemploymentEntryData[]) {
   return entries.map((entry, index) => Form1099GSchema.parse({
     // Result-local audit IDs are distinct from actual statement identity below.
@@ -29,7 +30,7 @@ export function buildGovernmentPaymentSourceRecords(entries: UnemploymentEntryDa
     tradeOrBusinessRefund: entry.tradeOrBusinessRefund ?? undefined, marketGain: money(entry.marketGain, "Box 9 market gain"),
     familyLeaveBenefits: money(entry.familyLeaveBenefits, "Box 10 family leave"), familyLeaveProgramType: entry.familyLeaveProgramType || undefined,
     currentYearRepaid: money(entry.currentYearRepaid, "current-year repayment"), priorYearRepaid: money(entry.priorYearRepaid, "earlier-year repayment"),
-    ...(entry.priorRepaymentReference?.trim() || entry.priorRepaymentConfirmed != null ? { priorYearRepaymentSource: {
+    ...(hasPriorRepayment(entry) ? { priorYearRepaymentSource: {
       sourceReference: entry.priorRepaymentReference?.trim() || undefined, sourceFactsConfirmed: entry.priorRepaymentConfirmed ?? undefined,
       originalTaxYear: entry.priorRepaymentOriginalYear?.trim() ? Number(entry.priorRepaymentOriginalYear) : undefined,
       earlierReturnTax: entry.priorRepaymentEarlierTax?.trim() ? parseGuidedCurrency(entry.priorRepaymentEarlierTax).toFixed() : undefined,

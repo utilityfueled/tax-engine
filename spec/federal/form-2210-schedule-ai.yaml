@@ -14,8 +14,8 @@ notes: |
   worksheet's qualified dividends and net capital gain are annualized, so a
   positive amount in any period rejects instead of choosing a convention.
   Column (d) covers the full year, so its AGI, taxable income, itemized deductions and
-  tax after credits must reconcile to the completed return, within $1 for tax after
-  credits. A mismatch rejects, which also stops Schedule 1-A and other deductions with
+  tax after credits must reconcile to the completed return, in whole dollars and within
+  $2 for tax after credits because the return rounds Schedule SE parts separately. A mismatch rejects, which also stops Schedule 1-A and other deductions with
   no line here. A return's own qualified dividends, net capital gain, Schedule J, Form
   8615, Form 2555 or two self-employed owners reject, whatever the periods say.
   The $400 test uses net earnings, following IRC1402(b) and Schedule SE line4c. The
@@ -41,7 +41,7 @@ lines:
     testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::uses the larger annualized itemized or standard deduction"
   - line: "part-ii"
     description: "Annualize self-employment tax with the prorated wage base"
-    formula: "Profit40000, wages0, column a: 36940*.496+36940*.116=22607.28. Column b wages50000: limit73375, 23375*.2976+36940*.0696=9527.424. Profit433.13 gives net earnings399.996 and0; profit433.14 gives400.004 and does not. 2026 limits use 184500 prorated by .25,5/12,2/3,1."
+    formula: "Profit40000, wages0, column a: 36940*.496+36940*.116=22607.28. Column b wages50000: limit73375, 23375*.2976+36940*.0696=9527.424. Net earnings round first as on Schedule SE: profit432.50 gives399 and0; profit432.60 gives400 and244.8. 2026 limits use 184500 prorated by .25,5/12,2/3,1."
     irsRef: "Schedule AI lines28-36"
     testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::annualizes self-employment tax around its limits"
   - line: "penalty"
