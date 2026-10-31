@@ -9,6 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { calculateFederalTax } from '@/engine/federal';
 import { TaxYearInputSchema } from '@/models/inputs';
 import { fillReturn } from '@/pdf/fill-return';
+import { prepareForm8949Review } from '@/pdf/form-8949-review-context';
 import { SCHEDULE_D_FIELDS as F } from '@/pdf/fill-schedule-d';
 import { REVIEW_PDF_NOTICE } from '@/pdf/export-policy';
 import { d } from '@/utils/decimal';
@@ -17,7 +18,7 @@ import { qofFacts, qofInvestment } from '../fixtures/qof-inclusion';
 
 const input = () => TaxYearInputSchema.parse({ ...simpleW2Fixture,
   qofDispositionFacts: qofFacts(2025, [qofInvestment({ event: 'sale_or_exchange', eventDate: '2025-06-30', investmentDate: '2020-03-01',
-    fairMarketValue: '130000', proceeds: '130000', basisBeforeInclusion: '0' })]) });
+    fairMarketValue: '130000', proceeds: '130000', basisBeforeInclusion: '0', description: 'Fictional 25% interest Ω' })], true) });
 
 it('prints the sale row and PartIII reference from complete sources', async () => {
   const source = input(), result = calculateFederalTax(source), directory = await mkdtemp(join(tmpdir(), 'qof-review-'));
@@ -38,25 +39,48 @@ it('prints the sale row and PartIII reference from complete sources', async () =
     expect(text).not.toContain('123-45-6789');
     const form8949 = (await PDFDocument.load(await readFile(files.find(file => file.endsWith('f8949-filled.pdf'))!))).getForm().getFields()
       .map(field => { try { return (field as unknown as { getText: () => string }).getText(); } catch { return ''; } });
-    expect(form8949).toContain('Y'); expect(form8949).toContain('98-7654321');
+    for (const value of ['Y', '98-7654321', '130000', '100000', '90000', '120000']) expect(form8949).toContain(value);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });
 
 it('rejects changed QOF sources and retained amounts before any output', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'qof-review-context-'));
+  const row = (source: ReturnType<typeof input>) => source.qofDispositionFacts!.investments![0]!;
   try {
     for (const change of [
-      (source: ReturnType<typeof input>) => { source.qofDispositionFacts!.investments![0]!.remainingDeferredGain = '99000'; },
-      (source: ReturnType<typeof input>) => { source.qofDispositionFacts!.investments![0]!.qofEin = '11-1111111'; },
+      (source: ReturnType<typeof input>) => { row(source).remainingDeferredGain = '99000'; },
+      (source: ReturnType<typeof input>) => { row(source).qofEin = '11-1111111'; },
+      (source: ReturnType<typeof input>) => { row(source).proceeds = '170000'; },
+      (source: ReturnType<typeof input>) => { row(source).basisBeforeInclusion = '50000'; },
+      (source: ReturnType<typeof input>) => { row(source).investmentDate = '2020-03-02'; },
+      (source: ReturnType<typeof input>) => { row(source).sourceReference = 'Different same-money records'; },
     ]) {
       const source = input(), result = calculateFederalTax(source); change(source);
-      await expect(fillReturn(source, result, { outputDir: join(directory, 'source'), blankFormsDir: 'forms/blank' })).rejects.toThrow(/8997|8949|Schedule/);
+      await expect(fillReturn(source, result, { outputDir: join(directory, 'source'), blankFormsDir: 'forms/blank' })).rejects.toThrow(/8997 reference|Form8949 original source audit/);
     }
+    const disposed = input(), kept = calculateFederalTax(disposed); disposed.qofDispositionFacts!.disposedOfQofInvestment = false;
+    await expect(fillReturn(disposed, kept, { outputDir: join(directory, 'answer'), blankFormsDir: 'forms/blank' })).rejects.toThrow(/8997|QOF/);
     const source = input(), result = calculateFederalTax(source);
     result.qofInclusion!.rows[0]!.includedGain = d('1');
     await expect(fillReturn(source, result, { outputDir: join(directory, 'result'), blankFormsDir: 'forms/blank' })).rejects.toThrow(/8997/);
-    const missing = input(), kept = calculateFederalTax(missing); kept.qofInclusion = undefined;
-    await expect(fillReturn(missing, kept, { outputDir: join(directory, 'missing'), blankFormsDir: 'forms/blank' })).rejects.toThrow(/8997/);
+    const schedule = calculateFederalTax(source); schedule.scheduleD!.netLongTerm = d('1');
+    await expect(fillReturn(source, schedule, { outputDir: join(directory, 'schedule'), blankFormsDir: 'forms/blank' })).rejects.toThrow(/Schedule D audits/);
+    const rows = calculateFederalTax(source); rows.qofInclusion!.transactions[0]!.proceeds = '1';
+    await expect(fillReturn(source, rows, { outputDir: join(directory, 'rows'), blankFormsDir: 'forms/blank' })).rejects.toThrow(/8997/);
+    const missing = input(), absent = calculateFederalTax(missing); absent.qofInclusion = undefined;
+    await expect(fillReturn(missing, absent, { outputDir: join(directory, 'missing'), blankFormsDir: 'forms/blank' })).rejects.toThrow(/8997/);
+    const stale = prepareForm8949Review(input()), changed = input(); row(changed).remainingDeferredGain = '50000';
+    await expect(fillReturn(changed, calculateFederalTax(changed), { outputDir: join(directory, 'stale'), blankFormsDir: 'forms/blank', capitalGainReview: stale })).rejects.toThrow(/stale|conflict|8949/i);
     expect(await readdir(directory)).toEqual([]);
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+it('wraps long reference text on the page', async () => {
+  const source = input(), directory = await mkdtemp(join(tmpdir(), 'qof-review-wrap-'));
+  source.qofDispositionFacts!.investments![0]!.description = 'Long fictional interest description '.repeat(10);
+  try {
+    const files = (await fillReturn(source, calculateFederalTax(source), { outputDir: directory, blankFormsDir: 'forms/blank' })).filledForms;
+    const doc = await PDFDocument.load(await readFile(files.find(file => file.endsWith('f8997-reference-filled.pdf'))!));
+    expect(doc.getPageCount()).toBe(1);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });

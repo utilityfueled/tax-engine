@@ -22,7 +22,9 @@ function QofInvestmentRow({ index, row, onChange, onRemove }: { index: number; r
     {text("eventDate", "Event date", "date")}
     <BooleanFact label={`${prefix}: Entire investment included`} value={row.entireInvestment ?? null} onChange={entireInvestment => onChange({ entireInvestment })} />
     {corporation ? text("fairMarketValue", "Fair market value on the event date") : text("fullyTaxableDispositionGain", "Gain on a fully taxable disposition at fair market value")}
-    {sale && text("proceeds", "Sale proceeds")}{sale && text("basisBeforeInclusion", "Basis before inclusion")}
+    {sale && text("proceeds", "Sale proceeds")}{sale && text("basisBeforeInclusion", "Basis before inclusion, without any 10% or 15% QOF increase")}
+    <BooleanFact label={`${prefix}: No Form 8997 special gain code applies`} value={row.noSpecialGainCode ?? null} onChange={noSpecialGainCode => onChange({ noSpecialGainCode })} />
+    {sale && !corporation && <BooleanFact label={`${prefix}: All sale gain is capital, with no look-through character`} value={row.saleGainAllCapitalConfirmed ?? null} onChange={saleGainAllCapitalConfirmed => onChange({ saleGainAllCapitalConfirmed })} />}
     <BooleanFact label={`${prefix}: Sources checked after the last edit`} value={row.sourceFactsConfirmed ?? null} onChange={sourceFactsConfirmed => onChange({ sourceFactsConfirmed })} />
   </div><button type="button" onClick={onRemove}>Remove {prefix}</button></fieldset>;
 }

@@ -74,6 +74,7 @@ const STATE_NAME_FALLBACKS = new Map<string, string>(
 );
 const FORM_LABELS: Record<string, string> = {
   "f1040-filled.pdf": "Form 1040",
+  "f8997-reference-filled.pdf": "Form 8997 Reference",
   "f1040s1-filled.pdf": "Schedule 1",
   "f1040s2-filled.pdf": "Schedule 2",
   "f1040s3-filled.pdf": "Schedule 3",

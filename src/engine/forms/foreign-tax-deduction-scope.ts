@@ -15,6 +15,7 @@ export function validateForeignTaxDeductionScope(input: TaxYearInput): void {
       throw new Error('Foreign deduction-year COD requires the actual fully excluded original debt');
     }
   }
+  if (input.qofDispositionFacts?.investments?.length) throw new Error('Foreign deduction-year carryover does not cover QOF capital sources');
   const unsupportedArrays: (keyof TaxYearInput)[] = [
     'form1099B', 'form1099DA', 'form1099Nec', 'form1099Misc', 'form1099G',
     'form1099OID', 'formW2G', 'form1099K', 'form1099Q', 'form1099R',

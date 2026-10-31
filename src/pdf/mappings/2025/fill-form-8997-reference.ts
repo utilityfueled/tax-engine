@@ -1,7 +1,8 @@
 /** Spec: qof-deferred-gain-inclusion.yaml review. Reference only, not Form 8997. */
 import { join } from 'node:path';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
-import { calculateQofInclusion } from '@/engine/forms/qof-inclusion.js';
+import Decimal from 'decimal.js';
+import { calculateQofInclusion, qofSourceDigest } from '@/engine/forms/qof-inclusion.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import type { TaxReturnResult } from '@/models/outputs.js';
 import { markReviewPdf } from '../../export-policy.js';
@@ -13,6 +14,13 @@ export const FORM_8997_REFERENCE_FILENAME = 'f8997-reference-filled.pdf';
 export function buildForm8997ReferenceSummary(input: TaxYearInput, result: TaxReturnResult) {
   const source = calculateQofInclusion(input), retained = result.qofInclusion;
   if (!source || !retained || source.rows.length !== retained.rows.length) throw new Error('Form8997 reference requires the actual QOF inclusion calculation');
+  if (retained.sourceDigest !== qofSourceDigest(input) || JSON.stringify(retained.transactions) !== JSON.stringify(source.transactions)) {
+    throw new Error('Form8997 reference amounts do not reconcile with the original QOF records');
+  }
+  for (const [line, value] of [['7', result.scheduleD?.netShortTerm], ['15', result.scheduleD?.netLongTerm]] as const) {
+    const audits = result.allLines.filter(row => row.form === 'Sched D' && row.line === line);
+    if (audits.length !== 1 || !Decimal.isDecimal(value) || !audits[0]!.value.eq(value)) throw new Error('Form8997 reference requires reconciled Schedule D audits');
+  }
   const rows = source.rows.map((row, index) => {
     const saved = retained.rows[index]!;
     if (saved.sourceId !== row.sourceId || saved.qofEin !== row.qofEin || saved.description !== row.description || saved.eventDate !== row.eventDate
@@ -35,8 +43,10 @@ export async function fillForm8997Reference(input: TaxYearInput, result: TaxRetu
   const bold = await doc.embedFont(StandardFonts.HelveticaBold), regular = await doc.embedFont(StandardFonts.Helvetica);
   let page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]), y = PAGE_HEIGHT - MARGIN;
   const write = (text: string, font = regular, size = 10) => {
-    if (y < MARGIN + 30) { page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]); y = PAGE_HEIGHT - MARGIN; }
-    page.drawText(text, { x: MARGIN, y, size, font }); y -= LINE;
+    for (const line of text.replace(/[^\x20-\x7E]/g, ' ').match(/.{1,90}(?:\s|$)|.{1,90}/g) ?? ['']) {
+      if (y < MARGIN + 30) { page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]); y = PAGE_HEIGHT - MARGIN; }
+      page.drawText(line.trim(), { x: MARGIN, y, size, font }); y -= LINE;
+    }
   };
   write('Form 8997 Part III Inclusion Reference', bold, 16); y -= 6;
   write('Reference only. This is not Form 8997, which must still be completed for a filed return.');

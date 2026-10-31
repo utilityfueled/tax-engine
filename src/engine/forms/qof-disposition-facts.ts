@@ -16,5 +16,8 @@ export function validateQofDispositionFacts(
   if (facts.disposedOfQofInvestment && !facts.investments?.some(row => row.event === "sale_or_exchange")) {
     throw new Error("A QOF disposition requires its actual Form8997 PartIII investment record and Form8949 deferred-gain source.");
   }
+  if (!facts.disposedOfQofInvestment && facts.investments?.some(row => row.event === "sale_or_exchange")) {
+    throw new Error("A QOF sale record conflicts with the actual No disposition answer.");
+  }
   return facts.disposedOfQofInvestment;
 }

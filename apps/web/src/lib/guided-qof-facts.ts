@@ -2,6 +2,7 @@ import type { TaxYearInput } from "@/models/inputs.js";
 import { validateQofDispositionFacts } from "@/engine/forms/qof-disposition-facts.js";
 import { calculateQofInclusion } from "@/engine/forms/qof-inclusion.js";
 import type { QofInvestmentSource } from "@/models/qof-investment-sources.js";
+import { parseGuidedCurrency } from "./guided-currency";
 
 export interface QofDispositionData {
   sourceTaxYear: string;
@@ -12,10 +13,11 @@ export interface QofDispositionData {
   deferredGainHeldAtYearEnd?: boolean | null;
   investments?: QofInvestmentData[];
 }
-export type QofInvestmentData = { [K in keyof QofInvestmentSource]: K extends "sourceFactsConfirmed" | "entireInvestment" ? boolean | null : string };
+export type QofInvestmentData = { [K in keyof QofInvestmentSource]: K extends "sourceFactsConfirmed" | "entireInvestment" | "noSpecialGainCode" | "saleGainAllCapitalConfirmed" ? boolean | null : string };
 export const emptyQofInvestment: QofInvestmentData = { sourceId: "", sourceReference: "", sourceFactsConfirmed: null, qofEin: "", description: "", investmentDate: "",
-  interestType: "", gainCharacter: "", originalDeferredGain: "", remainingDeferredGain: "", event: "", eventDate: "", entireInvestment: null,
+  interestType: "", gainCharacter: "", originalDeferredGain: "", remainingDeferredGain: "", event: "", eventDate: "", entireInvestment: null, noSpecialGainCode: null, saleGainAllCapitalConfirmed: null,
   fairMarketValue: "", fullyTaxableDispositionGain: "", proceeds: "", basisBeforeInclusion: "" };
+const QOF_MONEY = new Set(["originalDeferredGain", "remainingDeferredGain", "fairMarketValue", "fullyTaxableDispositionGain", "proceeds", "basisBeforeInclusion"]);
 export const emptyQofDispositionFacts: QofDispositionData = {
   sourceTaxYear: "", sourceReference: "", sourceFactsConfirmed: null,
   allInvestmentsReviewed: null, disposedOfQofInvestment: null,
@@ -25,7 +27,7 @@ export function buildGuidedQofFacts(data: QofDispositionData | undefined, taxYea
   if (!Number.isInteger(taxYear) || !/^\d{4}$/.test(data.sourceTaxYear.trim())) throw new Error("QOF sources require the actual return and original source year.");
   const investments = data.investments?.map(row => Object.fromEntries(Object.entries(row)
     .filter(([, value]) => value !== null && value !== "" && !(typeof value === "string" && !value.trim()))
-    .map(([key, value]) => [key, typeof value === "string" && key !== "sourceReference" && key !== "description" ? value.trim().replace(/,/g, "") : value])) as QofInvestmentSource);
+    .map(([key, value]) => [key, typeof value === "string" ? QOF_MONEY.has(key) ? parseGuidedCurrency(value).toFixed() : value.trim() : value])) as QofInvestmentSource);
   const facts = { sourceTaxYear: Number(data.sourceTaxYear), sourceReference: data.sourceReference,
     sourceFactsConfirmed: data.sourceFactsConfirmed ?? undefined, allInvestmentsReviewed: data.allInvestmentsReviewed ?? undefined,
     disposedOfQofInvestment: data.disposedOfQofInvestment ?? undefined,

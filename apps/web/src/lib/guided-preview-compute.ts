@@ -9,6 +9,7 @@ import { sumAdditionalStateWithholding } from "./guided-state-facts";
 import { parseGuidedCurrency } from "./guided-currency";
 import { calculateFederalTax } from "@/engine/federal";
 import { calculatePAReturn } from "@/engine/state/pa-orchestrator";
+import { assertQofStateMethod } from "@/engine/forms/qof-inclusion";
 import { buildOhioResidentReturnInput } from "@/engine/state/oh-input-adapter";
 import { calculateOhioResidentReturn } from "@/engine/state/oh-return";
 import { buildGuidedOhioOverlay, buildGuidedPennsylvaniaOverrides } from "./guided-state-engine-inputs";
@@ -171,6 +172,7 @@ export function computeGuidedPreview(state: GuidedFlowState | null | undefined):
       const stateEstimatedPayments = collectStateEstimatedPayments(state);
 
       try {
+        assertQofStateMethod(taxInput, stateCode);
         if (stateCode === "PA") {
           const pa = calculatePAReturn(taxInput, buildGuidedPennsylvaniaOverrides(state)).pa40;
           stateResult = { stateCode, stateName: "Pennsylvania", stateTax: pa.netTaxLiability,

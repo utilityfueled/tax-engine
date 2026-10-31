@@ -26,10 +26,17 @@ notes: |
   recognition date, but give no row layout for an inclusion with no sale. This
   method uses zero columns (d) and (e) with the included amount in (g), which
   yields the statutory amount. Final 2026 instructions must confirm the layout.
-  Bounded method: an individual's complete investment. Partial dispositions, other
-  inclusion events, special gain codes, section1231, section1256 and collectibles
-  attributes, post-2026 investments and the 10-year election reject explicitly.
-  State treatment is not determined here; attached state returns reject.
+  Bounded method: an individual's complete investment with no Form8997 special gain
+  code. Partial dispositions, other inclusion events, section1231, section1256,
+  collectibles and other special attributes, a partnership sale with look-through
+  character, and dates before 2017-12-22 reject explicitly. The original rule cannot
+  reach a 10-year hold by 2026, and later return years stay closed here.
+  State treatment is not determined: Pennsylvania, Ohio and guided state previews
+  reject or leave the state result blank. Conforming states need their own method.
+  Before tax year 2026 opens, a capital return needs a required QOF answer, because a
+  return with no QOF record cannot show that no inclusion applies.
+  Not reviewed here: section1411 treatment of gain deferred from non-NII activity, and
+  whether a February29 investment reaches a full year on February28.
 lines:
   - line: "regulation-example"
     description: "Reproduce the published partnership inclusion"
@@ -73,12 +80,12 @@ lines:
     testRef: "tests/engine/forms/qof-inclusion.test.ts::rejects missing facts and methods outside the bounded route"
   - line: "state"
     description: "Keep state treatment explicit"
-    formula: "A return with QOF inclusion rejects Pennsylvania attachment until state treatment is implemented, instead of silently using or omitting the federal row."
+    formula: "Resident and nonresident Pennsylvania, Ohio and guided state previews reject QOF inclusion until state treatment is implemented, instead of silently using or omitting the federal row."
     irsRef: "State conformity is not established by this federal method"
     testRef: "tests/engine/federal-qof-inclusion.test.ts::rejects a Pennsylvania attachment until state treatment exists"
   - line: "review"
     description: "Print inclusion evidence and answer the ScheduleD question"
-    formula: "A complete sale checks ScheduleD Yes, prints the code Y row and a Form8997 PartIII reference with QOF EIN, event date, description and included amounts, all marked review-only. Changed sources reject before output."
+    formula: "A complete sale checks ScheduleD Yes, prints the code Y row with columns d130000,e100000,g90000 and gain120000, and a Form8997 PartIII reference marked review-only. Non-ASCII description text is replaced and long text wraps before any file is written."
     irsRef: "Form8997 PartIII; Form8949 column f; ScheduleD QOF question"
     testRef: "tests/pdf/qof-inclusion-review.test.ts::prints the sale row and PartIII reference from complete sources"
   - line: "guide"
@@ -91,4 +98,29 @@ lines:
     formula: "A new row starts unknown and revokes confirmation. Editing a row clears its confirmation, a zero value stays zero, sale-only fields appear only for a sale, and removal leaves no row."
     irsRef: "Original-source contract"
     testRef: "tests/apps/web/qof-facts-interactions.test.tsx::adds complete QOF investment rows and revokes changed confirmations"
+  - line: "review-binding"
+    description: "Bind the complete QOF sources and capital rows before output"
+    formula: "A private digest of all QOF facts and the derived rows must match the retained result. Changed amounts, dates, EIN, references or answers, a changed retained row, a ScheduleD total that differs from its audit, a missing result and a stale Form8949 token reject with no file written."
+    irsRef: "Original-source output reconciliation"
+    testRef: "tests/pdf/qof-inclusion-review.test.ts::rejects changed QOF sources and retained amounts before any output"
+  - line: "review-text"
+    description: "Keep reference text printable and on the page"
+    formula: "A 370-character description wraps on one page."
+    irsRef: "Review output policy"
+    testRef: "tests/pdf/qof-inclusion-review.test.ts::wraps long reference text on the page"
+  - line: "derived-fields"
+    description: "Original records cannot set or suppress derived rows"
+    formula: "A statement using the internal source label does not suppress inclusion. A capital record setting qofInclusion or adjustmentCodes rejects."
+    irsRef: "Original-source contract"
+    testRef: "tests/engine/federal-qof-inclusion.test.ts::cannot be suppressed or asserted by original capital records"
+  - line: "answer-consistency"
+    description: "A sale record requires a Yes answer"
+    formula: "disposedOfQofInvestment false with a sale record rejects, so ScheduleD cannot print No beside a code Y row."
+    irsRef: "ScheduleD QOF question"
+    testRef: "tests/engine/federal-qof-inclusion.test.ts::keeps the sale answer consistent with its records"
+  - line: "credit-guard"
+    description: "Count QOF capital in guards that exclude capital originals"
+    formula: "The exclusion-only minimum tax credit method rejects QOF capital as it rejects other capital originals."
+    irsRef: "Form8801 PartI capital-gain branch"
+    testRef: "tests/engine/federal-qof-inclusion.test.ts::treats QOF capital as capital in the exclusion-only credit guard"
 

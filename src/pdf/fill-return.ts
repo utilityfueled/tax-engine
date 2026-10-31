@@ -485,7 +485,7 @@ export async function fillReturn(
     }
   }
   const hasK1CashDistribution = input.k1CharitableSources?.statements?.some(source => source.cashDistribution !== undefined);
-  if (capitalTransactions.section1202 || hasDigitalDispositions || hasK1CashDistribution) {
+  if (capitalTransactions.section1202 || hasDigitalDispositions || hasK1CashDistribution || input.qofDispositionFacts?.investments?.length) {
     for (const entry of capitalTransactions.lines.filter(row => row.form === "Form 8949")) {
       const canonical = result.allLines.filter(row => row.form === entry.form && row.line === entry.line);
       if (canonical.length !== 1 || !canonical[0].value.eq(entry.value)) throw new Error("Form8949 original source audit does not reconcile");

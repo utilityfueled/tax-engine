@@ -1,5 +1,7 @@
 /** Deferred QOF gain included on a complete sale or December 31, 2026.
  * Spec: spec/federal/qof-deferred-gain-inclusion.yaml. */
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
 import Decimal from 'decimal.js';
 import type { CapitalTransaction, TaxYearInput } from '@/models/inputs.js';
 import type { CalculatedLine } from '@/models/outputs.js';
@@ -14,11 +16,14 @@ export interface QofInclusionRow {
 export interface QofInclusionResult {
   rows: QofInclusionRow[]; transactions: CapitalTransaction[]; totalIncludedGain: Decimal;
   shortTermIncludedGain: Decimal; longTermIncludedGain: Decimal; lines: CalculatedLine[];
+  /** Private source binding only; never render the original records or this digest. */
+  sourceDigest: string;
 }
 
 const DATE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, MONEY = /^\d+(\.\d+)?$/, SIGNED = /^-?\d+(\.\d+)?$/;
-const YEAR_END = '2026-12-31', LAST_INVESTMENT = '2026-12-31', QOF_SOURCE = 'Qualified Opportunity Fund records';
+const YEAR_END = '2026-12-31', FIRST_INVESTMENT = '2017-12-22', QOF_SOURCE = 'Qualified Opportunity Fund records';
 const fail = (message: string) => new Error(`QOF ${message}`);
+const calendarDate = (value: string) => DATE.test(value) && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
 const money = (value: string | undefined, label: string) => {
   if (value === undefined || !MONEY.test(value)) throw fail(`requires the actual ${label}`);
   return new Decimal(value);
@@ -31,19 +36,20 @@ function calculateRow(row: QofInvestmentSource, taxYear: number): { row: QofIncl
   if (row.sourceFactsConfirmed !== true || !row.sourceReference?.trim() || !row.sourceId?.trim()) throw fail('investment requires a confirmed original record');
   if (!/^\d{2}-?\d{7}$/.test(row.qofEin ?? '') || !row.description?.trim()) throw fail('investment requires the actual fund EIN and interest description');
   const investmentDate = row.investmentDate ?? '', eventDate = row.eventDate ?? '';
-  if (!DATE.test(investmentDate) || !DATE.test(eventDate) || investmentDate > eventDate) throw fail('investment requires actual investment and event dates');
-  if (investmentDate > LAST_INVESTMENT) throw fail('investments after 2026 follow a separate rule that this method does not calculate');
+  if (!calendarDate(investmentDate) || !calendarDate(eventDate) || investmentDate > eventDate) throw fail('investment requires actual investment and event dates');
+  if (investmentDate < FIRST_INVESTMENT) throw fail('investment predates section 1400Z-2');
   if (row.entireInvestment !== true) throw fail('partial dispositions need a separate proportional method');
   const { event, gainCharacter, interestType } = row;
   if (event !== 'sale_or_exchange' && event !== 'december_31_2026') throw fail('event must be a sale or December 31, 2026; other inclusion events need a separate method');
   if (gainCharacter !== 'short_term' && gainCharacter !== 'long_term') throw fail('gain must be short-term or long-term; special gain attributes need a separate method');
   if (interestType !== 'corporation' && interestType !== 'partnership_or_s_corporation') throw fail('investment requires the actual interest type');
+  if (row.noSpecialGainCode !== true) throw fail('investment with a Form8997 special gain code needs a separate method');
   if (Number(eventDate.slice(0, 4)) !== taxYear) throw fail('event date must fall in the return year');
   if (event === 'december_31_2026' && eventDate !== YEAR_END) throw fail('year-end inclusion must use December 31, 2026');
   const original = money(row.originalDeferredGain, 'original deferred gain'), remaining = money(row.remainingDeferredGain, 'remaining deferred gain');
   if (remaining.gt(original)) throw fail('remaining deferred gain cannot exceed the original deferred gain');
   const rate = heldYears(investmentDate, eventDate, 7) ? '0.15' : heldYears(investmentDate, eventDate, 5) ? '0.10' : '0';
-  const basisIncrease = remaining.times(rate), reduced = remaining.minus(basisIncrease);
+  const basisIncrease = remaining.times(rate).toDecimalPlaces(2, Decimal.ROUND_HALF_UP), reduced = remaining.minus(basisIncrease);
   let includedGain: Decimal;
   if (interestType === 'corporation') {
     includedGain = Decimal.max(0, Decimal.min(remaining, money(row.fairMarketValue, 'fair market value')).minus(basisIncrease));
@@ -59,6 +65,9 @@ function calculateRow(row: QofInvestmentSource, taxYear: number): { row: QofIncl
     // One row needs one term. Different deferred and QOF terms need two reports.
     const heldMoreThanOneYear = `${Number(investmentDate.slice(0, 4)) + 1}${investmentDate.slice(4)}` < eventDate;
     if (heldMoreThanOneYear !== longTerm) throw fail('sale term must match the deferred gain character on its one reporting row');
+    if (interestType === 'partnership_or_s_corporation' && row.saleGainAllCapitalConfirmed !== true) {
+      throw fail('partnership or S corporation sale with look-through character needs a separate method');
+    }
     const proceeds = money(row.proceeds, 'sale proceeds'), prior = money(row.basisBeforeInclusion, 'basis before inclusion');
     transaction = { ...shared, proceeds: proceeds.toFixed(), costBasis: prior.plus(basisIncrease).plus(includedGain).toFixed(), adjustments: includedGain.toFixed() };
   } else transaction = { ...shared, proceeds: '0', costBasis: '0', adjustments: includedGain.toFixed() };
@@ -77,6 +86,7 @@ export function calculateQofInclusion(input: QofInclusionInput): QofInclusionRes
     }
   }
   if (records.length === 0) return undefined;
+  if (year !== 2025 && year !== 2026) throw fail('inclusion is unavailable for this return year');
   if (facts.sourceFactsConfirmed !== true || facts.allInvestmentsReviewed !== true || facts.sourceTaxYear !== year) throw fail('investments require confirmed current-year sources');
   if (new Set(records.map(row => row.sourceId)).size !== records.length) throw fail('investment records must be distinct');
   const results = records.map(row => calculateRow(row, year)), audit = new AuditTrail();
@@ -88,12 +98,23 @@ export function calculateQofInclusion(input: QofInclusionInput): QofInclusionRes
       { 'Remaining deferred gain': row.remainingDeferredGain, 'Basis increase': row.basisIncrease });
   }
   return { rows: results.map(item => item.row), transactions: results.map(item => item.transaction), totalIncludedGain: total(),
-    shortTermIncludedGain: total('short_term'), longTermIncludedGain: total('long_term'), lines: audit.getLines() };
+    shortTermIncludedGain: total('short_term'), longTermIncludedGain: total('long_term'), lines: audit.getLines(), sourceDigest: qofSourceDigest(input) };
 }
 
-/** Adding the source once keeps repeated capital normalization idempotent. */
+export function qofSourceDigest(input: QofInclusionInput): string {
+  return bytesToHex(sha256(new TextEncoder().encode(JSON.stringify(input.qofDispositionFacts ?? null))));
+}
+
+/** The engine derives these fields. Original records can never assert them. */
+export function assertNoDerivedCapitalFields(input: Pick<TaxYearInput, 'form1099B'>): void {
+  if (input.form1099B.some(form => form.transactions.some(row => row.qofInclusion !== undefined || row.adjustmentCodes !== undefined))) {
+    throw new Error('Capital records cannot set derived QOF or Form8949 code fields');
+  }
+}
+
+/** The derived row flag keeps repeated capital normalization idempotent. */
 export function addQofInclusionRows<T extends QofInclusionInput & { form1099B: TaxYearInput['form1099B'] }>(input: T): T {
-  if (input.form1099B.some(form => form.broker === QOF_SOURCE)) return input;
+  if (input.form1099B.some(form => form.transactions.some(row => row.qofInclusion === true))) return input;
   const result = calculateQofInclusion(input);
   if (!result) return input;
   return { ...input, form1099B: [...input.form1099B, { broker: QOF_SOURCE, stateWithheld: '0', transactions: result.transactions }] };

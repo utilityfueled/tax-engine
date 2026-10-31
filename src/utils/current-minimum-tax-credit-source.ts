@@ -94,7 +94,7 @@ export function readCurrentMinimumTaxCreditSources(input: IdentityInput, origina
       ...Object.values(originals.priorYear?.foreignTaxCreditCarryforwardByCategory ?? {}).flatMap(rows => rows.map(row => row.amount)),
       ...Object.values(originals.priorYear?.amtForeignTaxCreditCarryforwardByCategory ?? {}).flatMap(rows => rows?.map(row => row.amount) ?? []),
     ].some(value => value !== undefined && !new Decimal(value).isZero())) invalid('actual foreign originals conflict with the empty MTFTCE method');
-  if (originals.form1099B.length || originals.section1202Sources || originals.amtCapitalGains
+  if (originals.form1099B.length || originals.qofDispositionFacts?.investments?.length || originals.section1202Sources || originals.amtCapitalGains
     || [...originals.form1099Div.flatMap(row => [row.qualifiedDividends, row.totalCapitalGainDistributions, row.section1202Gain]),
       ...originals.scheduleK1.flatMap(row => [row.netLongTermCapitalGain, row.qualifiedDividends]),
       ...(originals.scheduleK1Form1041 ?? []).flatMap(row => [row.netLongTermCapitalGain, row.qualifiedDividends]),

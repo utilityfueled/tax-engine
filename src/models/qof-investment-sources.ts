@@ -4,7 +4,8 @@ import { z } from 'zod';
 export const QofInvestmentSourceSchema = z.object({
   sourceId: z.string().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
   qofEin: z.string().optional(), description: z.string().optional(), investmentDate: z.string().optional(),
-  interestType: z.string().optional(), gainCharacter: z.string().optional(),
+  interestType: z.string().optional(), gainCharacter: z.string().optional(), noSpecialGainCode: z.boolean().optional(),
+  saleGainAllCapitalConfirmed: z.boolean().optional(),
   originalDeferredGain: z.string().optional(), remainingDeferredGain: z.string().optional(),
   event: z.string().optional(), eventDate: z.string().optional(), entireInvestment: z.boolean().optional(),
   fairMarketValue: z.string().optional(), fullyTaxableDispositionGain: z.string().optional(),

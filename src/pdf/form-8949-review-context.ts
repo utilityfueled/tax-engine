@@ -16,7 +16,7 @@ function capitalSources(input: TaxYearInput) {
     form1099DA: input.form1099DA, cryptoIncome: input.cryptoIncome,
     scheduleK1: input.scheduleK1, k1CharitableSources: input.k1CharitableSources, qbiLossSources: input.qbiLossSources,
     scheduleDSpecialGainSources: input.scheduleDSpecialGainSources, amtCapitalGains: input.amtCapitalGains,
-    priorYear: input.priorYear, form172CapitalSources: input.form172?.capitalSources };
+    priorYear: input.priorYear, form172CapitalSources: input.form172?.capitalSources, qofDispositionFacts: input.qofDispositionFacts };
 }
 function sourceDigest(input: TaxYearInput, redacted = false): string {
   const source = capitalSources(input);

@@ -16,7 +16,8 @@ it('includes deferred gain at the statutory date without a sale', () => {
   expect(result.qofInclusion!.totalIncludedGain.toFixed()).toBe('90000');
   expect(result.scheduleD!.netLongTerm.toFixed()).toBe('90000');
   expect(result.agi.toFixed()).toBe('175000');
-  expect(calculateForm8949(input).longTermBoxF.transactions[0]).toMatchObject({ dateSold: '2026-12-31', adjustmentCode: 'Y', gainLoss: expect.anything() });
-  const held = qofInclusion2026Input(); held.qofDispositionFacts = qofFacts(2026, [qofInvestment({ investmentDate: '2019-12-31' })]);
+  expect(calculateForm8949(input).longTermBoxF.transactions[0]).toMatchObject({ dateSold: '2026-12-31', adjustmentCode: 'Y' });
+  expect(calculateForm8949(input).longTermBoxF.transactions[0]!.gainLoss.toFixed()).toBe('90000');
+  const held = qofInclusion2026Input(); held.qofDispositionFacts = qofFacts(2026, [qofInvestment({ investmentDate: '2019-12-31' })], false);
   expect(calculateFederalTax(held).qofInclusion!.totalIncludedGain.toFixed()).toBe('85000');
 });

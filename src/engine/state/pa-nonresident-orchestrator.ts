@@ -10,6 +10,7 @@
  * - PA-40 payment and settlement assembly
  */
 
+import { assertQofStateMethod } from "@/engine/forms/qof-inclusion.js";
 import Decimal from "decimal.js";
 import { d, sum } from "@/utils/decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -585,6 +586,7 @@ export function calculatePANonresidentReturn(
   input: TaxYearInput,
   overrides: PANonresidentOrchestratorOverrides = {},
 ): PANonresidentOrchestratorResult {
+  assertQofStateMethod(input, "Pennsylvania");
   const taxYear = input.taxpayer.taxYear;
   const resolved = resolvePANonresidentOverrides(input, overrides);
 
