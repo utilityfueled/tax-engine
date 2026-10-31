@@ -96,7 +96,7 @@ lines:
     testRef: "tests/engine/schedules/schedule-d-digital-sources.test.ts::reconciles corrected digital rows to the actual basis worksheet"
   - line: "income-origin"
     description: "Treat payments and income-origin assets from their actual records"
-    formula: "IRS virtual currency FAQs Q13-17 and Q25, Notice2014-21 and Rev.Rul.2023-14, retrieved2026-10-31. A payment for goods or services is an exchange with capital gain or loss. Mining, staking and airdrop assets use the amount included in income as basis, and the taxpayer must confirm that income was reported. A lot received in the return year must fit within that origin's income on this return, and a prior-year lot rests on the confirmation. Other origins still reject."
+    formula: "IRS virtual currency FAQs Q13-17 and Q25, Notice2014-21 and Rev.Rul.2023-14, retrieved2026-10-31. A payment for goods or services is an exchange with capital gain or loss. Mining, staking and airdrop assets use the amount included in income as basis, and the taxpayer must confirm that income was reported. A lot received in the return year ties to its own receipt on this return by origin, asset, date and units, and basis is units times the receipt value within1cent. A prior-year lot rests on the confirmation. Other origins still reject."
     irsRef: "https://www.irs.gov/individuals/international-taxpayers/frequently-asked-questions-on-virtual-currency-transactions"
     testRef: "tests/engine/forms/form-1099-da-sources.test.ts::treats payments and income-origin assets from their actual records"
   - line: "gift-lots"
@@ -111,7 +111,7 @@ lines:
     testRef: "tests/engine/forms/form-1099-da-sources.test.ts::reports inherited lots as long-term"
   - line: "confirmed-row-lots"
     description: "Keep confirmed rows from sharing a lot pool"
-    formula: "A confirmed row carries its own basis and consumes no lot. When the same asset has lots and a lot-consuming source exists, the return rejects rather than reusing basis."
+    formula: "A confirmed row carries its own basis and consumes no lot. A return rejects rather than reusing basis when a lot of the row's asset is also consumed by a swap, deposit, liquidation or unconfirmed statement. A row with no ticker is treated as possibly any lot, and an NFT source as consuming any lot."
     irsRef: "Rev.Proc.2024-28 unit identification; IRC1012"
     testRef: "tests/engine/forms/form-1099-da-sources.test.ts::rejects a confirmed row beside a lot-consuming source for the same asset"
 

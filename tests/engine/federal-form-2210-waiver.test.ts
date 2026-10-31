@@ -34,6 +34,11 @@ it('tests a claimed full payment against total tax due', () => {
   expect(due.minus(before).toFixed()).toBe('60');
   const paid = (amount: string, date = '2026-01-20') => withExcise({ ...dates, returnPayments: [{ date, amount }] });
   expect(() => calculateFederalTax(paid(due.toFixed()))).not.toThrow();
+  expect(() => calculateFederalTax(paid(due.minus('0.49').toFixed()))).not.toThrow();
+  expect(() => calculateFederalTax(withExcise({ ...dates, returnPayments: [{ date: '2026-01-20', amount: before.toFixed() }, { date: '2026-01-21', amount: '60' }] }))).toThrow(/reconcile to total tax due/);
+  const withheld = (amount: string) => TaxYearInputSchema.parse({ ...paid(amount), w2s: [{ ...simpleW2Fixture.w2s[0], federalWithheld: '1000' }] });
+  expect(() => calculateFederalTax(withheld(due.minus(1000).toFixed()))).not.toThrow();
+  expect(() => calculateFederalTax(withheld(due.minus(1002).toFixed()))).toThrow(/total tax due/);
   expect(() => calculateFederalTax(paid(before.toFixed()))).toThrow(/reconcile to total tax due/);
   expect(() => calculateFederalTax(paid(due.toFixed(), '2026-01-21'))).toThrow(/actual payments|total tax due/);
 });
@@ -41,14 +46,14 @@ it('tests a claimed full payment against total tax due', () => {
 it('rounds a regular partial waiver and tests it against the final penalty', () => {
   const base = calculateFederalTax(input());
   expect(calculateFederalTax(input({ ...waiver, waiverKind: 'partial', waiverAmount: '100.25' })).estimatedTaxPenalty.toFixed()).toBe(base.estimatedTaxPenalty.minus(100).toFixed());
-  const household = (facts = {}, wages = '100000') => TaxYearInputSchema.parse({ ...input(facts), w2s: [{ ...simpleW2Fixture.w2s[0], wages, federalWithheld: '0', socialSecurityWages: wages, medicareWages: wages }],
+  const household = (facts = {}, wages = '100000') => TaxYearInputSchema.parse({ ...input(facts), w2s: [{ ...simpleW2Fixture.w2s[0], wages, federalWithheld: '0', socialSecurityWages: wages, medicareWages: wages, socialSecurityWithheld: new Decimal(wages).times('0.062').toFixed(), medicareWithheld: new Decimal(wages).times('0.0145').toFixed() }],
     scheduleH: { employees: [{ name: 'Nanny', cashWages: '20000', isSpouse: false, isChildUnder21: false, isParent: false, isUnder18NonPrincipal: false }], futaApplies: true, futaSectionA: true } });
   const final = calculateFederalTax(household()).estimatedTaxPenalty, withoutHousehold = calculateFederalTax(TaxYearInputSchema.parse({ ...household(), scheduleH: undefined })).estimatedTaxPenalty;
   expect(final.gt(withoutHousehold)).toBe(true);
   expect(calculateFederalTax(household({ ...waiver, waiverKind: 'partial', waiverAmount: final.toFixed() })).estimatedTaxPenalty.toFixed()).toBe('0');
   expect(() => calculateFederalTax(household({ ...waiver, waiverKind: 'partial', waiverAmount: final.plus(1).toFixed() }))).toThrow(/no more than the penalty/);
   // A household return below the payment threshold still keeps its waiver request.
-  expect(calculateFederalTax(household({ ...waiver, waiverKind: 'full' }, '20000')).form2210!.waiver?.kind).toBe('full');
+  expect(calculateFederalTax(household({ ...waiver, waiverKind: 'full' }, '10000')).form2210!.waiver?.kind).toBe('full');
 });
 
 it('names the farmer form in readiness findings', () => {

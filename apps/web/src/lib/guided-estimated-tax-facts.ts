@@ -37,7 +37,7 @@ export const ANNUALIZED_PERIOD_FIELDS = [
   ["qbiDeduction", "Schedule AI line 9 QBI deduction", false], ["qualifiedDividends", "Qualified dividends", false], ["netCapitalGain", "Net capital gain", false],
   ["netProfitFromSelfEmployment", "Net profit from self-employment", true], ["socialSecurityWages", "Self-employed person's wages subject to social security tax", false],
   ["otherTaxes", "Schedule AI line 16 other taxes", false], ["credits", "Schedule AI line 18 credits", false],
-  ["schedule1AAdjustment", "Schedule 1-A amount for line 14, or 0 if none", false],
+  ["schedule1AAdjustment", "Schedule 1-A deduction through this period, not annualized, or 0 if none", false],
 ] as const;
 export type AnnualizedPeriodData = Record<(typeof ANNUALIZED_PERIOD_FIELDS)[number][0], string>;
 export const emptyAnnualizedPeriods = (): AnnualizedPeriodData[] => Array.from({ length: 4 }, () =>

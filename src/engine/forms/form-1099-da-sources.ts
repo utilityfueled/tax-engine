@@ -40,7 +40,7 @@ function isActualSource(form: Form1099DA, year: number): boolean {
 export function calculateForm1099DASources(input: DigitalSourceInput, options: { resolvedLegacyBasis?: ResolvedBasis } = {}) {
   const audit = new AuditTrail();
   const capitalForms: Form1099B[] = [];
-  const identifiers = new Set<string>(), sameYearOriginBasis = new Map<string, Decimal>();
+  const identifiers = new Set<string>(), receiptUnits = new Map<object, Decimal>();
   const existing = new Set(input.form1099B.flatMap(form => form.sourceId?.trim() ? [form.sourceId.trim()] : []));
   let federalWithheld = d(0);
   let sourceFactsComplete = true;
@@ -105,11 +105,13 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
         const incomeOrigin = row.assetOrigin === 'mining' || row.assetOrigin === 'staking' || row.assetOrigin === 'airdrop';
         const year = input.taxpayer.taxYear;
         if (incomeOrigin && acquired.startsWith(`${year}-`)) {
+          // Each lot ties to its own receipt by asset, date, units and per-unit value.
           const receipts = { mining: input.cryptoIncome?.miningIncome, staking: input.cryptoIncome?.stakingIncome, airdrop: input.cryptoIncome?.airdropIncome }[row.assetOrigin as 'mining' | 'staking' | 'airdrop'] ?? [];
-          const received = receipts.filter(receipt => receipt.dateReceived.startsWith(`${year}-`)).reduce((sum, receipt) => sum.plus(new Decimal(receipt.quantity).times(receipt.fairMarketValuePerUnit)), new Decimal(0));
-          const claimed = (sameYearOriginBasis.get(row.assetOrigin as string) ?? new Decimal(0)).plus(basis);
-          sameYearOriginBasis.set(row.assetOrigin as string, claimed);
-          if (claimed.gt(received)) throw new Error('Form1099DA lot received in the return year needs that income on this return.');
+          const names = [row.ticker, row.digitalAssetCode, row.digitalAssetName].map(name => name?.trim().toUpperCase());
+          const receipt = receipts.find(entry => entry.dateReceived === acquired && names.includes(entry.asset.trim().toUpperCase()));
+          const used = receipt ? (receiptUnits.get(receipt) ?? new Decimal(0)).plus(quantity) : quantity;
+          if (!receipt || used.gt(receipt.quantity) || quantity.times(receipt.fairMarketValuePerUnit).minus(basis).abs().gt('0.01')) throw new Error('Form1099DA lot received in the return year needs that income on this return.');
+          receiptUnits.set(receipt, used);
         }
         if (row.reportedDateAcquired !== null && row.reportedDateAcquired !== acquired) throw new Error('Original Form1099DA acquisition date conflicts with the completed ordinary basis source.');
         const reportedBasis = row.reportedCostBasis === null ? undefined : amount(row.reportedCostBasis, 'reported Box1g basis');

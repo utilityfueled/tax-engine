@@ -3,8 +3,8 @@ import { expect, it } from "vitest";
 import { buildGuidedQofFacts, emptyQofInvestment, qofDispositionFactErrors, type QofDispositionData } from "@/lib/guided-qof-facts";
 import { initialFlowState, updateSectionData, type GuidedFlowState } from "@/lib/guided-interview-flow";
 import { investmentFactErrors, investmentRowsStarted, type InvestmentData } from "@/lib/guided-investment-facts";
-import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
-import { completePersonalInfo, completeW2Entry } from "./complete-facts";
+import { buildGuidedSyntheticDocuments, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
+import { completeBrokerageSource, completeDividendSource, completeInterestSource, completePersonalInfo, completeW2Entry, startCompleteInterview } from "./complete-facts";
 
 it("preserves actual QOF facts and revokes changed investment confirmation", () => {
   const facts = { sourceTaxYear: "2025", sourceReference: "Original brokerage and investment statements", sourceFactsConfirmed: true, allInvestmentsReviewed: true, disposedOfQofInvestment: false };
@@ -68,5 +68,20 @@ it("asks 2026 returns for QOF facts only once a row is started", () => {
   expect(Object.keys(investmentFactErrors(blank, "single", 2026)).filter(key => /qof/i.test(key))).toEqual([]);
   expect(Object.keys(investmentFactErrors(started, "single", 2026)).filter(key => /qof/i.test(key)).length).toBeGreaterThan(0);
   expect(Object.keys(investmentFactErrors(started, "single", 2025)).filter(key => /qof/i.test(key))).toEqual([]);
+  expect(investmentRowsStarted({ ...blank, digitalAssetEntries: [{ brokerName: "Actual exchange" }] })).toBe(true);
+});
+
+it("keeps 2026 source documents supported once QOF is answered", () => {
+  const identity = { sourceTaxYear: "2026" };
+  const stateWith = (qofDispositionFacts?: QofDispositionData) => {
+    const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["investments"], lifeEvents: [], stateCode: null });
+    state.taxYear = 2026;
+    state.sectionData["income-investments"] = { interestEntries: [{ ...completeInterestSource, ...identity }], dividendEntries: [{ ...completeDividendSource, ...identity }], brokerageEntries: [{ ...completeBrokerageSource, ...identity, sourceId: "Original brokerage statement", transactions: completeBrokerageSource.transactions.map(row => ({ ...row, dateAcquired: "2024-01-15", dateSold: "2026-03-01" })) }], qofDispositionFacts };
+    return state;
+  };
+  const coverage = (state: GuidedFlowState) => ["1099-int", "1099-div", "1099-b"].map(kind => buildGuidedSyntheticDocuments(state).find(row => row.kind === kind)?.coverage);
+  const answered = { sourceTaxYear: "2026", sourceReference: "Fictional complete records", sourceFactsConfirmed: true, allInvestmentsReviewed: true, disposedOfQofInvestment: false, deferredGainHeldAtYearEnd: false, investments: [] };
+  expect(coverage(stateWith(answered))).toEqual(["supported", "supported", "supported"]);
+  expect(coverage(stateWith())).toEqual(["partially-supported", "partially-supported", "partially-supported"]);
 });
 

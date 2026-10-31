@@ -1331,10 +1331,18 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   );
 
   // Confirmed rows carry their own basis and consume no lot, so a lot path could reuse it.
-  const lotConsumers = (input.form1099DA ?? []).some((form) => form.sourceFactsConfirmed !== true) || Boolean(cryptoInput
-    && (cryptoInput.tokenSwaps?.length || cryptoInput.lpPositions?.length || cryptoInput.nftTransactions?.length || cryptoInput.liquidations?.length));
-  const confirmedAssets = new Set(form1099DAForms.filter((form) => form.sourceFactsConfirmed === true).flatMap((form) => form.transactions.flatMap((row) => [row.ticker, row.digitalAssetCode, row.digitalAssetName].map((name) => name?.toUpperCase()))));
-  if (lotConsumers && allLots.some((lot) => confirmedAssets.has(lot.asset.toUpperCase()))) {
+  const rowNames = (row: { ticker?: string; digitalAssetCode?: string; digitalAssetName: string }) => [row.ticker, row.digitalAssetCode, row.digitalAssetName].flatMap((name) => name?.trim() ? [name.trim().toUpperCase()] : []);
+  const confirmedRows = form1099DAForms.filter((form) => form.sourceFactsConfirmed === true).flatMap((form) => form.transactions);
+  const consumedAssets = new Set([
+    ...(cryptoInput?.tokenSwaps ?? []).map((swap) => swap.fromAsset.trim().toUpperCase()),
+    ...(cryptoInput?.lpPositions ?? []).flatMap((position) => position.underlyingAssetsDeposited.map((deposit) => deposit.asset.trim().toUpperCase())),
+    ...(cryptoInput?.liquidations ?? []).map((liquidation) => liquidation.collateralAsset.trim().toUpperCase()),
+    ...form1099DAForms.filter((form) => form.sourceFactsConfirmed !== true).flatMap((form) => form.transactions.filter((t) => !t.basisReportedToIRS && d(t.costBasis).isZero()).flatMap(rowNames)),
+  ]);
+  const anyAssetConsumed = Boolean(cryptoInput?.nftTransactions?.length);
+  // A row with no ticker cannot be tied to a lot symbol, so any consumed lot could be its own.
+  if (allLots.some((lot) => (anyAssetConsumed || consumedAssets.has(lot.asset.trim().toUpperCase()))
+    && confirmedRows.some((row) => !row.ticker?.trim() || rowNames(row).includes(lot.asset.trim().toUpperCase())))) {
     throw new Error("Form1099DA confirmed rows and lot-consuming crypto sources for the same asset need a separate lot method.");
   }
 
@@ -4409,7 +4417,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const paidInFullDate = input.form2210?.returnPaidInFullDate;
   if (paidInFullDate) {
     const paid = sum(estimatedTaxInput.withholding, ...estimatedTaxInput.payments.filter((payment) => payment.date <= paidInFullDate).map((payment) => d(payment.amount)));
-    if (paid.lt(totalTax.minus(estimatedTaxRefundableCredits))) throw new Error("Form 2210 claimed full return payment does not reconcile to total tax due");
+    if (roundDollar(paid).lt(roundDollar(totalTax.minus(estimatedTaxRefundableCredits)))) throw new Error("Form 2210 claimed full return payment does not reconcile to total tax due");
   }
   audit.record("1040", "24", "Total tax", totalTax,
     `Line 22 $${taxAfterCredits} + Line 23 $${totalAdditionalTaxes}`);

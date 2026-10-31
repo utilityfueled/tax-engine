@@ -157,29 +157,46 @@ it('reports inherited lots as long-term', () => {
 it('ties a lot received in the return year to income on this return', () => {
   const lotRow = (patch: Record<string, unknown>, income?: Record<string, unknown>) => { const form = fixture(); Object.assign(form.transactions[0]!, { assetOrigin: 'mining', originIncomeIncludedConfirmed: true, ...patch });
     return { ...input([form]), ...(income ? { cryptoIncome: { miningIncome: [], stakingIncome: [], airdropIncome: [], ...income } } : {}) } as ReturnType<typeof input>; };
-  const receipt = (value: string, dateReceived = '2025-01-15') => ({ asset: 'BTC', dateReceived, quantity: '1', fairMarketValuePerUnit: value });
-  const message = /received in the return year needs that income/;
+  const receipt = (patch: Record<string, unknown> = {}) => ({ asset: 'BTC', dateReceived: '2025-01-15', quantity: '0.001', fairMarketValuePerUnit: '90240', ...patch });
+  const message = /received in the return year needs that income/, gain = (source: ReturnType<typeof input>) => calculateForm8949(source).shortTermBoxH.transactions[0]!.gainLoss.toFixed();
   expect(() => calculateForm8949(lotRow({}))).toThrow(message);
-  expect(() => calculateForm8949(lotRow({}, { miningIncome: [receipt('90.23')] }))).toThrow(message);
-  expect(() => calculateForm8949(lotRow({}, { miningIncome: [receipt('90.24', '2024-01-15')] }))).toThrow(message);
-  expect(() => calculateForm8949(lotRow({}, { stakingIncome: [receipt('90.24')] }))).toThrow(message);
-  expect(calculateForm8949(lotRow({}, { miningIncome: [receipt('90.24')] })).shortTermBoxH.transactions[0]!.gainLoss.toFixed()).toBe('10.25');
-  expect(calculateForm8949(lotRow({ assetOrigin: 'staking' }, { stakingIncome: [receipt('50'), receipt('40.24')] })).shortTermBoxH.transactions[0]!.gainLoss.toFixed()).toBe('10.25');
-  expect(calculateForm8949(lotRow({ assetOrigin: 'airdrop' }, { airdropIncome: [{ ...receipt('90.24'), source: 'airdrop' }] })).shortTermBoxH.transactions[0]!.gainLoss.toFixed()).toBe('10.25');
+  expect(gain(lotRow({}, { miningIncome: [receipt()] }))).toBe('10.25');
+  expect(gain(lotRow({ assetOrigin: 'staking' }, { stakingIncome: [receipt({ asset: 'btc' })] }))).toBe('10.25');
+  expect(gain(lotRow({ assetOrigin: 'airdrop' }, { airdropIncome: [receipt({ source: 'airdrop' })] }))).toBe('10.25');
+  expect(gain(lotRow({}, { miningIncome: [receipt({ quantity: '0.002' })] }))).toBe('10.25');
+  expect(gain(lotRow({ costBasis: '0' }, { miningIncome: [receipt({ fairMarketValuePerUnit: '0' })] }))).toBe('100.49');
+  for (const income of [{ miningIncome: [receipt({ asset: 'ETH' })] }, { miningIncome: [receipt({ dateReceived: '2024-01-15' })] }, { miningIncome: [receipt({ dateReceived: '2025-01-16' })] }, { stakingIncome: [receipt()] },
+    { miningIncome: [receipt({ quantity: '0.0009' })] }, { miningIncome: [receipt({ fairMarketValuePerUnit: '50000' })] }, { miningIncome: [receipt({ fairMarketValuePerUnit: '90251' })] }]) {
+    expect(() => calculateForm8949(lotRow({}, income)), JSON.stringify(income)).toThrow(message);
+  }
+  expect(() => calculateForm8949(lotRow({ costBasis: '50' }, { miningIncome: [receipt()] }))).toThrow(message);
   const twoRows = fixture(); twoRows.transactions[1] = { ...twoRows.transactions[0]!, sourceId: 'second' };
   for (const row of twoRows.transactions) Object.assign(row, { assetOrigin: 'mining', originIncomeIncludedConfirmed: true });
-  expect(() => calculateForm8949({ ...input([twoRows]), cryptoIncome: { miningIncome: [receipt('100')], stakingIncome: [], airdropIncome: [] } } as ReturnType<typeof input>)).toThrow(message);
+  expect(() => calculateForm8949({ ...input([twoRows]), cryptoIncome: { miningIncome: [receipt()], stakingIncome: [], airdropIncome: [] } } as ReturnType<typeof input>)).toThrow(message);
+  expect(calculateForm8949({ ...input([twoRows]), cryptoIncome: { miningIncome: [receipt({ quantity: '0.002' })], stakingIncome: [], airdropIncome: [] } } as ReturnType<typeof input>).shortTermBoxH.transactions).toHaveLength(2);
 });
 
 it('rejects a confirmed row beside a lot-consuming source for the same asset', () => {
-  const form = fixture(), code = form.transactions[0]!.digitalAssetCode;
-  const crypto = (asset: string, fromAsset = asset) => ({ lots: [{ asset, dateAcquired: '2024-01-15', quantity: '1', costBasisPerUnit: '100', source: 'purchase' }],
-    tokenSwaps: [{ fromAsset, fromQuantity: '0.1', toAsset: 'USDC', toQuantity: '30', fairMarketValueAtSwap: '30', dateSwapped: '2025-07-01' }] });
-  const run = (cryptoIncome: unknown, source = form) => calculateFederalTax(TaxYearInputSchema.parse({ ...input([source]), cryptoIncome }));
-  expect(() => run(crypto(code!))).toThrow(/separate lot method/);
-  expect(() => run(crypto(code!.toLowerCase()))).toThrow(/separate lot method/);
-  expect(() => run(crypto('UNRELATED'))).not.toThrow();
-  expect(() => run({ lots: crypto(code!).lots })).not.toThrow();
+  const form = fixture(), lot = (asset: string) => ({ asset, dateAcquired: '2024-01-15', quantity: '1', costBasisPerUnit: '100', source: 'purchase' });
+  const swap = (fromAsset: string, toAsset = 'USDC') => ({ fromAsset, fromQuantity: '0.1', toAsset, toQuantity: '30', fairMarketValueAtSwap: '30', dateSwapped: '2025-07-01' });
+  const run = (cryptoIncome: unknown, source = form, extra: unknown[] = []) => calculateFederalTax(TaxYearInputSchema.parse({ ...input([source, ...extra as never[]]), cryptoIncome }));
+  const message = /separate lot method/;
+  expect(() => run({ lots: [lot('BTC')], tokenSwaps: [swap('BTC')] })).toThrow(message);
+  expect(() => run({ lots: [lot('btc')], tokenSwaps: [swap('btc')] })).toThrow(message);
+  expect(() => run({ lots: [lot('ACTUAL-DTIF')], tokenSwaps: [swap('ACTUAL-DTIF')] })).toThrow(message);
+  // Lots that are not at risk still calculate.
+  expect(() => run({ lots: [lot('BTC')] })).not.toThrow();
+  expect(() => run({ lots: [lot('BTC'), lot('ETH')], tokenSwaps: [swap('ETH')] })).not.toThrow();
+  expect(() => run({ lots: [lot('BTC'), lot('ETH')], tokenSwaps: [swap('ETH', 'BTC')] })).not.toThrow();
+  expect(() => run({ lots: [lot('ETH')], tokenSwaps: [swap('ETH')] })).not.toThrow();
+  // A row with no ticker could be any lot, so it rejects once a lot is consumed.
+  const unnamed = fixture(); delete unnamed.transactions[0]!.ticker;
+  expect(() => run({ lots: [lot('BTC')], tokenSwaps: [swap('BTC')] }, unnamed)).toThrow(message);
+  expect(() => run({ lots: [lot('BTC')] }, unnamed)).not.toThrow();
+  // An unconfirmed statement consumes lots only when it needs them.
+  const legacy = (transaction: Record<string, unknown>) => ({ brokerName: 'Legacy broker', transactions: [{ digitalAssetName: 'Bitcoin', ticker: 'BTC', dateAcquired: '2024-01-15', dateSold: '2025-06-01', proceeds: '50', costBasis: '0', basisReportedToIRS: false, holdingPeriod: 'long', ...transaction }] });
+  expect(() => run({ lots: [lot('BTC')] }, form, [legacy({})])).toThrow(message);
+  expect(() => run({ lots: [lot('BTC')] }, form, [legacy({ basisReportedToIRS: true, costBasis: '40' })])).not.toThrow();
 });
 
 const corrected = (patch: Record<string, unknown>) => {
