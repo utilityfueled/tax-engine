@@ -76,6 +76,39 @@
           "cause": "Both ran out of the 30s test budget at different steps, the same two tests as f70258c3. Locally they take 11.9s and 13.1s and pass. Corrected in 96a1a47a by giving these two tests the 90s repository default; no assertion changed."
         }
       }
+    },
+    {
+      "sourceCommit": "a17f8237",
+      "ci": 41174678598,
+      "web": 41174678657,
+      "ciConclusion": "failure",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19880,
+        "files": 1500,
+        "workers": 1
+      },
+      "coverage": {
+        "tests": 19872,
+        "failed": 8,
+        "files": 1500,
+        "seconds": 2480.12,
+        "report": "not produced",
+        "failures": "Eight explicit 5000ms timeouts at 5025-6063ms. The normal job passed the same tests."
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:e9e5e322f3528e4f0109d291c322fea47c9aed5c18cae203fd1c55c5c76f336e"
     }
   ],
   "hostedSkips": "The five skipped browser cases are hosted-only and establish nothing about hosted readiness."
