@@ -9,6 +9,8 @@ export interface EstimatedTaxFactsData {
   calendarYearTaxpayer: boolean | null; residentReturn: boolean | null; farmerOrFisher: boolean | null; disasterReliefClaimed: boolean | null; waiverRequested: boolean | null;
   calculationMethod: "" | "regular" | "annualized"; withholdingMethod: "" | "equal-installments" | "actual-dates";
   annualizedIncomePeriods?: AnnualizedPeriodData[]; bothSpousesSelfEmployed?: boolean | null;
+  farmingIncomeTwoThirdsConfirmed?: boolean | null; waiverKind?: "" | "full" | "partial"; waiverAmount?: string;
+  waiverReason?: "" | "retirement_or_disability" | "casualty_disaster_or_unusual_circumstance"; waiverStatementReference?: string;
   priorYearTaxStatus: "" | "return-filed" | "no-return" | "no-tax-liability";
   priorYearFullYear: boolean | null; priorYearResidentAllYear: boolean | null; priorYearJointReturn: boolean | null;
   priorYearTaxForForm2210: string; priorYearAgiForForm2210: string; priorYearTaxComputationConfirmed: boolean | null;
@@ -54,9 +56,11 @@ export function buildEstimatedTaxFacts(data: PaymentData | undefined, taxYear?: 
   if (facts.sourceTaxYear !== String(taxYear)) throw new Error("Estimated-tax source year must match the actual return year.");
   if (!facts.sourceReference.trim() || facts.sourceFactsConfirmed !== true || facts.allPaymentRecordsIncluded !== true) throw new Error("Confirm the actual prior-return and complete payment history after the last edit, including its source reference.");
   for (const [key, expected, label] of [
-    ["calendarYearTaxpayer", true, "calendar-year taxpayer"], ["residentReturn", true, "resident return"], ["farmerOrFisher", false, "farmer or fisher special rule"],
-    ["disasterReliefClaimed", false, "disaster relief"], ["waiverRequested", false, "penalty waiver"],
+    ["calendarYearTaxpayer", true, "calendar-year taxpayer"], ["residentReturn", true, "resident return"], ["disasterReliefClaimed", false, "disaster relief"],
   ] as const) if (known(facts[key], label) !== expected) throw new Error(`The ${label} scenario needs its separate estimated-tax method; retain these actual facts for review.`);
+  const farmer = known(facts.farmerOrFisher, "farmer or fisher rule"), waiver = known(facts.waiverRequested, "penalty waiver request");
+  if (farmer && facts.farmingIncomeTwoThirdsConfirmed !== true) throw new Error("Confirm that at least two-thirds of gross income for either year came from farming or fishing.");
+  if (waiver && (!facts.waiverKind || !facts.waiverReason || !facts.waiverStatementReference?.trim() || (facts.waiverKind === "partial" && !facts.waiverAmount?.trim()))) throw new Error("Enter the waiver kind, reason, amount if partial, and the statement you will attach.");
   if (facts.calculationMethod !== "regular" && facts.calculationMethod !== "annualized") throw new Error("Choose the actual estimated-tax method.");
   const annualizedIncomePeriods = facts.calculationMethod === "annualized" ? buildAnnualizedPeriods(facts) : undefined;
   if (facts.withholdingMethod !== "equal-installments" && facts.withholdingMethod !== "actual-dates") throw new Error("Choose the actual withholding timing method.");
@@ -112,6 +116,9 @@ export function buildEstimatedTaxFacts(data: PaymentData | undefined, taxYear?: 
     calendarYearTaxpayer: facts.calendarYearTaxpayer, residentReturn: facts.residentReturn, farmerOrFisher: facts.farmerOrFisher,
     disasterReliefClaimed: facts.disasterReliefClaimed, waiverRequested: facts.waiverRequested, calculationMethod: facts.calculationMethod, withholdingMethod: facts.withholdingMethod,
     annualizedIncomePeriods, bothSpousesSelfEmployed: facts.bothSpousesSelfEmployed ?? undefined,
+    farmingIncomeTwoThirdsConfirmed: facts.farmingIncomeTwoThirdsConfirmed ?? undefined, waiverKind: facts.waiverKind || undefined,
+    waiverAmount: facts.waiverAmount?.trim() ? parseGuidedCurrency(facts.waiverAmount).toFixed() : undefined, waiverReason: facts.waiverReason || undefined,
+    waiverStatementReference: facts.waiverStatementReference?.trim() || undefined,
     priorYearTaxStatus: facts.priorYearTaxStatus, priorYearFullYear: facts.priorYearFullYear ?? undefined, priorYearResidentAllYear: facts.priorYearResidentAllYear ?? undefined,
     priorYearJointReturn: facts.priorYearJointReturn ?? undefined, priorYearTaxComputationConfirmed: facts.priorYearTaxComputationConfirmed ?? undefined,
     priorYearTaxForForm2210: priorTax, priorYearAgiForForm2210: priorAgi, withholdingPayments, priorYearCreditPayments, returnPayments,

@@ -36,6 +36,7 @@ export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult,
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const calculation = result.form2210;
   if (!calculation) throw new Error("Form 2210 review requires its calculation audit");
+  if (calculation.farmerMethod) throw new Error("Form 2210-F has no review map");
   if (calculation.taxYear !== 2025) throw new Error("Form 2210 calculation year does not match the 2025 physical map");
   const audited = new Map<string, Decimal>();
   for (const entry of calculation.lines) {
@@ -53,7 +54,7 @@ export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult,
   for (const id of ["1", "2", "3", "4", "5", "6", "7", "9", "19"]) required(id);
   if (!required("9").eq(calculation.requiredAnnualPayment) || !required("19").eq(calculation.penalty)
       || !calculation.exactPenalty.isFinite() || calculation.exactPenalty.isNegative()
-      || !calculation.exactPenalty.toDecimalPlaces(0, Decimal.ROUND_HALF_UP).eq(calculation.penalty)) {
+      || !calculation.exactPenalty.toDecimalPlaces(0, Decimal.ROUND_HALF_UP).eq(calculation.waiver?.penaltyBeforeWaiver ?? calculation.penalty)) {
     throw new Error("Form 2210 audit does not reconcile to its calculated totals");
   }
   if (calculation.installments.length !== 0 && calculation.installments.length !== 4) throw new Error("Form 2210 audit must contain four installment columns");
@@ -107,7 +108,7 @@ export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult,
   const line9Greater = required("9").gt(required("6"));
   setCheckBox(form, F.line9No, !stopsAtPartI && !line9Greater);
   setCheckBox(form, F.line9Yes, !stopsAtPartI && line9Greater);
-  // Unsupported relief calculations never reach this mapping. Missing physical
+  // Disaster relief never reaches this mapping. Missing physical
   // source facts remain disclosed; unchecked is not an inferred answer.
   const annualized = source?.calculationMethod === "annualized";
   const scheduleAi = calculation.lines.filter(entry => entry.form === "Form 2210 Schedule AI");
@@ -122,8 +123,8 @@ export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult,
     const line27 = scheduleAi.filter(entry => entry.line === `27${String.fromCharCode(97 + index)}`);
     if (annualized && (line27.length !== 1 || !line27[0]!.value.eq(installment.required))) throw new Error("Form 2210 line10 does not reconcile to Schedule AI line27");
   }
-  setCheckBox(form, F.boxA, false);
-  setCheckBox(form, F.boxB, false);
+  setCheckBox(form, F.boxA, calculation.waiver?.kind === "full");
+  setCheckBox(form, F.boxB, calculation.waiver?.kind === "partial");
   setCheckBox(form, F.boxC, annualized && scheduleAi.length > 0);
   setCheckBox(form, F.boxD, source?.withholdingMethod === "actual-dates");
   const changedJointStatus = source?.priorYearJointReturn !== undefined

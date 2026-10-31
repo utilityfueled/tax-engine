@@ -202,11 +202,11 @@ describe("Form 2210 dated regular method", () => {
     for (const facts of [
       { ...ordinaryFacts, calendarYearTaxpayer: false },
       { ...ordinaryFacts, residentReturn: false },
-      { ...ordinaryFacts, farmerOrFisher: true },
       { ...ordinaryFacts, disasterReliefClaimed: true },
-      { ...ordinaryFacts, waiverRequested: true },
     ]) expect(() => calculateForm2210(input({ facts }))).toThrow(/unsupported|requires.*separate/i);
     expect(() => calculateForm2210(input({ facts: { ...ordinaryFacts, calculationMethod: "annualized" as const } }))).toThrow(/Schedule AI period facts/);
+    expect(() => calculateForm2210(input({ facts: { ...ordinaryFacts, farmerOrFisher: true } }))).toThrow(/two-thirds/);
+    expect(() => calculateForm2210(input({ facts: { ...ordinaryFacts, waiverRequested: true } }))).toThrow(/waiver request requires/);
     expect(() => calculateForm2210(input({ taxYear: 2026, facts: undefined }))).toThrow(/facts|calendarYearTaxpayer/);
     expect(() => calculateForm2210(input({ taxYear: 2027 }))).toThrow(/tax year.*2027/i);
   });

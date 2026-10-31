@@ -3195,6 +3195,26 @@
       "knownGaps": []
     },
     {
+      "key": "federal/form-2210-f",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-pdf/i2210f.pdf",
+      "specPath": "spec/federal/form-2210-f.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-2210-schedule-ai",
       "jurisdiction": "federal",
       "taxYear": 2025,

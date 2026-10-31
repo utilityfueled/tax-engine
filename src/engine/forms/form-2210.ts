@@ -65,6 +65,10 @@ export interface Form2210Result {
   /** Known Part II D/E reasons; uncollected physical filing facts are not inferred. */
   requiresForm2210: boolean;
   withholdingMethod: "equal-installments" | "actual-dates";
+  /** A waiver is a request; the IRS decides. */
+  waiver?: { kind: "full" | "partial"; reason: string; penaltyBeforeWaiver: Decimal; requestedAmount: Decimal };
+  /** Form 2210-F single due-date method. */
+  farmerMethod?: true;
   /** Retained so the review copy can recompute every Schedule AI line. */
   scheduleAi?: Omit<Form2210ScheduleAiInput, "facts">;
   installments: Form2210Installment[];
@@ -87,6 +91,7 @@ const RATE_PERIODS: Readonly<Record<number, readonly RatePeriod[]>> = Object.fre
     // No published2027Q1 rate as of2026-10-25. Positive exposure must fail explicitly.
   ]),
 });
+const FORM_2210_F_RATES: Readonly<Record<number, string>> = Object.freeze({ 2025: "0.07" });
 const DAY_MS = 86_400_000;
 const FORM = "Form 2210";
 
@@ -111,23 +116,93 @@ function total(values: readonly Decimal[]): Decimal { return values.reduce((sum,
 /** Strict source facts are required for2026 or whenever the caller supplies the new contract. */
 function validateScope(facts: NonNullable<Form2210Input["facts"]>): void {
   const booleans = [
-    ["calendarYearTaxpayer", true], ["residentReturn", true], ["farmerOrFisher", false],
-    ["disasterReliefClaimed", false], ["waiverRequested", false],
+    ["calendarYearTaxpayer", true], ["residentReturn", true], ["disasterReliefClaimed", false],
   ] as const;
   for (const [key, supported] of booleans) {
     if (facts[key] === undefined) throw new Error(`Form 2210 requires ${key}`);
     if (facts[key] !== supported) throw new Error(`Form 2210 ${key} scenario is unsupported; requires a separate calculation or relief determination`);
   }
+  for (const key of ["farmerOrFisher", "waiverRequested"] as const) if (facts[key] === undefined) throw new Error(`Form 2210 requires ${key}`);
   if (facts.calculationMethod === undefined) throw new Error("Form 2210 requires calculationMethod");
   if (facts.calculationMethod !== "regular" && !facts.annualizedIncomePeriods) throw new Error("Form 2210 annualized-income method requires actual Schedule AI period facts");
   if (facts.calculationMethod === "regular" && facts.annualizedIncomePeriods) throw new Error("Form 2210 regular method conflicts with its Schedule AI period facts");
   if (facts.withholdingMethod === undefined) throw new Error("Form 2210 requires withholdingMethod");
 }
 
+function form2210Waiver(facts: Form2210Input["facts"], penalty: Decimal): Form2210Result["waiver"] {
+  if (facts?.waiverRequested !== true) return undefined;
+  if (!facts.waiverReason || !facts.waiverStatementReference?.trim()) throw new Error("Form 2210 waiver request requires its actual reason and statement reference");
+  if (facts.waiverKind === "full") return { kind: "full", reason: facts.waiverReason, penaltyBeforeWaiver: penalty, requestedAmount: penalty };
+  if (facts.waiverKind !== "partial" || !/^\d+(\.\d+)?$/.test(facts.waiverAmount ?? "")) throw new Error("Form 2210 waiver request requires its actual kind and amount");
+  const requestedAmount = new Decimal(facts.waiverAmount!);
+  if (requestedAmount.isZero() || requestedAmount.gt(penalty)) throw new Error("Form 2210 partial waiver amount must be positive and no more than the penalty");
+  return { kind: "partial", reason: facts.waiverReason, penaltyBeforeWaiver: penalty, requestedAmount };
+}
+
+/** Form 2210-F. Spec: spec/federal/form-2210-f.yaml. */
+function calculateForm2210F(input: Form2210Input, taxYear: number, facts: NonNullable<Form2210Input["facts"]>): Form2210Result {
+  if (facts.farmingIncomeTwoThirdsConfirmed !== true) throw new Error("Form 2210-F requires confirmation of the two-thirds farming or fishing gross income test");
+  if (facts.calculationMethod === "annualized") throw new Error("Form 2210-F has no annualized method");
+  const FARM = "Form 2210-F", audit = new AuditTrail(), line3 = amount(input.currentYearTax, "currentYearTax"), line4 = amount(input.refundableCredits, "refundableCredits");
+  const line6 = zeroFloor(line3.minus(line4)), line7 = roundDollar(line6.times("0.667")), line8 = amount(input.withholding, "withholding"), line9 = zeroFloor(line6.minus(line8));
+  const estimates = amount(input.estimatedPayments, "estimatedPayments"), dueDay = dateNumber(`${taxYear + 1}-01-15`, "Form 2210-F due date"), endDay = dateNumber(`${taxYear + 1}-04-15`, "penalty end date");
+  const payments = (input.payments ?? []).map(payment => ({ day: dateNumber(payment.date, "payment date"), amount: amount(payment.amount, "payment amount"), kind: payment.kind }));
+  let required = line7, safeReason: string | undefined;
+  if (line3.lt(1000) || line6.lt(1000) || line9.lt(1000)) safeReason = "Tax is less than $1,000";
+  else if (facts.priorYearTaxStatus === undefined) throw new Error("Form 2210 requires priorYearTaxStatus");
+  else if (facts.priorYearTaxStatus !== "no-return") {
+    if (facts.priorYearFullYear === undefined) throw new Error("Form 2210 requires priorYearFullYear");
+    if (facts.priorYearFullYear) {
+      if (facts.priorYearTaxComputationConfirmed !== true) throw new Error("Form 2210 requires priorYearTaxComputationConfirmed");
+      const prior = amount(facts.priorYearTaxForForm2210, "priorYearTaxForForm2210");
+      if (facts.priorYearTaxStatus === "no-tax-liability") {
+        if (!prior.isZero()) throw new Error("Form 2210 no-tax-liability status conflicts with priorYearTaxForForm2210");
+        if (facts.priorYearResidentAllYear === undefined) throw new Error("Form 2210 requires priorYearResidentAllYear");
+        if (facts.priorYearResidentAllYear) safeReason = "No prior-year tax liability for a full year";
+      }
+      required = min(line7, prior);
+      audit.record(FARM, "10", "Prior-year tax", prior, "Actual prior-year tax");
+    }
+  }
+  const lastDay = dateNumber(taxYear === 2025 ? "2026-03-02" : "2027-03-01", "Form 2210-F early date");
+  if (!safeReason && facts.returnFiledDate && facts.returnPaidInFullDate) {
+    const filed = dateNumber(facts.returnFiledDate, "returnFiledDate"), paid = dateNumber(facts.returnPaidInFullDate, "returnPaidInFullDate");
+    if (filed <= lastDay && paid <= lastDay) safeReason = `Filed and paid by ${dateString(lastDay)}`;
+  }
+  if (!safeReason && line8.gte(required)) safeReason = "Withholding meets the required annual payment";
+  const line12 = line8.plus(total(payments.filter(payment => payment.day <= dueDay).map(payment => payment.amount)));
+  const line13 = safeReason ? new Decimal(0) : zeroFloor(required.minus(line12));
+  if (!safeReason && line13.isZero()) safeReason = "January 15 payments meet the required annual payment";
+  if (!total(payments.filter(payment => payment.kind === "estimated" || payment.kind === "prior-year-credit").map(payment => payment.amount)).eq(estimates)) {
+    throw new Error("Form 2210 dated estimated and prior-credit payments must reconcile to estimatedPayments");
+  }
+  let exact = new Decimal(0), days = 0;
+  if (!safeReason) {
+    const rate = FORM_2210_F_RATES[taxYear];
+    if (!rate) throw new Error(`Form 2210-F ${taxYear} penalty rate is unpublished; final penalty unavailable`);
+    const late = payments.filter(payment => payment.day > dueDay && payment.day <= endDay).sort((left, right) => left.day - right.day);
+    const covering = late.find(payment => payment.amount.gte(line13));
+    if (late.length > 0 && (!covering || covering !== late[0])) throw new Error("Form 2210-F has one payment date; several late payments need a separate method");
+    days = (covering?.day ?? endDay) - dueDay;
+    exact = line13.times(days).div(365).times(rate);
+  }
+  const waiver = form2210Waiver(facts, roundDollar(exact));
+  const penalty = waiver ? waiver.penaltyBeforeWaiver.minus(waiver.requestedAmount) : roundDollar(exact);
+  for (const [line, value, description] of [["3", line3, "Current tax"], ["4", line4, "Refundable credits"], ["6", line6, "Current-year tax"], ["7", line7, "66 2/3 percent of line 6"], ["8", line8, "Withholding"],
+    ["9", line9, "Line 6 less line 8"], ["11", required, "Required annual payment"], ["12", line12, "Payments by January 15"], ["13", line13, "Underpayment"], ["15", new Decimal(days), "Days"], ["16", penalty, "Penalty"]] as const) {
+    audit.record(FARM, line, description, value, `Form 2210-F line ${line}`);
+  }
+  const changedJointStatus = facts.priorYearJointReturn !== undefined && facts.priorYearJointReturn !== (input.filingStatus === "married_filing_jointly");
+  return { taxYear, sourceFactsVerified: true, safeHarborMet: safeReason !== undefined, safeHarborReason: safeReason ?? "No exception met", requiredAnnualPayment: required,
+    totalPayments: line12, underpayment: line13, exactPenalty: exact, penalty, requiresForm2210: waiver !== undefined || (changedJointStatus && required.lt(line7)), withholdingMethod: "equal-installments",
+    waiver, farmerMethod: true, installments: [], interestPeriods: [], lines: audit.getLines() };
+}
+
 export function calculateForm2210(input: Form2210Input): Form2210Result {
   const taxYear = input.taxYear ?? 2025;
   const rates = RATE_PERIODS[taxYear];
   if (!rates) throw new Error(`Form 2210 tax year ${taxYear} is not implemented`);
+  if (input.facts?.farmerOrFisher === true) return calculateForm2210F(input, taxYear, input.facts);
   const audit = new AuditTrail();
   const currentTax = amount(input.currentYearTax, "currentYearTax");
   const withholding = amount(input.withholding, "withholding");
@@ -160,7 +235,8 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
   let scheduleAi: Form2210Result["scheduleAi"];
   const basePayments = withholding.plus(estimates);
   const finish = (safe: boolean, reason: string, balance: Decimal, exactPenalty: Decimal, payments = basePayments): Form2210Result => {
-    const penalty = roundDollar(exactPenalty);
+    const waiver = form2210Waiver(facts, roundDollar(exactPenalty));
+    const penalty = waiver ? waiver.penaltyBeforeWaiver.minus(waiver.requestedAmount) : roundDollar(exactPenalty);
     audit.record(FORM, "9", "Required annual payment", required, "min(line5, applicable line8)");
     audit.record(FORM, "19", "Estimated-tax penalty", penalty, "roundDollar(sum(exact dated penalty periods))");
     audit.record(FORM, "safe_harbor", "No installment penalty", new Decimal(safe ? 1 : 0), reason);
@@ -172,7 +248,7 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
     return {
       taxYear, sourceFactsVerified, safeHarborMet: safe, safeHarborReason: reason,
       requiredAnnualPayment: required, totalPayments: payments, underpayment: balance,
-      exactPenalty, penalty, requiresForm2210: withholdingMethod === "actual-dates" || jointFilingReason || (scheduleAi !== undefined && withholding.lt(required)), withholdingMethod, scheduleAi, installments, interestPeriods,
+      exactPenalty, penalty, requiresForm2210: withholdingMethod === "actual-dates" || jointFilingReason || (scheduleAi !== undefined && withholding.lt(required)) || waiver !== undefined, withholdingMethod, scheduleAi, waiver, installments, interestPeriods,
       lines: audit.getLines(),
     };
   };

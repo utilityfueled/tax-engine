@@ -1,6 +1,6 @@
 // Spec: spec/federal/qof-disposition-facts.yaml.
 import { expect, it } from "vitest";
-import { buildGuidedQofFacts, emptyQofInvestment, type QofDispositionData } from "@/lib/guided-qof-facts";
+import { buildGuidedQofFacts, emptyQofInvestment, qofDispositionFactErrors, type QofDispositionData } from "@/lib/guided-qof-facts";
 import { initialFlowState, updateSectionData, type GuidedFlowState } from "@/lib/guided-interview-flow";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { completePersonalInfo, completeW2Entry } from "./complete-facts";
@@ -51,4 +51,10 @@ it("builds complete inclusion rows and keeps unknown answers unknown", () => {
   expect(() => buildGuidedQofFacts({ ...facts, deferredGainHeldAtYearEnd: null }, 2026)).toThrow(/year-end/);
   expect(() => buildGuidedQofFacts({ ...facts, investments: [] }, 2026)).toThrow(/year-end/);
   expect(buildGuidedQofFacts({ ...facts, deferredGainHeldAtYearEnd: false, investments: [] }, 2026)).toMatchObject({ deferredGainHeldAtYearEnd: false });
+});
+
+it("requires a QOF answer on a 2026 investment section", () => {
+  expect(qofDispositionFactErrors(undefined, 2026)).toHaveProperty("qofDisposition");
+  expect(qofDispositionFactErrors(undefined, 2025)).toEqual({});
+  expect(qofDispositionFactErrors({ sourceTaxYear: "2026", sourceReference: "Fictional complete records", sourceFactsConfirmed: true, allInvestmentsReviewed: true, disposedOfQofInvestment: false, deferredGainHeldAtYearEnd: false }, 2026)).toEqual({});
 });

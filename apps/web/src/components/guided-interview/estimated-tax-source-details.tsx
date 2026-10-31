@@ -31,6 +31,15 @@ export function EstimatedTaxSourceDetails({ data, appliedCredits = [], taxYear, 
       <Choice label="Estimated-tax calculation method" value={data.calculationMethod} choices={[["regular", "Regular installments"], ["annualized", "Annualized income (Schedule AI)"]]} onChange={calculationMethod => update({ calculationMethod: calculationMethod as EstimatedTaxFactsData["calculationMethod"] })} />
       <Choice label="Withholding timing method" value={data.withholdingMethod} choices={[["equal-installments", "Statutory equal installments"], ["actual-dates", "Elect actual withholding dates"]]} onChange={withholdingMethod => update({ withholdingMethod: withholdingMethod as EstimatedTaxFactsData["withholdingMethod"] })} />
     </div>
+    {data.farmerOrFisher === true && <BooleanFact label="At least two-thirds of gross income for this or last year came from farming or fishing" value={data.farmingIncomeTwoThirdsConfirmed ?? null} onChange={farmingIncomeTwoThirdsConfirmed => update({ farmingIncomeTwoThirdsConfirmed })} />}
+    {data.waiverRequested === true && <fieldset style={{ minWidth: 0 }}><legend>Penalty waiver request</legend>
+      <p className="guided-hint">A waiver is a request. The IRS decides and may still bill the penalty. Attach a statement and your supporting documents.</p>
+      <div className="guided-form-grid">
+        <Choice label="Waiver kind" value={data.waiverKind ?? ""} choices={[["full", "All of the penalty"], ["partial", "Part of the penalty"]]} onChange={value => update({ waiverKind: value as EstimatedTaxFactsData["waiverKind"] })} />
+        <Choice label="Waiver reason" value={data.waiverReason ?? ""} choices={[["retirement_or_disability", "Retired after 62 or became disabled"], ["casualty_disaster_or_unusual_circumstance", "Casualty, disaster or unusual circumstance"]]} onChange={value => update({ waiverReason: value as EstimatedTaxFactsData["waiverReason"] })} />
+        {data.waiverKind === "partial" && <CurrencyField label="Amount to waive" value={data.waiverAmount ?? ""} onChange={waiverAmount => update({ waiverAmount })} />}
+        <TextFact label="Waiver statement reference" value={data.waiverStatementReference ?? ""} onChange={waiverStatementReference => update({ waiverStatementReference })} />
+      </div></fieldset>}
     {data.calculationMethod === "annualized" && <AnnualizedPeriods data={data} update={update} />}
     <fieldset><legend>Actual prior-year history</legend><div className="guided-form-grid">
       <Choice label="Prior-year return and tax status" value={data.priorYearTaxStatus} choices={[["return-filed", "A return was filed"], ["no-return", "No prior return for the tax comparison"], ["no-tax-liability", "No prior-year tax liability"]]} onChange={priorYearTaxStatus => update({ priorYearTaxStatus: priorYearTaxStatus as EstimatedTaxFactsData["priorYearTaxStatus"] })} />

@@ -38,6 +38,7 @@ describe("actual guided OID sources", () => {
   });
   it("preserves explicit 2026 years and marks partial OID documents honestly", () => {
     const state = flow({ ...actualOid, taxYear: "2026" }); state.taxYear = 2026;
+    state.sectionData["income-investments"]!.qofDispositionFacts = { sourceTaxYear: "2026", sourceReference: "Fictional complete records", sourceFactsConfirmed: true, allInvestmentsReviewed: true, disposedOfQofInvestment: false, deferredGainHeldAtYearEnd: false };
     expect(buildTaxInputFromGuidedData(state)?.form1099OID[0].taxYear).toBe(2026);
     expect(buildGuidedSyntheticDocuments(state).find(doc => doc.kind === "1099-oid")?.coverage).toBe("supported");
     const source = state.sectionData["income-investments"]?.oidEntries?.[0];

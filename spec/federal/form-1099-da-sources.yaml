@@ -76,7 +76,7 @@ lines:
     testRef: "tests/engine/forms/form-1099-da-sources.test.ts::reduces gain for costs not on the form with code E"
   - line: "correction-boundaries"
     description: "Keep corrected rows out of methods that cannot read them"
-    formula: "Pennsylvania rejects corrected rows and rows with costs. ScheduleD worksheets reject corrected digital rows. Code order is alphabetical, for example BW and BEW. Column g prints -0- for a code B row with no adjustment. Original capital records cannot set codes other than B, E or BE, and the federal path rejects any."
+    formula: "Pennsylvania rejects corrected rows and rows with costs. ScheduleD worksheets compare a corrected row's basis net of adjustments, because they hold actual basis and the row keeps reported basis. Code order is alphabetical, for example BW and BEW. Column g prints -0- for a code B row with no adjustment. Original capital records cannot set codes other than B, E or BE, and the federal path rejects any."
     irsRef: "Instructions for Form8949 (2025) column f and code B"
     testRef: "tests/engine/forms/form-1099-da-sources.test.ts::keeps corrected rows out of methods that cannot read them"
   - line: "guided-corrections"
@@ -89,4 +89,9 @@ lines:
     formula: "Box H row with reported95, actual90.24: column e 90.24, code B, column g -0-."
     irsRef: "Instructions for Form8949 (2025) code B, basis not reported"
     testRef: "tests/guided-interview/guided-digital-asset-corrections.test.ts::prints a zero column g for a code B row"
+  - line: "schedule-d-worksheet"
+    description: "Reconcile a corrected row to the actual basis worksheet"
+    formula: "Reported95, actual90.24 with a gold coin row: net long-term110.25, unchanged by the correction. Costs5 with worksheet adjustment-5 give105.25. A different actual basis rejects."
+    irsRef: "Schedule D worksheets; Instructions for Form8949 codes B and E"
+    testRef: "tests/engine/schedules/schedule-d-digital-sources.test.ts::reconciles corrected digital rows to the actual basis worksheet"
 

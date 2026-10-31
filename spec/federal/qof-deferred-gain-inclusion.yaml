@@ -33,8 +33,9 @@ notes: |
   reach a 10-year hold by 2026, and later return years stay closed here.
   State treatment is not determined: Pennsylvania, Ohio and guided state previews
   reject or leave the state result blank. Conforming states need their own method.
-  Before tax year 2026 opens, a capital return needs a required QOF answer, because a
-  return with no QOF record cannot show that no inclusion applies.
+  A 2026 guided investment section requires a QOF answer, because a return with no QOF
+  record cannot show that no inclusion applies. A return with no investment section,
+  and direct API input, carry no such prompt, so this needs review before 2026 opens.
   Not reviewed here: section1411 treatment of gain deferred from non-NII activity, and
   whether a February29 investment reaches a full year on February28.
 lines:
@@ -123,4 +124,9 @@ lines:
     formula: "The exclusion-only minimum tax credit method rejects QOF capital as it rejects other capital originals."
     irsRef: "Form8801 PartI capital-gain branch"
     testRef: "tests/engine/federal-qof-inclusion.test.ts::treats QOF capital as capital in the exclusion-only credit guard"
+  - line: "guided-2026-answer"
+    description: "Require a QOF answer on a 2026 investment section"
+    formula: "A started 2026 investment section with no QOF record reports an error. 2025 does not. An answered record clears it."
+    irsRef: "IRC1400Z-2(b)(1)(B)"
+    testRef: "tests/guided-interview/guided-qof-facts.test.ts::requires a QOF answer on a 2026 investment section"
 

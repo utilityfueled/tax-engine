@@ -1,6 +1,6 @@
 # Unsupported method register
 
-Recorded October 31, 2026 at `298c254c`, then updated as packages shipped: Form 1099-DA basis corrections, gross-proceeds costs and repaid earlier-year unemployment are delivered. This classifies the engine's explicit rejections so the remaining work can be reviewed and prioritized. An unsupported return stops with a named error. The engine does not estimate it.
+Recorded October 31, 2026 at `298c254c`, then updated as packages shipped: Form 1099-DA basis corrections, gross-proceeds costs and repaid earlier-year unemployment, Form 2210-F, waiver requests and Schedule D worksheets with corrected digital rows are delivered. Form 1099-G business refunds moved to Ruling, because source research found no recipient rule. This classifies the engine's explicit rejections so the remaining work can be reviewed and prioritized. An unsupported return stops with a named error. The engine does not estimate it.
 
 A rejection here is not an external blocker unless its class says so. Year guards are excluded: they reject unsupported years on purpose and are not missing work.
 
@@ -16,10 +16,7 @@ A rejection here is not an external blocker unless its class says so. Year guard
 
 | Method | Rejection location | Who it affects |
 | --- | --- | --- |
-| Form 2210 farmer or fisher rule, and waiver | `form-2210.ts` | Farmers, fishers and filers requesting relief |
-| Form 1099-G business state refund | `form-1099-g.ts` | Business owners with a business tax refund |
 | Schedule AI with preferential income, Schedule 1-A or Schedule J | `form-2210-schedule-ai.ts` | Depends on a ruling on annualizing qualified dividends and gains; the rest need period methods |
-| Schedule D worksheet with a corrected digital-asset row | `schedule-d-source-binding.ts` | A long-term corrected row beside a collectible or section 1250 row |
 
 ## Specialist
 
@@ -39,6 +36,8 @@ A rejection here is not an external blocker unless its class says so. Year guard
 ## Ruling
 
 The six questions in [external actions](upgrade-2026-external-actions.md), plus the Schedule AI preferential-income question above and the final 2026 row layout for a QOF inclusion with no sale. These need a qualified reviewer or final IRS instructions. Engineering should not choose an answer.
+
+- Form 1099-G business refund: the Form 1099-G instructions define Box 8 but give the recipient no reporting rule, and the Schedule C line 6 instructions do not cover it. A reviewer should confirm the destination and tax-benefit treatment.
 
 ## How this list was made
 

@@ -20,7 +20,7 @@ The regulation's example gives an independent check: a partner who deferred 200 
 - "Basis before inclusion" excludes the 10% and 15% increases, which the calculation adds.
 - The 2025 Form 8949 instructions give no row layout for an inclusion with no sale. Zero proceeds and basis with the included amount in column (g) yields the statutory amount, and final 2026 instructions must confirm it.
 - No Form 8997 template or field map exists. The packet prints a reference page that says it is not Form 8997.
-- A 2026 QOF record needs an explicit answer on gain held at year end. A return with no QOF record is not flagged. That is acceptable only while 2026 stays closed, and it needs a required answer before 2026 opens.
+- A 2026 QOF record needs an explicit answer on gain held at year end. A 2026 guided investment section now requires an answer. A return with no investment section, and direct API input, are not prompted, so this still needs review before 2026 opens.
 - State conformity is not established. Pennsylvania, Ohio and guided state previews stop instead of using or omitting the federal row. Some states did not conform, so they taxed this gain in the deferral year.
 - Section 1411 treatment of gain deferred from non-investment activity has not been reviewed. The engine treats all included gain as net investment income.
 

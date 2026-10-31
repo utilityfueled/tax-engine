@@ -3509,6 +3509,11 @@ const Form2210AnnualizedPeriodSchema = z.object({
 
 export const Form2210Schema = z.object({
   annualizedIncomePeriods: z.array(Form2210AnnualizedPeriodSchema).optional(),
+  farmingIncomeTwoThirdsConfirmed: z.boolean().optional(),
+  waiverKind: z.enum(["full", "partial"]).optional(),
+  waiverAmount: z.string().optional(),
+  waiverReason: z.enum(["retirement_or_disability", "casualty_disaster_or_unusual_circumstance"]).optional(),
+  waiverStatementReference: z.string().optional(),
   bothSpousesSelfEmployed: z.boolean().optional(),
   calendarYearTaxpayer: z.boolean().optional(),
   residentReturn: z.boolean().optional(),

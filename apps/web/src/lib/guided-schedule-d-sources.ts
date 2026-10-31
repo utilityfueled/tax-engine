@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js';
 import { ScheduleDSpecialGainSourcesSchema, type TaxYearInput } from '@/models/inputs.js';
 import type { BrokerageEntryData, DividendEntryData, FilingStatus, PersonalInfoData } from './guided-interview-flow';
 import type { ChildElectionData } from './guided-child-election-facts';
@@ -43,7 +44,7 @@ export function captureScheduleDRecords(investments: InvestmentSources): { longT
         accountHolder: form.accountHolder, payerName: form.brokerName,
         description: transaction.digitalAssetName ? `${transaction.digitalAssetName.trim()}${transaction.ticker?.trim() ? ` (${transaction.ticker.trim()})` : ''}` : undefined,
         dateAcquired: transaction.dateAcquired, dateSold: transaction.dateSold, proceeds: transaction.proceeds, costBasis: transaction.costBasis,
-        adjustments: transaction.adjustments, washSale: transaction.washSale, washSaleDisallowed: transaction.washSaleDisallowed,
+        adjustments: new Decimal(transaction.adjustments || 0).minus(transaction.sellingExpenses || 0).toFixed(), washSale: transaction.washSale, washSaleDisallowed: transaction.washSaleDisallowed,
         character: transaction.capitalAssetConfirmed === true && transaction.nftOrCollectible === false && transaction.ordinaryIncome === false ? 'ordinary' : undefined,
       }]))],
     reportedGains: investments.dividendEntries.filter(started).map((form, index) => ({ sourceId: `form1099Div:${index}`,

@@ -24,3 +24,13 @@ it('builds four complete periods and keeps blanks unknown', () => {
     expect(() => buildEstimatedTaxFacts(data({ annualizedIncomePeriods: blank }), 2025), key).toThrow(/period 3/);
   }
 });
+
+it('collects farmer and waiver facts without defaults', () => {
+  const regular = { calculationMethod: 'regular' as const, annualizedIncomePeriods: undefined };
+  expect(() => buildEstimatedTaxFacts(data({ ...regular, farmerOrFisher: true }), 2025)).toThrow(/two-thirds/);
+  expect(buildEstimatedTaxFacts(data({ ...regular, farmerOrFisher: true, farmingIncomeTwoThirdsConfirmed: true }), 2025)).toMatchObject({ farmerOrFisher: true, farmingIncomeTwoThirdsConfirmed: true });
+  expect(() => buildEstimatedTaxFacts(data({ ...regular, waiverRequested: true }), 2025)).toThrow(/waiver kind/);
+  const waiver = { ...regular, waiverRequested: true, waiverKind: 'partial' as const, waiverReason: 'retirement_or_disability' as const, waiverStatementReference: 'Fictional statement' };
+  expect(() => buildEstimatedTaxFacts(data(waiver), 2025)).toThrow(/waiver kind/);
+  expect(buildEstimatedTaxFacts(data({ ...waiver, waiverAmount: '1,000' }), 2025)).toMatchObject({ waiverAmount: '1000', waiverKind: 'partial' });
+});

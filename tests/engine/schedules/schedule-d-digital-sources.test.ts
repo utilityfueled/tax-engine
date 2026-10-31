@@ -36,6 +36,17 @@ it('binds original long-term DA sources in direct and canonical capital workshee
   expect(calculateFederalTax(source).totalWithholding.toFixed()).toBe('12750.1');
   expect(JSON.stringify(source)).toBe(before);
 });
+it('reconciles corrected digital rows to the actual basis worksheet', () => {
+  const corrected = (patch: Record<string, unknown>, rowPatch: Record<string, unknown> = {}) => {
+    const source = input(); Object.assign(source.form1099DA[0]!.transactions[0]!, { reportedCostBasis: '95', reportedDateAcquired: '2020-01-15', basisReportedToIRS: true, noncoveredSecurity: false, basisCorrectionConfirmed: true, ...patch });
+    Object.assign(source.scheduleDSpecialGainSources!.longTermAssets[1]!, rowPatch);
+    return source;
+  };
+  expect(calculateFederalTax(corrected({})).scheduleD!.netLongTerm.toFixed()).toBe('110.25');
+  expect(calculateFederalTax(corrected({ sellingExpenses: '5', sellingCostsNotInProceedsConfirmed: true }, { adjustments: '-5' })).scheduleD!.netLongTerm.toFixed()).toBe('105.25');
+  expect(() => calculateFederalTax(corrected({}, { costBasis: '91' }))).toThrow(/asset adjusted basis/);
+});
+
 it('rejects missing duplicated and stale normalized digital source copies', () => {
   const source = input();
   expect(() => run(normalizeDigitalAssetCapitalInput(source))).toThrow(/original|source/i);

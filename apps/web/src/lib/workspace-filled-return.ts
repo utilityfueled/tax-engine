@@ -400,6 +400,10 @@ function buildPacketSummary(
     );
   }
 
+  if (result.form2210?.waiver) {
+    missingBullets.push("This return requests an estimated tax penalty waiver. The IRS decides, and may bill the penalty. Attach the form and your statement.");
+  }
+
   if (result.form2210?.scheduleAi && result.form2210.requiresForm2210) {
     missingBullets.push("This return uses the annualized income method, so Form 2210 with Schedule AI must be filed with it even when the penalty is zero. Neither is attached to this draft.");
   }

@@ -38,6 +38,8 @@ export function buildGuidedQofFacts(data: QofDispositionData | undefined, taxYea
   return facts;
 }
 export function qofDispositionFactErrors(data: QofDispositionData | undefined, taxYear?: number | null): Record<string, string> {
+  // All remaining deferred gain reaches inclusion in 2026, so silence cannot mean none.
+  if (taxYear === 2026 && !data) return { qofDisposition: "Answer whether you held QOF deferred gain on December 31, 2026." };
   try { buildGuidedQofFacts(data, taxYear); return {}; }
   catch (error) { return { qofDisposition: error instanceof Error ? error.message : "Complete the actual QOF investment sources." }; }
 }
