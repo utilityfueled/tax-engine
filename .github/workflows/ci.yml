@@ -118,7 +118,8 @@ jobs:
           cache-dependency-path: requirements-test.txt
       - run: pnpm test:setup
       # Instrumented PDF and AST work must not compete for the small runner's CPUs.
-      # Keep every test, the five-second per-test deadline and all coverage gates.
+      # Keep every test and all coverage gates. vitest.config.ts extends the
+      # per-test deadline for this instrumented run only.
       - run: pnpm test:coverage --maxWorkers=1
       - uses: actions/upload-artifact@v4
         if: always()

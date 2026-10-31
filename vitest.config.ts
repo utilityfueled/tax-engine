@@ -1,6 +1,10 @@
 import { defineConfig } from "vitest/config";
 import path from "path";
 
+// V8 instrumentation slows the heaviest PDF and DOM cases past 5s on hosted
+// runners. The normal unit job keeps the default deadline for real regressions.
+const coverageRun = process.argv.includes("--coverage");
+
 export default defineConfig({
   esbuild: {
     jsx: "automatic",
@@ -8,6 +12,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
+    testTimeout: coverageRun ? 15_000 : 5_000,
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     coverage: {
       provider: "v8",
