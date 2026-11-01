@@ -18,7 +18,9 @@ Foreign earned income from a partnership rejected outright. Review of that work 
 
 - Capital as a material factor rejects, because the line 20 30% limit needs the employer-equivalent deduction for that share.
 - Prior-year partnership services reject.
-- A K-1's foreign profit is entered, because the statement decides what sits in its QBI. K-1 W-2 wages or UBIA with a positive reduction reject, because they would need apportioning.
+- A K-1's foreign profit is entered, because the statement decides what sits in its QBI. K-1 or Schedule C W-2 wages or UBIA with a positive reduction reject, because they would need apportioning.
+- Health insurance and retirement deductions stay charged in full against U.S. QBI. No source reviewed says whether they follow the foreign share, so this is a reviewer question.
+- Existing Schedule C foreign returns can now reject when the entered allocable deductions fall below the self-employment floor. Across 1,500 seeded returns, 636 rejected this way, each confirmed against an independent formula, and they were previously accepted with too low an AGI.
 - The Schedule C ratio applies expenses evenly. A filer who can trace expenses to foreign or U.S. work has no separate entry.
 - Box 14 code A cannot prove source or passive status. The confirmations carry that.
 - State treatment of the exclusion was not reviewed, and no state engine reads Form 2555.

@@ -25,7 +25,7 @@ const ein = (value: string | undefined) => value?.replace(/-/g, "");
 export function resolveForm2555Sources(input: Form2555SourceContext) {
   const audit = new AuditTrail();
   const facts = input.form2555;
-  const qbiForeignProfit: { sourceId: string; amount: Decimal }[] = [];
+  const qbiForeignProfit: { sourceId: string; amount: Decimal; receipts: Decimal }[] = [];
   const scheduleCForeignShare: { foreign: Decimal; grossIncome: Decimal }[] = [];
   const empty = { sourceFactsVerified: false, currentForeignIncome: new Decimal(0), priorYearIncomeReceived: new Decimal(0), qbiForeignProfit, scheduleCForeignShare, lines: audit.getLines() };
   if (!facts) return empty;
@@ -104,9 +104,10 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
       // Spec: qbi-foreign-profit. A K-1 statement may already omit this income from QBI.
       const foreignProfit = amount(row.qbiForeignProfit, "foreign profit inside QBI");
       if (foreignProfit.gt(combined)) throw new Error("Form2555 foreign profit inside QBI exceeds the foreign receipts");
+      if (foreignProfit.gt(new Decimal(original.section199AQBI ?? 0))) throw new Error("Form2555 foreign profit inside QBI exceeds the Schedule K-1 QBI");
       if (foreignProfit.isZero() && new Decimal(original.section199AQBI ?? 0).gt(0) && row.k1QbiExcludesForeignConfirmed !== true) throw new Error("Form2555 confirm that the Schedule K-1 QBI already omits this foreign profit");
       if (foreignProfit.gt(0) && (new Decimal(original.section199AW2Wages ?? 0).gt(0) || new Decimal(original.section199AUBIA ?? 0).gt(0))) throw new Error("Form2555 foreign profit inside K-1 QBI needs its wages and UBIA apportioned");
-      qbiForeignProfit.push({ sourceId: row.sourceId, amount: foreignProfit });
+      qbiForeignProfit.push({ sourceId: row.sourceId, amount: foreignProfit, receipts: combined });
       key = "foreignPartnershipIncomeAlreadyReported";
     } else if (/^foreignEmployment:[A-Za-z0-9][A-Za-z0-9._-]*$/.test(row.sourceId)) {
       if (row.notIncludedInW2Confirmed !== true) throw new Error("Form2555 separate foreign employment must be confirmed absent from W2 income");

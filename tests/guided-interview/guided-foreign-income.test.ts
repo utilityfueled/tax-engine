@@ -158,6 +158,12 @@ it("binds an actual partnership source from the guide", () => {
   state.sectionData.adjustments!.k1LossSources = { fixture: [original] } as never;
   expect(foreignIncomeSourceOptions(state).map(row => row.label)).toContain("Schedule K-1 1: Fictional Partners");
   const built = buildForeignIncomeInput(data, state);
+  expect(built?.sourceMapping?.rows[0]?.k1QbiExcludesForeignConfirmed).toBe(true);
+  state.sectionData.adjustments!.k1LossSources = { fixture: [{ ...original, section199AQBI: "50000" }] } as never;
+  data.sources[0]!.k1QbiExcludesForeignConfirmed = null;
+  expect(() => buildForeignIncomeInput(data, state)).toThrow(/already omits this foreign profit/);
+  data.sources[0]!.k1QbiExcludesForeignConfirmed = true;
+  state.sectionData.adjustments!.k1LossSources = { fixture: [original] } as never;
   expect(built).toMatchObject({ isSelfEmployed: true, incomeSources: { foreignPartnershipIncomeAlreadyReported: "70000", foreignEmploymentIncomeIncludedOnW2: "0" } });
   expect(built?.sourceMapping?.rows[0]).toMatchObject({ partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false });
   data.sources[0]!.capitalMaterialIncomeFactor = true;
