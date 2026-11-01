@@ -26,7 +26,7 @@ A rejection here is not an external blocker unless its class says so. Year guard
 | Form 172 origins | Farming, estate, cancelled-debt, other classified income and deductions | `form-172-*.ts` |
 | K-1 histories | Basis, at-risk, passive recharacterization, decreased-value gifts, Form 461 classification | `k1-*.ts` |
 | Charitable with loss histories | Multi-vintage attribution, prior carry with the 2026 floor, recurrent joint attribution | `charitable-*.ts` |
-| COD | Chapters 7, 11 and 12 of title 11, joint or community ownership, modified-loss exhaustion, current EBL origin | `cod-nol-reductions.ts` |
+| COD | Chapters 7, 11 and 12 of title 11, modified-loss exhaustion, current EBL origin | `cod-nol-reductions.ts` |
 | Premium tax credit | Separate-return allocation, overlapping shared policies, no-APTC allocation, below-poverty marriage | `form-8962-*.ts` |
 | Education | Partial in-kind allocation, Coverdell disqualification with later activity | `form-1099-q.ts` |
 | Foreign earned income | Partnership or prior non-W2 income mappings | `form-2555-source-binding.ts` |
@@ -37,6 +37,7 @@ A rejection here is not an external blocker unless its class says so. Year guard
 
 The six questions in [external actions](upgrade-2026-external-actions.md), plus the Schedule AI preferential-income question above and the final 2026 row layout for a QOF inclusion with no sale. These need a qualified reviewer or final IRS instructions. Engineering should not choose an answer.
 
+- Canceled debt on a joint or community-property return: every married couple filing jointly with a canceled debt is rejected on the source route, so this reaches ordinary filers. Pub 4681 covers joint debt only for spouses filing separately, and neither it nor the Form 982 instructions say how to allocate insolvency or attribute reduction on a joint return. The search covered those two sources, not the regulations. A reviewer should confirm the method.
 - Form 1099-G business refund: the Form 1099-G instructions define Box 8 but give the recipient no reporting rule, and the Schedule C line 6 instructions do not cover it. A reviewer should confirm the destination and tax-benefit treatment.
 
 ## How this list was made
