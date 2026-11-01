@@ -3021,10 +3021,10 @@
     "npmMatches": 0,
     "platforms": {
       "arm64": {
-        "record": "docs/upgrade-2026-runtime-01fc9505-arm64.json"
+        "record": "docs/upgrade-2026-runtime-8eee5728-arm64.json"
       },
       "amd64": {
-        "record": "docs/upgrade-2026-runtime-01fc9505.json"
+        "record": "docs/upgrade-2026-runtime-8eee5728.json"
       }
     },
     "note": "The top-level counts describe the original 4aef633 scan. Use this block for the current state."
