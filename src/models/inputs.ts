@@ -4801,7 +4801,8 @@ export const Form2555Schema = z.preprocess(value => {
       businessGrossReceipts: decimal.optional(), businessReturnsAndAllowances: decimal.optional(),
       businessCostOfGoodsSold: decimal.optional(), businessOtherIncome: decimal.optional(),
       partnerPerformedServicesConfirmed: z.boolean().optional(), capitalMaterialIncomeFactor: z.boolean().optional(),
-      qbiForeignProfit: decimal.optional(), // Net profit from these services inside the source's QBI.
+      qbiForeignProfit: decimal.optional(), // Net profit from these services inside the K-1's QBI.
+      k1QbiExcludesForeignConfirmed: z.boolean().optional(),
     })),
   }).optional(),
   sourceFactsComplete: z.boolean().optional(),

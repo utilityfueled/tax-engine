@@ -1645,15 +1645,17 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     additionalNonfarmIncome: cryptoBusinessNet,
     additionalNonfarmOwner: input.cryptoIncome?.businessAccountHolder,
   });
-  // Spec: se-deduction-allocation. Pub54: the deduction is allocable, by exclusion over foreign earned income.
-  const foreignSelfEmployment = d(input.form2555?.incomeSources?.foreignBusinessIncomeAlreadyReported).plus(d(input.form2555?.incomeSources?.foreignPartnershipIncomeAlreadyReported));
-  if (form2555 && foreignSelfEmployment.gt(0) && form2555.foreignEarnedIncome.gt(0)) {
-    const owner = schedSE.perTaxpayer.find((row) => row.accountHolder === input.form2555?.accountHolder) ?? schedSE;
-    const earnings = owner.netSEEarnings;
-    if (earnings.gt(0) && owner.deductibleHalf.gt(0)) {
-      const minimum = owner.deductibleHalf.times(Decimal.min(1, foreignSelfEmployment.div(earnings))).times(Decimal.min(1, form2555.totalExclusion.div(form2555.foreignEarnedIncome))).toDecimalPlaces(0, Decimal.ROUND_DOWN);
-      if (d(input.form2555?.deductionsAllocableToExcludedIncome).lt(minimum)) throw new Error(`Form2555 deductions allocable to excluded income must include at least ${minimum.toFixed()} of the self-employment tax deduction`);
-    }
+  // Spec: qbi-foreign-profit. Profit earned abroad is not QBI, and Pub54 allocates by receipts.
+  const foreignQbiProfit = new Map(foreignIncomeSources.qbiForeignProfit.map((row) => [row.sourceId, row.amount]));
+  for (const share of foreignIncomeSources.scheduleCForeignShare) foreignQbiProfit.set("scheduleC", zeroFloor(schedC.netProfit).times(share.foreign).div(share.grossIncome));
+  // Spec: se-deduction-allocation. Only the U.S. share of this deduction lowers QBI.
+  const foreignSelfEmployment = (foreignQbiProfit.get("scheduleC") ?? d("0")).plus(d(input.form2555?.incomeSources?.foreignPartnershipIncomeAlreadyReported));
+  const foreignSeOwner = schedSE.perTaxpayer.find((row) => row.accountHolder === input.form2555?.accountHolder) ?? schedSE.perTaxpayer[0];
+  const foreignSeDeduction = foreignSeOwner && foreignSelfEmployment.gt(0) && foreignSeOwner.netSEEarnings.gt(0)
+    ? foreignSeOwner.deductibleHalf.times(Decimal.min(1, foreignSelfEmployment.div(foreignSeOwner.netSEEarnings))) : d("0");
+  if (form2555 && foreignSeDeduction.gt(0) && form2555.foreignEarnedIncome.gt(0)) {
+    const minimum = foreignSeDeduction.times(Decimal.min(1, form2555.foreignEarnedIncomeExclusion.div(form2555.foreignEarnedIncome))).toDecimalPlaces(0, Decimal.ROUND_DOWN);
+    if (d(input.form2555?.deductionsAllocableToExcludedIncome).lt(minimum)) throw new Error(`Form2555 deductions allocable to excluded income must include at least ${minimum.toFixed()} of the self-employment tax deduction`);
   }
   audit.merge(schedSE.lines);
   const netSEEarnings = schedSE.netSEEarnings;
@@ -2664,13 +2666,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const cOwnerForQBI = input.scheduleC?.accountHolder ?? (necOwnersForQBI.size === 1 ? [...necOwnersForQBI][0] : undefined);
   const deductionSources: QBIDeductionSource[] = [];
   if (input.scheduleC || !schedC.netProfit.isZero()) deductionSources.push({id:"scheduleC",name:input.scheduleC?.businessName ?? "Schedule C",
-    qbi:schedC.netProfit,netSEEarnings:schedC.netProfit,accountHolder:ownerOf(cOwnerForQBI),materiallyParticipated:input.scheduleC?.qbiMateriallyParticipated});
+    qbi:schedC.netProfit.minus(foreignQbiProfit.get("scheduleC") ?? d("0")),netSEEarnings:schedC.netProfit,accountHolder:ownerOf(cOwnerForQBI),materiallyParticipated:input.scheduleC?.qbiMateriallyParticipated});
   if (input.scheduleF || !schedFNetProfit.isZero()) deductionSources.push({id:"scheduleF",name:input.scheduleF?.principalCropOrActivity ?? "Schedule F",
     qbi:schedFNetProfit,netSEEarnings:schedFNetProfit,accountHolder:ownerOf(input.scheduleF?.accountHolder),materiallyParticipated:input.scheduleF?.qbiMateriallyParticipated});
   if (!cryptoBusinessNet.isZero()) deductionSources.push({id:"cryptoBusiness",name:"Cryptocurrency business",
     qbi:cryptoBusinessNet,netSEEarnings:cryptoBusinessNet,accountHolder:ownerOf(input.cryptoIncome?.businessAccountHolder)});
   seSourceInput.scheduleK1.forEach((k1,index)=>{
-    const qbi=k1QbiLosses.activities.find(source=>source.k1Index===index)?.currentQbi ?? d(k1.section199AQBI);
+    const qbi=(k1QbiLosses.activities.find(source=>source.k1Index===index)?.currentQbi ?? d(k1.section199AQBI)).minus(foreignQbiProfit.get(`scheduleK1:${index}`) ?? d("0"));
     const netSEEarnings=k1.entityType === "s_corporation" ? d("0") : d(k1.selfEmploymentNetEarningsAfterAdjustments ?? k1.selfEmploymentEarnings);
     if (!qbi.isZero() || !netSEEarnings.isZero()) deductionSources.push({id:`scheduleK1:${index}`,name:k1.partnershipName,
       qbi,netSEEarnings,accountHolder:ownerOf(k1.accountHolder),materiallyParticipated:k1.qbiMateriallyParticipated,
@@ -2691,7 +2693,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     })) };
   }
   const qbiSourceDeductions=calculateQBISourceDeductions({taxYear:year,sources:deductionSources,
-    selfEmploymentDeductions:schedSE.perTaxpayer.map(row=>({accountHolder:row.accountHolder,amount:row.deductibleHalf})),
+    selfEmploymentDeductions:schedSE.perTaxpayer.map(row=>({accountHolder:row.accountHolder,amount:row===foreignSeOwner ? row.deductibleHalf.minus(foreignSeDeduction) : row.deductibleHalf})),
     healthInsuranceDeduction:seHealthInsurance,retirementPlanDeduction:d(input.adjustments?.seRetirementContributions),
     sourceFactsVerified:schedSE.sourceFactsVerified,allocation:qbiAllocation,
     healthInsuranceSources:actualHealthInsurance?.healthSources,retirementPlanSources:actualHealthInsurance?.retirementSources});
@@ -2710,8 +2712,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   audit.record("1040", "13b", "Additional deductions from Schedule 1-A", schedule1A?.totalDeduction ?? d("0"),
     "Schedule 1-A line 38; no change to AGI or payroll taxes");
   const qbiSources: QBISource[] = qbiSourceDeductions.sources.map(source => ({ ...source,
-    qbi: source.qbi.minus(schedule1AReturn?.businessQbiExclusions.find(row => row.sourceId === source.id)?.amount ?? d("0"))
-      .minus(foreignIncomeSources.qbiForeignProfit.find(row => row.sourceId === source.id)?.amount ?? d("0")),
+    qbi: source.qbi.minus(schedule1AReturn?.businessQbiExclusions.find(row => row.sourceId === source.id)?.amount ?? d("0")),
   })).filter(source=>!source.qbi.isZero());
   // K-1 Form 1041 Box 14 Code I: QBI from estates/trusts
   // Trust QBI is NOT self-employment income — no SE tax adjustment needed

@@ -89,6 +89,8 @@ it("asks the partner questions only for a Schedule K-1 source", async () => {
   expect(asked()).toBe(true);
   await change("You performed the services for this partnership income in a foreign country 1", "true");
   await change("Capital was also a material source of this partnership's income 1", "false");
-  expect(latest.sources[0]).toMatchObject({ partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false });
+  await change("Net profit from these services inside the K-1 QBI, or 0 if none 1", "0");
+  await change("The K-1 QBI already leaves out this foreign profit 1", "true");
+  expect(latest.sources[0]).toMatchObject({ partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false, qbiForeignProfit: "0", k1QbiExcludesForeignConfirmed: true });
   await act(async () => root.unmount()); container.remove();
 });

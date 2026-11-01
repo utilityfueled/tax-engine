@@ -120,7 +120,7 @@ it("requires actual eligible foreign geography and travel facts", () => {
 });
 it("binds complete personal-service business sources without an income override", () => {
   const source = foreignIncomeFixture(); source.partIV.wages = "0"; source.partIV.businessPersonalServices = "1000.03"; source.businessCapitalMaterialIncomeProducing = false;
-  source.sources = [{ ...structuredClone(emptyForeignIncomeSource), sourceId: "scheduleC", qbiForeignProfit: "0", sourceTaxYear: "2025", accountHolder: "primary", sourceReference: "Original business ledger", payerName: "Foreign design", payerEin: "12-3456789", foreignEarnedIncome: "1000.03", priorYearIncomeReceived: "0", businessGrossReceipts: "1200.03", businessReturnsAndAllowances: "0", businessCostOfGoodsSold: "0", businessOtherIncome: "0" }];
+  source.sources = [{ ...structuredClone(emptyForeignIncomeSource), sourceId: "scheduleC", sourceTaxYear: "2025", accountHolder: "primary", sourceReference: "Original business ledger", payerName: "Foreign design", payerEin: "12-3456789", foreignEarnedIncome: "1000.03", priorYearIncomeReceived: "0", businessGrossReceipts: "1200.03", businessReturnsAndAllowances: "0", businessCostOfGoodsSold: "0", businessOtherIncome: "0" }];
   const state = foreignIncomeState(source); state.sectionData["income-self-employment"] = { ...structuredClone(completeBusinessSection), manualGrossReceipts: "1200.03", businessFacts: { ...structuredClone(completeBusinessSection.businessFacts), businessName: "Foreign design", ein: "12-3456789" } };
   expect(buildForeignIncomeInput(source, state)?.incomeSources?.foreignBusinessIncomeAlreadyReported).toBe("1000.03");
   const original = state.sectionData["income-self-employment"];
@@ -153,7 +153,7 @@ it("binds an actual partnership source from the guide", () => {
   const data = foreignIncomeFixture();
   Object.assign(data.partIV, { wages: "0", partnershipPersonalServices: "70000" });
   data.sources = [{ ...structuredClone(emptyForeignIncomeSource), sourceId: "scheduleK1:0", sourceTaxYear: "2025", accountHolder: "primary", sourceReference: "Partnership statement", payerName: "Fictional Partners", payerEin: "98-7654321",
-    foreignEarnedIncome: "70000", priorYearIncomeReceived: "0", partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false, qbiForeignProfit: "0" }];
+    foreignEarnedIncome: "70000", priorYearIncomeReceived: "0", partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false, qbiForeignProfit: "0", k1QbiExcludesForeignConfirmed: true }];
   const state = foreignIncomeState(data);
   state.sectionData.adjustments!.k1LossSources = { fixture: [original] } as never;
   expect(foreignIncomeSourceOptions(state).map(row => row.label)).toContain("Schedule K-1 1: Fictional Partners");
@@ -165,7 +165,7 @@ it("binds an actual partnership source from the guide", () => {
   data.sources[0]!.capitalMaterialIncomeFactor = null;
   expect(() => buildForeignIncomeInput(data, state)).toThrow(/partner services and capital answers/);
   data.sources[0]!.capitalMaterialIncomeFactor = false; data.sources[0]!.qbiForeignProfit = "";
-  expect(() => buildForeignIncomeInput(data, state)).toThrow(/net profit from these services inside QBI/);
+  expect(() => buildForeignIncomeInput(data, state)).toThrow(/net profit from these services inside K-1 QBI/);
   data.sources[0]!.qbiForeignProfit = "0";
   state.sectionData.adjustments!.k1LossSources = { fixture: [] } as never;
   expect(foreignIncomeSourceOptions(state).some(row => row.sourceId.startsWith("scheduleK1"))).toBe(false);

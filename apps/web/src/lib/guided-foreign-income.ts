@@ -16,7 +16,7 @@ export const foreignIncomePartIVKeys = ["wages", "businessPersonalServices", "pa
 export interface ForeignIncomeSourceData {
   sourceId: string; sourceTaxYear: string; accountHolder: "" | Owner; sourceReference: string; payerName: string; payerEin: string;
   foreignEarnedIncome: string; priorYearIncomeReceived: string; notIncludedInW2Confirmed: boolean | null;
-  partnerPerformedServicesConfirmed?: boolean | null; capitalMaterialIncomeFactor?: boolean | null; qbiForeignProfit?: string;
+  partnerPerformedServicesConfirmed?: boolean | null; capitalMaterialIncomeFactor?: boolean | null; qbiForeignProfit?: string; k1QbiExcludesForeignConfirmed?: boolean | null;
   businessGrossReceipts: string; businessReturnsAndAllowances: string; businessCostOfGoodsSold: string; businessOtherIncome: string;
 }
 export interface ForeignIncomeData {
@@ -93,7 +93,7 @@ function sourceContext(state: GuidedFlowState): Form2555SourceContext {
       returnsAndAllowances: hasEnteredAmount(facts.returnsAndAllowances) ? money(facts.returnsAndAllowances, "business returns") : undefined,
       costOfGoodsSold: hasEnteredAmount(facts.costOfGoodsSold) ? money(facts.costOfGoodsSold, "business cost of goods sold") : undefined,
       otherIncome: hasEnteredAmount(facts.otherIncome) ? money(facts.otherIncome, "business other income") : undefined } : undefined,
-    scheduleK1: guidedK1Originals(state, state.sectionData.adjustments?.foreignIncome?.sources?.some(row => row.sourceId.startsWith("scheduleK1:"))).map(k1 => ({ accountHolder: k1.accountHolder, taxYear: k1.taxYear, partnershipName: k1.partnershipName, partnershipEIN: k1.partnershipEIN, selfEmploymentEarnings: k1.selfEmploymentEarnings })),
+    scheduleK1: guidedK1Originals(state, state.sectionData.adjustments?.foreignIncome?.sources?.some(row => row.sourceId.startsWith("scheduleK1:"))).map(k1 => ({ accountHolder: k1.accountHolder, taxYear: k1.taxYear, partnershipName: k1.partnershipName, partnershipEIN: k1.partnershipEIN, selfEmploymentEarnings: k1.selfEmploymentEarnings, section199AQBI: k1.section199AQBI, section199AW2Wages: k1.section199AW2Wages, section199AUBIA: k1.section199AUBIA })),
     form1099Nec: necs.map(entry => ({ accountHolder: entry.accountHolder || undefined, nonemployeeCompensation: hasEnteredAmount(entry.nonemployeeCompensation) ? money(entry.nonemployeeCompensation, "original NEC compensation") : undefined })),
   };
 }
@@ -185,7 +185,7 @@ export function buildForeignIncomeInput(data: ForeignIncomeData | undefined, sta
     foreignEarnedIncome: money(row.foreignEarnedIncome, "current foreign source receipts"), priorYearIncomeReceived: money(row.priorYearIncomeReceived, "prior-year services received this year"),
     notIncludedInW2Confirmed: row.notIncludedInW2Confirmed ?? undefined,
     partnerPerformedServicesConfirmed: row.partnerPerformedServicesConfirmed ?? undefined, capitalMaterialIncomeFactor: row.capitalMaterialIncomeFactor ?? undefined,
-    ...(row.sourceId === "scheduleC" || row.sourceId.startsWith("scheduleK1:") ? { qbiForeignProfit: money(row.qbiForeignProfit ?? "", "net profit from these services inside QBI") } : {}),
+    ...(row.sourceId.startsWith("scheduleK1:") ? { qbiForeignProfit: money(row.qbiForeignProfit ?? "", "net profit from these services inside K-1 QBI"), k1QbiExcludesForeignConfirmed: row.k1QbiExcludesForeignConfirmed ?? undefined } : {}),
     ...Object.fromEntries((["businessGrossReceipts", "businessReturnsAndAllowances", "businessCostOfGoodsSold", "businessOtherIncome"] as const)
       .filter(key => row.sourceId === "scheduleC" || hasEnteredAmount(row[key])).map(key => [key, money(row[key], `actual ${key}`)])),
   }));

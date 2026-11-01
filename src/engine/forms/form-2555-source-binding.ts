@@ -10,7 +10,7 @@ export interface Form2555SourceContext {
   w2s: { employer: { name: string; ein: string }; accountHolder?: string; taxYear?: number; wages?: string }[];
   scheduleC?: { accountHolder?: string; businessName?: string; ein?: string; grossReceipts?: string; returnsAndAllowances?: string; costOfGoodsSold?: string; otherIncome?: string };
   form1099Nec: { accountHolder?: string; nonemployeeCompensation?: string }[];
-  scheduleK1?: { accountHolder?: string; taxYear?: number; partnershipName?: string; partnershipEIN?: string; selfEmploymentEarnings?: string }[];
+  scheduleK1?: { accountHolder?: string; taxYear?: number; partnershipName?: string; partnershipEIN?: string; selfEmploymentEarnings?: string; section199AQBI?: string; section199AW2Wages?: string; section199AUBIA?: string }[];
 }
 const incomeKeys = ["foreignEmploymentIncomeIncludedOnW2", "foreignEmploymentIncomeNotOnW2", "foreignBusinessIncomeAlreadyReported", "foreignPartnershipIncomeAlreadyReported", "otherForeignIncomeAlreadyReported"] as const;
 function amount(value: string | undefined, label: string): Decimal {
@@ -26,7 +26,8 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
   const audit = new AuditTrail();
   const facts = input.form2555;
   const qbiForeignProfit: { sourceId: string; amount: Decimal }[] = [];
-  const empty = { sourceFactsVerified: false, currentForeignIncome: new Decimal(0), priorYearIncomeReceived: new Decimal(0), qbiForeignProfit, lines: audit.getLines() };
+  const scheduleCForeignShare: { foreign: Decimal; grossIncome: Decimal }[] = [];
+  const empty = { sourceFactsVerified: false, currentForeignIncome: new Decimal(0), priorYearIncomeReceived: new Decimal(0), qbiForeignProfit, scheduleCForeignShare, lines: audit.getLines() };
   if (!facts) return empty;
   const year = input.taxpayer.taxYear;
   const source = facts.sourceMapping;
@@ -89,6 +90,7 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
         || !other.eq(amount(business.otherIncome, "ScheduleC other income"))) throw new Error("Form2555 original business receipts do not reconcile to canonical ScheduleC income");
       const grossIncome = receipts.minus(returns).minus(cogs).plus(other);
       if (combined.gt(grossIncome)) throw new Error("Form2555 current and prior foreign receipts exceed actual ScheduleC gross income");
+      if (combined.gt(0)) scheduleCForeignShare.push({ foreign: combined, grossIncome });
       key = "foreignBusinessIncomeAlreadyReported";
     } else if (/^scheduleK1:(0|[1-9]\d*)$/.test(row.sourceId)) {
       // Spec: partnership-services. Box14 code A exists only for active service.
@@ -99,6 +101,12 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
       if (row.capitalMaterialIncomeFactor) throw new Error("Form2555 partnership income with capital as a material factor needs the 30 percent method");
       if (priorReceived.gt(0)) throw new Error("Form2555 prior partnership services require their separate current-income source method");
       if (combined.gt(amount(original.selfEmploymentEarnings, "Schedule K-1 Box 14 code A"))) throw new Error("Form2555 partnership receipts exceed Schedule K-1 Box 14 code A");
+      // Spec: qbi-foreign-profit. A K-1 statement may already omit this income from QBI.
+      const foreignProfit = amount(row.qbiForeignProfit, "foreign profit inside QBI");
+      if (foreignProfit.gt(combined)) throw new Error("Form2555 foreign profit inside QBI exceeds the foreign receipts");
+      if (foreignProfit.isZero() && new Decimal(original.section199AQBI ?? 0).gt(0) && row.k1QbiExcludesForeignConfirmed !== true) throw new Error("Form2555 confirm that the Schedule K-1 QBI already omits this foreign profit");
+      if (foreignProfit.gt(0) && (new Decimal(original.section199AW2Wages ?? 0).gt(0) || new Decimal(original.section199AUBIA ?? 0).gt(0))) throw new Error("Form2555 foreign profit inside K-1 QBI needs its wages and UBIA apportioned");
+      qbiForeignProfit.push({ sourceId: row.sourceId, amount: foreignProfit });
       key = "foreignPartnershipIncomeAlreadyReported";
     } else if (/^foreignEmployment:[A-Za-z0-9][A-Za-z0-9._-]*$/.test(row.sourceId)) {
       if (row.notIncludedInW2Confirmed !== true) throw new Error("Form2555 separate foreign employment must be confirmed absent from W2 income");
@@ -108,12 +116,6 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
       nonW2References.add(reference);
       key = "foreignEmploymentIncomeNotOnW2";
     } else throw new Error("Form2555 unsupported or aliased original income source identifier");
-    // Spec: qbi-foreign-profit. Income earned abroad is not effectively connected, so it is not QBI.
-    if (key === "foreignBusinessIncomeAlreadyReported" || key === "foreignPartnershipIncomeAlreadyReported") {
-      const foreignProfit = amount(row.qbiForeignProfit, "foreign profit inside QBI");
-      if (foreignProfit.gt(combined)) throw new Error("Form2555 foreign profit inside QBI exceeds the foreign receipts");
-      qbiForeignProfit.push({ sourceId: row.sourceId, amount: foreignProfit });
-    }
     sums[key] = sums[key].plus(current);
     prior = prior.plus(priorReceived);
     audit.record("Form2555 source mapping", row.sourceId, "Actual current foreign receipts already classified by return source", current, "Original one-owner source subset, separately conserved from prior-year services", { owner, sourceId: row.sourceId, priorYearIncomeReceived: priorReceived });
@@ -126,5 +128,5 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
     if (!prior.eq(amount(facts.priorYearIncomeReceived, "prior-year services received this year"))) throw new Error("Form2555 original sources do not reconcile prior-year income received");
     if (priorExclusion.gt(prior)) throw new Error("Form2555 prior exclusion exceeds income actually included in current gross income");
   }
-  return { sourceFactsVerified: true, currentForeignIncome: current, priorYearIncomeReceived: prior, qbiForeignProfit, lines: audit.getLines() };
+  return { sourceFactsVerified: true, currentForeignIncome: current, priorYearIncomeReceived: prior, qbiForeignProfit, scheduleCForeignShare, lines: audit.getLines() };
 }
