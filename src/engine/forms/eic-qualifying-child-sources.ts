@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import type { EicCurrentChildSource } from '@/models/form-8862-sources.js';
 import { calculateEicResidenceDays } from './eic-residence-days.js';
@@ -11,7 +12,7 @@ export interface EicCurrentChildResult {
   sourceId: string; qualifies: boolean; ssnCounted: boolean;
   actualResidenceDays?: number; printedResidenceDays?: number;
   birthInYear?: string; deathInYear?: string;
-  requiresLiveBirthEvidence?: boolean;
+  requiresLiveBirthEvidence?: boolean; tiebreakLost?: true;
 }
 export interface EicQualifyingChildResult {
   qualifyingChildPresent: boolean; qualifyingChildSourceIds: string[]; ssnCountedChildSourceIds: string[];
@@ -21,6 +22,22 @@ const relationshipKey = (v: string) => v.trim().toLowerCase().replaceAll('_', ' 
 const childRelationships = new Set(['child', 'son', 'daughter', 'adopted child', 'stepchild', 'foster child', 'grandchild',
   'sibling', 'brother', 'sister', 'half brother', 'half sister', 'stepbrother', 'stepsister', 'step sibling', 'niece', 'nephew', 'niece nephew']);
 function answer(value: boolean | undefined, label: string): boolean { if (typeof value !== 'boolean') throw new Error(`EIC ${label} is unknown`); return value; }
+function money(value: string | undefined, label: string): Decimal {
+  if (value === undefined || !/^-?\d+(\.\d+)?$/.test(value)) throw new Error(`EIC ${label} needs an actual amount`);
+  return new Decimal(value);
+}
+/** Spec: nonparent-tiebreaker. IRC152(c)(4): a parent first, then the highest AGI. */
+function losesNonparentTiebreak(row: EicCurrentChildSource, joint: boolean): boolean {
+  const others = row.otherEligibleClaimants ?? [];
+  if (others.length === 0) return false;
+  if (joint) throw new Error('EIC tiebreaker on a joint return needs a reviewer method');
+  const filer = money(row.taxpayerTiebreakAgi, 'filer AGI');
+  const rows = others.map(other => ({ parent: answer(other.isParent, 'claimant parent answer'), claims: other.claimsAnyChildTaxBenefit === true, agi: money(other.adjustedGrossIncome, 'claimant AGI') }));
+  if (rows.some(other => other.parent && other.claims)) return true;
+  const highest = Decimal.max(...rows.map(other => other.agi));
+  if (filer.eq(highest)) throw new Error('EIC tiebreaker at equal AGI needs a reviewer method');
+  return filer.lt(highest);
+}
 function date(value: string | undefined, label: string): Date {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error(`EIC ${label} needs an actual date`);
   const result = new Date(`${value}T00:00:00Z`);
@@ -66,7 +83,9 @@ export function calculateEicQualifyingChildSources(input: EicQualifyingChildInpu
       printedDays = (birthInYear || death) && qualifiesHome ? yearDays : actualDays;
     } else if (special) throw new Error('EIC special child residence-period method requires actual day sources');
     if (home && child.monthsLivedWithYou < 6 && !(special && (birthInYear || death))) throw new Error('EIC actual child shared-home answer conflicts with original residence months below six');
-    if (answer(row.marriedAtYearEnd, 'child marital status')) throw new Error('EIC married-child dependency method needs separate actual sources');
+    const married = answer(row.marriedAtYearEnd, 'child marital status');
+    if (married && !row.marriedChildDependency) throw new Error('EIC married-child dependency answer is unknown');
+    if (!married && row.marriedChildDependency !== undefined) throw new Error('EIC married-child dependency answer conflicts with an unmarried child');
     const filedJoint = answer(row.jointReturnFiled, 'child joint-return answer');
     const refundOnly = filedJoint ? answer(row.jointReturnRefundOnly, 'child refund-only answer') : false;
     const ssn = answer(row.validSsnIssuedByDueDate, 'child timely valid SSN answer');
@@ -75,19 +94,21 @@ export function calculateEicQualifyingChildSources(input: EicQualifyingChildInpu
     if (!childRelationships.has(relation)) throw new Error('EIC child relationship needs a supported original category');
     if (relation === 'foster child' && row.authorizedFosterPlacement !== true) throw new Error('EIC foster child needs actual authorized placement');
     if (row.allOtherEligibleClaimantsIncluded !== true || row.otherEligibleClaimants === undefined) throw new Error('EIC competing-claim records are unknown or incomplete');
-    if (row.otherEligibleClaimants.length && !['child', 'son', 'daughter', 'adopted child'].includes(relation)) throw new Error('EIC competing nonparent priority needs separate actual sources');
+    const parent = ['child', 'son', 'daughter', 'adopted child'].includes(relation);
+    if (row.taxpayerTiebreakAgi !== undefined && (parent || row.otherEligibleClaimants.length === 0)) throw new Error('EIC filer AGI has no comparison to make');
     const otherNames = new Set<string>();
     for (const other of row.otherEligibleClaimants) {
       if (!other.name?.trim() || !other.sourceReference?.trim()) throw new Error('EIC other claimant original source is missing');
       const name = other.name.trim().toLowerCase(); if (otherNames.has(name)) throw new Error('EIC duplicate competing claimant source'); otherNames.add(name);
-      if (answer(other.claimsAnyChildTaxBenefit, 'competing child-benefit answer')) throw new Error('EIC contested competing-claim method requires actual priority sources');
+      if (answer(other.claimsAnyChildTaxBenefit, 'competing child-benefit answer') && parent) throw new Error('EIC contested competing-claim method requires actual priority sources');
     }
+    const tiebreakLost = !parent && losesNonparentTiebreak(row, joint);
     const younger = owners.some(owner => birth > date(owner.dateOfBirth, 'claimant birth'));
     const reaches = (age: number) => { const value = new Date(birth); value.setUTCFullYear(value.getUTCFullYear() + age); value.setUTCDate(value.getUTCDate() - 1); return value; };
     let ageEligible = yearEnd < reaches(19) && younger;
     if (!ageEligible && yearEnd < reaches(24) && younger) ageEligible = answer(row.fullTimeStudentForFiveMonths, 'child full-time student answer');
     if (!ageEligible) ageEligible = answer(row.permanentlyAndTotallyDisabled, 'child permanent disability answer');
-    const qualifies = home && (!filedJoint || refundOnly) && ageEligible;
+    const qualifies = home && (!filedJoint || refundOnly) && ageEligible && row.marriedChildDependency !== 'cannot_claim' && !tiebreakLost;
     const evidence = row.bornAndDeceasedRecord;
     const bornAndDeceased = birthInYear && death !== undefined;
     if (evidence !== undefined) {
@@ -99,7 +120,7 @@ export function calculateEicQualifyingChildSources(input: EicQualifyingChildInpu
     if (qualifies && !ssn && bornAndDeceased && !evidence) throw new Error('EIC born-and-deceased child needs actual live-birth record evidence before applying the SSN exception');
     const recordException = qualifies && !ssn && bornAndDeceased && evidence !== undefined;
     results.push({ sourceId: row.sourceId, qualifies, ssnCounted: qualifies && (ssn || recordException),
-      ...(recordException ? { requiresLiveBirthEvidence: true } : {}),
+      ...(recordException ? { requiresLiveBirthEvidence: true } : {}), ...(tiebreakLost ? { tiebreakLost: true as const } : {}),
       ...(actualDays === undefined ? {} : { actualResidenceDays: actualDays, printedResidenceDays: printedDays }),
       ...(birthInYear ? { birthInYear: child.dateOfBirth.slice(5).replace('-', '/') } : {}),
       ...(row.deathDate ? { deathInYear: row.deathDate.slice(5).replace('-', '/') } : {}) });

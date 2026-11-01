@@ -3470,6 +3470,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const eicSeparated = calculateEicSeparatedSpouseSources(input);
   const eicCurrentInput = input.eic?.recertificationSources === undefined ? undefined : { ...input, sources: input.eic.recertificationSources };
   const eicCurrent = eicCurrentInput ? calculateForm8862(eicCurrentInput) : undefined;
+  // Spec: return-agi. These source functions run before AGI exists in the guide, so the entered figure is tied here.
+  for (const row of [...(input.eic?.separatedSpouseSources?.children ?? []), ...(input.eic?.recertificationSources?.children ?? [])]) {
+    if (row.taxpayerTiebreakAgi !== undefined && !roundDollar(d(row.taxpayerTiebreakAgi)).eq(roundDollar(agi))) throw new Error("EIC tiebreaker AGI must match Form 1040 line 11");
+  }
   const qualifyingEicChildren = eicCurrent?.ssnCountedChildSourceIds?.length ?? eicSeparated.ssnCountedChildSourceIds.length;
   const actualEicChildPresent = eicCurrent?.qualifyingChildPresent ?? (eicSeparated.sourceFactsComplete ? eicSeparated.qualifyingChildPresent : undefined);
   audit.merge(eicSeparated.lines);

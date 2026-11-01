@@ -69,7 +69,9 @@ export function buildGuidedEicSeparatedSpouseSources(personal: PersonalInfoData 
       fullTimeStudentForFiveMonths: bool(row.fullTimeStudentForFiveMonths), permanentlyAndTotallyDisabled: bool(row.permanentlyAndTotallyDisabled),
       authorizedFosterPlacement: bool(row.authorizedFosterPlacement), validSsnIssuedByDueDate: bool(row.validSsnIssuedByDueDate),
       allOtherEligibleClaimantsIncluded: bool(row.allOtherEligibleClaimantsIncluded),
-      otherEligibleClaimants: row.otherEligibleClaimants?.map(other => ({ name: other.name, sourceReference: other.sourceReference, claimsAnyChildTaxBenefit: bool(other.claimsAnyChildTaxBenefit) })),
+      otherEligibleClaimants: row.otherEligibleClaimants?.map(other => ({ name: other.name, sourceReference: other.sourceReference, claimsAnyChildTaxBenefit: bool(other.claimsAnyChildTaxBenefit),
+        isParent: bool(other.isParent), adjustedGrossIncome: other.adjustedGrossIncome?.trim() ? other.adjustedGrossIncome.trim().replace(/,/g, '') : undefined })),
+      marriedChildDependency: row.marriedChildDependency || undefined, taxpayerTiebreakAgi: row.taxpayerTiebreakAgi?.trim() ? row.taxpayerTiebreakAgi.trim().replace(/,/g, '') : undefined,
     })),
   };
   const input: EicSeparatedSpouseInput = {

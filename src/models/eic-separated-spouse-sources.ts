@@ -29,7 +29,10 @@ export const EicSeparatedSpouseSourcesSchema = z.object({
     authorizedFosterPlacement: z.boolean().optional(),
     validSsnIssuedByDueDate: z.boolean().optional(),
     allOtherEligibleClaimantsIncluded: z.boolean().optional(),
-    otherEligibleClaimants: z.array(z.object({ name: z.string().optional(), sourceReference: z.string().optional(), claimsAnyChildTaxBenefit: z.boolean().optional() })).optional(),
+    otherEligibleClaimants: z.array(z.object({ name: z.string().optional(), sourceReference: z.string().optional(), claimsAnyChildTaxBenefit: z.boolean().optional(),
+      isParent: z.boolean().optional(), adjustedGrossIncome: z.string().optional() })).optional(),
+    marriedChildDependency: z.enum(['can_claim', 'released_to_other_parent', 'cannot_claim']).optional(),
+    taxpayerTiebreakAgi: z.string().optional(),
   })).optional(),
 });
 
