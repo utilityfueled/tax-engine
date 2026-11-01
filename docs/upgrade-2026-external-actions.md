@@ -1,7 +1,7 @@
 # External actions needed to finish the 2026 upgrade
 
 Prepared October 26, 2026, after `e3dcc3f`, and rechecked October 31 after
-`74f3994e`. No listed input has been supplied. Internal packages are delivered; see the
+`4850901d`. No listed input has been supplied. Internal packages are delivered; see the
 [execution checklist](upgrade-2026-checklist.md).
 This handoff records missing external inputs; it does not declare the remaining
 software finished. The [execution brief](upgrade-2026-execution-brief.md) retains
