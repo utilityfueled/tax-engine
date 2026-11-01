@@ -4725,7 +4725,8 @@ export const ForeignTaxElectionSchema = z.object({
   creditWithForm1116: ForeignTaxOrdinaryCreditSchema.optional(),
   noRedeterminationsConfirmed: z.boolean().optional(),
   sources: z.array(z.object({
-    sourceId: z.string().optional(), // Actual form1099Int:index or form1099Div:index.
+    sourceId: z.string().optional(), // Actual form1099Int, form1099Div, scheduleK1 or scheduleK1Form1041 index.
+    qualifiedPayeeStatement: z.enum(["schedule_k3", "schedule_k1_1041"]).optional(),
     payerName: z.string().optional(), payerTin: z.string().optional(), accountReference: z.string().optional(),
     owner: z.enum(["primary", "spouse"]).optional(),
     foreignCountry: z.string().optional(), jurisdictionType: z.enum(["foreign_country", "us_territory"]).optional(),

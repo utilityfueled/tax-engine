@@ -88,3 +88,9 @@ lines:
     description: "Audited elected AMT credit in the historical review form"
     formula: "Print actual8/9/10 without recomputation; reconcile elected credit to the canonical source result and7-minus8; describe supported904j separately from unimplemented general AMTFTC; keep all review notices and year gates"
     testRef: "tests/pdf/form-6251-direct-credit.test.ts::prints audited elected AMT credit and accurate limitations in a saved review form"
+  - line: "pass-through-statements"
+    description: "Accept passive foreign tax reported on a qualified pass-through statement"
+    formula: "Instructions for Form1116, election without Form1116, name Schedule K-1 (Form1041) and Schedule K-3 (Forms1065 and1120-S) as qualified payee statements. A row scheduleK1:i or scheduleK1Form1041:i binds owner, name and EIN, the statement kind must match the source, and a partnership K-1 row must be passive category. Its tax joins the 300 or 600 limit, and foreign income with no tax still needs its row. The Form1116 route and deductions keep rejecting pass-through tax. A Form1041 statement has no owner field, so it binds only on a return with one owner."
+    irsRef: "Instructions for Form1116 Election To Claim the Foreign Tax Credit Without Filing Form1116, retrieved2026-11-01; IRC904(j)"
+    testRef: "tests/engine/forms/foreign-tax-direct-credit.test.ts::accepts passive tax on a qualified pass-through statement"
+

@@ -63,4 +63,15 @@ describe('Canonical direct foreign tax credit election', () => {
     expect(result.form8801?.lines.find(row => row.line === '23')?.value.toFixed()).toBe('3414');
     expect(result.form8801?.creditAllowed.toFixed()).toBe('10281');
   });
+  it('counts passive K-1 tax once in the elected credit', () => {
+    const base = foreignTaxDirectCreditFixture(2025), first = base.foreignTaxElection!.sources![0]!;
+    const input = TaxYearInputSchema.parse({ ...base, scheduleK1: [{ partnershipName: 'Fictional Fund LP', partnershipEIN: '12-3456789', accountHolder: 'primary', ordinaryIncome: '0', foreignTaxPaid: '50', foreignTaxCategory: 'passive' }],
+      foreignTaxElection: { ...base.foreignTaxElection, sources: [first, { ...first, sourceId: 'scheduleK1:0', payerName: 'Fictional Fund LP', payerTin: '12-3456789', accountReference: undefined, foreignCountry: 'Canada', reportedTaxAmount: '50', qualifiedPayeeStatement: 'schedule_k3', payments: [{ date: '2025-06-01', amountUsd: '50' }] }] } });
+    const result = calculateFederalTax(input);
+    expect(result.foreignTaxDirectCredit?.currentTaxExact.toFixed()).toBe('250.25');
+    expect(result.foreignTaxCredit.toFixed()).toBe('250');
+    expect(result.schedule3?.lines.find(row => row.line === '1')?.value.toFixed()).toBe('250');
+    expect(result.allLines.some(row => row.form.startsWith('Form 1116'))).toBe(false);
+  });
 });
+

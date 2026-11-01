@@ -143,4 +143,25 @@ describe('Actual elected credit without Form1116', () => {
     ];
     for (const change of invalid) { const changed = structuredClone(input); change(changed); expect(() => resolveForeignTaxDirectSources(changed)).toThrow(/carryover|history|year|balance/i); }
   });
+  it('accepts passive tax on a qualified pass-through statement', () => {
+    const k1 = (patch: Record<string, unknown> = {}) => ScheduleK1Schema.parse({ partnershipName: 'Fictional Fund LP', partnershipEIN: '12-3456789', accountHolder: 'primary', ordinaryIncome: '0', foreignTaxPaid: '50', foreignTaxCategory: 'passive', ...patch });
+    const row = (patch: Record<string, unknown> = {}) => ({ ...firstSource(foreignTaxDirectCreditFixture()), sourceId: 'scheduleK1:0', payerName: 'Fictional Fund LP', payerTin: '12-3456789', accountReference: undefined, foreignCountry: 'Canada', reportedTaxAmount: '50', qualifiedPayeeStatement: 'schedule_k3', payments: [{ date: '2025-06-01', amountUsd: '50' }], ...patch });
+    const build = (k1Patch = {}, rowPatch = {}) => { const input = structuredClone(foreignTaxDirectCreditFixture()); input.scheduleK1 = [k1(k1Patch)]; sources(input).push(row(rowPatch) as never); return input; };
+    expect(resolveForeignTaxDirectSources(build()).currentTaxExact.toFixed()).toBe('250.25');
+    const trust = build(); trust.scheduleK1 = []; sources(trust)[1] = row({ sourceId: 'scheduleK1Form1041:0', payerName: 'Fictional Trust', qualifiedPayeeStatement: 'schedule_k1_1041' }) as never;
+    trust.scheduleK1Form1041 = [{ estateTrustName: 'Fictional Trust', estateTrustEIN: '12-3456789', accountHolder: 'primary', foreignTaxesPaid: '50' }] as never;
+    expect(resolveForeignTaxDirectSources(trust).currentTaxExact.toFixed()).toBe('250.25');
+    for (const [k1Patch, rowPatch, message] of [
+      [{ foreignTaxCategory: 'general' }, {}, /passive category/], [{ accountHolder: 'spouse' }, {}, /supported statement and return owner/],
+      [{}, { payerName: 'Other' }, /payer identity/], [{}, { payerTin: '98-7654321' }, /payer identity/], [{}, { qualifiedPayeeStatement: undefined }, /qualified payee statement/],
+      [{}, { qualifiedPayeeStatement: 'schedule_k1_1041' }, /qualified payee statement/], [{}, { foreignCountry: 'Puerto Rico' }, /foreign-country jurisdiction/], [{}, { foreignCountry: undefined }, /foreign-country jurisdiction/],
+      [{}, { reportedTaxAmount: '49' }, /disagrees with the actual statement/], [{}, { sourceId: 'scheduleK1:1' }, /supported statement/],
+      [{ foreignTaxPaid: '150' }, { reportedTaxAmount: '150', payments: [{ date: '2025-06-01', amountUsd: '150' }] }, /exceeds its exact 300/],
+    ] as const) expect(() => resolveForeignTaxDirectSources(build(k1Patch, rowPatch)), JSON.stringify([k1Patch, rowPatch])).toThrow(message);
+    const noRow = structuredClone(foreignTaxDirectCreditFixture()); noRow.scheduleK1 = [k1()];
+    expect(() => resolveForeignTaxDirectSources(noRow)).toThrow(/every actual positive foreign-tax statement/);
+    const incomeOnly = structuredClone(foreignTaxDirectCreditFixture()); incomeOnly.scheduleK1 = [k1({ foreignTaxPaid: '0', foreignSourceIncome: '100' })];
+    expect(() => resolveForeignTaxDirectSources(incomeOnly)).toThrow(/every actual positive foreign-tax statement|pass-through/);
+  });
 });
+

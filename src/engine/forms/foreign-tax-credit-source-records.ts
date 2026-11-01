@@ -74,24 +74,38 @@ export function resolveForeignTaxCreditSourceRecords(input: ForeignTaxCreditSour
   }
   if (owners.size !== expectedOwners.length) throw new Error('Foreign credit requires actual status for every return taxpayer');
   if (input.form2555 && amount(input.form2555.foreignEarnedIncome, 'foreign earned income').gt(0)) throw new Error('Foreign credit cannot ignore actual nonpassive foreign earned income');
-  if ((input.scheduleK1 ?? []).some(row => amount(row.foreignTaxPaid, 'pass-through tax').gt(0) || !d(row.foreignSourceIncome).isZero())
-    || (input.scheduleK1Form1041 ?? []).some(row => amount(row.foreignTaxesPaid, 'trust foreign tax').gt(0))) {
-    throw new Error('Foreign credit pass-through foreign sources require their separate qualified-statement method');
-  }
+  // Spec: pass-through-statements. Only the election without Form 1116 reads these statements.
+  const passThrough = [
+    ...(input.scheduleK1 ?? []).map((row, index) => ({ sourceId: `scheduleK1:${index}`, kind: 'schedule_k3' as const, passive: row.foreignTaxCategory === 'passive', hasIncome: !d(row.foreignSourceIncome).isZero(),
+      form: { accountHolder: row.accountHolder, payer: row.partnershipName, payerTin: row.partnershipEIN, foreignTaxPaid: row.foreignTaxPaid } })),
+    ...(input.scheduleK1Form1041 ?? []).map((row, index) => ({ sourceId: `scheduleK1Form1041:${index}`, kind: 'schedule_k1_1041' as const, passive: true, hasIncome: false,
+      // A trust statement has no owner field, so only a single-owner return can bind it.
+      form: { accountHolder: input.taxpayer.filingStatus === 'married_filing_jointly' ? undefined : 'primary' as const, payer: row.estateTrustName, payerTin: row.estateTrustEIN, foreignTaxPaid: row.foreignTaxesPaid } })),
+  ];
+  if (passThrough.some(row => row.hasIncome || amount(row.form.foreignTaxPaid, 'pass-through tax').gt(0)) && method !== 'direct') throw new Error('Foreign credit pass-through foreign sources require their separate qualified-statement method');
+  if (passThrough.some(row => row.hasIncome && !annual.sources?.some(source => source.sourceId === row.sourceId))) throw new Error('Foreign credit requires every actual positive foreign-tax statement, including pass-through foreign income');
   const statements = [
     ...input.form1099Int.map((form, index) => ({ sourceId: `form1099Int:${index}`, form })),
     ...input.form1099Div.map((form, index) => ({ sourceId: `form1099Div:${index}`, form })),
+    ...passThrough,
   ];
   const audit = new AuditTrail(); const used = new Set<string>(); let currentTaxExact = d('0');
   for (const source of annual.sources) {
     if (!source.sourceId || used.has(source.sourceId)) throw new Error('Foreign credit source ID is missing or duplicate');
     used.add(source.sourceId);
-    const actual = statements.find(row => row.sourceId === source.sourceId)?.form;
+    const statement = statements.find(row => row.sourceId === source.sourceId), actual = statement?.form;
+    const passThroughRow = statement && 'kind' in statement ? statement : undefined;
+    if (passThroughRow) {
+      if (source.qualifiedPayeeStatement !== passThroughRow.kind) throw new Error('Foreign credit pass-through tax requires its actual qualified payee statement');
+      if (!passThroughRow.passive) throw new Error('Foreign credit pass-through tax must be passive category');
+    }
     if (!actual || !actual.accountHolder || source.owner !== actual.accountHolder || !owners.has(source.owner)) throw new Error('Foreign credit requires the actual supported statement and return owner');
     if (!actual.payer.trim() || normalized(source.payerName) !== normalized(actual.payer)
       || !/^\d{9}$/.test(tin(actual.payerTin) ?? '') || tin(source.payerTin) !== tin(actual.payerTin)) throw new Error('Foreign credit must reconcile actual payer identity');
-    if (!actual.accountReference?.trim() || actual.accountReference.trim() !== source.accountReference?.trim()) throw new Error('Foreign credit must reconcile actual account identity');
-    const country = normalized(actual.foreignCountry);
+    // Pass-through statements have no account number, and the country is on the K-3 detail.
+    const direct1099 = passThroughRow ? undefined : actual as { accountReference?: string; foreignCountry?: string };
+    if (direct1099 && (!direct1099.accountReference?.trim() || direct1099.accountReference.trim() !== source.accountReference?.trim())) throw new Error('Foreign credit must reconcile actual account identity');
+    const country = normalized((direct1099 ? direct1099.foreignCountry : source.foreignCountry) ?? '');
     if (!country || country !== normalized(source.foreignCountry) || source.jurisdictionType !== 'foreign_country' || notForeignCountries.has(country)) throw new Error('Foreign credit requires actual foreign-country jurisdiction; territories need their separate method');
     const eligibility = source.creditEligibility;
     if (source.qualifiedIncomeTaxConfirmed !== true || !source.sourceReference?.trim() || !eligibility
