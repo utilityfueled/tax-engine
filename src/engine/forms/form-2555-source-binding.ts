@@ -25,7 +25,7 @@ const ein = (value: string | undefined) => value?.replace(/-/g, "");
 export function resolveForm2555Sources(input: Form2555SourceContext) {
   const audit = new AuditTrail();
   const facts = input.form2555;
-  const qbiForeignProfit: { sourceId: string; amount: Decimal; receipts: Decimal }[] = [];
+  const qbiForeignProfit: { sourceId: string; amount: Decimal; receipts: Decimal; capitalMaterial: boolean }[] = [];
   const scheduleCForeignShare: { foreign: Decimal; grossIncome: Decimal }[] = [];
   const empty = { sourceFactsVerified: false, currentForeignIncome: new Decimal(0), priorYearIncomeReceived: new Decimal(0), qbiForeignProfit, scheduleCForeignShare, lines: audit.getLines() };
   if (!facts) return empty;
@@ -98,7 +98,9 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
       if (!original || original.accountHolder !== owner || original.taxYear !== year) throw new Error("Form2555 original Schedule K-1 owner or year is unknown or conflicting");
       if (!sameName(row.payerName, original.partnershipName) || !/^\d{9}$/.test(ein(row.payerEin) ?? "") || ein(row.payerEin) !== ein(original.partnershipEIN)) throw new Error("Form2555 original Schedule K-1 identity does not reconcile");
       if (row.partnerPerformedServicesConfirmed !== true || typeof row.capitalMaterialIncomeFactor !== "boolean") throw new Error("Form2555 partner services and capital answers are unknown");
-      if (row.capitalMaterialIncomeFactor) throw new Error("Form2555 partnership income with capital as a material factor needs the 30 percent method");
+      // Spec: partnership-capital-limit. The 30 percent limit runs in federal.ts, where the deduction exists.
+      if (row.capitalMaterialIncomeFactor && (row.reasonableAllowanceConfirmed !== true || row.reasonableServicesAllowance === undefined
+        || combined.gt(amount(row.reasonableServicesAllowance, "reasonable allowance for services")))) throw new Error("Form2555 partnership receipts need a confirmed reasonable allowance for the services");
       if (priorReceived.gt(0)) throw new Error("Form2555 prior partnership services require their separate current-income source method");
       if (combined.gt(amount(original.selfEmploymentEarnings, "Schedule K-1 Box 14 code A"))) throw new Error("Form2555 partnership receipts exceed Schedule K-1 Box 14 code A");
       // Spec: qbi-foreign-profit. A K-1 statement may already omit this income from QBI.
@@ -107,7 +109,7 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
       if (foreignProfit.gt(new Decimal(original.section199AQBI ?? 0))) throw new Error("Form2555 foreign profit inside QBI exceeds the Schedule K-1 QBI");
       if (foreignProfit.isZero() && new Decimal(original.section199AQBI ?? 0).gt(0) && row.k1QbiExcludesForeignConfirmed !== true) throw new Error("Form2555 confirm that the Schedule K-1 QBI already omits this foreign profit");
       if (foreignProfit.gt(0) && (new Decimal(original.section199AW2Wages ?? 0).gt(0) || new Decimal(original.section199AUBIA ?? 0).gt(0))) throw new Error("Form2555 foreign profit inside K-1 QBI needs its wages and UBIA apportioned");
-      qbiForeignProfit.push({ sourceId: row.sourceId, amount: foreignProfit, receipts: combined });
+      qbiForeignProfit.push({ sourceId: row.sourceId, amount: foreignProfit, receipts: combined, capitalMaterial: row.capitalMaterialIncomeFactor });
       key = "foreignPartnershipIncomeAlreadyReported";
     } else if (/^foreignEmployment:[A-Za-z0-9][A-Za-z0-9._-]*$/.test(row.sourceId)) {
       if (row.notIncludedInW2Confirmed !== true) throw new Error("Form2555 separate foreign employment must be confirmed absent from W2 income");

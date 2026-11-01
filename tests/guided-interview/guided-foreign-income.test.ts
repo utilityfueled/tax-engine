@@ -167,7 +167,11 @@ it("binds an actual partnership source from the guide", () => {
   expect(built).toMatchObject({ isSelfEmployed: true, incomeSources: { foreignPartnershipIncomeAlreadyReported: "70000", foreignEmploymentIncomeIncludedOnW2: "0" } });
   expect(built?.sourceMapping?.rows[0]).toMatchObject({ partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false });
   data.sources[0]!.capitalMaterialIncomeFactor = true;
-  expect(() => buildForeignIncomeInput(data, state)).toThrow(/30 percent method/);
+  expect(() => buildForeignIncomeInput(data, state)).toThrow(/reasonable allowance/);
+  Object.assign(data.sources[0]!, { reasonableServicesAllowance: "70,000", reasonableAllowanceConfirmed: true });
+  expect(buildForeignIncomeInput(data, state)?.sourceMapping?.rows[0]).toMatchObject({ reasonableServicesAllowance: "70000", reasonableAllowanceConfirmed: true });
+  data.sources[0]!.reasonableAllowanceConfirmed = null;
+  expect(() => buildForeignIncomeInput(data, state)).toThrow(/reasonable allowance/);
   data.sources[0]!.capitalMaterialIncomeFactor = null;
   expect(() => buildForeignIncomeInput(data, state)).toThrow(/partner services and capital answers/);
   data.sources[0]!.capitalMaterialIncomeFactor = false; data.sources[0]!.qbiForeignProfit = "";

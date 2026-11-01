@@ -29,7 +29,7 @@ A rejection here is not an external blocker unless its class says so. Year guard
 | COD | Chapters 7, 11 and 12 of title 11, modified-loss exhaustion, current EBL origin | `cod-nol-reductions.ts` |
 | Premium tax credit | Separate-return allocation, overlapping shared policies, no-APTC allocation, below-poverty marriage | `form-8962-*.ts` |
 | Education | Partial in-kind allocation, Coverdell disqualification with later activity | `form-1099-q.ts` |
-| Foreign earned income | Partnership income where capital is a material factor, prior partnership services, prior non-W2 income, other mappings | `form-2555-source-binding.ts` |
+| Foreign earned income | Schedule C income where capital is a material factor, partnership net loss, prior partnership services, prior non-W2 income, other mappings | `form-2555-source-binding.ts` |
 | EIC | Active appeal | `eic-*.ts` |
 | Digital assets | Multiple-state reporting, market discount, derived crypto dispositions | `form-1099-da-sources.ts` |
 

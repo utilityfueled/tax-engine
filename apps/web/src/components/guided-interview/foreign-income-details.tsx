@@ -86,6 +86,10 @@ export function ForeignIncomeDetails({ data, sources = [], onChange }: { data?: 
           <BooleanFact label={`Capital was also a material source of this partnership's income ${index + 1}`} value={row.capitalMaterialIncomeFactor ?? null} onChange={capitalMaterialIncomeFactor => sourceUpdate(index, { capitalMaterialIncomeFactor })} />
         </>}
         {row.sourceId.startsWith("scheduleK1:") && <>
+          {row.capitalMaterialIncomeFactor === true && <>
+            <CurrencyField label={`Reasonable allowance for your services ${index + 1}`} value={row.reasonableServicesAllowance ?? ""} required onChange={reasonableServicesAllowance => sourceUpdate(index, { reasonableServicesAllowance })} />
+            <BooleanFact label={`Records support that allowance ${index + 1}`} value={row.reasonableAllowanceConfirmed ?? null} onChange={reasonableAllowanceConfirmed => sourceUpdate(index, { reasonableAllowanceConfirmed })} />
+          </>}
           <CurrencyField label={`Net profit from these services inside the K-1 QBI, or 0 if none ${index + 1}`} value={row.qbiForeignProfit ?? ""} required onChange={qbiForeignProfit => sourceUpdate(index, { qbiForeignProfit })} />
           <BooleanFact label={`The K-1 QBI already leaves out this foreign profit ${index + 1}`} value={row.k1QbiExcludesForeignConfirmed ?? null} onChange={k1QbiExcludesForeignConfirmed => sourceUpdate(index, { k1QbiExcludesForeignConfirmed })} />
         </>}

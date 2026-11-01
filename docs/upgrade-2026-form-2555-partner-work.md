@@ -8,7 +8,8 @@ Foreign earned income from a partnership rejected outright. Review of that work 
 
 - A `scheduleK1:i` row binds to that statement's owner, year, name and EIN, and reports on Form 2555 line 20b.
 - Receipts cannot exceed Box 14 code A, which reports earnings from active service. It is a net figure and can be lower than the partner's gross share, as in the Pub 54 partner example, so the ceiling can reject and cannot overstate.
-- The partner confirms performing the services in a foreign country, and that capital was not a material income-producing factor.
+- The partner confirms performing the services in a foreign country, and answers whether capital was a material income-producing factor.
+- Where capital is material, Reg. 1.911-3(b)(2) limits earned income to a reasonable allowance for the services, and to 30% of the partner's share of net profits. The Form 2555 instructions apply the 30% after the employer-equivalent self-employment deduction.
 - QBI excludes income not effectively connected with a U.S. trade or business, whether or not the income is excluded. Schedule C foreign profit is computed as net profit times foreign receipts over gross income, the Pub 54 ratio, so a filer enters nothing. A K-1 row enters the profit from those services inside its QBI, and zero with positive K-1 QBI needs confirmation that the statement already omits it.
 - The reduction comes before the deductions that lower QBI, and only the U.S. share of the self-employment tax deduction lowers QBI. All-foreign profit gives QBI of zero and no loss carryforward.
 - Pub 54 makes the self-employment tax deduction allocable to excluded income. The entered allocable deductions must reach the foreign share of the deduction times the exclusion over foreign earned income, and the error names the amount. The housing exclusion stays out of that ratio because Pub 54 does not name it.
@@ -16,7 +17,8 @@ Foreign earned income from a partnership rejected outright. Review of that work 
 
 ## Limits
 
-- Capital as a material factor rejects, because the line 20 30% limit needs the employer-equivalent deduction for that share.
+- Schedule C with capital as a material factor stays rejected in the guide, because its QBI ratio reads receipts and only part of the foreign profit would be reported.
+- A net loss rejects on the Box 14 code A ceiling, though Pub 54 Example 4 lets a reasonable allowance stand with no 30% limit.
 - Prior-year partnership services reject.
 - A K-1's foreign profit is entered, because the statement decides what sits in its QBI. K-1 or Schedule C W-2 wages or UBIA with a positive reduction reject, because they would need apportioning.
 - Health insurance and retirement deductions stay charged in full against U.S. QBI. No source reviewed says whether they follow the foreign share, so this is a reviewer question.

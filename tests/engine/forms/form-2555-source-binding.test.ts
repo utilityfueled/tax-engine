@@ -169,7 +169,7 @@ it("binds active-partner income to its Schedule K-1", () => {
   expect(run().currentForeignIncome.toFixed()).toBe("70000");
   expect(run(facts({}, "80000")).currentForeignIncome.toFixed()).toBe("80000");
   expect(() => run(facts({}, "80000.01"))).toThrow(/exceed Schedule K-1 Box 14 code A/);
-  expect(() => run(facts({ capitalMaterialIncomeFactor: true }))).toThrow(/30 percent method/);
+  expect(() => run(facts({ capitalMaterialIncomeFactor: true }))).toThrow(/reasonable allowance/);
   for (const patch of [{ capitalMaterialIncomeFactor: undefined }, { partnerPerformedServicesConfirmed: undefined }, { partnerPerformedServicesConfirmed: false }]) expect(() => run(facts(patch)), JSON.stringify(patch)).toThrow(/partner/i);
   for (const patch of [{ payerName: "Changed" }, { payerEin: "98-7654321" }, { payerEin: undefined }, { sourceId: "scheduleK1:1" }, { sourceId: "scheduleK1:00" }]) expect(() => run(facts(patch)), JSON.stringify(patch)).toThrow();
   for (const change of [{ accountHolder: "spouse" }, { taxYear: 2024 }, { taxYear: undefined }, { selfEmploymentEarnings: undefined }]) expect(() => run(facts(), { ...k1, ...change }), JSON.stringify(change)).toThrow();
@@ -213,7 +213,7 @@ it("removes foreign business profit from QBI", () => {
   const removed = calculateFederalTax(withWages(partnerReturn(k1))), kept = calculateFederalTax(withWages(partnerReturn(k1, {}, "0", true)));
   expect(new Decimal(line13(kept)).minus(line13(removed)).gt("13000")).toBe(true);
   expect(new Decimal(line13(removed)).gt(0)).toBe(true);
-  expect(resolveForm2555Sources(partnerReturn(k1) as never).qbiForeignProfit).toEqual([{ sourceId: "scheduleK1:0", amount: new Decimal("70000"), receipts: new Decimal("70000") }]);
+  expect(resolveForm2555Sources(partnerReturn(k1) as never).qbiForeignProfit).toEqual([{ sourceId: "scheduleK1:0", amount: new Decimal("70000"), receipts: new Decimal("70000"), capitalMaterial: false }]);
   expect(() => calculateFederalTax(partnerReturn(k1, {}, "0"))).toThrow(/already omits this foreign profit/);
   expect(() => calculateFederalTax(partnerReturn({ ...k1, section199AW2Wages: "1" }))).toThrow(/wages and UBIA/);
   expect(() => calculateFederalTax(partnerReturn({ ...k1, section199AUBIA: "1" }))).toThrow(/wages and UBIA/);
@@ -268,5 +268,20 @@ it("requires the allocable self-employment deduction", () => {
   // A domestic Schedule C keeps its wages and UBIA.
   const domesticWages = businessReturn("0", "0", { w2WagesPaid: "10000" }); domesticWages.form2555 = undefined;
   expect(() => calculateFederalTax(domesticWages)).not.toThrow();
+});
+
+it("limits earned income where capital is material", () => {
+  const capital = (receipts: string, patch: Record<string, unknown> = {}, k1: Record<string, unknown> = {}) => { const value = partnerReturn({ ordinaryIncome: "54147", selfEmploymentEarnings: "54147", ...k1 }, { foreignEarnedIncome: receipts, partIV: { ...source().partIV, wages: "0", partnershipPersonalServices: receipts }, incomeSources: { ...source().incomeSources, foreignEmploymentIncomeIncludedOnW2: "0", foreignPartnershipIncomeAlreadyReported: receipts }, deductionsAllocableToExcludedIncome: "9999" }, "0");
+    Object.assign(value.form2555!.sourceMapping!.rows[0]!, { foreignEarnedIncome: receipts, capitalMaterialIncomeFactor: true, reasonableServicesAllowance: "20000", reasonableAllowanceConfirmed: true, ...patch });
+    return value; };
+  expect(calculateFederalTax(capital("15096")).form2555?.foreignEarnedIncome.toFixed()).toBe("15096");
+  expect(() => calculateFederalTax(capital("15097"))).toThrow(/30 percent limit of 15096/);
+  // Guaranteed payments are part of the share.
+  expect(() => calculateFederalTax(capital("15097", {}, { ordinaryIncome: "44147", guaranteedPayments: "10000" }))).toThrow(/30 percent limit of 15096/);
+  expect(() => calculateFederalTax(capital("15096", { reasonableServicesAllowance: "15095" }))).toThrow(/reasonable allowance/);
+  expect(() => calculateFederalTax(capital("15096", { reasonableServicesAllowance: undefined }))).toThrow(/reasonable allowance/);
+  expect(() => calculateFederalTax(capital("15096", { reasonableAllowanceConfirmed: false }))).toThrow(/reasonable allowance/);
+  expect(() => calculateFederalTax(capital("15096", { capitalMaterialIncomeFactor: false }, {}))).not.toThrow(/30 percent limit/);
+  expect(() => calculateFederalTax(capital("20000", { capitalMaterialIncomeFactor: false }))).not.toThrow(/30 percent limit/);
 });
 

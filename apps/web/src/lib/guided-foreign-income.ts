@@ -17,6 +17,7 @@ export interface ForeignIncomeSourceData {
   sourceId: string; sourceTaxYear: string; accountHolder: "" | Owner; sourceReference: string; payerName: string; payerEin: string;
   foreignEarnedIncome: string; priorYearIncomeReceived: string; notIncludedInW2Confirmed: boolean | null;
   partnerPerformedServicesConfirmed?: boolean | null; capitalMaterialIncomeFactor?: boolean | null; qbiForeignProfit?: string; k1QbiExcludesForeignConfirmed?: boolean | null;
+  reasonableServicesAllowance?: string; reasonableAllowanceConfirmed?: boolean | null;
   businessGrossReceipts: string; businessReturnsAndAllowances: string; businessCostOfGoodsSold: string; businessOtherIncome: string;
 }
 export interface ForeignIncomeData {
@@ -185,7 +186,8 @@ export function buildForeignIncomeInput(data: ForeignIncomeData | undefined, sta
     foreignEarnedIncome: money(row.foreignEarnedIncome, "current foreign source receipts"), priorYearIncomeReceived: money(row.priorYearIncomeReceived, "prior-year services received this year"),
     notIncludedInW2Confirmed: row.notIncludedInW2Confirmed ?? undefined,
     partnerPerformedServicesConfirmed: row.partnerPerformedServicesConfirmed ?? undefined, capitalMaterialIncomeFactor: row.capitalMaterialIncomeFactor ?? undefined,
-    ...(row.sourceId.startsWith("scheduleK1:") ? { qbiForeignProfit: money(row.qbiForeignProfit ?? "", "net profit from these services inside K-1 QBI"), k1QbiExcludesForeignConfirmed: row.k1QbiExcludesForeignConfirmed ?? undefined } : {}),
+    ...(row.sourceId.startsWith("scheduleK1:") ? { qbiForeignProfit: money(row.qbiForeignProfit ?? "", "net profit from these services inside K-1 QBI"), k1QbiExcludesForeignConfirmed: row.k1QbiExcludesForeignConfirmed ?? undefined,
+      ...(row.capitalMaterialIncomeFactor === true ? { reasonableServicesAllowance: money(row.reasonableServicesAllowance ?? "", "reasonable allowance for the services"), reasonableAllowanceConfirmed: row.reasonableAllowanceConfirmed ?? undefined } : {}) } : {}),
     ...Object.fromEntries((["businessGrossReceipts", "businessReturnsAndAllowances", "businessCostOfGoodsSold", "businessOtherIncome"] as const)
       .filter(key => row.sourceId === "scheduleC" || hasEnteredAmount(row[key])).map(key => [key, money(row[key], `actual ${key}`)])),
   }));

@@ -1659,6 +1659,16 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     ?? (filingStatus === "married_filing_jointly" ? undefined : schedSE.perTaxpayer[0]);
   const foreignSeDeduction = foreignSeOwner && foreignSelfEmployment.gt(0) && foreignSeOwner.netSEEarnings.gt(0)
     ? foreignSeOwner.deductibleHalf.times(Decimal.min(1, foreignSelfEmployment.div(foreignSeOwner.netSEEarnings))) : d("0");
+  // Spec: partnership-capital-limit. Thirty percent of the share of net profits after this K-1's deduction.
+  for (const row of foreignIncomeSources.qbiForeignProfit) {
+    if (!row.capitalMaterial) continue;
+    const k1 = input.scheduleK1[Number(row.sourceId.replace("scheduleK1:", ""))];
+    const share = d(k1?.ordinaryIncome).plus(d(k1?.guaranteedPayments));
+    const earnings = zeroFloor(d(k1?.selfEmploymentNetEarningsAfterAdjustments ?? k1?.selfEmploymentEarnings));
+    const deduction = foreignSeOwner?.netSEEarnings.gt(0) ? foreignSeOwner.deductibleHalf.times(Decimal.min(1, earnings.div(foreignSeOwner.netSEEarnings))) : d("0");
+    const limit = zeroFloor(share.minus(deduction)).times("0.3").toDecimalPlaces(0, Decimal.ROUND_DOWN);
+    if (row.receipts.gt(limit)) throw new Error(`Form2555 partnership receipts exceed the 30 percent limit of ${limit.toFixed()}`);
+  }
   if (form2555 && foreignSeDeduction.gt(0) && form2555.foreignEarnedIncome.gt(0)) {
     const minimum = foreignSeDeduction.times(Decimal.min(1, form2555.foreignEarnedIncomeExclusion.div(form2555.foreignEarnedIncome))).toDecimalPlaces(0, Decimal.ROUND_DOWN);
     if (d(input.form2555?.deductionsAllocableToExcludedIncome).lt(minimum)) throw new Error(`Form2555 deductions allocable to excluded income must include at least ${minimum.toFixed()} of the self-employment tax deduction`);
