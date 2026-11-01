@@ -202,7 +202,7 @@
   ],
   "ongoingExecution": {
     "status": "internal-queue-delivered-external-gates-and-registered-methods-open",
-    "lastRecordedCommit": "204aa9f47a2bcbed144a8b8161489b31d17a89af",
+    "lastRecordedCommit": "a3e43a9fb49ee616025786e22ffadf10376f131c",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
     "telemetryCommit": "3408c76",
@@ -1315,7 +1315,7 @@
       "Resolve three source failures and eighteen coverage timeouts from exact036; then run final unchanged complete unit/coverage/static/build/browser gates. No final coverage result yet.",
       "Run final native arm64/amd64 SBOM/scan/recovery after source integration. Historical runtime evidence does not qualify current source. External human, staging, provider, final-form and advisory gates remain open."
     ],
-    "latestIntegratedCommit": "204aa9f47a2bcbed144a8b8161489b31d17a89af",
+    "latestIntegratedCommit": "a3e43a9fb49ee616025786e22ffadf10376f131c",
     "activeIntegrationRun": {
       "sourceCommit": "3669b0006a8e3d60028d22e5ffa517096b3c58e1",
       "tree": "c83a425f6be47e59f0fa550e8c7dcffded89c0da",
