@@ -10,6 +10,7 @@ export interface Form2555SourceContext {
   w2s: { employer: { name: string; ein: string }; accountHolder?: string; taxYear?: number; wages?: string }[];
   scheduleC?: { accountHolder?: string; businessName?: string; ein?: string; grossReceipts?: string; returnsAndAllowances?: string; costOfGoodsSold?: string; otherIncome?: string };
   form1099Nec: { accountHolder?: string; nonemployeeCompensation?: string }[];
+  scheduleK1?: { accountHolder?: string; taxYear?: number; partnershipName?: string; partnershipEIN?: string; selfEmploymentEarnings?: string }[];
 }
 const incomeKeys = ["foreignEmploymentIncomeIncludedOnW2", "foreignEmploymentIncomeNotOnW2", "foreignBusinessIncomeAlreadyReported", "foreignPartnershipIncomeAlreadyReported", "otherForeignIncomeAlreadyReported"] as const;
 function amount(value: string | undefined, label: string): Decimal {
@@ -39,7 +40,7 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
   if (facts.taxYear !== year) throw new Error("Form2555 original source year must match the actual return");
   if (!facts.incomeSources || facts.incomeSourceMappingConfirmed !== true) throw new Error("Form2555 requires the actual classified income-source amounts");
   const mapped = Object.fromEntries(incomeKeys.map(key => [key, amount(facts.incomeSources?.[key], key)])) as Record<typeof incomeKeys[number], Decimal>;
-  if (mapped.foreignPartnershipIncomeAlreadyReported.gt(0) || mapped.otherForeignIncomeAlreadyReported.gt(0)) throw new Error("Form2555 positive partnership or other mappings require their separate original-source method");
+  if (mapped.otherForeignIncomeAlreadyReported.gt(0)) throw new Error("Form2555 positive other mappings require their separate original-source method");
   if (!facts.partIV || !amount(facts.partIV.businessPersonalServices, "PartIV business personal services").eq(mapped.foreignBusinessIncomeAlreadyReported)
     || !amount(facts.partIV.partnershipPersonalServices, "PartIV partnership personal services").eq(mapped.foreignPartnershipIncomeAlreadyReported)) {
     throw new Error("Form2555 PartIV business and partnership classifications must reconcile to their actual source categories");
@@ -88,6 +89,16 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
       const grossIncome = receipts.minus(returns).minus(cogs).plus(other);
       if (combined.gt(grossIncome)) throw new Error("Form2555 current and prior foreign receipts exceed actual ScheduleC gross income");
       key = "foreignBusinessIncomeAlreadyReported";
+    } else if (/^scheduleK1:(0|[1-9]\d*)$/.test(row.sourceId)) {
+      // Spec: partnership-services. Box14 code A exists only for active service.
+      const original = input.scheduleK1?.[Number(row.sourceId.slice("scheduleK1:".length))];
+      if (!original || original.accountHolder !== owner || original.taxYear !== year) throw new Error("Form2555 original Schedule K-1 owner or year is unknown or conflicting");
+      if (!sameName(row.payerName, original.partnershipName) || !/^\d{9}$/.test(ein(row.payerEin) ?? "") || ein(row.payerEin) !== ein(original.partnershipEIN)) throw new Error("Form2555 original Schedule K-1 identity does not reconcile");
+      if (row.partnerPerformedServicesConfirmed !== true || typeof row.capitalMaterialIncomeFactor !== "boolean") throw new Error("Form2555 partner services and capital answers are unknown");
+      if (row.capitalMaterialIncomeFactor) throw new Error("Form2555 partnership income with capital as a material factor needs the 30 percent method");
+      if (priorReceived.gt(0)) throw new Error("Form2555 prior partnership services require their separate current-income source method");
+      if (combined.gt(amount(original.selfEmploymentEarnings, "Schedule K-1 Box 14 code A"))) throw new Error("Form2555 partnership receipts exceed Schedule K-1 Box 14 code A");
+      key = "foreignPartnershipIncomeAlreadyReported";
     } else if (/^foreignEmployment:[A-Za-z0-9][A-Za-z0-9._-]*$/.test(row.sourceId)) {
       if (row.notIncludedInW2Confirmed !== true) throw new Error("Form2555 separate foreign employment must be confirmed absent from W2 income");
       if (priorReceived.gt(0)) throw new Error("Form2555 prior non-W2 employment requires its separate current-income source method");

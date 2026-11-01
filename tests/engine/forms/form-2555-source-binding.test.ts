@@ -158,3 +158,25 @@ it("rejects missing and contradictory original receipt facts", () => {
   separate.sourceMapping.rows.push({ ...separate.sourceMapping.rows[0], sourceId: "foreignEmployment:two" });
   expect(() => resolveForm2555Sources(input({ form2555: separate }))).toThrow(/duplicate.*reference/);
 });
+
+it("binds active-partner income to its Schedule K-1", () => {
+  const k1 = { taxYear: 2025, accountHolder: "primary", partnershipName: "Fictional Partners", partnershipEIN: "12-3456789", ordinaryIncome: "90000", selfEmploymentEarnings: "80000" };
+  const facts = (patch = {}, amount = "70000") => { const form = source(); Object.assign(form, { foreignEarnedIncome: amount, isSelfEmployed: true, employerProvidedForeignEarnedIncome: "0",
+    partIV: { ...form.partIV, wages: "0", partnershipPersonalServices: amount }, incomeSources: { ...form.incomeSources, foreignEmploymentIncomeIncludedOnW2: "0", foreignPartnershipIncomeAlreadyReported: amount } });
+    form.sourceMapping.rows = [{ ...form.sourceMapping.rows[0]!, sourceId: "scheduleK1:0", payerName: "Fictional Partners", payerEin: "12-3456789", foreignEarnedIncome: amount, partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false, ...patch } as never]; return form; };
+  const run = (form = facts(), original: Record<string, unknown> = k1) => resolveForm2555Sources({ ...input({ form2555: form }), scheduleK1: [original] } as never);
+  expect(run().currentForeignIncome.toFixed()).toBe("70000");
+  expect(run(facts({}, "80000")).currentForeignIncome.toFixed()).toBe("80000");
+  expect(() => run(facts({}, "80000.01"))).toThrow(/exceed Schedule K-1 Box 14 code A/);
+  expect(() => run(facts({ capitalMaterialIncomeFactor: true }))).toThrow(/30 percent method/);
+  for (const patch of [{ capitalMaterialIncomeFactor: undefined }, { partnerPerformedServicesConfirmed: undefined }, { partnerPerformedServicesConfirmed: false }]) expect(() => run(facts(patch)), JSON.stringify(patch)).toThrow(/partner/i);
+  for (const patch of [{ payerName: "Changed" }, { payerEin: "98-7654321" }, { payerEin: undefined }, { sourceId: "scheduleK1:1" }, { sourceId: "scheduleK1:00" }]) expect(() => run(facts(patch)), JSON.stringify(patch)).toThrow();
+  for (const change of [{ accountHolder: "spouse" }, { taxYear: 2024 }, { taxYear: undefined }, { selfEmploymentEarnings: undefined }]) expect(() => run(facts(), { ...k1, ...change }), JSON.stringify(change)).toThrow();
+  expect(() => run(facts({ priorYearIncomeReceived: "1" }))).toThrow(/prior/i);
+  const withReturn = TaxYearInputSchema.parse({ ...simpleW2Fixture, w2s: [], form2555: facts(), scheduleK1: [{ ...k1, ordinaryIncome: "80000", guaranteedPayments: "0" }] });
+  const excluded = calculateFederalTax(withReturn), included = calculateFederalTax(TaxYearInputSchema.parse({ ...withReturn, form2555: undefined }));
+  expect(included.agi.minus(excluded.agi).toFixed()).toBe("70000");
+  const other = facts(); Object.assign(other, { incomeSources: { ...other.incomeSources, foreignPartnershipIncomeAlreadyReported: "0", otherForeignIncomeAlreadyReported: "70000" } });
+  expect(() => run(other)).toThrow(/other mappings/);
+});
+

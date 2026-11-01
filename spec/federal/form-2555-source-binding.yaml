@@ -44,3 +44,9 @@ lines:
     formula: "Known zero is valid. Missing, blank, negative or nonfinite source amounts, source references and category amounts reject; separately named foreign employment cannot duplicate the same receipt reference. Prior received income must reconcile before any exclusion."
     irsRef: "Form2555 PartIV and income earned in prior year statement"
     testRef: "tests/engine/forms/form-2555-source-binding.test.ts::rejects missing and contradictory original receipt facts"
+  - line: "partnership-services"
+    description: "Bind active-partner foreign income to its Schedule K-1"
+    formula: "Form2555 line20b. A row scheduleK1:i must match that statement's owner, year, partnership name and EIN, and its current plus prior receipts cannot exceed Box14 code A, which reports earnings from active service. The partner must confirm performing the services and that capital was not a material income-producing factor. Capital as a material factor rejects, because the line20 30 percent limit needs the employer-equivalent self-employment tax deduction for that share. Form2555 still requires self-employment classification."
+    irsRef: "Instructions for Form2555 line20, retrieved2026-11-01; Reg1.911-3(b)(2)"
+    testRef: "tests/engine/forms/form-2555-source-binding.test.ts::binds active-partner income to its Schedule K-1"
+

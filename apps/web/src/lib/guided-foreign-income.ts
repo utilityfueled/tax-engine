@@ -9,12 +9,14 @@ import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import { isStartedNec, sumKnownBusinessAmounts } from "./guided-business-facts";
 import { actualCompensationSourceYear } from "./guided-compensation-reporting";
+import { buildGuidedK1Sources } from "./guided-k1-qbi-sources";
 
 type Owner = "primary" | "spouse";
 export const foreignIncomePartIVKeys = ["wages", "businessPersonalServices", "partnershipPersonalServices", "noncashLodging", "noncashMeals", "noncashCar", "noncashOther", "allowanceCostOfLiving", "allowanceFamily", "allowanceEducation", "allowanceHomeLeave", "allowanceQuarters", "allowanceOther", "otherEarnedIncome", "section119MealsAndLodging"] as const;
 export interface ForeignIncomeSourceData {
   sourceId: string; sourceTaxYear: string; accountHolder: "" | Owner; sourceReference: string; payerName: string; payerEin: string;
   foreignEarnedIncome: string; priorYearIncomeReceived: string; notIncludedInW2Confirmed: boolean | null;
+  partnerPerformedServicesConfirmed?: boolean | null; capitalMaterialIncomeFactor?: boolean | null;
   businessGrossReceipts: string; businessReturnsAndAllowances: string; businessCostOfGoodsSold: string; businessOtherIncome: string;
 }
 export interface ForeignIncomeData {
@@ -91,13 +93,19 @@ function sourceContext(state: GuidedFlowState): Form2555SourceContext {
       returnsAndAllowances: hasEnteredAmount(facts.returnsAndAllowances) ? money(facts.returnsAndAllowances, "business returns") : undefined,
       costOfGoodsSold: hasEnteredAmount(facts.costOfGoodsSold) ? money(facts.costOfGoodsSold, "business cost of goods sold") : undefined,
       otherIncome: hasEnteredAmount(facts.otherIncome) ? money(facts.otherIncome, "business other income") : undefined } : undefined,
+    scheduleK1: guidedK1Originals(state).map(k1 => ({ accountHolder: k1.accountHolder, taxYear: k1.taxYear, partnershipName: k1.partnershipName, partnershipEIN: k1.partnershipEIN, selfEmploymentEarnings: k1.selfEmploymentEarnings })),
     form1099Nec: necs.map(entry => ({ accountHolder: entry.accountHolder || undefined, nonemployeeCompensation: hasEnteredAmount(entry.nonemployeeCompensation) ? money(entry.nonemployeeCompensation, "original NEC compensation") : undefined })),
   };
+}
+/** A K-1 packet still being entered has no originals to bind yet. */
+function guidedK1Originals(state: GuidedFlowState) {
+  try { return buildGuidedK1Sources(state.sectionData.adjustments?.k1LossSources, state)?.scheduleK1 ?? []; } catch { return []; }
 }
 export function foreignIncomeSourceOptions(state: GuidedFlowState): { sourceId: string; label: string }[] {
   const result = (state.sectionData["income-w2"]?.entries ?? []).filter(entry => hasEnteredAmount(entry.wages) || hasEnteredAmount(entry.federalWithheld))
     .map((entry, index) => ({ sourceId: `formW2:${index}`, label: `W-2 ${index + 1}: ${entry.employerName || "Unnamed employer"}` }));
   if (state.sectionData["income-self-employment"]?.businessFacts) result.push({ sourceId: "scheduleC", label: `Schedule C: ${state.sectionData["income-self-employment"]?.businessFacts?.businessName || "Actual business"}` });
+  guidedK1Originals(state).forEach((k1, index) => result.push({ sourceId: `scheduleK1:${index}`, label: `Schedule K-1 ${index + 1}: ${k1.partnershipName}` }));
   return result;
 }
 function qualification(data: ForeignIncomeData, year: number) {
@@ -176,14 +184,15 @@ export function buildForeignIncomeInput(data: ForeignIncomeData | undefined, sta
     sourceReference: row.sourceReference, payerName: row.payerName, payerEin: row.payerEin.trim() || undefined,
     foreignEarnedIncome: money(row.foreignEarnedIncome, "current foreign source receipts"), priorYearIncomeReceived: money(row.priorYearIncomeReceived, "prior-year services received this year"),
     notIncludedInW2Confirmed: row.notIncludedInW2Confirmed ?? undefined,
+    partnerPerformedServicesConfirmed: row.partnerPerformedServicesConfirmed ?? undefined, capitalMaterialIncomeFactor: row.capitalMaterialIncomeFactor ?? undefined,
     ...Object.fromEntries((["businessGrossReceipts", "businessReturnsAndAllowances", "businessCostOfGoodsSold", "businessOtherIncome"] as const)
       .filter(key => row.sourceId === "scheduleC" || hasEnteredAmount(row[key])).map(key => [key, money(row[key], `actual ${key}`)])),
   }));
   const sourceSums = { foreignEmploymentIncomeIncludedOnW2: new Decimal(0), foreignEmploymentIncomeNotOnW2: new Decimal(0), foreignBusinessIncomeAlreadyReported: new Decimal(0), foreignPartnershipIncomeAlreadyReported: new Decimal(0), otherForeignIncomeAlreadyReported: new Decimal(0) };
   let priorReceived = new Decimal(0);
   for (const row of rows) {
-    const key = /^formW2:/.test(row.sourceId) ? "foreignEmploymentIncomeIncludedOnW2" : row.sourceId === "scheduleC" ? "foreignBusinessIncomeAlreadyReported" : /^foreignEmployment:/.test(row.sourceId) ? "foreignEmploymentIncomeNotOnW2" : undefined;
-    if (!key) throw new Error("Choose an actual W2, ScheduleC or separately identified foreign employment source; other source methods are not represented.");
+    const key = /^formW2:/.test(row.sourceId) ? "foreignEmploymentIncomeIncludedOnW2" : row.sourceId === "scheduleC" ? "foreignBusinessIncomeAlreadyReported" : /^scheduleK1:/.test(row.sourceId) ? "foreignPartnershipIncomeAlreadyReported" : /^foreignEmployment:/.test(row.sourceId) ? "foreignEmploymentIncomeNotOnW2" : undefined;
+    if (!key) throw new Error("Choose an actual W2, ScheduleC, Schedule K-1 or separately identified foreign employment source; other source methods are not represented.");
     sourceSums[key] = sourceSums[key].plus(row.foreignEarnedIncome); priorReceived = priorReceived.plus(row.priorYearIncomeReceived);
   }
   const foreignEarnedIncome = foreignIncomePartIVKeys.filter(key => key !== "section119MealsAndLodging").reduce((total, key) => total.plus(partIV[key]), new Decimal(0)).minus(partIV.section119MealsAndLodging);
@@ -204,7 +213,7 @@ export function buildForeignIncomeInput(data: ForeignIncomeData | undefined, sta
     electionsValidConfirmed: known(data.electionsValidConfirmed, "exclusion election validity including revocations and IRS consent"),
     claimForeignEarnedIncomeExclusion: known(data.claimForeignEarnedIncomeExclusion, "foreign earned income exclusion election"),
     claimHousingExclusionOrDeduction: known(data.claimHousingExclusionOrDeduction, "housing exclusion or deduction election"),
-    qualifyingDays: days, totalDaysInYear: 365, partIV, foreignEarnedIncome: foreignEarnedIncome.toFixed(), isSelfEmployed: sourceSums.foreignBusinessIncomeAlreadyReported.gt(0),
+    qualifyingDays: days, totalDaysInYear: 365, partIV, foreignEarnedIncome: foreignEarnedIncome.toFixed(), isSelfEmployed: sourceSums.foreignBusinessIncomeAlreadyReported.plus(sourceSums.foreignPartnershipIncomeAlreadyReported).gt(0),
     incomeSources: Object.fromEntries(Object.entries(sourceSums).map(([key, value]) => [key, value.toFixed()])), incomeSourceMappingConfirmed: true,
     employerProvidedForeignEarnedIncome: sourceSums.foreignEmploymentIncomeIncludedOnW2.plus(sourceSums.foreignEmploymentIncomeNotOnW2).toFixed(),
     sourceMapping: { sourceReference: data.sourceReference, sourceFactsConfirmed: true, allSourcesIncluded: true, oneOwnerOnlyConfirmed: true, rows },

@@ -1,12 +1,13 @@
 // Spec: spec/federal/guided-foreign-income.yaml.
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema } from "@/models/inputs.js";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { emptyAdjustmentData, buildSectionRoute, updateSectionData, validateSection } from "@/lib/guided-interview-flow";
-import { buildForeignIncomeInput, emptyForeignIncome, emptyForeignIncomeSource, foreignIncomeFactErrors, foreignIncomePartIVKeys, type ForeignIncomeData } from "@/lib/guided-foreign-income";
+import { buildForeignIncomeInput, emptyForeignIncome, emptyForeignIncomeSource, foreignIncomeFactErrors, foreignIncomePartIVKeys, foreignIncomeSourceOptions, type ForeignIncomeData } from "@/lib/guided-foreign-income";
 import { completeW2Entry, completeBusinessSection, startCompleteInterview } from "./complete-facts";
 
+vi.mock("@/lib/guided-k1-qbi-sources", async original => ({ ...await original<object>(), buildGuidedK1Sources: (data: { fixture?: unknown[] } | undefined) => data?.fixture ? { scheduleK1: data.fixture } : undefined }));
 export function foreignIncomeFixture(): ForeignIncomeData {
   return { ...structuredClone(emptyForeignIncome), sourceTaxYear: "2025", sourceReference: "Original foreign pay and presence worksheet", accountHolder: "primary",
     taxpayerName: "Jordan Example", taxpayerTaxIdLast4: "3333", sourceFactsConfirmed: true, allSourcesIncluded: true, oneOwnerOnlyConfirmed: true,
@@ -142,4 +143,23 @@ it("reconciles actual household alien status without reinterpreting residency mo
   expect(buildForeignIncomeInput(source, state)?.eligibilityConfirmed).toBe(true);
   personal.usResidencyMonths = "0";
   expect(buildForeignIncomeInput(source, state)?.qualifyingDays).toBe(365);
+});
+
+it("binds an actual partnership source from the guide", () => {
+  const original = { accountHolder: "primary", taxYear: 2025, partnershipName: "Fictional Partners", partnershipEIN: "98-7654321", selfEmploymentEarnings: "80000" };
+  const data = foreignIncomeFixture();
+  Object.assign(data.partIV, { wages: "0", partnershipPersonalServices: "70000" });
+  data.sources = [{ ...structuredClone(emptyForeignIncomeSource), sourceId: "scheduleK1:0", sourceTaxYear: "2025", accountHolder: "primary", sourceReference: "Partnership statement", payerName: "Fictional Partners", payerEin: "98-7654321",
+    foreignEarnedIncome: "70000", priorYearIncomeReceived: "0", partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false }];
+  const state = foreignIncomeState(data);
+  state.sectionData.adjustments!.k1LossSources = { fixture: [original] } as never;
+  expect(foreignIncomeSourceOptions(state).map(row => row.label)).toContain("Schedule K-1 1: Fictional Partners");
+  const built = buildForeignIncomeInput(data, state);
+  expect(built).toMatchObject({ isSelfEmployed: true, incomeSources: { foreignPartnershipIncomeAlreadyReported: "70000", foreignEmploymentIncomeIncludedOnW2: "0" } });
+  expect(built?.sourceMapping?.rows[0]).toMatchObject({ partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false });
+  data.sources[0]!.capitalMaterialIncomeFactor = true;
+  expect(() => buildForeignIncomeInput(data, state)).toThrow(/30 percent method/);
+  data.sources[0]!.capitalMaterialIncomeFactor = null;
+  expect(() => buildForeignIncomeInput(data, state)).toThrow(/partner services and capital answers/);
+  expect(foreignIncomeSourceOptions(foreignIncomeState()).some(row => row.sourceId.startsWith("scheduleK1"))).toBe(false);
 });

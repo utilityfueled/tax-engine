@@ -4,7 +4,7 @@ import React, { act, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, it, vi } from "vitest";
 import { ForeignIncomeDetails } from "@/components/guided-interview/foreign-income-details";
-import type { ForeignIncomeData } from "@/lib/guided-foreign-income";
+import { emptyForeignIncome, emptyForeignIncomeSource, type ForeignIncomeData } from "@/lib/guided-foreign-income";
 
 it("collects actual foreign sources and qualification without defaults", async () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -68,4 +68,27 @@ it("reopens a partial saved adjustment section with unknown legacy amounts", asy
     expect(latest?.studentLoanInterest).toBe(""); expect(latest?.selfEmployedHealthInsurance).toBe(""); expect(latest?.hsaDeduction).toBe("");
     expect(saved).toEqual({ foreignIncome: source });
   } finally { await act(async () => root.unmount()); container.remove(); }
+});
+
+it("asks the partner questions only for a Schedule K-1 source", async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  const container = document.createElement("div"); document.body.appendChild(container); const root = createRoot(container);
+  let latest: ForeignIncomeData = { ...structuredClone(emptyForeignIncome), sources: [structuredClone(emptyForeignIncomeSource)] };
+  function Harness() { const [data, setData] = useState(latest); return <ForeignIncomeDetails data={data} sources={[{ sourceId: "scheduleK1:0", label: "Schedule K-1 1: Fictional Partners" }]} onChange={next => { latest = next; setData(next); }} />; }
+  async function change(label: string, value: string) {
+    const field = [...container.querySelectorAll("label")].find(row => row.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select");
+    if (!field) throw new Error(`Missing ${label}`);
+    await act(async () => { Object.getOwnPropertyDescriptor(field.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value")?.set?.call(field, value); field.dispatchEvent(new Event(field.tagName === "SELECT" ? "change" : "input", { bubbles: true })); field.dispatchEvent(new FocusEvent("focusout", { bubbles: true })); });
+  }
+  const asked = () => [...container.querySelectorAll(".guided-field-label")].some(node => node.textContent?.includes("this partnership income"));
+  await act(async () => root.render(<Harness />));
+  const details = [...container.querySelectorAll("details")]; for (const node of details) node.open = true;
+  expect(asked()).toBe(false);
+  await change("Existing return source 1", "scheduleK1:0");
+  expect(latest.sources[0]?.sourceId).toBe("scheduleK1:0");
+  expect(asked()).toBe(true);
+  await change("You performed the services for this partnership income 1", "true");
+  await change("Capital was also a material source of this partnership's income 1", "false");
+  expect(latest.sources[0]).toMatchObject({ partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false });
+  await act(async () => root.unmount()); container.remove();
 });

@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.206",
+    ruleVersion: "2025.207",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i2555", section: "Form 2555 active-partner income", revision: "Instructions for Form 2555 line 20 and Reg1.911-3(b)(2); bound to Schedule K-1 Box 14 code A. Capital as a material factor remains rejected. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/publications/p596", section: "EIC married child and nonparent tie-breakers", revision: "IRC152(c)(1)(E) and (c)(4), IRC32(c)(3)(B), Pub596 Rules 8 and 9 and Pub501; joint-return and equal-AGI comparisons remain rejected for review. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/publications/p4681", section: "Chapter 13 title 11 exclusion", revision: "IRC108(a)(1)(A), IRC1017(b)(2), IRC1398(a), Pub4681 Bankruptcy and Form982 instructions; chapters 7, 11 and 12 remain rejected. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/instructions/i2210", section: "Schedule AI line 14 Schedule 1-A adjustment", revision: "Instructions for Form 2210 (2025) line 14 name Schedule 1-A and give no period rule; each period is an entered amount, column d equals the return deduction. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
@@ -242,11 +243,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.204-law-integration-draft",
+    ruleVersion: "2026.205-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i2555", section: "Form 2555 active-partner income", revision: "Instructions for Form 2555 line 20 and Reg1.911-3(b)(2); bound to Schedule K-1 Box 14 code A. Capital as a material factor remains rejected. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/publications/p596", section: "EIC married child and nonparent tie-breakers", revision: "IRC152(c)(1)(E) and (c)(4), IRC32(c)(3)(B), Pub596 Rules 8 and 9 and Pub501; joint-return and equal-AGI comparisons remain rejected for review. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/publications/p4681", section: "Chapter 13 title 11 exclusion", revision: "IRC108(a)(1)(A), IRC1017(b)(2), IRC1398(a), Pub4681 Bankruptcy and Form982 instructions; chapters 7, 11 and 12 remain rejected. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },
       { url: "https://www.irs.gov/instructions/i2210", section: "Schedule AI line 14 Schedule 1-A adjustment", revision: "Instructions for Form 2210 (2025) line 14 name Schedule 1-A and give no period rule; each period is an entered amount, column d equals the return deduction. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-10-31" },

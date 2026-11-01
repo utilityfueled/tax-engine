@@ -4800,6 +4800,7 @@ export const Form2555Schema = z.preprocess(value => {
       notIncludedInW2Confirmed: z.boolean().optional(),
       businessGrossReceipts: decimal.optional(), businessReturnsAndAllowances: decimal.optional(),
       businessCostOfGoodsSold: decimal.optional(), businessOtherIncome: decimal.optional(),
+      partnerPerformedServicesConfirmed: z.boolean().optional(), capitalMaterialIncomeFactor: z.boolean().optional(),
     })),
   }).optional(),
   sourceFactsComplete: z.boolean().optional(),
