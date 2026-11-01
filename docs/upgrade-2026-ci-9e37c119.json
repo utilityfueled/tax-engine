@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "recordedAt": "2026-11-01T16:48:12+00:00",
+  "recordedAt": "2026-11-01T18:04:29+00:00",
   "releaseReady": false,
   "scope": "Synthetic remote CI evidence. Not staging, production or human review.",
   "runs": [
@@ -524,8 +524,45 @@
         }
       },
       "artifactDigest": "sha256:b9cfa0f1165b0a3155cf338432309aa4a145b20592fe13b0f3dd6c09729da3fd"
+    },
+    {
+      "sourceCommit": "204aa9f4",
+      "ci": 41331467301,
+      "web": 41331467270,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 20018,
+        "files": 1524,
+        "workers": 1,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 20018,
+        "files": 1524,
+        "workers": 1,
+        "statements": "91.85",
+        "branches": "87.15",
+        "functions": "90.33",
+        "lines": "94.53",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 534,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 534,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "artifactDigest": "sha256:32d03910836ff31ab0141d1b8f83ac3fb23074c444d594155b7b0ad113436dd0"
     }
   ],
   "hostedSkips": "The five skipped browser cases are hosted-only and establish nothing about hosted readiness.",
-  "latestSourceCommit": "dfb4cffc"
+  "latestSourceCommit": "204aa9f4"
 }
