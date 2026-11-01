@@ -244,11 +244,29 @@ it("requires the allocable self-employment deduction", () => {
   const expensed = businessReturn("62000", "0", { grossReceipts: "124000", expenses: { advertising: "60000" } });
   expect(() => calculateFederalTax(expensed)).toThrow(/at least 2261/);
   // The exclusion ratio scales the minimum: 130000 of 200000 foreign income.
-  expect(() => calculateFederalTax(businessReturn("200000", "0", { grossReceipts: "200000" }))).toThrow(/at least \d+/);
+  expect(() => calculateFederalTax(businessReturn("200000", "0", { grossReceipts: "200000" }))).toThrow(/at least 8837 /);
   // On a joint return, an owner with no self-employment row borrows no one's deduction.
   const joint = partnerReturn({ accountHolder: "spouse", selfEmploymentNetEarningsAfterAdjustments: "0", selfEmploymentIncomeType: "nonfarm", selfEmploymentFactsConfirmed: true }, { accountHolder: "spouse", deductionsAllocableToExcludedIncome: "0" }, "0");
   joint.form2555!.sourceMapping!.rows[0]!.accountHolder = "spouse";
   const couple = TaxYearInputSchema.parse({ ...joint, taxpayer: { ...joint.taxpayer, filingStatus: "married_filing_jointly", spouse: { firstName: "Pat", lastName: "Doe", ssn: "987-65-4322", dateOfBirth: "1980-01-01" } }, scheduleC: { accountHolder: "primary", businessName: "Domestic Shop", grossReceipts: "100000", returnsAndAllowances: "0", costOfGoodsSold: "0", otherIncome: "0" } });
   expect(() => calculateFederalTax(couple)).not.toThrow();
+  // A K-1 sheds only its own earnings, so adjustments below its receipts cap the share.
+  const adjusted = (after: string, allocable: string) => { const value = partnerReturn({ section199AQBI: "30000", selfEmploymentNetEarningsAfterAdjustments: after, selfEmploymentIncomeType: "nonfarm", selfEmploymentFactsConfirmed: true }, { deductionsAllocableToExcludedIncome: allocable }, "0", true);
+    return TaxYearInputSchema.parse({ ...value, scheduleC: { accountHolder: "primary", businessName: "Domestic Shop", grossReceipts: "100000", returnsAndAllowances: "0", costOfGoodsSold: "0", otherIncome: "0", qbiMateriallyParticipated: true } }); };
+  const scheduleCQbi = (value: ReturnType<typeof adjusted>) => new Decimal(calculateFederalTax(value).allLines.find(row => row.form === "QBI Source Deductions" && row.line === "scheduleC")!.value);
+  expect(() => calculateFederalTax(adjusted("0", "0"))).not.toThrow();
+  expect(scheduleCQbi(adjusted("0", "0")).minus("92935").abs().lte(1)).toBe(true);
+  // A K-1 loss lowers net earnings to 80000, so the whole 5652 deduction falls on Schedule C.
+  expect(scheduleCQbi(adjusted("-20000", "0")).minus("94348").abs().lte(1)).toBe(true);
+  expect(() => calculateFederalTax(adjusted("50000", "0"))).toThrow(/at least 3532/);
+  expect(scheduleCQbi(adjusted("50000", "3532")).minus("92935").abs().lte(1)).toBe(true);
+  // The foreign share comes off the owner only, so the other spouse's domestic business keeps its full deduction.
+  const spouseOwner = partnerReturn({ accountHolder: "spouse" }, { accountHolder: "spouse", deductionsAllocableToExcludedIncome: "4945" }, "0");
+  spouseOwner.form2555!.sourceMapping!.rows[0]!.accountHolder = "spouse";
+  const pair = TaxYearInputSchema.parse({ ...spouseOwner, taxpayer: { ...spouseOwner.taxpayer, filingStatus: "married_filing_jointly", spouse: { firstName: "Pat", lastName: "Doe", ssn: "987-65-4322", dateOfBirth: "1980-01-01" } }, scheduleC: { accountHolder: "primary", businessName: "Domestic Shop", grossReceipts: "100000", returnsAndAllowances: "0", costOfGoodsSold: "0", otherIncome: "0", qbiMateriallyParticipated: true } });
+  expect(new Decimal(calculateFederalTax(pair).allLines.find(row => row.form === "QBI Source Deductions" && row.line === "scheduleC")!.value).minus("92935").abs().lte(1)).toBe(true);
+  // A domestic Schedule C keeps its wages and UBIA.
+  const domesticWages = businessReturn("0", "0", { w2WagesPaid: "10000" }); domesticWages.form2555 = undefined;
+  expect(() => calculateFederalTax(domesticWages)).not.toThrow();
 });
 

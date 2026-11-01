@@ -1650,7 +1650,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   for (const share of foreignIncomeSources.scheduleCForeignShare) foreignQbiProfit.set("scheduleC", zeroFloor(schedC.netProfit).times(share.foreign).div(share.grossIncome));
   if (foreignQbiProfit.get("scheduleC")?.gt(0) && (d(input.scheduleC?.w2WagesPaid).gt(0) || d(input.scheduleC?.ubiaQualifiedProperty).gt(0))) throw new Error("Form2555 foreign profit inside Schedule C QBI needs its wages and UBIA apportioned");
   // Spec: se-deduction-allocation. Only the U.S. share of this deduction lowers QBI.
-  const foreignSelfEmployment = (foreignQbiProfit.get("scheduleC") ?? d("0")).plus(d(input.form2555?.incomeSources?.foreignPartnershipIncomeAlreadyReported));
+  // A K-1 can only shed earnings it has, so adjustments below its receipts cap the share.
+  const foreignK1Earnings = new Map(foreignIncomeSources.qbiForeignProfit.map((row) => { const k1 = input.scheduleK1[Number(row.sourceId.replace("scheduleK1:", ""))];
+    return [row.sourceId, Decimal.min(row.receipts, zeroFloor(d(k1?.selfEmploymentNetEarningsAfterAdjustments ?? k1?.selfEmploymentEarnings)))] as const; }));
+  const foreignSelfEmployment = sum(foreignQbiProfit.get("scheduleC") ?? d("0"), ...foreignK1Earnings.values());
   // A joint return's other spouse never stands in for an owner with no self-employment row.
   const foreignSeOwner = schedSE.perTaxpayer.find((row) => row.accountHolder === input.form2555?.accountHolder)
     ?? (filingStatus === "married_filing_jointly" ? undefined : schedSE.perTaxpayer[0]);
@@ -2678,7 +2681,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     const qbi=(k1QbiLosses.activities.find(source=>source.k1Index===index)?.currentQbi ?? d(k1.section199AQBI)).minus(foreignQbiProfit.get(`scheduleK1:${index}`) ?? d("0"));
     // Foreign earnings carry no U.S. share of the deduction, so they take none of it here.
     const netSEEarnings=k1.entityType === "s_corporation" ? d("0") : d(k1.selfEmploymentNetEarningsAfterAdjustments ?? k1.selfEmploymentEarnings)
-      .minus(foreignIncomeSources.qbiForeignProfit.find(row=>row.sourceId===`scheduleK1:${index}`)?.receipts ?? d("0"));
+      .minus(foreignK1Earnings.get(`scheduleK1:${index}`) ?? d("0"));
     if (!qbi.isZero() || !netSEEarnings.isZero()) deductionSources.push({id:`scheduleK1:${index}`,name:k1.partnershipName,
       qbi,netSEEarnings,accountHolder:ownerOf(k1.accountHolder),materiallyParticipated:k1.qbiMateriallyParticipated,
       excludedSEIncome:!d(k1.guaranteedPayments).isZero() || qbi.isZero()});
