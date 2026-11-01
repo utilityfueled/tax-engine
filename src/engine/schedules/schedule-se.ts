@@ -98,6 +98,15 @@ function calculateIndividual(
     earningsSubjectToSETax, socialSecurityPortion, medicarePortion, totalSETax, deductibleHalf, lines: audit.getLines() };
 }
 
+type K1Amount = Parameters<typeof d>[0];
+type K1SelfEmploymentFacts = { selfEmploymentFactsConfirmed?: boolean; selfEmploymentEarnings?: K1Amount; selfEmploymentNetEarningsAfterAdjustments?: K1Amount; selfEmploymentIncomeType?: string };
+const k1SelfEmploymentFactsVerified = (k1: K1SelfEmploymentFacts) => k1.selfEmploymentFactsConfirmed === true && k1.selfEmploymentEarnings !== undefined
+  && k1.selfEmploymentNetEarningsAfterAdjustments !== undefined && k1.selfEmploymentIncomeType !== undefined;
+/** The K-1 figure this schedule reads, for callers that must agree with it. */
+export function k1SelfEmploymentAmount(k1: K1SelfEmploymentFacts) {
+  return d(k1SelfEmploymentFactsVerified(k1) ? k1.selfEmploymentNetEarningsAfterAdjustments : k1.selfEmploymentEarnings);
+}
+
 export function calculateScheduleSE(
   input: TaxYearInput, constants: YearConstants,
   scheduleCNetProfitOverride?: Decimal, scheduleFNetProfitOverride?: Decimal,
@@ -140,8 +149,7 @@ export function calculateScheduleSE(
       if (!d(k1.selfEmploymentEarnings).isZero()) throw new Error("S-corporation K-1 cannot report partnership Box14A SE earnings");
       continue;
     }
-    const verified = k1.selfEmploymentFactsConfirmed === true && k1.selfEmploymentEarnings !== undefined
-      && k1.selfEmploymentNetEarningsAfterAdjustments !== undefined && k1.selfEmploymentIncomeType !== undefined;
+    const verified = k1SelfEmploymentFactsVerified(k1);
     if (!verified) {
       sourceFactsVerified = false;
       if (strict) throw new Error("2026 K-1 SE requires actual Box14A, adjusted partner earnings and farm/nonfarm source facts");

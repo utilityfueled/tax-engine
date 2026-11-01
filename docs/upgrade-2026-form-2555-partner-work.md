@@ -25,6 +25,7 @@ Foreign earned income from a partnership rejected outright. Review of that work 
 - Existing Schedule C foreign returns can now reject when the entered allocable deductions fall below the self-employment floor. Across 1,500 seeded returns, 636 rejected this way, each confirmed against an independent formula, and they were previously accepted with too low an AGI.
 - The Schedule C ratio applies expenses evenly. A filer who can trace expenses to foreign or U.S. work has no separate entry.
 - Box 14 code A cannot prove source or passive status. The confirmations carry that.
+- Schedule 1-A business tips with foreign Schedule C profit reject with a named message, because the tip limit reads full business profit.
 - State treatment of the exclusion was not reviewed, and no state engine reads Form 2555.
 
 ## Independent review

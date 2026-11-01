@@ -285,3 +285,29 @@ it("limits earned income where capital is material", () => {
   expect(() => calculateFederalTax(capital("20000", { capitalMaterialIncomeFactor: false }))).not.toThrow(/30 percent limit/);
 });
 
+it("reads the K-1 earnings Schedule SE reads and handles several sources", () => {
+  const shop = { accountHolder: "primary", businessName: "Domestic Shop", grossReceipts: "100000", returnsAndAllowances: "0", costOfGoodsSold: "0", otherIncome: "0", qbiMateriallyParticipated: true };
+  const qbi = (value: Parameters<typeof calculateFederalTax>[0], id: string) => new Decimal(calculateFederalTax(value).allLines.find(row => row.form === "QBI Source Deductions" && row.line === id)?.value ?? 0);
+  // Unconfirmed facts leave Schedule SE on Box 14 code A, so the share uses 70000 of receipts.
+  const unconfirmed = partnerReturn({ selfEmploymentNetEarningsAfterAdjustments: "50000", section199AQBI: "30000" }, {}, "0", true);
+  const withShop = TaxYearInputSchema.parse({ ...unconfirmed, scheduleC: shop });
+  expect(qbi(withShop, "scheduleC").minus("92934.7").abs().lte(1)).toBe(true);
+  // Two K-1s: the share comes from the foreign one by its own index.
+  const twoK1 = partnerReturn({ selfEmploymentNetEarningsAfterAdjustments: "50000", selfEmploymentIncomeType: "nonfarm", selfEmploymentFactsConfirmed: true, section199AQBI: "30000" }, { deductionsAllocableToExcludedIncome: "3043" }, "0", true);
+  twoK1.form2555!.sourceMapping!.rows[0]!.sourceId = "scheduleK1:1";
+  const domesticK1 = { taxYear: 2025, accountHolder: "primary", partnershipName: "Domestic Partners", partnershipEIN: "98-7654321", ordinaryIncome: "80000", selfEmploymentEarnings: "80000", selfEmploymentNetEarningsAfterAdjustments: "80000", selfEmploymentIncomeType: "nonfarm", selfEmploymentFactsConfirmed: true, section199AQBI: "80000", qbiMateriallyParticipated: true };
+  const both = TaxYearInputSchema.parse({ ...twoK1, scheduleC: shop, scheduleK1: [domesticK1, twoK1.scheduleK1[0]] });
+  expect(qbi(both, "scheduleC").minus("93914").abs().lte(1)).toBe(true);
+  expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...both, form2555: { ...both.form2555, deductionsAllocableToExcludedIncome: "3042" } }))).toThrow(/at least 3043/);
+  // A K-1 loss cannot lower the foreign share below Schedule C's own profit.
+  const lossy = TaxYearInputSchema.parse({ ...businessReturn("50000", "3532"), scheduleK1: [{ ...domesticK1, ordinaryIncome: "-20000", selfEmploymentEarnings: "0", selfEmploymentNetEarningsAfterAdjustments: "-20000", section199AQBI: "0" }] });
+  expect(() => calculateFederalTax(lossy)).not.toThrow();
+  expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...lossy, form2555: { ...lossy.form2555, deductionsAllocableToExcludedIncome: "3531" } }))).toThrow(/at least 3532/);
+  // A joint return with an unowned source cannot pick an owner.
+  const joint = partnerReturn({}, {}, "0");
+  const unowned = TaxYearInputSchema.parse({ ...joint, taxpayer: { ...joint.taxpayer, filingStatus: "married_filing_jointly", spouse: { firstName: "Pat", lastName: "Doe", ssn: "987-65-4322", dateOfBirth: "1980-01-01" } }, scheduleC: { ...shop, accountHolder: undefined }, scheduleK1: [{ ...joint.scheduleK1[0], selfEmploymentEarnings: "80000" }, { ...domesticK1, accountHolder: undefined }] });
+  expect(() => calculateFederalTax(unowned)).toThrow();
+  // Business tips read the full business profit, so a foreign share rejects by name.
+  expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...businessReturn("50000", "3532"), schedule1A: { primarySsnEligible: true, excludedPuertoRicoIncome: "0", form4563Exclusion: "0", employeeTips: [], businessTips: [{}], vehicleLoans: [], seniorOwners: [], overtime: [] } }))).toThrow();
+});
+
