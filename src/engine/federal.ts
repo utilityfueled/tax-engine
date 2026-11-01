@@ -3472,8 +3472,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const eicCurrent = eicCurrentInput ? calculateForm8862(eicCurrentInput) : undefined;
   // Spec: return-agi. These source functions run before AGI exists in the guide, so the entered figure is tied here.
   for (const row of [...(input.eic?.separatedSpouseSources?.children ?? []), ...(input.eic?.recertificationSources?.children ?? [])]) {
-    if (row.taxpayerTiebreakAgi !== undefined && !roundDollar(d(row.taxpayerTiebreakAgi)).eq(roundDollar(agi))) throw new Error("EIC tiebreaker AGI must match Form 1040 line 11");
+    if (row.taxpayerTiebreakAgi !== undefined && !roundDollar(d(row.taxpayerTiebreakAgi)).eq(roundDollar(agi))) throw new Error(`EIC tiebreaker AGI must match Form 1040 line 11, currently ${roundDollar(agi).toFixed()}`);
   }
+  const eicTiebreakLost = eicCurrent?.tiebreakLostChildCount ?? eicSeparated.tiebreakLostChildCount ?? 0;
+  if (eicTiebreakLost > 0) audit.record("EIC", "tiebreaker", "Children treated as another claimant's qualifying child", new Decimal(eicTiebreakLost), "IRC152(c)(4) on the actual child sources");
   const qualifyingEicChildren = eicCurrent?.ssnCountedChildSourceIds?.length ?? eicSeparated.ssnCountedChildSourceIds.length;
   const actualEicChildPresent = eicCurrent?.qualifyingChildPresent ?? (eicSeparated.sourceFactsComplete ? eicSeparated.qualifyingChildPresent : undefined);
   audit.merge(eicSeparated.lines);

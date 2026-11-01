@@ -26,9 +26,13 @@ it('asks the married-child and tiebreaker questions only when they apply', async
   expect(latest.marriedChildDependency).toBeUndefined();
   expect(asked('claim this married child')).toBe(false);
   await change("Child 1, claimant 1: is the child's parent", 'true');
-  await change('Child 1, claimant 1: adjusted gross income', '10000');
-  await change('Child 1: your adjusted gross income on this return, for the tiebreaker', '30000');
+  await change('Child 1, claimant 1: adjusted gross income', '10,000');
+  await change('Child 1: your adjusted gross income on this return, for the tiebreaker', '30,000');
   expect(latest).toMatchObject({ taxpayerTiebreakAgi: '30000', otherEligibleClaimants: [{ isParent: true, adjustedGrossIncome: '10000' }], allOtherEligibleClaimantsIncluded: null });
+  await act(async () => [...container.querySelectorAll('button')].find(button => button.textContent?.startsWith('Remove'))!.click());
+  expect(latest.otherEligibleClaimants).toEqual([]);
+  expect(latest.taxpayerTiebreakAgi).toBeUndefined();
+  expect(asked('for the tiebreaker')).toBe(false);
   await act(async () => root.unmount()); container.remove();
 });
 

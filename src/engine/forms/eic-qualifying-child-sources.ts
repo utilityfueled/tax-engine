@@ -16,7 +16,7 @@ export interface EicCurrentChildResult {
 }
 export interface EicQualifyingChildResult {
   qualifyingChildPresent: boolean; qualifyingChildSourceIds: string[]; ssnCountedChildSourceIds: string[];
-  children: EicCurrentChildResult[];
+  children: EicCurrentChildResult[]; tiebreakLostChildCount: number;
 }
 const relationshipKey = (v: string) => v.trim().toLowerCase().replaceAll('_', ' ').replaceAll('-', ' ');
 const childRelationships = new Set(['child', 'son', 'daughter', 'adopted child', 'stepchild', 'foster child', 'grandchild',
@@ -26,17 +26,20 @@ function money(value: string | undefined, label: string): Decimal {
   if (value === undefined || !/^-?\d+(\.\d+)?$/.test(value)) throw new Error(`EIC ${label} needs an actual amount`);
   return new Decimal(value);
 }
-/** Spec: nonparent-tiebreaker. IRC152(c)(4): a parent first, then the highest AGI. */
+/** Spec: nonparent-tiebreaker. IRC152(c)(4): a claiming parent, then (C) for other parents, then the highest claiming AGI. */
 function losesNonparentTiebreak(row: EicCurrentChildSource, joint: boolean): boolean {
   const others = row.otherEligibleClaimants ?? [];
   if (others.length === 0) return false;
+  const rows = others.map(other => ({ other, parent: answer(other.isParent, 'claimant parent answer'), claims: other.claimsAnyChildTaxBenefit === true }));
+  if (rows.some(row => row.parent && row.claims)) return true;
+  const compared = rows.filter(row => row.parent || row.claims).map(row => ({ ...row, agi: money(row.other.adjustedGrossIncome, 'claimant AGI') }));
+  if (compared.length === 0) return false;
   if (joint) throw new Error('EIC tiebreaker on a joint return needs a reviewer method');
   const filer = money(row.taxpayerTiebreakAgi, 'filer AGI');
-  const rows = others.map(other => ({ parent: answer(other.isParent, 'claimant parent answer'), claims: other.claimsAnyChildTaxBenefit === true, agi: money(other.adjustedGrossIncome, 'claimant AGI') }));
-  if (rows.some(other => other.parent && other.claims)) return true;
-  const highest = Decimal.max(...rows.map(other => other.agi));
-  if (filer.eq(highest)) throw new Error('EIC tiebreaker at equal AGI needs a reviewer method');
-  return filer.lt(highest);
+  if (compared.some(other => other.parent && other.agi.gte(filer))) throw new Error('EIC parent at or above the filer AGI who does not claim needs a reviewer method');
+  const claiming = compared.filter(other => other.claims);
+  if (claiming.some(other => other.agi.eq(filer))) throw new Error('EIC tiebreaker at equal AGI needs a reviewer method');
+  return claiming.some(other => other.agi.gt(filer));
 }
 function date(value: string | undefined, label: string): Date {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error(`EIC ${label} needs an actual date`);
@@ -103,6 +106,10 @@ export function calculateEicQualifyingChildSources(input: EicQualifyingChildInpu
       if (answer(other.claimsAnyChildTaxBenefit, 'competing child-benefit answer') && parent) throw new Error('EIC contested competing-claim method requires actual priority sources');
     }
     const tiebreakLost = !parent && losesNonparentTiebreak(row, joint);
+    // The child belongs to the other person for all five shared benefits.
+    const noChildBenefit = tiebreakLost || row.marriedChildDependency === 'cannot_claim' || row.marriedChildDependency === 'released_to_other_parent';
+    if (noChildBenefit && (child.qualifiesForCTC || child.qualifiesForODC)) throw new Error('EIC child the filer cannot claim conflicts with its child tax credit or other dependent credit answer');
+    if (tiebreakLost && taxpayer.filingStatus === 'head_of_household') throw new Error('EIC child treated as another claimant\'s conflicts with head of household status resting on that child');
     const younger = owners.some(owner => birth > date(owner.dateOfBirth, 'claimant birth'));
     const reaches = (age: number) => { const value = new Date(birth); value.setUTCFullYear(value.getUTCFullYear() + age); value.setUTCDate(value.getUTCDate() - 1); return value; };
     let ageEligible = yearEnd < reaches(19) && younger;
@@ -128,5 +135,6 @@ export function calculateEicQualifyingChildSources(input: EicQualifyingChildInpu
   for (const [i, child] of taxpayer.dependents.entries()) if ((child.qualifiesForEIC || childRelationships.has(relationshipKey(child.relationship))) && !seen.has(`dependent:${i}`)) throw new Error('EIC actual represented candidate child is missing');
   const qualified = results.filter(row => row.qualifies).map(row => row.sourceId);
   return { qualifyingChildPresent: qualified.length > 0, qualifyingChildSourceIds: qualified,
-    ssnCountedChildSourceIds: results.filter(row => row.ssnCounted).map(row => row.sourceId), children: results };
+    ssnCountedChildSourceIds: results.filter(row => row.ssnCounted).map(row => row.sourceId), children: results,
+    tiebreakLostChildCount: results.filter(row => row.tiebreakLost).length };
 }

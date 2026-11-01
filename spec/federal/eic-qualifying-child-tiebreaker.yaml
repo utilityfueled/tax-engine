@@ -10,29 +10,35 @@ notes: |
   A married child is a qualifying child only if the filer can claim the child as a
   dependent, or could but released the claim to the other parent. A parent's rule
   is unchanged. A filer who is not the child's parent loses the child to any parent
-  who claims, and otherwise needs AGI above every other eligible claimant. A filer
-  who loses may still claim the credit with no qualifying child.
+  who claims. A parent who does not claim limits the filer under (c)(4)(C), which
+  compares parents only. Among nonparents the tiebreaker sets apart only people who
+  claim, so one who claims nothing does not matter. A filer who loses may still
+  claim the credit with no qualifying child, but the child belongs to the other
+  person for all five shared benefits, so its CTC, ODC or head-of-household use rejects.
   Limits: no IRS source reviewed says how to compare AGI on a joint return, or what
-  happens at equal AGI, so both reject for a reviewer. The filer's AGI is entered on
-  the child record and must match the return.
+  happens at equal AGI, so both reject for a reviewer. A parent at or above the
+  filer's AGI who does not claim also rejects for a reviewer, because (c)(4)(C)
+  bars the filer while Pub596 Rule 9 lets a filer use a child the other person
+  cannot claim for the EIC. The filer's AGI is entered on the child record and must
+  match the return.
 lines:
   - line: "married-child"
     description: "Apply the dependency test to a married child"
-    formula: "Married with can_claim or released_to_other_parent qualifies, cannot_claim does not, and an unknown answer rejects. An answer for an unmarried child rejects. The joint-return test still applies."
+    formula: "Married with can_claim or released_to_other_parent qualifies, cannot_claim does not, and an unknown answer rejects. An answer for an unmarried child rejects. The joint-return test still applies. A cannot_claim or released child with a CTC or ODC flag on the dependent record rejects."
     irsRef: "Pub596 Married child; IRC32(c)(3)(B); IRC152(c)(1)(E)"
     testRef: "tests/engine/eic-qualifying-child-tiebreaker.test.ts::applies the dependency test to a married child"
   - line: "nonparent-tiebreaker"
     description: "Apply the nonparent competing-claim order"
-    formula: "A parent who claims takes the child. A parent who may claim but does not leaves the child only with a filer whose AGI exceeds every parent's. With no parent, the highest AGI takes the child. A parent filer keeps the existing rule."
+    formula: "A parent who claims takes the child. A parent who does not claim needs a filer AGI above that parent's. Among nonparents who claim, the highest AGI takes the child. A nonparent who claims nothing has no effect. A parent filer keeps the existing rule, and biological or adoptive parents are the only parents, so a stepparent or foster parent follows the nonparent rule."
     irsRef: "IRC152(c)(4)(A)(i),(ii) and (C); Pub596 Rule 9 Tiebreaker rules"
     testRef: "tests/engine/eic-qualifying-child-tiebreaker.test.ts::applies the nonparent competing-claim order"
   - line: "unsettled"
     description: "Reject comparisons with no published method"
-    formula: "A joint-return filer who is not the parent, and an AGI equal to the highest other claimant's, reject for a reviewer. Missing AGI or parent answers reject. Entered AGI with no comparison to make rejects."
+    formula: "A joint-return filer who is not the parent, an AGI equal to a claiming nonparent's, and a parent at or above the filer's AGI who does not claim all reject for a reviewer. Missing AGI or parent answers reject. Entered AGI with no comparison to make rejects."
     irsRef: "Pub501 Qualifying Child of More Than One Person has no joint-return or equal-AGI rule"
     testRef: "tests/engine/eic-qualifying-child-tiebreaker.test.ts::rejects comparisons with no published method"
   - line: "return-agi"
     description: "Tie the entered AGI to the completed return"
-    formula: "The AGI entered on a child record must equal Form1040 line11 in whole dollars, and a filer who loses every child is left with no qualifying child on the return."
+    formula: "The AGI entered on a child record must equal Form1040 line11 in whole dollars, and a filer who loses every child is left with no qualifying child on the return. A lost child with a CTC or ODC flag, or as the basis of head-of-household status, rejects."
     irsRef: "IRC152(c)(4); Form1040 line11"
     testRef: "tests/engine/eic-qualifying-child-tiebreaker.test.ts::ties the entered AGI to the completed return"
