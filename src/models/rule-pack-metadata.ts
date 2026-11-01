@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.210",
+    ruleVersion: "2025.211",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8962", section: "Allocation Situation 2 for a policy shared with a spouse on a separate return", revision: "2025 instructions", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/instructions/i1065sk1", section: "Foreign tax in the partner basis limit; Form 7203 line 46", revision: "2025 instructions; Form 7203 Rev. December 2022", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/instructions/i1116", section: "Pass-through foreign tax without Form 1116", revision: "Instructions for Form 1116 election and IRC904(j): Schedule K-3 and Schedule K-1 (Form 1041) rows, passive category, 300 or 600 limit. Form 1116 and deductions still reject pass-through tax. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/instructions/i2555", section: "Form 2555 active-partner income and foreign QBI", revision: "Instructions for Form 2555 line 20, Reg1.911-3(b)(2), Pub54 and Instructions for Form 8995; bound to Schedule K-1 Box 14 code A, with the 30 percent limit where capital is material and foreign profit outside QBI. Schedule C with capital as a material factor remains rejected. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-11-01" },
@@ -245,11 +246,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.208-law-integration-draft",
+    ruleVersion: "2026.209-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i8962", section: "Allocation Situation 2 for a policy shared with a spouse on a separate return", revision: "2025 instructions", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/instructions/i1065sk1", section: "Foreign tax in the partner basis limit; Form 7203 line 46", revision: "2025 instructions; Form 7203 Rev. December 2022", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/instructions/i1116", section: "Pass-through foreign tax without Form 1116", revision: "Instructions for Form 1116 election and IRC904(j): Schedule K-3 and Schedule K-1 (Form 1041) rows, passive category, 300 or 600 limit. Form 1116 and deductions still reject pass-through tax. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/instructions/i2555", section: "Form 2555 active-partner income and foreign QBI", revision: "Instructions for Form 2555 line 20, Reg1.911-3(b)(2), Pub54 and Instructions for Form 8995; bound to Schedule K-1 Box 14 code A, with the 30 percent limit where capital is material and foreign profit outside QBI. Schedule C with capital as a material factor remains rejected. Final 2026, human and filing qualification remain open.", retrievedAt: "2026-11-01" },

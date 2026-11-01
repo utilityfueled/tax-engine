@@ -1,6 +1,6 @@
 # Unsupported method register
 
-Recorded October 31, 2026 at `298c254c`, then updated as packages shipped: Form 1099-DA basis corrections, gross-proceeds costs and repaid earlier-year unemployment, Form 2210-F, waiver requests and Schedule D worksheets with corrected digital rows, crypto payments, mining, staking, airdrop, gift and inherited lots, Schedule 1-A on Schedule AI line 14, chapter 13 discharges, married-child and nonparent EIC tie-breakers on the actual child-source routes, active-partner foreign earned income, foreign profit removed from QBI, pass-through foreign tax on the election without Form 1116, and K-1 foreign tax in the basis schedule are delivered. Form 1099-G business refunds moved to Ruling, because source research found no recipient rule. This classifies the engine's explicit rejections so the remaining work can be reviewed and prioritized. An unsupported return stops with a named error. The engine does not estimate it.
+Recorded October 31, 2026 at `298c254c`, then updated as packages shipped: Form 1099-DA basis corrections, gross-proceeds costs and repaid earlier-year unemployment, Form 2210-F, waiver requests and Schedule D worksheets with corrected digital rows, crypto payments, mining, staking, airdrop, gift and inherited lots, Schedule 1-A on Schedule AI line 14, chapter 13 discharges, married-child and nonparent EIC tie-breakers on the actual child-source routes, active-partner foreign earned income, foreign profit removed from QBI, pass-through foreign tax on the election without Form 1116, K-1 foreign tax in the basis schedule, and separate-return premium tax credit allocation are delivered. Form 1099-G business refunds moved to Ruling, because source research found no recipient rule. This classifies the engine's explicit rejections so the remaining work can be reviewed and prioritized. An unsupported return stops with a named error. The engine does not estimate it.
 
 A rejection here is not an external blocker unless its class says so. Year guards are excluded: they reject unsupported years on purpose and are not missing work.
 
@@ -27,7 +27,7 @@ A rejection here is not an external blocker unless its class says so. Year guard
 | K-1 histories | Basis, foreign tax left suspended by basis (the year and amount of a later allowance are unsettled), at-risk, passive recharacterization, decreased-value gifts, Form 461 classification | `k1-*.ts` |
 | Charitable with loss histories | Multi-vintage attribution, prior carry with the 2026 floor, recurrent joint attribution | `charitable-*.ts` |
 | COD | Chapters 7, 11 and 12 of title 11, modified-loss exhaustion, current EBL origin | `cod-nol-reductions.ts` |
-| Premium tax credit | Separate-return allocation, overlapping shared policies, no-APTC allocation, below-poverty marriage | `form-8962-*.ts` |
+| Premium tax credit | Separate-return allocation with a third tax family or Exception 1, below-poverty marriage | `form-8962-*.ts` |
 | Education | Partial in-kind allocation, Coverdell disqualification with later activity | `form-1099-q.ts` |
 | Foreign earned income | Schedule C income where capital is a material factor, partnership net loss, prior partnership services, prior non-W2 income, other mappings | `form-2555-source-binding.ts` |
 | EIC | Active appeal | `eic-*.ts` |

@@ -9,6 +9,7 @@ import { actualSharedPolicyData } from '../../fixtures/guided-shared-policy';
 import { actualNoAdvanceAllocationData } from '../../fixtures/guided-no-advance-allocation';
 import { actualDefaultAllocationData } from '../../fixtures/guided-default-allocation';
 import { actualSharedUnsharedData } from '../../fixtures/guided-shared-unshared';
+import { actualSeparateReturnData } from '../../fixtures/guided-separate-return';
 import { completePersonalInfo } from '../../guided-interview/complete-facts';
 import { buildPremiumTaxCreditInputs } from '@/lib/guided-premium-tax-credit-facts';
 
@@ -115,5 +116,38 @@ it('reaches actual unshared source controls without another taxpayer or fraction
   await change('Allocation sources checked after the last edit','true');await change('Marketplace sources checked after the last edit','true');expect(buildPremiumTaxCreditInputs(latest.premiumTaxCredit,2025,'single',completePersonalInfo).form8962?.sharedPolicyAllocations?.policies?.[1]?.situation).toBe('not_shared');
   await change('Allocation policy 2: Unshared coverage source reference','Replacement source');expect(latest.premiumTaxCredit!.sourceFactsConfirmed).toBeNull();expect(latest.premiumTaxCredit!.sharedPolicyAllocations!.sourceFactsConfirmed).toBeNull();
   await change('Allocation policy 2: Allocation situation','other_two_tax_families');expect(latest.premiumTaxCredit!.sharedPolicyAllocations!.policies[1]).toMatchObject({unsharedSourceReference:'',allCoveredPeopleInThisTaxFamilyConfirmed:null});expect(control('Allocation policy 2: Covered person 1 tax family')?.value).toBe('');expect(latest.premiumTaxCredit!.sharedPolicyAllocations!.policies[1]!.monthlyAllocations[0]).toEqual({month:'7',fraction:''});expect(JSON.stringify(latest.premiumTaxCredit!.policies)).toBe(originals);
+ }finally{await act(async()=>root.unmount());container.remove();}
+});
+
+it('reaches the separate return allocation controls', async () => {
+ (globalThis as {IS_REACT_ACT_ENVIRONMENT?:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
+ const container=document.createElement('div');document.body.appendChild(container);const root=createRoot(container);
+ const start=actualSeparateReturnData(true);const policy=start.sharedPolicyAllocations!.policies[0]!;
+ policy.situation='other_two_tax_families';delete policy.separateReturn;
+ let latest:CreditsData={...emptyCreditsData,premiumTaxCredit:start};
+ function Harness(){const [data,setData]=useState(latest);return <SectionCredits data={data} hasDependents={false} filingStatus="mfs" taxYear={2025} personalData={completePersonalInfo} onDataChange={next=>{latest=next;setData(next);}}/>;}
+ async function change(label:string,value:string){const c=[...container.querySelectorAll('label')].find(e=>e.querySelector('.guided-field-label')?.textContent===label)?.querySelector<HTMLInputElement|HTMLSelectElement>('input,select');if(!c)throw new Error(`Missing ${label}`);const proto=c instanceof HTMLSelectElement?HTMLSelectElement.prototype:HTMLInputElement.prototype;await act(async()=>{Object.getOwnPropertyDescriptor(proto,'value')!.set!.call(c,value);c.dispatchEvent(new Event(c instanceof HTMLSelectElement?'change':'input',{bubbles:true}));});}
+ const labels=()=>[...container.querySelectorAll('.guided-field-label')].map(e=>e.textContent);
+ try{
+  await act(async()=>root.render(<Harness/>));
+  await change('Allocation policy 1: Allocation situation','married_separate');
+  expect(labels()).not.toContain('Allocation policy 1: Both taxpayers agreed to these fractions');
+  expect(labels()).not.toContain('Allocation policy 1: No marriage or divorce occurred this year');
+  expect(labels()).not.toContain('Allocation policy 1: Original SLCSP amounts are correct');
+  await change('Allocation policy 1: Separate-return source reference','Actual records');
+  await change('Allocation policy 1: Married at the end of the year','true');
+  await change("Allocation policy 1: Only your and your spouse's tax families are on this policy",'true');
+  for(let m=1;m<=12;m++)await change(`Allocation policy 1: Month ${m} SLCSP for your own coverage family`,'420');
+  const evidence=latest.premiumTaxCredit!.sharedPolicyAllocations!.policies[0]!.separateReturn!;
+  expect(evidence).toMatchObject({sourceReference:'Actual records',marriedAtYearEndConfirmed:true,onlySpouseTaxFamiliesConfirmed:true});
+  expect(evidence.ownCoverageFamilySlcsp[11]).toEqual({month:'12',slcsp:'420'});
+  expect([...container.querySelectorAll('button')].map(b=>b.textContent)).toContain('Calculate household amounts from allocation');
+  await change('Married-filing-separately exception established','false');
+  expect(labels()).not.toContain('Allocation policy 1: Month 1 SLCSP for your own coverage family');
+  await change('Allocation policy 1: Allocation situation','no_advance_credit');
+  expect(latest.premiumTaxCredit!.sharedPolicyAllocations!.policies[0]!.separateReturn).toBeUndefined();
+  await change('Allocation policy 1: Allocation situation','married_separate');
+  await change('Allocation policy 1: Allocation situation','not_shared');
+  expect(latest.premiumTaxCredit!.sharedPolicyAllocations!.policies[0]!.separateReturn).toBeUndefined();
  }finally{await act(async()=>root.unmount());container.remove();}
 });

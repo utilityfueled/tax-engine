@@ -31,9 +31,14 @@ export interface SharedPolicyAgreementData {
   unsharedSourceReference?: string;
   allCoveredPeopleInThisTaxFamilyConfirmed?: boolean | null;
   noAdvanceAllocation?: NoAdvanceBenchmarkData;
+  separateReturn?: SeparateReturnAllocationData;
   defaultAllocation?: { sourceReference: string; enrollingTaxpayerSsn: string; allCoveredPeopleEnrolledByTaxpayerConfirmed: boolean | null };
   coveredFamilyAssignments: { ssn: string; family: "" | "this_return" | "other_return" }[];
   monthlyAllocations: { month: string; fraction: string }[];
+}
+export interface SeparateReturnAllocationData {
+  sourceReference: string; marriedAtYearEndConfirmed: boolean | null; onlySpouseTaxFamiliesConfirmed: boolean | null;
+  ownCoverageFamilySlcsp: { month: string; slcsp: string }[];
 }
 export interface NoAdvanceBenchmarkData {
   sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null; allCoveredPeopleInCoverageFamiliesConfirmed: boolean | null;
@@ -266,15 +271,22 @@ export function resolveGuidedSharedPolicy(data: PremiumTaxCreditData, taxYear: n
         allCoveredPeopleInCoverageFamiliesConfirmed: policy.noAdvanceAllocation.allCoveredPeopleInCoverageFamiliesConfirmed ?? undefined,
         monthlyBenchmarks: policy.noAdvanceAllocation.monthlyBenchmarks.map(row => ({ ...row, month: whole(row.month, "benchmark source month"),
           thisReturnSlcsp: money(row.thisReturnSlcsp, "this-return benchmark"), otherReturnSlcsp: money(row.otherReturnSlcsp, "other-return benchmark") })) } : undefined,
+      separateReturn: policy.separateReturn ? { ...policy.separateReturn, marriedAtYearEndConfirmed: policy.separateReturn.marriedAtYearEndConfirmed ?? undefined,
+        onlySpouseTaxFamiliesConfirmed: policy.separateReturn.onlySpouseTaxFamiliesConfirmed ?? undefined,
+        ownCoverageFamilySlcsp: data.marriedFilingSeparatelyExceptionConfirmed === true ? policy.separateReturn.ownCoverageFamilySlcsp.map(row => ({ month: whole(row.month, "own benchmark month"), slcsp: money(row.slcsp, "own coverage-family benchmark") })) : [] } : undefined,
       defaultAllocation: policy.defaultAllocation ? { ...policy.defaultAllocation, allCoveredPeopleEnrolledByTaxpayerConfirmed: policy.defaultAllocation.allCoveredPeopleEnrolledByTaxpayerConfirmed ?? undefined } : undefined,
       coveredFamilyAssignments: policy.coveredFamilyAssignments.map(entry => ({ ...entry, family: entry.family || undefined })),
       monthlyAllocations: policy.monthlyAllocations.map(row => ({ month: whole(row.month, "agreement month"), fraction: row.fraction.trim() })) })) };
   const form8962 = Form8962Schema.parse({ sharedPolicyAllocations, taxFamilySize: whole(data.taxFamilySize, "actual tax family size"), allocationRequired: data.allocationRequired,
     canBeClaimedAsDependent: data.canBeClaimedAsDependent ?? undefined,
+    marriedFilingSeparatelyExceptionConfirmed: data.marriedFilingSeparatelyExceptionConfirmed ?? undefined,
     alternativeMarriageCalculationElected: data.alternativeMarriageCalculationElected ?? undefined,
     selfEmployedHealthInsuranceCoordinationRequired: data.selfEmployedHealthInsuranceCoordinationRequired ?? undefined,
     qsehraAffected: data.qsehraAffected ?? undefined, lawfulPresenceReconciliationRequired: data.lawfulPresenceReconciliationRequired ?? undefined });
-  const input: Form8962AllocationInput = { ...guidedMarketplaceHousehold(personal, filingStatus, taxYear), form1095A: policies, form8962, form7206 };
+  const household = guidedMarketplaceHousehold(personal, filingStatus, taxYear);
+  // Only this route compares the spouse; other separate-return Marketplace checks read the household without one.
+  const separateSpouse = filingStatus === "mfs" && personal.spouse?.ssn?.trim() && packet.policies.some(policy => policy.situation === "married_separate");
+  const input: Form8962AllocationInput = { ...household, taxpayer: { ...household.taxpayer, ...(separateSpouse ? { spouse: person(personal.spouse, "separate return spouse") } : {}) }, form1095A: policies, form8962, form7206 };
   return { policies, packet: form8962.sharedPolicyAllocations, allocation: calculateForm8962SharedPolicy(input), sourceInput: input };
 }
 export function deriveSharedPolicyMonths(data: PremiumTaxCreditData, taxYear: number | null | undefined, filingStatus: FilingStatus | null | undefined, personal?: PersonalInfoData, form7206?: Form7206Input): MarketplaceCoverageMonthData[] {

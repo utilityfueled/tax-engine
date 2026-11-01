@@ -61,6 +61,10 @@ export const Form8962SharedPolicySchema = z.object({
         thisReturnCoveredIndividualSsns: z.array(z.string()).optional(), otherReturnCoveredIndividualSsns: z.array(z.string()).optional(),
       })).optional(),
     }).optional(),
+    separateReturn: z.object({
+      sourceReference: z.string().optional(), marriedAtYearEndConfirmed: z.boolean().optional(), onlySpouseTaxFamiliesConfirmed: z.boolean().optional(),
+      ownCoverageFamilySlcsp: z.array(z.object({ month: z.number().int().optional(), slcsp: amount })).optional(),
+    }).optional(),
     monthlyAllocations: z.array(z.object({ month: z.number().int().optional(), fraction: z.string().optional() })).optional(),
   })).optional(),
 });

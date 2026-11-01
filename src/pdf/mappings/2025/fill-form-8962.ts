@@ -59,7 +59,7 @@ export interface Form8962ReferenceSummary {
   introduction: string;
   policies: Form8962ReferenceSummaryPolicy[];
   lines: Form8962ReferenceSummaryLine[];
-  allocations?: { policyNumber: string; firstMonth: number; lastMonth: number; fraction: string; method: 'agreement' | 'default_enrollee_count' | 'no_advance_benchmark' }[];
+  allocations?: { policyNumber: string; firstMonth: number; lastMonth: number; fraction: string; method: 'agreement' | 'default_enrollee_count' | 'no_advance_benchmark' | 'separate_return_exception' | 'separate_return_advance_only' }[];
   allocatedMonths?: { month: number; policyOrdinal: number; originalPremium: string; originalSlcsp: string | null; originalAdvance: string; premium: string; slcsp: string; advance: string; unshared?: true; benchmarkRatio?: { numerator: string; denominator: string } }[];
   householdMonths?: { month: number; policyOrdinals: number[]; premium: string; slcsp: string; advance: string; unsharedBenchmarkGroups: { policyOrdinals: number[]; slcsp: string }[]; noAdvanceBenchmarkGroups?: { policyOrdinals: number[]; slcsp: string }[] }[];
   marriage?: { electionApplies: boolean; worksheets: (Form8962ReferenceSummaryLine & { form: string })[] };
@@ -427,6 +427,8 @@ export async function fillForm8962Reference(
     write("All actual allocation periods are retained below. Taxpayer identifiers and private source references are omitted from this review copy. Policy numbers use the final 15 characters required by Part IV.");
     summary.allocations.forEach((period, index) => write(`Allocation ${index + 1}: policy ${period.policyNumber}; months ${period.firstMonth}-${period.lastMonth}; ${period.method === 'no_advance_benchmark'
       ? `premium fraction printed in column e ${period.fraction}; columns f and g blank. No advance credit; actual family benchmark ratio determines premiums before reporting.`
+      : period.method === 'separate_return_exception' ? `premium and advance fractions ${period.fraction}; column f blank. Situation 2: own coverage-family benchmark.`
+      : period.method === 'separate_return_advance_only' ? `advance fraction ${period.fraction}; columns e and f blank. Situation 2 without an exception: premium and benchmark are not used, and the allocated advance credit is repaid subject to line 28.`
       : `premium, SLCSP and advance fractions ${period.fraction}. ${period.method === 'default_enrollee_count' ? 'Default allocation from actual enrollees.' : 'Actual agreed allocation.'}`}`));
     for (const row of summary.allocatedMonths ?? []) {
       write(`Policy ${row.policyOrdinal}, month ${row.month}. Original monthly source: premium $${row.originalPremium}; SLCSP ${row.originalSlcsp === null ? "printed blank" : `$${row.originalSlcsp}`}; advance $${row.originalAdvance}.`);
@@ -541,7 +543,7 @@ async function fillForm8962SourceReview(input: TaxYearInput, result: TaxReturnRe
   const doc = await loadReviewTemplate(blankPdfPath, 2025), form = doc.getForm(), F = FORM_8962_FIELDS;
   const mappedFields = createPdfFieldBatch(form);
   mappedFields.setText(F.name, [input.taxpayer.primary, ...(input.taxpayer.filingStatus === 'married_filing_jointly' && input.taxpayer.spouse ? [input.taxpayer.spouse] : [])].map(person => `${person.firstName} ${person.lastName}`).join(' & '));
-  mappedFields.setText(F.ssn, ''); mappedFields.setCheckBox(F.marriedSeparate, false);
+  mappedFields.setText(F.ssn, ''); mappedFields.setCheckBox(F.marriedSeparate, input.taxpayer.filingStatus === 'married_filing_separately' && input.form8962?.marriedFilingSeparatelyExceptionConfirmed === true);
   for (const line of ['1', '2a', '2b', '3', '4', '5', '7', '8a', '8b', '24', '25'] as const) {
     const value = values.get(line);
     mappedFields.setText(F[`line${line}`], value === undefined ? '' : line === '7' ? new Decimal(value).toFixed(4) : new Decimal(value).toFixed(0));
@@ -563,7 +565,7 @@ async function fillForm8962SourceReview(input: TaxYearInput, result: TaxReturnRe
   for (const line of ['27', '28', '29'] as const) mappedFields.setText(F[`line${line}`], excess && values.has(line) ? new Decimal(values.get(line)!).toFixed(0) : '');
   for (const [index, fields] of F.allocations.entries()) {
     const period = summary.allocations?.[index];
-    const row = period ? [period.policyNumber, '', String(period.firstMonth).padStart(2, '0'), String(period.lastMonth).padStart(2, '0'), period.fraction, period.method === 'no_advance_benchmark' ? '' : period.fraction, period.method === 'no_advance_benchmark' ? '' : period.fraction] : Array<string>(7).fill('');
+    const row = period ? [period.policyNumber, '', String(period.firstMonth).padStart(2, '0'), String(period.lastMonth).padStart(2, '0'), period.method === 'separate_return_advance_only' ? '' : period.fraction, period.method === 'no_advance_benchmark' || period.method?.startsWith('separate_return') ? '' : period.fraction, period.method === 'no_advance_benchmark' ? '' : period.fraction] : Array<string>(7).fill('');
     fields.forEach((name, column) => mappedFields.setText(name, row[column]));
   }
   mappedFields.setCheckBox(F.line34Yes, Boolean(summary.allocations?.length && summary.allocations.length <= 4)); mappedFields.setCheckBox(F.line34No, Boolean(summary.allocations && summary.allocations.length > 4));

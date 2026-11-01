@@ -59,6 +59,7 @@ export function SharedPolicySourceDetails({ data, personal, filingStatus, taxYea
         const prefix = `Allocation policy ${index + 1}`;
         const set = (patch: Partial<SharedPolicyAgreementData>) => onChange({ sharedPolicyAllocations: { ...packet, policies: packet.policies.map((current, i) => i === index ? { ...current, ...patch } : current) } });
         const unshared = policy.situation === "not_shared";
+        const separate = policy.situation === "married_separate";
         const changeSituation = (value: string) => {
           const situation = value as SharedPolicyAgreementData["situation"];
           if (situation === "not_shared") {
@@ -66,10 +67,13 @@ export function SharedPolicySourceDetails({ data, personal, filingStatus, taxYea
               otherTaxpayerNotMarriedToEitherFilerDuringYearConfirmed: null, otherTaxpayerRelationshipSourceReference: '',
               twoTaxFamiliesConfirmed: null, allCoveredPeopleAssignedConfirmed: null, originalSlcspCorrectConfirmed: null,
               agreementConfirmed: null, agreementReference: "", defaultAllocation: undefined, noAdvanceAllocation: undefined,
-              coveredFamilyAssignments: [], monthlyAllocations: [], unsharedSourceReference: "", allCoveredPeopleInThisTaxFamilyConfirmed: null });
+              coveredFamilyAssignments: [], monthlyAllocations: [], unsharedSourceReference: "", allCoveredPeopleInThisTaxFamilyConfirmed: null, separateReturn: undefined });
             return;
           }
           set({ situation, unsharedSourceReference: "", allCoveredPeopleInThisTaxFamilyConfirmed: null,
+            ...(situation === "married_separate" ? { noCurrentYearMarriageOrDivorceConfirmed: null, originalSlcspCorrectConfirmed: null, agreementConfirmed: null, agreementReference: "", defaultAllocation: undefined,
+              monthlyAllocations: (policy.original?.monthlyPremiums ?? []).map(row => ({ month: row.month, fraction: "" })),
+              separateReturn: { sourceReference: "", marriedAtYearEndConfirmed: null, onlySpouseTaxFamiliesConfirmed: null, ownCoverageFamilySlcsp: (policy.original?.monthlyPremiums ?? []).map(row => ({ month: row.month, slcsp: "" })) } } : { separateReturn: undefined }),
             ...(unshared ? { coveredFamilyAssignments: (policy.original?.coveredIndividuals ?? []).map(person => ({ ssn: person.ssn, family: "" as const })),
               monthlyAllocations: (policy.original?.monthlyPremiums ?? []).map(row => ({ month: row.month, fraction: "" })) } : {}),
             ...(situation === "no_advance_credit" ? { agreementConfirmed: null, agreementReference: "", defaultAllocation: undefined,
@@ -83,13 +87,13 @@ export function SharedPolicySourceDetails({ data, personal, filingStatus, taxYea
             <TextFact label={`${prefix}: Unshared coverage source reference`} value={policy.unsharedSourceReference ?? ""} onChange={unsharedSourceReference => set({ unsharedSourceReference })} />
             <BooleanFact label={`${prefix}: All covered people belong to this tax family`} value={policy.allCoveredPeopleInThisTaxFamilyConfirmed ?? null} onChange={allCoveredPeopleInThisTaxFamilyConfirmed => set({ allCoveredPeopleInThisTaxFamilyConfirmed })} />
             <BooleanFact label={`${prefix}: Original SLCSP amounts are correct`} value={policy.originalSlcspCorrectConfirmed} onChange={originalSlcspCorrectConfirmed => set({ originalSlcspCorrectConfirmed })} />
-          </> : ([["noCurrentYearMarriageOrDivorceConfirmed", "No marriage or divorce occurred this year"], ["twoTaxFamiliesConfirmed", "Exactly two tax families share this policy"], ["allCoveredPeopleAssignedConfirmed", "Every covered person is assigned"], ["originalSlcspCorrectConfirmed", "Original SLCSP amounts are correct"]] as const).filter(([field]) => (field !== "originalSlcspCorrectConfirmed" || policy.situation !== "no_advance_credit") && (field !== "noCurrentYearMarriageOrDivorceConfirmed" || data.alternativeMarriageCalculationElected !== true)).map(([field, label]) => <BooleanFact key={field} label={`${prefix}: ${label}`} value={policy[field]} onChange={value => set({ [field]: value })} />)}
+          </> : ([["noCurrentYearMarriageOrDivorceConfirmed", "No marriage or divorce occurred this year"], ["twoTaxFamiliesConfirmed", "Exactly two tax families share this policy"], ["allCoveredPeopleAssignedConfirmed", "Every covered person is assigned"], ["originalSlcspCorrectConfirmed", "Original SLCSP amounts are correct"]] as const).filter(([field]) => (field !== "originalSlcspCorrectConfirmed" || (policy.situation !== "no_advance_credit" && !separate)) && (field !== "noCurrentYearMarriageOrDivorceConfirmed" || (data.alternativeMarriageCalculationElected !== true && !separate))).map(([field, label]) => <BooleanFact key={field} label={`${prefix}: ${label}`} value={policy[field]} onChange={value => set({ [field]: value })} />)}
           {!unshared && data.alternativeMarriageCalculationElected === true && <>
             <BooleanFact label={`${prefix}: Other taxpayer was not married to either filer during this year`} value={policy.otherTaxpayerNotMarriedToEitherFilerDuringYearConfirmed ?? null}
               onChange={otherTaxpayerNotMarriedToEitherFilerDuringYearConfirmed => set({ otherTaxpayerNotMarriedToEitherFilerDuringYearConfirmed, noCurrentYearMarriageOrDivorceConfirmed: null })} />
             <TextFact label={`${prefix}: Other taxpayer relationship source reference`} value={policy.otherTaxpayerRelationshipSourceReference ?? ''} onChange={otherTaxpayerRelationshipSourceReference => set({ otherTaxpayerRelationshipSourceReference })} />
           </>}
-          {!unshared && policy.situation !== "no_advance_credit" && <><BooleanFact label={`${prefix}: Both taxpayers agreed to these fractions`} value={policy.agreementConfirmed} onChange={agreementConfirmed => set({ agreementConfirmed,
+          {!unshared && !separate && policy.situation !== "no_advance_credit" && <><BooleanFact label={`${prefix}: Both taxpayers agreed to these fractions`} value={policy.agreementConfirmed} onChange={agreementConfirmed => set({ agreementConfirmed,
             ...(agreementConfirmed === true ? { defaultAllocation: undefined } : agreementConfirmed === false ? { agreementReference: "", monthlyAllocations: policy.monthlyAllocations.map(row => ({ ...row, fraction: "" })),
               defaultAllocation: policy.defaultAllocation ?? { sourceReference: "", enrollingTaxpayerSsn: "", allCoveredPeopleEnrolledByTaxpayerConfirmed: null } } : {}) })} />
           {policy.agreementConfirmed === true && <TextFact label={`${prefix}: Agreement reference`} value={policy.agreementReference} onChange={agreementReference => set({ agreementReference })} />}
@@ -100,11 +104,24 @@ export function SharedPolicySourceDetails({ data, personal, filingStatus, taxYea
           </>}</>}
         </div>
           {!unshared && policy.coveredFamilyAssignments.map((person, personIndex) => <Choice key={personIndex} label={`${prefix}: Covered person ${personIndex + 1} tax family`} value={person.family} choices={[["this_return", "This return's tax family"], ["other_return", "Other taxpayer's tax family"]]} onChange={family => set({ coveredFamilyAssignments: policy.coveredFamilyAssignments.map((current, i) => i === personIndex ? { ...current, family: family as typeof person.family } : current) })} />)}
+          {separate && policy.separateReturn && (() => {
+            const evidence = policy.separateReturn, patch = (next: Partial<NonNullable<SharedPolicyAgreementData["separateReturn"]>>) => set({ separateReturn: { ...evidence, ...next } });
+            return <>
+              <p className="guided-hint">Spouses filing separately split this policy equally. The other taxpayer above is your spouse.</p>
+              <div className="guided-form-grid">
+                <TextFact label={`${prefix}: Separate-return source reference`} value={evidence.sourceReference} onChange={sourceReference => patch({ sourceReference })} />
+                <BooleanFact label={`${prefix}: Married at the end of the year`} value={evidence.marriedAtYearEndConfirmed} onChange={marriedAtYearEndConfirmed => patch({ marriedAtYearEndConfirmed })} />
+                <BooleanFact label={`${prefix}: Only your and your spouse's tax families are on this policy`} value={evidence.onlySpouseTaxFamiliesConfirmed} onChange={onlySpouseTaxFamiliesConfirmed => patch({ onlySpouseTaxFamiliesConfirmed })} />
+                {data.marriedFilingSeparatelyExceptionConfirmed === true && evidence.ownCoverageFamilySlcsp.map((row, rowIndex) => <TextFact key={rowIndex} label={`${prefix}: Month ${row.month} SLCSP for your own coverage family`} value={row.slcsp}
+                  onChange={slcsp => patch({ ownCoverageFamilySlcsp: evidence.ownCoverageFamilySlcsp.map((current, i) => i === rowIndex ? { ...current, slcsp } : current) })} />)}
+              </div>
+            </>;
+          })()}
           {policy.situation === "no_advance_credit" && <NoAdvanceBenchmarkSourceDetails prefix={prefix} value={policy.noAdvanceAllocation} onCapture={() => perform(() => set({ noAdvanceAllocation: captureNoAdvanceBenchmarkSources(policy, packet) }))} onChange={noAdvanceAllocation => set({ noAdvanceAllocation })} />}
-          {!unshared && policy.situation !== "no_advance_credit" && policy.agreementConfirmed === true ? <>
+          {!unshared && !separate && policy.situation !== "no_advance_credit" && policy.agreementConfirmed === true ? <>
             <p className="guided-hint">Use the covered-person order on the copied original. Enter a fraction from 0 to 1, with at most two decimal places: for example, 0.50 for 50%. The same agreed fraction applies to all three monthly amounts.</p>
             <div className="guided-form-grid">{policy.monthlyAllocations.map((row, rowIndex) => <TextFact key={rowIndex} label={`${prefix}: Month ${row.month} agreed fraction`} value={row.fraction} onChange={fraction => set({ monthlyAllocations: policy.monthlyAllocations.map((current, i) => i === rowIndex ? { ...current, fraction } : current) })} />)}</div>
-          </> : !unshared && policy.situation !== "no_advance_credit" && policy.agreementConfirmed === false && <p className="guided-hint">Use the covered-person order on the copied original. The enrolling taxpayer is the person who expected to claim these people when enrolling them. The default share uses their actual coverage months and tax-family assignments; the enrolling taxpayer keeps the remaining share.</p>}
+          </> : !unshared && !separate && policy.situation !== "no_advance_credit" && policy.agreementConfirmed === false && <p className="guided-hint">Use the covered-person order on the copied original. The enrolling taxpayer is the person who expected to claim these people when enrolling them. The default share uses their actual coverage months and tax-family assignments; the enrolling taxpayer keeps the remaining share.</p>}
         </fieldset>;
       })}
       {(packet.noAdvanceCoverageFamilies || (packet.policies.length > 1 && packet.policies.some(policy => policy.situation === "no_advance_credit"))) && <NoAdvanceCoverageFamilyDetails value={packet.noAdvanceCoverageFamilies}
@@ -114,7 +131,7 @@ export function SharedPolicySourceDetails({ data, personal, filingStatus, taxYea
         onCapture={() => perform(() => onChange({ sharedPolicyAllocations: { ...packet, overlappingCoverage: captureOverlappingBenchmarkSources(packet) } }))}
         onChange={overlappingCoverage => onChange({ sharedPolicyAllocations: { ...packet, overlappingCoverage } })} onError={perform} />}
       <BooleanFact label="Allocation sources checked after the last edit" value={packet.sourceFactsConfirmed} onChange={sourceFactsConfirmed => onChange({ sharedPolicyAllocations: { ...packet, sourceFactsConfirmed } })} />
-      <button type="button" onClick={() => perform(() => onChange({ monthlyReconciliation: deriveSharedPolicyMonths(data, taxYear, filingStatus, personal, healthInsurance?.plans.some(plan => plan.coverageFamilySources) ? buildHealthInsuranceInput(healthInsurance, filingStatus, taxYear) : undefined) }))}>{packet.policies.some(policy => policy.agreementConfirmed === false || policy.situation === "no_advance_credit" || policy.situation === "not_shared") ? "Calculate household amounts from allocation" : "Calculate household amounts from agreement"}</button>
+      <button type="button" onClick={() => perform(() => onChange({ monthlyReconciliation: deriveSharedPolicyMonths(data, taxYear, filingStatus, personal, healthInsurance?.plans.some(plan => plan.coverageFamilySources) ? buildHealthInsuranceInput(healthInsurance, filingStatus, taxYear) : undefined) }))}>{packet.policies.some(policy => policy.agreementConfirmed === false || policy.situation === "no_advance_credit" || policy.situation === "not_shared" || policy.situation === "married_separate") ? "Calculate household amounts from allocation" : "Calculate household amounts from agreement"}</button>
       <p className="guided-hint">After calculation, check the household monthly amounts and confirm the sources below. Each month's coverage eligibility remains your separate source answer.</p>
       <button type="button" onClick={() => onChange({ sharedPolicyAllocations: undefined })}>Remove allocation worksheet</button>
     </>}
