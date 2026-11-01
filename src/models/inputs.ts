@@ -2381,6 +2381,7 @@ export const ScheduleK1Form1041Schema = z.object({
   estateTrustName: z.string(),
   /** EIN of the estate or trust */
   estateTrustEIN: z.string(),
+  accountHolder: z.enum(["primary", "spouse"]).optional(), // Beneficiary on a joint return.
   /** Whether this is the final K-1 (trust/estate terminating) */
   isFinalK1: z.boolean().default(false),
 

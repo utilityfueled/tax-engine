@@ -158,6 +158,14 @@ describe('Actual elected credit without Form1116', () => {
       [{}, { reportedTaxAmount: '49' }, /disagrees with the actual statement/], [{}, { sourceId: 'scheduleK1:1' }, /supported statement/],
       [{ foreignTaxPaid: '150' }, { reportedTaxAmount: '150', payments: [{ date: '2025-06-01', amountUsd: '150' }] }, /exceeds its exact 300/],
     ] as const) expect(() => resolveForeignTaxDirectSources(build(k1Patch, rowPatch)), JSON.stringify([k1Patch, rowPatch])).toThrow(message);
+    // The entity pays, so a fiscal-year date or an aggregate statement is no reason to reject.
+    expect(resolveForeignTaxDirectSources(build({}, { payments: undefined })).currentTaxExact.toFixed()).toBe('250.25');
+    expect(resolveForeignTaxDirectSources(build({}, { payments: [{ date: '2024-11-30', amountUsd: '50' }] })).currentTaxExact.toFixed()).toBe('250.25');
+    const stray = structuredClone(foreignTaxDirectCreditFixture()); Object.assign(firstSource(stray), { qualifiedPayeeStatement: 'schedule_k1_1041' });
+    expect(() => resolveForeignTaxDirectSources(stray)).toThrow(/applies only to a pass-through source/);
+    // A joint return names the beneficiary, and with none named the row cannot bind.
+    const joint = (accountHolder?: 'primary') => { const input = structuredClone(trust); input.taxpayer.filingStatus = 'married_filing_jointly'; input.scheduleK1Form1041 = [{ ...input.scheduleK1Form1041![0]!, accountHolder }] as never; return input; };
+    expect(() => resolveForeignTaxDirectSources(joint())).toThrow();
     const noRow = structuredClone(foreignTaxDirectCreditFixture()); noRow.scheduleK1 = [k1()];
     expect(() => resolveForeignTaxDirectSources(noRow)).toThrow(/every actual positive foreign-tax statement/);
     const incomeOnly = structuredClone(foreignTaxDirectCreditFixture()); incomeOnly.scheduleK1 = [k1({ foreignTaxPaid: '0', foreignSourceIncome: '100' })];

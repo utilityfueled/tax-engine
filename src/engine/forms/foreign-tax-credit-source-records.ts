@@ -79,8 +79,8 @@ export function resolveForeignTaxCreditSourceRecords(input: ForeignTaxCreditSour
     ...(input.scheduleK1 ?? []).map((row, index) => ({ sourceId: `scheduleK1:${index}`, kind: 'schedule_k3' as const, passive: row.foreignTaxCategory === 'passive', hasIncome: !d(row.foreignSourceIncome).isZero(),
       form: { accountHolder: row.accountHolder, payer: row.partnershipName, payerTin: row.partnershipEIN, foreignTaxPaid: row.foreignTaxPaid } })),
     ...(input.scheduleK1Form1041 ?? []).map((row, index) => ({ sourceId: `scheduleK1Form1041:${index}`, kind: 'schedule_k1_1041' as const, passive: true, hasIncome: false,
-      // A trust statement has no owner field, so only a single-owner return can bind it.
-      form: { accountHolder: input.taxpayer.filingStatus === 'married_filing_jointly' ? undefined : 'primary' as const, payer: row.estateTrustName, payerTin: row.estateTrustEIN, foreignTaxPaid: row.foreignTaxesPaid } })),
+      // A single-owner return has only one possible beneficiary.
+      form: { accountHolder: row.accountHolder ?? (input.taxpayer.filingStatus === 'married_filing_jointly' ? undefined : 'primary' as const), payer: row.estateTrustName, payerTin: row.estateTrustEIN, foreignTaxPaid: row.foreignTaxesPaid } })),
   ];
   if (passThrough.some(row => row.hasIncome || amount(row.form.foreignTaxPaid, 'pass-through tax').gt(0)) && method !== 'direct') throw new Error('Foreign credit pass-through foreign sources require their separate qualified-statement method');
   if (passThrough.some(row => row.hasIncome && !annual.sources?.some(source => source.sourceId === row.sourceId))) throw new Error('Foreign credit requires every actual positive foreign-tax statement, including pass-through foreign income');
@@ -95,6 +95,7 @@ export function resolveForeignTaxCreditSourceRecords(input: ForeignTaxCreditSour
     used.add(source.sourceId);
     const statement = statements.find(row => row.sourceId === source.sourceId), actual = statement?.form;
     const passThroughRow = statement && 'kind' in statement ? statement : undefined;
+    if (statement && !passThroughRow && source.qualifiedPayeeStatement !== undefined) throw new Error('Foreign credit qualified payee statement applies only to a pass-through source');
     if (passThroughRow) {
       if (source.qualifiedPayeeStatement !== passThroughRow.kind) throw new Error('Foreign credit pass-through tax requires its actual qualified payee statement');
       if (!passThroughRow.passive) throw new Error('Foreign credit pass-through tax must be passive category');
@@ -118,8 +119,9 @@ export function resolveForeignTaxCreditSourceRecords(input: ForeignTaxCreditSour
     }
     const reported = amount(source.reportedTaxAmount, 'statement tax');
     if (!reported.eq(amount(actual.foreignTaxPaid, 'actual reported foreign tax'))) throw new Error('Foreign credit tax disagrees with the actual statement');
-    if (!source.payments || source.payments.some(row => !actualDate(row.date, year))) throw new Error('Foreign credit requires actual payment dates in the return year');
-    const paid = sum(...source.payments.map(row => amount(row.amountUsd, 'actual USD payment')));
+    // The entity pays pass-through tax, and its statement reports the owner's share with no payment dates.
+    if (!passThroughRow && (!source.payments || source.payments.some(row => !actualDate(row.date, year)))) throw new Error('Foreign credit requires actual payment dates in the return year');
+    const paid = passThroughRow ? reported : sum(...(source.payments ?? []).map(row => amount(row.amountUsd, 'actual USD payment')));
     if (!paid.eq(reported)) throw new Error('Foreign credit actual payments must equal reported tax');
     currentTaxExact = currentTaxExact.plus(paid);
     audit.record(method === 'direct' ? 'Foreign Direct Credit WS' : 'Foreign Ordinary Credit Sources', source.sourceId, 'Actual eligible paid statement tax', paid,
