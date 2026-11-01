@@ -22,7 +22,7 @@ A rejection here is not an external blocker unless its class says so. Year guard
 
 | Family | Examples | Rejection location |
 | --- | --- | --- |
-| Foreign tax credit | Pass-through sources on Form 1116 or as deductions, guided entry of pass-through rows, territories, territories, overall foreign loss accounts, accrued-credit history, part-year residency | `foreign-tax-*.ts` |
+| Foreign tax credit | Pass-through sources on Form 1116 or as deductions, pass-through tax in the guide (guided K-1 basis and at-risk sources require zero foreign tax, and foreign tax also lowers partner basis, so that needs a K-1 basis method), territories, territories, overall foreign loss accounts, accrued-credit history, part-year residency | `foreign-tax-*.ts` |
 | Form 172 origins | Farming, estate, cancelled-debt, other classified income and deductions | `form-172-*.ts` |
 | K-1 histories | Basis, at-risk, passive recharacterization, decreased-value gifts, Form 461 classification | `k1-*.ts` |
 | Charitable with loss histories | Multi-vintage attribution, prior carry with the 2026 floor, recurrent joint attribution | `charitable-*.ts` |

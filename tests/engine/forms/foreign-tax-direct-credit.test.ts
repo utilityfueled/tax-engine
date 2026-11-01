@@ -164,8 +164,15 @@ describe('Actual elected credit without Form1116', () => {
     const stray = structuredClone(foreignTaxDirectCreditFixture()); Object.assign(firstSource(stray), { qualifiedPayeeStatement: 'schedule_k1_1041' });
     expect(() => resolveForeignTaxDirectSources(stray)).toThrow(/applies only to a pass-through source/);
     // A joint return names the beneficiary, and with none named the row cannot bind.
-    const joint = (accountHolder?: 'primary') => { const input = structuredClone(trust); input.taxpayer.filingStatus = 'married_filing_jointly'; input.scheduleK1Form1041 = [{ ...input.scheduleK1Form1041![0]!, accountHolder }] as never; return input; };
-    expect(() => resolveForeignTaxDirectSources(joint())).toThrow();
+    const joint = (accountHolder?: 'primary' | 'spouse', owner: 'primary' | 'spouse' = 'primary') => { const input = structuredClone(trust); input.taxpayer.filingStatus = 'married_filing_jointly'; (input.taxpayer as { spouse?: unknown }).spouse = { firstName: 'Pat', lastName: 'Doe', ssn: '987-65-4322', dateOfBirth: '1980-01-01' };
+      direct(input).taxpayers = [...required(direct(input).taxpayers), { ...required(direct(input).taxpayers)[0]!, owner: 'spouse' }];
+      input.scheduleK1Form1041 = [{ ...input.scheduleK1Form1041![0]!, accountHolder }] as never; Object.assign(sources(input)[1]!, { owner }); return input; };
+    expect(resolveForeignTaxDirectSources(joint('primary')).currentTaxExact.toFixed()).toBe('250.25');
+    expect(() => resolveForeignTaxDirectSources(joint())).toThrow(/supported statement and return owner/);
+    expect(() => resolveForeignTaxDirectSources(joint('spouse', 'primary'))).toThrow(/supported statement and return owner/);
+    // Direct 1099 payments still must add up to the reported tax.
+    const shortPaid = structuredClone(foreignTaxDirectCreditFixture()); firstSource(shortPaid).payments = [{ date: '2025-06-01', amountUsd: '1' }];
+    expect(() => resolveForeignTaxDirectSources(shortPaid)).toThrow(/payments must equal reported tax/);
     const noRow = structuredClone(foreignTaxDirectCreditFixture()); noRow.scheduleK1 = [k1()];
     expect(() => resolveForeignTaxDirectSources(noRow)).toThrow(/every actual positive foreign-tax statement/);
     const incomeOnly = structuredClone(foreignTaxDirectCreditFixture()); incomeOnly.scheduleK1 = [k1({ foreignTaxPaid: '0', foreignSourceIncome: '100' })];
