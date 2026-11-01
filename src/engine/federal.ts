@@ -1654,12 +1654,17 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const foreignK1Earnings = new Map(foreignIncomeSources.qbiForeignProfit.map((row) => { const k1 = input.scheduleK1[Number(row.sourceId.replace("scheduleK1:", ""))];
     return [row.sourceId, Decimal.min(row.receipts, k1 ? zeroFloor(k1SelfEmploymentAmount(k1)) : d("0"))] as const; }));
   const foreignSelfEmployment = sum(foreignQbiProfit.get("scheduleC") ?? d("0"), ...foreignK1Earnings.values());
+  // QBI loses all the foreign profit, which can pass the earned receipts where capital is material.
+  const foreignK1QbiEarnings = new Map(foreignIncomeSources.qbiForeignProfit.map((row) => { const k1 = input.scheduleK1[Number(row.sourceId.replace("scheduleK1:", ""))];
+    return [row.sourceId, Decimal.min(Decimal.max(row.receipts, row.amount), k1 ? zeroFloor(k1SelfEmploymentAmount(k1)) : d("0"))] as const; }));
+  const foreignQbiSelfEmployment = sum(foreignQbiProfit.get("scheduleC") ?? d("0"), ...foreignK1QbiEarnings.values());
   // A joint return's other spouse never stands in for an owner with no self-employment row.
   const foreignSeOwner = schedSE.perTaxpayer.find((row) => row.accountHolder === input.form2555?.accountHolder)
     ?? (filingStatus === "married_filing_jointly" ? undefined : schedSE.perTaxpayer[0]);
   if (!foreignSeOwner && foreignSelfEmployment.gt(0) && schedSE.perTaxpayer.some((row) => row.accountHolder === undefined)) throw new Error("Form2555 foreign self-employment on a joint return needs an owner on every self-employment source");
-  const foreignSeDeduction = foreignSeOwner && foreignSelfEmployment.gt(0) && foreignSeOwner.netSEEarnings.gt(0)
-    ? foreignSeOwner.deductibleHalf.times(Decimal.min(1, foreignSelfEmployment.div(foreignSeOwner.netSEEarnings))) : d("0");
+  const foreignSeShare = (foreign: Decimal) => foreignSeOwner && foreign.gt(0) && foreignSeOwner.netSEEarnings.gt(0)
+    ? foreignSeOwner.deductibleHalf.times(Decimal.min(1, foreign.div(foreignSeOwner.netSEEarnings))) : d("0");
+  const foreignSeDeduction = foreignSeShare(foreignSelfEmployment), foreignQbiSeDeduction = foreignSeShare(foreignQbiSelfEmployment);
   // Spec: partnership-capital-limit. Thirty percent of the share of net profits after this K-1's deduction.
   for (const row of foreignIncomeSources.qbiForeignProfit) {
     if (!row.capitalMaterial) continue;
@@ -1667,8 +1672,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     const share = d(k1?.ordinaryIncome).plus(d(k1?.guaranteedPayments));
     const earnings = k1 ? zeroFloor(k1SelfEmploymentAmount(k1)) : d("0");
     const deduction = foreignSeOwner?.netSEEarnings.gt(0) ? foreignSeOwner.deductibleHalf.times(Decimal.min(1, earnings.div(foreignSeOwner.netSEEarnings))) : d("0");
-    const limit = zeroFloor(share.minus(deduction)).times("0.3").toDecimalPlaces(0, Decimal.ROUND_DOWN);
-    if (row.receipts.gt(limit)) throw new Error(`Form2555 partnership receipts exceed the 30 percent limit of ${limit.toFixed()}`);
+    const limit = zeroFloor(share.minus(deduction)).times("0.3");
+    if (row.receipts.gt(limit)) throw new Error(`Form2555 partnership receipts exceed the 30 percent limit of ${limit.toDecimalPlaces(0, Decimal.ROUND_DOWN).toFixed()}`);
   }
   if (form2555 && foreignSeDeduction.gt(0) && form2555.foreignEarnedIncome.gt(0)) {
     const minimum = foreignSeDeduction.times(Decimal.min(1, form2555.foreignEarnedIncomeExclusion.div(form2555.foreignEarnedIncome))).toDecimalPlaces(0, Decimal.ROUND_DOWN);
@@ -2692,7 +2697,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     const qbi=(k1QbiLosses.activities.find(source=>source.k1Index===index)?.currentQbi ?? d(k1.section199AQBI)).minus(foreignQbiProfit.get(`scheduleK1:${index}`) ?? d("0"));
     // Foreign earnings carry no U.S. share of the deduction, so they take none of it here.
     const netSEEarnings=k1.entityType === "s_corporation" ? d("0") : (foreignK1Earnings.has(`scheduleK1:${index}`) ? k1SelfEmploymentAmount(k1) : d(k1.selfEmploymentNetEarningsAfterAdjustments ?? k1.selfEmploymentEarnings))
-      .minus(foreignK1Earnings.get(`scheduleK1:${index}`) ?? d("0"));
+      .minus(foreignK1QbiEarnings.get(`scheduleK1:${index}`) ?? d("0"));
     if (!qbi.isZero() || !netSEEarnings.isZero()) deductionSources.push({id:`scheduleK1:${index}`,name:k1.partnershipName,
       qbi,netSEEarnings,accountHolder:ownerOf(k1.accountHolder),materiallyParticipated:k1.qbiMateriallyParticipated,
       excludedSEIncome:!d(k1.guaranteedPayments).isZero() || qbi.isZero()});
@@ -2712,7 +2717,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     })) };
   }
   const qbiSourceDeductions=calculateQBISourceDeductions({taxYear:year,sources:deductionSources,
-    selfEmploymentDeductions:schedSE.perTaxpayer.map(row=>({accountHolder:row.accountHolder,amount:row===foreignSeOwner ? row.deductibleHalf.minus(foreignSeDeduction) : row.deductibleHalf})),
+    selfEmploymentDeductions:schedSE.perTaxpayer.map(row=>({accountHolder:row.accountHolder,amount:row===foreignSeOwner ? row.deductibleHalf.minus(foreignQbiSeDeduction) : row.deductibleHalf})),
     healthInsuranceDeduction:seHealthInsurance,retirementPlanDeduction:d(input.adjustments?.seRetirementContributions),
     sourceFactsVerified:schedSE.sourceFactsVerified,allocation:qbiAllocation,
     healthInsuranceSources:actualHealthInsurance?.healthSources,retirementPlanSources:actualHealthInsurance?.retirementSources});

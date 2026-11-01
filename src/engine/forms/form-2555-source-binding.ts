@@ -105,7 +105,8 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
       if (combined.gt(amount(original.selfEmploymentEarnings, "Schedule K-1 Box 14 code A"))) throw new Error("Form2555 partnership receipts exceed Schedule K-1 Box 14 code A");
       // Spec: qbi-foreign-profit. A K-1 statement may already omit this income from QBI.
       const foreignProfit = amount(row.qbiForeignProfit, "foreign profit inside QBI");
-      if (foreignProfit.gt(combined)) throw new Error("Form2555 foreign profit inside QBI exceeds the foreign receipts");
+      // With capital material, receipts are only the earned part, and all the foreign profit is outside QBI.
+      if (!row.capitalMaterialIncomeFactor && foreignProfit.gt(combined)) throw new Error("Form2555 foreign profit inside QBI exceeds the foreign receipts");
       if (foreignProfit.gt(new Decimal(original.section199AQBI ?? 0))) throw new Error("Form2555 foreign profit inside QBI exceeds the Schedule K-1 QBI");
       if (foreignProfit.isZero() && new Decimal(original.section199AQBI ?? 0).gt(0) && row.k1QbiExcludesForeignConfirmed !== true) throw new Error("Form2555 confirm that the Schedule K-1 QBI already omits this foreign profit");
       if (foreignProfit.gt(0) && (new Decimal(original.section199AW2Wages ?? 0).gt(0) || new Decimal(original.section199AUBIA ?? 0).gt(0))) throw new Error("Form2555 foreign profit inside K-1 QBI needs its wages and UBIA apportioned");
