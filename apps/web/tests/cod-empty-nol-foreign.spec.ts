@@ -36,7 +36,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       }
       // Foreign source edits invalidate the actual current-use and payment packets.
       for (let step = 0; step < 3; step++) await page.getByRole('button', { name: 'Back', exact: true }).click();
-      await page.getByText('Canceled debt and insolvency', { exact: true }).click();
+      await page.getByText('Canceled debt, insolvency and bankruptcy', { exact: true }).click();
       await page.getByText('Later tax attributes and property basis', { exact: true }).click();
       const confirmations = ['Debt 1 sources checked after the last edit', 'Insolvency worksheet checked after the last edit',
         'Current adjustments sources checked after the last edit'];

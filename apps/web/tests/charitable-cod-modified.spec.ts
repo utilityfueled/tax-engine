@@ -29,14 +29,14 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       }, { id, state });
       await page.reload(); const hero = page.locator('.guided-ticker-value-hero').first();
       await expect(hero).not.toHaveText('Enter more info for an estimate');
-      await page.getByText('Canceled debt and insolvency', { exact: true }).click();
+      await page.getByText('Canceled debt, insolvency and bankruptcy', { exact: true }).click();
       const amount = page.getByRole('textbox', { name: 'Debt 1 Box 2 canceled debt', exact: true });
       const interest = page.getByRole('textbox', { name: 'Debt 1 Box 3 interest included', exact: true });
       await expect(interest).toHaveValue('0');
       await expect(page.getByRole('combobox', { name: 'Debt was discharged in a title 11 bankruptcy case', exact: true })).toHaveValue('false');
       await amount.fill('5001'); await amount.press('Tab');
       await interest.fill(''); await expect(hero).toHaveText('Enter more info for an estimate');
-      await page.reload(); await page.getByText('Canceled debt and insolvency', { exact: true }).click();
+      await page.reload(); await page.getByText('Canceled debt, insolvency and bankruptcy', { exact: true }).click();
       await expect(interest).toHaveValue(''); await expect(amount).toHaveValue('5,001');
       await interest.fill('0'); await interest.press('Tab');
       for (const name of ['Debt 1 sources checked after the last edit', 'Insolvency worksheet checked after the last edit', 'Canceled-debt packet checked after the last edit']) {

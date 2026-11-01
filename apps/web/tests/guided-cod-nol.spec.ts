@@ -34,7 +34,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       await expect(page.locator('.guided-ticker-value-hero').first()).not.toHaveText('Enter more info for an estimate');
       await page.getByRole('button', { name: 'Expand Ticker', exact: true }).click(); await page.locator('.guided-ticker-clickable').first().click();
       await expect(page.locator('.guided-ticker-breakdown').getByText('$32,600', { exact: true }).first()).toBeVisible();
-      const open = () => page.getByText('Canceled debt and insolvency', { exact: true }).click(); await open();
+      const open = () => page.getByText('Canceled debt, insolvency and bankruptcy', { exact: true }).click(); await open();
       const amount = page.getByRole('textbox', { name: 'Debt 1 Box 2 canceled debt', exact: true });
       await amount.fill('40000.50'); await amount.press('Tab'); await expect(amount).toHaveValue('40,000.50');
       await page.getByRole('textbox', { name: 'Canceled-debt packet reference', exact: true }).fill('synthetic-private-insolvency-packet');

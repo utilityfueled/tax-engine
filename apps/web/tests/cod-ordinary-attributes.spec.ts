@@ -23,13 +23,13 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       await page.reload();
       const hero = page.locator('.guided-ticker-value-hero').first();
       await expect(hero).not.toHaveText('Enter more info for an estimate');
-      await page.getByText('Canceled debt and insolvency', { exact: true }).click();
+      await page.getByText('Canceled debt, insolvency and bankruptcy', { exact: true }).click();
       await page.getByText('Later tax attributes and property basis', { exact: true }).click();
       const money = page.getByRole('textbox', { name: 'Regular immediately after money', exact: true });
       await expect(money).toHaveValue('600'); await money.fill(''); await money.press('Tab');
       await expect(hero).toHaveText('Enter more info for an estimate');
       await page.reload();
-      await page.getByText('Canceled debt and insolvency', { exact: true }).click();
+      await page.getByText('Canceled debt, insolvency and bankruptcy', { exact: true }).click();
       await page.getByText('Later tax attributes and property basis', { exact: true }).click();
       await expect(money).toHaveValue('');
       await money.fill('0'); await money.press('Tab');

@@ -24,7 +24,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       const hero = page.locator('.guided-ticker-value-hero').first();
       await expect(hero).toHaveText('$56,906');
       const openSources = async () => {
-        await page.getByText('Canceled debt and insolvency', { exact: true }).click();
+        await page.getByText('Canceled debt, insolvency and bankruptcy', { exact: true }).click();
         await page.getByText('Later tax attributes and property basis', { exact: true }).click();
       };
       await openSources();
