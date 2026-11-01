@@ -117,6 +117,7 @@ export interface PartnerBasisScheduleResult {
     otherDeductions: Decimal;
     investmentInterest: Decimal;
     ebie: Decimal;
+    foreignTax: Decimal;
   };
 
   lines: CalculatedLine[];
@@ -271,9 +272,14 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1, charitableSourceCo
   }
 
   audit.record(FORM, "total-losses", "Total loss and deduction items", totalLosses,
-    "Sum of current-year losses + prior suspended losses", {
+    "Sum of current-year losses, deductions and foreign tax + prior suspended losses", {
       "Current-year + prior suspended total": totalLosses,
     });
+  const foreignTaxCategory = findCategory(lossCategories, "foreignTax");
+  if (foreignTaxCategory.total.gt(ZERO)) {
+    audit.record(FORM, "foreign-tax", "Foreign taxes paid or accrued, included in total loss and deduction items", foreignTaxCategory.total,
+      "IRC 704(d)(3)(A); Form 7203 line 46");
+  }
   const stockAllowedLosses = totalAllowedLosses;
 
   audit.record(FORM, "ending-basis", `${entityLabel} adjusted basis at end of year`,
@@ -454,6 +460,7 @@ export function calculatePartnerBasisSchedule(k1: ScheduleK1, charitableSourceCo
       otherDeductions: findCategory(lossCategories, "otherDeductions").suspended,
       investmentInterest: findCategory(lossCategories, "investmentInterest").suspended,
       ebie: findCategory(lossCategories, "ebie").suspended,
+      foreignTax: findCategory(lossCategories, "foreignTax").suspended,
     },
     lines: [...(charitable?.lines ?? []), ...audit.getLines()],
   };
@@ -487,6 +494,8 @@ function buildLossCategories(
   const currentOtherDeductions = Decimal.max(ZERO, d(k1.otherDeductions));
   const currentInvestmentInterest = Decimal.max(ZERO, d(k1.investmentInterestExpense));
   const currentEBIE = Decimal.max(ZERO, d(k1.excessBusinessInterest));
+  // IRC 704(d)(3)(A) and Form 7203 line 46 count foreign tax with these items.
+  const currentForeignTax = Decimal.max(ZERO, d(k1.foreignTaxPaid));
 
   // Add prior suspended amounts
   const priorOrdinary = d(prior?.ordinary);
@@ -515,6 +524,7 @@ function buildLossCategories(
     { key: "otherDeductions", description: "Other deductions (Box 13 W)", total: currentOtherDeductions.plus(priorOtherDeductions), allowed: ZERO, suspended: ZERO },
     { key: "investmentInterest", description: "Investment interest expense (semantic amount)", total: currentInvestmentInterest.plus(priorInvestmentInterest), allowed: ZERO, suspended: ZERO },
     { key: "ebie", description: "Excess business interest expense (Box 13 K)", total: currentEBIE.plus(priorEBIE), allowed: ZERO, suspended: ZERO },
+    { key: "foreignTax", description: "Foreign taxes paid or accrued", total: currentForeignTax, allowed: ZERO, suspended: ZERO },
   ];
 }
 

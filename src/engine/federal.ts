@@ -1475,6 +1475,12 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
 
   // Schedule E: Supplemental income (rental + partnership)
   const schedE = calculateScheduleE(input, k1CharitableSources);
+  for (const { basisResult, name } of schedE.partnerships) {
+    // Legacy dollar rounding can move a small suspension between categories, so test the real shortfall.
+    if (basisResult?.totalSuspendedLosses.gt(0) && basisResult.lossCategories.some(row => row.key === 'foreignTax' && row.total.gt(0))) {
+      throw new Error(`${name} leaves foreign tax suspended by basis; a later allowance needs a separate method.`);
+    }
+  }
   audit.merge(schedE.lines);
   const passiveCapital = calculateK1PassiveCapitalSources(input, schedE);
   if (passiveCapital) audit.merge(passiveCapital.lines);

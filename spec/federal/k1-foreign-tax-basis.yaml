@@ -1,0 +1,67 @@
+form: "K-1 foreign tax in the basis schedule"
+fullName: "Partner and shareholder foreign tax reduces basis and counts toward the basis limit"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i1065sk1"
+notes: |
+  Retrieved 2026-11-01. IRC702(a)(6); IRC704(d)(3)(A); Partner's Instructions for
+  Schedule K-1 (Form 1065) Basis Limitations and Part II pro rata rule; Form 7203
+  (Rev. December 2022) Part III line46; Shareholder's Instructions for Schedule K-1
+  (Form 1120-S) box16 code F, IRC1366(d) and the basis order.
+  IRC704(d)(3)(A) takes a partner's section 901 taxes into account in the loss limit.
+  Form 7203 lists foreign taxes with the loss and deduction items in Part III, so
+  they follow distributions and nondeductible costs and can use debt basis.
+  Limits: where basis leaves any foreign tax suspended, the return rejects. No source
+  reviewed says which year a suspended tax is treated as paid when it is later
+  allowed, or how the allowed part maps to the Form 1116 or election amount.
+  Without a beginning basis the engine computes no basis schedule, as before.
+lines:
+  - line: "ending-basis"
+    description: "Foreign tax lowers ending basis"
+    formula: "Beginning basis1000, foreign tax100: allowed100, ending basis900"
+    irsRef: "IRC704(d)(3)(A); Form 7203 line46"
+    testRef: "tests/engine/forms/k1-foreign-tax-basis.test.ts::lowers ending basis by the foreign tax"
+  - line: "pro-rata"
+    description: "Foreign tax shares a short basis with losses"
+    formula: "Basis300, ordinary loss300, foreign tax100: ordinary allowed225 and suspended75, foreign tax allowed75 and suspended25"
+    irsRef: "Partner's Instructions Part II; Form 7203 Part III"
+    testRef: "tests/engine/forms/k1-foreign-tax-basis.test.ts::shares a short basis with losses pro rata"
+  - line: "s-corporation-order"
+    description: "Shareholder foreign tax follows nondeductible costs and can use debt basis"
+    formula: "Stock basis100, nondeductible100, debt basis40, foreign tax40: stock ends0, allowed from debt40, none suspended"
+    irsRef: "Form 7203 Part III columns c and d; Shareholder's Instructions basis order"
+    testRef: "tests/engine/forms/k1-foreign-tax-basis.test.ts::follows nondeductible costs and can use debt basis"
+  - line: "no-basis-schedule"
+    description: "A K-1 with no beginning basis is unchanged"
+    formula: "No beginning basis: no basis result, the foreign tax stays on the return"
+    irsRef: "IRC704(d)"
+    testRef: "tests/engine/forms/k1-foreign-tax-basis.test.ts::leaves a K-1 without a beginning basis unchanged"
+  - line: "negative-amount"
+    description: "A negative foreign tax amount is not a basis decrease"
+    formula: "Foreign tax-100, basis1000: category0, ending basis1000"
+    irsRef: "IRC702(a)(6)"
+    testRef: "tests/engine/forms/k1-foreign-tax-basis.test.ts::ignores a negative foreign tax amount"
+  - line: "zero-tax-identity"
+    description: "A K-1 with no foreign tax is unchanged"
+    formula: "Basis500, loss200, tax0: total200, ending300, no foreign tax line"
+    irsRef: "IRC704(d)"
+    testRef: "tests/engine/forms/k1-foreign-tax-basis.test.ts::leaves a K-1 with no foreign tax unchanged"
+  - line: "review-line"
+    description: "Show foreign tax on its own review line"
+    formula: "Foreign tax100: line foreign-tax100"
+    irsRef: "Form 7203 line46; Partner's Instructions Part II line15d"
+    testRef: "tests/engine/forms/k1-foreign-tax-basis.test.ts::shows the foreign tax on its own review line"
+  - line: "distribution-order"
+    description: "Distributions come first and keep their gain"
+    formula: "Basis0, income50, distribution100, tax40: gain50, nothing left, tax suspended40"
+    irsRef: "Form 7203 lines6 and 11; IRC731(a)(1)"
+    testRef: "tests/engine/forms/k1-foreign-tax-basis.test.ts::keeps the distribution gain and follows distributions"
+  - line: "debt-restoration"
+    description: "Foreign tax lowers the net increase that restores debt basis"
+    formula: "Stock100, income100, tax150, debt50, prior reduction200: restoration0, stock50, debt50"
+    irsRef: "Reg. 1.1367-2(c)(1); Form 7203 line23"
+    testRef: "tests/engine/forms/k1-foreign-tax-basis.test.ts::counts foreign tax in the net increase that restores debt basis"
+  - line: "suspended-rejects"
+    description: "Reject a return where any basis shortfall reaches foreign tax"
+    formula: "Basis10 or99.60, tax100: rejects by name. Basis1999.60 with items totalling2000 rejects whichever item dollar rounding charges. Basis100 passes."
+    irsRef: "IRC704(d)(3)(A); the year and amount of a later allowance is unsettled by the sources reviewed"
+    testRef: "tests/engine/forms/k1-foreign-tax-basis.test.ts::rejects a return with suspended foreign tax"

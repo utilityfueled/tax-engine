@@ -1,6 +1,6 @@
 # Unsupported method register
 
-Recorded October 31, 2026 at `298c254c`, then updated as packages shipped: Form 1099-DA basis corrections, gross-proceeds costs and repaid earlier-year unemployment, Form 2210-F, waiver requests and Schedule D worksheets with corrected digital rows, crypto payments, mining, staking, airdrop, gift and inherited lots, Schedule 1-A on Schedule AI line 14, chapter 13 discharges, married-child and nonparent EIC tie-breakers on the actual child-source routes, active-partner foreign earned income, foreign profit removed from QBI, and pass-through foreign tax on the election without Form 1116 are delivered. Form 1099-G business refunds moved to Ruling, because source research found no recipient rule. This classifies the engine's explicit rejections so the remaining work can be reviewed and prioritized. An unsupported return stops with a named error. The engine does not estimate it.
+Recorded October 31, 2026 at `298c254c`, then updated as packages shipped: Form 1099-DA basis corrections, gross-proceeds costs and repaid earlier-year unemployment, Form 2210-F, waiver requests and Schedule D worksheets with corrected digital rows, crypto payments, mining, staking, airdrop, gift and inherited lots, Schedule 1-A on Schedule AI line 14, chapter 13 discharges, married-child and nonparent EIC tie-breakers on the actual child-source routes, active-partner foreign earned income, foreign profit removed from QBI, pass-through foreign tax on the election without Form 1116, and K-1 foreign tax in the basis schedule are delivered. Form 1099-G business refunds moved to Ruling, because source research found no recipient rule. This classifies the engine's explicit rejections so the remaining work can be reviewed and prioritized. An unsupported return stops with a named error. The engine does not estimate it.
 
 A rejection here is not an external blocker unless its class says so. Year guards are excluded: they reject unsupported years on purpose and are not missing work.
 
@@ -22,9 +22,9 @@ A rejection here is not an external blocker unless its class says so. Year guard
 
 | Family | Examples | Rejection location |
 | --- | --- | --- |
-| Foreign tax credit | Pass-through sources on Form 1116 or as deductions, pass-through tax in the guide (guided K-1 basis and at-risk sources require zero foreign tax, and foreign tax also lowers partner basis, so that needs a K-1 basis method), territories, territories, overall foreign loss accounts, accrued-credit history, part-year residency | `foreign-tax-*.ts` |
+| Foreign tax credit | Pass-through sources on Form 1116 or as deductions, pass-through tax in the guide (guided K-1 basis and at-risk sources require zero foreign tax), territories, overall foreign loss accounts, accrued-credit history, part-year residency | `foreign-tax-*.ts` |
 | Form 172 origins | Farming, estate, cancelled-debt, other classified income and deductions | `form-172-*.ts` |
-| K-1 histories | Basis, at-risk, passive recharacterization, decreased-value gifts, Form 461 classification | `k1-*.ts` |
+| K-1 histories | Basis, foreign tax left suspended by basis (the year and amount of a later allowance are unsettled), at-risk, passive recharacterization, decreased-value gifts, Form 461 classification | `k1-*.ts` |
 | Charitable with loss histories | Multi-vintage attribution, prior carry with the 2026 floor, recurrent joint attribution | `charitable-*.ts` |
 | COD | Chapters 7, 11 and 12 of title 11, modified-loss exhaustion, current EBL origin | `cod-nol-reductions.ts` |
 | Premium tax credit | Separate-return allocation, overlapping shared policies, no-APTC allocation, below-poverty marriage | `form-8962-*.ts` |
@@ -39,6 +39,7 @@ The six questions in [external actions](upgrade-2026-external-actions.md), plus 
 
 - EIC tiebreaker on a joint return or at equal AGI: IRC 152(c)(4) and Pubs 596 and 501 give the order, but none of those sources says how to compare a joint return's AGI or who wins at equal AGI. A nonparent's competing claim in those two cases rejects.
 - Canceled debt on a joint or community-property return: every married couple filing jointly with a canceled debt is rejected on the source route, so this reaches ordinary filers. Pub 4681 covers joint debt only for spouses filing separately, and neither it nor the Form 982 instructions say how to allocate insolvency or attribute reduction on a joint return. The search covered those two sources, not the regulations. A reviewer should confirm the method.
+- Suspended K-1 foreign tax: IRC 704(d)(3)(A) and Form 7203 line 46 limit it by basis, but no source reviewed says which year a suspended tax counts as paid when later allowed, or how the allowed part maps to Form 1116 or the election. Any basis shortfall on a K-1 with foreign tax rejects, even a small one. A reviewer should confirm whether the allowed part can be claimed in the current year.
 - Form 1099-G business refund: the Form 1099-G instructions define Box 8 but give the recipient no reporting rule, and the Schedule C line 6 instructions do not cover it. A reviewer should confirm the destination and tax-benefit treatment.
 
 ## How this list was made

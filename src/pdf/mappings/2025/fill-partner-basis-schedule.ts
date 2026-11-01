@@ -29,6 +29,7 @@ const INCLUDED_PARTNER_BASIS_LINES = [
   "nondeductible",
   "basis-after-nondeductible",
   "total-losses",
+  "foreign-tax",
   "total-allowed",
   "total-suspended",
   "ending-basis",
