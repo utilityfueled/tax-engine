@@ -17,6 +17,24 @@ function makeInput(overrides: Partial<PAScheduleTInput> = {}): PAScheduleTInput 
 }
 
 describe("Pennsylvania Schedule T", () => {
+  it("PA Schedule T Lines 1 and 2 - routes combined entries by source and owner", () => {
+    const result = calculatePAScheduleT({ taxYear: 2025, entries: [
+      { source: "w2g", description: "Lottery noncash", winnings: d(500), isLottery: true, lotteryState: "PA", prizeType: "noncash" },
+      { source: "w2g", description: "Casino", winnings: d(1000), accountHolder: "spouse" },
+      { source: "w2g", winnings: d(200), isLottery: true, lotteryState: "NJ", prizeType: "noncash" },
+      { source: "statement", description: "Poker log", winnings: d(300), wageringCosts: d(50) },
+      { source: "statement", winnings: d(400), wageringCosts: d(900), accountHolder: "spouse" },
+    ] });
+    expect(result.exemptPALotteryNoncashWinnings.toFixed()).toBe("500");
+    expect(result.primary.formW2GWinnings.toFixed()).toBe("200");
+    expect(result.primary.supplementalWinnings.toFixed()).toBe("300");
+    expect(result.primary.netTaxableWinnings.toFixed()).toBe("450");
+    expect(result.spouse.formW2GWinnings.toFixed()).toBe("1000");
+    expect(result.spouse.netTaxableWinnings.toFixed()).toBe("500");
+    const named = calculatePAScheduleT({ taxYear: 2025, entries: [{ source: "w2g", description: "Casino", winnings: d(1000) }], w2gForms: [] });
+    expect(named.primary.formW2GWinnings.toFixed()).toBe("0");
+  });
+
   it("PA Schedule T Line 1 - includes taxable W-2G winnings and excludes noncash PA Lottery prizes", () => {
     const result = calculatePAScheduleT(makeInput({
       w2gForms: [

@@ -43,3 +43,30 @@ it("collects actual history and dates while preserving unknowns and exact amount
     await click("Remove estimated-tax worksheet"); expect(latest).toBeUndefined(); expect(network).not.toHaveBeenCalled();
   } finally { await act(async () => root.unmount()); container.remove(); network.mockRestore(); }
 });
+
+it("collects farmer and waiver answers only after they apply", async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  const container = document.createElement("div"); document.body.appendChild(container); const root = createRoot(container);
+  let latest: EstimatedTaxFactsData | undefined;
+  function Harness({ taxYear }: { taxYear: number }) { const [data, setData] = useState<EstimatedTaxFactsData>(); return <EstimatedTaxSourceDetails data={data} taxYear={taxYear} appliedCredits={[]} onChange={next => { latest = next; setData(next); }} />; }
+  const control = (label: string) => { const field = [...container.querySelectorAll("label")].find(row => row.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select"); if (!field) throw new Error(`Missing ${label}`); return field; };
+  async function change(label: string, value: string) { const field = control(label); await act(async () => { Object.getOwnPropertyDescriptor(field.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value")?.set?.call(field, value); field.dispatchEvent(new Event(field.tagName === "SELECT" ? "change" : "input", { bubbles: true })); field.dispatchEvent(new FocusEvent("focusout", { bubbles: true })); }); }
+  await act(async () => root.render(<Harness taxYear={2025} />));
+  await act(async () => [...container.querySelectorAll("button")].find(row => row.textContent === "Add estimated-tax worksheet")!.click());
+  expect(container.textContent).toContain("the early-return deadline is February 2, 2026");
+  expect(container.textContent).not.toContain("Penalty waiver request");
+  await change("Farmer or fisher estimated-tax special rule applies", "true");
+  expect(container.textContent).toContain("the farmer and fisher deadline is March 2, 2026");
+  await change("At least two-thirds of gross income for this or last year came from farming or fishing", "true");
+  await change("A penalty waiver is requested", "true");
+  expect(container.textContent).toContain("The IRS decides and may still bill the penalty");
+  await change("Waiver kind", "partial");
+  await change("Amount to waive", "100.25");
+  await change("Waiver reason", "retirement_or_disability");
+  await change("Waiver statement reference", "Fictional statement");
+  expect(latest).toMatchObject({ farmerOrFisher: true, farmingIncomeTwoThirdsConfirmed: true, waiverRequested: true, waiverKind: "partial", waiverAmount: "100.25", waiverReason: "retirement_or_disability", waiverStatementReference: "Fictional statement" });
+  await change("Waiver kind", "full");
+  expect([...container.querySelectorAll(".guided-field-label")].some(node => node.textContent === "Amount to waive")).toBe(false);
+  await act(async () => root.unmount()); container.remove();
+});
+
