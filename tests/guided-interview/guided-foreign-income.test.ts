@@ -118,6 +118,27 @@ it("requires actual eligible foreign geography and travel facts", () => {
   expect(build({ ...cuba, cubaTravelPermittedConfirmed: false, qualifyingDays: "0" })?.eligibilityConfirmed).toBe(false);
   expect(() => build({ ...source, fullForeignPeriods: [...source.fullForeignPeriods, source.fullForeignPeriods[0]] })).toThrow(/overlap|duplicate/i);
 });
+it("guides a business where capital is material", () => {
+  const source = foreignIncomeFixture(); source.partIV.wages = "0"; source.partIV.businessPersonalServices = "300"; source.businessCapitalMaterialIncomeProducing = true;
+  source.sources = [{ ...structuredClone(emptyForeignIncomeSource), sourceId: "scheduleC", sourceTaxYear: "2025", accountHolder: "primary", sourceReference: "Original business ledger", payerName: "Foreign design", payerEin: "12-3456789", foreignEarnedIncome: "300", priorYearIncomeReceived: "0", businessGrossReceipts: "1200.03", businessReturnsAndAllowances: "0", businessCostOfGoodsSold: "0", businessOtherIncome: "0",
+    reasonableServicesAllowance: "300", reasonableAllowanceConfirmed: true, allBusinessIncomeForeignConfirmed: true }];
+  const state = foreignIncomeState(source); state.sectionData["income-self-employment"] = { ...structuredClone(completeBusinessSection), manualGrossReceipts: "1200.03", businessFacts: { ...structuredClone(completeBusinessSection.businessFacts), businessName: "Foreign design", ein: "12-3456789" } };
+  expect(buildForeignIncomeInput(source, state)?.sourceMapping?.rows?.[0]).toMatchObject({ capitalMaterialIncomeFactor: true, reasonableServicesAllowance: "300", reasonableAllowanceConfirmed: true, allBusinessIncomeForeignConfirmed: true });
+  expect(() => calculateFederalTax(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state)))).toThrow(/at least 21 of the self-employment/);
+  source.deductionsAllocableToExcludedIncome = "21"; state.sectionData.adjustments = { ...state.sectionData.adjustments!, foreignIncome: source };
+  const form = calculateFederalTax(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state))).form2555!;
+  expect(form.foreignEarnedIncome.toFixed()).toBe("300");
+  const open = structuredClone(source); open.sources[0]!.reasonableServicesAllowance = "";
+  expect(() => buildForeignIncomeInput(open, state)).toThrow(/reasonable allowance/i);
+  const mixed = structuredClone(source); mixed.sources[0]!.allBusinessIncomeForeignConfirmed = null;
+  expect(() => buildForeignIncomeInput(mixed, state)).toThrow(/mixed U.S. and foreign/);
+  const unsupported = structuredClone(source); unsupported.sources[0]!.reasonableAllowanceConfirmed = null;
+  expect(() => buildForeignIncomeInput(unsupported, state)).toThrow(/reasonable allowance/);
+  const stale = structuredClone(source); stale.businessCapitalMaterialIncomeProducing = false; stale.sources[0]!.capitalMaterialIncomeFactor = true;
+  expect(buildForeignIncomeInput(stale, state)?.sourceMapping?.rows?.[0]?.capitalMaterialIncomeFactor).toBeUndefined();
+  const services = structuredClone(source); services.businessCapitalMaterialIncomeProducing = false;
+  expect(buildForeignIncomeInput(services, state)?.sourceMapping?.rows?.[0]?.capitalMaterialIncomeFactor).toBeUndefined();
+});
 it("binds complete personal-service business sources without an income override", () => {
   const source = foreignIncomeFixture(); source.partIV.wages = "0"; source.partIV.businessPersonalServices = "1000.03"; source.businessCapitalMaterialIncomeProducing = false;
   source.sources = [{ ...structuredClone(emptyForeignIncomeSource), sourceId: "scheduleC", sourceTaxYear: "2025", accountHolder: "primary", sourceReference: "Original business ledger", payerName: "Foreign design", payerEin: "12-3456789", foreignEarnedIncome: "1000.03", priorYearIncomeReceived: "0", businessGrossReceipts: "1200.03", businessReturnsAndAllowances: "0", businessCostOfGoodsSold: "0", businessOtherIncome: "0" }];
@@ -128,7 +149,7 @@ it("binds complete personal-service business sources without an income override"
   expect(() => buildForeignIncomeInput(source, state)).toThrow(/manual|complete|receipts/i);
   state.sectionData["income-self-employment"] = original;
   expect(() => buildForeignIncomeInput({ ...source, businessCapitalMaterialIncomeProducing: null }, state)).toThrow(/capital|classification/i);
-  expect(() => buildForeignIncomeInput({ ...source, businessCapitalMaterialIncomeProducing: true }, state)).toThrow(/30-percent/i);
+  expect(() => buildForeignIncomeInput({ ...source, businessCapitalMaterialIncomeProducing: true, sources: [] }, state)).toThrow(/30-percent/i);
   source.sources[0].businessGrossReceipts = "1200.04";
   expect(() => buildForeignIncomeInput(source, state)).toThrow(/reconcile/i);
 });

@@ -27,9 +27,9 @@ A rejection here is not an external blocker unless its class says so. Year guard
 | K-1 histories | Basis, foreign tax left suspended by basis (the year and amount of a later allowance are unsettled), at-risk, passive recharacterization, decreased-value gifts, Form 461 classification | `k1-*.ts` |
 | Charitable with loss histories | Multi-vintage attribution, prior carry with the 2026 floor, recurrent joint attribution | `charitable-*.ts` |
 | COD | Chapters 7, 11 and 12 of title 11, modified-loss exhaustion, current EBL origin | `cod-nol-reductions.ts` |
-| Premium tax credit | Separate-return allocation with a third tax family, below-poverty marriage | `form-8962-*.ts` |
+| Premium tax credit | Separate-return allocation with a third tax family | `form-8962-*.ts` |
 | Education | Partial in-kind allocation, Coverdell disqualification with later activity | `form-1099-q.ts` |
-| Foreign earned income | Schedule C income where capital is a material factor, partnership net loss, prior partnership services, prior non-W2 income, other mappings | `form-2555-source-binding.ts` |
+| Foreign earned income | Mixed U.S. and foreign Schedule C income where capital is a material factor, business or partnership net loss, prior partnership services, prior non-W2 income, other mappings | `form-2555-source-binding.ts` |
 | EIC | Active appeal | `eic-*.ts` |
 | Digital assets | Multiple-state reporting (each reader treats one statement as one state), market discount (tokenized debt, needs interest plumbing through state engines), derived crypto dispositions | `form-1099-da-sources.ts` |
 
@@ -40,6 +40,7 @@ The six questions in [external actions](upgrade-2026-external-actions.md), plus 
 - EIC tiebreaker on a joint return or at equal AGI: IRC 152(c)(4) and Pubs 596 and 501 give the order, but none of those sources says how to compare a joint return's AGI or who wins at equal AGI. A nonparent's competing claim in those two cases rejects.
 - Canceled debt on a joint or community-property return: every married couple filing jointly with a canceled debt is rejected on the source route, so this reaches ordinary filers. Pub 4681 covers joint debt only for spouses filing separately, and neither it nor the Form 982 instructions say how to allocate insolvency or attribute reduction on a joint return. The search covered those two sources, not the regulations. A reviewer should confirm the method.
 - Suspended K-1 foreign tax: IRC 704(d)(3)(A) and Form 7203 line 46 limit it by basis, but no source reviewed says which year a suspended tax counts as paid when later allowed, or how the allowed part maps to Form 1116 or the election. Any basis shortfall on a K-1 with foreign tax rejects, even a small one. A reviewer should confirm whether the allowed part can be claimed in the current year.
+- Below-poverty year of marriage: the alternative calculation rejects when joint household income is under 100 percent of the poverty line. Neither the Form 8962 instructions nor Pub 974 address that case, and Pub 974 Worksheet I describes no special handling of a half-income percentage below 100. A reviewer should confirm whether Part V applies.
 - Form 1099-G business refund: the Form 1099-G instructions define Box 8 but give the recipient no reporting rule, and the Schedule C line 6 instructions do not cover it. A reviewer should confirm the destination and tax-benefit treatment.
 
 ## How this list was made

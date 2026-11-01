@@ -99,3 +99,22 @@ it("asks the partner questions only for a Schedule K-1 source", async () => {
   expect(latest.sources[0]).toMatchObject({ partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false, qbiForeignProfit: "0", k1QbiExcludesForeignConfirmed: true });
   await act(async () => root.unmount()); container.remove();
 });
+
+it("shows the business capital questions on the Schedule C row", async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  const container = document.createElement("div"); document.body.appendChild(container); const root = createRoot(container);
+  let latest: ForeignIncomeData = { ...structuredClone(emptyForeignIncome), businessCapitalMaterialIncomeProducing: false, sources: [{ ...structuredClone(emptyForeignIncomeSource), sourceId: "scheduleC" }] };
+  function Harness() { const [data, setData] = useState<ForeignIncomeData>(latest); return <ForeignIncomeDetails data={data} sources={[{ sourceId: "scheduleC", label: "Actual business" }]} onChange={value => { if (value) { latest = value; setData(value); } }} />; }
+  const labels = () => [...container.querySelectorAll(".guided-field-label")].map(row => row.textContent);
+  const control = (label: string) => { const field = [...container.querySelectorAll("label")].find(row => row.querySelector(".guided-field-label")?.textContent === label)?.querySelector<HTMLInputElement | HTMLSelectElement>("input,select"); if (!field) throw new Error(`Missing ${label}`); return field; };
+  async function change(label: string, value: string) { const field = control(label); await act(async () => { const setter = Object.getOwnPropertyDescriptor(field.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype, "value")?.set; setter?.call(field, value); field.dispatchEvent(new Event(field.tagName === "SELECT" ? "change" : "input", { bubbles: true })); }); }
+  try {
+    await act(async () => root.render(<Harness />));
+    expect(labels()).not.toContain("Reasonable allowance for your business services 1");
+    await change("Capital is a material income-producing factor in the foreign business", "true");
+    await change("Reasonable allowance for your business services 1", "300");
+    await change("Records support that business allowance 1", "true");
+    await change("All of this business's income is foreign 1", "true");
+    expect(latest.sources[0]).toMatchObject({ reasonableServicesAllowance: "300", reasonableAllowanceConfirmed: true, allBusinessIncomeForeignConfirmed: true });
+  } finally { await act(async () => root.unmount()); container.remove(); }
+});

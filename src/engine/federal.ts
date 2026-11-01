@@ -1681,9 +1681,24 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     const limit = zeroFloor(share.minus(deduction)).times("0.3");
     if (row.receipts.gt(limit)) throw new Error(`Form2555 partnership receipts exceed the 30 percent limit of ${limit.toDecimalPlaces(0, Decimal.ROUND_DOWN).toFixed()}`);
   }
-  if (form2555 && foreignSeDeduction.gt(0) && form2555.foreignEarnedIncome.gt(0)) {
-    const minimum = foreignSeDeduction.times(Decimal.min(1, form2555.foreignEarnedIncomeExclusion.div(form2555.foreignEarnedIncome))).toDecimalPlaces(0, Decimal.ROUND_DOWN);
-    if (d(input.form2555?.deductionsAllocableToExcludedIncome).lt(minimum)) throw new Error(`Form2555 deductions allocable to excluded income must include at least ${minimum.toFixed()} of the self-employment tax deduction`);
+  // Spec: business-capital-limit.
+  for (const share of foreignIncomeSources.scheduleCForeignShare) {
+    if (!share.capitalMaterialEarned) continue;
+    const profit = zeroFloor(schedC.netProfit);
+    if (profit.isZero()) throw new Error("Form2555 a business with no net profit where capital is material needs a separate method");
+    const limit = zeroFloor(profit.minus(foreignSeShare(profit))).times("0.3");
+    if (share.capitalMaterialEarned.gt(limit)) throw new Error(`Form2555 business receipts exceed the 30 percent limit of ${limit.toDecimalPlaces(0, Decimal.ROUND_DOWN).toFixed()}`);
+  }
+  // Spec: allocable-deduction-floor. Pub54 How To Report Deductions charges both to the excluded income.
+  const businessExpenseFloor = foreignIncomeSources.scheduleCForeignShare.reduce((total, share) => form2555?.foreignEarnedIncomeExclusion
+    ? total.plus(zeroFloor(share.grossIncome.minus(schedC.netProfit)).times(Decimal.min(1, form2555.foreignEarnedIncomeExclusion.div(share.grossIncome)))) : total, d("0"));
+  if (form2555 && form2555.foreignEarnedIncome.gt(0) && (foreignSeDeduction.gt(0) || businessExpenseFloor.gt(0))) {
+    // With capital material only part of the profit is earned, so the fraction reads the whole net profit.
+    const profitAboveEarned = foreignIncomeSources.scheduleCForeignShare.reduce((total, share) => share.capitalMaterialEarned ? total.plus(zeroFloor(zeroFloor(schedC.netProfit).minus(share.capitalMaterialEarned))) : total, d("0"));
+    const seFloor = foreignSeDeduction.times(Decimal.min(1, form2555.foreignEarnedIncomeExclusion.div(form2555.foreignEarnedIncome.plus(profitAboveEarned))));
+    // Allocable deductions cannot exceed the exclusion, so a floor above it would reject every entry.
+    const minimum = Decimal.min(seFloor.plus(businessExpenseFloor), form2555.foreignEarnedIncomeExclusion).toDecimalPlaces(0, Decimal.ROUND_DOWN);
+    if (d(input.form2555?.deductionsAllocableToExcludedIncome).lt(minimum)) throw new Error(`Form2555 deductions allocable to excluded income must include at least ${minimum.toFixed()} of the self-employment tax deduction and business expenses`);
   }
   audit.merge(schedSE.lines);
   const netSEEarnings = schedSE.netSEEarnings;

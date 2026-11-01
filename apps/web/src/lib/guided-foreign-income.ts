@@ -16,7 +16,7 @@ export const foreignIncomePartIVKeys = ["wages", "businessPersonalServices", "pa
 export interface ForeignIncomeSourceData {
   sourceId: string; sourceTaxYear: string; accountHolder: "" | Owner; sourceReference: string; payerName: string; payerEin: string;
   foreignEarnedIncome: string; priorYearIncomeReceived: string; notIncludedInW2Confirmed: boolean | null;
-  partnerPerformedServicesConfirmed?: boolean | null; capitalMaterialIncomeFactor?: boolean | null; qbiForeignProfit?: string; k1QbiExcludesForeignConfirmed?: boolean | null;
+  partnerPerformedServicesConfirmed?: boolean | null; capitalMaterialIncomeFactor?: boolean | null; allBusinessIncomeForeignConfirmed?: boolean | null; qbiForeignProfit?: string; k1QbiExcludesForeignConfirmed?: boolean | null;
   reasonableServicesAllowance?: string; reasonableAllowanceConfirmed?: boolean | null;
   businessGrossReceipts: string; businessReturnsAndAllowances: string; businessCostOfGoodsSold: string; businessOtherIncome: string;
 }
@@ -173,7 +173,7 @@ export function buildForeignIncomeInput(data: ForeignIncomeData | undefined, sta
   if (new Decimal(partIV.section119MealsAndLodging).gt(0) && data.section119QualificationConfirmed !== true) throw new Error("Confirm actual section119 meals/lodging qualification, including employer premises, convenience and required lodging.");
   if (new Decimal(partIV.otherEarnedIncome).gt(0) && !data.otherIncomeDescription.trim()) throw new Error("Describe the actual other foreign earned income source.");
   if (new Decimal(partIV.businessPersonalServices).gt(0)) {
-    if (known(data.businessCapitalMaterialIncomeProducing, "business capital and personal-services classification")) throw new Error("A business with capital as a material income-producing factor needs the separate30-percent net-profit source worksheet.");
+    if (known(data.businessCapitalMaterialIncomeProducing, "business capital and personal-services classification") && !data.sources.some(row => row.sourceId === "scheduleC")) throw new Error("A business with capital as a material income-producing factor needs its Schedule C source for the 30-percent net-profit limit.");
   }
   if (data.sources.some(row => row.sourceId === "scheduleC")) {
     if (context.scheduleC?.grossReceipts === undefined) throw new Error("Complete the actual business receipts ledger, including known zero manual receipts, before binding foreign sources.");
@@ -185,9 +185,11 @@ export function buildForeignIncomeInput(data: ForeignIncomeData | undefined, sta
     sourceReference: row.sourceReference, payerName: row.payerName, payerEin: row.payerEin.trim() || undefined,
     foreignEarnedIncome: money(row.foreignEarnedIncome, "current foreign source receipts"), priorYearIncomeReceived: money(row.priorYearIncomeReceived, "prior-year services received this year"),
     notIncludedInW2Confirmed: row.notIncludedInW2Confirmed ?? undefined,
-    partnerPerformedServicesConfirmed: row.partnerPerformedServicesConfirmed ?? undefined, capitalMaterialIncomeFactor: row.capitalMaterialIncomeFactor ?? undefined,
+    partnerPerformedServicesConfirmed: row.partnerPerformedServicesConfirmed ?? undefined, capitalMaterialIncomeFactor: row.sourceId.startsWith("scheduleK1:") ? row.capitalMaterialIncomeFactor ?? undefined : undefined,
     ...(row.sourceId.startsWith("scheduleK1:") ? { qbiForeignProfit: money(row.qbiForeignProfit ?? "", "net profit from these services inside K-1 QBI"), k1QbiExcludesForeignConfirmed: row.k1QbiExcludesForeignConfirmed ?? undefined,
       ...(row.capitalMaterialIncomeFactor === true ? { reasonableServicesAllowance: money(row.reasonableServicesAllowance ?? "", "reasonable allowance for the services"), reasonableAllowanceConfirmed: row.reasonableAllowanceConfirmed ?? undefined } : {}) } : {}),
+    ...(row.sourceId === "scheduleC" && data.businessCapitalMaterialIncomeProducing === true ? { capitalMaterialIncomeFactor: true, reasonableServicesAllowance: money(row.reasonableServicesAllowance ?? "", "reasonable allowance for the services"),
+      reasonableAllowanceConfirmed: row.reasonableAllowanceConfirmed ?? undefined, allBusinessIncomeForeignConfirmed: row.allBusinessIncomeForeignConfirmed ?? undefined } : {}),
     ...Object.fromEntries((["businessGrossReceipts", "businessReturnsAndAllowances", "businessCostOfGoodsSold", "businessOtherIncome"] as const)
       .filter(key => row.sourceId === "scheduleC" || hasEnteredAmount(row[key])).map(key => [key, money(row[key], `actual ${key}`)])),
   }));

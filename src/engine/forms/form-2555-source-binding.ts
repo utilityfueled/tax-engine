@@ -26,7 +26,7 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
   const audit = new AuditTrail();
   const facts = input.form2555;
   const qbiForeignProfit: { sourceId: string; amount: Decimal; receipts: Decimal; capitalMaterial: boolean }[] = [];
-  const scheduleCForeignShare: { foreign: Decimal; grossIncome: Decimal }[] = [];
+  const scheduleCForeignShare: { foreign: Decimal; grossIncome: Decimal; capitalMaterialEarned?: Decimal }[] = [];
   const empty = { sourceFactsVerified: false, currentForeignIncome: new Decimal(0), priorYearIncomeReceived: new Decimal(0), qbiForeignProfit, scheduleCForeignShare, lines: audit.getLines() };
   if (!facts) return empty;
   const year = input.taxpayer.taxYear;
@@ -90,7 +90,15 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
         || !other.eq(amount(business.otherIncome, "ScheduleC other income"))) throw new Error("Form2555 original business receipts do not reconcile to canonical ScheduleC income");
       const grossIncome = receipts.minus(returns).minus(cogs).plus(other);
       if (combined.gt(grossIncome)) throw new Error("Form2555 current and prior foreign receipts exceed actual ScheduleC gross income");
-      if (combined.gt(0)) scheduleCForeignShare.push({ foreign: combined, grossIncome });
+      const capital = row.capitalMaterialIncomeFactor === true;
+      // Spec: business-capital-limit. The 30 percent limit runs in federal.ts, where the deduction exists.
+      if (capital && row.allBusinessIncomeForeignConfirmed !== true) throw new Error("Form2555 a mixed U.S. and foreign business with capital as a material factor needs a separate method");
+      if (capital && (row.reasonableAllowanceConfirmed !== true || row.reasonableServicesAllowance === undefined
+        || combined.gt(amount(row.reasonableServicesAllowance, "reasonable allowance for services")))) throw new Error("Form2555 business receipts need a confirmed reasonable allowance for the services");
+      if (capital && priorReceived.gt(0)) throw new Error("Form2555 prior business services with capital as a material factor require their separate method");
+      // With capital material, receipts are only the earned part, and all the foreign profit is outside QBI.
+      if (capital && grossIncome.lte(0)) throw new Error("Form2555 a business with no gross income where capital is material needs a separate method");
+      if (capital || combined.gt(0)) scheduleCForeignShare.push(capital ? { foreign: grossIncome, grossIncome, capitalMaterialEarned: combined } : { foreign: combined, grossIncome });
       key = "foreignBusinessIncomeAlreadyReported";
     } else if (/^scheduleK1:(0|[1-9]\d*)$/.test(row.sourceId)) {
       // Spec: partnership-services. Box14 code A exists only for active service.

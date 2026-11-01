@@ -242,7 +242,8 @@ it("requires the allocable self-employment deduction", () => {
   expect(() => calculateFederalTax(businessReturn("50000", "3532"))).not.toThrow();
   expect(() => calculateFederalTax(businessReturn("50000", "3531"))).toThrow(/at least 3532/);
   const expensed = businessReturn("62000", "0", { grossReceipts: "124000", expenses: { advertising: "60000" } });
-  expect(() => calculateFederalTax(expensed)).toThrow(/at least 2261/);
+  // Half of the 60000 expenses plus the 2261 share of the deduction.
+  expect(() => calculateFederalTax(expensed)).toThrow(/at least 32261/);
   // The exclusion ratio scales the minimum: 130000 of 200000 foreign income.
   expect(() => calculateFederalTax(businessReturn("200000", "0", { grossReceipts: "200000" }))).toThrow(/at least 8837 /);
   // On a joint return, an owner with no self-employment row borrows no one's deduction.
@@ -270,6 +271,58 @@ it("requires the allocable self-employment deduction", () => {
   expect(() => calculateFederalTax(domesticWages)).not.toThrow();
 });
 
+it("limits business earned income where capital is material", () => {
+  const capital = (earned: string, patch: Record<string, unknown> = {}, allocable = "7065") => { const value = businessReturn(earned, allocable);
+    Object.assign(value.form2555!.sourceMapping!.rows[0]!, { capitalMaterialIncomeFactor: true, reasonableServicesAllowance: "30000", reasonableAllowanceConfirmed: true, allBusinessIncomeForeignConfirmed: true, ...patch });
+    return value; };
+  const allowed = calculateFederalTax(capital("27880"));
+  expect(allowed.form2555?.foreignEarnedIncome.toFixed()).toBe("27880");
+  expect(line13(allowed)).toBe("0");
+  expect(() => calculateFederalTax(capital("27881"))).toThrow(/30 percent limit of 27880/);
+  // Pub54 Example3: the allocable floor reads the exclusion over gross income, so 27.88 percent of the deduction.
+  expect(() => calculateFederalTax(capital("27880", {}, "1000"))).toThrow(/at least 1969 of the self-employment tax deduction/);
+  expect(calculateFederalTax(capital("27880", {}, "2000")).form2555?.foreignEarnedIncome.toFixed()).toBe("27880");
+  expect(() => calculateFederalTax(capital("20000", { reasonableServicesAllowance: "19999" }))).toThrow(/reasonable allowance/);
+  expect(() => calculateFederalTax(capital("20000", { reasonableAllowanceConfirmed: false }))).toThrow(/reasonable allowance/);
+  expect(() => calculateFederalTax(capital("20000", { reasonableServicesAllowance: undefined }))).toThrow(/reasonable allowance/);
+  expect(() => calculateFederalTax(capital("20000", { allBusinessIncomeForeignConfirmed: false }))).toThrow(/mixed U.S. and foreign/);
+  expect(() => calculateFederalTax(capital("27880.51"))).toThrow(/30 percent limit of 27880/);
+  expect(() => calculateFederalTax(capital("20000", { reasonableAllowanceConfirmed: undefined }))).toThrow(/reasonable allowance/);
+  expect(() => calculateFederalTax(capital("20000", { allBusinessIncomeForeignConfirmed: undefined }))).toThrow(/mixed U.S. and foreign/);
+  const prior = capital("19999", { priorYearIncomeReceived: "1", reasonableServicesAllowance: "20000" });
+  prior.form2555!.priorYearIncomeReceived = "1"; prior.form2555!.incomeSources!.priorYearIncomeReceived = "1"; prior.form2555!.foreignEarnedIncome = "19999";
+  expect(() => calculateFederalTax(prior)).toThrow(/prior business services|prior/i);
+  // Without capital the same earned amount has no 30 percent limit and keeps the U.S. share in QBI.
+  const services = businessReturn("27881", "7065");
+  expect(calculateFederalTax(services).form2555?.foreignEarnedIncome.toFixed()).toBe("27881");
+  expect(Number(line13(calculateFederalTax(services)))).toBeGreaterThan(0);
+});
+it("charges allocable business expenses and self-employment tax to the exclusion", () => {
+  // Pub54 Example3 fraction: exclusion27880 over gross200000 of expenses100000 is 13940, plus the deduction share.
+  const expenses = (allocable: string) => { const value = businessReturn("27880", allocable, { grossReceipts: "200000", expenses: { supplies: "100000" } });
+    Object.assign(value.form2555!.sourceMapping!.rows[0]!, { capitalMaterialIncomeFactor: true, reasonableServicesAllowance: "30000", reasonableAllowanceConfirmed: true, allBusinessIncomeForeignConfirmed: true });
+    return value; };
+  expect(() => calculateFederalTax(expenses("7065"))).toThrow(/at least 15909 of the self-employment tax deduction and business expenses/);
+  expect(calculateFederalTax(expenses("15909")).form2555?.foreignEarnedIncome.toFixed()).toBe("27880");
+  // The same charge applies with no capital: exclusion50000 over gross200000 of expenses100000 is 25000.
+  const services = (allocable: string) => businessReturn("50000", allocable, { grossReceipts: "200000", expenses: { supplies: "100000" } });
+  expect(() => calculateFederalTax(services("7065"))).toThrow(/of the self-employment tax deduction and business expenses/);
+  expect(calculateFederalTax(services("32065")).form2555?.foreignEarnedIncome.toFixed()).toBe("50000");
+  // A net loss stays rejected by name, though Pub54 Example4 allows the allowance.
+  const loss = businessReturn("20000", "20000", { grossReceipts: "100000", expenses: { supplies: "120000" } });
+  Object.assign(loss.form2555!.sourceMapping!.rows[0]!, { capitalMaterialIncomeFactor: true, reasonableServicesAllowance: "30000", reasonableAllowanceConfirmed: true, allBusinessIncomeForeignConfirmed: true });
+  expect(() => calculateFederalTax(loss)).toThrow(/no net profit/);
+  // With very high expenses the floor stops at the exclusion, because allocable deductions cannot exceed it.
+  const thin = (allocable: string) => { const value = businessReturn("2787", allocable, { grossReceipts: "200000", expenses: { supplies: "190000" } });
+    Object.assign(value.form2555!.sourceMapping!.rows[0]!, { capitalMaterialIncomeFactor: true, reasonableServicesAllowance: "3000", reasonableAllowanceConfirmed: true, allBusinessIncomeForeignConfirmed: true });
+    return value; };
+  expect(calculateFederalTax(thin("2787")).form2555?.foreignEarnedIncome.toFixed()).toBe("2787");
+  expect(() => calculateFederalTax(thin("2786"))).toThrow(/at least 2787/);
+  // Earned income of zero still takes all the foreign profit out of QBI.
+  const none = businessReturn("0", "0");
+  Object.assign(none.form2555!.sourceMapping!.rows[0]!, { capitalMaterialIncomeFactor: true, reasonableServicesAllowance: "0", reasonableAllowanceConfirmed: true, allBusinessIncomeForeignConfirmed: true });
+  expect(line13(calculateFederalTax(none))).toBe("0");
+});
 it("limits earned income where capital is material", () => {
   const capital = (receipts: string, patch: Record<string, unknown> = {}, k1: Record<string, unknown> = {}) => { const value = partnerReturn({ ordinaryIncome: "54147", selfEmploymentEarnings: "54147", ...k1 }, { foreignEarnedIncome: receipts, partIV: { ...source().partIV, wages: "0", partnershipPersonalServices: receipts }, incomeSources: { ...source().incomeSources, foreignEmploymentIncomeIncludedOnW2: "0", foreignPartnershipIncomeAlreadyReported: receipts }, deductionsAllocableToExcludedIncome: "9999" }, "0");
     Object.assign(value.form2555!.sourceMapping!.rows[0]!, { foreignEarnedIncome: receipts, capitalMaterialIncomeFactor: true, reasonableServicesAllowance: "20000", reasonableAllowanceConfirmed: true, ...patch });
