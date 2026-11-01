@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "recordedAt": "2026-11-01T01:10:55+00:00",
+  "recordedAt": "2026-11-01T02:39:07+00:00",
   "releaseReady": false,
   "scope": "Synthetic remote CI evidence. Not staging, production or human review.",
   "runs": [
@@ -302,8 +302,45 @@
         }
       },
       "artifactDigest": "sha256:8038ee8c53fb7610a95c19011f97b23aea16640ce2645057273b7d7bc53d79d4"
+    },
+    {
+      "sourceCommit": "9e5af8c0",
+      "ci": 41262983182,
+      "web": 41262983290,
+      "ciConclusion": "success",
+      "webConclusion": "success",
+      "unit": {
+        "tests": 19972,
+        "files": 1518,
+        "workers": 1,
+        "perTestDeadlineMs": 5000
+      },
+      "coverage": {
+        "tests": 19972,
+        "files": 1518,
+        "workers": 1,
+        "statements": "91.81",
+        "branches": "87.09",
+        "functions": "90.26",
+        "lines": "94.51",
+        "thresholdsPassed": true,
+        "perTestDeadlineMs": 15000
+      },
+      "browser": {
+        "selfHost": {
+          "passed": 530,
+          "skipped": 5
+        },
+        "container": {
+          "passed": 530,
+          "skipped": 5,
+          "timeoutMs": 30000,
+          "retries": 0
+        }
+      },
+      "note": "Tests only since 4850901d, whose runtime records still describe the application image."
     }
   ],
   "hostedSkips": "The five skipped browser cases are hosted-only and establish nothing about hosted readiness.",
-  "latestSourceCommit": "4850901d"
+  "latestSourceCommit": "9e5af8c0"
 }
