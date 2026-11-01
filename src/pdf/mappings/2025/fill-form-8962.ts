@@ -59,7 +59,7 @@ export interface Form8962ReferenceSummary {
   introduction: string;
   policies: Form8962ReferenceSummaryPolicy[];
   lines: Form8962ReferenceSummaryLine[];
-  allocations?: { policyNumber: string; firstMonth: number; lastMonth: number; fraction: string; method: 'agreement' | 'default_enrollee_count' | 'no_advance_benchmark' | 'separate_return_exception' | 'separate_return_advance_only' }[];
+  allocations?: { policyNumber: string; firstMonth: number; lastMonth: number; fraction: string; method: 'agreement' | 'default_enrollee_count' | 'no_advance_benchmark' | 'separate_return_exception' | 'separate_return_advance_only'; ownBenchmarkAboveReported?: true }[];
   allocatedMonths?: { month: number; policyOrdinal: number; originalPremium: string; originalSlcsp: string | null; originalAdvance: string; premium: string; slcsp: string; advance: string; unshared?: true; benchmarkRatio?: { numerator: string; denominator: string } }[];
   householdMonths?: { month: number; policyOrdinals: number[]; premium: string; slcsp: string; advance: string; unsharedBenchmarkGroups: { policyOrdinals: number[]; slcsp: string }[]; noAdvanceBenchmarkGroups?: { policyOrdinals: number[]; slcsp: string }[] }[];
   marriage?: { electionApplies: boolean; worksheets: (Form8962ReferenceSummaryLine & { form: string })[] };
@@ -268,7 +268,7 @@ export function buildForm8962ReferenceSummary(
         formula: normalizeFormula(line.formula),
       })),
     allocations: allocation?.periods.map(period => ({ policyNumber: forms[period.policyIndex].policyNumber.slice(-15),
-      firstMonth: period.firstMonth, lastMonth: period.lastMonth, fraction: period.fraction.toFixed(2), method: period.method ?? 'agreement' })),
+      firstMonth: period.firstMonth, lastMonth: period.lastMonth, fraction: period.fraction.toFixed(2), method: period.method ?? 'agreement', ...(period.ownBenchmarkAboveReported ? { ownBenchmarkAboveReported: true as const } : {}) })),
     allocatedMonths: allocation?.months.map(month => ({ month: month.month, policyOrdinal: month.policyIndex + 1, originalPremium: month.originalPremium.toFixed(),
       originalSlcsp: month.originalSlcsp?.toFixed() ?? null, originalAdvance: month.originalAdvance.toFixed(), ...(month.unshared ? { unshared: true as const } : {}),
       premium: month.premium.toFixed(), slcsp: month.slcsp.toFixed(), advance: month.advance.toFixed(),
@@ -427,13 +427,15 @@ export async function fillForm8962Reference(
     write("All actual allocation periods are retained below. Taxpayer identifiers and private source references are omitted from this review copy. Policy numbers use the final 15 characters required by Part IV.");
     summary.allocations.forEach((period, index) => write(`Allocation ${index + 1}: policy ${period.policyNumber}; months ${period.firstMonth}-${period.lastMonth}; ${period.method === 'no_advance_benchmark'
       ? `premium fraction printed in column e ${period.fraction}; columns f and g blank. No advance credit; actual family benchmark ratio determines premiums before reporting.`
-      : period.method === 'separate_return_exception' ? `premium and advance fractions ${period.fraction}; column f blank. Situation 2: own coverage-family benchmark.`
+      : period.method === 'separate_return_exception' ? `premium and advance fractions ${period.fraction}; column f blank. Situation 2: own coverage-family benchmark.${period.ownBenchmarkAboveReported ? ' The benchmark is above the reported figure in at least one month, on the source the filer named.' : ''}`
       : period.method === 'separate_return_advance_only' ? `advance fraction ${period.fraction}; columns e and f blank. Situation 2 without an exception: premium and benchmark are not used, and the allocated advance credit is repaid subject to line 28.`
       : `premium, SLCSP and advance fractions ${period.fraction}. ${period.method === 'default_enrollee_count' ? 'Default allocation from actual enrollees.' : 'Actual agreed allocation.'}`}`));
     for (const row of summary.allocatedMonths ?? []) {
       write(`Policy ${row.policyOrdinal}, month ${row.month}. Original monthly source: premium $${row.originalPremium}; SLCSP ${row.originalSlcsp === null ? "printed blank" : `$${row.originalSlcsp}`}; advance $${row.originalAdvance}.`);
       if (row.benchmarkRatio) write(`Actual benchmark ratio before printed rounding: ${row.benchmarkRatio.numerator} / ${row.benchmarkRatio.denominator}.`);
-      write(`Actual ${row.unshared ? "unallocated" : "allocated"} amounts before form rounding: premium $${row.premium}; SLCSP $${row.slcsp}; advance $${row.advance}.`);
+      const advanceOnly = !row.unshared && new Decimal(row.premium).isZero() && new Decimal(row.slcsp).isZero();
+      write(advanceOnly ? `Actual allocated advance before form rounding: $${row.advance}. Premium and SLCSP are not allocated on this route.`
+        : `Actual ${row.unshared ? "unallocated" : "allocated"} amounts before form rounding: premium $${row.premium}; SLCSP $${row.slcsp}; advance $${row.advance}.`);
     }
     for (const row of summary.householdMonths ?? []) {
       write(`Combined household month ${row.month}: policies ${row.policyOrdinals.join(', ')}; premium $${row.premium}; SLCSP $${row.slcsp}; advance $${row.advance}.`, true);

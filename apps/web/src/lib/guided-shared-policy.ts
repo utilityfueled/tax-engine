@@ -38,6 +38,7 @@ export interface SharedPolicyAgreementData {
 }
 export interface SeparateReturnAllocationData {
   sourceReference: string; marriedAtYearEndConfirmed: boolean | null; onlySpouseTaxFamiliesConfirmed: boolean | null;
+  livingApartExceptionConfirmed?: boolean | null; benchmarkAboveReportedReference?: string;
   ownCoverageFamilySlcsp: { month: string; slcsp: string }[];
 }
 export interface NoAdvanceBenchmarkData {
@@ -273,7 +274,8 @@ export function resolveGuidedSharedPolicy(data: PremiumTaxCreditData, taxYear: n
           thisReturnSlcsp: money(row.thisReturnSlcsp, "this-return benchmark"), otherReturnSlcsp: money(row.otherReturnSlcsp, "other-return benchmark") })) } : undefined,
       separateReturn: policy.separateReturn ? { ...policy.separateReturn, marriedAtYearEndConfirmed: policy.separateReturn.marriedAtYearEndConfirmed ?? undefined,
         onlySpouseTaxFamiliesConfirmed: policy.separateReturn.onlySpouseTaxFamiliesConfirmed ?? undefined,
-        ownCoverageFamilySlcsp: data.marriedFilingSeparatelyExceptionConfirmed === true ? policy.separateReturn.ownCoverageFamilySlcsp.map(row => ({ month: whole(row.month, "own benchmark month"), slcsp: money(row.slcsp, "own coverage-family benchmark") })) : [] } : undefined,
+        livingApartExceptionConfirmed: filingStatus === "mfs" ? undefined : policy.separateReturn.livingApartExceptionConfirmed ?? undefined,
+        ownCoverageFamilySlcsp: (filingStatus === "mfs" ? data.marriedFilingSeparatelyExceptionConfirmed === true : policy.separateReturn.livingApartExceptionConfirmed === true) ? policy.separateReturn.ownCoverageFamilySlcsp.map(row => ({ month: whole(row.month, "own benchmark month"), slcsp: money(row.slcsp, "own coverage-family benchmark") })) : [] } : undefined,
       defaultAllocation: policy.defaultAllocation ? { ...policy.defaultAllocation, allCoveredPeopleEnrolledByTaxpayerConfirmed: policy.defaultAllocation.allCoveredPeopleEnrolledByTaxpayerConfirmed ?? undefined } : undefined,
       coveredFamilyAssignments: policy.coveredFamilyAssignments.map(entry => ({ ...entry, family: entry.family || undefined })),
       monthlyAllocations: policy.monthlyAllocations.map(row => ({ month: whole(row.month, "agreement month"), fraction: row.fraction.trim() })) })) };

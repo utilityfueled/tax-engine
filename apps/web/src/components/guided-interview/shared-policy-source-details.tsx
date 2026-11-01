@@ -107,12 +107,14 @@ export function SharedPolicySourceDetails({ data, personal, filingStatus, taxYea
           {separate && policy.separateReturn && (() => {
             const evidence = policy.separateReturn, patch = (next: Partial<NonNullable<SharedPolicyAgreementData["separateReturn"]>>) => set({ separateReturn: { ...evidence, ...next } });
             return <>
-              <p className="guided-hint">Spouses filing separately split this policy equally. The other taxpayer above is your spouse.</p>
+              <p className="guided-hint">Spouses who file separate returns split this policy equally. The other taxpayer above is your spouse.</p>
               <div className="guided-form-grid">
                 <TextFact label={`${prefix}: Separate-return source reference`} value={evidence.sourceReference} onChange={sourceReference => patch({ sourceReference })} />
                 <BooleanFact label={`${prefix}: Married at the end of the year`} value={evidence.marriedAtYearEndConfirmed} onChange={marriedAtYearEndConfirmed => patch({ marriedAtYearEndConfirmed })} />
                 <BooleanFact label={`${prefix}: Only your and your spouse's tax families are on this policy`} value={evidence.onlySpouseTaxFamiliesConfirmed} onChange={onlySpouseTaxFamiliesConfirmed => patch({ onlySpouseTaxFamiliesConfirmed })} />
-                {data.marriedFilingSeparatelyExceptionConfirmed === true && evidence.ownCoverageFamilySlcsp.map((row, rowIndex) => <TextFact key={rowIndex} label={`${prefix}: Month ${row.month} SLCSP for your own coverage family`} value={row.slcsp}
+                {filingStatus === "hoh" && <BooleanFact label={`${prefix}: Married but living apart and filing as head of household`} value={evidence.livingApartExceptionConfirmed ?? null} onChange={livingApartExceptionConfirmed => patch({ livingApartExceptionConfirmed })} />}
+                {(filingStatus === "mfs" ? data.marriedFilingSeparatelyExceptionConfirmed === true : evidence.livingApartExceptionConfirmed === true) && <TextFact label={`${prefix}: Source for any month above the reported SLCSP`} value={evidence.benchmarkAboveReportedReference ?? ""} onChange={benchmarkAboveReportedReference => patch({ benchmarkAboveReportedReference })} />}
+                {(filingStatus === "mfs" ? data.marriedFilingSeparatelyExceptionConfirmed === true : evidence.livingApartExceptionConfirmed === true) && evidence.ownCoverageFamilySlcsp.map((row, rowIndex) => <TextFact key={rowIndex} label={`${prefix}: Month ${row.month} SLCSP for your own coverage family`} value={row.slcsp}
                   onChange={slcsp => patch({ ownCoverageFamilySlcsp: evidence.ownCoverageFamilySlcsp.map((current, i) => i === rowIndex ? { ...current, slcsp } : current) })} />)}
               </div>
             </>;

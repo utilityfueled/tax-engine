@@ -32,3 +32,14 @@ it('prints only the allocated columns', async () => {
     }
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }, 30000);
+it('leaves line A clear for Exception 1', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'tax-separate-return-'));
+  try {
+    // A stale separate-return answer must not tick line A on a head of household return.
+    const input = separateReturnFixture(true); input.taxpayer.filingStatus = 'head_of_household'; input.form8962!.marriedFilingSeparatelyExceptionConfirmed = true;
+    input.form8962!.sharedPolicyAllocations!.policies![0]!.separateReturn!.livingApartExceptionConfirmed = true;
+    const packet = await fillReturn(input, calculateFederalTax(input), { blankFormsDir: 'forms/blank/2025', outputDir: dir, flatten: false, premiumTaxCreditReview: preparePremiumTaxCreditReview(input) });
+    const saved = fields(packet.filledForms.find(file => file.endsWith('/f8962-filled.pdf'))!), row = F.allocations[0]!;
+    expect(saved[F.marriedSeparate]).toBe('/Off'); expect(saved[row[4]!]).toBe('0.50'); expect(saved[row[6]!]).toBe('0.50');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+}, 30000);

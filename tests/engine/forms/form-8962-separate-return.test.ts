@@ -17,6 +17,23 @@ it("allocates premium and advance credit with the filer's own benchmark", () => 
   expect(result.lines.filter(line => line.line.startsWith('allocation-')).map(line => line.line)).toEqual(['allocation-1e', 'allocation-1g']);
   expect(JSON.stringify(input)).toBe(before);
 });
+it('applies Exception 1 to a married filer living apart', () => {
+  const input = separateReturnFixture(true);
+  input.taxpayer.filingStatus = 'head_of_household'; input.form8962!.marriedFilingSeparatelyExceptionConfirmed = undefined;
+  policyOf(input).separateReturn!.livingApartExceptionConfirmed = true;
+  expect(january(calculateForm8962SharedPolicy(input))).toEqual(['500', '420', '250']);
+  expect(calculateFederalTax(input).form8962!.ptcAllowed.gt(0)).toBe(true);
+  policyOf(input).separateReturn!.livingApartExceptionConfirmed = false;
+  expect(() => calculateForm8962SharedPolicy(input)).toThrow(/living-apart exception/);
+  for (const status of ['single', 'married_filing_separately', 'qualifying_surviving_spouse'] as const) {
+    const other = separateReturnFixture(true); other.taxpayer.filingStatus = status;
+    policyOf(other).separateReturn!.livingApartExceptionConfirmed = true;
+    expect(() => calculateForm8962SharedPolicy(other)).toThrow(/living-apart exception/);
+  }
+  const joint = separateReturnFixture(true); joint.taxpayer.filingStatus = 'married_filing_jointly';
+  policyOf(joint).separateReturn!.livingApartExceptionConfirmed = true;
+  expect(() => calculateForm8962SharedPolicy(joint)).toThrow(/joint spouse/);
+});
 it('allocates only the advance credit without an exception', () => {
   const result = calculateForm8962SharedPolicy(separateReturnFixture(false));
   expect(january(result)).toEqual(['0', '0', '250']);
@@ -43,6 +60,20 @@ it('accepts the matching spouse and a blank reported benchmark', () => {
   policyOf(input).separateReturn!.ownCoverageFamilySlcsp![0]!.slcsp = '950';
   expect(january(calculateForm8962SharedPolicy(input))).toEqual(['500', '950', '250']);
 });
+it('needs a source for an own benchmark above the reported figure', () => {
+  const equal = separateReturnFixture(true); policyOf(equal).separateReturn!.ownCoverageFamilySlcsp![0]!.slcsp = '900';
+  expect(calculateForm8962SharedPolicy(equal).periods[0]!.ownBenchmarkAboveReported).toBeUndefined();
+  const above = separateReturnFixture(true); policyOf(above).separateReturn!.ownCoverageFamilySlcsp![0]!.slcsp = '950';
+  expect(() => calculateForm8962SharedPolicy(above)).toThrow(/above the reported SLCSP/);
+  policyOf(above).separateReturn!.benchmarkAboveReportedReference = 'Marketplace tax tool result';
+  const result = calculateForm8962SharedPolicy(above);
+  expect(january(result)).toEqual(['500', '950', '250']);
+  expect(result.periods.every(period => period.ownBenchmarkAboveReported)).toBe(true);
+  const zero = separateReturnFixture(true);
+  zero.form1095A[0]!.monthlyPremiums = zero.form1095A[0]!.monthlyPremiums.map(row => ({ ...row, slcsp: '0' }));
+  policyOf(zero).original = structuredClone(zero.form1095A[0]);
+  expect(() => calculateForm8962SharedPolicy(zero)).toThrow(/above the reported SLCSP/);
+});
 it('explains each allocated amount in the review record', () => {
   const lines = (exception: boolean) => calculateForm8962SharedPolicy(separateReturnFixture(exception)).lines;
   expect(lines(true).find(line => line.line === 'allocation-1e')?.description).toBe('Equal allocation between spouses filing separately');
@@ -66,7 +97,7 @@ it('requires the spouse the marriage and the benchmark sources', () => {
     [input => { input.taxpayer.spouse = { firstName: 'Casey', lastName: 'Other', ssn: '234-56-7890', dateOfBirth: '1980-01-01' } as never; }, /actual spouse/],
     [input => { policyOf(input).agreementReference = 'Signed agreement'; }, /agreement or default/],
     [input => { policyOf(input).defaultAllocation = { sourceReference: 'Enrollment records' }; }, /agreement or default/],
-    [input => { policyOf(input).separateReturn!.ownCoverageFamilySlcsp![2]!.slcsp = '900.01'; }, /exceeds the reported/],
+    [input => { policyOf(input).separateReturn!.ownCoverageFamilySlcsp![2]!.slcsp = '900.01'; }, /above the reported SLCSP/],
     [input => { policyOf(input).agreementConfirmed = true; }, /agreement or default/],
     [input => { policyOf(input).monthlyAllocations = [{ month: 1, fraction: '0.75' }]; }, /agreement or default/],
     [input => { policyOf(input).separateReturn!.ownCoverageFamilySlcsp!.pop(); }, /each original month/],

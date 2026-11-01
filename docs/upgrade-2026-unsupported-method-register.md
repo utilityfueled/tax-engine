@@ -27,7 +27,7 @@ A rejection here is not an external blocker unless its class says so. Year guard
 | K-1 histories | Basis, foreign tax left suspended by basis (the year and amount of a later allowance are unsettled), at-risk, passive recharacterization, decreased-value gifts, Form 461 classification | `k1-*.ts` |
 | Charitable with loss histories | Multi-vintage attribution, prior carry with the 2026 floor, recurrent joint attribution | `charitable-*.ts` |
 | COD | Chapters 7, 11 and 12 of title 11, modified-loss exhaustion, current EBL origin | `cod-nol-reductions.ts` |
-| Premium tax credit | Separate-return allocation with a third tax family or Exception 1, below-poverty marriage | `form-8962-*.ts` |
+| Premium tax credit | Separate-return allocation with a third tax family, below-poverty marriage | `form-8962-*.ts` |
 | Education | Partial in-kind allocation, Coverdell disqualification with later activity | `form-1099-q.ts` |
 | Foreign earned income | Schedule C income where capital is a material factor, partnership net loss, prior partnership services, prior non-W2 income, other mappings | `form-2555-source-binding.ts` |
 | EIC | Active appeal | `eic-*.ts` |

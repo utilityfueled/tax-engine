@@ -26,6 +26,8 @@ export interface Form8962AllocationMonth {
 export interface Form8962AllocationPeriod {
   policyIndex: number; firstMonth: number; lastMonth: number; fraction: Decimal;
   method?: 'agreement' | 'default_enrollee_count' | 'no_advance_benchmark' | 'separate_return_exception' | 'separate_return_advance_only';
+  /** The filer's own benchmark is above the reported one in a month of this policy. */
+  ownBenchmarkAboveReported?: true;
 }
 export interface Form8962SharedPolicyResult {
   months: Form8962AllocationMonth[]; householdMonths: Form8962HouseholdMonth[];
@@ -382,9 +384,10 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
     }
     if ((!noAdvance && !separate && policy.situation !== 'other_two_tax_families') || (!marriage && !separate && policy.noCurrentYearMarriageOrDivorceConfirmed !== true)
       || policy.twoTaxFamiliesConfirmed !== true || policy.allCoveredPeopleAssignedConfirmed !== true) throw new Error('Form8962 allocation requires actual Situation4 and two-family source facts');
-    if (separate && !separateFiler) throw new Error('Form8962 Situation2 requires an actual separate return');
-    const separateException = facts.marriedFilingSeparatelyExceptionConfirmed === true;
-    if (separate && typeof facts.marriedFilingSeparatelyExceptionConfirmed !== 'boolean') throw new Error('Form8962 Situation2 requires the actual separate filing exception answer');
+    const livingApart = policy.separateReturn?.livingApartExceptionConfirmed === true;
+    if (separate && (livingApart ? input.taxpayer.filingStatus !== 'head_of_household' : !separateFiler)) throw new Error('Form8962 Situation2 requires an actual separate return or the living-apart exception');
+    const separateException = livingApart || facts.marriedFilingSeparatelyExceptionConfirmed === true;
+    if (separate && separateFiler && typeof facts.marriedFilingSeparatelyExceptionConfirmed !== 'boolean') throw new Error('Form8962 Situation2 requires the actual separate filing exception answer');
     if (!noAdvance && !separate && policy.originalSlcspCorrectConfirmed !== true) throw new Error('Form8962 allocation requires the actual correct original SLCSP source');
     if (!noAdvance && !separate && typeof policy.agreementConfirmed !== 'boolean') throw new Error('Form8962 allocation requires a known actual agreement answer');
     const method = separate ? separateException ? 'separate_return_exception' : 'separate_return_advance_only'
@@ -420,13 +423,17 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
     }
     if (!noAdvance && !separate && sum(...original.monthlyPremiums.map(row => d(row.advancePremiumTaxCredit))).lte(0)) throw new Error('Form8962 no-APTC allocation requires its separate source method');
     const ownBenchmarks = new Map<number, Decimal>();
+    let ownAboveReported = false;
     if (separate && separateException) {
       for (const row of policy.separateReturn?.ownCoverageFamilySlcsp ?? []) {
         const m = month(row.month);
         if (ownBenchmarks.has(m) || !original.monthlyPremiums.some(sourceMonth => sourceMonth.month === m)) throw new Error('Form8962 Situation2 own benchmark month is duplicated or has no original source');
         const reported = original.monthlyPremiums.find(sourceMonth => sourceMonth.month === m)?.slcsp;
-        // The own family is part of the enrollment, so its benchmark cannot exceed the reported one.
-        if (reported != null && money(row.slcsp).gt(money(reported))) throw new Error('Form8962 Situation2 own benchmark exceeds the reported SLCSP; obtain a corrected statement');
+        // i8962: no corrected statement is needed, so a reported figure that looks wrong needs a source, not a rejection.
+        if (reported != null && money(row.slcsp).gt(money(reported))) {
+          text(policy.separateReturn?.benchmarkAboveReportedReference, 'source for an own benchmark above the reported SLCSP');
+          ownAboveReported = true;
+        }
         ownBenchmarks.set(m, money(row.slcsp));
       }
       if (ownBenchmarks.size !== original.monthlyPremiums.length) throw new Error('Form8962 Situation2 requires the actual own coverage-family SLCSP for each original month');
@@ -473,7 +480,7 @@ export function calculateForm8962SharedPolicy(input: Form8962AllocationInput): F
         ...(allocation ? { benchmarkRatio: { numerator: allocation.numerator, denominator: allocation.denominator } } : {}) });
       const last = periods.at(-1);
       if (last?.policyIndex === index && last.lastMonth + 1 === row.month && last.fraction.eq(fraction)) last.lastMonth = row.month;
-      else periods.push({ policyIndex: index, firstMonth: row.month, lastMonth: row.month, fraction, method });
+      else periods.push({ policyIndex: index, firstMonth: row.month, lastMonth: row.month, fraction, method, ...(ownAboveReported ? { ownBenchmarkAboveReported: true as const } : {}) });
     }
   }
   if (periods.length === 0) throw new Error('Form8962 allocationRequired needs at least one actual shared-policy allocation');

@@ -119,6 +119,25 @@ it('reaches actual unshared source controls without another taxpayer or fraction
  }finally{await act(async()=>root.unmount());container.remove();}
 });
 
+it('reaches the living-apart control off a separate return', async () => {
+ (globalThis as {IS_REACT_ACT_ENVIRONMENT?:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
+ const container=document.createElement('div');document.body.appendChild(container);const root=createRoot(container);
+ const hoh=actualSeparateReturnData(false);delete hoh.marriedFilingSeparatelyExceptionConfirmed;let latest:CreditsData={...emptyCreditsData,premiumTaxCredit:hoh};
+ function Harness(){const [data,setData]=useState(latest);return <SectionCredits data={data} hasDependents={false} filingStatus="hoh" taxYear={2025} personalData={completePersonalInfo} onDataChange={next=>{latest=next;setData(next);}}/>;}
+ async function change(label:string,value:string){const c=[...container.querySelectorAll('label')].find(e=>e.querySelector('.guided-field-label')?.textContent===label)?.querySelector<HTMLInputElement|HTMLSelectElement>('input,select');if(!c)throw new Error(`Missing ${label}`);const proto=c instanceof HTMLSelectElement?HTMLSelectElement.prototype:HTMLInputElement.prototype;await act(async()=>{Object.getOwnPropertyDescriptor(proto,'value')!.set!.call(c,value);c.dispatchEvent(new Event(c instanceof HTMLSelectElement?'change':'input',{bubbles:true}));});}
+ const labels=()=>[...container.querySelectorAll('.guided-field-label')].map(e=>e.textContent);
+ try{
+  await act(async()=>root.render(<Harness/>));
+  expect(labels()).not.toContain('Allocation policy 1: Month 1 SLCSP for your own coverage family');
+  await change('Allocation policy 1: Married but living apart and filing as head of household','true');
+  expect(latest.premiumTaxCredit!.sharedPolicyAllocations!.policies[0]!.separateReturn?.livingApartExceptionConfirmed).toBe(true);
+  expect(labels()).toContain('Allocation policy 1: Month 1 SLCSP for your own coverage family');
+  await change('Allocation policy 1: Source for any month above the reported SLCSP','Marketplace tax tool result');
+  expect(latest.premiumTaxCredit!.sharedPolicyAllocations!.policies[0]!.separateReturn?.benchmarkAboveReportedReference).toBe('Marketplace tax tool result');
+  expect(labels()).not.toContain('Married-filing-separately exception established');
+ }finally{await act(async()=>root.unmount());container.remove();}
+});
+
 it('reaches the separate return allocation controls', async () => {
  (globalThis as {IS_REACT_ACT_ENVIRONMENT?:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
  const container=document.createElement('div');document.body.appendChild(container);const root=createRoot(container);
@@ -134,6 +153,7 @@ it('reaches the separate return allocation controls', async () => {
   expect(labels()).not.toContain('Allocation policy 1: Both taxpayers agreed to these fractions');
   expect(labels()).not.toContain('Allocation policy 1: No marriage or divorce occurred this year');
   expect(labels()).not.toContain('Allocation policy 1: Original SLCSP amounts are correct');
+  expect(labels()).not.toContain('Allocation policy 1: Married but living apart and filing as head of household');
   await change('Allocation policy 1: Separate-return source reference','Actual records');
   await change('Allocation policy 1: Married at the end of the year','true');
   await change("Allocation policy 1: Only your and your spouse's tax families are on this policy",'true');
