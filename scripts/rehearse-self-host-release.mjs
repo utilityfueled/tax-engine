@@ -176,7 +176,8 @@ try {
     phase = label;
     await ready();
     await page.goto(`/returns/${id}?local=1`);
-    await expect(page.getByRole("heading", { name: `Tax Return ${id}`, exact: true })).toBeVisible();
+    // The first page after a recreated container can pass 5s on a slow runner. Browser suites here allow 30s.
+    await expect(page.getByRole("heading", { name: `Tax Return ${id}`, exact: true })).toBeVisible({ timeout: 30_000 });
     assert.equal(await page.evaluate(id => globalThis.localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`), id), originalFlow);
     assert.deepEqual(Buffer.from(await documentBytes(page, id)), originalBytes);
     assert.equal(await databaseSnapshot(), beforeDatabase);
