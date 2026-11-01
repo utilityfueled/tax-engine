@@ -3474,8 +3474,18 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   for (const row of [...(input.eic?.separatedSpouseSources?.children ?? []), ...(input.eic?.recertificationSources?.children ?? [])]) {
     if (row.taxpayerTiebreakAgi !== undefined && !roundDollar(d(row.taxpayerTiebreakAgi)).eq(roundDollar(agi))) throw new Error(`EIC tiebreaker AGI must match Form 1040 line 11, currently ${roundDollar(agi).toFixed()}`);
   }
-  const eicTiebreakLost = eicCurrent?.tiebreakLostChildCount ?? eicSeparated.tiebreakLostChildCount ?? 0;
-  if (eicTiebreakLost > 0) audit.record("EIC", "tiebreaker", "Children treated as another claimant's qualifying child", new Decimal(eicTiebreakLost), "IRC152(c)(4) on the actual child sources");
+  const eicTiebreakLost = eicCurrent?.tiebreakLostChildSourceIds ?? eicSeparated.tiebreakLostChildSourceIds ?? [];
+  if (eicTiebreakLost.length > 0) {
+    audit.record("EIC", "tiebreaker", "Children treated as another claimant's qualifying child", new Decimal(eicTiebreakLost.length), "IRC152(c)(4) on the actual child sources");
+    // Dependent care is one of the five shared benefits and its people are entered separately.
+    const careIdentity = (taxId: string | undefined, firstName: string, lastName: string) => [taxId?.replace(/\D/g, ""), `${firstName} ${lastName}`.trim().toLowerCase()];
+    const carePeople = (input.dependentCare?.qualifyingPersons ?? []).map((person) => careIdentity(person.taxId, person.firstName, person.lastName));
+    for (const sourceId of eicTiebreakLost) {
+      const child = input.taxpayer.dependents[Number(sourceId.replace("dependent:", ""))];
+      const [id, name] = child ? careIdentity(child.ssn, child.firstName, child.lastName) : [];
+      if (carePeople.some(([taxId, personName]) => (id && taxId === id) || personName === name)) throw new Error("EIC child treated as another claimant's conflicts with its dependent care benefit");
+    }
+  }
   const qualifyingEicChildren = eicCurrent?.ssnCountedChildSourceIds?.length ?? eicSeparated.ssnCountedChildSourceIds.length;
   const actualEicChildPresent = eicCurrent?.qualifyingChildPresent ?? (eicSeparated.sourceFactsComplete ? eicSeparated.qualifyingChildPresent : undefined);
   audit.merge(eicSeparated.lines);

@@ -17,7 +17,7 @@ export type Form8862Input = Pick<TaxYearInput, 'standardDeductionFacts'> & {
 };
 export interface Form8862Result {
   sourceFactsComplete: true; required: boolean; currentFormRequirementsMet: boolean;
-  qualifyingChildPresent?: boolean; qualifyingChildSourceIds?: string[]; ssnCountedChildSourceIds?: string[]; tiebreakLostChildCount?: number;
+  qualifyingChildPresent?: boolean; qualifyingChildSourceIds?: string[]; ssnCountedChildSourceIds?: string[]; tiebreakLostChildSourceIds?: string[];
   requiredChildEvidenceSourceIds?: string[];
   physical: {
     line1: number; line2Eic: true; line3IncomeOnly: boolean;
@@ -95,7 +95,7 @@ export function calculateForm8862(input: Form8862Input): Form8862Result | undefi
           : 'Original household, actual child records and applicable claimant questions reconciled; no credit override');
     return { sourceFactsComplete: true, required: history.form8862Required === true, currentFormRequirementsMet: meets,
       ...(children ? { qualifyingChildPresent: children.qualifyingChildPresent, qualifyingChildSourceIds: children.qualifyingChildSourceIds,
-        ssnCountedChildSourceIds: children.ssnCountedChildSourceIds, tiebreakLostChildCount: children.tiebreakLostChildCount,
+        ssnCountedChildSourceIds: children.ssnCountedChildSourceIds, tiebreakLostChildSourceIds: children.tiebreakLostChildSourceIds,
         requiredChildEvidenceSourceIds: children.children.filter(row => row.requiresLiveBirthEvidence).map(row => row.sourceId) } : {}), physical, lines: audit.getLines() };
   };
   if (history.barred) return finish(false);

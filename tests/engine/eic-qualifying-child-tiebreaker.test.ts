@@ -5,6 +5,8 @@ import { calculateFederalTax } from '@/engine/federal.js';
 import { TaxYearInputSchema } from '@/models/inputs.js';
 import type { EicCurrentChildSource } from '@/models/form-8862-sources.js';
 import { eicSeparatedReviewInput } from '../fixtures/eic-separated-review.js';
+import { child as form8862Child, source as form8862Source } from '../fixtures/form-8862.js';
+import { form8862ReviewInput } from '../fixtures/form-8862-review.js';
 
 const dependent = (relationship: string) => ({ firstName: 'Avery', lastName: 'Lee', ssn: '123456789', dateOfBirth: '2012-05-01', relationship, monthsLivedWithYou: 12 });
 const row = (patch: Partial<EicCurrentChildSource> = {}): EicCurrentChildSource => ({ sourceId: 'dependent:0', sourceReference: 'Fictional home records', sourceFactsConfirmed: true, original: dependent('grandchild'), livedWithTaxpayerInUnitedStatesMoreThanHalfYear: true, specialResidencePeriodClaimed: false, marriedAtYearEnd: false,
@@ -31,7 +33,7 @@ describe('EIC qualifying-child tie-breakers', () => {
     const agi = { taxpayerTiebreakAgi: '30000' }, withOthers = (...otherEligibleClaimants: ReturnType<typeof other>[]) => row({ ...agi, otherEligibleClaimants });
     expect(wins(withOthers(other('10000', true, true)))).toBe(false);
     expect(run(withOthers(other('10000', true, true))).children[0]!.tiebreakLost).toBe(true);
-    expect(run(withOthers(other('10000', true, true))).tiebreakLostChildCount).toBe(1);
+    expect(run(withOthers(other('10000', true, true))).tiebreakLostChildSourceIds).toEqual(['dependent:0']);
     expect(run(row({ otherEligibleClaimants: [other('10000', true, true)] })).qualifyingChildPresent).toBe(false);
     expect(wins(withOthers(other('10000', true)))).toBe(true);
     expect(wins(withOthers(other('10000', true), other('29999', true)))).toBe(true);
@@ -67,6 +69,12 @@ describe('EIC qualifying-child tie-breakers', () => {
     expect(() => run(row(claimed), 'grandchild', 'single', undefined, { qualifiesForODC: true })).toThrow(message);
     expect(run(row(claimed), 'grandchild', 'single', undefined, { qualifiesForCTC: false, qualifiesForODC: false }).qualifyingChildPresent).toBe(false);
     expect(() => run(row(claimed), 'grandchild', 'head_of_household')).toThrow(/head of household/);
+    expect(() => run(row({ marriedAtYearEnd: true, marriedChildDependency: 'cannot_claim' }), 'child', 'head_of_household')).toThrow(/head of household/);
+    expect(run(row({ marriedAtYearEnd: true, marriedChildDependency: 'released_to_other_parent' }), 'child', 'head_of_household').qualifyingChildPresent).toBe(true);
+    const second = { ...dependent('child'), firstName: 'Blake', ssn: '123456780' };
+    const two = calculateEicQualifyingChildSources({ taxpayer: { taxYear: 2025, filingStatus: 'head_of_household', primary: { firstName: 'Sam', lastName: 'Lee', ssn: '987654321', dateOfBirth: '1960-01-01' }, dependents: [dependent('grandchild'), second] } as never,
+      allCandidateChildrenIncluded: true, children: [row(claimed), row({ sourceId: 'dependent:1', original: second })] });
+    expect(two.qualifyingChildSourceIds).toEqual(['dependent:1']);
     const married = (marriedChildDependency: EicCurrentChildSource['marriedChildDependency']) => row({ marriedAtYearEnd: true, marriedChildDependency });
     expect(() => run(married('cannot_claim'), 'child', 'single', undefined, { qualifiesForCTC: true })).toThrow(message);
     expect(() => run(married('released_to_other_parent'), 'child', 'single', undefined, { qualifiesForODC: true })).toThrow(message);
@@ -87,6 +95,26 @@ describe('EIC qualifying-child tie-breakers', () => {
     expect(lost.earnedIncomeCredit.toFixed()).toBe('0');
     expect(lost.allLines.some(line => line.form === 'EIC' && line.line === 'tiebreaker' && line.value.eq(1))).toBe(true);
     expect(() => calculateFederalTax(relative(agi.plus('0.49').toFixed(), '1000'))).not.toThrow();
+    const care = (taxId: string, firstName: string) => ({ expenses: '1000', qualifyingPersons: [{ firstName, lastName: 'Example', identifierType: 'tax_id', taxId, over12Disabled: false, qualifyingPersonConfirmed: true, qualifiedExpenses: '1000' }] });
+    const person = claimed.taxpayer.dependents[0]!;
+    expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...claimed, dependentCare: care(person.ssn, 'Someone') }))).toThrow(/dependent care benefit/);
+    expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...claimed, dependentCare: care('111223333', person.firstName) }))).toThrow(/dependent care benefit/);
     expect(() => calculateFederalTax(relative(agi.plus(1).toFixed(), '1000'))).toThrow(new RegExp(`must match Form 1040 line 11, currently ${agi.toFixed()}`));
+  });
+
+  it('ties the entered AGI on the Form 8862 route too', () => {
+    const agi = calculateFederalTax(form8862ReviewInput()).agi;
+    const recertified = (taxpayerTiebreakAgi: string) => { const current = form8862Source(), row = form8862Child(current); current.taxpayer.dependents[0]!.relationship = 'grandchild'; row.original!.relationship = 'grandchild';
+      Object.assign(row, { taxpayerTiebreakAgi, otherEligibleClaimants: [other(agi.plus(1).toFixed(), false, true)] }); return form8862ReviewInput(current); };
+    const lost = calculateFederalTax(recertified(agi.toFixed()));
+    expect(lost.allLines.some(line => line.form === 'EIC' && line.line === 'tiebreaker' && line.value.eq(1))).toBe(true);
+    expect(() => calculateFederalTax(recertified(agi.minus(1).toFixed()))).toThrow(/must match Form 1040 line 11/);
+  });
+
+  it('accepts a negative filer AGI and rejects text', () => {
+    expect(wins(row({ taxpayerTiebreakAgi: '-100', otherEligibleClaimants: [other('-500', true)] }))).toBe(true);
+    expect(() => wins(row({ taxpayerTiebreakAgi: '30,000', otherEligibleClaimants: [other('1', true)] }))).toThrow(/filer AGI needs an actual amount/);
+    expect(() => wins(row({ taxpayerTiebreakAgi: 'x30000', otherEligibleClaimants: [other('1', true)] }))).toThrow(/filer AGI needs an actual amount/);
+    expect(() => wins(row({ taxpayerTiebreakAgi: '30000x', otherEligibleClaimants: [other('1', true)] }))).toThrow(/filer AGI needs an actual amount/);
   });
 });

@@ -35,6 +35,15 @@ function credit(state: ReturnType<typeof sourceState>) {
   const input = TaxYearInputSchema.parse(required(buildTaxInputFromGuidedData(state)));
   return calculateFederalTax(input).allLines.find(line => line.form === '1040' && line.line === '27a')?.value.toFixed();
 }
+it('carries married-child and tiebreaker answers from the guide', () => {
+  const state = sourceState(), person = required(state.sectionData['personal-info']), row = required(required(person.eicSeparatedSpouseSources).children)[0]!;
+  Object.assign(row, { marriedAtYearEnd: true, marriedChildDependency: 'cannot_claim' });
+  expect(credit(state)).toBe('0');
+  const parent = sourceState(), parentRow = required(required(required(parent.sectionData['personal-info']).eicSeparatedSpouseSources).children)[0]!;
+  Object.assign(parentRow, { marriedAtYearEnd: true, marriedChildDependency: 'can_claim' });
+  expect(credit(parent)).toBe('3409');
+});
+
 it('derives guided Rule3 eligibility and separate actual-child and SSN-counted routes', () => {
   const state = sourceState(); const before = JSON.stringify(state);
   expect(credit(state)).toBe('3409');

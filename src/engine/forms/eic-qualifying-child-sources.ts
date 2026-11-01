@@ -16,7 +16,7 @@ export interface EicCurrentChildResult {
 }
 export interface EicQualifyingChildResult {
   qualifyingChildPresent: boolean; qualifyingChildSourceIds: string[]; ssnCountedChildSourceIds: string[];
-  children: EicCurrentChildResult[]; tiebreakLostChildCount: number;
+  children: EicCurrentChildResult[]; tiebreakLostChildSourceIds: string[];
 }
 const relationshipKey = (v: string) => v.trim().toLowerCase().replaceAll('_', ' ').replaceAll('-', ' ');
 const childRelationships = new Set(['child', 'son', 'daughter', 'adopted child', 'stepchild', 'foster child', 'grandchild',
@@ -109,7 +109,6 @@ export function calculateEicQualifyingChildSources(input: EicQualifyingChildInpu
     // The child belongs to the other person for all five shared benefits.
     const noChildBenefit = tiebreakLost || row.marriedChildDependency === 'cannot_claim' || row.marriedChildDependency === 'released_to_other_parent';
     if (noChildBenefit && (child.qualifiesForCTC || child.qualifiesForODC)) throw new Error('EIC child the filer cannot claim conflicts with its child tax credit or other dependent credit answer');
-    if (tiebreakLost && taxpayer.filingStatus === 'head_of_household') throw new Error('EIC child treated as another claimant\'s conflicts with head of household status resting on that child');
     const younger = owners.some(owner => birth > date(owner.dateOfBirth, 'claimant birth'));
     const reaches = (age: number) => { const value = new Date(birth); value.setUTCFullYear(value.getUTCFullYear() + age); value.setUTCDate(value.getUTCDate() - 1); return value; };
     let ageEligible = yearEnd < reaches(19) && younger;
@@ -134,7 +133,10 @@ export function calculateEicQualifyingChildSources(input: EicQualifyingChildInpu
   }
   for (const [i, child] of taxpayer.dependents.entries()) if ((child.qualifiesForEIC || childRelationships.has(relationshipKey(child.relationship))) && !seen.has(`dependent:${i}`)) throw new Error('EIC actual represented candidate child is missing');
   const qualified = results.filter(row => row.qualifies).map(row => row.sourceId);
+  // Head of household can rest on another child, so this rejects only when none remains.
+  if (taxpayer.filingStatus === 'head_of_household' && qualified.length === 0 && (results.some(row => row.tiebreakLost)
+    || input.children.some(row => row.marriedChildDependency === 'cannot_claim'))) throw new Error('EIC child the filer cannot claim conflicts with head of household status resting on that child');
   return { qualifyingChildPresent: qualified.length > 0, qualifyingChildSourceIds: qualified,
     ssnCountedChildSourceIds: results.filter(row => row.ssnCounted).map(row => row.sourceId), children: results,
-    tiebreakLostChildCount: results.filter(row => row.tiebreakLost).length };
+    tiebreakLostChildSourceIds: results.filter(row => row.tiebreakLost).map(row => row.sourceId) };
 }

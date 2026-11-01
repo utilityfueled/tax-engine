@@ -39,6 +39,6 @@ lines:
     testRef: "tests/engine/eic-qualifying-child-tiebreaker.test.ts::rejects comparisons with no published method"
   - line: "return-agi"
     description: "Tie the entered AGI to the completed return"
-    formula: "The AGI entered on a child record must equal Form1040 line11 in whole dollars, and a filer who loses every child is left with no qualifying child on the return. A lost child with a CTC or ODC flag, or as the basis of head-of-household status, rejects."
+    formula: "The AGI entered on a child record must equal Form1040 line11 in whole dollars, and a filer who loses every child is left with no qualifying child on the return. A lost child with a CTC or ODC flag, or on the dependent care person list, rejects, by identifier or name. Head of household rejects only when no qualifying child remains and a child was lost or cannot be claimed."
     irsRef: "IRC152(c)(4); Form1040 line11"
     testRef: "tests/engine/eic-qualifying-child-tiebreaker.test.ts::ties the entered AGI to the completed return"

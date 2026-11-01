@@ -8,7 +8,7 @@ The actual child-source routes, used by Form 8862 and separated-spouse claims, r
 
 - A married child qualifies only if the filer can claim the child as a dependent, or could but released the claim to the other parent. The joint-return test still applies.
 - A parent who claims the child takes it. A parent who does not claim needs a filer AGI above that parent's, under IRC 152(c)(4)(C), which compares parents only. Among nonparents who claim, the highest AGI takes the child. A nonparent who claims nothing has no effect.
-- A filer who loses the child is left with no qualifying child and may still claim the credit without one, if otherwise eligible. The child belongs to the other person for all five shared benefits, so a CTC, ODC or head-of-household use of that child rejects. A married child the filer cannot claim, or released to the other parent, rejects with a CTC or ODC answer.
+- A filer who loses the child is left with no qualifying child and may still claim the credit without one, if otherwise eligible. The child belongs to the other person for all five shared benefits, so a CTC, ODC or dependent care use of that child rejects, and so does head of household when no qualifying child remains. A married child the filer cannot claim, or released to the other parent, rejects with a CTC or ODC answer.
 - Only a biological or adoptive parent is a parent here. A stepparent or foster parent follows the nonparent rule, as Pub 596 defines it.
 
 ## Limits

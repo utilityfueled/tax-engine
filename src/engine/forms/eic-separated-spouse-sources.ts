@@ -15,7 +15,7 @@ export interface EicSeparatedSpouseResult {
   separatedSpouseEligible: boolean | undefined;
   qualifyingChildPresent: boolean;
   qualifyingChildSourceIds: string[];
-  ssnCountedChildSourceIds: string[]; tiebreakLostChildCount?: number;
+  ssnCountedChildSourceIds: string[]; tiebreakLostChildSourceIds?: string[];
   lines: CalculatedLine[];
 }
 const instrumentStates = new Set('AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY'.split(' '));
@@ -98,5 +98,5 @@ export function calculateEicSeparatedSpouseSources(input: EicSeparatedSpouseInpu
       'Separation alternative': apart ? 'Principal homes apart throughout last six months' : separated ? 'State-law instrument and different households at year end' : 'Known separation conditions not met',
     });
   return { sourceFactsComplete: true, separatedSpouseEligible: eligible, qualifyingChildPresent: qualified.length > 0,
-    qualifyingChildSourceIds: qualified, ssnCountedChildSourceIds: counted, tiebreakLostChildCount: childSources.tiebreakLostChildCount, lines: audit.getLines() };
+    qualifyingChildSourceIds: qualified, ssnCountedChildSourceIds: counted, tiebreakLostChildSourceIds: childSources.tiebreakLostChildSourceIds, lines: audit.getLines() };
 }
