@@ -25,7 +25,8 @@ const ein = (value: string | undefined) => value?.replace(/-/g, "");
 export function resolveForm2555Sources(input: Form2555SourceContext) {
   const audit = new AuditTrail();
   const facts = input.form2555;
-  const empty = { sourceFactsVerified: false, currentForeignIncome: new Decimal(0), priorYearIncomeReceived: new Decimal(0), lines: audit.getLines() };
+  const qbiForeignProfit: { sourceId: string; amount: Decimal }[] = [];
+  const empty = { sourceFactsVerified: false, currentForeignIncome: new Decimal(0), priorYearIncomeReceived: new Decimal(0), qbiForeignProfit, lines: audit.getLines() };
   if (!facts) return empty;
   const year = input.taxpayer.taxYear;
   const source = facts.sourceMapping;
@@ -107,6 +108,12 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
       nonW2References.add(reference);
       key = "foreignEmploymentIncomeNotOnW2";
     } else throw new Error("Form2555 unsupported or aliased original income source identifier");
+    // Spec: qbi-foreign-profit. Income earned abroad is not effectively connected, so it is not QBI.
+    if (key === "foreignBusinessIncomeAlreadyReported" || key === "foreignPartnershipIncomeAlreadyReported") {
+      const foreignProfit = amount(row.qbiForeignProfit, "foreign profit inside QBI");
+      if (foreignProfit.gt(combined)) throw new Error("Form2555 foreign profit inside QBI exceeds the foreign receipts");
+      qbiForeignProfit.push({ sourceId: row.sourceId, amount: foreignProfit });
+    }
     sums[key] = sums[key].plus(current);
     prior = prior.plus(priorReceived);
     audit.record("Form2555 source mapping", row.sourceId, "Actual current foreign receipts already classified by return source", current, "Original one-owner source subset, separately conserved from prior-year services", { owner, sourceId: row.sourceId, priorYearIncomeReceived: priorReceived });
@@ -119,5 +126,5 @@ export function resolveForm2555Sources(input: Form2555SourceContext) {
     if (!prior.eq(amount(facts.priorYearIncomeReceived, "prior-year services received this year"))) throw new Error("Form2555 original sources do not reconcile prior-year income received");
     if (priorExclusion.gt(prior)) throw new Error("Form2555 prior exclusion exceeds income actually included in current gross income");
   }
-  return { sourceFactsVerified: true, currentForeignIncome: current, priorYearIncomeReceived: prior, lines: audit.getLines() };
+  return { sourceFactsVerified: true, currentForeignIncome: current, priorYearIncomeReceived: prior, qbiForeignProfit, lines: audit.getLines() };
 }

@@ -1645,6 +1645,16 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     additionalNonfarmIncome: cryptoBusinessNet,
     additionalNonfarmOwner: input.cryptoIncome?.businessAccountHolder,
   });
+  // Spec: se-deduction-allocation. Pub54: the deduction is allocable, by exclusion over foreign earned income.
+  const foreignSelfEmployment = d(input.form2555?.incomeSources?.foreignBusinessIncomeAlreadyReported).plus(d(input.form2555?.incomeSources?.foreignPartnershipIncomeAlreadyReported));
+  if (form2555 && foreignSelfEmployment.gt(0) && form2555.foreignEarnedIncome.gt(0)) {
+    const owner = schedSE.perTaxpayer.find((row) => row.accountHolder === input.form2555?.accountHolder) ?? schedSE;
+    const earnings = owner.netSEEarnings;
+    if (earnings.gt(0) && owner.deductibleHalf.gt(0)) {
+      const minimum = owner.deductibleHalf.times(Decimal.min(1, foreignSelfEmployment.div(earnings))).times(Decimal.min(1, form2555.totalExclusion.div(form2555.foreignEarnedIncome))).toDecimalPlaces(0, Decimal.ROUND_DOWN);
+      if (d(input.form2555?.deductionsAllocableToExcludedIncome).lt(minimum)) throw new Error(`Form2555 deductions allocable to excluded income must include at least ${minimum.toFixed()} of the self-employment tax deduction`);
+    }
+  }
   audit.merge(schedSE.lines);
   const netSEEarnings = schedSE.netSEEarnings;
 
@@ -2700,7 +2710,8 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   audit.record("1040", "13b", "Additional deductions from Schedule 1-A", schedule1A?.totalDeduction ?? d("0"),
     "Schedule 1-A line 38; no change to AGI or payroll taxes");
   const qbiSources: QBISource[] = qbiSourceDeductions.sources.map(source => ({ ...source,
-    qbi: source.qbi.minus(schedule1AReturn?.businessQbiExclusions.find(row => row.sourceId === source.id)?.amount ?? d("0")),
+    qbi: source.qbi.minus(schedule1AReturn?.businessQbiExclusions.find(row => row.sourceId === source.id)?.amount ?? d("0"))
+      .minus(foreignIncomeSources.qbiForeignProfit.find(row => row.sourceId === source.id)?.amount ?? d("0")),
   })).filter(source=>!source.qbi.isZero());
   // K-1 Form 1041 Box 14 Code I: QBI from estates/trusts
   // Trust QBI is NOT self-employment income — no SE tax adjustment needed
@@ -3479,11 +3490,13 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     audit.record("EIC", "tiebreaker", "Children treated as another claimant's qualifying child", new Decimal(eicTiebreakLost.length), "IRC152(c)(4) on the actual child sources");
     // Dependent care is one of the five shared benefits and its people are entered separately.
     const careIdentity = (taxId: string | undefined, firstName: string, lastName: string) => [taxId?.replace(/\D/g, ""), `${firstName} ${lastName}`.trim().toLowerCase()];
+    if (input.dependentCare && !input.dependentCare.qualifyingPersons) throw new Error("EIC child treated as another claimant's needs the dependent care person list, not a count");
     const carePeople = (input.dependentCare?.qualifyingPersons ?? []).map((person) => careIdentity(person.taxId, person.firstName, person.lastName));
     for (const sourceId of eicTiebreakLost) {
       const child = input.taxpayer.dependents[Number(sourceId.replace("dependent:", ""))];
       const [id, name] = child ? careIdentity(child.ssn, child.firstName, child.lastName) : [];
-      if (carePeople.some(([taxId, personName]) => (id && taxId === id) || personName === name)) throw new Error("EIC child treated as another claimant's conflicts with its dependent care benefit");
+      // Different identifiers are different people, even with one name.
+      if (carePeople.some(([taxId, personName]) => (id && taxId ? taxId === id : personName === name))) throw new Error("EIC child treated as another claimant's conflicts with its dependent care benefit");
     }
   }
   const qualifyingEicChildren = eicCurrent?.ssnCountedChildSourceIds?.length ?? eicSeparated.ssnCountedChildSourceIds.length;

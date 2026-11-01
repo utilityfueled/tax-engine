@@ -87,7 +87,7 @@ it("asks the partner questions only for a Schedule K-1 source", async () => {
   await change("Existing return source 1", "scheduleK1:0");
   expect(latest.sources[0]?.sourceId).toBe("scheduleK1:0");
   expect(asked()).toBe(true);
-  await change("You performed the services for this partnership income 1", "true");
+  await change("You performed the services for this partnership income in a foreign country 1", "true");
   await change("Capital was also a material source of this partnership's income 1", "false");
   expect(latest.sources[0]).toMatchObject({ partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false });
   await act(async () => root.unmount()); container.remove();

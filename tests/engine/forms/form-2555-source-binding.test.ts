@@ -1,5 +1,6 @@
 // Spec: spec/federal/form-2555-source-binding.yaml. Actual synthetic USD sources.
 import { expect, it } from "vitest";
+import Decimal from "decimal.js";
 import { resolveForm2555Sources } from "@/engine/forms/form-2555-source-binding.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { Form2555Schema, TaxYearInputSchema } from "@/models/inputs.js";
@@ -54,7 +55,7 @@ it("binds business amounts to actual canonical receipts", () => {
   const facts = source(); facts.isSelfEmployed = true; facts.employerProvidedForeignEarnedIncome = "0";
   facts.incomeSources.foreignEmploymentIncomeIncludedOnW2 = "0"; facts.incomeSources.foreignBusinessIncomeAlreadyReported = "120000";
   facts.partIV.wages = "0"; facts.partIV.businessPersonalServices = "120000";
-  Object.assign(facts.sourceMapping.rows[0], { sourceId: "scheduleC", payerName: "Actual Services", payerEin: "12-3456789", businessGrossReceipts: "130000", businessReturnsAndAllowances: "5000", businessCostOfGoodsSold: "1000", businessOtherIncome: "0" });
+  Object.assign(facts.sourceMapping.rows[0], { sourceId: "scheduleC", qbiForeignProfit: "0", payerName: "Actual Services", payerEin: "12-3456789", businessGrossReceipts: "130000", businessReturnsAndAllowances: "5000", businessCostOfGoodsSold: "1000", businessOtherIncome: "0" });
   const business = input({ form2555: facts, form1099Nec: [{ payer: "Actual Client", nonemployeeCompensation: "130000", accountHolder: "primary" }], scheduleC: { businessName: "Actual Services", ein: "12-3456789", accountHolder: "primary", returnsAndAllowances: "5000", costOfGoodsSold: "1000", otherIncome: "0" } });
   expect(resolveForm2555Sources(business).currentForeignIncome.toFixed()).toBe("120000");
   const wrongLine = input({ form2555: { ...facts, partIV: { ...facts.partIV, wages: "120000", businessPersonalServices: "0" } }, scheduleC: business.scheduleC, form1099Nec: business.form1099Nec });
@@ -163,7 +164,7 @@ it("binds active-partner income to its Schedule K-1", () => {
   const k1 = { taxYear: 2025, accountHolder: "primary", partnershipName: "Fictional Partners", partnershipEIN: "12-3456789", ordinaryIncome: "90000", selfEmploymentEarnings: "80000" };
   const facts = (patch = {}, amount = "70000") => { const form = source(); Object.assign(form, { foreignEarnedIncome: amount, isSelfEmployed: true, employerProvidedForeignEarnedIncome: "0",
     partIV: { ...form.partIV, wages: "0", partnershipPersonalServices: amount }, incomeSources: { ...form.incomeSources, foreignEmploymentIncomeIncludedOnW2: "0", foreignPartnershipIncomeAlreadyReported: amount } });
-    form.sourceMapping.rows = [{ ...form.sourceMapping.rows[0]!, sourceId: "scheduleK1:0", payerName: "Fictional Partners", payerEin: "12-3456789", foreignEarnedIncome: amount, partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false, ...patch } as never]; return form; };
+    form.sourceMapping.rows = [{ ...form.sourceMapping.rows[0]!, sourceId: "scheduleK1:0", payerName: "Fictional Partners", payerEin: "12-3456789", foreignEarnedIncome: amount, partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false, qbiForeignProfit: "0", ...patch } as never]; return form; };
   const run = (form = facts(), original: Record<string, unknown> = k1) => resolveForm2555Sources({ ...input({ form2555: form }), scheduleK1: [original] } as never);
   expect(run().currentForeignIncome.toFixed()).toBe("70000");
   expect(run(facts({}, "80000")).currentForeignIncome.toFixed()).toBe("80000");
@@ -173,10 +174,41 @@ it("binds active-partner income to its Schedule K-1", () => {
   for (const patch of [{ payerName: "Changed" }, { payerEin: "98-7654321" }, { payerEin: undefined }, { sourceId: "scheduleK1:1" }, { sourceId: "scheduleK1:00" }]) expect(() => run(facts(patch)), JSON.stringify(patch)).toThrow();
   for (const change of [{ accountHolder: "spouse" }, { taxYear: 2024 }, { taxYear: undefined }, { selfEmploymentEarnings: undefined }]) expect(() => run(facts(), { ...k1, ...change }), JSON.stringify(change)).toThrow();
   expect(() => run(facts({ priorYearIncomeReceived: "1" }))).toThrow(/prior/i);
-  const withReturn = TaxYearInputSchema.parse({ ...simpleW2Fixture, w2s: [], form2555: facts(), scheduleK1: [{ ...k1, ordinaryIncome: "80000", guaranteedPayments: "0" }] });
+  const withReturn = TaxYearInputSchema.parse({ ...simpleW2Fixture, w2s: [], form2555: { ...facts(), deductionsAllocableToExcludedIncome: "4945" }, scheduleK1: [{ ...k1, ordinaryIncome: "80000", guaranteedPayments: "0" }] });
   const excluded = calculateFederalTax(withReturn), included = calculateFederalTax(TaxYearInputSchema.parse({ ...withReturn, form2555: undefined }));
-  expect(included.agi.minus(excluded.agi).toFixed()).toBe("70000");
+  expect(included.agi.minus(excluded.agi).toFixed()).toBe("65055");
   const other = facts(); Object.assign(other, { incomeSources: { ...other.incomeSources, foreignPartnershipIncomeAlreadyReported: "0", otherForeignIncomeAlreadyReported: "70000" } });
   expect(() => run(other)).toThrow(/other mappings/);
+});
+
+function partnerReturn(patch: Record<string, unknown> = {}, form2555Patch: Record<string, unknown> = {}, qbiForeignProfit = "70000") {
+  const form = source(), amount = "70000";
+  Object.assign(form, { foreignEarnedIncome: amount, isSelfEmployed: true, employerProvidedForeignEarnedIncome: "0", partIV: { ...form.partIV, wages: "0", partnershipPersonalServices: amount },
+    incomeSources: { ...form.incomeSources, foreignEmploymentIncomeIncludedOnW2: "0", foreignPartnershipIncomeAlreadyReported: amount }, deductionsAllocableToExcludedIncome: "4945", ...form2555Patch });
+  form.sourceMapping.rows = [{ ...form.sourceMapping.rows[0]!, sourceId: "scheduleK1:0", payerName: "Fictional Partners", payerEin: "12-3456789", foreignEarnedIncome: amount, partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false, qbiForeignProfit } as never];
+  return TaxYearInputSchema.parse({ ...simpleW2Fixture, w2s: [], form2555: form, scheduleK1: [{ taxYear: 2025, accountHolder: "primary", partnershipName: "Fictional Partners", partnershipEIN: "12-3456789", ordinaryIncome: "80000", selfEmploymentEarnings: "80000", ...patch }] });
+}
+
+it("removes foreign business profit from QBI", () => {
+  const qbi = { section199AQBI: "80000", qbiMateriallyParticipated: true, section199AW2Wages: "100000", section199AUBIA: "0" };
+  const withWages = (value: ReturnType<typeof partnerReturn>) => TaxYearInputSchema.parse({ ...value, w2s: simpleW2Fixture.w2s });
+  const removed = calculateFederalTax(withWages(partnerReturn(qbi))), kept = calculateFederalTax(withWages(partnerReturn(qbi, {}, "0")));
+  const line13 = (result: typeof removed) => result.allLines.find(row => row.form === "1040" && row.line === "13")!.value;
+  expect(line13(kept).minus(line13(removed)).gt("13000")).toBe(true);
+  expect(line13(removed).gt(0)).toBe(true);
+  const form = partnerReturn(qbi).form2555!;
+  expect(resolveForm2555Sources({ ...partnerReturn(qbi) } as never).qbiForeignProfit).toEqual([{ sourceId: "scheduleK1:0", amount: new Decimal("70000") }]);
+  for (const qbiForeignProfit of [undefined, "70000.01"]) {
+    const bad = structuredClone(form); Object.assign(bad.sourceMapping!.rows[0]!, { qbiForeignProfit });
+    expect(() => resolveForm2555Sources({ ...partnerReturn(qbi), form2555: bad } as never), String(qbiForeignProfit)).toThrow(/foreign profit/i);
+  }
+  const wage = input(); expect(resolveForm2555Sources(wage).qbiForeignProfit).toEqual([]);
+});
+
+it("requires the allocable self-employment deduction", () => {
+  expect(() => calculateFederalTax(partnerReturn())).not.toThrow();
+  expect(() => calculateFederalTax(partnerReturn({}, { deductionsAllocableToExcludedIncome: "0" }))).toThrow(/at least 4945 of the self-employment tax deduction/);
+  expect(() => calculateFederalTax(partnerReturn({}, { deductionsAllocableToExcludedIncome: "4944" }))).toThrow(/at least 4945/);
+  expect(() => calculateFederalTax(partnerReturn({}, { deductionsAllocableToExcludedIncome: "6000" }))).not.toThrow();
 });
 

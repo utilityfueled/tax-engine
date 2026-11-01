@@ -98,7 +98,12 @@ describe('EIC qualifying-child tie-breakers', () => {
     const care = (taxId: string, firstName: string) => ({ expenses: '1000', qualifyingPersons: [{ firstName, lastName: 'Example', identifierType: 'tax_id', taxId, over12Disabled: false, qualifyingPersonConfirmed: true, qualifiedExpenses: '1000' }] });
     const person = claimed.taxpayer.dependents[0]!;
     expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...claimed, dependentCare: care(person.ssn, 'Someone') }))).toThrow(/dependent care benefit/);
-    expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...claimed, dependentCare: care('111223333', person.firstName) }))).toThrow(/dependent care benefit/);
+    expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...claimed, dependentCare: care(person.ssn.replace(/-/g, ''), 'Someone') }))).toThrow(/dependent care benefit/);
+    const noIdentifier = { ...care('', person.firstName), qualifyingPersons: [{ ...care('', person.firstName.toUpperCase()).qualifyingPersons[0]!, lastName: person.lastName.toUpperCase(), taxId: undefined, identifierType: 'died' }] };
+    expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...claimed, dependentCare: noIdentifier }))).toThrow(/dependent care benefit/);
+    const sameName = care('111223333', person.firstName); sameName.qualifyingPersons[0]!.lastName = person.lastName;
+    expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...claimed, dependentCare: sameName }))).not.toThrow(/dependent care benefit/);
+    expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...claimed, dependentCare: { expenses: '1000', qualifyingIndividuals: 1 } }))).toThrow(/person list, not a count/);
     expect(() => calculateFederalTax(relative(agi.plus(1).toFixed(), '1000'))).toThrow(new RegExp(`must match Form 1040 line 11, currently ${agi.toFixed()}`));
   });
 
