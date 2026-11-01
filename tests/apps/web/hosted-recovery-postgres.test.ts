@@ -102,7 +102,9 @@ describe.skipIf(!testDatabaseUrl)("hosted recovery with actual PostgreSQL and sy
     const diagnostic = vi.spyOn(console, "error");
     try {
       const failed = await routes.POST(request("reset-password", { token, newPassword: "New rollback password" }));
-      expect([500, 503]).toContain(failed.status); expect(await failed.text()).not.toContain("Synthetic recovery write outage");
+      // A single CI run returned 400 here and 60 local runs did not, so a failure names the response.
+      const failedBody = await failed.text();
+      expect([500, 503], failedBody).toContain(failed.status); expect(failedBody).not.toContain("Synthetic recovery write outage");
       expect((await pool.query('SELECT count(*) FROM verification WHERE value=$1', [account.payload.user.id])).rows[0].count).toBe("1");
       const session = await routes.GET(new Request(`${env.TAX_ENGINE_APP_URL}/api/auth/get-session`, { headers: { cookie: account.cookie } }));
       expect((await session.json()).user.id).toBe(account.payload.user.id);
