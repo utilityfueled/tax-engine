@@ -2,28 +2,43 @@
 
 ## Active continuation — November 1, 2026
 
-The checkout includes Claude's delivered October 31 packages. The remote branch is
-`00930447`; its four latest CI/Web runs pass. Local `948d6b95` adds Form 2555
-business capital support and is committed but unpushed. Its independent review
-has identified a potential deduction cap that conflicts with Publication 54
-Example 4; reproduction and correction are active before publication.
+Claude's delivered October 31 packages are preserved. The branch now includes
+and has pushed these separately reviewed packages:
 
-Internal work remains: finish that review, implement determined two-state
-Form 1099-DA source preservation, refresh sources/advisories/provider documentation,
-and verify the resulting integrated code and runtime. The historical “all internal
-packages delivered” statements below refer to their queued packages, not every
-method in the execution brief. Human tax/AI/security reviews, actual launch-state
-demand, authorized staging evidence, approved provider evaluation and final-form
-qualification remain pending as documented in [external actions](upgrade-2026-external-actions.md).
-No release completion, filing enablement or model promotion is claimed.
+- [x] `6ea8907b`: disabled final 2026 Schedule C/R physical candidates. Parent
+  checks 136 fillable fields on four pages and 569 grouped assertions; main 11 tests in 3 files,
+  types/spec/inventory/lint pass. Scenario and human qualification remain pending.
+- [x] `192e006e`: [official source/provider/advisory refresh](upgrade-2026-refresh-20261101.md).
+  Final Form 1040/Tax Table endpoints remain 2025. Dependency audits report 0 vulnerabilities;
+  all 68 OS advisories remain unfixed and unaccepted.
+- [x] `5293f451`: [Form2555 correction](upgrade-2026-form2555-source-correction-work.md)
+  after independent review of948d6b95. Actual foreign expenses, pro-rata mixed
+  sources, uncapped signed line 45 and reported-dollar comparison are preserved. Main
+  387 tests in 19 files, three types, 6,406 spec references, inventory and lint pass.
+  Separate reviewers pass 6 plus 3 independent controls. Signed Form 2555/Form 7206 attribution remains
+  an explicit unfinished method; no human qualification is implied.
+- [x] `8d74350d`: [two-state original DA sources](upgrade-2026-digital-two-state-work.md)
+  for the existing PA/OH paths. Exact withholding rows and gain/basis sources stay
+  separate. Contradictory no-state IDs reject; explicit scalar-ID recovery keeps
+  other facts intact. Author 42 tests in 7 files, parent 18 in 5 (including 3 independent), main
+  66 in 9, three types, 6,414 spec references, 606 inventory entries, lint and engine build pass.
+- [ ] Final-code production browser and actual downloaded-artifact review on
+  `8d74350d` is active. Earlier frozen collector/reopen evidence is retained but
+  does not qualify the later code or a full upload-to-delete journey.
+- [ ] [New-marriage NOL owner-income method](upgrade-2026-scope-audit-20261101.md)
+  is required internal work. Source research, spec-first implementation and a
+  separate review are active. Old charity/current-joint queue prose is partly
+  superseded; the audit identifies actual remaining methods without externalizing
+  unfinished source research or inventing allocation rules.
+- [ ] Current integrated full test/coverage/static/build/browser and native
+  arm64/amd64 recovery/SBOM/scans remain required after the remaining code.
+  CI/Web on `5293f451` are running; historical green `a3e43a9f` does not qualify this head.
 
-The [November 1 source refresh](upgrade-2026-refresh-20261101.md) finds new final
-2026 Schedules C and R, while Form 1040 and the Tax Table endpoints still show
-2025. New physical candidates are isolated and disabled pending review. Dependency
-audits report zero vulnerabilities; the 68 registered OS advisories remain unfixed
-and unaccepted. The two-state source candidate passes 38 author tests and 14
-parent review tests, including three independently derived amount cases; actual
-browser and integration checks remain pending.
+Rule versions are `2025.215` / `2026.213-law-integration-draft`. Tax year 2026 stays
+incomplete; filing and model promotion remain disabled. Human tax/AI/security
+reviews, actual launch-state demand, authorized staging evidence, approved
+provider evaluation and final-form qualification remain pending in
+[external actions](upgrade-2026-external-actions.md). No release completion is claimed.
 
 
 ## Current checkpoint — 2026-10-31 UTC

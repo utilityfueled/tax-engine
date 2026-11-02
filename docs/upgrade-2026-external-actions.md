@@ -1,7 +1,8 @@
 # External actions needed to finish the 2026 upgrade
 
 Prepared October 26, 2026, after `e3dcc3f`, and rechecked October 31 after
-`a3e43a9f`. No listed input has been supplied. Internal packages are delivered; see the
+`a3e43a9f`, with public sources refreshed November 1. No listed input has
+been supplied. Active Form 2555 corrections and two-state source work are in the
 [execution checklist](upgrade-2026-checklist.md).
 This handoff records missing external inputs; it does not declare the remaining
 software finished. The [execution brief](upgrade-2026-execution-brief.md) retains
@@ -20,7 +21,7 @@ engineering cannot substitute for that review.
 | Supply provider account access and approve a bounded synthetic evaluation budget | Securely configured keys for the selected provider accounts, exact permitted candidates, maximum total spend and permitted test period. Availability must then be checked against those accounts; public model documentation is insufficient. | Repeated live evaluation, actual failed/retried/escalated costs, latency and provider availability. No live spending or model promotion is currently authorized. |
 | Assign independent human AI-case reviewers | Review the 240 draft cases, original synthetic inputs, expected monetary/date fields, answerability and safety labels; preserve the held-out partition and record reviewer provenance. Revise or remove unsuitable cases without counting generated variants as independent review. | Representative 200–300-case corpus and qualification metrics. The [executor guide](ai-evaluation-executor.md) describes the evidence and approval boundaries. |
 | Assign an independent security/privacy reviewer and an advisory owner | Review the exact application/runtime revisions and staging evidence; provide findings and their disposition. For each remaining image advisory, record the accountable owner and an evidence-backed fix or acceptance with expiry. The [advisory register](upgrade-2026-image-advisories.json) has pending owner confirmation and a November 7, 2026 review date. The October 31 scans report 68 advisories, including new high-severity CVE-2026-84243 in glibc, and none has a fixed version. | Independent security/privacy review and resolved or owned, expiring advisories. No acceptance is implied by the existing component exposure notes. |
-| Qualify final official forms as they become available | Final published year/revision PDFs, authoritative hashes and line/field mapping review for each enabled scenario, plus the required independent signoff. The [source refresh](upgrade-2026-release-source-refresh.md) distinguishes available historical, draft and final forms. | Final physical maps and complete-data filing exports. Draft or historical mappings cannot be approved into a different year. |
+| Qualify final official forms as they become available | Final published year/revision PDFs, authoritative hashes and line/field mapping review for each enabled scenario, plus the required independent signoff. The November 1 refresh found final 2026 Schedules C/R; disabled physical candidates are committed in `6ea8907b`. That does not qualify their scenarios or supply final Form 1040/Tax Table. The [source refresh](upgrade-2026-release-source-refresh.md) distinguishes available historical, draft and final forms. | Final physical maps and complete-data filing exports. Draft or historical mappings cannot be approved into a different year. |
 
 ## Tax interpretation handoff
 

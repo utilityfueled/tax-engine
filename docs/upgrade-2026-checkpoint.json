@@ -11995,12 +11995,12 @@
     "goal": "active",
     "priorContext": "October28 unfinished-package context is superseded by the delivered October31 packages; retain historical evidence.",
     "currentInternalWork": [
-      "Review unpushed Form2555 capital-material package, including uncapped allocable deductions and multiple-source allocation.",
-      "Research and implement source-complete two-state Form1099DA reporting without inventing state income allocation or qualification.",
-      "Refresh official form/provider and dependency/image advisory evidence as of November1.",
-      "Run current integrated CI and runtime/recovery evidence after all code corrections."
+      "Final integrated production browser/download review on8d74350d.",
+      "New-marriage NOL owner-income source method: official research/spec-first private implementation and separate review.",
+      "Current integrated full CI, coverage and native arm64/amd64 runtime/recovery/SBOM/advisory evidence after remaining code.",
+      "Continue bounded source-method research identified by scope audit; do not externalize unimplemented methods."
     ],
-    "reviewFinding": "Reproduced uncapped line44/signed45 and mixed-source expense allocation defects in948d6b95; reviewed correction active and commit unpushed.",
+    "reviewFinding": "948d6b95 source-method defects corrected, independently reviewed and pushed in5293f451.",
     "externalInputs": "See docs/upgrade-2026-external-actions.md. No human signoff, demand selection, staging authorization/configuration, provider budget or advisory acceptance inferred.",
     "preservedUntracked": [
       ".pnpm-store/",
@@ -12017,6 +12017,17 @@
           41341949994
         ],
         "status": "success via GitHub API; no new log/artifact qualification claimed"
+      },
+      "5293f451": {
+        "ci": [
+          41371147354,
+          41371144172
+        ],
+        "web": [
+          41371147376,
+          41371144198
+        ],
+        "status": "in_progress observed; no result claim"
       }
     },
     "sourceRefresh": {
@@ -12032,32 +12043,48 @@
       "advisoryOwnerAcceptance": false
     },
     "twoStateDAReview": {
-      "frozenReceipt": ".local/upgrade-evidence/nov01-next-method/frozen-package.json",
-      "sha256": "4dfcac2f4911557f0b925d46585bf38c927638d49c07b4afa5f4197d374f98ba",
-      "privateAuthorTests": {
-        "passed": 38,
+      "commit": "8d74350d",
+      "pushed": true,
+      "frozenReceiptSha256": "40b4f2a7173955e10f474ae61e66ec73003f3d3df36f07bf5d42320c0233d4cd",
+      "authorTests": {
+        "passed": 42,
         "files": 7
       },
       "parentTests": {
-        "passed": 14,
+        "passed": 18,
         "files": 5,
         "includesIndependentCases": 3
       },
+      "mainTests": {
+        "passed": 66,
+        "files": 9
+      },
+      "mainChecksSha256": "c6ed28625c5cfa742a244297fe1e1a6683234274c1a2b210df9f9c24d6fa9d35",
       "pending": [
-        "production browser and actual artifact review",
-        "main integration and full checks",
-        "spec-first correction for contradictory no-state answer with retained nonblank state ID"
-      ]
+        "actual final-code production browser/artifact review",
+        "full current integrated CI/runtime evidence"
+      ],
+      "qualifiedHuman": false
     },
     "form2555Correction": {
-      "privateAuthorTests": {
-        "passed": 379,
-        "files": 17,
-        "scope": "intermediate candidate; final rounding and explicit7206 regressions pending"
+      "commit": "5293f451",
+      "pushed": true,
+      "authorTests": {
+        "passed": 387,
+        "files": 19
       },
-      "frozen": false,
-      "independentReview": "active; not yet clear",
-      "scope": "Actual foreign expense sources, mixed-income allocation, uncapped line44 and source-bound signed45 through Schedule1 and credit MAGI worksheets."
+      "mainTests": {
+        "passed": 387,
+        "files": 19
+      },
+      "independentReview": {
+        "secondAgentCases": 6,
+        "parentCases": 3,
+        "qualifiedHuman": false
+      },
+      "frozenReceiptSha256": "fd85423fcee460ed16ec529a800143ceca2153a4c98c00689cf3f236079a4598",
+      "mainChecksSha256": "bbc019b1465fa66eb59847f63549388cd3a2a538e778c439be4b6c5b003782a6",
+      "remainingMethod": "Signed2555 with actualForm7206 per-business attribution remains separate."
     },
     "localCandidateHead": "6ea8907b",
     "physicalCandidates": {
@@ -12082,6 +12109,18 @@
       ],
       "inventoryEntries": 604,
       "humanQualified": false
+    },
+    "currentHead": "8d74350d",
+    "currentRemoteHead": "8d74350d",
+    "currentRuleVersions": {
+      "2025": "2025.215",
+      "2026": "2026.213-law-integration-draft"
+    },
+    "scopeAudit": {
+      "document": "docs/upgrade-2026-scope-audit-20261101.md",
+      "sha256": "1abcadf5aff6a064e1bfde86783e2b02417ec7dc9904749ea10dcf73ff0e7801",
+      "newRequiredInternalMethod": "new-marriage current joint NOL owner-income limitation",
+      "status": "implementation and independent review active"
     }
   }
 }
