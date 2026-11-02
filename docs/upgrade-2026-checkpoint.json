@@ -11985,5 +11985,103 @@
       "Hosted auth/security/billing/Redis/provider/DB/recovery requires authorized staging credentials and evidence. Local synthetic and CI checks do not establish staging readiness.",
       "Immutable 76d native amd64 recovery and both 510-case browser suites pass with verified SBOM/archive. Final-source native arm64 and amd64 images/scans/recovery remain due. The same 157 advisory tuples/67 OS advisories await owner acceptance by 2026-11-07, with no critical/npm/fixed-version matches. No staging, publication or human security approval."
     ]
+  },
+  "resumption20261101": {
+    "date": "2026-11-01",
+    "branch": "upgrade/2026-baseline",
+    "observedLocalHead": "948d6b95f37859484d2a6d2d36f77d67111100ff",
+    "observedRemoteHead": "009304476ce0a9f15d3c1742291c5b4c95629923",
+    "releaseReady": false,
+    "goal": "active",
+    "priorContext": "October28 unfinished-package context is superseded by the delivered October31 packages; retain historical evidence.",
+    "currentInternalWork": [
+      "Review unpushed Form2555 capital-material package, including uncapped allocable deductions and multiple-source allocation.",
+      "Research and implement source-complete two-state Form1099DA reporting without inventing state income allocation or qualification.",
+      "Refresh official form/provider and dependency/image advisory evidence as of November1.",
+      "Run current integrated CI and runtime/recovery evidence after all code corrections."
+    ],
+    "reviewFinding": "Reproduced uncapped line44/signed45 and mixed-source expense allocation defects in948d6b95; reviewed correction active and commit unpushed.",
+    "externalInputs": "See docs/upgrade-2026-external-actions.md. No human signoff, demand selection, staging authorization/configuration, provider budget or advisory acceptance inferred.",
+    "preservedUntracked": [
+      ".pnpm-store/",
+      "docs/reviews/"
+    ],
+    "verifiedRemoteRuns": {
+      "00930447": {
+        "ci": [
+          41341955215,
+          41341950015
+        ],
+        "web": [
+          41341955244,
+          41341949994
+        ],
+        "status": "success via GitHub API; no new log/artifact qualification claimed"
+      }
+    },
+    "sourceRefresh": {
+      "document": "docs/upgrade-2026-refresh-20261101.md",
+      "receipt": ".local/upgrade-evidence/nov01-refresh/receipt.json",
+      "sha256": "7f9eee719362e157abeb69eea34db1cdb79e4b9c1c360ec3db9479a8f28d3178",
+      "newFinal2026Forms": [
+        "Schedule C",
+        "Schedule R"
+      ],
+      "main1040AndTaxTableEndpointYear": 2025,
+      "dependencyVulnerabilitiesReported": 0,
+      "advisoryOwnerAcceptance": false
+    },
+    "twoStateDAReview": {
+      "frozenReceipt": ".local/upgrade-evidence/nov01-next-method/frozen-package.json",
+      "sha256": "4dfcac2f4911557f0b925d46585bf38c927638d49c07b4afa5f4197d374f98ba",
+      "privateAuthorTests": {
+        "passed": 38,
+        "files": 7
+      },
+      "parentTests": {
+        "passed": 14,
+        "files": 5,
+        "includesIndependentCases": 3
+      },
+      "pending": [
+        "production browser and actual artifact review",
+        "main integration and full checks",
+        "spec-first correction for contradictory no-state answer with retained nonblank state ID"
+      ]
+    },
+    "form2555Correction": {
+      "privateAuthorTests": {
+        "passed": 379,
+        "files": 17,
+        "scope": "intermediate candidate; final rounding and explicit7206 regressions pending"
+      },
+      "frozen": false,
+      "independentReview": "active; not yet clear",
+      "scope": "Actual foreign expense sources, mixed-income allocation, uncapped line44 and source-bound signed45 through Schedule1 and credit MAGI worksheets."
+    },
+    "localCandidateHead": "6ea8907b",
+    "physicalCandidates": {
+      "commit": "6ea8907b",
+      "forms": [
+        "Schedule C",
+        "Schedule R"
+      ],
+      "enabled": false,
+      "parentWidgetChecks": 136,
+      "parentGroupedChecks": 569,
+      "mainTests": {
+        "passed": 11,
+        "files": 3
+      },
+      "staticChecks": [
+        "typecheck",
+        "spec:validate",
+        "spec:inventory",
+        "spec:inventory:check",
+        "scoped eslint"
+      ],
+      "inventoryEntries": 604,
+      "humanQualified": false
+    }
   }
 }

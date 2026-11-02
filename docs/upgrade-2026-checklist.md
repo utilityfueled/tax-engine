@@ -1,5 +1,37 @@
 # Remaining 2026 upgrade execution checklist
 
+## Active continuation — November 1, 2026
+
+The checkout includes Claude's delivered October 31 packages. The remote branch is
+`00930447`; its four latest CI/Web runs pass. Local `948d6b95` adds Form 2555
+business capital support and is committed but unpushed. Its independent review
+has reproduced a deduction cap that conflicts with Publication 54 Example 4
+and an inferred foreign-expense allocation. Corrections and independent review
+are active before publication.
+
+Internal work remains: finish that review, implement determined two-state
+Form 1099-DA source preservation, refresh sources/advisories/provider documentation,
+and verify the resulting integrated code and runtime. The historical “all internal
+packages delivered” statements below refer to their queued packages, not every
+method in the execution brief. Human tax/AI/security reviews, actual launch-state
+demand, authorized staging evidence, approved provider evaluation and final-form
+qualification remain pending as documented in [external actions](upgrade-2026-external-actions.md).
+No release completion, filing enablement or model promotion is claimed.
+
+The [November 1 source refresh](upgrade-2026-refresh-20261101.md) finds new final
+2026 Schedules C and R, while Form 1040 and the Tax Table endpoints still show
+2025. Physical candidates are committed in `6ea8907b`, isolated and disabled.
+Parent review checks all 136 fillable fields on the four pages; main checks pass
+11 tests in three files, types, spec, inventory and scoped lint. No scenario or
+filing qualification follows from the physical review. Dependency
+audits report zero vulnerabilities; the 68 registered OS advisories remain unfixed
+and unaccepted. The two-state source candidate passes 38 author tests and 14
+parent review tests, including three independently derived amount cases; actual
+browser and integration checks remain pending. Review also found a nonblank
+state ID could be dropped under an explicit no-state answer; its spec-first
+correction is active.
+
+
 This is the durable working checklist for the execution brief. The historical
 progress log and checkpoint are evidence for their recorded commits, not current
 qualification. Resume here after compaction. Do not remove release gates to

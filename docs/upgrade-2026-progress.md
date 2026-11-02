@@ -1,5 +1,31 @@
 # 2026 upgrade implementation evidence
 
+## Active continuation — November 1, 2026
+
+The checkout includes Claude's delivered October 31 packages. The remote branch is
+`00930447`; its four latest CI/Web runs pass. Local `948d6b95` adds Form 2555
+business capital support and is committed but unpushed. Its independent review
+has identified a potential deduction cap that conflicts with Publication 54
+Example 4; reproduction and correction are active before publication.
+
+Internal work remains: finish that review, implement determined two-state
+Form 1099-DA source preservation, refresh sources/advisories/provider documentation,
+and verify the resulting integrated code and runtime. The historical “all internal
+packages delivered” statements below refer to their queued packages, not every
+method in the execution brief. Human tax/AI/security reviews, actual launch-state
+demand, authorized staging evidence, approved provider evaluation and final-form
+qualification remain pending as documented in [external actions](upgrade-2026-external-actions.md).
+No release completion, filing enablement or model promotion is claimed.
+
+The [November 1 source refresh](upgrade-2026-refresh-20261101.md) finds new final
+2026 Schedules C and R, while Form 1040 and the Tax Table endpoints still show
+2025. New physical candidates are isolated and disabled pending review. Dependency
+audits report zero vulnerabilities; the 68 registered OS advisories remain unfixed
+and unaccepted. The two-state source candidate passes 38 author tests and 14
+parent review tests, including three independently derived amount cases; actual
+browser and integration checks remain pending.
+
+
 ## Current checkpoint — 2026-10-31 UTC
 
 Remote CI is fully green on `a3e43a9f`. All queued internal packages are delivered, plus further packages from the unsupported-method register. The upgrade is not complete: the remaining criteria need people, accounts, authorization or final IRS forms, and specialist methods remain unbuilt.
@@ -1841,3 +1867,16 @@ without changing product code or saved artifacts. Final integration remains acti
 privately. Charity prior-floor, positive-benefit COD and changed-membership
 histories remain in the finite queue. External review, staging credentials,
 provider evaluation authorization and final-form gates remain unchanged.
+
+
+## November 1 continuation: disabled Schedule C/R candidates
+
+`6ea8907b` pins the final 2026 Schedule C and Schedule R physical templates and
+adds unregistered candidate maps. Parent review independently checks 136 unique
+leaf widgets, canonical saved values, appearances and notices across four pages,
+with 569 grouped checks and zero failures. All four diagnostic pages were
+visually inspected. Main checks pass 11 tests in three files, root types, spec,
+inventory freshness (604 entries), and scoped lint. Physical mapping evidence
+is separate from scenario qualification; the candidates remain unavailable to
+exports. The preceding unpushed Form 2555 commit remains held for corrections,
+so this local candidate commit has not yet been pushed.
