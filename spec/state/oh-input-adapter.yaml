@@ -56,6 +56,9 @@ packetRules:
     the packet-inclusion gate for the Ohio SD 100 reference summary.
 
 businessRuleValidation:
+  - rule: "actual-owner-residency-nrc-source"
+    description: "2025 official IT NRC Section I actual owner domicile and income-original reconciliation; no bare nonzero NRC scalar, owner default, unknown-zero substitution or district inference. New full-resident proof cannot silently drop actual local/school withholding. Proof adjustment rows cannot contradict actual zero adjustment sources. Actual IN/KY/MI/PA/WV reciprocal-period Ohio compensation requires its actual exemption allocation, and is not silently admitted by the no-adjustment cohort. No new residency packet can accept a free RC scalar or unqualified other-state tax row, including fullresident; actual resident-period linkage is a separate source method. All newly qualified canonical packets, including fullresident, require an exact current private original snapshot; do not normalize away actual owner identity changes in private validation. The published digest-only commitment hashes the exact current private original packet, including actual owner/payer identifiers; equal-money actual owner replacement must change that commitment. Identifier normalization is only for permitted render-copy comparison after opaque current-original resolution. Original-context fresh federal replay precedes reference PDF I/O; permitted structured-ID redaction is render-only."
+    testRef: "tests/engine/state/oh-residency-source.test.ts::changes the digest-only current-original commitment after an equal-money actual owner replacement"
   - rule: "actual-federal-inclusions-and-care-audit"
     description: |
       Final2025 Ohio booklet, Schedule of Adjustments lines26/28 and care

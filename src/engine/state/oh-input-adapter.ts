@@ -1,3 +1,5 @@
+import type {OhioResidencyFacts} from "@/models/ohio-residency.js";
+import {buildOhioResidencySource} from "./oh-residency-source.js";
 /**
  * Ohio Input Adapter — bridges federal tax documents and results to Ohio engine input.
  * Spec: spec/state/oh-input-adapter.yaml
@@ -71,6 +73,7 @@ import { d } from "@/utils/decimal.js";
 // ---------------------------------------------------------------------------
 
 export interface OhioOverlayInput {
+  residency?:OhioResidencyFacts;
   // --- Schedule of Adjustments: Additions ---
   nonOhioStateLocalInterest?: Decimal | string | number;
   employeeBenefitPlanDistributions?: Decimal | string | number;
@@ -736,6 +739,11 @@ export function buildOhioResidentReturnInput(
   federalResult: TaxReturnResult,
   overlay: OhioOverlayInput = {},
 ): OhioResidentReturnInput {
+  if(overlay.nonresidentCredit!==undefined&&!d(overlay.nonresidentCredit).isZero())throw new Error("Ohio nonresident credit requires actual owner residency sources, not a credit override");
+  const canonical=(taxInput as TaxYearInput&{ohioResidency?:OhioResidencyFacts}).ohioResidency;
+  if(canonical&&overlay.residency&&JSON.stringify(canonical)!==JSON.stringify(overlay.residency))throw new Error("Ohio canonical and overlay residency originals conflict");
+  const residency=canonical??overlay.residency;
+  if(residency&&overlay.nonresidentCredit!==undefined)throw new Error("Ohio source-derived credit does not accept a supplied scalar override");
   assertQofStateMethod(taxInput, "Ohio");
   assertClaimOfRightStateMethod(taxInput, "Ohio");
   const digitalCapitalInput = calculateDigitalAssetStateSources(taxInput, "OH");
@@ -899,7 +907,7 @@ export function buildOhioResidentReturnInput(
       ? resolveOverlaySchoolDistricts(federalResult.taxYear, overlay.schoolDistricts)
       : deriveSchoolDistrictsFromW2s(federalResult.taxYear, w2s);
 
-  return {
+  const adapted:OhioResidentReturnInput = {
     taxYear: federalResult.taxYear,
     filingStatus,
     federalAgi: federalResult.agi,
@@ -1039,4 +1047,10 @@ export function buildOhioResidentReturnInput(
     sdLatePaymentInterest: overlay.sdLatePaymentInterest,
     sdCreditCarryforward: overlay.sdCreditCarryforward,
   };
+  if(residency){
+    if(overlay.schoolDistricts===undefined)adapted.schoolDistricts=[];
+    const verified=buildOhioResidencySource(taxInput,federalResult,adapted,residency);
+    adapted.residency=verified.facts;adapted.residencySourceDigest=verified.sourceDigest;
+  }
+  return adapted;
 }

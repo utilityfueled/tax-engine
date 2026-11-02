@@ -62,6 +62,9 @@ notes: |
   Supported tax years: 2024 and 2025.
 
 businessRuleValidation:
+  - rule: "actual-nrc-reference-replay-before-io"
+    description: "Current actual owner source allocations and saved federal result bind before output I/O. Permitted structured-ID redaction requires original prepared context; NRC is reference-only."
+    testRef: "tests/pdf/oh-residency-reference.test.ts::rejects source conflicts before creating output %s"
   - rule: "workspace-ohio-packet-disclosure"
     description: "Inventory support counts the Ohio resident-return orchestrator as business-rule validated only when regression coverage proves workspace packets keep Ohio output disclosed as partial, reference-only, and not yet e-file validated when the Ohio packet is attached."
     testRef: "tests/apps/web/oh-state-packet.test.ts::buildWorkspaceFilledReturnDownload keeps Ohio packet disclosures honest when only reference-summary state forms are attached"

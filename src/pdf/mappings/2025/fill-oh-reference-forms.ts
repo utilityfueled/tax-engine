@@ -1,3 +1,4 @@
+import {resolveOhioResidencyReview,type PreparedOhioResidencyReview} from "../../../engine/state/oh-residency-source.js";
 import { assertPdfExportAllowed } from "../../export-policy.js";
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
@@ -242,9 +243,12 @@ export async function fillOhioReferenceForms(
   federalResult: TaxReturnResult,
   outputDir: string,
   overlay: OhioOverlayInput = {},
+  reviewContext?:PreparedOhioResidencyReview,
 ): Promise<OhioReferencePacketResult> {
   assertPdfExportAllowed(taxInput.taxpayer.taxYear, federalResult.taxYear);
-  const ohioInput = buildOhioResidentReturnInput(taxInput, federalResult, overlay);
+  const hasResidency=Boolean((taxInput as TaxYearInput&{ohioResidency?:unknown}).ohioResidency??overlay.residency);
+  const original=hasResidency?resolveOhioResidencyReview(taxInput,federalResult,reviewContext):taxInput;
+  const ohioInput = buildOhioResidentReturnInput(original, federalResult, overlay);
   const ohioResult = calculateOhioResidentReturn(ohioInput);
   const digitalCapitalInput = calculateDigitalAssetStateSources(taxInput, "OH");
   const itBusResult = extractQualifyingBusinessIncome(
@@ -280,6 +284,10 @@ export async function fillOhioReferenceForms(
       outputDir,
     ),
   );
+
+  if(ohioResult.nonresidentCreditResult&&!ohioResult.nonresidentCreditResult.fullResidentOnly){
+    filledForms.push(await createReferencePdf({title:"Ohio IT NRC",subtitle:"Actual owner nonresident and part-year source allocation - reference worksheet",fileName:"oh-it-nrc-reference.pdf",lines:[...ohioResult.nonresidentCreditResult.lines,...ohioResult.lines.filter(row=>row.form==="OH-IT-NRC"&&row.line==="actual-source-commitment")]},outputDir));
+  }
 
   if (shouldIncludeAdjustments(ohioResult.scheduleOfAdjustments)) {
     filledForms.push(

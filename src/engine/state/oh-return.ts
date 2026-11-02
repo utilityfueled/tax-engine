@@ -15,6 +15,8 @@
  */
 
 import Decimal from "decimal.js";
+import type {OhioResidencyFacts} from "@/models/ohio-residency.js";
+import {calculateOhioITNRC} from "./oh-it-nrc.js";
 import type { FilingStatus } from "@/models/constants.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import { d, zeroFloor } from "@/utils/decimal.js";
@@ -62,6 +64,8 @@ import {
 // ---------------------------------------------------------------------------
 
 export interface OhioResidentReturnInput {
+  residency?:OhioResidencyFacts;
+  residencySourceDigest?:string;
   taxYear: number;
   filingStatus: FilingStatus;
   federalAgi: Decimal | string | number;
@@ -230,6 +234,7 @@ export interface OhioResidentReturnInput {
 // ---------------------------------------------------------------------------
 
 export interface OhioResidentReturnResult {
+  nonresidentCreditResult:ReturnType<typeof calculateOhioITNRC>|null;
   scheduleOfAdjustments: OhioScheduleOfAdjustmentsResult;
   it1040: OhioIT1040Result;
   scheduleOfCredits: OhioScheduleOfCreditsResult;
@@ -367,7 +372,7 @@ export function calculateOhioResidentReturn(
     affordableSingleFamilyHousingCredit:
       input.affordableSingleFamilyHousingCredit,
     otherSecondBatchCredits: input.otherSecondBatchCredits,
-    nonresidentCredit: input.nonresidentCredit,
+    nonresidentCredit: input.residency ? new Decimal(0) : input.nonresidentCredit,
     residentCredit: new Decimal(0),
     refundableHistoricPreservationCredit: input.refundableHistoricPreservationCredit,
     refundableJobCreationCredit: input.refundableJobCreationCredit,
@@ -377,6 +382,8 @@ export function calculateOhioResidentReturn(
     ventureCapitalCredit: input.ventureCapitalCredit,
   });
 
+  const nonresidentCreditResult=input.residency?calculateOhioITNRC({taxYear:input.taxYear,filingStatus:input.filingStatus,federalAgi:input.federalAgi,ohioAgi:firstPass.line3_ohioAgi,taxRemainingBeforeResidencyCredits:creditsPreview.line37_taxLessAllCredits,residencyFacts:input.residency}):null;
+  const nonresidentCreditAmount=nonresidentCreditResult?.line20??input.nonresidentCredit;
   // Step 3b: Compute resident credit (if other-state taxes provided and no pass-through override)
   let residentCreditResult: OhioResidentCreditResult | null = null;
   let residentCreditAmount = input.residentCredit;
@@ -389,7 +396,7 @@ export function calculateOhioResidentReturn(
     residentCreditResult = calculateOhioResidentCredit({
       ohioAgi: firstPass.line3_ohioAgi,
       ohioTaxBeforeCredits: zeroFloor(
-        creditsPreview.line37_taxLessAllCredits.minus(creditsPreview.line38_nonresidentCredit)
+        creditsPreview.line37_taxLessAllCredits.minus(d(nonresidentCreditAmount))
       ),
       otherStates: input.otherStateTaxes,
     });
@@ -454,7 +461,7 @@ export function calculateOhioResidentReturn(
     affordableSingleFamilyHousingCredit:
       input.affordableSingleFamilyHousingCredit,
     otherSecondBatchCredits: input.otherSecondBatchCredits,
-    nonresidentCredit: input.nonresidentCredit,
+    nonresidentCredit: nonresidentCreditAmount,
     residentCredit: residentCreditAmount,
     refundableHistoricPreservationCredit: input.refundableHistoricPreservationCredit,
     refundableJobCreationCredit: input.refundableJobCreationCredit,
@@ -564,6 +571,8 @@ export function calculateOhioResidentReturn(
   const lines = [
     ...adjustments.lines,
     ...(residentCreditResult ? residentCreditResult.lines : []),
+    ...(nonresidentCreditResult?.lines??[]),
+    ...(input.residencySourceDigest?[{form:"OH-IT-NRC",line:"actual-source-commitment",description:"Actual Ohio owner residency original sources",value:new Decimal(0),formula:"Complete source commitment; no private source references printed",inputs:{"Original source commitment":input.residencySourceDigest}}]:[]),
     ...credits.lines,
     ...(itsd2210 ? itsd2210.lines : []),
     ...it1040.lines,
@@ -576,6 +585,7 @@ export function calculateOhioResidentReturn(
     it1040,
     scheduleOfCredits: credits,
     residentCredit: residentCreditResult,
+    nonresidentCreditResult,
     itsd2210,
     sdItsd2210,
     sd100,
