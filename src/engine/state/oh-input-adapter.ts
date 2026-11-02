@@ -1,5 +1,6 @@
 import {roundDollar} from '@/utils/decimal.js';
 import {buildOhioPaymentSource} from './oh-payment-source.js';
+import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
 import type {OhioPaymentFacts} from '@/models/ohio-payments.js';
 import type {OhioResidencyFacts} from "@/models/ohio-residency.js";
 import {buildOhioResidencySource} from "./oh-residency-source.js";
@@ -243,6 +244,9 @@ export function extractOhioWithholding(
   form1099Bs: Form1099B[] = [],
   form1099OIDs: Form1099OID[] = [],
 ): Decimal {
+  if (w2s.some(w2 => w2.stateLocalSources !== undefined)) {
+    throw new Error("Ohio actual W2 rows require full canonical owner/year/original context, not the scalar-only extractor");
+  }
   return calculateOhioScheduleOfWithholding({
     w2s,
     formW2Gs,
@@ -762,6 +766,17 @@ export function buildOhioResidentReturnInput(
   const digitalCapitalInput = calculateDigitalAssetStateSources(taxInput, "OH");
   const filingStatus = mapFilingStatus(federalResult.filingStatus);
   const w2s = taxInput.w2s ?? [];
+  const actualW2Rows = w2s.map((w2, index) => w2.stateLocalSources === undefined
+    ? undefined : calculateW2StateLocalSources(taxInput, index, w2.stateLocalSources));
+  if (actualW2Rows.some(source => source !== undefined) && overlay.ohioWithholdingOverride !== undefined) {
+    throw new Error("Ohio actual W2 withholding sources do not accept a scalar withholding override");
+  }
+  if (residency && actualW2Rows.some(source => source?.localRows.some(row => row.withheld.gt(0)))) {
+    throw new Error("Ohio actual local/school withholding requires separate district reconciliation");
+  }
+  const actualOhioW2Withholding = actualW2Rows.flatMap(source => source?.stateRows ?? [])
+    .filter(row => row.state === "OH").reduce((total, row) => total.plus(row.withheld), new Decimal(0));
+  const legacyW2s = w2s.filter((_w2, index) => actualW2Rows[index] === undefined);
   const formW2Gs = taxInput.formW2G ?? [];
   const form1099Gs = taxInput.form1099G ?? [];
   const form1099Ks = taxInput.form1099K ?? [];
@@ -783,8 +798,8 @@ export function buildOhioResidentReturnInput(
   const ohioWithholding =
     overlay.ohioWithholdingOverride !== undefined
       ? overlay.ohioWithholdingOverride
-      : extractOhioWithholding(
-          w2s,
+      : actualOhioW2Withholding.plus(extractOhioWithholding(
+          legacyW2s,
           formW2Gs,
           form1099Gs,
           form1099Ks,
@@ -795,7 +810,7 @@ export function buildOhioResidentReturnInput(
           taxInput.form1099Div,
           digitalCapitalInput.form1099B,
           form1099OIDs,
-        );
+        ));
 
   const sdWithholding =
     overlay.sdWithholdingOverride !== undefined

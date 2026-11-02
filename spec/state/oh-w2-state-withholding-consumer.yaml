@@ -1,0 +1,54 @@
+form: "OH-W2-State-Withholding-Consumer"
+fullName: "Ohio actual original W2 withholding consumer successor"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Printed2025 booklet17/47: IT1040line14 includes only actual Ohio state tax
+  withheld. Other-state, city and school-district amounts are excluded. This is
+  a source consumer successor, separate from dated payment integration, source
+  model admission, guided UI, physical form qualification and final2026 readiness.
+lines:
+  - line: "actual-w2-admission"
+    description: "Complete canonical actual row proof replaces incomplete scalar proof"
+    formula: |
+      Payment source requires actual statement taxYear and current owner as before.
+      For W2with canonical stateLocalSources, validate the existing full actual
+      source method against current input/index: source year, owner identity,
+      complete current original, no duplicate economic original, actual rows and
+      declared scalar projection. Present unknown/contradictory packet rejects.
+      Missing scalar withholding remains unknown without valid actual packet;
+      valid unused scalar projection requires no fabricated legacyOH0.
+      Every nonW2 statement owner/year/withholding/state check stays unchanged.
+    testRef: "tests/engine/state/oh-w2-state-withholding-consumer.test.ts::OH actual W2 consumer admits explicit unused scalars with complete actual rows"
+  - line: "line14"
+    description: "Select actual OH Box17 exactly once"
+    formula: |
+      In full canonical adapter context, sum actual validated OHstate rows once
+      for each actual packet, and exclude that W2scalar from the legacy total.
+      Sum remaining legacy W2 and all existing nonW2 withholding normally.
+      Exclude PAstate, Box19city and school district taxes from IT1040line14.
+      The source-qualified line14 rounds the complete Decimal total once.
+      PAfirst1535/OHsecond1000 on one100000W2 ->OH1000, federal100000once.
+      OHfirst1000/PAsecond1535 stillOH1000; scalar cannot be added again.
+    testRef: "tests/engine/state/oh-w2-state-withholding-consumer.test.ts::OH actual W2 consumer selects second OH row without duplicating the federal original"
+  - line: "guarded-context"
+    description: "No scalar or local-reconciliation bypass"
+    formula: |
+      Scalar-only extractor lacks canonical owner/year/original context; reject
+      actual packets there. Actualpacket scalarWH overrides reject, and existing
+      source-qualified payment/credit/penalty override ban remains unchanged.
+      For current actual owner-residency/payment lane, positive actual local
+      withholding still requires separate district reconciliation even if scalar
+      projection is unused/zero. No locality name infers school district residence.
+    testRef: "tests/engine/state/oh-w2-state-withholding-consumer.test.ts::OH actual W2 consumer preserves source override and local reconciliation gates"
+  - line: "principal-and-endpoint"
+    description: "Actual withholding enters existing endpoint method without changing it"
+    formula: |
+      Synthetic original OHtax2323, actualOHWH1000: remaining principal1323,
+      existing reported quarter penalty cells4/11/22/19 total56, total due1379.
+      This retains the existing endpoint method, not dated settlement support.
+    testRef: "tests/engine/state/oh-w2-state-withholding-consumer.test.ts::OH actual W2 consumer feeds existing qualified endpoint balances"
+  - line: "private-original"
+    description: "Source identity changes require fresh binding; output contains digest"
+    formula: "Retain full actual packet in private original snapshots and source digest. Public calculation audits expose digest and aggregate amounts, without private source references, ownerSSNs or state employerIDs."
+    testRef: "tests/engine/state/oh-w2-state-withholding-consumer.test.ts::OH actual W2 consumer binds current full private identity without audit leakage"

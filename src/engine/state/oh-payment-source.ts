@@ -1,5 +1,6 @@
 /** Spec: state/ohio-payments.yaml. Source projection, not a payment override. */
 import Decimal from 'decimal.js';
+import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
 import type { TaxYearInput } from '@/models/inputs.js';
@@ -70,9 +71,19 @@ export function buildOhioPaymentSource(input: TaxYearInput, raw: unknown): OhioP
         [input.w2s, 'stateTaxWithheld'], [input.formW2G, 'stateWithheld'], [input.form1099G, 'stateWithheld'], [input.form1099K, 'stateWithheld'], [input.form1099R, 'stateWithheld'], [input.form1099Nec, 'stateWithheld'], [input.form1099Misc, 'stateWithheld'], [input.form1099Int, 'stateWithheld'], [input.form1099Div, 'stateWithheld'], [input.form1099B, 'stateWithheld'], [input.form1099OID, 'stateWithheld'],
     ];
     for (const [statements, field] of statementGroups)
-        for (const statement of statements ?? []) {
+        for (const [index, statement] of (statements ?? []).entries()) {
             const row = statement as Record<string, unknown>;
-            if (row.taxYear !== facts.taxYear || typeof row.accountHolder !== 'string' || !owners.has(row.accountHolder as 'primary' | 'spouse') || row[field] === undefined)
+            if (row.taxYear !== facts.taxYear || typeof row.accountHolder !== 'string' || !owners.has(row.accountHolder as 'primary' | 'spouse'))
+                fail('actual Ohio statement owner/year/withholding is missing');
+            // A complete current canonical W2 packet supplies actual Box17
+            // evidence even when its explicitly unused legacy scalar is absent.
+            // Validate the full original, never substitute a fabricated OH zero.
+            const packet = field === 'stateTaxWithheld' ? row.stateLocalSources : undefined;
+            if (packet !== undefined) {
+                calculateW2StateLocalSources(input, index, packet);
+                continue;
+            }
+            if (row[field] === undefined)
                 fail('actual Ohio statement owner/year/withholding is missing');
             const actual = new Decimal(String(row[field]));
             if (!actual.isFinite() || actual.isNegative())
