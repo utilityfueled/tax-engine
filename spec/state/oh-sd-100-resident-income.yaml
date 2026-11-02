@@ -1,0 +1,66 @@
+form: "OH-SD-100-Resident-Income"
+fullName: "Ohio earned-income actual resident allocation successor"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Internal pure worksheet only, lines29-33. Source completeness, owner/source/year
+  identity, MAGI classification, district type and effective tax dates must be
+  established separately. No canonical eligibility, withholding-residency
+  inference, tax rate override, payments, prior sources, penalty, filing or2026.
+  Actual final2025 booklet printed59-61, published Eric/Angela example. Annual
+  wages are not supplied in that example; preserve that unknown, do not infer
+  90000 from globalMAGI. Prior district codes are likewise not supplied. A
+  separately labeled synthetic complete calendar with the same214selecteddays
+  exercises the published numerical original without inventing prior9999facts.
+  Known annual5294000 remains known though resident0.
+lines:
+  - line: "residency"
+    description: "Actual complete owner calendar and published method domain"
+    formula: |
+      Require primary full365-day2025 calendar with contiguous nonoverlapping
+      actual periods, real dates and four-digit district codes, including9999
+      for nonOhio periods. Recognize the five actual engine filing statuses;
+      nonjoint returns require only primary owner, with no spouse/joint sources.
+      Married-filing-jointly returns require spouse complete calendar and
+      identical actual daily district timeline. Different joint timelines remain
+      unavailable pending separate official method. W2locality proves no residence.
+      Selected actual district cannot9999. Factor=roundHalfUp(residentDays/365,4).
+      Do not accept a caller residency factor. Preserve inputs unchanged.
+    testRef: "tests/engine/state/oh-sd-100-resident-income.test.ts::OH SD resident income derives actual owner residency without factor override"
+  - line: "29-30"
+    description: "Amount-specific resident compensation and net SE"
+    formula: |
+      For each source allocation, specific identification uses actual resident
+      amount; retain annual amount as known or explicitly not-provided. Never
+      substitute annual-times-factor when a specific amount exists. Proration
+      requires actual known annual amount and explicit specificIdentification
+      unavailable; roundDollar(annualAmount*reportedFactor). No monetary numbers,
+      nonfinite values or cents are admitted. Wages nonnegative; net SE signed.
+      Known annual wages cannot be smaller than known resident wages. Where a
+      specific annual amount is known, full365-day residence requires matching
+      annual/resident amount; zero residence requires residentzero. Reject
+      contradictory specific/prorated fields instead of ignoring a supplied
+      specific amount. Unknown resident allocation, ownership mismatch, contradictory zero-day
+      specific income and missing/ambiguous methods are rejected.
+    testRef: "tests/engine/state/oh-sd-100-resident-income.test.ts::OH SD resident income reproduces published Eric Angela mixed allocation"
+  - line: "31"
+    description: "Reported resident earned income floor"
+    formula: "max(0,line29+line30), using reported whole-dollar components and retaining signed line30."
+    testRef: "tests/engine/state/oh-sd-100-resident-income.test.ts::OH SD resident income retains resident SE losses before earned-income floor"
+  - line: "32"
+    description: "Actual resident net MAGI and annual cap"
+    formula: |
+      Start from resident wages plus resident netSE, then add/subtract each
+      explicit remaining residentMAGI component, allocated individually by its
+      own specific/prorated method. Round each prorated reported component once.
+      For full365-day residents, line32=annualMAGI exactly as printed instructions
+      require; otherwise line32=min(annualMAGI,max(0,resident netMAGI)).
+      AnnualMAGI is a separately
+      established actual reported source, not a source for blind proration.
+      Published58000+round(89000*.5863)-round(9000*.5863)-0=104904;
+      blind166000*.5863=97326 is deliberately not accepted as the resident cap.
+    testRef: "tests/engine/state/oh-sd-100-resident-income.test.ts::OH SD resident income uses identified MAGI changes and annual cap"
+  - line: "33"
+    description: "Earned-income taxable base"
+    formula: "min(line31,line32); Decimal result with nonprivate audit formulas. No tax/payment/refund or district qualification claim."
+    testRef: "tests/engine/state/oh-sd-100-resident-income.test.ts::OH SD resident income reproduces published Eric Angela mixed allocation"

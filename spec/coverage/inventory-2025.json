@@ -11979,6 +11979,25 @@
       "knownGaps": []
     },
     {
+      "key": "state/oh-sd-100-resident-income",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf",
+      "specPath": "spec/state/oh-sd-100-resident-income.yaml",
+      "enginePath": "src/engine/state/oh-sd-100-resident-income.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/ohio-payments",
       "jurisdiction": "state",
       "taxYear": 2025,
