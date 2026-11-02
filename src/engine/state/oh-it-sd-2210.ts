@@ -45,7 +45,7 @@ export interface OhioITSD2210Input {
   /** Which personal return is being annualized on IT/SD 2210 page 2. */
   formType?: "it1040" | "sd100";
 
-  /** IT 1040 line 10: current year tax after nonrefundable credits. */
+  /** IT 1040 line 10 minus 16: current year tax after all credits. */
   currentYearTaxLiability: Decimal | string | number;
 
   /** Ohio income tax withheld (IT 1040 line 14). */
@@ -58,7 +58,7 @@ export interface OhioITSD2210Input {
    *  If not provided, all estimated payments are assumed paid by Q4 (Jan 15). */
   estimatedPaymentSchedule?: EstimatedPaymentEntry[];
 
-  /** Prior year Ohio tax liability after nonrefundable credits. Zero if no prior year. */
+  /** Prior year Ohio tax liability after all credits; absence is not a zero-tax prior return. */
   priorYearTaxLiability?: Decimal | string | number;
 
   /** Whether the prior year return was timely filed. Default: true if priorYearTaxLiability > 0. */
@@ -120,8 +120,8 @@ const CUMULATIVE_PERCENTAGES = [
 const FORM_REFERENCES = {
   it1040: {
     line1Formula: "IT 1040 line 14 + line 15",
-    line2Formula: "IT 1040 line 10",
-    line3Formula: "Prior year IT 1040 line 10",
+    line2Formula: "IT 1040 line 10 minus line 16",
+    line3Formula: "Prior year IT 1040 line 10 minus line 16",
     line17Formula: "Flows to IT 1040 line 11",
     withholdingLabel: "Withholding",
   },
@@ -231,22 +231,25 @@ export function calculateOhioITSD2210(input: OhioITSD2210Input): OhioITSD2210Res
   }
 
   const audit = new AuditTrail();
+  // Published2025 monetary lines report whole dollars after each component sum.
+  // Keep the earlier historical-year arithmetic unchanged in this correction.
+  const reported=input.taxYear===2025?roundDollar:roundCents;
 
   // Line 2 — Current year tax liability
-  const line2 = d(input.currentYearTaxLiability);
+  const line2 = reported(d(input.currentYearTaxLiability));
   audit.record("OH-IT/SD-2210", "2", "Current year tax liability", line2, references.line2Formula);
 
   // Line 3 — Prior year tax liability
-  const line3 = d(input.priorYearTaxLiability);
+  const line3 = reported(d(input.priorYearTaxLiability));
   audit.record("OH-IT/SD-2210", "3", "Prior year tax liability", line3, references.line3Formula);
 
-  const withholding = d(input.ohioWithholding);
-  const estimatedTotal = d(input.estimatedPayments);
-  const timelyEstimatedTotal = sumTimelyEstimatedPayments(
+  const withholding = reported(d(input.ohioWithholding));
+  const estimatedTotal = reported(d(input.estimatedPayments));
+  const timelyEstimatedTotal = reported(sumTimelyEstimatedPayments(
     input.estimatedPaymentSchedule,
     estimatedTotal,
     dueDates[3],
-  );
+  ));
 
   // Line 1 — Total taxes paid
   const line1 = withholding.plus(timelyEstimatedTotal);
@@ -264,7 +267,7 @@ export function calculateOhioITSD2210(input: OhioITSD2210Input): OhioITSD2210Res
   // --- Safe Harbor Checks ---
 
   // Safe Harbor A: payments >= 90% of current year liability
-  const ninetyPercentCurrent = roundCents(line2.times(d("0.90")));
+  const ninetyPercentCurrent = reported(line2.times(d("0.90")));
   const safeHarborA = line1.greaterThanOrEqualTo(ninetyPercentCurrent);
   audit.record(
     "OH-IT/SD-2210", "4-5",
@@ -329,7 +332,7 @@ export function calculateOhioITSD2210(input: OhioITSD2210Input): OhioITSD2210Res
   // --- Penalty Calculation ---
 
   // Line 9 — Required annual payment
-  const ninetyPercentCurrentForLine9 = roundCents(line2.times(d("0.90")));
+  const ninetyPercentCurrentForLine9 = reported(line2.times(d("0.90")));
   const line9 = priorYearTimelyFiled
     ? min(line3, ninetyPercentCurrentForLine9)
     : ninetyPercentCurrentForLine9;
@@ -364,12 +367,12 @@ export function calculateOhioITSD2210(input: OhioITSD2210Input): OhioITSD2210Res
     const pct = CUMULATIVE_PERCENTAGES[q]!;
     const factor = constants.quarterlyFactors[q]!;
 
-    const cumulativeRequired = roundCents(line9.times(pct));
-    const cumulativeWithholding = roundCents(withholding.times(pct));
-    const cumulativeEst = cumulativeEstimated[q]!;
+    const cumulativeRequired = reported(line9.times(pct));
+    const cumulativeWithholding = reported(withholding.times(pct));
+    const cumulativeEst = reported(cumulativeEstimated[q]!);
     const cumulativePayments = cumulativeWithholding.plus(cumulativeEst);
     const underpayment = zeroFloor(cumulativeRequired.minus(cumulativePayments));
-    const interestPenalty = roundCents(underpayment.times(factor.factor));
+    const interestPenalty = reported(underpayment.times(factor.factor));
 
     totalPenaltyCents = totalPenaltyCents.plus(interestPenalty);
 

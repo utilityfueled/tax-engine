@@ -662,7 +662,7 @@ describe("OH IT/SD 2210 Line 15 - interest rate factors", () => {
 // ---------------------------------------------------------------------------
 
 describe("OH IT/SD 2210 Line 16 - quarterly interest penalty", () => {
-  it("penalty = underpayment * factor (rounded to cents)", () => {
+  it("penalty = underpayment * factor (published2025 nearest dollar)", () => {
     const result = calculateOhioITSD2210(baseInput({
       currentYearTaxLiability: 10000,
       ohioWithholding: 0,
@@ -670,17 +670,17 @@ describe("OH IT/SD 2210 Line 16 - quarterly interest penalty", () => {
       priorYearTimelyFiled: false,
     }));
     // Q1 underpayment = 2250, factor = 0.013580
-    // 2250 * 0.013580 = 30.555 → 30.56
-    expect(result.quarters![0]!.interestPenalty).toEqual(dec("30.56"));
+    // 2250 * 0.013580 = 30.555 → 31
+    expect(result.quarters![0]!.interestPenalty).toEqual(dec("31"));
     // Q2 underpayment = 4500, factor = 0.019932
-    // 4500 * 0.019932 = 89.694 → 89.69
-    expect(result.quarters![1]!.interestPenalty).toEqual(dec("89.69"));
+    // 4500 * 0.019932 = 89.694 → 90
+    expect(result.quarters![1]!.interestPenalty).toEqual(dec("90"));
     // Q3 underpayment = 6750, factor = 0.026311
-    // 6750 * 0.026311 = 177.59925 → 177.60
-    expect(result.quarters![2]!.interestPenalty).toEqual(dec("177.60"));
+    // 6750 * 0.026311 = 177.59925 → 178
+    expect(result.quarters![2]!.interestPenalty).toEqual(dec("178"));
     // Q4 underpayment = 9000, factor = 0.017248
-    // 9000 * 0.017248 = 155.232 → 155.23
-    expect(result.quarters![3]!.interestPenalty).toEqual(dec("155.23"));
+    // 9000 * 0.017248 = 155.232 → 155
+    expect(result.quarters![3]!.interestPenalty).toEqual(dec("155"));
   });
 });
 
@@ -696,8 +696,8 @@ describe("OH IT/SD 2210 Line 17 - total penalty", () => {
       estimatedPayments: 0,
       priorYearTimelyFiled: false,
     }));
-    // 30.56 + 89.69 + 177.60 + 155.23 = 453.08 → $453
-    expect(result.line17_totalPenalty).toEqual(dec(453));
+    // Published reported amounts31 +90 +178 +155 =454; original cents453 retained in source erratum
+    expect(result.line17_totalPenalty).toEqual(dec(454));
   });
 
   it("zero penalty when all quarters covered by payments", () => {
@@ -929,4 +929,20 @@ describe("OH IT/SD 2210 realistic scenarios", () => {
     expect(result.safeHarborC).toBe(true);
     expect(result.penaltyExempt).toBe(true);
   });
+});
+
+// Spec: state/oh-it-sd-2210.yaml#published-2025-dollar-projection
+it('uses published2025 whole-dollar monetary lines and exact rate factors',()=>{
+ const actual=calculateOhioITSD2210(baseInput({currentYearTaxLiability:'929'}));
+ expect(actual.line9_requiredAnnualPayment.toString()).toBe('836');
+ expect(actual.quarters?.map(q=>q.cumulativeRequired.toString())).toEqual(['209','418','627','836']);
+ expect(actual.quarters?.map(q=>q.interestPenalty.toString())).toEqual(['3','8','16','14']);
+ expect(actual.line17_totalPenalty.toString()).toBe('41');
+ const refundNet=calculateOhioITSD2210(baseInput({currentYearTaxLiability:'1823'}));
+ expect(refundNet.quarters?.map(q=>q.interestPenalty.toString())).toEqual(['6','16','32','28']);expect(refundNet.line17_totalPenalty.toString()).toBe('82');
+ const joe=calculateOhioITSD2210(baseInput({currentYearTaxLiability:'2000',ohioWithholding:'1000',priorYearTaxLiability:'1500',priorYearTimelyFiled:true}));
+ expect(joe.quarters?.map(q=>q.interestPenalty.toString())).toEqual(['2','5','10','9']);expect(joe.line17_totalPenalty.toString()).toBe('26');
+ const half=calculateOhioITSD2210(baseInput({currentYearTaxLiability:'1005'}));expect(half.line9_requiredAnnualPayment.toString()).toBe('905');
+ const cents=calculateOhioITSD2210(baseInput({currentYearTaxLiability:'1000',ohioWithholding:'499.50'}));expect(cents.line1_totalTaxesPaid.toString()).toBe('500');expect(cents.line17_totalPenalty.toString()).toBe('0');
+ const summed=calculateOhioITSD2210(baseInput({currentYearTaxLiability:'1000',estimatedPayments:'100.50',estimatedPaymentSchedule:[{date:'2025-04-15',amount:'50.25'},{date:'2025-04-15',amount:'50.25'}]}));expect(summed.line1_totalTaxesPaid.toString()).toBe('101');expect(summed.quarters?.[0].cumulativeEstimated.toString()).toBe('101');
 });

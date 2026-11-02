@@ -1,3 +1,6 @@
+import {roundDollar} from '@/utils/decimal.js';
+import {buildOhioPaymentSource} from './oh-payment-source.js';
+import type {OhioPaymentFacts} from '@/models/ohio-payments.js';
 import type {OhioResidencyFacts} from "@/models/ohio-residency.js";
 import {buildOhioResidencySource} from "./oh-residency-source.js";
 /**
@@ -73,6 +76,7 @@ import { d } from "@/utils/decimal.js";
 // ---------------------------------------------------------------------------
 
 export interface OhioOverlayInput {
+  payments?:OhioPaymentFacts;
   residency?:OhioResidencyFacts;
   // --- Schedule of Adjustments: Additions ---
   nonOhioStateLocalInterest?: Decimal | string | number;
@@ -743,6 +747,15 @@ export function buildOhioResidentReturnInput(
   const canonical=(taxInput as TaxYearInput&{ohioResidency?:OhioResidencyFacts}).ohioResidency;
   if(canonical&&overlay.residency&&JSON.stringify(canonical)!==JSON.stringify(overlay.residency))throw new Error("Ohio canonical and overlay residency originals conflict");
   const residency=canonical??overlay.residency;
+  const canonicalPayments=(taxInput as TaxYearInput&{ohioPayments?:OhioPaymentFacts}).ohioPayments;
+  if(canonicalPayments&&overlay.payments&&JSON.stringify(canonicalPayments)!==JSON.stringify(overlay.payments))throw new Error('Ohio actual payment sources: canonical and overlay payment packets conflict');
+  const paymentFacts=canonicalPayments??overlay.payments;
+  if(paymentFacts){
+    const forbidden=['underpaymentPenalty','useTax','estimatedPayments','refundableCredits','amendedPriorOverpayment','latePaymentInterest','creditCarryforward','donations','computeUnderpaymentPenalty','priorYearTaxLiability','priorYearTimelyFiled','estimatedPaymentSchedule','ohioWithholdingOverride'] as const;
+    if(forbidden.some(key=>overlay[key]!==undefined))throw new Error('Ohio actual payment sources: source-qualified facts do not accept unbound payment/credit/penalty overrides');
+    if(!residency)throw new Error('Ohio actual payment sources: actual owner residency packet is required');
+  }
+
   if(residency&&overlay.nonresidentCredit!==undefined)throw new Error("Ohio source-derived credit does not accept a supplied scalar override");
   assertQofStateMethod(taxInput, "Ohio");
   assertClaimOfRightStateMethod(taxInput, "Ohio");
@@ -1051,6 +1064,13 @@ export function buildOhioResidentReturnInput(
     if(overlay.schoolDistricts===undefined)adapted.schoolDistricts=[];
     const verified=buildOhioResidencySource(taxInput,federalResult,adapted,residency);
     adapted.residency=verified.facts;adapted.residencySourceDigest=verified.sourceDigest;
+  }
+  if(paymentFacts){
+    if((adapted.schoolDistricts?.length??0)||residency?.schoolDistrictStatus!=='no_ohio_taxing_district_residency')throw new Error('Ohio actual payment sources: actual SD/combined method is required');
+    const source=buildOhioPaymentSource(taxInput,paymentFacts);
+    adapted.paymentTaxCoverage=source.facts.remainingTaxPayment;adapted.paymentSourceDigest=source.sourceDigest;adapted.paymentMethodVersion=source.methodVersion;adapted.paymentTiming={kind:source.timingKind,valuationDate:source.valuationDate,asOfDate:source.asOfDate};
+    adapted.ohioWithholding=roundDollar(d(adapted.ohioWithholding));adapted.estimatedPayments=roundDollar(source.estimatedPayments);adapted.estimatedPaymentSchedule=source.estimatedPaymentSchedule;adapted.priorYearTaxLiability=source.priorYearTaxLiability;adapted.priorYearTimelyFiled=source.priorYearTimelyFiled;
+    adapted.useTax=roundDollar(source.useTax);adapted.creditCarryforward=roundDollar(source.creditCarryforward);adapted.donations=roundDollar(source.donations);adapted.latePaymentInterest=source.latePaymentInterest;adapted.computeUnderpaymentPenalty=true;
   }
   return adapted;
 }

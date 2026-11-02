@@ -19,7 +19,7 @@ import type {OhioResidencyFacts} from "@/models/ohio-residency.js";
 import {calculateOhioITNRC} from "./oh-it-nrc.js";
 import type { FilingStatus } from "@/models/constants.js";
 import type { CalculatedLine } from "@/models/outputs.js";
-import { d, zeroFloor } from "@/utils/decimal.js";
+import { d, roundDollar, zeroFloor } from "@/utils/decimal.js";
 import {
   type OhioCollegeGrantRoomAndBoardEntry,
   type OhioEducatorExpense,
@@ -66,6 +66,10 @@ import {
 export interface OhioResidentReturnInput {
   residency?:OhioResidencyFacts;
   residencySourceDigest?:string;
+  paymentSourceDigest?:string;
+  paymentMethodVersion?:string;
+  paymentTaxCoverage?:{status:'no_remaining_tax'|'expected_payment'|'actual_payment';date?:string;amountAppliedToTax?:Decimal|string|number};
+  paymentTiming?:{kind:'filed'|'expected';valuationDate:string;asOfDate:string};
   taxYear: number;
   filingStatus: FilingStatus;
   federalAgi: Decimal | string | number;
@@ -481,9 +485,24 @@ export function calculateOhioResidentReturn(
       firstPass.line8c_totalTax.minus(credits.line40_totalNonrefundableCredits)
     );
 
+    if(input.paymentSourceDigest){
+      const liability=roundDollar(line10Preview.minus(input.refundableCredits??credits.line47_totalRefundableCredits));
+      const withheld=roundDollar(d(input.ohioWithholding));
+      const schedule=input.estimatedPaymentSchedule??[];
+      const endpoints=[['2025-04-15','0.25'],['2025-06-16','0.50'],['2025-09-15','0.75'],['2026-01-15','1.00']] as const;
+      const estimatesThrough=(date:string)=>roundDollar(schedule.filter(row=>row.date<=date).reduce((sum,row)=>sum.plus(row.amount),new Decimal(0)));
+      const annualPaid=withheld.plus(estimatesThrough('2026-01-15'));
+      const covered=(required:Decimal)=>endpoints.every(([date,percentage])=>roundDollar(withheld.times(percentage)).plus(estimatesThrough(date)).gte(roundDollar(required.times(percentage))));
+      const currentRequired=roundDollar(liability.times('0.90'));
+      const priorRequired=roundDollar(d(input.priorYearTaxLiability));
+      if((annualPaid.gte(currentRequired)&&!covered(currentRequired))||(input.priorYearTimelyFiled&&annualPaid.gte(priorRequired)&&!covered(priorRequired))){
+        throw new Error('Ohio actual payment sources: actual timely installment coverage requires its separate dated payment method');
+      }
+    }
+
     itsd2210 = calculateOhioITSD2210({
       taxYear: input.taxYear,
-      currentYearTaxLiability: line10Preview,
+      currentYearTaxLiability: line10Preview.minus(input.refundableCredits ?? credits.line47_totalRefundableCredits),
       ohioWithholding: d(input.ohioWithholding),
       estimatedPayments: d(input.estimatedPayments),
       priorYearTaxLiability: input.priorYearTaxLiability,
@@ -516,6 +535,15 @@ export function calculateOhioResidentReturn(
     creditCarryforward: input.creditCarryforward,
     donations: input.donations,
   });
+
+  if(input.paymentSourceDigest){
+    const coverage=input.paymentTaxCoverage;
+    const remaining=it1040.line10_taxAfterCredits.minus(it1040.line16_refundableCredits).minus(it1040.line14_ohioWithholding).minus(it1040.line15_estimatedPayments);
+    if(!coverage||(coverage.status==='no_remaining_tax'?remaining.gt(0):d(coverage.amountAppliedToTax).lt(Decimal.max(remaining,0))))throw new Error('Ohio actual payment sources: remaining-tax payment source does not cover actual remaining tax');
+  }
+  if(input.paymentSourceDigest&&d(input.creditCarryforward).plus(d(input.donations)).gt(it1040.line23_overpayment)){
+    throw new Error('Ohio actual payment sources: refund elections exceed actual overpayment');
+  }
 
   // Step 5: SD 100 — School District Income Tax (if districts provided)
   let sdItsd2210: OhioITSD2210Result | null = null;
@@ -573,6 +601,7 @@ export function calculateOhioResidentReturn(
     ...(residentCreditResult ? residentCreditResult.lines : []),
     ...(nonresidentCreditResult?.lines??[]),
     ...(input.residencySourceDigest?[{form:"OH-IT-NRC",line:"actual-source-commitment",description:"Actual Ohio owner residency original sources",value:new Decimal(0),formula:"Complete source commitment; no private source references printed",inputs:{"Original source commitment":input.residencySourceDigest}}]:[]),
+    ...(input.paymentSourceDigest?[{form:'OH-IT/SD-2210',line:'actual-payment-source-commitment',description:'Actual Ohio current account payment sources',value:new Decimal(0),formula:'Current actual private originals; digest only',inputs:{'Original source commitment':input.paymentSourceDigest,'State method version':input.paymentMethodVersion??'','Tax year':String(input.taxYear),'Timing kind':input.paymentTiming?.kind??'','Return filed/expected date':input.paymentTiming?.valuationDate??'','As of date':input.paymentTiming?.asOfDate??'','Remaining-tax payment kind':input.paymentTaxCoverage?.status??'','Remaining-tax payment date':input.paymentTaxCoverage?.date??''}}]:[]),
     ...credits.lines,
     ...(itsd2210 ? itsd2210.lines : []),
     ...it1040.lines,

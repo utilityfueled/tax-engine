@@ -246,7 +246,7 @@ export async function fillOhioReferenceForms(
   reviewContext?:PreparedOhioResidencyReview,
 ): Promise<OhioReferencePacketResult> {
   assertPdfExportAllowed(taxInput.taxpayer.taxYear, federalResult.taxYear);
-  const hasResidency=Boolean((taxInput as TaxYearInput&{ohioResidency?:unknown}).ohioResidency??overlay.residency);
+  const hasResidency=Boolean((taxInput as TaxYearInput&{ohioResidency?:unknown;ohioPayments?:unknown}).ohioResidency??overlay.residency)||Boolean((taxInput as TaxYearInput&{ohioPayments?:unknown}).ohioPayments??overlay.payments);
   const original=hasResidency?resolveOhioResidencyReview(taxInput,federalResult,reviewContext):taxInput;
   const ohioInput = buildOhioResidentReturnInput(original, federalResult, overlay);
   const ohioResult = calculateOhioResidentReturn(ohioInput);
@@ -408,7 +408,7 @@ export async function fillOhioReferenceForms(
           title: "Ohio IT/SD 2210",
           subtitle: "Underpayment of estimated tax summary",
           fileName: "oh-it-sd-2210-reference.pdf",
-          lines: ohioResult.itsd2210.lines,
+          lines: [...ohioResult.itsd2210.lines,...(ohioInput.paymentSourceDigest?[{form:'OH-IT/SD-2210',line:'actual-payment-source',inputs:{},description:ohioInput.paymentTaxCoverage?.status==='expected_payment'?'Expected remaining-tax payment':ohioInput.paymentTaxCoverage?.status==='actual_payment'?'Actual remaining-tax payment':'Actual no remaining tax',value:d(ohioInput.paymentTaxCoverage?.amountAppliedToTax),formula:`${ohioInput.paymentTaxCoverage?.date??'No tax remains'}; ${ohioInput.paymentMethodVersion}; original commitment ${ohioInput.paymentSourceDigest}`}]:[])],
         },
         outputDir,
       ),

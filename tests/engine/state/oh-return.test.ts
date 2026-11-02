@@ -2052,3 +2052,12 @@ describe("Ohio Resident Return — Orchestrator", () => {
     expect(result.it1040.line8c_totalTax.toNumber()).toBe(3790);
   });
 });
+
+// Spec: state/oh-return.yaml#actual-refund-credit-2210-liability
+it('subtracts actual refundable line16 from underpayment liability', () => {
+ const result=calculateOhioResidentReturn(makeInput({federalAgi:'100000',refundableCredits:'500',ohioWithholding:'0',estimatedPayments:'0',priorYearTimelyFiled:false,computeUnderpaymentPenalty:true}));
+ expect(result.it1040.line10_taxAfterCredits.toString()).toBe('2323');
+ expect(result.it1040.line16_refundableCredits.toString()).toBe('500');
+ expect(result.itsd2210?.line2_currentYearLiability.toString()).toBe('1823');
+ expect(result.itsd2210?.line17_totalPenalty.toString()).toBe('82');
+});

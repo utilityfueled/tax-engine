@@ -92,8 +92,8 @@ export function buildGuidedOhioResidencyFacts(data: OhioResidencyDraft | undefin
     const errors = ohioResidencyFactErrors(data, input.taxpayer.taxYear, input.taxpayer.filingStatus);
     if (Object.keys(errors).length)
         throw new Error(Object.values(errors).join(' '));
-    const { ohioResidency: _, ...original } = input as TaxYearInput & {
-        ohioResidency?: unknown;
+    const { ohioResidency: _, ohioPayments: _payments, ...original } = input as TaxYearInput & {
+        ohioResidency?: unknown; ohioPayments?:unknown;
     };
     return OhioResidencyFactsSchema.parse({ ...raw(data), originalFederalSources: structuredClone(original) });
 }

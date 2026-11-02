@@ -250,3 +250,8 @@ lines:
     description: "High income ($750K+) zero exemptions"
     formula: "MAGI ≥ $750,000 produces $0 per exemption, eliminating all MAGI-dependent credits"
     testRef: "tests/engine/state/oh-return.test.ts::high income $750K+ gets zero exemptions"
+
+  - line: "actual-refund-credit-2210-liability"
+    description: "Refundable credits reduce current underpayment liability"
+    formula: "Actual IT1040line10 minus actual line16, before estimated/withholding/carry payments"
+    testRef: "tests/engine/state/oh-return.test.ts::subtracts actual refundable line16 from underpayment liability"
