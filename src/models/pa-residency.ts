@@ -1,5 +1,6 @@
 /** Private actual PA originals/drafts. No amount, date, answer or source year defaults to a fact. */
 import { z } from "zod";
+import {PAOrdinaryDividendSourceSchema} from "./pa-ordinary-investment-sources.js";
 
 const answer = z.boolean().nullable();
 const sourceYear = z.number().int().nullable();
@@ -37,6 +38,8 @@ export const PAResidencySourcesSchema = z.object({
     dec31PrincipalResidenceState: z.string(), schoolDistrictCode: z.string(), schoolDistrictName: z.string(),
   }).strict(),
   wages: z.array(wageSource), interest: z.array(interestSource),
+  // Absence is compatible only when no original1099DIV exists; replay enforces complete coverage.
+  dividends: z.array(PAOrdinaryDividendSourceSchema).optional(),
   otherPAIncomeClassesConfirmedNone: answer, otherPAAdjustmentsConfirmedNone: answer,
 }).strict();
 

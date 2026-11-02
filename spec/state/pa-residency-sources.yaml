@@ -5,7 +5,8 @@ reference: "https://www.pacodeandbulletin.gov/Display/pacode?file=/secure/pacode
 notes: |
   User selected PA full-year resident, part-year resident and nonresident routes.
   This first finite source method derives ordinary cash W2 compensation and
-  personal bank interest for a single actual owner. It qualifies neither an
+  personal bank interest for a single actual owner. Source-aware ordinary dividend
+  and printed A/B line extension is specified in pa-ordinary-investment-sources.yaml. It qualifies neither an
   arbitrary PA income override nor a full return/payment/credit/export packet.
   Spouse joint/separate/mixed residency and richer source scenarios remain
   required internal successors. Final 2026 physical/filing gates remain closed.
@@ -53,7 +54,9 @@ lines:
     formula: |
       Preserve exact source cents; aggregate within each actual income class,
       then roundDollar each reported class once (never each original/receipt).
-      PA40 line9 is sum(reported compensation, reported ordinary interest),
+      Under the source-aware A/B extension, reported interest follows printed
+      A1 minus A8 and reported dividends follows B12; preserve raw included/excluded
+      cents separately. PA40 line9 sums the resulting reported income classes,
       line10 is confirmed zero in this finite method, line11 equals line9,
       and line12 is roundDollar(line11 * Decimal('0.0307')).
     testRef: "tests/engine/state/pa-residency-sources.test.ts::PA actual residency sources - matches independent original tax amounts"

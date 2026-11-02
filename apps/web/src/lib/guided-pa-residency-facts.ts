@@ -31,6 +31,7 @@ export function confirmGuidedPAResidencySources(input: TaxYearInput, draft: unkn
       originalTaxpayer: { firstName: owner.firstName, lastName: owner.lastName, ssn: owner.ssn } },
     wages: data.wages.map(row => ({ ...row, original: row.originalIndex === null ? undefined : structuredClone(input.w2s[row.originalIndex]) })),
     interest: data.interest.map(row => ({ ...row, original: row.originalIndex === null ? undefined : structuredClone(input.form1099Int[row.originalIndex]) })),
+    ...(data.dividends===undefined?{}:{dividends:data.dividends.map(row=>({...row,original:row.originalIndex===null?undefined:structuredClone(input.form1099Div[row.originalIndex])}))}),
   };
   calculatePAResidencySources(input, candidate);
   return candidate;

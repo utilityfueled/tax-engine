@@ -3,11 +3,13 @@ import Decimal from "decimal.js";
 import { calculateW2StateLocalSources } from "../forms/w2-state-local.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { Form1099IntSchema, W2Schema, type TaxYearInput } from "@/models/inputs.js";
+import { Form1099DivSchema, Form1099IntSchema, W2Schema, type TaxYearInput } from "@/models/inputs.js";
 import { PAResidencySourcesSchema, type PAResidencySources, type PAResidencyStatus } from "@/models/pa-residency.js";
 import { roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { calculatePAReciprocalCompensation } from "./pa-reciprocity.js";
+import {calculatePAScheduleA,type PAScheduleAResult} from "./pa-schedule-a.js";
+import {calculatePAScheduleB,type PAScheduleBResult} from "./pa-schedule-b.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 
 const Money=Decimal.clone({precision:100,rounding:Decimal.ROUND_HALF_UP});
@@ -89,7 +91,9 @@ function deriveResidency(source: PAResidencySources, year: number) {
 
 export interface PAResidencySourcesResult {
   residencyStatus: PAResidencyStatus; schoolDistrictCode: string;
-  compensation: Decimal; interest: Decimal; reportedCompensation: Decimal; reportedInterest: Decimal; excludedNonPACompensation: Decimal; excludedReciprocalCompensation: Decimal;
+  compensation: Decimal; interest: Decimal; reportedCompensation: Decimal; reportedInterest: Decimal;
+  dividends: Decimal; reportedDividends: Decimal; excludedNonPADividends: Decimal;
+  scheduleA:PAScheduleAResult; scheduleB:PAScheduleBResult; excludedNonPACompensation: Decimal; excludedReciprocalCompensation: Decimal;
   excludedNonPAInterest: Decimal; totalOrdinaryPATaxableIncome: Decimal; taxBeforeCredits: Decimal;
   sourceCommitment: string; lines: CalculatedLine[];
 }
@@ -105,7 +109,7 @@ export function calculatePAResidencySources(input: TaxYearInput, rawSources: unk
   if (!owner || !/^\d{9}$/.test(owner.ssn.replace(/\D/g, "")) || stable(owner) !== stable({ firstName: actual.firstName, lastName: actual.lastName, ssn: actual.ssn })) return error("actual original owner identity does not match the current taxpayer");
   if (source.otherPAIncomeClassesConfirmedNone !== true || source.otherPAAdjustmentsConfirmedNone !== true) return error("confirm complete ordinary source scope; unknown other classes/adjustments are not zero");
   for (const key of ["w2s", "form1099Int", "form1099Div", "form1099B", "form1099Nec", "form1099Misc", "scheduleK1"] as const) if (!Array.isArray(input[key])) return error("complete current canonical document arrays are required before source derivation");
-  for (const key of ["form1099Div", "form1099B", "form1099Nec", "form1099Misc", "scheduleK1", "form1099R", "formW2G", "form1099G", "form1099K", "form1099DA", "form1099OID", "form1099C", "form1099Q", "form1099SA", "formSSA1099", "formRRB1099", "rentalProperties", "homeSales", "savingsBondRedemptions", "scheduleK1Form1041", "paPassThroughStatements", "paScheduleJStatements", "paScheduleGLStatements"] as const) {
+  for (const key of ["form1099B", "form1099Nec", "form1099Misc", "scheduleK1", "form1099R", "formW2G", "form1099G", "form1099K", "form1099DA", "form1099OID", "form1099C", "form1099Q", "form1099SA", "formSSA1099", "formRRB1099", "rentalProperties", "homeSales", "savingsBondRedemptions", "scheduleK1Form1041", "paPassThroughStatements", "paScheduleJStatements", "paScheduleGLStatements"] as const) {
     const rows = input[key]; if (Array.isArray(rows) && rows.length) return error("additional retained income originals need their actual PA class source method");
   }
   if (input.scheduleC !== undefined || input.scheduleF !== undefined || input.cryptoIncome !== undefined || input.form4797 !== undefined || input.form6252.length || input.form6781 !== undefined || input.form8824.length) return error("additional retained income source needs its actual PA class source method");
@@ -178,8 +182,39 @@ export function calculatePAResidencySources(input: TaxYearInput, rawSources: unk
     }
     if (!gross.eq(amount(original.interestIncome))) return error("actual dated bank credits do not reconcile original Box1");
   }
-  const reportedCompensation = roundDollar(compensation), reportedInterest = roundDollar(interest);
-  const taxable = reportedCompensation.plus(reportedInterest), tax = roundDollar(taxable.times("0.0307"));
+  // Each actual personal distribution original is covered exactly once, including known zero.
+  const dividendSources=source.dividends??[];
+  if(dividendSources.length!==input.form1099Div.length)return error("complete actual dividend original coverage is required");
+  const dividendIndices=new Set<number>(),dividendIdentities=new Set<string>(),dividendReferences=new Set<string>();
+  let ordinaryDividends=new Money(0),capitalDistributions=new Money(0),dividends=new Money(0),excludedNonPADividends=new Money(0);
+  for(const row of dividendSources){
+    reference(row.sourceReference);const index=row.originalIndex;
+    if(index===null||index<0||index>=input.form1099Div.length||dividendIndices.has(index))return error("unique complete dividend original indices are required");
+    dividendIndices.add(index);
+    if(dividendReferences.has(row.sourceReference.trim()))return error("duplicate actual dividend source reference");dividendReferences.add(row.sourceReference.trim());
+    if(row.sourceTaxYear!==year||row.sourceFactsConfirmed!==true||row.ordinaryPersonalDividendIncomeConfirmed!==true||row.capitalDistributionsFromRegulatedInvestmentCompanyConfirmed!==true||row.noOtherPADividendAdjustmentsConfirmed!==true||row.currentUncorrectedNonvoidOriginalConfirmed!==true||row.allOriginalBoxesKnownConfirmed!==true||!row.original)return error("actual ordinary personal dividend classification and complete current original facts are required");
+    const current=input.form1099Div[index];
+    if(!Form1099DivSchema.strict().safeParse(current).success||stable(row.original)!==stable(current)||current.taxYear!==year||current.accountHolder!=="primary")return error("actual dividend original owner/year/identity is missing or stale");
+    reference(current.payer);
+    const economicIdentity=stable(semantic(current,year));if(dividendIdentities.has(economicIdentity))return error("duplicate economic dividend original");dividendIdentities.add(economicIdentity);
+    for(const key of ["ordinaryDividends","qualifiedDividends","totalCapitalGainDistributions","section1250Gain","section1202Gain","collectiblesGain","nondividendDistributions","federalWithheld","section199ADividends","foreignTaxPaid","exemptInterestDividends","specifiedPrivateActivityBondInterest","paExemptInterestDividendAllocation","stateWithheld"] as const)amount(current[key]);
+    if(amount(current.qualifiedDividends).gt(amount(current.ordinaryDividends)))return error("qualified dividend subset contradicts actual original ordinary income");
+    for(const key of ["section1250Gain","section1202Gain","collectiblesGain","nondividendDistributions","section199ADividends","foreignTaxPaid","exemptInterestDividends","specifiedPrivateActivityBondInterest","paExemptInterestDividendAllocation"] as const)if(!amount(current[key]).isZero())return error("actual special dividend source class or adjustment requires its successor");
+    if(amount(current.stateWithheld).gt(0)&&current.state!=="PA")return error("actual outside or unknown jurisdiction dividend withholding requires its source successor");
+    if(!row.credits.length)return error("actual complete dated dividend distribution ledger is required");
+    let originalOrdinary=new Money(0),originalCapital=new Money(0);const refs=new Set<string>();
+    for(const credit of row.credits){reference(credit.sourceReference);if(refs.has(credit.sourceReference.trim()))return error("duplicate actual dividend distribution source reference");refs.add(credit.sourceReference.trim());
+      const received=day(credit.creditedOn,year),ordinary=amount(credit.ordinaryDividends),capital=amount(credit.capitalGainDistributions);
+      originalOrdinary=originalOrdinary.plus(ordinary);originalCapital=originalCapital.plus(capital);
+      if(residentAt(received))dividends=dividends.plus(ordinary).plus(capital);else excludedNonPADividends=excludedNonPADividends.plus(ordinary).plus(capital);
+    }
+    if(!originalOrdinary.eq(amount(current.ordinaryDividends))||!originalCapital.eq(amount(current.totalCapitalGainDistributions)))return error("actual dated distributions do not reconcile complete current original Box1a and Box2a");
+    ordinaryDividends=ordinaryDividends.plus(originalOrdinary);capitalDistributions=capitalDistributions.plus(originalCapital);
+  }
+  const scheduleA=calculatePAScheduleA({taxYear:year,federalInterestIncome:interest.plus(excludedInterest),reductionAdjustments:excludedInterest.gt(0)?[{description:"Non-Residency Period Interest",amount:excludedInterest}]:[]});
+  const scheduleB=calculatePAScheduleB({taxYear:year,federalDividendIncome:ordinaryDividends,capitalGainDistributions:capitalDistributions,reductionAdjustments:excludedNonPADividends.gt(0)?[{description:"Non-Residency Period Ordinary and Capital Gain Distributions",amount:excludedNonPADividends}]:[]});
+  const reportedCompensation = roundDollar(compensation), reportedInterest = scheduleA.line16,reportedDividends=scheduleB.line12;
+  const taxable = reportedCompensation.plus(reportedInterest).plus(reportedDividends), tax = roundDollar(taxable.times("0.0307"));
   // The collector packet is the sole excluded key; all actual canonical facts remain privately bound.
   const originalInput = Object.fromEntries(Object.entries(input).filter(([key]) => key !== "paResidencySources"));
   const commitment = bytesToHex(sha256(new TextEncoder().encode(stable({ version: "pa-ordinary-residency-v1", year, input: originalInput, rawSources }))));
@@ -187,9 +222,11 @@ export function calculatePAResidencySources(input: TaxYearInput, rawSources: unk
   audit.record("PA-Residency-Sources", "compensation", "Actual ordinary taxable PA compensation", compensation, "Resident-period all-source plus nonresident-period actual PA services, less actual reciprocal employee exclusions; complete original payroll reconciliation");
   audit.record("PA-Residency-Sources", "interest", "Actual ordinary taxable PA bank interest", interest, "Actual dated personal bank credits during resident periods; nonresident ordinary bank credits excluded");
   audit.record("PA-Residency-Sources", "reported-compensation", "Reported ordinary PA compensation", reportedCompensation, "Aggregate exact actual compensation class, then round once to whole dollars");
-  audit.record("PA-Residency-Sources", "reported-interest", "Reported ordinary PA interest", reportedInterest, "Aggregate exact actual ordinary interest class, then round once to whole dollars");
+  audit.record("PA-Residency-Sources", "reported-interest", "Reported ordinary PA interest", reportedInterest, "Replay official Schedule A line totals, preserving included/excluded source cents separately");
+  audit.merge(scheduleA.lines);audit.merge(scheduleB.lines);
+  audit.record("PA-Residency-Sources","dividends","Actual ordinary PA personal dividend distributions",dividends,"Actual received/credited distributions during confirmed resident periods; exact outside-period distributions excluded");
   audit.record("PA-Residency-Sources", "ordinary-tax", "Ordinary PA tax before credits and payments", tax, "Sum reported whole-dollar classes, multiply by3.07%, then whole-dollar tax rounding; no credit/payment/penalty qualification");
   return { residencyStatus: residency.status, schoolDistrictCode: source.residency.schoolDistrictCode,
-    compensation, interest, reportedCompensation, reportedInterest, excludedNonPACompensation: excludedCompensation, excludedReciprocalCompensation, excludedNonPAInterest: excludedInterest,
+    compensation, interest, reportedCompensation, reportedInterest,dividends,reportedDividends,excludedNonPADividends,scheduleA,scheduleB, excludedNonPACompensation: excludedCompensation, excludedReciprocalCompensation, excludedNonPAInterest: excludedInterest,
     totalOrdinaryPATaxableIncome: taxable, taxBeforeCredits: tax, sourceCommitment: commitment, lines: audit.getLines() };
 }

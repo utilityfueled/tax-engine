@@ -1,0 +1,59 @@
+form: "PA Ordinary Investment Sources"
+fullName: "Actual ordinary personal bank interest and dividend distribution originals through all three residency categories"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40b.pdf"
+notes: |
+  Refreshed actual2025 PA40A/B instructions and PA40IN on2026-11-02; exact public bytes and hashes retained privately.
+  A official SHA dd32da96a856d033725e772c9a7dc4339131b4abe776e4caa4e7de722c0cbfce.
+  B official SHA c6d8f5cdd63045e1e40b6deeced2c80b23006b7700befe3b8f0c430f2b40a0d4.
+  Source-bound extension only: ordinary personal investments for one confirmed primary owner.
+  Spouse, business/working-capital investments, return of capital, foreign/repatriation,
+  exempt-interest distributions and richer adjustment methods remain guarded, never inferred zero.
+  Existing ScheduleC and NRH workspace positives remain required followups, unchanged.
+  Final2026/federal rule pack/physical and human filing qualification gates remain closed.
+lines:
+  - line: "originals"
+    description: "Complete actual distribution originals remain current and unique"
+    formula: "Each retained1099DIV including knownzero has exactly one row with actual year/index/owner/current uncorrected all-box original, explicit ordinary-personal classification and actual reference. Missing status/box/date/value is unknown; semantic duplicate originals and duplicate ledger rows reject."
+    testRef: "tests/engine/state/pa-ordinary-investment-sources.test.ts::ordinary investment sources retain zero and reject missing original coverage"
+  - line: "all-three"
+    description: "Dates allocate actual personal distributions without source-state or calendar proration"
+    formula: "Aggregate dated ordinary dividends and regulated-investment-company capital distributions separately to exact current Box1a/Box2a. Resident includes all; partyear includes received/credited dates within actual resident periods; nonresident excludes ordinary intangible distributions even from PA payer. Exact outside amounts enter worldwide SP once."
+    testRef: "tests/engine/state/pa-ordinary-investment-sources.test.ts::ordinary investment sources allocate all three actual residency periods"
+  - line: "A1-A16"
+    description: "Source-replayed Schedule A and reported interest class"
+    formula: "A1=whole complete personal bank Box1 totals; A8=whole actual nonresident-period bank credits; A4=A1,A9=A8,A10=A1-A8,A16=A10. Remaining A lines are knownzero only under already validated finite personal-bank scope. This printed-line method supersedes rounding only included partyear cents. Keep exact raw included/excluded separately. A reference is diagnostic even where official filing schedule is not required."
+    testRef: "tests/engine/state/pa-ordinary-investment-sources.test.ts::ordinary investment sources preserve printed line cents boundaries"
+  - line: "B1-B12"
+    description: "Official ordinary distribution line mapping"
+    formula: "B1=whole complete ordinary Box1a; B4=whole nonresident-period ordinary plus capital distributions; B5=B4; B6=B1-B4 may be negative; B10=whole complete regulated fund Box2a; B12=B6+B10. Other B lines are zero only after explicit no-special-adjustment classification and crosscheck of actual original boxes. Report B12 as PA40 dividends, never as PA gains. No rates or amount overrides."
+    testRef: "tests/engine/state/pa-ordinary-investment-sources.test.ts::ordinary investment sources preserve negative B6 without losing capital distribution exclusion"
+  - line: "precision"
+    description: "Exact line arithmetic without changing global Decimal settings"
+    formula: "Preserve up to60 source digits and aggregate with local precision100 Decimal, round each official line only once and use exact local additions/subtractions. A/B local precision repair only if original genuine controls demonstrate loss."
+    testRef: "tests/engine/state/pa-ordinary-investment-sources.test.ts::ordinary investment schedules retain large exact dollar and cents totals for %s"
+  - line: "composition"
+    description: "Current source classes reach PA40 SP and compensation-only resident credit limits"
+    formula: "PA40 interest=A16,dividends=B12; SP adds actual excluded raw personal distributions/bank interest once with outside compensation. Raw income never expands compensation-only same-income credit scope. Preserve all prior credit and household source replay. Current source changes stale retained facts/context."
+    testRef: "tests/engine/state/pa-ordinary-investment-sources.test.ts::ordinary investment composition preserves statewide and worldwide classes"
+  - line: "withholding"
+    description: "Actual PA distribution withholding is an original payment once"
+    formula: "Require actual known state and withheld box; add PA distribution withholding once to source-derived W2/bank amounts, round total reported withholding once. Positive outside or unknown jurisdiction requires its separate source-qualified method. Knownzero remains zero."
+    testRef: "tests/engine/state/pa-ordinary-investment-sources.test.ts::ordinary investment composition retains actual PA dividend withholding exactly once"
+  - line: "resident-credit"
+    description: "Printed fractional class corrections preserve identical compensation cap"
+    formula: "Partyear reported classes26002 produce tax798; identical resident-period DE compensation20000 retains credit614 and actual799withholding produces refund615. An alleged20001 other-state compensation cannot borrow the new dividend or bank class to establish same-income eligibility."
+    testRef: "tests/engine/state/pa-ordinary-investment-sources.test.ts::ordinary investment fractions preserve compensation-only resident credit scope"
+  - line: "guide"
+    description: "Explicit confirmation alone binds current originals"
+    formula: "Only existing explicit confirm action copies selected1099DIV originals; read compares retained originals and does not refresh. New absent/blank classification/date/zero never inferred. Equal-dollar owner/payer/account/year edits stale actual packet and pending edits clear confirmation."
+    testRef: "tests/engine/state/pa-ordinary-investment-sources.test.ts::ordinary investment guide binds originals only on explicit confirmation"
+  - line: "packet"
+    description: "Actual A/B reference output retains privacy and disclosures"
+    sourceSupplement: "Legacy Taylor positives use an independently supplied fictional NY zero-payment history bearing current legacy original owner/year; Avery original source from reusable fixture is retained in evidence and never silently rebound. Payment amounts, dates, references and all existing monetary/original assertions remain unchanged."
+    formula: "The complete actual workspace uses real bridge/engine/prepared context/renderer and typed A/B results, keeps actual legacy wages75000/WH2303, SP6000/WH184, bank3000, DIV2000/capital500 positive facts. Reference filenames and partial/notvalidated notices remain; identifiers are redacted before PDF. Explicit diagnostic output mode retains all four actual positive artifacts for strict-reader and visual inspection; normal temporary files are removed. Original business/NRH positive cases are preserved pending methods."
+    testRef: "tests/apps/web/pa-state-packet.test.ts::buildWorkspaceFilledReturnDownload includes the Pennsylvania Schedule B reference summary and marks the packet partial"
+  - line: "legacy-NJ"
+    description: "Original NJ wage dollars never become invented taxable PA income"
+    formula: "Preserve Taylor Northwind original NJ W2 wages75000/withheld2500. Separate actual NJ domicile and ordinary employee payroll originals50000PAservices+25000outside establish reciprocal exclusion50000 and taxable PA compensation0. Original freePA50000/estimate400 and NRH positive workspace cases stay unchanged pending proper successor coverage; no new arbitrary scalar admission."
+    testRef: "tests/engine/state/pa-ordinary-investment-sources.test.ts::ordinary investment migration preserves original NJ reciprocal source correctness"
