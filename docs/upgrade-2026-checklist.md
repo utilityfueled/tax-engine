@@ -19,6 +19,11 @@ The owner selected PA and Ohio, each with full-year resident, part-year resident
 
 - [x] `ae86999f`: [2026 PA care-credit conformity](upgrade-2026-pa-dc-conformity-work.md) uses actual current federal care records with frozen 2022 PA percentages. Independent32 controls and main439 tests/11files, three types/spec6561/inventory617/lint/build pass. Canonical source handoff and additional care methods remain internal work; no final-form/human qualification is implied.
 
+- [x] `790ec31e` delivers the ordinary Ohio business apportionment worksheet after 25 independent controls, 853 main tests in six files and all nine package checks. Canonical fresh C/AGI derivation and full business/state integration remain internal work.
+- [x] `58c2ce3a` corrects reported PA income-class arithmetic after 20 independent controls, 1,640 main tests in 76 files and all nine checks. The separate payment/penalty and historical 2024 source correction is under review.
+- [x] `87b23938` delivers actual-owner PA ordinary residency originals and dedicated confirmation UI after 33 independent controls, 962 main tests in eight files and all nine checks. The private shared PA/OH integration passes 22 tests in five files, all three type checks, 6,600 spec references and 561 strict-reference checks. Full source-bound return/payment/export integration remains required.
+- [ ] Finish the active reported PA payment/penalty package (six genuine failures then 96 focused passes and three type checks; independent final review pending), frozen REV-1630 review, PA reciprocity, Ohio payment facts and the actual dated-payment successors. These are internal implementation tasks. Actual multi-state W-2 rows and once-only federal wage counting also remain required; a single-state source cannot prove a missing continuation row.
+
 Claude's delivered October 31 packages are preserved. The branch now includes
 and has pushed these separately reviewed packages:
 

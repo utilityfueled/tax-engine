@@ -12226,8 +12226,8 @@
       "inventoryEntries": 604,
       "humanQualified": false
     },
-    "currentHead": "ae86999f663f0dd15e3faa2dded54f8ebe798063",
-    "currentRemoteHead": "ae86999f663f0dd15e3faa2dded54f8ebe798063",
+    "currentHead": "87b23938cbea4c0341b0b07523edb9b9a1bc11c9",
+    "currentRemoteHead": "87b23938cbea4c0341b0b07523edb9b9a1bc11c9",
     "currentRuleVersions": {
       "2025": "2025.223",
       "2026": "2026.221-law-integration-draft"
@@ -12812,6 +12812,56 @@
       "independentControls": 32,
       "evidence": ".local/upgrade-evidence/nov02-parent-pa-dc-main-v2",
       "remaining": "Canonical PA/guide care sources, positive129/prior-credit/special-income/binding-limit/partial-year methods; final2026 physical and human qualification"
+    },
+    "ohioBusinessSources20261102": {
+      "commit": "790ec31ea082cb294c7dc145f68e4fbde367cb47",
+      "pushed": true,
+      "mainTests": 853,
+      "files": 6,
+      "mainChecks": "9pass",
+      "independentControls": 25,
+      "evidence": ".local/upgrade-evidence/nov02-parent-ohio-business-main",
+      "remaining": "Fresh canonical C/AGI/payroll/rent derivation; all business/owner coverage, guide, source-bound PDF and complete state qualification"
+    },
+    "paPrintedIncome20261102": {
+      "commit": "58c2ce3a6b1d9baf37d7140fba780f0a59d13bd4",
+      "pushed": true,
+      "mainTests": 1640,
+      "files": 76,
+      "mainChecks": "9pass",
+      "independentControls": 20,
+      "evidence": ".local/upgrade-evidence/nov02-parent-pa40-main",
+      "remaining": "Payment/credit/penalty reported-line rounding,2024source refresh, full actual source/upstream class/household/state/physical qualification"
+    },
+    "activeStateSharedIntegration20261102": {
+      "source": "/var/folders/vj/n88qs2v507967d25plmyd19h0000gn/T/tax-nov02-state-guide-87b-m75tksn2/source",
+      "mainBase": "87b23938cbea4c0341b0b07523edb9b9a1bc11c9",
+      "status": "Private;22tests/5files, all3types,spec6600/6600,strict561pass. PAactualsourceUI and OHcanonicaloriginalboundary implemented; whole-state/payment/full-context integration pending",
+      "mainPAOrdinary10": "Delivered87b23938 afterindependent33controls,main962/8andall9checks; sourcehelpers only, notcompleteall3statequalification",
+      "multiStateW2": "Required internal source model/guide/once-only federal counting successor; no missing state row inferred"
+    },
+    "paOrdinarySources20261102": {
+      "commit": "87b23938cbea4c0341b0b07523edb9b9a1bc11c9",
+      "pushed": true,
+      "mainTests": 962,
+      "files": 8,
+      "mainChecks": "9pass",
+      "independentControls": 33,
+      "evidence": ".local/upgrade-evidence/nov02-parent-pa-ordinary-main",
+      "remaining": "Canonical/sourceboundall3PAstatecore, completehouseholds/incomeclasses,actualpayments/credits/local/forms; humanqualification"
+    },
+    "activePA40ReportedSettlement20261102": {
+      "source": "mainuncommitted3paths",
+      "status": "6genuinebehaviorfailures/90passed beforeproduct;96focusedpass/all3types afterward; independentfinalreviewandbroadmaincheckspending",
+      "evidence": ".local/upgrade-evidence/nov02-parent-pa40-reported-settlement",
+      "remaining": "Review/finalmainchecks/commitpush; upstreamactualeligibility/receipt/dates separate"
+    },
+    "activePAREV163020261102": {
+      "source": "/private/tmp/tax-nov02-pa-rev1630-_3uw79av/source",
+      "status": "Authorfrozen7paths/339focused/563strict-year/all3types/spec/lintpass;independentrootreviewprepared,noexecutionyet",
+      "manifest": ".local/upgrade-evidence/nov02-pa-rev1630-correction/frozen-package.json",
+      "independentSource": "/private/tmp/tax-nov02-rev-independent-m5q8oopn/source",
+      "remaining": "Independentreview/mainintegration;actualdatedpayment/priorreturn/exceptionmethods;unsourced2027interestguarded"
     }
   }
 }
