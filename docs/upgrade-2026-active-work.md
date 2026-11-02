@@ -161,3 +161,6 @@ status/diff inside archive-only trees. Continue implementing all unblocked work.
   awaits distinct independent review. Actual official full12page blank retained.
 
 - `11cea224` pushed: actual paid resident-credit composition, main121/10/all11.
+
+- `6a88c9b5` pushed: actual source-qualified ordinary G-L review forms, main95/11+10saved-artifact controls/all13; independent40/three; main10PDF/122pages strict and full pixel/text parity.
+- Public API G-L test-only migration: exact8pass/one reciprocal-guard failure reproduced on main; explicit fictional NY307 positive plus retained exact NJ source rejection yields42/two/types/spec/inventory/strictlint0/diff. No engine/source gate changed.

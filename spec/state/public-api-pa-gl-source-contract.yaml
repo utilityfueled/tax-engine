@@ -1,0 +1,22 @@
+form: "Public API PA Schedule G-L arithmetic and reciprocal source guard"
+fullName: "Public calculator surface preserves arithmetic without reciprocal employee qualification"
+taxYear: 2025
+reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/deductions-and-credits"
+notes: |
+  Test-only migration; no tax engine or source admission change. Official PA guide
+  denies resident credit for ordinary employee compensation in NJ and the other
+  reciprocal states. Missing income classification must not infer an exception.
+  Official MOD03-24 G-L requires the same eligible income in both states, limits
+  credit to due/paid and 3.07 percent of eligible income, and requires originals.
+  The NY example is explicitly fictional ordinary-compensation arithmetic with
+  caller-provided final tax paid, not live taxpayer evidence or source qualification.
+  The exact historical NJ input is retained as a public API rejection control.
+lines:
+  - line: "ny-arithmetic-surface"
+    description: "Retain all public exports and original10000/500/307 arithmetic"
+    formula: "Fictional NY ordinary compensation10000; final state income tax paid500; PA cap307;10000*0.0307=307; min500,307 and cap307 =307. Scalars do not prove eligibility."
+    testRef: "tests/public-api.test.ts::exports the broader Pennsylvania calculator surface"
+  - line: "original-nj-source-guard"
+    description: "Historical unclassified NJ and explicit ordinary compensation require reciprocal refund treatment"
+    formula: "Preserve original taxYear2025, PA liability307, NJ same-income10000, paid500 input and require refund/source rejection; explicitcompensation and trimmed lower-case NJ must also reject. No business or shareholder exception is invented."
+    testRef: "tests/public-api.test.ts::retains the historical NJ reciprocal employee source rejection"

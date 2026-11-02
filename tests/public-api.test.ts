@@ -496,7 +496,10 @@ describe("Public API", () => {
       paTaxLiability: new Decimal("307"),
       otherStateCredits: [
         {
-          stateCode: "NJ",
+          // Explicit fictional nonreciprocal compensation arithmetic, not source qualification.
+          // The $500 is assumed final tax paid on the same $10,000, not withholding proof.
+          stateCode: "NY",
+          incomeClass: "compensation",
           incomeTaxableByBothStates: new Decimal("10000"),
           taxPaidToOtherState: new Decimal("500"),
         },
@@ -683,6 +686,13 @@ describe("Public API", () => {
     expect(pa40Result.taxLiability.toString()).toBe("307");
     expect(scheduleSPResult.taxForgivenessCredit.toString()).toBe("184");
     expect(scheduleGLResult.totalCredit.toString()).toBe("307");
+    expect(scheduleGLResult.perStateResults.map((row) => ({
+      stateCode: row.stateCode,
+      income: row.incomeTaxableByBothStates.toString(),
+      paid: row.taxPaidToOtherState.toString(),
+      paTax: row.paTaxOnSharedIncome.toString(),
+      credit: row.credit.toString(),
+    }))).toEqual([{ stateCode: "NY", income: "10000", paid: "500", paTax: "307", credit: "307" }]);
     expect(scheduleUEResult.netUnreimbursedExpenses.toString()).toBe("150");
     expect(scheduleOCResult.totalOtherCredits.toString()).toBe("75");
     expect(scheduleOResult.totalOtherDeductions.toString()).toBe("1150");
@@ -698,5 +708,32 @@ describe("Public API", () => {
     expect(scheduleDCResult.credit.toString()).toBe("300");
     expect(wptcResult.credit.toString()).toBe("80");
     expect(scheduleNRHResult.netPATaxableCompensation.toString()).toBe("2500");
+  });
+
+  // Spec: state/public-api-pa-gl-source-contract.yaml. Preserve the exact old NJ
+  // input and explicit ordinary-compensation variants as refund/source guards.
+  it("retains the historical NJ reciprocal employee source rejection", () => {
+    const historicalInput: ScheduleGLInput = {
+      taxYear: 2025,
+      paTaxLiability: new Decimal("307"),
+      otherStateCredits: [{
+        stateCode: "NJ",
+        incomeTaxableByBothStates: new Decimal("10000"),
+        taxPaidToOtherState: new Decimal("500"),
+      }],
+    };
+    expect(() => calculateScheduleGL(historicalInput)).toThrow(/reciprocal employee tax requires refund, not resident credit/);
+    for (const stateCode of ["NJ", " nj "]) {
+      const explicitCompensation: ScheduleGLInput = {
+        ...historicalInput,
+        otherStateCredits: [{
+          stateCode,
+          incomeClass: "compensation",
+          incomeTaxableByBothStates: new Decimal("10000"),
+          taxPaidToOtherState: new Decimal("500"),
+        }],
+      };
+      expect(() => calculateScheduleGL(explicitCompensation)).toThrow(/reciprocal employee tax requires refund, not resident credit/);
+    }
   });
 });
