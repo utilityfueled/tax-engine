@@ -87,11 +87,12 @@ its minimal enum/type/dropdown edits; it qualifies source capture only.
   2026 facts plus the existing unavailable-rulepack exception; original evidence
   retained and no readiness gate relaxed. Types3/spec/strict0/engine build pass;
   web build also passes; freeze, independent review and main adoption pending.
-- [ ] Hosted homepage request boundary: genuine actual-module regression fails
-  one ofthree before removing the catch around Next request headers. Eight/two,
-  types3/spec/strict0 pass privately; independent5 and synthetic dead-DB build
-  prepared. First unresolved bare-module mock diagnostic is retained separately,
-  not counted as genuine proof. Main adoption and staging checks pending.
+- [x] Hosted homepage request boundary: fresh main one genuine failure/two passes
+  before the edit, then eight/two/types3/spec/strict0/diff pass. Independent13/three
+  plus full synthetic hosted build: `/` dynamic, zero local database attempts.
+  Exact independent receipt `eb257247311dd91f3e82b6c85c1e60ca79fad348621cc38a361f17fa78f112e6`.
+  Initial unresolved-mock diagnostics retained separately. Commit reference follows;
+  actual preview database/runtime qualification remains outstanding.
 - [ ] Finish every other required state household, income-class, local, SD,
   credit, special and dated-payment method. Guards are not completed methods.
 - [ ] Final integrated full suite/coverage/types/spec/inventory/build/lint/browser,

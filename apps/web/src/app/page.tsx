@@ -24,17 +24,9 @@ const trustSignals = [
   { label: "Hosted plans are software tools", detail: `Sync, reminders, and AI helper budgets for tax year ${latestEngineTargetYear}` }
 ];
 
-async function readRequestHeadersSafely() {
-  try {
-    return await headers();
-  } catch {
-    return new Headers();
-  }
-}
-
 export default async function HomePage() {
   const actor = await resolveHostedWorkspaceActor({
-    requestHeaders: await readRequestHeadersSafely()
+    requestHeaders: await headers()
   });
   const prefersLocalDraft = shouldPreferLocalWorkspaceDraft() && !actor;
   const deploymentMode = prefersLocalDraft ? "self-host" : resolveDeploymentMode();
