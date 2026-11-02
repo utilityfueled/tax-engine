@@ -2114,3 +2114,16 @@ test-only merge corrections and unaltered monetary assertions are retained in th
 two guide ledgers and active checklist. This is bounded main evidence; full
 coverage, final2026 forms, independent human reviews and hosted qualification
 remain required.
+
+
+## November2: source-bound ordinary PA review PDFs
+
+Guided PA/OH integration is pushed as`ec1dcccc`. The actual ordinary PA result
+now has its honest transport type and opaque pre-redaction source context for
+PA40 review mapping. Main six genuine behavior reds/five module diagnostics
+precede adopted products;85/eight/all11 checks pass. Independent31pass/one known
+unsupported household skip plus sevenPDFs/17pages strict/privacy/visual review
+approved the frozen candidate. Final-reason and school text remain complete and
+privacy-safe on labelled reference pages; no final2026/filing gate is promoted.
+See the PA ordinary source PDF ledger and active checklist for exact receipts
+and pending richer household/workspace/G-L successors.

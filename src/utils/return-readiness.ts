@@ -630,6 +630,7 @@ export function assessReturnReadiness(
     normalizedStateCode === "PA"
     && !input.taxInput.paNonresidentReturn
     && input.federalResult.stateReturns?.pennsylvania
+    && "scheduleGL"in input.federalResult.stateReturns.pennsylvania
     && shouldIncludePAScheduleGLReferenceSummary(input.federalResult.stateReturns.pennsylvania.scheduleGL)
   ) {
     const hasPAScheduleGLReference = hasIncludedForm(

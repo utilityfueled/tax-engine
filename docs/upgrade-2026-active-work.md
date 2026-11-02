@@ -67,26 +67,26 @@ its minimal enum/type/dropdown edits; it qualifies source capture only.
   Actual complete payment/refund/account originals, exact same-income caps and
   credit-before-SP/penalty order remain required. Main adoption and positive G-L
   PDF/UI methods remain successors. No general resident-credit qualification.
-- [ ] PA ordinary PDF10: original actual final-reason privacy failure and school
+- [x] PA ordinary PDF10: original actual final-reason privacy failure and school
   appearance clipping were corrected before independent approval. Final frozen10
   `nov02-pa-ordinary-pdf/frozen-package-school-appearance.json` SHA
   `6bce7c04e63df98118132e6c140ce183d792699b5d4636f5bd7da2885a4c2881`.
   Independent31pass/one known unsupported skip and sevenPDFs/17pages with exact
   structure/privacy/visual inspection approved receipt
   `9f8b30416d5b4531f37d48f0d838f8465993898cb11848d19ee9fbb392926ddb`.
-  Original unsupported household positive remains recorded; successor below.
+  Main85/eight and all11 package checks pass; original unsupported household positive remains recorded; reviewed successor below.
 - [ ] Root workspace actual PA export: five focused controls plus shared paths
   pass15/four/types3/spec/strict0/build. All three actual renderer packets each
   14pages reopen without fields/widgets/private IDs. Root inspected all42 pages
   via contact sheets and six PA40 pages at full size; exact visual receipt
   `nov02-parent-pa-workspace-export/root-visual-review.json`. Independent13 own
-  controls prepared before runtime. Main adoption and independent runtime pending.
+  controls prepared before runtime. Independent18/two approved d468533ec6fa6a842abf49179676857ba77084f92f4a46f9acf1490a4b65c99a; all42same-render pages pixel/text exact. Main adoption pending.
 - [ ] PA nonchild dependent household: official-source-first37 controls exposed
   19 genuine failures; four-product candidate gives37/37 plus87 prior controls.
   An invalid positive2026 composer expectation was corrected spec-first to direct
   2026 facts plus the existing unavailable-rulepack exception; original evidence
   retained and no readiness gate relaxed. Types3/spec/strict0/engine build pass;
-  web build also passes; freeze, independent review and main adoption pending.
+  web build passes; frozen9 b895b93744af07984c1b27613c342dc3964e78fd9876815d1262fa0499c4f42e independently approved142/10 a1b3e6f109ea76f52652ffe6e5d8f057eeeff81ec329df47c320a85a84e469a8. Separate actual3federal/1SPchild PDFproof independently10/two/12pages approved9dda042befaaf1abc05892f1a5c6ed1f35ab88cdd6e72db0b7f0158159dc3f2b; main adoption pending.
 - [x] Hosted homepage request boundary: fresh main one genuine failure/two passes
   before the edit, then eight/two/types3/spec/strict0/diff pass. Independent13/three
   plus full synthetic hosted build: `/` dynamic, zero local database attempts.
@@ -134,3 +134,15 @@ Preserve unrelated `.pnpm-store/` and `docs/reviews/`. Private work/evidence sta
 under ignored `.local/`. Preserve complete source copies and genuine red/green
 logs. Never run Node concurrently without explicit root handoff; do not run git
 status/diff inside archive-only trees. Continue implementing all unblocked work.
+
+
+## Latest integration references
+
+- `ec1dcccc` pushed: reviewed PA/OH guided originals, main280/16/all11 checks.
+- Positive ordinary resident-credit collector11 frozen743f4be4a1ff892d61684d1b432e38ef48193f2633331a7b45e67b5ead32b20b;
+  author91/eight/allchecks, independent121/10 approved
+  e26205a6d974ecbeb451c9766512a09c99f0747c599b503fb72c691c96f3d2be.
+  Actual facts/persisted-webdraft root wiring and main adoption remain.
+- Ordinary positive G-L PDF extension: official continuous03-24 blank retained
+  with current official instructions; source-first controls underway privately.
+  Positive PA40line22 alone does not prove a complete ordinary packet.

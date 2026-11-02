@@ -1,5 +1,7 @@
 import { markReviewPdf } from "../../export-policy.js";
 import { assertPAWorkingCreditReview, type PreparedPAWorkingCreditReview } from "../../pa-working-credit-review-context.js";
+import {assertPAOrdinaryReturnReview,isPAOrdinaryReturnResult,type PreparedPAOrdinaryReturnReview} from "../../pa-ordinary-return-review-context.js";
+import type {PAOrdinaryReturnResult} from "@/engine/state/pa-ordinary-return.js";
 import { assertPdfExportAllowed } from "../../export-policy.js";
 /**
  * PDF filler for Pennsylvania PA-40 Personal Income Tax Return.
@@ -143,13 +145,17 @@ export const PA_40_FIELDS = {
   spouseDateOfDeath: "Spouse Date of Death",
 } as const;
 
-type PAPacketResult = PAOrchestratorResult | PANonresidentOrchestratorResult;
+type PAPacketResult = PAOrchestratorResult | PANonresidentOrchestratorResult | PAOrdinaryReturnResult;
 
 /** Render-only original facts. Diagnostic callers do not gain source qualification. */
 export interface PA40DiagnosticRenderFacts {
   filingStatus?: "S" | "J" | "M" | "F";
   residency?: { status: "resident" | "part_year" | "nonresident"; schoolCode: string; schoolDistrictName: string; from?: string; through?: string };
   requestedRefund?: string;
+  finalReturnReason?:string;
+  dependentChildren?:number;
+  nextYearCredit?:string;
+  donations?:Array<{code:string;amount:string}>;
 }
 
 function prepareOfficialWidget(form: ReturnType<PDFDocument["getForm"]>, name: string): void {
@@ -192,12 +198,6 @@ function keepReviewNoticeVisible(doc: PDFDocument): void {
 }
 
 
-function hasREV1630(
-  paResult: PAPacketResult,
-): paResult is PAOrchestratorResult & { rev1630: NonNullable<PAOrchestratorResult["rev1630"]> } {
-  return "rev1630" in paResult && paResult.rev1630 !== undefined;
-}
-
 /**
  * Fill a PA-40 PDF from engine calculation results.
  * Returns the filled PDFDocument (caller saves to disk).
@@ -207,6 +207,7 @@ export async function fillPA40(
   result: TaxReturnResult,
   blankPdfPath: string,
   workingCreditReview?: PreparedPAWorkingCreditReview,
+  ordinaryReview?:PreparedPAOrdinaryReturnReview,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const paResult = result.stateReturns?.pennsylvania;
@@ -214,12 +215,24 @@ export async function fillPA40(
     throw new Error("No Pennsylvania state return result available");
   }
 
-  assertPAWorkingCreditReview(input, result, workingCreditReview);
+  let actualFacts:PA40DiagnosticRenderFacts|undefined;
+  if(isPAOrdinaryReturnResult(paResult)||input.paOrdinaryReturnFacts!==undefined||input.paOrdinaryReturnCompletionSources!==undefined||ordinaryReview!==undefined){
+    if(workingCreditReview!==undefined)throw new Error("PA ordinary result requires its own original prepared context");
+    actualFacts=assertPAOrdinaryReturnReview(input,result,ordinaryReview);
+  }else{
+    if(ordinaryReview!==undefined)throw new Error("PA ordinary prepared context cannot qualify a legacy result");
+    assertPAWorkingCreditReview(input,result,workingCreditReview);
+  }
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
-  applyPA40FieldMap(doc, input.taxpayer, paResult);
+  applyPA40FieldMap(doc, input.taxpayer, paResult,actualFacts);
+  await appendSourceTextReferences(doc,actualFacts);
 
-  if ("workingCreditProcessing" in paResult && paResult.workingCreditProcessing?.credit.gt(0)) {
-    const reference = paResult.workingCreditProcessing;
+  const ordinary=isPAOrdinaryReturnResult(paResult);
+  const processing=ordinary?paResult.wptcProcessing: "workingCreditProcessing"in paResult?paResult.workingCreditProcessing:undefined;
+  const workingCredit=ordinary?paResult.workingCredit:"workingPennsylvaniansTaxCredit"in paResult?paResult.workingPennsylvaniansTaxCredit:undefined;
+  if (processing?.credit.gt(0)) {
+    if(!workingCredit)throw new Error("Actual PA working credit source is missing");
+    const reference = processing;
     const page = doc.addPage([612, 792]);
     const font = await doc.embedFont(StandardFonts.Helvetica);
     const rows = [
@@ -227,7 +240,7 @@ export async function fillPA40(
       "This page is not an official PA-40 field or a filing attachment.",
       "The unchanged 2025 paper PA-40 excludes WPTC from printed payments and credits.",
       "Pennsylvania verifies the attached federal return and applies WPTC during processing.",
-      `Actual federal EITC: $${paResult.workingPennsylvaniansTaxCredit!.federalEarnedIncomeCredit.toFixed(0)}`,
+      `Actual federal EITC: $${workingCredit.federalEarnedIncomeCredit.toFixed(0)}`,
       `WPTC processing reference: $${reference.credit.toFixed(0)}`,
       `Credit applied to paper tax principal: $${reference.creditAppliedToTaxDue.toFixed(0)}`,
       `Remaining principal before penalties: $${reference.remainingTaxDueBeforePenalties.toFixed(0)}`,
@@ -281,9 +294,32 @@ export async function projectPA40DiagnosticFields(
   assertPdfExportAllowed(taxpayer.taxYear, taxpayer.taxYear);
   if (!projection.pa40.refundableCredits.eq(0)) throw new Error("PA40 diagnostic projection requires zero unprinted credits");
   applyPA40FieldMap(doc, taxpayer, projection, facts);
+  await appendSourceTextReferences(doc,facts);
   await markReviewPdf(doc);
   doc.setTitle("PA-40 diagnostic field projection - source qualification unavailable");
   return doc;
+}
+
+/** Preserve complete privacy-safe source text beyond original physical field limits. */
+async function appendSourceTextReferences(doc:PDFDocument,facts?:PA40DiagnosticRenderFacts):Promise<void>{
+  const sources=[
+    {field:PA_40_FIELDS.finalReturn,text:facts?.filingStatus==="F"?facts.finalReturnReason:undefined,label:"Final Return reason"},
+    {field:PA_40_FIELDS.schoolDistrictName,text:facts?.residency?.schoolCode!=="99999"?facts?.residency?.schoolDistrictName:undefined,label:"School District name"},
+  ];
+  for(const source of sources){
+    if(!source.text||doc.getForm().getTextField(source.field).getText()!=="SEE REFERENCE")continue;
+    const font=await doc.embedFont(StandardFonts.Helvetica);let page=doc.addPage([612,792]),y=680;
+    const heading=()=>{page.drawText("PA-40 "+source.label+" - REVIEW REFERENCE ONLY",{x:36,y:744,size:11,font});page.drawText("Full privacy-safe source text; this page is not an official filing attachment.",{x:36,y:720,size:9,font});};heading();
+    let line="";
+    const write=(value:string)=>{if(y<48){page=doc.addPage([612,792]);y=680;heading();}page.drawText(value,{x:36,y,size:10,font});y-=15;};
+    for(const word of source.text.split(/\s+/)){
+      if(line&&font.widthOfTextAtSize(line+" "+word,10)>540){write(line);line="";}
+      for(const char of word){if(font.widthOfTextAtSize(line+char,10)>540){write(line);line="";}line+=char;}
+      line+=" ";
+    }
+    if(line.trim())write(line.trim());
+  }
+  await markReviewPdf(doc);
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -342,7 +378,11 @@ function fillFilingInfo(
     setTextField(form, F.schoolCode, residency.schoolCode);
     // Actual outside-PA December31 residence uses instructed code99999, not a
     // fabricated/truncated PA school-district name. Keep the raw original intact.
-    if (residency.schoolCode !== "99999") setTextField(form, F.schoolDistrictName, residency.schoolDistrictName.toUpperCase());
+    if (residency.schoolCode !== "99999") {
+      const name=residency.schoolDistrictName.toUpperCase(),max=form.getTextField(F.schoolDistrictName).getMaxLength();
+      setTextField(form,F.schoolDistrictName,max!==undefined&&name.length>max?"SEE REFERENCE":name);
+      form.getTextField(F.schoolDistrictName).setFontSize(0);
+    }
     if (residency.status === "part_year") {
       const date = (raw: string | undefined) => {
         if (!raw || !/^2025-\d{2}-\d{2}$/.test(raw) || new Date(raw+"T00:00:00Z").toISOString().slice(0,10) !== raw) throw new Error("PA40 actual part-year dates are required");
@@ -354,16 +394,22 @@ function fillFilingInfo(
   }
 
   // Dependents count
-  const depCount = tp.dependents?.length ?? 0;
-  if (depCount > 0) {
+  const depCount = facts?.dependentChildren ?? tp.dependents?.length ?? 0;
+  if(!Number.isInteger(depCount)||depCount<0)throw new Error("PA40 actual dependent child count is invalid");
+  if (depCount > 0 || facts?.dependentChildren!==undefined) {
     setTextField(form, F.dependents, String(depCount));
   }
 
+  if(filing==="F"&&facts?.finalReturnReason!==undefined){
+    if(!facts.finalReturnReason.trim())throw new Error("PA40 actual final-return reason is required");
+    const max=form.getTextField(F.finalReturn).getMaxLength();
+    setTextField(form,F.finalReturn,max!==undefined&&facts.finalReturnReason.length>max?"SEE REFERENCE":facts.finalReturnReason);
+  }
   // Tax Forgiveness checkbox (if Schedule SP credit > 0)
   setCheckBox(form, F.taxForgiveness, paResult.scheduleSP.taxForgivenessCredit.gt(0));
 
   // REV-1630 checkbox (underpayment penalty)
-  if (hasREV1630(paResult) && paResult.rev1630.totalInterest.gt(0)) {
+  if ("rev1630"in paResult && paResult.rev1630?.totalInterest.gt(0)) {
     setCheckBox(form, F.rev1630, true);
   }
 }
@@ -487,5 +533,17 @@ function fillTaxAndPayments(
     const refund = new Decimal(facts.requestedRefund).toDecimalPlaces(0,Decimal.ROUND_HALF_UP);
     if (refund.gt(pa40.netOverpayment)) throw new Error("PA40 requested refund exceeds reported overpayment");
     setCurrencyField(form,F.line30,refund);
+  }
+  if(facts?.nextYearCredit!==undefined){
+    if(!/^\d+$/.test(facts.nextYearCredit))throw new Error("PA40 actual next-year credit election is invalid");
+    setCurrencyField(form,F.line31,new Decimal(facts.nextYearCredit));
+  }
+  if(facts?.donations!==undefined){
+    if(facts.donations.length>5)throw new Error("PA40 donation continuation method is required");
+    const fields=[[F.line32Code,F.line32],[F.line33Code,F.line33],[F.line34Code,F.line34],[F.line35Code,F.line35],[F.line36Code,F.line36]] as const;
+    for(const [index,row]of facts.donations.entries()){
+      if(!/^[A-GIJ]$/.test(row.code)||!/^\d+$/.test(row.amount)||!new Decimal(row.amount).gt(0))throw new Error("PA40 actual donation election is invalid");
+      setTextField(form,fields[index][0],row.code);setCurrencyField(form,fields[index][1],new Decimal(row.amount));
+    }
   }
 }

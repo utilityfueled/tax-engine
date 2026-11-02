@@ -25,6 +25,7 @@ function sameAmount(actual: unknown, expected: Decimal, label: string): void {
 export function assertPAWorkingCreditReview(input: TaxYearInput, result: TaxReturnResult, token?: PreparedPAWorkingCreditReview): void {
   const saved = result.stateReturns?.pennsylvania;
   if (!saved) fail("PA result is missing");
+  if(("methodVersion"in saved && saved.methodVersion==="pa-ordinary-return-v1") || input.paOrdinaryReturnFacts!==undefined || input.paOrdinaryReturnCompletionSources!==undefined) fail("ordinary source result requires its own actual prepared context");
   if (result.taxYear !== input.taxpayer.taxYear) fail("actual and retained source years conflict");
   // The separate NR/part-year orchestrator has no WPTC source method yet.
   // Preserve its existing zero-credit physical mapping without representing qualification.
@@ -43,7 +44,8 @@ export function assertPAWorkingCreditReview(input: TaxYearInput, result: TaxRetu
   } else {
     // Always inspect actual input, even when every retained WPTC route marker was stripped.
     const prepared = preparePAWorkingCreditReview(input);
-    context = contexts.get(prepared)!;
+    context = contexts.get(prepared);
+    if (!context) return fail("an original prepared context is required");
   }
   const expected = context.expected;
   const actualCredit = expected.workingPennsylvaniansTaxCredit;

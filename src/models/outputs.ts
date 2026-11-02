@@ -365,7 +365,8 @@ export interface TaxReturnResult {
     illinois?: import("@/engine/state/il-1040.js").IL1040Result;
     pennsylvania?:
       | import("@/engine/state/pa-orchestrator.js").PAOrchestratorResult
-      | import("@/engine/state/pa-nonresident-orchestrator.js").PANonresidentOrchestratorResult;
+      | import("@/engine/state/pa-nonresident-orchestrator.js").PANonresidentOrchestratorResult
+      | import("@/engine/state/pa-ordinary-return.js").PAOrdinaryReturnResult;
     newJersey?: import("@/engine/state/nj-1040.js").NJ1040Result;
     newYork?: import("@/engine/state/ny-it201-full-return.js").NYIT201FullReturnResult;
   };

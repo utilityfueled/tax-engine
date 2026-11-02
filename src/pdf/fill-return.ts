@@ -1,6 +1,7 @@
 import {calculateScheduleCReviewSource} from "./schedule-c-review-source.js";
 import {preparePARoyaltyReview,assertPARoyaltyReview,type PreparedPARoyaltyReview} from "./pa-royalty-review-context.js";
 import { assertPAWorkingCreditReview, type PreparedPAWorkingCreditReview } from "./pa-working-credit-review-context.js";
+import {assertPAOrdinaryReturnReview,isPAOrdinaryReturnResult,type PreparedPAOrdinaryReturnReview} from "./pa-ordinary-return-review-context.js";
 /**
  * Top-level orchestrator for filling a complete tax return as PDFs.
  * Fills all applicable forms and saves them to the output directory.
@@ -413,6 +414,8 @@ export interface FillReturnOptions {
   paRoyaltyReview?: PreparedPARoyaltyReview;
   /** Actual WPTC originals checked before render-only identifier redaction. */
   paWorkingCreditReview?: PreparedPAWorkingCreditReview;
+  /** Actual complete ordinary originals, privately prepared before redaction. */
+  paOrdinaryReview?:PreparedPAOrdinaryReturnReview;
   /** Actual EIC child records, validated before identifier redaction. */
   eicReview?: PreparedEicReview;
   /** Actual policy allocation and whole-return income, validated before redaction. */
@@ -451,7 +454,15 @@ export async function fillReturn(
   const paRoyaltyReview = (input.royaltyPropertySources && result.stateReturns?.pennsylvania) || options.paRoyaltyReview
     ? options.paRoyaltyReview ?? preparePARoyaltyReview(input) : undefined;
   if (paRoyaltyReview) assertPARoyaltyReview(input,result,paRoyaltyReview);
-  if (result.stateReturns?.pennsylvania) assertPAWorkingCreditReview(input, result, options.paWorkingCreditReview);
+  if (result.stateReturns?.pennsylvania){
+    if(isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)||input.paOrdinaryReturnFacts!==undefined||input.paOrdinaryReturnCompletionSources!==undefined||options.paOrdinaryReview!==undefined){
+      if(options.paWorkingCreditReview!==undefined)throw new Error("PA ordinary result requires its actual ordinary prepared context");
+      assertPAOrdinaryReturnReview(input,result,options.paOrdinaryReview);
+    }else{
+      if(options.paOrdinaryReview!==undefined)throw new Error("PA ordinary prepared context cannot qualify a legacy result");
+      assertPAWorkingCreditReview(input,result,options.paWorkingCreditReview);
+    }
+  }
   const eicReview = hasEicReviewSources(input) || result.scheduleEIC?.form8862 || options.eicReview
     ? options.eicReview ?? prepareEicReview(input) : undefined;
   const actualEicChildren = eicReview ? eicReviewChildren(eicReviewOriginalSourceInput(input, result, eicReview)) : undefined;
@@ -1090,7 +1101,8 @@ export async function fillReturn(
 
   // ── Form 6781 reference summary (if applicable — supported section 1256 and straddle activity) ──
   if (shouldIncludeForm6781ReferenceSummary(input)) {
-    const outputPath6781Reference = await fillForm6781Reference(input.form6781!, outputDir);
+    if (!input.form6781) throw new Error("Actual Form 6781 sources are required for its reference summary.");
+    const outputPath6781Reference = await fillForm6781Reference(input.form6781, outputDir);
     filledForms.push(outputPath6781Reference);
   }
 
@@ -1147,8 +1159,9 @@ export async function fillReturn(
 
   // ── Form 8915-F reference summary (if applicable — supported qualified disaster distribution activity) ──
   if (shouldIncludeForm8915FReferenceSummary(input.form8915F) && result.form8915F) {
+    if (!input.form8915F) throw new Error("Actual Form 8915-F sources are required for its reference summary.");
     const outputPath8915FReference = await fillForm8915FReference(
-      input.form8915F!,
+      input.form8915F,
       input.taxpayer.taxYear,
       result.form8915F,
       outputDir,
@@ -1248,7 +1261,7 @@ export async function fillReturn(
   // ── PA-40 (if applicable — Pennsylvania state return) ──
   if (result.stateReturns?.pennsylvania) {
     const pa40Path = join(blankFormsDir, "pa-40.pdf");
-    const docPA40 = await fillPA40(input, result, pa40Path, options.paWorkingCreditReview);
+    const docPA40 = await fillPA40(input, result, pa40Path, options.paWorkingCreditReview,options.paOrdinaryReview);
     if (flatten) await flattenForm(docPA40.getForm());
     const outputPathPA40 = join(outputDir, "pa-40-filled.pdf");
     await savePacketPdf(docPA40, outputPathPA40);
@@ -1451,6 +1464,7 @@ export async function fillReturn(
 
     if (
       !input.paNonresidentReturn
+      && "scheduleGL"in result.stateReturns.pennsylvania
       && shouldIncludePAScheduleGLReferenceSummary(result.stateReturns.pennsylvania.scheduleGL)
     ) {
       const outputPathPAScheduleGL = await fillPAScheduleGLReference(
