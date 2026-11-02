@@ -1968,13 +1968,13 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
           state: "PA",
         }],
         paScheduleGLStatements: [{
-          stateCode: "NJ",
+          stateCode: "NY",
           incomeTaxableByBothStates: "40000",
           taxPaidToOtherState: "1500",
         }],
       }));
       // PA tax: $100K × 3.07% = $3,070
-      // NJ credit: min($1,500 paid, $40K × 3.07% = $1,228) = $1,228
+      // Fictional nonreciprocal NY credit: min($1,500 paid, $40K × 3.07% = $1,228) = $1,228
       expect(result.scheduleGL.totalCredit.toNumber()).toBe(1228);
       // Net tax: $3,070 - $1,228 = $1,842
       expect(result.pa40.netTaxLiability.toNumber()).toBe(1842);
@@ -2033,7 +2033,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
         }),
         {
           otherStateCredits: [{
-            stateCode: "NJ",
+            stateCode: "NY",
             incomeTaxableByBothStates: d(10000),
             taxPaidToOtherState: d(500),
           }],
@@ -3554,7 +3554,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
         }),
         {
           otherStateCredits: [{
-            stateCode: "NJ",
+            stateCode: "NY",
             incomeTaxableByBothStates: d(15000),
             taxPaidToOtherState: d(600),
           }],
@@ -3614,7 +3614,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       // Schedule G-L — Resident Credit
       // ---------------------------------------------------------------
 
-      // NJ: PA tax on $15,000 shared = $15,000 × 3.07% = $460.50 → $461
+      // Fictional nonreciprocal NY: PA tax on $15,000 shared = $15,000 × 3.07% = $460.50 → $461
       // Credit = min($600 paid, $461 PA tax) = $461
       expect(result.scheduleGL.perStateResults[0].credit.toNumber()).toBe(461);
       expect(result.scheduleGL.totalCredit.toNumber()).toBe(461);
@@ -3896,41 +3896,16 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     });
 
     it("PA orchestrator end-to-end: NJ commuter with full resident credit offset", () => {
-      // PA resident working entirely in NJ — G-L credit should offset most/all PA tax
-      const result = calculatePAReturn(
-        makeInput({
-          w2s: [{
-            employer: { name: "NJ Corp", ein: "77-7777777" },
-            wages: "110000",
-            federalWithheld: "18000",
-            stateWages: "110000",
-            stateTaxWithheld: "3377", // PA withholding
-            state: "PA",
-          }],
-        }),
-        {
-          otherStateCredits: [{
-            stateCode: "NJ",
-            incomeTaxableByBothStates: d(110000),
-            taxPaidToOtherState: d(4500), // NJ tax on $110K
-          }],
-        },
-      );
-
-      // Class 1: $110,000
+      // Historical NJ110000/4500 credit expectation is preserved in original-caller-source.
+      // Actual reciprocal employee scalar evidence requires refund/source method.
+      const input=makeInput({w2s:[{employer:{name:"NJ Corp",ein:"77-7777777"},wages:"110000",federalWithheld:"18000",stateWages:"110000",stateTaxWithheld:"3377",state:"PA"}]});
+      expect(()=>calculatePAReturn(input,{otherStateCredits:[{stateCode:"NJ",incomeTaxableByBothStates:d(110000),taxPaidToOtherState:d(4500)}]})).toThrow(/reciprocal|refund|source/i);
+      // Independently stated fictional NY source preserves all original numeric cap/payment oracles.
+      const result=calculatePAReturn(input,{otherStateCredits:[{stateCode:"NY",incomeTaxableByBothStates:d(110000),taxPaidToOtherState:d(4500)}]});
       expect(result.pa40.totalPATaxableIncome.toNumber()).toBe(110000);
-
-      // Tax: $110,000 × 3.07% = $3,377
       expect(result.pa40.taxLiability.toNumber()).toBe(3377);
-
-      // G-L: PA tax on shared = $110,000 × 3.07% = $3,377
-      // Credit = min($4,500, $3,377) = $3,377
       expect(result.scheduleGL.perStateResults[0].credit.toNumber()).toBe(3377);
-
-      // Net tax: $3,377 - $3,377 = $0
       expect(result.pa40.netTaxLiability.toNumber()).toBe(0);
-
-      // The resident credit zeroes the tax liability; only withholding creates the refund.
       expect(result.pa40.overpayment.toNumber()).toBe(3377);
     });
   });
@@ -5105,7 +5080,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
       const overrides: PAOrchestratorOverrides = {
         otherStateCredits: [{
-          stateCode: "NJ",
+          stateCode: "NY",
           incomeTaxableByBothStates: d(100000),
           taxPaidToOtherState: d(5000),
         }],
@@ -6141,7 +6116,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             },
             otherStateCredits: [
               {
-                stateCode: "NJ",
+                stateCode: "NY",
                 incomeTaxableByBothStates: "10000",
                 taxPaidToOtherState: "400",
               },
@@ -6174,7 +6149,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.scheduleOC).toBeDefined();
       expect(result.scheduleOC!.totalOtherCredits.toNumber()).toBe(150);
       expect(result.scheduleGL.totalCredit.toNumber()).toBe(307);
-      expect(result.scheduleGL.perStateResults[0].stateCode).toBe("NJ");
+      expect(result.scheduleGL.perStateResults[0].stateCode).toBe("NY");
       expect(result.localEIT).toBeDefined();
       expect(result.localEIT!.municipality).toBe("Abington Township");
       expect(result.localEIT!.localEITRate.toNumber()).toBe(0.01);

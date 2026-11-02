@@ -873,7 +873,7 @@ describe("assessReturnReadiness", () => {
       paResidentReturn: {
         otherStateCredits: [
           {
-            stateCode: "NJ",
+            stateCode: "NY",
             incomeTaxableByBothStates: "50000",
             taxPaidToOtherState: "2000",
           },

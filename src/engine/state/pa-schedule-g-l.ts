@@ -5,7 +5,8 @@
  * PA residents who paid income tax to another state on income also taxable
  * by PA may claim a credit. For each state: credit = lesser of (tax paid
  * to other state, PA tax on shared income at 3.07%). Total credit capped
- * at PA-40 Line 12 tax liability.
+ * at PA-40 Line 12 tax liability. This primitive performs arithmetic only;
+ * caller amounts/classification never establish source eligibility.
  */
 
 import Decimal from "decimal.js";
@@ -22,6 +23,10 @@ import { PA_CONSTANTS } from "@/engine/state/pa-40.js";
 export interface OtherStateCredit {
   /** Two-letter state code (e.g., "NJ", "NY", "DE") */
   stateCode: string;
+  /** Explicit caller classification; reciprocal employee exemption is not a business ban.
+   * Actual original eligibility belongs to the source-bound method. Never infer this
+   * classification from a state code, wages, withholding or a computed credit. */
+  incomeClass?: "compensation" | "business" | "rents";
   /** Line 1: Income taxable by both PA and the other state */
   incomeTaxableByBothStates: Decimal;
   /** Line 2: Tax paid to the other state on that income */
@@ -81,6 +86,11 @@ export function calculateScheduleGL(input: ScheduleGLInput): ScheduleGLResult {
 
   for (const entry of input.otherStateCredits) {
     const code = entry.stateCode;
+    if (["IN", "MD", "NJ", "OH", "VA", "WV"].includes(code.trim().toUpperCase())
+      && entry.incomeTaxableByBothStates.gt(0) && entry.taxPaidToOtherState.gt(0)
+      && entry.incomeClass !== "business" && entry.incomeClass !== "rents") {
+      throw new Error("PA Schedule G-L reciprocal employee tax requires refund, not resident credit; missing or unsupported income class needs its actual source method, including dual-resident/shareholder exceptions");
+    }
 
     // Line 1: Income taxable by both states
     audit.record("PA-Schedule-G-L", `1-${code}`,
