@@ -9,6 +9,7 @@ The owner selected PA and Ohio, each with full-year resident, part-year resident
 - [x] `97698bc0` delivers actual-source acquired-goodwill Form4562amortization→C after35independent tests/30PDFs/3958readerchecks/13visuals; main2209tests/50files,3types/spec6518/inventory613/lint/bothbuilds pass.
 - [x] `3202e7b9` removes exactly two unused runner APT packages after actual79→77 package proof, six recovery phases, SBOM/scan and independent review; 13runtime unit tests/syntax/lint pass. The candidate is97698bc0+reviewedpatch, not the final committed-source image. New scanner database reports176matches/80pendingownerIDs; final integrated runtime qualification remains required.
 - [x] `7a4b7f68` updates Philadelphia2026 actual effective-period rates after66independent tests and433main tests/5files, three typechecks/spec6523/inventory613/lint/enginebuild. Mixed city residency and complete PA return remain separate.
+- [x] Public `/support` now records the received PA/OH all-three-residency selection and November2 status; existing capability rows and filing/year gates are unchanged. Existing disclosure tests, web types and scoped lint pass.
 - [ ] Complete PA/OH all three selected residency categories: actual facts, law, guide, source-bound adapters, credits/payments/local boundaries and final forms. PA WPTC and Ohio actual-owner NRC packages are active.
 - [ ] Requalify the final integrated source through full CI/coverage and actual ARM64/AMD64 runtime artifacts after those application commits.
 
