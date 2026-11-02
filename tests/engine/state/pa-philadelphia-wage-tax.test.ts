@@ -142,3 +142,71 @@ describe("Philadelphia Wage Tax / Earnings Tax", () => {
     }))).toThrow("Philadelphia Wage Tax constants not available for tax year 2024");
   });
 });
+
+
+describe("Philadelphia actual 2026 effective periods", () => {
+  it("Philadelphia 2026 selects actual resident and nonresident effective-period rates", () => {
+    // Spec: pa-philadelphia-wage-tax.yaml 2026-rates.
+    const resident = calculatePhiladelphiaWageTax(makeInput({ taxYear: 2026,
+      taxableCompensationPreJuly: d("30000"), taxableCompensationPostJuly: d("30000") }));
+    const nonresident = calculatePhiladelphiaWageTax(makeInput({ taxYear: 2026, residencyStatus: "nonresident",
+      taxableCompensationPreJuly: d("30000"), taxableCompensationPostJuly: d("30000") }));
+    expect([resident.preJulyRate.toString(), resident.postJulyRate.toString(), resident.standardTax.toFixed(2)])
+      .toEqual(["0.0374", "0.03735", "2242.50"]);
+    expect([nonresident.preJulyRate.toString(), nonresident.postJulyRate.toString(), nonresident.standardTax.toFixed(2)])
+      .toEqual(["0.0343", "0.03425", "2056.50"]);
+  });
+
+  it("Philadelphia 2026 preserves period cents and actual withholding settlement", () => {
+    // Spec: pa-philadelphia-wage-tax.yaml 2026-cents-and-settlement.
+    const resident = calculatePhiladelphiaWageTax(makeInput({ taxYear: 2026,
+      taxableCompensationPreJuly: d("10000.25"), taxableCompensationPostJuly: d("20000.75"), withholding: d("1200") }));
+    const nonresident = calculatePhiladelphiaWageTax(makeInput({ taxYear: 2026, residencyStatus: "nonresident",
+      taxableCompensationPreJuly: d("10000.25"), taxableCompensationPostJuly: d("20000.75"), withholding: d("1000") }));
+    expect([resident.standardTax.toFixed(2), resident.overpayment.toFixed(2), resident.balanceDue.toFixed(2)])
+      .toEqual(["1121.04", "78.96", "0.00"]);
+    expect([nonresident.standardTax.toFixed(2), nonresident.overpayment.toFixed(2), nonresident.balanceDue.toFixed(2)])
+      .toEqual(["1028.04", "0.00", "28.04"]);
+  });
+
+  it("Philadelphia 2026 uses reduced tax only with actual Schedule SP approval", () => {
+    // Spec: pa-philadelphia-wage-tax.yaml 2026-approved-reduced-rate.
+    for (const residencyStatus of ["resident", "nonresident"] as const) {
+      const source = makeInput({ taxYear: 2026, residencyStatus,
+        taxableCompensationPreJuly: d("30000"), taxableCompensationPostJuly: d("30000"), withholding: d("1000") });
+      const approved = calculatePhiladelphiaWageTax({ ...source, scheduleSPApproved: true });
+      expect([approved.finalTax.toFixed(2), approved.overpayment.toFixed(2)]).toEqual(["900.00", "100.00"]);
+      for (const scheduleSPApproved of [false, undefined]) {
+        const unapproved = calculatePhiladelphiaWageTax({ ...source, scheduleSPApproved });
+        expect(unapproved.finalTax.equals(unapproved.standardTax)).toBe(true);
+        expect(unapproved.scheduleSPApproved).toBe(false);
+      }
+    }
+  });
+
+  it("Philadelphia 2026 retains explicit zero and one-period source amounts", () => {
+    // Spec: pa-philadelphia-wage-tax.yaml 2026-period-boundaries.
+    for (const [residencyStatus, preTax, postTax] of [["resident", "374.00", "373.50"], ["nonresident", "343.00", "342.50"]] as const) {
+      expect(calculatePhiladelphiaWageTax(makeInput({ taxYear: 2026, residencyStatus })).standardTax.toFixed(2)).toBe("0.00");
+      const pre = calculatePhiladelphiaWageTax(makeInput({ taxYear: 2026, residencyStatus, taxableCompensationPreJuly: d("10000") }));
+      const post = calculatePhiladelphiaWageTax(makeInput({ taxYear: 2026, residencyStatus, taxableCompensationPostJuly: d("10000") }));
+      expect(pre.standardTax.toFixed(2)).toBe(preTax);
+      expect(post.standardTax.toFixed(2)).toBe(postTax);
+    }
+  });
+
+  it("Philadelphia audit labels follow the selected year without changing historical rates", () => {
+    // Spec: pa-philadelphia-wage-tax.yaml year-aware-audit.
+    for (const taxYear of [2025, 2026]) {
+      const result = calculatePhiladelphiaWageTax(makeInput({ taxYear,
+        taxableCompensationPreJuly: d("30000"), taxableCompensationPostJuly: d("30000") }));
+      const periodLines = result.lines.filter(line => ["1", "2", "3-pre", "3-post"].includes(line.line));
+      expect(periodLines).toHaveLength(4);
+      for (const line of periodLines) {
+        expect(line.description).toContain(String(taxYear));
+        expect(line.formula ?? "").not.toContain(String(taxYear === 2025 ? 2026 : 2025));
+      }
+      expect(result.standardTax.toFixed(2)).toBe(taxYear === 2025 ? "2247.00" : "2242.50");
+    }
+  });
+});

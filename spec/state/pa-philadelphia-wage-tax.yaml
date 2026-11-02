@@ -1,16 +1,16 @@
 form: "PA-Philadelphia-Wage-Tax"
 fullName: "Philadelphia Wage Tax / Earnings Tax"
-taxYear: 2025
-reference: "https://www.phila.gov/services/payments-assistance-taxes/taxes/income-taxes/wage-tax-employers/"
+taxYear: 2026
+reference: "https://www.phila.gov/services/business-self-employment/business-taxes/wage-tax-employers/"
 
 notes: |
   Philadelphia imposes a city wage tax on:
     - residents on taxable compensation regardless of where earned, and
     - nonresidents on taxable compensation for services performed in Philadelphia.
 
-  This module covers the supported annual reconciliation slice for tax year 2025:
-    - taxable compensation paid from January 1, 2025 through June 30, 2025
-    - taxable compensation paid on or after July 1, 2025
+  This module covers the supported annual reconciliation slices for tax years 2025 and 2026:
+    - actual taxable compensation paid January 1 through June 30 of the selected year
+    - actual taxable compensation paid July 1 through December 31 of the selected year
     - resident vs. nonresident rate selection
     - the income-based 1.5% reduced rate for taxpayers approved for PA Schedule SP
     - withholding reconciliation
@@ -19,6 +19,18 @@ notes: |
     - Residents: 3.75% through June 30, 2025; 3.74% on and after July 1, 2025
     - Nonresidents: 3.44% through June 30, 2025; 3.43% on and after July 1, 2025
     - Income-based reduced rate: 1.5% when the taxpayer is approved for PA Schedule SP
+
+  Official 2026 rates, refreshed 2026-11-02 from the current City rate page and
+  https://www.phila.gov/documents/tax-rate-schedule/:
+    - Residents: 3.74% through June 30, 2026; 3.735% on and after July 1, 2026
+    - Nonresidents: 3.43% through June 30, 2026; 3.425% on and after July 1, 2026
+    - The approved Schedule SP reduced rate remains 1.5%.
+  Actual compensation must already be classified by payment period and the
+  selected city residency status. This module does not infer days, prorate annual
+  wages, establish remote-work exclusions, or supply a mixed-residency method.
+  Missing/false SP approval retains the existing standard-rate semantics; a new
+  selected launch state does not establish approval or filing qualification.
+  No municipal blank form, guide auto-origination or readiness gate is enabled.
 
   The city materials describe this as a refund/reduced-rate mechanism for low-income
   taxpayers. In the supported engine slice, the reduced rate is modeled as the final
@@ -99,3 +111,32 @@ lines:
     description: "Balance due"
     formula: "If Line 7 > Line 8, Line 7 - Line 8; otherwise 0, rounded to cents"
     testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia Wage Tax Line 10 computes a balance due when liability exceeds withholding"
+
+  - line: "2026-rates"
+    description: "Actual 2026 resident and nonresident effective-period rates"
+    formula: |
+      For 2026 resident use preJuly=0.0374 and postJuly=0.03735.
+      For 2026 nonresident use preJuly=0.0343 and postJuly=0.03425.
+      Tax each actual compensation period at its actual applicable rate, using
+      the existing cents rounding on each period before their sum.
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia 2026 selects actual resident and nonresident effective-period rates"
+
+  - line: "2026-cents-and-settlement"
+    description: "Actual cents and withholding reconciliation in 2026"
+    formula: "standardTax=cents(preComp*preRate)+cents(postComp*postRate); overpayment=max(0,withholding-finalTax); balanceDue=max(0,finalTax-withholding)"
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia 2026 preserves period cents and actual withholding settlement"
+
+  - line: "2026-approved-reduced-rate"
+    description: "Actual approved reduced rate remains separate from standard 2026 rates"
+    formula: "If and only if scheduleSPApproved===true use cents((preComp+postComp)*0.015); otherwise standardTax"
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia 2026 uses reduced tax only with actual Schedule SP approval"
+
+  - line: "2026-period-boundaries"
+    description: "Known zero or one actual pay period does not imply proration"
+    formula: "Zero preComp or postComp contributes zero; positive actual compensation in just one period uses only that period rate"
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia 2026 retains explicit zero and one-period source amounts"
+
+  - line: "year-aware-audit"
+    description: "Audit descriptions and rate explanations identify the actual calculation year"
+    formula: "Use the selected input.taxYear in period descriptions and rate explanations; 2025 remains 2025 and 2026 must not describe 2025 periods"
+    testRef: "tests/engine/state/pa-philadelphia-wage-tax.test.ts::Philadelphia audit labels follow the selected year without changing historical rates"

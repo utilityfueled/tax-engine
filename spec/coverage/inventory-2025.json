@@ -11866,8 +11866,8 @@
     {
       "key": "state/pa-philadelphia-wage-tax",
       "jurisdiction": "state",
-      "taxYear": 2025,
-      "sourceAuthority": "https://www.phila.gov/services/payments-assistance-taxes/taxes/income-taxes/wage-tax-employers/",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.phila.gov/services/business-self-employment/business-taxes/wage-tax-employers/",
       "specPath": "spec/state/pa-philadelphia-wage-tax.yaml",
       "enginePath": "src/engine/state/pa-philadelphia-wage-tax.ts",
       "packetPath": null,
