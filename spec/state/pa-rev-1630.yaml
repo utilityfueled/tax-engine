@@ -15,6 +15,20 @@ notes: |
   packets conservative, the engine only emits a REV-1630 reference summary when
   Line 16 computes a positive estimated-underpayment interest amount.
 
+  This is the published fixed-endpoint worksheet core. Actual timely-payment,
+  prior full-year-return eligibility and endpoint payment facts are caller
+  preconditions, not inferred from these numeric fields. Arbitrary early/late
+  partial payments, uneven-income Exception 2, special exceptions and farmers
+  need their independently sourced method and facts.
+
+  The 2024 printed form repeats Q1 factor 258 despite Apr 15 to Dec 31 being
+  260 elapsed days. Use 258 only as its published worksheet factor; this does
+  not resolve that statutory-day interpretation conflict. Printed Q3 is 106
+  (Sep 16); Q2 is 197. Current REV-1611 supports 2026 daily .000192 through
+  Dec 31 only. There is no sourced 2027 rate: do not reuse .000192 or zero.
+  Final 2026 REV-413 states threshold $430 and dates Apr15/Jun15/Sep15/Jan15,
+  yielding tax-year day factors 260/199/107. This is not a final2026 export.
+
   Key rules:
     - Penalty applies when tax owed after withholding/credits >= $338 (TY2025)
     - Quarterly due dates: April 15, June 16, September 15, January 15
@@ -25,7 +39,7 @@ notes: |
     - 100% Tax Forgiveness in prior year exempts from penalty entirely
 
   Safe harbor exceptions (per quarter):
-    - Exception 1: Cumulative payments ≥ prior year tax at current rate
+    - Exception 1: Cumulative payments ≥ 25/50/75/100% of prior year tax at current rate
     - Exception 2: Annualized income method (90% of tax on income earned per period)
     - Special exception: Prior year tax < $338 AND started paying when income > $11,000
 
@@ -52,7 +66,7 @@ lines:
 
   - line: "2"
     description: "Withholding and credits"
-    formula: "PA-40 Line 13 (withholding) + Line 19 (tax forgiveness) + Line 20 (resident credit) + Line 21 (other credits)"
+    formula: "Sum reported PA-40 Lines 13 + 17 + 21 + 22 + 23 (withholding, NRK-1 withholding, forgiveness, resident credit, other credits)"
     notes: |
       All non-payment credits that reduce the tax liability.
       Does not include estimated payments, prior year credits, or extension payments.
@@ -118,14 +132,14 @@ lines:
   - line: "exception-1"
     description: "Exception 1 — prior year tax safe harbor"
     formula: |
-      For each quarter: cumulative (withholding/4 + estimated payments) ≥ prior year tax at current rate
+      For each quarter: cumulative (roundDollar(withholding/4) + estimated payments) ≥ roundDollar(prior year tax at current rate × cumulative fraction [0.25,0.50,0.75,1.00])
       Prior year tax = prior year PA taxable income × current year rate (3.07%)
       minus prior year Tax Forgiveness credit
     notes: |
       Does not apply if no prior year return filed or prior year was part-year.
       Exception 1 Worksheet: Line A = Line 2 / 4 (quarterly withholding share)
       Line B = estimated payments per quarter, Line C = cumulative A + B.
-      If cumulative C ≥ prior year tax amount, exception applies for that quarter.
+      If cumulative C ≥ the matching reported fraction of prior year tax, exception applies for that quarter.
     edgeCases:
       - "No prior year return: Exception 1 not available"
       - "Prior year tax was zero: exception always met"
@@ -135,7 +149,7 @@ lines:
   - line: "14a"
     description: "Days from due date to Dec 31 (Q1-Q3)"
     formula: "Q1: 260, Q2: 198, Q3: 107 (TY2025, calendar year, filing by Apr 15)"
-    notes: "Adjusted if taxpayer pays underpayment before Dec 31."
+    notes: "The official form adjusts for actual earlier payment; this fixed-endpoint core does not invent that timing or claim arbitrary dated-payment support."
     testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section III - interest calculation matches form example"
 
   - line: "14b"
@@ -173,6 +187,29 @@ lines:
       - "No estimated payments at all: maximum penalty"
       - "All paid in Q1: overpayments eliminate Q2-Q4 underpayments"
     testRef: "tests/engine/state/pa-rev-1630.test.ts::REV-1630 Section III - total interest penalty"
+
+  - line: "year-specific-source-contract"
+    description: "Use published factors and do not invent a succeeding-year rate"
+    formula: "2024 factors 258/197/106; 2025 260/198/107; 2026 threshold430, factors260/199/107, current daily .000192, next-year rate unknown"
+    reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2026/2026_rev-413i.pdf"
+    notes: "2024 printed258/calendar260 discrepancy remains unresolved; only the published worksheet is represented. No 2026 final-form qualification."
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::uses sourced yearly worksheet factors without inventing the 2027 rate"
+
+  - line: "unknown-next-year-rate"
+    description: "Reject only interest-bearing unknown-rate periods"
+    formula: "After exemption/threshold/no-underpayment/Exception1, reject if an unexcepted positive underpayment needs an unsourced next-year rate"
+    reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/otherforms/documents/rev-1611.pdf"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::rejects unexcepted 2026 interest requiring an unknown 2027 rate"
+
+  - line: "reported-inputs"
+    description: "Reported amounts are finite, nonnegative, and rounded once per monetary line"
+    formula: "Reject negative/nonfinite inputs before exemptions; round each reported line, not each underlying statement"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::rejects invalid reported amounts even on an otherwise exempt return %s"
+
+  - line: "quarterly-safe-harbor-boundary"
+    description: "Prior tax1535 has cumulative thresholds384/768/1151/1535"
+    formula: "Cumulative payments383/768/1151/1535 except only Q2-Q4; Q1underpayment1867 produces tax-year93 plus next-year38, total131"
+    testRef: "tests/engine/state/pa-rev-1630.test.ts::compares cumulative payments with the matching rounded prior-tax fraction"
 
 businessRuleValidation:
   - scenario: "Penalty-bearing REV-1630 packet inclusion"

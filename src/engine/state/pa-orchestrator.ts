@@ -17,7 +17,7 @@ import { calculateDigitalAssetStateSources } from "./digital-asset-sources.js";
 import { calculatePARentalIncomeExpenses, type PARentalIncomeExpensesResult } from "@/engine/state/pa-rental-income-expenses.js";
 import { calculatePAOIDSources, type PAOIDSourcesResult } from "@/engine/state/pa-oid-sources.js";
 import { calculatePARentalClassification, type PARentalClassificationResult } from "@/engine/state/pa-rental-classification.js";
-import { d, sum, zeroFloor } from "@/utils/decimal.js";
+import { roundDollar, d, sum, zeroFloor } from "@/utils/decimal.js";
 import type {
   Form1099R,
   PAPassThroughStatement,
@@ -2045,10 +2045,13 @@ export function calculatePAReturn(
     const rev1630Input: REV1630Input = {
       taxYear,
       taxLiability: firstPass.taxLiability,
-      withholdingAndCredits: stateWithholding
-        .plus(scheduleSP.taxForgivenessCredit)
-        .plus(scheduleGL.totalCredit)
-        .plus(allowedOtherCreditsAmount),
+      // Actual reported PA-40 Lines13/17/21/22/23; each line rounds once.
+      // Payment-only lines and separate WPTC processing are not Line2 credits.
+      withholdingAndCredits: roundDollar(stateWithholding)
+        .plus(roundDollar(nonresidentTaxWithheld))
+        .plus(roundDollar(scheduleSP.taxForgivenessCredit))
+        .plus(roundDollar(scheduleGL.totalCredit))
+        .plus(roundDollar(finalOtherCreditsAmount)),
       quarterlyEstimatedPayments: normalizedQuarterlyEstimatedPayments,
       priorYear100PercentForgiveness: resolvedOverrides.priorYear100PercentForgiveness,
       priorYearPATaxableIncome: resolvedOverrides.priorYearPATaxableIncome,

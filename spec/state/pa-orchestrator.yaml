@@ -1238,7 +1238,10 @@ lines:
     notes: |
       REV-1630 is computed only when the caller provides quarterlyEstimatedPayments.
       The withholdingAndCredits input is computed from the final PA-40 result:
-      state withholding + tax forgiveness credit + resident credit + other credits.
+      sum of reported PA-40 Lines 13 + 17 + 21 + 22 + 23: round each line once;
+      include nonresident withholding and the full allowed other-credit amount
+      including Schedule DC. Exclude payment-only Lines 14,15,16,18 and
+      separate department-processing WPTC.
       Supports prior year safe harbor (Exception 1) and prior year 100% forgiveness exemption.
     edgeCases:
       - "No quarterly payments provided: REV-1630 not computed"
@@ -1359,3 +1362,9 @@ lines:
     description: "Stripped actual sources cannot enter the diagnostic fixture boundary"
     formula: "PublicfillPA40 with actualpositive source changed by removing EICproof, canonicalarray and all3savedmarkers rejects beforetemplateIO"
     testRef: "tests/pdf/pa-working-credit-review-context.test.ts::PA WPTC rejects actual originals stripped into partial mapping shape"
+
+  - line: "rev1630-reported-line2"
+    description: "REV-1630 Line2 includes actual printed NRK-1 withholding once"
+    formula: "roundDollar(PA40Line13) + roundDollar(PA40Line17) + roundDollar(PA40Line21) + roundDollar(PA40Line22) + roundDollar(PA40Line23)"
+    reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_rev-1630.pdf"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator REV-1630 includes each reported withholding line once"

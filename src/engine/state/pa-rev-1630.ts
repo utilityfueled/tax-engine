@@ -25,8 +25,8 @@ export interface PAREV1630Constants {
   minimumTaxThreshold: Decimal;
   /** Daily interest rate for the tax year */
   dailyRate: Decimal;
-  /** Daily interest rate for the succeeding tax year */
-  nextYearDailyRate: Decimal;
+  /** Published daily interest rate for the succeeding tax year, unknown until sourced */
+  nextYearDailyRate?: Decimal;
   /** Days from each quarterly due date to Dec 31 (Q1, Q2, Q3) — Line 14a */
   daysToYearEnd: readonly [number, number, number];
   /** Days from Q4 due date to April 15 of following year — Line 14b */
@@ -40,8 +40,9 @@ export const PA_REV1630_CONSTANTS: Record<number, PAREV1630Constants> = {
     minimumTaxThreshold: new Decimal("292"),
     dailyRate: new Decimal("0.000219"),
     nextYearDailyRate: new Decimal("0.000192"),
-    // Q1: Apr 15→Dec 31 = 260, Q2: Jun 17→Dec 31 = 197, Q3: Sep 15→Dec 31 = 107
-    daysToYearEnd: [260, 197, 107] as const,
+    // Published 2024 worksheet factors, not a determination of statutory elapsed days.
+    // Q1 printed258 conflicts with Apr15→Dec31 calendar260; Q3 dueSep16 gives106.
+    daysToYearEnd: [258, 197, 106] as const,
     daysQ4ToFiling: 90, // Jan 15→Apr 15
     daysYearEndToFiling: 105, // Dec 31→Apr 15
   },
@@ -55,13 +56,15 @@ export const PA_REV1630_CONSTANTS: Record<number, PAREV1630Constants> = {
     daysYearEndToFiling: 105, // Dec 31→Apr 15
   },
   2026: {
-    minimumTaxThreshold: new Decimal("338"),
+    // Final 2026 REV-413(I): $14,000 income threshold, $430 net-tax threshold.
+    minimumTaxThreshold: new Decimal("430"),
     dailyRate: new Decimal("0.000192"),
-    nextYearDailyRate: new Decimal("0.000192"),
-    // Q1: Apr 15→Dec 31 = 260, Q2: Jun 16→Dec 31 = 198, Q3: Sep 15→Dec 31 = 107
-    daysToYearEnd: [260, 198, 107] as const,
-    daysQ4ToFiling: 90, // Jan 15→Apr 15
-    daysYearEndToFiling: 105, // Dec 31→Apr 15
+    // REV-1611 is published only through Dec31,2026. No inferred 2027 rate.
+    nextYearDailyRate: undefined,
+    // Final REV-413 due dates Apr15/Jun15/Sep15; no final2026 REV1630 map claim.
+    daysToYearEnd: [260, 199, 107] as const,
+    daysQ4ToFiling: 90,
+    daysYearEndToFiling: 105,
   },
 };
 
@@ -80,16 +83,18 @@ export interface REV1630Input {
 
   /**
    * REV-1630 Line 2: withholding + non-payment credits.
-   * Sum of PA-40 Lines 13 (withholding) + 19 (tax forgiveness) +
-   * 20 (resident credit) + 21 (other credits).
+   * Sum of reported PA-40 Lines 13 + 17 + 21 + 22 + 23.
+   * Does not include payment-only Lines 14/15/16/18 or department-processing WPTC.
    */
   withholdingAndCredits: Decimal;
 
   /**
    * Quarterly estimated payments made by each due date.
-   * [Q1 by Apr 15, Q2 by Jun 16, Q3 by Sep 15, Q4 by Jan 15]
+   * Use the actual year-specific due dates. Published fixed-endpoint worksheet
+   * only: these already-aggregated amounts require independently verified timing;
+   * arbitrary late/partial payments and early payoff need their own method.
    * Include prior year overpayment credit in Q1 if applicable.
-   * Include extension payment in Q4 if applicable.
+   * Include an extension payment in Q4 only if actually paid by that due date.
    */
   quarterlyEstimatedPayments: readonly [Decimal, Decimal, Decimal, Decimal];
 
@@ -102,7 +107,8 @@ export interface REV1630Input {
   /**
    * Prior year PA taxable income (for Exception 1 safe harbor).
    * Used to compute prior year tax at current year rate.
-   * If undefined, Exception 1 is not available.
+   * Caller must establish an actual prior full-year resident return. Numeric0
+   * does not establish filing history. If undefined, Exception1 is not available.
    */
   priorYearPATaxableIncome?: Decimal;
 
@@ -171,6 +177,24 @@ export interface REV1630Result {
 // ---------------------------------------------------------------------------
 
 export function calculateREV1630(input: REV1630Input): REV1630Result {
+  // Validate before exemptions: malformed actual amounts cannot turn into a known0.
+  const amounts = [input.taxLiability, input.withholdingAndCredits,
+    ...input.quarterlyEstimatedPayments,
+    ...[input.priorYearPATaxableIncome, input.priorYearTaxForgivenessCredit]
+      .filter((value): value is Decimal => value !== undefined)];
+  if (input.quarterlyEstimatedPayments.length !== 4 ||
+      amounts.some(value => !value.isFinite() || value.lt(0))) {
+    throw new Error("PA REV-1630 reported amounts must be finite and nonnegative with four payment periods");
+  }
+  // These are reported worksheet lines, not individual raw statement amounts.
+  input = {
+    ...input,
+    taxLiability: roundDollar(input.taxLiability),
+    withholdingAndCredits: roundDollar(input.withholdingAndCredits),
+    quarterlyEstimatedPayments: input.quarterlyEstimatedPayments.map(roundDollar) as [Decimal, Decimal, Decimal, Decimal],
+    priorYearPATaxableIncome: input.priorYearPATaxableIncome === undefined ? undefined : roundDollar(input.priorYearPATaxableIncome),
+    priorYearTaxForgivenessCredit: input.priorYearTaxForgivenessCredit === undefined ? undefined : roundDollar(input.priorYearTaxForgivenessCredit),
+  };
   const constants = PA_REV1630_CONSTANTS[input.taxYear];
   if (!constants) {
     throw new Error(`PA REV-1630 constants not available for tax year ${input.taxYear}`);
@@ -178,6 +202,10 @@ export function calculateREV1630(input: REV1630Input): REV1630Result {
 
   const audit = new AuditTrail();
   const ZERO = new Decimal(0);
+  audit.record("REV-1630", "method", "Published fixed-endpoint worksheet", ZERO,
+    input.taxYear === 2024
+      ? "published worksheet factors258/197/106; Q1printed258 versus calendar260 discrepancy unresolved; actual dated-payment qualification separate"
+      : "published worksheet fixed-endpoint precondition; actual timely-payment/source eligibility must be established separately");
 
   // -----------------------------------------------------------------------
   // Check: prior year 100% Tax Forgiveness exemption
@@ -205,7 +233,7 @@ export function calculateREV1630(input: REV1630Input): REV1630Result {
   // Line 2: withholding and credits
   const withholdingAndCredits = input.withholdingAndCredits;
   audit.record("REV-1630", "2", "Withholding and credits", withholdingAndCredits,
-    "PA-40 Lines 13 + 19 + 20 + 21");
+    "Sum of reported PA-40 Lines 13 + 17 + 21 + 22 + 23");
 
   // Line 3: net tax owed = Line 1a - Line 2
   const netTaxOwed = zeroFloor(taxLiability.minus(withholdingAndCredits));
@@ -318,7 +346,10 @@ export function calculateREV1630(input: REV1630Input): REV1630Result {
         .plus(quarterlyWithholdingShare)
         .plus(input.quarterlyEstimatedPayments[q]);
 
-      if (cumulativePayments.gte(priorYearTaxAtCurrentRate)) {
+      const priorTaxFraction = roundDollar(priorYearTaxAtCurrentRate.times(q + 1).dividedBy(4));
+      audit.record("REV-1630", `12${["a", "b", "c", "d"][q]}`, `Exception1 cumulative threshold Q${q + 1}`,
+        priorTaxFraction, `Prior annual tax × ${q + 1}/4, rounded to reported dollars`);
+      if (cumulativePayments.gte(priorTaxFraction)) {
         quarters[q].exception1Met = true;
       }
     }
@@ -339,9 +370,14 @@ export function calculateREV1630(input: REV1630Input): REV1630Result {
       qd.interest = ZERO;
       if (qd.exception1Met && !qd.underpayment.isZero()) {
         audit.record("REV-1630", `exc1-${label}`, `Exception 1 applies Q${q + 1}`,
-          ZERO, "Cumulative payments ≥ prior year tax — no interest");
+          ZERO, "Cumulative payments ≥ matching25/50/75/100%prior-year tax threshold — no interest");
       }
       continue;
+    }
+
+    const nextYearDailyRate = constants.nextYearDailyRate;
+    if (nextYearDailyRate === undefined) {
+      throw new Error(`PA REV-1630 ${input.taxYear + 1} daily interest rate is not sourced; cannot calculate an unexcepted positive underpayment`);
     }
 
     const quarterInterest = q < 3
@@ -363,12 +399,12 @@ export function calculateREV1630(input: REV1630Input): REV1630Result {
         // Line 15c: next year interest
         const interest14c = roundDollar(
           qd.underpayment
-            .times(constants.nextYearDailyRate)
+            .times(nextYearDailyRate)
             .times(daysInNextYear),
         );
         audit.record("REV-1630", `15c-${label}`, `Interest Q${q + 1} (next year)`,
           interest14c,
-          `$${qd.underpayment} × ${constants.nextYearDailyRate} × ${daysInNextYear} days`);
+          `$${qd.underpayment} × ${nextYearDailyRate} × ${daysInNextYear} days`);
 
         return interest14a.plus(interest14c);
       })()
@@ -379,12 +415,12 @@ export function calculateREV1630(input: REV1630Input): REV1630Result {
         // Line 15b: Q4 interest
         const interest14b = roundDollar(
           qd.underpayment
-            .times(constants.nextYearDailyRate)
+            .times(nextYearDailyRate)
             .times(daysQ4),
         );
         audit.record("REV-1630", `15b-${label}`, `Interest Q4`,
           interest14b,
-          `$${qd.underpayment} × ${constants.nextYearDailyRate} × ${daysQ4} days`);
+          `$${qd.underpayment} × ${nextYearDailyRate} × ${daysQ4} days`);
 
         return interest14b;
       })();

@@ -5061,9 +5061,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
       expect(result.rev1630).toBeDefined();
       expect(result.rev1630!.priorYearTaxAtCurrentRate).toEqual(d(921));
-      // Q1 cumulative: $0 (no withholding/4) + $500 = $500 < $921
+      // Q1 cumulative500 >=25%of921 rounded230
       // Q2 cumulative: $500 + $0 + $500 = $1,000 ≥ $921 → met
-      expect(result.rev1630!.quarters[0].exception1Met).toBe(false);
+      expect(result.rev1630!.quarters[0].exception1Met).toBe(true);
       expect(result.rev1630!.quarters[1].exception1Met).toBe(true);
     });
 
@@ -6571,4 +6571,16 @@ it("PA WPTC processing reference does not change actual paper settlement",()=>{
   expect(processing.creditAppliedToTaxDue.toFixed()).toBe("0");
   expect(processing.remainingTaxDueBeforePenalties.toFixed()).toBe("0");
   expect(processing.additionalOverpaymentBeforePenalties.toFixed()).toBe("433");
+});
+
+// Spec: spec/state/pa-orchestrator.yaml#rev1630-reported-line2
+it("PA orchestrator REV-1630 includes each reported withholding line once", () => {
+  const input=makeInput({w2s:[{employer:{name:"Fictional Work",ein:"12-3456789"},wages:"80000",federalWithheld:"0",stateWages:"80000",stateTaxWithheld:"1500",state:"PA"}]});
+  const result=calculatePAReturn(input,{nonresidentTaxWithheld:d(700),quarterlyEstimatedPayments:[d(0),d(0),d(0),d(0)]});
+  expect(result.pa40.taxLiability).toEqual(d(2456));
+  expect(result.rev1630?.withholdingAndCredits).toEqual(d(2200));
+  expect(result.rev1630?.netTaxOwed).toEqual(d(256));
+  expect(result.rev1630?.totalInterest).toEqual(d(0));
+  const cents=calculatePAReturn({...input,w2s:[{...input.w2s[0],stateTaxWithheld:"1000.49"}]},{nonresidentTaxWithheld:d("100.49"),quarterlyEstimatedPayments:[d(0),d(0),d(0),d(0)]});
+  expect(cents.rev1630?.withholdingAndCredits).toEqual(d(1100));
 });
