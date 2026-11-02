@@ -20,7 +20,9 @@ function name(value: string) { return value.trim().replace(/\s+/g, ' ').toUpperC
 export interface OhioPaymentSourceProjection {
     facts: OhioPaymentFacts;
     sourceDigest: string;
-    methodVersion: 'ohio-it1040-calendar-endpoint-payment-sources-v1';
+    methodVersion: 'ohio-it1040-calendar-endpoint-payment-sources-v1' | 'ohio-it1040-actual-dated-payment-sources-v1';
+    /** Present only after complete actual dated source admission; never an override. */
+    datedPayments?: ReadonlyArray<{ date: string; amount: Decimal }>;
     estimatedPayments: Decimal;
     estimatedPaymentSchedule: EstimatedPaymentEntry[];
     priorYearTaxLiability?: Decimal;
@@ -92,9 +94,14 @@ export function buildOhioPaymentSource(input: TaxYearInput, raw: unknown): OhioP
                 fail('actual state for nonzero statement withholding is missing');
         }
     const payoff = facts.remainingTaxPayment;
+    const endpointDates = ['2025-04-15', '2025-06-16', '2025-09-15', '2026-01-15'];
+    const dated = facts.paymentRows.some(row => !new Decimal(row.amount).isZero() && !endpointDates.includes(row.date))
+        || payoff.status === 'actual_payment' && payoff.date !== '2026-04-15';
+    if (dated && payoff.status === 'expected_payment')
+        fail('actual dated interval payment method requires actual settlement evidence, not an expected payment');
     if (payoff.status !== 'no_remaining_tax') {
         const paid = actualDate(payoff.date);
-        if (paid !== '2026-04-15')
+        if (paid < '2025-01-01' || paid > '2026-04-15' || paid !== '2026-04-15' && !dated)
             fail('actual dated interval payment method is required');
         if (payoff.status === 'expected_payment') {
             if (paid < asOf)
@@ -107,9 +114,12 @@ export function buildOhioPaymentSource(input: TaxYearInput, raw: unknown): OhioP
                 fail('actual remaining-tax payment original contradicts current account facts');
         }
     }
-    const schedule: EstimatedPaymentEntry[] = [];
+    const schedule: Array<{ date: string; amount: Decimal }> = [];
     const ids = new Set<string>();
     const originals = new Set<string>();
+    const actualConfirmations = new Set<string>();
+    const confirmationKey = (accountSsn: string, confirmation: string) => ssn(accountSsn) + ':' + confirmation.trim().toUpperCase();
+    if (dated && payoff.status === 'actual_payment') actualConfirmations.add(confirmationKey(payoff.original.accountSsn, payoff.original.confirmationNumber));
     for (const row of facts.paymentRows) {
         const person = owners.get(row.accountHolder);
         if (!person)
@@ -120,10 +130,13 @@ export function buildOhioPaymentSource(input: TaxYearInput, raw: unknown): OhioP
         if (row.taxYear !== facts.taxYear || receipt.taxYear !== facts.taxYear || row.date !== receipt.date || row.kind !== receipt.kind || row.returnType !== receipt.returnType || !new Decimal(row.amount).eq(receipt.amount))
             fail('actual original payment receipt contradicts current row');
         const paid = actualDate(row.date);
-        if (!new Decimal(row.amount).isZero() && !['2025-04-15', '2025-06-16', '2025-09-15', '2026-01-15'].includes(paid))
+        if (!new Decimal(row.amount).isZero() && !endpointDates.includes(paid) && !dated)
             fail('actual dated interval payment method is required');
-        if (paid > asOf || paid < '2025-01-01')
+        if (paid > asOf || paid < '2025-01-01' || dated && paid > '2026-04-15')
             fail('actual payment date is outside known current account records');
+        const confirmation = confirmationKey(receipt.accountSsn, receipt.confirmationNumber);
+        if (dated && actualConfirmations.has(confirmation)) fail('duplicate actual payment receipt confirmation across current account records');
+        if (dated) actualConfirmations.add(confirmation);
         const semantic = digest({ ...receipt, accountName: name(receipt.accountName), accountSsn: ssn(receipt.accountSsn), amount: new Decimal(receipt.amount).toString() });
         if (ids.has(row.sourceId) || originals.has(semantic))
             fail('duplicate payment originals');
@@ -162,5 +175,6 @@ export function buildOhioPaymentSource(input: TaxYearInput, raw: unknown): OhioP
     else if (prior.status === 'filed_return' && !new Decimal(prior.electedCreditCarryforward).isZero())
         fail('actual prior elected carryforward availability is unknown');
     const estimated = schedule.reduce((sum, row) => sum.plus(row.amount), new Decimal(0));
-    return { facts, sourceDigest: digest({ original: input, facts }), methodVersion: 'ohio-it1040-calendar-endpoint-payment-sources-v1', estimatedPayments: estimated, estimatedPaymentSchedule: schedule, priorYearTaxLiability: priorLiability, priorYearTimelyFiled: timely, useTax: new Decimal(facts.balanceFacts.useTax), creditCarryforward: new Decimal(facts.balanceFacts.outgoingCarryforward), donations: new Decimal(facts.balanceFacts.donations), latePaymentInterest: new Decimal(0), valuationDate: valued, asOfDate: asOf, timingKind: timing.kind };
+    const datedPayments = dated ? [...schedule, ...(payoff.status === 'actual_payment' ? [{ date: payoff.date, amount: new Decimal(payoff.amountAppliedToTax) }] : [])] : undefined;
+    return { facts, sourceDigest: digest({ original: input, facts }), methodVersion: dated ? 'ohio-it1040-actual-dated-payment-sources-v1' : 'ohio-it1040-calendar-endpoint-payment-sources-v1', datedPayments, estimatedPayments: estimated, estimatedPaymentSchedule: schedule, priorYearTaxLiability: priorLiability, priorYearTimelyFiled: timely, useTax: new Decimal(facts.balanceFacts.useTax), creditCarryforward: new Decimal(facts.balanceFacts.outgoingCarryforward), donations: new Decimal(facts.balanceFacts.donations), latePaymentInterest: new Decimal(0), valuationDate: valued, asOfDate: asOf, timingKind: timing.kind };
 }

@@ -1,0 +1,72 @@
+form: "Ohio actual dated payment source integration"
+fullName: "Source-complete ordinary 2025 IT1040 dated PartII successor"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1762982551/tax.ohio.gov/forms/ohio_individual/individual/2025/itsd2210.pdf"
+notes: |
+  Separate successor to frozen OH actualW2 consumer and corrected guarded dated
+  pure calculator. No 2026, SD/combined, late-payment, special method or actual
+  withholding-date qualification. All existing source and scalar override gates
+  remain. Actual current liability is IT1040 line10 minus actual line16, after
+  NRC and credit calculation. No taxpayer required-payment/precision selector.
+  Actual payment and filing dates are separate. Expected payoff is insufficient
+  evidence for an interior actual dated calculation. Existing endpoint version
+  and original expected-payment arithmetic remain unchanged without admission.
+  The original annual-cash/catchup PartI guard remains; this successor does not
+  silently qualify its separate timely-installment interpretation.
+lines:
+  - line: "source-admission"
+    description: "Current complete actual receipt source admission"
+    formula: |
+      Reuse strict OhioPaymentFacts/current federal snapshot/canonical W2 packet
+      and nonW2 metadata validation. Confirmed equal-quarter withholding only.
+      Permit interior actual estimated/extension receipts and early actual balance
+      settlement only after actual owner/name/SSN/year/type/kind/date/amount
+      reconciliation. Actual receipt dates<=asof and <=2026Apr15. Preserve current
+      ordinary calendar/return type/SD/extension/special/prior/carryforward gates.
+      Actual payment confirmation cannot be duplicated across receipts/payoff.
+    testRef: "tests/engine/state/oh-payment-dated-source.test.ts::dated source requires current actual originals and distinct receipt confirmations"
+  - line: "partI-fresh"
+    description: "Fresh canonical PartI and withholding"
+    formula: |
+      Read actual current IT1040 tax after credits, annual OH withholding selected
+      from validated actual Box15/17 or complete legacy sources, and actual prior
+      return/carryforward projections. Report withholding once after sum. Derive
+      current90 and eligible prior annual liability, required annual line9 and
+      exemptions freshly. Preserve timely-installment catchup guard; no taxpayer
+      line9 or arbitrary precision flag. Unknown withholding remains unknown.
+    testRef: "tests/engine/state/oh-payment-dated-source.test.ts::dated integration derives fresh tax and actual Ohio withholding without scalar overrides"
+  - line: "remaining-tax"
+    description: "Actual balance settlement and principal reconciliation"
+    formula: |
+      Fresh principal=max(0,IT1040line10-line16-line14-line15), excluding penalty,
+      use tax/donations. An actual balance receipt amountAppliedToTax must cover
+      this principal and not exceed its original amount. Append that actual
+      applied tax amount only to the dated interest events, never line15 or
+      estimated total. Explicit no_remaining_tax requires principal<=0.
+      Expected balance payment cannot manufacture an actual dated payoff.
+    testRef: "tests/engine/state/oh-payment-dated-source.test.ts::dated integration separates remaining principal from estimated payments and filing date"
+  - line: "dated-accrual"
+    description: "Actual asof, guarded precision and original literal periods"
+    formula: |
+      Call frozen calculateOhioDatedPartII using freshly derived required annual
+      line9, reported annual withholding, actual current-asof and source-verified
+      receipts/carry/actual settlement. Retain published factors for unchanged
+      endpoints; admit interior events only when exact/six-digit/cent methods
+      agree. Zero/excess payments never create artificial segments. Reject
+      positive-balance accrual beyond actualasof and all unqualified cents receipts.
+      Synthetic tax2323,WH1000,estimate200May15,actual1123Feb1: required2091;
+      due deficits273/346/618/891; reported interest2/7/16/3=28; principal1123;
+      original return amount due1151. Last interval ends on actualFeb1 receipt,
+      never actual/expected return filing. Dated details are explicit alongside
+      PartI audit; no invented single effective factor for changing balances.
+    testRef: "tests/engine/state/oh-payment-dated-source.test.ts::dated integration retains independently pinned whole-dollar periods"
+  - line: "endpoint-privacy"
+    description: "Endpoint compatibility and digest-only audit"
+    formula: |
+      Nonadmitted endpoint calculation keeps current endpoint method/version,
+      values, and all original controls. Successful actual dated calculation
+      emits a separate dated source version plus current full original digest.
+      All current original identity/receipt fields affect digest; public lines
+      contain no private SSN/account names/confirmation/source references.
+      Reference and filing/model promotion gates are unchanged.
+    testRef: "tests/engine/state/oh-payment-dated-source.test.ts::dated integration retains endpoint version and keeps actual originals private"

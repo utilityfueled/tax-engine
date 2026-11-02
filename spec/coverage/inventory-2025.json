@@ -11829,6 +11829,25 @@
       ]
     },
     {
+      "key": "state/oh-payment-dated-source",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://dam.assets.ohio.gov/image/upload/v1762982551/tax.ohio.gov/forms/ohio_individual/individual/2025/itsd2210.pdf",
+      "specPath": "spec/state/oh-payment-dated-source.yaml",
+      "enginePath": "src/engine/state/oh-payment-dated-source.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-payment-source",
       "jurisdiction": "state",
       "taxYear": null,

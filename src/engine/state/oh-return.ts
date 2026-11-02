@@ -15,6 +15,9 @@
  */
 
 import Decimal from "decimal.js";
+import { calculateOhioDatedPaymentInterest } from "./oh-payment-dated-source.js";
+import type { OhioPaymentSourceProjection } from "./oh-payment-source.js";
+import type { OhioDatedPartIIResult } from "./oh-it-sd-2210-dated.js";
 import type {OhioResidencyFacts} from "@/models/ohio-residency.js";
 import {calculateOhioITNRC} from "./oh-it-nrc.js";
 import type { FilingStatus } from "@/models/constants.js";
@@ -67,6 +70,7 @@ export interface OhioResidentReturnInput {
   residency?:OhioResidencyFacts;
   residencySourceDigest?:string;
   paymentSourceDigest?:string;
+  paymentDatedSource?:OhioPaymentSourceProjection;
   paymentMethodVersion?:string;
   paymentTaxCoverage?:{status:'no_remaining_tax'|'expected_payment'|'actual_payment';date?:string;amountAppliedToTax?:Decimal|string|number};
   paymentTiming?:{kind:'filed'|'expected';valuationDate:string;asOfDate:string};
@@ -246,6 +250,7 @@ export interface OhioResidentReturnResult {
   residentCredit: OhioResidentCreditResult | null;
   /** IT/SD 2210 result, or null if underpayment penalty was not auto-computed. */
   itsd2210: OhioITSD2210Result | null;
+  itsd2210Dated: OhioDatedPartIIResult | null;
   /** SD 100 IT/SD 2210 result, or null if school district underpayment penalty was not auto-computed. */
   sdItsd2210: OhioITSD2210Result | null;
   /** SD 100 result, or null if no school districts were provided. */
@@ -477,6 +482,7 @@ export function calculateOhioResidentReturn(
 
   // Step 3d: IT/SD 2210 — Compute underpayment penalty if requested
   let itsd2210: OhioITSD2210Result | null = null;
+  let itsd2210Dated: OhioDatedPartIIResult | null = null;
   let underpaymentPenalty = input.underpaymentPenalty;
 
   if (input.computeUnderpaymentPenalty && underpaymentPenalty === undefined) {
@@ -485,7 +491,7 @@ export function calculateOhioResidentReturn(
       firstPass.line8c_totalTax.minus(credits.line40_totalNonrefundableCredits)
     );
 
-    if(input.paymentSourceDigest){
+    if(input.paymentSourceDigest && !input.paymentDatedSource){
       const liability=roundDollar(line10Preview.minus(input.refundableCredits??credits.line47_totalRefundableCredits));
       const withheld=roundDollar(d(input.ohioWithholding));
       const schedule=input.estimatedPaymentSchedule??[];
@@ -500,6 +506,12 @@ export function calculateOhioResidentReturn(
       }
     }
 
+    if (input.paymentDatedSource) {
+      const dated = calculateOhioDatedPaymentInterest(input.paymentDatedSource,
+        line10Preview.minus(input.refundableCredits ?? credits.line47_totalRefundableCredits), d(input.ohioWithholding));
+      itsd2210 = dated.worksheet;
+      itsd2210Dated = dated.partII;
+    } else {
     itsd2210 = calculateOhioITSD2210({
       taxYear: input.taxYear,
       currentYearTaxLiability: line10Preview.minus(input.refundableCredits ?? credits.line47_totalRefundableCredits),
@@ -509,6 +521,7 @@ export function calculateOhioResidentReturn(
       priorYearTimelyFiled: input.priorYearTimelyFiled,
       estimatedPaymentSchedule: input.estimatedPaymentSchedule,
     });
+    }
 
     underpaymentPenalty = itsd2210.line17_totalPenalty;
   }
@@ -616,6 +629,7 @@ export function calculateOhioResidentReturn(
     residentCredit: residentCreditResult,
     nonresidentCreditResult,
     itsd2210,
+    itsd2210Dated,
     sdItsd2210,
     sd100,
     lines,

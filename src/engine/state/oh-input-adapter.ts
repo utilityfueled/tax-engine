@@ -1083,7 +1083,7 @@ export function buildOhioResidentReturnInput(
   if(paymentFacts){
     if((adapted.schoolDistricts?.length??0)||residency?.schoolDistrictStatus!=='no_ohio_taxing_district_residency')throw new Error('Ohio actual payment sources: actual SD/combined method is required');
     const source=buildOhioPaymentSource(taxInput,paymentFacts);
-    adapted.paymentTaxCoverage=source.facts.remainingTaxPayment;adapted.paymentSourceDigest=source.sourceDigest;adapted.paymentMethodVersion=source.methodVersion;adapted.paymentTiming={kind:source.timingKind,valuationDate:source.valuationDate,asOfDate:source.asOfDate};
+    adapted.paymentDatedSource=source.datedPayments ? source : undefined;adapted.paymentTaxCoverage=source.facts.remainingTaxPayment;adapted.paymentSourceDigest=source.sourceDigest;adapted.paymentMethodVersion=source.methodVersion;adapted.paymentTiming={kind:source.timingKind,valuationDate:source.valuationDate,asOfDate:source.asOfDate};
     adapted.ohioWithholding=roundDollar(d(adapted.ohioWithholding));adapted.estimatedPayments=roundDollar(source.estimatedPayments);adapted.estimatedPaymentSchedule=source.estimatedPaymentSchedule;adapted.priorYearTaxLiability=source.priorYearTaxLiability;adapted.priorYearTimelyFiled=source.priorYearTimelyFiled;
     adapted.useTax=roundDollar(source.useTax);adapted.creditCarryforward=roundDollar(source.creditCarryforward);adapted.donations=roundDollar(source.donations);adapted.latePaymentInterest=source.latePaymentInterest;adapted.computeUnderpaymentPenalty=true;
   }
