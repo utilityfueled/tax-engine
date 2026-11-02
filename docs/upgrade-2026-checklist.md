@@ -21,11 +21,12 @@ The owner selected PA and Ohio, each with full-year resident, part-year resident
 
 - [x] `790ec31e` delivers the ordinary Ohio business apportionment worksheet after 25 independent controls, 853 main tests in six files and all nine package checks. Canonical fresh C/AGI derivation and full business/state integration remain internal work.
 - [x] `58c2ce3a` corrects reported PA income-class arithmetic after 20 independent controls, 1,640 main tests in 76 files and all nine checks. The separate payment/penalty and historical2024 source correction follows in c3d60333.
-- [x] `87b23938` delivers actual-owner PA ordinary residency originals and dedicated confirmation UI after 33 independent controls, 962 main tests in eight files and all nine checks. The private shared PA/OH integration passes 22 tests in five files, all three type checks, 6,600 spec references and 561 strict-reference checks. Full source-bound return/payment/export integration remains required.
+- [x] `87b23938` delivers actual-owner PA ordinary residency originals and dedicated confirmation UI after 33 independent controls, 962 main tests in eight files and all nine checks. The historical private shared PA/OH integration passed22tests/5files, types/spec6600/strict561, but its unfrozen temporary source archive was lost during an interrupted run. Those results do not verify the reconstructed current source. Full source-bound return/payment/export integration remains required.
 - [x] `c3d60333` corrects printed PA income/payment/penalty lines, including actual2024 rules, after24 independent controls/120 combined tests and1615 main tests/58files plus all package checks. Raw receipt/penalty cents remain preserved.
 - [x] `a27b4e12` refreshes REV-1630 actual2026 threshold/dates and prior-year safe-harbor quarters after8 independent controls/344 combined tests and1086 main tests/eight files plus all package checks. Unpublished2027 rates and unresolved actual dated methods remain guarded.
 - [x] `dcffe356` derives actual reciprocal employee exclusions and atomic source confirmation after19 independent controls/45 combined tests and890 main tests/11files plus all nine package checks. Original PA service earnings remain available separately from excluded taxable wages.
 - [x] `eb31e1f0` binds Ohio ordinary payment worksheets to actual current/prior account originals. Independent31 source controls,2 saved-artifact cases and14 reopened PDFs/36pages pass; main1464tests/33files, all3 types/spec6636/inventory/lint/build pass. Scoped lint has219 nonnull warnings,0 errors. Actual dated payments, district methods and complete canonical guide integration remain internal work.
+- [x] `bb19116f` replaces the misfiled PA40 blank with actual2025 bytes, repairs actual status widgets, penalty codes, unknown refund intent, occupation fit and review notices. Independent16PDF/32page review confirms all original on-state appearance bytes,145 raw fields/119 widgets and actual values; main716tests/9files/all9 checks/spec6640 pass. Final2026/full-source export and human qualification remain required.
 - [ ] Integrate the separately prepared PA/OH canonical guide packets and complete PA return facts, actual multi-state W-2 rows with once-only federal counting, dated payment methods, school-district/local boundaries and physical forms. These internal tasks remain part of the selected all-three-residency scope.
 
 Claude's delivered October 31 packages are preserved. The branch now includes
@@ -2451,3 +2452,15 @@ without changing product code or saved artifacts. Final integration remains acti
 privately. Charity prior-floor, positive-benefit COD and changed-membership
 histories remain in the finite queue. External review, staging credentials,
 provider evaluation authorization and final-form gates remain unchanged.
+
+
+November2 durability correction: the interrupted run removed temporary private
+source archives. Committed application work and retained evidence remain intact.
+Unfrozen shared integration, PA ordinary facts and Ohio dated work are rebuilt
+from official sources/contracts with fresh spec-first reds; historical green logs
+do not establish source continuity. Every new private archive now lives in
+ignored `.local/upgrade-work/`, with full source copies and patches retained under
+`.local/upgrade-evidence/`. OH guide V2 is reconstructed byte-exact from its frozen
+patch and independently rechecked20tests/3files. Multi-state W2 new10 is likewise
+byte-exact; its actual downstream consumer8 has a new four-case behavior red,
+37tests/7files and static checks, with independent review pending.

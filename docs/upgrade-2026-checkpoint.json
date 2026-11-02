@@ -12226,8 +12226,8 @@
       "inventoryEntries": 604,
       "humanQualified": false
     },
-    "currentHead": "eb31e1f0b7ff95eca2a156d5c901383f8fcfa0e6",
-    "currentRemoteHead": "eb31e1f0b7ff95eca2a156d5c901383f8fcfa0e6",
+    "currentHead": "bb19116f1f123210531f4efa4ad53842f189bade",
+    "currentRemoteHead": "bb19116f1f123210531f4efa4ad53842f189bade",
     "currentRuleVersions": {
       "2025": "2025.223",
       "2026": "2026.221-law-integration-draft"
@@ -12834,12 +12834,12 @@
       "remaining": "Payment/credit/penalty and2024reported rules deliveredc3d60333; full actual upstream class/household/state/physical qualification remains"
     },
     "activeStateSharedIntegration20261102": {
-      "source": "/var/folders/vj/n88qs2v507967d25plmyd19h0000gn/T/tax-nov02-state-guide-87b-m75tksn2/source",
-      "mainBase": "87b23938cbea4c0341b0b07523edb9b9a1bc11c9",
-      "status": "Private;22tests/5files, all3types,spec6600/6600,strict561pass. PAactualsourceUI and OHcanonicaloriginalboundary implemented; whole-state/payment/full-context integration pending",
+      "source": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-work/root-state-integration/source",
+      "mainBase": "3dfe1316c0932b2e7bfc4c2b0c8c389f219aaee2",
+      "status": "Unfrozen historical temporary14 source archive lost on interruption. Rebuilt source-first in durable ignored archive; historical22tests/5files are not current proof. New canonical schema true2red\u21922green; shared source handoff/invalidation true4red retained, firstgreen running. No main shared code adopted.",
       "mainPAOrdinary10": "Delivered87b23938 afterindependent33controls,main962/8andall9checks; sourcehelpers only, notcompleteall3statequalification",
       "multiStateW2": "Required internal source model/guide/once-only federal counting successor; no missing state row inferred",
-      "remainingQueue": "Rebase preserved14 root paths onto eb31e1f0; admit ohioPayments/paReciprocitySources/paOrdinaryReturnFacts and W2stateLocalSources source-first. OHguide5 frozen separately, PAfacts10/W2new10 active private. No partial route publication."
+      "remainingQueue": "Full PA/OH all3 residency canonical guide/preview/workspace/private-context integration; PAordinaryfacts10 reconstruction, W2 source10+consumer8 independent review/shared admission, OHdated5 independent review, SD/local and other source methods, forms, full final qualification."
     },
     "paOrdinarySources20261102": {
       "commit": "87b23938cbea4c0341b0b07523edb9b9a1bc11c9",
@@ -12909,6 +12909,31 @@
       "specReferences": 6636,
       "lintWarnings": 219,
       "lintErrors": 0
+    },
+    "paPhysical20261102": {
+      "commit": "bb19116f1f123210531f4efa4ad53842f189bade",
+      "pushed": true,
+      "mainTests": 716,
+      "files": 9,
+      "checks": "all9pass; spec6640; lint0errors8preexistingwarnings",
+      "independentPDFs": 16,
+      "independentPages": 32,
+      "rawFields": 145,
+      "widgets": 119,
+      "onAppearanceMismatches": 0,
+      "independentReviewSHA256": "69d961b456027fcfc3dbe7296f62b9b8ca987a24fdb2e66044e7021459967a7f",
+      "evidence": ".local/upgrade-evidence/nov02-parent-pa40-actual-2025-physical",
+      "remaining": "Canonical complete source-bound state return/PDF integration, final2026 forms and human qualification"
+    },
+    "privateSourceDurability20261102": {
+      "temporaryArchivesLost": true,
+      "committedWorkPreserved": true,
+      "newArchiveRoot": ".local/upgrade-work",
+      "newEvidenceRequires": "full source copies and patches per coherent state; hashes/logs alone are not reconstructed source proof",
+      "ohGuideV2": "frozen5 exact reconstruction; independent20/3pass SHA6dfa6fac43cb3527736a2f68df3b7d680a3f76eac2804ae01347110ec6785f53",
+      "w2Consumers8": "new source-first4red\u219237/7green,3types/spec6647/lint0err8oldwarn; independent review pending",
+      "ohDated5": "rebuilt source-first missing-module red\u219277/77combined,types/spec/lint; independent review pending",
+      "paOrdinaryFacts10": "rebuilt source-first missing-module red; product reconstruction active"
     }
   }
 }
