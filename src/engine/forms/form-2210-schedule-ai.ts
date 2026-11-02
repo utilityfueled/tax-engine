@@ -1,3 +1,4 @@
+import type { Form2210OwnerSourceContext } from './form-2210-owner-source.js';
 /** Form 2210 Schedule AI. Spec: spec/federal/form-2210-schedule-ai.yaml. */
 import Decimal from 'decimal.js';
 import { getConstants, type FilingStatus } from '@/models/constants.js';
@@ -16,7 +17,7 @@ const MONEY = /^\d+(\.\d+)?$/, SIGNED = /^-?\d+(\.\d+)?$/;
 /** Completed return facts. Column (d) covers the full year, so it must reconcile. */
 export interface Form2210ScheduleAiReturn {
   standardDeduction: Decimal; agi: Decimal; taxableIncome: Decimal; itemizedDeductions?: Decimal; preferentialIncome: boolean;
-  selfEmployedOwners: number; specialTaxMethod: boolean; schedule1ADeduction?: Decimal;
+  selfEmployedOwners: number; specialTaxMethod: boolean; schedule1ADeduction?: Decimal; ownerSources?: Form2210OwnerSourceContext;
 }
 export interface Form2210ScheduleAiInput {
   taxYear: number; filingStatus: FilingStatus; requiredAnnualPayment: Decimal; taxAfterRefundableCredits: Decimal;
@@ -34,11 +35,21 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
   if (periods?.length !== 4) throw new Error('Form 2210 Schedule AI requires all four actual cumulative periods');
   if (returnContext.preferentialIncome) throw new Error('Form 2210 Schedule AI with qualified dividends or net capital gain needs its separate period worksheet method');
   if (returnContext.specialTaxMethod) throw new Error('Form 2210 Schedule AI with Schedule J, Form 8615 or foreign earned income needs its separate tax method');
-  if (returnContext.selfEmployedOwners > 1) throw new Error('Form 2210 Schedule AI needs a separate PartII for each self-employed spouse');
+  if (returnContext.selfEmployedOwners > 1 && facts.selfEmploymentOwnerPeriods === undefined) throw new Error('Form 2210 Schedule AI needs a separate PartII for each self-employed spouse with actual owner sources');
   if (filingStatus === 'married_filing_jointly' && typeof facts.bothSpousesSelfEmployed !== 'boolean') {
     throw new Error('Form 2210 Schedule AI requires the actual answer on whether both spouses were self-employed');
   }
-  if (facts.bothSpousesSelfEmployed === true) throw new Error('Form 2210 Schedule AI needs a separate PartII for each self-employed spouse');
+  const ownerFacts=facts.selfEmploymentOwnerPeriods, ownerContext=returnContext.ownerSources;
+  if(facts.bothSpousesSelfEmployed===true&&ownerFacts===undefined) throw new Error('Form 2210 Schedule AI needs a separate PartII for each self-employed spouse with actual owner sources');
+  if(ownerFacts!==undefined){
+    if(filingStatus!=='married_filing_jointly'||facts.bothSpousesSelfEmployed!==true||ownerFacts.length!==2||!ownerContext||!/^[a-f0-9]{64}$/.test(ownerContext.sourceCommitment)||ownerContext.owners.length!==2)throw new Error('Form2210 separate PartII owner sources and actual canonical owner context are required');
+    for(const owner of ['primary','spouse'] as const){
+      const rows=ownerFacts.filter(row=>row.accountHolder===owner),contexts=ownerContext.owners.filter(row=>row.accountHolder===owner);
+      const row=rows[0],ctx=contexts[0];
+      if(rows.length!==1||contexts.length!==1||!row||!ctx||row.sourceTaxYear!==taxYear||!row.sourceReference?.trim()||row.sourceFactsConfirmed!==true||row.periods?.length!==4)throw new Error('Form2210 actual owner source year, reference, confirmation and all four periods are required');
+      if(!amount(row.periods[3]?.netProfitFromSelfEmployment,'owner full-year net profit',true).eq(ctx.netProfit)||!amount(row.periods[3]?.socialSecurityWages,'owner full-year SocialSecurity payroll').eq(ctx.socialSecurityWages))throw new Error('Form2210 owner full-year profit/payroll must reconcile independently to canonical ScheduleSE sources');
+    }
+  }else if(ownerContext!==undefined)throw new Error('Form2210 canonical owner context requires its actual owner period sources');
   const constants = getConstants(taxYear), wageBase = constants.selfEmploymentTax.socialSecurityWageBase, audit = new AuditTrail();
   const installments: Decimal[] = [], line24 = input.requiredAnnualPayment.times('0.25');
   let priorInstallments = new Decimal(0), line25 = new Decimal(0);
@@ -62,8 +73,26 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
     const profit = amount(period.netProfitFromSelfEmployment, 'period self-employment profit', true);
     // Schedule SE rounds net earnings before its $400 test, and column (d) must match it.
     const netEarnings = roundDollar(Decimal.max(0, profit.times('0.9235'))), line28 = netEarnings.lt(400) ? new Decimal(0) : netEarnings;
-    const line31 = Decimal.max(0, wageBase.times(WAGE_LIMIT_TWELFTHS[index]!).div(12).minus(amount(period.socialSecurityWages, 'period social security wages')));
-    const line36 = Decimal.min(line28, line31).times(SOCIAL_SECURITY[index]!).plus(line28.times(MEDICARE[index]!));
+    const periodWageBase = wageBase.times(WAGE_LIMIT_TWELFTHS[index]!).div(12), ssRate = SOCIAL_SECURITY[index]!, medicareRate = MEDICARE[index]!;
+    const line31 = Decimal.max(0, periodWageBase.minus(amount(period.socialSecurityWages, 'period social security wages')));
+    let line36 = Decimal.min(line28, line31).times(ssRate).plus(line28.times(medicareRate));
+    if(ownerFacts&&ownerContext){
+      let totalProfit=new Decimal(0),totalWages=new Decimal(0);line36=new Decimal(0);
+      for(const owner of ['primary','spouse'] as const){
+        const row=ownerFacts.find(item=>item.accountHolder===owner)?.periods?.[index];
+        if(!row)throw new Error('Form2210 requires all actual owner periods');
+        const p=amount(row.netProfitFromSelfEmployment,`${owner} period net profit`,true),w=amount(row.socialSecurityWages,`${owner} period SocialSecurity payroll`);
+        totalProfit=totalProfit.plus(p);totalWages=totalWages.plus(w);
+        const earnings=roundDollar(Decimal.max(0,p.times('0.9235'))),n=earnings.lt(400)?new Decimal(0):earnings;
+        const cap=Decimal.max(0,periodWageBase.minus(w));
+        const ss=Decimal.min(n,cap).times(ssRate),med=n.times(medicareRate),tax=ss.plus(med);
+        line36=line36.plus(tax);
+        for(const [id,value,label] of [['28',n,'Actual owner net earnings'],['29',periodWageBase,'Owner prorated wage base'],['30',w,'Actual owner SocialSecurity payroll'],['31',cap,'Owner remaining wage base'],['33',ss,'Owner annualized SocialSecurity tax'],['35',med,'Owner annualized Medicare tax'],['36',tax,'Owner annualized self-employment tax']] as const)audit.record(FORM,`${id}${column}-${owner}`,label,value,`Separate actual ${owner} PartII`,{'Taxpayer owner':owner});
+      }
+      if(!totalProfit.eq(profit)||!totalWages.eq(amount(period.socialSecurityWages,'period social security wages')))throw new Error('Form2210 combined period profit/payroll contradict actual owner source sums');
+      audit.record(FORM,`15${column}`,'Combined separate-owner self-employment tax',line36,'Sum each actual owner PartII line36 once');
+      if(index===3&&(!amount(period.otherTaxes,'full-year other taxes').eq(ownerContext.otherTaxes)||!amount(period.credits,'full-year credits').eq(ownerContext.credits)))throw new Error('Form2210 full-year other taxes and credits must separately reconcile to actual canonical sources');
+    }
     const line16 = amount(period.otherTaxes, 'period other taxes'), line18 = amount(period.credits, 'period credits');
     const line17 = tax.plus(line36).plus(line16);
     const line19 = Decimal.max(0, line17.minus(line18));
@@ -88,5 +117,6 @@ export function calculateForm2210ScheduleAi(input: Form2210ScheduleAiInput): For
     priorInstallments = priorInstallments.plus(line27);
     line25 = line26.minus(line27);
   });
+  if(ownerContext)audit.record(FORM,'owner-source-commitment','Actual two-owner original source commitment',new Decimal(0),'Digest only; no original private references printed',{'Original source commitment':ownerContext.sourceCommitment});
   return { installments, lines: audit.getLines() };
 }

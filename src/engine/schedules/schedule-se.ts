@@ -110,7 +110,7 @@ export function k1SelfEmploymentAmount(k1: K1SelfEmploymentFacts) {
 export function calculateScheduleSE(
   input: TaxYearInput, constants: YearConstants,
   scheduleCNetProfitOverride?: Decimal, scheduleFNetProfitOverride?: Decimal,
-  options: { additionalNonfarmIncome?: Decimal; additionalNonfarmOwner?: Owner } = {},
+  options: { additionalNonfarmIncome?: Decimal; additionalNonfarmOwner?: Owner; auditOwners?: Owner[] } = {},
 ): ScheduleSEResult {
   const tipPayroll = calculateUnreportedTipPayroll(input, constants);
   const strict = input.taxpayer.taxYear >= 2026;
@@ -176,7 +176,7 @@ export function calculateScheduleSE(
     || (input.form8919 !== undefined && input.form8919.accountHolder === undefined));
   const perTaxpayer = hasUnknownOwner && rawProfits.length
     ? [calculateIndividual(input,constants,rawProfits,undefined,true,tipPayroll)]
-    : (["primary","spouse"] as const).filter(owner => rawProfits.some(p => p.owner === owner))
+    : (["primary","spouse"] as const).filter(owner => rawProfits.some(p => p.owner === owner) || options.auditOwners?.includes(owner))
       .map(owner => calculateIndividual(input,constants,rawProfits.filter(p => p.owner === owner),owner,false,tipPayroll));
   const empty = calculateIndividual(input,constants,[],joint ? undefined : "primary",false,tipPayroll);
   const total = (key: Exclude<keyof ScheduleSEAmounts,"lines">) => sum(...perTaxpayer.map(row => row[key]));

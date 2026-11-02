@@ -1,6 +1,6 @@
 "use client";
 
-import { ANNUALIZED_PERIOD_FIELDS, emptyAnnualizedPeriods, emptyEstimatedTaxFacts, type EstimatedTaxFactsData } from "@/lib/guided-estimated-tax-facts";
+import { ANNUALIZED_PERIOD_FIELDS, emptyAnnualizedPeriods, emptyAnnualizedOwner, emptyEstimatedTaxFacts, type EstimatedTaxFactsData, type AnnualizedOwnerData } from "@/lib/guided-estimated-tax-facts";
 import type { EstimatedPaymentEntry, PaymentData } from "@/lib/guided-interview-flow";
 import { BooleanFact, TextFact } from "./fact-fields";
 import { CurrencyField } from "./currency-field";
@@ -11,7 +11,7 @@ export function EstimatedTaxSourceDetails({ data, appliedCredits = [], taxYear, 
   data?: EstimatedTaxFactsData; appliedCredits?: PaymentData["priorYearAppliedCredits"]; taxYear?: number | null; onChange: (data: EstimatedTaxFactsData | undefined) => void;
 }) {
   if (!data) return <section><h4>Estimated-tax penalty history</h4><p className="guided-hint">Prior-year tax and actual payment timing can change an underpayment penalty. Add the source worksheet when those facts are needed; estimated payments entered above remain separate.</p><button type="button" onClick={() => onChange(structuredClone(emptyEstimatedTaxFacts))}>Add estimated-tax worksheet</button></section>;
-  const update = (patch: Partial<EstimatedTaxFactsData>) => onChange({ ...data, ...patch, ...(Object.keys(patch).every(key => key === "sourceFactsConfirmed") ? {} : { sourceFactsConfirmed: null }) });
+  const update = (patch: Partial<EstimatedTaxFactsData>) => onChange({ ...data, ...patch, ...(patch.calculationMethod !== undefined && patch.calculationMethod !== data.calculationMethod ? { selfEmploymentOwnerPeriods: data.selfEmploymentOwnerPeriods?.map(row => ({ ...row, sourceFactsConfirmed: null })) } : {}), ...(Object.keys(patch).every(key => key === "sourceFactsConfirmed") ? {} : { sourceFactsConfirmed: null }) });
   const dateRows = (key: "withholdingPayments" | "returnPayments", title: string) => <fieldset><legend>{title}</legend>{data[key].map((payment, index) => {
     const prefix = `${title} ${index + 1}`;
     const set = (patch: Partial<EstimatedPaymentEntry>) => update({ [key]: data[key].map((row, i) => i === index ? { ...row, ...patch } : row) });
@@ -41,6 +41,7 @@ export function EstimatedTaxSourceDetails({ data, appliedCredits = [], taxYear, 
         <TextFact label="Waiver statement reference" value={data.waiverStatementReference ?? ""} onChange={waiverStatementReference => update({ waiverStatementReference })} />
       </div></fieldset>}
     {data.calculationMethod === "annualized" && <AnnualizedPeriods data={data} update={update} />}
+    {data.calculationMethod === "regular" && data.selfEmploymentOwnerPeriods !== undefined && <p className="guided-hint">Your separate-owner Schedule AI draft is retained. It is excluded from regular installments. Select annualized income to review and reconfirm its sources, or <button type="button" onClick={() => update({ selfEmploymentOwnerPeriods: undefined })}>Remove retained separate owner worksheet</button>.</p>}
     <fieldset><legend>Actual prior-year history</legend><div className="guided-form-grid">
       <Choice label="Prior-year return and tax status" value={data.priorYearTaxStatus} choices={[["return-filed", "A return was filed"], ["no-return", "No prior return for the tax comparison"], ["no-tax-liability", "No prior-year tax liability"]]} onChange={priorYearTaxStatus => update({ priorYearTaxStatus: priorYearTaxStatus as EstimatedTaxFactsData["priorYearTaxStatus"] })} />
       <BooleanFact label="Prior return covered a full 12 months" value={data.priorYearFullYear} onChange={priorYearFullYear => update({ priorYearFullYear })} />
@@ -81,5 +82,23 @@ function AnnualizedPeriods({ data, update }: { data: EstimatedTaxFactsData; upda
       {ANNUALIZED_PERIOD_FIELDS.map(([key, label, signed]) => <CurrencyField key={key} label={`Period ${index + 1}: ${label}`} allowNegative={signed} value={period[key]}
         onChange={value => update({ annualizedIncomePeriods: periods.map((row, at) => at === index ? { ...row, [key]: value } : row) })} />)}
     </div></fieldset>)}
+    <p className="guided-hint">When both spouses have self-employment sources, keep separate actual Part II records. Enter combined profit and payroll above as the sum of the two owner records. Full-year payroll must match each owner's reported Schedule SE line 8d: W-2 boxes 3 plus 7 and applicable Forms 4137/8919 and railroad compensation, using each line's reporting and rounding rules. These are reported worksheet amounts, not an unrounded grand total. Additional Medicare Tax belongs in line 16 other taxes.</p>
+    {(data.selfEmploymentOwnerPeriods??[]).map((row,index)=>{
+      const set=(patch:Partial<AnnualizedOwnerData>)=>update({selfEmploymentOwnerPeriods:(data.selfEmploymentOwnerPeriods??[]).map((entry,i)=>i===index?{...entry,...patch,...(Object.keys(patch).every(key=>key==='sourceFactsConfirmed')?{}:{sourceFactsConfirmed:null})}:entry)});
+      const prefix=`Self-employment owner ${index+1}`;
+      return <fieldset key={index} style={{minWidth:0}}><legend>{prefix}</legend><div className="guided-form-grid">
+        <Choice label={`${prefix}: Owner`} value={row.accountHolder} choices={[["primary","Primary taxpayer"],["spouse","Spouse"]]} onChange={accountHolder=>set({accountHolder:accountHolder as AnnualizedOwnerData['accountHolder']})}/>
+        <TextFact label={`${prefix}: Source year`} value={row.sourceTaxYear} onChange={sourceTaxYear=>set({sourceTaxYear})}/>
+        <TextFact label={`${prefix}: Source reference`} value={row.sourceReference} onChange={sourceReference=>set({sourceReference})}/>
+        {row.periods.map((period,i)=><fieldset key={i} style={{minWidth:0}}><legend>{ANNUALIZED_LABELS[i]}</legend>
+          <CurrencyField label={`${prefix}, period ${i+1}: Net profit`} allowNegative value={period.netProfitFromSelfEmployment} onChange={netProfitFromSelfEmployment=>set({periods:row.periods.map((p,j)=>i===j?{...p,netProfitFromSelfEmployment}:p)})}/>
+          <CurrencyField label={`${prefix}, period ${i+1}: Social Security payroll`} value={period.socialSecurityWages} onChange={socialSecurityWages=>set({periods:row.periods.map((p,j)=>i===j?{...p,socialSecurityWages}:p)})}/>
+        </fieldset>)}
+        <BooleanFact label={`${prefix}: Sources checked after the last edit`} value={row.sourceFactsConfirmed} onChange={sourceFactsConfirmed=>set({sourceFactsConfirmed})}/>
+        <button type="button" onClick={()=>update({selfEmploymentOwnerPeriods:(data.selfEmploymentOwnerPeriods??[]).filter((_,i)=>i!==index)})}>{prefix}: Remove</button>
+      </div></fieldset>;
+    })}
+    <button type="button" onClick={()=>update({selfEmploymentOwnerPeriods:[...(data.selfEmploymentOwnerPeriods??[]),emptyAnnualizedOwner()]})}>Add self-employment owner source</button>
+    {data.selfEmploymentOwnerPeriods!==undefined&&<button type="button" onClick={()=>update({selfEmploymentOwnerPeriods:undefined})}>Remove separate owner worksheet</button>}
   </fieldset>;
 }

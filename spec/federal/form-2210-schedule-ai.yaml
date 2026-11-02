@@ -17,7 +17,7 @@ notes: |
   tax after credits must reconcile to the completed return, in whole dollars and within
   $2 for tax after credits because the return rounds Schedule SE parts separately. A mismatch rejects, which also stops Schedule 1-A and other deductions with
   no line here. A return's own qualified dividends, net capital gain, Schedule J, Form
-  8615, Form 2555 or two self-employed owners reject, whatever the periods say.
+  8615 or Form 2555 reject, whatever the periods say. Two self-employed owners require separately confirmed actual owner worksheets and canonical per-owner reconciliation.
   The $400 test uses net earnings, following IRC1402(b) and Schedule SE line4c. The
   instructions say self-employment income, so a human reviewer should confirm this.
 sources:
@@ -51,7 +51,7 @@ lines:
     testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::replaces regular installments in the dated penalty"
   - line: "unknown"
     description: "Reject missing facts and unresolved branches"
-    formula: "Fewer than four periods, a blank amount, positive preferential income in the periods or on the return, both spouses self-employed, an unanswered joint self-employment question, or periods supplied with the regular method reject. Entered zero stays zero."
+    formula: "Fewer than four periods, a blank amount, positive preferential income in the periods or on the return, two spouses without complete separate-owner sources, an unanswered joint self-employment question, or periods supplied with the regular method reject. Entered zero stays zero."
     irsRef: "Original-source contract; Schedule AI all-dates rule"
     testRef: "tests/engine/forms/form-2210-schedule-ai.test.ts::rejects missing facts and unresolved branches"
   - line: "guide"
@@ -76,7 +76,7 @@ lines:
     testRef: "tests/engine/forms/form-2210-schedule-ai-2026.test.ts::uses the 2026 wage base under isolated constants"
   - line: "return-wiring"
     description: "Pass completed return facts into the worksheet"
-    formula: "Two self-employed spouses reject despite a false answer. An itemizer whose column d differs from the return rejects."
+    formula: "Two self-employed spouses reject despite a false answer or without complete separate-owner sources. An itemizer whose column d differs from the return rejects."
     irsRef: "Schedule AI PartII; column d"
     testRef: "tests/engine/federal-form-2210-schedule-ai.test.ts::passes return facts into Schedule AI"
   - line: "line-14-schedule-1a"
@@ -90,3 +90,57 @@ lines:
     irsRef: "Instructions for Form2210 (2025), Schedule AI line14; Schedule 1-A"
     testRef: "tests/engine/federal-form-2210-schedule-ai.test.ts::reconciles a return with Schedule 1-A through line 14"
 
+
+  - line: "two-owner-part-ii"
+    description: "Separate actual primary and spouse Part II sources before summing line 15"
+    formula: "Actual per-owner period profits40/60/80/100k and40/80/120/160k; primary payroll50/60/70/80k, spouse0: separate2025 PartII sums26892.32/34815.384/37463.37/36736.83. Never pool wage caps or offset one person's loss against the other. Full-year owner profit and reported ScheduleSE8d payroll reconcile independently. Explicit owner/year/reference/confirmation/four-period facts and canonical owner context required."
+    irsRef: "Final2025 i2210 PartII and f2210 page3 lines28-36; separately complete each spouse's PartII then sum36 into PartI15, retrieved2026-11-02. No new interpretation of the existing400test."
+    testRef: "tests/engine/forms/form-2210-two-owner.test.ts::computes two actual owner Part II worksheets before adding line 15"
+  - line: "two-owner-source-errors"
+    description: "Reject missing, conflicting and shifted owner facts before calculation"
+    formula: "Missing/false source proof, wrong year, duplicate/missing owners, incomplete periods, aggregate contradictions and same-total owner swaps reject. Annual zero/loss owners remain represented when actual source ownership exists; earlier period earnings are not erased. Exact signed profit and explicit zero remain distinct from unknown. AdditionalMedicare and credits reconcile separately to canonical full-year sources, not merely their net."
+    irsRef: "i2210 PartII, line16 and line18; original-source completeness and current ScheduleSE8d owner binding"
+    testRef: "tests/engine/forms/form-2210-two-owner.test.ts::rejects incomplete owner sources and independently binds annual payroll taxes and credits"
+  - line: "two-owner-canonical"
+    description: "Bind the two-owner worksheet to current actual canonical sources"
+    formula: "PrimaryC40000/spouseF40000, primary wages176100/SS176100/tips0: ownerSE1071/5652, halves536/2826, AGI252738, QBI15328, taxable205910, regular35128,total41851. Independent annual payroll and SE audit rows supply current context; a known zero owner source still supplies its payroll audit."
+    irsRef: "i2210 PartII and ScheduleSE lines3,8d,10-13; existing ordinary canonical income/deduction methods"
+    testRef: "tests/engine/federal-form-2210-two-owner.test.ts::binds actual per-owner payroll/profit and independently sourced whole-return originals"
+  - line: "two-owner-guide"
+    description: "Collect every actual owner source and period without splitting a household total"
+    formula: "Add blank identified owner source rows, original year/reference and four actual cumulative profit/payroll rows. Payroll is the reported PartII line30 worksheet compensation, matching full-year ScheduleSE8d: separately rounded W2Box3+7, RRTA,4137line10 and8919line10 components; never a rounding of the raw grand total. Explicit user-selected owners, exact Decimal amounts, zero and losses survive. Missing facts reject; any source edit revokes packet and overall source confirmation. Combined existing period amounts must equal actual owner sums."
+    irsRef: "i2210 PartII separate-owner instruction; source completeness contract"
+    testRef: "tests/guided-interview/guided-estimated-tax-two-owner.test.ts::preserves actual owner sources and rejects unknown or contradictory amounts"
+  - line: "two-owner-review"
+    description: "Recompute the actual two-owner canonical result before review-template I/O"
+    formula: "Current original source commitment binds the complete canonical original input, including owner, household, business, payroll, actual K1 adjustment histories and full2210 packet references. Structured personal IDs normalize under the existing redaction contract. Recompute actual canonical result before template loading and compare context, commitments and all owner audit lines; equal-total swaps, stale original identity/reference and saved-result tampering reject. Raw source references are not printed. Review-only and2026 gates remain closed."
+    irsRef: "Current source/review binding; i2210 separate PartII and complete current-return column d"
+    testRef: "tests/pdf/form-2210-two-owner-review.test.ts::rejects stale two-owner source and saved-result changes before template I/O"
+  - line: "two-owner-dom"
+    description: "Owner source edits preserve records and revoke their confirmations"
+    formula: "Adding a row creates no guessed owner/year/amount. Edit or remove only by explicit user action; changing the method alone never deletes retained sources. Source edits revoke owner and overall confirmation while confirmation-only edits preserve amounts."
+    irsRef: "Actual source contract and separate-owner PartII"
+    testRef: "tests/apps/web/estimated-tax-two-owner-interactions.test.tsx::collects both owner histories without defaults and invalidates confirmation"
+
+  - line: "two-owner-exception-validation"
+    description: "Do not bypass supplied owner-source completeness on safe-harbor exceptions"
+    formula: "Validate actual supplied owner packet before withholding exceptions; no provisional installment is persisted. A digest-only original source audit remains bound on an otherwise valid withholding exception. Guided regular method retains draft raw sources but omits inactive Schedule AI packets; re-enabling invalidates confirmation."
+    testRef: "tests/engine/federal-form-2210-two-owner.test.ts::rejects incomplete owner proof even when withholding alone meets the safe harbor"
+
+  - line: "two-owner-indexed-2026"
+    description: "Apply the 2026 Social Security wage base separately to each owner"
+    formula: "Isolated draft constants only; actual production2026 gate rejects before and after this test. 2026 owner profiles as two-owner-part-ii: sum line15=26892.32/36007.272/38504.97/36736.83 using wage base184500. Standard32200 and joint taxable167800 yield regular26340; no2026 physical review or2027 unpublished interest rate is qualified here."
+    irsRef: "SSA2026 wage base184500; IRS RevProc2025-32 joint2026 standard deduction32200 and rate table, i2210 separate-owner method"
+    testRef: "tests/engine/forms/form-2210-two-owner.test.ts::uses the indexed 2026 wage base separately for each actual owner"
+
+  - line: "two-owner-partnership-guide"
+    description: "Reconcile actual ordinary partnership self-employment sources for both spouses"
+    formula: "Existing guide adapter converts each original domestic partnership K1, StatementA QBI, openingbasis, at-risk and independent SE history. Both40000 ordinary/adjustedSE/QBI, primary W2 SS176100, preserve SE1071/5652 and AGI252738/taxable205910/tax41851. Full original K1 adjustment/reference packet enters source commitment. C plus the guide K1-only461 classification remains its existing separate composition boundary."
+    irsRef: "i2210 separate owner PartII, ScheduleSE3/8d; existing actual partnership ordinary-current SE method"
+    testRef: "tests/engine/federal-form-2210-two-owner.test.ts::accepts both ordinary partnership owners from actual guide source conversion"
+
+  - line: "two-owner-redacted-k1-original"
+    description: "Validate original actual K1 identities privately before redacted review rendering"
+    formula: "The existing opaque prepared QBI context binds complete original/permitted-redacted input and independent source calculation. Its private original clone supplies fresh canonical recomputation; render only the supplied redacted input. Missing, forged, stale or mismatched tokens and saved-result edits reject before template I/O. No IDs are fabricated and no identity check is relaxed."
+    irsRef: "Existing original-source privacy/export contract, i2210 complete current-return and separate-owner source binding"
+    testRef: "tests/pdf/form-2210-two-owner-review.test.ts::renders valid redacted actual K1 sources through the opaque original context"

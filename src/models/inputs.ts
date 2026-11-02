@@ -3521,7 +3521,13 @@ const Form2210AnnualizedPeriodSchema = z.object({
   socialSecurityWages: z.string().optional(), otherTaxes: z.string().optional(), credits: z.string().optional(), schedule1AAdjustment: z.string().optional(),
 }).strict();
 
+const Form2210SelfEmploymentOwnerSchema = z.object({
+  accountHolder: z.enum(["primary", "spouse"]).optional(),
+  sourceTaxYear: z.number().int().optional(), sourceReference: z.string().optional(), sourceFactsConfirmed: z.boolean().optional(),
+  periods: z.array(z.object({ netProfitFromSelfEmployment: z.string().optional(), socialSecurityWages: z.string().optional() }).strict()).optional(),
+}).strict();
 export const Form2210Schema = z.object({
+  selfEmploymentOwnerPeriods: z.array(Form2210SelfEmploymentOwnerSchema).optional(),
   annualizedIncomePeriods: z.array(Form2210AnnualizedPeriodSchema).optional(),
   farmingIncomeTwoThirdsConfirmed: z.boolean().optional(),
   waiverKind: z.enum(["full", "partial"]).optional(),

@@ -125,7 +125,7 @@ function validateScope(facts: NonNullable<Form2210Input["facts"]>): void {
   for (const key of ["farmerOrFisher", "waiverRequested"] as const) if (facts[key] === undefined) throw new Error(`Form 2210 requires ${key}`);
   if (facts.calculationMethod === undefined) throw new Error("Form 2210 requires calculationMethod");
   if (facts.calculationMethod !== "regular" && !facts.annualizedIncomePeriods) throw new Error("Form 2210 annualized-income method requires actual Schedule AI period facts");
-  if (facts.calculationMethod === "regular" && facts.annualizedIncomePeriods) throw new Error("Form 2210 regular method conflicts with its Schedule AI period facts");
+  if (facts.calculationMethod === "regular" && (facts.annualizedIncomePeriods || facts.selfEmploymentOwnerPeriods)) throw new Error("Form 2210 regular method conflicts with its Schedule AI period facts");
   if (facts.withholdingMethod === undefined) throw new Error("Form 2210 requires withholdingMethod");
 }
 
@@ -266,6 +266,18 @@ export function calculateForm2210(input: Form2210Input): Form2210Result {
       lines: audit.getLines(),
     };
   };
+
+  // A supplied two-owner source packet must be complete even when withholding
+  // establishes an exception. Validate without persisting provisional installments;
+  // the actual prior-year limit is determined below before the worksheet is kept.
+  if (facts?.selfEmploymentOwnerPeriods !== undefined) {
+    validateScope(facts);
+    if (facts.calculationMethod !== "annualized" || !input.scheduleAiReturn) throw new Error("Form 2210 owner sources require the actual annualized return context");
+    calculateForm2210ScheduleAi({ taxYear, filingStatus: input.filingStatus, requiredAnnualPayment: ninetyPercent, taxAfterRefundableCredits: taxShown, returnContext: input.scheduleAiReturn, facts });
+    const ownerSources = input.scheduleAiReturn.ownerSources;
+    if (!ownerSources) throw new Error("Form 2210 requires actual owner sources");
+    audit.record(FORM, "owner-source-commitment", "Actual two-owner original source commitment", new Decimal(0), "Digest only; retained even on withholding exceptions", { "Original source commitment": ownerSources.sourceCommitment });
+  }
 
   // These exceptions are provable without inventing missing prior-return or installment facts.
   if (taxAfterWithholding.lt(1000)) return finish(true, "Tax shown minus withholding < $1,000", new Decimal(0), new Decimal(0));

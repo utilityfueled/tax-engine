@@ -8,7 +8,7 @@ export interface EstimatedTaxFactsData {
   sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null; allPaymentRecordsIncluded: boolean | null;
   calendarYearTaxpayer: boolean | null; residentReturn: boolean | null; farmerOrFisher: boolean | null; disasterReliefClaimed: boolean | null; waiverRequested: boolean | null;
   calculationMethod: "" | "regular" | "annualized"; withholdingMethod: "" | "equal-installments" | "actual-dates";
-  annualizedIncomePeriods?: AnnualizedPeriodData[]; bothSpousesSelfEmployed?: boolean | null;
+  annualizedIncomePeriods?: AnnualizedPeriodData[]; bothSpousesSelfEmployed?: boolean | null; selfEmploymentOwnerPeriods?: AnnualizedOwnerData[];
   farmingIncomeTwoThirdsConfirmed?: boolean | null; waiverKind?: "" | "full" | "partial"; waiverAmount?: string;
   waiverReason?: "" | "retirement_or_disability" | "casualty_disaster_or_unusual_circumstance"; waiverStatementReference?: string;
   priorYearTaxStatus: "" | "return-filed" | "no-return" | "no-tax-liability";
@@ -40,6 +40,26 @@ export const ANNUALIZED_PERIOD_FIELDS = [
   ["schedule1AAdjustment", "Schedule 1-A deduction through this period, not annualized, or 0 if none", false],
 ] as const;
 export type AnnualizedPeriodData = Record<(typeof ANNUALIZED_PERIOD_FIELDS)[number][0], string>;
+export interface AnnualizedOwnerData {
+  accountHolder: ''|'primary'|'spouse'; sourceTaxYear:string; sourceReference:string; sourceFactsConfirmed:boolean|null;
+  periods:{netProfitFromSelfEmployment:string;socialSecurityWages:string}[];
+}
+export const emptyAnnualizedOwner=():AnnualizedOwnerData=>({accountHolder:'',sourceTaxYear:'',sourceReference:'',sourceFactsConfirmed:null,periods:Array.from({length:4},()=>({netProfitFromSelfEmployment:'',socialSecurityWages:''}))});
+function buildOwnerPeriods(facts:EstimatedTaxFactsData,taxYear:number){
+  if(facts.calculationMethod!=="annualized")return undefined;
+  const rows=facts.selfEmploymentOwnerPeriods;if(rows===undefined)return undefined;
+  if(facts.calculationMethod!=='annualized'||facts.bothSpousesSelfEmployed!==true||rows.length!==2||new Set(rows.map(row=>row.accountHolder)).size!==2||rows.some(row=>row.accountHolder!== 'primary'&&row.accountHolder!=='spouse'))throw new Error('Schedule AI requires two actual separate owner PartII sources and both-spouse self-employment confirmation.');
+  const built=rows.map(row=>{
+    if(row.sourceTaxYear!==String(taxYear)||!row.sourceReference.trim()||row.sourceFactsConfirmed!==true||row.periods.length!==4)throw new Error('Confirm every actual owner source year, reference and four periods after the last edit.');
+    return {accountHolder:row.accountHolder as 'primary'|'spouse',sourceTaxYear:taxYear,sourceReference:row.sourceReference,sourceFactsConfirmed:true,periods:row.periods.map((period,index)=>({netProfitFromSelfEmployment:money(period.netProfitFromSelfEmployment,`${row.accountHolder} period ${index+1} net profit`,true,true) as string,socialSecurityWages:money(period.socialSecurityWages,`${row.accountHolder} period ${index+1} SocialSecurity payroll`) as string}))};
+  });
+  for(let i=0;i<4;i++){
+    const actual=built.map(row=>{const period=row.periods[i];if(!period)throw new Error('Missing actual owner period');return period;});
+    const profit=Decimal.sum(...actual.map(row=>row.netProfitFromSelfEmployment)),wages=Decimal.sum(...actual.map(row=>row.socialSecurityWages)),period=facts.annualizedIncomePeriods?.[i];
+    if(!period||!profit.eq(money(period.netProfitFromSelfEmployment,`combined period ${i+1} net profit`,true,true) as string)||!wages.eq(money(period.socialSecurityWages,`combined period ${i+1} payroll`) as string))throw new Error('Combined Schedule AI period profit/payroll contradict actual owner source sums.');
+  }
+  return built;
+}
 export const emptyAnnualizedPeriods = (): AnnualizedPeriodData[] => Array.from({ length: 4 }, () =>
   Object.fromEntries(ANNUALIZED_PERIOD_FIELDS.map(([key]) => [key, ""])) as AnnualizedPeriodData);
 function buildAnnualizedPeriods(facts: EstimatedTaxFactsData): AnnualizedPeriodData[] {
@@ -117,7 +137,7 @@ export function buildEstimatedTaxFacts(data: PaymentData | undefined, taxYear?: 
   return Form2210Schema.parse({
     calendarYearTaxpayer: facts.calendarYearTaxpayer, residentReturn: facts.residentReturn, farmerOrFisher: facts.farmerOrFisher,
     disasterReliefClaimed: facts.disasterReliefClaimed, waiverRequested: facts.waiverRequested, calculationMethod: facts.calculationMethod, withholdingMethod: facts.withholdingMethod,
-    annualizedIncomePeriods, bothSpousesSelfEmployed: facts.bothSpousesSelfEmployed ?? undefined,
+    annualizedIncomePeriods, selfEmploymentOwnerPeriods:buildOwnerPeriods(facts,year), bothSpousesSelfEmployed: facts.bothSpousesSelfEmployed ?? undefined,
     farmingIncomeTwoThirdsConfirmed: facts.farmingIncomeTwoThirdsConfirmed ?? undefined, waiverKind: facts.waiverKind || undefined,
     waiverAmount: facts.waiverAmount?.trim() ? parseGuidedCurrency(facts.waiverAmount).toFixed() : undefined, waiverReason: facts.waiverReason || undefined,
     waiverStatementReference: facts.waiverStatementReference?.trim() || undefined,

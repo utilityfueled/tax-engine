@@ -1,3 +1,4 @@
+import { buildForm2210OwnerSourceContext } from './forms/form-2210-owner-source.js';
 import { calculateMarketplaceActualPaidRepayment, type MarketplaceActualPaidAdjustment } from "./forms/marketplace-actual-paid-repayment.js";
 import { calculateMarketplaceActualPaidSources } from "./forms/marketplace-actual-paid-sources.js";
 import { calculateMarketplaceActualCashSources, calculateMarketplaceActualCashHealth } from './forms/marketplace-actual-cash-health.js';
@@ -1651,6 +1652,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   const schedSE = calculateScheduleSE(seSourceInput, constants, schedC.netProfit, schedFNetProfit, {
     additionalNonfarmIncome: cryptoBusinessNet,
     additionalNonfarmOwner: input.cryptoIncome?.businessAccountHolder,
+    auditOwners: input.form2210?.selfEmploymentOwnerPeriods === undefined ? undefined : ["primary", "spouse"],
   });
   // Spec: qbi-foreign-profit. Actual foreign business profit remains outside QBI.
   const foreignQbiProfit = new Map(foreignIncomeSources.qbiForeignProfit.map((row) => [row.sourceId, row.amount]));
@@ -4449,7 +4451,10 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     filingStatus,facts:input.form2210,
     scheduleAiReturn:{standardDeduction,agi,taxableIncome,itemizedDeductions:deductionUsed === "itemized" ? deductionAmount : undefined,
       preferentialIncome:qualifiedDividends.gt(0) || netLTCG.gt(0),selfEmployedOwners:schedSE.perTaxpayer.filter(row => row.netSEEarnings.gt(0)).length,
-      specialTaxMethod:Boolean(input.form8615 || input.scheduleJ || input.form2555),schedule1ADeduction:schedule1A?.totalDeduction},
+      specialTaxMethod:Boolean(input.form8615 || input.scheduleJ || input.form2555),schedule1ADeduction:schedule1A?.totalDeduction,
+      ownerSources:buildForm2210OwnerSourceContext(input,schedSE,
+        estimatedTaxBase.minus(taxAfterCredits).minus(selfEmploymentTax).plus(amt).plus(partIAdditions),
+        taxBeforeCredits.minus(taxAfterCredits).plus(estimatedTaxRefundableCredits))},
     payments:[
       ...(input.adjustments?.estimatedTaxPayments ?? []).filter(payment=>payment.type === "federal")
         .map(payment=>({date:payment.date,amount:payment.amount,kind:"estimated" as const})),

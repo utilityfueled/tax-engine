@@ -4,6 +4,8 @@ import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
+import { qbiLossReviewOriginalSourceInput, type PreparedQbiLossReview } from "../../qbi-loss-review-context.js";
+import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateForm2210ScheduleAi } from "@/engine/forms/form-2210-schedule-ai.js";
 import { formatCurrency, loadReviewTemplate, setCheckBox, setTextField } from "../../pdf-utils.js";
 
@@ -32,10 +34,36 @@ export const FORM_2210_FIELDS = {
   line19: p2("f2_37[0]"),
 } as const;
 
-export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string): Promise<PDFDocument> {
+export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string, qbiLossReview?: PreparedQbiLossReview): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const calculation = result.form2210;
   if (!calculation) throw new Error("Form 2210 review requires its calculation audit");
+  const actualBusinessOwners = new Set([
+    input.scheduleC?.accountHolder, input.scheduleF?.accountHolder,
+    ...input.form1099Nec.map(row => row.accountHolder),
+    ...input.scheduleK1.filter(row => row.entityType !== "s_corporation").map(row => row.accountHolder),
+    input.cryptoIncome?.businessAccountHolder,
+  ].filter(owner => owner === "primary" || owner === "spouse"));
+  if ((input.form2210?.calculationMethod === "annualized" && actualBusinessOwners.size > 1)
+      || input.form2210?.selfEmploymentOwnerPeriods !== undefined || input.form2210?.bothSpousesSelfEmployed === true
+      || calculation.scheduleAi?.returnContext.ownerSources !== undefined || (calculation.scheduleAi?.returnContext.selfEmployedOwners ?? 0) > 1
+      || calculation.lines.some(row => row.line === "owner-source-commitment" || /[abcd]-(?:primary|spouse)$/.test(row.line))) {
+    // Bind the saved result to current actual sources before opening any template.
+    // Replaying a saved returnContext would trust stale payroll or source identity.
+    let current: typeof calculation;
+    try {
+      const original = input.qbiLossSources || qbiLossReview
+        ? qbiLossReviewOriginalSourceInput(input, result, qbiLossReview) : input;
+      const actual = calculateFederalTax(original).form2210;
+      if (!actual) throw new Error("Missing actual calculation");
+      current = actual;
+    } catch {
+      throw new Error("Form 2210 current actual owner sources cannot be reconciled to the saved calculation");
+    }
+    if (JSON.stringify(current) !== JSON.stringify(calculation)) {
+      throw new Error("Form 2210 current actual owner sources and source commitment do not match the saved calculation");
+    }
+  }
   if (calculation.farmerMethod) throw new Error("Form 2210-F has no review map");
   if (calculation.taxYear !== 2025) throw new Error("Form 2210 calculation year does not match the 2025 physical map");
   const audited = new Map<string, Decimal>();
