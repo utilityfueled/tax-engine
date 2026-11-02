@@ -6,6 +6,7 @@ import { Form1099IntSchema, W2Schema, type TaxYearInput } from "@/models/inputs.
 import { PAResidencySourcesSchema, type PAResidencySources, type PAResidencyStatus } from "@/models/pa-residency.js";
 import { roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
+import { calculatePAReciprocalCompensation } from "./pa-reciprocity.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 
 const error = (detail: string): never => { throw new Error(`PA ordinary residency sources: ${detail}`); };
@@ -85,7 +86,7 @@ function deriveResidency(source: PAResidencySources, year: number) {
 
 export interface PAResidencySourcesResult {
   residencyStatus: PAResidencyStatus; schoolDistrictCode: string;
-  compensation: Decimal; interest: Decimal; reportedCompensation: Decimal; reportedInterest: Decimal; excludedNonPACompensation: Decimal;
+  compensation: Decimal; interest: Decimal; reportedCompensation: Decimal; reportedInterest: Decimal; excludedNonPACompensation: Decimal; excludedReciprocalCompensation: Decimal;
   excludedNonPAInterest: Decimal; totalOrdinaryPATaxableIncome: Decimal; taxBeforeCredits: Decimal;
   sourceCommitment: string; lines: CalculatedLine[];
 }
@@ -129,25 +130,32 @@ export function calculatePAResidencySources(input: TaxYearInput, rawSources: unk
     }
   };
   verifyRows(source.wages, input.w2s, "wage"); verifyRows(source.interest, input.form1099Int, "interest");
+  const reciprocalPacket = (input as TaxYearInput & { paReciprocitySources?: unknown }).paReciprocitySources;
+  const reciprocal = reciprocalPacket === undefined ? undefined : calculatePAReciprocalCompensation(input, source, reciprocalPacket);
+  let excludedReciprocalCompensation = new Decimal(0);
   for (const row of source.wages) {
     if (row.ordinaryCashCompensationOnlyConfirmed !== true || row.noPAFederalCompensationDifferencesConfirmed !== true || !row.payroll.length) return error("actual ordinary cash payroll and PA/federal compensation facts required");
     const w2 = input.w2s[row.originalIndex as number];
     for (const key of ["box12CodeD", "box12CodeE", "box12CodeF", "box12CodeG", "box12CodeH", "box12CodeS", "box12CodeW", "box12CodeT", "box10DependentCareBenefits", "allocatedTips"] as const) if (w2[key] !== undefined && !amount(w2[key]).isZero()) return error("retained nonordinary PA/federal wage adjustment requires its actual source method");
     if (w2.militaryService?.activeDuty === true) return error("military compensation requires its actual PA source method");
-    let gross = new Decimal(0), included = new Decimal(0), excluded = new Decimal(0);
+    let gross = new Decimal(0), included = new Decimal(0), excluded = new Decimal(0), reciprocalExcluded = new Decimal(0);
     const references = new Set<string>();
-    for (const payroll of row.payroll) {
+    for (const [payrollIndex, payroll] of row.payroll.entries()) {
       reference(payroll.sourceReference); if (references.has(payroll.sourceReference.trim())) return error("duplicate payroll-source reference"); references.add(payroll.sourceReference.trim());
       const paid = day(payroll.paidOn, year), from = day(payroll.serviceFrom, year), through = day(payroll.serviceThrough, year);
       if (from > through || domicilePeriodAt(from) !== domicilePeriodAt(through) || domicilePeriodAt(paid) !== domicilePeriodAt(from)) return error("cross-period or deferred compensation requires its actual source method");
       const total = amount(payroll.grossCompensation), pa = amount(payroll.paServicesCompensation), outside = amount(payroll.outsidePAServicesCompensation);
       if (!pa.plus(outside).eq(total)) return error("actual payroll PA/outside amounts must exactly reconcile gross; no missing residual");
-      if (!residentAt(paid) && ["IN", "MD", "NJ", "OH", "VA", "WV"].includes(source.residency.domicilePeriods[domicilePeriodAt(paid)].state) && pa.gt(0)) return error("reciprocal compensation requires actual employee and owner exception sources before admission");
+      if (!residentAt(paid) && ["IN", "MD", "NJ", "OH", "VA", "WV"].includes(source.residency.domicilePeriods[domicilePeriodAt(paid)].state) && pa.gt(0)) {
+        const classification = reciprocal?.segments.find(s => s.originalIndex === row.originalIndex && s.payrollIndex === payrollIndex);
+        if (!classification || !classification.excludedPACompensation.plus(classification.taxablePAServices).eq(pa)) return error("reciprocal compensation requires actual employee and owner exception sources before admission");
+        reciprocalExcluded = reciprocalExcluded.plus(classification.excludedPACompensation);
+      }
       gross = gross.plus(total); included = included.plus(residentAt(paid) ? total : pa); excluded = excluded.plus(residentAt(paid) ? 0 : outside);
     }
     if (!gross.eq(amount(w2.wages))) return error("actual payroll ledger does not reconcile current original W2 compensation");
     if (w2.state === "PA" && !amount(w2.stateWages).eq(included)) return error("PA payroll and original reported compensation differ; actual NRH/source correction required");
-    compensation = compensation.plus(included); excludedCompensation = excludedCompensation.plus(excluded);
+    compensation = compensation.plus(included.minus(reciprocalExcluded)); excludedCompensation = excludedCompensation.plus(excluded); excludedReciprocalCompensation = excludedReciprocalCompensation.plus(reciprocalExcluded);
   }
   for (const row of source.interest) {
     if (row.ordinaryPersonalBankInterestConfirmed !== true || !row.credits.length) return error("actual nonbusiness bank-interest classification and dated credit ledger required");
@@ -167,12 +175,12 @@ export function calculatePAResidencySources(input: TaxYearInput, rawSources: unk
   const originalInput = Object.fromEntries(Object.entries(input).filter(([key]) => key !== "paResidencySources"));
   const commitment = bytesToHex(sha256(new TextEncoder().encode(stable({ version: "pa-ordinary-residency-v1", year, input: originalInput, rawSources }))));
   const audit = new AuditTrail();
-  audit.record("PA-Residency-Sources", "compensation", "Actual ordinary taxable PA compensation", compensation, "Resident-period all-source plus nonresident-period actual PA services; complete original payroll reconciliation");
+  audit.record("PA-Residency-Sources", "compensation", "Actual ordinary taxable PA compensation", compensation, "Resident-period all-source plus nonresident-period actual PA services, less actual reciprocal employee exclusions; complete original payroll reconciliation");
   audit.record("PA-Residency-Sources", "interest", "Actual ordinary taxable PA bank interest", interest, "Actual dated personal bank credits during resident periods; nonresident ordinary bank credits excluded");
   audit.record("PA-Residency-Sources", "reported-compensation", "Reported ordinary PA compensation", reportedCompensation, "Aggregate exact actual compensation class, then round once to whole dollars");
   audit.record("PA-Residency-Sources", "reported-interest", "Reported ordinary PA interest", reportedInterest, "Aggregate exact actual ordinary interest class, then round once to whole dollars");
   audit.record("PA-Residency-Sources", "ordinary-tax", "Ordinary PA tax before credits and payments", tax, "Sum reported whole-dollar classes, multiply by3.07%, then whole-dollar tax rounding; no credit/payment/penalty qualification");
   return { residencyStatus: residency.status, schoolDistrictCode: source.residency.schoolDistrictCode,
-    compensation, interest, reportedCompensation, reportedInterest, excludedNonPACompensation: excludedCompensation, excludedNonPAInterest: excludedInterest,
+    compensation, interest, reportedCompensation, reportedInterest, excludedNonPACompensation: excludedCompensation, excludedReciprocalCompensation, excludedNonPAInterest: excludedInterest,
     totalOrdinaryPATaxableIncome: taxable, taxBeforeCredits: tax, sourceCommitment: commitment, lines: audit.getLines() };
 }

@@ -11982,6 +11982,25 @@
       ]
     },
     {
+      "key": "state/pa-reciprocity",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/gross-compensation",
+      "specPath": "spec/state/pa-reciprocity.yaml",
+      "enginePath": "src/engine/state/pa-reciprocity.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-rental-classification",
       "jurisdiction": "state",
       "taxYear": 2026,
