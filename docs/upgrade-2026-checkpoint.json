@@ -12226,8 +12226,8 @@
       "inventoryEntries": 604,
       "humanQualified": false
     },
-    "currentHead": "87b23938cbea4c0341b0b07523edb9b9a1bc11c9",
-    "currentRemoteHead": "87b23938cbea4c0341b0b07523edb9b9a1bc11c9",
+    "currentHead": "eb31e1f0b7ff95eca2a156d5c901383f8fcfa0e6",
+    "currentRemoteHead": "eb31e1f0b7ff95eca2a156d5c901383f8fcfa0e6",
     "currentRuleVersions": {
       "2025": "2025.223",
       "2026": "2026.221-law-integration-draft"
@@ -12831,14 +12831,15 @@
       "mainChecks": "9pass",
       "independentControls": 20,
       "evidence": ".local/upgrade-evidence/nov02-parent-pa40-main",
-      "remaining": "Payment/credit/penalty reported-line rounding,2024source refresh, full actual source/upstream class/household/state/physical qualification"
+      "remaining": "Payment/credit/penalty and2024reported rules deliveredc3d60333; full actual upstream class/household/state/physical qualification remains"
     },
     "activeStateSharedIntegration20261102": {
       "source": "/var/folders/vj/n88qs2v507967d25plmyd19h0000gn/T/tax-nov02-state-guide-87b-m75tksn2/source",
       "mainBase": "87b23938cbea4c0341b0b07523edb9b9a1bc11c9",
       "status": "Private;22tests/5files, all3types,spec6600/6600,strict561pass. PAactualsourceUI and OHcanonicaloriginalboundary implemented; whole-state/payment/full-context integration pending",
       "mainPAOrdinary10": "Delivered87b23938 afterindependent33controls,main962/8andall9checks; sourcehelpers only, notcompleteall3statequalification",
-      "multiStateW2": "Required internal source model/guide/once-only federal counting successor; no missing state row inferred"
+      "multiStateW2": "Required internal source model/guide/once-only federal counting successor; no missing state row inferred",
+      "remainingQueue": "Rebase preserved14 root paths onto eb31e1f0; admit ohioPayments/paReciprocitySources/paOrdinaryReturnFacts and W2stateLocalSources source-first. OHguide5 frozen separately, PAfacts10/W2new10 active private. No partial route publication."
     },
     "paOrdinarySources20261102": {
       "commit": "87b23938cbea4c0341b0b07523edb9b9a1bc11c9",
@@ -12851,17 +12852,63 @@
       "remaining": "Canonical/sourceboundall3PAstatecore, completehouseholds/incomeclasses,actualpayments/credits/local/forms; humanqualification"
     },
     "activePA40ReportedSettlement20261102": {
-      "source": "mainuncommitted3paths",
-      "status": "6genuinebehaviorfailures/90passed beforeproduct;96focusedpass/all3types afterward; independentfinalreviewandbroadmaincheckspending",
+      "source": "committed",
+      "status": "Delivered c3d60333 after independent and main checks; previous source/failure entries are historical",
       "evidence": ".local/upgrade-evidence/nov02-parent-pa40-reported-settlement",
-      "remaining": "Review/finalmainchecks/commitpush; upstreamactualeligibility/receipt/dates separate"
+      "remaining": "See paReportedSettlement20261102"
     },
     "activePAREV163020261102": {
       "source": "/private/tmp/tax-nov02-pa-rev1630-_3uw79av/source",
-      "status": "Authorfrozen7paths/339focused/563strict-year/all3types/spec/lintpass;independentrootreviewprepared,noexecutionyet",
+      "status": "Delivered a27b4e12 after independent and main checks; previous private archive is historical",
       "manifest": ".local/upgrade-evidence/nov02-pa-rev1630-correction/frozen-package.json",
       "independentSource": "/private/tmp/tax-nov02-rev-independent-m5q8oopn/source",
-      "remaining": "Independentreview/mainintegration;actualdatedpayment/priorreturn/exceptionmethods;unsourced2027interestguarded"
+      "remaining": "See paREV163020261102"
+    },
+    "paReportedSettlement20261102": {
+      "commit": "c3d60333bb517e900bb57dbabbe8e4302b27f491",
+      "pushed": true,
+      "mainTests": 1615,
+      "files": 58,
+      "mainChecks": "all package checks pass",
+      "independentControls": 24,
+      "evidence": ".local/upgrade-evidence/nov02-parent-pa40-reported-settlement-broad",
+      "remaining": "Actual eligibility/receipt/date proof and sourcebound full return/physical qualification"
+    },
+    "paREV163020261102": {
+      "commit": "a27b4e125882207ec80d55135573e3f20151e52d",
+      "pushed": true,
+      "mainTests": 1086,
+      "files": 8,
+      "mainChecks": "all package checks pass",
+      "independentControls": 8,
+      "evidence": ".local/upgrade-evidence/nov02-parent-pa-rev1630-main",
+      "remaining": "Actual dated/annualized/farmer methods; actual source proof;2027rate unavailable"
+    },
+    "paReciprocity20261102": {
+      "commit": "dcffe3567880ef4a0b7c81a482f2a8c4dae67a7d",
+      "pushed": true,
+      "mainTests": 890,
+      "files": 11,
+      "mainChecks": "all package checks pass",
+      "independentControls": 19,
+      "evidence": ".local/upgrade-evidence/nov02-parent-pa-reciprocity-main",
+      "remaining": "Canonical shared admission, full household/source scope, reciprocal WPTC qualification"
+    },
+    "ohioPayments20261102": {
+      "commit": "eb31e1f0b7ff95eca2a156d5c901383f8fcfa0e6",
+      "pushed": true,
+      "mainTests": 1464,
+      "files": 33,
+      "mainChecks": "all package checks pass",
+      "independentControls": 31,
+      "evidence": ".local/upgrade-evidence/nov02-parent-ohio-payments-main",
+      "remaining": "Guide canonical integration, actual dated payments, SD/combined/special methods, complete2026state and official form qualification",
+      "independentArtifactCases": 2,
+      "pdfFiles": 14,
+      "pdfPages": 36,
+      "specReferences": 6636,
+      "lintWarnings": 219,
+      "lintErrors": 0
     }
   }
 }
