@@ -14,14 +14,31 @@ const backupPassword = 'synthetic-lifecycle-backup-password';
 const sha = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 
 
-/** Follow the real tab order; inspect focus, never assign it or bypass native activation. */
+/** Choose a shorter native tab direction from read-only DOM order; never assign focus. */
 async function keyboardActivate(page: Page, target: Locator) {
   await expect(target).toBeVisible();
+  await expect(target).toBeEnabled();
+  const keys: string[] = [];
   for (let steps = 0; steps < 100; steps++) {
-    if (await target.evaluate(element => document.activeElement === element)) {
-      await page.keyboard.press('Enter'); return;
+    const state = await target.evaluate(element => {
+      if (document.activeElement === element) return { focused: true, reverse: false };
+      const order = Array.from(document.querySelectorAll<HTMLElement>('*'))
+        .filter(node => node.tabIndex >= 0 && !node.matches(':disabled') && !node.closest('[inert]')
+          && node.getClientRects().length > 0 && getComputedStyle(node).visibility === 'visible')
+        .map((node, index) => ({ node, index, priority: node.tabIndex > 0 ? node.tabIndex : Infinity }))
+        .sort((a, b) => a.priority - b.priority || a.index - b.index);
+      const targetIndex = order.findIndex(item => item.node === element);
+      if (targetIndex < 0) throw new Error('Critical lifecycle control is absent from the native tab order');
+      const activeIndex = order.findIndex(item => item.node === document.activeElement);
+      const forward = activeIndex < 0 ? targetIndex + 1 : (targetIndex - activeIndex + order.length) % order.length;
+      const reverse = activeIndex < 0 ? order.length - targetIndex : (activeIndex - targetIndex + order.length) % order.length;
+      return { focused: false, reverse: reverse < forward };
+    });
+    if (state.focused) {
+      await page.keyboard.press('Enter'); return { steps, traversalKeys: keys, activation: 'Enter' as const };
     }
-    await page.keyboard.press('Tab');
+    const key = state.reverse ? 'Shift+Tab' : 'Tab';
+    keys.push(key); await page.keyboard.press(key);
   }
   throw new Error('Critical lifecycle action was not reachable within 100 natural Tab steps');
 }
@@ -34,7 +51,7 @@ async function stored(page: Page, id: string) {
   }), id);
 }
 async function cachedFiles(page: Page) {
-  return page.evaluate(async () => {
+  const files = await page.evaluate(async () => {
     const dbs = await indexedDB.databases();
     if (!dbs.some(db => db.name === 'tax-engine-workspace-document-cache')) return [];
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
@@ -45,8 +62,14 @@ async function cachedFiles(page: Page) {
       const request = db.transaction('workspace-document-files', 'readonly').objectStore('workspace-document-files').getAll();
       request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
     }); db.close();
-    return Promise.all(records.map(async record => ({ workspaceId: record.workspaceId, documentId: record.documentId, fileName: record.fileName, bytes: [...new Uint8Array(await record.file.arrayBuffer())] })));
+    // Lossless transport avoids serializing more than a million separate byte integers.
+    return Promise.all(records.map(async record => {
+      const bytes = new Uint8Array(await record.file.arrayBuffer()); let binary = '';
+      for (let start = 0; start < bytes.length; start += 16384) binary += String.fromCharCode(...bytes.subarray(start, start + 16384));
+      return { workspaceId: record.workspaceId, documentId: record.documentId, fileName: record.fileName, bytesBase64: btoa(binary) };
+    }));
   });
+  return files.map(({ bytesBase64, ...record }) => ({ ...record, bytes: Buffer.from(bytesBase64, 'base64') }));
 }
 async function completeSegmentation(page: Page) {
   await reachFilingStatus(page);
@@ -68,17 +91,24 @@ async function estimate(page: Page) {
 
 for (const width of [1280, 390]) test(`complete unseeded local upload/review/recovery/delete lifecycle ${width}`, async ({ page }, testInfo) => {
   await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+  const started = performance.now();
+  const stageTimes: { stage: string; elapsedMS: number; durationMS?: number; inspectorMS?: number }[] = [];
+  const mark = (stage: string) => stageTimes.push({ stage, elapsedMS: performance.now() - started });
   const requests: { url: string; body: string }[] = [];
   page.on('request', request => requests.push({ url: request.url(), body: request.postData() ?? '' }));
   const bytes = await readFile(sourcePath), sourceSha256 = sha(bytes);
   const evidence = async (name: string, value: unknown) => writeFile(testInfo.outputPath(name), JSON.stringify(value, null, 2));
+  const keyboardActions: Awaited<ReturnType<typeof keyboardActivate>>[] = [];
+  const activate = async (target: Locator) => { keyboardActions.push(await keyboardActivate(page, target)); };
   const downloadReview = async (name: string) => {
+    const downloadStarted = performance.now();
     const bundle = page.getByRole('region', { name: 'Return Bundle', exact: true });
     const download = page.waitForEvent('download');
     const response = page.waitForResponse(r => r.url().endsWith('/api/workspace/filled-return'));
-    await keyboardActivate(page, bundle.getByRole('button', { name: 'Download Review PDF', exact: true }));
+    await activate(bundle.getByRole('button', { name: 'Download Review PDF', exact: true }));
     expect((await response).status()).toBe(200);
     const output = testInfo.outputPath(name); await (await download).saveAs(output);
+    const inspectorStarted = performance.now();
     const inspected = JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? 'python3', ['-c', `
 from pypdf import PdfReader
 import json,sys
@@ -95,14 +125,18 @@ first=next(i for i,t in enumerate(texts) if '1040' in t and 'Filing Status' in t
 # Printed cells from the official blank2025Form1040; amounts pinned independently before output.
 expected={0:{'f1_47[0]':'52000','f1_75[0]':'52000'},1:{'f2_01[0]':'52000','f2_02[0]':'15750','f2_06[0]':'36250','f2_08[0]':'4115','f2_16[0]':'4115','f2_17[0]':'5000','f2_20[0]':'5000','f2_29[0]':'5000','f2_30[0]':'885','f2_31[0]':'885'}}
 for templatepage,fields in expected.items():
+ boxes={field:next([float(x) for x in a.get_object()['/Rect']] for a in blank.pages[templatepage]['/Annots'] if a.get_object().get('/T')==field) for field in fields}
+ actual={field:[] for field in fields}
+ def visit(text,cm,tm,font,size):
+  for field,box in boxes.items():
+   if abs(cm[4]-box[0])<.02 and abs(cm[5]-box[1])<.02 and text.strip(): actual[field].append(text.strip())
+ r.pages[first+templatepage].extract_text(visitor_text=visit)
  for field,value in fields.items():
-  box=next([float(x) for x in a.get_object()['/Rect']] for a in blank.pages[templatepage]['/Annots'] if a.get_object().get('/T')==field); values=[]
-  def visit(text,cm,tm,font,size):
-   if abs(cm[4]-box[0])<.02 and abs(cm[5]-box[1])<.02 and text.strip(): values.append(text.strip())
-  r.pages[first+templatepage].extract_text(visitor_text=visit)
+  values=actual[field]
   assert values==[value],(field,values,value)
 print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(texts),'fields':0,'widgets':0,'unresolvedAnnotations':0,'privateSsnPresent':False}))
 `, output, path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../forms/blank/2025/f1040.pdf')], { encoding: 'utf8', timeout: 10000 }));
+    stageTimes.push({ stage: name, elapsedMS: performance.now() - started, durationMS: performance.now() - downloadStarted, inspectorMS: performance.now() - inspectorStarted });
     await evidence(name + '.inspection.json', inspected);
   };
   await page.goto('/');
@@ -120,7 +154,7 @@ print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(text
   await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+(?:\?create=1)?$/i);
   const id = new URL(page.url()).pathname.split('/').at(-1);
   if (!id) throw new Error('Created workspace URL has no ID');
-  await completeSegmentation(page);
+  await completeSegmentation(page); mark('segmentation-complete');
   await page.getByRole('button', { name: /switch to advanced mode/i }).click();
   await page.locator('input[type="file"]').setInputFiles(sourcePath);
   await expect(page.getByText(/1 irs sample document loaded/i)).toBeVisible();
@@ -147,7 +181,7 @@ print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(text
     if (await skip.isVisible()) await skip.click();
   }
   await page.getByRole('button', { name: /open full return/i }).click();
-  await estimate(page);
+  await estimate(page); mark('initial-calculation-complete');
   const before = await stored(page, id);
   expect(before.guidedRaw).not.toBeNull();
   if (!before.guidedRaw) throw new Error('Completed interview did not save original answers');
@@ -161,7 +195,7 @@ print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(text
   await downloadReview('initial-review.pdf');
   await page.goto('/');
   const card = page.getByRole('listitem').filter({ hasText: `Tax Return ${id}` });
-  await keyboardActivate(page, card.getByRole('link', { name: /continue tax return/i }));
+  await activate(card.getByRole('link', { name: /continue tax return/i }));
   await expect(page).toHaveURL(new RegExp(`/returns/${id}(?:\\?local=1)?$`));
   await page.reload(); await estimate(page);
   expect((await stored(page, id)).guidedRaw).toBe(before.guidedRaw);
@@ -175,10 +209,10 @@ print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(text
   await expect(backupButton).toBeFocused();
   const backupDownload = page.waitForEvent('download'); await page.keyboard.press('Enter');
   const backupPath = testInfo.outputPath('encrypted-full-backup.json'); await (await backupDownload).saveAs(backupPath);
-  const encrypted = await readFile(backupPath, 'utf8');
+  const encrypted = await readFile(backupPath, 'utf8'); mark('encrypted-backup-downloaded');
   expect(JSON.parse(encrypted)).toMatchObject({ format: 'tax-engine-encrypted-recovery', cipher: 'AES-256-GCM', kdf: 'PBKDF2-SHA256', iterations: 600000 });
   for (const secret of [original.ssn, original.firstName, backupPassword, '%PDF-']) expect(encrypted).not.toContain(secret);
-  await keyboardActivate(page, card.getByRole('button', { name: `Delete tax return ${id}`, exact: true }));
+  await activate(card.getByRole('button', { name: `Delete tax return ${id}`, exact: true }));
   await expect(card).toHaveCount(0); await page.reload();
   expect((await stored(page, id)).guidedRaw).toBeNull(); expect((await stored(page, id)).workspace).toBeUndefined(); expect((await stored(page, id)).keys).toEqual([]); expect(await cachedFiles(page)).toEqual([]);
   const restore = page.locator('details').filter({ has: page.getByText('Restore an encrypted backup', { exact: true }) });
@@ -200,6 +234,7 @@ print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(text
   await restoredLink.click();
   await expect(page).toHaveURL(new RegExp(`/returns/${restoredId}\\?local=1$`));
   await page.reload(); await estimate(page);
+  mark('restored-recalculation-complete');
   const recovered = await stored(page, restoredId); expect(recovered.guidedRaw).toBe(before.guidedRaw);
   const restoredFiles = await cachedFiles(page); expect(restoredFiles).toHaveLength(1); expect(restoredFiles[0].workspaceId).toBe(restoredId); expect(Buffer.from(restoredFiles[0].bytes)).toEqual(bytes);
   await evidence('after-recovery.json', { originalId: id, restoredId, ...recovered, sourceSha256, cached: restoredFiles.map(({ bytes: contents, ...row }) => ({ ...row, sha256: sha(Buffer.from(contents)) })) });
@@ -210,7 +245,7 @@ print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(text
   await page.goto('/');
   const restoredCard = page.getByRole('listitem').filter({ hasText: `Tax Return ${restoredId}` });
   await expect(restoredCard).toContainText('Restored local return — saved only on this device.');
-  await keyboardActivate(page, restoredCard.getByRole('button', { name: `Delete tax return ${restoredId}`, exact: true }));
+  await activate(restoredCard.getByRole('button', { name: `Delete tax return ${restoredId}`, exact: true }));
   await expect(restoredCard).toHaveCount(0); await page.reload();
   expect((await stored(page, restoredId)).guidedRaw).toBeNull(); expect((await stored(page, restoredId)).workspace).toBeUndefined(); expect((await stored(page, restoredId)).keys).toEqual([]); expect(await cachedFiles(page)).toEqual([]);
   await evidence('after-deletion.json', { original: await stored(page, id), restored: await stored(page, restoredId), cached: await cachedFiles(page) });
@@ -221,4 +256,7 @@ print(json.dumps({'pages':len(texts),'physicalCells':12,'reviewNotices':len(text
     if (request.url.startsWith('http')) expect(new URL(request.url).origin).toBe(origin);
   }
   await evidence('requests.json', requests);
+  await evidence('keyboard-actions.json', keyboardActions);
+  mark('restored-deletion-and-privacy-complete');
+  await evidence('stage-times.json', stageTimes);
 });
