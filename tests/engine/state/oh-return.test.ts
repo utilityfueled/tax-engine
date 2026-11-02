@@ -742,7 +742,7 @@ describe("Ohio Resident Return — Orchestrator", () => {
     // Ohio portion: 0.375 × $1,767 = $662.625 → $663
     // Credit: min($663, $921) = $663
     expect(result.residentCredit).not.toBeNull();
-    expect(result.residentCredit!.stateDetails[0]!.credit.toNumber()).toBe(663);
+    expect(result.residentCredit!.line7_residentCredit.toNumber()).toBe(663);
     expect(result.it1040.line9_nonrefundableCredits.toNumber()).toBe(663);
   });
 
