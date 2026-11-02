@@ -6,8 +6,9 @@ revision: "Created 4/21/26; final annual source, not export-qualified"
 retrievedAt: "2026-11-01"
 notes: |
   No tax calculation or export route is enabled. This candidate stays absent from
-  all public/review/filing registries. Final instruction, complete-data scenario
-  qualification and independent human review remain pending.
+  all public/review/filing registries. Final2026 instructions are available and
+  published worksheet cases are exercised in isolation; complete-data return
+  scenario qualification and independent human review remain pending.
 lines:
   - line: "revision"
     description: "Pin the actual final year and source hash"
@@ -25,3 +26,9 @@ lines:
     description: "Retain the new printed AGI cross-reference without changing calculations"
     formula: "Line14 references Form1040 line11b in 2026, not 2025 line11a. This physical map takes no input or result and performs no tax calculation."
     testRef: "tests/pdf/schedule-r-2026-candidate.test.ts::retains the 2026 AGI reference contract"
+
+  - line: "published-worksheets"
+    description: "Project final2026 published worksheet values through isolated final physical map"
+    formula: "Actual core line11 and printed14-22 retain identity on saved/reopened candidate: mixed-age box6 and final2026 Jesse box2. This is not an admitted full2026 return or public export."
+    irsRef: "Final2026 Schedule R and current2026 instructions, Initial Amounts Example1 and Jesse Example1"
+    testRef: "tests/pdf/schedule-r-2026-candidate.test.ts::retains isolated published worksheet amounts in final2026 physical cells (%j)"

@@ -1,7 +1,7 @@
 form: "Schedule R"
 fullName: "Credit for the Elderly or the Disabled"
 taxYear: 2025
-irsReference: "https://www.irs.gov/instructions/i1040sr"
+irsReference: "https://www.irs.gov/pub/irs-prior/i1040sr--2025.pdf"
 statute: "IRC §22"
 
 notes: |
@@ -40,8 +40,8 @@ lines:
       Box 3 (MFJ, both 65+): $7,500
       Box 4 (MFJ, both under 65, one disabled): $5,000
       Box 5 (MFJ, both under 65, both disabled): $7,500
-      Box 6 (MFJ, one 65+, other under 65 and not disabled): $5,000
-      Box 7 (MFJ, one 65+, other under 65 and disabled): $7,500
+      Box 7 (MFJ, one 65+, other under 65 and not disabled): $5,000
+      Box 6 (MFJ, one 65+, other under 65 and disabled): $7,500
       Box 8 (MFS, 65+): $3,750
       Box 9 (MFS, under 65, disabled): $3,750
     irsRef: "Schedule R Instructions, Line 10; IRC §22(c)(1)"
@@ -50,19 +50,19 @@ lines:
 
   - line: "11"
     description: "Taxable disability income (for under-65 disabled filers)"
-    formula: "Total taxable disability income received during the year, per qualifying disabled person"
+    formula: "Boxes 2/4/9: actual qualifying disability income; Box 5: sum both actual disability incomes; Box 6: $5,000 plus actual younger disabled spouse income"
     irsRef: "Schedule R Instructions, Line 11; IRC §22(c)(2)(B)(iii)"
     edgeCases:
-      - "Only applies if Box 2, 4, 5, 7, or 9 is checked (disability-based eligibility)"
+      - "Only applies if Box 2, 4, 5, 6, or 9 is checked (disability-based eligibility)"
       - "If 65+, disability income is not a limiting factor"
-      - "MFJ Box 5 or 7: sum of both qualifying spouses' disability income"
+      - "MFJ Box 5: sum both actual disability incomes; Box 6: $5,000 plus actual under-65 disabled spouse income"
     testRef: "tests/engine/forms/schedule-r.test.ts::Line 11-12 — disability income cap"
 
   - line: "12"
     description: "Adjusted initial amount"
     formula: |
-      If Box 2, 4, 5, 7, or 9: min(Line 10, Line 11)
-      Otherwise (Box 1, 3, 6, 8): Line 10
+      If Box 2, 4, 5, 6, or 9: min(Line 10, Line 11)
+      Otherwise (Box 1, 3, 7, 8): Line 10
     irsRef: "Schedule R Instructions, Line 12; IRC §22(c)(2)(B)"
     notes: "Disability income caps the credit base for under-65 disabled filers"
     testRef: "tests/engine/forms/schedule-r.test.ts::Line 11-12 — disability income cap"
@@ -87,49 +87,39 @@ lines:
     testRef: "tests/engine/forms/schedule-r.test.ts::Lines 13-14 — nontaxable benefits reduction"
 
   - line: "14"
-    description: "Net initial amount after nontaxable benefits"
-    formula: "max(0, Line 12 - Line 13c)"
-    irsRef: "Schedule R Instructions, Line 14; IRC §22(c)(3)"
-    edgeCases:
-      - "If Line 13c >= Line 12, no credit is available"
-    testRef: "tests/engine/forms/schedule-r.test.ts::Lines 13-14 — nontaxable benefits reduction"
+    description: "Adjusted gross income"
+    formula: "Actual Form 1040 line 11a (2025) or 11b (2026)"
+    irsRef: "Final 2025 and 2026 Schedule R, line 14"
+    testRef: "tests/engine/forms/schedule-r-published-examples.test.ts::preserves printed audit identities and actual worksheet credit limit"
 
   - line: "15"
-    description: "AGI"
-    formula: "Form 1040 Line 11"
-    irsRef: "Schedule R Instructions, Line 15"
-    testRef: "tests/engine/forms/schedule-r.test.ts::Lines 16-18 — AGI reduction"
+    description: "Statutory AGI threshold"
+    formula: "Single/HoH/QSS 7500; MFJ 10000; MFS 5000"
+    irsRef: "Schedule R line 15"
+    testRef: "tests/engine/forms/schedule-r-published-examples.test.ts::preserves printed audit identities and actual worksheet credit limit"
 
   - line: "16"
-    description: "AGI threshold by filing status"
-    formula: |
-      Single, HoH, QSS: $7,500
-      MFJ: $10,000
-      MFS: $5,000
-    irsRef: "Schedule R Instructions, Line 16; IRC §22(d)(1)"
-    notes: "These thresholds are statutory and NOT inflation-adjusted"
-    testRef: "tests/engine/forms/schedule-r.test.ts::Lines 16-18 — AGI reduction"
+    description: "Excess AGI"
+    formula: "max(0, line 14 minus line 15)"
+    irsRef: "Schedule R line 16"
+    testRef: "tests/engine/forms/schedule-r-published-examples.test.ts::preserves printed audit identities and actual worksheet credit limit"
 
   - line: "17"
-    description: "Excess AGI over threshold"
-    formula: "max(0, Line 15 - Line 16)"
-    irsRef: "Schedule R Instructions, Line 17"
-    testRef: "tests/engine/forms/schedule-r.test.ts::Lines 16-18 — AGI reduction"
+    description: "Half excess AGI"
+    formula: "roundDollar(line 16 times 0.5)"
+    irsRef: "Schedule R line 17"
+    testRef: "tests/engine/forms/schedule-r-published-examples.test.ts::preserves printed audit identities and actual worksheet credit limit"
 
   - line: "18"
-    description: "AGI reduction"
-    formula: "Line 17 × 0.5"
-    irsRef: "Schedule R Instructions, Line 18; IRC §22(d)"
-    notes: "Half of the excess AGI reduces the credit base"
-    testRef: "tests/engine/forms/schedule-r.test.ts::Lines 16-18 — AGI reduction"
+    description: "Total reduction"
+    formula: "line 13c plus line 17"
+    irsRef: "Schedule R line 18"
+    testRef: "tests/engine/forms/schedule-r-published-examples.test.ts::preserves printed audit identities and actual worksheet credit limit"
 
   - line: "19"
     description: "Credit base"
-    formula: "max(0, Line 14 - Line 18)"
-    irsRef: "Schedule R Instructions, Line 19"
-    edgeCases:
-      - "If AGI reduction exceeds the net initial amount, credit is zero"
-      - "High-income taxpayers are phased out entirely"
+    formula: "max(0, line 12 minus line 18)"
+    irsRef: "Schedule R line 19"
     testRef: "tests/engine/forms/schedule-r.test.ts::Line 20 — credit calculation"
 
   - line: "20"
@@ -139,12 +129,25 @@ lines:
     notes: "The 15% rate is set by statute"
     testRef: "tests/engine/forms/schedule-r.test.ts::Line 20 — credit calculation"
 
+  - line: "21"
+    description: "Actual Credit Limit Worksheet"
+    formula: "max(0, actual Form1040 line18 minus actual Schedule3 lines1,2,6l)"
+    irsRef: "2025 and 2026 Schedule R instructions, Line21 Credit Limit Worksheet"
+    notes: "Optional standalone worksheet context must contain all four actual components. Missing context stays unknown, never defaults to zero or tentative credit. Federal supplies its actual calculated components; no Form8978/line6l return input is implemented. PDF rejects missing/stale worksheet before I/O."
+    testRef: "tests/engine/forms/schedule-r-published-examples.test.ts::preserves printed audit identities and actual worksheet credit limit"
+
   - line: "22"
-    description: "Credit for the elderly or the disabled"
-    formula: "min(Line 20, tax liability after other credits)"
-    irsRef: "Schedule R Instructions, Line 22; IRC §22"
-    notes: "Nonrefundable — cannot exceed remaining tax liability. Tax liability limit is enforced at the Schedule 3/federal.ts level in this engine."
-    testRef: "tests/engine/forms/schedule-r.test.ts::Line 20 — credit calculation"
+    description: "Allowed nonrefundable credit"
+    formula: "min(line20, line21), only when actual worksheet context exists"
+    irsRef: "Schedule R line22"
+    testRef: "tests/engine/forms/schedule-r-published-examples.test.ts::published Jesse examples preserve year-specific tentative and allowed credit (%j)"
+
+  - line: "published-mixed-age"
+    description: "Published mixed-age disability example, both final years"
+    formula: "Age63 disabled4000 plus age67 spouse: box6, line10=7500, line11=5000+4000=9000, line12=7500"
+    irsRef: "2025 archived instructions and current 2026 instructions, Initial Amounts Example1"
+    notes: "Does not qualify physician statement, citizenship, eligibility source facts, full2026 return or filing. Existing year/export gates remain closed. Physical2026 exercise is isolated only."
+    testRef: "tests/engine/forms/schedule-r-published-examples.test.ts::published mixed-age example uses box6 and the full uncapped line11 (%j)"
 
   # ── Edge Cases ──────────────────────────────────────────────
   - line: "phase-out"
@@ -166,3 +169,39 @@ lines:
       - "Disability income of $3,000 caps base to $3,000 even though initial amount is $5,000"
       - "Disability income of $0 means no credit even if otherwise eligible"
     testRef: "tests/engine/forms/schedule-r.test.ts::Disabled filer with disability income less than initial amount is capped"
+
+  - line: "physical-source-binding"
+    description: "Actual disability worksheet and current original Schedule R facts before PDF I/O"
+    formula: "2025 fields11/21/22 use actual uncapped11 and source-bound worksheet21/allowed22; reject missing/stale core or worksheet"
+    irsRef: "Final2025 Schedule R lines11,21,22"
+    testRef: "tests/pdf/fill-schedule-r.test.ts::prints actual uncapped disability line11 and actual zero tax limit"
+
+  - line: "canonical-published-credit-limit"
+    description: "Actual2025 Jesse return versus published worksheet"
+    formula: "Actual disability15900 + interest100 and nontaxSS700 => AGI16000; taxable250; tax-table26; R tentative8, limit26, allowed8"
+    irsRef: "Archived2025 Schedule R instructions, Jesse Example1"
+    testRef: "tests/pdf/fill-schedule-r.test.ts::prints the actual canonical published2025 Jesse credit limit and allowed credit"
+
+  - line: "actual-source-validation"
+    description: "Validate actual monetary originals before eligibility or arithmetic"
+    formula: "Actual disability income and nontaxable pension/Social Security benefits must be finite and nonnegative; actual AGI must be finite and may be negative. Optional absent disability amounts remain zero."
+    irsRef: "Schedule R lines11,13a,13b,14; final2025 and2026 instructions"
+    testRef: "tests/engine/forms/schedule-r-published-examples.test.ts::rejects invalid actual benefit and disability sources"
+
+  - line: "export-source-consistency"
+    description: "Reject stale eligibility and every rendered monetary field before template I/O"
+    formula: "Replay current original R facts with current federal AGI, Social Security and unique line18 worksheet; require matching eligibility, all returned amounts and audit lines. Apply at full packet entry even when saved R is absent, ineligible or zero-credit. Consistent ineligible sources remain blank-compatible."
+    irsRef: "Final2025 Schedule R PartI and lines10-22"
+    testRef: "tests/pdf/fill-schedule-r.test.ts::rejects changed eligibility and rendered amounts before any export I/O"
+
+  - line: "no-claim-credit-signal"
+    description: "No observable Schedule3 credit without an eligible actual R claim"
+    formula: "When R originals are absent or ineligible, any provided Schedule3 line6d must be actual finite zero; reject a nonzero saved credit before standalone or full packet I/O. An absent Schedule3 is not invented."
+    irsRef: "Schedule R PartI and line22; Schedule3 line6d"
+    testRef: "tests/pdf/fill-schedule-r.test.ts::rejects a nonzero saved credit without an eligible original claim"
+
+  - line: "required-printed-zero"
+    description: "Retain explicit printed zero required on lines13c and16"
+    formula: "No nontaxable benefits means actual line13c=0 printed as0; nonpositive AGI excess means actual line16=0 printed as0. Individual zero13a/13b may remain blank. Preserve saved/reopened field values."
+    irsRef: "Final2025 Schedule R printed lines13c and16"
+    testRef: "tests/pdf/fill-schedule-r.test.ts::prints required zero totals on lines13c and16 after reopening"

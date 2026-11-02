@@ -1,4 +1,7 @@
 /** Spec: spec/federal/schedule-r-2026-template.yaml. Diagnostic only; no return enabled. */
+import Decimal from "decimal.js";
+import { calculateScheduleR } from "@/engine/forms/schedule-r.js";
+import { getConstants } from "@/models/constants.js";
 import { createHash } from "node:crypto";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -116,4 +119,37 @@ describe("Final 2026 schedule-r physical candidate", () => {
     expect(candidate.line14Source).toBe("Form 1040 line 11b");
     expect(candidate.fields.line14Agi).toBe("topmostSubform[0].Page2[0].f2_7[0]");
   });
+  it.each(["mixed-age", "Jesse"] as const)("retains isolated published worksheet amounts in final2026 physical cells (%j)", async (example) => {
+    // Explicit worksheet facts, not invented canonical return liability.
+    const mixed = example === "mixed-age";
+    const r = calculateScheduleR({taxYear:2026, filingStatus:mixed ? "married_filing_jointly" : "single",
+      agi:new Decimal(mixed ? "4000" : "16270"),nontaxableSocialSecurity:new Decimal(mixed ? "0" : "500"),
+      // The statutory R amounts are unchanged; do not bypass getConstants(2026).
+      constants:getConstants(2025).elderlyOrDisabledCredit,
+      scheduleRInput:{primaryQualifies:true,primaryAge65OrOlder:false,primaryDisabilityIncome:mixed ? "4000" : "16170",
+        spouseQualifies:mixed,spouseAge65OrOlder:mixed,nontaxablePensionsAnnuities:"0"},
+      creditLimitWorksheet:{taxBeforeCredits:new Decimal(mixed ? "100" : "16"),foreignTaxCredit:new Decimal(0),dependentCareCredit:new Decimal(0),schedule3Line6l:new Decimal(0)}});
+    const expected:Record<string,string> = mixed
+      ? {"10":"7500","11":"9000","12":"7500","13a":"0","13b":"0","13c":"0","14":"4000","15":"10000","16":"0","17":"0","18":"0","19":"7500","20":"1125","21":"100","22":"100"}
+      : {"10":"5000","11":"16170","12":"5000","13a":"500","13b":"0","13c":"500","14":"16270","15":"7500","16":"8770","17":"4385","18":"4885","19":"115","20":"17","21":"16","22":"16"};
+    const pdf=await PDFDocument.load(await readFile(sourcePath));
+    const fields=pdf.getForm();fields.getTextField(candidate.fields.name).setText("FICTIONAL WORKSHEET ONLY");fields.getTextField(candidate.fields.ssn).setText("REDACTED");
+    fields.getCheckBox(mixed ? candidate.fields.box6 : candidate.fields.box2).check();
+    for(const [line,value] of Object.entries(expected)) {
+      const actual=r.lines.find(row=>row.line===line);expect(actual?.value.toFixed()).toBe(value);
+      const key=line==="14" ? "line14Agi" : `line${line}`;
+      const fieldName=candidate.fields[key as keyof typeof candidate.fields];
+      fields.getTextField(fieldName).setText(actual?.value.toFixed(0));
+    }
+    await markReviewPdf(pdf);const bytes=await pdf.save();const saved=await PDFDocument.load(bytes);
+    for(const [line,value] of Object.entries(expected)) {
+      const key=line==="14" ? "line14Agi" : `line${line}`;
+      expect(saved.getForm().getTextField(candidate.fields[key as keyof typeof candidate.fields]).getText()).toBe(value);
+    }
+    expect(saved.getForm().getCheckBox(mixed ? candidate.fields.box6 : candidate.fields.box2).isChecked()).toBe(true);
+    expect(saved.getForm().getCheckBox(candidate.fields.box7).isChecked()).toBe(false);
+    expect(()=>assertPdfExportAllowed(2026,2026)).toThrow(/No qualified review/);
+    if(process.env.TAX_CANDIDATE_ARTIFACT_DIR){await mkdir(process.env.TAX_CANDIDATE_ARTIFACT_DIR,{recursive:true});await writeFile(join(process.env.TAX_CANDIDATE_ARTIFACT_DIR,`schedule-r-${example}-worksheet.pdf`),bytes);}
+  });
+
 });

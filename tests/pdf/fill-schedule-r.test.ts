@@ -8,6 +8,7 @@ import { PDFDocument, PDFTextField, PDFCheckBox } from "pdf-lib";
 import Decimal from "decimal.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { fillScheduleR, SCHEDULE_R_FIELDS } from "@/pdf/fill-schedule-r.js";
+import { fillReturn } from "@/pdf/fill-return.js";
 import { formatCurrency } from "@/pdf/pdf-utils.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 
@@ -63,7 +64,7 @@ const singleElderlyFixture: TaxYearInput = {
   },
   w2s: [],
   form1099Int: [
-    { payer: "Community Bank", amount: "1000", taxExemptInterest: "0", privateActivityBondInterest: "0" },
+    { payer: "Community Bank", interestIncome: "1000", taxExemptInterest: "0", privateActivityBondInterest: "0" },
   ],
   form1099Div: [],
   form1099B: [],
@@ -185,7 +186,7 @@ const mfjBothElderlyFixture: TaxYearInput = {
   },
   w2s: [],
   form1099Int: [
-    { payer: "Credit Union", amount: "1500", taxExemptInterest: "0", privateActivityBondInterest: "0" },
+    { payer: "Credit Union", interestIncome: "1500", taxExemptInterest: "0", privateActivityBondInterest: "0" },
   ],
   form1099Div: [],
   form1099B: [],
@@ -247,7 +248,7 @@ describe("Schedule R PDF filling — MFJ, both 65+, Box 3", () => {
 
   it("Schedule R Line 22 - final credit", () => {
     const schedR = result.scheduleR!;
-    expect(getFieldText(doc, F.line22)).toBe(formatCurrency(schedR.credit));
+    expect(getFieldText(doc, F.line22)).toBe(schedR.allowedCredit?.toFixed(0));
   });
 });
 
@@ -329,5 +330,109 @@ describe("Schedule R PDF filling — not eligible, no fields filled", () => {
     expect(getFieldText(doc, F.line10)).toBeUndefined();
     expect(getFieldText(doc, F.line20)).toBeUndefined();
     expect(getFieldText(doc, F.line22)).toBeUndefined();
+  });
+});
+
+
+/** Synthetic AGI/benefits supplement to the literal published mixed-age initial example. */
+function mixedAgePublishedFixture(): TaxYearInput {
+  return {...singleElderlyFixture, taxpayer:{...singleElderlyFixture.taxpayer,filingStatus:'married_filing_jointly',
+    primary:{...singleElderlyFixture.taxpayer.primary,dateOfBirth:'1962-06-15'},
+    spouse:{firstName:'Sam',lastName:'Elder',ssn:'333-44-5555',dateOfBirth:'1958-06-15',occupation:'Retired'}},
+    formSSA1099:[], form1099Int:[{payer:'Actual bank',interestIncome:'16000',taxExemptInterest:'0',privateActivityBondInterest:'0'}],
+    form1099R:[{payer:'Actual disability pension',grossDistribution:'4000',taxableAmount:'4000',federalWithheld:'0',distributionCode:'3'}],
+    scheduleR:{primaryQualifies:true,primaryAge65OrOlder:false,primaryDisabilityIncome:'4000',spouseQualifies:true,spouseAge65OrOlder:true,nontaxablePensionsAnnuities:'0'}};
+}
+describe('Schedule R published physical correction',()=>{
+  it('prints actual uncapped disability line11 and actual zero tax limit',async()=>{
+    const input=mixedAgePublishedFixture();const result=calculateFederalTax(input);
+    const doc=await fillScheduleR(input,result,BLANK_SCHED_R); const reopened=await PDFDocument.load(await doc.save());
+    expect(isChecked(reopened,F.box6)).toBe(true);expect(isChecked(reopened,F.box7)).toBe(false);
+    for(const [field,expected] of [[F.line10,'7500'],[F.line11,'9000'],[F.line12,'7500'],[F.line14,'20000'],[F.line15,'10000'],[F.line16,'10000'],[F.line17,'5000'],[F.line18,'5000'],[F.line19,'2500'],[F.line20,'375'],[F.line21,'0'],[F.line22,'0']]) expect(getFieldText(reopened,field)).toBe(expected);
+  });
+  it('rejects unknown actual credit limit before template I/O',async()=>{
+    const input=mixedAgePublishedFixture();const result=calculateFederalTax(input);
+    if(!result.scheduleR)throw new Error('expected actual Schedule R');
+    const missing={...result,scheduleR:{...result.scheduleR,creditLimit:undefined,allowedCredit:undefined}};
+    await expect(fillScheduleR(input,missing,'does-not-exist.pdf')).rejects.toThrow(/Schedule R.*worksheet/i);
+  });
+  it('rejects stale actual disability facts and inconsistent worksheet before template I/O',async()=>{
+    const input=mixedAgePublishedFixture();const result=calculateFederalTax(input);
+    if(!input.scheduleR)throw new Error('expected original Schedule R facts');
+    await expect(fillScheduleR({...input,scheduleR:{...input.scheduleR,primaryDisabilityIncome:'1000'}},result,'does-not-exist.pdf')).rejects.toThrow(/Schedule R.*source/i);
+    if(!result.scheduleR)throw new Error('expected actual Schedule R');
+    await expect(fillScheduleR(input,{...result,scheduleR:{...result.scheduleR,creditLimit:new Decimal(1)}},'does-not-exist.pdf')).rejects.toThrow(/Schedule R.*worksheet/i);
+  });
+  it('prints the actual canonical published2025 Jesse credit limit and allowed credit', async()=>{
+    const input:TaxYearInput={...singleElderlyFixture,
+      taxpayer:{...singleElderlyFixture.taxpayer,primary:{...singleElderlyFixture.taxpayer.primary,dateOfBirth:'1967-06-15'}},
+      form1099Int:[{payer:'Actual bank',interestIncome:'100',taxExemptInterest:'0',privateActivityBondInterest:'0'}],
+      form1099R:[{payer:'Actual disability pension',grossDistribution:'15900',taxableAmount:'15900',federalWithheld:'0',distributionCode:'3'}],
+      formSSA1099:[{netBenefits:'700'}],
+      scheduleR:{primaryQualifies:true,primaryAge65OrOlder:false,primaryDisabilityIncome:'15900',nontaxablePensionsAnnuities:'0'}};
+    const result=calculateFederalTax(input);expect(result.agi.toFixed()).toBe('16000');
+    const doc=await fillScheduleR(input,result,BLANK_SCHED_R);const saved=await PDFDocument.load(await doc.save());
+    for(const [field,value] of [[F.line10,'5000'],[F.line11,'15900'],[F.line12,'5000'],[F.line13a,'700'],[F.line13c,'700'],[F.line14,'16000'],[F.line15,'7500'],[F.line16,'8500'],[F.line17,'4250'],[F.line18,'4950'],[F.line19,'50'],[F.line20,'8'],[F.line21,'26'],[F.line22,'8']])expect(getFieldText(saved,field)).toBe(value);
+    expect(result.schedule3?.elderlyOrDisabledCredit.toFixed()).toBe('8');
+  });
+
+});
+
+describe('Schedule R export source validation', () => {
+  // Spec: schedule-r.yaml export-source-consistency. Missing paths prove pre-I/O rejection.
+  it('rejects changed eligibility and rendered amounts before any export I/O', async () => {
+    for (const route of ['standalone', 'packet'] as const) {
+      for (const change of ['absent', 'false', 'benefits', 'reduction', 'net', 'original'] as const) {
+        const input = mixedAgePublishedFixture();
+        const result = calculateFederalTax(input);
+        if (!result.scheduleR) throw new Error('Expected original R result');
+        if (change === 'absent') result.scheduleR = undefined;
+        else if (change === 'false') result.scheduleR.eligible = false;
+        else if (change === 'benefits') result.scheduleR.nontaxableBenefits = new Decimal(1000);
+        else if (change === 'reduction') result.scheduleR.agiReduction = new Decimal(1);
+        else if (change === 'net') result.scheduleR.netInitialAmount = new Decimal(1);
+        else {
+          if (!input.scheduleR) throw new Error('Expected original R facts');
+          input.scheduleR = {...input.scheduleR, primaryQualifies: false, primaryAge65OrOlder: false, spouseQualifies: false, spouseAge65OrOlder: false};
+        }
+        const pending = route === 'standalone' ? fillScheduleR(input, result, '/missing-r-source.pdf')
+          : fillReturn(input, result, {blankFormsDir: '/missing-r-templates', outputDir: '/missing-r-output'});
+        await expect(pending, `${route}:${change}`).rejects.toThrow(/Schedule R.*(source|worksheet|inconsistent)/i);
+      }
+    }
+  });
+});
+
+describe('Schedule R no-claim credit signal', () => {
+  // Spec: schedule-r.yaml no-claim-credit-signal.
+  it('rejects a nonzero saved credit without an eligible original claim', async () => {
+    for (const absent of [false, true]) {
+      for (const packet of [false, true]) {
+        const input = structuredClone(singleElderlyFixture);
+        input.taxpayer.primary.dateOfBirth = '1990-06-15';
+        input.scheduleR = absent ? undefined : {primaryQualifies: false, primaryAge65OrOlder: false, nontaxablePensionsAnnuities: '1000'};
+        const result = calculateFederalTax(input);
+        if (!result.schedule3) throw new Error('Expected actual Schedule3');
+        expect(result.schedule3.elderlyOrDisabledCredit.isZero()).toBe(true);
+        result.schedule3.elderlyOrDisabledCredit = new Decimal(100);
+        const pending = packet ? fillReturn(input, result, {blankFormsDir: '/missing-r-templates', outputDir: '/missing-r-output'})
+          : fillScheduleR(input, result, '/missing-r-source.pdf');
+        await expect(pending).rejects.toThrow(/Schedule R.*(source|credit|inconsistent)/i);
+      }
+    }
+  });
+});
+
+describe('Schedule R required printed zeros', () => {
+  // Spec: schedule-r.yaml required-printed-zero.
+  it('prints required zero totals on lines13c and16 after reopening', async () => {
+    const input = mixedAgePublishedFixture();
+    input.form1099Int = [];
+    const result = calculateFederalTax(input);
+    const reopened = await PDFDocument.load(await (await fillScheduleR(input, result, BLANK_SCHED_R)).save());
+    expect(getFieldText(reopened, F.line13c)).toBe('0');
+    expect(getFieldText(reopened, F.line16)).toBe('0');
+    expect(getFieldText(reopened, F.line13a)).toBeUndefined();
+    expect(getFieldText(reopened, F.line13b)).toBeUndefined();
   });
 });

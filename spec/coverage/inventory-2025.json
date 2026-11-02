@@ -9097,7 +9097,7 @@
       "key": "federal/schedule-r",
       "jurisdiction": "federal",
       "taxYear": 2025,
-      "sourceAuthority": "https://www.irs.gov/instructions/i1040sr",
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/i1040sr--2025.pdf",
       "specPath": "spec/federal/schedule-r.yaml",
       "enginePath": "src/engine/forms/schedule-r.ts",
       "packetPath": "src/pdf/fill-schedule-r.ts",

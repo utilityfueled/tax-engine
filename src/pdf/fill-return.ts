@@ -101,7 +101,7 @@ import { fillScheduleH } from "./fill-schedule-h.js";
 import { fillForm4797 } from "./fill-form-4797.js";
 import { resolveReviewTemplateDirectory } from "./template-registry.js";
 import { fillForm4952 } from "./fill-form-4952.js";
-import { fillScheduleR } from "./fill-schedule-r.js";
+import { assertScheduleRSourceConsistency, fillScheduleR } from "./fill-schedule-r.js";
 import { fillForm8936 } from "./fill-form-8936.js";
 import { fillScheduleF } from "./fill-schedule-f.js";
 import { fillScheduleJ } from "./fill-schedule-j.js";
@@ -435,6 +435,7 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  assertScheduleRSourceConsistency(input, result);
   if (options.pageOnlyTemporaryMerge && (options.flatten !== true || options.useObjectStreams !== false)) {
     throw new Error("Page-only temporary merge packets require flattened, uncompressed components");
   }

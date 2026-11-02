@@ -107,7 +107,7 @@ describe("Schedule R — Credit for the Elderly or the Disabled", () => {
       expect(result.box).toBe(5);
     });
 
-    it("Box 6: MFJ, one 65+, other under 65 and not disabled", () => {
+    it("Box 7: MFJ, one 65+, other under 65 and not disabled", () => {
       const result = calculateScheduleR(makeParams({
         filingStatus: "married_filing_jointly",
         scheduleRInput: {
@@ -119,10 +119,10 @@ describe("Schedule R — Credit for the Elderly or the Disabled", () => {
         },
       }));
       expect(result.eligible).toBe(true);
-      expect(result.box).toBe(6);
+      expect(result.box).toBe(7);
     });
 
-    it("Box 7: MFJ, one 65+, other under 65 and disabled", () => {
+    it("Box 6: MFJ, one 65+, other under 65 and disabled", () => {
       const result = calculateScheduleR(makeParams({
         filingStatus: "married_filing_jointly",
         scheduleRInput: {
@@ -135,10 +135,10 @@ describe("Schedule R — Credit for the Elderly or the Disabled", () => {
         },
       }));
       expect(result.eligible).toBe(true);
-      expect(result.box).toBe(7);
+      expect(result.box).toBe(6);
     });
 
-    it("Box 7 reversed: MFJ, spouse 65+, primary under 65 and disabled", () => {
+    it("Box 6 reversed: MFJ, spouse 65+, primary under 65 and disabled", () => {
       const result = calculateScheduleR(makeParams({
         filingStatus: "married_filing_jointly",
         scheduleRInput: {
@@ -151,7 +151,7 @@ describe("Schedule R — Credit for the Elderly or the Disabled", () => {
         },
       }));
       expect(result.eligible).toBe(true);
-      expect(result.box).toBe(7);
+      expect(result.box).toBe(6);
     });
 
     it("Box 8: MFS, age 65+, lived apart all year", () => {
@@ -371,7 +371,7 @@ describe("Schedule R — Credit for the Elderly or the Disabled", () => {
       expect(result.adjustedInitialAmount.toNumber()).toBe(3500);
     });
 
-    it("MFJ Box 7 uses disabled spouse's disability income (primary 65+, spouse disabled)", () => {
+    it("MFJ Box 6 adds $5,000 to disabled spouse's disability income (primary 65+, spouse disabled)", () => {
       const result = calculateScheduleR(makeParams({
         filingStatus: "married_filing_jointly",
         scheduleRInput: {
@@ -383,26 +383,9 @@ describe("Schedule R — Credit for the Elderly or the Disabled", () => {
           nontaxablePensionsAnnuities: "0",
         },
       }));
-      expect(result.box).toBe(7);
-      // min(7500, 4000) = 4000... wait, for Box 7, the disability cap applies
-      // only to the disabled spouse's portion. But the IRS form says:
-      // "If you checked Box 7: Enter the smaller of Line 10 or Line 11"
-      // Line 11 for Box 7 is the younger disabled spouse's disability income.
-      // But both qualify, so initial amount = $7,500.
-      // Hmm, actually looking at the IRS instructions more carefully:
-      // For Box 7, the disability income cap only applies to the disabled spouse.
-      // The 65+ spouse's $5,000 is not capped. But the form says
-      // "smaller of line 10 or line 11" where line 10 is $7,500 total.
-      // Actually the IRS form treats Box 7 differently. Let me check again.
-      //
-      // Per IRS Schedule R instructions for Line 11:
-      // If you checked Box 7: "Enter your [disabled] spouse's taxable disability income"
-      // Line 12: "Smaller of line 10 or line 11"
-      //
-      // So the ENTIRE $7,500 is capped by the disabled spouse's disability income.
-      // This means if the disabled spouse has $4,000 in disability income,
-      // the adjusted amount is min($7,500, $4,000) = $4,000.
-      expect(result.adjustedInitialAmount.toNumber()).toBe(4000);
+      expect(result.box).toBe(6);
+      // Official2025/2026 published Example1: min(7500,5000+4000).
+      expect(result.adjustedInitialAmount.toNumber()).toBe(7500);
     });
   });
 

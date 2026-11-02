@@ -3944,6 +3944,11 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // ── Schedule R: Credit for the Elderly or the Disabled ──
   const scheduleR = input.scheduleR
     ? calculateScheduleR({
+        taxYear: year,
+        creditLimitWorksheet: {taxBeforeCredits, foreignTaxCredit, dependentCareCredit,
+          // No Form8978/Schedule3 line6l input is admitted by this return model.
+          // The refundable section1341 credit belongs to line13b, not this worksheet.
+          schedule3Line6l: new Decimal(0)},
         filingStatus,
         agi,
         nontaxableSocialSecurity: zeroFloor(socialSecurityBenefitsGross.minus(socialSecurityBenefitsTaxable)),
@@ -3955,7 +3960,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   if (scheduleR) {
     audit.merge(scheduleR.lines);
   }
-  const elderlyOrDisabledCredit = Decimal.min(scheduleR?.credit ?? new Decimal(0), zeroFloor(taxBeforeCredits.minus(foreignTaxCredit).minus(dependentCareCredit)));
+  const elderlyOrDisabledCredit = scheduleR?.allowedCredit ?? new Decimal(0);
 
   // ── Form 8863: actual education facts and Credit Limit Worksheet ──
   let educationNonrefundable = new Decimal(0);

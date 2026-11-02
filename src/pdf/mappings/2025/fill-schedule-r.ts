@@ -14,7 +14,8 @@ import { PDFDocument } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
-import type { ScheduleRBox } from "@/engine/forms/schedule-r.js";
+import { calculateScheduleR, type ScheduleRBox } from "@/engine/forms/schedule-r.js";
+import { getConstants } from "@/models/constants.js";
 import {
   loadReviewTemplate,
   setTextField,
@@ -99,16 +100,70 @@ function getAgiThreshold(box: ScheduleRBox): Decimal {
  * Fill IRS Schedule R PDF from engine calculation results.
  * Returns the filled PDFDocument (caller saves it).
  */
+/** Validate original R facts before packet selection or any template I/O. */
+export function assertScheduleRSourceConsistency(input: TaxYearInput, result: TaxReturnResult): void {
+  const schedR = result.scheduleR;
+  const observedCredit = result.schedule3?.elderlyOrDisabledCredit;
+  if ((!input.scheduleR || !schedR?.eligible) && result.schedule3
+    && (!Decimal.isDecimal(observedCredit) || !observedCredit.isFinite() || !observedCredit.isZero())) {
+    throw new Error("Schedule R credit is inconsistent with absent or ineligible original sources");
+  }
+  if (!input.scheduleR) {
+    if (schedR) throw new Error("Schedule R original source facts are missing");
+    return;
+  }
+  const params = {taxYear: input.taxpayer.taxYear,
+    filingStatus: input.taxpayer.filingStatus, agi: result.agi,
+    nontaxableSocialSecurity: Decimal.max(ZERO, result.socialSecurityBenefitsGross.minus(result.socialSecurityBenefitsTaxable)),
+    scheduleRInput: input.scheduleR, livedWithSpouse: input.taxpayer.livedWithSpouseAtAnyTimeDuringYear,
+    constants: getConstants(input.taxpayer.taxYear).elderlyOrDisabledCredit};
+  let expected = calculateScheduleR(params);
+  if (!schedR || expected.eligible !== schedR.eligible) {
+    throw new Error("Schedule R original source eligibility is inconsistent");
+  }
+  if (expected.eligible) {
+    const taxSources = result.allLines.filter(row => row.form === "1040" && row.line === "18");
+    const schedule3 = result.schedule3;
+    if (schedR.creditLimit === undefined || schedR.allowedCredit === undefined
+      || taxSources.length !== 1 || !schedule3) {
+      throw new Error("Schedule R actual credit limit worksheet is missing");
+    }
+    const taxSource = taxSources[0];
+    if (!taxSource) throw new Error("Schedule R actual credit limit worksheet is missing");
+    expected = calculateScheduleR({...params,
+      creditLimitWorksheet: {taxBeforeCredits: taxSource.value,
+        foreignTaxCredit: schedule3.foreignTaxCredit, dependentCareCredit: schedule3.childDependentCareCredit,
+        // No Form8978/line6l input exists in the admitted canonical return model.
+        schedule3Line6l: ZERO}});
+    if (!expected.creditLimit?.eq(schedR.creditLimit) || !expected.allowedCredit?.eq(schedR.allowedCredit)
+      || !schedule3.elderlyOrDisabledCredit.eq(schedR.allowedCredit)) {
+      throw new Error("Schedule R actual credit limit worksheet is inconsistent");
+    }
+  }
+  const amounts = ['initialAmount', 'line11Amount', 'adjustedInitialAmount', 'nontaxableBenefits',
+    'netInitialAmount', 'agiReduction', 'creditBase', 'credit', 'creditLimit', 'allowedCredit'] as const;
+  if (expected.box !== schedR.box || expected.lines.length !== schedR.lines.length
+    || expected.lines.some((row, index) => row.form !== schedR.lines[index]?.form
+      || row.line !== schedR.lines[index]?.line || !row.value.eq(schedR.lines[index].value))
+    || amounts.some(key => {
+      const actual = schedR[key]; const original = expected[key];
+      return original === undefined ? actual !== undefined : !Decimal.isDecimal(actual) || !original.eq(actual);
+    })) {
+    throw new Error("Schedule R original source facts do not match the calculation");
+  }
+}
+
 export async function fillScheduleR(
   input: TaxYearInput,
   result: TaxReturnResult,
   blankPdfPath: string,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  assertScheduleRSourceConsistency(input, result);
+  const schedR = result.scheduleR;
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = SCHEDULE_R_FIELDS;
-  const schedR = result.scheduleR;
 
   // ── Header ──
   const name = input.taxpayer.spouse
@@ -129,14 +184,8 @@ export async function fillScheduleR(
   // Line 10: Initial amount
   setCurrencyField(form, F.line10, schedR.initialAmount);
 
-  // Line 11: Disability income (only for disability boxes 2, 4, 5, 6, 9)
-  const isDisabilityBox = box === 2 || box === 4 || box === 5 || box === 6 || box === 9;
-  if (isDisabilityBox && !schedR.adjustedInitialAmount.eq(schedR.initialAmount)) {
-    // Disability income caps the initial amount — derive it from the relationship
-    // adjustedInitialAmount = min(initialAmount, disabilityIncome)
-    // If adjusted < initial, then disabilityIncome = adjusted
-    setCurrencyField(form, F.line11, schedR.adjustedInitialAmount);
-  }
+  // Report actual uncapped line11, including the box6 age-based $5,000.
+  if (schedR.line11Amount !== undefined) setCurrencyField(form, F.line11, schedR.line11Amount);
 
   // Line 12: Adjusted initial amount
   setCurrencyField(form, F.line12, schedR.adjustedInitialAmount);
@@ -149,7 +198,7 @@ export async function fillScheduleR(
 
   setCurrencyField(form, F.line13a, nontaxableSS);
   setCurrencyField(form, F.line13b, nontaxablePensions);
-  setCurrencyField(form, F.line13c, schedR.nontaxableBenefits);
+  setTextField(form, F.line13c, schedR.nontaxableBenefits.toDecimalPlaces(0, Decimal.ROUND_HALF_UP).toFixed(0));
 
   // Lines 14-17: AGI reduction calculation
   const agi = result.agi;
@@ -159,7 +208,7 @@ export async function fillScheduleR(
 
   setCurrencyField(form, F.line14, agi);
   setCurrencyField(form, F.line15, agiThreshold);
-  setCurrencyField(form, F.line16, excessAgi);
+  setTextField(form, F.line16, excessAgi.toDecimalPlaces(0, Decimal.ROUND_HALF_UP).toFixed(0));
   setCurrencyField(form, F.line17, halfExcess);
 
   // Line 18: Total reduction (nontaxable benefits + half excess AGI)
@@ -172,8 +221,11 @@ export async function fillScheduleR(
   // Line 20: Tentative credit (15% of credit base)
   setCurrencyField(form, F.line20, schedR.credit);
 
-  // Line 22: Final credit (= tentative credit; tax liability limit applied externally)
-  setCurrencyField(form, F.line22, schedR.credit);
+  // Known actual worksheet values were checked before loading the template.
+  if (schedR.creditLimit !== undefined && schedR.allowedCredit !== undefined) {
+    setTextField(form, F.line21, schedR.creditLimit.toDecimalPlaces(0, Decimal.ROUND_HALF_UP).toFixed(0));
+    setTextField(form, F.line22, schedR.allowedCredit.toDecimalPlaces(0, Decimal.ROUND_HALF_UP).toFixed(0));
+  }
 
   return doc;
 }
