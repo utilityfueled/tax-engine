@@ -6354,6 +6354,26 @@
       "knownGaps": []
     },
     {
+      "key": "federal/hosted-homepage-request-boundary",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://nextjs.org/docs/messages/dynamic-server-error; https://nextjs.org/docs/app/api-reference/functions/headers",
+      "specPath": "spec/federal/hosted-homepage-request-boundary.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-webhook-delivery",
       "jurisdiction": "federal",
       "taxYear": 2026,

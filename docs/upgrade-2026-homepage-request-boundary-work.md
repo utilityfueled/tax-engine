@@ -38,3 +38,13 @@ This fixes build-time request handling. A valid Preview database, SMTP and actua
 hosted auth/security/recovery/Stripe tests remain required. The free Redis cache
 is connected to Preview only but has no runtime qualification yet. No production
 deployment or release readiness is claimed.
+
+
+Follow-up to pushed `dcede825`: remote Spec Validate exposed a stale generated
+coverage inventory. An isolated archive of that exact committed head regenerates
+one unsupported hosting-contract row, with no changed support/readiness flags.
+Generation and inventory check pass; the actual inventory control file passes.
+An initial guessed test path found no tests and was retained as a diagnostic,
+then corrected to `tests/spec/coverage-inventory.test.ts`. No runtime/product
+change. Evidence `nov02-homepage-inventory-followup/` and
+`nov02-homepage-inventory-real-controls/`; the separate PA work stays uncommitted.
