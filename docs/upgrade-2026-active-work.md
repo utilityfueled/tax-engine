@@ -1,83 +1,128 @@
 # Active 2026 upgrade work
 
-Resume here, then read the execution brief and the referenced package ledgers.
-This compact index supplements the historical progress/checkpoint; it does not
-replace completion criteria. The goal remains active. Release readiness is false.
-Selected launch states are PA and Ohio, all three residency categories.
+Resume here, then read the execution brief and package ledgers. This index
+supplements the historical progress/checkpoint; it does not replace completion
+criteria. The goal remains active; release readiness is false. Launch states are
+PA and Ohio, all three residency categories. Useful internal work remains.
 
-## Delivered November 2, latest continuation
+## Delivered November2
 
-| Commit | Package | Main verification | Independent agent verification |
+| Commit | Package | Main checks | Independent agent checks |
 | --- | --- | --- | --- |
-| `0b3762e4` | Actual PA W2 withholding rows, once | 772 tests/25 files, nine package checks | 90 tests/four files |
-| `b58e91ea` | Typed PA completion-source model/collector/panel | 793/27, nine checks, spec6740 | 61/four, exact schema parity |
-| `8e757958` | Reciprocal employee withholding needs refund/source method, not G-L credit | 383/seven, nine checks, spec6741 | 367/six;22 new controls |
-| `b8661656` | Actual Ohio dated receipts through fresh PartI/PartII and return | 343/seven, nine checks, spec6746 | 351/eight;8 new controls |
+| `0b3762e4` | Actual PA W2 rows once | 772/25, all9 | 90/four |
+| `b58e91ea` | PA completion collector | 793/27, all9 | 61/four |
+| `8e757958` | Reciprocal employee refund/source correction | 383/seven, all9 | 367/six |
+| `b8661656` | Actual Ohio dated receipts | 343/seven, all9 | 351/eight |
+| `75846e7e` | Ohio actual W2 review PDFs | 68/eight, all9 | 42/four plus25/four |
+| `b572afcd` | Retain six canonical state packets | 105/seven, all9 | 88/11 |
+| `da15b188` | Actual50state/DC W2 source jurisdictions | 103/10, all9 | 118/11 |
 
-All four commits are pushed to `upgrade/2026-baseline`. Scoped warning counts
-remain unchanged; no thresholds, guards or readiness gates were reduced.
-Package ledgers contain official authorities and full private evidence locations.
+All seven are pushed to `upgrade/2026-baseline`. No threshold, monetary oracle,
+privacy control or readiness gate was reduced. Ohio PDF main validation reopens
+64PDFs/157pages with no fields/widgets/private IDs;167page/contact pixel checks
+exactly match frozen reviewed output. Canonical admission has six genuine main
+failures before its three product edits. W2 jurisdiction has55fail/3pass before
+its minimal enum/type/dropdown edits; it qualifies source capture only.
 
-## Current internal implementation queue
+## Current internal queue
 
-- [x] Delivered `75846e7e`, OH withholding PDF package7: copied from immutable author manifest
-  `nov02-oh-w2-reference/frozen-author-v1/frozen-package.json`, hash
-  `acac6295c6b82969a0ee30e0f99a2b6a91a08dedd2eecc5849ed75282289d445`.
-  Independent review approved42/four plus25/four legacy controls;93 PDFs/226pages
-  reopened,69 own pages visually reviewed. Main68/eight/all9 checks pass.64 PDFs/157pages reopen;167pixel comparisons exact.
-- [x] W2 jurisdiction successor, main103/10/all9 and independent118/11: source rows currently restrict PA/OH;
-  implement actual valid US50+DC source rows and actual interview selection.
-  This does not qualify other state returns. Keep all owner/year/amount/duplicate,
-  original/continuation and monetary guards. Source-first55fail/3pass and exact final9 retained.
-- [ ] PA resident-credit originals6: source/spec/tests first;16/17 pass with
-  unchanged positive DE withholding800+actual payment1200 giving capped credit1535
-  now green17/17 after exact reviewed jurisdiction dependency above. Upstream precision correction and independent review remain. Preserve that real failure and
-  all original oracles; do not replace it with a passing unsupported-method test.
-  Full incomplete6 and20 dependencies: `nov02-pa-resident-credit-sources/incomplete-author-v1.json`.
-- [ ] Root shared state integration private source:
-  `.local/upgrade-work/root-state-integration-v2/source`. Historical current06
-  manifest16 remains a dependency snapshot, not a claim for later source.
-  Canonical PA roots/model extraction: genuine4red to75/10green plus all three
-  types/spec/lint/build. Exact5 frozen in `nov02-parent-pa-canonical-roots`;
-  independent88/11 approved; standalone main105/seven/all9 checks pass. Canonical admission `b572afcd` is committed and pushed; full shared integration remains private.
-- [ ] Root PA actual bridge/preview: genuine5behavior failures, then all5 green
-  after complete ordinary/completion binding and all3 composer preview. Missing,
-  stale or unsupported state facts preserve federal AGI50120. Frozen sources and
-  originals in `nov02-parent-pa-shared-paths`. Workspace/PDF integration remains.
-- [ ] Saved generic state payment reconciliation: actual duplicate overlay,
-  mismatch, unsupported additional withholding and ignored PA100.01 each proved
-  a real failing control. Minimal exact-receipt reconciler written after4red;
-  first rerun found one obsolete residency-only PA setup; actual complete-source fixture migration retains assertions. Second green36/six plus types3/spec/lint/build passes; independent33/four approved. Evidence: `nov02-parent-state-payment-reconciliation`.
-- [ ] PA state panels/navigation/invalidation3: agent private archive
-  `.local/upgrade-work/pa-completion-state-panels/source`;19 source controls
-  genuine18red/1pass then19green. Generic-ledger guard2 proved real red, then21
-  green. Bounded86/10/types/spec/lint/build and independent37/four approved; main integration pending. Root does not edit these
-  three owned files concurrently.
-- [ ] Adopt reviewed OH payment collector5 with main checks; complete source-aware
-  PA/OH preview/workspace/export, actual local/SD/credit/payment/household methods.
-- [ ] Reconcile every remaining finite required method in the execution brief;
-  source-preserving guards are not completed implementations of those methods.
-- [ ] Final exact-head full suite/coverage/types/spec/inventory/build/lint/browser,
-  remote CI, ARM64/AMD64 runtime/recovery/SBOM/scans after integration.
+- [ ] Shared integration source:
+  `.local/upgrade-work/root-state-integration-v2/source`. Full4290-file source
+  archive and hashes are durable in ignored evidence
+  `nov02-parent-state-integration-recovery/current-state-07/manifest.json`;
+  archive SHA256`b8f6e5477ae3ba9df7f94b0fb4591424789ba5e04747b6c33a12b02ecda867bc`.
+  This is exact unqualified work, not an all-green result. Later small changes
+  retain separate full copies/receipts. Historical current06/16 is not current.
+- [ ] Shared PA preview/payment reconciliation eight: genuine5+4 behavior reds,
+  then36/six with types3/spec/strictlint/build; independent33/four approved,
+  receipt`9cb8b9df8276d6c14dfb603742f6d2d2418080eb3ecaed126a0dccb55957ad13`.
+  Exact frozen8: `nov02-parent-pa-shared-reviewed-candidate/manifest.json`.
+  Legacy generic rows remain evidence and reconcile to distinct exact receipts;
+  extra scalar withholding cannot override originals. Main adoption pending.
+- [ ] PA UI/navigation eight:21 own controls, bounded86/10/types/spec/lint/build;
+  independent37/four approved, receipt`9fdea1ee74ea8d4dd50fe540b5225765513972ca37d68f48ab665cd04ef238a0`.
+  Frozen8`nov02-pa-completion-state-panels/frozen-author-v1/frozen-package.json`,
+  hash`041078ff3816a27353354f9e49ebf8a1ec40742c8a953adc0e53e0c558c4d083`.
+  Merge only owned delta and dependencies; preserve newer unrelated main work.
+- [ ] Ohio source confirmation/navigation19: reads previously recreated snapshots.
+  Explicit confirmation only now retains original identity/year/full facts;
+  nested confirmations remain real facts.28/two and types3/spec/lint/bothbuilds
+  pass privately. Broader75pass/5fail reflects investment-year/OID source gaps,
+  not green qualification. Exact19`nov02-oh-source-navigation/frozen-author-v1/frozen-package.json`,
+  hash`9819557c062133d4093f6af07cff0eb5e44d5351fe9c3d6fe9547b5094f532ed`;
+  independent review/adoption and dependency corrections remain.
+- [ ] Investment actual-source year/OID successor: five owned products, actual
+  blank-year UI, strict entered-year projection/schema admission and genuine OID
+  row validation. Source-first23 has8fail/15pass before product, then23green.
+  Broader604pass/8fail exposed explicit synthetic-source setup migrations;
+  migrated614/34 now passes with types3/spec, strict baseline proof/build pending.
+  unchanged monetary/negative oracles and old originals remain preserved.
+  Scoped migrations/checks/freeze/review are in progress, evidence
+  `nov02-investment-source-year-oh-oid/`. No selected-year/withholding defaults.
+- [ ] PA rich actual resident-credit6: original DE800+1200→1535 control is now
+  green; all original17 pass after exact reviewed W2 jurisdiction dependency.
+  Frozen6`nov02-pa-resident-credit-sources/frozen-package.json`, hash
+  `28290828f29a9dbd1d3fec554b0e91620e798e636ee960ddece1dde5eb2a9dff`.
+  Complete filed returns/payment/refund/account originals remain required.
+  Independent review, upstream precision and composition remain separate work.
+- [ ] PA source precision4: independent Python150 oracles expose real19-digit
+  half-dollar error and60-digit false reconciliation failure.2fail/1pass before
+  local Money100 correction becomes83/five plus strictlint0. Global Decimal and
+  all originals remain unchanged. Frozen4`nov02-parent-pa-source-precision/first-green-package.json`;
+  independent5 controls/types/adoption pending. Other ordinary facts/PA40
+  precision boundaries and unbounded input policy remain explicitly unverified.
+- [ ] PA ordinary PDF10: honest union, genuine prepared context, R/N/P/school/PY
+  fields, actual SP children, refund/donation allocation and WPTC processing.
+  SevenPDFs/16pages pass strict field/widget/AP/privacy and author visual checks;
+  focused8+related100/seven pass. Captured unowned webtype2errors and3unchanged
+  lint warnings require fresh main checks. Frozen initial10
+  `nov02-pa-ordinary-pdf/frozen-package.json`, hash
+  `b427c095e912cefe61e750ccb7f74277087240128414af3fb0c4d79e6ae5ef7a`.
+  Parent proved one actual SSN leak through a free-text final reason. Render-only
+  sanitizer candidate`842b0d7fd87daa86afcbe2f079eb7a16e920fce375effe39cc4f2fb422b3532e`
+  also protects school-name output using the existing private-key contract;
+  original sources/digests/money stay intact. Ninth author control and independent20
+  remain queued; corrected output cannot be adopted before passing review.
+- [ ] Root workspace PA export5: actual full3-residency renderer/context path has
+  one genuine behavior failure plus a missing-packet message diagnostic before
+  a minimal workspace edit. Fresh ordinary composition/context-before-redaction
+  and a clear missing-source message are implemented privately; first green
+  pending. Evidence`nov02-parent-pa-workspace-export/`; no passing export claim.
+- [ ] Root actual PA credit composition5: three genuine positive failures/two
+  negative passes before typed nested completion credit sources and fresh replay.
+  Exact complete-history/netpayment/withholding reconciliation, PA40/SP/penalty
+  credit order and audit integration implemented privately; first green pending.
+  No new excluded canonical root. Evidence`nov02-parent-pa-credit-composition/`.
+  Positive source-aware G-L PDF/UI methods remain required successors.
+- [ ] Finish every other required state household, income-class, local, SD,
+  credit, special and dated-payment method. Guards are not completed methods.
+- [ ] Final integrated full suite/coverage/types/spec/inventory/build/lint/browser,
+  exact-head remote CI and ARM64/AMD64 runtime/recovery/SBOM/scans remain required.
 
 ## External qualification gates
 
-Existing requests remain outstanding: qualified human tax/spec/artifact review;
-authorized hosted staging auth/Postgres/Redis/Stripe-test/webhook/SMTP access;
-exact provider account/candidate/period/spend authorization and independently
-reviewed synthetic/held-out AI labels; independent human security/privacy review;
-owner decisions on80 OS advisory IDs by November7; final2026 official forms and
-qualification. No provider funds, model promotion, filing enablement, production
-deployment, publication of runtime images or readiness claim is authorized here.
+Pending: qualified human tax/spec/artifact review; authorized non-production
+staging auth/Postgres/Redis/Stripe-test/webhook/SMTP; exact provider account,
+candidates, period and spend authorization; independent held-out AI labels and
+human security/privacy review; owner decisions on80 OS advisory IDs by November7;
+final2026 official forms and qualification. Agent review is not human review.
 
-The current IRS1040 and Schedule1-A PDF endpoints still serve2025 forms on
-November2. Repository/PR13 head was refreshed at `8e757958`; later b866 push was
-confirmed. Historical global CI/coverage/image records keep their original commit
-boundaries and are not current-source qualification. Independent agent review is
-not the required independent human review.
+Read-only hosting refresh: the signed-in Chrome browser reaches the project.
+Latest `da15b188` preview `AX56o11JrCBnJT46vNBNZb5ADntY` explicitly says it could
+not be built because the entire project is paused. The project overview shows
+“Resume Project” and existing production domains; resuming also restores the
+production site. That page is open for the owner, and the user will resume it personally.
+Actual resume and preview availability are not yet observed. No resume/redeploy/configuration
+change was performed. The API environment-metadata403 and same-scoped CLI
+account denial remain separate access limits. Evidence
+`nov02-parent-hosted-access-refresh/browser-access-receipt.json`.
 
-All new private work stays under ignored `.local/upgrade-work` and
-`.local/upgrade-evidence`, retaining full source copies, patches, source-first
-spec/tests, genuine failures, check logs and immutable hashes. Preserve unrelated
-`.pnpm-store/` and `docs/reviews/`. Never run Node concurrently without the current
-root-agent slot handoff; do not run git status/diff inside archive-only trees.
+IRS1040/1-A endpoints still served2025 on November2. Existing global CI/coverage
+and runtime records retain their exact earlier commits and are not qualification
+of current private integration. No filing/model promotion, provider spend,
+production deployment, image publication or readiness claim is authorized here.
+
+Preserve unrelated `.pnpm-store/` and `docs/reviews/`. Private work/evidence stays
+under ignored `.local/`. Preserve complete source copies and genuine red/green
+logs. Never run Node concurrently without explicit root handoff; do not run git
+status/diff inside archive-only trees. Continue implementing all unblocked work.
