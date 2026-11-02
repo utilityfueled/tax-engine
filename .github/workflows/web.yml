@@ -93,6 +93,7 @@ jobs:
             sudo apt-get update
             sudo apt-get install --yes postgresql-client-16
           fi
+      - run: docker pull node:24.22.1-trixie-slim
       - run: docker build --label org.opencontainers.image.revision="$GITHUB_SHA" --tag tax-engine:ci .
       - run: node scripts/smoke-container.mjs tax-engine:ci | tee container-smoke.log
       - name: Build immutable previous application for upgrade and rollback

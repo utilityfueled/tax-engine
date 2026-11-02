@@ -1,4 +1,6 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { URL } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import assert from "node:assert/strict";
 import { resolveLocalContainerRuntime } from "./local-container-runtime.mjs";
@@ -50,7 +52,18 @@ try {
   docker("exec", container, "node", "-e", "require('node:fs').accessSync('/app/forms/blank/2025/f1040.pdf')");
   const processEvidence = JSON.parse(docker("exec", container, "node", "-e", `
     const fs = require('node:fs');
+    const { execFileSync } = require('node:child_process');
+    const packageFormat = '-f=' + '$' + '{binary:Package}' + String.fromCharCode(9) + '$' + '{Version}' + String.fromCharCode(9) + '$' + '{db:Status-Status}' + String.fromCharCode(10);
+    const packageRows = execFileSync('/usr/bin/dpkg-query', ['-W', packageFormat], { encoding: 'utf8' })
+      .trim().split(String.fromCharCode(10)).map(row => row.split(String.fromCharCode(9)));
+    const installedPackages = new Set(packageRows.filter(([, , status]) => status === 'installed').map(([name]) => name.split(':')[0]));
     console.log(JSON.stringify({ uid: process.getuid(), node: process.version, architecture: process.arch,
+      debianPackages: packageRows,
+      aptPackageRecords: packageRows.map(([name]) => name).filter(name => /^(?:apt|libapt-pkg7[.]0)(?::|$)/u.test(name)),
+      aptBinaries: ['apt', 'apt-cache', 'apt-cdrom', 'apt-config', 'apt-get', 'apt-mark'].filter(name => fs.existsSync('/usr/bin/' + name)),
+      aptLibraries: fs.readdirSync('/usr/lib', { recursive: true }).filter(name => /^libapt.*[.]so(?:[.]|$)/u.test(name.split('/').at(-1))),
+      dpkgAudit: execFileSync('/usr/bin/dpkg', ['--audit'], { encoding: 'utf8' }).trim(),
+      corePackagesInstalled: ['dpkg', 'libc6', 'libstdc++6', 'libgcc-s1'].every(name => installedPackages.has(name)),
       imageCacheFilesystem: fs.statfsSync('/app/apps/web/.next/cache').type,
       imageCacheLimitBytes: fs.statfsSync('/app/apps/web/.next/cache').blocks * fs.statfsSync('/app/apps/web/.next/cache').bsize,
       packageTools: ['/usr/local/bin/npm', '/usr/local/bin/corepack', '/usr/local/bin/yarn'].some(p => fs.existsSync(p)),
@@ -62,6 +75,56 @@ try {
   assert.equal(processEvidence.imageCacheLimitBytes, 64 * 1024 * 1024, "Image cache must remain bounded to64MiB.");
   assert.match(processEvidence.node, /^v24\./u);
   assert.equal(processEvidence.packageTools, false);
+  assert.deepEqual(processEvidence.aptPackageRecords, [], "APT packages must be purged through dpkg, with no installed or residual records.");
+  assert.deepEqual(processEvidence.aptBinaries, [], "The runner must not retain APT executables.");
+  assert.deepEqual(processEvidence.aptLibraries, [], "The runner must not retain libapt shared libraries.");
+  assert.equal(processEvidence.dpkgAudit, "", "The retained dpkg database must pass its consistency audit.");
+  assert.equal(processEvidence.corePackagesInstalled, true, "Keep package metadata for dpkg and Node's core runtime libraries.");
+
+  // Inspect the locally available runner base once, then execute only its immutable ID.
+  // The exact filesystem-layer prefix proves shared base contents; a tag alone does not.
+  const runnerBaseReference = readFileSync(new URL("../Dockerfile", import.meta.url), "utf8")
+    .match(/^FROM (\S+) AS runner$/mu)?.[1];
+  assert.equal(runnerBaseReference, "node:24.22.1-trixie-slim", "Use the shipped fixed runner base for the package proof.");
+  const baseline = JSON.parse(docker("image", "inspect", runnerBaseReference))[0];
+  const candidate = JSON.parse(docker("image", "inspect", metadata.Image))[0];
+  assert.equal(candidate.Id, metadata.Image);
+  assert.match(baseline.Id, /^(?:sha256:)?[0-9a-f]{64}$/u);
+  assert.equal(baseline.Os, candidate.Os);
+  assert.equal(baseline.Architecture, candidate.Architecture);
+  assert.ok(Array.isArray(baseline.RootFS?.Layers) && baseline.RootFS.Layers.length > 0);
+  assert.deepEqual(candidate.RootFS?.Layers?.slice(0, baseline.RootFS.Layers.length), baseline.RootFS.Layers,
+    "The observed fixed runner base must be an exact filesystem-layer prefix of this candidate image.");
+  const baselineRows = docker("run", "--rm", "--network", "none", "--entrypoint", "/usr/bin/dpkg-query",
+    baseline.Id, "-W", "-f=${binary:Package}\t${Version}\t${db:Status-Status}\n")
+    .split("\n").map(row => row.split("\t"));
+  const orderedRows = rows => {
+    assert.ok(rows.length > 0 && rows.every(row => row.length === 3 && row.every(value => value.length > 0)));
+    assert.equal(new Set(rows.map(([name]) => name)).size, rows.length, "Package records must not contain duplicate full names.");
+    return [...rows].sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
+  };
+  const beforePackages = orderedRows(baselineRows);
+  const afterPackages = orderedRows(processEvidence.debianPackages);
+  const targets = new Set(["apt", "libapt-pkg7.0"]);
+  const removedPackages = beforePackages.filter(([name]) => targets.has(name.split(":")[0]));
+  assert.deepEqual(removedPackages.map(([name]) => name.split(":")[0]).sort(), [...targets].sort());
+  assert.ok(removedPackages.every(([, , status]) => status === "installed"));
+  assert.deepEqual(afterPackages, beforePackages.filter(([name]) => !targets.has(name.split(":")[0])),
+    "Exactly apt and libapt-pkg7.0 may disappear; every other full package name, version and status must remain unchanged.");
+  const planArguments = ["run", "--rm", "--network", "none", "--user", "0", "--entrypoint", "/usr/bin/dpkg",
+    baseline.Id, "--no-act", "--purge", "apt", "libapt-pkg7.0"];
+  const removalPlan = spawnSync(runtime, [...connection.args, ...planArguments], { encoding: "utf8", env: connection.env });
+  if (removalPlan.error) throw removalPlan.error;
+  assert.equal(removalPlan.status, 0, "The actual immutable runner base must accept the unforced two-package removal dry run.");
+  const runnerPackageProof = {
+    runnerBaseReference, binding: "observed same-architecture fixed runner-base filesystem-layer prefix; tag alone is not build provenance",
+    baseline: { id: baseline.Id, os: baseline.Os, architecture: baseline.Architecture, repoDigests: baseline.RepoDigests,
+      layers: baseline.RootFS.Layers },
+    candidate: { id: candidate.Id, os: candidate.Os, architecture: candidate.Architecture, layers: candidate.RootFS.Layers,
+      sourceRevision: candidate.Config?.Labels?.["org.opencontainers.image.revision"] ?? null },
+    beforePackages, afterPackages, removedPackages,
+    removalPlan: { arguments: planArguments, status: removalPlan.status, stdout: removalPlan.stdout, stderr: removalPlan.stderr },
+  };
   assert.equal(processEvidence.providerKeys, false);
   assert.ok(processEvidence.templates > 0);
   const auth = await fetch(`${origin}/api/auth/get-session`, { signal: globalThis.AbortSignal.timeout(5_000) });
@@ -75,7 +138,7 @@ try {
   }
   assert.ok(healthy, "Runtime health check never reported healthy.");
   console.log(JSON.stringify({ result: "passed", image: metadata.Image, readOnly: true,
-    healthy, assets: true, imageCacheWritten, selfHostAuth: true, ...processEvidence }));
+    healthy, assets: true, imageCacheWritten, selfHostAuth: true, runnerPackageProof, ...processEvidence }));
 } catch (error) {
   console.error(docker("logs", container));
   throw error;

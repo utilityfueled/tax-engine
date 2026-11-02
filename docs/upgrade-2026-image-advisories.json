@@ -162,6 +162,14 @@
         ],
         "exposureEvidenceGroup": "cli-tools",
         "independentReview": "pending"
+      },
+      "candidateObservation": {
+        "sourceBaseCommit": "97698bc0d451b4460b16e4725fb560ec6e1d6517",
+        "sourcePatchSHA256": "db4a0fb5ab179e20e50208d3b3924e40f82387718f225e7e9676cb879a92c72b",
+        "imageId": "d74867cdafb30bf99c21db250bc0d419febfac03aec1439733ae224fb6179e22",
+        "status": "Absent in reviewed ARM64 engineering candidate because both actual packages purged; historical record retained, final-source/AMD64 proof pending",
+        "ownerAcceptance": false,
+        "debianQualification": "Official tracker says not exploitable in Debian because no keyring URI is defined; no exploitability or measured risk-reduction claim."
       }
     },
     {
@@ -2503,14 +2511,14 @@
           "name": "libc-bin",
           "version": "2.41-12+deb13u4",
           "type": "deb",
-          "fixState": "not-fixed",
+          "fixState": "wont-fix",
           "fixedVersions": []
         },
         {
           "name": "libc6",
           "version": "2.41-12+deb13u4",
           "type": "deb",
-          "fixState": "not-fixed",
+          "fixState": "wont-fix",
           "fixedVersions": []
         }
       ],
@@ -2530,6 +2538,12 @@
         ],
         "fixedVersion": "none listed",
         "upstream": "Sourceware bug 17142; GLIBC-SA-2026-0025; Debian bug 1152640"
+      },
+      "latestSourceObservation": {
+        "retrievedAt": "2026-11-02",
+        "observation": "Trixie vulnerable; no-dsa Minor issue; source unfixed. Existing LANGUAGE/locale exposure limits remain bounded, no acceptance.",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-84243",
+        "ownerAcceptance": false
       }
     },
     {
@@ -2849,6 +2863,529 @@
         "independentReview": "pending",
         "specificBoundary": "The described optimized routine targets Power8. Observed runtime platforms are arm64 and amd64; this is an architecture-specific applicability observation, not a suppression."
       }
+    },
+    {
+      "id": "CVE-2026-114690",
+      "severity": "Medium",
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-114690",
+      "packages": [
+        {
+          "name": "gcc-14-base",
+          "version": "14.2.0-19",
+          "type": "deb",
+          "fixState": "wont-fix",
+          "fixedVersions": []
+        },
+        {
+          "name": "libgcc-s1",
+          "version": "14.2.0-19",
+          "type": "deb",
+          "fixState": "wont-fix",
+          "fixedVersions": []
+        },
+        {
+          "name": "libstdc++6",
+          "version": "14.2.0-19",
+          "type": "deb",
+          "fixState": "wont-fix",
+          "fixedVersions": []
+        }
+      ],
+      "disposition": "unresolved-release-review-required",
+      "ownerRole": "release maintainer",
+      "ownerConfirmation": "pending",
+      "reviewBy": "2026-11-07",
+      "exposure": "Actual candidate Node links libstdc++/libgcc. Advisory-specific template/parallel reachability is not established or ruled out by TypeScript/ldd.",
+      "sourceReview": {
+        "retrievedAt": "2026-11-02",
+        "retrieval": "Fresh primary Debian tracker web tool response, not raw HTTP HTML",
+        "sourceEvidenceFile": "new-debian-source-web-first.json",
+        "sourceEvidenceSha256": "0706eeaa23bae1eec647fe0bd8d504ad899ea52a555091dd0269976dc8995c80",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "14.2.0-19",
+            "status": "vulnerable"
+          }
+        ],
+        "debianFixedVersion": null,
+        "upstreamFixedVersion": null,
+        "debianNote": "no-dsa Minor issue",
+        "exposureEvidenceGroup": "cpp-runtime",
+        "independentReview": "bounded agent evidence review; human review pending"
+      }
+    },
+    {
+      "id": "CVE-2026-114691",
+      "severity": "Medium",
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-114691",
+      "packages": [
+        {
+          "name": "gcc-14-base",
+          "version": "14.2.0-19",
+          "type": "deb",
+          "fixState": "wont-fix",
+          "fixedVersions": []
+        },
+        {
+          "name": "libgcc-s1",
+          "version": "14.2.0-19",
+          "type": "deb",
+          "fixState": "wont-fix",
+          "fixedVersions": []
+        },
+        {
+          "name": "libstdc++6",
+          "version": "14.2.0-19",
+          "type": "deb",
+          "fixState": "wont-fix",
+          "fixedVersions": []
+        }
+      ],
+      "disposition": "unresolved-release-review-required",
+      "ownerRole": "release maintainer",
+      "ownerConfirmation": "pending",
+      "reviewBy": "2026-11-07",
+      "exposure": "Actual candidate Node links libstdc++/libgcc. Advisory-specific template/parallel reachability is not established or ruled out by TypeScript/ldd.",
+      "sourceReview": {
+        "retrievedAt": "2026-11-02",
+        "retrieval": "Fresh primary Debian tracker web tool response, not raw HTTP HTML",
+        "sourceEvidenceFile": "new-debian-source-web-first.json",
+        "sourceEvidenceSha256": "0706eeaa23bae1eec647fe0bd8d504ad899ea52a555091dd0269976dc8995c80",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "14.2.0-19",
+            "status": "vulnerable"
+          }
+        ],
+        "debianFixedVersion": null,
+        "upstreamFixedVersion": null,
+        "debianNote": "no-dsa Minor issue",
+        "exposureEvidenceGroup": "cpp-runtime",
+        "independentReview": "bounded agent evidence review; human review pending"
+      }
+    },
+    {
+      "id": "CVE-2026-115455",
+      "severity": "Medium",
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-115455",
+      "packages": [
+        {
+          "name": "gcc-14-base",
+          "version": "14.2.0-19",
+          "type": "deb",
+          "fixState": "wont-fix",
+          "fixedVersions": []
+        },
+        {
+          "name": "libgcc-s1",
+          "version": "14.2.0-19",
+          "type": "deb",
+          "fixState": "wont-fix",
+          "fixedVersions": []
+        },
+        {
+          "name": "libstdc++6",
+          "version": "14.2.0-19",
+          "type": "deb",
+          "fixState": "wont-fix",
+          "fixedVersions": []
+        }
+      ],
+      "disposition": "unresolved-release-review-required",
+      "ownerRole": "release maintainer",
+      "ownerConfirmation": "pending",
+      "reviewBy": "2026-11-07",
+      "exposure": "Actual candidate Node links libstdc++/libgcc. Advisory-specific template/parallel reachability is not established or ruled out by TypeScript/ldd.",
+      "sourceReview": {
+        "retrievedAt": "2026-11-02",
+        "retrieval": "Fresh primary Debian tracker web tool response, not raw HTTP HTML",
+        "sourceEvidenceFile": "new-debian-source-web-first.json",
+        "sourceEvidenceSha256": "0706eeaa23bae1eec647fe0bd8d504ad899ea52a555091dd0269976dc8995c80",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "14.2.0-19",
+            "status": "vulnerable"
+          }
+        ],
+        "debianFixedVersion": null,
+        "upstreamFixedVersion": null,
+        "debianNote": "no-dsa Minor issue",
+        "exposureEvidenceGroup": "cpp-runtime",
+        "independentReview": "bounded agent evidence review; human review pending"
+      }
+    },
+    {
+      "id": "CVE-2026-119371",
+      "severity": "Medium",
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119371",
+      "packages": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2",
+          "type": "deb",
+          "fixState": "not-fixed",
+          "fixedVersions": []
+        }
+      ],
+      "disposition": "unresolved-release-review-required",
+      "ownerRole": "release maintainer",
+      "ownerConfirmation": "pending",
+      "reviewBy": "2026-11-07",
+      "exposure": "Inherited Debian libsqlite3-0 installed unchanged. Actual Node ldd lacks this OS library; hosted persistence uses PostgreSQL. No proof all transitive/optional native feature paths unreachable.",
+      "sourceReview": {
+        "retrievedAt": "2026-11-02",
+        "retrieval": "Fresh primary Debian tracker web tool response, not raw HTTP HTML",
+        "sourceEvidenceFile": "new-debian-source-web-first.json",
+        "sourceEvidenceSha256": "0706eeaa23bae1eec647fe0bd8d504ad899ea52a555091dd0269976dc8995c80",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "3.46.1-7+deb13u2",
+            "status": "vulnerable"
+          }
+        ],
+        "debianFixedVersion": null,
+        "upstreamFixedVersion": "3.54.0",
+        "debianNote": "Debian source unfixed; upstream3.54.0 fix links supplied",
+        "exposureEvidenceGroup": "sqlite",
+        "independentReview": "bounded agent evidence review; human review pending"
+      }
+    },
+    {
+      "id": "CVE-2026-119372",
+      "severity": "Medium",
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119372",
+      "packages": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2",
+          "type": "deb",
+          "fixState": "not-fixed",
+          "fixedVersions": []
+        }
+      ],
+      "disposition": "unresolved-release-review-required",
+      "ownerRole": "release maintainer",
+      "ownerConfirmation": "pending",
+      "reviewBy": "2026-11-07",
+      "exposure": "Inherited Debian libsqlite3-0 installed unchanged. Actual Node ldd lacks this OS library; hosted persistence uses PostgreSQL. No proof all transitive/optional native feature paths unreachable.",
+      "sourceReview": {
+        "retrievedAt": "2026-11-02",
+        "retrieval": "Fresh primary Debian tracker web tool response, not raw HTTP HTML",
+        "sourceEvidenceFile": "new-debian-source-web-first.json",
+        "sourceEvidenceSha256": "0706eeaa23bae1eec647fe0bd8d504ad899ea52a555091dd0269976dc8995c80",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "3.46.1-7+deb13u2",
+            "status": "vulnerable"
+          }
+        ],
+        "debianFixedVersion": null,
+        "upstreamFixedVersion": "3.54.0",
+        "debianNote": "Debian source unfixed; upstream3.54.0 fix links supplied",
+        "exposureEvidenceGroup": "sqlite",
+        "independentReview": "bounded agent evidence review; human review pending"
+      }
+    },
+    {
+      "id": "CVE-2026-119373",
+      "severity": "High",
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119373",
+      "packages": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2",
+          "type": "deb",
+          "fixState": "not-fixed",
+          "fixedVersions": []
+        }
+      ],
+      "disposition": "unresolved-release-review-required",
+      "ownerRole": "release maintainer",
+      "ownerConfirmation": "pending",
+      "reviewBy": "2026-11-07",
+      "exposure": "Inherited Debian libsqlite3-0 installed unchanged. Actual Node ldd lacks this OS library; hosted persistence uses PostgreSQL. No proof all transitive/optional native feature paths unreachable.",
+      "sourceReview": {
+        "retrievedAt": "2026-11-02",
+        "retrieval": "Fresh primary Debian tracker web tool response, not raw HTTP HTML",
+        "sourceEvidenceFile": "new-debian-source-web-first.json",
+        "sourceEvidenceSha256": "0706eeaa23bae1eec647fe0bd8d504ad899ea52a555091dd0269976dc8995c80",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "3.46.1-7+deb13u2",
+            "status": "vulnerable"
+          }
+        ],
+        "debianFixedVersion": null,
+        "upstreamFixedVersion": "3.54.0",
+        "debianNote": "Debian source unfixed; upstream3.54.0 fix links supplied",
+        "exposureEvidenceGroup": "sqlite",
+        "independentReview": "bounded agent evidence review; human review pending"
+      }
+    },
+    {
+      "id": "CVE-2026-119374",
+      "severity": "High",
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119374",
+      "packages": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2",
+          "type": "deb",
+          "fixState": "not-fixed",
+          "fixedVersions": []
+        }
+      ],
+      "disposition": "unresolved-release-review-required",
+      "ownerRole": "release maintainer",
+      "ownerConfirmation": "pending",
+      "reviewBy": "2026-11-07",
+      "exposure": "Inherited Debian libsqlite3-0 installed unchanged. Actual Node ldd lacks this OS library; hosted persistence uses PostgreSQL. No proof all transitive/optional native feature paths unreachable.",
+      "sourceReview": {
+        "retrievedAt": "2026-11-02",
+        "retrieval": "Fresh primary Debian tracker web tool response, not raw HTTP HTML",
+        "sourceEvidenceFile": "new-debian-source-web-first.json",
+        "sourceEvidenceSha256": "0706eeaa23bae1eec647fe0bd8d504ad899ea52a555091dd0269976dc8995c80",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "3.46.1-7+deb13u2",
+            "status": "vulnerable"
+          }
+        ],
+        "debianFixedVersion": null,
+        "upstreamFixedVersion": "3.54.0",
+        "debianNote": "Debian source unfixed; upstream3.54.0 fix links supplied",
+        "exposureEvidenceGroup": "sqlite",
+        "independentReview": "bounded agent evidence review; human review pending"
+      }
+    },
+    {
+      "id": "CVE-2026-119375",
+      "severity": "Medium",
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119375",
+      "packages": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2",
+          "type": "deb",
+          "fixState": "not-fixed",
+          "fixedVersions": []
+        }
+      ],
+      "disposition": "unresolved-release-review-required",
+      "ownerRole": "release maintainer",
+      "ownerConfirmation": "pending",
+      "reviewBy": "2026-11-07",
+      "exposure": "Inherited Debian libsqlite3-0 installed unchanged. Actual Node ldd lacks this OS library; hosted persistence uses PostgreSQL. No proof all transitive/optional native feature paths unreachable.",
+      "sourceReview": {
+        "retrievedAt": "2026-11-02",
+        "retrieval": "Fresh primary Debian tracker web tool response, not raw HTTP HTML",
+        "sourceEvidenceFile": "new-debian-source-web-second.json",
+        "sourceEvidenceSha256": "3a233e71054b0f3d0b9f41abc691ce348f3a74f41e678a6f815f44256f20a686",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "3.46.1-7+deb13u2",
+            "status": "vulnerable"
+          }
+        ],
+        "debianFixedVersion": null,
+        "upstreamFixedVersion": "3.54.0",
+        "debianNote": "Debian source unfixed; upstream3.54.0 fix links supplied",
+        "exposureEvidenceGroup": "sqlite",
+        "independentReview": "bounded agent evidence review; human review pending"
+      }
+    },
+    {
+      "id": "CVE-2026-119376",
+      "severity": "Medium",
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119376",
+      "packages": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2",
+          "type": "deb",
+          "fixState": "not-fixed",
+          "fixedVersions": []
+        }
+      ],
+      "disposition": "unresolved-release-review-required",
+      "ownerRole": "release maintainer",
+      "ownerConfirmation": "pending",
+      "reviewBy": "2026-11-07",
+      "exposure": "Inherited Debian libsqlite3-0 installed unchanged. Actual Node ldd lacks this OS library; hosted persistence uses PostgreSQL. No proof all transitive/optional native feature paths unreachable.",
+      "sourceReview": {
+        "retrievedAt": "2026-11-02",
+        "retrieval": "Fresh primary Debian tracker web tool response, not raw HTTP HTML",
+        "sourceEvidenceFile": "new-debian-source-web-second.json",
+        "sourceEvidenceSha256": "3a233e71054b0f3d0b9f41abc691ce348f3a74f41e678a6f815f44256f20a686",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "3.46.1-7+deb13u2",
+            "status": "vulnerable"
+          }
+        ],
+        "debianFixedVersion": null,
+        "upstreamFixedVersion": "3.54.0",
+        "debianNote": "Debian source unfixed; upstream3.54.0 fix links supplied",
+        "exposureEvidenceGroup": "sqlite",
+        "independentReview": "bounded agent evidence review; human review pending"
+      }
+    },
+    {
+      "id": "CVE-2026-119377",
+      "severity": "Low",
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119377",
+      "packages": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2",
+          "type": "deb",
+          "fixState": "not-fixed",
+          "fixedVersions": []
+        }
+      ],
+      "disposition": "unresolved-release-review-required",
+      "ownerRole": "release maintainer",
+      "ownerConfirmation": "pending",
+      "reviewBy": "2026-11-07",
+      "exposure": "Inherited Debian libsqlite3-0 installed unchanged. Actual Node ldd lacks this OS library; hosted persistence uses PostgreSQL. No proof all transitive/optional native feature paths unreachable.",
+      "sourceReview": {
+        "retrievedAt": "2026-11-02",
+        "retrieval": "Fresh primary Debian tracker web tool response, not raw HTTP HTML",
+        "sourceEvidenceFile": "new-debian-source-web-second.json",
+        "sourceEvidenceSha256": "3a233e71054b0f3d0b9f41abc691ce348f3a74f41e678a6f815f44256f20a686",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "3.46.1-7+deb13u2",
+            "status": "vulnerable"
+          }
+        ],
+        "debianFixedVersion": null,
+        "upstreamFixedVersion": "3.54.0",
+        "debianNote": "Debian source unfixed; upstream3.54.0 fix links supplied",
+        "exposureEvidenceGroup": "sqlite",
+        "independentReview": "bounded agent evidence review; human review pending"
+      }
+    },
+    {
+      "id": "CVE-2026-119378",
+      "severity": "Medium",
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119378",
+      "packages": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2",
+          "type": "deb",
+          "fixState": "not-fixed",
+          "fixedVersions": []
+        }
+      ],
+      "disposition": "unresolved-release-review-required",
+      "ownerRole": "release maintainer",
+      "ownerConfirmation": "pending",
+      "reviewBy": "2026-11-07",
+      "exposure": "Inherited Debian libsqlite3-0 installed unchanged. Actual Node ldd lacks this OS library; hosted persistence uses PostgreSQL. No proof all transitive/optional native feature paths unreachable.",
+      "sourceReview": {
+        "retrievedAt": "2026-11-02",
+        "retrieval": "Fresh primary Debian tracker web tool response, not raw HTTP HTML",
+        "sourceEvidenceFile": "new-debian-source-web-second.json",
+        "sourceEvidenceSha256": "3a233e71054b0f3d0b9f41abc691ce348f3a74f41e678a6f815f44256f20a686",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "3.46.1-7+deb13u2",
+            "status": "vulnerable"
+          }
+        ],
+        "debianFixedVersion": null,
+        "upstreamFixedVersion": "3.54.0",
+        "debianNote": "Debian source unfixed; upstream3.54.0 fix links supplied",
+        "exposureEvidenceGroup": "sqlite",
+        "independentReview": "bounded agent evidence review; human review pending"
+      }
+    },
+    {
+      "id": "CVE-2026-119379",
+      "severity": "High",
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119379",
+      "packages": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2",
+          "type": "deb",
+          "fixState": "not-fixed",
+          "fixedVersions": []
+        }
+      ],
+      "disposition": "unresolved-release-review-required",
+      "ownerRole": "release maintainer",
+      "ownerConfirmation": "pending",
+      "reviewBy": "2026-11-07",
+      "exposure": "Inherited Debian libsqlite3-0 installed unchanged. Actual Node ldd lacks this OS library; hosted persistence uses PostgreSQL. No proof all transitive/optional native feature paths unreachable.",
+      "sourceReview": {
+        "retrievedAt": "2026-11-02",
+        "retrieval": "Fresh primary Debian tracker web tool response, not raw HTTP HTML",
+        "sourceEvidenceFile": "new-debian-source-web-second.json",
+        "sourceEvidenceSha256": "3a233e71054b0f3d0b9f41abc691ce348f3a74f41e678a6f815f44256f20a686",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "3.46.1-7+deb13u2",
+            "status": "vulnerable"
+          }
+        ],
+        "debianFixedVersion": null,
+        "upstreamFixedVersion": "3.54.0",
+        "debianNote": "Debian source unfixed; upstream3.54.0 fix links supplied",
+        "exposureEvidenceGroup": "sqlite",
+        "independentReview": "bounded agent evidence review; human review pending"
+      }
+    },
+    {
+      "id": "CVE-2026-119591",
+      "severity": "Medium",
+      "source": "https://security-tracker.debian.org/tracker/CVE-2026-119591",
+      "packages": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2",
+          "type": "deb",
+          "fixState": "not-fixed",
+          "fixedVersions": []
+        }
+      ],
+      "disposition": "unresolved-release-review-required",
+      "ownerRole": "release maintainer",
+      "ownerConfirmation": "pending",
+      "reviewBy": "2026-11-07",
+      "exposure": "Inherited Debian libsqlite3-0 installed unchanged. Actual Node ldd lacks this OS library; hosted persistence uses PostgreSQL. No proof all transitive/optional native feature paths unreachable.",
+      "sourceReview": {
+        "retrievedAt": "2026-11-02",
+        "retrieval": "Fresh primary Debian tracker web tool response, not raw HTTP HTML",
+        "sourceEvidenceFile": "new-debian-source-web-second.json",
+        "sourceEvidenceSha256": "3a233e71054b0f3d0b9f41abc691ce348f3a74f41e678a6f815f44256f20a686",
+        "debianTrixieRows": [
+          {
+            "release": "trixie",
+            "version": "3.46.1-7+deb13u2",
+            "status": "vulnerable"
+          }
+        ],
+        "debianFixedVersion": null,
+        "upstreamFixedVersion": "3.54.0",
+        "debianNote": "Debian source unfixed; upstream3.54.0 fix links supplied",
+        "exposureEvidenceGroup": "sqlite",
+        "independentReview": "bounded agent evidence review; human review pending"
+      }
     }
   ],
   "sourceCommit": "4aef633349dbb39c2481b914730c309785cc8c41",
@@ -2858,7 +3395,7 @@
       "status": "bounded-agent-assessment-not-acceptance"
     },
     "cpp-runtime": {
-      "assessment": "Node links libstdc++ and libgcc. The two advisories concern aligned allocation and a PBDS binary-heap operation. Application TypeScript search cannot establish whether bundled/native code uses those paths, so reachability remains unresolved.",
+      "assessment": "Node links libstdc++/libgcc. Existing allocation/PBDS plus new parallel-search/vector<bool>/wide-bitset paths require native reachability review; no paths ruled out.",
       "status": "bounded-agent-assessment-not-acceptance"
     },
     "compression": {
@@ -2951,7 +3488,7 @@
       "scanSha256": "0c058fa350f49217ca7c36d90c839d1d095cce8b573e08d6c358e27217c1196c"
     }
   ],
-  "currentRuntimeEvidence": "docs/upgrade-2026-runtime-52d03ef7-arm64.json",
+  "currentRuntimeEvidence": "docs/upgrade-2026-runtime-package-minimization-arm64.json",
   "previousAdditionalPlatformEvidence": [
     {
       "commit": "214411a04c0113fbdbc073862cf3803ee3d6b6a4",
@@ -3007,38 +3544,61 @@
     }
   ],
   "latestScan": {
-    "recordedAt": "2026-11-02T05:15:17.235002+00:00",
-    "sourceCommit": "52d03ef7213f0b3f272575fbb36586bd7e6bd624",
+    "recordedAt": "2026-11-02T14:27:05.824914+00:00",
+    "sourceCommit": null,
+    "sourceBaseCommit": "97698bc0d451b4460b16e4725fb560ec6e1d6517",
+    "sourcePatchSHA256": "db4a0fb5ab179e20e50208d3b3924e40f82387718f225e7e9676cb879a92c72b",
     "platform": "linux/arm64",
-    "imageId": "sha256:035309381d7bd17d8120d7c5e4559cdf950fc4f22dfebc2879d84bc596ce43c8",
-    "databaseBuilt": "2026-11-01T06:20:12Z",
-    "matches": 159,
-    "uniqueAdvisories": 68,
+    "imageId": "sha256:d74867cdafb30bf99c21db250bc0d419febfac03aec1439733ae224fb6179e22",
+    "databaseBuilt": "2026-11-02T06:26:52Z",
+    "matches": 176,
+    "uniqueAdvisories": 80,
     "matchCounts": {
-      "High": 56,
-      "Negligible": 46,
-      "Medium": 47,
-      "Low": 10
+      "High": 59,
+      "Negligible": 44,
+      "Medium": 62,
+      "Low": 11
     },
     "fixedVersionAvailable": 0,
     "npmMatches": 0,
     "criticalMatches": 0,
-    "newSinceRegister": [],
-    "goneSinceRegister": [],
-    "ownerAcceptance": false,
-    "record": "docs/upgrade-2026-runtime-52d03ef7-arm64.json",
-    "sbomSha256": "275bfe0c19cdbc6fbcca5072102c78d1cd0433e0dd1a302415241dcefec42f26",
-    "scanSha256": "f05f1481ae25f48f1d73c6da8e7c87adb4f35548362e07b31503d28d86efdf69",
-    "platforms": {
-      "arm64": {
-        "status": "Exact52build/smoke/6recovery/browser536pass5hostedskips/SBOM/scan passed; localsynthetic only",
-        "record": "docs/upgrade-2026-runtime-52d03ef7-arm64.json"
-      },
-      "amd64": {
-        "status": "Exact52 remote smoke/6recovery/browser536pass5hostedskips/SBOM/criticalscan steps passed; artifact metadata/logs only here. Subsequentc6/NEClinkage source requires final integrated evidence."
-      }
+    "newSinceRegister": [
+      "CVE-2026-114690",
+      "CVE-2026-114691",
+      "CVE-2026-115455",
+      "CVE-2026-119371",
+      "CVE-2026-119372",
+      "CVE-2026-119373",
+      "CVE-2026-119374",
+      "CVE-2026-119375",
+      "CVE-2026-119376",
+      "CVE-2026-119377",
+      "CVE-2026-119378",
+      "CVE-2026-119379",
+      "CVE-2026-119591"
+    ],
+    "goneSinceRegister": [
+      "CVE-2011-3374"
+    ],
+    "changedExistingFixState": {
+      "id": "CVE-2026-84243",
+      "packages": [
+        "libc-bin",
+        "libc6"
+      ],
+      "version": "2.41-12+deb13u4",
+      "fixStateBefore": "not-fixed",
+      "fixStateAfter": "wont-fix",
+      "fixedVersions": [],
+      "officialSource": "https://security-tracker.debian.org/tracker/CVE-2026-84243",
+      "freshOfficialObservation": "Trixie vulnerable; no-dsa Minor issue; source unfixed. Existing LANGUAGE/locale exposure limits remain bounded, no acceptance."
     },
-    "note": "Top-level counts preserve original historicalscan. Latest52ARM64scan accepts no finding; all68OS advisory IDs match register. No human/staging/release qualification."
+    "ownerAcceptance": false,
+    "record": "docs/upgrade-2026-runtime-package-minimization-arm64.json",
+    "sbomSha256": "c0d3fd6a9737bd84d944174d113fd5f184dc1645f055d1c9ea8eee55c8a0c2ee",
+    "scanSha256": "1336577540257d79439036bb043b493b6e82b10127f4ba992baf4c829b4abc15",
+    "independentCandidateReceiptSHA256": "27f2a3443d3f76d4d6ec7548ed70061dd90bb4d3cceacee1406c36da6a94d994",
+    "note": "Engineering candidate97698bc0+reviewed4pathpatch; no exact final committed-source, AMD64/fullbrowser, human or release qualification. Top-level fields retain original historical scan.81registryrecords include80currentunacceptedIDs and1historicalAPTrecord. Newdatabase adds13IDs/19matches and changes2glibcfixstate tuples;2APTmatches absent. No other remaining package/version/status changes."
   },
   "previousLatestScans": [
     {
@@ -3094,6 +3654,49 @@
         }
       },
       "note": "The top-level counts describe the original 4aef633 scan. Use this block for the current state."
+    },
+    {
+      "recordedAt": "2026-11-02T05:15:17.235002+00:00",
+      "sourceCommit": "52d03ef7213f0b3f272575fbb36586bd7e6bd624",
+      "platform": "linux/arm64",
+      "imageId": "sha256:035309381d7bd17d8120d7c5e4559cdf950fc4f22dfebc2879d84bc596ce43c8",
+      "databaseBuilt": "2026-11-01T06:20:12Z",
+      "matches": 159,
+      "uniqueAdvisories": 68,
+      "matchCounts": {
+        "High": 56,
+        "Negligible": 46,
+        "Medium": 47,
+        "Low": 10
+      },
+      "fixedVersionAvailable": 0,
+      "npmMatches": 0,
+      "criticalMatches": 0,
+      "newSinceRegister": [],
+      "goneSinceRegister": [],
+      "ownerAcceptance": false,
+      "record": "docs/upgrade-2026-runtime-52d03ef7-arm64.json",
+      "sbomSha256": "275bfe0c19cdbc6fbcca5072102c78d1cd0433e0dd1a302415241dcefec42f26",
+      "scanSha256": "f05f1481ae25f48f1d73c6da8e7c87adb4f35548362e07b31503d28d86efdf69",
+      "platforms": {
+        "arm64": {
+          "status": "Exact52build/smoke/6recovery/browser536pass5hostedskips/SBOM/scan passed; localsynthetic only",
+          "record": "docs/upgrade-2026-runtime-52d03ef7-arm64.json"
+        },
+        "amd64": {
+          "status": "Exact52 remote smoke/6recovery/browser536pass5hostedskips/SBOM/criticalscan steps passed; artifact metadata/logs only here. Subsequentc6/NEClinkage source requires final integrated evidence."
+        }
+      },
+      "note": "Top-level counts preserve original historicalscan. Latest52ARM64scan accepts no finding; all68OS advisory IDs match register. No human/staging/release qualification."
     }
-  ]
+  ],
+  "latestSourceReviewEvidence": {
+    "retrievedAt": "2026-11-02",
+    "newAdvisories": 13,
+    "existingUpdatedAdvisories": 1,
+    "proposalSHA256": "2b0e550a3b43001c756ed9d58aa4d7f382ed7f5d7d12b08bf726d1c68d377e6d",
+    "source": "Fresh primary Debian tracker pages; raw evidence and exact scope retained under .local/upgrade-evidence/nov02-runtime-package-minimization/independent-static-review",
+    "independentHumanReview": false,
+    "ownerAcceptance": false
+  }
 }

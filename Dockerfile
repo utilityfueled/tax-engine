@@ -33,8 +33,11 @@ ENV PORT=3000
 ENV NODE_OPTIONS="--max-old-space-size=384"
 WORKDIR /app
 
+# Remove unused APT from the standalone runner through dpkg; retain its package database.
 # Run as non-root for security
 RUN groupadd --gid 1001 appgroup && useradd --uid 1001 --gid appgroup --shell /bin/false appuser \
+    && dpkg --purge apt libapt-pkg7.0 \
+    && test -z "$(dpkg --audit)" \
     && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-* \
     && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 
