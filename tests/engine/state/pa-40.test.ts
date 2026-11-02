@@ -1134,3 +1134,59 @@ describe("Pennsylvania PA-40 Personal Income Tax Return", () => {
     });
   });
 });
+
+// Spec: spec/state/pa-40.yaml, printed-income-rounding. Original reported
+// amounts are pinned from actual 2025 PA-40 IN before implementation outputs.
+describe("PA-40 reported income class arithmetic", () => {
+  it("PA-40 printed income - rounds reported classes before adding income and computing tax", () => {
+    for (const taxYear of [2025, 2026]) {
+      for (const [wages, bank, reportedWages, reportedBank, total, tax] of [
+        ["16.49", ".49", "16", "0", "16", "0"],
+        ["16.49", ".50", "16", "1", "17", "1"],
+        ["16.50", ".49", "17", "0", "17", "1"],
+        ["32.98", ".49", "33", "0", "33", "1"],
+      ]) {
+        const result = calculatePA40(makeInput({ taxYear, compensation: d(wages!), interest: d(bank!) }));
+        expect(result.compensation.toString()).toBe(reportedWages);
+        expect(result.interest.toString()).toBe(reportedBank);
+        expect(result.totalPATaxableIncome.toString()).toBe(total);
+        expect(result.adjustedPATaxableIncome.toString()).toBe(total);
+        expect(result.taxLiability.toString()).toBe(tax);
+        expect(result.lines.find(line => line.line === "1a")?.value.toString()).toBe(reportedWages);
+        expect(result.lines.find(line => line.line === "2")?.value.toString()).toBe(reportedBank);
+        expect(result.lines.find(line => line.line === "11")?.value.toString()).toBe(total);
+      }
+    }
+  });
+
+  it("PA-40 printed income - subtracts reported expenses and deductions and retains signed loss classes", () => {
+    for (const [wages, expenses, deductions, business, interest, printedWages, printedExpenses, printedBusiness, total, adjusted, tax] of [
+      ["16.50", ".49", "0", "0", "0", "17", "0", "0", "17", "17", "1"],
+      ["17.49", ".99", "0", "0", "0", "17", "1", "0", "16", "16", "0"],
+      ["17.49", "0", ".99", "0", "0", "17", "0", "0", "17", "16", "0"],
+      ["16.50", "0", "0", "-16.50", ".49", "17", "0", "-17", "17", "17", "1"],
+    ]) {
+      const result = calculatePA40(makeInput({ compensation: d(wages!), unreimbursedExpenses: d(expenses!),
+        otherDeductions: d(deductions!), netBusinessIncome: d(business!), interest: d(interest!) }));
+      expect(result.compensation.toString()).toBe(printedWages);
+      expect(result.unreimbursedExpenses.toString()).toBe(printedExpenses);
+      expect(result.netBusinessIncome.toString()).toBe(printedBusiness);
+      expect(result.totalPATaxableIncome.toString()).toBe(total);
+      expect(result.adjustedPATaxableIncome.toString()).toBe(adjusted);
+      expect(result.taxLiability.toString()).toBe(tax);
+      for (const [line, value] of [["1a", result.compensation], ["1b", result.unreimbursedExpenses],
+        ["1c", result.netCompensation], ["4", result.netBusinessIncome], ["10", result.otherDeductions]]) {
+        expect(result.lines.find(item => item.line === line)?.value.toString()).toBe(value!.toString());
+      }
+    }
+  });
+
+  it("PA-40 printed income - does not mutate exact aggregate originals", () => {
+    const input = makeInput({ compensation: d("32.98"), interest: d(".49") });
+    calculatePA40(input);
+    expect(input.compensation.toString()).toBe("32.98");
+    expect(input.interest.toString()).toBe("0.49");
+  });
+
+
+});

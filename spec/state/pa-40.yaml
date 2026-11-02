@@ -345,3 +345,24 @@ lines:
     description: "Explicit internal field-map diagnostics do not admit source-qualified public packets"
     formula: "PrecreatedPDF+taxpayer renderfields+zero-unprinted scalarprojection only; strict2025reviewpolicy/reviewmark/diagnostictitle; no credit/source approval or templateIO"
     testRef: "tests/pdf/fill-pa-40.test.ts::PA40 diagnostic projection keeps zero-credit mapping separate from source admission"
+
+  - line: "printed-income-rounding"
+    description: "2025 and draft 2026 PA-40 Part A uses reported whole-dollar lines before tax"
+    formula: |
+      Keep exact admissible original source cents through within-class aggregation.
+      Round aggregate input lines 1a, 1b, 2 through 8, and 10 once using Decimal
+      roundDollar. Line 1c is max(0, reported 1a minus reported 1b). Line 9 sums
+      positive reported income classes including 1c; a class loss cannot offset
+      another class. Line 11 is max(0, reported 9 minus reported 10). Line 12
+      is roundDollar(reported 11 times 0.0307). The result and audit expose the
+      same reported Part A amounts. Do not round each W-2/source independently.
+    notes: |
+      Actual 2025 PA-40 IN printed page 4 Rounding Numbers requires whole-dollar
+      form/schedule amounts; page 14 directs 1c = 1a minus 1b; page 21 directs
+      reported adjusted-income and tax lines. Retrieved 2026-11-02 at
+      https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
+      Source SHA e8996504a4302a65055e697ba6301a3e41a411a4802645a5fc5f653f7538c172.
+      This correction leaves the historical 2024 path unchanged and does not
+      qualify final 2026 physical forms, payment methods or upstream source
+      eligibility. The existing draft 2026 computation carries this method.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 printed income - rounds reported classes before adding income and computing tax"

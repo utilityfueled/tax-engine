@@ -202,7 +202,23 @@ export function calculatePA40AllowedOtherCredits(input: PA40AllowedOtherCreditsI
 // Calculation
 // ---------------------------------------------------------------------------
 
-export function calculatePA40(input: PA40Input): PA40Result {
+export function calculatePA40(originalInput: PA40Input): PA40Result {
+  // Spec: printed-income-rounding. Sources are aggregated exactly by the caller;
+  // round each reported Part A line once before its downstream arithmetic.
+  // Keep original cents untouched and the separately scoped 2024 path unchanged.
+  const input: PA40Input = originalInput.taxYear >= 2025 ? {
+    ...originalInput,
+    compensation: roundDollar(originalInput.compensation),
+    unreimbursedExpenses: roundDollar(originalInput.unreimbursedExpenses),
+    interest: roundDollar(originalInput.interest),
+    dividends: roundDollar(originalInput.dividends),
+    netBusinessIncome: roundDollar(originalInput.netBusinessIncome),
+    netGainOrLoss: roundDollar(originalInput.netGainOrLoss),
+    netRentalIncome: roundDollar(originalInput.netRentalIncome),
+    estateTrustIncome: roundDollar(originalInput.estateTrustIncome),
+    gamblingIncome: roundDollar(originalInput.gamblingIncome),
+    otherDeductions: roundDollar(originalInput.otherDeductions),
+  } : originalInput;
   const constants = STATE_TAX_CONSTANTS.pa[input.taxYear];
   if (!constants) {
     throw new Error(`PA constants not available for tax year ${input.taxYear}`);
