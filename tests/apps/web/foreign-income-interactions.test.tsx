@@ -116,5 +116,14 @@ it("shows the business capital questions on the Schedule C row", async () => {
     await change("Records support that business allowance 1", "true");
     await change("All of this business's income is foreign 1", "true");
     expect(latest.sources[0]).toMatchObject({ reasonableServicesAllowance: "300", reasonableAllowanceConfirmed: true, allBusinessIncomeForeignConfirmed: true });
+    await change("Actual business expenses attributable to foreign income 1", "30000.03");
+    await change("Foreign expense source 1", "Original foreign expense register");
+    await change("Records confirm those actual foreign expenses 1", "true");
+    expect(latest.sources[0]).toMatchObject({foreignBusinessExpenses:"30000.03",foreignBusinessExpenseSourceReference:"Original foreign expense register",foreignBusinessExpensesConfirmed:true});
+    await change("Foreign sources checked after the last edit", "true");
+    expect(latest.sourceFactsConfirmed).toBe(true);
+    await change("Actual business expenses attributable to foreign income 1", "30000.04");
+    expect(latest.sources[0]?.foreignBusinessExpenses).toBe("30000.04");
+    expect(latest.sourceFactsConfirmed).toBeNull();
   } finally { await act(async () => root.unmount()); container.remove(); }
 });

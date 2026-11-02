@@ -1,3 +1,5 @@
+import type { Form2555Result } from "@/engine/forms/form-2555.js";
+import { resolveForm2555WorksheetAddback } from "@/engine/forms/form-2555-worksheet-source.js";
 /** Canonical Form8962 income. Spec: spec/federal/premium-tax-credit-return.yaml. */
 import Decimal from "decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -10,6 +12,7 @@ export function calculatePremiumTaxCreditReturn(params: {
   agi: Decimal;
   taxExemptInterest: Decimal;
   foreignIncomeReduction: Decimal;
+  form2555Source?: Form2555Result;
   foreignHousingDeduction: Decimal;
   socialSecurityBenefitsGross: Decimal;
   socialSecurityBenefitsTaxable: Decimal;
@@ -17,12 +20,12 @@ export function calculatePremiumTaxCreditReturn(params: {
   const { input } = params;
   if (coordination?.orderedDeductionInterim && coordination.stage !== "maximum") throw new Error("Pub974 auxiliary400 is only for an interim maximum-deduction credit calculation.");
   for (const [name, amount] of Object.entries(params)) {
-    if (name === "input") continue;
+    if (name === "input" || name === "form2555Source") continue;
     if (!Decimal.isDecimal(amount) || !amount.isFinite()) throw new Error("Form8962 canonical income must be finite.");
-    if (name !== "agi" && name !== "socialSecurityBenefitsGross" && amount.lt(0)) throw new Error("Form8962 income addbacks must be nonnegative.");
+    if (name !== "agi" && name !== "socialSecurityBenefitsGross" && name !== "foreignIncomeReduction" && amount.lt(0)) throw new Error("Form8962 income addbacks must be nonnegative.");
   }
   if (params.socialSecurityBenefitsTaxable.gt(zeroFloor(params.socialSecurityBenefitsGross))) throw new Error("Form8962 taxable SocialSecurity source exceeds actual benefits.");
-  const foreign = params.foreignIncomeReduction.plus(params.foreignHousingDeduction);
+  const foreign = resolveForm2555WorksheetAddback(params.foreignIncomeReduction, params.foreignHousingDeduction, params.form2555Source, input.taxpayer.taxYear);
   const nontaxableBenefits = zeroFloor(params.socialSecurityBenefitsGross.minus(params.socialSecurityBenefitsTaxable));
   const taxpayerMagi = sum(params.agi, params.taxExemptInterest, foreign, nontaxableBenefits);
   const sourceMagi = input.form8962?.taxpayerModifiedAGI;

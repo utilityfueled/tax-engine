@@ -98,6 +98,11 @@ export function ForeignIncomeDetails({ data, sources = [], onChange }: { data?: 
           <BooleanFact label={`Records support that business allowance ${index + 1}`} value={row.reasonableAllowanceConfirmed ?? null} onChange={reasonableAllowanceConfirmed => sourceUpdate(index, { reasonableAllowanceConfirmed })} />
           <BooleanFact label={`All of this business's income is foreign ${index + 1}`} value={row.allBusinessIncomeForeignConfirmed ?? null} onChange={allBusinessIncomeForeignConfirmed => sourceUpdate(index, { allBusinessIncomeForeignConfirmed })} />
         </>}
+        {row.sourceId === "scheduleC" && <>
+          <CurrencyField label={`Actual business expenses attributable to foreign income ${index + 1}`} value={row.foreignBusinessExpenses ?? ""} onChange={foreignBusinessExpenses => sourceUpdate(index, { foreignBusinessExpenses })} />
+          <TextFact label={`Foreign expense source ${index + 1}`} value={row.foreignBusinessExpenseSourceReference ?? ""} onChange={foreignBusinessExpenseSourceReference => sourceUpdate(index, { foreignBusinessExpenseSourceReference })} />
+          <BooleanFact label={`Records confirm those actual foreign expenses ${index + 1}`} value={row.foreignBusinessExpensesConfirmed ?? null} onChange={foreignBusinessExpensesConfirmed => sourceUpdate(index, { foreignBusinessExpensesConfirmed })} />
+        </>}
         {(row.sourceId === "scheduleC" || [row.businessGrossReceipts, row.businessReturnsAndAllowances, row.businessCostOfGoodsSold, row.businessOtherIncome].some(value => value.trim())) && (["businessGrossReceipts", "businessReturnsAndAllowances", "businessCostOfGoodsSold", "businessOtherIncome"] as const).map((key, i) => <CurrencyField key={key} label={`${["Original business gross receipts", "Original business returns and allowances", "Original business cost of goods sold", "Original business other income"][i]} ${index + 1}`} value={row[key]} required onChange={value => sourceUpdate(index, { [key]: value })} />)}
       </div><button type="button" onClick={() => update({ sources: data.sources.filter((_, n) => n !== index) })}>Remove foreign-income source {index + 1}</button></fieldset>)}
       <button type="button" onClick={() => update({ sources: [...data.sources, structuredClone(emptyForeignIncomeSource)] })}>Add original foreign-income source</button>

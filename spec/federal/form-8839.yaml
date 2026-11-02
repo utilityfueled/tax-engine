@@ -164,6 +164,12 @@ lines:
     formula: "line 23 - line 30; may be negative for qualified-plan special-needs adoption; ineligible MFS or foreign not-final benefits remain taxable"
     testRef: "tests/engine/forms/form-8839.test.ts::special needs employer exclusion can create negative taxable benefits"
 
+  - line: "signed-form2555-source"
+    description: "Copy actual signed Form2555 lines45+50 into MAGI"
+    formula: "Use the complete confirmed calculated Form2555 source with audit and prior-statement conservation when45 is negative. Preserve signed45+50; reject unbound negative legacy addbacks. The original amount remains visible in the worksheet."
+    irsRef: "2025Schedule8812line2b; Instructions8839line7; Instructions8962Worksheet1-1line3; retrieved2026-11-01"
+    testRef: "tests/engine/forms/form-2555-actual-expense-allocation.test.ts::copies signed source amounts into child adoption and premium-credit MAGI worksheets"
+
 exportValidation:
   description: "2025 review-only mapping takes monetary lines directly from the engine audit, including refund, carryforward, credit limit and signed benefits; never reimplements tax arithmetic or silently truncates more than three children."
   testRef: "tests/pdf/fill-form-8839.test.ts::maps audited refundable nonrefundable carryforward and signed benefits without recalculation"

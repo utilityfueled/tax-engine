@@ -122,6 +122,7 @@ export function calculateForm7206Return(params: Params) {
     }
   }
   const retirement = d(input.adjustments?.seRetirementContributions), foreign = params.foreignIncomeExclusion;
+  if (foreign.isFinite() && foreign.lt(0)) throw new Error("Actual signed Form2555 with Form7206 business attribution needs its separate source method.");
   if (!retirement.isFinite() || retirement.lt(0) || !foreign.isFinite() || foreign.lt(0)) throw new Error("Form7206 canonical retirement and foreign amounts must be finite and nonnegative.");
   const allocation = facts.incomeDeductions;
   const retirementSources: QBIDeductionSourceAmount[] = [];

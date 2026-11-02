@@ -20,3 +20,14 @@ lines:
     description: "Count the actual child-election dependent worksheet once"
     formula: "For an applicable Form8814 child election, retain child line1b and min(line4,line5) in the actual completed dependent-MAGI worksheet. The parent's exempt-interest addback must not duplicate the child's line1b. No other dependent income is inferred."
     testRef: "tests/engine/federal-ptc-income.test.ts::counts a child election in the actual dependent worksheet without duplicating exempt interest"
+
+  - line: "signed-form2555-source"
+    description: "Copy actual signed Form2555 lines45+50 into MAGI"
+    formula: "Use the complete confirmed calculated Form2555 source with audit and prior-statement conservation when45 is negative. Preserve signed45+50; reject unbound negative legacy addbacks. The original amount remains visible in the worksheet."
+    irsRef: "2025Schedule8812line2b; Instructions8839line7; Instructions8962Worksheet1-1line3; retrieved2026-11-01"
+    testRef: "tests/engine/forms/form-2555-actual-expense-allocation.test.ts::copies signed source amounts into child adoption and premium-credit MAGI worksheets"
+
+  - line: "signed-form2555-ordinary-marketplace"
+    description: "Copy signed foreign source into ordinary marketplace canonical income"
+    formula: "For an admitted ordinary1095A return without Form7206 coordination, MAGI is actual AGI plus signed Form2555line45+50 plus the other statutory additions. Example domestic wages20000, foreign business net10000, SEdeduction707, signed45minus568: AGI29861 and MAGI29293. Do not reject the signed actual source or replace it with zero."
+    testRef: "tests/engine/forms/form-2555-actual-expense-allocation.test.ts::preserves signed Form2555 in an ordinary marketplace return"

@@ -124,8 +124,8 @@ it("guides a business where capital is material", () => {
     reasonableServicesAllowance: "300", reasonableAllowanceConfirmed: true, allBusinessIncomeForeignConfirmed: true }];
   const state = foreignIncomeState(source); state.sectionData["income-self-employment"] = { ...structuredClone(completeBusinessSection), manualGrossReceipts: "1200.03", businessFacts: { ...structuredClone(completeBusinessSection.businessFacts), businessName: "Foreign design", ein: "12-3456789" } };
   expect(buildForeignIncomeInput(source, state)?.sourceMapping?.rows?.[0]).toMatchObject({ capitalMaterialIncomeFactor: true, reasonableServicesAllowance: "300", reasonableAllowanceConfirmed: true, allBusinessIncomeForeignConfirmed: true });
-  expect(() => calculateFederalTax(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state)))).toThrow(/at least 21 of the self-employment/);
-  source.deductionsAllocableToExcludedIncome = "21"; state.sectionData.adjustments = { ...state.sectionData.adjustments!, foreignIncome: source };
+  expect(() => calculateFederalTax(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state)))).toThrow(/at least 85 of the self-employment/);
+  source.deductionsAllocableToExcludedIncome = "85"; state.sectionData.adjustments = { ...state.sectionData.adjustments!, foreignIncome: source };
   const form = calculateFederalTax(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state))).form2555!;
   expect(form.foreignEarnedIncome.toFixed()).toBe("300");
   const open = structuredClone(source); open.sources[0]!.reasonableServicesAllowance = "";
@@ -135,9 +135,9 @@ it("guides a business where capital is material", () => {
   const unsupported = structuredClone(source); unsupported.sources[0]!.reasonableAllowanceConfirmed = null;
   expect(() => buildForeignIncomeInput(unsupported, state)).toThrow(/reasonable allowance/);
   const stale = structuredClone(source); stale.businessCapitalMaterialIncomeProducing = false; stale.sources[0]!.capitalMaterialIncomeFactor = true;
-  expect(buildForeignIncomeInput(stale, state)?.sourceMapping?.rows?.[0]?.capitalMaterialIncomeFactor).toBeUndefined();
+  expect(buildForeignIncomeInput(stale, state)?.sourceMapping?.rows?.[0]?.capitalMaterialIncomeFactor).toBe(false);
   const services = structuredClone(source); services.businessCapitalMaterialIncomeProducing = false;
-  expect(buildForeignIncomeInput(services, state)?.sourceMapping?.rows?.[0]?.capitalMaterialIncomeFactor).toBeUndefined();
+  expect(buildForeignIncomeInput(services, state)?.sourceMapping?.rows?.[0]?.capitalMaterialIncomeFactor).toBe(false);
 });
 it("binds complete personal-service business sources without an income override", () => {
   const source = foreignIncomeFixture(); source.partIV.wages = "0"; source.partIV.businessPersonalServices = "1000.03"; source.businessCapitalMaterialIncomeProducing = false;

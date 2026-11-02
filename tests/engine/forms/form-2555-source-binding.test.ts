@@ -55,7 +55,7 @@ it("binds business amounts to actual canonical receipts", () => {
   const facts = source(); facts.isSelfEmployed = true; facts.employerProvidedForeignEarnedIncome = "0";
   facts.incomeSources.foreignEmploymentIncomeIncludedOnW2 = "0"; facts.incomeSources.foreignBusinessIncomeAlreadyReported = "120000";
   facts.partIV.wages = "0"; facts.partIV.businessPersonalServices = "120000";
-  Object.assign(facts.sourceMapping.rows[0], { sourceId: "scheduleC", payerName: "Actual Services", payerEin: "12-3456789", businessGrossReceipts: "130000", businessReturnsAndAllowances: "5000", businessCostOfGoodsSold: "1000", businessOtherIncome: "0" });
+  Object.assign(facts.sourceMapping.rows[0], { sourceId: "scheduleC", capitalMaterialIncomeFactor: false, payerName: "Actual Services", payerEin: "12-3456789", businessGrossReceipts: "130000", businessReturnsAndAllowances: "5000", businessCostOfGoodsSold: "1000", businessOtherIncome: "0" });
   const business = input({ form2555: facts, form1099Nec: [{ payer: "Actual Client", nonemployeeCompensation: "130000", accountHolder: "primary" }], scheduleC: { businessName: "Actual Services", ein: "12-3456789", accountHolder: "primary", returnsAndAllowances: "5000", costOfGoodsSold: "1000", otherIncome: "0" } });
   expect(resolveForm2555Sources(business).currentForeignIncome.toFixed()).toBe("120000");
   const wrongLine = input({ form2555: { ...facts, partIV: { ...facts.partIV, wages: "120000", businessPersonalServices: "0" } }, scheduleC: business.scheduleC, form1099Nec: business.form1099Nec });
@@ -174,9 +174,9 @@ it("binds active-partner income to its Schedule K-1", () => {
   for (const patch of [{ payerName: "Changed" }, { payerEin: "98-7654321" }, { payerEin: undefined }, { sourceId: "scheduleK1:1" }, { sourceId: "scheduleK1:00" }]) expect(() => run(facts(patch)), JSON.stringify(patch)).toThrow();
   for (const change of [{ accountHolder: "spouse" }, { taxYear: 2024 }, { taxYear: undefined }, { selfEmploymentEarnings: undefined }]) expect(() => run(facts(), { ...k1, ...change }), JSON.stringify(change)).toThrow();
   expect(() => run(facts({ priorYearIncomeReceived: "1" }))).toThrow(/prior/i);
-  const withReturn = TaxYearInputSchema.parse({ ...simpleW2Fixture, w2s: [], form2555: { ...facts(), deductionsAllocableToExcludedIncome: "4945" }, scheduleK1: [{ ...k1, ordinaryIncome: "80000", guaranteedPayments: "0" }] });
+  const withReturn = TaxYearInputSchema.parse({ ...simpleW2Fixture, w2s: [], form2555: { ...facts(), deductionsAllocableToExcludedIncome: "4946" }, scheduleK1: [{ ...k1, ordinaryIncome: "80000", guaranteedPayments: "0" }] });
   const excluded = calculateFederalTax(withReturn), included = calculateFederalTax(TaxYearInputSchema.parse({ ...withReturn, form2555: undefined }));
-  expect(included.agi.minus(excluded.agi).toFixed()).toBe("65055");
+  expect(included.agi.minus(excluded.agi).toFixed()).toBe("65054");
   const other = facts(); Object.assign(other, { incomeSources: { ...other.incomeSources, foreignPartnershipIncomeAlreadyReported: "0", otherForeignIncomeAlreadyReported: "70000" } });
   expect(() => run(other)).toThrow(/other mappings/);
 });
@@ -184,16 +184,16 @@ it("binds active-partner income to its Schedule K-1", () => {
 function partnerReturn(patch: Record<string, unknown> = {}, form2555Patch: Record<string, unknown> = {}, qbiForeignProfit = "70000", k1QbiExcludesForeignConfirmed?: boolean) {
   const form = source(), amount = "70000";
   Object.assign(form, { foreignEarnedIncome: amount, isSelfEmployed: true, employerProvidedForeignEarnedIncome: "0", partIV: { ...form.partIV, wages: "0", partnershipPersonalServices: amount },
-    incomeSources: { ...form.incomeSources, foreignEmploymentIncomeIncludedOnW2: "0", foreignPartnershipIncomeAlreadyReported: amount }, deductionsAllocableToExcludedIncome: "4945", ...form2555Patch });
+    incomeSources: { ...form.incomeSources, foreignEmploymentIncomeIncludedOnW2: "0", foreignPartnershipIncomeAlreadyReported: amount }, deductionsAllocableToExcludedIncome: "4946", ...form2555Patch });
   form.sourceMapping.rows = [{ ...form.sourceMapping.rows[0]!, sourceId: "scheduleK1:0", payerName: "Fictional Partners", payerEin: "12-3456789", foreignEarnedIncome: amount, partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false, qbiForeignProfit, k1QbiExcludesForeignConfirmed } as never];
   return TaxYearInputSchema.parse({ ...simpleW2Fixture, w2s: [], form2555: form, scheduleK1: [{ taxYear: 2025, accountHolder: "primary", partnershipName: "Fictional Partners", partnershipEIN: "12-3456789", ordinaryIncome: "80000", selfEmploymentEarnings: "80000", ...patch }] });
 }
 
-function businessReturn(foreign: string, allocable: string, patch: Record<string, unknown> = {}, wages = false) {
+function businessReturn(foreign: string, allocable: string, patch: Record<string, unknown> = {}, wages = false, foreignExpenses?: string) {
   const form = source(), gross = (patch.grossReceipts as string | undefined) ?? "100000";
   Object.assign(form, { foreignEarnedIncome: foreign, isSelfEmployed: true, employerProvidedForeignEarnedIncome: "0", partIV: { ...form.partIV, wages: "0", businessPersonalServices: foreign },
     incomeSources: { ...form.incomeSources, foreignEmploymentIncomeIncludedOnW2: "0", foreignBusinessIncomeAlreadyReported: foreign }, deductionsAllocableToExcludedIncome: allocable });
-  form.sourceMapping.rows = [{ ...form.sourceMapping.rows[0]!, sourceId: "scheduleC", payerName: "Actual Services", payerEin: "12-3456789", foreignEarnedIncome: foreign, businessGrossReceipts: gross, businessReturnsAndAllowances: "0", businessCostOfGoodsSold: "0", businessOtherIncome: "0" } as never];
+  form.sourceMapping.rows = [{ ...form.sourceMapping.rows[0]!, sourceId: "scheduleC", payerName: "Actual Services", payerEin: "12-3456789", foreignEarnedIncome: foreign, businessGrossReceipts: gross, businessReturnsAndAllowances: "0", businessCostOfGoodsSold: "0", businessOtherIncome: "0", capitalMaterialIncomeFactor: false, ...(foreignExpenses === undefined ? {} : { foreignBusinessExpenses: foreignExpenses, foreignBusinessExpenseSourceReference: "Original fictional foreign expense ledger", foreignBusinessExpensesConfirmed: true }) } as never];
   return TaxYearInputSchema.parse({ ...simpleW2Fixture, w2s: wages ? simpleW2Fixture.w2s : [], form2555: form,
     scheduleC: { accountHolder: "primary", businessName: "Actual Services", ein: "12-3456789", grossReceipts: gross, returnsAndAllowances: "0", costOfGoodsSold: "0", otherIncome: "0", materialParticipation: true, qbiMateriallyParticipated: true, ...patch } });
 }
@@ -202,7 +202,7 @@ const line13 = (result: ReturnType<typeof calculateFederalTax>) => result.allLin
 it("removes foreign business profit from QBI", () => {
   // U.S. wages keep the taxable-income cap away, so these compare QBI itself.
   // With wages, SE tax is 13974 at the wage base, so half is 6987 and the U.S. half of that lowers QBI.
-  const half = calculateFederalTax(businessReturn("50000", "3493", {}, true));
+  const half = calculateFederalTax(businessReturn("50000", "3494", {}, true));
   expect(half.selfEmploymentTax.toFixed()).toBe("13974");
   expect(line13(half)).toBe("9301");
   const allForeign = calculateFederalTax(businessReturn("100000", "6987", {}, true));
@@ -218,8 +218,8 @@ it("removes foreign business profit from QBI", () => {
   expect(() => calculateFederalTax(partnerReturn({ ...k1, section199AW2Wages: "1" }))).toThrow(/wages and UBIA/);
   expect(() => calculateFederalTax(partnerReturn({ ...k1, section199AUBIA: "1" }))).toThrow(/wages and UBIA/);
   expect(() => calculateFederalTax(partnerReturn({ section199AQBI: "20000" }))).toThrow(/exceeds the Schedule K-1 QBI/);
-  expect(() => calculateFederalTax(businessReturn("50000", "3532", { w2WagesPaid: "1" }))).toThrow(/Schedule C QBI needs its wages and UBIA/);
-  expect(() => calculateFederalTax(businessReturn("50000", "3532", { ubiaQualifiedProperty: "1" }))).toThrow(/Schedule C QBI needs its wages and UBIA/);
+  expect(() => calculateFederalTax(businessReturn("50000", "3533", { w2WagesPaid: "1" }))).toThrow(/Schedule C QBI needs its wages and UBIA/);
+  expect(() => calculateFederalTax(businessReturn("50000", "3533", { ubiaQualifiedProperty: "1" }))).toThrow(/Schedule C QBI needs its wages and UBIA/);
   // A domestic source carries the whole U.S. share of the deduction, and the total is unchanged.
   const mixedInput = TaxYearInputSchema.parse({ ...businessReturn("100000", "6987", {}, true), scheduleK1: [{ taxYear: 2025, accountHolder: "primary", partnershipName: "Domestic Partners", partnershipEIN: "98-7654321", ordinaryIncome: "100000", selfEmploymentEarnings: "100000", section199AQBI: "100000", qbiMateriallyParticipated: true }] });
   const adjusted = (id: string) => calculateFederalTax(mixedInput).allLines.find(row => row.form === "QBI Source Deductions" && row.line === id)?.value.toFixed() ?? "0";
@@ -235,13 +235,13 @@ it("removes foreign business profit from QBI", () => {
 
 it("requires the allocable self-employment deduction", () => {
   expect(() => calculateFederalTax(partnerReturn({}, {}, "0"))).not.toThrow();
-  expect(() => calculateFederalTax(partnerReturn({}, { deductionsAllocableToExcludedIncome: "0" }, "0"))).toThrow(/at least 4945 of the self-employment tax deduction/);
-  expect(() => calculateFederalTax(partnerReturn({}, { deductionsAllocableToExcludedIncome: "4944" }, "0"))).toThrow(/at least 4945/);
+  expect(() => calculateFederalTax(partnerReturn({}, { deductionsAllocableToExcludedIncome: "0" }, "0"))).toThrow(/at least 4946 of the self-employment tax deduction/);
+  expect(() => calculateFederalTax(partnerReturn({}, { deductionsAllocableToExcludedIncome: "4944" }, "0"))).toThrow(/at least 4946/);
   expect(() => calculateFederalTax(partnerReturn({}, { deductionsAllocableToExcludedIncome: "6000" }, "0"))).not.toThrow();
   // Schedule C: expenses reduce the foreign profit the same way, and part-year exclusion reduces the minimum.
-  expect(() => calculateFederalTax(businessReturn("50000", "3532"))).not.toThrow();
-  expect(() => calculateFederalTax(businessReturn("50000", "3531"))).toThrow(/at least 3532/);
-  const expensed = businessReturn("62000", "0", { grossReceipts: "124000", expenses: { advertising: "60000" } });
+  expect(() => calculateFederalTax(businessReturn("50000", "3533"))).not.toThrow();
+  expect(() => calculateFederalTax(businessReturn("50000", "3531"))).toThrow(/at least 3533/);
+  const expensed = businessReturn("62000", "0", { grossReceipts: "124000", expenses: { advertising: "60000" } }, false, "30000");
   // Half of the 60000 expenses plus the 2261 share of the deduction.
   expect(() => calculateFederalTax(expensed)).toThrow(/at least 32261/);
   // The exclusion ratio scales the minimum: 130000 of 200000 foreign income.
@@ -262,7 +262,7 @@ it("requires the allocable self-employment deduction", () => {
   expect(() => calculateFederalTax(adjusted("50000", "0"))).toThrow(/at least 3532/);
   expect(scheduleCQbi(adjusted("50000", "3532")).minus("92935").abs().lte(1)).toBe(true);
   // The foreign share comes off the owner only, so the other spouse's domestic business keeps its full deduction.
-  const spouseOwner = partnerReturn({ accountHolder: "spouse" }, { accountHolder: "spouse", deductionsAllocableToExcludedIncome: "4945" }, "0");
+  const spouseOwner = partnerReturn({ accountHolder: "spouse" }, { accountHolder: "spouse", deductionsAllocableToExcludedIncome: "4946" }, "0");
   spouseOwner.form2555!.sourceMapping!.rows[0]!.accountHolder = "spouse";
   const pair = TaxYearInputSchema.parse({ ...spouseOwner, taxpayer: { ...spouseOwner.taxpayer, filingStatus: "married_filing_jointly", spouse: { firstName: "Pat", lastName: "Doe", ssn: "987-65-4322", dateOfBirth: "1980-01-01" } }, scheduleC: { accountHolder: "primary", businessName: "Domestic Shop", grossReceipts: "100000", returnsAndAllowances: "0", costOfGoodsSold: "0", otherIncome: "0", qbiMateriallyParticipated: true } });
   expect(new Decimal(calculateFederalTax(pair).allLines.find(row => row.form === "QBI Source Deductions" && row.line === "scheduleC")!.value).minus("92935").abs().lte(1)).toBe(true);
@@ -279,9 +279,10 @@ it("limits business earned income where capital is material", () => {
   expect(allowed.form2555?.foreignEarnedIncome.toFixed()).toBe("27880");
   expect(line13(allowed)).toBe("0");
   expect(() => calculateFederalTax(capital("27881"))).toThrow(/30 percent limit of 27880/);
-  // Pub54 Example3: the allocable floor reads the exclusion over gross income, so 27.88 percent of the deduction.
-  expect(() => calculateFederalTax(capital("27880", {}, "1000"))).toThrow(/at least 1969 of the self-employment tax deduction/);
-  expect(calculateFederalTax(capital("27880", {}, "2000")).form2555?.foreignEarnedIncome.toFixed()).toBe("27880");
+  // The expense denominator follows Pub54 Example3; the SE deduction follows PartVIII FEIE over total FEI.
+  expect(() => calculateFederalTax(capital("27880", {}, "1000"))).toThrow(/at least 7065 of the self-employment tax deduction/);
+  expect(() => calculateFederalTax(capital("27880", {}, "2000"))).toThrow(/at least 7065/);
+  expect(calculateFederalTax(capital("27880", {}, "7065")).form2555?.foreignEarnedIncome.toFixed()).toBe("27880");
   expect(() => calculateFederalTax(capital("20000", { reasonableServicesAllowance: "19999" }))).toThrow(/reasonable allowance/);
   expect(() => calculateFederalTax(capital("20000", { reasonableAllowanceConfirmed: false }))).toThrow(/reasonable allowance/);
   expect(() => calculateFederalTax(capital("20000", { reasonableServicesAllowance: undefined }))).toThrow(/reasonable allowance/);
@@ -298,26 +299,28 @@ it("limits business earned income where capital is material", () => {
   expect(Number(line13(calculateFederalTax(services)))).toBeGreaterThan(0);
 });
 it("charges allocable business expenses and self-employment tax to the exclusion", () => {
-  // Pub54 Example3 fraction: exclusion27880 over gross200000 of expenses100000 is 13940, plus the deduction share.
+  // Pub54 Example3 fraction: 27880 /200000 *100000 =13940; full FEIE excludes all actual FEI, so SE disallowance7065.
   const expenses = (allocable: string) => { const value = businessReturn("27880", allocable, { grossReceipts: "200000", expenses: { supplies: "100000" } });
     Object.assign(value.form2555!.sourceMapping!.rows[0]!, { capitalMaterialIncomeFactor: true, reasonableServicesAllowance: "30000", reasonableAllowanceConfirmed: true, allBusinessIncomeForeignConfirmed: true });
     return value; };
-  expect(() => calculateFederalTax(expenses("7065"))).toThrow(/at least 15909 of the self-employment tax deduction and business expenses/);
-  expect(calculateFederalTax(expenses("15909")).form2555?.foreignEarnedIncome.toFixed()).toBe("27880");
+  expect(() => calculateFederalTax(expenses("7065"))).toThrow(/at least 21005 of the self-employment tax deduction and business expenses/);
+  expect(() => calculateFederalTax(expenses("15909"))).toThrow(/at least 21005/);
+  expect(calculateFederalTax(expenses("21005")).form2555?.foreignEarnedIncome.toFixed()).toBe("27880");
   // The same charge applies with no capital: exclusion50000 over gross200000 of expenses100000 is 25000.
-  const services = (allocable: string) => businessReturn("50000", allocable, { grossReceipts: "200000", expenses: { supplies: "100000" } });
+  const services = (allocable: string) => businessReturn("50000", allocable, { grossReceipts: "200000", expenses: { supplies: "100000" } }, false, "25000");
   expect(() => calculateFederalTax(services("7065"))).toThrow(/of the self-employment tax deduction and business expenses/);
   expect(calculateFederalTax(services("32065")).form2555?.foreignEarnedIncome.toFixed()).toBe("50000");
   // A net loss stays rejected by name, though Pub54 Example4 allows the allowance.
   const loss = businessReturn("20000", "20000", { grossReceipts: "100000", expenses: { supplies: "120000" } });
   Object.assign(loss.form2555!.sourceMapping!.rows[0]!, { capitalMaterialIncomeFactor: true, reasonableServicesAllowance: "30000", reasonableAllowanceConfirmed: true, allBusinessIncomeForeignConfirmed: true });
-  expect(() => calculateFederalTax(loss)).toThrow(/no net profit/);
-  // With very high expenses the floor stops at the exclusion, because allocable deductions cannot exceed it.
+  expect(() => calculateFederalTax(loss)).toThrow(/foreign loss method/);
+  // With high expenses actual disallowance can exceed the exclusion and line45 stays signed.
   const thin = (allocable: string) => { const value = businessReturn("2787", allocable, { grossReceipts: "200000", expenses: { supplies: "190000" } });
     Object.assign(value.form2555!.sourceMapping!.rows[0]!, { capitalMaterialIncomeFactor: true, reasonableServicesAllowance: "3000", reasonableAllowanceConfirmed: true, allBusinessIncomeForeignConfirmed: true });
     return value; };
-  expect(calculateFederalTax(thin("2787")).form2555?.foreignEarnedIncome.toFixed()).toBe("2787");
-  expect(() => calculateFederalTax(thin("2786"))).toThrow(/at least 2787/);
+  expect(() => calculateFederalTax(thin("2787"))).toThrow(/at least 3355/);
+  expect(calculateFederalTax(thin("3355")).form2555?.netExclusion.toFixed()).toBe("-568");
+  expect(() => calculateFederalTax(thin("2786"))).toThrow(/at least 3355/);
   // Earned income of zero still takes all the foreign profit out of QBI.
   const none = businessReturn("0", "0");
   Object.assign(none.form2555!.sourceMapping!.rows[0]!, { capitalMaterialIncomeFactor: true, reasonableServicesAllowance: "0", reasonableAllowanceConfirmed: true, allBusinessIncomeForeignConfirmed: true });
@@ -367,23 +370,22 @@ it("reads the K-1 earnings Schedule SE reads and handles several sources", () =>
   expect(qbi(both, "scheduleC").minus("93914").abs().lte(1)).toBe(true);
   expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...both, form2555: { ...both.form2555, deductionsAllocableToExcludedIncome: "3042" } }))).toThrow(/at least 3043/);
   // A K-1 loss cannot lower the foreign share below Schedule C's own profit.
-  const lossy = TaxYearInputSchema.parse({ ...businessReturn("50000", "3532"), scheduleK1: [{ ...domesticK1, ordinaryIncome: "-20000", selfEmploymentEarnings: "0", selfEmploymentNetEarningsAfterAdjustments: "-20000", section199AQBI: "0" }] });
+  const lossy = TaxYearInputSchema.parse({ ...businessReturn("50000", "3533"), scheduleK1: [{ ...domesticK1, ordinaryIncome: "-20000", selfEmploymentEarnings: "0", selfEmploymentNetEarningsAfterAdjustments: "-20000", section199AQBI: "0" }] });
   expect(() => calculateFederalTax(lossy)).not.toThrow();
-  expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...lossy, form2555: { ...lossy.form2555, deductionsAllocableToExcludedIncome: "3531" } }))).toThrow(/at least 3532/);
+  expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...lossy, form2555: { ...lossy.form2555, deductionsAllocableToExcludedIncome: "3531" } }))).toThrow(/at least 3533/);
   // A joint return with an unowned source cannot pick an owner.
   const joint = partnerReturn({}, {}, "0");
   const unowned = TaxYearInputSchema.parse({ ...joint, taxpayer: { ...joint.taxpayer, filingStatus: "married_filing_jointly", spouse: { firstName: "Pat", lastName: "Doe", ssn: "987-65-4322", dateOfBirth: "1980-01-01" } }, scheduleC: { ...shop, accountHolder: undefined }, scheduleK1: [{ ...joint.scheduleK1[0], selfEmploymentEarnings: "80000" }, { ...domesticK1, accountHolder: undefined }] });
   expect(() => calculateFederalTax(unowned)).toThrow(/owner on every self-employment source/);
   // Business tips read the full business profit, so a foreign share rejects by name.
   const tips = { owner: "primary", occupationCode: "102", eligibleOccupation: true, voluntaryCashTips: true, lawfulActivity: true, meetsSstbRuleOrTransition: true, businessName: "Actual Services", businessSourceId: "scheduleC", qualifiedReportedTips: "1000", reportedTipSources: [{ sourceId: "form1099Nec:0", qualifiedTips: "1000" }] };
-  expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...businessReturn("50000", "3532"), schedule1A: { primarySsnEligible: true, excludedPuertoRicoIncome: "0", form4563Exclusion: "0", employeeTips: [], businessTips: [tips], vehicleLoans: [], seniorOwners: [], overtime: [] } }))).toThrow(/business tips with foreign Schedule C profit/);
+  expect(() => calculateFederalTax(TaxYearInputSchema.parse({ ...businessReturn("50000", "3533"), schedule1A: { primarySsnEligible: true, excludedPuertoRicoIncome: "0", form4563Exclusion: "0", employeeTips: [], businessTips: [tips], vehicleLoans: [], seniorOwners: [], overtime: [] } }))).toThrow(/business tips with foreign Schedule C profit/);
   // A foreign K-1 loss adds no foreign earnings, so Schedule C alone sets the share.
-  const lossForm = businessReturn("50000", "3532");
+  const lossForm = businessReturn("50000", "3533");
   const lossK1 = { taxYear: 2025, accountHolder: "primary", partnershipName: "Fictional Partners", partnershipEIN: "12-3456789", ordinaryIncome: "-20000", selfEmploymentEarnings: "80000", selfEmploymentNetEarningsAfterAdjustments: "-20000", selfEmploymentIncomeType: "nonfarm", selfEmploymentFactsConfirmed: true };
   const k1Row = { ...lossForm.form2555!.sourceMapping!.rows[0]!, sourceId: "scheduleK1:0", payerName: "Fictional Partners", foreignEarnedIncome: "10000", businessGrossReceipts: undefined, businessReturnsAndAllowances: undefined, businessCostOfGoodsSold: undefined, businessOtherIncome: undefined, partnerPerformedServicesConfirmed: true, capitalMaterialIncomeFactor: false, qbiForeignProfit: "0" };
   const two = (allocable: string) => TaxYearInputSchema.parse({ ...lossForm, scheduleK1: [lossK1], form2555: { ...lossForm.form2555, foreignEarnedIncome: "60000", deductionsAllocableToExcludedIncome: allocable, partIV: { ...lossForm.form2555!.partIV, partnershipPersonalServices: "10000" },
     incomeSources: { ...lossForm.form2555!.incomeSources, foreignPartnershipIncomeAlreadyReported: "10000" }, sourceMapping: { ...lossForm.form2555!.sourceMapping!, rows: [lossForm.form2555!.sourceMapping!.rows[0]!, k1Row] } } });
-  expect(() => calculateFederalTax(two("3532"))).not.toThrow(/at least/);
-  expect(() => calculateFederalTax(two("3531"))).toThrow(/at least 3532/);
+  expect(() => calculateFederalTax(two("3533"))).not.toThrow(/at least/);
+  expect(() => calculateFederalTax(two("3531"))).toThrow(/at least 3533/);
 });
-

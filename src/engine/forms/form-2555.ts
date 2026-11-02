@@ -9,6 +9,8 @@ import { FORM2555_HOUSING_LIMITS } from "./form-2555-housing-limits.js";
 
 export interface Form2555Result {
   taxYear: number;
+  /** Actual source statement amount retained for signed worksheet conservation. */
+  priorYearIncomeExclusion?: Decimal;
   sourceFactsVerified: boolean;
   foreignEarnedIncome: Decimal;
   maximumExclusion: Decimal;
@@ -161,7 +163,7 @@ export function calculateForm2555(input: Form2555Input, constants: YearConstants
   const foreignEarnedIncomeExclusion = claimFEIE ? min(incomeAvailableForExclusion, proratedMaximumExclusion) : d(0);
   const totalExclusion = foreignEarnedIncomeExclusion.plus(housingExclusion);
   const allocableDeductions = amount(input.deductionsAllocableToExcludedIncome, "deductions allocable to excluded income", strict);
-  if (eligible && allocableDeductions.gt(totalExclusion)) throw new Error("Form2555 allocable deductions exceed the actual exclusions");
+  // Pub54 Example4 permits line44 above43: signed45 is a positive Schedule1 addback.
   const priorIncome = amount(input.priorYearIncomeExclusion, "prior-year income exclusion", strict);
   if (priorIncome.gt(0)) {
     if (input.priorYearIncomeExclusionTaxYear !== taxYear - 1 || input.priorYearIncomeStatementConfirmed !== true || input.priorYearIncomeAlreadyReportedConfirmed !== true) throw new Error("Form2555 prior-year income exclusion requires the actual preceding-year computation statement");
@@ -195,7 +197,7 @@ export function calculateForm2555(input: Form2555Input, constants: YearConstants
   record("49", "Prior-year housing deduction carryover used", carryUsed, "min(confirmed prior-year carryover,47-48)");
   record("50", "Total housing deduction", housingDeduction, "48+49; Schedule1line24j");
   record("carryover", "Housing deduction carried to next year only", housingDeductionCarryover, "max(0,46-48); prior carry never carries again");
-  return { taxYear, sourceFactsVerified: verified, foreignEarnedIncome, maximumExclusion, proratedMaximumExclusion,
+  return { taxYear, priorYearIncomeExclusion: priorIncome, sourceFactsVerified: verified, foreignEarnedIncome, maximumExclusion, proratedMaximumExclusion,
     baseHousingAmount, qualifiedHousingExpensesCapped, housingExpenseLimit, housingAmount, housingExclusion,
     housingDeduction, housingDeductionCarryover, expiredPriorYearHousingCarryover, incomeAvailableForExclusion,
     foreignEarnedIncomeExclusion, totalExclusion, netExclusion, totalIncomeReduction: netExclusion,

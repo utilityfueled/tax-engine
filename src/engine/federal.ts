@@ -693,6 +693,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
       ...input.form8839,
       taxYear: year, filingStatus, agi: creditAgi, taxLiabilityLimit,
       sourceTaxpayer: input.taxpayer,
+      form2555Source: form2555,
       foreignEarnedIncomeExclusion: form2555 ? form2555IncomeReduction : d(input.form8839.foreignEarnedIncomeExclusion),
       foreignHousingExclusion: form2555 ? form2555HousingDeduction : d(input.form8839.foreignHousingExclusion),
       possessionIncomeExclusion: d(input.form8839.possessionIncomeExclusion),
@@ -1651,9 +1652,20 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     additionalNonfarmIncome: cryptoBusinessNet,
     additionalNonfarmOwner: input.cryptoIncome?.businessAccountHolder,
   });
-  // Spec: qbi-foreign-profit. Profit earned abroad is not QBI, and Pub54 allocates by receipts.
+  // Spec: qbi-foreign-profit. Actual foreign business profit remains outside QBI.
   const foreignQbiProfit = new Map(foreignIncomeSources.qbiForeignProfit.map((row) => [row.sourceId, row.amount]));
-  for (const share of foreignIncomeSources.scheduleCForeignShare) foreignQbiProfit.set("scheduleC", zeroFloor(schedC.netProfit).times(share.foreign).div(share.grossIncome));
+  // Actual expense location determines foreign profit; a gross-receipts ratio cannot invent it.
+  const actualForeignBusinessExpenses = new Map<typeof foreignIncomeSources.scheduleCForeignShare[number], Decimal>();
+  for (const share of foreignIncomeSources.scheduleCForeignShare) {
+    const totalExpenses = share.grossIncome.minus(schedC.netProfit);
+    const allForeign = share.foreign.eq(share.grossIncome);
+    if (totalExpenses.lt(0)) throw new Error("Form2555 canonical business expenses must be nonnegative");
+    const expenses = share.foreignBusinessExpenses ?? (allForeign ? totalExpenses : totalExpenses.isZero() ? d("0") : undefined);
+    if (expenses === undefined) throw new Error("Form2555 mixed business requires actual foreign business expenses and their confirmed original source");
+    if (expenses.gt(totalExpenses) || expenses.gt(share.foreign) || (allForeign && !expenses.eq(totalExpenses))) throw new Error("Form2555 actual foreign business expenses contradict the canonical business or need a foreign loss method");
+    actualForeignBusinessExpenses.set(share, expenses);
+    foreignQbiProfit.set("scheduleC", share.foreign.minus(expenses));
+  }
   if (foreignQbiProfit.get("scheduleC")?.gt(0) && (d(input.scheduleC?.w2WagesPaid).gt(0) || d(input.scheduleC?.ubiaQualifiedProperty).gt(0))) throw new Error("Form2555 foreign profit inside Schedule C QBI needs its wages and UBIA apportioned");
   // Spec: se-deduction-allocation. Only the U.S. share of this deduction lowers QBI.
   // A K-1 can only shed earnings it has, so adjustments below its receipts cap the share.
@@ -1690,15 +1702,19 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     if (share.capitalMaterialEarned.gt(limit)) throw new Error(`Form2555 business receipts exceed the 30 percent limit of ${limit.toDecimalPlaces(0, Decimal.ROUND_DOWN).toFixed()}`);
   }
   // Spec: allocable-deduction-floor. Pub54 How To Report Deductions charges both to the excluded income.
-  const businessExpenseFloor = foreignIncomeSources.scheduleCForeignShare.reduce((total, share) => form2555?.foreignEarnedIncomeExclusion
-    ? total.plus(zeroFloor(share.grossIncome.minus(schedC.netProfit)).times(Decimal.min(1, form2555.foreignEarnedIncomeExclusion.div(share.grossIncome)))) : total, d("0"));
+  // Reg1.911-6(a): exclusions include a pro rata share of each earned-income source.
+  const exclusionFraction = form2555 && form2555.foreignEarnedIncome.gt(0)
+    ? Decimal.min(1, form2555.foreignEarnedIncomeExclusion.div(form2555.foreignEarnedIncome)) : d("0");
+  const businessExpenseFloor = foreignIncomeSources.scheduleCForeignShare.reduce((total, share) => {
+    const expenses = actualForeignBusinessExpenses.get(share)!;
+    // Capital's allowance is only part of foreign gross; Pub54 Example3 uses that gross denominator.
+    const sourceFraction = share.foreign.isZero() ? d("0") : share.earned.div(share.foreign);
+    return total.plus(expenses.times(sourceFraction).times(exclusionFraction));
+  }, d("0"));
   if (form2555 && form2555.foreignEarnedIncome.gt(0) && (foreignSeDeduction.gt(0) || businessExpenseFloor.gt(0))) {
-    // With capital material only part of the profit is earned, so the fraction reads the whole net profit.
-    const profitAboveEarned = foreignIncomeSources.scheduleCForeignShare.reduce((total, share) => share.capitalMaterialEarned ? total.plus(zeroFloor(zeroFloor(schedC.netProfit).minus(share.capitalMaterialEarned))) : total, d("0"));
-    const seFloor = foreignSeDeduction.times(Decimal.min(1, form2555.foreignEarnedIncomeExclusion.div(form2555.foreignEarnedIncome.plus(profitAboveEarned))));
-    // Allocable deductions cannot exceed the exclusion, so a floor above it would reject every entry.
-    const minimum = Decimal.min(seFloor.plus(businessExpenseFloor), form2555.foreignEarnedIncomeExclusion).toDecimalPlaces(0, Decimal.ROUND_DOWN);
-    if (d(input.form2555?.deductionsAllocableToExcludedIncome).lt(minimum)) throw new Error(`Form2555 deductions allocable to excluded income must include at least ${minimum.toFixed()} of the self-employment tax deduction and business expenses`);
+    const seFloor = foreignSeDeduction.times(exclusionFraction);
+    const minimum = roundDollar(seFloor.plus(businessExpenseFloor));
+    if (roundDollar(d(input.form2555?.deductionsAllocableToExcludedIncome)).lt(minimum)) throw new Error(`Form2555 deductions allocable to excluded income must include at least ${minimum.toFixed()} of the self-employment tax deduction and business expenses`);
   }
   audit.merge(schedSE.lines);
   const netSEEarnings = schedSE.netSEEarnings;
@@ -1831,7 +1847,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     earlyWithdrawalPenalty,
     alimonyPaid,
     gamblingIncome: totalGamblingWinnings,
-    form2555IncomeReduction,
+    form2555IncomeReduction, form2555Source: form2555,
     form2555HousingDeduction,
     seHealthInsurance: actualHealthInsurance?.form7206.deductionToSchedule1 ?? seHealthInsuranceWorksheetResult?.deductibleAmount,
     taxableStateRefund,
@@ -3809,7 +3825,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   let form8962: ReturnType<typeof calculateForm8962> | undefined;
   if (input.form1095A.length > 0 || input.form8962) {
     form8962 = calculatePremiumTaxCreditReturn({
-      input, agi, taxExemptInterest, foreignIncomeReduction: form2555IncomeReduction,
+      input, agi, taxExemptInterest, foreignIncomeReduction: form2555IncomeReduction, form2555Source: form2555,
       foreignHousingDeduction: form2555HousingDeduction,
       socialSecurityBenefitsGross, socialSecurityBenefitsTaxable,
     }, marketplace?.stage === "actual-paid" ? { method: "ordinary-actual-paid-repayment", stage: "final" } : marketplace?.stage === "actual-cash" ? { method: "ordinary-actual-cash-zero-credit", stage: "final" } : marketplace?.stage === "full-repayment" ? { method: marketplace.reportedPayment ? "ordinary-reported-advance-repayment" : "ordinary-full-advance-repayment", stage: "final" } : marketplace ? { method: marketplace.deduction.method === "pub974-alternative-reentry-2026" ? marketplace.deduction.method
@@ -4076,7 +4092,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     adjustedGrossIncome: agi,
     puertoRicoExcludedIncome: childCreditPuertoRico,
     form4563ExcludedIncome: childCreditForm4563,
-    foreignExcludedIncome: form2555IncomeReduction.plus(form2555HousingDeduction),
+    foreignExcludedIncome: form2555IncomeReduction.plus(form2555HousingDeduction), form2555Source: form2555,
     agi: sum(agi, form2555IncomeReduction, form2555HousingDeduction, childCreditPossessionTotal ?? new Decimal(0)),
     // Per IRC §32(c)(2)(A)(i)(II) → §24(d)(1)(B)(i): earned income =
     // wages + net SE earnings - deductible half of SE tax (§164(f)).
@@ -4302,7 +4318,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     const line44 = form2555.lines.find(line => line.form === "2555" && line.line === "44")?.value ?? d("0");
     if (niitSources?.feieAllocableDeductions !== undefined) {
       niitFeieDeduction = niitAmount(niitSources.feieAllocableDeductions, "FEIE deduction allocation");
-      if (niitFeieDeduction.lt(0) || niitFeieDeduction.gt(line44) || niitFeieDeduction.gt(form2555.foreignEarnedIncomeExclusion)
+      if (niitFeieDeduction.lt(0) || niitFeieDeduction.gt(line44)
         || (form2555.housingExclusion.isZero() && !niitFeieDeduction.eq(line44))) throw new Error("Form8960 FEIE deduction allocation must reconcile with Form2555line44");
     } else if (line44.isZero() || form2555.foreignEarnedIncomeExclusion.isZero()) {
       niitFeieDeduction = d("0");

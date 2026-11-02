@@ -113,8 +113,13 @@ describe("Form2555 source-backed 2026", () => {
     expect(calc({ claimHousingExclusionOrDeduction: false }).totalIncomeReduction.toFixed()).toBe("132900");
   });
   it("Form2555 rejects contradictory sources stale years and arbitrary location overrides", () => {
-    for (const override of [{ foreignEarnedIncome: "200001" }, { totalDaysInYear: 366 }, { qualifyingDays: 366 }, { housingExpenseLocationLimit: "100000" }, { housingLocationPeriods: [{ locationId: "Unknown", days: 365 }] }, { housingLocationPeriods: [{ locationId: "default", days: 366 }] }, { housingLocationPeriods: [{ locationId: "Canada / Toronto", days: 365, noticeTaxYear: 2027 }] }, { employerProvidedForeignEarnedIncome: "200001" }, { deductionsAllocableToExcludedIncome: "200000" }, { priorYearHousingDeductionCarryover: "100", priorYearHousingCarryoverTaxYear: 2024, priorYearHousingCarryoverConfirmed: true }, { qualifiedHousingExpenses: "-1" }, { priorYearIncomeExclusion: "5" }]) expect(() => calc(override)).toThrow();
+    for (const override of [{ foreignEarnedIncome: "200001" }, { totalDaysInYear: 366 }, { qualifyingDays: 366 }, { housingExpenseLocationLimit: "100000" }, { housingLocationPeriods: [{ locationId: "Unknown", days: 365 }] }, { housingLocationPeriods: [{ locationId: "default", days: 366 }] }, { housingLocationPeriods: [{ locationId: "Canada / Toronto", days: 365, noticeTaxYear: 2027 }] }, { employerProvidedForeignEarnedIncome: "200001" }, { priorYearHousingDeductionCarryover: "100", priorYearHousingCarryoverTaxYear: 2024, priorYearHousingCarryoverConfirmed: true }, { qualifiedHousingExpenses: "-1" }, { priorYearIncomeExclusion: "5" }]) expect(() => calc(override)).toThrow();
     expect(() => calculateForm2555(Form2555Schema.parse(facts()), getConstants(2025))).toThrow(/year|constants/i);
+  });
+  it("Form2555 preserves the formerly rejected actual deduction amount above exclusions", () => {
+    const result=calc({deductionsAllocableToExcludedIncome:"200000"});
+    // 2026 maximum132900 + (30000-21264) housing8736 =141636; line45=141636-200000.
+    expect(result.netExclusion.toFixed()).toBe("-58364");
   });
   it("Form2555 zero income has finite ratios and zero benefits", () => {
     const base = facts();

@@ -209,7 +209,7 @@ lines:
     testRef: "tests/engine/forms/form-2555-2026.test.ts::Form2555 2026 computes every source line and net exclusion"
   - line: "44"
     description: "Disallowed AGI deductions"
-    formula: "Actual supported computation of deductions allocable to excluded income;0<=44<=43; excluded housing deduction and section119 are not allocable"
+    formula: "Actual supported computation of deductions allocable to excluded income;0<=44;44 may exceed43 and makes45 negative; excluded housing deduction and section119 are not allocable"
     irsRef: "Form2555 same numbered line; IRC911; Pub54; Notices2025-16/2026-25"
     testRef: "tests/engine/forms/form-2555-2026.test.ts::Form2555 2026 computes every source line and net exclusion"
   - line: "45"

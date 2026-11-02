@@ -1,3 +1,5 @@
+import type { Form2555Result } from "@/engine/forms/form-2555.js";
+import { resolveForm2555WorksheetAddback } from "@/engine/forms/form-2555-worksheet-source.js";
 /** Schedule 8812 — spec/federal/form-8812.yaml; source-backed 2025/2026 worksheets. */
 import Decimal from "decimal.js";
 import type { CalculatedLine } from "@/models/outputs.js";
@@ -15,6 +17,7 @@ export interface Form8812Input {
   adjustedGrossIncome?: Decimal;
   puertoRicoExcludedIncome?: Decimal;
   foreignExcludedIncome?: Decimal;
+  form2555Source?: Form2555Result;
   form4563ExcludedIncome?: Decimal;
   earnedIncome: Decimal;
   /** Credit Limit Worksheet A line 5, after the Worksheet B interaction if applicable. */
@@ -55,8 +58,13 @@ export function calculateForm8812(input: Form8812Input, constants: YearConstants
   for (const amount of [input.agi, input.earnedIncome, input.taxLiability]) {
     if (!amount.isFinite()) throw new Error("Schedule 8812 amount must be finite");
   }
+  const foreignSource = input.foreignExcludedIncome;
+  if (foreignSource !== undefined) {
+    const housing = input.form2555Source?.housingDeduction ?? new Decimal(0);
+    resolveForm2555WorksheetAddback(foreignSource.minus(housing), housing, input.form2555Source, year);
+  }
   const sourceAmounts = [input.puertoRicoExcludedIncome,input.foreignExcludedIncome,input.form4563ExcludedIncome];
-  if (sourceAmounts.some(value => value !== undefined && (!value.isFinite() || value.lt(0)))) throw new Error("Invalid Schedule8812 excluded-income source");
+  if (sourceAmounts.some((value, index) => value !== undefined && (!value.isFinite() || (index !== 1 && value.lt(0))))) throw new Error("Invalid Schedule8812 excluded-income source");
   if (input.adjustedGrossIncome !== undefined) {
     if (!input.adjustedGrossIncome.isFinite()) throw new Error("Invalid Schedule8812 AGI source");
     audit.record("Form 8812", "1", "Adjusted gross income", input.adjustedGrossIncome, "Form1040 line11");

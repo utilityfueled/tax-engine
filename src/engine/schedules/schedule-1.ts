@@ -1,3 +1,5 @@
+import type { Form2555Result } from "@/engine/forms/form-2555.js";
+import { resolveForm2555WorksheetAddback } from "@/engine/forms/form-2555-worksheet-source.js";
 /**
  * Schedule 1 — Additional Income and Adjustments to Income
  * Spec: spec/federal/schedule-1.yaml
@@ -68,6 +70,7 @@ export interface Schedule1Input {
   nolDeduction?: Decimal;
   /** Net Form2555line45, entered as negative Schedule1line8d. */
   form2555IncomeReduction?: Decimal;
+  form2555Source?: Form2555Result;
   /** Form 2555 housing deduction for self-employed (Schedule 1 Line 24j) */
   form2555HousingDeduction?: Decimal;
   /** Pre-computed SE health insurance deduction from the Pub 535 worksheet (bypasses manual cap logic) */
@@ -526,7 +529,7 @@ export function calculateSchedule1(
   }
 
   const foreignIncomeExclusion = extra?.form2555IncomeReduction ?? new Decimal(0);
-  if (!foreignIncomeExclusion.isFinite() || foreignIncomeExclusion.lt(0)) throw new Error("Form2555 net exclusion must be finite and nonnegative");
+  resolveForm2555WorksheetAddback(foreignIncomeExclusion, extra?.form2555Source?.housingDeduction ?? new Decimal(0), extra?.form2555Source, input.taxpayer.taxYear);
   if (extra?.form2555IncomeReduction !== undefined) {
     audit.record("Sched 1", "8d", "Foreign earned income and housing exclusion", foreignIncomeExclusion.negated(), "Negative net Form2555line45; gross wages remain on1040line1z");
   }

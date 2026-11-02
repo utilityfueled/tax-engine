@@ -293,3 +293,9 @@ lines:
     irsRef: "Schedule 1 Instructions, Line 26"
     notes: "Goes to Form 1040 Line 10"
     testRef: "tests/engine/schedules/schedule-1.test.ts::Schedule 1 Line 26 - total adjustments"
+
+  - line: "2555-signed-addback"
+    description: "Preserve Form2555 negative line45"
+    formula: "Schedule1line8d is negative Form2555line45. A negative45 therefore produces a positive8d; do not reject or clamp it. Pub54 Example4: line4377000, line4490713, line45minus13713, positive8d13713."
+    irsRef: "Pub54 HowToReportDeductions Example4; retrieved2026-11-01"
+    testRef: "tests/engine/forms/form-2555-actual-expense-allocation.test.ts::preserves negative line45 instead of capping actual disallowed deductions"

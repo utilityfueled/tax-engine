@@ -4804,6 +4804,7 @@ export const Form2555Schema = z.preprocess(value => {
       businessCostOfGoodsSold: decimal.optional(), businessOtherIncome: decimal.optional(),
       partnerPerformedServicesConfirmed: z.boolean().optional(), capitalMaterialIncomeFactor: z.boolean().optional(),
       allBusinessIncomeForeignConfirmed: z.boolean().optional(),
+      foreignBusinessExpenses: decimal.optional(), foreignBusinessExpenseSourceReference: z.string().optional(), foreignBusinessExpensesConfirmed: z.boolean().optional(),
       qbiForeignProfit: decimal.optional(), // Net profit from these services inside the K-1's QBI.
       k1QbiExcludesForeignConfirmed: z.boolean().optional(),
       reasonableServicesAllowance: decimal.optional(), reasonableAllowanceConfirmed: z.boolean().optional(),

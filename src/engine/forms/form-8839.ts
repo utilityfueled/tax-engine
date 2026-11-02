@@ -1,3 +1,5 @@
+import type { Form2555Result } from "@/engine/forms/form-2555.js";
+import { resolveForm2555WorksheetAddback } from "@/engine/forms/form-2555-worksheet-source.js";
 /** Form 8839 — spec/federal/form-8839.yaml. Decimal, year-aware, per-child limits. */
 import Decimal from "decimal.js";
 import type { FilingStatus } from "@/models/constants.js";
@@ -23,6 +25,7 @@ export interface Form8839Params {
     priorYearForeignBenefits?: string;
   })[];
   foreignEarnedIncomeExclusion: Decimal;
+  form2555Source?: Form2555Result;
   foreignHousingExclusion: Decimal;
   possessionIncomeExclusion?: Decimal;
   /** Completed Part III MAGI worksheet before adoption-benefit income adjustment. */
@@ -105,8 +108,9 @@ export function calculateForm8839(params: Form8839Params): Form8839Result {
   const maxCredit = nonnegative(constants.maxCreditPerChild, "maximum");
   const refundableCap = nonnegative(constants.refundablePerChild ?? new Decimal(taxYear === 2025 ? "5000" : "5120"), "refundable cap");
   if (!agi.isFinite() || !constants.phaseOutRange.isFinite() || !constants.phaseOutRange.greaterThan(0)) throw new Error("Invalid adoption MAGI/range");
-  const magi = sum(agi, nonnegative(params.foreignEarnedIncomeExclusion, "foreign exclusion"),
-    nonnegative(params.foreignHousingExclusion, "foreign housing"), nonnegative(params.possessionIncomeExclusion ?? ZERO, "possession exclusion"));
+  const foreign = resolveForm2555WorksheetAddback(params.foreignEarnedIncomeExclusion,
+    params.foreignHousingExclusion, params.form2555Source, taxYear);
+  const magi = sum(agi, foreign, nonnegative(params.possessionIncomeExclusion ?? ZERO, "possession exclusion"));
   const threshold = constants.phaseOutThreshold;
   const excessMagi = zeroFloor(magi.minus(threshold));
   const fraction = (income: Decimal) => Decimal.min(1, zeroFloor(income.minus(threshold)).div(constants.phaseOutRange)).toDecimalPlaces(3, Decimal.ROUND_HALF_UP);

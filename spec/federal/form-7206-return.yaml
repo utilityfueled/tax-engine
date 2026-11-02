@@ -46,3 +46,8 @@ lines:
     formula: "A positive canonical Form2555 exclusion requires its confirmed gross source mapping. Aggregate Form7206 line12 allocations to self-employed, partnership, and shareholder businesses may not exceed the corresponding actual foreign business, partnership, and W2 employment receipts. A wage-only exclusion cannot be moved to a domestic business. This is a source-conservation bound, not an inferred allocation method."
     irsRef: "Form7206 line12; Form2555 PartIV and line45"
     testRef: "tests/engine/forms/form-7206-return.test.ts::rejects foreign allocations contradicting the actual income source class"
+
+  - line: "signed-form2555-attribution-method"
+    description: "Keep negative actual Form2555line45 separate from nonnegative business attribution"
+    formula: "A negative source-confirmed Form2555line45 is a valid signed amount. Current Form7206 business exclusion allocations accept only nonnegative exclusions and have no signed per-business source method. Reject that precise composition with a named separate-method requirement; never describe the actual source as invalid or silently clamp it."
+    testRef: "tests/engine/forms/form-2555-actual-expense-allocation.test.ts::names the separate signed Form7206 business attribution method"
