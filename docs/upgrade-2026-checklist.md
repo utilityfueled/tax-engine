@@ -2493,3 +2493,21 @@ Exact package sources, check receipts and the durable private work queue are in
 evidence keeps its historical commit boundary. Final integrated CI/coverage,
 forms, target images/recovery, staging, human and live-provider qualification
 remain required. The active goal remains open.
+
+
+## November 2: W-2 interview and complete ordinary PA foundations
+
+- [x] `5fad1ad6` retains actual ordinary PA return facts and confirmations. Independent review58 tests/fourfiles, main214/11, all nine package checks and spec6677 pass. Unknown source dates, household eligibility and original snapshots remain bound.
+- [x] `7d962783` derives resident school-district earned income from actual resident-period originals. Independent review101/3 and main191/3, all nine checks/spec6682 pass; annual-factor shortcuts remain guarded.
+- [x] `f0a87cd8` corrects nine preexisting PA guided printed-dollar probes after unchanged00fa baseline61pass/9fail. Main70/9 pass; exact original cents remain verified at actual production aggregates, alongside printed lines. Independent static review has no findings; 50 existing test lint warnings are unchanged by actual baseline comparison.
+- [x] `a21ea344` wires actual W2 state/local rows through real interview cards, source-only confirmation context, edits, navigation and saved canonical input. Independent review53/6 plus reviewed required-birth-date type narrowing; main1055/194, focused12, three types/spec6695/inventory/library and webpack web builds pass. Bridge2 existing warnings remain exact; other owned strict lint0. Missing Box8/modeledBox12 is unknown, never verified zero.
+- [x] `1bde0b12` composes supported ordinary PA returns using actual residency/eligibility/payment/settlement originals. Independent review40/2 and main735/19/allninechecks/spec6710 pass. Department working-credit processing stays separate from printed return totals. Filing/current2026/local/richer-source gates remain closed.
+- [ ] Adopt independently reviewed OH actualW2consumer6, PA actualW2consumer8 and PA completioncollector8 with fresh main checks; complete shared canonical/guide/preview/private-context/export integration for all three selected residency classes.
+- [ ] Finish actual dated-payment pipeline, source-aware OH withholding PDF support, PA original-return resident credit and other remaining positive/special/household/local source methods. These are required internal tasks, not missing demand decisions.
+- [ ] Qualify the final integrated source with complete CI/coverage/browser, target-platform runtime/recovery/SBOM/scans and the distinct external human/staging/provider/form gates. No package green substitutes for these gates.
+
+Durable current shared reconstruction is `.local/upgrade-work/root-state-integration-v2/source`,
+with complete16 copies in `nov02-parent-state-integration-recovery/current-state-06`.
+It merges the W2 dependency and retains explicit unverified status; historical
+state04's12 passing tests are not a claim for this newer source. All new private
+packages keep full source copies, patches, hashes, genuine failures and receipts.

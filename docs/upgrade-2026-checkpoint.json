@@ -12226,8 +12226,8 @@
       "inventoryEntries": 604,
       "humanQualified": false
     },
-    "currentHead": "00fa29c6eb243635acb335cc87d0d2637540079c",
-    "currentRemoteHead": "00fa29c6eb243635acb335cc87d0d2637540079c",
+    "currentHead": "1bde0b12ca614d61b79728f780914b931aa69802",
+    "currentRemoteHead": "1bde0b12ca614d61b79728f780914b931aa69802",
     "currentRuleVersions": {
       "2025": "2025.223",
       "2026": "2026.221-law-integration-draft"
@@ -12968,19 +12968,76 @@
       ]
     },
     "activeInternalStateQueue20261102": {
-      "rootPrivate": ".local/upgrade-work/root-state-integration/source",
-      "rootDurable": ".local/upgrade-evidence/nov02-parent-state-integration-recovery/current-state-04/manifest.json",
-      "w2GuidedSpecFirst": ".local/upgrade-evidence/nov02-parent-w2-guided-wiring/red-candidate.json",
-      "paFacts": "Corrected ten-file freeze after genuine53pass5fail to58green; independent original16 re-review active",
-      "paComposer": "New-only ordinary PA source-bound return composition; spec-first, not implemented yet",
-      "ohSD": "Frozen resident-income worksheet5 awaiting independent review",
-      "ohConsumers": "Actual canonical W2 rows in payment source and withholding adapter; spec-first active",
+      "rootPrivate": ".local/upgrade-work/root-state-integration-v2/source",
+      "rootDurable": ".local/upgrade-evidence/nov02-parent-state-integration-recovery/current-state-06/manifest.json",
+      "w2GuidedSpecFirst": "Delivered a21ea344; exactsource/truefailures retained",
+      "paFacts": "Delivered5fad1ad6 after58independent and214main",
+      "paComposer": "Delivered1bde0b12 after40independent and735main; sharedintegrationpending",
+      "ohSD": "Delivered7d962783 pure actualresident-income method; completeSD integrationpending",
+      "ohConsumers": "Frozen6 independentlyreviewed197/7; mainadoptionchecksqueued",
       "remaining": [
         "Complete canonical and guided state source paths with unknown-preserving validation",
         "Complete original-bound PA/OH credit/payment/local/dated methods and reference/export context",
         "Run final integrated coverage/CI/browser/target-runtime recovery and scan gates after source integration"
       ],
-      "status": "active; useful authorized implementation remains"
+      "status": "active; useful authorized implementation remains",
+      "paW2Consumer": "Frozen8 independentlyreviewed90/4; mainadoptionpending",
+      "paCompletionCollector": "Frozen8 independentlyreviewed61/4; mainadoptionpending",
+      "ohDatedIntegration": "Genuine-red/implementation slot active; originalPartII5 delivered4285372a",
+      "sourceAwareOHWhPDF": "New source/spec/tests active; no Node/result claimed",
+      "paResidentCreditOriginals": "Source/spec/test work active; old GL reciprocal/proxy spec deficiency confirmed; correction separate"
+    },
+    "paOrdinaryFacts20261102": {
+      "commit": "5fad1ad6",
+      "pushed": true,
+      "mainTests": 214,
+      "files": 11,
+      "checks": ".local/upgrade-evidence/nov02-parent-pa-ordinary-facts-main-checks/checks.json",
+      "independent": "independent review58/4files",
+      "qualification": false
+    },
+    "ohSchoolDistrictResidentIncome20261102": {
+      "commit": "7d962783",
+      "pushed": true,
+      "mainTests": 191,
+      "files": 3,
+      "checks": ".local/upgrade-evidence/nov02-parent-ohio-sd-main-checks/checks.json",
+      "independent": "independent review101/3files",
+      "qualification": false
+    },
+    "paGuidedPrintedBoundary20261102": {
+      "commit": "f0a87cd8",
+      "pushed": true,
+      "mainTests": 70,
+      "files": 9,
+      "checks": ".local/upgrade-evidence/nov02-pa-guided-printed-boundary-checks/checks.json",
+      "independent": "independentstaticsourceapproved",
+      "qualification": false,
+      "followupChecks": [
+        ".local/upgrade-evidence/nov02-pa-guided-printed-boundary-remaining/checks.json"
+      ]
+    },
+    "w2GuidedActualRows20261102": {
+      "commit": "a21ea344",
+      "pushed": true,
+      "mainTests": 1055,
+      "files": 194,
+      "checks": ".local/upgrade-evidence/nov02-parent-w2-guided-main-checks/checks.json",
+      "independent": "independent review53/6files +DOBstaticdelta",
+      "qualification": false,
+      "followupChecks": [
+        ".local/upgrade-evidence/nov02-parent-w2-guided-main-after-types/checks.json",
+        ".local/upgrade-evidence/nov02-parent-w2-guided-main-remaining/checks.json"
+      ]
+    },
+    "paOrdinaryComposition20261102": {
+      "commit": "1bde0b12",
+      "pushed": true,
+      "mainTests": 735,
+      "files": 19,
+      "checks": ".local/upgrade-evidence/nov02-parent-pa-ordinary-composer-main-checks/checks.json",
+      "independent": "independent review40/2files",
+      "qualification": false
     }
   }
 }
