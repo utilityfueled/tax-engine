@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import type { TaxYearInput } from "@/models/inputs";
+import type { W2StateLocalSourceContext } from "@/engine/forms/w2-state-local";
 import type { W2StateLocalSources } from "@/models/w2-state-local";
 import { confirmGuidedW2StateLocalSources, emptyGuidedW2StateLocalSources, updateGuidedW2StateLocalSources } from "@/lib/guided-w2-state-local-facts";
 import { BooleanFact, TextFact } from "./fact-fields";
@@ -15,7 +15,7 @@ function SelectFact({ label, value, options, onChange }: { label: string; value:
 
 /** Collect actual printed rows without inferring jurisdiction, allocation, or another federal W-2. */
 export function W2StateLocalDetails({ originalInput, originalIndex, data, onChange }: {
-  originalInput: TaxYearInput | null; originalIndex: number; data?: W2StateLocalSources;
+  originalInput: W2StateLocalSourceContext | null; originalIndex: number; data?: W2StateLocalSources;
   onChange: (next: W2StateLocalSources | undefined) => void;
 }) {
   const [message, setMessage] = useState("");

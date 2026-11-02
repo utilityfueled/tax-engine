@@ -1,3 +1,5 @@
+import { W2Schema } from "@/models/inputs";
+import { calculateW2StateLocalSources, type W2StateLocalSourceContext } from "@/engine/forms/w2-state-local";
 import {calculateScheduleCSourceFacts} from "../../../../src/engine/schedules/schedule-c-source-facts.js";
 import {buildNecInputs} from './guided-business-facts';
 export {buildNecInputs} from './guided-business-facts';
@@ -62,7 +64,7 @@ import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-
 import { buildCareBenefitsInput, careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitSource } from "./guided-dependent-care-benefits";
 import { careFactErrors } from "./guided-credit-facts";
 import { buildActualEnergyInput, energyFactErrors } from "./guided-energy-facts";
-import { w2FactErrors } from "./guided-w2-facts";
+import { isStartedW2, w2FactErrors } from "./guided-w2-facts";
 import { businessFactErrors, hasBusinessSourceData, isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "./guided-business-facts";
 import { isStartedRental, rentalFactErrors, rentalExpenseFields } from "./guided-rental-facts";
 import { buildGuidedRentalCarryovers } from "./guided-rental-carry-sources";
@@ -185,7 +187,7 @@ export function buildW2Inputs(
   if (!entries || entries.length === 0) return [];
   return entries
     .map(stripPendingW2Suggestions)
-    .filter((e) => hasEnteredAmount(e.wages) || hasEnteredAmount(e.federalWithheld))
+    .filter((e) => hasEnteredAmount(e.wages) || hasEnteredAmount(e.federalWithheld) || e.stateLocalSources !== undefined)
     .map((e) => ({
       employer: {
         name: e.employerName.trim(),
@@ -206,9 +208,23 @@ export function buildW2Inputs(
       medicareWithheld: toOptionalDecimalString(e.medicareWithheld),
       box10DependentCareBenefits: toOptionalDecimalString(e.box10DependentCareBenefits),
       box12CodeW: toOptionalDecimalString(e.box12CodeW),
+      box12CodeD: toOptionalDecimalString(e.box12CodeD),
+      box12CodeE: toOptionalDecimalString(e.box12CodeE),
+      box12CodeF: toOptionalDecimalString(e.box12CodeF),
+      box12CodeG: toOptionalDecimalString(e.box12CodeG),
+      box12CodeH: toOptionalDecimalString(e.box12CodeH),
+      box12CodeS: toOptionalDecimalString(e.box12CodeS),
+      box12CodeAA: toOptionalDecimalString(e.box12CodeAA),
+      box12CodeBB: toOptionalDecimalString(e.box12CodeBB),
+      box12CodeEE: toOptionalDecimalString(e.box12CodeEE),
+      box12CodeT: toOptionalDecimalString(e.box12CodeT),
       stateWages: e.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(e.stateWages),
       stateTaxWithheld: e.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(e.stateWithheld),
       state: e.state?.trim().toUpperCase() || undefined,
+      ...(e.stateLocalSources !== undefined ? { stateLocalSources: structuredClone(e.stateLocalSources) } : {}),
+      ...(e.localWages !== undefined ? { localWages: toOptionalDecimalString(e.localWages) } : {}),
+      ...(e.localTaxWithheld !== undefined ? { localTaxWithheld: toOptionalDecimalString(e.localTaxWithheld) } : {}),
+      ...(e.localityName !== undefined ? { localityName: e.localityName } : {}),
     }));
 }
 
@@ -627,6 +643,21 @@ type GuidedTaxInputSources = Omit<z.input<typeof TaxYearInputSchema>,
   rentalProperties: ReturnType<typeof buildRentalPropertyInputs>;
 };
 
+/** Actual W2/owner originals only; not a tax return input or calculation readiness result. */
+export function buildGuidedW2SourceContext(state: GuidedFlowState): W2StateLocalSourceContext | null {
+  const personal = state.sectionData["personal-info"], status = state.segmentation.filingStatus;
+  if (!personal || !personal.dateOfBirth || !status || state.taxYear == null || Object.keys(personalFactErrors(personal, status, state.taxYear)).length) return null;
+  const entries = state.sectionData["income-w2"]?.entries;
+  if (!entries?.some(isStartedW2) || Object.keys(w2FactErrors(entries, status, state.taxYear, { forSourceConfirmation: true })).length) return null;
+  try {
+    const w2s = buildW2Inputs(entries).map(entry => W2Schema.parse(entry));
+    return { taxpayer: { taxYear: state.taxYear, filingStatus: mapFilingStatus(status),
+      primary: { firstName: combineGivenNameWithMiddleInitial(personal.firstName, personal.middleName), lastName: personal.lastName, ssn: personal.ssn, dateOfBirth: personal.dateOfBirth },
+      ...(personal.spouse && (status === "mfj" || status === "mfs") ? { spouse: { firstName: personal.spouse.firstName, lastName: personal.spouse.lastName, ssn: personal.spouse.ssn, dateOfBirth: personal.spouse.dateOfBirth } } : {}),
+    }, w2s };
+  } catch { return null; }
+}
+
 export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxInputSources | null {
   const { segmentation, sectionData } = state;
 
@@ -871,6 +902,13 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
         : undefined,
   };
   if(input.scheduleC?.sourceFacts || input.scheduleC?.expenses?.businessInterest){try{calculateScheduleCSourceFacts(input as Parameters<typeof calculateScheduleCSourceFacts>[0],input.scheduleC);}catch{return null;}}
+  if (input.w2s.some(entry => entry.stateLocalSources !== undefined)) {
+    try {
+      const context = buildGuidedW2SourceContext(state);
+      if (!context) return null;
+      context.w2s.forEach((entry, index) => { if (entry.stateLocalSources !== undefined) calculateW2StateLocalSources(context, index, entry.stateLocalSources); });
+    } catch { return null; }
+  }
   return input;
 }
 

@@ -32,6 +32,8 @@ function checkCount(mode: string, count: number): void {
 function knownText(status: string, value: string): void {
   if (!(status === "reported" && value.trim() || status === "blank_original" && !value.trim())) error("reported or actual blank-original identity must be explicit and consistent; unknown is not blank");
 }
+/** Only these actual originals are needed for row validation; no tax facts are invented. */
+export type W2StateLocalSourceContext = { taxpayer: Pick<TaxYearInput["taxpayer"], "taxYear" | "filingStatus" | "primary" | "spouse">; w2s: TaxYearInput["w2s"] };
 export interface W2StateLocalSourcesResult {
   federalWages: Decimal; federalWithheld: Decimal;
   stateRows: Array<{ printedRow: number; state: "PA" | "OH"; wages: Decimal; withheld: Decimal }>;
@@ -39,7 +41,7 @@ export interface W2StateLocalSourcesResult {
   totalStateWithheld: Decimal; totalLocalWithheld: Decimal; sourceCommitment: string; lines: CalculatedLine[];
 }
 /** Does not calculate state/local liability, deductibility, resident credit or filing eligibility. */
-export function calculateW2StateLocalSources(input: TaxYearInput, index: number, rawSources: unknown): W2StateLocalSourcesResult {
+export function calculateW2StateLocalSources(input: W2StateLocalSourceContext, index: number, rawSources: unknown): W2StateLocalSourcesResult {
   const parsed = W2StateLocalSourcesSchema.safeParse(rawSources);
   if (!parsed.success) return error("complete actual source packet shape required");
   const source = parsed.data, year = input.taxpayer.taxYear, w2 = input.w2s[index];

@@ -1,4 +1,8 @@
 "use client";
+import type { W2StateLocalSourceContext } from "@/engine/forms/w2-state-local";
+import { W2_SOURCE_BOX12_FIELDS } from "@/lib/guided-w2-facts";
+import { buildW2Inputs } from "@/lib/guided-interview-bridge";
+import { W2StateLocalDetails } from "./w2-state-local-details";
 
 import { formatGuidedCurrency } from "@/lib/guided-currency";
 
@@ -265,7 +269,9 @@ function W2Card({
   onRemove,
   removable,
   availableSuggestions,
+  originalInput, originalIndex, onSourcesChange,
 }: {
+  originalInput: W2StateLocalSourceContext | null; originalIndex: number; onSourcesChange: (sources: W2EntryData["stateLocalSources"]) => void;
   index: number;
   entry: W2EntryData;
   onUpdate: (field: keyof W2EntryData, value: string | string[] | undefined) => void;
@@ -629,7 +635,7 @@ function W2Card({
               <select className="guided-select" value={entry.stateTaxReporting ?? ""} onChange={(event) => onUpdate("stateTaxReporting", event.target.value)}>
                 <option value="">Not answered</option><option value="none">No state section reported</option><option value="single">One state reported</option><option value="multiple">Multiple states reported</option>
               </select>
-              <small>Use the actual form. Multiple-state allocation needs separate state records before this return can be calculated.</small>
+              <small>Use the actual form. Enter multiple printed rows in the original-source collector below.</small>
             </label>
             <label className="guided-field">
               <span className="guided-field-label">Box 15 — State</span>
@@ -673,18 +679,29 @@ function W2Card({
               )}
             />
           </div>
+          <CurrencyField label="Box 18 — Local wages (first entered row)" value={entry.localWages ?? ""} onChange={value => onUpdate("localWages", value)} />
+          <CurrencyField label="Box 19 — Local tax withheld (first entered row)" value={entry.localTaxWithheld ?? ""} onChange={value => onUpdate("localTaxWithheld", value)} />
+          <label className="guided-field"><span className="guided-field-label">Box 20 — Locality name (first entered row)</span><input className="guided-input" value={entry.localityName ?? ""} onChange={event => onUpdate("localityName", event.target.value)} /></label>
         </div>
       </details>
+      {entry.stateLocalSources !== undefined && <fieldset className="guided-card"><legend>Actual original Box 12 amounts</legend>
+        <p className="guided-hint">Check each modeled code against this original. Enter actual zero only after checking that code; an empty amount remains unknown. These amounts are source facts and are not deducted again from Box 1 wages. Other codes or special reporting still require their actual method.</p>
+        {W2_SOURCE_BOX12_FIELDS.filter(key => key !== "box12CodeW").map(key => <CurrencyField key={key} label={`Actual Box 12 code ${key.slice(9)}`} value={entry[key] ?? ""} onChange={value => onUpdate(key, value)} />)}
+        <p className="guided-hint">Also complete the actual code W and Box 8 fields above before confirming this original.</p>
+      </fieldset>}
+      <W2StateLocalDetails originalInput={originalInput} originalIndex={originalIndex} data={entry.stateLocalSources} onChange={onSourcesChange} />
     </div>
   );
 }
 
 export function SectionW2Income({
+  originalInput = null,
   entries,
   workspace,
   onUploadDocuments,
   onEntriesChange,
 }: {
+  originalInput?: W2StateLocalSourceContext | null;
   entries: W2EntryData[];
   workspace: ReturnWorkspaceRecord;
   onUploadDocuments?: (files: File[]) => Promise<string>;
@@ -776,7 +793,7 @@ export function SectionW2Income({
 
   function updateEntry(index: number, field: keyof W2EntryData, value: string | string[] | undefined) {
     const next = current.map((entry, i) =>
-      i === index ? { ...clearSuggestedField(entry, field), [field]: value } : entry
+      i === index ? { ...clearSuggestedField(entry, field), [field]: value, ...(entry.stateLocalSources && entry[field] !== value ? { stateLocalSources: { ...entry.stateLocalSources, sourceFactsConfirmed: null } } : {}) } : entry
     );
     onEntriesChange(next);
   }
@@ -987,6 +1004,9 @@ export function SectionW2Income({
               onRemove={() => removeEntry(index)}
               removable={current.length > 1}
               availableSuggestions={suggestions}
+              originalInput={originalInput}
+              originalIndex={buildW2Inputs(current.slice(0, index)).length}
+              onSourcesChange={stateLocalSources => onEntriesChange(current.map((row, i) => i === index ? { ...row, stateLocalSources } : row))}
             />
           ))}
         </div>

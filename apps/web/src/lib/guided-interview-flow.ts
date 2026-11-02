@@ -1,3 +1,6 @@
+import { buildGuidedW2SourceContext } from "./guided-interview-bridge";
+import { calculateW2StateLocalSources } from "@/engine/forms/w2-state-local";
+import type { W2StateLocalSources } from "@/models/w2-state-local";
 import { cryptoDonationFactErrors, type CryptoDonationData } from './guided-crypto-donations';
 import { royaltySourceFactErrors, invalidateRoyaltySources, type RoyaltyIncomeData } from "./guided-royalty-sources";
 import { invalidateSharedPolicySources } from "./guided-shared-policy";
@@ -623,8 +626,11 @@ export const emptyPersonalInfo: PersonalInfoData = {
 };
 
 export interface W2EntryData {
+  stateLocalSources?: W2StateLocalSources;
+  localWages?: string; localTaxWithheld?: string; localityName?: string;
   sourceTaxYear?: string;
   box12CodeTP?: string; box12CodeTT?: string; treasuryTippedOccupationCodes?: string[];
+  box12CodeD?: string; box12CodeE?: string; box12CodeF?: string; box12CodeG?: string; box12CodeH?: string; box12CodeS?: string; box12CodeAA?: string; box12CodeBB?: string; box12CodeEE?: string; box12CodeT?: string;
   box12CodeW?: string;
   box10DependentCareBenefits?: string;
   accountHolder?: "primary" | "spouse" | "";
@@ -1553,6 +1559,12 @@ export function startInterview(segmentation: SegmentationAnswers, taxYear: numbe
   };
 }
 
+function w2OriginalFields(entry: W2EntryData | undefined) {
+  if (!entry) return undefined;
+  const { stateLocalSources: _source, aiSuggestedFields: _suggestions, ...original } = entry;
+  return original;
+}
+
 export function updateSectionData(
   state: GuidedFlowState,
   sectionId: string,
@@ -1628,6 +1640,11 @@ export function updateSectionData(
     (sectionId === "credits" && (guidedSourceValuesChanged(credits?.education, nextCredits.education) || guidedSourceValuesChanged(credits?.educationDistributions, nextCredits.educationDistributions)
       || (nextCredits.savingsBondEducation?.reissueSources !== undefined && savingsBondSourceValuesChanged(credits?.savingsBondEducation, nextCredits.savingsBondEducation))))
   );
+  const nextW2 = sectionId === "income-w2" ? data as SectionDataMap["income-w2"] : state.sectionData["income-w2"];
+  const invalidatedW2 = nextW2 && (sectionId === "income-w2" || sectionId === "personal-info" && sourceValuesChanged) ? {
+    ...nextW2, entries: nextW2.entries.map((entry, index) => entry.stateLocalSources && (sectionId === "personal-info" || guidedSourceValuesChanged(w2OriginalFields(state.sectionData["income-w2"]?.entries[index]), w2OriginalFields(entry)))
+      ? { ...entry, stateLocalSources: { ...entry.stateLocalSources, sourceFactsConfirmed: null } } : entry),
+  } : undefined;
   const ohioStateReturn = state.sectionData["state-return"];
   const ohioInterestChanged = sectionId === "income-investments" && ohioStateReturn?.ohioInterestAllocation;
   return {
@@ -1635,6 +1652,7 @@ export function updateSectionData(
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
+      ...(invalidatedW2 ? { "income-w2": invalidatedW2 } : {}),
       ...(scheduleCSourcesChanged && nextBusiness ? {"income-self-employment":{...nextBusiness,businessFacts:{...nextBusiness.businessFacts,scheduleCSourceFacts:{...scheduleCSourcesChanged,sourceFactsConfirmed:null}}}}:{}),
       ...(royaltySourcesChanged ? { "income-royalties": invalidateRoyaltySources(royaltySourcesChanged) } : {}),
       ...((eicClaimantSourcesChanged || eicSeparatedSourcesChanged || eicHistorySourcesChanged || eicCurrentSourcesChanged) && nextPersonal ? { "personal-info": { ...nextPersonal,
@@ -1846,7 +1864,7 @@ function validatePersonalInfo(data: PersonalInfoData | undefined, status: Filing
   return VALID_SECTION;
 }
 
-function validateW2Section(data: { entries: W2EntryData[] } | undefined, filingStatus?: FilingStatus | null, returnYear?: number | null): SectionValidationResult {
+function validateW2Section(data: { entries: W2EntryData[] } | undefined, filingStatus?: FilingStatus | null, returnYear?: number | null, state?: GuidedFlowState): SectionValidationResult {
   if (!data?.entries || data.entries.length === 0) return EMPTY_SECTION("W-2 info");
 
   const filledEntries = data.entries.filter(isStartedW2);
@@ -1887,6 +1905,13 @@ function validateW2Section(data: { entries: W2EntryData[] } | undefined, filingS
 
   if (Object.keys(errors).length > 0) return { status: "partial", message: "Complete the actual W-2 identity, payroll and state facts.", fieldErrors: errors };
 
+  if (state && data.entries.some(entry => entry.stateLocalSources !== undefined)) {
+    const context = buildGuidedW2SourceContext(state);
+    try {
+      if (!context) throw new Error("Complete the current taxpayer and original W-2 before confirming its rows.");
+      context.w2s.forEach((entry, index) => { if (entry.stateLocalSources !== undefined) calculateW2StateLocalSources(context, index, entry.stateLocalSources); });
+    } catch (error) { return { status: "partial", message: "Review the actual W-2 rows after the last edit.", fieldErrors: { "w2-actual-sources": error instanceof Error ? error.message : "Actual source review is required." } }; }
+  }
   return VALID_SECTION;
 }
 
@@ -1979,7 +2004,7 @@ export function validateSection(
     case "personal-info":
       return validatePersonalInfo(getSectionData(state, "personal-info"), state.segmentation.filingStatus, state.taxYear);
     case "income-w2":
-      return validateW2Section(getSectionData(state, "income-w2"), state.segmentation.filingStatus, state.taxYear);
+      return validateW2Section(getSectionData(state, "income-w2"), state.segmentation.filingStatus, state.taxYear, state);
     case "income-self-employment":
       return validateSelfEmploymentSection(getSectionData(state, "income-self-employment"), state.segmentation.filingStatus, getSectionData(state, "income-w2")?.entries, getSectionData(state, "state-return"), state.taxYear);
     case "income-investments":

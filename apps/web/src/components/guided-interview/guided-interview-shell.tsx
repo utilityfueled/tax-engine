@@ -1,4 +1,5 @@
 "use client";
+import { buildGuidedW2SourceContext } from "@/lib/guided-interview-bridge";
 
 import { invalidateRoyaltySources } from "@/lib/guided-royalty-sources";
 import { SectionRoyaltyIncome } from "./section-royalty-income";
@@ -500,6 +501,7 @@ function SectionContent({
       const entries = w2Data?.entries ?? [emptyW2Entry];
       return (
         <SectionW2Income
+          originalInput={buildGuidedW2SourceContext(state)}
           entries={entries}
           workspace={workspace}
           onUploadDocuments={onUploadDocuments}
