@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "ca11611ba02d608e3f218afef64aaafdbfd2b5bd",
+  "recordedAt": "2026-11-02T06:32:52.264273+00:00",
+  "releaseReady": false,
+  "scope": "Exactca committed clean archive, local synthetic ARM64 runtime; intermediate before further ScheduleC/R corrections. No human/staging/final2026/release qualification.",
+  "platform": "linux/arm64",
+  "builder": "podman build --pull=always --format docker",
+  "sourceArchive": {
+    "trackedGitBlobsVerified": 4073,
+    "exactGitSymlinkTargetsRestored": 6
+  },
+  "image": {
+    "id": "sha256:caed0cb16274c3af5a2346ff501fe0b12b90940ac237911bbc1daf202e2b9f51",
+    "archiveSha256": "79fc3c3b4c281f3232f67d509c9687098f4b210a3482e3b17552cbc7c5e34c78",
+    "revisionLabel": "ca11611ba02d608e3f218afef64aaafdbfd2b5bd"
+  },
+  "smoke": {
+    "result": "passed",
+    "image": "caed0cb16274c3af5a2346ff501fe0b12b90940ac237911bbc1daf202e2b9f51",
+    "readOnly": true,
+    "healthy": true,
+    "assets": true,
+    "imageCacheWritten": true,
+    "selfHostAuth": true,
+    "uid": 1001,
+    "node": "v24.22.1",
+    "architecture": "arm64",
+    "imageCacheFilesystem": 16914836,
+    "imageCacheLimitBytes": 67108864,
+    "packageTools": false,
+    "providerKeys": false,
+    "templates": 44
+  },
+  "recovery": {
+    "kind": "local-synthetic-compose-release-rehearsal",
+    "project": "tax-rehearsal-9aab743f",
+    "phases": [
+      {
+        "phase": "previous",
+        "imageDigest": "ddb34f532e3f5a6db5df14d528774368448d51eddb7b7e0bd1229cb8ffdeca11",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "8018478e3488482722fe4986e2ee4b5fe22d9ebdb0a8fd956f77aa6c3fb5eab3",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "upgrade",
+        "imageDigest": "caed0cb16274c3af5a2346ff501fe0b12b90940ac237911bbc1daf202e2b9f51",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "8018478e3488482722fe4986e2ee4b5fe22d9ebdb0a8fd956f77aa6c3fb5eab3",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-restart",
+        "imageDigest": "caed0cb16274c3af5a2346ff501fe0b12b90940ac237911bbc1daf202e2b9f51",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "8018478e3488482722fe4986e2ee4b5fe22d9ebdb0a8fd956f77aa6c3fb5eab3",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "database-dump-restore",
+        "imageDigest": "caed0cb16274c3af5a2346ff501fe0b12b90940ac237911bbc1daf202e2b9f51",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "8018478e3488482722fe4986e2ee4b5fe22d9ebdb0a8fd956f77aa6c3fb5eab3",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "rollback",
+        "imageDigest": "ddb34f532e3f5a6db5df14d528774368448d51eddb7b7e0bd1229cb8ffdeca11",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "8018478e3488482722fe4986e2ee4b5fe22d9ebdb0a8fd956f77aa6c3fb5eab3",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      },
+      {
+        "phase": "re-upgrade",
+        "imageDigest": "caed0cb16274c3af5a2346ff501fe0b12b90940ac237911bbc1daf202e2b9f51",
+        "databaseSha256": "2ff57b44e35f90ca3827f09dcbbab7c85a056105b9911dcd36cefa5c84fce9d8",
+        "browserFactsSha256": "f767fc70844cf56888d32df1a686df2de10a555b28ea79446752eb86534e2dcb",
+        "documentSha256": "8018478e3488482722fe4986e2ee4b5fe22d9ebdb0a8fd956f77aa6c3fb5eab3",
+        "readOnly": true,
+        "runtimeFacts": {
+          "uid": 1001,
+          "arch": "arm64",
+          "node": "v24.22.1",
+          "noNewPrivileges": true,
+          "noEffectiveCapabilities": true,
+          "noBoundingCapabilities": true,
+          "providerKeys": false
+        }
+      }
+    ],
+    "platform": "linux/arm64",
+    "previousDigest": "ddb34f532e3f5a6db5df14d528774368448d51eddb7b7e0bd1229cb8ffdeca11",
+    "candidateDigest": "caed0cb16274c3af5a2346ff501fe0b12b90940ac237911bbc1daf202e2b9f51",
+    "databaseRecovery": {
+      "result": "passed",
+      "evidence": "local-synthetic-postgresql-dump-restore",
+      "tables": 9,
+      "tenantWorkspaces": 2,
+      "exactCostRestored": true,
+      "metadataCleanupReapplied": true,
+      "metadataCleanupIdempotent": true,
+      "checksum": "b33af2eea020ae156fad1e04ec071a507cc2ac53e68fb3294c9dc559147dcbc9"
+    },
+    "browserRecovery": {
+      "passed": true,
+      "encrypted": true,
+      "wrongPasswordRejected": true,
+      "tamperRejected": true,
+      "originalBytes": true,
+      "unknownYearPreserved": true,
+      "exactCents": true,
+      "deletion": true,
+      "networkObservation": {
+        "requests": 400,
+        "startsBeforeUpload": true,
+        "rawPrivateMarkersAbsent": true,
+        "limitation": "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof."
+      }
+    },
+    "result": "passed"
+  },
+  "rehearsalResourceCleanup": {
+    "containers": [],
+    "volumes": [],
+    "browserContainerRemoved": true,
+    "browserPortClosed": true
+  },
+  "browser": {
+    "passed": 536,
+    "hostedOnlySkipped": 5,
+    "durationSeconds": 971.225,
+    "workers": 2,
+    "retries": 0,
+    "perTestTimeoutMs": 30000,
+    "deploymentMode": "self-host",
+    "actualRuntimeImage": true
+  },
+  "sbom": {
+    "components": 2930,
+    "format": "CycloneDX",
+    "generator": "Syft1.55.0",
+    "sha256": "e9b5f613fd7dd7eddd771e4658cccd5c2e913687e156830f692361634474fa68"
+  },
+  "scan": {
+    "scanner": "grype0.121.0",
+    "databaseBuilt": "2026-11-01T06:20:12Z",
+    "databaseValid": true,
+    "matches": 159,
+    "distinctAdvisories": 68,
+    "severity": {
+      "High": 56,
+      "Negligible": 46,
+      "Medium": 47,
+      "Low": 10
+    },
+    "fixedVersions": 0,
+    "criticalGatePassed": true,
+    "ownerAcceptance": false,
+    "independentComparisonReceiptSha256": "fca4bc6157b8aba0925c50d5c83d5c6986baa3a2ebb586ccd681e520200fd8ee"
+  },
+  "executionReceiptSha256": "2bc38a1be9faffcf68ceb7b72553d565ff97d7c7b6f257c94d2655dbaf72c9cc",
+  "receipts": {
+    "browser.log": "ad86d342eda9302daf26e15819e76b4079ce1c4955752813e90ebf7eb5a07716",
+    "sbom.cdx.json": "e9b5f613fd7dd7eddd771e4658cccd5c2e913687e156830f692361634474fa68",
+    "image-save.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "browser-container-id.txt": "ae2d635203542f5fa6b47aab99e976e2c1a39fd319a89b55888a4870eb59ec45",
+    "image-inspect.json": "5a512fa7c9f6554652aabcd380d6ed063ce16ae6a0b1ff8390eaa9b601c07431",
+    "image.tar": "79fc3c3b4c281f3232f67d509c9687098f4b210a3482e3b17552cbc7c5e34c78",
+    "smoke.log": "4848981baf18a8a20c0a3048daa2ef2db6e853f3045e47e5aa1c3ab6876642b6",
+    "browser-container.log": "99f2c20d2de97b2d803add6e545facbb878151ecc49079887a9596a634e25cb4",
+    "base-image-inspect.json": "53e9619113263731518bd48b648c90ac6582c1ca6832df49b85a2ce8c91bd0a1",
+    "browser-container-inspect.json": "6d07d3c71cc61ce568dbc24ff39ed04e8050a9a974622836fd19ddd07e9119bb",
+    "cleanup-containers.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "recovery.log": "3fcbc8a615f3349f124ecfe1fa92f29b65e04103420ad230f30d621e1bf9fd90",
+    "browser-container-remove.txt": "ae2d635203542f5fa6b47aab99e976e2c1a39fd319a89b55888a4870eb59ec45",
+    "scan.json": "f3cec2645920fd3df5cea1c980171293df1499b89e8b26790bd53664ac91fb98",
+    "recovery.json": "dcf80916bd64e6ac1fb03fc47c9b3ec298e74009787f332c0c0eeaeae541311b",
+    "cleanup-volumes.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "syft.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "grype.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "build.log": "91855b1778648d6d57f3be962bbcdec3e16a746a9fb884fd9f45bc59db83afad"
+  },
+  "independentArtifactReview": {
+    "receiptSha256": "421bce132f44459cbc5910b66c6e896bce9ef2699d15ed325108734a3f956a65",
+    "parentVerifiedBoundFiles": 27,
+    "checks": {
+      "pages": 72,
+      "physicalCells": 72,
+      "reviewNotices": 72,
+      "positiveReaderExecutions": 12,
+      "expectedNegativeReaderExecutions": 4,
+      "fullOriginalByteComparisons": 2,
+      "bytesPerOriginal": 1343180,
+      "wrongPasswordRejections": 2,
+      "tamperRejections": 2,
+      "nativeCriticalEnterActivations": 12,
+      "capturedLoopbackRequests": 677,
+      "visuallyInspectedCanonicalPages": 3
+    },
+    "limits": "Exactca11611b ARM64 saved local lifecycle only; cached restored bytes are supported by saved hash plus original browser full-buffer assertions, not reread from live IndexedDB here. Independent decrypt compares complete actual backup file bytes. Does not exercise every C+K1/NEC method; no amd64, human, staging or filing qualification.",
+    "qualifiedHuman": false
+  }
+}

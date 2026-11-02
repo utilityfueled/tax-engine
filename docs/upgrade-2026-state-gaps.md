@@ -1,9 +1,6 @@
 # State scenario selection and qualification gaps
 
-Assessed 2026-10-25. Launch-state demand was requested and is still missing.
-No state is selected or filing-qualified. The comparison below supports the
-one-or-two-state decision; existing test counts and old verified labels do not
-establish demand, legal review or filing readiness.
+The owner selected Pennsylvania and Ohio on November 2, 2026, and explicitly requested all three residency categories: full-year resident, part-year resident and nonresident. This resolves the launch selection. All six state/residency combinations now require implementation and qualification against actual facts, year-specific law and final forms. None is filing-qualified. The comparison below retains the October 25 baseline; test counts and old verified labels do not establish legal review or filing readiness.
 
 | Candidate | Existing 2025 implementation | Main remaining 2026 gaps |
 | --- | --- | --- |
@@ -17,7 +14,7 @@ establish demand, legal review or filing readiness.
 `/support` now distinguishes each jurisdiction, year, residency, scenario and
 output. Dedicated components may require structured inputs absent from the UI;
 the page does not advertise them as a complete guided filing flow. All 2026 full
-returns remain unavailable. No demand-based selection has been invented.
+returns remain unavailable. The owner selection does not activate any unqualified path.
 
 ## Official sources refreshed
 
@@ -48,7 +45,7 @@ returns remain unavailable. No demand-based selection has been invented.
   does not prove every 2026 form or local rate is final.
 
 The other-state rows are a code-gap inventory, not completed 2026 legal research.
-After actual demand is supplied, research the selected state's official final
+For the selected PA/OH residency categories, research official final
 instructions, write per-line specs, derive independent expected cases, collect
 complete facts and qualify the exact final form revision. All these gates remain
 required; selecting a state cannot unlock generic draft output for filing.
@@ -104,3 +101,7 @@ pass, including generated PDF text. Engine/web types and all 3,289 then-current
 spec references pass; scoped lint has zero errors and 13 existing test warnings.
 Evidence: `.local/upgrade-evidence/oh-investment-withholding-{red,green}.log`
 and `oh-investment-{types,spec,lint}.log`. This is local synthetic evidence.
+
+## November 2 continuation after owner selection
+
+Philadelphia component2026 rates are delivered in `7a4b7f68` with 66 independently derived/control tests and 433 main affected tests. This does not implement mixed city residency or the complete PA return. Source contracts now identify ordinary actual-owner/state-period income entry, reciprocity, credits/payments and physical residency/date fields as internal PA work. The next coherent package corrects WPTC statutory arithmetic and separates a processing-stage credit from the actual2025 paper return. Ohio's next package implements actual-owner NRC/residency sources before broader business and full2026 integrations. Both selected states require full-year, part-year and nonresident qualification; no one component or finite first cohort fulfills that requirement.

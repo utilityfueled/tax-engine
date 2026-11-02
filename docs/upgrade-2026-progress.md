@@ -2,6 +2,10 @@
 
 ## Active continuation — November 2, 2026
 
+The owner selected PA and Ohio, each with full-year resident, part-year resident and nonresident returns. Separate source-first state implementation/qualification work is active; selection does not activate unqualified outputs.
+
+Current application source is `7a4b7f68` (pushed), rules2025.223/2026.221-law-integration-draft. Schedule R is delivered in13a5d28e after56independent controls/387saved-artifactchecks; Schedule C in75f78914 after31controls/475artifactchecks and main2158tests/44files. Historical1040 required-zero rendering is delivered in1ca9550f after seven independent controls/24artifactchecks and618main tests/6files, three types/spec6510/inventory613/lint/enginebuild. Actual-source Form4562 amortization→C is delivered in97698bc0 after35independent tests/30PDFs/3958readerchecks/13visuals and main2209tests/50files,3types/spec6518/inventory613/lint/bothbuilds. Runtime minimization is delivered in3202e7b9 after actual candidate image/recovery/SBOM/scan and independent review; Philadelphia2026 component rates are delivered in7a4b7f68 after66independent tests/433main tests and all nine checks. Final integrated CI/runtime/artifact qualification remains required.
+
 Claude's delivered October 31 packages are preserved. The branch now includes
 and has pushed these separately reviewed packages:
 
@@ -85,19 +89,24 @@ and has pushed these separately reviewed packages:
   builds pass. Independent40tests include30original controls;462checks pass across
   39actualPDFs/72pages with36physical1040cells. V1's NEC bypass finding is retained
   and corrected; known blank original name/EIN stays distinct from unknown.
-- [ ] [Actual same-business NEC receipt linkage](upgrade-2026-scope-audit-20261102.md)
-  is required internal work, now in spec-first implementation. Each original must
-  bind to the actual business with complete unique coverage and exact gross receipts
-  reconciliation. Shared ownership alone is insufficient. No external input is
-  needed to implement this determined ordinary source relationship.
+- [x] `ca11611b` [actual same-business NEC receipt linkage](upgrade-2026-c-k1-nec-linkage-work.md):
+  explicit current originals, complete unique coverage, known other gross and exact
+  Decimal reconciliation preserve C income once. Main930tests/26files, three types,
+  6476spec refs, inventory611, scoped lint and engine/webpack builds pass. Separate
+  review passes89tests including65independent controls and609checks over39actualPDFs/
+  72pages/69physical cells. Duplicate-source findings and harness erratum are retained.
+- [x] The final C/R source audit findings are delivered in `13a5d28e` and `75f78914`, with the independent controls and main checks recorded above. Historical1040 required-zero rendering is delivered in `1ca9550f`. The separate actual-source Form4562 amortization successor is delivered in `97698bc0`.
 - [ ] Current integrated full test/coverage/static/build/browser and native
-  arm64/amd64 recovery/SBOM/scans remain required after the remaining code.
-  Current-head CI/Web completion remains pending; intermediate runs are historical.
+  arm64/amd64 recovery/SBOM/scans are required after those corrections.
+  The intermediate `ca11611b` ARM64 rehearsal passes536cases/5hostedskips, all
+  recovery/scan stages and independent full backup/PDF checks.
+  `ca11611b` CI/Web passes20,149tests/1,550files and87.12%branches;
+  after the delivered C/R corrections and active selected-state work, exact-current integrated evidence is required.
   Historical green `a3e43a9f` does not qualify this head.
 
-Rule versions are `2025.219` / `2026.217-law-integration-draft`. Tax year 2026 stays
+Rule versions are `2025.223` / `2026.221-law-integration-draft`. Tax year 2026 stays
 incomplete; filing and model promotion remain disabled. Human tax/AI/security
-reviews, actual launch-state demand, authorized staging evidence, approved
+reviews, selected-state qualification, authorized staging evidence, approved
 provider evaluation and final-form qualification remain pending in
 [external actions](upgrade-2026-external-actions.md). No release completion is claimed.
 

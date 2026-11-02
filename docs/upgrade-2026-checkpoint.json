@@ -194,14 +194,14 @@
     "testContainerRemoved": true
   },
   "releaseBlockers": [
-    "Independent human tax review, launch-state demand and qualification, and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Six interpretation questions await a qualified reviewer.",
+    "Independent human tax review, PA/OH all-three-residency implementation and qualification, and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Six interpretation questions await a qualified reviewer.",
     "The AI corpus has zero human reviews and no live results. Provider account access and spend are not approved. No model is promoted.",
     "Hosted auth, security, billing, Redis, provider, database and recovery rehearsals require authorized staging access. Local and CI checks do not establish staging readiness.",
-    "The image register holds 159 matches and 68 OS advisories awaiting owner acceptance by 2026-11-07. There are no critical, npm or fixed-version matches. No artifact is published and no human security review exists.",
+    "Latest ARM64 engineering candidate has176 matches/80 OS advisory IDs against November2 scanner database, all owner decisions pending by2026-11-07; zero critical/npm/fixed-version matches. Historical68-ID scan is retained. Final selected-state committed-source ARM64/AMD64 artifacts, human security review and publication authorization remain pending.",
     "The 2026 federal calculation remains incomplete and unavailable in production. Final 2026 Form 1040/Tax Table and necessary remaining forms are unavailable; final C/R disabled physical candidates exist and are not qualified."
   ],
   "ongoingExecution": {
-    "status": "internal-queue-delivered-external-gates-and-registered-methods-open",
+    "status": "selected-state-all3-internal-implementation-active-external-qualification-gates-open",
     "lastRecordedCommit": "a3e43a9fb49ee616025786e22ffadf10376f131c",
     "checklist": "docs/upgrade-2026-checklist.md",
     "recoveryCommit": "6bebb6d",
@@ -1299,8 +1299,7 @@
     "externalInputsStillPending": [
       "authorized staging/test credentials",
       "independent human reviewers",
-      "live synthetic provider budget/account access",
-      "launch-state demand"
+      "live synthetic provider budget/account access"
     ],
     "notQualified": [
       "2026 calculation pack",
@@ -11995,11 +11994,12 @@
     "goal": "active",
     "priorContext": "October28 unfinished-package context is superseded by the delivered October31 packages; retain historical evidence.",
     "currentInternalWork": [
-      "Implement actual same-business nonzeroNEC receipt linkage and complete unique original-source reconciliation; ordinary source combination is required internal work, not an external credential blocker.",
-      "After final application changes, finish exact-source full integrated CI/coverage, ARM64/AMD64 runtime and independently reviewed artifacts."
+      "Finish and qualify selected PA/OH full-year resident, part-year resident and nonresident facts/law/adapters/forms. Owner selection is resolved; implementation is internal work, not a missing credential.",
+      "Continue PA WPTC source/form-boundary correction and complete residency sources; continue Ohio NRC actual-owner source implementation and all required business/residency successors.",
+      "Run full CI/coverage and actual ARM64/AMD64 runtime/recovery/artifact qualification at final integrated application source after state packages, then commit final documentation and await its required checks."
     ],
     "reviewFinding": "948d6b95 source-method defects corrected, independently reviewed and pushed in5293f451.",
-    "externalInputs": "See docs/upgrade-2026-external-actions.md. No human signoff, demand selection, staging authorization/configuration, provider budget or advisory acceptance inferred.",
+    "externalInputs": "See docs/upgrade-2026-external-actions.md. PA/OH all3 selection received. No human signoff, staging authorization/configuration, provider budget or advisory acceptance inferred.",
     "preservedUntracked": [
       ".pnpm-store/",
       "docs/reviews/"
@@ -12226,11 +12226,11 @@
       "inventoryEntries": 604,
       "humanQualified": false
     },
-    "currentHead": "c6f88681e73f82ae0dfe5bcb7df3b693783fd397",
-    "currentRemoteHead": "c6f88681e73f82ae0dfe5bcb7df3b693783fd397",
+    "currentHead": "7a4b7f68828b3043bf8247f914cc0bf5e356e934",
+    "currentRemoteHead": "7a4b7f68828b3043bf8247f914cc0bf5e356e934",
     "currentRuleVersions": {
-      "2025": "2025.219",
-      "2026": "2026.217-law-integration-draft"
+      "2025": "2025.223",
+      "2026": "2026.221-law-integration-draft"
     },
     "scopeAudit": {
       "document": "docs/upgrade-2026-scope-audit-20261101.md",
@@ -12425,7 +12425,7 @@
       "newOrdinaryInternalCohort": "Separate PartII for two self-employed spouses delivered52d03ef7; precise method/source and retained qualification boundaries in linked ledger.",
       "billingAuditReceiptSha256": "58a2f57465d065bd3d2f45b6387be465c97fa17ecab7ac0b55a590094ce538e0",
       "billingFinding": "Delivered790dcb13, with malformedtimestamp reviewfinding independentlyclosed; actualstaging remains separate.",
-      "status": "Finite audit found another determined ordinary internal source composition; implementation/review active, no external-only or completion claim.",
+      "status": "Historical finite audit findings led to separately delivered manual-C classification c6f88681 and actual NEC receipt linkage ca11611b; exact-current integrated verification remains active. This is not universal completeness or human/staging qualification.",
       "webhookReviewFinding": "Firstcandidate negative/fractional created admission and unsafe-negative DateRangeError findings independently corrected in delivered790dcb13; original reds retained."
     },
     "webhookDeliveryCorrection": {
@@ -12535,7 +12535,7 @@
       "runs": 16
     },
     "ordinaryCK1Classification": {
-      "status": "V2 delivered after reviewed NEC correction; ordinary nonzeroNEC linkage remains next required internal package",
+      "status": "Historical manual-C-only V2 delivered; subsequent actual same-business NEC linkage delivered in ca11611b",
       "base": "52d03ef7213f0b3f272575fbb36586bd7e6bd624",
       "document": "docs/upgrade-2026-c-k1-classification-work.md",
       "manifestSha256": "2cece0c089c887a39113c69306200455f8a190f6fa01363288d0ce59e3dd50bd",
@@ -12553,7 +12553,7 @@
       "inventoryEntries": 610,
       "metadataReviewReceiptSha256": "3db47fa5c71909f4986ecc700d215acffe84203623d89d18114fe6f2a6647c5f",
       "qualifiedHuman": false,
-      "boundary": "Nonnegative ordinary domestic manualC+partnership/zeroEBL; known blank originalname/EIN preserved. Actual nonzeroNEC linkage is next required internalpackage. Full2026 and filing gates unchanged.",
+      "boundary": "Nonnegative ordinary domestic manualC+partnership/zeroEBL and known blank originalname/EIN delivered in c6f88681; separately source-bound current ordinary NEC linkage delivered in ca11611b. Corrected/foreign/loss/multiple-business methods remain separate; full2026/filing gates unchanged.",
       "commit": "c6f88681e73f82ae0dfe5bcb7df3b693783fd397",
       "pushed": true,
       "rootAdoptionReceiptSha256": "a99311a6cb2e4c376483a34da1417f636e81005ebe5f765fb458cccf1424a630"
@@ -12569,13 +12569,179 @@
       "scope": "Exact52 ARM64 saved local lifecycle only; cached restored bytes are supported by saved hash plus original browser full-buffer assertions, not reread from live IndexedDB here. Independent decrypt compares complete actual backup file bytes. No future C+K1, amd64, human, staging or filing qualification."
     },
     "ordinaryNECSourceLinkage": {
-      "status": "Spec-first implementation in private exactc6archive; independent source/originals/static contract review active, no main product edits yet",
+      "status": "Delivered, independently source/artifact reviewed and pushed; exact integrated full runtime/CI remains separate",
       "rootOriginalsReceiptSha256": "8788d9e4202c5f9178dd425fe8338ac3429eac9dcce04294475b7d028c7a73a5",
       "example": "actualNEC25000.10 + othergrossnotonNEC14999.90 = canonicalC40000; no double add; fulloriginal linkage not inferred from owner equality",
       "scopeAudit": "docs/upgrade-2026-scope-audit-20261102.md",
       "qualifiedHuman": false,
-      "scopeAuditReceiptSha256": "385089fcdcfcf3b08e788c6b1356288655ca009b70a7810ec6316fc45c667dc4"
+      "scopeAuditReceiptSha256": "385089fcdcfcf3b08e788c6b1356288655ca009b70a7810ec6316fc45c667dc4",
+      "commit": "ca11611ba02d608e3f218afef64aaafdbfd2b5bd",
+      "pushed": true,
+      "authorManifestSha256": "4051fd8cf251f4edce4c596753bab2b4ea5a6af8c5f7b76e7faeeb9ded10c071",
+      "independentReceiptSha256": "f0415f39113f02161d0cc25d3869415f6446cf37e38e65d3471da54137f4c72a",
+      "rootAdoptionReceiptSha256": "ab26c3a66d65b26ad64a1e629a534473dc070493b057106a578ee4a97cf1536e",
+      "mainTests": 930,
+      "mainFiles": 26,
+      "independentTests": 89,
+      "independentOriginalControls": 65,
+      "strictPdfChecks": 609,
+      "pdfs": 39,
+      "pages": 72,
+      "physicalCells": 69,
+      "specReferences": 6476,
+      "inventoryEntries": 611
     },
-    "currentHeadScope": "These currentHead/currentRemoteHead fields identify the latest application-source commit. Documentation-only successors may follow; they do not create new tax/runtime qualification."
+    "currentHeadScope": "These currentHead/currentRemoteHead fields identify the latest application-source commit. Documentation-only successors may follow; they do not create new tax/runtime qualification.",
+    "scheduleCrFurtherAudit": {
+      "status": "R/C, historical1040zero and actual-source amortization successors independently reviewed, main-checked, committed/pushed. Runtime minimization engineering package delivered3202e7b9; selected-state all3 and final integrated CI/runtime remain internal.",
+      "scheduleC": "Delivered75f78914: actual interest/ordinary expense/address facts, finite current-cash source method, once-only reconciliation and shared actual C replay before standalone/public I/O. Legacy no-proof addresses and unavailable specialty scenarios are not qualified.",
+      "scheduleR": "Delivered13a5d28e: officialboxes6/7,5000 addition, uncapped11, correct printedworksheet/limits, actual-source consistency including absent/ineligible signals, mandatory13c/16zeros.",
+      "instructionsObserved": {
+        "ScheduleC": "2025 current endpoint",
+        "ScheduleR": "2026 current endpoint"
+      },
+      "sourceGapExternal": false,
+      "privateScheduleC": {
+        "manifestSha256": "ced657319df726193a85e78326900e78d01db0a695a4013971e27ce7af6bf779",
+        "independentReceiptSha256": "9317ea87c3ba718db74d063f2508d9804698d26c0a20920d5ddeffa79512f932",
+        "authorTests": 1177,
+        "independentControls": 31,
+        "savedArtifactChecks": 475,
+        "actualPdfs": 29,
+        "actualPages": 52,
+        "mainAdopted": true,
+        "commit": "75f789140feb0f10e67ad15fb8b33d18f4016391",
+        "mainTests": 2158,
+        "mainFiles": 44,
+        "mainSpecReferences": 6506,
+        "inventoryEntries": 612
+      },
+      "privateScheduleR": {
+        "manifestSha256": "5ae3fe04c9bc830d604c69316692b6770d67153466138eb14a5756d3547836f9",
+        "authorTests": 1505,
+        "authorFiles": 14,
+        "specReferences": 6485,
+        "independentArtifactReview": "Passed56controls/387artifactchecks/29PDF51pages/eightvisuals",
+        "mainAdopted": true,
+        "commit": "13a5d28e3ac8931d765b087fe2b18eb374578914",
+        "independentReceiptSha256": "1ddc7ca18d2d18a07c73cd5ee8d2b65e5e6781f15e381b852011583d16063fb3"
+      }
+    },
+    "intermediateCaIntegrated": {
+      "sourceCommit": "ca11611ba02d608e3f218afef64aaafdbfd2b5bd",
+      "ciRun": 41398580265,
+      "webRun": 41398580305,
+      "allRemoteJobsPassed": true,
+      "unitAndCoverageTests": 20149,
+      "testFiles": 1550,
+      "coverage": {
+        "statements": "91.77",
+        "branches": "87.12",
+        "functions": "90.25",
+        "lines": "94.51"
+      },
+      "plainBrowserPassed": 536,
+      "actualAmd64BrowserPassed": 536,
+      "hostedOnlySkipsEach": 5,
+      "amd64ArtifactMetadataOnly": true,
+      "arm64RuntimeRecord": "docs/upgrade-2026-runtime-ca11611b-arm64.json",
+      "arm64ArtifactReviewSha256": "421bce132f44459cbc5910b66c6e896bce9ef2699d15ed325108734a3f956a65",
+      "status": "Intermediate before active ScheduleC/R corrections; not final latest-source or release qualification"
+    },
+    "currentIntegratedCi": {
+      "commit": "7a4b7f68828b3043bf8247f914cc0bf5e356e934",
+      "status": "Final integrated CI remains pending after selected-state work. Package main checks passed; no completed latest-source full-suite result claimed."
+    },
+    "form1040RequiredZero": {
+      "commit": "1ca9550fcd3b84843f292763ae332fb463e5c52c",
+      "manifestSHA256": "b95480b93fa80ce36fb2816ad3d89a9fbc34d618c277f20dd614d4281385a6f3",
+      "independentReceiptSHA256": "7abbf364341f2fec6fa153753866b3731f5388d9198cc0f94f9f2f677a43ae78",
+      "independentTests": 7,
+      "artifactChecks": 24,
+      "PDFs": 2,
+      "pages": 4,
+      "mainTests": 618,
+      "mainFiles": 6,
+      "specReferences": 6510,
+      "inventoryEntries": 613,
+      "ruleVersionChanged": false
+    },
+    "amortizationSuccessor": {
+      "status": "Delivered after independent and main checks; committed/pushed",
+      "manifestSHA256": "87ebf87be75d1092bab47048572d110c557b79f0787e3e8f69a98d6201f961bb",
+      "ownedPaths": 15,
+      "authorTests": 1220,
+      "authorFiles": 28,
+      "retainedFindings": [
+        "Exact600.5 division-first precision bug",
+        "Contradictory one-business start dates",
+        "Valid calendar-month original overrestriction"
+      ],
+      "newMethodLimits": "Typed/imported current-start acquired Section197 goodwill only; no guide origination, official4562physical filing map or new PA basis method.",
+      "commit": "97698bc0d451b4460b16e4725fb560ec6e1d6517",
+      "independentReceiptSHA256": "7e2eb819affe677b7f905e4b4e44dbb3fced961f6afe5726ac0adc41d1aced9b",
+      "independentTests": 35,
+      "actualPDFs": 30,
+      "pages": 51,
+      "savedReaderChecks": 3958,
+      "personallyViewedPages": 13,
+      "mainTests": 2209,
+      "mainFiles": 50,
+      "mainSpecReferences": 6518,
+      "inventoryEntries": 613
+    },
+    "launchStateSelection": {
+      "receivedAt": "2026-11-02",
+      "source": "Explicit owner response: PA and Ohio are fine; support all3",
+      "states": [
+        "PA",
+        "OH"
+      ],
+      "residencies": [
+        "full-year resident",
+        "part-year resident",
+        "nonresident"
+      ],
+      "selectionResolved": true,
+      "qualification": "Pending; no final2026 or filing activation",
+      "work": "Separate official-source implementation/gap packages assigned PA and Ohio; sharedpath ownership/rootreview required."
+    },
+    "runtimePackageMinimization": {
+      "commit": "3202e7b9",
+      "pushed": true,
+      "record": "docs/upgrade-2026-runtime-package-minimization-arm64.json",
+      "actualCandidate": "97698bc0+patchdb4a0fb5",
+      "exactCommittedSourceImage": false,
+      "removedPackages": 2,
+      "packagesBefore": 79,
+      "packagesAfter": 77,
+      "runtimeUnitTests": 13,
+      "mainChecks": 3,
+      "recoveryPhases": 6,
+      "sbomComponents": 2880,
+      "scanMatches": 176,
+      "scanAdvisoryIds": 80,
+      "criticalMatches": 0,
+      "npmMatches": 0,
+      "fixedVersionMatches": 0,
+      "ownerAcceptance": false,
+      "independentReceiptSHA256": "27f2a3443d3f76d4d6ec7548ed70061dd90bb4d3cceacee1406c36da6a94d994",
+      "finalSourceBrowserAndAmd64": "Pending after selected-state application work"
+    },
+    "philadelphia2026": {
+      "commit": "7a4b7f68828b3043bf8247f914cc0bf5e356e934",
+      "pushed": true,
+      "ledger": "docs/upgrade-2026-pa-philadelphia-work.md",
+      "independentTests": 66,
+      "mainTests": 433,
+      "mainFiles": 5,
+      "mainChecks": 9,
+      "specReferences": 6523,
+      "inventoryEntries": 613,
+      "qualifiedHuman": false,
+      "mixedCityResidencyMethod": false,
+      "completePAReturn": false,
+      "rootAdoptionSHA256": "6153c4b9694a9ac70c36aa82135edcbb2403479f53fa86192e6e3d1e20c10f7e"
+    }
   }
 }
