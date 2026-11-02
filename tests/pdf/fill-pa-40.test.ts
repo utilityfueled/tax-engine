@@ -7,7 +7,8 @@ import { describe, it, expect } from "vitest";
 import { PDFDocument, PDFTextField, PDFCheckBox } from "pdf-lib";
 import Decimal from "decimal.js";
 import { fillPA40, PA_40_FIELDS } from "@/pdf/fill-pa-40.js";
-import { formatCurrency } from "@/pdf/pdf-utils.js";
+import { formatCurrency, loadReviewTemplate } from "@/pdf/pdf-utils.js";
+import * as pa40Mapping from "@/pdf/mappings/2025/fill-pa-40.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import { calculatePAReturn, type PAOrchestratorOverrides } from "@/engine/state/pa-orchestrator.js";
@@ -46,6 +47,12 @@ function isChecked(doc: PDFDocument, fieldName: string): boolean {
 }
 
 const BLANK_PDF = "forms/blank/2025/pa-40.pdf";
+
+/** Mapping-only old scalar fixtures deliberately make no source/EIC qualification claim. */
+async function projectMappingFixture(input:TaxYearInput,result:TaxReturnResult,path:string):Promise<PDFDocument> {
+  const doc=await loadReviewTemplate(path,2025);
+  return pa40Mapping.projectPA40DiagnosticFields(doc,input.taxpayer,result.stateReturns!.pennsylvania!);
+}
 
 // ─── Minimal PA40Result factory ──────────────────────────────────────────
 
@@ -399,16 +406,16 @@ const paMFJResult: TaxReturnResult = {
 
 // ─── Tests ───────────────────────────────────────────────────────────────
 
-describe("fillPA40 — Single filer with W-2 income", () => {
+describe("PA40 field-map diagnostic — Single filer with W-2 income", () => {
   let doc: PDFDocument;
 
   it("fills the PA-40 PDF without errors", async () => {
-    doc = await fillPA40(paSingleFiler, paSingleResult, BLANK_PDF);
+    doc = await projectMappingFixture(paSingleFiler, paSingleResult, BLANK_PDF);
     expect(doc).toBeDefined();
   });
 
   it("fills taxpayer personal information in all caps", async () => {
-    doc = await fillPA40(paSingleFiler, paSingleResult, BLANK_PDF);
+    doc = await projectMappingFixture(paSingleFiler, paSingleResult, BLANK_PDF);
     const F = PA_40_FIELDS;
 
     expect(getFieldText(doc, F.primarySSN)).toBe("111223333");
@@ -422,7 +429,7 @@ describe("fillPA40 — Single filer with W-2 income", () => {
   });
 
   it("fills income lines correctly", async () => {
-    doc = await fillPA40(paSingleFiler, paSingleResult, BLANK_PDF);
+    doc = await projectMappingFixture(paSingleFiler, paSingleResult, BLANK_PDF);
     const F = PA_40_FIELDS;
 
     expect(getFieldText(doc, F.line1a)).toBe("75000");
@@ -432,7 +439,7 @@ describe("fillPA40 — Single filer with W-2 income", () => {
   });
 
   it("fills tax and payment lines correctly", async () => {
-    doc = await fillPA40(paSingleFiler, paSingleResult, BLANK_PDF);
+    doc = await projectMappingFixture(paSingleFiler, paSingleResult, BLANK_PDF);
     const F = PA_40_FIELDS;
 
     expect(getFieldText(doc, F.line12)).toBe("2303");
@@ -444,7 +451,7 @@ describe("fillPA40 — Single filer with W-2 income", () => {
   });
 
   it("leaves unused income lines empty", async () => {
-    doc = await fillPA40(paSingleFiler, paSingleResult, BLANK_PDF);
+    doc = await projectMappingFixture(paSingleFiler, paSingleResult, BLANK_PDF);
     const F = PA_40_FIELDS;
 
     // Zero-value fields should be empty (formatCurrency returns "" for zero)
@@ -456,7 +463,7 @@ describe("fillPA40 — Single filer with W-2 income", () => {
   });
 
   it("does not check loss boxes for zero values", async () => {
-    doc = await fillPA40(paSingleFiler, paSingleResult, BLANK_PDF);
+    doc = await projectMappingFixture(paSingleFiler, paSingleResult, BLANK_PDF);
     const F = PA_40_FIELDS;
 
     expect(isChecked(doc, F.line4Loss)).toBe(false);
@@ -465,26 +472,26 @@ describe("fillPA40 — Single filer with W-2 income", () => {
   });
 
   it("does not check Tax Forgiveness checkbox for non-eligible filer", async () => {
-    doc = await fillPA40(paSingleFiler, paSingleResult, BLANK_PDF);
+    doc = await projectMappingFixture(paSingleFiler, paSingleResult, BLANK_PDF);
     expect(isChecked(doc, PA_40_FIELDS.taxForgiveness)).toBe(false);
   });
 
   it("fills page 2 header names", async () => {
-    doc = await fillPA40(paSingleFiler, paSingleResult, BLANK_PDF);
+    doc = await projectMappingFixture(paSingleFiler, paSingleResult, BLANK_PDF);
     expect(getFieldText(doc, PA_40_FIELDS.page2Names)).toBe("SMITH, JOHN");
   });
 });
 
-describe("fillPA40 — MFJ filer with multiple income classes and losses", () => {
+describe("PA40 field-map diagnostic — MFJ filer with multiple income classes and losses", () => {
   let doc: PDFDocument;
 
   it("fills the PA-40 PDF without errors", async () => {
-    doc = await fillPA40(paMFJFiler, paMFJResult, BLANK_PDF);
+    doc = await projectMappingFixture(paMFJFiler, paMFJResult, BLANK_PDF);
     expect(doc).toBeDefined();
   });
 
   it("fills spouse information", async () => {
-    doc = await fillPA40(paMFJFiler, paMFJResult, BLANK_PDF);
+    doc = await projectMappingFixture(paMFJFiler, paMFJResult, BLANK_PDF);
     const F = PA_40_FIELDS;
 
     expect(getFieldText(doc, F.spouseSSN)).toBe("777889999");
@@ -495,7 +502,7 @@ describe("fillPA40 — MFJ filer with multiple income classes and losses", () =>
   });
 
   it("fills address with apt/suite", async () => {
-    doc = await fillPA40(paMFJFiler, paMFJResult, BLANK_PDF);
+    doc = await projectMappingFixture(paMFJFiler, paMFJResult, BLANK_PDF);
     const F = PA_40_FIELDS;
 
     expect(getFieldText(doc, F.addressLine1)).toBe("456 OAK AVE");
@@ -504,17 +511,17 @@ describe("fillPA40 — MFJ filer with multiple income classes and losses", () =>
   });
 
   it("fills dependents count", async () => {
-    doc = await fillPA40(paMFJFiler, paMFJResult, BLANK_PDF);
+    doc = await projectMappingFixture(paMFJFiler, paMFJResult, BLANK_PDF);
     expect(getFieldText(doc, PA_40_FIELDS.dependents)).toBe("2");
   });
 
   it("checks Filing Status checkbox for MFJ", async () => {
-    doc = await fillPA40(paMFJFiler, paMFJResult, BLANK_PDF);
+    doc = await projectMappingFixture(paMFJFiler, paMFJResult, BLANK_PDF);
     expect(isChecked(doc, PA_40_FIELDS.filingStatus)).toBe(true);
   });
 
   it("fills all income classes including losses with loss checkboxes", async () => {
-    doc = await fillPA40(paMFJFiler, paMFJResult, BLANK_PDF);
+    doc = await projectMappingFixture(paMFJFiler, paMFJResult, BLANK_PDF);
     const F = PA_40_FIELDS;
 
     expect(getFieldText(doc, F.line1a)).toBe("150000");
@@ -541,7 +548,7 @@ describe("fillPA40 — MFJ filer with multiple income classes and losses", () =>
   });
 
   it("fills tax and settlement correctly for MFJ", async () => {
-    doc = await fillPA40(paMFJFiler, paMFJResult, BLANK_PDF);
+    doc = await projectMappingFixture(paMFJFiler, paMFJResult, BLANK_PDF);
     const F = PA_40_FIELDS;
 
     expect(getFieldText(doc, F.line12)).toBe("5075");
@@ -550,12 +557,12 @@ describe("fillPA40 — MFJ filer with multiple income classes and losses", () =>
   });
 
   it("fills page 2 header with both names for MFJ", async () => {
-    doc = await fillPA40(paMFJFiler, paMFJResult, BLANK_PDF);
+    doc = await projectMappingFixture(paMFJFiler, paMFJResult, BLANK_PDF);
     expect(getFieldText(doc, PA_40_FIELDS.page2Names)).toBe("JONES, ROBERT & SARAH");
   });
 });
 
-describe("fillPA40 — Tax Forgiveness and credits", () => {
+describe("PA40 field-map diagnostic — Tax Forgiveness and credits", () => {
   const forgivenessResult: TaxReturnResult = {
     taxYear: 2025,
     stateReturns: {
@@ -598,12 +605,12 @@ describe("fillPA40 — Tax Forgiveness and credits", () => {
   } as unknown as TaxReturnResult;
 
   it("checks Tax Forgiveness checkbox when SP credit is active", async () => {
-    const doc = await fillPA40(paSingleFiler, forgivenessResult, BLANK_PDF);
+    const doc = await projectMappingFixture(paSingleFiler, forgivenessResult, BLANK_PDF);
     expect(isChecked(doc, PA_40_FIELDS.taxForgiveness)).toBe(true);
   });
 
   it("fills forgiveness credit and eligibility income", async () => {
-    const doc = await fillPA40(paSingleFiler, forgivenessResult, BLANK_PDF);
+    const doc = await projectMappingFixture(paSingleFiler, forgivenessResult, BLANK_PDF);
     const F = PA_40_FIELDS;
 
     expect(getFieldText(doc, F.line20)).toBe("15000");
@@ -710,7 +717,7 @@ describe("fillPA40 — resident packet inclusion for supported PA line items", (
     expect(getFieldText(doc, PA_40_FIELDS.line17)).toBe("307");
   });
 
-  it("fillPA40 carries the Working Pennsylvanians Tax Credit through PA-40 total payments and overpayment", async () => {
+  it("fillPA40 keeps WPTC separate from actual 2025 paper totals", async () => {
     const input = makeResidentPacketInput({
       taxpayer: {
         taxYear: 2025,
@@ -755,9 +762,12 @@ describe("fillPA40 — resident packet inclusion for supported PA line items", (
     const result = makeCalculatedPA40PacketResult(input);
     const paResult = result.stateReturns?.pennsylvania as PAOrchestratorResult;
 
-    expect(paResult.workingPennsylvaniansTaxCredit?.credit.gt(0)).toBe(true);
+    expect(paResult.workingPennsylvaniansTaxCredit?.credit.toFixed()).toBe("433");
+    expect(paResult.pa40.refundableCredits.toFixed()).toBe("0");
+    expect(paResult.pa40.totalPaymentsAndCredits.eq(paResult.pa40.stateWithholding.plus(paResult.pa40.totalEstimatedPaymentsAndCredits).plus(paResult.pa40.taxForgivenessCredit).plus(paResult.pa40.residentCredit).plus(paResult.pa40.otherCredits))).toBe(true);
 
     const doc = await fillPA40(input, result, BLANK_PDF);
+    expect(doc.getPageCount()).toBe(3); // Separate processing-reference appendix, not a new official cell.
 
     expect(getFieldText(doc, PA_40_FIELDS.line24)).toBe(paResult.pa40.totalPaymentsAndCredits.toString());
     expect(getFieldText(doc, PA_40_FIELDS.line29)).toBe(paResult.pa40.netOverpayment.toString());
@@ -777,4 +787,19 @@ describe("fillPA40 — error handling", () => {
       fillPA40(paSingleFiler, noStateResult, BLANK_PDF),
     ).rejects.toThrow("No Pennsylvania state return result available");
   });
+});
+
+// Spec: state/pa-40.yaml#field-map-diagnostic
+it("PA40 diagnostic projection keeps zero-credit mapping separate from source admission",async()=>{
+  const project=(pa40Mapping as unknown as Record<string,unknown>).projectPA40DiagnosticFields as ((doc:PDFDocument,taxpayer:TaxYearInput["taxpayer"],projection:PAOrchestratorResult)=>Promise<PDFDocument>)|undefined;
+  expect(typeof project).toBe("function");
+  if(!project)throw new Error("PA40 explicit diagnostic projection is missing");
+  const doc=await loadReviewTemplate(BLANK_PDF,2025);
+  const projection=paSingleResult.stateReturns!.pennsylvania! as PAOrchestratorResult;
+  await project(doc,paSingleFiler.taxpayer,projection);
+  expect(getFieldText(doc,PA_40_FIELDS.line1a)).toBe("75000");
+  expect(doc.getTitle()).toMatch(/diagnostic.*source qualification unavailable/i);
+  expect(doc.getSubject()).toBe("FOR REVIEW ONLY - NOT FOR FILING");
+  await expect(project(doc,paSingleFiler.taxpayer,{...projection,pa40:{...projection.pa40,refundableCredits:d(1)}})).rejects.toThrow(/unprinted|credit|diagnostic/i);
+  await expect(project(doc,{...paSingleFiler.taxpayer,taxYear:2026},projection)).rejects.toThrow(/mapping|2026/i);
 });

@@ -1,3 +1,5 @@
+import { markReviewPdf } from "../../export-policy.js";
+import { assertPAWorkingCreditReview, type PreparedPAWorkingCreditReview } from "../../pa-working-credit-review-context.js";
 import { assertPdfExportAllowed } from "../../export-policy.js";
 /**
  * PDF filler for Pennsylvania PA-40 Personal Income Tax Return.
@@ -9,7 +11,7 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  *   fillDebugLabels('forms/blank/2025/pa-40.pdf', 'forms/filled/pa-40-debug.pdf')
  */
 
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, StandardFonts } from "pdf-lib";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { PAOrchestratorResult } from "@/engine/state/pa-orchestrator.js";
@@ -156,6 +158,7 @@ export async function fillPA40(
   input: TaxYearInput,
   result: TaxReturnResult,
   blankPdfPath: string,
+  workingCreditReview?: PreparedPAWorkingCreditReview,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const paResult = result.stateReturns?.pennsylvania;
@@ -163,16 +166,43 @@ export async function fillPA40(
     throw new Error("No Pennsylvania state return result available");
   }
 
+  assertPAWorkingCreditReview(input, result, workingCreditReview);
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
+  applyPA40FieldMap(doc, input.taxpayer, paResult);
+
+  if ("workingCreditProcessing" in paResult && paResult.workingCreditProcessing?.credit.gt(0)) {
+    const reference = paResult.workingCreditProcessing;
+    const page = doc.addPage([612, 792]);
+    const font = await doc.embedFont(StandardFonts.Helvetica);
+    const rows = [
+      `${input.taxpayer.taxYear} PA Working Pennsylvanians Tax Credit - PROCESSING REFERENCE ONLY`,
+      "This page is not an official PA-40 field or a filing attachment.",
+      "The unchanged 2025 paper PA-40 excludes WPTC from printed payments and credits.",
+      "Pennsylvania verifies the attached federal return and applies WPTC during processing.",
+      `Actual federal EITC: $${paResult.workingPennsylvaniansTaxCredit!.federalEarnedIncomeCredit.toFixed(0)}`,
+      `WPTC processing reference: $${reference.credit.toFixed(0)}`,
+      `Credit applied to paper tax principal: $${reference.creditAppliedToTaxDue.toFixed(0)}`,
+      `Remaining principal before penalties: $${reference.remainingTaxDueBeforePenalties.toFixed(0)}`,
+      `Additional overpayment before penalties: $${reference.additionalOverpaymentBeforePenalties.toFixed(0)}`,
+      "This reference does not predict DOR offsets, payment timing, interest or final settlement.",
+    ];
+    rows.forEach((text, index) => page.drawText(text, {x:36,y:736-index*26,size:index===0?10:9,font}));
+    await markReviewPdf(doc);
+  }
+  return doc;
+}
+
+/** Internal scalar field projection: it does not validate original taxpayer sources. */
+function applyPA40FieldMap(doc: PDFDocument, taxpayer: TaxYearInput["taxpayer"], paResult: PAPacketResult): void {
   const form = doc.getForm();
   const F = PA_40_FIELDS;
   const pa40 = paResult.pa40;
 
   // ── Personal Information ──
-  fillPersonalInfo(form, input);
+  fillPersonalInfo(form, taxpayer);
 
   // ── Filing Info ──
-  fillFilingInfo(form, input, paResult);
+  fillFilingInfo(form, taxpayer, paResult);
 
   // ── Part A: Income (Lines 1–11) ──
   fillIncome(form, pa40);
@@ -181,12 +211,28 @@ export async function fillPA40(
   fillTaxAndPayments(form, pa40, paResult);
 
   // ── Page 2 header ──
-  const tp = input.taxpayer;
+  const tp = taxpayer;
   const page2Name = tp.spouse
     ? `${tp.primary.lastName.toUpperCase()}, ${tp.primary.firstName.toUpperCase()} & ${tp.spouse.firstName.toUpperCase()}`
     : `${tp.primary.lastName.toUpperCase()}, ${tp.primary.firstName.toUpperCase()}`;
   setTextField(form, F.page2Names, page2Name);
 
+}
+
+/** Explicit field-map diagnostic for pre-created documents, never source admission.
+ * It accepts render fields only, performs no template I/O, and cannot approve WPTC.
+ * Production packets use fillPA40 and its unconditional original-source guard.
+ */
+export async function projectPA40DiagnosticFields(
+  doc: PDFDocument,
+  taxpayer: TaxYearInput["taxpayer"],
+  projection: PAPacketResult,
+): Promise<PDFDocument> {
+  assertPdfExportAllowed(taxpayer.taxYear, taxpayer.taxYear);
+  if (!projection.pa40.refundableCredits.eq(0)) throw new Error("PA40 diagnostic projection requires zero unprinted credits");
+  applyPA40FieldMap(doc, taxpayer, projection);
+  await markReviewPdf(doc);
+  doc.setTitle("PA-40 diagnostic field projection - source qualification unavailable");
   return doc;
 }
 
@@ -194,10 +240,9 @@ export async function fillPA40(
 
 function fillPersonalInfo(
   form: ReturnType<PDFDocument["getForm"]>,
-  input: TaxYearInput,
+  tp: TaxYearInput["taxpayer"],
 ): void {
   const F = PA_40_FIELDS;
-  const tp = input.taxpayer;
 
   setTextField(form, F.primarySSN, tp.primary.ssn.replace(/-/g, ""));
   setTextField(form, F.primaryFirstName, tp.primary.firstName.toUpperCase());
@@ -227,11 +272,10 @@ function fillPersonalInfo(
 
 function fillFilingInfo(
   form: ReturnType<PDFDocument["getForm"]>,
-  input: TaxYearInput,
+  tp: TaxYearInput["taxpayer"],
   paResult: PAPacketResult,
 ): void {
   const F = PA_40_FIELDS;
-  const tp = input.taxpayer;
 
   // Filing status checkbox — PA uses single checkbox (checked = MFJ)
   const isMFJ = tp.filingStatus === "married_filing_jointly";

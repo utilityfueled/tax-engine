@@ -12269,8 +12269,8 @@
     {
       "key": "state/pa-working-pennsylvanians-tax-credit",
       "jurisdiction": "state",
-      "taxYear": 2025,
-      "sourceAuthority": "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/working-pennsylvanians-tax-credit",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1929/0/0176..HTM",
       "specPath": "spec/state/pa-working-pennsylvanians-tax-credit.yaml",
       "enginePath": "src/engine/state/pa-working-pennsylvanians-tax-credit.ts",
       "packetPath": "src/pdf/fill-pa-40.ts",

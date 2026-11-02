@@ -1,5 +1,6 @@
 import {calculateScheduleCReviewSource} from "./schedule-c-review-source.js";
 import {preparePARoyaltyReview,assertPARoyaltyReview,type PreparedPARoyaltyReview} from "./pa-royalty-review-context.js";
+import { assertPAWorkingCreditReview, type PreparedPAWorkingCreditReview } from "./pa-working-credit-review-context.js";
 /**
  * Top-level orchestrator for filling a complete tax return as PDFs.
  * Fills all applicable forms and saves them to the output directory.
@@ -410,6 +411,8 @@ export interface FillReturnOptions {
   qbiLossReview?: PreparedQbiLossReview;
   scheduleEReview?: PreparedScheduleEReview;
   paRoyaltyReview?: PreparedPARoyaltyReview;
+  /** Actual WPTC originals checked before render-only identifier redaction. */
+  paWorkingCreditReview?: PreparedPAWorkingCreditReview;
   /** Actual EIC child records, validated before identifier redaction. */
   eicReview?: PreparedEicReview;
   /** Actual policy allocation and whole-return income, validated before redaction. */
@@ -448,6 +451,7 @@ export async function fillReturn(
   const paRoyaltyReview = (input.royaltyPropertySources && result.stateReturns?.pennsylvania) || options.paRoyaltyReview
     ? options.paRoyaltyReview ?? preparePARoyaltyReview(input) : undefined;
   if (paRoyaltyReview) assertPARoyaltyReview(input,result,paRoyaltyReview);
+  if (result.stateReturns?.pennsylvania) assertPAWorkingCreditReview(input, result, options.paWorkingCreditReview);
   const eicReview = hasEicReviewSources(input) || result.scheduleEIC?.form8862 || options.eicReview
     ? options.eicReview ?? prepareEicReview(input) : undefined;
   const actualEicChildren = eicReview ? eicReviewChildren(eicReviewOriginalSourceInput(input, result, eicReview)) : undefined;
@@ -1244,7 +1248,7 @@ export async function fillReturn(
   // ── PA-40 (if applicable — Pennsylvania state return) ──
   if (result.stateReturns?.pennsylvania) {
     const pa40Path = join(blankFormsDir, "pa-40.pdf");
-    const docPA40 = await fillPA40(input, result, pa40Path);
+    const docPA40 = await fillPA40(input, result, pa40Path, options.paWorkingCreditReview);
     if (flatten) await flattenForm(docPA40.getForm());
     const outputPathPA40 = join(outputDir, "pa-40-filled.pdf");
     await savePacketPdf(docPA40, outputPathPA40);

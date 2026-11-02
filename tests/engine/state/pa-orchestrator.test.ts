@@ -1,3 +1,4 @@
+import { fictionalEmptyEicHistory } from "../../fixtures/eic-disallowance.js";
 /**
  * Tests for Pennsylvania Personal Income Tax Return Orchestrator
  * Spec: spec/state/pa-orchestrator.yaml
@@ -1666,9 +1667,10 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.scheduleSP.forgivenessPercentage.toNumber()).toBe(100);
       expect(result.scheduleSP.taxForgivenessCredit.toNumber()).toBe(154);
       const wptc = result.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0;
+      expect(result.workingCreditProcessing?.credit.toNumber() ?? 0).toBe(wptc);
       // Withholding is on the payment side; tax forgiveness zeroes the tax liability.
       expect(result.pa40.netTaxLiability.toNumber()).toBe(0);
-      expect(result.pa40.overpayment.toNumber()).toBe(154 + wptc);
+      expect(result.pa40.overpayment.toNumber()).toBe(154);
     });
 
     it("PA orchestrator maps married filing jointly to married category for SP", () => {
@@ -2186,9 +2188,10 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       // Forgiveness credit: $368 (100%)
       expect(result.pa40.taxForgivenessCredit.toNumber()).toBe(368);
       const wptc = result.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0;
+      expect(result.workingCreditProcessing?.credit.toNumber() ?? 0).toBe(wptc);
       // Withholding is on the payment side; tax forgiveness zeroes the tax liability.
       expect(result.pa40.netTaxLiability.toNumber()).toBe(0);
-      expect(result.pa40.overpayment.toNumber()).toBe(368 + wptc);
+      expect(result.pa40.overpayment.toNumber()).toBe(368);
     });
 
     it("PA orchestrator end-to-end: zero income produces zero tax", () => {
@@ -3690,8 +3693,9 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.pa40.netTaxLiability.toNumber()).toBe(0);
 
       const wptc = result.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0;
+      expect(result.workingCreditProcessing?.credit.toNumber() ?? 0).toBe(wptc);
       // Withholding is on the payment side; tax forgiveness zeroes the tax liability.
-      expect(result.pa40.overpayment.toNumber()).toBe(553 + wptc);
+      expect(result.pa40.overpayment.toNumber()).toBe(553);
       expect(result.pa40.amountOwed.toNumber()).toBe(0);
     });
 
@@ -3738,9 +3742,10 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
       expect(result.pa40.netTaxLiability.toNumber()).toBe(0);
       const wptc = result.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0;
-      // Withholding plus any refundable WPTC now show up entirely as overpayment.
+      expect(result.workingCreditProcessing?.credit.toNumber() ?? 0).toBe(wptc);
+      // Actual paper withholding is separate from processing-stage WPTC (DOR FAQ4255).
       expect(result.pa40.amountOwed.toNumber()).toBe(0);
-      expect(result.pa40.overpayment.toNumber()).toBe(675 + wptc);
+      expect(result.pa40.overpayment.toNumber()).toBe(675);
     });
 
     it("PA orchestrator end-to-end: MFJ near forgiveness boundary with partial credit", () => {
@@ -3789,7 +3794,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.pa40.netTaxLiability.toNumber()).toBe(288);
 
       // Withholding produces the refund after partial forgiveness reduces net tax.
-      expect(result.pa40.overpayment.toNumber()).toBe(455);
+      // FAQ4255: paper refund722-(721-433)=434; WPTC is a separate processing reference.
+      expect(result.pa40.overpayment.toNumber()).toBe(434);
     });
 
     it("PA orchestrator end-to-end: retiree with fully exempt retirement income", () => {
@@ -5165,7 +5171,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       // $10,000 × 3.07% = $307
       expect(result.pa40.taxLiability.toNumber()).toBe(307);
       const wptc = result.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0;
-      expect(result.pa40.amountOwed.toNumber()).toBe(307 - wptc);
+      expect(result.workingCreditProcessing?.credit.toNumber() ?? 0).toBe(wptc);
+      expect(result.pa40.amountOwed.toNumber()).toBe(307);
     });
   });
 
@@ -5913,7 +5920,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
       expect(result.scheduleDC).toBeDefined();
       expect(result.scheduleDC!.credit.toNumber()).toBe(1050);
-      expect(result.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0).toBe(0);
+      // PA/SP dependency answer does not disallow actual same-year federal EITC.
+      expect(result.workingPennsylvaniansTaxCredit!.credit.gt(0)).toBe(true);
       expect(result.pa40.otherCredits.toNumber()).toBe(1050);
       expect(result.pa40.totalCredits.toNumber()).toBe(1050);
       expect(result.pa40.refundableCredits.toNumber()).toBe(0);
@@ -5998,7 +6006,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(federalEitc.toNumber()).toBeGreaterThan(0);
       expect(result.workingPennsylvaniansTaxCredit).toBeDefined();
       expect(result.workingPennsylvaniansTaxCredit!.credit.toNumber()).toBe(expectedWptc.toNumber());
-      expect(result.pa40.refundableCredits.toNumber()).toBe(expectedWptc.toNumber());
+      expect(result.pa40.refundableCredits.toNumber()).toBe(0);
+      expect((result as unknown as {workingCreditProcessing:{credit:Decimal}}).workingCreditProcessing.credit.toFixed()).toBe(expectedWptc.toFixed());
     });
 
     it("PA orchestrator blocks WPTC when federal EITC is positive but Pennsylvania earned income is zero", () => {
@@ -6049,7 +6058,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.pa40.refundableCredits.toNumber()).toBe(0);
     });
 
-    it("PA orchestrator blocks WPTC when the resident supplement marks the taxpayer as claimed on another federal return", () => {
+    it("PA orchestrator uses actual federal EITC rather than a separate PA dependency bar", () => {
       const input = makeInput({
         taxpayer: {
           taxYear: 2025,
@@ -6091,7 +6100,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       const result = calculatePAReturn(input);
 
       expect(federalEitc.toNumber()).toBeGreaterThan(0);
-      expect(result.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0).toBe(0);
+      expect(result.workingPennsylvaniansTaxCredit?.credit.toFixed()).toBe("433");
       expect(result.pa40.refundableCredits.toNumber()).toBe(0);
     });
   });
@@ -6272,7 +6281,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       const blocked = calculatePAReturn(dependentInput);
       expect(blocked.scheduleSP.forgivenessPercentage.toNumber()).toBe(0);
       expect(blocked.pa40.taxForgivenessCredit.toNumber()).toBe(0);
-      expect(blocked.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0).toBe(0);
+      expect(blocked.workingPennsylvaniansTaxCredit!.credit.gt(0)).toBe(true);
       expect(blocked.pa40.totalAmountDue.toNumber()).toBe(123);
 
       const allowed = calculatePAReturn(dependentInput, {
@@ -6280,7 +6289,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       });
       expect(allowed.scheduleSP.forgivenessPercentage.toNumber()).toBe(100);
       expect(allowed.pa40.taxForgivenessCredit.toNumber()).toBe(123);
-      expect(allowed.workingPennsylvaniansTaxCredit?.credit.toNumber() ?? 0).toBe(0);
+      expect(allowed.workingPennsylvaniansTaxCredit!.credit.eq(blocked.workingPennsylvaniansTaxCredit!.credit)).toBe(true);
       expect(allowed.pa40.totalAmountDue.toNumber()).toBe(0);
       expect(allowed.pa40.netOverpayment.toNumber()).toBe(0);
     });
@@ -6538,4 +6547,28 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
       expect(result.pa40.interest.toNumber()).toBe(1500);
     });
   });
+});
+
+// Spec: state/pa-orchestrator.yaml#wptc-paper-processing-reference
+it("PA WPTC processing reference does not change actual paper settlement",()=>{
+  const input=makeInput({taxpayer:{taxYear:2025,filingStatus:"head_of_household",stateResidency:"full-year",
+    primary:{firstName:"Avery",lastName:"Source",ssn:"900-70-0311",dateOfBirth:"1990-01-01",usResidencyMonths:12,employmentValidSsnIssuedByDueDate:true},
+    address:{street:"1 Test Lane",city:"Harrisburg",state:"PA",zip:"17101"},
+    dependents:[{firstName:"Casey",lastName:"Source",ssn:"900-70-0313",relationship:"child",dateOfBirth:"2017-06-01",monthsLivedWithYou:12,qualifiesForCTC:true,ctcSsnEligible:true,qualifiesForODC:false,qualifiesForEIC:true}]},
+    w2s:[{taxYear:2025,accountHolder:"primary",employer:{name:"Source Employer",ein:"99-1234567"},wages:"19000",federalWithheld:"0",stateWages:"19000",stateTaxWithheld:"583",state:"PA"}],
+    eic:{claimantEligibility:{sourceTaxYear:2025,sourceReference:"actual-claimant-worksheet",sourceFactsConfirmed:true,primaryNonresidentAlienDuringYear:false,primaryQualifyingChildOfAnotherTaxpayer:false},primaryIsFullTimeStudent:false}});
+  input.eic!.disallowanceSources=fictionalEmptyEicHistory(input.taxpayer);
+  const result=calculatePAReturn(input);
+  expect(result.pa40.taxLiability.toFixed()).toBe("583");
+  expect(result.scheduleSP.taxForgivenessCredit.toFixed()).toBe("0");
+  expect(result.workingPennsylvaniansTaxCredit?.credit.toFixed()).toBe("433");
+  expect(result.pa40.refundableCredits.toFixed()).toBe("0");
+  expect(result.pa40.totalPaymentsAndCredits.toFixed()).toBe("583");
+  expect(result.pa40.netOverpayment.toFixed()).toBe("0");
+  const processing=(result as unknown as {workingCreditProcessing:{stage:string;credit:Decimal;creditAppliedToTaxDue:Decimal;remainingTaxDueBeforePenalties:Decimal;additionalOverpaymentBeforePenalties:Decimal}}).workingCreditProcessing;
+  expect(processing.stage).toBe("department-processing-reference");
+  expect(processing.credit.toFixed()).toBe("433");
+  expect(processing.creditAppliedToTaxDue.toFixed()).toBe("0");
+  expect(processing.remainingTaxDueBeforePenalties.toFixed()).toBe("0");
+  expect(processing.additionalOverpaymentBeforePenalties.toFixed()).toBe("433");
 });

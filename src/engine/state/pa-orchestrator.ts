@@ -11,6 +11,8 @@ import { calculatePARoyaltyPropertySources } from "./pa-royalty-property-sources
  */
 
 import Decimal from "decimal.js";
+import {sha256} from "@noble/hashes/sha2.js";
+import {bytesToHex} from "@noble/hashes/utils.js";
 import { calculateDigitalAssetStateSources } from "./digital-asset-sources.js";
 import { calculatePARentalIncomeExpenses, type PARentalIncomeExpensesResult } from "@/engine/state/pa-rental-income-expenses.js";
 import { calculatePAOIDSources, type PAOIDSourcesResult } from "@/engine/state/pa-oid-sources.js";
@@ -258,6 +260,26 @@ const PA_SCHEDULE_SP_MARRIED_DEPENDENT_FILING_ERROR =
 // Result
 // ---------------------------------------------------------------------------
 
+/** Processing reference only: paper PA-40 and actual Department disbursement are separate. */
+export interface PAWorkingCreditProcessingReference {
+  stage: "department-processing-reference";
+  credit: Decimal;
+  creditAppliedToTaxDue: Decimal;
+  remainingTaxDueBeforePenalties: Decimal;
+  additionalOverpaymentBeforePenalties: Decimal;
+}
+/** Keep raw original identities private; only this versioned commitment is returned. */
+function workingCreditSourceCommitment(input: TaxYearInput): string {
+  const canonical = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(canonical);
+    if (value !== null && typeof value === "object") return Object.fromEntries(
+      Object.entries(value).sort(([left], [right]) => left.localeCompare(right)).map(([key, child]) => [key, canonical(child)]),
+    );
+    return value;
+  };
+  return bytesToHex(sha256(new TextEncoder().encode(JSON.stringify({version:"pa-wptc-actual-v1",taxYear:input.taxpayer.taxYear,original:canonical(input)}))));
+}
+
 export interface PAOrchestratorResult {
   pa40: PA40Result;
   scheduleSP: ScheduleSPResult;
@@ -290,6 +312,9 @@ export interface PAOrchestratorResult {
   scheduleDC?: ScheduleDCResult;
   /** Working Pennsylvanians Tax Credit result (only present for tax year 2025+) */
   workingPennsylvaniansTaxCredit?: PAWorkingPennsylvaniansTaxCreditResult;
+  /** WPTC-specific original binding, not qualification of unrelated PA totals. */
+  workingCreditSourceCommitment?: string;
+  workingCreditProcessing?: PAWorkingCreditProcessingReference;
   /** Schedule OC result (only present when scheduleOC input is provided) */
   scheduleOC?: ScheduleOCResult;
   /** Schedule SD result (only present when scheduleSD input is provided) */
@@ -1967,7 +1992,7 @@ export function calculatePAReturn(
 
   let scheduleDC: ScheduleDCResult | undefined;
   let workingPennsylvaniansTaxCredit: PAWorkingPennsylvaniansTaxCreditResult | undefined;
-  let refundableCreditsAmount = ZERO;
+  const refundableCreditsAmount = ZERO;
   let scheduleDCCreditAmount = ZERO;
 
   if (input.dependentCare) {
@@ -1989,7 +2014,8 @@ export function calculatePAReturn(
       isClaimedAsDependentOnAnotherFederalReturn:
         resolvedOverrides.isClaimedAsDependentOnAnotherFederalReturn,
     });
-    refundableCreditsAmount = refundableCreditsAmount.plus(workingPennsylvaniansTaxCredit.credit);
+    // DOR FAQ4255: 2025 paper PA-40 is unchanged; the Department adds WPTC
+    // during processing. Never insert the credit into printed paper totals.
   }
 
   const allowedOtherCreditsAmount = calculatePA40AllowedOtherCredits({
@@ -2049,6 +2075,14 @@ export function calculatePAReturn(
   };
 
   const pa40 = calculatePA40(finalPA40Input);
+  const workingCreditProcessing: PAWorkingCreditProcessingReference | undefined = workingPennsylvaniansTaxCredit === undefined ? undefined : {
+    stage: "department-processing-reference",
+    credit: workingPennsylvaniansTaxCredit.credit,
+    creditAppliedToTaxDue: Decimal.min(workingPennsylvaniansTaxCredit.credit, pa40.taxDue),
+    remainingTaxDueBeforePenalties: zeroFloor(pa40.taxDue.minus(workingPennsylvaniansTaxCredit.credit)),
+    additionalOverpaymentBeforePenalties: zeroFloor(workingPennsylvaniansTaxCredit.credit.minus(pa40.taxDue)),
+  };
+
 
   // -------------------------------------------------------------------------
   // Step 7: Schedule SD (if school district inputs are provided)
@@ -2114,6 +2148,8 @@ export function calculatePAReturn(
     scheduleO,
     scheduleDC,
     workingPennsylvaniansTaxCredit,
+    workingCreditSourceCommitment: workingPennsylvaniansTaxCredit === undefined ? undefined : workingCreditSourceCommitment(input),
+    workingCreditProcessing,
     scheduleOC: scheduleOCResult,
     scheduleSD,
     localEIT,

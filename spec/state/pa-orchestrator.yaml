@@ -1057,37 +1057,39 @@ lines:
     testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes Schedule DC from the federal dependent care credit"
 
   - line: "working-pennsylvanians-tax-credit"
-    description: "Compute the Working Pennsylvanians Tax Credit from the federal EITC"
+    description: "Compute actual same-year WPTC separately from printed2025PA40"
     formula: |
-      1. Compute supported Pennsylvania earned income as:
-         positive PA Class 1 compensation + positive PA Class 4 business income
-      2. Compute the federal Earned Income Credit from the federal return result
-      3. If the taxpayer is marked in PA resident supplements as claimed on
-         another person's federal return, force WPTC to 0
-      4. Otherwise, if Pennsylvania earned income > 0 and federal EITC > 0,
-         compute WPTC = round(federal EITC × 10%)
-      5. Add the WPTC amount to the PA-40 refundable-credit bucket
+      ActualpositivePAearned class1/class4 plus validfreshsame-year federal1040EITC
+      determines10% roundedWPTC, with no805fixedcap and no separateSPdependentbar.
+      Do not add it to2025paperPA40 refundableCredits or printed24/refund.
+      Separate workingCreditProcessing reference: applied=min(credit,paperTaxDue),
+      remainingTaxDueBeforePenalties=max(0,paperTaxDue-credit),
+      additionalOverpaymentBeforePenalties=max(0,credit-paperTaxDue).
     notes: |
-      The 2025 PA preparation guide states taxpayers who qualify for the
-      federal EITC automatically qualify for the state credit, that the credit
-      is refundable, and that the taxpayer must have earned income in
-      Pennsylvania consisting of wages, salary, and/or self-employment income.
-      The Department may calculate it automatically during filing, but the
-      engine computes it directly for a deterministic PA result. The refundable
-      amount is exposed through the orchestrator and PA-40 result objects so
-      reviewers can see the state-calculated amount without depending on the
-      Department's post-filing automation. The resident supplement flag for
-      "claimed as a dependent on another federal return" is also used as a
-      guard because that fact disqualifies the federal EITC even if the
-      embedded federal calculation was run without the supplemental dependency
-      metadata.
-    edgeCases:
-      - "Federal EITC is $0: no WPTC"
-      - "Federal EITC is positive but resident has no Pennsylvania earned income: no WPTC"
-      - "Small federal EITC rounds to the nearest dollar"
-      - "WPTC can create a refund even when PA tax is already zero"
-      - "PA resident supplement marks taxpayer as claimed on another federal return: no WPTC"
+      FiscalCodeArticleXVI-W.2 and DORFAQ4255/4256, refreshed2026-11-02.
+      The reference is an estimated Department processing adjustment, not actual
+      DOR approval/payment or finalbalance. Current shared federal/PA filingstatus
+      does not invent joint-federal/separate-PA originals; that sourcepath is an
+      internal residency successor. No2026physicalmap is enabled.
     testRef: "tests/engine/state/pa-orchestrator.test.ts::PA orchestrator computes the Working Pennsylvanians Tax Credit from federal EITC"
+
+  - line: "wptc-paper-processing-reference"
+    description: "Source-backed paper and processing values remain separate"
+    formula: "Actual19000PAwages with583withholding and onequalifyingchild: PA tax583/SP0/paper24=583/paperrefund0; federalEITC4328 -> processingWPTC433"
+    testRef: "tests/engine/state/pa-orchestrator.test.ts::PA WPTC processing reference does not change actual paper settlement"
+
+  - line: "wptc-private-review-context"
+    description: "Bind actual WPTC sources before any PA review templateI/O"
+    formula: "Opaque privately prepared completeoriginal+exactredaction;freshactualEIC/PAearned/WPTCdigest plus engine-produced versioned rawsource commitment;retainedcredit and paper-exclusion/processingrelations mustmatch"
+    notes: |
+      No caller digest/override. Token validates WPTC-specific facts only,
+      not source qualification of unrelated PA totals. Current actualguided
+      payment overlays remain supported; canonical dated payment sources and
+      fullPA replay remain required internal successor. Public PA40 always replays actual
+      sources; incomplete originals cannot become mapping-only mocks by stripping
+      proof, arrays or retained markers. Legacy field-map unit fixtures use an explicit
+      diagnostic projection with no WPTC or wholePA source qualification.
+    testRef: "tests/pdf/pa-working-credit-review-context.test.ts::PA WPTC review binds fresh actual sources and the processing reference"
 
   - line: "map-local-withholding"
     description: "Map local EIT withholding from W-2 Box 19"
@@ -1352,3 +1354,8 @@ lines:
     formula: "When the new actual federal ScheduleC Form4562 PartVI source method has a positive allowance, reject the automatic PA business-income mapper/resident composition until its independent actual PA basis and amortization sources have a supported method. Do not infer PA0 or copy federal44. Preserve existing standalone PA actual-source expense mapping and unsupported federal boundaries."
     irsRef: "Pennsylvania ScheduleC source/basis methods; federal i4562 PartVI44 is not evidence of PA allowance"
     testRef: "tests/engine/schedules/schedule-c-amortization.test.ts::does not invent PA amortization from the new federal source"
+
+  - line: "wptc-partial-source-rejection"
+    description: "Stripped actual sources cannot enter the diagnostic fixture boundary"
+    formula: "PublicfillPA40 with actualpositive source changed by removing EICproof, canonicalarray and all3savedmarkers rejects beforetemplateIO"
+    testRef: "tests/pdf/pa-working-credit-review-context.test.ts::PA WPTC rejects actual originals stripped into partial mapping shape"

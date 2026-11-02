@@ -9,6 +9,7 @@ import {buildPAScheduleEReferenceSummary,fillPAScheduleEReference,shouldIncludeP
 import {fillReturn} from '@/pdf/fill-return.js';import {redactReviewIdentifiers} from '@/pdf/redact-review-identifiers.js';
 import {preparePARoyaltyReview,assertPARoyaltyReview,type PreparedPARoyaltyReview} from '@/pdf/pa-royalty-review-context.js';
 import {prepareScheduleEReview} from '@/pdf/schedule-e-review-context.js';
+import {preparePAWorkingCreditReview} from '@/pdf/pa-working-credit-review-context.js';
 import {paRoyaltyPropertyFixture} from '../fixtures/pa-royalty-property.js';
 
 it('retains actual state property lines and zero net across review pages',async()=>{
@@ -46,7 +47,7 @@ it('rejects stale PA sources and balanced state result changes before output',as
  const scheduleEReview=prepareScheduleEReview(input);
  await expect(fillReturn(redactReviewIdentifiers(input),redactReviewIdentifiers(result),{scheduleEReview,blankFormsDir:'/invalid-template',outputDir:'/invalid-output'})).rejects.toThrow(/PA.*(original|royalt|source)/i);
  const dir=await mkdtemp(join(tmpdir(),'pa-source-packet-'));try{
-  const packet=await fillReturn(redactReviewIdentifiers(input),redactReviewIdentifiers(result),{scheduleEReview,paRoyaltyReview,blankFormsDir:'forms/blank/2025',outputDir:dir});
+  const packet=await fillReturn(redactReviewIdentifiers(input),redactReviewIdentifiers(result),{scheduleEReview,paRoyaltyReview,paWorkingCreditReview:preparePAWorkingCreditReview(input),blankFormsDir:'forms/blank/2025',outputDir:dir});
   const reference=packet.filledForms.find(path=>path.endsWith('pa-schedule-e-reference.pdf'));expect(reference).toBeDefined();
   const text=execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON||'python3',['-c','import sys;from pypdf import PdfReader;print("\\n".join(p.extract_text() for p in PdfReader(sys.argv[1]).pages))',reference!],{encoding:'utf8'});
   expect(text).toContain('Actual PA royalty net income or loss: 11000');expect(text).toContain('Source tax year: 2025');

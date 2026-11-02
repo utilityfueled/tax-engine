@@ -195,13 +195,12 @@ lines:
     description: "Refundable credits"
     formula: "Sum of refundable PA credits carried on the payment side of the return"
     notes: |
-      The current resident engine uses this bucket for credits that may increase
-      the refund even when they exceed PA tax liability. For tax year 2025 this
-      includes the Working Pennsylvanians Tax Credit and any future supported
-      refundable credits that are not printed directly on the PA-40. This
-      remains an internal engine line used to make supported refundable credits
-      explicit and auditable even when the printed PA-40 routes them through
-      other labels.
+      This is a generic internal/reference arithmetic bucket; it is not an
+      official2025PA40 field. WPTC must not enter the actual2025paper totals:
+      DORFAQ4255 says Department adds WPTC duringprocessing with no paperform
+      change. Residentorchestrator keeps WPTC separate; physical2025filler
+      rejects a nonzero unprintedbucket. Genericdirecthelper tests retain
+      mathematical reference behavior, not printedform qualification.
     testRef: "tests/engine/state/pa-40.test.ts::PA-40 refundable credits increase total payments and refund"
 
   - line: "18"
@@ -259,14 +258,11 @@ lines:
     description: "Total payments and credits"
     formula: "Line 13 + Line 18 + Line 21 + Line 22 + Line 23, plus supported Line 18a engine-only refundable credits"
     notes: |
-      The printed 2025 PA-40 adds withholding, estimated-payment credits, and
-      supported credits on Line 24. The current resident engine also carries an
-      internal refundable-credit helper bucket (Line 18a) into this settlement
-      total so Working Pennsylvanians Tax Credit and any other supported
-      engine-only refundable credits remain explicit and auditable. Restricted
-      Schedule OC credits must already be capped before being placed on
-      Line 23, but refundable Schedule DC may still increase Line 24 beyond
-      the remaining PA tax liability.
+      Actualprinted2025Line24 is13+18+21+22+23 only. Genericdirecthelper can
+      additionally model an internalreference refundablebucket, but that is
+      not qualified for physical2025PA40. WPTC is computed separately in the
+      residentorchestrator and added only duringDepartmentprocessing.
+      RestrictedOC remainscapped; actualrefundableScheduleDC is printed23.
     testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 24 - total payments and credits include withholding payments and supported credits"
 
   - line: "22a"
@@ -343,3 +339,9 @@ lines:
       absorbed. The engine preserves a legacy pre-additions overpayment helper
       separately for backward compatibility.
     testRef: "tests/engine/state/pa-40.test.ts::PA-40 Line 29 - overpayment is net of use tax and penalties"
+
+  # Diagnostic projection is a separate internal rendering method, never credit approval.
+  - line: "field-map-diagnostic"
+    description: "Explicit internal field-map diagnostics do not admit source-qualified public packets"
+    formula: "PrecreatedPDF+taxpayer renderfields+zero-unprinted scalarprojection only; strict2025reviewpolicy/reviewmark/diagnostictitle; no credit/source approval or templateIO"
+    testRef: "tests/pdf/fill-pa-40.test.ts::PA40 diagnostic projection keeps zero-credit mapping separate from source admission"
