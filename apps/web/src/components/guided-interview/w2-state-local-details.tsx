@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { supportedStates } from "@/lib/guided-interview-flow";
 import type { W2StateLocalSourceContext } from "@/engine/forms/w2-state-local";
 import type { W2StateLocalSources } from "@/models/w2-state-local";
 import { confirmGuidedW2StateLocalSources, emptyGuidedW2StateLocalSources, updateGuidedW2StateLocalSources } from "@/lib/guided-w2-state-local-facts";
@@ -46,7 +47,7 @@ export function W2StateLocalDetails({ originalInput, originalIndex, data, onChan
     {current.stateRows.map((row, index) => <fieldset className="guided-card" key={index}><legend>State original row {index + 1}</legend>
       <NumberFact label={`State ${index + 1} actual printed row position`} value={row.printedRow} onChange={printedRow => updateState(index, { printedRow })} />
       <TextFact label={`State ${index + 1} original row reference`} value={row.sourceReference} onChange={sourceReference => updateState(index, { sourceReference })} />
-      <SelectFact label={`State ${index + 1} actual Box 15 state`} value={row.state} options={[["PA", "Pennsylvania"], ["OH", "Ohio"]]} onChange={state => updateState(index, { state: state as typeof row.state })} />
+      <SelectFact label={`State ${index + 1} actual Box 15 state`} value={row.state} options={supportedStates.map(({ code, name }): [string, string] => [code, name])} onChange={state => updateState(index, { state: state as typeof row.state })} />
       <SelectFact label={`State ${index + 1} employer state ID original status`} value={row.employerStateIDStatus} options={statuses} onChange={employerStateIDStatus => updateState(index, { employerStateIDStatus: employerStateIDStatus as typeof row.employerStateIDStatus })} />
       <TextFact label={`State ${index + 1} actual employer state ID`} value={row.employerStateID} onChange={employerStateID => updateState(index, { employerStateID })} />
       <CurrencyField label={`State ${index + 1} actual Box 16 wages`} value={row.wages} onChange={wages => updateState(index, { wages })} />

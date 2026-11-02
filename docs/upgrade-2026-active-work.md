@@ -25,13 +25,13 @@ Package ledgers contain official authorities and full private evidence locations
   `acac6295c6b82969a0ee30e0f99a2b6a91a08dedd2eecc5849ed75282289d445`.
   Independent review approved42/four plus25/four legacy controls;93 PDFs/226pages
   reopened,69 own pages visually reviewed. Main68/eight/all9 checks pass.64 PDFs/157pages reopen;167pixel comparisons exact.
-- [ ] Original W2 jurisdiction successor: source rows currently restrict PA/OH;
+- [x] W2 jurisdiction successor, main103/10/all9 and independent118/11: source rows currently restrict PA/OH;
   implement actual valid US50+DC source rows and actual interview selection.
   This does not qualify other state returns. Keep all owner/year/amount/duplicate,
-  original/continuation and monetary guards. Source/spec/tests are in preparation.
+  original/continuation and monetary guards. Source-first55fail/3pass and exact final9 retained.
 - [ ] PA resident-credit originals6: source/spec/tests first;16/17 pass with
   unchanged positive DE withholding800+actual payment1200 giving capped credit1535
-  blocked by the jurisdiction dependency above. Preserve that real failure and
+  now green17/17 after exact reviewed jurisdiction dependency above. Upstream precision correction and independent review remain. Preserve that real failure and
   all original oracles; do not replace it with a passing unsupported-method test.
   Full incomplete6 and20 dependencies: `nov02-pa-resident-credit-sources/incomplete-author-v1.json`.
 - [ ] Root shared state integration private source:
@@ -39,7 +39,7 @@ Package ledgers contain official authorities and full private evidence locations
   manifest16 remains a dependency snapshot, not a claim for later source.
   Canonical PA roots/model extraction: genuine4red to75/10green plus all three
   types/spec/lint/build. Exact5 frozen in `nov02-parent-pa-canonical-roots`;
-  independent88/11 approved; standalone main105/seven/all9 checks pass. Canonical admission is committed separately; full shared integration remains private.
+  independent88/11 approved; standalone main105/seven/all9 checks pass. Canonical admission `b572afcd` is committed and pushed; full shared integration remains private.
 - [ ] Root PA actual bridge/preview: genuine5behavior failures, then all5 green
   after complete ordinary/completion binding and all3 composer preview. Missing,
   stale or unsupported state facts preserve federal AGI50120. Frozen sources and
@@ -47,11 +47,11 @@ Package ledgers contain official authorities and full private evidence locations
 - [ ] Saved generic state payment reconciliation: actual duplicate overlay,
   mismatch, unsupported additional withholding and ignored PA100.01 each proved
   a real failing control. Minimal exact-receipt reconciler written after4red;
-  first rerun found one obsolete residency-only PA setup; actual complete-source fixture migration retains assertions. Second green pending. Evidence: `nov02-parent-state-payment-reconciliation`.
+  first rerun found one obsolete residency-only PA setup; actual complete-source fixture migration retains assertions. Second green36/six plus types3/spec/lint/build passes; independent33/four approved. Evidence: `nov02-parent-state-payment-reconciliation`.
 - [ ] PA state panels/navigation/invalidation3: agent private archive
   `.local/upgrade-work/pa-completion-state-panels/source`;19 source controls
   genuine18red/1pass then19green. Generic-ledger guard2 proved real red, then21
-  green. Bounded checks and independent review pending. Root does not edit these
+  green. Bounded86/10/types/spec/lint/build and independent37/four approved; main integration pending. Root does not edit these
   three owned files concurrently.
 - [ ] Adopt reviewed OH payment collector5 with main checks; complete source-aware
   PA/OH preview/workspace/export, actual local/SD/credit/payment/household methods.

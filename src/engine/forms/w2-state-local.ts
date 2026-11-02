@@ -3,7 +3,7 @@ import Decimal from "decimal.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { W2Schema, type TaxYearInput } from "@/models/inputs.js";
-import { W2StateLocalSourcesSchema } from "@/models/w2-state-local.js";
+import { W2StateLocalSourcesSchema, type W2SourceState } from "@/models/w2-state-local.js";
 import { AuditTrail } from "@/utils/audit.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 const error = (detail: string): never => { throw new Error(`W-2 actual row sources: ${detail}`); };
@@ -36,7 +36,7 @@ function knownText(status: string, value: string): void {
 export type W2StateLocalSourceContext = { taxpayer: Pick<TaxYearInput["taxpayer"], "taxYear" | "filingStatus" | "primary" | "spouse">; w2s: TaxYearInput["w2s"] };
 export interface W2StateLocalSourcesResult {
   federalWages: Decimal; federalWithheld: Decimal;
-  stateRows: Array<{ printedRow: number; state: "PA" | "OH"; wages: Decimal; withheld: Decimal }>;
+  stateRows: Array<{ printedRow: number; state: W2SourceState; wages: Decimal; withheld: Decimal }>;
   localRows: Array<{ printedRow: number; localityNameStatus: "reported" | "blank_original"; wages: Decimal; withheld: Decimal }>;
   totalStateWithheld: Decimal; totalLocalWithheld: Decimal; sourceCommitment: string; lines: CalculatedLine[];
 }
@@ -65,7 +65,7 @@ export function calculateW2StateLocalSources(input: W2StateLocalSourceContext, i
   checkedPositions(source.stateRows); checkedPositions(source.localRows);
   const states = new Set<string>();
   const stateRows = source.stateRows.map(row => {
-    if (!row.state || states.has(row.state)) return error("actual distinct PA/OH state rows required; repeated/other-state rows need their source method"); states.add(row.state);
+    if (!row.state || states.has(row.state)) return error("actual distinct supported US state/DC rows required; repeated or unsupported jurisdiction rows need their source method"); states.add(row.state);
     knownText(row.employerStateIDStatus, row.employerStateID);
     return { printedRow: row.printedRow as number, state: row.state, wages: amount(row.wages), withheld: amount(row.withheld) };
   });

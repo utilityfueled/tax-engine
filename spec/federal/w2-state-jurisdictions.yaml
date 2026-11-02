@@ -1,0 +1,64 @@
+form: "W2-State-Jurisdictions"
+fullName: "Original-bound W-2 source rows for the fifty states and DC"
+taxYear: 2026
+reference: "https://www.irs.gov/instructions/iw2w3"
+notes: |
+  Official current2026 and final2025 instructions refreshed2026-11-02,
+  Boxes15 through20 and Multiple forms. Final2025 printed23:
+  https://www.irs.gov/pub/irs-prior/iw2w3--2025.pdf
+  Source codes crosschecked against USPS Publication28 AppendixB:
+  https://pe.usps.com/text/pub28/28apb.htm
+  IRS requires actual two-letter state, state-assigned employerID, and distinct
+  printed state/local rows; two states/two localities fit one original.
+  This successor admits US50+DC source identities only, including NY and DE,
+  while preserving the complete prior original-bound method and TY2025 route.
+  Foreign, territories and military-mail codes require their own source methods.
+  IRS documents a distinct CNMI federal-employer rule; this package does not
+  declare it invalid or silently extend ordinary-state qualification to it.
+  Source admission never proves state liability, residence, allocation, tax
+  credit, SALT eligibility, filing, human review or final2026 physical forms.
+  Original PA/OH-only evidence remains immutable; current unsupported controls
+  now use actual unknown/invalid codes rather than treating actual NY as invalid.
+lines:
+  - line: "valid-source-states"
+    description: "Actual original Box15 source jurisdiction accepts US50+DC"
+    formula: |
+      Admit exactly uppercase AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA
+      KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI
+      SC SD TN TX UT VT VA WA WV WI WY for an otherwise validated current
+      source packet. Unknown empty remains a recoverable draft but cannot
+      calculate. No state name, whitespace/case normalization, foreign or
+      territory abbreviation is guessed into a supported original.
+      Each code preserves actual Box16=50000 and Box17=800.25 unchanged in
+      both TY2025 and TY2026; it does not infer tax due from withholding.
+    testRef: "tests/engine/forms/w2-state-jurisdictions.test.ts::W2 US source jurisdiction preserves actual rows for %s"
+  - line: "original-federal-once"
+    description: "Additional state identity never duplicates federal wages or credits"
+    formula: |
+      PA50000/1535 plus actual DE50000/800 yields state withholding2335;
+      one federal economic original remains Box1=50000/Box2=5000. Actual
+      NY50000/1000 preserves PA/OH-era numerical2535 without treating NY as
+      unsupported. First_entered_rows and unused scalar contracts remain;
+      scalar money is never added to structured rows. Local withholding3125
+      stays separate; source support2335+3125=5460, no eligibility assertion.
+    testRef: "tests/engine/forms/w2-state-jurisdictions.test.ts::W2 US source rows retain NY and DE once across federal and deduction consumers"
+  - line: "prior-guards"
+    description: "Every prior original/source/privacy gate remains mandatory"
+    formula: |
+      Exact owner/year/full original and canonical packet, source references,
+      current nonvoid uncorrected single original, every box/copy checked,
+      distinct printed0/1/2 state/local reporting counts, actual assignedID
+      reported versus verifiedblank, Decimal nonnegative known amounts,
+      scalar reconciliation, duplicate economic original/row and digest gates
+      stay unchanged. Unknown is not verifiedzero. Monetary source cents stay
+      exact above binary integer range. Digests expose no raw IDs/references.
+    testRef: "tests/engine/forms/w2-state-jurisdictions.test.ts::W2 US source rows retain every prior unknown original monetary and duplicate guard"
+  - line: "guide-source-options"
+    description: "Guided actual Box15 collector exposes source jurisdictions"
+    formula: |
+      Offer all51 original source jurisdictions, with unknown blank initial
+      choice. Actual selection of NY/DE invalidates source confirmation while
+      retaining every other printed row, source reference, wages and withheld
+      amount. Explicit actual original reconfirmation remains mandatory.
+      Do not promote return support or change preview/helper/bridge behavior.
+    testRef: "tests/apps/web/w2-state-jurisdictions.test.tsx::W2 US source collector exposes all states and invalidates an actual jurisdiction edit"

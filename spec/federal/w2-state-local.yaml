@@ -9,7 +9,7 @@ notes: |
   assigned by states, not substituted federal EINs. Additional forms report
   actual additional items and retain identity; they are not guessed extra
   employment or duplicated federal income. This first current-original method
-  captures0/1/2 PA/OH state and0/1/2 printed local rows on one actual original
+  captures0/1/2 distinct US50/DC state and0/1/2 printed local rows on one actual original
   with no continuation/correction/void. Those compositions need actual later
   source methods. No state/local allocation, tax liability, resident credit,
   SALT eligibility, filing or final2026 physical qualification is established.
@@ -29,7 +29,7 @@ lines:
     description: "Actual Box15 state and state-assigned employer identifier"
     formula: |
       Each actual printed position is unique. Exact stateReporting count0/1/2;
-      two-row finite scope is distinct PA/OH states. Actual state-assigned ID
+      two-row finite scope is distinct US50/DC states (see w2-state-jurisdictions.yaml). Actual state-assigned ID
       reported requires a nonblank source value; explicit blank_original means
       actual blank, not unknown or unissued federal EIN. Do not infer an ID or
       replace it with federal EIN. Wages/withholding are actual nonnegative

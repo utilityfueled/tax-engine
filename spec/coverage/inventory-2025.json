@@ -9728,6 +9728,26 @@
       ]
     },
     {
+      "key": "federal/w2-state-jurisdictions",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.irs.gov/instructions/iw2w3",
+      "specPath": "spec/federal/w2-state-jurisdictions.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/w2-state-local",
       "jurisdiction": "federal",
       "taxYear": 2026,

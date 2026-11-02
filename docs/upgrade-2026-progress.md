@@ -2068,3 +2068,14 @@ stripping them. Six fresh main behavior failures precede the three product edits
 13 own controls and exact model parity. See state-canonical-roots-work.md and
 the compact active checklist. Shared UI/preview/workspace integration remains
 private work; full-source release qualification remains required.
+
+
+## November2: valid US-state/DC wage-statement originals
+
+Canonical admissionb572afcd is pushed. The W2 source-jurisdiction successor
+now accepts valid50state/DC originals, retaining all owner/year/row/identity and
+privacy guards. This expands source capture, not qualified state returns.
+Source-first55fail/3pass precedes the minimal enum/type/dropdown changes;
+main103/10 and allninechecks/spec6760 pass. Independent118/11 includes15own
+controls. The retained positive DE800+1200→1535 rich-credit control now passes
+privately; full credit composition and upstream precision verification remain.
