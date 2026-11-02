@@ -171,3 +171,6 @@ status/diff inside archive-only trees. Continue implementing all unblocked work.
 - `aeb2604b` pushed: Next16.4.4 maintenance, main123/eight/allnine plus full522/prod426 audits0. November3 actual security recheck remains.
 
 Parent real auth/billing regression:173/seven passes (`nov02-parent-hosted-preview-db-main-regression/checks.json`); cohorts overlap with89/four and must not be added. All original15 selector controls remain exact.
+
+- `1bb723b2` pushed: isolated Preview PostgreSQL selector; main89/four plus overlapping173/seven/authbilling and all11 checks pass. Free actual Neon/cache Preview-only connections verified; READY preview `dpl_AdDSJxp3bxepHXBxHcNoFG9JaUZF` at1bb, no runtime qualification yet.
+- [Plain-language human tax review packet](upgrade-2026-human-tax-review-packet.md) captures1bb source, actual unresolved interpretations,32 checked links and blank attestation. No human reviewer is assigned; nothing is signed or approved.
