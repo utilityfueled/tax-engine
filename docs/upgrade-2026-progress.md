@@ -2152,3 +2152,16 @@ strict field/widget/appearance/privacy and visual review. The standard-suite PDF
 harness also passes without a private output variable; its minimal temporary
 directory correction preserves every assertion and has independent static review.
 See both household ledgers. Final2026 and human qualification remain outstanding.
+
+
+## November2: source-qualified ordinary G-L review forms
+
+The ordinary PA review packet now includes the exact official continuous G-L
+form for each positive source-qualified state credit, with complete employer
+continuations and private source identifiers removed. Main95/11 plus10 saved
+artifact controls and all13 checks pass after8 genuine failures/six passes.
+Independent40/three and14PDFs/171pages are retained. All122 main rendered pages
+and page text match those independently inspected outputs; strict field/widget,
+appearance and privacy checks pass. Temporary-directory portability and the new
+45th template registry entry preserve every assertion. Original other-state
+return/W2 attachments, final2026 forms and human qualification remain required.

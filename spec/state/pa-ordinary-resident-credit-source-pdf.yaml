@@ -1,0 +1,44 @@
+form: "PA ordinary source-qualified resident credit paper review"
+fullName: "PA Schedule G-L from original-bound ordinary employee resident-credit sources"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40_pa-41g-l.pdf"
+notes: |
+  Continuous official MOD03-24 form uses entered taxyear25; exact immutable official
+  asset SHA256 b30072eb0bacf5c2cb4cd15344f1a6b9fabc01de99820c5508381c8004c3cd68.
+  Finite ordinaryemployee method only. Original filed returns, W2/payroll, net account
+  payment/refund histories and resident-period classification are replayed by the
+  existing reviewed composer. No new calculation/sourcequalification or final2026
+  mapping/filing promotion. Legacy arithmetic/reference mapping stays unchanged.
+  Standard suite execution requires no private artifact-output setting. Save
+  each generated artifact into an isolated owned temporary directory when no
+  retained directory is requested; remove only owned temporary outputs afterward.
+lines:
+  - line: "source-context"
+    description: "Safe GL render data comes only from original private prepared context"
+    formula: "Fresh source-qualified ordinary result and complete original/redacted digest must match opaque context; expose perstate safe numeric/source-employer facts. Forged/stale/stripped-method/wrongresult/year contexts reject before template IO."
+    testRef: "tests/pdf/pa-ordinary-resident-credit-context.test.ts::actual credit context exposes original-bound GL facts"
+  - line: "official-lines"
+    description: "One official2025 ScheduleG-L per positive state"
+    formula: "SectionI2aA and2cA=claimantPA40compensation;2aB/2cB=actualotherstatecompensation;2cC=lesser. Other unsupportedincomeclasses blank.3=sumC;4a=whole actualtaxliability afternonpaymentcredits;4b=whole actualnetpayments;4c=min4a4b;4d=sourcequalified adjustment0 in finite method;4e=4c-4d;5=existingwholePAtaxonsameincome;6=min4e5. Sum6 must match totalcredit andPA40line22; mismatches reject."
+    testRef: "tests/pdf/pa-ordinary-resident-credit-source-pdf.test.ts::actual resident and PY credit produce official GL values"
+  - line: "employer-source"
+    description: "SectionII actual original employer worksheet"
+    formula: "Group actual claimed payroll by retained original employer identity; preserve complete sanitized employername. Aggregate exactcents peremployer then whole-dollar report; totalprinted employers must equalSectionI columnB or reject explicitrounding-successor gap. ColumnE total equalsB. Additionalactualemployers need labelledsource continuations, no truncation or inventedsource."
+    testRef: "tests/pdf/pa-ordinary-resident-credit-source-pdf.test.ts::actual SectionII source employers and private output"
+  - line: "account-and-order"
+    description: "Original net paid credit remains distinct from withholding and SP/penalty"
+    formula: "Resident DE50000 income credit1535; PYresidentperiodDE20000 credit614; NRzero omits. ActualDE800WH+1200payment once; refund900 from2000 net1100 capscredit1100. SPcredit follows residentcredit:tax188,credit100,SP88. PAWH0/credit1000 retains REV96each,interest7+6+4+2=19,principal539,total558."
+    testRef: "tests/pdf/pa-ordinary-resident-credit-source-pdf.test.ts::actual refund and credit-before-SP-penalty values"
+  - line: "packet-routing"
+    description: "Distinct ordinary result routes supported official GL documents"
+    formula: "fillReturn creates pa-schedule-g-l-STATE-filled.pdf for each actualpositive jurisdiction. No GL for sourcequalifiedNRzero/none. Readiness explicitly reports missingexpectedpositive GL; evenpresent reviewforms do not establish requiredactualotherstate attachment copies orfiling readiness."
+    testRef: "tests/pdf/pa-ordinary-resident-credit-context.test.ts::actual ordinary GL missing packet is reported"
+  - line: "physical-private-template"
+    description: "Exact official template and saved appearances remain reviewonly"
+    formula: "Use exactregistered2025byteasset, year25; sourceyear/templatehash mismatchreject. Retain originalofficialgeometry and full12pages. Savedfieldtree/widget/AP agreement, no originalowner/employerTIN/account IDs or source references; fullpage render withactualZapfDingbats verifies legibility andreviewmarks."
+    testRef: "tests/pdf/pa-ordinary-resident-credit-source-pdf.test.ts::actual official GL template and privacy guards"
+
+  - line: "physical-template-registry"
+    description: "Register one additional exact official continuous2025 review blank"
+    formula: "2025 review pack has45 physical blanks including original twelve-page pa-schedule-g-l.pdf SHA256 b30072eb0bacf5c2cb4cd15344f1a6b9fabc01de99820c5508381c8004c3cd68; all prior exact hashes, corruption rejection and unknown/year gates retained. This adds no2026 or filing qualification."
+    testRef: "tests/pdf/template-registry.test.ts::pins every historical blank to exact bytes and rejects an unreviewed revision"

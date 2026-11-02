@@ -172,6 +172,10 @@ export const REVIEW_TEMPLATES_2025 = {
     "sha256": "cfe63039ffa4374f5fff67b7d2b37c5bdb802211fac55c69386e8f15c20d3e08",
     "revisionQualification": "unreviewed-legacy-snapshot"
   },
+  "pa-schedule-g-l.pdf": {
+    "sha256": "b30072eb0bacf5c2cb4cd15344f1a6b9fabc01de99820c5508381c8004c3cd68",
+    "revisionQualification": "official-continuous-mod03-24-year25-review-only-not-filing"
+  },
   "pa-40.pdf": {
     "sha256": "fcd7648601f3ce5a7a258be49c54aa1c604e1c61c1fe9175351451ac6087d8b3",
     "revisionQualification": "unreviewed-legacy-snapshot"

@@ -1,3 +1,4 @@
+import {fillPAOrdinaryScheduleGL} from "./mappings/2025/fill-pa-ordinary-schedule-gl.js";
 import {calculateScheduleCReviewSource} from "./schedule-c-review-source.js";
 import {preparePARoyaltyReview,assertPARoyaltyReview,type PreparedPARoyaltyReview} from "./pa-royalty-review-context.js";
 import { assertPAWorkingCreditReview, type PreparedPAWorkingCreditReview } from "./pa-working-credit-review-context.js";
@@ -1266,6 +1267,11 @@ export async function fillReturn(
     const outputPathPA40 = join(outputDir, "pa-40-filled.pdf");
     await savePacketPdf(docPA40, outputPathPA40);
     filledForms.push(outputPathPA40);
+
+    if(isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)&&result.stateReturns.pennsylvania.pa40.residentCredit.gt(0)){
+      const schedules=await fillPAOrdinaryScheduleGL(input,result,join(blankFormsDir,"pa-schedule-g-l.pdf"),options.paOrdinaryReview);
+      for(const {state,doc}of schedules){if(flatten)await flattenForm(doc.getForm());const path=join(outputDir,"pa-schedule-g-l-"+state.toLowerCase()+"-filled.pdf");await savePacketPdf(doc,path);filledForms.push(path);}
+    }
 
     if (
       hasPAScheduleSP(result.stateReturns.pennsylvania)

@@ -75,6 +75,7 @@ its minimal enum/type/dropdown edits; it qualifies source capture only.
   structure/privacy/visual inspection approved receipt
   `9f8b30416d5b4531f37d48f0d838f8465993898cb11848d19ee9fbb392926ddb`.
   Main85/eight and all11 package checks pass; original unsupported household positive remains recorded; reviewed successor below.
+- [x] Actual ordinary G-L review PDF12: main95/11 plus10 artifact controls and all13 checks pass after8 genuine main failures/six passes. Independent40/three approved c22ec579; main10PDF/122pages strict field/widget/AP/privacy and full rendered pixel/text parity pass. Portable harness and45-template registry preserve assertions. Original return/W2 attachments still missing from packet; readiness remains partial.
 - [ ] Root workspace actual PA export: five focused controls plus shared paths
   pass15/four/types3/spec/strict0/build. All three actual renderer packets each
   14pages reopen without fields/widgets/private IDs. Root inspected all42 pages

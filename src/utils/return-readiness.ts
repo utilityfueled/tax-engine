@@ -626,6 +626,15 @@ export function assessReturnReadiness(
     );
   }
 
+  const ordinaryPA=input.federalResult.stateReturns?.pennsylvania;
+  if(normalizedStateCode==="PA"&&ordinaryPA&&"methodVersion"in ordinaryPA&&ordinaryPA.methodVersion==="pa-ordinary-return-v1"&&ordinaryPA.pa40.residentCredit.gt(0)){
+    packetCompleteness="partial";
+    const states=ordinaryPA.residentCreditSources?.perState.filter(row=>row.credit.gt(0)).map(row=>row.state)??[];
+    if(!states.length)findings.push("Pennsylvania ordinary Schedule G-L is missing its actual source-qualified state detail.");
+    for(const state of states){const filename="pa-schedule-g-l-"+state.toLowerCase()+"-filled.pdf";if(!input.includedForms.some(form=>form.replaceAll("\\","/").split("/").at(-1)?.toLowerCase()===filename))findings.push("Pennsylvania ordinary Schedule G-L "+state+" is missing from the review packet.");}
+    findings.push("Pennsylvania ordinary Schedule G-L review forms do not include the original other-state return and W-2 attachments required to support the credit.");
+  }
+
   if (
     normalizedStateCode === "PA"
     && !input.taxInput.paNonresidentReturn
