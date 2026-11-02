@@ -4,7 +4,11 @@ import type { FilingStatus, NecEntryData, SelfEmploymentSectionData, StateReturn
 import { parseGuidedCurrency, sumGuidedDisplayAmounts } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 
+import type {ScheduleCSourceFacts} from "@/models/inputs";
+
 export interface BusinessSourceData {
+  businessInterest?: string;
+  scheduleCSourceFacts?: ScheduleCSourceFacts;
   accountHolder?: "primary" | "spouse" | "joint" | "";
   activityDescription?: string;
   businessName?: string;
@@ -65,6 +69,8 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   if (!["cash", "accrual"].includes(facts.accountingMethod ?? "")) errors.accountingMethod = "Confirm the actual accounting method; another method requires additional support.";
   for (const field of ["singleBusinessConfirmed", "incomeReconciled", "expensesReconciled"] as const) if (facts[field] !== true) errors[field] = field === "singleBusinessConfirmed" ? "This interview supports one actual business activity; separate activities cannot be combined." : "Review and reconcile the actual source amounts before calculating.";
   for (const [field, label] of businessSourceAmounts) { const error = amountError(facts[field], label); if (error) errors[field] = error; }
+  if(facts.businessInterest !== undefined){const error=amountError(facts.businessInterest,"actual aggregate business interest");if(error)errors.businessInterest=error;}
+  if(facts.scheduleCSourceFacts?.sourceFactsConfirmed !== true && (facts.scheduleCSourceFacts || (hasEnteredAmount(facts.businessInterest) && parseGuidedCurrency(facts.businessInterest).gt(0)))) errors.scheduleCSourceFacts="Confirm actual Schedule C interest, expense and address source facts.";
   const manualError = amountError(data.manualGrossReceipts, "gross receipts not already included on Forms 1099-NEC"); if (manualError) errors.manualGrossReceipts = manualError;
   if (hasEnteredAmount(data.expenses.employeeBenefitPrograms)) { const error = amountError(data.expenses.employeeBenefitPrograms, "actual employee-benefit program expense"); if (error) errors.employeeBenefitPrograms = error; }
   for (const field of expenseCategories) { const error = amountError(data.expenses[field], `${field} business expenses`); if (error) errors[`expense-${field}`] = error; }
@@ -93,7 +99,7 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   const receipts = [data.manualGrossReceipts, ...data.necEntries.filter(isStartedNec).map(entry => entry.nonemployeeCompensation)];
   const businessIncome = [...receipts, facts.otherIncome];
   const incomeReductions = [facts.returnsAndAllowances, facts.costOfGoodsSold];
-  const expenseAmounts = [...expenseCategories.filter(field => field !== "meals").map(field => data.expenses[field]), facts.contractLabor, facts.depreciation, facts.legalAndProfessional];
+  const expenseAmounts = [...expenseCategories.filter(field => field !== "meals").map(field => data.expenses[field]), facts.contractLabor, facts.depreciation, facts.legalAndProfessional, ...(facts.businessInterest===undefined?[]:[facts.businessInterest]), ...(facts.scheduleCSourceFacts?.ordinaryExpenses?.rows?.map(row=>row.amount)??[])];
   if ([...businessIncome, ...incomeReductions, ...expenseAmounts, data.expenses.meals].every(value => !amountError(value, "business amount"))) {
     const total = (values: Array<string | undefined>) => values.reduce((sum, value) => sum.plus(parseGuidedCurrency(value)), new Decimal(0));
     const tentative = total(businessIncome).minus(total(incomeReductions)).minus(total(expenseAmounts)).minus(parseGuidedCurrency(data.expenses.meals).times("0.5").toDecimalPlaces(0, Decimal.ROUND_HALF_UP));

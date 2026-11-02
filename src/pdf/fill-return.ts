@@ -1,3 +1,4 @@
+import {calculateScheduleCReviewSource} from "./schedule-c-review-source.js";
 import {preparePARoyaltyReview,assertPARoyaltyReview,type PreparedPARoyaltyReview} from "./pa-royalty-review-context.js";
 /**
  * Top-level orchestrator for filling a complete tax return as PDFs.
@@ -436,6 +437,8 @@ export async function fillReturn(
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
   assertScheduleRSourceConsistency(input, result);
+  const scheduleCSources=calculateScheduleCReviewSource(input,result.scheduleC);
+  if(scheduleCSources&&!result.scheduleC)throw new Error("Schedule C actual source calculation is missing");
   if (options.pageOnlyTemporaryMerge && (options.flatten !== true || options.useObjectStreams !== false)) {
     throw new Error("Page-only temporary merge packets require flattened, uncompressed components");
   }

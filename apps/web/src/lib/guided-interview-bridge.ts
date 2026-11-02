@@ -1,3 +1,4 @@
+import {calculateScheduleCSourceFacts} from "../../../../src/engine/schedules/schedule-c-source-facts.js";
 import {buildNecInputs} from './guided-business-facts';
 export {buildNecInputs} from './guided-business-facts';
 import { buildGuidedCurrentMtcOriginals } from './guided-current-minimum-tax-credit';
@@ -227,6 +228,7 @@ export function buildScheduleCInput(
     ? receiptAmounts.reduce((sum, value) => sum.plus(value), new Decimal(0)) : null;
 
   return {
+    sourceFacts: businessFacts?.scheduleCSourceFacts,
     grossReceipts: totalGross?.toFixed(),
     accountHolder: businessFacts?.accountHolder === "primary" || businessFacts?.accountHolder === "spouse" ? businessFacts.accountHolder : undefined,
     principalBusinessActivity: businessFacts?.activityDescription?.trim() || undefined,
@@ -245,6 +247,8 @@ export function buildScheduleCInput(
     qbiMateriallyParticipated: qbiMateriallyParticipated ?? undefined,
     expenses: expenses
       ? {
+          ...(businessFacts?.scheduleCSourceFacts?.ordinaryExpenses?.rows? Object.fromEntries(businessFacts.scheduleCSourceFacts.ordinaryExpenses.rows.flatMap(row=>row.category?[[row.category,toOptionalDecimalString(row.amount)]]:[])) : {}),
+          businessInterest:toOptionalDecimalString(businessFacts?.businessInterest),
           employeeBenefitPrograms: toOptionalDecimalString(expenses.employeeBenefitPrograms),
           contractLabor: toOptionalDecimalString(businessFacts?.contractLabor),
           depreciation: toOptionalDecimalString(businessFacts?.depreciation),
@@ -758,7 +762,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
   const currentCapitalCarry = form172?.capitalSources?.priorCapitalLosses;
 
   const healthInsurance = buildHealthInsuranceInput(adjustmentData?.healthInsuranceFacts, segmentation.filingStatus, state.taxYear, adjustmentData?.selfEmployedHealthInsurance);
-  return {
+  const input: GuidedTaxInputSources = {
     taxpayer: {
       taxYear: state.taxYear,
       filingStatus: mapFilingStatus(segmentation.filingStatus),
@@ -866,6 +870,8 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
         ? paymentAdjustments
         : undefined,
   };
+  if(input.scheduleC?.sourceFacts || input.scheduleC?.expenses?.businessInterest){try{calculateScheduleCSourceFacts(input as Parameters<typeof calculateScheduleCSourceFacts>[0],input.scheduleC);}catch{return null;}}
+  return input;
 }
 
 // ── Preview metrics ─────────────────────────────────────────────────────────

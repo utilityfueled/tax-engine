@@ -949,7 +949,8 @@ function getPAClass4Owner(accountHolder?: PAClass4Owner): PAClass4Owner {
   return accountHolder === "spouse" ? "spouse" : "primary";
 }
 
-function calculatePAScheduleCNetIncome(input: TaxYearInput): Decimal {
+/** Actual PA-only source projection; no federal deduction or whole-return qualification. */
+export function calculatePAScheduleCNetIncome(input: TaxYearInput): Decimal {
   if (!input.scheduleC) {
     return new Decimal(0);
   }
@@ -1503,6 +1504,14 @@ export function calculatePAReturn(
     const hasRawSupportedScheduleODeductions = adjustments?.archerMSADeduction !== undefined
       || adjustments?.hsaDeduction !== undefined
       || adjustments?.studentLoanInterest !== undefined;
+
+    // PA-only expense sources do not require a speculative federal calculation
+    // when no federal-dependent Schedule O deduction/default is requested.
+    if (!resolvedOverrides.scheduleO && !hasRawSupportedScheduleODeductions
+      && input.form8889 === undefined && input.form8889ByOwner === undefined
+      && input.studentLoanInterestFacts === undefined && (input.form1098E ?? []).length === 0) {
+      return undefined;
+    }
 
     if (!hasFederalConstantsForYear) {
       if (!resolvedOverrides.scheduleO && !hasRawSupportedScheduleODeductions) {

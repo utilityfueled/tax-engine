@@ -8,7 +8,7 @@
 
 import { describe, it, expect } from "vitest";
 import Decimal from "decimal.js";
-import { calculatePAReturn, type PAOrchestratorOverrides } from "@/engine/state/pa-orchestrator.js";
+import { calculatePAReturn, calculatePAScheduleCNetIncome, type PAOrchestratorOverrides } from "@/engine/state/pa-orchestrator.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs.js";
 
@@ -340,7 +340,7 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
     });
 
     it("PA orchestrator maps additional PA Schedule C printed expense lines into Class 4 business income", () => {
-      const result = calculatePAReturn(makeInput({
+      const input = makeInput({
         scheduleC: {
           grossReceipts: "10000",
           expenses: {
@@ -351,13 +351,16 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             wages: "2000",
           },
         },
-      }));
+      });
+      // State-only original-source projection; this is not a mocked successful full return.
+      const paNetBusinessIncome = calculatePAScheduleCNetIncome(input);
+      expect(() => calculatePAReturn(input)).toThrow(/separate supported federal source method/);
 
-      expect(result.mappedIncome.netBusinessIncome.toNumber()).toBe(5600);
+      expect(paNetBusinessIncome.toNumber()).toBe(5600);
     });
 
     it("PA orchestrator maps newly supported PA Schedule C employee and property deduction lines into Class 4 business income", () => {
-      const result = calculatePAReturn(makeInput({
+      const input = makeInput({
         scheduleC: {
           grossReceipts: "10000",
           expenses: {
@@ -368,13 +371,16 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             repairsAndMaintenance: "260.49",
           },
         },
-      }));
+      });
+      // State-only original-source projection; this is not a mocked successful full return.
+      const paNetBusinessIncome = calculatePAScheduleCNetIncome(input);
+      expect(() => calculatePAReturn(input)).toThrow(/separate supported federal source method/);
 
-      expect(result.mappedIncome.netBusinessIncome.toNumber()).toBe(9107);
+      expect(paNetBusinessIncome.toNumber()).toBe(9107);
     });
 
     it("PA orchestrator maps newly supported PA Schedule C amortization, postage, and IDC/start-up deduction lines into Class 4 business income", () => {
-      const result = calculatePAReturn(makeInput({
+      const input = makeInput({
         scheduleC: {
           grossReceipts: "10000",
           expenses: {
@@ -386,9 +392,12 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
             startupCostsDirectExpense: "100",
           },
         },
-      } as Partial<TaxYearInput>));
+      } as Partial<TaxYearInput>);
+      // State-only original-source projection; this is not a mocked successful full return.
+      const paNetBusinessIncome = calculatePAScheduleCNetIncome(input);
+      expect(() => calculatePAReturn(input)).toThrow(/separate supported federal source method/);
 
-      expect(result.mappedIncome.netBusinessIncome.toNumber()).toBe(9280);
+      expect(paNetBusinessIncome.toNumber()).toBe(9280);
     });
 
     it("PA orchestrator maps actual home-office costs from Schedule C into Class 4 business income", () => {

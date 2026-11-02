@@ -14,6 +14,7 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
  *   Part V:       Other Expenses (Page 2)
  */
 
+import {calculateScheduleCReviewSource} from "../../schedule-c-review-source.js";
 import { PDFDocument } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
@@ -109,6 +110,11 @@ const EXPENSE_FIELD_MAP: Record<string, string> = {
   "Advertising": FIELDS.line8,
   "Car and truck": FIELDS.line9,
   "Contract labor": FIELDS.line11,
+  "Commissions and fees":FIELDS.line10,
+  "Rent of business property":FIELDS.line20b,
+  "Repairs and maintenance":FIELDS.line21,
+  "Taxes and licenses":FIELDS.line23,
+  "Wages":FIELDS.line26,
   "Depreciation and section 179": FIELDS.line13,
   "Insurance": FIELDS.line15,
   "Legal and professional": FIELDS.line17,
@@ -132,6 +138,18 @@ export async function fillScheduleC(
   blankPdfPath: string,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  const source = calculateScheduleCReviewSource(input,result.scheduleC);
+  if(source){
+    const bound=result.scheduleC?.lines.filter(row=>row.line==='actual-source-commitment');
+    if(bound?.length!==1 || bound[0].inputs['Original source commitment']!==source.commitment)throw new Error('Schedule C source is stale or calculation original source changed');
+    const expectedRows = [['10','commissionsAndFees'],['20b','rentOnBusinessProperty'],['21','repairsAndMaintenance'],['23','taxes'],['26','wages']] as const;
+    for(const [line,key] of expectedRows){const expected=source.rowAmounts[key]??new Decimal(0);const rows=result.scheduleC?.lines.filter(row=>row.form==='Sched C'&&row.line===line);if(rows?.length!==1||!rows[0].value.eq(expected))throw new Error('Schedule C ordinary source calculation is stale');}
+    const expectedOther=new Decimal(input.scheduleC?.expenses?.otherExpenses??'0').plus(source.partV);
+    if(!result.scheduleC?.expenseBreakdown['Other expenses']?.eq(expectedOther)||!result.scheduleC?.lines.find(row=>row.form==='Sched C'&&row.line==='27b')?.value.eq(expectedOther))throw new Error('Schedule C remaining expense source calculation is stale');
+    for(const [line,value] of [['16a',source.mortgage],['16b',source.vehicle.plus(source.other)]] as const){
+      if(input.scheduleC?.sourceFacts?.interest && !result.scheduleC?.lines.find(row=>row.line===line)?.value.eq(value))throw new Error('Schedule C source interest calculation is stale');
+    }
+  }
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
   const form = doc.getForm();
   const F = FIELDS;
@@ -149,6 +167,10 @@ export async function fillScheduleC(
     setTextField(form, F.ssn, proprietor.ssn.replace(/-/g, ""));
   }
 
+  if(source?.address?.method==='separate_business_address'){
+    const a=source.address;setTextField(form,F.businessAddress,[a.street,a.unit].filter(Boolean).join(' '));setTextField(form,F.businessCityStateZip,`${a.city}, ${a.state} ${a.zip}`);
+  }
+  if(source && (source.interestTotal.gt(0)||input.scheduleC?.sourceFacts?.interest)){setCurrencyField(form,F.line16a,source.mortgage);setCurrencyField(form,F.line16b,source.vehicle.plus(source.other));}
   // ── Business info from actual input ──
   if (scInput) {
     setTextField(form, F.businessOrProfession, scInput.principalBusinessActivity ?? "");
@@ -222,7 +244,14 @@ export async function fillScheduleC(
     setCheckBox(form, F.allInvestmentAtRisk, scInput?.allInvestmentAtRisk === true);
     setCheckBox(form, F.someInvestmentNotAtRisk, scInput?.allInvestmentAtRisk === false);
   }
-  if (scInput?.otherExpenseDescription && sc.expenseBreakdown["Other expenses"]?.gt(0)) {
+  if(source && sc.expenseBreakdown['Other expenses']?.gt(0)){
+    const entries:Array<[string,Decimal]>=[];
+    const remaining=new Decimal(scInput?.expenses?.otherExpenses??'0');if(remaining.gt(0))entries.push([scInput?.otherExpenseDescription??'',remaining]);
+    const descriptions:Record<string,string>={bankCharges:'Bank charges',duesAndPublications:'Business dues and publications',freight:'Freight outside inventory',laundryAndCleaning:'Business laundry and cleaning',managementFees:'Management fees',postage:'Business postage',telephone:'Business telephone'};
+    for(const [key,label] of Object.entries(descriptions)){const value=source.rowAmounts[key];if(value?.gt(0))entries.push([label,value]);}
+    entries.forEach(([label,value],i)=>{setTextField(form,`topmostSubform[0].Page2[0].PartVTable[0].Item${i+1}[0].f2_${15+2*i}[0]`,label);setCurrencyField(form,`topmostSubform[0].Page2[0].PartVTable[0].Item${i+1}[0].f2_${16+2*i}[0]`,value);});
+    setCurrencyField(form,'topmostSubform[0].Page2[0].f2_33[0]',audited('27b',sc.expenseBreakdown['Other expenses']));
+  } else if (scInput?.otherExpenseDescription && sc.expenseBreakdown["Other expenses"]?.gt(0)) {
     const otherExpenses = audited("27b", sc.expenseBreakdown["Other expenses"]);
     setTextField(form, "topmostSubform[0].Page2[0].PartVTable[0].Item1[0].f2_15[0]", scInput.otherExpenseDescription);
     setCurrencyField(form, "topmostSubform[0].Page2[0].PartVTable[0].Item1[0].f2_16[0]", otherExpenses);

@@ -3262,7 +3262,42 @@ export const Form8829Schema = z.object({
   }
 });
 
+/** Actual source records; blanks remain unknown until the Schedule C source calculator validates them. */
+export const ScheduleCSourceFactsSchema = z.object({
+  sourceTaxYear:z.number().int().optional(), sourceReference:z.string().optional(), sourceFactsConfirmed:z.boolean().nullable().optional(),
+  accountHolder:z.enum(["primary","spouse"]).optional(), ownerName:z.string().optional(),
+  businessNameStatus:z.enum(["reported","blank_original"]).optional(), businessName:z.string().optional(),
+  businessEINStatus:z.enum(["reported","not_issued"]).optional(), businessEIN:z.string().optional(),
+  interest:z.object({
+    sourceReference:z.string().optional(), mortgageInterest:z.string().optional(), vehicleLoanInterest:z.string().optional(), otherInterest:z.string().optional(),
+    allInterestOrdinaryCurrentCashBusinessOnlyConfirmed:z.boolean().nullable().optional(),
+    noCapitalizedPrepaidRelatedPartyOrForeignInterestConfirmed:z.boolean().nullable().optional(),
+    noPersonalOrSchedule1AInterestConfirmed:z.boolean().nullable().optional(),
+    mortgageBank1098OrSimilarStatementConfirmed:z.boolean().nullable().optional(),
+    notDeductedElsewhereConfirmed:z.boolean().nullable().optional(),
+    otherExpensesExcludingInterest:z.string().optional(), otherExpenseSourceReference:z.string().optional(),
+    grossReceiptsException:z.object({
+      allAggregationAndPassThroughSharesIncludedConfirmed:z.boolean().nullable().optional(), notTaxShelterConfirmed:z.boolean().nullable().optional(), noPriorDisallowedInterestOrPartnershipEbieConfirmed:z.boolean().nullable().optional(),
+      history:z.array(z.object({taxYear:z.number().int().optional(),grossReceipts:z.string().optional(),sourceReference:z.string().optional(),fullTaxYearConfirmed:z.boolean().nullable().optional()}).strict()).optional(),
+    }).strict().optional(),
+    reclassification:z.object({originalOtherExpenses:z.string().optional(),interestAlreadyIncluded:z.string().optional(),ordinaryExpensesAlreadyIncluded:z.string().optional(),remainingOtherExpenses:z.string().optional(),sourceReference:z.string().optional()}).strict().optional(),
+  }).strict().optional(),
+  address:z.object({method:z.enum(["separate_business_address","home_at_return_address"]).optional(),street:z.string().optional(),unitStatus:z.enum(["reported","blank_original"]).optional(),unit:z.string().optional(),city:z.string().optional(),state:z.string().optional(),zip:z.string().optional(),homeAtReturnAddressConfirmed:z.boolean().nullable().optional(),homeReturnAddress:z.object({street:z.string(),apt:z.string().optional(),city:z.string(),state:z.string(),zip:z.string()}).strict().optional()}).strict().optional(),
+  ordinaryExpenses:z.object({sourceReference:z.string().optional(),sourceFactsConfirmed:z.boolean().nullable().optional(),
+    allCurrentCashBusinessOnlyConfirmed:z.boolean().nullable().optional(),
+    notCapitalizedInventoryOrDeductedElsewhereConfirmed:z.boolean().nullable().optional(),
+    rentExcludesHomeVehiclesPrepaidAndCapitalAcquisitionConfirmed:z.boolean().nullable().optional(),
+    repairsExcludeCapitalImprovementsConfirmed:z.boolean().nullable().optional(),
+    taxesExcludeIncomeSelfEmploymentCollectedSalesPenaltiesAndAssessmentsConfirmed:z.boolean().nullable().optional(),
+    wagesAreNonownerEmployeesWithoutEmploymentCreditsConfirmed:z.boolean().nullable().optional(),
+    remainingOtherExpenses:z.string().optional(),remainingOtherExpenseSourceReference:z.string().optional(),
+    rows:z.array(z.object({category:z.string().optional(),amount:z.string().optional(),sourceReference:z.string().optional(),sourceFactsConfirmed:z.boolean().nullable().optional()}).strict()).optional(),
+  }).strict().optional(),
+}).strict();
+export type ScheduleCSourceFacts = z.infer<typeof ScheduleCSourceFactsSchema>;
+
 export const ScheduleCInputSchema = z.object({
+  sourceFacts:ScheduleCSourceFactsSchema.optional(),
   qbiMateriallyParticipated: z.boolean().optional(),
   principalBusinessActivity: z.string().optional(),
   allInvestmentAtRisk: z.boolean().optional(),

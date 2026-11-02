@@ -8793,6 +8793,27 @@
       ]
     },
     {
+      "key": "federal/schedule-c-source-facts",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/schedules/schedule-c-source-facts.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/schedule-d",
       "jurisdiction": "federal",
       "taxYear": 2025,

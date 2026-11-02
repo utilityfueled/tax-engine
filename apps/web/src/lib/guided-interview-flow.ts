@@ -1563,6 +1563,10 @@ export function updateSectionData(
   const iraSourcesChanged = ["income-w2", "income-self-employment", "income-retirement"].includes(sectionId) && adjustments?.iraContributions;
   const hsaSourcesChanged = ["income-w2", "personal-info"].includes(sectionId) && adjustments?.hsaAccounts;
   const sourceValuesChanged = guidedSourceValuesChanged(state.sectionData[sectionId as keyof SectionDataMap], data);
+  const nextBusiness = sectionId === "income-self-employment" ? data as SelfEmploymentSectionData : state.sectionData["income-self-employment"];
+  const scheduleCValues=(value:SelfEmploymentSectionData|undefined)=>value?{...value,businessFacts:value.businessFacts?{...value.businessFacts,incomeReconciled:undefined,expensesReconciled:undefined}:undefined}:value;
+  const scheduleCValuesChanged=sectionId==='income-self-employment'?guidedSourceValuesChanged(scheduleCValues(state.sectionData['income-self-employment']),scheduleCValues(nextBusiness)):sourceValuesChanged;
+  const scheduleCSourcesChanged=scheduleCValuesChanged && ["personal-info","income-self-employment","adjustments","credits"].includes(sectionId) && nextBusiness?.businessFacts?.scheduleCSourceFacts;
   const nextPersonal = sectionId === "personal-info" ? data as PersonalInfoData : state.sectionData["personal-info"];
   const eicClaimantSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && nextPersonal?.eicClaimantEligibility;
   const eicSeparatedSourcesChanged = sourceValuesChanged && sectionId === "personal-info" && nextPersonal?.eicSeparatedSpouseSources;
@@ -1631,6 +1635,7 @@ export function updateSectionData(
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
+      ...(scheduleCSourcesChanged && nextBusiness ? {"income-self-employment":{...nextBusiness,businessFacts:{...nextBusiness.businessFacts,scheduleCSourceFacts:{...scheduleCSourcesChanged,sourceFactsConfirmed:null}}}}:{}),
       ...(royaltySourcesChanged ? { "income-royalties": invalidateRoyaltySources(royaltySourcesChanged) } : {}),
       ...((eicClaimantSourcesChanged || eicSeparatedSourcesChanged || eicHistorySourcesChanged || eicCurrentSourcesChanged) && nextPersonal ? { "personal-info": { ...nextPersonal,
         ...(eicClaimantSourcesChanged ? { eicClaimantEligibility: { ...eicClaimantSourcesChanged, sourceFactsConfirmed: null } } : {}),

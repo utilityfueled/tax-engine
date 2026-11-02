@@ -23,5 +23,10 @@ lines:
     testRef: "tests/pdf/schedule-c-2026-candidate.test.ts::retains every diagnostic value and appearance after save"
   - line: "new-interest-and-address"
     description: "Keep vehicle interest and other interest distinct on the new printed lines"
-    formula: "Line16b vehicle-loan interest uses f1_29; line16c other interest uses f1_31 under Lines8-16c_ReadOrder. No old line16b alias. Street, apartment, city, state and ZIP have distinct widgets. Source-data allocation and tax qualification remain pending."
+    formula: "Line16b vehicle-loan interest uses f1_29; line16c other interest uses f1_31 under Lines8-16c_ReadOrder. No old line16b alias. Street, apartment, city, state and ZIP have distinct widgets. A separate internal actual-source projector covers the bounded source-qualified cash expense cohort; all wider tax qualification and export gates remain pending."
     testRef: "tests/pdf/schedule-c-2026-candidate.test.ts::keeps new interest and address fields distinct"
+
+  - line: "actual-source-projection"
+    description: "Isolated actual source values for final2026 business address and interest split"
+    formula: "Source-qualified canonical aggregate interest splits into actual16a mortgage/16b vehicle/16c other and split address fields. Copy canonical source values only after actual source binding and row reconciliation. This internal candidate projection does not register any review/filing export or enable2026."
+    testRef: "tests/pdf/schedule-c-source-facts.test.ts::projects actual 2026 sources to split fields with every export gate closed"
