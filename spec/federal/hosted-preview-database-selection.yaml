@@ -1,0 +1,34 @@
+form: "Hosted-Preview-Database-Selection"
+fullName: "Hosted Vercel previews use only their isolated pooled PostgreSQL connection"
+taxYear: 2026
+reference: "https://vercel.com/docs/environment-variables/system-environment-variables; https://node-postgres.com/features/connecting; docs/upgrade-2026-execution-brief.md"
+notes: |
+  Operator confirmed metadata only: TAX_ENGINE_STAGING_DATABASE_DATABASE_URL is
+  the Neon pooled connection, installed as a sensitive Preview-only variable.
+  No secret value is read by these tests. The exact VERCEL_ENV preview marker
+  changes selection only in hosted mode. This is a configuration boundary, not
+  database connectivity, staging qualification, production deployment or recovery
+  evidence. Missing/invalid isolated preview configuration must never fall back
+  to DATABASE_URL or unpooled/alias variables. All other modes retain the current
+  DATABASE_URL behavior, including existing normalization/TLS/deadline policies.
+lines:
+  - line: "isolated-preview"
+    description: "Exact hosted preview selects the confirmed pooled connection"
+    formula: "hosted AND VERCEL_ENV equals preview selects trimmed TAX_ENGINE_STAGING_DATABASE_DATABASE_URL; DATABASE_URL and alternate prefixed aliases are ignored."
+    testRef: "tests/apps/web/hosted-preview-database-selection.test.ts::selects only the confirmed pooled preview variable"
+  - line: "missing-isolation"
+    description: "A missing or invalid preview connection blocks before pool allocation"
+    formula: "Require parseable postgres/postgresql URL with hostname and nonempty database path. Missing, blank, malformed, non-PostgreSQL, missing-host or missing-database values return null/blocked without shared fallback; no pool connection is opened."
+    testRef: "tests/apps/web/hosted-preview-database-selection.test.ts::blocks invalid isolated preview configuration without shared fallback (%s)"
+  - line: "auth-propagation"
+    description: "Actual hosted auth consumes the selected database configuration"
+    formula: "Preview-only valid URL is live/configured without DATABASE_URL. Missing preview configuration blocks auth even in development NODE_ENV, retaining independent secret/origin gates."
+    testRef: "tests/apps/web/hosted-preview-database-selection.test.ts::propagates preview isolation to actual auth configuration"
+  - line: "other-environments"
+    description: "Production and self-host preserve their existing database contract"
+    formula: "All non-preview VERCEL_ENV values and all self-host deployments retain DATABASE_URL selection, current production missing-DB block, and disabled self-host runtime."
+    testRef: "tests/apps/web/hosted-preview-database-selection.test.ts::preserves non-preview hosted DATABASE_URL selection (%s)"
+  - line: "pool-policy"
+    description: "The selected pooled connection retains TLS, caching and deadlines"
+    formula: "Pass the selected normalized URL once to the existing runtime; require certificate validation for sslmode=require, retain all pool limits/timeouts and cache identity. Never log credentials or URLs in configuration failures."
+    testRef: "tests/apps/web/hosted-preview-database-selection.test.ts::retains TLS deadlines and runtime identity for the selected preview pool"

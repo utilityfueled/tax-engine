@@ -107,17 +107,44 @@ function discardClientAfterReadTimeout(client: PoolClient) {
   }) as typeof client.query;
 }
 
+function isHostedPreview(deploymentMode: "self-host" | "hosted", env: HostedDbEnvironment) {
+  return deploymentMode === "hosted" && env.VERCEL_ENV === "preview";
+}
+
+function getIsolatedPreviewDatabaseUrl(env: HostedDbEnvironment): string | null {
+  const databaseUrl = env.TAX_ENGINE_STAGING_DATABASE_DATABASE_URL?.trim();
+  if (!databaseUrl) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(databaseUrl);
+    return (parsed.protocol === "postgres:" || parsed.protocol === "postgresql:")
+      && Boolean(parsed.hostname)
+      && parsed.pathname.length > 1
+      ? databaseUrl
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 export function getHostedServerDatabaseConfig(
   env: HostedDbEnvironment = process.env
 ): HostedServerDatabaseConfig {
   const deploymentMode = resolveDeploymentMode(env);
   const nodeEnv = env.NODE_ENV?.trim().toLowerCase() || "development";
-  const databaseUrl = env.DATABASE_URL?.trim() || null;
-  const blocked = deploymentMode === "hosted" && nodeEnv === "production" && !databaseUrl;
+  const preview = isHostedPreview(deploymentMode, env);
+  const databaseUrl = preview
+    ? getIsolatedPreviewDatabaseUrl(env)
+    : env.DATABASE_URL?.trim() || null;
+  const blocked = deploymentMode === "hosted" && (nodeEnv === "production" || preview) && !databaseUrl;
 
   if (blocked) {
     console.error(
-      "[security] CRITICAL: DATABASE_URL is not configured for hosted production mode. " +
+      (preview
+        ? "[security] CRITICAL: Isolated hosted preview database configuration is missing or invalid. "
+        : "[security] CRITICAL: DATABASE_URL is not configured for hosted production mode. ") +
       "Hosted auth, billing, and workspace persistence are blocked."
     );
   }
@@ -141,7 +168,9 @@ export async function getHostedServerDatabase(
 
   if (!config.databaseUrl) {
     throw new Error(
-      "Server configuration error: DATABASE_URL is required for hosted account, billing, and persistence features."
+      isHostedPreview(config.deploymentMode, env)
+        ? "Server configuration error: a valid isolated preview PostgreSQL connection is required for hosted account, billing, and persistence features."
+        : "Server configuration error: DATABASE_URL is required for hosted account, billing, and persistence features."
     );
   }
 

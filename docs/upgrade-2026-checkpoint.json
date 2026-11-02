@@ -13184,6 +13184,41 @@
     },
     "independentReview": "08fa940f53bfb8da523664427ce53a758ba27fa16c844dff0635e143147492ac",
     "securityGate": "Nov3 seven announced medium advisories require exact affectedrange/fix recheck;16.4.4 is bugfix-only",
+    "releaseReady": false,
+    "commit": "aeb2604b"
+  },
+  "continuation20261102Hosting": {
+    "baseCommit": "aeb2604b",
+    "database": {
+      "userApproved": true,
+      "created": true,
+      "free": true,
+      "region": "iad1",
+      "auth": false,
+      "realtime": false,
+      "previewConnectionVerified": true,
+      "sensitive": true,
+      "variableName": "TAX_ENGINE_STAGING_DATABASE_DATABASE_URL",
+      "oldSharedDATABASE_URLUntouched": true,
+      "runtimeQualified": false
+    },
+    "smtp": {
+      "config4PreviewOnly": true,
+      "sender": "support@vivalatax.com",
+      "password": "user created Zoho app password; completing direct Vercel save; last metadata absent",
+      "delivered": false
+    },
+    "selector": {
+      "sourceFirst": "10genuinefail5pass",
+      "mainTests": "89/4 plus overlapping173/7authbilling regression; noadditiveclaim",
+      "checks": "all11pass; types3/spec/inventory/strictlint0/engine+explicitpreviewwebbuild/diff"
+    },
+    "ai": {
+      "totalApprovedSpendUSD": "5.00",
+      "projectAccess": "pending",
+      "actualSpendUSD": "0.00",
+      "humanTaxReviewer": "unassigned; review requirement open"
+    },
     "releaseReady": false
   }
 }

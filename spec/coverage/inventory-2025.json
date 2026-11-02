@@ -6374,6 +6374,26 @@
       ]
     },
     {
+      "key": "federal/hosted-preview-database-selection",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://vercel.com/docs/environment-variables/system-environment-variables; https://node-postgres.com/features/connecting; docs/upgrade-2026-execution-brief.md",
+      "specPath": "spec/federal/hosted-preview-database-selection.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-webhook-delivery",
       "jurisdiction": "federal",
       "taxYear": 2026,

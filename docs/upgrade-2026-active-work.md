@@ -120,11 +120,11 @@ were revealed. Names KV_REST_API_URL/TOKEN already match the existing adapter.
 Evidence `nov02-parent-hosted-access-refresh/staging-redis-browser.json`.
 Actual hosted rate-limit operation remains untested until a valid preview runs.
 
-A free isolated Neon database setup is prepared in the browser. Automatic review
-blocked continuing because database creation/access authorization was not
-explicit; approval request is pending. Production and unrelated existing stores
-remain excluded. Test SMTP service/sender credentials are also requested; do not
-paste secrets into chat. No database created or production operation performed.
+The user explicitly approved a free isolated Neon database and Preview-only connection. Initial provisioning and later plan-fetch attempts failed; a fresh retry succeeded. `tax-engine-staging-postgres` is Available/Free in iad1 with Auth/Realtime off. Saved connection confirms tax-engine / Preview only / Sensitive. Its isolated prefix installs `TAX_ENGINE_STAGING_DATABASE_DATABASE_URL`; the old shared DATABASE_URL was not modified. The actual preview-only selector has main10fail/5pass red, then89/four/all11 package checks; real auth/billing regression recorded in its ledger. Deployment and runtime qualification still await the pushed selector.
+
+All four nonsecret SMTP settings are saved Preview only, sender `support@vivalatax.com`. The user created a Zoho app password and is completing its direct Vercel Secret/Preview save; the last refreshed metadata still showed no saved SMTP password. No secret was read. Runtime email delivery is untested.
+
+The user approved up to$5 total synthetic provider-run spend and will provide project access. No provider run or spend is established. No qualified human tax reviewer is selected; a plain-language review packet is being prepared. The review requirement is not waived.
 
 IRS1040/1-A endpoints still served2025 on November2. Existing global CI/coverage
 and runtime records retain their exact earlier commits and are not qualification
@@ -167,3 +167,7 @@ status/diff inside archive-only trees. Continue implementing all unblocked work.
 
 - `e3f7fd95` pushed: public API reciprocal-source fixture correction, main42/two/allseven checks.
 - Next16.4.4 maintenance3: exact11family/507unchanged, independent08fa940f; main123/eight/types3/strictpeerinstall/bothbuilds/lint/diff pass; full522/prod426 audit0. November3 announced security release remains a required recheck, not resolved by16.4.4. See `upgrade-2026-next-1644-refresh.md`.
+
+- `aeb2604b` pushed: Next16.4.4 maintenance, main123/eight/allnine plus full522/prod426 audits0. November3 actual security recheck remains.
+
+Parent real auth/billing regression:173/seven passes (`nov02-parent-hosted-preview-db-main-regression/checks.json`); cohorts overlap with89/four and must not be added. All original15 selector controls remain exact.
