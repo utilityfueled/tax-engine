@@ -1344,6 +1344,16 @@
       "note": "Actual same-couple originals and historical owner use determine current joint loss-year totals. Independent regular and alternative sources and fixed investment fractions are retained. Review output does not assign current owner closing shares or establish human, final2026 or filing qualification."
     },
     {
+      "key": "federal/net-operating-loss-new-marriage",
+      "enginePath": "src/engine/forms/net-operating-loss-new-marriage.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "testRefs": [
+        "tests/engine/federal-net-operating-loss-new-marriage.test.ts::uses only the actual loss owner income with independent AMT originals",
+        "tests/engine/federal-net-operating-loss-new-marriage.test.ts::calculates verified empty personal ledgers without owner contexts"
+      ],
+      "note": "Actual individual premarital originals and separately recomputed owner MFS current/modified sources constrain joint regular and independent AMT use. Guided edits invalidate source confirmations; historical review output binds original facts. Specialist source projections, final2026 forms, filing and qualified human review remain distinct."
+    },
+    {
       "key": "federal/net-operating-loss-vintages",
       "enginePath": "src/engine/forms/net-operating-loss.ts",
       "testRefs": [

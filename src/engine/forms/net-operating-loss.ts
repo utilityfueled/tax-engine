@@ -3,8 +3,9 @@
  * Canonical return computations supply income contexts; they are not source inputs.
  */
 import Decimal from "decimal.js";
+import { calculateNewMarriageNol } from "./net-operating-loss-new-marriage.js";
 import type { FilingUnitHistory } from "@/models/filing-unit-sources.js";
-import type { NolFilingUnitOrigin, NolFilingUnitUse, NolSameCoupleJointHistory } from "@/models/net-operating-loss-filing-unit.js";
+import type { NolFilingUnitOrigin, NolFilingUnitUse, NolSameCoupleJointHistory, NolNewMarriageCurrentSources } from "@/models/net-operating-loss-filing-unit.js";
 import { calculateNolFilingUnitHistory } from "./net-operating-loss-filing-unit-history.js";
 import { calculateJointNolComponents } from "./net-operating-loss-joint-components.js";
 import type { FilingStatus } from "@/models/constants.js";
@@ -38,6 +39,8 @@ export interface NetOperatingLossSources {
   returnMembership?: "continuous_individual" | "same_spouses_joint" | "changed_membership";
   filingUnitHistory?: FilingUnitHistory;
   sameCoupleJointHistory?: NolSameCoupleJointHistory;
+  newMarriageHistory?: NolSameCoupleJointHistory;
+  currentOwnerSources?: NolNewMarriageCurrentSources;
   membershipUnchangedConfirmed?: boolean;
   primaryName?: string;
   primaryTaxpayerIdLast4?: string;
@@ -51,6 +54,7 @@ export interface NetOperatingLossSources {
  * Do not substitute the ordinary final taxable income or an input override.
  */
 export interface NetOperatingLossContext {
+  ownerIncomeContexts?: Array<{ ownerPersonId: string; taxableIncomeWithoutNolQbiAndSection250: Decimal; modifiedTaxableIncomeWithoutNolQbiAndSection250?: Decimal; carryoverContexts?: NetOperatingLossContext["carryoverContexts"] }>;
   taxableIncomeWithoutNolQbiAndSection250: Decimal;
   modifiedTaxableIncomeWithoutNolQbiAndSection250?: Decimal;
   carryoverContexts?: Array<{
@@ -60,6 +64,8 @@ export interface NetOperatingLossContext {
   }>;
 }
 export interface NetOperatingLossVintageResult {
+  ownerPersonId?: string;
+  earlierOwnerModifiedNolDeductions?: Decimal;
   sourceId: string;
   lossTaxYear: number;
   originKind: "individual_nol" | "excess_business_loss";
@@ -194,7 +200,7 @@ export function calculateNetOperatingLoss(input: {
     audit.record("Section172 Carry Sources", row.sourceId, "Actual adjusted NOL carry balance", openingCarryforward,
       "Filed original loss less actual prior use and attribute reductions; no inferred source year or ownership",
       { "Loss year": String(year), "Original loss": originalLoss, "Prior reductions": sum(...reductions), "Expired before year": expiredBeforeYear });
-    return { sourceId: row.sourceId, lossTaxYear: year, originKind: row.originKind, originalLoss, openingCarryforward, expiredBeforeYear };
+    return { ...(filingHistory.personalOwners ? { ownerPersonId: filingHistory.personalOwners.find(owner => owner.sourceId === row.sourceId)!.ownerPersonId } : {}), sourceId: row.sourceId, lossTaxYear: year, originKind: row.originKind, originalLoss, openingCarryforward, expiredBeforeYear };
   }).sort((a, b) => a.lossTaxYear - b.lossTaxYear);
   if (filingHistory.jointOwners !== undefined) {
     const byYear = new Map<number, NetOperatingLossVintageResult[]>();
@@ -225,6 +231,7 @@ export function calculateNetOperatingLoss(input: {
   const base: NetOperatingLossResult = { sourceFactsVerified: true, calculationComplete: false,
     availableCarryforward: pre2018.plus(post2017), pre2018Carryforward: pre2018, post2017Carryforward: post2017, vintages, lines: audit.getLines() };
   if (!context) return base;
+  if (facts.newMarriageHistory && base.vintages.length > 0) return calculateNewMarriageNol({ source: base, context, taxYear });
   const income = contextAmount(context.taxableIncomeWithoutNolQbiAndSection250, "limit income");
   const excess = zeroFloor(income.minus(pre2018));
   const post2017Limit = roundDollar(excess.times("0.8"));

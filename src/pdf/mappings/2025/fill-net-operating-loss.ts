@@ -473,7 +473,10 @@ export function buildNetOperatingLossReview(input: TaxYearInput, result: TaxRetu
       ledger.lines.filter(row => row.form === 'Section172 Filing Unit History' && row.line !== 'timeline').map(row =>
         `${label}: ${row.description}: ${row.value}; ${Object.entries(row.inputs ?? {}).map(([key, value]) => `${key}: ${value}`).join('; ')}`)),
   ] : [];
-  return ["NET OPERATING LOSS - REVIEW CALCULATION STATEMENT", ...ownershipRows, ...contexts, ...regularRows, ...alternativeRows, ...originRows, ...charityRows, ...codRows,
+  const personalRows = facts.newMarriageHistory ? ['NEW MARRIAGE - ORIGINAL OWNER INCOME LIMIT',
+    'Individual losses keep their actual owner. Current joint statutory percentage ceilings and separately recomputed full owner MFS income limits apply independently.',
+    ...calculation.lines.filter(row => row.form === 'Section172 New Marriage' || row.form === 'Alternative NOL Owner Capacity').map(row => `${row.description}: ${row.value}; ${Object.entries(row.inputs ?? {}).map(([key, value]) => `${key}: ${value}`).join('; ')}`)] : [];
+  return ["NET OPERATING LOSS - REVIEW CALCULATION STATEMENT", ...personalRows, ...ownershipRows, ...contexts, ...regularRows, ...alternativeRows, ...originRows, ...charityRows, ...codRows,
     result.codNolReduction
       ? "The original source packet was recalculated before identifier removal. The before-COD loss calculations and final after-COD balances are shown separately."
       : "Amounts explain the retained canonical income contexts; this statement does not independently replay every upstream income source.",

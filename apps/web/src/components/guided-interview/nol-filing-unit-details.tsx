@@ -1,5 +1,5 @@
 "use client";
-import type { NolFilingUnitHistoryData, NolFilingUnitOriginData, NolFilingUnitUseData, NolSameCoupleJointHistoryData } from '@/lib/guided-nol-filing-unit';
+import type { NolFilingUnitHistoryData, NolFilingUnitOriginData, NolFilingUnitUseData, NolSameCoupleJointHistoryData, NolNewMarriageCurrentSourcesData } from '@/lib/guided-nol-filing-unit';
 import { CharitableFilingUnitDetails } from './charitable-filing-unit-details';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
@@ -22,11 +22,11 @@ export function NolFilingUnitDetails({ label, data, onChange }: { label: string;
   </fieldset>;
 }
 
-export function NolSameCoupleJointDetails({ label, timeline, data, onChange }: { label: string; timeline?: NolFilingUnitHistoryData; data?: NolSameCoupleJointHistoryData; onChange: (data: NolSameCoupleJointHistoryData | undefined) => void }) {
-  if (!data) return <button type="button" className="utility-button" onClick={() => onChange({})}>Add same-couple marital history for {label}</button>;
+export function NolSameCoupleJointDetails({ label, timeline, data, onChange, newMarriage = false }: { label: string; timeline?: NolFilingUnitHistoryData; data?: NolSameCoupleJointHistoryData; newMarriage?: boolean; onChange: (data: NolSameCoupleJointHistoryData | undefined) => void }) {
+  if (!data) return <button type="button" className="utility-button" onClick={() => onChange({})}>Add {newMarriage ? 'new-marriage' : 'same-couple'} marital history for {label}</button>;
   const change = (patch: Partial<NolSameCoupleJointHistoryData>) => onChange({ ...data, ...patch });
   return <fieldset className="panel-stack" style={nestedSourceStyle}><legend>{label} current joint marital history</legend>
-    <p className="guided-hint">For a current joint return, identify the same two spouses in every relevant original and intervening year. Separate-return status alone does not identify the spouse. Copy actual marital records; do not enter this year&apos;s deduction or divide the joint closing carry.</p>
+    <p className="guided-hint">{newMarriage ? 'Identify the current spouses in every relevant year. Record that they were not married to each other before this marriage, then record the actual marriage years. Individual losses keep their original owner. Reunion and prior joint losses need separate allocation records.' : 'For a current joint return, identify the same two spouses in every relevant original and intervening year. Separate-return status alone does not identify the spouse. Copy actual marital records; do not enter this year’s deduction or divide the joint closing carry.'}</p>
     <TextFact label={`${label} marital history source reference`} value={data.sourceReference ?? ''} onChange={sourceReference => change({ sourceReference })} />
     <BooleanFact label={`${label} all relevant marital years included`} value={data.allRelevantYearsIncluded} onChange={allRelevantYearsIncluded => change({ allRelevantYearsIncluded })} />
     {data.years === undefined && <p role="status">The actual marital years are unknown.</p>}
@@ -44,7 +44,7 @@ export function NolSameCoupleJointDetails({ label, timeline, data, onChange }: {
     <button type="button" className="utility-button" onClick={() => change({ years: [...(data.years ?? []), {}] })}>Add marital year for {label}</button>
     <button type="button" className="utility-button" onClick={() => change({ years: undefined })}>Mark marital years unknown for {label}</button>
     <BooleanFact label={`${label} marital sources checked after the last edit`} value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed => change({ sourceFactsConfirmed })} />
-    <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Remove same-couple marital history for {label}</button>
+    <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Remove {newMarriage ? 'new-marriage' : 'same-couple'} marital history for {label}</button>
   </fieldset>;
 }
 
@@ -102,5 +102,54 @@ export function NolFilingUnitUses({ prefix, timeline, data, onChange }: { prefix
     })}
     <button type="button" className="utility-button" onClick={() => onChange([...(data ?? []), {}])}>Add actual filed use for {prefix}</button>
     <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Mark filed-owner history unknown for {prefix}</button>
+  </fieldset>;
+}
+
+const expenseFields = {
+  scheduleA: [['medicalExpenses', 'Medical expenses'], ['realEstateTaxes', 'Real estate taxes'], ['additionalStateLocalIncomeTaxes', 'Additional state and local income taxes'], ['nonW2IncomeTaxesDeductedElsewhere', 'Nonwage taxes deducted elsewhere'], ['personalPropertyTaxes', 'Personal property taxes'], ['excludedPuertoRicoIncome', 'Excluded Puerto Rico income'], ['form4563ExcludedIncome', 'Form4563 excluded income'], ['investmentInterestExpense', 'Investment interest expense'], ['gamblingWinnings', 'Gambling winnings'], ['gamblingLosses', 'Gambling losses'], ['gamblingExpenses', 'Gambling expenses']],
+  adjustments: [['otherTaxesPaid', 'Other taxes paid'], ['educatorExpenses', 'Educator expenses'], ['primaryEducatorExpenses', 'Primary educator expenses'], ['spouseEducatorExpenses', 'Spouse educator expenses'], ['businessExpenseAdjustments', 'Business expense adjustments'], ['hsaDeduction', 'HSA contributions'], ['armedForcesMovingExpenses', 'Military moving expenses'], ['archerMSADeduction', 'Archer MSA contributions'], ['selfEmployedHealthInsurance', 'Self-employed health premiums'], ['studentLoanInterest', 'Student loan interest'], ['iraDeduction', 'IRA contributions'], ['otherAdjustmentsTotal', 'Other adjustments'], ['alimonyPaid', 'Alimony paid'], ['earlyWithdrawalPenalty', 'Early withdrawal penalty'], ['seRetirementContributions', 'Self-employed retirement contributions']],
+  priorYear: [['shortTermCapitalLoss', 'Prior short-term capital loss'], ['longTermCapitalLoss', 'Prior long-term capital loss'], ['capitalLossCarryforward', 'Prior aggregate capital loss']],
+} satisfies Record<string, [string, string][]>;
+const ownerSourceFields: [string, string][] = [['w2s', 'W-2'], ['form1099Int', '1099-INT'], ['form1099Div', '1099-DIV'], ['form1099B', '1099-B'], ['form1099DA', '1099-DA'], ['form1099Nec', '1099-NEC'], ['form1099Misc', '1099-MISC'], ['form1099G', '1099-G'], ['form1099OID', '1099-OID'], ['formW2G', 'W-2G'], ['form1099K', '1099-K'], ['form1099R', '1099-R'], ['form1099SA', '1099-SA'], ['formSSA1099', 'SSA-1099'], ['formRRB1099', 'RRB-1099'], ['scheduleK1', 'Business K-1'], ['scheduleK1Form1041', 'Estate K-1'], ['form1098', '1098 mortgage'], ['form1098E', '1098-E student loan'], ['donations', 'Donation'], ['rentalProperties', 'Rental property'], ['form6252', 'Installment sale'], ['homeSales', 'Home sale'], ['form8824', 'Like-kind exchange'], ['scheduleC', 'Schedule C business'], ['scheduleF', 'Schedule F farm'], ['form4562', 'Depreciation'], ['form4797', 'Business property sale'], ['form4137', 'Unreported tips'], ['form8919', 'Uncollected wage taxes'], ['form5329', 'Retirement additional-tax facts'], ['form8606', 'IRA basis'], ['form8889', 'HSA facts'], ['form3903', 'Moving expenses'], ['seHealthInsuranceWorksheet', 'Health insurance worksheet'], ['form7206', 'Self-employed health insurance'], ['form4684', 'Casualty loss'], ['form4952', 'Investment interest'], ['form4952Amt', 'AMT investment interest'], ['amtCapitalGains', 'AMT capital gains'], ['studentLoanInterestFacts', 'Student loan facts'], ['socialSecurityFacts', 'Social Security facts'], ['taxableRefundWorksheet', 'Taxable refund'], ['salesTaxDeduction', 'Sales tax payments'], ['form6781', 'Section1256 contracts'], ['form8915F', 'Disaster distribution'], ['form461', 'Excess business loss facts']];
+export function NolNewMarriageCurrentDetails({ data, onChange }: { data?: NolNewMarriageCurrentSourcesData; onChange: (data: NolNewMarriageCurrentSourcesData | undefined) => void }) {
+  if (!data) return <button type="button" className="utility-button" onClick={() => onChange({})}>Add actual current owner income and expense sources</button>;
+  const change = (patch: Partial<NolNewMarriageCurrentSourcesData>) => onChange({ ...data, ...patch });
+  return <fieldset className="panel-stack" style={nestedSourceStyle}><legend>New-marriage current owner sources</legend>
+    <p className="guided-hint">Use each income document&apos;s actual owner. For expenses entered as a joint total, record the actual amount belonging to each spouse and its source. The calculator recomputes separate income limits. Do not enter a taxable income, loss deduction or closing carry.</p>
+    <TextFact label="Current owner records source reference" value={data.sourceReference ?? ''} onChange={sourceReference => change({ sourceReference })} />
+    <BooleanFact label="All current owner income and deductions included" value={data.allIncomeAndDeductionsIncluded} onChange={allIncomeAndDeductionsIncluded => change({ allIncomeAndDeductionsIncluded })} />
+    <BooleanFact label="Community property applies to these current sources" value={data.communityPropertyApplies} onChange={communityPropertyApplies => change({ communityPropertyApplies })} />
+    <BooleanFact label="Spouses lived together during any part of this year" value={data.livedWithSpouseAtAnyTimeDuringYear} onChange={livedWithSpouseAtAnyTimeDuringYear => change({ livedWithSpouseAtAnyTimeDuringYear })} />
+    {(['primary', 'spouse'] as const).map(owner => <SourceChoice key={owner} label={`${owner === 'primary' ? 'Primary' : 'Spouse'} separate-return deduction election for the owner worksheet`} value={owner === 'primary' ? data.primaryDeductionElection : data.spouseDeductionElection} options={[['standard', 'Standard deduction'], ['itemized', 'Itemized deductions']]} onChange={value => change(owner === 'primary' ? { primaryDeductionElection: value as 'standard' | 'itemized' | undefined } : { spouseDeductionElection: value as 'standard' | 'itemized' | undefined })} />)}
+    {data.expenseAllocations === undefined && <p role="status">The actual raw expense allocations are unknown.</p>}
+    {(data.expenseAllocations ?? []).map((row, index) => {
+      const prefix = `Current owner expense ${index + 1}`;
+      const edit = (patch: Partial<typeof row>) => change({ expenseAllocations: data.expenseAllocations!.map((item, i) => i === index ? { ...item, ...patch } : item) });
+      return <fieldset key={index} className="panel-stack" style={nestedSourceStyle}><legend>{prefix}</legend>
+        <SourceChoice label={`${prefix} source group`} value={row.kind} options={[['scheduleA', 'Itemized expense'], ['adjustments', 'Income adjustment'], ['priorYear', 'Prior capital loss']]} onChange={kind => edit({ kind: kind as typeof row.kind, field: undefined })} />
+        <SourceChoice label={`${prefix} actual source amount`} value={row.field} options={row.kind ? expenseFields[row.kind] : []} onChange={field => edit({ field })} />
+        <CurrencyField label={`${prefix} primary raw amount`} value={row.primaryAmount ?? ''} onChange={primaryAmount => edit({ primaryAmount })} />
+        <CurrencyField label={`${prefix} spouse raw amount`} value={row.spouseAmount ?? ''} onChange={spouseAmount => edit({ spouseAmount })} />
+        <TextFact label={`${prefix} source reference`} value={row.sourceReference ?? ''} onChange={sourceReference => edit({ sourceReference })} />
+        <button type="button" className="utility-button" onClick={() => change({ expenseAllocations: data.expenseAllocations!.filter((_, i) => i !== index) })}>Remove {prefix}</button>
+      </fieldset>;
+    })}
+    <button type="button" className="utility-button" onClick={() => change({ expenseAllocations: [...(data.expenseAllocations ?? []), {}] })}>Add actual owner expense split</button>
+    <button type="button" className="utility-button" onClick={() => change({ expenseAllocations: [] })}>Record no joint raw expenses to allocate</button>
+    <p className="guided-hint">For a source without an owner field, identify its actual owner below. A document number is its position in the source list, starting with1. Whole business or worksheet sources do not need a document number.</p>
+    {(data.sourceOwners ?? []).map((row, index) => {
+      const prefix = `Current owner document ${index + 1}`;
+      const edit = (patch: Partial<typeof row>) => change({ sourceOwners: data.sourceOwners!.map((item, i) => i === index ? { ...item, ...patch } : item) });
+      return <fieldset key={index} className="panel-stack" style={nestedSourceStyle}><legend>{prefix}</legend>
+        <SourceChoice label={`${prefix} source`} value={row.field} options={ownerSourceFields} onChange={field => edit({ field })} />
+        <TextFact label={`${prefix} document number when a list`} value={row.index === undefined || row.index === '' ? '' : String(Number(row.index) + 1)} onChange={value => edit({ index: /^\d+$/.test(value) && Number(value) > 0 ? String(Number(value) - 1) : value ? 'invalid' : undefined })} />
+        <SourceChoice label={`${prefix} actual owner`} value={row.owner} options={[['primary', 'Primary taxpayer'], ['spouse', 'Spouse']]} onChange={owner => edit({ owner: owner as typeof row.owner })} />
+        <TextFact label={`${prefix} source reference`} value={row.sourceReference ?? ''} onChange={sourceReference => edit({ sourceReference })} />
+        <button type="button" className="utility-button" onClick={() => change({ sourceOwners: data.sourceOwners!.filter((_, i) => i !== index) })}>Remove {prefix}</button>
+      </fieldset>;
+    })}
+    <button type="button" className="utility-button" onClick={() => change({ sourceOwners: [...(data.sourceOwners ?? []), {}] })}>Add actual source owner assignment</button>
+    <BooleanFact label="Current owner sources checked after the last edit" value={data.sourceFactsConfirmed} onChange={sourceFactsConfirmed => change({ sourceFactsConfirmed })} />
+    <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Remove current owner sources</button>
   </fieldset>;
 }

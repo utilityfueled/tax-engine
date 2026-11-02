@@ -53,9 +53,9 @@ export function calculateNolFilingUnitHistory(input: {
   taxpayer: { taxYear: number; filingStatus: FilingStatus; primary: { firstName: string; lastName: string; ssn: string }; spouse?: { firstName: string; lastName: string; ssn: string } };
   standardDeductionFacts?: { primaryDeathDate?: string | null; spouseDeathDate?: string | null };
   facts: NetOperatingLossSources;
-}): { lines: ReturnType<AuditTrail['getLines']>; jointOwners?: JointOwner[] } {
+}): { lines: ReturnType<AuditTrail['getLines']>; jointOwners?: JointOwner[]; personalOwners?: JointOwner[] } {
   const { facts, taxYear } = input, audit = new AuditTrail();
-  const attached = facts.filingUnitHistory !== undefined || facts.sameCoupleJointHistory !== undefined || facts.vintages?.some(row => row.filingUnitOrigin !== undefined
+  const attached = facts.filingUnitHistory !== undefined || facts.sameCoupleJointHistory !== undefined || facts.newMarriageHistory !== undefined || facts.currentOwnerSources !== undefined || facts.vintages?.some(row => row.filingUnitOrigin !== undefined
     || row.history?.some(year => year.filingUnitUses !== undefined));
   if (facts.returnMembership !== 'changed_membership') {
     if (attached) throw new Error('NOL filing history cannot be hidden under an unchanged-membership confirmation');
@@ -64,12 +64,38 @@ export function calculateNolFilingUnitHistory(input: {
   if (facts.membershipUnchangedConfirmed !== false || !Array.isArray(facts.vintages)) {
     throw new Error('NOL changed membership requires an actual false unchanged answer and complete original vintages');
   }
-  if (input.filingStatus === 'married_filing_jointly' && facts.sameCoupleJointHistory === undefined) {
+  if (input.filingStatus === 'married_filing_jointly' && facts.sameCoupleJointHistory === undefined && facts.newMarriageHistory === undefined) {
     throw new Error('NOL changed membership on a current joint return requires complete actual same-couple marital-year history');
   }
   const timeline = validateNolFilingUnitTimeline(input.taxpayer, facts.filingUnitHistory, input.standardDeductionFacts);
   const joint = input.filingStatus === 'married_filing_jointly';
-  if (joint) validateSameCouple(facts, timeline, taxYear);
+  const personal = facts.newMarriageHistory !== undefined;
+  if (personal) {
+    if (!joint || facts.sameCoupleJointHistory !== undefined) throw new Error('New-marriage NOL history cannot replace an actual same-couple or current separate method');
+    const proof = facts.newMarriageHistory!;
+    if (proof.sourceFactsConfirmed !== true || proof.allRelevantYearsIncluded !== true || !Array.isArray(proof.years)) throw new Error('New-marriage NOL requires complete actual marital years');
+    required(proof.sourceReference, 'new-marriage history reference');
+    const seen = new Set<number>(), pair = timeline.current.members;
+    let marriageStarted = false, hadPriorUnmarried = false;
+    const start = Math.min(taxYear, ...(facts.vintages ?? []).map(firstRelevantYear), ...proof.years.map(row => row.taxYear ?? taxYear));
+    for (const row of [...proof.years].sort((a, b) => (a.taxYear ?? 0) - (b.taxYear ?? 0))) {
+      const year = row.taxYear;
+      required(row.sourceReference, 'new-marriage marital year reference');
+      if (!Number.isInteger(year) || year === undefined || year < start || year > taxYear || seen.has(year)
+        || row.firstPersonId === row.secondPersonId || !pair.includes(row.firstPersonId ?? '') || !pair.includes(row.secondPersonId ?? '')
+        || typeof row.marriedToEachOther !== 'boolean') throw new Error('New-marriage NOL requires actual distinct years and identified spouse pair');
+      if (!row.marriedToEachOther) { if (marriageStarted) throw new Error('New-marriage NOL reunion or intervening separation needs its separate owner allocation method'); hadPriorUnmarried = true; }
+      else marriageStarted = true;
+      for (const owner of pair) {
+        const unit = timeline.byPersonYear.get(`${owner}:${year}`);
+        if (!unit || row.marriedToEachOther && (!['married_filing_jointly', 'married_filing_separately'].includes(unit.filingStatus!) || unit.members.some(id => !pair.includes(id)))
+          || !row.marriedToEachOther && unit.members.some(id => id !== owner && pair.includes(id))) throw new Error('New-marriage NOL marital evidence contradicts actual filed units');
+      }
+      seen.add(year);
+    }
+    for (let year = start; year <= taxYear; year++) if (!seen.has(year)) throw new Error('New-marriage NOL requires every relevant actual marital year');
+    if (!marriageStarted || facts.vintages!.length > 0 && !hadPriorUnmarried || proof.years.find(row => row.taxYear === taxYear)?.marriedToEachOther !== true) throw new Error('New-marriage NOL must establish actual earlier separate ownership and current marriage');
+  } else if (joint) validateSameCouple(facts, timeline, taxYear);
   else if (facts.sameCoupleJointHistory !== undefined) throw new Error('NOL current separate return cannot hide a current joint-pooling source attachment');
   const jointOwners: JointOwner[] = [], ownerYears = new Set<string>(), sourceIds = new Set<string>();
   const sharedOriginals = new Map<string, { value: string; owners: Set<string>; expected: string[] }>();
@@ -103,6 +129,7 @@ export function calculateNolFilingUnitHistory(input: {
       jointOwners.push({ sourceId, ownerPersonId: currentOwner, originalReturnSourceId: required(origin.returnSourceId, 'origin return identity') });
     }
     const originUnit = timeline.returns.get(required(origin.returnSourceId, 'origin return identity'));
+    if (personal && (originUnit?.members.length !== 1 || facts.newMarriageHistory!.years!.find(year => year.taxYear === row.lossTaxYear)?.marriedToEachOther !== false)) throw new Error('New-marriage NOL requires actual individual original before the current marriage; prior joint originals need their separate allocation method');
     if (!originUnit || originUnit.taxYear !== row.lossTaxYear || !originUnit.members.includes(currentOwner)) {
       throw new Error('NOL original owner must belong to the actual originating return; another spouse loss is not inherited');
     }
@@ -248,5 +275,5 @@ export function calculateNolFilingUnitHistory(input: {
   for (const original of sharedOriginals.values()) {
     if (original.expected.some(owner => !original.owners.has(owner))) throw new Error('NOL current joint pooling requires each original owner, including an actual zero share');
   }
-  return { lines: audit.getLines(), ...(joint ? { jointOwners } : {}) };
+  return { lines: audit.getLines(), ...(joint ? personal ? { personalOwners: jointOwners } : { jointOwners } : {}) };
 }

@@ -23,6 +23,7 @@ export interface AlternativeTaxNolResult {
  * never regular-tax carry amounts or taxpayer-entered AMTI overrides. */
 export function calculateAlternativeTaxNol(input: {
   taxYear: number;
+  ownerContexts?: Array<{ ownerPersonId: string; amtiBeforeAtnol: Decimal; modifiedAmtiBeforeAtnol: Decimal }>;
   sources: NetOperatingLossResult;
   amtiBeforeAtnol: Decimal;
   modifiedAmtiBeforeAtnol: Decimal;
@@ -35,6 +36,14 @@ export function calculateAlternativeTaxNol(input: {
   const modifiedAmtiBeforeAtnol = roundDollar(input.modifiedAmtiBeforeAtnol);
   const currentLimit = roundDollar(zeroFloor(amtiBeforeAtnol).times("0.9"));
   const modifiedLimit = roundDollar(zeroFloor(modifiedAmtiBeforeAtnol).times("0.9"));
+  const ownerContexts = new Map((input.ownerContexts ?? []).map(owner => [owner.ownerPersonId, owner]));
+  if (ownerContexts.size !== (input.ownerContexts?.length ?? 0)
+    || input.sources.vintages.some(row => row.ownerPersonId && !ownerContexts.has(row.ownerPersonId))) throw new Error('New-marriage ATNOL requires independent canonical personal-owner AMTI contexts');
+  for (const owner of ownerContexts.values()) for (const amount of [owner.amtiBeforeAtnol, owner.modifiedAmtiBeforeAtnol]) {
+    if (!Decimal.isDecimal(amount) || !amount.isFinite()) throw new Error('ATNOL personal-owner AMTI must be a finite canonical context');
+  }
+  const ownerCurrent = new Map([...ownerContexts].map(([id, owner]) => [id, zeroFloor(roundDollar(owner.amtiBeforeAtnol))]));
+  const ownerModified = new Map([...ownerContexts].map(([id, owner]) => [id, zeroFloor(roundDollar(owner.modifiedAmtiBeforeAtnol))]));
   let currentRemaining = currentLimit;
   let modifiedRemaining = modifiedLimit;
   const audit = new AuditTrail();
@@ -43,10 +52,13 @@ export function calculateAlternativeTaxNol(input: {
   audit.record("Alternative NOL Worksheet", "modified-limit", "Modified90percent absorption capacity", modifiedLimit,
     "Modified AMTI under172 and56(d)(1)(B)(ii), applying the alternative90percent limitation once",
     { "Modified AMTI": modifiedAmtiBeforeAtnol, "Complementary reserve": zeroFloor(modifiedAmtiBeforeAtnol).minus(modifiedLimit) });
+  for (const [index, owner] of [...ownerContexts.values()].entries()) audit.record('Alternative NOL Owner Capacity', String(index + 1), 'Actual personal-owner MFS AMTI before ATNOLD', roundDollar(owner.amtiBeforeAtnol),
+    'Full independently recomputed owner AMTI maximum; one90percent ceiling applies to actual joint AMTI', { 'Owner modified AMTI': roundDollar(owner.modifiedAmtiBeforeAtnol) });
   const vintages = input.sources.vintages.map(row => {
     const available = row.openingCarryforward.minus(row.expiredBeforeYear);
-    const deduction = Decimal.min(available, currentRemaining);
-    const absorbed = Decimal.min(available, modifiedRemaining);
+    const deduction = Decimal.min(available, currentRemaining, row.ownerPersonId ? ownerCurrent.get(row.ownerPersonId)! : available);
+    const absorbed = Decimal.min(available, modifiedRemaining, row.ownerPersonId ? ownerModified.get(row.ownerPersonId)! : available);
+    if (row.ownerPersonId) { ownerCurrent.set(row.ownerPersonId, ownerCurrent.get(row.ownerPersonId)!.minus(deduction)); ownerModified.set(row.ownerPersonId, ownerModified.get(row.ownerPersonId)!.minus(absorbed)); }
     currentRemaining = currentRemaining.minus(deduction);
     modifiedRemaining = modifiedRemaining.minus(absorbed);
     const unused = available.minus(absorbed);

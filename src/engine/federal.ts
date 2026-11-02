@@ -412,9 +412,9 @@ function calculateFederalTaxWithNol(input: TaxYearInput, marketplace?: Marketpla
   const retained = marketplace?.ordered;
   const refigured = retained && marketplace ? { ...marketplace, ordered: { kinds: retained.kinds.filter(kind =>
     retained[kind] === undefined && retained.calculating !== kind) } } : marketplace;
-  const worksheet = calculateNetOperatingLossReturn(input, (deduction, modified, purpose, charitableContributionLimit) =>
-    calculateFederalTaxCore(input, purpose === "final" ? marketplace : refigured, undefined, { stage: "income", deduction, modified, charitableContributionLimit }),
-  (deduction, modified, charitableContributionLimit, actualRegularNol, actualRegularDeductionMethod, actualRegularQbiDeduction) => calculateFederalTaxCore(input, modified ? refigured : marketplace, undefined,
+  const worksheet = calculateNetOperatingLossReturn(input, (deduction, modified, purpose, charitableContributionLimit, sourceInput) =>
+    calculateFederalTaxCore(sourceInput ?? input, sourceInput ? undefined : purpose === "final" ? marketplace : refigured, undefined, { stage: "income", deduction, modified, charitableContributionLimit }),
+  (deduction, modified, charitableContributionLimit, actualRegularNol, actualRegularDeductionMethod, actualRegularQbiDeduction, sourceInput) => calculateFederalTaxCore(sourceInput ?? input, sourceInput ? undefined : modified ? refigured : marketplace, undefined,
     { stage: "alternative-income", deduction, modified, charitableContributionLimit, actualRegularNol, actualRegularDeductionMethod, actualRegularQbiDeduction }));
   if (!worksheet.calculationComplete || worksheet.deduction === undefined) throw new Error("Actual NOL calculation is incomplete");
   return complete(worksheet);

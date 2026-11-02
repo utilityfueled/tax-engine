@@ -17,7 +17,7 @@ export function hasCompleteEmptyForeignNolSources(input: TaxYearInput): boolean 
     throw new Error('Foreign composition requires complete independently confirmed AMT NOL history');
   }
   const amt = calculateNetOperatingLoss({ ...params, facts: { ...facts, ...alternative,
-    filingUnitHistory: alternative.filingUnitHistory, sameCoupleJointHistory: alternative.sameCoupleJointHistory } });
+    filingUnitHistory: alternative.filingUnitHistory, sameCoupleJointHistory: alternative.sameCoupleJointHistory, newMarriageHistory: alternative.newMarriageHistory } });
   if (facts.vintages?.length !== 0 || alternative.vintages.length !== 0
     || !regular.availableCarryforward.isZero() || !amt.availableCarryforward.isZero()) return false;
   if (![input.priorYear?.nolCarryforward, input.priorYear?.excessBusinessLossNOL,

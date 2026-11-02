@@ -1,5 +1,6 @@
 /** Canonical Section172 income-context orchestration. Spec: net-operating-loss-return.yaml. */
 import Decimal from "decimal.js";
+import { newMarriageOwnerInputs } from "@/utils/nol-new-marriage-sources.js";
 import { nolFilingUnitSourceDigest } from "@/utils/nol-filing-unit-source-digest.js";
 import { assertNolFilingUnitAgreement } from "@/utils/nol-filing-unit-timeline.js";
 import type { CharitableNolContributionLimit } from "@/utils/charitable-nol-source.js";
@@ -73,10 +74,10 @@ export interface NetOperatingLossReturnResult extends NetOperatingLossResult {
 }
 
 export function calculateNetOperatingLossReturn(input: TaxYearInput,
-  computeIncome: (deduction: Decimal, modified: boolean, purpose: "current-limit" | "modified" | "final", charitableContributionLimit?: CharitableNolContributionLimit) => NolIncomeContext,
+  computeIncome: (deduction: Decimal, modified: boolean, purpose: "current-limit" | "modified" | "final", charitableContributionLimit?: CharitableNolContributionLimit, sourceInput?: TaxYearInput) => NolIncomeContext,
   computeAlternativeIncome: (deduction: Decimal, modified: boolean, charitableContributionLimit?: CharitableNolContributionLimit,
     actualRegularNol?: NetOperatingLossResult, actualRegularDeductionMethod?: NolIncomeContext["deductionUsed"],
-    actualRegularQbiDeduction?: Decimal) => NolAlternativeIncomeContext): NetOperatingLossReturnResult {
+    actualRegularQbiDeduction?: Decimal, sourceInput?: TaxYearInput) => NolAlternativeIncomeContext): NetOperatingLossReturnResult {
   const facts = input.netOperatingLoss;
   if (!facts) throw new Error("Actual NOL return computation requires the actual carry source packet");
   // Source completeness cannot depend on whether a small gift creates an
@@ -122,7 +123,7 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
     throw new Error("NOL requires the separate actual complete AMT carry history and special-loss classification");
   }
   const alternativeTaxSources = calculateNetOperatingLoss({ ...params, facts: { ...facts, ...alternative,
-    filingUnitHistory: alternative.filingUnitHistory, sameCoupleJointHistory: alternative.sameCoupleJointHistory } });
+    filingUnitHistory: alternative.filingUnitHistory, sameCoupleJointHistory: alternative.sameCoupleJointHistory, newMarriageHistory: alternative.newMarriageHistory } });
   if (facts.returnMembership === "changed_membership") assertNolFilingUnitAgreement(input.taxpayer, facts.filingUnitHistory, alternative.filingUnitHistory, input.standardDeductionFacts);
   if (!emptyCurrentMtcHistories && input.scheduleK1.some(row => !d(row.amtDepletion).isZero())) {
     throw new Error("ATNOL with depletion requires its refigured AMT taxable-income limitation worksheet");
@@ -139,7 +140,14 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   if (!currentOrigin && (modifiedIncome.agi.lt(0) || actualIncome.currentExcessBusinessLoss.gt(0))) {
     throw new Error("Existing NOL carry with a potential current-year original loss requires its separate original-loss worksheet");
   }
-  const bases = { taxableIncomeWithoutNolQbiAndSection250: actualIncome.taxableIncome,
+  const ownerInputs = newMarriageOwnerInputs(input);
+  const ownerBaseIncome = ownerInputs ? [...ownerInputs].map(([ownerPersonId, ownerInput]) => ({ ownerPersonId, ownerInput,
+    actual: computeIncome(d('0'), false, 'current-limit', undefined, ownerInput),
+    modified: computeIncome(d('0'), true, 'modified', undefined, ownerInput) })) : undefined;
+  const ownerIncomeContexts = ownerBaseIncome?.map(owner => ({ ownerPersonId: owner.ownerPersonId,
+    taxableIncomeWithoutNolQbiAndSection250: owner.actual.taxableIncome,
+    modifiedTaxableIncomeWithoutNolQbiAndSection250: owner.modified.taxableIncome }));
+  const bases = { ...(ownerIncomeContexts ? { ownerIncomeContexts } : {}), taxableIncomeWithoutNolQbiAndSection250: actualIncome.taxableIncome,
     modifiedTaxableIncomeWithoutNolQbiAndSection250: modifiedIncome.taxableIncome };
   const claims = calculateNetOperatingLoss({ ...params, context: bases });
   const modifiedVintageIncome = claims.vintages.filter(row => row.openingCarryforward.gt(row.expiredBeforeYear)).map(row => {
@@ -147,7 +155,15 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
     if (retained === undefined) throw new Error("Canonical NOL earlier-vintage amount is incomplete");
     return { sourceId: row.sourceId, retainedEarlierDeduction: retained, income: retained.isZero() ? modifiedIncome : computeIncome(retained, true, "modified", regularOriginLimit) };
   });
-  const result = calculateNetOperatingLoss({ ...params, context: { ...bases, carryoverContexts: modifiedVintageIncome.map(row => ({
+  const completedOwnerContexts = ownerBaseIncome?.map(owner => ({ ownerPersonId: owner.ownerPersonId,
+    taxableIncomeWithoutNolQbiAndSection250: owner.actual.taxableIncome, modifiedTaxableIncomeWithoutNolQbiAndSection250: owner.modified.taxableIncome,
+    carryoverContexts: claims.vintages.filter(row => row.ownerPersonId === owner.ownerPersonId && row.openingCarryforward.gt(row.expiredBeforeYear)).map(row => {
+      const retained = row.earlierOwnerModifiedNolDeductions;
+      if (retained === undefined) throw new Error('New-marriage NOL requires separately retained earlier owner modified deductions');
+      const income = retained.isZero() ? owner.modified : computeIncome(retained, true, 'modified', undefined, owner.ownerInput);
+      return { sourceId: row.sourceId, priorNolDeductions: retained, modifiedTaxableIncomeBeforeTwentyPercentReduction: income.taxableIncome };
+    }) }));
+  const result = calculateNetOperatingLoss({ ...params, context: { ...bases, ...(completedOwnerContexts ? { ownerIncomeContexts: completedOwnerContexts } : {}), carryoverContexts: modifiedVintageIncome.map(row => ({
     sourceId: row.sourceId, priorNolDeductions: row.retainedEarlierDeduction,
     modifiedTaxableIncomeBeforeTwentyPercentReduction: row.income.taxableIncome,
   })) } });
@@ -160,6 +176,7 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   let determinedCharitableCarryover: DeterminedCharitableNolResult | undefined;
   let charitableCounterfactual: NetOperatingLossReturnResult["charitableCounterfactual"];
   const computeCharitableComparison = (charitableContributionLimit: CharitableNolContributionLimit): Decimal => {
+    if (ownerInputs) throw new Error('New-marriage NOL charitable counterfactual requires its separately refigured actual owner contribution method');
     const counterfactual = computeIncome(d("0"), true, "modified", charitableContributionLimit);
     const counterfactualBases = { ...bases, modifiedTaxableIncomeWithoutNolQbiAndSection250: counterfactual.taxableIncome };
     const counterfactualClaims = calculateNetOperatingLoss({ ...params, context: counterfactualBases });
@@ -217,7 +234,20 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
   const priorCharitableAlternativeAdjustment = regularLedgerIncome ? {
     regularLedgerIncome, independentIncome: actualAlternativeIncome, amount: actualAlternativeIncome.amti.minus(regularLedgerIncome.amti),
   } : undefined;
-  const alternativeTax = calculateAlternativeTaxNol({ taxYear: input.taxpayer.taxYear, sources: alternativeTaxSources,
+  const alternativeOwnerContexts = ownerBaseIncome?.map(owner => {
+    const regularDeduction = sum(...result.vintages.filter(row => row.ownerPersonId === owner.ownerPersonId).map(row => row.deduction ?? d('0')));
+    const actual = computeAlternativeIncome(regularDeduction, false, undefined, undefined, undefined, undefined, owner.ownerInput);
+    const modified = computeAlternativeIncome(regularDeduction, true, undefined, undefined, undefined, undefined, owner.ownerInput);
+    const regularCurrent = facts.filingUnitHistory?.returns?.find(row => row.sourceId === facts.filingUnitHistory?.currentReturnSourceId);
+    const alternativeCurrent = alternative.filingUnitHistory?.returns?.find(row => row.sourceId === alternative.filingUnitHistory?.currentReturnSourceId);
+    if (!regularCurrent?.primaryPersonId || !regularCurrent.spousePersonId || !alternativeCurrent?.primaryPersonId || !alternativeCurrent.spousePersonId) {
+      throw new Error('New-marriage NOL requires actual current joint people in each independent filing history');
+    }
+    const alternativeOwner = owner.ownerPersonId === regularCurrent.primaryPersonId ? alternativeCurrent.primaryPersonId : alternativeCurrent.spousePersonId;
+    if (!alternativeOwner) throw new Error('Independent ATNOL owner context must identify the same actual current person');
+    return { ownerPersonId: alternativeOwner, amtiBeforeAtnol: actual.amti, modifiedAmtiBeforeAtnol: modified.amti };
+  });
+  const alternativeTax = calculateAlternativeTaxNol({ ...(alternativeOwnerContexts ? { ownerContexts: alternativeOwnerContexts } : {}), taxYear: input.taxpayer.taxYear, sources: alternativeTaxSources,
     amtiBeforeAtnol: actualAlternativeIncome.amti, modifiedAmtiBeforeAtnol: modifiedAlternativeIncome.amti });
   let alternativeCharitableCarryover: AlternativeCharitableNolCarryoverResult | undefined;
   let priorAlternativeCharitableCarryover: PriorCharitableNolCarryoverResult | undefined;
@@ -228,6 +258,7 @@ export function calculateNetOperatingLossReturn(input: TaxYearInput,
     || (input.cryptoIncome?.donations.length ?? 0) > 0 || finalIncome.charitableCarryforward.gt(0)
     || alternative.charitableCarryoverHistory !== undefined;
   const computeAlternativeCharitableComparison = (charitableContributionLimit: CharitableNolContributionLimit): Decimal => {
+    if (ownerInputs) throw new Error('New-marriage ATNOL charitable counterfactual requires its separately refigured actual owner contribution method');
     const income = computeAlternativeIncome(actualRegularDeduction, true, charitableContributionLimit, result, actualRegularDeductionMethod);
     const comparison = calculateAlternativeTaxNol({ taxYear: input.taxpayer.taxYear, sources: alternativeTaxSources,
       amtiBeforeAtnol: actualAlternativeIncome.amti, modifiedAmtiBeforeAtnol: income.amti });

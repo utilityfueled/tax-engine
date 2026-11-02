@@ -1,5 +1,5 @@
 import { FilingUnitHistorySchema, type FilingUnitHistory } from '@/models/filing-unit-sources';
-import { NolFilingUnitOriginSchema, NolFilingUnitUseSchema, NolSameCoupleJointHistorySchema, type NolFilingUnitOrigin, type NolFilingUnitUse, type NolSameCoupleJointHistory } from '@/models/net-operating-loss-filing-unit';
+import { NolFilingUnitOriginSchema, NolFilingUnitUseSchema, NolNewMarriageCurrentSourcesSchema, NolSameCoupleJointHistorySchema, type NolFilingUnitOrigin, type NolFilingUnitUse, type NolSameCoupleJointHistory, type NolNewMarriageCurrentSources } from '@/models/net-operating-loss-filing-unit';
 import { parseGuidedCurrency } from './guided-currency';
 
 type Editable<T> = { [K in keyof T]: NonNullable<T[K]> extends boolean ? boolean | null | undefined
@@ -9,6 +9,7 @@ type Editable<T> = { [K in keyof T]: NonNullable<T[K]> extends boolean ? boolean
 export type NolFilingUnitHistoryData = Editable<FilingUnitHistory>;
 export type NolFilingUnitOriginData = Editable<NolFilingUnitOrigin>;
 export type NolFilingUnitUseData = Editable<NolFilingUnitUse>;
+export type NolNewMarriageCurrentSourcesData = Editable<NolNewMarriageCurrentSources>;
 export type NolSameCoupleJointHistoryData = Editable<NolSameCoupleJointHistory>;
 function year(value: string | undefined, label: string): number {
   if (!value || !/^\d{4}$/.test(value)) throw new Error(`Enter the actual ${label}.`);
@@ -49,4 +50,29 @@ export function buildNolFilingUnitUses(data?: NolFilingUnitUseData[]): NolFiling
     owners: use.owners?.map(owner => ({ ...owner, claimedDeduction: filed(owner.claimedDeduction, 'historical owner deduction'),
       modifiedAbsorption: filed(owner.modifiedAbsorption, 'historical owner modified absorption'), attributeReduction: filed(owner.attributeReduction, 'historical owner attribute reduction') })),
   }));
+}
+
+export function buildNolNewMarriageCurrentSources(data?: NolNewMarriageCurrentSourcesData): NolNewMarriageCurrentSources | undefined {
+  if (!data) return undefined;
+  if (data.sourceFactsConfirmed !== true || data.allIncomeAndDeductionsIncluded !== true
+    || data.communityPropertyApplies !== false || typeof data.livedWithSpouseAtAnyTimeDuringYear !== 'boolean'
+    || !data.primaryDeductionElection || !data.spouseDeductionElection || !Array.isArray(data.expenseAllocations)
+    || !data.sourceReference?.trim()) {
+    throw new Error('Confirm the complete actual new-marriage current owner income, expenses and MFS election sources.');
+  }
+  const sourceAmount = (value: string | undefined) => {
+    if (!value?.trim()) throw new Error('Enter actual owner source amounts, including established zero.');
+    const parsed = parseGuidedCurrency(value);
+    if (!parsed.isFinite()) throw new Error('Actual owner source amount must be finite.');
+    return parsed.toFixed();
+  };
+  return NolNewMarriageCurrentSourcesSchema.parse({ ...data, sourceFactsConfirmed: data.sourceFactsConfirmed ?? undefined,
+    allIncomeAndDeductionsIncluded: data.allIncomeAndDeductionsIncluded ?? undefined,
+    communityPropertyApplies: data.communityPropertyApplies ?? undefined,
+    livedWithSpouseAtAnyTimeDuringYear: data.livedWithSpouseAtAnyTimeDuringYear ?? undefined,
+    expenseAllocations: data.expenseAllocations?.map(row => ({ ...row, primaryAmount: sourceAmount(row.primaryAmount), spouseAmount: sourceAmount(row.spouseAmount) })),
+    sourceOwners: data.sourceOwners?.map(row => {
+      if (row.index !== undefined && row.index !== '' && !/^\d+$/.test(row.index)) throw new Error('Enter the actual zero-based document index.');
+      return { ...row, index: row.index === undefined || row.index === '' ? undefined : Number(row.index) };
+    }) });
 }

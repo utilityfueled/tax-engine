@@ -21,6 +21,7 @@ function freeze<T>(value: T): T {
 }
 export function requiresNolFilingUnitReview(input: TaxYearInput, result?: TaxReturnResult): boolean {
   return input.netOperatingLoss?.returnMembership === 'changed_membership'
+    || input.netOperatingLoss?.newMarriageHistory !== undefined || input.netOperatingLoss?.alternativeTax?.newMarriageHistory !== undefined || input.netOperatingLoss?.currentOwnerSources !== undefined
     || input.netOperatingLoss?.sameCoupleJointHistory !== undefined || input.netOperatingLoss?.alternativeTax?.sameCoupleJointHistory !== undefined
     || input.netOperatingLoss?.filingUnitHistory !== undefined || input.netOperatingLoss?.alternativeTax?.filingUnitHistory !== undefined
     || result?.netOperatingLoss?.filingUnitSourceDigest !== undefined

@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js';
 import { assertNolFilingUnitAgreement } from '@/utils/nol-filing-unit-timeline';
-import { buildNolFilingUnitTimeline, buildNolFilingUnitOrigin, buildNolFilingUnitUses, buildNolSameCoupleJointHistory, type NolFilingUnitHistoryData, type NolFilingUnitOriginData, type NolFilingUnitUseData, type NolSameCoupleJointHistoryData } from './guided-nol-filing-unit';
+import { buildNolFilingUnitTimeline, buildNolFilingUnitOrigin, buildNolFilingUnitUses, buildNolSameCoupleJointHistory, buildNolNewMarriageCurrentSources, type NolNewMarriageCurrentSourcesData, type NolFilingUnitHistoryData, type NolFilingUnitOriginData, type NolFilingUnitUseData, type NolSameCoupleJointHistoryData } from './guided-nol-filing-unit';
 import { NetOperatingLossSourcesSchema, type TaxYearInput } from '@/models/inputs';
 import { calculateNetOperatingLoss } from '@/engine/forms/net-operating-loss';
 import type { DeductionData, FilingStatus, PersonalInfoData } from './guided-interview-flow';
@@ -31,6 +31,7 @@ export interface NolAlternativeData {
   regularBasisAndLossLimitsSameAsAlternativeConfirmed?: boolean | null; vintages?: NolVintageData[];
   charitableCarryoverHistory?: NolCharitableHistoryData; filingUnitHistory?: NolFilingUnitHistoryData;
   sameCoupleJointHistory?: NolSameCoupleJointHistoryData;
+  newMarriageHistory?: NolSameCoupleJointHistoryData;
 }
 export interface NolCharitableCarryData {
   taxYear?: string; category?: '' | 'cash_60' | 'noncash_50' | 'capital_gain_30' | 'other_30' | 'capital_gain_20';
@@ -47,6 +48,8 @@ export interface NetOperatingLossData {
   returnMembership?: '' | 'continuous_individual' | 'same_spouses_joint' | 'changed_membership';
   filingUnitHistory?: NolFilingUnitHistoryData; membershipUnchangedConfirmed?: boolean | null;
   sameCoupleJointHistory?: NolSameCoupleJointHistoryData;
+  newMarriageHistory?: NolSameCoupleJointHistoryData;
+  currentOwnerSources?: NolNewMarriageCurrentSourcesData;
   primaryName?: string; primaryTaxpayerIdLast4?: string; spouseName?: string; spouseTaxpayerIdLast4?: string;
   vintages?: NolVintageData[]; alternativeTax?: NolAlternativeData;
 }
@@ -130,16 +133,22 @@ function collectGuidedNetOperatingLoss(validateDeductions: boolean, data: NetOpe
     return { ...row, taxYear: year(row.taxYear, 'original charitable contribution year'), category: row.category || undefined,
       amount: row.amount.trim().replaceAll(',', ''), sourceReference: row.sourceReference?.trim() };
   });
+  if ((data.newMarriageHistory || alternative.newMarriageHistory) && !data.currentOwnerSources) {
+    throw new Error('Confirm the complete actual new-marriage current owner income, expenses and MFS election sources.');
+  }
   const facts = NetOperatingLossSourcesSchema.parse({
     sourceTaxYear: year(data.sourceTaxYear, 'carry source tax year'), sourceReference: data.sourceReference?.trim(), sourceFactsConfirmed: data.sourceFactsConfirmed ?? undefined,
     allCarryoversIncluded: data.allCarryoversIncluded ?? undefined, calendarYearTaxpayer: data.calendarYearTaxpayer ?? undefined,
     filingUnitHistory: buildNolFilingUnitTimeline(data.filingUnitHistory),
     sameCoupleJointHistory: buildNolSameCoupleJointHistory(data.sameCoupleJointHistory),
+    newMarriageHistory: buildNolSameCoupleJointHistory(data.newMarriageHistory),
+    currentOwnerSources: buildNolNewMarriageCurrentSources(data.currentOwnerSources),
     returnMembership: data.returnMembership || undefined, membershipUnchangedConfirmed: data.membershipUnchangedConfirmed ?? undefined,
     primaryName: data.primaryName?.trim(), primaryTaxpayerIdLast4: data.primaryTaxpayerIdLast4?.trim(), spouseName: data.spouseName?.trim() || undefined, spouseTaxpayerIdLast4: data.spouseTaxpayerIdLast4?.trim() || undefined,
     vintages: vintages(data.vintages, true, qbiSources !== undefined), alternativeTax: { sourceReference: alternative.sourceReference.trim(), sourceFactsConfirmed: true,
       filingUnitHistory: buildNolFilingUnitTimeline(alternative.filingUnitHistory),
       sameCoupleJointHistory: buildNolSameCoupleJointHistory(alternative.sameCoupleJointHistory),
+      newMarriageHistory: buildNolSameCoupleJointHistory(alternative.newMarriageHistory),
       allCarryoversIncluded: true, specialDisasterCarryIncluded: false, currentYearAdjustmentsCompleteConfirmed: true,
       regularBasisAndLossLimitsSameAsAlternativeConfirmed: alternative.regularBasisAndLossLimitsSameAsAlternativeConfirmed, vintages: vintages(alternative.vintages, false, qbiSources !== undefined),
       ...(history ? { charitableCarryoverHistory: { sourceTaxYear: year(history.sourceTaxYear, 'charitable histories source year'),
@@ -159,7 +168,7 @@ function collectGuidedNetOperatingLoss(validateDeductions: boolean, data: NetOpe
     netOperatingLoss: facts, charitableCarryoverSources: buildGuidedCharitableCarryover(deductions?.charitableCarryoverSources, taxYear, filingStatus, personal) });
   calculateNetOperatingLoss({ ...context, facts });
   calculateNetOperatingLoss({ ...context, facts: { ...facts, ...facts.alternativeTax,
-    filingUnitHistory: facts.alternativeTax?.filingUnitHistory, sameCoupleJointHistory: facts.alternativeTax?.sameCoupleJointHistory } });
+    filingUnitHistory: facts.alternativeTax?.filingUnitHistory, sameCoupleJointHistory: facts.alternativeTax?.sameCoupleJointHistory, newMarriageHistory: facts.alternativeTax?.newMarriageHistory } });
   if (facts.returnMembership === 'changed_membership') assertNolFilingUnitAgreement({ ...taxpayer, taxYear, filingStatus: statuses[filingStatus] }, facts.filingUnitHistory, facts.alternativeTax?.filingUnitHistory, standardDeductionFacts);
   if (qbiSources) {
     const original = { taxpayer: { ...taxpayer, taxYear, filingStatus: statuses[filingStatus] },
@@ -188,10 +197,13 @@ export function updateNetOperatingLossSources(previous: NetOperatingLossData, pa
 export function invalidateNetOperatingLossSources(next: NetOperatingLossData): NetOperatingLossData {
   return { ...next, sourceFactsConfirmed: null,
     ...(next.filingUnitHistory ? { filingUnitHistory: { ...next.filingUnitHistory, sourceFactsConfirmed: null } } : {}),
+    ...(next.newMarriageHistory ? { newMarriageHistory: { ...next.newMarriageHistory, sourceFactsConfirmed: null } } : {}),
+    ...(next.currentOwnerSources ? { currentOwnerSources: { ...next.currentOwnerSources, sourceFactsConfirmed: null } } : {}),
     ...(next.sameCoupleJointHistory ? { sameCoupleJointHistory: { ...next.sameCoupleJointHistory, sourceFactsConfirmed: null } } : {}),
     ...(next.vintages ? { vintages: invalidateNolOwnerUses(next.vintages) } : {}),
     ...(next.alternativeTax ? { alternativeTax: { ...next.alternativeTax, sourceFactsConfirmed: null,
       ...(next.alternativeTax.filingUnitHistory ? { filingUnitHistory: { ...next.alternativeTax.filingUnitHistory, sourceFactsConfirmed: null } } : {}),
+      ...(next.alternativeTax.newMarriageHistory ? { newMarriageHistory: { ...next.alternativeTax.newMarriageHistory, sourceFactsConfirmed: null } } : {}),
       ...(next.alternativeTax.sameCoupleJointHistory ? { sameCoupleJointHistory: { ...next.alternativeTax.sameCoupleJointHistory, sourceFactsConfirmed: null } } : {}),
       ...(next.alternativeTax.vintages ? { vintages: invalidateNolOwnerUses(next.alternativeTax.vintages) } : {}),
       ...(next.alternativeTax.charitableCarryoverHistory ? { charitableCarryoverHistory: { ...next.alternativeTax.charitableCarryoverHistory, sourceFactsConfirmed: null,

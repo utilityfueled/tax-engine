@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.215",
+    ruleVersion: "2025.216",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i172", section: "Changed spouse: actual personal NOL owner income and independent AMT", revision: "Form172 Change in Marital Status, current IRC172/56 PL119-136 and Reg1.172-7/1.55-1(b): canonical owner MFS current/modified sources, joint statutory ceilings once, independent originals and annual histories. Modern combined limits are a documented statutory inference, not a published matching example or human qualification. Unprojected specialist compositions retain named rejections; final2026 forms/filing remain unqualified.", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/instructions/i1099da", section: "Two original state withholding rows, Boxes14 through16", revision: "Final2026 i1099da: original PA/OH row identities and exact withholding remain separate from federal transactions/Box4 and actual PA basis. Other pairs and PA nonresident/part-year compositions remain unsupported. Agent source review only; no demand-based launch-state, human, form or filing qualification.", retrievedAt: "2026-11-01" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.911-6", section: "Actual business deduction attribution and signed Form2555 worksheet amounts", revision: "Reg1.911-6(a),(d), Pub54 Examples3/4, final2025 i2555 PartVIII and 8812/8839/8962/8960 worksheets; actual foreign expenses, pro rata FEIE across earned sources, uncapped reported line44 and source-bound signed45. Signed7206 attribution remains a separate method. Agent review only; human, full2026 forms and filing qualification remain pending.", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/instructions/i2555", section: "Line 20 business earned income where capital is material", revision: "2025 instructions", retrievedAt: "2026-11-01" },
@@ -249,11 +250,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.213-law-integration-draft",
+    ruleVersion: "2026.214-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i172", section: "Changed spouse: actual personal NOL owner income and independent AMT", revision: "Form172 Change in Marital Status, current IRC172/56 PL119-136 and Reg1.172-7/1.55-1(b): canonical owner MFS current/modified sources, joint statutory ceilings once, independent originals and annual histories. Modern combined limits are a documented statutory inference, not a published matching example or human qualification. Unprojected specialist compositions retain named rejections; final2026 forms/filing remain unqualified.", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/instructions/i1099da", section: "Two original state withholding rows, Boxes14 through16", revision: "Final2026 i1099da: original PA/OH row identities and exact withholding remain separate from federal transactions/Box4 and actual PA basis. Other pairs and PA nonresident/part-year compositions remain unsupported. Agent source review only; no demand-based launch-state, human, form or filing qualification.", retrievedAt: "2026-11-01" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.911-6", section: "Actual business deduction attribution and signed Form2555 worksheet amounts", revision: "Reg1.911-6(a),(d), Pub54 Examples3/4, final2025 i2555 PartVIII and 8812/8839/8962/8960 worksheets; actual foreign expenses, pro rata FEIE across earned sources, uncapped reported line44 and source-bound signed45. Signed7206 attribution remains a separate method. Agent review only; human, full2026 forms and filing qualification remain pending.", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/instructions/i2555", section: "Line 20 business earned income where capital is material", revision: "2025 instructions", retrievedAt: "2026-11-01" },

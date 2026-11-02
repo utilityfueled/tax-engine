@@ -7701,6 +7701,29 @@
       ]
     },
     {
+      "key": "federal/net-operating-loss-new-marriage",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i172",
+      "specPath": "spec/federal/net-operating-loss-new-marriage.yaml",
+      "enginePath": "src/engine/forms/net-operating-loss-new-marriage.ts",
+      "packetPath": "src/pdf/mappings/2025/fill-net-operating-loss.ts",
+      "implementationTestRefs": [
+        "tests/engine/federal-net-operating-loss-new-marriage.test.ts::uses only the actual loss owner income with independent AMT originals",
+        "tests/engine/federal-net-operating-loss-new-marriage.test.ts::calculates verified empty personal ledgers without owner contexts"
+      ],
+      "implementationNote": "Actual individual premarital originals and separately recomputed owner MFS current/modified sources constrain joint regular and independent AMT use. Guided edits invalidate source confirmations; historical review output binds original facts. Specialist source projections, final2026 forms, filing and qualified human review remain distinct.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": true,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/net-operating-loss-return",
       "jurisdiction": "federal",
       "taxYear": 2025,

@@ -1,0 +1,124 @@
+form: "Section172 prior individual loss entering a new marriage"
+fullName: "Original owner sources and separate current income limitation on a new joint return"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i172"
+notes: |
+  Form172 Change in Marital Status preserves the personal loss owner when the
+  current spouses were not married to each other throughout the carry period.
+  This is a distinct source method, not a relaxation of Reg1.172-7 same-couple
+  pooling. Actual prior individual originals, complete filed-use histories and
+  actual new-marriage years are required. Divorce/reunion and prior joint
+  originals retain their separate allocation method.
+  IRS Chief Counsel20042901F Part2 is explanatory, nonprecedential analysis
+  under6110(k)(3). It explains RevRul80-6 and Calvin354F2d202: recompute the
+  owner's separate taxable income using MFS rules and actual income/deductions;
+  modified absorption cannot exceed the smaller of separate and joint modified
+  income. No equal or wage-ratio deduction allocation is inferred.
+  Statutory inference:172(a)(2) computes the actual joint-return80percent ceiling;
+  the personal marital rule adds the full owner MFS taxable-income maximum, not
+  a second owner80percent deduction. Absorption uses the independent joint
+  modified capacity after172(b)(2)(C) and the full owner modified-income maximum.
+  Section56(d) similarly supplies the actual joint90percent AMTI ceiling and the
+  independently computed owner's full AMTI maximum. These are derived controls,
+  not a published modern marital example or human tax qualification.
+  All current income documents must retain actual owner attribution; raw joint
+  expense splits reconcile exactly before statutory MFS recomputation. Independent
+  AMT originals and owner income contexts are required. No current taxable income,
+  allowance, absorption or closing carry is collected as a source fact.
+  Existing filing-output and qualified review gates remain in force.
+lines:
+  - line: "original-owner"
+    description: "Require actual individual original owner and new-marriage years"
+    formula: "Complete actual original ownership and filed uses conserve each owner vintage. Every relevant year identifies current pair and actual false-before/true-after marriage facts; missing, conflicting or duplicate sources reject. Existing same-couple originals and controls stay unchanged."
+    irsRef: "Form172 Change in Marital Status; RevRul80-6; Reg1.172-7"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::requires the actual original owner and new-marriage years"
+  - line: "owner-income"
+    description: "Recompute actual owner MFS income instead of using new-spouse income"
+    formula: "2025 owner wages40000 and new-spouse wages60000, source-complete standard-deduction facts, give owner MFS base24250 and joint base68500. Regular carry10000 is fully deducted and absorbed; independent AMT carry20000 is fully deducted and absorbed. Actual joint AGI90000 remains joint. At owner wages0 and spouse100000 both owner ledgers use0."
+    irsRef: "Form172 Change in Marital Status; IRC172(a)(2),(b)(2),56(d),63; i6251 line2f"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::uses only the actual loss owner income with independent AMT originals"
+  - line: "pre2018-owner-cap"
+    description: "Apply personal owner limit independently of vintage percentage character"
+    formula: "2017 nonfarming unexpired carry30000, actual waived carryback and complete filed uses, owner wages40000 and spouse60000: owner standard15750 gives regular claim24250, absorption24250, closing5750. Independent AMT10000 is fully used. No modern80percent applies to the2017 regular vintage."
+    irsRef: "IRC172(a)(2)(A),(b)(1),(b)(2); Form172 marital rule"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::keeps the pre2018 owner cap and source conservation"
+  - line: "raw-source-conservation"
+    description: "Reconcile actual owner expense attribution before computing deductions"
+    formula: "Actual owner expense amounts and source references must sum exactly to canonical joint raw expenses; unassigned income ownership, mixed community property, missing zero/false facts, duplicate allocation or entered taxable income cannot produce an allowance. Decimal arithmetic preserves source cents and statutory whole-dollar rounding."
+    irsRef: "IRC63,172; Form172 Keeping records; i6251"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::rejects unknown or contradictory actual owner sources"
+  - line: "source-guide"
+    description: "Collect original owner facts, current source ownership and raw expenses"
+    formula: "Guided current owner source fields retain blank/false/zero, exact Decimal currency, actual source references, and confirmed new-marriage history. Edits invalidate affected confirmations. No computed current allowance or closing amount is collected."
+    irsRef: "Form172 Keeping records and Change in Marital Status"
+    testRef: "tests/guided-interview/guided-net-operating-loss-new-marriage.test.ts::preserves actual new-marriage and owner source facts"
+  - line: "private-review-binding"
+    description: "Bind the actual source packet and computed owner allowance before review"
+    formula: "A prepared original source digest binds the actual owner contexts and independent ledger amounts; stale source ownership, altered owner expense amounts, forged result or redacted substitution fails. Saved review remains private and review-only."
+    irsRef: "Form172 Keeping records; review-only output policy"
+    testRef: "tests/pdf/net-operating-loss-new-marriage-review.test.ts::binds owner sources and the independently computed return"
+  - line: "owner-full-income-cap"
+    description: "Apply one actual joint percentage ceiling and the distinct personal-owner maximum"
+    formula: "2025 owner wages40000, spouse60000, standard deductions15750/31500, post2017carry50000: joint80percent limit54800 exceeds owner full MFS income24250. Claim and modified absorption24250 give closing25750 and joint AGI75750. Do not impose an invented second owner80percent cap19400. Independent AMT owner50000/joint250000 with carry70000 gives50000 claim and20000 closing, not45000."
+    irsRef: "IRC172(a)(2),(b)(2),56(d); i172 marital rule; RevRul80-6; nonprecedential ChiefCounsel20042901F explanatory analysis"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::uses the full personal owner maximum with one actual joint percentage ceiling"
+  - line: "independent-modified-owner"
+    description: "Refigure owner capital-loss and AMT contexts independently"
+    formula: "Owner wages50000, spouse200000, actual owner priorcapitalcarry-3000: actual MFS loss deduction1500 and standard15750 give owner claim32750. Modified removes capital-loss deduction and gives34250 absorption; regular100000 opening closes65750. Independent ATNOL70000 claims48500, absorbs50000, closes20000. Do not use actual owner current income for modified absorption."
+    irsRef: "IRC1211(b),172(a)(2),(b)(2),(d)(2),56(d); i172; i6251"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::independently refigures modified owner capital losses and alternative income"
+  - line: "owner-raw-medical"
+    description: "Recompute the owner medical floor from actual payments"
+    formula: "Owner wages40000, spouse60000, actual owner medical20000, both hypothetical itemized: owner medical floor3000 and deduction17000 give personal income23000. Regular50000 carry claims and absorbs23000, closes27000. Actual joint medical deduction is separately refigured after the current loss claim."
+    irsRef: "IRC213(a),172; RevRul80-6; i172 marital rule"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::recomputes actual raw itemized expenses and preserves source cents"
+  - line: "standalone-context"
+    description: "Do not bypass the personal cap through a standalone helper"
+    formula: "No-context calls may validate original available sources. A current regular/AMT calculation with personal-owner originals requires separate canonical owner income/AMTI contexts. No owner contexts are public taxpayer input overrides."
+    irsRef: "IRC172,56(d); i172 marital rule"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::requires canonical owner contexts for standalone current calculations"
+  - line: "independent-owner-identities"
+    description: "Resolve the same actual person through independent ledger identities"
+    formula: "Regular/AMT local person IDs may differ while actual identities and marital years agree. Regular100000 and AMT70000 remain independent; owner50000/spouse200000 gives regular34250 and AMT50000 claims. Missing or conflicting independent marriage history cannot inherit regular proof."
+    irsRef: "IRC56(d); Form172 Keeping records"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::reconciles independently named AMT people without copying regular balances"
+  - line: "owner-medical-amt"
+    description: "Retain actual regular AGI for the alternative owner worksheet"
+    formula: "Actual owner wages40000 and owner medical20000, both itemized: regular owner claim23000 gives regular AGI17000. Medical deduction18725 leaves taxable income-1725;6251 restores23000 regular NOL and owner current/modified AMTI21275. Independent ATNOL30000 claims and absorbs21275, closing8725. Removing alternative NOL never removes the regular claim from AGI. This combines the primary rules rather than a published joint example."
+    irsRef: "Reg1.55-1(b); Reg1.172-5(a)(2)(ii); IRC56(d),213; i6251 lines2e,2f"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::retains actual regular AGI in owner current and modified AMTI"
+  - line: "personal-fifo"
+    description: "Conserve each original under FIFO without pooling spouses"
+    formula: "Owner wages50000/spouse200000: regular2017 carry20000 and2021 carry100000 use20000+14250, closing85750. Independent AMT2017=15000 and2021=70000 use15000+35000, closing35000. Distinct-owner different-year originals apply each own income maximum and the shared joint ceiling in loss-year order; earlier other-owner NOL never reduces the later owner's MFS income. Same-year competing-owner originals retain the precise unsupported priority method."
+    irsRef: "IRC172(b)(2),56(d); i172 Change in Marital Status; RevRul80-6"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::keeps personal FIFO limits for mixed vintages and distinct owners"
+  - line: "ordinary-owned-sources"
+    description: "Recompute ordinary owner investment, pension and sole-proprietor income"
+    formula: "Owner wages40000 plus actual owned taxable interest1000 and taxable non-IRA pension5000 gives owner regular30250 and AMTI46000. Separate owner business profit10000 with wages40000 has SE1413 and half-SE707; MFS base33543 and AMTI49293. Other spouse income does not enter either owner's separate computation. Existing actual source qualifications remain required."
+    irsRef: "i1040 lines2b,5b; ScheduleC and SE instructions; IRC172 marital rule"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::recomputes owned ordinary investment retirement and business sources"
+  - line: "2026-diagnostic"
+    description: "Use actual selected-year constants without opening readiness gates"
+    formula: "Diagnostic2026 owner40000/spouse60000 gives MFS standard16100 and full owner23900, regular50000carry closing26100, independent ATNOL20000 fully used. Isolated test injects verified indexed2026 constants; production complete-return and PDF gates remain unchanged."
+    irsRef: "IRC63,172;2026 indexed constants and release qualification policy"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::keeps selected year arithmetic separate from release gates"
+  - line: "owner-ira-and-inherent-owner"
+    description: "Recompute owner IRA deduction using actual individual contribution and participation facts"
+    formula: "Neither spouse covered at work: owner40000 with7000 actual own IRA contribution and other spouse6000 gives owner MFS deduction7000, regular capacity17250, AMTI33000. The hypothetical separate return claims only the selected person's contribution while retaining actual other-spouse participation for MFS phase-out rules. Raw fields already named primary/spouse educator expense cannot be reassigned by an inconsistent source split."
+    irsRef: "Pub590-A tables1-2,1-3 and individual compensation rules; IRC219,172"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::retains individual IRA claims and inherent expense owners"
+  - line: "independent-empty-history"
+    description: "Preserve explicit empty regular and alternative histories"
+    formula: "When both independently verified original-vintage lists and current ownership/expense-allocation lists are empty, there is no personal carry to cap and no owner income projection is needed. The independent AMT marriage proof must still be validated, never inherited. Positive vintages or retained current source allocations continue through the complete owner projection."
+    irsRef: "IRC172,56(d); original-source and independent-history contract"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::preserves independently empty histories without inventing an owner allowance"
+  - line: "negative-current-positive-modified"
+    description: "Do not erase modified owner capacity when current owner income is negative"
+    formula: "Owner wages1000 with actual capital carry-3000, other wages200000 and actual other-owner taxexpense20000; actualjoint standard, both hypothetical MFS itemized. Owner current taxable income/AMTI-500 but modified1000. Regular100000carry claims0/absorbs1000/closes99000; independent ATNOL70000 claims0/absorbs1000/closes69000. Current and modified bases must remain independent."
+    irsRef: "IRC1211(b),172(b)(2),(d)(2),56(d),63(c)(6); Reg1.55-1(b)"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::retains positive modified owner capacity when current income is negative"
+  - line: "empty-current-dispatch"
+    description: "Complete a verified empty current calculation without fictitious owner capacities"
+    formula: "Canonical ordinary new-marriage returns with explicitly empty independent regular/AMT vintage lists compute deduction0, absorption0 and closing0. Source history and independent marital proof are validated before the empty calculation. Dispatch the personal-owner capacity method only when a verified vintage exists; missing lists or positive originals never become empty by fallback."
+    irsRef: "IRC172,56(d); independent actual-original source contract"
+    testRef: "tests/engine/federal-net-operating-loss-new-marriage.test.ts::calculates verified empty personal ledgers without owner contexts"
