@@ -90,3 +90,40 @@ lines:
       - "A federal credit below the chart cap is unchanged"
       - "Negative or invalid upstream amount is floored to $0 for safety"
     testRef: "tests/engine/state/pa-schedule-dc.test.ts::PA Schedule DC Line 2 - applies the official chart cap to the federal child and dependent care credit"
+
+  - line: "2026-conformity"
+    description: "2026 ordinary current-year care uses Pennsylvania's frozen 2022 section 21 percentage"
+    formula: |
+      Require the actual confirmed same-year source packet and replay its current
+      2026 Form 2441 input. Match actual qualifying count and current federal 9a
+      exactly. Require explicitly known zero excluded section 129 benefits and
+      prior-year expense credit, actual individual earned-income facts, actual
+      resident eligibility and eligibility under frozen 2022 section 21, current-year paid/incurred expenses not claimed by
+      another taxpayer, and a supplied nonbinding federal credit-limit worksheet.
+      B = minimum of actual eligible paid care, $3,000 for one or $6,000 for 2+,
+      actual nonnegative taxpayer earned income and actual spouse earned income
+      for a joint federal return (Form 2441 line 6).
+      R = max(0.20, 0.35 - 0.01 * ceil(max(0, actual federal AGI - 15000) / 2000)).
+      PA credit = roundDollar(B * R), with no substitution of the 2026 federal
+      percentage or Pennsylvania taxable-income chart for actual federal AGI.
+    notes: |
+      Fiscal Code 1602-W fixes applicable percent to 2022, 1603-W(c) provides
+      the capped expense multiplication, and 1605-W freezes section 21
+      administration as of July 8, 2022. Current DOR OBBBA conformity guidance
+      expressly rejects the 2026 federal percentage increase for this PA credit.
+      This bounded source method preserves historical 2024/2025 behavior.
+      Missing 2026 sources fail; a federal-credit scalar cannot prove expenses.
+      Positive section 129 benefits, prior-year expense credit, binding federal
+      tax limitation, MFS exceptions, deemed income and residency allocation
+      require separate internal methods and are not qualified by this packet.
+      This is a computation method, not a final 2026 physical form or filing gate.
+      Sources retrieved 2026-11-02:
+      https://www.palegis.us/statutes/unconsolidated/law-information/view-statute?act=176&chpt=16W&iFrame=true&sessInd=0&smthLwInd=0&txtType=HTM&yr=1929
+      https://www.pa.gov/agencies/revenue/resources/tax-law-policies-bulletins-notices/tax-cuts-and-jobs-one-big-beautiful-bill-acts
+      https://www.irs.gov/pub/irs-prior/f2441--2022.pdf
+    testRef: "tests/engine/state/pa-schedule-dc.test.ts::PA Schedule DC 2026 conformity - uses actual current sources and the frozen 2022 percentages"
+
+  - line: "2026-source-boundary"
+    description: "Actual-source validation and finite 2026 cohort admission"
+    formula: "Reject missing, unknown, contradictory, nonfinite, invalid actual filing status or unsupported current-year sources before computing any PA allowance; keep private source references out of the audit."
+    testRef: "tests/engine/state/pa-schedule-dc.test.ts::PA Schedule DC 2026 conformity - rejects absent or contradictory actual sources"

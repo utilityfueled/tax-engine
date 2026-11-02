@@ -72,7 +72,17 @@ describe("PA 2026 tax year support", () => {
       taxpayerPATaxableIncome: d(0),
       spousePATaxableIncome: d(0),
     }).totalOtherDeductions.toNumber()).toBe(0);
-    expect(calculateScheduleDC({ taxYear: 2026, qualifyingPersons: 1, paTaxableIncome: d(0), federalCredit: d(0) }).credit.toNumber()).toBe(0);
+    // Explicit fictional zero-care originals; a zero federal credit alone is not
+    // proof of zero Pennsylvania credit under the frozen 2022 rules.
+    expect(calculateScheduleDC({ taxYear: 2026, qualifyingPersons: 1, paTaxableIncome: d(0), federalCredit: d(0),
+      source2022Conformity: {
+        sourceTaxYear: 2026, sourceReference: "Fictional zero-care 2026 original records", sourceFactsConfirmed: true,
+        residentIndividualEligibilityConfirmed: true, eligibilityUnder2022Section21Confirmed: true,
+        currentYearExpensesOnlyConfirmed: true, actualEarnedIncomeOnlyConfirmed: true, expensesNotClaimedOnAnotherReturnConfirmed: true,
+        federal: { taxYear: 2026, filingStatus: "single", qualifyingIndividuals: 1, careExpenses: d(0), earnedIncome: d(0), agi: d(0),
+          excludedDependentCareBenefits: d(0), priorYearExpenseCredit: d(0), taxLiabilityLimit: d(0), eligibilityConfirmed: true, earnedIncomeFactsVerified: true },
+      },
+    }).credit.toNumber()).toBe(0);
     expect(calculateScheduleUE({ taxYear: 2026 }).netUnreimbursedExpenses.toNumber()).toBe(0);
     expect(calculateScheduleSP({
       taxYear: 2026,
