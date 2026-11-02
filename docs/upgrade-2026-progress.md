@@ -2037,3 +2037,18 @@ with complete16 copies in `nov02-parent-state-integration-recovery/current-state
 It merges the W2 dependency and retains explicit unverified status; historical
 state04's12 passing tests are not a claim for this newer source. All new private
 packages keep full source copies, patches, hashes, genuine failures and receipts.
+
+
+## November2: actual state source consumers and dated integration
+
+Delivered and pushed0b3762e4 (PA actualW2 rows),b58e91ea (PA completion
+collector),8e757958 (reciprocal employee credit correction),b8661656 (Ohio
+actual dated receipts). Main checks and independent agent evidence are indexed in
+[the compact active checklist](upgrade-2026-active-work.md), which is now the first
+resumption index alongside this history and the checkpoint. Full final-source
+qualification remains pending. The PA rich-credit17th case exposed the actual
+PA/OH-only W2 row schema dependency; its positive DE800+1200→1535 oracle remains
+unchanged and failing until the separately reviewed jurisdiction successor lands.
+Root canonical4 and PA preview5 source-first controls are green privately; source
+continuity does not imply adoption or final integrated readiness. Useful internal
+work remains, and the goal remains active.
