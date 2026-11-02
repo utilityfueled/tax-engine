@@ -15,7 +15,6 @@ import { d } from "@/utils/decimal.js";
 import { calculateDigitalAssetStateSources } from "../../../engine/state/digital-asset-sources.js";
 import {
   buildOhioResidentReturnInput,
-  extractOhioWithholding,
   extractQualifyingBusinessIncome,
   type OhioOverlayInput,
 } from "@/engine/state/oh-input-adapter.js";
@@ -247,27 +246,31 @@ export async function fillOhioReferenceForms(
 ): Promise<OhioReferencePacketResult> {
   assertPdfExportAllowed(taxInput.taxpayer.taxYear, federalResult.taxYear);
   const hasResidency=Boolean((taxInput as TaxYearInput&{ohioResidency?:unknown;ohioPayments?:unknown}).ohioResidency??overlay.residency)||Boolean((taxInput as TaxYearInput&{ohioPayments?:unknown}).ohioPayments??overlay.payments);
-  const original=hasResidency?resolveOhioResidencyReview(taxInput,federalResult,reviewContext):taxInput;
+  const hasActualW2 = (taxInput.w2s ?? []).some(statement => statement.stateLocalSources !== undefined);
+  const original = hasResidency || hasActualW2 || reviewContext !== undefined
+    ? resolveOhioResidencyReview(taxInput, federalResult, reviewContext)
+    : taxInput;
   const ohioInput = buildOhioResidentReturnInput(original, federalResult, overlay);
   const ohioResult = calculateOhioResidentReturn(ohioInput);
-  const digitalCapitalInput = calculateDigitalAssetStateSources(taxInput, "OH");
+  const digitalCapitalInput = calculateDigitalAssetStateSources(original, "OH");
   const itBusResult = extractQualifyingBusinessIncome(
     federalResult,
-    taxInput.scheduleK1 ?? [],
+    original.scheduleK1 ?? [],
     overlay.otherBusinessIncome,
   );
   const withholdingResult = calculateOhioScheduleOfWithholding({
-    w2s: taxInput.w2s,
-    formW2Gs: taxInput.formW2G,
-    form1099Gs: taxInput.form1099G,
-    form1099Ks: taxInput.form1099K,
-    form1099Rs: taxInput.form1099R,
-    form1099Necs: taxInput.form1099Nec,
-    form1099Miscs: taxInput.form1099Misc,
-    form1099Ints: taxInput.form1099Int,
-    form1099Divs: taxInput.form1099Div,
+    w2s: original.w2s,
+    w2SourceContext: original,
+    formW2Gs: original.formW2G,
+    form1099Gs: original.form1099G,
+    form1099Ks: original.form1099K,
+    form1099Rs: original.form1099R,
+    form1099Necs: original.form1099Nec,
+    form1099Miscs: original.form1099Misc,
+    form1099Ints: original.form1099Int,
+    form1099Divs: original.form1099Div,
     form1099Bs: digitalCapitalInput.form1099B,
-    form1099OIDs: taxInput.form1099OID,
+    form1099OIDs: original.form1099OID,
   });
   const lumpSumDistributionWorksheet = getLumpSumDistributionWorksheet(ohioInput);
 
@@ -317,19 +320,11 @@ export async function fillOhioReferenceForms(
     );
   }
 
-  const additionalWithholding = extractOhioWithholding(
-    taxInput.w2s,
-    taxInput.formW2G,
-    taxInput.form1099G,
-    taxInput.form1099K,
-    taxInput.form1099R,
-    taxInput.form1099Nec,
-    taxInput.form1099Misc,
-    taxInput.form1099Int,
-    taxInput.form1099Div,
-    digitalCapitalInput.form1099B,
-  );
-  const totalWithholding = overlay.ohioWithholdingOverride ?? additionalWithholding;
+  const totalWithholding = overlay.ohioWithholdingOverride ?? withholdingResult.line6_totalOhioWithholding;
+  const reportedWithholding = ohioResult.it1040.lines.find(line => line.line === "14");
+  const withholdingLines = hasActualW2 && reportedWithholding
+    ? [...withholdingResult.lines, { ...reportedWithholding, description: "Reported Ohio IT1040 line14", formula: "Already calculated return line14; exact source cents remain above and existing qualified-return rounding is unchanged" }]
+    : withholdingResult.lines;
 
   if (withholdingResult.line6_totalOhioWithholding.gt(0) || d(totalWithholding).gt(0)) {
     filledForms.push(
@@ -338,7 +333,7 @@ export async function fillOhioReferenceForms(
           title: "Ohio Schedule of Withholding",
           subtitle: "Ohio withholding support for IT 1040 line 14",
           fileName: "oh-schedule-of-withholding-reference.pdf",
-          lines: withholdingResult.lines,
+          lines: withholdingLines,
         },
         outputDir,
       ),

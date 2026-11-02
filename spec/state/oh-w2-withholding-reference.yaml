@@ -1,0 +1,49 @@
+form: "OH-Actual-W2-Withholding-Reference"
+fullName: "Ohio original-bound withholding support reference successor"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Official final2025 booklet line14 and final ITWH PartA/PartB refreshed2026-11-02.
+  ITWH https://dam.assets.ohio.gov/image/upload/v1767098682/tax.ohio.gov/forms/ohio_individual/individual/2025/itwh.pdf
+  Actual OH box17 enters IT1040line14; exclude other states, local/district and PTE
+  credits. Exact source cents remain review audit; existing qualified return
+  boundary rounds once. Generated summaries remain reference-only, not official
+  original statements, filled forms, final2026 qualification or filing evidence.
+lines:
+  - line: "actual-context"
+    description: "Validate actual complete originals before selecting state"
+    formula: |
+      Present actual W2 packet requires full current owner/year context and exact
+      current whole W2 list. Validate all packets, including knownzero/noOH,
+      using existing original-bound method. Unknown, stale, duplicate or malformed
+      originals reject; no redacted owner replay or scalar fallback.
+    testRef: "tests/engine/state/oh-w2-withholding-reference.test.ts::OH support rejects actual packets without matching current full context"
+  - line: "1"
+    description: "Actual Ohio W2 withholding once"
+    formula: |
+      For each valid actual W2 sum only OH state rows once; do not add its legacy
+      scalar. For each remaining legacy W2 retain existing scalar method. Both
+      original row orders and explicit unused scalar projection yield OH1000.
+      Zero/noOH remain knownzero. Decimal9007199254740993.01 plus0.02 equals
+      9007199254740993.03. Retain original-bound source digest without identifiers.
+    testRef: "tests/engine/state/oh-w2-withholding-reference.test.ts::OH support selects actual OH rows once for either order and unused scalars"
+  - line: "6"
+    description: "One exact total preserves every supported statement family"
+    formula: |
+      Sum W2, W2G, G, K, R, NEC, MISC, INT, DIV, B, OID and original DA amounts
+      once, using actual OH state only. Source amounts1000.01/2.02/3.03/4.04/
+      5.05/6.06/7.07/8.08/9.09/10.10/11.11/12.12 total1077.78.
+      Existing nonnegative/source-state guards remain. No free credit override.
+    testRef: "tests/engine/state/oh-w2-withholding-reference.test.ts::OH support retains every source family and exact large Decimal cents"
+  - line: "private-reference"
+    description: "Reuse validated private original for the return and support"
+    formula: |
+      Recover private original from validated review context when actual W2 or
+      residency/payment sources are present. Derive digital originals and all
+      eleven withholding arrays from that same original. Use one support total
+      for inclusion; no scalar-only re-extraction. Source1000.51 stays exact in
+      support, while existing actual-payment line14 reports1001. Show the already
+      calculated line14 alongside source audit. Preserve local/credit/source
+      guards before any file I/O. Reference copy excludes private SSNs, source
+      references and state IDs. A digest change follows actual original edits.
+    testRef: "tests/pdf/oh-w2-withholding-reference.test.ts::OH actual W2 references save all three residencies from private originals"

@@ -8,6 +8,7 @@
  */
 
 import Decimal from "decimal.js";
+import { calculateW2StateLocalSources, type W2StateLocalSourceContext } from "@/engine/forms/w2-state-local.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 import type {
   Form1099Int,
@@ -27,6 +28,8 @@ import { d, sum } from "@/utils/decimal.js";
 
 export interface OhioScheduleOfWithholdingInput {
   w2s?: W2[];
+  /** Required for actual packets: current private owner/year and complete W2 list. */
+  w2SourceContext?: W2StateLocalSourceContext;
   formW2Gs?: FormW2G[];
   form1099Gs?: Form1099G[];
   form1099Ks?: Form1099K[];
@@ -40,6 +43,7 @@ export interface OhioScheduleOfWithholdingInput {
 }
 
 export interface OhioScheduleOfWithholdingResult {
+  actualW2SourceCommitments: Array<{ originalIndex: number; sourceCommitment: string }>;
   line1_w2OhioWithholding: Decimal;
   line2_w2gOhioWithholding: Decimal;
   line3_1099gOhioWithholding: Decimal;
@@ -54,6 +58,13 @@ export interface OhioScheduleOfWithholdingResult {
   line5g_1099DAOhioWithholding: Decimal;
   line6_totalOhioWithholding: Decimal;
   lines: CalculatedLine[];
+}
+
+/** Compare retained originals structurally, without depending on object key order. */
+function stableSource(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableSource).join(",")}]`;
+  if (value && typeof value === "object") return `{${Object.entries(value).filter(([, child]) => child !== undefined).sort(([a], [b]) => a.localeCompare(b)).map(([key, child]) => `${JSON.stringify(key)}:${stableSource(child)}`).join(",")}}`;
+  return JSON.stringify(value) ?? "null";
 }
 
 function isOhioStateCode(state: string | undefined): boolean {
@@ -87,16 +98,33 @@ export function calculateOhioScheduleOfWithholding(
 ): OhioScheduleOfWithholdingResult {
   const audit = new AuditTrail();
 
-  const line1 = sumOhioAmounts(
-    input.w2s,
-    (statement) => statement.stateTaxWithheld,
-  );
+  const w2s = input.w2s ?? [];
+  const hasActualW2 = w2s.some(statement => statement.stateLocalSources !== undefined);
+  const context = input.w2SourceContext;
+  if (hasActualW2 && !context) throw new Error("Ohio actual W2 withholding requires full current owner/year/source context.");
+  if (context && stableSource(w2s) !== stableSource(context.w2s)) throw new Error("Ohio W2 source context differs from the current complete original W2 list.");
+  let line1 = new Decimal(0);
+  const actualW2SourceCommitments: OhioScheduleOfWithholdingResult["actualW2SourceCommitments"] = [];
+  for (const [originalIndex, statement] of w2s.entries()) {
+    if (statement.stateLocalSources === undefined) {
+      line1 = line1.plus(sumOhioAmounts([statement], row => row.stateTaxWithheld));
+      continue;
+    }
+    // The complete packet is validated even when it reports no OH row or known zero.
+    if (!context) throw new Error("Ohio actual W2 withholding requires source context.");
+    const actual = calculateW2StateLocalSources(context, originalIndex, statement.stateLocalSources);
+    const ohio = sum(...actual.stateRows.filter(row => row.state === "OH").map(row => row.withheld));
+    line1 = line1.plus(ohio);
+    actualW2SourceCommitments.push({ originalIndex, sourceCommitment: actual.sourceCommitment });
+    audit.record("OH-SCHEDULE-WH", `actual-w2-${originalIndex}`, "Original-bound actual Ohio W2 withholding", ohio,
+      `Admitted OH printed rows once; original source commitment ${actual.sourceCommitment}`);
+  }
   audit.record(
     "OH-SCHEDULE-WH",
     "1",
     "Ohio withholding from W-2 statements",
     line1,
-    "Sum W-2 box 17 amounts where state = OH",
+    "Sum admitted actual OH printed box 17 rows once; otherwise use the original legacy OH scalar",
   );
 
   const line2 = sumOhioAmounts(
@@ -225,6 +253,7 @@ export function calculateOhioScheduleOfWithholding(
   );
 
   return {
+    actualW2SourceCommitments,
     line1_w2OhioWithholding: line1,
     line2_w2gOhioWithholding: line2,
     line3_1099gOhioWithholding: line3,
