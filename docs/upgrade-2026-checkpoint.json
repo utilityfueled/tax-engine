@@ -12226,8 +12226,8 @@
       "inventoryEntries": 604,
       "humanQualified": false
     },
-    "currentHead": "bb19116f1f123210531f4efa4ad53842f189bade",
-    "currentRemoteHead": "bb19116f1f123210531f4efa4ad53842f189bade",
+    "currentHead": "00fa29c6eb243635acb335cc87d0d2637540079c",
+    "currentRemoteHead": "00fa29c6eb243635acb335cc87d0d2637540079c",
     "currentRuleVersions": {
       "2025": "2025.223",
       "2026": "2026.221-law-integration-draft"
@@ -12934,6 +12934,53 @@
       "w2Consumers8": "new source-first4red\u219237/7green,3types/spec6647/lint0err8oldwarn; independent review pending",
       "ohDated5": "rebuilt source-first missing-module red\u219277/77combined,types/spec/lint; independent review pending",
       "paOrdinaryFacts10": "rebuilt source-first missing-module red; product reconstruction active"
+    },
+    "ohioDatedPayments20261102": {
+      "commit": "4285372a592f8c8c4b5d9c47b6e79f7339aaa4f8",
+      "status": "pure dated PartII delivered; actual-source pipeline integration pending",
+      "mainChecks": ".local/upgrade-evidence/nov02-parent-ohio-dated-main-checks/checks.json",
+      "tests": 889,
+      "testFiles": 7,
+      "independentTests": 18,
+      "independentFiles": 2,
+      "specReferences": 6644,
+      "limits": [
+        "No final2026 or whole-state qualification",
+        "No source packet or dated PartI adoption"
+      ]
+    },
+    "multiStateW2Sources20261102": {
+      "commit": "00fa29c6eb243635acb335cc87d0d2637540079c",
+      "status": "source/schema/federal-SALT-PA consumers delivered and pushed; guided shared/OH consumers pending",
+      "mainChecks": ".local/upgrade-evidence/nov02-parent-w2-main-checks/checks.json",
+      "postReviewTestCleanup": ".local/upgrade-evidence/nov02-parent-w2-warning-cleanup/checks.json",
+      "tests": 1322,
+      "testFiles": 187,
+      "specReferences": 6663,
+      "independentSchemaTests": 27,
+      "independentSchemaFiles": 7,
+      "package": ".local/upgrade-evidence/nov02-w2-independent-review/final-main-package.json",
+      "ledger": "docs/upgrade-2026-w2-canonical-work.md",
+      "limits": [
+        "Current uncorrected single actual W2 original method only",
+        "No final2026 forms or filing promotion",
+        "Canonical rows do not establish local liability or eligibility"
+      ]
+    },
+    "activeInternalStateQueue20261102": {
+      "rootPrivate": ".local/upgrade-work/root-state-integration/source",
+      "rootDurable": ".local/upgrade-evidence/nov02-parent-state-integration-recovery/current-state-04/manifest.json",
+      "w2GuidedSpecFirst": ".local/upgrade-evidence/nov02-parent-w2-guided-wiring/red-candidate.json",
+      "paFacts": "Corrected ten-file freeze after genuine53pass5fail to58green; independent original16 re-review active",
+      "paComposer": "New-only ordinary PA source-bound return composition; spec-first, not implemented yet",
+      "ohSD": "Frozen resident-income worksheet5 awaiting independent review",
+      "ohConsumers": "Actual canonical W2 rows in payment source and withholding adapter; spec-first active",
+      "remaining": [
+        "Complete canonical and guided state source paths with unknown-preserving validation",
+        "Complete original-bound PA/OH credit/payment/local/dated methods and reference/export context",
+        "Run final integrated coverage/CI/browser/target-runtime recovery and scan gates after source integration"
+      ],
+      "status": "active; useful authorized implementation remains"
     }
   }
 }

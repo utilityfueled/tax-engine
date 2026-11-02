@@ -2464,3 +2464,32 @@ ignored `.local/upgrade-work/`, with full source copies and patches retained und
 patch and independently rechecked20tests/3files. Multi-state W2 new10 is likewise
 byte-exact; its actual downstream consumer8 has a new four-case behavior red,
 37tests/7files and static checks, with independent review pending.
+
+
+## November 2: original W-2 rows and Ohio dated interest
+
+- [x] `4285372a` adds the guarded actual2025 Ohio dated PartII worksheet.
+  Main889 tests/7files, all three types,6644spec refs, inventory, strict scoped
+  lint and build pass; independent18tests/2files pass after the zero-receipt
+  segmentation defect was reproduced and corrected. Full actual payment-source
+  pipeline integration remains internal work.
+- [x] `00fa29c6` retains complete original W-2 state/local packets through the
+  canonical schema and validates them before federal calculation, ScheduleA5a,
+  PA sourcing and reciprocity. Main1322tests/187files, all three types,6663spec
+  refs, inventory, scoped lint and build pass. Independent schema27tests/7files
+  pass. The post-review fixture guard retains every numeric/assertion oracle;
+  six tests and zero-warning strict lint pass again. Both commits are pushed.
+- [ ] Wire the existing W-2 collector into shared interview entries/bridge,
+  invalidation, saved facts, confirmation and navigation. Eight spec-first
+  controls are prepared privately; no product or passing result is claimed yet.
+- [ ] Finish source-bound PA return composition and all three residency paths.
+  The PA facts reviewer found self-household acceptance and a missing source-date
+  commitment; genuine53pass5fail becomes58green after the minimal correction.
+  Independent re-review precedes adoption. Ohio resident-income review and
+  actual-row payment consumers continue separately.
+
+Exact package sources, check receipts and the durable private work queue are in
+`upgrade-2026-checkpoint.json` and the package ledgers. Existing top-level full-run
+evidence keeps its historical commit boundary. Final integrated CI/coverage,
+forms, target images/recovery, staging, human and live-provider qualification
+remain required. The active goal remains open.
