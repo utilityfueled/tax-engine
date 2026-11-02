@@ -3,6 +3,7 @@ import Decimal from 'decimal.js';
 import {z} from 'zod';
 import {sha256} from '@noble/hashes/sha2.js';
 import {bytesToHex} from '@noble/hashes/utils.js';
+import {calculateW2StateLocalSources} from '@/engine/forms/w2-state-local.js';
 import type {TaxYearInput} from '@/models/inputs.js';
 import {PAResidencySourcesSchema} from '@/models/pa-residency.js';
 import type {CalculatedLine} from '@/models/outputs.js';
@@ -51,11 +52,19 @@ function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnComple
  if(other.status!=='none_paid'||other.allJurisdictionsAndPaymentsReviewedConfirmed!==true)fail('actual other-state credit eligibility/payment history is unknown or needs its successor');
  const states=new Set<string>();for(const row of other.jurisdictions){ref(row.sourceReference);if(!/^[A-Z]{2}$/.test(row.state)||row.state==='PA'||states.has(row.state)||row.sourceTaxYear!==y||ssn(row.accountSsn)!==ssn(t.ssn)||name(row.accountName)!==name(t.firstName+' '+t.lastName)||row.completeThroughDate!==asOf)fail('other-state credit original owner/year/history is incomplete');states.add(row.state);if(!money(row.taxPaid).isZero()||!money(row.incomeTaxWithheld).isZero())fail('actual positive other-state tax credit needs its source-aware successor');}
  const residency=PAResidencySourcesSchema.parse((input as TaxYearInput&{paResidencySources?:unknown}).paResidencySources);
- const actualOutsideStates=new Set([...residency.residency.domicilePeriods.map(p=>p.state),...input.w2s.map(w=>w.state),...input.form1099Int.map(b=>b.state)].filter((state):state is string=>typeof state==='string'&&state!==''&&state!=='PA'));
+ const actualW2Rows=input.w2s.map((w,index)=>w.stateLocalSources===undefined?undefined:calculateW2StateLocalSources(input,index,w.stateLocalSources));
+ const actualW2States=input.w2s.flatMap((w,index)=>actualW2Rows[index]?.stateRows.map(row=>row.state)??[w.state]);
+ const actualOutsideStates=new Set([...residency.residency.domicilePeriods.map(p=>p.state),...actualW2States,...input.form1099Int.map(b=>b.state)].filter((state):state is string=>typeof state==='string'&&state!==''&&state!=='PA'));
  const outsideWork=residency.wages.some(w=>w.payroll.some(p=>money(p.outsidePAServicesCompensation).gt(0)));
  if((outsideWork&&!states.size)||[...actualOutsideStates].some(state=>!states.has(state)))fail('actual outside-state jurisdiction payment history is missing or incomplete');
  // A supplied no-paid history cannot suppress actual retained withholding.
- for(const w of input.w2s)if(w.state&&w.state!=='PA'&&money(w.stateTaxWithheld).gt(0))fail('actual other-state withholding requires its credit successor');
+ for(const [index,w] of input.w2s.entries()){
+  const actualRows=actualW2Rows[index];
+  if(actualRows!==undefined){
+   if(actualRows.stateRows.some(row=>row.state!=='PA'&&row.withheld.gt(0)))fail('actual positive other-state withholding requires its credit/refund successor');
+   if(actualRows.localRows.some(row=>row.withheld.gt(0)))fail('actual local Box19 withholding requires its separate reconciliation successor');
+  }else if(w.state&&w.state!=='PA'&&money(w.stateTaxWithheld).gt(0))fail('actual other-state withholding requires its credit successor');
+ }
  for(const b of input.form1099Int)if(b.state&&b.state!=='PA'&&money(b.stateWithheld).gt(0))fail('actual other-state bank withholding requires its credit successor');
  const oc=sources.restrictedCredits;ref(oc.sourceReference);if(oc.status!=='none_available'||oc.allAwardsTransfersCarryforwardsReviewedConfirmed!==true||oc.originalAwards.length||oc.originalTransfers.length||oc.originalCarryforwards.length)fail('restricted credit awards/transfers/carryforwards are unknown or need their actual successor');
  const care=sources.care;ref(care.sourceReference);if(care.status!=='no_qualifying_expenses'||care.allCarePaymentSourcesReviewedConfirmed!==true||care.allEmployerBenefitsIncludedConfirmed!==true||care.originalCarePayments.length||input.dependentCare!==undefined||input.dependentCareBenefits!==undefined||input.w2s.some(w=>!money(w.box10DependentCareBenefits).isZero()))fail('actual care credit/benefit sources are unknown or need their successor');

@@ -1,6 +1,7 @@
 /** Source normalization only. Spec: state/pa-ordinary-return-facts.yaml. */
 import Decimal from 'decimal.js';
 import {sha256} from '@noble/hashes/sha2.js';import {bytesToHex} from '@noble/hashes/utils.js';
+import {calculateW2StateLocalSources} from '@/engine/forms/w2-state-local.js';
 import type {TaxYearInput} from '@/models/inputs.js';import type {CalculatedLine} from '@/models/outputs.js';
 import {PAOrdinaryReturnFactsSchema,PA_SP_OTHER_LINES,type PAOrdinaryReturnFacts} from '@/models/pa-ordinary-return-facts.js';
 import {PAResidencySourcesSchema} from '@/models/pa-residency.js';import {roundDollar} from '@/utils/decimal.js';import {AuditTrail} from '@/utils/audit.js';
@@ -33,7 +34,13 @@ export function calculatePAOrdinaryReturnFacts(input:TaxYearInput,raw:unknown):P
  const f=facts.filing;ref(f.sourceReference);if(f.factsConfirmed!==true||f.claimedAsDependentOnAnotherReturn===null)return fail('actual marital and dependency sources are required');
  if(f.maritalStatus!=='unmarried'||f.aliveEntireYear!==true||input.taxpayer.spouse||['married_filing_jointly','married_filing_separately'].includes(input.taxpayer.filingStatus)||!['S','F'].includes(f.choice))return fail('spouse/household/deceased/annualization facts require their actual successor method');
  if(f.choice==='F'&&(!f.finalReturnReason.trim()||f.noPATaxableIncomeNextYearConfirmed!==true))return fail('Final Return requires the actual reason and confirmed no next-year PA taxable income');
- if(input.w2s.some(w=>(w as typeof w&{stateLocalSources?:unknown}).stateLocalSources!==undefined))return fail('retained W2 state/local sources require the actual row-normalized successor method');
+ const actualW2Rows=new Map<number,ReturnType<typeof calculateW2StateLocalSources>>();
+ for(const [index,w] of input.w2s.entries())if(w.stateLocalSources!==undefined){
+  // A present proof is authoritative: unknown or stale rows cannot fall back
+  // to a first-row scalar. Complete credit/local eligibility remains separate.
+  try{actualW2Rows.set(index,calculateW2StateLocalSources(input,index,w.stateLocalSources));}
+  catch{return fail('retained W2 state/local sources need complete actual row-normalized successor evidence');}
+ }
  const sourcePacket=(input as TaxYearInput&{paResidencySources?:unknown}).paResidencySources;const income=calculatePAResidencySources(input,sourcePacket);const residency=PAResidencySourcesSchema.parse(sourcePacket);
  const asOf=day(facts.timing.asOfDate),filingDate=day(facts.timing.date),timing=facts.timing;
  if(timing.kind===''||(timing.kind==='filed'?filingDate>asOf:filingDate<asOf))return fail('actual filed versus expected filing date contradicts as-of sources');
@@ -63,7 +70,11 @@ export function calculatePAOrdinaryReturnFacts(input:TaxYearInput,raw:unknown):P
  const carry=payments.priorCredit;ref(carry.sourceReference);let credit=new Decimal(0);
  if(carry.status==='available'){const p=carry.priorOriginalElection,c=carry.currentOriginalAccount;if(!p||!c||prior.status!=='return')return fail('prior elected credit requires actual prior return and current account originals');owner(p,input);owner(c,input);if(p.taxYear!==y-1||c.taxYear!==y||c.noOffsetsReversalsOrRefundsConfirmed!==true||!money(p.creditElected).eq(money(c.availableCredit)))return fail('actual prior credit election and available account credit must match');credit=money(c.availableCredit);}
  else if(carry.status!=='none'||carry.priorOriginalElection||carry.currentOriginalAccount)return fail('actual carry credit is unknown or contradictory');
- let withholding=new Decimal(0);for(const w of input.w2s){const n=money(w.stateTaxWithheld);if(w.state==='PA')withholding=withholding.plus(n);}for(const b of input.form1099Int){const n=money(b.stateWithheld);if(b.state==='PA')withholding=withholding.plus(n);}
+ let withholding=new Decimal(0);for(const [index,w] of input.w2s.entries()){
+  const actualRows=actualW2Rows.get(index);
+  if(actualRows!==undefined)for(const row of actualRows.stateRows){if(row.state==='PA')withholding=withholding.plus(row.withheld);}
+  else{const n=money(w.stateTaxWithheld);if(w.state==='PA')withholding=withholding.plus(n);}
+ }for(const b of input.form1099Int){const n=money(b.stateWithheld);if(b.state==='PA')withholding=withholding.plus(n);}
  const outside=roundDollar(income.excludedNonPACompensation.plus(income.excludedReciprocalCompensation).plus(income.excludedNonPAInterest));let nontax=outside;const other:Record<string,Decimal>={};const spEntries=new Set<string>();
  if(facts.sp.allWorldwideSourcesCompleteConfirmed!==true)return fail('actual worldwide SP income sources are incomplete');
  for(const line of PA_SP_OTHER_LINES){const category=facts.sp.categories[line];ref(category.sourceReference);let exact=new Decimal(0);

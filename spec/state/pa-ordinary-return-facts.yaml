@@ -48,10 +48,10 @@ lines:
     description: Actual PA child relation must agree with retained federal original
     formula: PA40IN p38 includes natural/adopted/step/foster children and grandchildren who can be federal dependents, including adult children. Require unique actual child identities and a valid birth date no later than the tax year. A federal sibling/other adult is not a PA child; do not let an independent PA classification contradict the retained original relationship.
     testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts bind child classification to actual federal relationship"
-  - line: multistate-successor-guard
-    description: Explicitly route retained W2 state/local sources to their actual row successor
-    formula: Any present canonical W2 stateLocalSources packet must stop this legacy single-row ordinary projection before income replay. An OH-first original must never silently produce zero PA withholding from the first scalar row; actual row-normalized PA withholding requires a separately reviewed successor.
-    testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts explicitly guard retained multistate W2 sources"
+  - line: multistate-actual-withholding-successor
+    description: Replay complete actual W2 state rows and preserve jurisdiction boundaries
+    formula: Present current canonical packets require complete calculateW2StateLocalSources validation; malformed/stale/duplicate/unknown packets never fall back. Select actual PA Box17 once independent of first scalar or unused legacy projection. Primitive facts may retain OH1000/PA1535 and project PA1535, binding outside actual1000 in raw originals without claiming resident credit or local completion. All actual payroll/residency/Box12/source guards persist; composer separately requires every actual jurisdiction history and guards positive outside/local withholding pending actual successors.
+    testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts normalize complete actual multistate W2 withholding"
   - line: claiming-household-other-taxpayer
     description: Completed claiming household belongs to another taxpayer
     formula: The completed Schedule SP taxpayer must have a valid identity different from the current dependent claimant; the other taxpayer must actually list the claimant. A self-owning household cannot establish dependency eligibility (2025 SP eligibility question1 and SectionI line1b).
