@@ -1,4 +1,4 @@
-import { compensationReportingErrors } from "./guided-compensation-reporting";
+import { actualCompensationSourceYear, compensationReportingErrors } from "./guided-compensation-reporting";
 import Decimal from "decimal.js";
 import type { FilingStatus, NecEntryData, SelfEmploymentSectionData, StateReturnData, W2EntryData } from "./guided-interview-flow";
 import { parseGuidedCurrency, sumGuidedDisplayAmounts } from "./guided-currency";
@@ -101,4 +101,25 @@ export function businessFactErrors(data: SelfEmploymentSectionData | undefined, 
   }
 
   return errors;
+}
+
+function necDecimalString(value:string|undefined){if(!hasEnteredAmount(value))return undefined;parseGuidedCurrency(value);return (value??'').trim().replace(/,/g,'')||'0';}
+export function buildNecInputs(entries: NecEntryData[] | undefined) {
+  if (!entries || entries.length === 0) return [];
+  return entries
+    .filter(isStartedNec)
+    .map((e) => ({
+      payer: e.payerName.trim(),
+      accountHolder: e.accountHolder || undefined,
+      payerTin: e.payerTin || undefined,
+      taxYear: actualCompensationSourceYear(e.sourceTaxYear),
+      cashTips: necDecimalString(e.cashTips),
+      qualifiedOvertimeCompensation: necDecimalString(e.qualifiedOvertimeCompensation),
+      treasuryTippedOccupationCodes: e.treasuryTippedOccupationCodes === undefined ? undefined : [...e.treasuryTippedOccupationCodes],
+      nonemployeeCompensation: necDecimalString(e.nonemployeeCompensation),
+      federalWithheld: necDecimalString(e.federalWithheld),
+      state: e.state?.trim().toUpperCase() || undefined,
+      stateWithheld: e.stateTaxReporting === "none" ? "0" : necDecimalString(e.stateWithheld),
+      stateIncome: e.stateTaxReporting === "none" ? "0" : necDecimalString(e.stateIncome),
+    }));
 }

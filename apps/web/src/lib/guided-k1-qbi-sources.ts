@@ -7,7 +7,10 @@ import { calculateK1PassiveDistributionSources } from '@/engine/forms/k1-passive
 import { calculateK1PassiveCapitalSources } from '@/engine/forms/k1-passive-capital-sources';
 import { calculateQbiEblNol } from '@/engine/forms/qbi-ebl-nol';
 import { calculateQbiPriorCarrySources } from '@/engine/forms/qbi-prior-carry-sources';
-import { d } from '@/utils/decimal';
+import { d,sum } from '@/utils/decimal';
+import {calculateCK1NecReceiptSources} from '@/engine/forms/c-k1-nec-receipt-sources';
+import {buildNecInputs} from './guided-business-facts';
+import {parseGuidedCurrency} from './guided-currency';
 import type { GuidedFlowState } from './guided-interview-flow';
 import { parseGuidedQbiLossPacket, qbiSourceValues, type K1LossSourcesData } from './guided-qbi-loss-data';
 import { buildGuidedNetOperatingLoss } from './guided-net-operating-loss';
@@ -107,9 +110,6 @@ export function buildGuidedK1Sources(data: K1LossSourcesData | undefined, state:
     }
     const proof=classification.scheduleCSource;
     if(classification.method==='profitable_ordinary_c_and_k1') {
-      if(sectionData['income-self-employment']?.necEntries.some(row=>!d(row.nonemployeeCompensation.replaceAll(',','')).isZero())) {
-        throw new Error('Actual nonzero NEC receipts need their separately reconciled C/K1 business source method; keep the original records.');
-      }
       const business=sectionData['income-self-employment']?.businessFacts;
       const person=proof?.accountHolder==='primary'?taxpayer.primary:proof?.accountHolder==='spouse'?taxpayer.spouse:undefined;
       const name=(text:string|undefined)=>text?.trim().replace(/\s+/g,' ').toLowerCase();
@@ -125,6 +125,15 @@ export function buildGuidedK1Sources(data: K1LossSourcesData | undefined, state:
           :proof.businessEINStatus==='not_issued'&&!proof.businessEIN?.trim()&&!business.ein?.trim())) {
         throw new Error('Confirm actual current ordinary domestic ScheduleC classification, original name/EIN status and owner identity. No missing source fact is inferred.');
       }
+      const self=sectionData['income-self-employment'],necs=buildNecInputs(self?.necEntries);
+      if(proof.necReceipts){
+        proof.necReceipts.rows=proof.necReceipts.rows?.map(row=>{
+          const match=/^form1099Nec:(0|[1-9]\d*)$/.exec(row.necSourceId??''),actual=match?necs[Number(match[1])]:undefined;
+          return {...row,original:row.original??(actual?{...actual}:undefined)};
+        });
+      }
+      const gross=self?.manualGrossReceipts!==undefined?sum(...necs.map(row=>parseGuidedCurrency(row.nonemployeeCompensation)),parseGuidedCurrency(self.manualGrossReceipts)).toFixed():undefined;
+      calculateCK1NecReceiptSources({taxpayer,form1099Nec:necs as TaxYearInput['form1099Nec'],scheduleC:{accountHolder:proof.accountHolder,grossReceipts:gross},qbiLossSources:packet});
     } else if(proof!==undefined) throw new Error('K1-only classification cannot include a different ScheduleC source method');
   }
   const netOperatingLoss = buildGuidedNetOperatingLoss(sectionData.adjustments?.netOperatingLossSources, taxYear, segmentation.filingStatus,

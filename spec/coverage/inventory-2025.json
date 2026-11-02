@@ -183,6 +183,27 @@
       ]
     },
     {
+      "key": "federal/c-k1-nec-receipt-sources",
+      "jurisdiction": "federal",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/forms/c-k1-nec-receipt-sources.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/charitable-carryover",
       "jurisdiction": "federal",
       "taxYear": null,

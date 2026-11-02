@@ -2,6 +2,7 @@
  * Spec: spec/federal/k1-form461-classification.yaml.
  */
 import Decimal from 'decimal.js';
+import {calculateCK1NecReceiptSources} from './c-k1-nec-receipt-sources.js';
 import type { TaxYearInput } from '@/models/inputs.js';
 import type { YearConstants } from '@/models/constants.js';
 import type { ScheduleEResult } from '@/engine/schedules/schedule-e.js';
@@ -60,10 +61,11 @@ export function calculateK1Form461Classification(input: TaxYearInput, context: {
       throw new Error('Profitable ordinary C/K1 classification requires nonnegative canonical current domestic sources; foreign or loss compositions need their separate method');
     }
   }
+  const necSources=withC?calculateCK1NecReceiptSources(input):undefined;
   const cNet=withC?context.scheduleCNetProfit??d(0):d(0);
   if(input.form461) throw new Error('K1 Form461 calculated classification and a separate entered Form461 cannot be used simultaneously');
   if((input.scheduleC&&!withC)||input.scheduleF||input.form4797||(input.form8824?.length??0)>0||input.rentalProperties.length>0
-    ||input.form1099Nec.some(row=>!d(row.nonemployeeCompensation).isZero())
+    ||(!withC&&input.form1099Nec.some(row=>!d(row.nonemployeeCompensation).isZero()))
     ||(input.scheduleK1Form1041?.length??0)>0||input.cryptoIncome?.isMiningBusiness||input.cryptoIncome?.isStakingBusiness
     ||input.cryptoIncome?.nftTransactions.some(row=>row.isBusiness)
     ||(input.priorYear?.suspendedBusinessInterest?.length??0)>0||(input.priorYear?.suspendedPTPLosses?.length??0)>0) {
@@ -89,5 +91,6 @@ export function calculateK1Form461Classification(input: TaxYearInput, context: {
     seRetirementContributions:context.seRetirementContributions,priorYearEBLNol:d(input.priorYear?.excessBusinessLossNOL),
   },input.taxpayer.filingStatus,constants);
   if(withC&&form461.applies) throw new Error('Current C/K1 excess-business-loss allocation requires its separate source method');
+  if(necSources)form461.lines.push(...necSources.lines);
   return {passive,scheduleESupplementalIncome,form461};
 }

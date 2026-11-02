@@ -1,3 +1,5 @@
+import {buildNecInputs} from './guided-business-facts';
+export {buildNecInputs} from './guided-business-facts';
 import { buildGuidedCurrentMtcOriginals } from './guided-current-minimum-tax-credit';
 import type { z } from "zod";
 import type { TaxYearInputSchema } from "@/models/inputs";
@@ -209,25 +211,6 @@ export function buildW2Inputs(
     }));
 }
 
-export function buildNecInputs(entries: NecEntryData[] | undefined) {
-  if (!entries || entries.length === 0) return [];
-  return entries
-    .filter(isStartedNec)
-    .map((e) => ({
-      payer: e.payerName.trim(),
-      accountHolder: e.accountHolder || undefined,
-      payerTin: e.payerTin || undefined,
-      taxYear: actualCompensationSourceYear(e.sourceTaxYear),
-      cashTips: toOptionalDecimalString(e.cashTips),
-      qualifiedOvertimeCompensation: toOptionalDecimalString(e.qualifiedOvertimeCompensation),
-      treasuryTippedOccupationCodes: e.treasuryTippedOccupationCodes === undefined ? undefined : [...e.treasuryTippedOccupationCodes],
-      nonemployeeCompensation: toOptionalDecimalString(e.nonemployeeCompensation),
-      federalWithheld: toOptionalDecimalString(e.federalWithheld),
-      state: e.state?.trim().toUpperCase() || undefined,
-      stateWithheld: e.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(e.stateWithheld),
-      stateIncome: e.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(e.stateIncome),
-    }));
-}
 
 export function buildScheduleCInput(
   necEntries: NecEntryData[] | undefined,

@@ -1,5 +1,5 @@
 /** Explicit synthetic C/K1 originals, pinned in the package source receipt before outputs. */
-import {TaxYearInputSchema} from '@/models/inputs.js';
+import {Form1099NecSchema,TaxYearInputSchema} from '@/models/inputs.js';
 import {twoOwnerK1ScheduleAiFixture,twoOwnerScheduleAiFixture} from './two-owner-schedule-ai.js';
 import {actualGuidedK1Sources} from './guided-k1-qbi-sources.js';
 import {startCompleteInterview,completeW2Entry,completeBusinessSection} from '../guided-interview/complete-facts.js';
@@ -23,3 +23,8 @@ export function cK1GuidedFixture(){
  data.form461Classification={...data.form461Classification,method:'profitable_ordinary_c_and_k1',scheduleCSource:{...cK1Proof(),sourceTaxYear:'2025'}};
  state.sectionData.adjustments={...emptyAdjustmentData,k1LossSources:data};return state;
 }
+
+export function cK1NecOriginal(){return Form1099NecSchema.parse({taxYear:2025,payer:'Actual ordinary client',payerTin:'12-4444444',accountHolder:'primary',nonemployeeCompensation:'25000.10',federalWithheld:'0',stateWithheld:'0'});}
+export function cK1NecReceipts(){const original=cK1NecOriginal();return {sourceTaxYear:2025,sourceReference:'Actual private receipt reconciliation ledger',sourceFactsConfirmed:true,allNecSourcesIncluded:true,noDuplicateStatementsConfirmed:true,otherGrossReceiptsNotOnNec:'14999.90',otherGrossSourceReference:'Actual private cash receipt ledger excluding NEC',rows:[{necSourceId:'form1099Nec:0',sourceTaxYear:2025,sourceReference:'Actual private current original client NEC',sourceFactsConfirmed:true,payerTinStatus:'reported' as const,sameBusinessConfirmed:true,includedOnceConfirmed:true,currentOriginalNoCorrectionsOrVoidsConfirmed:true,allUnmodeledBoxesZeroOrBlankConfirmed:true,original}]};}
+export function cK1NecFixture(){const input=cK1OrdinaryFixture();input.form1099Nec=[cK1NecOriginal()];return TaxYearInputSchema.parse({...input,qbiLossSources:{...input.qbiLossSources,form461Classification:{...input.qbiLossSources!.form461Classification,scheduleCSource:{...input.qbiLossSources!.form461Classification!.scheduleCSource,necReceipts:cK1NecReceipts()}}}});}
+export function cK1NecGuidedFixture(){const state=cK1GuidedFixture();state.sectionData['income-self-employment']!.manualGrossReceipts='14999.90';state.sectionData['income-self-employment']!.necEntries=[{sourceTaxYear:'2025',payerName:'Actual ordinary client',payerTin:'12-4444444',accountHolder:'primary',nonemployeeCompensation:'25000.10',federalWithheld:'0',stateTaxReporting:'none',state:'',stateIncome:'0',stateWithheld:'0'}];const packet=cK1NecReceipts();state.sectionData.adjustments!.k1LossSources!.form461Classification!.scheduleCSource!.necReceipts={...packet,sourceTaxYear:'2025',rows:packet.rows.map(({original:_original,...row})=>({...row,sourceTaxYear:'2025'}))};return state;}
