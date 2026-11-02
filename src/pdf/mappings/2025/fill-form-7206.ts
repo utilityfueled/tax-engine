@@ -67,6 +67,9 @@ function reconcileSources(input: TaxYearInput, result: NonNullable<TaxReturnResu
   }
   if (!sumSourceMoney(...result.businesses.map(group => exact(group.deduction, "business deduction"))).eq(exact(result.deduction, "total source deduction"))) throw new Error("Form7206 business deductions disagree with their calculated source total.");
   const fresh = calculateForm7206ReviewSources(input, fullReturn);
+  const domesticAudit=(lines: TaxReturnResult["allLines"])=>lines.filter(row=>row.form==="Form7206 Domestic Farm");
+  const freshDomestic=retained(domesticAudit(fresh.physical.lines));
+  if (freshDomestic!==retained(domesticAudit(result.lines)) || freshDomestic!==retained(domesticAudit(fullReturn.allLines))) throw new Error("Form7206 actual domestic farm and signed source audits do not reconcile.");
   for (const source of fresh.physical.businesses) {
     const persisted = result.businesses.find(group => group.businessSourceId === source.businessSourceId && group.accountHolder === source.accountHolder);
     if (!persisted) throw new Error("Form7206 current business source is absent from the saved calculation.");
@@ -260,6 +263,8 @@ export async function fillForm7206(input: TaxYearInput, result: TaxReturnResult,
       }
     }
   }
+  for (const row of calculation.lines.filter(line=>line.form==="Form7206 Domestic Farm")) write(`${row.description}: $${row.value.toFixed()}. ${row.formula}.`);
+  if (facts.domesticFarmSources) write(`Original domestic farm source proof is bound by its saved audit commitment. Source year ${facts.domesticFarmSources.sourceTaxYear}; actual all-domestic income and zero self-employed retirement deduction confirmed. This proof does not allocate a signed foreign exclusion to the farm.`);
   const coveredPeople = new Set(calculation.sourceRecords.filter(row => row.businessSourceId === businessSourceId && row.accountHolder === accountHolder).map(row => row.personId));
   for (const person of calculation.longTermCarePersons.filter(row => coveredPeople.has(row.personId))) write(`LTC person ${person.personId}: attained age ${person.attainedAge}; annual limit $${person.annualLimit.toFixed()}; eligible across all businesses $${person.eligiblePremiums.toFixed()}; allowed across all businesses $${person.allowedPremiums.toFixed()}.`);
   for (const [line, value] of byLine) write(`Exact calculated line ${line}: ${value.toFixed()}${line === "6" ? " (ratio; percentage display is rounded to six decimal places)" : " dollars"}.`);

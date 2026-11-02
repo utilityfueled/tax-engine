@@ -54,9 +54,16 @@ export function calculateForm7206ReviewSources(input: TaxYearInput, result: TaxR
   same(savedSE.deductibleHalf, scheduleSE.deductibleHalf);
   if (input.form2555?.taxYear !== undefined && input.form2555.taxYear !== input.taxpayer.taxYear) throw new Error("Form7206 foreign source year does not match the return.");
   const foreign = input.form2555 ? calculateForm2555({ ...input.form2555, taxYear: input.taxpayer.taxYear }, constants) : undefined;
+  if (input.form7206?.domesticFarmSources) {
+    if (!foreign || !result.form2555) throw new Error("Domestic farm review requires its actual signed foreign source.");
+    for (const key of ["netExclusion","totalExclusion","foreignEarnedIncome","foreignEarnedIncomeExclusion","housingDeduction","housingExclusion"] as const) same(result.form2555[key],foreign[key]);
+    const actual=foreign.lines.filter(row=>["43","44","45","50"].includes(row.line));
+    const saved=result.form2555.lines.filter(row=>["43","44","45","50"].includes(row.line));
+    if (JSON.stringify(actual)!==JSON.stringify(saved)) throw new Error("Domestic farm signed foreign source audits do not reconcile.");
+  }
   const params = { input: seSourceInput, scheduleCProfit: scheduleC.netProfit, scheduleFProfit: scheduleF.netFarmProfit,
     cryptoBusinessProfit: cryptoNet, selfEmploymentDeductions: scheduleSE.perTaxpayer.map(row => ({ accountHolder: row.accountHolder, amount: row.deductibleHalf })),
-    foreignIncomeExclusion: foreign?.totalIncomeReduction ?? d(0), selfEmploymentSourcesVerified: scheduleSE.sourceFactsVerified,
+    foreignIncomeExclusion: foreign?.totalIncomeReduction ?? d(0), form2555Source: foreign, selfEmploymentSourcesVerified: scheduleSE.sourceFactsVerified,
     businessGrossIncomes: [{ sourceId: "scheduleC", amount: scheduleC.grossIncome }, { sourceId: "scheduleF", amount: scheduleF.grossFarmIncome }, { sourceId: "cryptoBusiness", amount: cryptoGross }] };
   const marketplace = result.marketplaceHealthInsurance;
   const physical = calculateForm7206Return({ ...params, marketplace: result.marketplaceActualPaidRepaymentHealth

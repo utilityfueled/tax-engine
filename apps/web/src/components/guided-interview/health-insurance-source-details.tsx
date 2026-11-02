@@ -29,6 +29,7 @@ export function HealthInsuranceSourceDetails({ data, sources = [], marketplacePo
   const updateCreditAllocation = (patch: Partial<MarketplaceCreditAllocationData>) => {
     if (data.marketplaceCreditAllocation) update({ marketplaceCreditAllocation: { ...data.marketplaceCreditAllocation, ...patch } });
   };
+  const domestic=data.domesticFarmSources;
   const people = data.persons.filter(person => person.personId.trim()).map(person => [person.personId, person.name || person.personId] as const);
   const sourceChoices = sources.map(source => [source.sourceId, `${source.label} (${source.accountHolder === "primary" ? "you" : "spouse"})`] as const);
   return <section>
@@ -50,6 +51,20 @@ export function HealthInsuranceSourceDetails({ data, sources = [], marketplacePo
       </div>
       <button type="button" onClick={() => update({ marketplaceCreditAllocation: undefined })}>Remove recorded credit allocation method</button>
     </fieldset> : <button type="button" onClick={() => update({ marketplaceCreditAllocation: { sourceTaxYear: "", sourceReference: "", sourceFactsConfirmed: null, method: "", sameMethodForAllCalculationsConfirmed: null } })}>Add recorded Marketplace credit allocation method</button>}
+    {domestic ? <fieldset><legend>Actual domestic farm source proof</legend>
+      <p className="guided-hint">Use the original US-only farm records for an already present Schedule F. This proof does not create a farm or change foreign income. The ordinary interview cannot originate Schedule F; that return needs its canonical typed or imported farm source.</p>
+      <div className="guided-form-grid">
+        <TextFact label="Domestic farm source tax year" value={domestic.sourceTaxYear} onChange={sourceTaxYear => update({domesticFarmSources:{...domestic,sourceTaxYear}})} />
+        <TextFact label="Domestic farm source reference" value={domestic.sourceReference} onChange={sourceReference => update({domesticFarmSources:{...domestic,sourceReference}})} />
+        <Choice label="Actual domestic farm business" value={domestic.businessSourceId} choices={sourceChoices.filter(([id])=>id==="scheduleF")} onChange={businessSourceId=>update({domesticFarmSources:{...domestic,businessSourceId:businessSourceId as "" | "scheduleF",accountHolder:sources.find(row=>row.sourceId===businessSourceId)?.accountHolder??""}})} />
+        <TextFact label="Domestic farm original activity" value={domestic.principalCropOrActivity} onChange={principalCropOrActivity=>update({domesticFarmSources:{...domestic,principalCropOrActivity}})} />
+        <TextFact label="Domestic farm original EIN" value={domestic.ein} onChange={ein=>update({domesticFarmSources:{...domestic,ein}})} />
+        <BooleanFact label="All actual farm income is domestic" value={domestic.allIncomeDomesticConfirmed} onChange={allIncomeDomesticConfirmed=>update({domesticFarmSources:{...domestic,allIncomeDomesticConfirmed}})} />
+        <BooleanFact label="Actual self-employed retirement deduction is zero" value={domestic.noSelfEmployedRetirementDeductionConfirmed} onChange={noSelfEmployedRetirementDeductionConfirmed=>update({domesticFarmSources:{...domestic,noSelfEmployedRetirementDeductionConfirmed}})} />
+        <BooleanFact label="Domestic farm proof checked after the last edit" value={domestic.sourceFactsConfirmed} onChange={sourceFactsConfirmed=>update({domesticFarmSources:{...domestic,sourceFactsConfirmed}})} />
+      </div>
+      <button type="button" onClick={()=>update({domesticFarmSources:undefined})}>Remove domestic farm proof</button>
+    </fieldset> : sources.some(source=>source.sourceId==="scheduleF") && <button type="button" onClick={()=>update({domesticFarmSources:{sourceTaxYear:"",sourceReference:"",sourceFactsConfirmed:null,businessSourceId:"",accountHolder:"",principalCropOrActivity:"",ein:"",allIncomeDomesticConfirmed:null,noSelfEmployedRetirementDeductionConfirmed:null}})}>Add domestic farm proof</button>}
     <PartnershipHealthGrossDetails data={data.partnershipGrossIncomeSources} sources={sources} onChange={partnershipGrossIncomeSources => update({ partnershipGrossIncomeSources })} />
     {data.persons.map((person, index) => {
       const prefix = `Person ${index + 1}`;

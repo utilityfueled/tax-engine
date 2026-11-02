@@ -48,10 +48,16 @@ export interface MarketplaceCreditAllocationData {
   sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null;
   method: "" | "monthly_eligible_plan_enrollment"; sameMethodForAllCalculationsConfirmed: boolean | null;
 }
+export interface DomesticFarmHealthSourcesData {
+  sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null;
+  businessSourceId: "" | "scheduleF"; accountHolder: "" | Owner; principalCropOrActivity: string; ein: string;
+  allIncomeDomesticConfirmed: boolean | null; noSelfEmployedRetirementDeductionConfirmed: boolean | null;
+}
 export interface HealthInsuranceData {
   sourceTaxYear: string; sourceReference: string; sourceFactsConfirmed: boolean | null; allPlansIncluded: boolean | null;
   persons: HealthInsurancePersonData[]; plans: HealthInsurancePlanData[];
   incomeDeductions?: HealthInsuranceIncomeDeductionsData;
+  domesticFarmSources?: DomesticFarmHealthSourcesData;
   marketplaceCreditAllocation?: MarketplaceCreditAllocationData;
   partnershipGrossIncomeSources?: PartnershipHealthGrossData;
   longTermCareAllocations: { personId: string; accountHolder: "" | Owner; businessSourceId: string; allowedPremium: string }[];
@@ -61,6 +67,7 @@ export const emptyHealthInsuranceFacts: HealthInsuranceData = { sourceTaxYear: "
 /** Revoke independent confirmations without replacing their actual source values. */
 export function invalidateHealthInsuranceSources(data: HealthInsuranceData): HealthInsuranceData {
   return { ...data, sourceFactsConfirmed: null,
+    ...(data.domesticFarmSources ? { domesticFarmSources: { ...data.domesticFarmSources, sourceFactsConfirmed: null } } : {}),
     ...(data.partnershipGrossIncomeSources ? { partnershipGrossIncomeSources: { ...data.partnershipGrossIncomeSources, sourceFactsConfirmed: null, statements: data.partnershipGrossIncomeSources.statements.map(row => ({ ...row, sourceFactsConfirmed: null })) } } : {}),
     ...(data.marketplaceCreditAllocation ? { marketplaceCreditAllocation: { ...data.marketplaceCreditAllocation, sourceFactsConfirmed: null } } : {}),
     ...(data.incomeDeductions ? { incomeDeductions: { ...data.incomeDeductions, sourceFactsConfirmed: null } } : {}),
@@ -116,6 +123,13 @@ export function buildHealthInsuranceInput(data: HealthInsuranceData | undefined,
   const facts = Form7206Schema.parse({
     sourceTaxYear: integer(data.sourceTaxYear, "source tax year"), sourceReference: data.sourceReference, sourceFactsConfirmed: data.sourceFactsConfirmed ?? undefined, allPlansIncluded: data.allPlansIncluded ?? undefined,
     incomeDeductions: buildIncomeDeductions(data.incomeDeductions),
+    domesticFarmSources: data.domesticFarmSources ? {
+      ...data.domesticFarmSources, sourceTaxYear: integer(data.domesticFarmSources.sourceTaxYear,"domestic farm source year"),
+      sourceReference: data.domesticFarmSources.sourceReference.trim(), sourceFactsConfirmed: data.domesticFarmSources.sourceFactsConfirmed ?? undefined,
+      businessSourceId: data.domesticFarmSources.businessSourceId || undefined, accountHolder: data.domesticFarmSources.accountHolder || undefined,
+      allIncomeDomesticConfirmed: data.domesticFarmSources.allIncomeDomesticConfirmed ?? undefined,
+      noSelfEmployedRetirementDeductionConfirmed: data.domesticFarmSources.noSelfEmployedRetirementDeductionConfirmed ?? undefined,
+    } : undefined,
     partnershipGrossIncomeSources: buildPartnershipHealthGross(data.partnershipGrossIncomeSources, taxYear),
     marketplaceCreditAllocation: data.marketplaceCreditAllocation ? {
       sourceTaxYear: integer(data.marketplaceCreditAllocation.sourceTaxYear, "credit allocation source year"),
@@ -193,6 +207,7 @@ export function healthInsuranceSourceErrors(state: GuidedFlowState): Record<stri
   const sources = healthInsuranceSourceOptions(state.sectionData["income-self-employment"], state.sectionData["income-w2"]?.entries, state.sectionData.adjustments?.k1LossSources);
   if ((data.plans ?? []).some(plan => !sources.some(source => source.sourceId === plan.businessSourceId && source.accountHolder === plan.accountHolder && source.kind === plan.businessKind))) return { healthInsuranceBusiness: "Link every health plan to its actual business or shareholder W-2 on this return. Other business sources require their source worksheets before this interview can use them." };
   if ((data.incomeDeductions?.allocations ?? []).some(row => !sources.some(source => source.sourceId === row.businessSourceId && source.accountHolder === row.accountHolder))) return { healthInsuranceBusiness: "Link each deduction attribution to its actual business and owner on this return." };
+  if (data.domesticFarmSources && !sources.some(source=>source.sourceId==="scheduleF" && source.accountHolder===data.domesticFarmSources?.accountHolder)) return {healthInsuranceBusiness:"This interview cannot originate Schedule F. Use the canonical typed/imported return with its actual farm before collecting domestic farm proof."};
   const personal = state.sectionData["personal-info"];
   const normalize = (value: string) => value.trim().replace(/\s+/g, " ").toLowerCase();
   const name = (person: { firstName?: string; lastName?: string } | undefined) => person ? normalize([person.firstName, person.lastName].filter(Boolean).join(" ")) : "";

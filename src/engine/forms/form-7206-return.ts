@@ -1,7 +1,12 @@
 /** Canonical owner/business binding. Spec: spec/federal/form-7206-return.yaml. */
 import Decimal from "decimal.js";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex } from "@noble/hashes/utils.js";
 import type { MarketplaceActualPaidAdjustment } from "./marketplace-actual-paid-repayment.js";
 import type { MarketplaceReportedRepaymentPayment } from "./marketplace-reported-repayment-payment.js";
+import { resolveForm2555Sources } from "./form-2555-source-binding.js";
+import { resolveForm2555WorksheetAddback } from "./form-2555-worksheet-source.js";
+import type { Form2555Result } from "./form-2555.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { d, roundDollar, sum } from "@/utils/decimal.js";
 import { sumSourceMoney } from "@/utils/sum-source-money.js";
@@ -24,6 +29,8 @@ interface Params {
   cryptoBusinessProfit: Decimal;
   selfEmploymentDeductions: { accountHolder?: Owner; amount: Decimal }[];
   foreignIncomeExclusion: Decimal;
+  /** Actual canonical Form2555 result, required to bind a signed source. */
+  form2555Source?: Form2555Result;
   selfEmploymentSourcesVerified: boolean;
   /** Engine-computed Pub974 stage; not a taxpayer amount or source fact. */
   marketplace?: { stage: "actual-paid"; actualPaidAdjustment?: MarketplaceActualPaidAdjustment } | { stage: "actual-cash" } | { stage: "full-repayment"; reportedPayment?: MarketplaceReportedRepaymentPayment } | { stage: "worksheet-w" } | { stage: "maximum"; historicalLimit?: MarketplaceHealthLimitResult } | { stage: "final" | "ordered"; deduction: MarketplaceHealthDeductionResult };
@@ -39,6 +46,63 @@ function attainedAge(date: string, year: number): number {
 function sourceAmount(value: string | undefined): Decimal {
   if (value === undefined || !/^\d+(\.\d+)?$/.test(value) || !d(value).isFinite()) throw new Error("Form7206 income allocations require actual finite nonnegative amounts, including known zero.");
   return d(value);
+}
+/** Finite source method: zero attributable to an independently proven domestic F.
+ * This does not allocate a negative household exclusion among businesses. */
+function signedDomesticFarmAudit(params: Params, businesses: Form7206BusinessContext[]) {
+  const {input}=params, facts=input.form7206, proof=facts?.domesticFarmSources;
+  const fail=()=>{throw new Error("Actual signed Form2555 with Form7206 business attribution needs its separate source method; the domestic farm route requires complete independent domestic source proof.");};
+  const farm=input.scheduleF, form=input.form2555, mapping=form?.sourceMapping;
+  const c=businesses.find(row=>row.sourceId==="scheduleC"), f=businesses.find(row=>row.sourceId==="scheduleF");
+  if(!proof || proof.sourceTaxYear!==input.taxpayer.taxYear || !proof.sourceReference?.trim() || proof.sourceFactsConfirmed!==true
+    || proof.businessSourceId!=="scheduleF" || !proof.accountHolder || proof.allIncomeDomesticConfirmed!==true
+    || proof.noSelfEmployedRetirementDeductionConfirmed!==true || input.adjustments?.seRetirementContributions===undefined
+    || !d(input.adjustments.seRetirementContributions).isZero() || facts?.incomeDeductions || params.marketplace
+    || !farm || !farm.principalCropOrActivity?.trim() || !proof.principalCropOrActivity?.trim()
+    || name(proof.principalCropOrActivity)!==name(farm.principalCropOrActivity)
+    || !/^\d{2}-?\d{7}$/.test(proof.ein??"") || proof.ein?.replace(/-/g,"")!==farm.ein?.replace(/-/g,"")
+    || proof.accountHolder!==farm.accountHolder || businesses.length!==2 || !c?.netIncome?.gt(0) || !f?.netIncome?.gt(0)
+    || c.accountHolder!==f.accountHolder || f.accountHolder!==proof.accountHolder || form?.accountHolder!==c.accountHolder
+    || facts?.plans?.length!==1 || facts.plans.some(plan=>plan.businessSourceId!=="scheduleF" || plan.accountHolder!==f.accountHolder
+      || plan.businessKind!=="self_employed" || plan.kind!=="medical" || plan.marketplaceCoverage!==false || plan.premiumTaxCreditInvolved!==false)
+    || mapping?.rows.length!==1 || mapping.rows[0]?.sourceId!=="scheduleC" || mapping.rows[0].capitalMaterialIncomeFactor!==true
+    || mapping.rows[0].allBusinessIncomeForeignConfirmed!==true || !d(mapping.rows[0].priorYearIncomeReceived).isZero()) return fail();
+  const bound=resolveForm2555Sources(input), source=params.form2555Source;
+  if(!source || !bound.sourceFactsVerified || bound.scheduleCForeignShare.length!==1 || bound.qbiForeignProfit.length!==0
+    || !source.priorYearIncomeExclusion?.isZero() || !source.housingDeduction.isZero() || !source.housingExclusion.isZero()) return fail();
+  resolveForm2555WorksheetAddback(params.foreignIncomeExclusion, d(0), source,input.taxpayer.taxYear);
+  const share=bound.scheduleCForeignShare[0];
+  if(!share || !share.capitalMaterialEarned || !source.foreignEarnedIncome.eq(share.earned) || !source.foreignEarnedIncome.gt(0)) return fail();
+  // Independently recheck the canonical capital bound and actual expense floor
+  // here, because review export also invokes this source method without federal.ts.
+  const profits=c.netIncome.plus(f.netIncome), half=c.ownerDeductibleSelfEmploymentTax;
+  if(!half || !half.isFinite() || half.lt(0)) return fail();
+  const foreignHalf=half.times(c.netIncome.div(profits));
+  if(share.capitalMaterialEarned.gt(Decimal.max(0,c.netIncome.minus(foreignHalf)).times("0.3"))) return fail();
+  const expenses=share.grossIncome.minus(c.netIncome);
+  if(expenses.lt(0) || (share.foreignBusinessExpenses!==undefined && !share.foreignBusinessExpenses.eq(expenses))) return fail();
+  const exclusionFraction=Decimal.min(1,source.foreignEarnedIncomeExclusion.div(source.foreignEarnedIncome));
+  const floor=roundDollar(expenses.times(share.earned.div(share.foreign)).plus(foreignHalf).times(exclusionFraction));
+  if(roundDollar(d(form?.deductionsAllocableToExcludedIncome)).lt(floor)) return fail();
+  // Normalize only structured personal identifiers for the existing render-only
+  // redaction contract. Business EIN, original references and all money stay bound.
+  // Sorting object keys avoids false changes when a saved JSON object is reordered.
+  const canonicalSource=(value:unknown,key=""):unknown=>{
+    if(typeof value==="string" && /(?:ssn(?:last4)?|tin|taxid|taxpayerIdLast4|identifyingnumber(?:last4)?|accountReference)$/i.test(key)) return "";
+    if(Array.isArray(value)) return value.map(item=>typeof item==="string" && /ssns$/i.test(key)?"":canonicalSource(item));
+    if(value!==null && typeof value==="object") return Object.fromEntries(Object.entries(value).sort(([a],[b])=>a<b?-1:a>b?1:0).map(([field,item])=>[field,canonicalSource(item,field)]));
+    return value;
+  };
+  const sourceCommitment=bytesToHex(sha256(new TextEncoder().encode(JSON.stringify(canonicalSource({
+    taxYear:input.taxpayer.taxYear,filingStatus:input.taxpayer.filingStatus,
+    scheduleC:input.scheduleC,scheduleF:input.scheduleF,foreign:form,health:facts,
+  })))));
+  const audit=new AuditTrail();
+  audit.record("Form7206 Domestic Farm","signed-c-source","Actual signed Form2555 line45 remains on its sole foreign C source",params.foreignIncomeExclusion,
+    "Actual Form2555 line45; not a domestic farm exclusion",{"Foreign business source":"scheduleC","Source year":String(input.taxpayer.taxYear),"Original source commitment":sourceCommitment});
+  audit.record("Form7206 Domestic Farm","domestic-f-foreign-zero","Known zero foreign exclusion attributable to the independently proven domestic farm",d(0),
+    "All actual F income is domestic; foreign exclusion attributable to F = 0",{"Business source":"scheduleF","Taxpayer owner":proof.accountHolder,"Original source commitment":sourceCommitment});
+  return audit.getLines();
 }
 export function calculateForm7206Return(params: Params) {
   const { input } = params;
@@ -122,8 +186,9 @@ export function calculateForm7206Return(params: Params) {
     }
   }
   const retirement = d(input.adjustments?.seRetirementContributions), foreign = params.foreignIncomeExclusion;
-  if (foreign.isFinite() && foreign.lt(0)) throw new Error("Actual signed Form2555 with Form7206 business attribution needs its separate source method.");
-  if (!retirement.isFinite() || retirement.lt(0) || !foreign.isFinite() || foreign.lt(0)) throw new Error("Form7206 canonical retirement and foreign amounts must be finite and nonnegative.");
+  const signedFarmLines = foreign.isFinite() && foreign.lt(0) ? signedDomesticFarmAudit(params,businesses) : [];
+  if (facts.domesticFarmSources && signedFarmLines.length===0) throw new Error("Domestic farm source proof requires its actual signed Form2555 source method.");
+  if (!retirement.isFinite() || retirement.lt(0) || !foreign.isFinite() || (foreign.lt(0) && signedFarmLines.length===0)) throw new Error("Form7206 canonical retirement and foreign amounts must be finite and nonnegative.");
   const allocation = facts.incomeDeductions;
   const retirementSources: QBIDeductionSourceAmount[] = [];
   if (!allocation && (retirement.gt(0) || foreign.gt(0))) throw new Error("Form7206 needs actual business attribution of positive retirement and foreign deductions.");
@@ -287,5 +352,5 @@ export function calculateForm7206Return(params: Params) {
   const printed = result?.method.startsWith("ordinary-no-ptc-")
     ? calculateForm7206({ taxYear: year, filingStatus: input.taxpayer.filingStatus, facts, marketplaceSourceInput: input, businesses, marketplaceHandling: "ordinary-no-ptc" }) : form7206;
   if (result?.method.startsWith("ordinary-no-ptc-") && (printed.deduction === undefined || !roundDollar(printed.deduction).eq(deductionToSchedule1))) throw new Error("Ordinary no-PTC Form7206 must reconcile the final source deduction.");
-  return { form7206: { ...printed, lines: [...printed.lines, ...marketplaceAudit.getLines()], deductionToSchedule1 }, healthSources, retirementSources, marketplacePremiums };
+  return { form7206: { ...printed, lines: [...printed.lines, ...signedFarmLines, ...marketplaceAudit.getLines()], deductionToSchedule1 }, healthSources, retirementSources, marketplacePremiums };
 }

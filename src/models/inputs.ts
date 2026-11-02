@@ -4297,6 +4297,18 @@ export const Form7206Schema = z.object({
     method: z.enum(["monthly_eligible_plan_enrollment"]).optional(),
     sameMethodForAllCalculationsConfirmed: z.boolean().optional(),
   }).optional(),
+  /** Original proof of a wholly domestic farm, separate from foreign-source mapping. */
+  domesticFarmSources: z.object({
+    sourceTaxYear: z.number().int().optional(),
+    sourceReference: z.string().optional(),
+    sourceFactsConfirmed: z.boolean().optional(),
+    businessSourceId: z.literal("scheduleF").optional(),
+    accountHolder: z.enum(["primary", "spouse"]).optional(),
+    principalCropOrActivity: z.string().optional(),
+    ein: z.string().optional(),
+    allIncomeDomesticConfirmed: z.boolean().optional(),
+    noSelfEmployedRetirementDeductionConfirmed: z.boolean().optional(),
+  }).strict().optional(),
   /** Actual attribution of positive already-allowed retirement and Form2555line45 amounts. */
   incomeDeductions: z.object({
     sourceReference: z.string().optional(),

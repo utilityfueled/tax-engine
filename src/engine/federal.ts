@@ -1736,7 +1736,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
     actualHealthInsurance = calculateForm7206Return({ input: seSourceInput, scheduleCProfit: schedC.netProfit,
       scheduleFProfit: schedFNetProfit, cryptoBusinessProfit: cryptoBusinessNet,
       selfEmploymentDeductions: schedSE.perTaxpayer.map(row => ({ accountHolder: row.accountHolder, amount: row.deductibleHalf })),
-      foreignIncomeExclusion: form2555IncomeReduction, selfEmploymentSourcesVerified: schedSE.sourceFactsVerified, marketplace,
+      foreignIncomeExclusion: form2555IncomeReduction, form2555Source: form2555, selfEmploymentSourcesVerified: schedSE.sourceFactsVerified, marketplace,
       businessGrossIncomes: [{ sourceId: "scheduleC", amount: schedC.grossIncome }, { sourceId: "scheduleF", amount: schedF.grossFarmIncome }, { sourceId: "cryptoBusiness", amount: cryptoBusinessGross }] });
     seHealthInsurance = actualHealthInsurance.form7206.deductionToSchedule1;
     audit.merge(actualHealthInsurance.form7206.lines);
