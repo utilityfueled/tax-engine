@@ -2127,3 +2127,15 @@ approved the frozen candidate. Final-reason and school text remain complete and
 privacy-safe on labelled reference pages; no final2026/filing gate is promoted.
 See the PA ordinary source PDF ledger and active checklist for exact receipts
 and pending richer household/workspace/G-L successors.
+
+
+## November2: actual paid resident-credit composition
+
+The ordinary PA composer now replays complete same-income nonreciprocal
+ordinary employee originals, actual payment/refund/offset/transfer history and
+current account balances before applying per-state and PA tax caps. Credits
+precede ScheduleSP and penalty settlement. Main3 genuine red/two pass then
+121/10 and all11 package checks pass; exact independent52/four review is retained
+in the resident-credit source ledger. Positive guided/G-L successors and broader
+workspace income migrations continue; this is finite2025 review support, not
+final2026 forms or filing qualification.

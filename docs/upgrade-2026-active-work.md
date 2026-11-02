@@ -60,13 +60,13 @@ its minimal enum/type/dropdown edits; it qualifies source capture only.
   `746d03d52b5192e74975cbbbc857f24d87d7e895517114d73807753476e43354`.
   Source-test migrations retain every monetary/negative oracle and original red.
   Pushed `e28f42a7`; no source defaults.
-- [ ] PA rich resident-credit6 and root composition5: exact frozen source
+- [x] PA rich resident-credit6 and root composition5: exact frozen source
   `28290828...` plus `dfdcec5e...` now pass75/seven/types3/spec/strict0/build.
   Independent52/four approved receipt
   `7cc833b3eabef649ffe05166625229a6e1ce53e6f295ef6eb398ddc85861f829`.
   Actual complete payment/refund/account originals, exact same-income caps and
-  credit-before-SP/penalty order remain required. Main adoption and positive G-L
-  PDF/UI methods remain successors. No general resident-credit qualification.
+  credit-before-SP/penalty order remain required. Main121/10 and all11 package checks pass after3 genuine main failures/two passes.
+  Positive G-L PDF/UI remain separate successors. No general resident-credit qualification.
 - [x] PA ordinary PDF10: original actual final-reason privacy failure and school
   appearance clipping were corrected before independent approval. Final frozen10
   `nov02-pa-ordinary-pdf/frozen-package-school-appearance.json` SHA
@@ -146,3 +146,15 @@ status/diff inside archive-only trees. Continue implementing all unblocked work.
 - Ordinary positive G-L PDF extension: official continuous03-24 blank retained
   with current official instructions; source-first controls underway privately.
   Positive PA40line22 alone does not prove a complete ordinary packet.
+
+- Latest ordinary source PDF commit `9e052bd2` is pushed; exact branch fetch0/0.
+  Current remote lint/types/spec/build/webbuild pass and preview READY; remaining
+  current remote unit/coverage/browser/container jobs were still running at read.
+- Root workspace candidate new5 actual controls pass; broader legacy baseline
+  was38/four pass, then14fail/24pass with the candidate. Complete5-file candidate
+  is retained at `nov02-parent-pa-workspace-export-main/deferred-main-candidate`
+  until actual A/B/business/NRH method migrations pass. No failing candidate is
+  committed and no positive assertion is replaced only with a rejection.
+- Ordinary G-L12 author24+58 controls/types/spec/build pass; strict new-owned
+  lint0. Exact frozen17d8d37293f15ade8355fe7ac27938dba4f5ea7e3a909094fbe1bcfffd0b3acf
+  awaits distinct independent review. Actual official full12page blank retained.

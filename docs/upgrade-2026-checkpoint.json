@@ -13119,6 +13119,20 @@
     "independentReview": "9f8b30416d5b4531f37d48f0d838f8465993898cb11848d19ee9fbb392926ddb",
     "independentBoundary": "31passed1knownunsupportedskip;7PDF17pagesstrict/privacy/visual",
     "releaseReady": false,
-    "remaining": "household9+proof3/workspace actualexport/richcredit+composition+UI+positiveGL/mainadoption plus all global/staging/human gates"
+    "remaining": "household9+proof3/workspace actualexport/richcredit+composition+UI+positiveGL/mainadoption plus all global/staging/human gates",
+    "commit": "9e052bd2"
+  },
+  "continuation20261102PAResidentCredit": {
+    "baseCommit": "9e052bd2",
+    "mainTests": {
+      "passed": 121,
+      "files": 10
+    },
+    "checks": "types3/spec6817/inventorygeneration+check/strictlint0/engine+webbuild/diff all11pass",
+    "sourceFirst": "3genuinefail2pass; separatemissingmodule diagnostic excluded",
+    "evidence": "nov02-parent-pa-rich-credit-main-green/checks.json",
+    "independentReview": "7cc833b3eabef649ffe05166625229a6e1ce53e6f295ef6eb398ddc85861f829",
+    "workspaceCandidate": "new5pass; legacy38baselinepass\u219214fail24pass; exactcandidate deferred privately until actualA/B/business/NRH migrations",
+    "releaseReady": false
   }
 }
