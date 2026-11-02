@@ -1868,7 +1868,7 @@ function calculateFederalTaxCore(input: TaxYearInput, marketplace?: MarketplaceC
   // is added back to other income on Schedule 1 Line 8p.
   const eblSources = input.form461;
   const k1Form461Classification = calculateK1Form461Classification(input, {
-    scheduleE: schedE, capitalGainOrLoss: capitalGainLoss, deductibleSETax: schedSE.deductibleHalf,
+    scheduleE: schedE, scheduleCNetProfit: schedCNetProfit, capitalGainOrLoss: capitalGainLoss, deductibleSETax: schedSE.deductibleHalf,
     seHealthInsurance: sched1.seHealthInsurance, seRetirementContributions: sched1.seRetirementContributions,
   }, constants);
   if (eblSources) {

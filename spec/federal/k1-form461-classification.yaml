@@ -2,7 +2,7 @@ form: "K1 Form461 Classification"
 fullName: "Actual ordinary K-1 classification after basis, at-risk and passive limits"
 taxYear: 2025
 irsReference: "https://www.irs.gov/instructions/i461"
-retrievedAt: "2026-10-25"
+retrievedAt: "2026-11-02"
 notes: |
   Form461 Ordering Rules applies at-risk then passive then excess business
   losses. Line5 is actual ScheduleE income/loss after those limits. Form8582
@@ -22,6 +22,8 @@ notes: |
   requires no other partner adjustments and an independent preceding-year
   zero suspended-SE record. A negative original Box14 must equal the original
   ordinary loss, with no prior passive loss to allocate; no fraction is guessed.
+  The explicit profitable C-plus-partnership method below is a separate source
+  answer; the older ordinary_k1_only method continues to exclude C sources.
   The calculated pre-461 income remains the existing ScheduleSE source basis;
   positive461 mixed-source SE coordination is not broadened by this method.
 lines:
@@ -61,3 +63,35 @@ lines:
     description: "Use identical source-derived earnings for health deductions and review validation"
     formula: "Actual positive partnership100000 yields92350net earnings: rounded11451Social Security plus2678Medicare =14129SEtax/7065half. Actual owner-paid600.10 medical costs transfer600 once; AGI92335. The review recalculates the same original source limits and rejects changed sources."
     testRef: "tests/engine/federal-k1-form461-classification.test.ts::uses calculated partner earnings consistently in health and review sources"
+  - line: "profitable-c-k1"
+    description: "Explicit profitable ordinary domestic C plus partnership K1 classification"
+    formula: "A separate profitable_ordinary_c_and_k1 method binds actual current ScheduleC owner, original name/EIN line status and recipient identity to confirmed original domestic ordinary records. Add canonical ScheduleC40000 to post-limitation ordinary partnership ScheduleE40000; computed owner halfSE536+2826 enters line8=-3362, line9/14=76638, MFJ2025 line15=626000, signed16=702638, EBL0. Employee wages176100 stay excluded. Actual negative C/K1 or any resulting EBL requires a separate loss-allocation method. The old ordinary_k1_only answer never admits C."
+    testRef: "tests/engine/federal-c-k1-classification.test.ts::derives profitable C and K1 from actual sources without entered computed totals"
+  - line: "profitable-c-k1-proof"
+    description: "Preserve unknown ordinary domestic identity and existing source boundaries"
+    formula: "Missing false stale year owner business name/EIN or recipient identity and reference confirmation reject. Actual C net comes from the canonical federal ScheduleC context after its adjustments, never from an entered source-proof amount. All other business amounts remain explicit zero, no competing entered461, no ScheduleF/rental/businesscapital/PTP/crypto composition."
+    testRef: "tests/engine/forms/k1-form461-c-k1.test.ts::requires actual C proof and preserves K1-only and loss boundaries"
+  - line: "profitable-c-k1-guide"
+    description: "Guide originates explicit C classification without guessing proof"
+    formula: "Actual complete self-employment and K1 source controls build the same canonical C/K1 return as typed sources. A new method exposes actual source fields with unknown initial values; edits invalidate confirmations recursively. No domestic proof is inferred from absent foreign forms or an existing K1-only answer."
+    testRef: "tests/guided-interview/guided-c-k1-classification.test.ts::builds actual guide C and K1 canonical parity and preserves unknown proof"
+  - line: "profitable-c-k1-review"
+    description: "Original-bound prepared redacted review rejects stale C and K1 sources before template I/O"
+    formula: "Existing opaque prepared QBI context binds complete actual original and fresh canonical result. Valid permitted redaction renders; equal-dollar source identity or reference mutation, forged context and saved-result mutation reject before template access. Positive no-EBL calculation does not claim automatic official Form461 attachment."
+    testRef: "tests/pdf/c-k1-classification-review.test.ts::binds prepared C and K1 originals before template I O"
+  - line: "profitable-c-k1-blank-identity"
+    description: "Actual sole proprietor original name and EIN line status"
+    formula: "ScheduleC lineC is blank when no separate name and lineD blank when no EIN issued. Explicit reported or blank_original name status and reported or not_issued EIN status corroborate actual owner identity. Known blank originals preserve missing identifiers; unknown status or contradiction with canonical reported name/EIN reject. No invented business name or taxID."
+    testRef: "tests/engine/forms/k1-form461-c-k1.test.ts::accepts an explicitly known blank sole proprietor name and no EIN without inventing identifiers"
+  - line: "profitable-c-k1-isolated-2026"
+    description: "Isolated 2026 profitable C/K1 classification preserves the return gate"
+    formula: "With actual current2026 C40000 and ordinary partnership40000, independent owner SE2113/5652 and reported half1057+2826=3883, Form461 line14=76117 and current joint512000 threshold produce signed16=588117, EBL0. This source-level law control does not qualify a 2026 full return; production gate remains closed."
+    testRef: "tests/engine/forms/k1-form461-c-k1.test.ts::calculates isolated 2026 sources while preserving the full return readiness gate"
+  - line: "profitable-c-k1-nec-boundary"
+    description: "Do not admit an unlinked actual NEC source under ordinary C classification"
+    formula: "The finite C/K1 proof identifies original C character and owner, not a second NEC receipt reconciliation. Actual nonzero NEC100000 alongside canonical C gross40000 rejects even for the same owner. Existing explicit zero NEC remains harmless. A nonzero NEC route needs actual receipt and business linkage; do not assume receipts are included merely because owners match."
+    testRef: "tests/engine/forms/k1-form461-c-k1.test.ts::rejects unlinked nonzero NEC while preserving explicit zero sources"
+  - line: "profitable-c-k1-guide-nec"
+    description: "Guide reports the bounded nonzero NEC method before canonical calculation"
+    formula: "An actual nonzero NEC entry is retained as source data but cannot use this finite C/K1 classification. The guide adapter rejects that composition until its actual receipt/business linkage method is implemented; manual C receipts and explicit zero NEC remain available."
+    testRef: "tests/guided-interview/guided-c-k1-classification.test.ts::rejects an actual nonzero NEC composition in the guide adapter without discarding it"

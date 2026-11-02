@@ -99,12 +99,33 @@ export function buildGuidedK1Sources(data: K1LossSourcesData | undefined, state:
   if (scheduleK1.length && !passiveDistribution.rows.length && !passiveCapital?.rows.some(row => row.hasPassiveCapital)) {
     const classification = packet.form461Classification;
     if (!classification || classification.sourceTaxYear !== taxYear || !classification.sourceReference?.trim()
-      || classification.sourceFactsConfirmed !== true || classification.method !== 'ordinary_k1_only'
+      || classification.sourceFactsConfirmed !== true || (classification.method !== 'ordinary_k1_only' && classification.method !== 'profitable_ordinary_c_and_k1')
       || classification.allNonEmployeeBusinessSourcesIncluded !== true || classification.capitalIncomeIsNonbusiness !== true
       || classification.otherBusinessIncome === undefined || classification.otherBusinessDeductions === undefined
       || !d(classification.otherBusinessIncome).isZero() || !d(classification.otherBusinessDeductions).isZero()) {
-      throw new Error('Confirm the actual ordinary K-1-only business classification and known-zero other business amounts. Current Form461 amounts are calculated from the return.');
+      throw new Error('Confirm the actual ordinary business classification method and known-zero other business amounts. Current Form461 amounts are calculated from the return.');
     }
+    const proof=classification.scheduleCSource;
+    if(classification.method==='profitable_ordinary_c_and_k1') {
+      if(sectionData['income-self-employment']?.necEntries.some(row=>!d(row.nonemployeeCompensation.replaceAll(',','')).isZero())) {
+        throw new Error('Actual nonzero NEC receipts need their separately reconciled C/K1 business source method; keep the original records.');
+      }
+      const business=sectionData['income-self-employment']?.businessFacts;
+      const person=proof?.accountHolder==='primary'?taxpayer.primary:proof?.accountHolder==='spouse'?taxpayer.spouse:undefined;
+      const name=(text:string|undefined)=>text?.trim().replace(/\s+/g,' ').toLowerCase();
+      const ein=(text:string|undefined)=>text?.trim().replaceAll('-','');
+      if(!proof||proof.sourceTaxYear!==taxYear||!proof.sourceReference?.trim()||proof.sourceFactsConfirmed!==true
+        ||proof.allIncomeDomesticConfirmed!==true||proof.ordinaryBusinessOnlyConfirmed!==true
+        ||!business||proof.accountHolder!==business.accountHolder||!person||!/^\d{9}$/.test(person.ssn.replaceAll('-',''))
+        ||!/^\d{4}$/.test(proof.recipientTaxpayerIdLast4??'')||person.ssn.replaceAll('-','').slice(-4)!==proof.recipientTaxpayerIdLast4
+        ||!proof.recipientName?.trim()||name(proof.recipientName)!==name(`${person.firstName} ${person.lastName}`)
+        ||!(proof.businessNameStatus==='reported'?Boolean(proof.businessName?.trim()&&business.businessName?.trim()&&proof.businessName.trim()===business.businessName.trim())
+          :proof.businessNameStatus==='blank_original'&&!proof.businessName?.trim()&&!business.businessName?.trim())
+        ||!(proof.businessEINStatus==='reported'?/^\d{9}$/.test(ein(proof.businessEIN)??'')&&ein(proof.businessEIN)===ein(business.ein)
+          :proof.businessEINStatus==='not_issued'&&!proof.businessEIN?.trim()&&!business.ein?.trim())) {
+        throw new Error('Confirm actual current ordinary domestic ScheduleC classification, original name/EIN status and owner identity. No missing source fact is inferred.');
+      }
+    } else if(proof!==undefined) throw new Error('K1-only classification cannot include a different ScheduleC source method');
   }
   const netOperatingLoss = buildGuidedNetOperatingLoss(sectionData.adjustments?.netOperatingLossSources, taxYear, segmentation.filingStatus,
     personal, sectionData.deductions, data);

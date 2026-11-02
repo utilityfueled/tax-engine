@@ -141,10 +141,22 @@ export function K1LossSourceDetails({ data, nol, onChange }: { data?: K1LossSour
       <button type="button" className="utility-button" onClick={() => change({ activities: [] })}>Record no original K-1s</button>
       {!classification ? <button type="button" className="utility-button" onClick={() => change({ form461Classification: {} })}>Add current business classification</button> : <fieldset><legend>Current business classification</legend>
         <Fields prefix="Business classification" data={classification} fields={[...evidence,
-          ['method', 'source method', [['ordinary_k1_only', 'Ordinary K-1 businesses only']]],
+          ['method', 'source method', [['ordinary_k1_only', 'Ordinary K-1 businesses only'],['profitable_ordinary_c_and_k1','Profitable ordinary Schedule C and partnership K-1']]],
           ['allNonEmployeeBusinessSourcesIncluded', 'all nonemployee business sources included', 'boolean'], ['capitalIncomeIsNonbusiness', 'capital income is nonbusiness investment income', 'boolean'],
           ['otherBusinessIncome', 'actual other business income', 'money'], ['otherBusinessDeductions', 'actual other business deductions', 'money'],
         ]} onChange={patch => change({ form461Classification: { ...classification, ...patch } })} />
+        {(classification.method==='profitable_ordinary_c_and_k1'||classification.scheduleCSource) && <>
+          {!classification.scheduleCSource ? <button type="button" className="utility-button" onClick={()=>change({form461Classification:{...classification,scheduleCSource:{}}})}>Add actual Schedule C classification source</button> : <fieldset><legend>Actual Schedule C classification source</legend>
+            <Fields prefix="Schedule C classification" data={classification.scheduleCSource} fields={[...evidence,
+              ['accountHolder','actual owner',owner],['recipientName','actual recipient name','text'],['recipientTaxpayerIdLast4','actual recipient taxpayer ID last four','text'],
+              ['businessNameStatus','original business name status',[['reported','Separate name reported'],['blank_original','No separate business name on original']]],['businessName','reported business name','text'],
+              ['businessEINStatus','original EIN status',[['reported','Actual issued EIN reported'],['not_issued','No EIN issued; original line blank']]],['businessEIN','reported EIN','text'],
+              ['allIncomeDomesticConfirmed','all income is domestic','boolean'],['ordinaryBusinessOnlyConfirmed','ordinary business only','boolean'],
+            ]} onChange={patch=>change({form461Classification:{...classification,scheduleCSource:{...classification.scheduleCSource,...patch}}})}/>
+            <button type="button" className="utility-button" onClick={()=>change({form461Classification:{...classification,scheduleCSource:undefined}})}>Remove actual Schedule C classification source</button>
+          </fieldset>}
+          <p className="guided-hint">Use actual current original records. Blank name or no issued EIN needs its explicit original status. This method requires nonnegative C and partnership sources with no excess business loss. Other source compositions need their separate method.</p>
+        </>}
         <p className="guided-hint">The supported classification requires actual zero other business sources. SE, health and retirement deductions are calculated separately from the return records.</p>
         <button type="button" className="utility-button" onClick={() => change({ form461Classification: undefined })}>Remove current business classification</button>
       </fieldset>}
