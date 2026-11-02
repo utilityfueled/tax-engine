@@ -2195,6 +2195,26 @@
       ]
     },
     {
+      "key": "federal/form-1040-pdf-explicit-zero",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/pub/irs-prior/f1040--2025.pdf",
+      "specPath": "spec/federal/form-1040-pdf-explicit-zero.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-1098-e",
       "jurisdiction": "federal",
       "taxYear": 2025,

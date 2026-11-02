@@ -1,0 +1,32 @@
+form: "Form1040 explicit-zero review rendering"
+fullName: "Final2025 Form1040 lines15 and22 preserve actual printed zero"
+taxYear: 2025
+irsReference: "https://www.irs.gov/pub/irs-prior/f1040--2025.pdf"
+notes: |
+  Final2025 two-page form Created9/5/25 explicitly instructs entering zero on
+  printed15 and22 when their calculations are zero or less. The engine already
+  floors these results; this package changes rendering only, never tax math.
+  Only actual known zero is rendered as 0 at these two fields. Other zero fields
+  retain their existing blank convention. Missing audit22 remains an error.
+  This is a review mapping correction, not filing or full2026 qualification.
+lines:
+  - line: "15-zero"
+    description: "Render actual zero taxable income at printed15"
+    formula: "If actual result.taxableIncome is zero, write literal0 at Page2 f2_06; otherwise preserve existing Decimal formatting"
+    irsRef: "Final2025 Form1040 printed15"
+    testRef: "tests/pdf/form-1040-explicit-zero.test.ts::retains actual zero at both required printed cells after saving and reopening"
+  - line: "22-zero"
+    description: "Render actual audited zero tax after credits at printed22"
+    formula: "If actual audited1040line22 is zero, write literal0 at Page2 f2_14; absence is never converted to zero"
+    irsRef: "Final2025 Form1040 printed22"
+    testRef: "tests/pdf/form-1040-explicit-zero.test.ts::retains actual zero at both required printed cells after saving and reopening"
+  - line: "positive-and-blank-boundaries"
+    description: "Retain nonzero formatting and unrelated blank-zero fields"
+    formula: "Retain Decimal nearest-dollar representation for nonzero15/22; do not change formatCurrency or any other mapped field"
+    irsRef: "Final2025 Form1040 page2 printed15/22 only"
+    testRef: "tests/pdf/form-1040-explicit-zero.test.ts::preserves existing nonzero rounding and unrelated blank-zero semantics"
+  - line: "missing-and-year-boundaries"
+    description: "Retain missing audit and year gates"
+    formula: "Missing actual1040line22 throws;2026review and any filing export remain unavailable"
+    irsRef: "Final2025 Form1040 source-year contract"
+    testRef: "tests/pdf/form-1040-explicit-zero.test.ts::preserves missing-line and year rejection without manufacturing zero"

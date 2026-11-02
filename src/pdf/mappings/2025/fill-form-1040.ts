@@ -273,14 +273,18 @@ export async function fillForm1040(
   const totalDeductions = getLineValue(result, "1040", "14")
     ?? result.deductionAmount.plus(qbiDeduction ?? new Decimal(0)).plus(schedule1ADeduction);
   fields.setCurrency(F.line14, totalDeductions);
-  fields.setCurrency(F.line15, result.taxableIncome);
+  // Printed2025 line15 explicitly requires entering zero, rather than a blank.
+  if (result.taxableIncome.isZero()) fields.setText(F.line15, "0");
+  else fields.setCurrency(F.line15, result.taxableIncome);
 
   // The engine owns these amounts. Preserve its final audited values without
   // recalculating credits or adding AMT twice in the form layer.
   for (const line of ["16", "17", "18", "19", "20", "21", "22", "23", "24"] as const) {
     const value = getLineValue(result, "1040", line);
     if (value === undefined) throw new Error(`Missing audited Form 1040 line ${line}.`);
-    fields.setCurrency(F[`line${line}`], value);
+    // Printed2025 line22 has the same explicit zero instruction as line15.
+    if (line === "22" && value.isZero()) fields.setText(F.line22, "0");
+    else fields.setCurrency(F[`line${line}`], value);
   }
 
   // ── Page 2 Payments ──
