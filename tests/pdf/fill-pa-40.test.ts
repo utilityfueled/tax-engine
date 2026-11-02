@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { PDFDocument, PDFTextField, PDFCheckBox } from "pdf-lib";
+import { PDFDocument, PDFTextField, PDFCheckBox, PDFName } from "pdf-lib";
 import Decimal from "decimal.js";
 import { fillPA40, PA_40_FIELDS } from "@/pdf/fill-pa-40.js";
 import { formatCurrency, loadReviewTemplate } from "@/pdf/pdf-utils.js";
@@ -51,7 +51,7 @@ const BLANK_PDF = "forms/blank/2025/pa-40.pdf";
 /** Mapping-only old scalar fixtures deliberately make no source/EIC qualification claim. */
 async function projectMappingFixture(input:TaxYearInput,result:TaxReturnResult,path:string):Promise<PDFDocument> {
   const doc=await loadReviewTemplate(path,2025);
-  return pa40Mapping.projectPA40DiagnosticFields(doc,input.taxpayer,result.stateReturns!.pennsylvania!);
+  return pa40Mapping.projectPA40DiagnosticFields(doc,input.taxpayer,result.stateReturns!.pennsylvania!,{requestedRefund:result.stateReturns!.pennsylvania!.pa40.netOverpayment.toString()});
 }
 
 // ─── Minimal PA40Result factory ──────────────────────────────────────────
@@ -515,9 +515,9 @@ describe("PA40 field-map diagnostic — MFJ filer with multiple income classes a
     expect(getFieldText(doc, PA_40_FIELDS.dependents)).toBe("2");
   });
 
-  it("checks Filing Status checkbox for MFJ", async () => {
+  it("selects the official J appearance for the MFJ filing group", async () => {
     doc = await projectMappingFixture(paMFJFiler, paMFJResult, BLANK_PDF);
-    expect(isChecked(doc, PA_40_FIELDS.filingStatus)).toBe(true);
+    expect(doc.getForm().getField(PA_40_FIELDS.filingStatus).acroField.dict.get(PDFName.of("V"))?.toString()).toBe("/2");
   });
 
   it("fills all income classes including losses with loss checkboxes", async () => {

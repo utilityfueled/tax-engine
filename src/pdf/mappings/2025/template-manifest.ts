@@ -173,7 +173,7 @@ export const REVIEW_TEMPLATES_2025 = {
     "revisionQualification": "unreviewed-legacy-snapshot"
   },
   "pa-40.pdf": {
-    "sha256": "d84fa37ad65e9e54003c3996620965bb8bb590b3993582beb17ab9ecfaa198bd",
+    "sha256": "fcd7648601f3ce5a7a258be49c54aa1c604e1c61c1fe9175351451ac6087d8b3",
     "revisionQualification": "unreviewed-legacy-snapshot"
   }
 } as const;

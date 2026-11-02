@@ -400,3 +400,44 @@ lines:
       Preserve printed one-dollar due/overpayment values; payment/issuance
       policy and actual refund elections are separate from printed arithmetic.
     testRef: "tests/engine/state/pa-40.test.ts::PA-40 reported settlement - combines unprinted late components once and nets the reported penalty"
+
+  - line: "actual-2025-physical"
+    description: "Actual2025 PA40 asset and mutually exclusive official widget appearances"
+    formula: |
+      Pin actual2025 official blank SHA fcd7648601f3ce5a7a258be49c54aa1c604e1c61c1fe9175351451ac6087d8b3.
+      Preserve145 canonical fields and original widget AP streams. Filing group values
+      are1S,2J,3M,4F; residency group1R,2N,3P. Set field V and exactly matching
+      widget AS, never first-widget check(). Explicit diagnostic render facts are
+      not taxpayer-source qualification. Actual part-year dates use MM/DD, actual
+      school code is retained. Hide only pure pushbutton annotations intersecting
+      the review-notice band; keep original field definitions and widgets intact.
+    notes: |
+      Actual2025 official PA40 MOD04-25 and PA40IN p24. Raw actual2025/old2024
+      sources and widget locations are retained in nov02-pa-remaining-lines-source-review.
+      Final2026 and filing exports remain disabled.
+    testRef: "tests/pdf/pa40-actual-2025-physical.test.ts::PA40 actual2025 physical - pins the correct official year and canonical fields"
+
+  - line: "actual-2025-settlement-fields"
+    description: "Known zero use tax, component codes and explicit refund allocation"
+    formula: |
+      Print known zero line25 as0, leave no-penalty27 blank. Positive estimated-only
+      component usesE, late-onlyL, bothB; X requires a separately proven attached
+      exception and is not guessed from zero. Unknown refund intent leaves30/31
+      blank; an explicit diagnostic requested refund may not exceed reported29.
+      Its rendering does not establish actual taxpayer intent or entitlement.
+    testRef: "tests/pdf/pa40-actual-2025-physical.test.ts::PA40 actual2025 physical - prints known zero and leaves unknown refund intent blank"
+
+  - line: "actual-2025-text-fit"
+    description: "Preserve actual occupation text and fit its saved appearance within the official rectangle"
+    formula: "Keep original occupation string; size the appearance so full text width is within widget width minus border padding. Do not truncate or alter canonical field definition."
+    testRef: "tests/pdf/pa40-actual-2025-physical.test.ts::PA40 actual2025 physical - fits complete occupation text in its saved appearance"
+
+  - line: "actual-2025-original-on-appearances"
+    description: "Keep the official saved checkbox on-state appearance bytes"
+    formula: |
+      Preserve each original normal on-state appearance stream byte for byte
+      through default PDF save, including an unselected unknown-residency group.
+      Add only a blank Off appearance where missing,
+      so nonselected widgets do not force pdf-lib to regenerate official marks.
+      Original field flags, on-state names, geometry and original asset stay fixed.
+    testRef: "tests/pdf/pa40-actual-2025-physical.test.ts::PA40 actual2025 physical - retains official on appearances after default save"

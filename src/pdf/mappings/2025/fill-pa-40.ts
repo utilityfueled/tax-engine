@@ -4,18 +4,19 @@ import { assertPdfExportAllowed } from "../../export-policy.js";
 /**
  * PDF filler for Pennsylvania PA-40 Personal Income Tax Return.
  *
- * Field names are from the official PA DoR fillable PDF (2024 tax year).
+ * Field names are from the official PA DoR fillable PDF (2025 tax year).
  * Field mapping was derived by inspecting field names in the blank PDF.
  *
  * To verify or update mappings, run the debug utility:
  *   fillDebugLabels('forms/blank/2025/pa-40.pdf', 'forms/filled/pa-40-debug.pdf')
  */
 
-import { PDFDocument, StandardFonts } from "pdf-lib";
+import { PDFDocument, PDFName, PDFDict, StandardFonts } from "pdf-lib";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { PAOrchestratorResult } from "@/engine/state/pa-orchestrator.js";
 import type { PANonresidentOrchestratorResult } from "@/engine/state/pa-nonresident-orchestrator.js";
+import Decimal from "decimal.js";
 import type { PA40Result } from "@/engine/state/pa-40.js";
 import {
   loadReviewTemplate,
@@ -25,7 +26,7 @@ import {
 } from "../../pdf-utils.js";
 
 // ─── PDF Field Names ──────────────────────────────────────────────────────
-// Exact field names from the 2024 PA-40 fillable PDF.
+// Exact field names from the 2025 PA-40 fillable PDF.
 // Note: some fields have deliberate typos/spacing per the official PDF.
 
 export const PA_40_FIELDS = {
@@ -144,6 +145,53 @@ export const PA_40_FIELDS = {
 
 type PAPacketResult = PAOrchestratorResult | PANonresidentOrchestratorResult;
 
+/** Render-only original facts. Diagnostic callers do not gain source qualification. */
+export interface PA40DiagnosticRenderFacts {
+  filingStatus?: "S" | "J" | "M" | "F";
+  residency?: { status: "resident" | "part_year" | "nonresident"; schoolCode: string; schoolDistrictName: string; from?: string; through?: string };
+  requestedRefund?: string;
+}
+
+function prepareOfficialWidget(form: ReturnType<PDFDocument["getForm"]>, name: string): void {
+  const field = form.getField(name);
+  for (const widget of field.acroField.getWidgets()) {
+    const normal = widget.dict.lookup(PDFName.of("AP"), PDFDict).lookup(PDFName.of("N"), PDFDict);
+    // Keep official on-state streams even when the actual selection is unknown.
+    // A blank Off stream prevents default save from regenerating the whole group.
+    if (!normal.has(PDFName.of("Off"))) {
+      const box = widget.getRectangle();
+      normal.set(PDFName.of("Off"), form.doc.context.register(form.doc.context.flateStream("", {
+        Type: "XObject", Subtype: "Form", BBox: [0, 0, box.width, box.height],
+      })));
+    }
+  }
+  form.markFieldAsClean(field.ref);
+}
+
+function selectOfficialWidget(form: ReturnType<PDFDocument["getForm"]>, name: string, value: string): void {
+  prepareOfficialWidget(form, name);
+  const field = form.getField(name);
+  const widgets = field.acroField.getWidgets();
+  if (!widgets.some(widget => widget.getOnValue()?.toString() === `/${value}`)) throw new Error(`PA40 official field has no selected appearance: ${name}`);
+  // The official group is FT=Btn without the radio flag. check() selects only
+  // its first widget. Set the canonical value and exclusive actual appearance.
+  field.acroField.dict.set(PDFName.of("V"), PDFName.of(value));
+  for (const widget of widgets) widget.setAppearanceState(PDFName.of(widget.getOnValue()?.toString() === `/${value}` ? value : "Off"));
+}
+
+function keepReviewNoticeVisible(doc: PDFDocument): void {
+  for (const field of doc.getForm().getFields()) {
+    if (field.acroField.dict.get(PDFName.of("FT"))?.toString() !== "/Btn" || !(field.acroField.getFlags() & 65536)) continue;
+    for (const widget of field.acroField.getWidgets()) {
+      const box = widget.getRectangle();
+      // Hide decorative navigation/reset/print controls only in the filled review
+      // copy. Retain every original field, widget, rectangle and appearance stream.
+      if (box.y < 18 && box.y + box.height > 3) widget.setFlags((widget.getFlags() | 2) & ~4);
+    }
+  }
+}
+
+
 function hasREV1630(
   paResult: PAPacketResult,
 ): paResult is PAOrchestratorResult & { rev1630: NonNullable<PAOrchestratorResult["rev1630"]> } {
@@ -193,7 +241,7 @@ export async function fillPA40(
 }
 
 /** Internal scalar field projection: it does not validate original taxpayer sources. */
-function applyPA40FieldMap(doc: PDFDocument, taxpayer: TaxYearInput["taxpayer"], paResult: PAPacketResult): void {
+function applyPA40FieldMap(doc: PDFDocument, taxpayer: TaxYearInput["taxpayer"], paResult: PAPacketResult, facts?: PA40DiagnosticRenderFacts): void {
   const form = doc.getForm();
   const F = PA_40_FIELDS;
   const pa40 = paResult.pa40;
@@ -202,13 +250,14 @@ function applyPA40FieldMap(doc: PDFDocument, taxpayer: TaxYearInput["taxpayer"],
   fillPersonalInfo(form, taxpayer);
 
   // ── Filing Info ──
-  fillFilingInfo(form, taxpayer, paResult);
+  fillFilingInfo(form, taxpayer, paResult, facts);
 
   // ── Part A: Income (Lines 1–11) ──
   fillIncome(form, pa40);
 
   // ── Part B: Tax, Payments, Credits (Lines 12–29) ──
-  fillTaxAndPayments(form, pa40, paResult);
+  fillTaxAndPayments(form, pa40, facts);
+  keepReviewNoticeVisible(doc);
 
   // ── Page 2 header ──
   const tp = taxpayer;
@@ -227,10 +276,11 @@ export async function projectPA40DiagnosticFields(
   doc: PDFDocument,
   taxpayer: TaxYearInput["taxpayer"],
   projection: PAPacketResult,
+  facts?: PA40DiagnosticRenderFacts,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(taxpayer.taxYear, taxpayer.taxYear);
   if (!projection.pa40.refundableCredits.eq(0)) throw new Error("PA40 diagnostic projection requires zero unprinted credits");
-  applyPA40FieldMap(doc, taxpayer, projection);
+  applyPA40FieldMap(doc, taxpayer, projection, facts);
   await markReviewPdf(doc);
   doc.setTitle("PA-40 diagnostic field projection - source qualification unavailable");
   return doc;
@@ -265,8 +315,10 @@ function fillPersonalInfo(
   setTextField(form, F.zip, tp.address.zip);
 
   setTextField(form, F.yourOccupation, tp.primary.occupation ?? "");
+  form.getTextField(F.yourOccupation).setFontSize(0);
   if (tp.spouse) {
     setTextField(form, F.spouseOccupation, tp.spouse.occupation ?? "");
+    form.getTextField(F.spouseOccupation).setFontSize(0);
   }
 }
 
@@ -274,12 +326,32 @@ function fillFilingInfo(
   form: ReturnType<PDFDocument["getForm"]>,
   tp: TaxYearInput["taxpayer"],
   paResult: PAPacketResult,
+  facts?: PA40DiagnosticRenderFacts,
 ): void {
   const F = PA_40_FIELDS;
 
-  // Filing status checkbox — PA uses single checkbox (checked = MFJ)
-  const isMFJ = tp.filingStatus === "married_filing_jointly";
-  setCheckBox(form, F.filingStatus, isMFJ);
+  const filing = facts?.filingStatus ?? (tp.filingStatus === "married_filing_jointly" ? "J" : tp.filingStatus === "married_filing_separately" ? "M" : "S");
+  if (!["S", "J", "M", "F"].includes(filing)) throw new Error("PA40 actual filing choice is invalid");
+  selectOfficialWidget(form, F.filingStatus, String(["S", "J", "M", "F"].indexOf(filing) + 1));
+  prepareOfficialWidget(form, F.residencyStatus);
+  if (facts?.residency) {
+    const residency = facts.residency;
+    const value = {resident:"1",nonresident:"2",part_year:"3"}[residency.status];
+    if (!value || !/^\d{5}$/.test(residency.schoolCode) || !residency.schoolDistrictName.trim()) throw new Error("PA40 actual residency and school source is invalid");
+    selectOfficialWidget(form, F.residencyStatus, value);
+    setTextField(form, F.schoolCode, residency.schoolCode);
+    // Actual outside-PA December31 residence uses instructed code99999, not a
+    // fabricated/truncated PA school-district name. Keep the raw original intact.
+    if (residency.schoolCode !== "99999") setTextField(form, F.schoolDistrictName, residency.schoolDistrictName.toUpperCase());
+    if (residency.status === "part_year") {
+      const date = (raw: string | undefined) => {
+        if (!raw || !/^2025-\d{2}-\d{2}$/.test(raw) || new Date(raw+"T00:00:00Z").toISOString().slice(0,10) !== raw) throw new Error("PA40 actual part-year dates are required");
+        return raw.slice(5,7)+"/"+raw.slice(8,10);
+      };
+      if (!residency.from || !residency.through || residency.from > residency.through) throw new Error("PA40 actual part-year date interval is invalid");
+      setTextField(form,F.partYearFrom,date(residency.from));setTextField(form,F.partYearTo,date(residency.through));
+    }
+  }
 
   // Dependents count
   const depCount = tp.dependents?.length ?? 0;
@@ -348,7 +420,7 @@ function fillIncome(
 function fillTaxAndPayments(
   form: ReturnType<PDFDocument["getForm"]>,
   pa40: PA40Result,
-  paResult: PAPacketResult,
+  facts?: PA40DiagnosticRenderFacts,
 ): void {
   const F = PA_40_FIELDS;
 
@@ -389,16 +461,18 @@ function fillTaxAndPayments(
   setCurrencyField(form, F.line24, pa40.totalPaymentsAndCredits);
 
   // Line 25: Use tax
-  setCurrencyField(form, F.line25, pa40.useTax);
+  setTextField(form, F.line25, pa40.useTax.toFixed(0));
 
   // Line 26: Tax due
   setCurrencyField(form, F.line26, pa40.taxDue);
 
   // Line 27: Penalties and interest
   setCurrencyField(form, F.line27, pa40.penaltiesAndInterest);
-  // Line 27 code: "a" for REV-1630 underpayment penalty
-  if (hasREV1630(paResult) && paResult.rev1630.totalInterest.gt(0)) {
-    setTextField(form, F.line27Code, "a");
+  const estimated = pa40.underpaymentPenalty.gt(0);
+  const late = pa40.lateFilingOrPaymentPenalty.gt(0) || pa40.latePaymentInterest.gt(0);
+  if (pa40.penaltiesAndInterest.gt(0)) {
+    if (!estimated && !late) throw new Error("PA40 positive line27 requires actual penalty components");
+    setTextField(form,F.line27Code,estimated ? late ? "B" : "E" : "L");
   }
 
   // Line 28: Total payment due
@@ -407,6 +481,11 @@ function fillTaxAndPayments(
   // Line 29: Overpayment
   setCurrencyField(form, F.line29, pa40.netOverpayment);
 
-  // Line 30: Refund — for now, assume full overpayment goes to refund
-  setCurrencyField(form, F.line30, pa40.netOverpayment);
+  // An overpayment does not establish the taxpayer's actual refund election.
+  if (facts?.requestedRefund !== undefined) {
+    if (!/^\d+(?:\.\d{1,2})?$/.test(facts.requestedRefund)) throw new Error("PA40 actual requested refund is invalid");
+    const refund = new Decimal(facts.requestedRefund).toDecimalPlaces(0,Decimal.ROUND_HALF_UP);
+    if (refund.gt(pa40.netOverpayment)) throw new Error("PA40 requested refund exceeds reported overpayment");
+    setCurrencyField(form,F.line30,refund);
+  }
 }
