@@ -1,3 +1,4 @@
+import { assertPAGuidedPaymentBoundary } from "../fixtures/assert-pa-guided-payment-boundary";
 // Spec: spec/federal/guided-input.yaml#w2-owner-and-source-state
 import { describe, expect, it } from "vitest";
 import { buildTaxInputFromGuidedData, buildW2Inputs } from "@/lib/guided-interview-bridge";
@@ -63,6 +64,7 @@ describe("W-2 source facts", () => {
     state.sectionData["personal-info"] = { ...completePersonalInfo, state: "PA" };
     expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0");
     state.sectionData["income-w2"]!.entries[0].state = "PA";
-    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("123.45");
+    assertPAGuidedPaymentBoundary(state, "123.45", "123");
+    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("123");
   });
 });

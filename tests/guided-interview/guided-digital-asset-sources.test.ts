@@ -1,3 +1,4 @@
+import { assertPAGuidedPaymentBoundary } from "../fixtures/assert-pa-guided-payment-boundary";
 // Spec: spec/federal/guided-digital-asset-sources.yaml.
 import { expect, it } from 'vitest';
 import { buildDigitalAssetInputs, digitalAssetFactErrors, updateDigitalAssetEntry, updateDigitalAssetTransaction, type DigitalAssetEntryData } from '@/lib/guided-digital-asset-facts';
@@ -125,7 +126,8 @@ it('includes original digital withholding once in generic and dedicated state pr
     state.sectionData['income-investments'] = { interestEntries: [], dividendEntries: [], brokerageEntries: [], digitalAssetEntries: sources };
     const original = structuredClone(state);
     const input = buildTaxInputFromGuidedData(state); expect(input).not.toBeNull();
-    expect(computeGuidedPreview(state)?.state?.stateWithholding, stateCode).toBe('0.7');
+    if (stateCode === 'PA') assertPAGuidedPaymentBoundary(state, '0.7', '1');
+    expect(computeGuidedPreview(state)?.state?.stateWithholding, stateCode).toBe(stateCode === 'PA' ? '1' : '0.7');
     expect(computeGuidedPreview(state)?.totalIncome, stateCode).toBe('50030.75');
     expect(state).toEqual(original);
   }

@@ -1,3 +1,4 @@
+import { assertPAGuidedPaymentBoundary } from "../fixtures/assert-pa-guided-payment-boundary";
 // Spec: spec/federal/guided-input.yaml, government-payment-source-records
 import { expect, it } from "vitest";
 import { buildGuidedFactAnswers, buildGuidedSyntheticDocuments, buildTaxInputFromGuidedData, buildUnemploymentInputs } from "@/lib/guided-interview-bridge";
@@ -64,7 +65,8 @@ it("uses actual source states once and requires the known non-W-2 tax allocation
   expect(buildTaxInputFromGuidedData(state)).toBeNull();
   state.sectionData.deductions = { ...emptyDeductionData, nonW2IncomeTaxesDeductedElsewhere: "0" };
   expect(buildTaxInputFromGuidedData(state)?.form1099G?.[0]).toMatchObject({ state: "PA", stateWithheld: "12.34" });
-  expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("12.34");
+  assertPAGuidedPaymentBoundary(state, "12.34", "12");
+    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("12");
   state.sectionData["income-unemployment"]!.entries![0]!.state = "NY";
   expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0");
   state.sectionData["income-unemployment"]!.entries![0]!.state = "PA";

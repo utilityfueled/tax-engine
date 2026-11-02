@@ -1,3 +1,4 @@
+import { assertPAGuidedPaymentBoundary } from "../fixtures/assert-pa-guided-payment-boundary";
 // Spec: spec/federal/guided-input.yaml, retirement-ira-checkbox
 import { expect, it } from "vitest";
 import { buildGuidedFactAnswers, buildGuidedSyntheticDocuments, buildRetirementInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
@@ -28,7 +29,8 @@ it("forwards actual recipient and matching state withholding without inventing l
     { ...completeRetirementSource, payer: "Other payer", accountReference: "other", stateTaxReporting: "single", state: "NY", stateWithheld: "0.20", stateDistribution: "1000" },
   ] };
   expect(buildTaxInputFromGuidedData(state)?.form1099R?.[0]).toMatchObject({ accountHolder: "spouse", state: "PA", stateWithheld: "0.10", stateDistribution: "1000" });
-  expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0.1");
+  assertPAGuidedPaymentBoundary(state, "0.1", "0");
+    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0");
   state.sectionData["income-retirement"].entries[0]!.stateTaxReporting = "none";
   expect(buildTaxInputFromGuidedData(state)).toBeNull();
 });

@@ -1,3 +1,4 @@
+import { assertPAGuidedPaymentBoundary } from "../fixtures/assert-pa-guided-payment-boundary";
 // Spec: spec/federal/guided-oid-sources.yaml.
 import { describe, expect, it } from "vitest";
 import { buildOidInputs, oidFactErrors, updateOidEntry, type OidEntryData } from "@/lib/guided-oid-facts";
@@ -94,7 +95,8 @@ describe("actual guided OID sources", () => {
     const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
     expect(input.form1099OID[0].stateWithholding).toEqual(entry.stateWithholding);
     expect(calculatePAOIDSources(input.form1099OID, input.paResidentReturn?.scheduleA?.oidSources, 2025).stateWithholding.toFixed()).toBe("0.1");
-    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0.1");
+    assertPAGuidedPaymentBoundary(state, "0.1", "0");
+    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0");
     state.sectionData["state-return"] = { stateEstimatedPayments: [], additionalStateWithholding: "", additionalStateWithholdingEntries: [{ payer: "Synthetic bond broker", documentType: "1099-OID", state: "PA", taxYear: "2025", amount: "0.10" }] };
     expect(buildTaxInputFromGuidedData(state)).toBeNull();
   });

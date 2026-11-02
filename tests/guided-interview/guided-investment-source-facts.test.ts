@@ -1,3 +1,4 @@
+import { assertPAGuidedPaymentBoundary } from "../fixtures/assert-pa-guided-payment-boundary";
 // Spec: spec/federal/guided-input.yaml, investment-source-records
 import { describe, expect, it } from "vitest";
 import { buildBrokerageInputs, buildDividendInputs, buildGuidedFactAnswers, buildGuidedSyntheticDocuments, buildInterestInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
@@ -78,8 +79,10 @@ describe("guided investment source records", () => {
     state.sectionData.deductions!.nonW2IncomeTaxesDeductedElsewhere = "0";
     state.segmentation.stateCode = "PA";
     state.sectionData["income-investments"] = { interestEntries: [{ ...completeInterestSource, stateTaxReporting: "single", state: "PA", stateWithheld: "0.10" }], dividendEntries: [{ ...completeDividendSource, stateTaxReporting: "single", state: "PA", stateWithheld: "0.20" }], brokerageEntries: [{ ...completeBrokerageSource, stateTaxReporting: "single", state: "NY", stateWithheld: "400" }] };
-    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0.3");
+    assertPAGuidedPaymentBoundary(state, "0.3", "0");
+    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0");
     state.sectionData["income-investments"].brokerageEntries[0].state = "PA";
-    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("400.3");
+    assertPAGuidedPaymentBoundary(state, "400.3", "400");
+    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("400");
   });
 });

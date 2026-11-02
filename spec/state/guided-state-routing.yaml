@@ -26,7 +26,7 @@ lines:
     testRef: "tests/guided-interview/guided-state-routing.test.ts::uses dedicated PA and OH treatment for Treasury OID"
   - line: "payments"
     description: "Keep source withholding and dated estimated payments exact and distinct"
-    formula: "state payments = matching-source withholding + reconciled additional withholding + actual estimated payments; do not count OID twice or drop it when another source exists"
+    formula: "keep matching-source withholding + reconciled additional withholding and dated estimates exact through source aggregation; PA rounds each printed payment line once before adding its reported total; OH retains its dedicated method; do not count OID twice or drop sources"
     testRef: "tests/guided-interview/guided-state-routing.test.ts::preserves exact actual payments in dedicated state previews and export overlays"
   - line: "PA-source-withholding"
     description: "Include actual PA brokerage withholding and require source jurisdiction"
@@ -40,3 +40,9 @@ lines:
     description: "Do not render a resident calculation for another residency"
     formula: "PA/OH resident review packets require actual full-year resident facts; a PA nonresident packet requires its separate allocation input"
     testRef: "tests/apps/web/workspace-filled-return.test.ts::does not print resident state forms for a part-year selection without allocations: %s"
+
+  - line: "PA-guided-raw-and-printed-boundary"
+    description: "Guided payment probes preserve exact source cents and verify printed PA whole-dollar lines separately"
+    formula: "calculatePAReturn.stateWithholding retains exact jurisdiction-specific aggregate; pa40.stateWithholding rounds that aggregate once; preview total equals reported payment lines, not rounded combined raw payment categories"
+    notes: "Actual2025PA40IN printed page4 Rounding Numbers, refreshed2026-11-02; https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf . Existing engine settlement spec applies. No product arithmetic or readiness gate changes."
+    testRef: "tests/guided-interview/guided-state-routing.test.ts::preserves exact actual payments in dedicated state previews and export overlays"

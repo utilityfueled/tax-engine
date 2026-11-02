@@ -63,14 +63,16 @@ describe("selected state and dedicated previews", () => {
       state.sectionData["state-return"] = { additionalStateWithholding: "0.20", additionalStateWithholdingEntries: [{ payer: "Separate actual payer", documentType: "1099-MISC", state: code, taxYear: "2025", amount: "0.20" }], stateEstimatedPayments: [{ state: code, date: "2025-04-15", amount: "0.30" }] };
       state.sectionData.deductions = { ...emptyDeductionData, nonW2IncomeTaxesDeductedElsewhere: "0" };
       const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
-      expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("2000.6");
+      expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe(code === "PA" ? "2000" : "2000.6");
       if (code === "OH") expect(buildGuidedOhioOverlay(input, state, calculateFederalTax(input).taxExemptInterest)).toMatchObject({ ohioWithholdingOverride: "2000.3", estimatedPayments: "0.3" });
       else {
         const result = calculatePAReturn(input, buildGuidedPennsylvaniaOverrides(state));
-        expect(result.pa40.stateWithholding.toFixed()).toBe("2000.3");
-        expect(result.pa40.estimatedPayments.toFixed()).toBe("0.3");
-        // PA prints the $158.60 net overpayment rounded to the nearest whole dollar.
-        expect(result.pa40.netOverpayment.toFixed()).toBe("159");
+        expect(result.stateWithholding.toFixed()).toBe("2000.3");
+        expect(result.pa40.stateWithholding.toFixed()).toBe("2000");
+        expect(buildGuidedPennsylvaniaOverrides(state).estimatedPayments?.toFixed()).toBe("0.3");
+        expect(result.pa40.estimatedPayments.toFixed()).toBe("0");
+        // Reported withholding $2000 plus reported estimates $0 minus tax $1842.
+        expect(result.pa40.netOverpayment.toFixed()).toBe("158");
       }
     }
   });
