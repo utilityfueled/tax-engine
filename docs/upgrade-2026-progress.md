@@ -2139,3 +2139,16 @@ precede ScheduleSP and penalty settlement. Main3 genuine red/two pass then
 in the resident-credit source ledger. Positive guided/G-L successors and broader
 workspace income migrations continue; this is finite2025 review support, not
 final2026 forms or filing qualification.
+
+
+## November2: documented nonchild federal dependents
+
+PA household originals can now distinguish actual federal dependents who are
+not PA dependent children, without an age/count inference. Main19fail/18pass
+source-first precedes four exact reviewed products;141/10 and all package checks
+pass. Actual3 federal dependents/one PA child produce the retained1539/799/184
+PA tax oracles across allthree residencies. Three saved paper PDFs/six pages pass
+strict field/widget/appearance/privacy and visual review. The standard-suite PDF
+harness also passes without a private output variable; its minimal temporary
+directory correction preserves every assertion and has independent static review.
+See both household ledgers. Final2026 and human qualification remain outstanding.

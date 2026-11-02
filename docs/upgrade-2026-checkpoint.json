@@ -13133,6 +13133,21 @@
     "evidence": "nov02-parent-pa-rich-credit-main-green/checks.json",
     "independentReview": "7cc833b3eabef649ffe05166625229a6e1ce53e6f295ef6eb398ddc85861f829",
     "workspaceCandidate": "new5pass; legacy38baselinepass\u219214fail24pass; exactcandidate deferred privately until actualA/B/business/NRH migrations",
+    "releaseReady": false,
+    "commit": "11cea224"
+  },
+  "continuation20261102PAHousehold": {
+    "baseCommit": "11cea224",
+    "mainTests": {
+      "passed": 141,
+      "files": 10
+    },
+    "checks": "types3/spec6831/inventorygeneration+check/strictlint0/engine+webbuild/diff allpass",
+    "sourceFirst": "19genuinefail18pass37",
+    "independentReview": "a1b3e6f109ea76f52652ffe6e5d8f057eeeff81ec329df47c320a85a84e469a8",
+    "paperReview": "3PDF6pages145canonical119widgets each; strictAP/privacy/rootvisualpass",
+    "paperIndependent": "9dda042befaaf1abc05892f1a5c6ed1f35ab88cdd6e72db0b7f0158159dc3f2b",
+    "portableHarness": "3configurationfails2pass\u21925pass standardnoenv; staticf7a83186da71c09a1468a08118442e9909e6cf62bd26ae3be6b6ca7d23120ed3",
     "releaseReady": false
   }
 }

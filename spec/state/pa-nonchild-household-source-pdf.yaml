@@ -1,0 +1,31 @@
+form: "PA40 review with documented nonchild federal dependent sources"
+fullName: "Actual3 federal dependents and1 qualified PAchild source review"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf"
+notes: |
+  Source-method and paper review proof only. Use unchanged frozenhousehold9 and exact
+  independently reviewed finalschoolappearance PDF10. This is a separately stated
+  actual fictional source packet with adultson+two documentedparents. The original
+  unsupported three-federal/one-PAchild control remains unchanged historical evidence;
+  no facts are retroactively invented into it. PA ScheduleSP SectionII supports the
+  actual relationship method. Existing whole original/context/privacy/templateyear
+  and filing gates remain. Artifact output is optional for the standard suite;
+  without an explicit retained-output directory save to an isolated temporary
+  directory and remove only that owned temporary directory after verification. No new final2026/federalcalculation or filing qualification.
+lines:
+  - line: "all-three-residencies"
+    description: "Actual source-complete family classification reaches saved paper review"
+    formula: "Resident/partyear/nonresident actual3 federal originals+1qualifiedchild+2confirmed nonchildparent records yield PA40childfield1, tax1539/799/184 and official residency selection1/3/2. Fresh calculated result and genuine prepared context required; originals immutable."
+    testRef: "tests/pdf/pa-nonchild-household-source-pdf.test.ts::actual sourcecomplete3federal1PAchild saved PDF"
+  - line: "missing-source-denial"
+    description: "A federal count cannot substitute an actual relationship source"
+    formula: "Remove one actual nonchild row from the new complete source packet; preparing review must reject before PDF creation, preserving the complete original family and no fallback to raw federal count."
+    testRef: "tests/pdf/pa-nonchild-household-source-pdf.test.ts::actual nonchild proof missing rejects source review"
+  - line: "stale-original-denial"
+    description: "Prepared context never authorizes an edited parent original"
+    formula: "After preparation, edit only actual parent surname at same money; saved-result/context reuse must reject before template I/O. Existing source binding is preserved."
+    testRef: "tests/pdf/pa-nonchild-household-source-pdf.test.ts::actual nonchild original edit rejects prepared PDF before IO"
+  - line: "private-output"
+    description: "Paper review retains childcount without private originals"
+    formula: "Each saved interactive official2025 form preserves canonical field tree/appearance semantics and exact actual literals while text fields and extracted pages contain no owner/child/parent SSNs nor source references. Strict reopen and visual inspection required separately; no flattening or template substitution."
+    testRef: "tests/pdf/pa-nonchild-household-source-pdf.test.ts::actual sourcecomplete3federal1PAchild saved PDF"

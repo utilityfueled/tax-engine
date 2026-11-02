@@ -1,0 +1,69 @@
+form: "PA Schedule SP actual nonchild federal-dependent source method"
+fullName: "Complete reviewed federal-dependent partition for ordinary PA households"
+taxYear: 2026
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf"
+notes: |
+  Source refreshed 2026-11-02: actual2025 ScheduleSP SectionII and current official
+  PITguide TaxForgiveness Dependent Child of a Claimant. This source method extends
+  the established one living unmarried owner scope; it does not qualify married,
+  deceased, new filing forms, local, federal-dependent eligibility or final2026 law.
+  PA counts actual natural/adopted/stepchildren, grandchildren and fosterchildren
+  with an actual federal dependent claim and no contrary parental agreement/decree.
+  A qualifying adult child may count. Other federally claimed children/adults do not.
+  Classifying a person as a nonchild changes the child count only. All actual claimant
+  eligibility income, gifts/support and other SP sources remain independently required.
+  Complete private original identity/source proofs remain mandatory; neither a federal
+  count nor an intent not to claim PA forgiveness supplies a relationship fact.
+  New optional filing.otherFederalDependents rows preserve existing complete child-only
+  packets. Missing rows do not become known exclusions; every actual federal original
+  must be covered exactly once by a child row or an actual documented nonchild row.
+  Nonchild row fields: originalIndex, retained originalFederalDependent, sourceReference,
+  factsConfirmed, federalReturnClaimConfirmed, relationship, actualRelationshipDescription
+  and notAChildOfClaimantConfirmed. Other-nonchild-relative needs its actual family
+  relationship description, not an inferred classification from a generic Other label.
+  Unknown/blank/false proof, unsupported or conflicting original relationship, owner/self,
+  repeated original index/SSN, stale full original or future birth date must reject.
+  Relationship categories are parent/grandparent/sibling/aunt_uncle/niece_nephew/cousin/
+  unrelated/other_nonchild_relative; explicit actual nonchild evidence and canonical
+  relationship consistency are both required. Do not infer exclusions from age or flags.
+lines:
+  - line: "source-partition"
+    description: "Exactly once complete actual dependent review"
+    formula: "qualifiedPAChildIndices union reviewedNonchildIndices equals all canonical federal dependent indices, with no overlapping index or normalizedSSN; only qualifiedPAChildIndices.size supplies PAchild count. Literal3federal originals=1actualadultson+2documentedparents gives1PAchild, never3."
+    testRef: "tests/engine/state/pa-nonchild-dependent-household.test.ts::PA nonchild sources qualify actual3 federal dependents and1 PA child"
+  - line: "original-consistency"
+    description: "Original source identity and actual relationship proofs"
+    formula: "Require current full original equality at exact originalIndex and all three nullable confirmations true, actual nonempty sourceReference, supported nonchild relation consistent with retained canonical relationship, valid distinct nonowner SSN and nonfuture birthdate. Child original cannot be relabelled as a parent or other nonchild."
+    testRef: "tests/engine/state/pa-nonchild-dependent-household.test.ts::PA nonchild sources reject incomplete or contradictory proof"
+  - line: "child-rules-unchanged"
+    description: "Preserve actual child qualification and source completeness"
+    formula: "Existing child federal claim/relationship/agreement/decree checks remain mandatory, including valid adult child. Unknown or omitted nonchild proof stays blocked; no absent array inference for uncovered federaldependents. Complete existing child-only packets remain unchanged."
+    testRef: "tests/engine/state/pa-nonchild-dependent-household.test.ts::PA nonchild sources preserve adult child and existing source guards"
+  - line: "supported-nonchild-relations"
+    description: "Actual nonchild relation sources cover minor and adult federal dependents"
+    formula: "Current canonical parent/mother/father, grandparent, sibling, aunt/uncle, niece/nephew, cousin, unrelated and actually described other-nonchild-relative originals each remain nonchildren only after actual three confirmations and exact current source binding. A15-year-old nephew is not inferred to be a PAchild from age; an adult son retains existing child qualification."
+    testRef: "tests/engine/state/pa-nonchild-dependent-household.test.ts::PA nonchild sources retain supported actual nonchild relationships: %s"
+  - line: "eligibility-income"
+    description: "Exclusion from child count does not erase actual income sources"
+    formula: "Replay existing worldwide SPcategory sources unchanged. An actual parent gift250.25 remains reported250 on line5 and totaleligibility50370; actual outside-household support100.25 remains reported100 on line10 and total50220. No inference that other-dependent income is automatically claimant income or that actual transfers are irrelevant."
+    testRef: "tests/engine/state/pa-nonchild-dependent-household.test.ts::PA nonchild count preserves actual gifts and outside household support"
+  - line: "all-residencies"
+    description: "Derive exact PA income/tax and actual child count across existing all3"
+    formula: "Resident1539/partyear799/nonresident184 paper tax and worldwideeligibility50120 remain exact with documented3federal1PAchild. Source classification does not modify underlying W2, bank credits or existing local/readiness boundaries."
+    testRef: "tests/engine/state/pa-nonchild-dependent-household.test.ts::PA nonchild composition retains all3 literal tax oracles"
+  - line: "guide-confirmation"
+    description: "Only explicit confirmation retains current nonchild originals"
+    formula: "Empty draft has no actual year/reference/answer or relationship. Actual field edits clear packetconfirmation and retain oldoriginal snapshot; explicit confirm alone binds selected current dependent originals. Reads compare current sources without refreshing; original edit/stale owner/year/canonical dependent rejects. Save/reopen and no-op preserve retained facts."
+    testRef: "tests/engine/state/pa-nonchild-dependent-household.test.ts::PA nonchild guide confirms actual originals only on explicit action"
+  - line: "structured-panel"
+    description: "Private structured source collection without free count/JSON override"
+    formula: "Add actual nonchild row from blanknullable fields; explicit select current canonical dependent and actual relationship, reference and three source confirmations. Every edit/removal invalidates header; no auto-copy original or confirmation until explicit button. Preserve existing child panel and worldwide source collection."
+    testRef: "tests/apps/web/pa-nonchild-dependent-household.test.tsx::PA nonchild UI adds unknown structured source records and invalidates edits"
+  - line: "privacy-binding"
+    description: "Keep actual records private and bind them to source audit commitment"
+    formula: "Changed nonchild proof changes ordinary sourceCommitment even when childcount/money identical. Audit must not contain raw retained SSNs/source references. Existing render redaction recursively removes structured person identifiers; no public source replay or readiness promotion."
+    testRef: "tests/engine/state/pa-nonchild-dependent-household.test.ts::PA nonchild sources bind changed actual proof without exposing identifiers"
+  - line: "draft-year-gate"
+    description: "Current source method cannot promote final2026 readiness"
+    formula: "Actual-source2026 direct source normalization retains sourceyear2026/childcount1 and PA taxable income50120 without promoting readiness. Current complete composer is unavailable because existing federal2026 rule pack is incomplete; assert that actual unavailable exception and filingQualified false, never invent a draft composer result. Original positive draft-composer expectation and its existing-gate failure are retained as historical diagnostic evidence."
+    testRef: "tests/engine/state/pa-nonchild-dependent-household.test.ts::PA nonchild sources retain actual2026 facts and unavailable composer gate"

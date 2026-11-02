@@ -81,12 +81,12 @@ its minimal enum/type/dropdown edits; it qualifies source capture only.
   via contact sheets and six PA40 pages at full size; exact visual receipt
   `nov02-parent-pa-workspace-export/root-visual-review.json`. Independent13 own
   controls prepared before runtime. Independent18/two approved d468533ec6fa6a842abf49179676857ba77084f92f4a46f9acf1490a4b65c99a; all42same-render pages pixel/text exact. Main adoption pending.
-- [ ] PA nonchild dependent household: official-source-first37 controls exposed
+- [x] PA nonchild dependent household: official-source-first37 controls exposed
   19 genuine failures; four-product candidate gives37/37 plus87 prior controls.
   An invalid positive2026 composer expectation was corrected spec-first to direct
   2026 facts plus the existing unavailable-rulepack exception; original evidence
   retained and no readiness gate relaxed. Types3/spec/strict0/engine build pass;
-  web build passes; frozen9 b895b93744af07984c1b27613c342dc3964e78fd9876815d1262fa0499c4f42e independently approved142/10 a1b3e6f109ea76f52652ffe6e5d8f057eeeff81ec329df47c320a85a84e469a8. Separate actual3federal/1SPchild PDFproof independently10/two/12pages approved9dda042befaaf1abc05892f1a5c6ed1f35ab88cdd6e72db0b7f0158159dc3f2b; main adoption pending.
+  web build passes; frozen9 b895b93744af07984c1b27613c342dc3964e78fd9876815d1262fa0499c4f42e independently approved142/10 a1b3e6f109ea76f52652ffe6e5d8f057eeeff81ec329df47c320a85a84e469a8. Separate actual3federal/1SPchild PDFproof independently10/two/12pages approved9dda042befaaf1abc05892f1a5c6ed1f35ab88cdd6e72db0b7f0158159dc3f2b; main141/10/allchecks plus portableproof5 and strict/visual3PDF/sixpages pass. Tiny output-harness correction independently approvedf7a83186; no assertion weakened.
 - [x] Hosted homepage request boundary: fresh main one genuine failure/two passes
   before the edit, then eight/two/types3/spec/strict0/diff pass. Independent13/three
   plus full synthetic hosted build: `/` dynamic, zero local database attempts.
@@ -158,3 +158,5 @@ status/diff inside archive-only trees. Continue implementing all unblocked work.
 - Ordinary G-L12 author24+58 controls/types/spec/build pass; strict new-owned
   lint0. Exact frozen17d8d37293f15ade8355fe7ac27938dba4f5ea7e3a909094fbe1bcfffd0b3acf
   awaits distinct independent review. Actual official full12page blank retained.
+
+- `11cea224` pushed: actual paid resident-credit composition, main121/10/all11.
