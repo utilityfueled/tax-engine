@@ -1,5 +1,6 @@
 /** Source-derived ordinary PA residency/tax bases. Spec: spec/state/pa-residency-sources.yaml. */
 import Decimal from "decimal.js";
+import { calculateW2StateLocalSources } from "../forms/w2-state-local.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { Form1099IntSchema, W2Schema, type TaxYearInput } from "@/models/inputs.js";
@@ -111,6 +112,7 @@ export function calculatePAResidencySources(input: TaxYearInput, rawSources: unk
   const residentAt = (date: number) => residency.residentPeriods.some(p => p.from <= date && date <= p.through);
   const domicilePeriodAt = (date: number) => residency.periods.findIndex(p => p.from <= date && date <= p.through);
   let compensation = new Decimal(0), excludedCompensation = new Decimal(0), interest = new Decimal(0), excludedInterest = new Decimal(0);
+  const actualW2Rows = new Map<number, ReturnType<typeof calculateW2StateLocalSources>>();
   const verifyRows = (rows: PAResidencySources["wages"] | PAResidencySources["interest"], originals: unknown[], kind: "wage" | "interest") => {
     if (rows.length !== originals.length) return error("every current original must have exactly one source row, including known zero originals");
     const indices = new Set<number>(), identities = new Set<string>(), refs = new Set<string>();
@@ -121,7 +123,10 @@ export function calculatePAResidencySources(input: TaxYearInput, rawSources: unk
       if (refs.has(row.sourceReference.trim())) return error("actual distinct original references are required"); refs.add(row.sourceReference.trim());
       if (row.sourceTaxYear !== year || row.sourceFactsConfirmed !== true || row.currentUncorrectedNonvoidOriginalConfirmed !== true || row.allOriginalBoxesKnownConfirmed !== true || !row.original) return error("actual original year/status/all-box facts must be explicitly confirmed");
       const current = originals[index] as Record<string, unknown>;
-      if (!(kind === "wage" ? W2Schema.strict() : Form1099IntSchema.strict()).safeParse(current).success) return error("original source shape contains missing or unsupported facts/status");
+      const packet = kind === "wage" ? current.stateLocalSources : undefined;
+      if (packet !== undefined) actualW2Rows.set(index, calculateW2StateLocalSources(input, index, packet));
+      const strictOriginal = packet === undefined ? current : Object.fromEntries(Object.entries(current).filter(([key]) => key !== "stateLocalSources"));
+      if (!(kind === "wage" ? W2Schema.strict() : Form1099IntSchema.strict()).safeParse(strictOriginal).success) return error("original source shape contains missing or unsupported facts/status");
       const monetaryKeys = kind === "wage" ? ["wages", "federalWithheld", "socialSecurityWages", "socialSecurityTips", "allocatedTips", "socialSecurityWithheld", "medicareWages", "medicareWithheld", "box10DependentCareBenefits", "stateTaxWithheld", "localWages", "localTaxWithheld", "stateWages", "box12CodeW", "box12CodeD", "box12CodeE", "box12CodeF", "box12CodeG", "box12CodeH", "box12CodeS", "box12CodeAA", "box12CodeBB", "box12CodeEE", "box12CodeT", "box12CodeTP", "box12CodeTT"]
         : ["interestIncome", "earlyWithdrawalPenalty", "usSavingsBondInterest", "federalWithheld", "foreignTaxPaid", "taxExemptInterest", "privateActivityBondInterest", "paDirectObligationInterest", "stateWithheld"];
       for (const key of monetaryKeys) if (current[key] !== undefined) amount(current[key]);
@@ -154,7 +159,9 @@ export function calculatePAResidencySources(input: TaxYearInput, rawSources: unk
       gross = gross.plus(total); included = included.plus(residentAt(paid) ? total : pa); excluded = excluded.plus(residentAt(paid) ? 0 : outside);
     }
     if (!gross.eq(amount(w2.wages))) return error("actual payroll ledger does not reconcile current original W2 compensation");
-    if (w2.state === "PA" && !amount(w2.stateWages).eq(included)) return error("PA payroll and original reported compensation differ; actual NRH/source correction required");
+    const actualRows = actualW2Rows.get(row.originalIndex as number);
+    const reportedPAWages = actualRows === undefined ? (w2.state === "PA" ? amount(w2.stateWages) : undefined) : actualRows.stateRows.find(state => state.state === "PA")?.wages;
+    if (reportedPAWages !== undefined && !reportedPAWages.eq(included)) return error("PA payroll and original reported compensation differ; actual NRH/source correction required");
     compensation = compensation.plus(included.minus(reciprocalExcluded)); excludedCompensation = excludedCompensation.plus(excluded); excludedReciprocalCompensation = excludedReciprocalCompensation.plus(reciprocalExcluded);
   }
   for (const row of source.interest) {

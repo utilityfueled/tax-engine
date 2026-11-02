@@ -1,0 +1,26 @@
+form: "W2-State-Local-Consumers"
+fullName: "Actual W2 reported state/local row consumption"
+taxYear: 2026
+reference: "https://www.irs.gov/instructions/i1040sca"
+notes: |
+  Actual W2 state wages may overlap. Preserve one federal economic original;
+  no state/local jurisdiction or credit is inferred from a reported row.
+  Source worksheet and PA controls cover2025/2026; full federal total controls
+  use2025, and the independently incomplete2026 rule-pack gate stays enforced.
+lines:
+  - line: "salt-once"
+    description: "Schedule A line5a uses each reported actual state/local withholding once"
+    formula: "Sum validated row withholding2535+3125=5660; exclude duplicate legacy1535+1875. Preserve all existing income/sales elections and refund constraints."
+    testRef: "tests/engine/w2-state-local-consumers.test.ts::W2 actual consumers - includes each actual state/local withholding once"
+  - line: "federal-source-validation"
+    description: "Validate packet against current original before any federal computation"
+    formula: "Reject stale source identity even for nonitemizers; retain one50000 Box1 and5000 Box2."
+    testRef: "tests/engine/w2-state-local-consumers.test.ts::W2 actual consumers - rejects stale actual packet before federal calculation"
+  - line: "pa-selected-row"
+    description: "PA reported Box16 is selected by actual state, irrespective first scalar row"
+    formula: "Reconcile pre-exclusion included payroll with actual PA Box16; never add overlapping state wages."
+    testRef: "tests/engine/w2-state-local-consumers.test.ts::W2 actual consumers - selects actual PA Box16 after OH first row"
+  - line: "pa-reciprocal-row"
+    description: "Actual multi-state original retains PA withholding and reciprocal exclusion"
+    formula: "Reported PA withholding1535 only; PAresident20000 plus reciprocal30000excluded gives614tax. A truthful false zero-or-one-state attestation does not erase qualified actual multi-row originals."
+    testRef: "tests/engine/w2-state-local-consumers.test.ts::W2 actual consumers - selects actual reciprocal PA withholding without single-state assertion"

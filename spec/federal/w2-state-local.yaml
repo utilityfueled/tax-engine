@@ -1,0 +1,85 @@
+form: "W2-State-Local-Sources"
+fullName: "Original-bound actual W-2 state and local rows"
+taxYear: 2026
+reference: "https://www.irs.gov/instructions/iw2w3"
+notes: |
+  Source refresh 2026-11-02: official 2025 W2/W3 instructions pages16/23,
+  Multiple forms and Boxes15–20; current official 2026 same headings. A W2
+  supports two actual state and two actual local rows. Employer state IDs are
+  assigned by states, not substituted federal EINs. Additional forms report
+  actual additional items and retain identity; they are not guessed extra
+  employment or duplicated federal income. This first current-original method
+  captures0/1/2 PA/OH state and0/1/2 printed local rows on one actual original
+  with no continuation/correction/void. Those compositions need actual later
+  source methods. No state/local allocation, tax liability, resident credit,
+  SALT eligibility, filing or final2026 physical qualification is established.
+  Presence of the packet always invokes this route, including TY2025. Missing
+  fields cannot silently become scalar/default zero or be dropped by a schema.
+lines:
+  - line: "original-once"
+    description: "One actual federal economic original with independent actual state rows"
+    formula: |
+      Bind actual current owner/year/employer/full original privately. One W2
+      Box1=50000 and Box2=5000 remains one federal original even if actual
+      PABox16=50000 and OHBox16=50000. Never sum state/local wages as federal
+      wages or require the sum of state wages to equal federal wages.
+      Actual state withholding1535+1000=2535, each distinct row once.
+    testRef: "tests/engine/forms/w2-state-local.test.ts::W2 actual rows - preserves one federal original and overlapping PA OH wages"
+  - line: "state-identity"
+    description: "Actual Box15 state and state-assigned employer identifier"
+    formula: |
+      Each actual printed position is unique. Exact stateReporting count0/1/2;
+      two-row finite scope is distinct PA/OH states. Actual state-assigned ID
+      reported requires a nonblank source value; explicit blank_original means
+      actual blank, not unknown or unissued federal EIN. Do not infer an ID or
+      replace it with federal EIN. Wages/withholding are actual nonnegative
+      Decimal source strings; explicit zero remains different from missing.
+    testRef: "tests/engine/forms/w2-state-local.test.ts::W2 actual rows - preserves known blank IDs and rejects unknown missing contradictory rows"
+  - line: "local-source"
+    description: "Actual Boxes18–20 remain separate printed source rows"
+    formula: |
+      Exact localReporting count0/1/2; unique printed positions and actual
+      original reference. Preserve actual Box18/19 nonnegative values and
+      reported/knownblank Box20. Sum distinct actual local withholding once:
+      explicit fictional reported1875+1250=3125, without deriving city tax.
+      No city/PSD/state association, residence, rate or taxable allocation is
+      inferred from row placement, mailing address or a locality label.
+    testRef: "tests/engine/forms/w2-state-local.test.ts::W2 actual rows - retains local rows independently without guessing jurisdiction"
+  - line: "legacy-reconciliation"
+    description: "Explicit scalar projection prevents loss and duplicate credits"
+    formula: |
+      Any retained scalar state/local fields require actual confirmed
+      first_entered_rows projection matching the first actual rows exactly,
+      or unused disposition with no conflicting recorded nonzero/identity.
+      No scalar amounts are added on top of structured rows. A mode switch
+      alone cannot discard source facts or turn a contradiction into zero.
+    testRef: "tests/engine/forms/w2-state-local.test.ts::W2 actual rows - rejects scalar conflicts and counts explicit projections once"
+  - line: "private-source-binding"
+    description: "Raw original and source identity binding before redaction"
+    formula: |
+      Confirm actual owner/year/current uncorrected nonvoid original, every
+      box, all copies and one original without continuation. Full raw original
+      excludes only its own stateLocalSources key to avoid self-reference.
+      Snapshot changes reject until explicit reconfirmation; equal amounts
+      with changed original/row identity or reference produce a new digest.
+      Duplicate indistinguishable originals or rows cannot become distinct
+      economic income/credits solely through indices or free references.
+      Raw ownerSSN/EIN/stateID/locality/reference stay private input, not audit.
+    testRef: "tests/engine/forms/w2-state-local.test.ts::W2 actual rows - binds full current originals and rejects duplicate or stale source proof"
+  - line: "guide-confirmation"
+    description: "Explicit original confirmation and source edit invalidation"
+    formula: |
+      New drafts have null year/answers and empty rows; no amount/state/ID is
+      guessed. One explicit action snapshots the actual selected current W2
+      and owner after actual individual facts are entered. Any source edit
+      retains raw rows and invalidates the global confirmation. Build replays
+      against actual current source rather than rebinding old proof silently.
+    testRef: "tests/apps/web/guided-w2-state-local-facts.test.ts::W2 state local guide - confirms actual originals and invalidates edits"
+  - line: "guide-controls"
+    description: "Recoverable actual state and local source controls"
+    formula: |
+      Actual rows/unknown answers/knownblank statuses remain visible/editable.
+      Add/edit/remove/confirm controls preserve source facts until explicit
+      user action. Removing the packet cannot fabricate scalar facts; old
+      unsupported multiple-state paths remain unavailable until root wiring.
+    testRef: "tests/apps/web/w2-state-local-details.test.tsx::W2 state local UI - retains unknown source facts and invalidates actual edits"

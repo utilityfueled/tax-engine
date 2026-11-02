@@ -1,5 +1,6 @@
 /** Source-derived ordinary PA residency/tax bases. Spec: spec/state/pa-residency-sources.yaml. */
 import Decimal from "decimal.js";
+import { calculateW2StateLocalSources } from "../forms/w2-state-local.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { W2Schema, type TaxYearInput } from "@/models/inputs.js";
@@ -101,13 +102,17 @@ export function calculatePAReciprocalCompensation(input:TaxYearInput, rawOrdinar
  const residency=deriveResidency(source,year);
  if (!Array.isArray(input.w2s) || source.wages.length!==input.w2s.length) return error("complete unique original wage coverage required");
  const seen=new Set<number>(), identities=new Set<string>(), references=new Set<string>();
+ const actualW2Rows=new Map<number,ReturnType<typeof calculateW2StateLocalSources>>();
  const relevant=new Map<string,{originalIndex:number;payrollIndex:number;pa:Decimal;state:string}>();
  for(const row of source.wages){
   const i=row.originalIndex;
   if(i===null || i<0 || i>=input.w2s.length || seen.has(i)) return error("unique complete actual original indices required"); seen.add(i);
   reference(row.sourceReference);if(references.has(row.sourceReference.trim())) return error("distinct actual original references required");references.add(row.sourceReference.trim());
   const w2=input.w2s[i];
-  if(!W2Schema.strict().safeParse(w2).success || row.sourceTaxYear!==year || row.sourceFactsConfirmed!==true || row.currentUncorrectedNonvoidOriginalConfirmed!==true || row.allOriginalBoxesKnownConfirmed!==true || row.ordinaryCashCompensationOnlyConfirmed!==true || row.noPAFederalCompensationDifferencesConfirmed!==true || w2.accountHolder!=="primary" || (w2.taxYear!==undefined && w2.taxYear!==year) || stable(row.original)!==stable(w2)) return error("actual current ordinary wage original/year/owner/status changed or unknown");
+  const packet=(w2 as typeof w2 & {stateLocalSources?:unknown}).stateLocalSources;
+  if(packet!==undefined) actualW2Rows.set(i,calculateW2StateLocalSources(input,i,packet));
+  const strictOriginal=packet===undefined?w2:Object.fromEntries(Object.entries(w2).filter(([key])=>key!=="stateLocalSources"));
+  if(!W2Schema.strict().safeParse(strictOriginal).success || row.sourceTaxYear!==year || row.sourceFactsConfirmed!==true || row.currentUncorrectedNonvoidOriginalConfirmed!==true || row.allOriginalBoxesKnownConfirmed!==true || row.ordinaryCashCompensationOnlyConfirmed!==true || row.noPAFederalCompensationDifferencesConfirmed!==true || w2.accountHolder!=="primary" || (w2.taxYear!==undefined && w2.taxYear!==year) || stable(row.original)!==stable(w2)) return error("actual current ordinary wage original/year/owner/status changed or unknown");
   const originalIdentity=stable(semantic(w2,year));if(identities.has(originalIdentity)) return error("indistinguishable duplicate actual originals");identities.add(originalIdentity);
   for(const [key,value] of Object.entries(w2)) if(typeof value==="string" && /wages|withheld|tips|benefits|box12Code/i.test(key)) amount(value);
   for(const key of ["box12CodeD","box12CodeE","box12CodeF","box12CodeG","box12CodeH","box12CodeS","box12CodeW","box12CodeT","box10DependentCareBenefits","allocatedTips"] as const) if(w2[key]!==undefined && !amount(w2[key]).isZero()) return error("nonordinary PA wage adjustment needs actual method");
@@ -151,10 +156,15 @@ export function calculatePAReciprocalCompensation(input:TaxYearInput, rawOrdinar
   const i=o.originalIndex;
   if(i===null || !statesByOriginal.has(i) || originalKeys.has(i)) return error("unique covered actual original proof required");originalKeys.add(i);reference(o.sourceReference);
   const w2=input.w2s[i];
-  if(o.sourceTaxYear!==year || o.sourceFactsConfirmed!==true || o.zeroOrOneStateRowOnActualOriginalConfirmed!==true || o.noAdditionalPAStateRowOnOriginalConfirmed!==true || stable(o.originalW2)!==stable(w2)) return error("actual original year/content and complete single-state source proof required; multiple rows need their source method");
+  const actualRows=actualW2Rows.get(i);
+  const zeroOrOneState=actualRows===undefined?true:actualRows.stateRows.length<=1;
+  if(o.sourceTaxYear!==year || o.sourceFactsConfirmed!==true || o.zeroOrOneStateRowOnActualOriginalConfirmed!==zeroOrOneState || o.noAdditionalPAStateRowOnOriginalConfirmed!==true || stable(o.originalW2)!==stable(w2)) return error("actual original year/content and truthful complete state-row source proof required");
+  const reportedPARow=actualRows?.stateRows.find(row=>row.state==="PA");
+  const hasPARow=actualRows===undefined?w2.state==="PA":reportedPARow!==undefined;
+  const reportedPAWithheld=actualRows===undefined?amount(w2.stateTaxWithheld):reportedPARow?.withheld;
   const actualPAWithheld=amount(o.actualPAWithheld);
-  if(o.paWithholdingStatus==="reported_PA_box17") {if(w2.state!=="PA" || !amount(w2.stateTaxWithheld).eq(actualPAWithheld)) return error("actual original PA withholding contradicts source");}
-  else if(o.paWithholdingStatus==="no_PA_row_on_original") {if(w2.state==="PA" || !actualPAWithheld.isZero() || (!w2.state && !amount(w2.stateTaxWithheld).isZero())) return error("actual no-PA-row status contradicts original withholding jurisdiction");}
+  if(o.paWithholdingStatus==="reported_PA_box17") {if(!hasPARow || reportedPAWithheld===undefined || !reportedPAWithheld.eq(actualPAWithheld)) return error("actual original PA withholding contradicts source");}
+  else if(o.paWithholdingStatus==="no_PA_row_on_original") {if(hasPARow || !actualPAWithheld.isZero() || (actualRows===undefined && !w2.state && !amount(w2.stateTaxWithheld).isZero())) return error("actual no-PA-row status contradicts original withholding jurisdiction");}
   else return error("actual PA withholding source status required");
   paWithheldFromCoveredOriginals=paWithheldFromCoveredOriginals.plus(actualPAWithheld);
   const r=o.residentStateReturn;

@@ -4,6 +4,7 @@
  */
 
 import { z } from "zod";
+import { W2StateLocalSourcesSchema } from "./w2-state-local.js";
 import { FilingUnitHistorySchema } from "./filing-unit-sources.js";
 import { NolFilingUnitOriginSchema, NolFilingUnitUseSchema, NolNewMarriageCurrentSourcesSchema, NolSameCoupleJointHistorySchema } from "./net-operating-loss-filing-unit.js";
 import { SavingsBondReissueSourcesSchema } from "./savings-bond-reissue-sources.js";
@@ -98,6 +99,7 @@ export const TaxpayerSchema = z.object({
 });
 
 export const W2Schema = z.object({
+  stateLocalSources: W2StateLocalSourcesSchema.optional(),
   taxYear: z.number().int().optional(),
   employer: z.object({
     name: z.string(),

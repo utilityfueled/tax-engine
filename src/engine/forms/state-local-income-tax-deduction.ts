@@ -1,5 +1,6 @@
 /** Schedule A line 5a source worksheet; spec/federal/schedule-a.yaml. */
 import Decimal from "decimal.js";
+import { calculateW2StateLocalSources } from "./w2-state-local.js";
 import { calculateForm1099G } from "./form-1099-g.js";
 import { calculateForm1099OID } from "./form-1099-oid.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -28,8 +29,12 @@ function actualAmount(value: string | undefined, label: string): Decimal {
 
 export function calculateStateLocalIncomeTaxDeduction(input: TaxYearInput): StateLocalIncomeTaxDeductionResult {
   const audit = new AuditTrail();
-  const w2StateWithholding = sum(...input.w2s.map(form => actualAmount(form.stateTaxWithheld, "W2 state withholding")));
-  const w2LocalWithholding = sum(...input.w2s.map(form => actualAmount(form.localTaxWithheld, "W2 local withholding")));
+  const actualW2Rows = input.w2s.map((form, index) => {
+    const packet = (form as typeof form & { stateLocalSources?: unknown }).stateLocalSources;
+    return packet === undefined ? undefined : calculateW2StateLocalSources(input, index, packet);
+  });
+  const w2StateWithholding = sum(...input.w2s.map((form, index) => actualW2Rows[index]?.totalStateWithheld ?? actualAmount(form.stateTaxWithheld, "W2 state withholding")));
+  const w2LocalWithholding = sum(...input.w2s.map((form, index) => actualW2Rows[index]?.totalLocalWithheld ?? actualAmount(form.localTaxWithheld, "W2 local withholding")));
   const sourceGroups: Array<[string, ReadonlyArray<{ stateWithheld?: string }>]> = [
     ["1099-INT", input.form1099Int ?? []], ["1099-DIV", input.form1099Div ?? []],
     ["1099-B", input.form1099B ?? []], ["1099-DA", input.form1099DA ?? []],
