@@ -4,6 +4,8 @@ import {sha256} from '@noble/hashes/sha2.js';
 import {bytesToHex} from '@noble/hashes/utils.js';
 import type {ScheduleCResult} from './schedule-c.js';
 import type {TaxYearInput,ScheduleCSourceFacts} from '@/models/inputs.js';
+import {AmortizableAssetSchema} from '@/models/inputs.js';
+import {calculateForm4562} from '@/engine/forms/form-4562.js';
 import {AuditTrail} from '@/utils/audit.js';
 import {d} from '@/utils/decimal.js';
 
@@ -21,8 +23,9 @@ export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceB
  const exp=(business?.expenses??{}) as Partial<Record<string,string>>, proof=business?.sourceFacts;
  for(const field of special)if(!d(exp[field]).isZero())fail(`${field} requires its separate supported federal source method`);
  for(const field of ['businessInterest',...ordinary])if(!d(exp[field]).isFinite()||d(exp[field]).lt(0))fail(`${field} is not a nonnegative current expense`);
+ const amortizationTotal=input.form4562?calculateForm4562(input.form4562).line44:d(0);
  const interestTotal=d(exp.businessInterest),ordinaryTotal=ordinary.reduce((s,k)=>s.plus(d(exp[k])),d(0));
- if(!proof){if(saved?.lines.some(row=>row.line==='actual-source-commitment'))fail('saved original source proof was removed');if(!interestTotal.isZero()||!ordinaryTotal.isZero())fail('positive interest or classified ordinary expenses require complete actual sources');return undefined;}
+ if(!proof){if(amortizationTotal.gt(0))fail('positive Form4562 amortization requires actual Schedule C asset attribution sources');if(saved?.lines.some(row=>row.line==='actual-source-commitment'))fail('saved original source proof was removed');if(!interestTotal.isZero()||!ordinaryTotal.isZero())fail('positive interest or classified ordinary expenses require complete actual sources');return undefined;}
  if(d(exp.otherExpenses).gt(0)&&!business?.otherExpenseDescription?.trim())fail('actual remaining other-expense description is unknown');
  truth(proof.sourceFactsConfirmed,'original source facts');ref(proof.sourceReference,'business');
  if(![2025,2026].includes(input.taxpayer.taxYear)||proof.sourceTaxYear!==input.taxpayer.taxYear)fail('source year does not match supported return year');
@@ -65,6 +68,38 @@ export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceB
   for(const key of ordinary.slice(5))partV=partV.plus(rowAmounts[key]??d(0));
   if(d(exp.wages).gt(0)&&(d(input.form3800?.currentYearCredits).gt(0)||d(input.form3800?.passiveActivityCredits).gt(0)))fail('employee wages with business credit reductions require a separate source method');
  }
+
+ const amortization=proof.amortization;
+ if(amortization||amortizationTotal.gt(0)){
+  if(!amortization)return fail('positive Form4562 amortization requires actual Schedule C asset sources');const p=amortization;
+  truth(p.sourceFactsConfirmed,'amortization original source facts');ref(p.sourceReference,'amortization');
+  for(const key of ['fullCalendarYearConfirmed','allAssetsForThisScheduleCConfirmed','notDeductedElsewhereConfirmed'] as const)truth(p[key],key);
+  if(p.sourceTaxYear!==input.taxpayer.taxYear||input.form4562?.taxYear!==input.taxpayer.taxYear)fail('amortization actual Form4562 source year is unknown or different');
+  if(business.accountingMethod!=='cash')fail('finite actual acquired-goodwill amortization source requires cash business');
+  if(input.form2555)fail('foreign amortization allocation requires its separate source method');
+  if(!amount(p.remainingOtherExpenses,'remaining nonamortization other expenses').eq(d(exp.otherExpenses)))fail('amortization remaining other expense sources do not reconcile');ref(p.remainingOtherExpenseSourceReference,'remaining nonamortization other expenses');
+  const assets=input.form4562?.amortizableAssets,rows=p.rows;
+  if(!assets?.length||rows?.length!==assets.length)return fail('amortization requires complete unique original per-asset sources; summary alone is unsupported');
+  if(!d(input.form4562?.currentYearAmortization).isZero()||!d(input.form4562?.priorYearAmortization).isZero())fail('amortization per-asset sources contradict a separate summary method');
+  const indices=new Set<number>(),originals=new Set<string>();
+  const ordered=(v:unknown):unknown=>Array.isArray(v)?v.map(ordered):v!==null&&typeof v==='object'?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a<b?-1:a>b?1:0).map(([k,x])=>[k,ordered(x)])):v;
+  const date=(v:string|undefined,label:string):string=>{if(!v||!/^\d{4}-\d{2}-\d{2}$/.test(v)||Number.isNaN(Date.parse(v+'T00:00:00Z'))||new Date(v+'T00:00:00Z').toISOString().slice(0,10)!==v)return fail(`actual amortization ${label} date is unknown or invalid`);return v;};
+  let actualBusinessStart:string|undefined;
+  for(const row of rows){
+   const index=row.assetIndex;if(index===undefined||!Number.isInteger(index)||index<0||index>=assets.length||indices.has(index))return fail('amortization original asset coverage is invalid or duplicated');indices.add(index);
+   ref(row.sourceReference,'amortization asset');truth(row.sourceFactsConfirmed,'amortization asset original');if(row.accountHolder!==business.accountHolder)fail('amortization asset owner or actual business attribution is unknown or different');
+   for(const key of ['acquiredGoodwillForThisBusinessConfirmed','armsLengthTaxableCashPurchaseAfter1993Confirmed','noSelfCreatedRelatedPartyAntiChurningForeignLeaseOrDispositionConfirmed','fullBusinessUseConfirmed'] as const)truth(row[key],key);
+   const actual=AmortizableAssetSchema.strict().safeParse(assets[index]),original=AmortizableAssetSchema.strict().safeParse(row.originalAsset);
+   if(!actual.success||!original.success||JSON.stringify(ordered(actual.data))!==JSON.stringify(ordered(original.data)))return fail('amortization actual original asset snapshot is missing or different');
+   const asset=actual.data;if(asset.codeSection!=='197'||(asset.amortizationPeriodMonths!==undefined&&asset.amortizationPeriodMonths!==180))fail('amortization source requires the separately supported statutory Section197 method');
+   const description=asset.description?.trim();if(!description)return fail('actual amortization asset description is unknown');const basis=amount(asset.amortizableAmount,'actual acquired-goodwill basis');
+   const acquired=date(row.acquisitionDate,'acquisition'),started=date(row.businessStartDate,'business start');if(actualBusinessStart!==undefined&&actualBusinessStart!==started)fail('amortization assets contradict the one actual business start date');actualBusinessStart=started;if(acquired<'1994-01-01')fail('amortization pre1994 acquisition requires its anti-churning source method');const begin=acquired>started?acquired:started;
+   if(asset.dateAmortizationBegins.length===10)date(asset.dateAmortizationBegins,'original declared start');if(begin.slice(0,4)!==String(input.taxpayer.taxYear)||asset.dateAmortizationBegins.slice(0,7)!==begin.slice(0,7))fail('amortization current start does not match later actual acquisition and business-start sources');
+   const identity=JSON.stringify([description.replace(/\s+/g,' ').toLowerCase(),basis.toString(),begin.slice(0,7),'197',180]);if(originals.has(identity))fail('amortization duplicates an indistinguishable original asset');originals.add(identity);
+  }
+  if(p.reclassification){const r=p.reclassification;ref(r.sourceReference,'amortization reclassification');const old=amount(r.originalOtherExpenses,'original other expenses before amortization reclassification'),included=amount(r.amortizationAlreadyIncluded,'amortization already included'),remaining=amount(r.remainingOtherExpenses,'remaining nonamortization other expenses');if(!old.eq(included.plus(remaining))||!remaining.eq(d(exp.otherExpenses))||included.gt(amortizationTotal))fail('actual amortization reclassification is not conserved');if(included.gt(0)&&interest?.reclassification)fail('simultaneous historical interest and amortization reclassification requires its coherent original ledger method');}
+  partV=partV.plus(amortizationTotal);
+ }
  if(interest?.reclassification){const r=interest.reclassification;ref(r.sourceReference,'expense reclassification');const old=amount(r.originalOtherExpenses,'original other expenses'),i=amount(r.interestAlreadyIncluded,'interest already included'),o=amount(r.ordinaryExpensesAlreadyIncluded,'ordinary expenses already included'),remaining=amount(r.remainingOtherExpenses,'remaining other expenses');if(!old.eq(i.plus(o).plus(remaining))||!remaining.eq(d(exp.otherExpenses))||i.gt(interestTotal)||o.gt(ordinaryTotal))fail('actual expense reclassification is not conserved');}
  if(!proof.address)fail('actual business address or confirmed home omission source is unknown');
  let address:ScheduleCSourceFacts['address'];
@@ -84,5 +119,5 @@ export function calculateScheduleCSourceFacts(input:SourceInput,business:SourceB
   if(!saved.expenseBreakdown['Other expenses']?.eq(d(exp.otherExpenses).plus(partV))||(interest&&!saved.expenseBreakdown['Business interest']?.eq(interestTotal)))fail('saved interest or remaining other expense is stale');
  }
  const audit=new AuditTrail();audit.record('Sched C','actual-source-commitment','Actual expense and business address original source commitment',d(0),'Exact original source reconciliation; structured personal identifiers normalized for permitted review redaction',{'Original source commitment':commitment});
- return {mortgage,vehicle,other,interestTotal,rowAmounts,partV,address,commitment,lines:audit.getLines()};
+ return {mortgage,vehicle,other,interestTotal,rowAmounts,partV,amortizationTotal,address,commitment,lines:audit.getLines()};
 }

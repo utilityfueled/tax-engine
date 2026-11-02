@@ -125,8 +125,9 @@ function computeAssetAmortization(
 
   if (months === 0) return null;
 
-  const monthlyAmount = amount.dividedBy(periodMonths);
-  const deduction = roundDollar(monthlyAmount.times(months));
+  // Preserve exact half-dollar boundaries before final reporting round.
+  // Dividing first can turn 18015 / 180 * 6 into 600.49999999999999998.
+  const deduction = roundDollar(amount.times(months).dividedBy(periodMonths));
 
   return {
     description: asset.description || `§${section} intangible`,

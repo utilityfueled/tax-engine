@@ -1,3 +1,4 @@
+import {calculateScheduleCSourceFacts} from '@/engine/schedules/schedule-c-source-facts.js';
 import { assertPdfExportAllowed } from "../../export-policy.js";
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
@@ -171,7 +172,7 @@ function collectForm4562ReferenceActivities(input: TaxYearInput): Form4562Refere
       activityLabel: activityName,
       downstreamBridgeLabel: "Schedule C Line 13 depreciation and section 179 deduction",
       downstreamBridgeValue: result.line22,
-      amortizationBridgeLabel: "Supplemental amortization reference (Form 4562 Line 44)",
+      amortizationBridgeLabel: input.scheduleC.sourceFacts?.amortization && calculateScheduleCSourceFacts(input,input.scheduleC)?.amortizationTotal.eq(result.line44) ? "Schedule C Part V other-expense bridge from Form 4562 Line 44" : "Supplemental amortization reference (Form 4562 Line 44)",
       amortizationBridgeValue: result.line44,
       recaptureLabel: "IRC Section 280F recapture income",
       recaptureValue: result.section280FRecaptureIncome,

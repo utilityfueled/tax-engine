@@ -249,6 +249,7 @@ export async function fillScheduleC(
     const remaining=new Decimal(scInput?.expenses?.otherExpenses??'0');if(remaining.gt(0))entries.push([scInput?.otherExpenseDescription??'',remaining]);
     const descriptions:Record<string,string>={bankCharges:'Bank charges',duesAndPublications:'Business dues and publications',freight:'Freight outside inventory',laundryAndCleaning:'Business laundry and cleaning',managementFees:'Management fees',postage:'Business postage',telephone:'Business telephone'};
     for(const [key,label] of Object.entries(descriptions)){const value=source.rowAmounts[key];if(value?.gt(0))entries.push([label,value]);}
+    if(source.amortizationTotal.gt(0))entries.push(['Business goodwill amortization (Form4562)',source.amortizationTotal]);
     entries.forEach(([label,value],i)=>{setTextField(form,`topmostSubform[0].Page2[0].PartVTable[0].Item${i+1}[0].f2_${15+2*i}[0]`,label);setCurrencyField(form,`topmostSubform[0].Page2[0].PartVTable[0].Item${i+1}[0].f2_${16+2*i}[0]`,value);});
     setCurrencyField(form,'topmostSubform[0].Page2[0].f2_33[0]',audited('27b',sc.expenseBreakdown['Other expenses']));
   } else if (scInput?.otherExpenseDescription && sc.expenseBreakdown["Other expenses"]?.gt(0)) {

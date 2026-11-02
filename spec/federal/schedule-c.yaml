@@ -271,3 +271,36 @@ lines:
     description: "Preserve actual care benefit, depreciation and home-office source methods"
     formula: "Actual source C38500 before additional methods: eligible care2000 already included2500 adjusts line14 to2000, giving total3500/net36500; actual primary earned-income source33921. Actual Form4562 line22=1000 plus simplified home100sqft*5=500 gives total2500/tentative37500/net37000. Replay original actual sources after permitted identifier redaction; no caller-entered adjustment or invented zero."
     testRef: "tests/pdf/schedule-c-source-facts.test.ts::replays actual care depreciation and home office sources after permitted redaction"
+
+  - line: "27b-amortization-source"
+    description: "Actual attributed Form4562 PartVI amortization enters PartV once"
+    formula: "For the finite full-calendar current-start ordinary acquired-business-goodwill Section197 method, calculate Form4562 per-asset44 under its statutory180months and add that exact reported amount once to actual remainingOtherExpenses and separately classified ordinaryPartV rows; include the resulting27b in28/29/31. Form4562 line22 remains exclusively C13."
+    irsRef: "2025 ScheduleC Instructions PartV Amortization; Form4562 Instructions PartVI Section197,columnf and44; Reg1.197-2"
+    inputs: ["Actual year/owner/business/original asset attribution", "Actual acquired basis/acquisition and business-start dates", "Complete unique actual Form4562 asset originals", "Actual remaining nonamortization expenses and source ledger"]
+    notes: "Unknown source facts do not become0 or assumed eligibility. Only arm-length taxable cash-purchased post1993 goodwill,100percent business use,current-year amortization start,fullcalendar year and known absence of self-created/related-party/anti-churning/foreign/lease/disposition exceptions are admitted. Form4562 year must match actual return. Other positive C44 methods and unqualified summary amounts require their separate source contracts. No guide Form4562origination or2026fullreturn/export qualification is claimed."
+    testRef: "tests/engine/schedules/schedule-c-amortization.test.ts::adds actual attributed Form4562 amortization once to C PartV"
+
+  - line: "27b-amortization-conservation"
+    description: "Actual source coverage and other-expense conservation"
+    formula: "Require every current original amortizable asset once, with unique original-record identity and exact snapshot/year/owner/business agreement; the current start is the later actual acquisition/business-start month. Exact canonicalotherExpenses equals entered actual remainingOtherExpenses excluding amortization. Optional simple amortization-only reclassification requires originalOtherExpenses=amortizationAlreadyIncluded+remainingOtherExpenses and included<=computed44; no residual or blind addition."
+    irsRef: "ScheduleC PartV and Form4562 PartVI; Reg1.197-2(f)"
+    notes: "An index/reference alone cannot establish a second identical asset. Existing interest/ordinary source deductions remain conserved independently. Conflicting simultaneous historical reclassification is unsupported rather than guessed."
+    testRef: "tests/engine/schedules/schedule-c-amortization.test.ts::rejects unknown contradictory or duplicated amortization sources"
+
+  - line: "27b-amortization-review-binding"
+    description: "Private original amortization sources and actual C totals before review I O"
+    formula: "Bind full actual Form4562/original source packet in the existing private C source commitment; replay actual C source calculation before standalone/public template access. Copy computed44 to one labelled PartV row and27b/48; reject removed sources, equal-dollar original edits or changed saved C result/audit. Preserve structured identifier redaction and all2026gates."
+    irsRef: "ScheduleC PartV48; Form4562 line44 and existing review-only source policy"
+    testRef: "tests/pdf/schedule-c-amortization.test.ts::renders actual amortization PartV and rejects stale originals before I O"
+
+  - line: "27b-amortization-one-business-start"
+    description: "All attributed assets reconcile the same actual business start"
+    formula: "Require the same actual businessStartDate across every asset attributed to the one represented ScheduleC. Acquisition dates can differ; later of each acquisition and that common actual start controls the asset beginning. Contradictory business start records cannot be accepted from equal or favorable totals."
+    irsRef: "Form4562 Instructions Section197; Reg1.197-2(f)(1)"
+    testRef: "tests/engine/schedules/schedule-c-amortization.test.ts::rejects conflicting business start records for one C activity"
+
+  - line: "27b-amortization-original-date"
+    description: "Preserve real original start dates under the statutory monthly convention"
+    formula: "The original asset can state YYYY-MM or a valid actual YYYY-MM-DD within the later actual acquisition/business-start month. Validate the complete calendar date when provided; never admit impossible dates merely because their month matches. Section197 calculates a monthly period; it does not require the acquisition day as the first amortization day."
+    irsRef: "Reg1.197-2(f)(1)(i), firstday of later month; Form4562 PartVI columnb"
+    testRef: "tests/engine/schedules/schedule-c-amortization.test.ts::preserves actual monthly start originals and rejects impossible dates"

@@ -417,3 +417,16 @@ lines:
       - "Asset with 0% business use in current year still triggers recapture if prior use was >50%"
       - "Only listed-property assets with the recapture flag produce recapture — other assets unaffected"
     testRef: "tests/engine/forms/form-4562.test.ts::section 280F recapture"
+
+  - line: "44-schedule-c-attribution"
+    description: "Source-qualified ScheduleC PartVI destination"
+    formula: "For actual current-start acquired goodwill attributable solely to the represented ScheduleC, computed PartVI44 is a separately labelled C PartV/27b expense, excluded from depreciation22/C13. Require complete actual source and remaining-expense reconciliation; do not use the computed total alone as business attribution or deduction eligibility."
+    irsRef: "Form4562 Instructions line44; ScheduleC Instructions PartV Amortization; Section197"
+    notes: "The existing standalone Form4562 reference summary is not an eligibility ruling or proof that a ScheduleC receives every amortization code. Other unrepresented source compositions explicitly reject at C."
+    testRef: "tests/pdf/schedule-c-amortization.test.ts::renders actual amortization PartV and rejects stale originals before I O"
+
+  - line: "PartVI-exact-rounding"
+    description: "Preserve exact half-dollar amortization at final reported rounding"
+    formula: "Compute basis*eligibleMonths/periodMonths using Decimal, then round once to nearest whole dollar. Do not round a repeating monthly quotient before multiplication or let finite precision move an exact half-dollar below its boundary. Basis18015,period180,6months is exactly600.5 and reports601; basis18014 reports600."
+    irsRef: "Form4562 Instructions PartVI columnf; standard nearest-dollar reporting"
+    testRef: "tests/engine/schedules/schedule-c-amortization.test.ts::preserves explicit zero and exact statutory month and rounding boundaries"

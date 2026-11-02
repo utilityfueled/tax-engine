@@ -194,6 +194,7 @@ export function calculateScheduleC(
   totalExpenses = totalExpenses.plus(deductibleMeals);
 
   totalExpenses = totalExpenses.plus(addExpense("25", "Utilities", expenses.utilities));
+  // Classified Part V sources include actual Form4562 amortization, separate from line13.
   totalExpenses = totalExpenses.plus(addExpense("27b", "Other expenses", d(expenses.otherExpenses).plus(sources?.partV??d(0)).toString()));
 
   // Line 28: Total expenses

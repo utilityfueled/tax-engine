@@ -3264,6 +3264,14 @@ export const Form8829Schema = z.object({
 
 /** Actual source records; blanks remain unknown until the Schedule C source calculator validates them. */
 export const ScheduleCSourceFactsSchema = z.object({
+  amortization:z.object({sourceTaxYear:z.number().int().optional(),sourceReference:z.string().optional(),sourceFactsConfirmed:z.boolean().nullable().optional(),
+    fullCalendarYearConfirmed:z.boolean().nullable().optional(),allAssetsForThisScheduleCConfirmed:z.boolean().nullable().optional(),notDeductedElsewhereConfirmed:z.boolean().nullable().optional(),
+    remainingOtherExpenses:z.string().optional(),remainingOtherExpenseSourceReference:z.string().optional(),
+    rows:z.array(z.object({assetIndex:z.number().int().optional(),sourceReference:z.string().optional(),sourceFactsConfirmed:z.boolean().nullable().optional(),accountHolder:z.enum(["primary","spouse"]).optional(),originalAsset:z.record(z.string(),z.unknown()).optional(),acquisitionDate:z.string().optional(),businessStartDate:z.string().optional(),
+      acquiredGoodwillForThisBusinessConfirmed:z.boolean().nullable().optional(),armsLengthTaxableCashPurchaseAfter1993Confirmed:z.boolean().nullable().optional(),noSelfCreatedRelatedPartyAntiChurningForeignLeaseOrDispositionConfirmed:z.boolean().nullable().optional(),fullBusinessUseConfirmed:z.boolean().nullable().optional(),
+    }).strict()).optional(),
+    reclassification:z.object({sourceReference:z.string().optional(),originalOtherExpenses:z.string().optional(),amortizationAlreadyIncluded:z.string().optional(),remainingOtherExpenses:z.string().optional()}).strict().optional(),
+  }).strict().optional(),
   sourceTaxYear:z.number().int().optional(), sourceReference:z.string().optional(), sourceFactsConfirmed:z.boolean().nullable().optional(),
   accountHolder:z.enum(["primary","spouse"]).optional(), ownerName:z.string().optional(),
   businessNameStatus:z.enum(["reported","blank_original"]).optional(), businessName:z.string().optional(),

@@ -12,6 +12,7 @@ import {
   FORM_4562_REFERENCE_FILENAME,
 } from "@/pdf/fill-form-4562.js";
 import { fillReturn } from "@/pdf/fill-return.js";
+import {scheduleCAmortizationFixture} from "../fixtures/schedule-c-amortization.js";
 import { simpleW2Fixture } from "../fixtures/simple-w2.js";
 
 async function makeOutputDir() {
@@ -144,8 +145,10 @@ describe("Form 4562 packet reference summary", () => {
     const outputDir = await makeOutputDir();
 
     try {
-      const result = calculateFederalTax(scheduleCForm4562Fixture);
-      const { filledForms } = await fillReturn(scheduleCForm4562Fixture, result, {
+      expect(()=>calculateFederalTax(scheduleCForm4562Fixture)).toThrow(/amorti|source|attribut/i);
+      const actual=scheduleCAmortizationFixture();
+      const result = calculateFederalTax(actual);
+      const { filledForms } = await fillReturn(actual, result, {
         blankFormsDir: "forms/blank",
         outputDir,
       });
