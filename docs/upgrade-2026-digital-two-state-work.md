@@ -32,3 +32,7 @@ to2025.215/2026.213-law-integration-draft. Main check receipt SHA256:
 Actual final-code production browser/download review follows separately; previous
 collector evidence is scoped to its frozen source. No human or filing
 qualification, launch-state selection or staging evidence is inferred.
+
+## Strict spec-reference correction after full CI
+
+The exact `af85b959` full unit job125056471801 (CI41376046575) reports20,085 passing tests and one failing strict reference test. The scalar-ID recovery reference omitted the existing parameterized test title's literal `(%j)` suffix. The correction changes only that YAML reference; it preserves both parameter cases, every assertion, calculation, validator and threshold. Parent rerun of the strict catalog reference suite plus DA UI controls passes556tests/2files; inventory consistency passes. The original CI failure excerpt and successful focused logs are retained under `.local/upgrade-evidence/nov01-parent-new-marriage/`. Full unit/coverage completion remains pending a corrected-commit run.

@@ -38,4 +38,4 @@ lines:
   - line: "guided-scalar-id-recovery"
     description: "Allow explicit recovery from a retained scalar state identifier"
     formula: "Expose the scalar Box15 identifier in single-state mode or whenever retained. Changing to two-state reporting preserves it and causes no inferred deletion. An explicit Remove single-state ID action removes only that obsolete scalar field, including an explicitly blank one, retains both original row IDs/amounts and all transactions, and clears source confirmation."
-    testRef: "tests/apps/web/digital-asset-state-rows-interactions.test.tsx::explicitly removes a retained single-state ID without changing original rows"
+    testRef: "tests/apps/web/digital-asset-state-rows-interactions.test.tsx::explicitly removes a retained single-state ID without changing original rows (%j)"
