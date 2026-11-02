@@ -2267,6 +2267,26 @@
       ]
     },
     {
+      "key": "federal/form-1099-da-state-rows",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": null,
+      "specPath": "spec/federal/form-1099-da-state-rows.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-1099-g",
       "jurisdiction": "federal",
       "taxYear": null,

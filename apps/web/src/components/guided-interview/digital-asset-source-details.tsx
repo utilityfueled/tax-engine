@@ -63,10 +63,29 @@ function Statement({ entry, index, stateCode, onChange, onRemove }: { entry: Dig
       {([['sourceId', 'Original statement ID'], ['sourceReference', 'Original source reference'], ['taxYear', 'Actual source tax year'], ['brokerName', 'Broker name'], ['brokerTin', 'Broker taxpayer ID, if shown'], ['accountReference', 'Account reference, if shown']] as const).map(([key, label]) => <TextFact key={key} label={`${prefix} — ${label}`} value={entry[key] ?? ''} onChange={value => onChange({ [key]: value })} />)}
       <Choice label={`${prefix} — Actual taxpayer owner`} value={entry.accountHolder} options={[['primary', 'Primary taxpayer'], ['spouse', 'Spouse'], ['joint', 'Joint or nominee — needs allocation']]} onChange={value => onChange({ accountHolder: value as DigitalAssetEntryData['accountHolder'] })} />
       <CurrencyField label={`${prefix} — Box 4 federal withholding`} value={entry.federalWithheld ?? ''} onChange={federalWithheld => onChange({ federalWithheld })} />
-      <Choice label={`${prefix} — Actual state reporting`} value={entry.stateTaxReporting} options={[['none', 'No state row'], ['single', 'One state'], ['multiple', 'Multiple states — needs allocation']]} onChange={value => onChange({ stateTaxReporting: value as DigitalAssetEntryData['stateTaxReporting'] })} />
+      <Choice label={`${prefix} — Actual state reporting`} value={entry.stateTaxReporting} options={[['none', 'No state row'], ['single', 'One state'], ['multiple', 'Two states — Pennsylvania and Ohio']]} onChange={value => onChange({ stateTaxReporting: value as DigitalAssetEntryData['stateTaxReporting'] })} />
+      {(entry.stateTaxReporting === 'single' || entry.stateIdentificationNumber !== undefined) && <TextFact label={`${prefix} — Original single-state Box 15 filer state ID`} value={entry.stateIdentificationNumber ?? ''} onChange={stateIdentificationNumber => onChange({ stateIdentificationNumber })} />}
       <TextFact label={`${prefix} — Original state code`} value={entry.state ?? ''} onChange={state => onChange({ state })} />
       <CurrencyField label={`${prefix} — Original state withholding`} value={entry.stateWithheld ?? ''} onChange={stateWithheld => onChange({ stateWithheld })} />
     </div>
+    {entry.stateTaxReporting === 'multiple' && entry.stateIdentificationNumber !== undefined && <div>
+      <p className="guided-hint">Check the original state rows below, then remove the saved single-state ID if it is an obsolete copy.</p>
+      <button type="button" className="utility-button utility-button-small" onClick={() => onChange({ stateIdentificationNumber: undefined })}>Remove single-state ID from {prefix}</button>
+    </div>}
+    {entry.stateTaxReporting === 'multiple' && <fieldset className="guided-w2-card"><legend>{prefix} — original state rows</legend>
+      <p className="guided-hint">Copy each original state row separately. This records withholding and does not split investment income. Two-state source support currently covers Pennsylvania and Ohio.</p>
+      {[0, 1].map(index => {
+        const row = entry.stateWithholding?.[index] ?? {};
+        const label = `${prefix} state row ${index + 1}`;
+        const update = (patch: Partial<typeof row>) => onChange({ stateWithholding: [0, 1].map(i => i === index ? { ...row, ...patch } : (entry.stateWithholding?.[i] ?? {})) });
+        return <div className="guided-form-grid" key={index}>
+          <TextFact label={`${label} — Box 14 state code`} value={row.state ?? ''} onChange={state => update({ state })} />
+          <BooleanFact label={`${label} — Original Box 15 state ID is blank`} value={row.stateIdentificationNumberBlank} onChange={stateIdentificationNumberBlank => update({ stateIdentificationNumberBlank })} />
+          <TextFact label={`${label} — Box 15 filer state ID`} value={row.stateIdentificationNumber ?? ''} onChange={stateIdentificationNumber => update({ stateIdentificationNumber })} />
+          <CurrencyField label={`${label} — Box 16 state withholding`} value={row.stateWithheld ?? ''} onChange={stateWithheld => update({ stateWithheld })} />
+        </div>;
+      })}
+    </fieldset>}
     {rows.map((row, rowIndex) => <Disposition key={rowIndex} row={row} stateCode={stateCode} prefix={`DA ${index + 1} sale ${rowIndex + 1}`} onChange={patch => onChange({ transactions: rows.map((value, i) => i === rowIndex ? updateDigitalAssetTransaction(value, patch) : value) })} onRemove={() => onChange({ transactions: rows.filter((_, i) => i !== rowIndex) })} />)}
     <button type="button" className="utility-button" onClick={() => onChange({ transactions: [...rows, {}] })}>Add individual disposition to {prefix}</button>
     <BooleanFact label={`${prefix} — Every original disposition is included`} value={entry.allTransactionsIncluded} onChange={allTransactionsIncluded => onChange({ allTransactionsIncluded })} />

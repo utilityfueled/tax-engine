@@ -19,6 +19,31 @@ function amount(value: string | undefined, label: string): Decimal {
   return result;
 }
 
+// Spec: form-1099-da-state-rows. State rows are withholding facts, not gain allocations.
+function actualStateRows(form: Form1099DA): Array<{ state: string; stateIdentificationNumber?: string; stateWithheld: string }> {
+  if (form.stateTaxReporting === 'multiple') {
+    const rows = form.stateWithholding;
+    if (!rows || rows.length !== 2 || new Set(rows.map(row => row.state)).size !== 2)
+      throw new Error('Form1099DA multiple-state reporting requires two distinct original state rows.');
+    const actual = rows.map(row => {
+      if (row.state !== 'PA' && row.state !== 'OH') throw new Error('Form1099DA multiple-state pairs other than PA/OH require their separate supported state-source method.');
+      if (row.stateIdentificationNumber === undefined) throw new Error('Form1099DA actual state identification number or confirmed blank is required.');
+      amount(row.stateWithheld, 'original state-row withholding');
+      return { state: row.state, stateIdentificationNumber: row.stateIdentificationNumber, stateWithheld: row.stateWithheld! };
+    });
+    const total = actual.reduce((sum, row) => sum.plus(row.stateWithheld), d(0));
+    if (form.state?.trim() || form.stateIdentificationNumber !== undefined || (form.stateWithheld !== undefined && !amount(form.stateWithheld, 'state withholding total').eq(total)))
+      throw new Error('Form1099DA scalar state or total conflicts with its original state rows.');
+    return actual;
+  }
+  if (form.stateWithholding?.length) throw new Error('Form1099DA state rows conflict with single or no-state reporting.');
+  const withheld = amount(form.stateWithheld, 'state withholding');
+  if (form.stateTaxReporting !== 'none' && form.stateTaxReporting !== 'single') throw new Error('Form1099DA requires actual state reporting.');
+  if (form.stateTaxReporting === 'none' && (!withheld.isZero() || form.state?.trim() || form.stateIdentificationNumber?.trim())) throw new Error('Form1099DA no-state reporting conflicts with actual state amounts, code or identification number.');
+  if (form.stateTaxReporting === 'single' && !/^[A-Z]{2}$/.test(form.state ?? '')) throw new Error('Form1099DA state withholding requires the actual state code.');
+  return form.stateTaxReporting === 'single' ? [{ state: form.state!, stateIdentificationNumber: form.stateIdentificationNumber, stateWithheld: form.stateWithheld! }] : [];
+}
+
 function actualDate(value: string, label: string): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0, 10) !== value) {
     throw new Error(`Form1099DA ${label} requires its actual valid date.`);
@@ -27,7 +52,7 @@ function actualDate(value: string, label: string): string {
 }
 
 function isActualSource(form: Form1099DA, year: number): boolean {
-  const statementFields = ['sourceId', 'taxYear', 'sourceReference', 'sourceFactsConfirmed', 'allTransactionsIncluded', 'federalWithheld', 'stateTaxReporting', 'accountReference'] as const;
+  const statementFields = ['sourceId', 'taxYear', 'sourceReference', 'sourceFactsConfirmed', 'allTransactionsIncluded', 'federalWithheld', 'stateTaxReporting', 'accountReference', 'stateWithholding', 'stateIdentificationNumber'] as const;
   const transactionFields = ['sourceId', 'digitalAssetCode', 'reportedDateAcquired', 'reportedCostBasis', 'basisSource', 'basisSourceReference', 'basisFactsConfirmed', 'basisCorrectionConfirmed', 'sellingCostsNotInProceedsConfirmed', 'originIncomeIncludedConfirmed', 'inheritedBasisConfirmed', 'giftSource',
     'proceedsType', 'sellingExpenses', 'marketDiscount', 'qof', 'lossNotAllowed', 'ordinaryIncome', 'onlyCashProceeds', 'customerProvidedAcquisitionInformation',
     'noncoveredSecurity', 'optionalReportingMethod', 'assetOrigin', 'capitalAssetConfirmed', 'nftOrCollectible',
@@ -44,9 +69,11 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
   const existing = new Set(input.form1099B.flatMap(form => form.sourceId?.trim() ? [form.sourceId.trim()] : []));
   let federalWithheld = d(0);
   let sourceFactsComplete = true;
+  const stateWithholding: Array<{ statementIndex: number; state: string; stateIdentificationNumber?: string; stateWithheld: string }> = [];
   for (const [formIndex, form] of (input.form1099DA ?? []).entries()) {
     const actual = isActualSource(form, input.taxpayer.taxYear);
     const id = form.sourceId?.trim();
+    let stateRows: ReturnType<typeof actualStateRows> | undefined;
     if (actual) {
       if (!id || !form.brokerName.trim() || !form.sourceReference?.trim() || form.sourceFactsComplete !== true
         || form.sourceFactsConfirmed !== true || form.allTransactionsIncluded !== true) {
@@ -60,10 +87,10 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
       if (identifiers.has(id) || existing.has(id) || existing.has(`1099-da:${id}`)) throw new Error('Duplicate Form1099DA statement or collision with an already converted original source.');
       identifiers.add(id);
       if (form.transactions.length === 0) throw new Error('Actual ordinary Form1099DA requires its original individual dispositions.');
-      const state = amount(form.stateWithheld, 'state withholding');
-      if (form.stateTaxReporting !== 'none' && form.stateTaxReporting !== 'single') throw new Error('Form1099DA requires actual state reporting; multiple-state allocation is a separate source method.');
-      if (form.stateTaxReporting === 'none' && (!state.isZero() || form.state?.trim())) throw new Error('Form1099DA no-state reporting conflicts with the actual state amounts or code.');
-      if (form.stateTaxReporting === 'single' && !/^[A-Z]{2}$/.test(form.state ?? '')) throw new Error('Form1099DA state withholding requires the actual state code.');
+      stateRows = actualStateRows(form);
+      stateWithholding.push(...stateRows.map(row => ({ statementIndex: formIndex, ...row })));
+      for (const row of stateRows) audit.record('Form1099DA', `state:${formIndex}:${row.state}`, 'Original digital-asset state withholding', d(row.stateWithheld),
+        'Original Box16 row once; state information does not allocate capital gain', { state: row.state });
       federalWithheld = federalWithheld.plus(amount(form.federalWithheld, 'Box4'));
     } else sourceFactsComplete = false;
 
@@ -157,11 +184,13 @@ export function calculateForm1099DASources(input: DigitalSourceInput, options: {
     });
     capitalForms.push({ broker: form.brokerName, sourceId: id ? `1099-da:${id}` : undefined, taxYear: form.taxYear,
       payerTin: form.brokerTin, accountReference: form.accountReference, accountHolder: form.accountHolder,
-      federalWithheld: form.federalWithheld, stateWithheld: form.stateWithheld, state: form.state, transactions });
+      federalWithheld: form.federalWithheld,
+      stateWithheld: form.stateTaxReporting === 'multiple' && stateRows ? stateRows.reduce((sum, row) => sum.plus(row.stateWithheld), d(0)).toFixed() : (form.stateWithheld ?? '0'),
+      state: form.stateTaxReporting === 'multiple' ? undefined : form.state, transactions });
     if (actual) audit.record('Form1099DA', `Box4:${formIndex}`, 'Original digital-asset federal withholding', amount(form.federalWithheld, 'Box4'),
       'Original statement Box4, once per statement', { sourceVerified: 'true', sourceTaxYear: String(form.taxYear), owner: form.accountHolder ?? 'unknown' });
   }
   if (input.form1099DA?.length) audit.record('Form1099DA', 'Box4-total', 'Digital-asset withholding to Form1040 line25b', federalWithheld,
     'Sum actual original statement Box4 once; original cents retained', { allSourcesVerified: String(sourceFactsComplete) });
-  return { capitalForms, federalWithheld, sourceFactsComplete, lines: audit.getLines() };
+  return { capitalForms, federalWithheld, stateWithholding, sourceFactsComplete, lines: audit.getLines() };
 }

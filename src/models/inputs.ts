@@ -350,7 +350,8 @@ export const Form1099DATransactionSchema = z.preprocess((value) => {
 export const Form1099DASchema = z.preprocess((value) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
   const raw = value as Record<string, unknown>;
-  const required = ["sourceId", "taxYear", "sourceReference", "sourceFactsConfirmed", "allTransactionsIncluded", "brokerName", "accountHolder", "federalWithheld", "stateTaxReporting", "stateWithheld", "transactions"];
+  const required = ["sourceId", "taxYear", "sourceReference", "sourceFactsConfirmed", "allTransactionsIncluded", "brokerName", "accountHolder", "federalWithheld", "stateTaxReporting", "transactions"];
+  required.push(raw.stateTaxReporting === "multiple" ? "stateWithholding" : "stateWithheld");
   return { ...raw, sourceFactsComplete: raw.sourceFactsComplete !== false && required.every(field => raw[field] !== undefined) };
 }, z.object({
   sourceId: z.string().optional(),
@@ -365,8 +366,13 @@ export const Form1099DASchema = z.preprocess((value) => {
   accountHolder: z.enum(["primary", "spouse"]).optional(),
   federalWithheld: decimal.optional(), // Original Box4, once per statement; unknown remains unknown.
   stateTaxReporting: z.enum(["none", "single", "multiple"]).optional(),
-  stateWithheld: optionalDecimal,
+  stateWithheld: optionalDecimalInput,
   state: z.string().optional(),
+  stateIdentificationNumber: z.string().optional(),
+  stateWithholding: z.array(z.object({
+    state: z.string().optional(), stateIdentificationNumber: z.string().optional(),
+    stateWithheld: decimal.optional(),
+  }).strict()).optional(),
   transactions: z.array(Form1099DATransactionSchema),
 }));
 

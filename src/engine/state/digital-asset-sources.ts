@@ -11,8 +11,17 @@ export function calculateDigitalAssetStateSources<T extends DigitalAssetCapitalI
   const actual = calculateForm1099DASources(input);
   if (!actual.sourceFactsComplete) throw new Error('State digital-asset calculation requires complete actual original DA sources.');
   const normalized = normalizeDigitalAssetCapitalInput(input);
-  if (state === 'OH') return normalized;
-  const capitalForms = actual.capitalForms.map((form, formIndex) => ({ ...form, transactions: form.transactions.map((row, rowIndex) => {
+  // Each view keeps one disposition set, selecting only this state's original Box16.
+  const selectedForms = actual.capitalForms.map((form, formIndex) => {
+    if (input.form1099DA[formIndex].stateTaxReporting !== 'multiple') return form;
+    const selected = actual.stateWithholding.find(row => row.statementIndex === formIndex && row.state === state);
+    return { ...form, state, stateWithheld: selected?.stateWithheld ?? '0' };
+  });
+  if (state === 'OH') {
+    const selectedById = new Map(selectedForms.map(form => [form.sourceId, form]));
+    return { ...normalized, form1099B: normalized.form1099B.map(form => selectedById.get(form.sourceId) ?? form) };
+  }
+  const capitalForms = selectedForms.map((form, formIndex) => ({ ...form, transactions: form.transactions.map((row, rowIndex) => {
     const original = input.form1099DA[formIndex].transactions[rowIndex];
     if (original.paCostBasis === undefined || !original.paCostBasis.trim() || !d(original.paCostBasis).isFinite() || d(original.paCostBasis).lt(0)
       || !original.paBasisSourceReference?.trim() || original.paBasisFactsConfirmed !== true || original.paTransactionForProfitConfirmed !== true) {

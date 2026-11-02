@@ -587,6 +587,10 @@ export function calculatePANonresidentReturn(
   input: TaxYearInput,
   overrides: PANonresidentOrchestratorOverrides = {},
 ): PANonresidentOrchestratorResult {
+  // Spec: form-1099-da-state-rows unsupported-residency. No gain sourcing is inferred.
+  if (input.form1099DA?.some(form => form.stateTaxReporting === 'multiple' || form.stateWithholding !== undefined)) {
+    throw new Error('Pennsylvania two-state digital-asset nonresident or part-year residency requires its separate actual source method');
+  }
   assertQofStateMethod(input, "Pennsylvania");
   assertClaimOfRightStateMethod(input, "Pennsylvania");
   const taxYear = input.taxpayer.taxYear;

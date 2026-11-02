@@ -27,11 +27,12 @@ export function freezeRuleData<T>(value: T): T {
 export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = freezeRuleData({
   2025: {
     taxYear: 2025,
-    ruleVersion: "2025.214",
+    ruleVersion: "2025.215",
     calculationStatus: "legacy-available",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1099da", section: "Two original state withholding rows, Boxes14 through16", revision: "Final2026 i1099da: original PA/OH row identities and exact withholding remain separate from federal transactions/Box4 and actual PA basis. Other pairs and PA nonresident/part-year compositions remain unsupported. Agent source review only; no demand-based launch-state, human, form or filing qualification.", retrievedAt: "2026-11-01" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.911-6", section: "Actual business deduction attribution and signed Form2555 worksheet amounts", revision: "Reg1.911-6(a),(d), Pub54 Examples3/4, final2025 i2555 PartVIII and 8812/8839/8962/8960 worksheets; actual foreign expenses, pro rata FEIE across earned sources, uncapped reported line44 and source-bound signed45. Signed7206 attribution remains a separate method. Agent review only; human, full2026 forms and filing qualification remain pending.", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/instructions/i2555", section: "Line 20 business earned income where capital is material", revision: "2025 instructions", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/instructions/i8962", section: "Allocation Situation 2 for a policy shared with a spouse on a separate return, including Exception 1", revision: "2025 instructions", retrievedAt: "2026-11-01" },
@@ -248,11 +249,12 @@ export const FEDERAL_RULE_PACKS: Readonly<Record<number, RulePackMetadata>> = fr
   },
   2026: {
     taxYear: 2026,
-    ruleVersion: "2026.212-law-integration-draft",
+    ruleVersion: "2026.213-law-integration-draft",
     calculationStatus: "incomplete",
     reviewStatus: "independent-review-pending",
     filingQualified: false,
     sources: [
+      { url: "https://www.irs.gov/instructions/i1099da", section: "Two original state withholding rows, Boxes14 through16", revision: "Final2026 i1099da: original PA/OH row identities and exact withholding remain separate from federal transactions/Box4 and actual PA basis. Other pairs and PA nonresident/part-year compositions remain unsupported. Agent source review only; no demand-based launch-state, human, form or filing qualification.", retrievedAt: "2026-11-01" },
       { url: "https://www.ecfr.gov/current/title-26/section-1.911-6", section: "Actual business deduction attribution and signed Form2555 worksheet amounts", revision: "Reg1.911-6(a),(d), Pub54 Examples3/4, final2025 i2555 PartVIII and 8812/8839/8962/8960 worksheets; actual foreign expenses, pro rata FEIE across earned sources, uncapped reported line44 and source-bound signed45. Signed7206 attribution remains a separate method. Agent review only; human, full2026 forms and filing qualification remain pending.", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/instructions/i2555", section: "Line 20 business earned income where capital is material", revision: "2025 instructions", retrievedAt: "2026-11-01" },
       { url: "https://www.irs.gov/instructions/i8962", section: "Allocation Situation 2 for a policy shared with a spouse on a separate return, including Exception 1", revision: "2025 instructions", retrievedAt: "2026-11-01" },

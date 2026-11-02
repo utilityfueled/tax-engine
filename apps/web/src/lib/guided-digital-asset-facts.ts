@@ -28,8 +28,9 @@ export type DigitalAssetTransactionData = Partial<Record<typeof digitalAmountFie
   };
 export interface DigitalAssetEntryData {
   sourceId?: string; sourceReference?: string; taxYear?: string; brokerName?: string; brokerTin?: string; accountReference?: string;
-  accountHolder?: 'primary' | 'spouse' | 'joint' | ''; federalWithheld?: string; stateWithheld?: string; state?: string;
+  accountHolder?: 'primary' | 'spouse' | 'joint' | ''; federalWithheld?: string; stateWithheld?: string; state?: string; stateIdentificationNumber?: string;
   stateTaxReporting?: 'none' | 'single' | 'multiple' | ''; sourceFactsConfirmed?: boolean | null; allTransactionsIncluded?: boolean | null;
+  stateWithholding?: Array<{ state?: string; stateIdentificationNumber?: string; stateIdentificationNumberBlank?: boolean | null; stateWithheld?: string }>;
   transactions?: DigitalAssetTransactionData[];
 }
 export function isStartedDigitalAsset(value: unknown): boolean {
@@ -58,7 +59,11 @@ function toSource(entry: DigitalAssetEntryData): Form1099DA {
     sourceId: actual(entry.sourceId, 'statement ID'), sourceReference: actual(entry.sourceReference, 'source reference'), taxYear: Number(entry.taxYear),
     brokerName: actual(entry.brokerName, 'broker name'), brokerTin: entry.brokerTin?.trim() || undefined, accountReference: entry.accountReference?.trim() || undefined,
     accountHolder: entry.accountHolder, federalWithheld: amount(entry.federalWithheld, 'Box 4 withholding'),
-    stateTaxReporting: entry.stateTaxReporting, state: entry.state?.trim().toUpperCase() || undefined, stateWithheld: amount(entry.stateWithheld, 'state withholding'),
+    stateIdentificationNumber: entry.stateIdentificationNumber,
+    stateTaxReporting: entry.stateTaxReporting, state: entry.state?.trim().toUpperCase() || undefined, stateWithheld: entry.stateTaxReporting === 'multiple' && !entry.stateWithheld?.trim() ? undefined : amount(entry.stateWithheld, 'state withholding'),
+    stateWithholding: entry.stateWithholding?.map(row => ({ state: row.state?.trim().toUpperCase() || undefined,
+      stateIdentificationNumber: originalBlank(row.stateIdentificationNumberBlank ?? (row.stateIdentificationNumber?.trim() ? false : undefined), row.stateIdentificationNumber, 'Box 15 state identification number') ?? '',
+      stateWithheld: amount(row.stateWithheld, 'Box 16 state-row withholding') })),
     sourceFactsConfirmed: entry.sourceFactsConfirmed ?? undefined, allTransactionsIncluded: entry.allTransactionsIncluded ?? undefined,
     transactions: entry.transactions.map(row => ({
       ...Object.fromEntries(digitalAmountFields.map(([key, label]) => [key, amount(row[key], label)])),
@@ -98,7 +103,7 @@ export function digitalAssetFactErrors(entries: DigitalAssetEntryData[] | undefi
       // Validate the supplied DA-only state view. Original B identity collisions were checked above.
       calculateDigitalAssetStateSources({ taxpayer: { taxYear, filingStatus: statuses[filingStatus], spouse }, form1099B: [], form1099DA: sources }, 'PA');
     }
-    if (sources.some(source => stateData?.additionalStateWithholdingEntries?.some(extra => extra.documentType === '1099-DA' && extra.payer.trim().toLowerCase() === source.brokerName.trim().toLowerCase() && extra.state === source.state))) throw new Error('Reconcile duplicate DA state withholding already entered with the original statement.');
+    if (sources.some(source => stateData?.additionalStateWithholdingEntries?.some(extra => extra.documentType === '1099-DA' && extra.payer.trim().toLowerCase() === source.brokerName.trim().toLowerCase() && (extra.state === source.state || source.stateWithholding?.some(row => row.state === extra.state))))) throw new Error('Reconcile duplicate DA state withholding already entered with the original statement.');
     return {};
   } catch (error) { return { digitalAssetSources: error instanceof Error ? error.message : 'Complete the actual digital-asset source facts.' }; }
 }

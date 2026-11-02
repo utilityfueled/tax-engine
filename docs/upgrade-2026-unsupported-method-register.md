@@ -31,7 +31,7 @@ A rejection here is not an external blocker unless its class says so. Year guard
 | Education | Partial in-kind allocation, Coverdell disqualification with later activity | `form-1099-q.ts` |
 | Foreign earned income | Mixed U.S. and foreign Schedule C income where capital is a material factor, business or partnership net loss, prior partnership services, prior non-W2 income, other mappings | `form-2555-source-binding.ts` |
 | EIC | Active appeal | `eic-*.ts` |
-| Digital assets | Multiple-state reporting (each reader treats one statement as one state), market discount (tokenized debt, needs interest plumbing through state engines), derived crypto dispositions | `form-1099-da-sources.ts` |
+| Digital assets | Multiple-state pairs outside the admitted original PA/OH pair, PA nonresident/part-year two-state source composition, market discount (tokenized debt, needs interest plumbing through state engines), derived crypto dispositions | `form-1099-da-sources.ts` |
 
 ## Ruling
 

@@ -41,3 +41,22 @@ it('renders the actual Pennsylvania digital gain and disclosure in its reference
     expect(text).toContain('REFERENCE SUMMARY ONLY'); expect(text).not.toContain('Private Pennsylvania basis record');
   } finally { await rm(directory, { recursive: true, force: true }); }
 });
+
+// Spec: form-1099-da-state-rows.yaml state-view.
+it('reopens only the Ohio row of a two-state original without exposing state IDs', async () => {
+  const input = TaxYearInputSchema.parse({ ...simpleW2Fixture, w2s: [], form1099DA: [{ ...actualDigitalAssetSource,
+    stateTaxReporting: 'multiple', stateWithheld: undefined,
+    stateWithholding: [{ state: 'PA', stateIdentificationNumber: 'Private PA ID', stateWithheld: '123.45' },
+      { state: 'OH', stateIdentificationNumber: 'Private OH ID', stateWithheld: '6.78' }] }] });
+  const directory = await mkdtemp(join(tmpdir(), 'tax-oh-two-state-reference-'));
+  try {
+    const packet = await fillOhioReferenceForms(input, calculateFederalTax(input), directory);
+    const path = packet.filledForms.find(file => basename(file) === 'oh-schedule-of-withholding-reference.pdf');
+    if (!path) throw new Error('Missing two-state withholding reference');
+    const text = execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? 'python3', ['-c',
+      'from pypdf import PdfReader; import sys; print("\\n".join(p.extract_text() or "" for p in PdfReader(sys.argv[1]).pages))', path], { encoding: 'utf8', timeout: 30000 });
+    expect(text).toContain('Value: 6.78'); expect(text).not.toContain('123.45');
+    expect(text).toContain('REFERENCE SUMMARY ONLY');
+    for (const value of ['Private PA ID', 'Private OH ID']) expect(text).not.toContain(value);
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
