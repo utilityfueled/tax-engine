@@ -198,7 +198,7 @@
     "The AI corpus has zero human reviews and no live results. Provider account access and spend are not approved. No model is promoted.",
     "Hosted auth, security, billing, Redis, provider, database and recovery rehearsals require authorized staging access. Local and CI checks do not establish staging readiness.",
     "The image register holds 159 matches and 68 OS advisories awaiting owner acceptance by 2026-11-07. There are no critical, npm or fixed-version matches. No artifact is published and no human security review exists.",
-    "The 2026 federal calculation remains incomplete and unavailable in production. The final 2026 Tax Table and forms are not published."
+    "The 2026 federal calculation remains incomplete and unavailable in production. Final 2026 Form 1040/Tax Table and necessary remaining forms are unavailable; final C/R disabled physical candidates exist and are not qualified."
   ],
   "ongoingExecution": {
     "status": "internal-queue-delivered-external-gates-and-registered-methods-open",
@@ -11987,7 +11987,7 @@
     ]
   },
   "resumption20261101": {
-    "date": "2026-11-01",
+    "date": "2026-11-02 UTC",
     "branch": "upgrade/2026-baseline",
     "observedLocalHead": "948d6b95f37859484d2a6d2d36f77d67111100ff",
     "observedRemoteHead": "009304476ce0a9f15d3c1742291c5b4c95629923",
@@ -11995,9 +11995,8 @@
     "goal": "active",
     "priorContext": "October28 unfinished-package context is superseded by the delivered October31 packages; retain historical evidence.",
     "currentInternalWork": [
-      "New-marriage NOL owner-income source method: official research/spec-first private implementation and separate review.",
-      "Current integrated full CI, coverage and native arm64/amd64 runtime/recovery/SBOM/advisory evidence after remaining code.",
-      "Continue bounded source-method research identified by scope audit; do not externalize unimplemented methods."
+      "Implement actual same-business nonzeroNEC receipt linkage and complete unique original-source reconciliation; ordinary source combination is required internal work, not an external credential blocker.",
+      "After final application changes, finish exact-source full integrated CI/coverage, ARM64/AMD64 runtime and independently reviewed artifacts."
     ],
     "reviewFinding": "948d6b95 source-method defects corrected, independently reviewed and pushed in5293f451.",
     "externalInputs": "See docs/upgrade-2026-external-actions.md. No human signoff, demand selection, staging authorization/configuration, provider budget or advisory acceptance inferred.",
@@ -12037,7 +12036,7 @@
           41371735659,
           41371732072
         ],
-        "status": "in_progress observed2026-11-02 UTC; no completed-result claim"
+        "status": "Both CI runs and both web runs completed cancelled. Engine/web build, types, lint and spec jobs succeeded; unit/coverage and browser/container jobs cancelled. No completed-suite qualification."
       },
       "e3da672b": {
         "ci": [
@@ -12048,7 +12047,104 @@
           41372863221,
           41372860096
         ],
-        "status": "in_progress observed; no completed-result claim"
+        "status": "Both CI runs and both web runs completed cancelled. Engine/web build, types, lint and spec jobs succeeded; unit/coverage and browser/container jobs cancelled. No completed-suite qualification."
+      },
+      "0ff6aa64": {
+        "ci": [
+          41374601524
+        ],
+        "web": [
+          41374601368
+        ],
+        "status": "CI and web runs completed cancelled. Static/build jobs succeeded; unit/coverage/browser work cancelled. Container smoke and isolated Compose recovery steps succeeded, runtime browser step cancelled, SBOM/scan skipped. No complete-suite qualification."
+      },
+      "af85b959": {
+        "ci": [
+          41376046575
+        ],
+        "web": [
+          41376046522
+        ],
+        "status": "CI completed failure: unit and coverage jobs failed; static/build jobs succeeded. Web completed cancelled: ordinary browser job succeeded; container smoke/recovery/runtime-browser and SBOM steps succeeded, vulnerability scan cancelled. Existing separately evidenced exact-testRef failure remains historical; this reconciliation adds no test count or coverage percentage."
+      },
+      "23447a73": {
+        "ci": [
+          41380356663
+        ],
+        "web": [
+          41380356729
+        ],
+        "unitTestsPassed": 20086,
+        "coverageTestsPassed": 20086,
+        "testFiles": 1535,
+        "coverage": {
+          "statements": 91.78,
+          "branches": 87.08,
+          "functions": 90.25,
+          "lines": 94.5
+        },
+        "status": "CI all required jobs pass. Plain browser completed success; actual image has2joined30s deadlines/534otherpasses/5hostedskips. New helper correction and new tax-code full qualification remain active."
+      },
+      "0cd0640b": {
+        "ci": [
+          41385509686
+        ],
+        "web": [
+          41385509540
+        ],
+        "status": "CI and web runs completed cancelled. Engine/web build, types, lint and spec jobs succeeded; unit/coverage/browser/container work incomplete or cancelled. No completed-suite qualification."
+      },
+      "790dcb13": {
+        "ci": [
+          41387540599
+        ],
+        "web": [
+          41387540534
+        ],
+        "status": "CI completed cancelled: unit job succeeded; coverage job cancelled; static/build jobs succeeded. Web completed success: build, self-host browser and container recovery/browser/SBOM jobs all succeeded, including smoke/recovery/runtime-browser/SBOM/scan steps. Historical head only; no current52d03ef qualification or coverage percentage.",
+        "unitTestsPassed": 20108,
+        "testFiles": 1540,
+        "browserPassed": 536,
+        "hostedOnlySkips": 5,
+        "actualImageBrowserPassed": 536,
+        "actualImage": "sha256:20e0118021563a1058d68ddb77accbd0a07307b8891d40e98bcb26051d023852",
+        "containerArtifact": {
+          "id": 13116819441,
+          "sizeBytes": 73056737,
+          "sha256": "f029434c2f746a47e8a598a99490aec61a8e936cc24a6b30b048d32b7d2d73c2",
+          "scope": "GitHub artifact metadata/logs verified; not downloaded or contents qualified here"
+        }
+      },
+      "52d03ef7": {
+        "ci": [
+          41391094195
+        ],
+        "web": [
+          41391094232
+        ],
+        "status": "CI cancelled: unit20125/1545 and static/build jobs pass; coveragecancelled byc6push. Web all jobs pass, plain536/5 andactualAMD64 image536/5 with smoke/6phase recovery/SBOM/criticalscan steps successful. Artifact metadata/logs verified, contents not downloaded/qualified here. No fullcoverage qualification.",
+        "browserPassed": 536,
+        "hostedOnlySkips": 5,
+        "browserMinutes": "22.2",
+        "unitTestsPassed": 20125,
+        "testFiles": 1545,
+        "actualImageBrowserPassed": 536,
+        "actualImage": "sha256:bfad21a4df88c734dcc18eb773269fba4521ccfc244bbe9b8003f2f4f7afa20f",
+        "containerArtifact": {
+          "id": 13118274025,
+          "sizeBytes": 73006458,
+          "sha256": "d977cdbaee15f9d30d089727e7c7483e07675eb0b4ea33644334525e2ac00c71",
+          "scope": "Metadata/logs only; not downloaded/content-qualified here"
+        }
+      },
+      "c6f88681": {
+        "ci": [
+          41394844108
+        ],
+        "web": [
+          41394844136
+        ],
+        "status": "queued/inprogress; full required suite not complete"
       }
     },
     "sourceRefresh": {
@@ -12082,8 +12178,7 @@
       },
       "mainChecksSha256": "c6ed28625c5cfa742a244297fe1e1a6683234274c1a2b210df9f9c24d6fa9d35",
       "pending": [
-        "actual final-code production browser/artifact review",
-        "full current integrated CI/runtime evidence"
+        "Full current integrated CI/runtime evidence"
       ],
       "qualifiedHuman": false
     },
@@ -12131,17 +12226,17 @@
       "inventoryEntries": 604,
       "humanQualified": false
     },
-    "currentHead": "e3da672b",
-    "currentRemoteHead": "e3da672b",
+    "currentHead": "c6f88681e73f82ae0dfe5bcb7df3b693783fd397",
+    "currentRemoteHead": "c6f88681e73f82ae0dfe5bcb7df3b693783fd397",
     "currentRuleVersions": {
-      "2025": "2025.215",
-      "2026": "2026.213-law-integration-draft"
+      "2025": "2025.219",
+      "2026": "2026.217-law-integration-draft"
     },
     "scopeAudit": {
       "document": "docs/upgrade-2026-scope-audit-20261101.md",
       "sha256": "1abcadf5aff6a064e1bfde86783e2b02417ec7dc9904749ea10dcf73ff0e7801",
       "newRequiredInternalMethod": "new-marriage current joint NOL owner-income limitation",
-      "status": "implementation and independent review active"
+      "status": "New-marriage owner-income method delivered af85b959 after independent correction/review; bounded desktop/mobile2/2 and162PDF checks recorded. Final integrated current-source runtime evidence remains pending."
     },
     "actualDigitalBrowserReview": {
       "applicationCommit": "8d74350dec6c5ae64c49ab2e7c4bd169f18f9f9e",
@@ -12205,6 +12300,282 @@
       "productInvoked": false,
       "newControllingMethodIdentified": false,
       "status": "Precise source derivations remain open; no arbitrary allocation/clamp, credential classification or human qualification inferred."
-    }
+    },
+    "newMarriageNol": {
+      "commit": "af85b959e4d8d8782a84349ca3a75ab8aaec20fe",
+      "pushed": true,
+      "document": "docs/upgrade-2026-new-marriage-nol-work.md",
+      "frozenReceiptSha256": "d2c05e34afaeaab4ba91bf6977be349282e268b8a055535143726aa454ed56f1",
+      "independentReviewReceiptSha256": "3e497efdb9a9cae82403d63373744b862259fa24a91cd95f7e17ef9efd332c32",
+      "mainTests": {
+        "passed": 71,
+        "files": 16
+      },
+      "independentTests": {
+        "separateAgent": 17,
+        "parentOriginals": 2,
+        "totalPassed": 19
+      },
+      "mainTypechecks": 3,
+      "specReferences": 6436,
+      "inventoryEntries": 608,
+      "scopedLint": {
+        "errors": 0,
+        "warnings": 141,
+        "sameScopeBaselineWarnings": 36
+      },
+      "qualifiedHuman": false,
+      "actualBrowser": {
+        "commit": "af85b959e4d8d8782a84349ca3a75ab8aaec20fe",
+        "testsPassed": 2,
+        "savedSourceReplaysPassed": 4,
+        "strictPDFChecksPassed": 130,
+        "supplementaryPhysicalChecksPassed": 32,
+        "pages": 34,
+        "decodedObjectsChecked": 1852,
+        "decodedStreamsChecked": 1560,
+        "parentVerifiedBoundFiles": 22,
+        "parentVerifiedPageRenders": 34,
+        "matchingDesktopMobilePagePixels": 17,
+        "receiptSha256": "c7cdec605ada83bc62915b76722a1947c6d55f05d1009c104ff809d47efc5151",
+        "boundary": "Partially seeded local synthetic2025positive case; not full upload journey/empty-vintage dispatch/browser or staging/human/final2026 qualification."
+      },
+      "finding": "Verified-empty ledgers dispatch regression retained againstv1 and independently closedv2; missing/positive originals still require actual source facts."
+    },
+    "nativeArm64": {
+      "commit": "af85b959e4d8d8782a84349ca3a75ab8aaec20fe",
+      "record": "docs/upgrade-2026-runtime-af85b959-arm64.json",
+      "imageId": "4e3f7a1acd70b3697f3035727fda7682a5747151fa81c7ba2cb5e69c48688a2b",
+      "smoke": "passed",
+      "recoveryPhases": 6,
+      "recovery": "passed",
+      "browserEncryptedRecovery": "passed; exactcents/unknownyear/originalbytes/wrongpassword/tamper/deletion preserved",
+      "databaseTablesRestored": 9,
+      "tenants": 2,
+      "sbomComponents": 2930,
+      "scanMatches": 159,
+      "distinctOSAdvisories": 68,
+      "fixedVersionAvailable": 0,
+      "ownerAcceptance": false,
+      "rehearsalContainersAndVolumesRemoved": true
+    },
+    "completeLocalLifecycle": {
+      "commit": "23447a730be601a4e726c099de551e6b7c89a4eb",
+      "document": "docs/upgrade-2026-complete-local-lifecycle-work.md",
+      "independentReviewReceiptSha256": "6af0545feee0aba9fe3254acd586c75a35caf01c941a22f4ead8b343109a7501",
+      "parentReceiptSha256": "467d504bc0ccd3a7909fd2f95d4761864e43d9fc9efde8d7cfa78d85d32d4fa4",
+      "independentSourceArtifactHashes": 4085,
+      "independentPdfChecks": 258,
+      "independentCryptoChecks": 26,
+      "actualNativeImageTestsPassed": 2,
+      "actualNativeImageSecondsTotal": 38.4,
+      "perTestTimeoutMs": 30000,
+      "workers": 1,
+      "retries": 0,
+      "pdfDownloads": 6,
+      "pages": 72,
+      "boundary": "Unseeded actual UI with explicitly confirmed synthetic blank-W2 sample facts; local2025only, not hosted/TY2026/human/filing qualification."
+    },
+    "strictSpecReferenceCorrection": {
+      "commit": "d6f4065d",
+      "pushed": true,
+      "applicationCodeChanged": false,
+      "failure": "af85 fullunit andcoverage each20085passed/1failed: exactparameterized DAUI testRef lacked(%j)",
+      "focusedRerun": {
+        "passed": 556,
+        "files": 2,
+        "inventory": "pass"
+      },
+      "originalEvidence": ".local/upgrade-evidence/nov01-parent-new-marriage/af85-unit-failure-excerpt.log"
+    },
+    "domesticFarmSignedHealth": {
+      "commit": "80ee9cc2660a33eb23cf5fed7580704c161f73a7",
+      "document": "docs/upgrade-2026-domestic-f-signed-health-work.md",
+      "parentReceiptSha256": "c3e6dd05cc812e58f7ef5f9ce21e9e3b69c8250933dfb2484c072a6f4e886272",
+      "mainTestsPassed": 578,
+      "mainTestFiles": 8,
+      "independentOriginalsPassed": 14,
+      "independentRelatedTestsPassed": 21,
+      "artifactChecksPassed": 160,
+      "artifactPdfs": 11,
+      "artifactPages": 42,
+      "parentCapChecksPassed": 9,
+      "specReferences": 6438,
+      "inventoryEntries": 608,
+      "humanQualified": false,
+      "boundary": "Canonical typed/imported F only; no ordinary guide F origination. General signed foreign-plan attribution remains guarded."
+    },
+    "lifecyclePerformanceCorrection": {
+      "commit": "0cd0640bdd69e8a46c5b839d82d51df5a6dd0ede",
+      "scope": "test and ledger only; all original assertions and deadlines preserved",
+      "authorConcurrentCases": 2,
+      "authorTotalSeconds": "17.1",
+      "independentCases": 2,
+      "fullByteComparisons": 4,
+      "changedByteRejections": 4,
+      "dualReaderControls": 26,
+      "reviewReceiptSha256": "88c67fad125af39e2b68ffe0d4fa400322305b7ee240282c650ddb2e79035572",
+      "mainWebTypes": "passed",
+      "mainScopedLint": "passed zero warnings",
+      "exactRuntimeAndFullCI": "pending"
+    },
+    "finalCompletionAudit": {
+      "base": "0cd0640bdd69e8a46c5b839d82d51df5a6dd0ede",
+      "receiptSha256": "c938f63e37acd8c3484b8da19eab430ae48e959f6fffd2eb5a9ed75503893d24",
+      "newOrdinaryInternalCohort": "Separate PartII for two self-employed spouses delivered52d03ef7; precise method/source and retained qualification boundaries in linked ledger.",
+      "billingAuditReceiptSha256": "58a2f57465d065bd3d2f45b6387be465c97fa17ecab7ac0b55a590094ce538e0",
+      "billingFinding": "Delivered790dcb13, with malformedtimestamp reviewfinding independentlyclosed; actualstaging remains separate.",
+      "status": "Finite audit found another determined ordinary internal source composition; implementation/review active, no external-only or completion claim.",
+      "webhookReviewFinding": "Firstcandidate negative/fractional created admission and unsafe-negative DateRangeError findings independently corrected in delivered790dcb13; original reds retained."
+    },
+    "webhookDeliveryCorrection": {
+      "commit": "790dcb13b4f8ada02d7f429311074bf40251395d",
+      "document": "docs/upgrade-2026-webhook-delivery-work.md",
+      "mainTests": 164,
+      "mainTestFiles": 7,
+      "independentControls": 7,
+      "independentCombinedTests": 58,
+      "authorManifestSha256": "19e22ad01ea8eee95ae8fa092e114cbdc4ef23805026e7d69f89c320b35ecaf5",
+      "reviewReceiptSha256": "1deaf11e28f553e92428bbb45643d13b576b447d14f70d484b1b4a03846033cb",
+      "parentReceiptSha256": "a78233f80851ad51545a32284dd8fe35430803d2b4230d4734320e6147cede26",
+      "mainWebTypes": "passed",
+      "scopedLint": "passed zero warnings",
+      "inventoryEntries": 609,
+      "stagingQualification": false,
+      "retainedReviewFinding": "Malformed original creation time accepted in first candidate; safeinteger/nonnegative shape controls close unchanged independent reds.",
+      "actualPostgresSupplement": {
+        "commit": "790dcb13b4f8ada02d7f429311074bf40251395d",
+        "postgres": "16.14",
+        "casesPassed": 4,
+        "independentSnapshotChecks": 17,
+        "concurrentSameEventDeliveries": 12,
+        "distinctEventsSameCheckout": 6,
+        "creditGrants": 1,
+        "paidCents": "1500",
+        "creditedCents": "1000",
+        "actualMarkerFailureRetry": "passed",
+        "staleTamperedZeroRows": "passed",
+        "ownedServerStopped": true,
+        "clusterRemoved": true,
+        "port52400Closed": true,
+        "receiptSha256": "ee4c6f9cd060bea9ce0507575f82004575cbc496766d9f04d364d69cf652fb84",
+        "stagingQualification": false
+      }
+    },
+    "intermediate0cdNative": {
+      "sourceCommit": "0cd0640bdd69e8a46c5b839d82d51df5a6dd0ede",
+      "imageId": "f72b6aa06b91cc4dc662ca0e576fc129205a8e7ceaf2b85302f236e8394721f1",
+      "smoke": "passed",
+      "recoveryPhases": 6,
+      "recovery": "passed",
+      "cleanupContainers": [],
+      "cleanupVolumes": [],
+      "fullBrowser": "not run on this intermediate image",
+      "sbomScan": "not run on this intermediate image; finalsource scan required",
+      "evidence": ".local/upgrade-evidence/nov02-final-runtime/intermediate-summary.json",
+      "qualification": "Superseded application source; no finalsource, staging or release qualification."
+    },
+    "twoOwnerScheduleAi": {
+      "base": "0cd0640bdd69e8a46c5b839d82d51df5a6dd0ede",
+      "ownershipManifestSha256": "1543b95e03a58831f9ba82e53cb8280fe46d9583bc4c73bb50141d6e6c40566e",
+      "independentPreOutputOriginalSha256": "19721cb311068092ef2792679fa16c8445fc014ef56b24cdb2fbf19d53aee564",
+      "cleanOriginalSha256": "4269c39014662e495952dd41f073e0bdfbb47c6bc4c02378d374af42f458e9ee",
+      "rootIndependentOriginalSha256": "388cb0083d315a77c540c6c11f60c9b8c2ff8607a8ef2575ba3ce0f72801e92c",
+      "retainedPenaltyOracleErratumSha256": "ff9596634e5ea9687890988a6fbf74fdf092cd396c50725bf30e1be61797fe3e",
+      "fullReturnExpected": {
+        "agi": "252738",
+        "taxableIncome": "205910",
+        "selfEmploymentTax": "6723",
+        "totalTax": "41851",
+        "unpaidPenalty": "1754"
+      },
+      "status": "delivered and pushed; bounded agent review clear, exact-image/fullCI qualification separate",
+      "commit": "52d03ef7213f0b3f272575fbb36586bd7e6bd624",
+      "document": "docs/upgrade-2026-two-owner-schedule-ai-work.md",
+      "authorManifestSha256": "a62f3cc00e75ffefe322622a1a4e5162f703854758d36538441739b68047c709",
+      "reviewReceiptSha256": "94ab65616482997d002e52a1de34d953587c8fd168dfd9cd38171e589fa22612",
+      "metadataReviewReceiptSha256": "a7d6734fce2738b505bb13220397eb36349db387d3b81617633dca7bd62b6455",
+      "mainTests": 796,
+      "mainTestFiles": 22,
+      "mainSpecReferences": 6456,
+      "inventoryEntries": 610,
+      "independentTests": 19,
+      "independentCombinedTests": 36,
+      "physicalChecks": 96,
+      "physicalCells": 26,
+      "physicalPages": 12,
+      "physicalScheduleAIPage3Completed": false,
+      "defaultPacketAutoAttachment": false,
+      "ordinaryGuideFarmOrigination": false,
+      "nodeOwnerAtFinalSourceChecks": "root"
+    },
+    "finalNative52d03ef7": {
+      "sourceCommit": "52d03ef7213f0b3f272575fbb36586bd7e6bd624",
+      "status": "all recorded phases passed; later C+K1 code needs new integrated evidence",
+      "evidenceDirectory": ".local/upgrade-evidence/final-native-52d03ef7",
+      "qualification": "Local synthetic only; no hosted staging, human review or release qualification.",
+      "image": "sha256:035309381d7bd17d8120d7c5e4559cdf950fc4f22dfebc2879d84bc596ce43c8",
+      "record": "docs/upgrade-2026-runtime-52d03ef7-arm64.json",
+      "browserPassed": 536,
+      "hostedOnlySkips": 5,
+      "executionReceiptSha256": "01cf7ae914378bfc4b89ec8830181627cff663c908e13a4921f7911714375d72",
+      "cleanup": "owncontainers/volumes[]; browser removed andportclosed"
+    },
+    "finalAudit20261102": {
+      "productionVulnerabilities": 0,
+      "fullVulnerabilities": 0,
+      "offlineModelEvidenceCheck": "passed; no provider call or promotion",
+      "directory": ".local/upgrade-evidence/nov02-final-audit",
+      "officialCurrentEndpoints": "2025Form1040/TaxTable still served on2026-11-02UTC",
+      "sourceReceiptSha256": "77001f9b3427e1aefd959493d5e3a5aa466671b168a1037d908d559617bdc4d3"
+    },
+    "historicalCiReconciliation": {
+      "retrievedAt": "2026-11-02T04:57:34.253Z",
+      "handoffSha256": "f37ec3ab7f6184072296ce4445f12ad2a3dbc05aea9ff3f70742be4eafa7b5c6",
+      "runs": 16
+    },
+    "ordinaryCK1Classification": {
+      "status": "V2 delivered after reviewed NEC correction; ordinary nonzeroNEC linkage remains next required internal package",
+      "base": "52d03ef7213f0b3f272575fbb36586bd7e6bd624",
+      "document": "docs/upgrade-2026-c-k1-classification-work.md",
+      "manifestSha256": "2cece0c089c887a39113c69306200455f8a190f6fa01363288d0ce59e3dd50bd",
+      "reviewReceiptSha256": "23a09f67defbc6341f8d39c98cb86df6b09cdca9ab828e8e6bc40fdd8532ba52",
+      "rootVerifiedIndependentEvidenceFiles": 225,
+      "independentTests": 30,
+      "combinedIndependentAuthorTests": 40,
+      "actualPDFs": 39,
+      "actualPDFPages": 72,
+      "strictArtifactChecks": 462,
+      "physical1040Cells": 36,
+      "mainTestsPassed": 719,
+      "mainTestFiles": 22,
+      "specRefs": 6464,
+      "inventoryEntries": 610,
+      "metadataReviewReceiptSha256": "3db47fa5c71909f4986ecc700d215acffe84203623d89d18114fe6f2a6647c5f",
+      "qualifiedHuman": false,
+      "boundary": "Nonnegative ordinary domestic manualC+partnership/zeroEBL; known blank originalname/EIN preserved. Actual nonzeroNEC linkage is next required internalpackage. Full2026 and filing gates unchanged.",
+      "commit": "c6f88681e73f82ae0dfe5bcb7df3b693783fd397",
+      "pushed": true,
+      "rootAdoptionReceiptSha256": "a99311a6cb2e4c376483a34da1417f636e81005ebe5f765fb458cccf1424a630"
+    },
+    "native52IndependentArtifactReview": {
+      "receiptSha256": "8b61b72ca41199b58a997732606fb2a509577d4b6b106352111a88e681bc7c0d",
+      "record": "docs/upgrade-2026-runtime-52d03ef7-arm64.json",
+      "pdfs": 6,
+      "pages": 72,
+      "physicalCells": 72,
+      "fullBackupOriginalByteComparisons": 2,
+      "qualifiedHuman": false,
+      "scope": "Exact52 ARM64 saved local lifecycle only; cached restored bytes are supported by saved hash plus original browser full-buffer assertions, not reread from live IndexedDB here. Independent decrypt compares complete actual backup file bytes. No future C+K1, amd64, human, staging or filing qualification."
+    },
+    "ordinaryNECSourceLinkage": {
+      "status": "Spec-first implementation in private exactc6archive; independent source/originals/static contract review active, no main product edits yet",
+      "rootOriginalsReceiptSha256": "8788d9e4202c5f9178dd425fe8338ac3429eac9dcce04294475b7d028c7a73a5",
+      "example": "actualNEC25000.10 + othergrossnotonNEC14999.90 = canonicalC40000; no double add; fulloriginal linkage not inferred from owner equality",
+      "scopeAudit": "docs/upgrade-2026-scope-audit-20261102.md",
+      "qualifiedHuman": false,
+      "scopeAuditReceiptSha256": "385089fcdcfcf3b08e788c6b1356288655ca009b70a7810ec6316fc45c667dc4"
+    },
+    "currentHeadScope": "These currentHead/currentRemoteHead fields identify the latest application-source commit. Documentation-only successors may follow; they do not create new tax/runtime qualification."
   }
 }

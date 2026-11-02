@@ -56,3 +56,5 @@ Two trailing blank EOFs in an existing spec and existing test were normalized
 after frozen-hash verification; `.local/upgrade-evidence/nov01-parent-2555/eof-normalization.json`
 records both hashes, with no semantic or assertion changes. The main-check
 receipt SHA256 is `bbc019b1465fa66eb59847f63549388cd3a2a538e778c439be4b6c5b003782a6`. Full integrated CI/browser/runtime qualification remains pending.
+
+Subsequent bounded composition: `80ee9cc2` delivers the independently proven domestic Schedule F-only medical-plan method while preserving the actual signed foreign Schedule C amount. It uses an actual year/owner/activity/EIN/source-reference-bound domestic packet and no inferred farm income; canonical typed/imported F is required because the ordinary interview cannot originate F. Foreign-plan signed health attribution, Marketplace and other unprojected combinations retain their source-method guards. See [the domestic farm ledger](upgrade-2026-domestic-f-signed-health-work.md) for original amounts, source commitments and independent/export checks. This later exception does not qualify the foreign-health QBI interpretation or final2026 forms.

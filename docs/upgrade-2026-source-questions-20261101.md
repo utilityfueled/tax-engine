@@ -43,9 +43,9 @@ new failing product tests can select an expected legal result.
 The [existing Form 172/section 1202 packet](upgrade-2026-form172-qsbs-origin-work.md)
 also retains its specific printed-worksheet/statutory-recomputation conflict;
 this refresh does not resolve it. The [scope audit](upgrade-2026-scope-audit-20261101.md)
-separately identifies implemented charitable ownership and the new-marriage NOL
-implementation underway, so those deliveries are not reopened from stale queue
-prose.
+separately identifies implemented charitable ownership. The new-marriage NOL
+method was delivered in `af85b959`; its bounded source/browser evidence is in
+the package ledger, so those deliveries are not reopened from stale queue prose.
 
 ## Evidence and next action
 

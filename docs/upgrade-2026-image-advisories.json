@@ -2951,7 +2951,7 @@
       "scanSha256": "0c058fa350f49217ca7c36d90c839d1d095cce8b573e08d6c358e27217c1196c"
     }
   ],
-  "currentRuntimeEvidence": "docs/upgrade-2026-runtime-4aef633.json",
+  "currentRuntimeEvidence": "docs/upgrade-2026-runtime-52d03ef7-arm64.json",
   "previousAdditionalPlatformEvidence": [
     {
       "commit": "214411a04c0113fbdbc073862cf3803ee3d6b6a4",
@@ -3007,26 +3007,93 @@
     }
   ],
   "latestScan": {
-    "recordedAt": "2026-10-31",
-    "databaseBuilt": "2026-10-31T06:18:17Z",
+    "recordedAt": "2026-11-02T05:15:17.235002+00:00",
+    "sourceCommit": "52d03ef7213f0b3f272575fbb36586bd7e6bd624",
+    "platform": "linux/arm64",
+    "imageId": "sha256:035309381d7bd17d8120d7c5e4559cdf950fc4f22dfebc2879d84bc596ce43c8",
+    "databaseBuilt": "2026-11-01T06:20:12Z",
     "matches": 159,
     "uniqueAdvisories": 68,
     "matchCounts": {
       "High": 56,
-      "Medium": 47,
       "Negligible": 46,
+      "Medium": 47,
       "Low": 10
     },
     "fixedVersionAvailable": 0,
     "npmMatches": 0,
+    "criticalMatches": 0,
+    "newSinceRegister": [],
+    "goneSinceRegister": [],
+    "ownerAcceptance": false,
+    "record": "docs/upgrade-2026-runtime-52d03ef7-arm64.json",
+    "sbomSha256": "275bfe0c19cdbc6fbcca5072102c78d1cd0433e0dd1a302415241dcefec42f26",
+    "scanSha256": "f05f1481ae25f48f1d73c6da8e7c87adb4f35548362e07b31503d28d86efdf69",
     "platforms": {
       "arm64": {
-        "record": "docs/upgrade-2026-runtime-a3e43a9f-arm64.json"
+        "status": "Exact52build/smoke/6recovery/browser536pass5hostedskips/SBOM/scan passed; localsynthetic only",
+        "record": "docs/upgrade-2026-runtime-52d03ef7-arm64.json"
       },
       "amd64": {
-        "record": "docs/upgrade-2026-runtime-a3e43a9f.json"
+        "status": "Exact52 remote smoke/6recovery/browser536pass5hostedskips/SBOM/criticalscan steps passed; artifact metadata/logs only here. Subsequentc6/NEClinkage source requires final integrated evidence."
       }
     },
-    "note": "The top-level counts describe the original 4aef633 scan. Use this block for the current state."
-  }
+    "note": "Top-level counts preserve original historicalscan. Latest52ARM64scan accepts no finding; all68OS advisory IDs match register. No human/staging/release qualification."
+  },
+  "previousLatestScans": [
+    {
+      "recordedAt": "2026-11-02T02:23:48.705366+00:00",
+      "sourceCommit": "af85b959e4d8d8782a84349ca3a75ab8aaec20fe",
+      "platform": "linux/arm64",
+      "databaseBuilt": "2026-11-01T06:20:12Z",
+      "matches": 159,
+      "scanSha256": "03e83005b4423be203710c024d67ac6babd74fc223109375ce606e8374a91f55",
+      "sbomSha256": "e9c2fe9bb3f48d0e9d1947c6a7d0a31fe28bb182e43cbc4ad443f73194aff198",
+      "newSinceRegister": [],
+      "goneSinceRegister": [],
+      "record": "docs/upgrade-2026-runtime-af85b959-arm64.json",
+      "ownerAcceptance": false,
+      "uniqueAdvisories": 68,
+      "matchCounts": {
+        "High": 56,
+        "Medium": 47,
+        "Negligible": 46,
+        "Low": 10
+      },
+      "fixedVersionAvailable": 0,
+      "npmMatches": 0,
+      "platforms": {
+        "arm64": {
+          "record": "docs/upgrade-2026-runtime-af85b959-arm64.json"
+        },
+        "amd64": {
+          "status": "Historicalaf85: runtimebrowser andSBOM succeeded, vulnerabilityscan cancelled. Not current qualification."
+        }
+      },
+      "note": "Top-level counts preserve original4aef633 scan. This historicalaf85ARM64 scan accepted no advisory; af85AMD64 scan was cancelled after its SBOM step succeeded."
+    },
+    {
+      "recordedAt": "2026-10-31",
+      "databaseBuilt": "2026-10-31T06:18:17Z",
+      "matches": 159,
+      "uniqueAdvisories": 68,
+      "matchCounts": {
+        "High": 56,
+        "Medium": 47,
+        "Negligible": 46,
+        "Low": 10
+      },
+      "fixedVersionAvailable": 0,
+      "npmMatches": 0,
+      "platforms": {
+        "arm64": {
+          "record": "docs/upgrade-2026-runtime-a3e43a9f-arm64.json"
+        },
+        "amd64": {
+          "record": "docs/upgrade-2026-runtime-a3e43a9f.json"
+        }
+      },
+      "note": "The top-level counts describe the original 4aef633 scan. Use this block for the current state."
+    }
+  ]
 }

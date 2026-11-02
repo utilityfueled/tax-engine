@@ -1,6 +1,6 @@
 # Remaining 2026 upgrade execution checklist
 
-## Active continuation — November 1, 2026
+## Active continuation — November 2, 2026
 
 Claude's delivered October 31 packages are preserved. The branch now includes
 and has pushed these separately reviewed packages:
@@ -15,7 +15,7 @@ and has pushed these separately reviewed packages:
   after independent review of948d6b95. Actual foreign expenses, pro-rata mixed
   sources, uncapped signed line 45 and reported-dollar comparison are preserved. Main
   387 tests in 19 files, three types, 6,406 spec references, inventory and lint pass.
-  Separate reviewers pass 6 plus 3 independent controls. Signed Form 2555/Form 7206 attribution remains
+  Separate reviewers pass 6 plus 3 independent controls. Foreign-plan signed Form 2555/Form 7206 attribution remains
   an explicit unfinished method; no human qualification is implied.
 - [x] `8d74350d`: [two-state original DA sources](upgrade-2026-digital-two-state-work.md)
   for the existing PA/OH paths. Exact withholding rows and gain/basis sources stay
@@ -29,21 +29,73 @@ and has pushed these separately reviewed packages:
   pass 158 strict PDF, 68 saved-source, four PA physical and 11 recovery checks;
   parent separately passes 224 unchanged-text/structure checks over all 72 pages.
   Seeded partial interviews do not establish a full upload-to-delete journey.
-- [ ] [New-marriage NOL owner-income method](upgrade-2026-scope-audit-20261101.md)
-  is required internal work. Source research, spec-first implementation and a
-  separate review are active. Old charity/current-joint queue prose is partly
-  superseded; the audit identifies actual remaining methods without externalizing
-  unfinished source research or inventing allocation rules.
 - [ ] [Five precise source derivations](upgrade-2026-source-questions-20261101.md)
   retain fresh official passages and competing originals. Parent verifies all 50
   bound files and 23+56 independent Decimal checks. No controlling allocation was
   established; named methods remain guarded and further tax interpretation is required.
+- [x] `af85b959` new-marriage NOL owner-income method: source-first current and
+  modified MFS owner bases, independent regular/AMT histories, canonical guided
+  facts and bound review output. The [scope audit](upgrade-2026-scope-audit-20261101.md)
+  identified this missing method. Independent review found and closed the empty
+  history defect; 19 original controls and main 71 tests/16 files pass. Three
+  typechecks, spec 6436/6436, inventory 608 and scoped lint pass. Actual production
+  desktop/mobile journeys pass 2/2; four saved-source replays and 162 independent
+  PDF checks pass across 34 pages. Parent verifies 22 bound files/34 renders and
+  all 17 matching desktop/mobile page pixels. These are partially seeded 2025
+  cases; human review, full journeys and final integrated evidence remain separate.
+- [x] `23447a73` [complete local lifecycle](upgrade-2026-complete-local-lifecycle-work.md):
+  actual UI upload/confirm/calculate/export/reopen/backup/restore/delete passes
+  desktop/mobile under the unchanged 30-second per-test runtime limit. Independent
+  review passes 4,085 source/artifact hashes, 258 PDF checks and 26 native-crypto
+  checks. Parent actual read-only ARM64 image run passes 2/2 in 38.4 seconds, with
+  all six PDFs physically checked. This is synthetic 2025 sample/local evidence.
+- [x] `80ee9cc2` [signed foreign C / domestic farm health](upgrade-2026-domestic-f-signed-health-work.md):
+  actual independently confirmed domestic F proves business-specific foreign zero,
+  while the signed C amount is preserved. Fourteen separate originals, 21 related
+  checks, 160 physical/source/privacy PDF checks and nine parent cap checks pass.
+  Main 578 tests/8 files, all three types, specs/inventory, lint and engine/webpack
+  builds pass. Ordinary guide cannot originate F; broader foreign-plan attribution
+  remains guarded. Canonical typed/imported-source and human-review limits remain.
+- [x] `0cd0640b` lifecycle test correction preserves all 43 original assertion
+  lines, six PDF downloads, full byte comparisons, native keyboard activation,
+  privacy/recovery controls, 30-second per-test limit and zero retries. Concurrent
+  author execution passes 2/2 in 17.1 seconds; independent instrumented execution
+  passes 2/2 with four complete byte comparisons and four changed-byte rejections.
+  Twenty-six old/new reader controls pass. Main web types and zero-warning scoped
+  lint pass. Exact updated image/full CI remains separate below. The retained
+  `23447a73` AMD64 run passes 534 older cases/5 skips but times out in the two
+  joined cases; its unit/coverage pass (20,086 cases, 87.08% branches) does not
+  erase those failures.
+- [x] `790dcb13` [delayed signed webhooks](upgrade-2026-webhook-delivery-work.md):
+  164 main tests/7 files, seven independent controls and58combined checks pass.
+  Fresh signed retries accept old events; stale/tampered signatures and malformed
+  or future creation times reject. Actual PostgreSQL16.14 supplement passes4cases
+  and17snapshot checks, including concurrency and real marker failure/retry.
+  Local synthetic evidence does not establish hosted staging qualification.
+- [x] `52d03ef7` [separate spouse ScheduleAI sources](upgrade-2026-two-owner-schedule-ai-work.md):
+  actual per-owner PartII, canonical reconciliation, guided owner records and
+  original-bound standalone review. Main796tests/22files, three types,6456spec refs,
+  inventory610, engine/webpack builds and scoped lint pass. Independent36tests
+  (19original controls) plus96PDF checks/26physical cells pass. The retained
+  redacted-partnership failure is corrected using the existing private original
+  context. Physical2025 AIpage3 is uncompleted; default packet auto-attachment,
+  ordinary guide farm origination and human/2026 qualification remain separate.
+- [x] `c6f88681` [ordinary manual C plus partnership classification](upgrade-2026-c-k1-classification-work.md):
+  main719tests/22files, three types,6464spec refs, inventory610, lint and engine/webpack
+  builds pass. Independent40tests include30original controls;462checks pass across
+  39actualPDFs/72pages with36physical1040cells. V1's NEC bypass finding is retained
+  and corrected; known blank original name/EIN stays distinct from unknown.
+- [ ] [Actual same-business NEC receipt linkage](upgrade-2026-scope-audit-20261102.md)
+  is required internal work, now in spec-first implementation. Each original must
+  bind to the actual business with complete unique coverage and exact gross receipts
+  reconciliation. Shared ownership alone is insufficient. No external input is
+  needed to implement this determined ordinary source relationship.
 - [ ] Current integrated full test/coverage/static/build/browser and native
   arm64/amd64 recovery/SBOM/scans remain required after the remaining code.
   Current-head CI/Web completion remains pending; intermediate runs are historical.
   Historical green `a3e43a9f` does not qualify this head.
 
-Rule versions are `2025.215` / `2026.213-law-integration-draft`. Tax year 2026 stays
+Rule versions are `2025.219` / `2026.217-law-integration-draft`. Tax year 2026 stays
 incomplete; filing and model promotion remain disabled. Human tax/AI/security
 reviews, actual launch-state demand, authorized staging evidence, approved
 provider evaluation and final-form qualification remain pending in
@@ -55,7 +107,10 @@ progress log and checkpoint are evidence for their recorded commits, not current
 qualification. Resume here after compaction. Do not remove release gates to
 complete a checkbox.
 
-## Current integration — 2026-10-31 UTC
+## Historical integration — 2026-10-31 UTC
+
+This records the assessment at that time. The active continuation above supersedes
+its broad internal-completion statement with later findings and delivered work.
 
 Remote CI is fully green on `a3e43a9f`. All queued internal packages are delivered, plus further packages from the unsupported-method register. The upgrade is not complete: the remaining criteria need people, accounts, authorization or final IRS forms, and specialist methods remain unbuilt.
 
