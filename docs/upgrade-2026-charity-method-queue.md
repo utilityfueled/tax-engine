@@ -90,7 +90,8 @@ actual guided collector, private output binding and review appendix are covered.
 See [the package ledger](upgrade-2026-charitable-filing-unit-work.md) for source
 54/11, original-output 9,452 checks, final 72/17, main 50/9 and production/browser
 evidence. The original internal-queue row above is retained as audit history.
-Its charitable part is delivered within the stated method; NOL histories,
-positive-benefit COD/modified absorption and recurrent owner attribution after
-partial joint use remain separate active work or precise source-method questions.
+Its charitable part is delivered within the stated method. The later new-marriage
+NOL owner-income method is delivered in `af85b959`; see the [owner-source ledger](upgrade-2026-new-marriage-nol-work.md). Positive-benefit COD/modified absorption
+and recurrent owner attribution after partial joint use retain the precise
+questions in the [November 1 source investigation](upgrade-2026-source-questions-20261101.md).
 No current deduction, historical ownership or final human qualification is inferred.

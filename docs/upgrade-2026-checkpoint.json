@@ -12226,8 +12226,8 @@
       "inventoryEntries": 604,
       "humanQualified": false
     },
-    "currentHead": "7a4b7f68828b3043bf8247f914cc0bf5e356e934",
-    "currentRemoteHead": "7a4b7f68828b3043bf8247f914cc0bf5e356e934",
+    "currentHead": "ae86999f663f0dd15e3faa2dded54f8ebe798063",
+    "currentRemoteHead": "ae86999f663f0dd15e3faa2dded54f8ebe798063",
     "currentRuleVersions": {
       "2025": "2025.223",
       "2026": "2026.221-law-integration-draft"
@@ -12742,6 +12742,76 @@
       "mixedCityResidencyMethod": false,
       "completePAReturn": false,
       "rootAdoptionSHA256": "6153c4b9694a9ac70c36aa82135edcbb2403479f53fa86192e6e3d1e20c10f7e"
+    },
+    "ohioResidentCreditCorrection": {
+      "commit": "3e08ad01d7a680ce3d69c9f11165c87446f32db2",
+      "source": "Actual2025ITRC printed1\u20137; RC5747.05(B,C,D)",
+      "sourceSha256": "ebd9960d6a8004d6803f0f22238f989043db794e9ebc9aa9fcb3d5588112cb48",
+      "independentReviewSha256": "3378d5b6045ccaa0694bf972d71a9d812b3115607ef533718fa465509b5cee93",
+      "independentProbes": 6,
+      "mainTests": 250,
+      "mainFiles": 6,
+      "mainCommandsPassed": 9,
+      "specReferences": 6523,
+      "inventoryEntries": 613,
+      "lintErrors": 0,
+      "existingTestWarnings": 62,
+      "gatesChanged": false,
+      "remaining": "Actual resident-period/source/payment/noNRCoverlap canonical proof, full all3 state implementation, physical maps and final integrated qualification."
+    },
+    "paWorkingCredit20261102": {
+      "commit": "326bad2da70290e3fa5e3a47b93b7df003816bd9",
+      "pushed": true,
+      "mainTests": {
+        "passed": 1055,
+        "files": 60
+      },
+      "mainChecks": "9pass incl3types/spec/inventory/lint/build",
+      "independentReview": {
+        "originalControls": 27,
+        "combinedTests": 61,
+        "savedLegacyArtifactChecks": 166,
+        "sharedReview": "fourpaths source-hash verified; clear"
+      },
+      "evidence": ".local/upgrade-evidence/nov02-parent-pa-wptc-main",
+      "remaining": [
+        "PAall3actualsources/payment/credits/localintegration",
+        "actual2025PA40 physical source correction",
+        "final2026forms/scenarios/humanqualification"
+      ]
+    },
+    "ohioOwnerSources20261102": {
+      "commit": "bfb62e239d3df73f3c26ddb7fadbad423608ac88",
+      "pushed": true,
+      "mainTests": 815,
+      "files": 30,
+      "mainChecks": "9pass; strict557pass",
+      "independentControls": 12,
+      "savedReferencePages": 9,
+      "evidence": ".local/upgrade-evidence/nov02-parent-ohio-first-source-main",
+      "remaining": "wholeguideactualpayment/penalty/credits/business/district/full2026/physical/humanqualification"
+    },
+    "ohioPhysicalCandidates20261102": {
+      "commit": "9bd3540226589a751df054334cfc1bd9e75f0d94",
+      "pushed": true,
+      "mainTests": 8,
+      "files": 2,
+      "mainChecks": "9pass",
+      "independentSavedPdfChecks": 1669,
+      "savedPdfPages": 55,
+      "evidence": ".local/upgrade-evidence/nov02-parent-ohio-physical-main",
+      "exportsEnabled": false,
+      "filingQualified": false
+    },
+    "paCareConformity20261102": {
+      "commit": "ae86999f663f0dd15e3faa2dded54f8ebe798063",
+      "pushed": true,
+      "mainTests": 439,
+      "files": 11,
+      "mainChecks": "9pass",
+      "independentControls": 32,
+      "evidence": ".local/upgrade-evidence/nov02-parent-pa-dc-main-v2",
+      "remaining": "Canonical PA/guide care sources, positive129/prior-credit/special-income/binding-limit/partial-year methods; final2026 physical and human qualification"
     }
   }
 }

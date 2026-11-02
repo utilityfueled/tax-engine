@@ -1,5 +1,7 @@
 # Actual same-business NEC receipt reconciliation
 
+Delivered in `ca11611b`; the initial implementation and pre-review notes below are retained as history. The parent integration section records the final reviewed source and actual output checks.
+
 Spec-first private package at exact c6f88681e73f82ae0dfe5bcb7df3b693783fd397. Root retains main/index/metadata/inventory/central docs. Official source and Decimal originals were pinned in `.local/upgrade-evidence/nov02-c-k1-nec-linkage-audit` and independently in `nov02-nec-linkage-independent-review` before candidate output.
 
 Finite ordinary current original NEC source records require explicit linkage to this actual C business, included exactly once, complete coverage, actual current source year, original payer TIN status and full original source snapshot, confirmed no corrections/voids/unmodeled amounts and no duplicate originals. Actual source-backed other gross not already in NEC is required, including known zero. Exact Decimal source equality occurs before rounding: sum(Box1)+other gross=canonical C gross. Existing C net/SE/QBI/Form461 formulas remain unchanged. Returns/allowances stay separate line2. Corrections, differences requiring an explanatory statement and separate-business allocation remain explicit internal source methods outside this finite cohort; no external tax ruling is claimed necessary merely because a method is guarded.

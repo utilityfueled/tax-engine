@@ -31,7 +31,12 @@ The audit established no other determinate ordinary package beyond this linkage,
 the active C/partnership integration and final integrated verification. Its
 scope does not establish universal completeness or exhaust unresolved tax
 interpretations. The [precise source questions](upgrade-2026-source-questions-20261101.md)
-remain distinct from missing credentials. Independent human review, demand-based
-state selection, staging configuration/authorization, live-provider access/spend,
+remain distinct from missing credentials. Independent human review, staging configuration/authorization, live-provider access/spend,
 advisory ownership and final-form qualification remain external inputs in the
 [action register](upgrade-2026-external-actions.md).
+
+## Delivery
+
+The required ordinary receipt relationship is delivered in `ca11611ba02d608e3f218afef64aaafdbfd2b5bd`; see the [source and independent review ledger](upgrade-2026-c-k1-nec-linkage-work.md). All original relationship/coverage and exact-gross obligations remain enforced. Corrected-source lineage, unexplained differences and multiple-business allocation remain explicit separate methods; their existence alone is not evidence that this finite cohort is incomplete. Source-method implementation, complete-year/form qualification and independent human review remain separate.
+
+The owner subsequently selected Pennsylvania and Ohio with full-year, part-year and nonresident returns for both. This decision is resolved; their remaining source methods and integrations are internal implementation work.
