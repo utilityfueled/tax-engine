@@ -1,0 +1,1556 @@
+{
+  "filename": "oh-it1040-bundle.pdf",
+  "sha256": "4e6432e23df3bf181a8e9d7ee5d5bb7e2e96a6a21dd65fa39c625fb8a7e2f57c",
+  "pages": 13,
+  "totalSourceFields": 588,
+  "mappedPages": [
+    1,
+    2
+  ],
+  "sourceUrl": "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/1040-bundle-original-fi.pdf",
+  "retrievedAt": "2026-11-02",
+  "locations": {
+    "primarySsn": [
+      {
+        "fieldName": "TP_SSN",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          39.751,
+          670.154,
+          123.298,
+          656.833
+        ],
+        "onValues": []
+      }
+    ],
+    "spouseSsn": [
+      {
+        "fieldName": "SP_SSN",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          256.758,
+          656.833,
+          338.68,
+          670.154
+        ],
+        "onValues": []
+      }
+    ],
+    "schoolDistrictNumber": [
+      {
+        "fieldName": "SD_NUM",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          489.344,
+          656.833,
+          521.821,
+          670.154
+        ],
+        "onValues": []
+      }
+    ],
+    "primaryFirstName": [
+      {
+        "fieldName": "TP_FN",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          43.251,
+          620.984,
+          155.154,
+          634.305
+        ],
+        "onValues": []
+      }
+    ],
+    "primaryMiddleInitial": [
+      {
+        "fieldName": "TP_MI",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          250.278,
+          620.984,
+          260.895,
+          634.305
+        ],
+        "onValues": []
+      }
+    ],
+    "primaryLastName": [
+      {
+        "fieldName": "TP_LN",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          273.719,
+          620.984,
+          435.641,
+          634.305
+        ],
+        "onValues": []
+      }
+    ],
+    "spouseFirstName": [
+      {
+        "fieldName": "SP_FN",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          43.251,
+          597.975,
+          155.154,
+          584.654
+        ],
+        "onValues": []
+      }
+    ],
+    "spouseMiddleInitial": [
+      {
+        "fieldName": "SP_MI",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          250.278,
+          584.654,
+          260.895,
+          597.975
+        ],
+        "onValues": []
+      }
+    ],
+    "spouseLastName": [
+      {
+        "fieldName": "SP_LN",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          272.83,
+          597.975,
+          434.752,
+          584.654
+        ],
+        "onValues": []
+      }
+    ],
+    "address1": [
+      {
+        "fieldName": "ADDRESS1",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          41.501,
+          562.152,
+          296.495,
+          548.831
+        ],
+        "onValues": []
+      }
+    ],
+    "address2": [
+      {
+        "fieldName": "ADDRESS2",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          41.501,
+          526.714,
+          296.495,
+          513.393
+        ],
+        "onValues": []
+      }
+    ],
+    "city": [
+      {
+        "fieldName": "CITY",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          41.251,
+          491.779,
+          188.034,
+          478.458
+        ],
+        "onValues": []
+      }
+    ],
+    "state": [
+      {
+        "fieldName": "STATE",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          323.259,
+          478.458,
+          340.076,
+          491.779
+        ],
+        "onValues": []
+      }
+    ],
+    "zip": [
+      {
+        "fieldName": "ZIP",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          357.637,
+          478.458,
+          396.689,
+          491.779
+        ],
+        "onValues": []
+      }
+    ],
+    "county": [
+      {
+        "fieldName": "COUNTY",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          437.119,
+          478.458,
+          469.732,
+          491.779
+        ],
+        "onValues": []
+      }
+    ],
+    "foreignCountry": [
+      {
+        "fieldName": "FRGN_COUNTRY",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          41.251,
+          454.113,
+          188.816,
+          440.792
+        ],
+        "onValues": []
+      }
+    ],
+    "foreignPostalCode": [
+      {
+        "fieldName": "FRGN_ZIP",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          322.28,
+          440.792,
+          387.362,
+          454.113
+        ],
+        "onValues": []
+      }
+    ],
+    "amended": [
+      {
+        "fieldName": "CHK_AMD",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          43.046,
+          695.03,
+          51.165,
+          708.122
+        ],
+        "onValues": [
+          "Yes"
+        ]
+      }
+    ],
+    "nolCarryback": [
+      {
+        "fieldName": "CHK_NOL",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          316.587,
+          695.03,
+          324.706,
+          708.122
+        ],
+        "onValues": [
+          "1"
+        ]
+      }
+    ],
+    "primaryDeceased": [
+      {
+        "fieldName": "CHK_PRIM_DEC",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          201.8,
+          656.833,
+          209.919,
+          670.154
+        ],
+        "onValues": [
+          "Yes"
+        ]
+      }
+    ],
+    "spouseDeceased": [
+      {
+        "fieldName": "CHK_SP_DEC",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          417.435,
+          656.833,
+          425.554,
+          670.154
+        ],
+        "onValues": [
+          "Yes"
+        ]
+      }
+    ],
+    "primaryResidency": [
+      {
+        "fieldName": "CHK_PRIM_RES",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          36.075,
+          407.416,
+          44.25,
+          420.284
+        ],
+        "onValues": [
+          "1"
+        ]
+      },
+      {
+        "fieldName": "CHK_PRIM_RES",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          108.374,
+          407.416,
+          116.549,
+          420.284
+        ],
+        "onValues": [
+          "2"
+        ]
+      },
+      {
+        "fieldName": "CHK_PRIM_RES",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          179.555,
+          407.416,
+          187.73,
+          420.284
+        ],
+        "onValues": [
+          "3"
+        ]
+      }
+    ],
+    "spouseResidency": [
+      {
+        "fieldName": "CHK_SP_RES",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          36.075,
+          370.153,
+          44.25,
+          383.021
+        ],
+        "onValues": [
+          "1"
+        ]
+      },
+      {
+        "fieldName": "CHK_SP_RES",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          108.098,
+          370.153,
+          116.273,
+          383.021
+        ],
+        "onValues": [
+          "2"
+        ]
+      },
+      {
+        "fieldName": "CHK_SP_RES",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          179.555,
+          370.153,
+          187.73,
+          383.021
+        ],
+        "onValues": [
+          "3"
+        ]
+      }
+    ],
+    "primaryOtherState": [
+      {
+        "fieldName": "PRIM_NON_RES_STATE",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          264.818,
+          406.659,
+          281.875,
+          419.4
+        ],
+        "onValues": []
+      }
+    ],
+    "spouseOtherState": [
+      {
+        "fieldName": "SP_NON_RES_STATE",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          264.818,
+          371.596,
+          281.875,
+          384.337
+        ],
+        "onValues": []
+      }
+    ],
+    "filingStatus": [
+      {
+        "fieldName": "CHK_FILING_STATUS",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          330.723,
+          419.275,
+          338.898,
+          406.407
+        ],
+        "onValues": [
+          "1"
+        ]
+      },
+      {
+        "fieldName": "CHK_FILING_STATUS",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          330.749,
+          394.911,
+          338.924,
+          382.043
+        ],
+        "onValues": [
+          "2"
+        ]
+      },
+      {
+        "fieldName": "CHK_FILING_STATUS",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          330.875,
+          359.348,
+          339.05,
+          372.216
+        ],
+        "onValues": [
+          "3"
+        ]
+      }
+    ],
+    "separateSpouseSsn": [
+      {
+        "fieldName": "SP_SSN_SEP",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          473.723,
+          358.717,
+          555.553,
+          370.865
+        ],
+        "onValues": []
+      }
+    ],
+    "primaryNonresidentStatement": [
+      {
+        "fieldName": "CHK_PRIM_NON_RES_STMT",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          36.075,
+          322.719,
+          44.25,
+          335.587
+        ],
+        "onValues": [
+          "1"
+        ]
+      }
+    ],
+    "spouseNonresidentStatement": [
+      {
+        "fieldName": "CHK_SP_NON_RES_STMT",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          36.075,
+          299.701,
+          44.25,
+          312.569
+        ],
+        "onValues": [
+          "1"
+        ]
+      }
+    ],
+    "federalExtension": [
+      {
+        "fieldName": "CHK_FED_EXT_FILTER",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          330.875,
+          323.02,
+          339.05,
+          335.888
+        ],
+        "onValues": [
+          "1"
+        ]
+      }
+    ],
+    "canBeDependent": [
+      {
+        "fieldName": "CHK_CLAIM_DEP",
+        "type": "/Btn",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          330.875,
+          299.484,
+          339.05,
+          312.352
+        ],
+        "onValues": [
+          "1"
+        ]
+      }
+    ],
+    "line1Negative": [
+      {
+        "fieldName": "L1_NEG",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          395.969,
+          263.034,
+          403.85,
+          275.791
+        ],
+        "onValues": []
+      }
+    ],
+    "line3Negative": [
+      {
+        "fieldName": "L3_NEG",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          395.969,
+          192.051,
+          403.85,
+          204.808
+        ],
+        "onValues": []
+      }
+    ],
+    "exemptionCount": [
+      {
+        "fieldName": "L4_EXEMPT",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          325.176,
+          151.882,
+          351.783,
+          167.804
+        ],
+        "onValues": []
+      }
+    ],
+    "continuedPrimarySsn": [
+      {
+        "fieldName": "TP_SSN1",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          60.367,
+          729.534,
+          162.471,
+          743.738
+        ],
+        "onValues": []
+      },
+      {
+        "fieldName": "TP_SSN1",
+        "type": "/Tx",
+        "page": 3,
+        "pageReference": "5 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          265.103,
+          695.185,
+          347.15,
+          707.783
+        ],
+        "onValues": []
+      },
+      {
+        "fieldName": "TP_SSN1",
+        "type": "/Tx",
+        "page": 4,
+        "pageReference": "8 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          61.9125,
+          728.057,
+          145.194,
+          741.676
+        ],
+        "onValues": []
+      },
+      {
+        "fieldName": "TP_SSN1",
+        "type": "/Tx",
+        "page": 5,
+        "pageReference": "11 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          265.029,
+          696.099,
+          347.454,
+          709.853
+        ],
+        "onValues": []
+      },
+      {
+        "fieldName": "TP_SSN1",
+        "type": "/Tx",
+        "page": 6,
+        "pageReference": "14 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          61.5675,
+          728.345,
+          144.073,
+          741.256
+        ],
+        "onValues": []
+      },
+      {
+        "fieldName": "TP_SSN1",
+        "type": "/Tx",
+        "page": 7,
+        "pageReference": "17 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          264.394,
+          717.247,
+          347.019,
+          729.504
+        ],
+        "onValues": []
+      },
+      {
+        "fieldName": "TP_SSN1",
+        "type": "/Tx",
+        "page": 8,
+        "pageReference": "20 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          62.9356,
+          727.399,
+          146.357,
+          742.274
+        ],
+        "onValues": []
+      },
+      {
+        "fieldName": "TP_SSN1",
+        "type": "/Tx",
+        "page": 9,
+        "pageReference": "23 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          263.965,
+          693.88,
+          346.655,
+          706.219
+        ],
+        "onValues": []
+      },
+      {
+        "fieldName": "TP_SSN1",
+        "type": "/Tx",
+        "page": 10,
+        "pageReference": "26 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          65.8839,
+          729.392,
+          148.49,
+          742.753
+        ],
+        "onValues": []
+      },
+      {
+        "fieldName": "TP_SSN1",
+        "type": "/Tx",
+        "page": 11,
+        "pageReference": "29 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          258.578,
+          695.69,
+          340.406,
+          707.919
+        ],
+        "onValues": []
+      },
+      {
+        "fieldName": "TP_SSN1",
+        "type": "/Tx",
+        "page": 12,
+        "pageReference": "32 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          61.3885,
+          729.6,
+          143.026,
+          741.174
+        ],
+        "onValues": []
+      },
+      {
+        "fieldName": "TP_SSN1",
+        "type": "/Tx",
+        "page": null,
+        "pageReference": "2344 0 R",
+        "inPageAnnotations": false,
+        "rect": [
+          265.539,
+          683.422,
+          349.594,
+          696.51
+        ],
+        "onValues": []
+      }
+    ],
+    "line19Negative": [
+      {
+        "fieldName": "L19_NEG",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          415.989,
+          373.497,
+          422.811,
+          385.249
+        ],
+        "onValues": []
+      }
+    ],
+    "phone": [
+      {
+        "fieldName": "PHONE_NUM",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          317.124,
+          104.645,
+          410.187,
+          117.133
+        ],
+        "onValues": []
+      }
+    ],
+    "signatureDate": [
+      {
+        "fieldName": "SIGN_DATE",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          285.875,
+          89.708,
+          354.349,
+          102.196
+        ],
+        "onValues": []
+      }
+    ],
+    "preparerPrintedName": [
+      {
+        "fieldName": "PREPARER_PRINTED_NAME",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          113.254,
+          75.288,
+          266.846,
+          87.776
+        ],
+        "onValues": []
+      }
+    ],
+    "preparerPhone": [
+      {
+        "fieldName": "PREPARER_PHONE_NUM",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          319.938,
+          76.4775,
+          415.064,
+          88.311
+        ],
+        "onValues": []
+      }
+    ],
+    "preparerTin": [
+      {
+        "fieldName": "PREPARER_TIN",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          301.444,
+          49.242,
+          413.623,
+          61.73
+        ],
+        "onValues": []
+      }
+    ],
+    "authorizePreparer": [
+      {
+        "fieldName": "SpeakPrep",
+        "type": "/Btn",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          53.931,
+          50.48,
+          65.517,
+          62.066
+        ],
+        "onValues": [
+          "1"
+        ]
+      }
+    ],
+    "nonpaidPreparer": [
+      {
+        "fieldName": "NonPaidPrep",
+        "type": "/Btn",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          170.001,
+          50.48,
+          181.588,
+          62.066
+        ],
+        "onValues": [
+          "1"
+        ]
+      }
+    ],
+    "line1": [
+      {
+        "fieldName": "L1",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.486,
+          263.036,
+          570.864,
+          276.357
+        ],
+        "onValues": []
+      }
+    ],
+    "line2a": [
+      {
+        "fieldName": "L2A",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.486,
+          238.855,
+          570.864,
+          252.176
+        ],
+        "onValues": []
+      }
+    ],
+    "line2b": [
+      {
+        "fieldName": "L2B",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.486,
+          215.227,
+          570.864,
+          228.548
+        ],
+        "onValues": []
+      }
+    ],
+    "line3": [
+      {
+        "fieldName": "L3",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.486,
+          190.243,
+          570.864,
+          203.564
+        ],
+        "onValues": []
+      }
+    ],
+    "line4": [
+      {
+        "fieldName": "L4",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.486,
+          166.419,
+          570.864,
+          179.74
+        ],
+        "onValues": []
+      }
+    ],
+    "line5": [
+      {
+        "fieldName": "L5",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.486,
+          142.45,
+          570.864,
+          155.771
+        ],
+        "onValues": []
+      }
+    ],
+    "line6": [
+      {
+        "fieldName": "L6",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.486,
+          118.453,
+          570.864,
+          131.774
+        ],
+        "onValues": []
+      }
+    ],
+    "line7": [
+      {
+        "fieldName": "L7",
+        "type": "/Tx",
+        "page": 1,
+        "pageReference": "20195 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.486,
+          93.863,
+          570.864,
+          107.184
+        ],
+        "onValues": []
+      }
+    ],
+    "line7a": [
+      {
+        "fieldName": "L7a",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          706.483,
+          570.283,
+          718.971
+        ],
+        "onValues": []
+      }
+    ],
+    "line8a": [
+      {
+        "fieldName": "L8A",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          683.43,
+          570.283,
+          695.918
+        ],
+        "onValues": []
+      }
+    ],
+    "line8b": [
+      {
+        "fieldName": "L8B",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          659.936,
+          570.283,
+          672.424
+        ],
+        "onValues": []
+      }
+    ],
+    "line8c": [
+      {
+        "fieldName": "L8C",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          635.109,
+          570.283,
+          647.597
+        ],
+        "onValues": []
+      }
+    ],
+    "line9": [
+      {
+        "fieldName": "L9",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          611.313,
+          570.283,
+          623.801
+        ],
+        "onValues": []
+      }
+    ],
+    "line10": [
+      {
+        "fieldName": "L10",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          586.268,
+          570.283,
+          598.756
+        ],
+        "onValues": []
+      }
+    ],
+    "line11": [
+      {
+        "fieldName": "L11",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          563.236,
+          570.283,
+          575.724
+        ],
+        "onValues": []
+      }
+    ],
+    "line12": [
+      {
+        "fieldName": "L12",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          539.026,
+          570.283,
+          551.514
+        ],
+        "onValues": []
+      }
+    ],
+    "line13": [
+      {
+        "fieldName": "L13",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          515.205,
+          570.283,
+          527.693
+        ],
+        "onValues": []
+      }
+    ],
+    "line14": [
+      {
+        "fieldName": "L14",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          491.587,
+          570.283,
+          504.075
+        ],
+        "onValues": []
+      }
+    ],
+    "line15": [
+      {
+        "fieldName": "L15",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          467.689,
+          570.283,
+          480.177
+        ],
+        "onValues": []
+      }
+    ],
+    "line16": [
+      {
+        "fieldName": "L16",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          442.979,
+          570.283,
+          455.467
+        ],
+        "onValues": []
+      }
+    ],
+    "line17": [
+      {
+        "fieldName": "L17",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          418.394,
+          570.283,
+          430.882
+        ],
+        "onValues": []
+      }
+    ],
+    "line18": [
+      {
+        "fieldName": "L18",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          395.523,
+          570.283,
+          408.011
+        ],
+        "onValues": []
+      }
+    ],
+    "line19": [
+      {
+        "fieldName": "L19",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          372.461,
+          570.283,
+          384.949
+        ],
+        "onValues": []
+      }
+    ],
+    "line20": [
+      {
+        "fieldName": "L20",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          347.976,
+          570.283,
+          360.464
+        ],
+        "onValues": []
+      }
+    ],
+    "line21": [
+      {
+        "fieldName": "L21",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          324.025,
+          570.283,
+          336.513
+        ],
+        "onValues": []
+      }
+    ],
+    "line22": [
+      {
+        "fieldName": "L22",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          299.894,
+          570.283,
+          312.382
+        ],
+        "onValues": []
+      }
+    ],
+    "line23": [
+      {
+        "fieldName": "L23",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          275.625,
+          570.283,
+          288.113
+        ],
+        "onValues": []
+      }
+    ],
+    "line24": [
+      {
+        "fieldName": "L24",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          251.939,
+          570.283,
+          264.427
+        ],
+        "onValues": []
+      }
+    ],
+    "line25a": [
+      {
+        "fieldName": "L25A",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          76.813,
+          214.645,
+          109.867,
+          227.133
+        ],
+        "onValues": []
+      }
+    ],
+    "line25b": [
+      {
+        "fieldName": "L25B",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          199.425,
+          214.645,
+          232.479,
+          227.133
+        ],
+        "onValues": []
+      }
+    ],
+    "line25c": [
+      {
+        "fieldName": "L25C",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          308.48,
+          214.645,
+          341.534,
+          227.133
+        ],
+        "onValues": []
+      }
+    ],
+    "line25d": [
+      {
+        "fieldName": "L25D",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          76.813,
+          179.908,
+          109.867,
+          192.396
+        ],
+        "onValues": []
+      }
+    ],
+    "line25e": [
+      {
+        "fieldName": "L25E",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          199.425,
+          179.908,
+          232.479,
+          192.396
+        ],
+        "onValues": []
+      }
+    ],
+    "line25f": [
+      {
+        "fieldName": "L25F",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          307.48,
+          179.908,
+          340.534,
+          192.396
+        ],
+        "onValues": []
+      }
+    ],
+    "line25g": [
+      {
+        "fieldName": "L25G",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          201.922,
+          570.283,
+          214.41
+        ],
+        "onValues": []
+      }
+    ],
+    "line26": [
+      {
+        "fieldName": "L26",
+        "type": "/Tx",
+        "page": 2,
+        "pageReference": "1 0 R",
+        "inPageAnnotations": true,
+        "rect": [
+          488.217,
+          154.387,
+          570.283,
+          166.875
+        ],
+        "onValues": []
+      }
+    ]
+  },
+  "provenance": "Manual semantic names from visible2025 printed pages; raw widgets extracted with pypdf6.10. Not independent qualification.",
+  "sharedFieldWidgetScope": "All actual AcroForm widgets for mapped fields, including rendered companion repetitions and explicitly unrendered orphan. No other companion-line mapping claimed."
+}

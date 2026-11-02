@@ -1,0 +1,56 @@
+form: "Ohio official physical source candidates"
+fullName: "Actual 2025 IT1040 pages1–2 and IT NRC SectionI physical source maps"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/1040-bundle-original-fi.pdf"
+notes: |
+  Source retrieved2026-11-02. Actual IT1040 bundle13pages/SHA256
+  4e6432e23df3bf181a8e9d7ee5d5bb7e2e96a6a21dd65fa39c625fb8a7e2f57c;
+  actual ITNRC3pages/SHA256
+  7e2f83559370510e129a6d720e090ae08aeefffcc75083c0b91561df85639c52.
+  New inactive constants preserve physical source names, widget rectangles and
+  on-values. They perform no tax calculation and enable no export/filing path.
+  IT1040 scope is pages1–2 only; companion schedules and NRC SectionsII/III
+  remain separate required implementation. Complete-state exports need actual
+  source binding, all required attachments and independent qualification.
+  Printed labels control; stale embedded tooltips are not the line authority.
+  In particular actual Adjustments12/47, Credits40/47, ITBUS16, totalpayments17,
+  availablepayments19, due20/22, overpayment23 and refund26 must retain printed
+  meanings. Donation25a–f physical cells follow printed positions rather than
+  shifted old tooltip names. Signed values use separate minus fields1/3/19.
+  Resident/part-year/nonresident are actual grouped button states1/2/3 for each
+  owner. Filing status single-or-HOH-or-QSS/joint/separate are states1/2/3.
+  These grouped buttons must never be treated as a boolean MFJ checkbox.
+  Original settlement no-issue/no-payment policy for amounts at most1 does not
+  change arithmetic printed line26/22; no settlement-zero projection is qualified.
+  NRCI includes actual owner dates, sources1a–14b, list fields7/8/14 and totals
+  9/15–20. Printed ratio19 has four decimal places; these maps do not calculate it.
+  Every diagnostic page is marked review-only. No 2025 source is a 2026 form.
+  Actual TP_SSN1 has11 rendered continuation widgets plus one original orphan
+  widget pointing to a Page outside the13-page tree. The raw source witness
+  retains all12, explicitly marks the orphan as unrendered, and does not invent
+  a physical page for it. This inactive source map is not template sanitization.
+lines:
+  - line: "source-revision"
+    description: "Actual immutable official byte revision and closed exports"
+    formula: "Hash exact actual2025 sources; keep candidate inactive and outside template registry"
+    testRef: "tests/pdf/oh-official-physical-candidates.test.ts::Ohio physical candidates pin actual2025 sources without enabling exports"
+  - line: "IT1040-physical"
+    description: "Actual IT1040 pages1–2 complete field projection"
+    formula: "Match source witness physical names, field types, pages, raw rectangles and grouped on-values"
+    testRef: "tests/pdf/oh-official-physical-candidates.test.ts::Ohio physical candidates preserve every declared physical location"
+  - line: "NRCI-physical"
+    description: "Actual NRC SectionI owner dates and worksheet cells"
+    formula: "Use exact source1a–20 names and actual dates, never guessed proportional amounts"
+    testRef: "tests/pdf/oh-official-physical-candidates.test.ts::Ohio physical candidates preserve every declared physical location"
+  - line: "printed-label-authority"
+    description: "Printed2025 labels override stale tooltips"
+    formula: "Actual2a=Adjustments12,2b=47,9=Credits40,16=Credits47; exact donation25a–f printed positions"
+    testRef: "tests/pdf/oh-official-physical-candidates.test.ts::Ohio physical candidates retain printed2025 line meanings"
+  - line: "grouped-status"
+    description: "Actual status on-values survive save for each owner"
+    formula: "Explicit widget1/2/3 state, exactly one selected; never boolean checkbox inference"
+    testRef: "tests/pdf/oh-official-physical-candidates.test.ts::Ohio physical status groups preserve each actual on-value after save"
+  - line: "diagnostic-save"
+    description: "Saved exact-cell probes remain review-only on every page"
+    formula: "Save/read exact synthetic source-cell values; all pages retain review-only notice"
+    testRef: "tests/pdf/oh-official-physical-candidates.test.ts::Ohio physical candidates preserve saved diagnostic values and review notices"
