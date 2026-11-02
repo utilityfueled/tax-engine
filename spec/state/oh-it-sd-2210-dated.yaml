@@ -1,0 +1,58 @@
+form: "OH-IT/SD-2210-Dated"
+fullName: "Ohio actual dated ordinary PartII worksheet"
+taxYear: 2025
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5747.09"
+notes: |
+  Pure PartII calculation only. This is not qualification of PartI safe harbors,
+  source owner/account/year/receipt identity, actual federal or state liability,
+  late prior returns, special annualization/farmer/relief, cents receipts or2026.
+  Canonical source replay must establish eligibility and actual required annual
+  payment first. No taxpayer method selection or quarter designation is inferred.
+  Current2025 rates/whole-dollar lines from actual final ITSD2210 revision11/25
+  SHA8729512c897b6863f350d8f1909afe63e9f2cc44f17cc78f1a856ef51ddc3bce.
+  Historical2023p4 full/partial examples explain interior payment termination,
+  but do not resolve current precision-sensitive cases. Exact/factor/cent
+  disagreement remains guarded rather than silently choosing a tax treatment.
+lines:
+  - line: "10-14"
+    description: "Actual reported cumulative obligations and payments"
+    formula: |
+      RequiredAnnualPayment and annualWithholding are finite nonnegative already
+      reported whole-dollar Decimal amounts. Reject cents rather than rounding
+      individual receipts. Each10/11=roundDollar(annual amount times cumulative
+      fraction .25/.50/.75/1);12=sum actual payments dated<=due;13=11+12;
+      14=max(0,10-13). Payment dates must be real, current2025Jan1..2026Apr15
+      and <=actualAsOfDate. Input arrays remain unchanged, sorting is local.
+    testRef: "tests/engine/state/oh-it-sd-2210-dated.test.ts::OH dated PartII preserves actual endpoint inputs and whole-dollar originals"
+  - line: "15-16"
+    description: "Actual unpaid periods and guarded current precision"
+    formula: |
+      For each due-to-next-due interval, split at actual interior balance-reducing
+      receipts and the Jan1 rate boundary. Zero-dollar receipts and receipts
+      entirely in excess of a settled balance must not create segments or alter
+      any precision guard. Aggregate same-date receipts before determining an
+      actual balance reduction. Exclude start/include payment date in
+      day count. Split the old-rate segment at Dec31; Jan1 itself uses the new
+      rate. The pinned Sep15-Dec1-Dec31-Jan15 control has77/30/15 days. Compute cumulative deficit after actual payments, no caller quarter
+      labels. Uniform-rate cumulative deficit is invariant to earlier installment
+      ordering, preserving current installment priority of5747.09D. Rate8%2025,
+      7%2026, denominator365.25. If no interior balance reduction, retain exact
+      published endpoint factors .013580/.019932/.026311/.017248.
+      Otherwise compare (a)sum exact segment amount*rate*days/365.25 then whole
+      dollar, (b)sum products using segment factors rounded six decimal places
+      then whole dollar, (c)sum cent-rounded exact segment interest then whole
+      dollar. Admit only identical reported line16; otherwise precision method
+      unavailable. Never round each segment to whole dollars before summing.
+    testRef: "tests/engine/state/oh-it-sd-2210-dated.test.ts::OH dated PartII reduces actual partial payments before the next endpoint"
+  - line: "actual-asof"
+    description: "No invented future nonpayment or filing-date payment"
+    formula: |
+      Reject any positive-balance interest segment extending past actualAsOfDate.
+      A last-quarter balance actually settledFeb1 may be known throughApr15 when
+      later balance stayszero. A Jan20 snapshot without payment proof cannot
+      manufacture unpaid future days. Filing date is absent from this interface.
+    testRef: "tests/engine/state/oh-it-sd-2210-dated.test.ts::OH dated PartII rejects future unpaid periods beyond actual asof"
+  - line: "17"
+    description: "Sum actual reported16 cells"
+    formula: "Sum whole-dollar line16 values once, no annual cash safe-harbor shortcut. Return Decimal audit and method marker without private receipt references."
+    testRef: "tests/engine/state/oh-it-sd-2210-dated.test.ts::OH dated PartII totals reported cells without annual catchup erasing earlier interest"

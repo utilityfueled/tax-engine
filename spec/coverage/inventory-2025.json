@@ -11679,6 +11679,25 @@
       "knownGaps": []
     },
     {
+      "key": "state/oh-it-sd-2210-dated",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://codes.ohio.gov/ohio-revised-code/section-5747.09",
+      "specPath": "spec/state/oh-it-sd-2210-dated.yaml",
+      "enginePath": "src/engine/state/oh-it-sd-2210-dated.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-lump-sum-distribution-credit",
       "jurisdiction": "state",
       "taxYear": 2025,
