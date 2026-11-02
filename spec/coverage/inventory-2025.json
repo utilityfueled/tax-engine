@@ -11644,6 +11644,25 @@
       ]
     },
     {
+      "key": "state/oh-it-nrc-business",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc-fi.pdf",
+      "specPath": "spec/state/oh-it-nrc-business.yaml",
+      "enginePath": "src/engine/state/oh-it-nrc-business.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-it-sd-2210",
       "jurisdiction": "state",
       "taxYear": 2025,
