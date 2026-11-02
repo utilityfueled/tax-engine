@@ -164,3 +164,6 @@ status/diff inside archive-only trees. Continue implementing all unblocked work.
 
 - `6a88c9b5` pushed: actual source-qualified ordinary G-L review forms, main95/11+10saved-artifact controls/all13; independent40/three; main10PDF/122pages strict and full pixel/text parity.
 - Public API G-L test-only migration: exact8pass/one reciprocal-guard failure reproduced on main; explicit fictional NY307 positive plus retained exact NJ source rejection yields42/two/types/spec/inventory/strictlint0/diff. No engine/source gate changed.
+
+- `e3f7fd95` pushed: public API reciprocal-source fixture correction, main42/two/allseven checks.
+- Next16.4.4 maintenance3: exact11family/507unchanged, independent08fa940f; main123/eight/types3/strictpeerinstall/bothbuilds/lint/diff pass; full522/prod426 audit0. November3 announced security release remains a required recheck, not resolved by16.4.4. See `upgrade-2026-next-1644-refresh.md`.
