@@ -5,6 +5,12 @@
 
 import { z } from "zod";
 import { W2StateLocalSourcesSchema } from "./w2-state-local.js";
+import { OhioResidencyFactsSchema } from "./ohio-residency.js";
+import { OhioPaymentFactsSchema } from "./ohio-payments.js";
+import { PAResidencySourcesSchema } from "./pa-residency.js";
+import { PAReciprocitySourcesSchema } from "./pa-reciprocity.js";
+import { PAOrdinaryReturnFactsSchema } from "./pa-ordinary-return-facts.js";
+import { PAOrdinaryReturnCompletionSourcesSchema } from "./pa-ordinary-return-completion.js";
 import { FilingUnitHistorySchema } from "./filing-unit-sources.js";
 import { NolFilingUnitOriginSchema, NolFilingUnitUseSchema, NolNewMarriageCurrentSourcesSchema, NolSameCoupleJointHistorySchema } from "./net-operating-loss-filing-unit.js";
 import { SavingsBondReissueSourcesSchema } from "./savings-bond-reissue-sources.js";
@@ -6142,6 +6148,12 @@ export type Schedule1AInput = z.infer<typeof Schedule1ASchema>;
 /** Complete input for a tax year */
 export const TaxYearInputSchema = z.object({
   taxpayer: TaxpayerSchema,
+  ohioResidency: OhioResidencyFactsSchema.optional(),
+  ohioPayments: OhioPaymentFactsSchema.optional(),
+  paResidencySources: PAResidencySourcesSchema.optional(),
+  paReciprocitySources: PAReciprocitySourcesSchema.optional(),
+  paOrdinaryReturnFacts: PAOrdinaryReturnFactsSchema.optional(),
+  paOrdinaryReturnCompletionSources: PAOrdinaryReturnCompletionSourcesSchema.optional(),
   qofDispositionFacts: z.object({
     sourceTaxYear: z.number().int().optional(),
     sourceReference: z.string().optional(),

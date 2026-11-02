@@ -1,6 +1,7 @@
 /** Pure review-only source composition. Spec: state/pa-ordinary-return.yaml. */
 import Decimal from 'decimal.js';
-import {z} from 'zod';
+import {PAOrdinaryReturnCompletionSourcesSchema,type PAOrdinaryReturnCompletionSources} from '@/models/pa-ordinary-return-completion.js';
+export type {PAOrdinaryReturnCompletionSources} from '@/models/pa-ordinary-return-completion.js';
 import {sha256} from '@noble/hashes/sha2.js';
 import {bytesToHex} from '@noble/hashes/utils.js';
 import {calculateW2StateLocalSources} from '@/engine/forms/w2-state-local.js';
@@ -17,18 +18,6 @@ import {calculateScheduleSP,type ScheduleSPResult} from './pa-schedule-sp.js';
 import {calculateREV1630,type REV1630Result} from './pa-rev-1630.js';
 import {calculatePAWorkingPennsylvaniansTaxCredit,type PAWorkingPennsylvaniansTaxCreditResult} from './pa-working-pennsylvanians-tax-credit.js';
 
-const answer=z.boolean().nullable(),reference=z.string(),originals=z.array(z.record(z.string(),z.unknown()));
-const CompletionSourcesSchema=z.object({
- sourceTaxYear:z.number().int().nullable(),sourceReference:reference,sourceFactsConfirmed:answer,
- originalFederalSources:z.record(z.string(),z.unknown()),owner:z.object({firstName:z.string(),lastName:z.string(),ssn:z.string()}).strict(),
- otherStateTaxes:z.object({status:z.enum(['unknown','none_paid','actual_payments']),sourceReference:reference,allJurisdictionsAndPaymentsReviewedConfirmed:answer,jurisdictions:z.array(z.object({state:z.string(),sourceReference:reference,sourceTaxYear:z.number().int().nullable(),accountName:z.string(),accountSsn:z.string(),completeThroughDate:z.string(),taxPaid:z.string(),incomeTaxWithheld:z.string()}).strict())}).strict(),
- restrictedCredits:z.object({status:z.enum(['unknown','none_available','actual_awards']),sourceReference:reference,allAwardsTransfersCarryforwardsReviewedConfirmed:answer,originalAwards:originals,originalTransfers:originals,originalCarryforwards:originals}).strict(),
- care:z.object({status:z.enum(['unknown','no_qualifying_expenses','actual_expenses']),sourceReference:reference,allCarePaymentSourcesReviewedConfirmed:answer,allEmployerBenefitsIncludedConfirmed:answer,originalCarePayments:originals}).strict(),
- nrk1:z.object({status:z.enum(['unknown','none_received','actual_statements']),sourceReference:reference,allReceivedStatementsReviewedConfirmed:answer,originalStatements:originals}).strict(),
- local:z.object({status:z.enum(['unknown','separate_return_required']),sourceReference:reference,allResidentAndWorkJurisdictionsReviewedConfirmed:answer,jurisdictions:z.array(z.object({name:z.string(),sourceReference:reference,returnRequired:answer}).strict())}).strict(),
- lateFilingRelief:z.object({status:z.enum(['unknown','no_actual_relief_records','actual_relief']),sourceReference:reference,allActualReliefSourcesReviewedConfirmed:answer,originalAgencyRelief:originals}).strict(),
-}).strict();
-export type PAOrdinaryReturnCompletionSources=z.infer<typeof CompletionSourcesSchema>;
 export interface PAOrdinaryReturnResult {
  taxYear:number;sourceCommitment:string;methodVersion:'pa-ordinary-return-v1';residencyStatus:PAResidencySourcesResult['residencyStatus'];filingChoice:'S'|'F';
  schoolDistrictCode:string;dependentChildren:number;timingStatus:'filed'|'expected';
@@ -73,7 +62,7 @@ function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnComple
  const relief=sources.lateFilingRelief;ref(relief.sourceReference);if(relief.status!=='no_actual_relief_records'||relief.allActualReliefSourcesReviewedConfirmed!==true||relief.originalAgencyRelief.length)fail('actual late-filing relief records require their separate source method');
 }
 export function calculatePAOrdinaryReturn(input:TaxYearInput,ordinaryRaw:unknown,completionRaw:unknown):PAOrdinaryReturnResult{
- const parsed=CompletionSourcesSchema.safeParse(completionRaw);if(!parsed.success)return fail('complete actual completion source shape is unknown or unsupported');const sources=parsed.data;
+ const parsed=PAOrdinaryReturnCompletionSourcesSchema.safeParse(completionRaw);if(!parsed.success)return fail('complete actual completion source shape is unknown or unsupported');const sources=parsed.data;
  const p=calculatePAOrdinaryReturnFacts(input,ordinaryRaw),year=p.taxYear;
  completeCreditSources(input,sources,p.timing.asOfDate);
  if(p.timing.date<`${year+1}-01-01`)return fail('an original annual filing cannot predate the end of its actual tax year');

@@ -2052,3 +2052,19 @@ unchanged and failing until the separately reviewed jurisdiction successor lands
 Root canonical4 and PA preview5 source-first controls are green privately; source
 continuity does not imply adoption or final integrated readiness. Useful internal
 work remains, and the goal remains active.
+
+
+## November2: source-bound Ohio PDF and canonical state packets
+
+`75846e7e` preserves actual multi-row Ohio W2 withholding in redacted review
+PDFs. Main68 tests/eightfiles/allnine checks pass; all64 PDFs/157pages reopen
+with no fields/widgets/private identifiers, and all167 page/contact-sheet pixel
+comparisons exactly match the frozen reviewed artifacts. Independent42/four plus
+25/four legacy controls pass. This is review output, not final2026 qualification.
+
+The next canonical-source package retains six PA/OH source packets instead of
+stripping them. Six fresh main behavior failures precede the three product edits;
+105 tests/sevenfiles and all nine package checks pass. Independent88/11 includes
+13 own controls and exact model parity. See state-canonical-roots-work.md and
+the compact active checklist. Shared UI/preview/workspace integration remains
+private work; full-source release qualification remains required.

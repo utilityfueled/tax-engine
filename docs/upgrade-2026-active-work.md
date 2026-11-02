@@ -20,11 +20,11 @@ Package ledgers contain official authorities and full private evidence locations
 
 ## Current internal implementation queue
 
-- [ ] Main OH withholding PDF package7: copied from immutable author manifest
+- [x] Delivered `75846e7e`, OH withholding PDF package7: copied from immutable author manifest
   `nov02-oh-w2-reference/frozen-author-v1/frozen-package.json`, hash
   `acac6295c6b82969a0ee30e0f99a2b6a91a08dedd2eecc5849ed75282289d445`.
   Independent review approved42/four plus25/four legacy controls;93 PDFs/226pages
-  reopened,69 own pages visually reviewed. Main checks/commit remain pending.
+  reopened,69 own pages visually reviewed. Main68/eight/all9 checks pass.64 PDFs/157pages reopen;167pixel comparisons exact.
 - [ ] Original W2 jurisdiction successor: source rows currently restrict PA/OH;
   implement actual valid US50+DC source rows and actual interview selection.
   This does not qualify other state returns. Keep all owner/year/amount/duplicate,
@@ -39,7 +39,7 @@ Package ledgers contain official authorities and full private evidence locations
   manifest16 remains a dependency snapshot, not a claim for later source.
   Canonical PA roots/model extraction: genuine4red to75/10green plus all three
   types/spec/lint/build. Exact5 frozen in `nov02-parent-pa-canonical-roots`;
-  independent review pending. Full shared package still private/uncommitted.
+  independent88/11 approved; standalone main105/seven/all9 checks pass. Canonical admission is committed separately; full shared integration remains private.
 - [ ] Root PA actual bridge/preview: genuine5behavior failures, then all5 green
   after complete ordinary/completion binding and all3 composer preview. Missing,
   stale or unsupported state facts preserve federal AGI50120. Frozen sources and
@@ -47,7 +47,7 @@ Package ledgers contain official authorities and full private evidence locations
 - [ ] Saved generic state payment reconciliation: actual duplicate overlay,
   mismatch, unsupported additional withholding and ignored PA100.01 each proved
   a real failing control. Minimal exact-receipt reconciler written after4red;
-  first green pending. Evidence: `nov02-parent-state-payment-reconciliation`.
+  first rerun found one obsolete residency-only PA setup; actual complete-source fixture migration retains assertions. Second green pending. Evidence: `nov02-parent-state-payment-reconciliation`.
 - [ ] PA state panels/navigation/invalidation3: agent private archive
   `.local/upgrade-work/pa-completion-state-panels/source`;19 source controls
   genuine18red/1pass then19green. Generic-ledger guard2 proved real red, then21
