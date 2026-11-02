@@ -1,6 +1,19 @@
-import { buildGuidedW2SourceContext } from "./guided-interview-bridge";
+import { buildGuidedW2SourceContext, buildTaxInputFromGuidedData } from "./guided-interview-bridge";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs";
+import type { PAOrdinaryReturnFacts } from "@/models/pa-ordinary-return-facts";
+import type { PAOrdinaryReturnCompletionSources } from "@/models/pa-ordinary-return-completion";
+import { buildGuidedOhioResidencyFacts } from "./guided-ohio-residency-facts";
+import { buildGuidedOhioPaymentFacts } from "./guided-ohio-payment-facts";
+import { buildGuidedPAResidencySources } from "./guided-pa-residency-facts";
+import { buildGuidedPAReciprocitySources } from "./guided-pa-reciprocity-facts";
+import { buildGuidedPAOrdinaryReturnFacts } from "./guided-pa-ordinary-return-facts";
+import { buildGuidedPAOrdinaryReturnCompletionSources } from "./guided-pa-ordinary-return-completion";
 import { calculateW2StateLocalSources } from "@/engine/forms/w2-state-local";
 import type { W2StateLocalSources } from "@/models/w2-state-local";
+import type { OhioResidencyDraft } from "./guided-ohio-residency-facts";
+import type { OhioPaymentDraft } from "./guided-ohio-payment-facts";
+import type { PAResidencySources } from "@/models/pa-residency";
+import type { PAReciprocitySources } from "@/models/pa-reciprocity";
 import { cryptoDonationFactErrors, type CryptoDonationData } from './guided-crypto-donations';
 import { royaltySourceFactErrors, invalidateRoyaltySources, type RoyaltyIncomeData } from "./guided-royalty-sources";
 import { invalidateSharedPolicySources } from "./guided-shared-policy";
@@ -1305,6 +1318,12 @@ export interface StateReturnData {
   additionalStateWithholding: string;
   additionalStateWithholdingEntries?: StateWithholdingEntry[];
   ohioInterestAllocation?: OhioInterestAllocation;
+  ohioResidency?: OhioResidencyDraft;
+  ohioPayments?: OhioPaymentDraft;
+  paResidencySources?: PAResidencySources;
+  paReciprocitySources?: PAReciprocitySources;
+  paOrdinaryReturnFacts?: PAOrdinaryReturnFacts;
+  paOrdinaryReturnCompletionSources?: PAOrdinaryReturnCompletionSources;
 }
 
 export interface StateWithholdingEntry {
@@ -1559,6 +1578,58 @@ export function startInterview(segmentation: SegmentationAnswers, taxYear: numbe
   };
 }
 
+/** Current source-only originals for explicit PA ordinary confirmation.
+ * Residency controls use separate federal-only originals, avoiding a confirmation
+ * cycle. This reads/replays existing proof; it never confirms either ordinary packet. */
+export function buildGuidedPAOrdinarySourceInput(state: GuidedFlowState): TaxYearInput | null {
+  if (state.segmentation.stateCode !== "PA") return null;
+  const data = state.sectionData["state-return"];
+  if (!data?.paResidencySources) return null;
+  try {
+    const raw = buildTaxInputFromGuidedData(state);
+    const parsed = raw ? TaxYearInputSchema.safeParse(raw) : undefined;
+    if (!parsed?.success) return null;
+    if (data.paReciprocitySources) {
+      const bound = buildGuidedPAReciprocitySources(parsed.data, data.paResidencySources, data.paReciprocitySources);
+      return { ...parsed.data, paResidencySources: bound.residencySources, paReciprocitySources: bound.reciprocitySources };
+    }
+    return { ...parsed.data, paResidencySources: buildGuidedPAResidencySources(parsed.data, data.paResidencySources) };
+  } catch { return null; }
+}
+
+/** Automatic original snapshots and confirmation headers are not new user facts. */
+function paOrdinarySourceValues(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(paOrdinarySourceValues);
+  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value)
+    .filter(([key]) => !["sourceFactsConfirmed", "originalFederalSources", "originalTaxpayer", "originalFederalDependent"].includes(key))
+    .map(([key, child]) => [key, paOrdinarySourceValues(child)]));
+  return value;
+}
+function paCompletionSourceValues(value: PAOrdinaryReturnCompletionSources | undefined): unknown {
+  if (!value) return value;
+  const { owner: _boundOwner, ...facts } = value;
+  return paOrdinarySourceValues(facts);
+}
+/** Only top-level OH confirmation/snapshot fields are automatic metadata. */
+function ohioActualSourceValues(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  function stable(item: unknown): unknown {
+    if (Array.isArray(item)) return item.map(stable);
+    if (item && typeof item === "object") return Object.fromEntries(Object.entries(item)
+      .filter(([, child]) => child !== undefined).sort(([a], [b]) => a.localeCompare(b)).map(([key, child]) => [key, stable(child)]));
+    return item;
+  }
+  // Encode after excluding only the top header; the generic cross-section
+  // comparator intentionally ignores recursive confirmation metadata.
+  return JSON.stringify(stable(Object.fromEntries(Object.entries(value).filter(([key]) => key !== "sourceFactsConfirmed" && key !== "originalFederalSources"))));
+}
+
+function paStateDependencyValues(value: StateReturnData | undefined): unknown {
+  if (!value) return value;
+  const { paOrdinaryReturnFacts: _ordinary, paOrdinaryReturnCompletionSources: _completion, ...dependencies } = value;
+  return dependencies;
+}
+
 function w2OriginalFields(entry: W2EntryData | undefined) {
   if (!entry) return undefined;
   const { stateLocalSources: _source, aiSuggestedFields: _suggestions, ...original } = entry;
@@ -1647,11 +1718,31 @@ export function updateSectionData(
   } : undefined;
   const ohioStateReturn = state.sectionData["state-return"];
   const ohioInterestChanged = sectionId === "income-investments" && ohioStateReturn?.ohioInterestAllocation;
+  const stateOriginalsChanged = sourceValuesChanged && sectionId !== "state-return" && ohioStateReturn;
+  const incomingStateReturn = sectionId === "state-return" ? data as StateReturnData : undefined;
+  const paDependenciesChanged = incomingStateReturn && guidedSourceValuesChanged(paStateDependencyValues(ohioStateReturn), paStateDependencyValues(incomingStateReturn));
+  const paOrdinaryChanged = incomingStateReturn && guidedSourceValuesChanged(paOrdinarySourceValues(ohioStateReturn?.paOrdinaryReturnFacts), paOrdinarySourceValues(incomingStateReturn.paOrdinaryReturnFacts));
+  const paCompletionChanged = incomingStateReturn && guidedSourceValuesChanged(paCompletionSourceValues(ohioStateReturn?.paOrdinaryReturnCompletionSources), paCompletionSourceValues(incomingStateReturn.paOrdinaryReturnCompletionSources));
+  const invalidatedPAStateReturn = incomingStateReturn && (paDependenciesChanged || paOrdinaryChanged || paCompletionChanged) ? {
+    ...incomingStateReturn,
+    ...(incomingStateReturn.paOrdinaryReturnFacts && (paDependenciesChanged || paOrdinaryChanged)
+      ? { paOrdinaryReturnFacts: { ...incomingStateReturn.paOrdinaryReturnFacts, sourceFactsConfirmed: null } } : {}),
+    ...(incomingStateReturn.paOrdinaryReturnCompletionSources && (paDependenciesChanged || paCompletionChanged)
+      ? { paOrdinaryReturnCompletionSources: { ...incomingStateReturn.paOrdinaryReturnCompletionSources, sourceFactsConfirmed: null } } : {}),
+  } : undefined;
+  const ohioResidencyChanged = incomingStateReturn && guidedSourceValuesChanged(ohioActualSourceValues(ohioStateReturn?.ohioResidency), ohioActualSourceValues(incomingStateReturn.ohioResidency));
+  const ohioPaymentsChanged = incomingStateReturn && guidedSourceValuesChanged(ohioActualSourceValues(ohioStateReturn?.ohioPayments), ohioActualSourceValues(incomingStateReturn.ohioPayments));
+  const invalidatedOhioStateReturn = incomingStateReturn && (ohioResidencyChanged || ohioPaymentsChanged) ? {
+    ...(invalidatedPAStateReturn ?? incomingStateReturn),
+    ...(incomingStateReturn.ohioResidency && ohioResidencyChanged ? { ohioResidency: { ...incomingStateReturn.ohioResidency, sourceFactsConfirmed: null } } : {}),
+    ...(incomingStateReturn.ohioPayments && ohioPaymentsChanged ? { ohioPayments: { ...incomingStateReturn.ohioPayments, sourceFactsConfirmed: null } } : {}),
+  } : undefined;
   return {
     ...state,
     sectionData: {
       ...state.sectionData,
       [sectionId]: data,
+      ...((invalidatedOhioStateReturn ?? invalidatedPAStateReturn) ? { "state-return": invalidatedOhioStateReturn ?? invalidatedPAStateReturn } : {}),
       ...(invalidatedW2 ? { "income-w2": invalidatedW2 } : {}),
       ...(scheduleCSourcesChanged && nextBusiness ? {"income-self-employment":{...nextBusiness,businessFacts:{...nextBusiness.businessFacts,scheduleCSourceFacts:{...scheduleCSourcesChanged,sourceFactsConfirmed:null}}}}:{}),
       ...(royaltySourcesChanged ? { "income-royalties": invalidateRoyaltySources(royaltySourcesChanged) } : {}),
@@ -1677,7 +1768,18 @@ export function updateSectionData(
         ...(mortgageSourcesChanged ? { mortgageEntries: mortgageSourcesChanged.mortgageEntries?.map(entry => ({ ...entry, sourceFactsConfirmed: null })), ...(mortgageSourcesChanged.mortgageWorksheet ? { mortgageWorksheet: { ...mortgageSourcesChanged.mortgageWorksheet, sourceFactsConfirmed: null } } : {}) } : {}),
         ...(investmentInterestSourcesChanged ? { investmentInterestSources: Object.fromEntries(Object.entries(investmentInterestSourcesChanged).map(([key, worksheet]) => [key, worksheet ? { ...worksheet, sourceFactsConfirmed: null, ...(worksheet.childIncomeSources ? { childIncomeSources: { ...worksheet.childIncomeSources, sourceFactsConfirmed: null } } : {}) } : worksheet])) } : {}),
       } } : {}),
-      ...(ohioInterestChanged && ohioStateReturn ? { "state-return": { ...ohioStateReturn, ohioInterestAllocation: { ...ohioInterestChanged, sourceFactsConfirmed: null } } } : {}),
+      ...((ohioInterestChanged || stateOriginalsChanged) && ohioStateReturn ? { "state-return": {
+        ...ohioStateReturn,
+        ...(ohioInterestChanged ? { ohioInterestAllocation: { ...ohioInterestChanged, sourceFactsConfirmed: null } } : {}),
+        ...(stateOriginalsChanged ? {
+          ...(ohioStateReturn.ohioResidency ? {ohioResidency:{...ohioStateReturn.ohioResidency,sourceFactsConfirmed:null}} : {}),
+          ...(ohioStateReturn.ohioPayments ? {ohioPayments:{...ohioStateReturn.ohioPayments,sourceFactsConfirmed:null}} : {}),
+          ...(ohioStateReturn.paResidencySources ? {paResidencySources:{...ohioStateReturn.paResidencySources,sourceFactsConfirmed:null}} : {}),
+          ...(ohioStateReturn.paReciprocitySources ? {paReciprocitySources:{...ohioStateReturn.paReciprocitySources,sourceFactsConfirmed:null}} : {}),
+          ...(ohioStateReturn.paOrdinaryReturnFacts ? { paOrdinaryReturnFacts: { ...ohioStateReturn.paOrdinaryReturnFacts, sourceFactsConfirmed: null } } : {}),
+          ...(ohioStateReturn.paOrdinaryReturnCompletionSources ? { paOrdinaryReturnCompletionSources: { ...ohioStateReturn.paOrdinaryReturnCompletionSources, sourceFactsConfirmed: null } } : {}),
+        } : {}),
+      } } : {}),
       ...((iraSourcesChanged || hsaSourcesChanged || educatorSourcesChanged || studentLoanSourcesChanged || healthSourcesChanged || foreignIncomeSourcesChanged || nolSourcesChanged || currentLossSourcesChanged || codSourcesChanged || k1LossSourcesChanged) && nextAdjustments ? { adjustments: { ...nextAdjustments,
         ...(k1LossSourcesChanged ? { k1LossSources: invalidateK1LossSources(k1LossSourcesChanged) } : {}),
         ...(codSourcesChanged ? { codNolSources: invalidateGuidedCodNol(codSourcesChanged) } : {}),
@@ -1947,6 +2049,43 @@ function validateRentalSection(data: { entries: RentalPropertyEntryData[] } | un
   return Object.keys(errors).length ? { status: "partial", message: "Complete the actual rental ownership, use and expense facts.", fieldErrors: errors, allowSkip: true } : VALID_SECTION;
 }
 
+/** Source navigation only. The complete composer separately guards unsupported methods. */
+function guidedPAOrdinaryReturnSourceErrors(state: GuidedFlowState): Record<string, string> {
+  if (state.segmentation.stateCode !== "PA") return {};
+  const data = state.sectionData["state-return"], current = buildGuidedPAOrdinarySourceInput(state);
+  const errors: Record<string, string> = {};
+  if (!current) errors.paResidencySources = "Complete and confirm the actual current federal and Pennsylvania residency sources.";
+  if (!data?.paOrdinaryReturnFacts) errors.paOrdinaryReturnFacts = "Complete and confirm the actual Pennsylvania return records.";
+  else if (current) {
+    try { buildGuidedPAOrdinaryReturnFacts(current, data.paOrdinaryReturnFacts); }
+    catch (error) { errors.paOrdinaryReturnFacts = error instanceof Error ? error.message : "Reconcile the actual Pennsylvania return records."; }
+  }
+  if (!data?.paOrdinaryReturnCompletionSources) errors.paOrdinaryReturnCompletionSources = "Complete and confirm the actual Pennsylvania completion records.";
+  else if (current) {
+    try { buildGuidedPAOrdinaryReturnCompletionSources(current, data.paOrdinaryReturnCompletionSources); }
+    catch (error) { errors.paOrdinaryReturnCompletionSources = error instanceof Error ? error.message : "Reconcile the actual Pennsylvania completion records."; }
+  }
+  return errors;
+}
+
+/** Mandatory actual OH source replay, independent of state return calculation. */
+function guidedOhioActualSourceErrors(state: GuidedFlowState): Record<string, string> {
+  if (state.segmentation.stateCode !== "OH") return {};
+  const data = state.sectionData["state-return"], errors: Record<string, string> = {};
+  if (!data?.ohioResidency) errors.ohioResidency = "Complete and explicitly confirm the actual Ohio residency records.";
+  if (!data?.ohioPayments) errors.ohioPayments = "Complete and explicitly confirm the actual Ohio payment records.";
+  try {
+    const raw = buildTaxInputFromGuidedData(state);
+    const parsed = raw ? TaxYearInputSchema.safeParse(raw) : undefined;
+    if (!parsed?.success) throw new Error("Complete the actual current federal owner, year and source originals before confirming Ohio sources.");
+    try { buildGuidedOhioResidencyFacts(data?.ohioResidency, parsed.data); }
+    catch (error) { errors.ohioResidency = error instanceof Error ? error.message : "Reconcile the actual Ohio residency sources."; }
+    try { buildGuidedOhioPaymentFacts(data?.ohioPayments, parsed.data); }
+    catch (error) { errors.ohioPayments = error instanceof Error ? error.message : "Reconcile the actual Ohio payment sources."; }
+  } catch (error) { errors["ohio-current-originals"] = error instanceof Error ? error.message : "Complete actual federal originals before confirming Ohio sources."; }
+  return errors;
+}
+
 function validateRequiredFacts(errors: Record<string, string>): SectionValidationResult {
   return Object.keys(errors).length ? {
     status: "partial", message: Object.values(errors)[0], fieldErrors: errors, allowSkip: false,
@@ -2077,6 +2216,8 @@ export function validateSection(
       return VALID_SECTION; // Review is always valid
     case "state-return":
       return validateRequiredFacts({
+        ...guidedPAOrdinaryReturnSourceErrors(state),
+        ...guidedOhioActualSourceErrors(state),
         ...statePaymentFactErrors(getSectionData(state, "state-return"), state.taxYear, state.segmentation.stateCode),
         ...guidedOhioInterestFactErrors(state),
       });

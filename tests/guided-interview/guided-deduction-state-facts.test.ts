@@ -1,5 +1,6 @@
 // Spec: spec/federal/guided-input.yaml, deduction-categories and state-payment-sources
 import { describe, expect, it } from "vitest";
+import { explicitlyConfirmFullYearOhioNavigationFixture } from "../fixtures/guided-ohio-source-navigation.js";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 import { buildScheduleAInput, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
@@ -43,6 +44,7 @@ describe("classified deduction and state facts", () => {
       { payer: "Example Bank", documentType: "1099-INT", state: "OH", taxYear: "2025", amount: "0.2" },
       { payer: "Example Brokerage", documentType: "1099-DIV", state: "OH", taxYear: "2025", amount: "0" },
     ], stateEstimatedPayments: [{ state: "OH", date: "2025-09-15", amount: "0" }, { state: "OH", date: "2026-01-15", amount: "9007199254740993.01" }] });
+    explicitlyConfirmFullYearOhioNavigationFixture(state);
     expect(validateSection(state, "state-return").status).toBe("complete");
     expect(buildTaxInputFromGuidedData(state)?.scheduleA?.additionalStateLocalIncomeTaxes).toBe("0.3");
     expect(buildTaxInputFromGuidedData(state)?.adjustments?.estimatedTaxPayments).toEqual([{ type: "state", state: "OH", date: "2025-09-15", amount: "0" }, { type: "state", state: "OH", date: "2026-01-15", amount: "9007199254740993.01" }]);

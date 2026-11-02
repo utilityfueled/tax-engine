@@ -2100,3 +2100,17 @@ after automatic review rejection. Test SMTP remains missing. No staging
 qualification or production deployment is claimed. PA household, credit and
 actual export work continues privately; the active index records current exact
 review/test evidence and remaining adoption work.
+
+
+## November2: guided PA/OH original-source integration
+
+The combined source/navigation/preview package passes280 tests/16files, allthree
+type checks, spec validation, inventory generation/check, strict lint0 and both
+builds. Its official-law calculations remain in the existing composers; actual
+source packets and explicit confirmations now reach those composers for allthree
+residency categories. Saved generic entries remain visible and must reconcile
+against distinct actual receipts. Source-first failures, independent reviews,
+test-only merge corrections and unaltered monetary assertions are retained in the
+two guide ledgers and active checklist. This is bounded main evidence; full
+coverage, final2026 forms, independent human reviews and hosted qualification
+remain required.

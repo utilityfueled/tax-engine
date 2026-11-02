@@ -9,6 +9,7 @@ import { marketplacePolicyOptions } from "@/lib/guided-marketplace-health-facts"
 import { healthInsuranceSourceOptions } from "@/lib/guided-health-insurance-facts";
 import { guidedCareBenefitSources } from "@/lib/guided-dependent-care-benefits";
 import Decimal from "decimal.js";
+import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReturnWorkspaceRecord } from "@tax-engine/contracts";
 import {
@@ -26,6 +27,8 @@ import { RetroShell } from "@/components/retro-shell";
 import {
   type GuidedPreviewMetrics,
   type StatePreviewMetrics,
+  buildTaxInputFromGuidedData,
+  mapFilingStatus,
   buildGuidedFactAnswers,
   buildGuidedSyntheticDocuments,
 } from "@/lib/guided-interview-bridge";
@@ -68,6 +71,7 @@ import {
   emptyScheduleCExpenses,
   emptyW2Entry,
   getSectionData,
+  buildGuidedPAOrdinarySourceInput,
   getVisitedSectionStatus,
   goToNextSection,
   goToPreviousSection,
@@ -730,10 +734,20 @@ function SectionContent({
           onJumpToSection={onJumpToSection}
         />
       );
-    case "state-return":
+    case "state-return": {
+      let originalInput: TaxYearInput | null = null;
+      try {
+        const raw = buildTaxInputFromGuidedData(state);
+        const parsed = raw ? TaxYearInputSchema.safeParse(raw) : undefined;
+        if (parsed?.success) originalInput = parsed.data;
+      } catch { /* Actual incomplete federal sources stay unavailable for confirmation. */ }
       return (
         <SectionStateReturn
           stateCode={state.segmentation.stateCode as SupportedStateCode}
+          originalInput={originalInput}
+          ordinaryOriginalInput={buildGuidedPAOrdinarySourceInput(state)}
+          taxYear={state.taxYear}
+          filingStatus={state.segmentation.filingStatus ? mapFilingStatus(state.segmentation.filingStatus) : null}
           data={getSectionData(state, "state-return")}
           guidedPreview={guidedPreview}
           onDataChange={(data: StateReturnData) =>
@@ -741,6 +755,7 @@ function SectionContent({
           }
         />
       );
+    }
     case "final-review": {
       const completion = summarizeFlowCompletion(state);
       const followUpSections = completion.skippedSections + completion.needsReviewSections;

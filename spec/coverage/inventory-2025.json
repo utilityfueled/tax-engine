@@ -10404,6 +10404,46 @@
       ]
     },
     {
+      "key": "state/guided-ohio-source-navigation",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "spec/state/guided-ohio-residency.yaml; spec/state/guided-ohio-payments.yaml",
+      "specPath": "spec/state/guided-ohio-source-navigation.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/guided-pa-ordinary-panels",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "docs/upgrade-2026-execution-brief.md",
+      "specPath": "spec/state/guided-pa-ordinary-panels.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/guided-pa-royalty-sources",
       "jurisdiction": "state",
       "taxYear": 2025,
@@ -10429,6 +10469,46 @@
       "taxYear": 2025,
       "sourceAuthority": "docs/upgrade-2026-execution-brief.md",
       "specPath": "spec/state/guided-state-originals.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/guided-state-originals-integration",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "docs/upgrade-2026-execution-brief.md",
+      "specPath": "spec/state/guided-state-originals-integration.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/guided-state-payment-reconciliation",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "docs/upgrade-2026-execution-brief.md",
+      "specPath": "spec/state/guided-state-payment-reconciliation.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,
@@ -12198,6 +12278,26 @@
       "taxYear": 2026,
       "sourceAuthority": "docs/upgrade-2026-execution-brief.md",
       "specPath": "spec/state/pa-complete-canonical-roots.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-complete-shared-paths",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf",
+      "specPath": "spec/state/pa-complete-shared-paths.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,

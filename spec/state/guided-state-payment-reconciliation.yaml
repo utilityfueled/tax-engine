@@ -1,0 +1,23 @@
+form: Guided-State-Payment-Reconciliation
+fullName: Reconcile saved generic state ledger with actual source receipts
+taxYear: 2025
+reference: docs/upgrade-2026-execution-brief.md
+notes: |
+  Actual original-bound state payment sources are authoritative; legacy saved
+  rows remain visible and require reconciliation or explicit removal. Match each
+  saved estimate once to an actual receipt by exact date, state and Decimal amount.
+  Matching records never produce an extra scalar credit. Additional withholding
+  needs its actual canonical source method; do not convert free totals to proof.
+lines:
+  - line: match
+    description: Ohio actual estimated100 and matching saved100 remain one receipt and no estimated overlay.
+    testRef: 'tests/guided-interview/state-payment-source-reconciliation.test.ts::state actual payment ledger does not double add matching legacy Ohio receipt'
+  - line: conflict
+    description: Reject mismatched100.01, wrong actualdate and duplicate saved claims; never silently discard amounts.
+    testRef: 'tests/guided-interview/state-payment-source-reconciliation.test.ts::state actual payment ledger rejects unmatched and duplicate legacy Ohio claims'
+  - line: withholding
+    description: Retain actual saved50.01 additional withholding metadata but require canonical original reconciliation, never use an override.
+    testRef: 'tests/guided-interview/state-payment-source-reconciliation.test.ts::state actual payment ledger preserves unsupported additional withholding claims for reconciliation'
+  - line: pa
+    description: A saved PA estimate100.01 absent from actual original receipts must block instead of silently disappearing from state computation.
+    testRef: 'tests/guided-interview/state-payment-source-reconciliation.test.ts::state actual payment ledger cannot silently discard saved PA estimated amounts'

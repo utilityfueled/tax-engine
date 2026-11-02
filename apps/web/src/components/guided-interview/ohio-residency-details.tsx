@@ -1,6 +1,8 @@
 'use client';
+import { useState } from 'react';
+import type { TaxYearInput } from '@/models/inputs';
 import { ohioNrcCategories, type OhioNrcCategory } from '@/models/ohio-residency';
-import { emptyOhioResidencyDraft, emptyOhioResidencyOwner, type OhioResidencyDraft } from '@/lib/guided-ohio-residency-facts';
+import { emptyOhioResidencyDraft, emptyOhioResidencyOwner, confirmGuidedOhioResidencyFacts, type OhioResidencyDraft } from '@/lib/guided-ohio-residency-facts';
 import { BooleanFact, TextFact } from './fact-fields';
 import { CurrencyField } from './currency-field';
 
@@ -26,16 +28,19 @@ function currentAmounts(owner: Owner): NonNullable<Owner['amounts']> {
     if (!owner.amounts) throw new Error('The actual allocation source rows are missing.');
     return owner.amounts;
 }
-export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear }: {
+export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, originalInput }: {
+    originalInput?: TaxYearInput | null;
     data: OhioResidencyDraft | undefined;
     onChange: (data: OhioResidencyDraft | undefined) => void;
     filingStatus: string | null | undefined;
     taxYear: number | null | undefined;
 }) {
-    function edit(change: (copy: OhioResidencyDraft) => void, confirmation = false) {
+    const [confirmationError, setConfirmationError] = useState<string | null>(null);
+    function edit(change: (copy: OhioResidencyDraft) => void) {
         const copy = structuredClone(data ?? emptyOhioResidencyDraft);
         change(copy);
-        if (!confirmation) copy.sourceFactsConfirmed = null;
+        copy.sourceFactsConfirmed = null;
+        setConfirmationError(null);
         onChange(copy);
     }
     function editOwner(key: Owner['accountHolder'], change: (owner: Owner) => void) {
@@ -99,7 +104,13 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear }: 
                 <BooleanFact label="All actual federal income and adjustment sources included" value={data.allFederalSourcesIncludedConfirmed} onChange={value => edit(copy => { copy.allFederalSourcesIncludedConfirmed = value; })} />
                 <BooleanFact label="Actual sources contain no business income requiring Ohio apportionment" value={data.noBusinessIncomeConfirmed} onChange={value => edit(copy => { copy.noBusinessIncomeConfirmed = value; })} />
             </>}
-            <BooleanFact label="Ohio residency sources checked after the last edit" value={data.sourceFactsConfirmed} onChange={value => edit(copy => { copy.sourceFactsConfirmed = value; }, true)} />
+            <p role="status">{data.sourceFactsConfirmed === true ? 'Ohio residency sources explicitly confirmed.' : 'Ohio residency sources need explicit confirmation.'}</p>
+            <button type="button" className="utility-button" disabled={!originalInput} onClick={() => {
+                if (!originalInput) return;
+                try { const confirmed = confirmGuidedOhioResidencyFacts(originalInput, data); setConfirmationError(null); onChange(confirmed); }
+                catch (error) { setConfirmationError(error instanceof Error ? error.message : 'Complete and reconcile actual Ohio residency sources.'); }
+            }}>Confirm actual Ohio residency sources</button>
+            {confirmationError && <p role="alert">{confirmationError}</p>}
             <button type="button" className="utility-button" onClick={() => onChange(undefined)}>Remove Ohio residency source facts</button>
         </>}
     </div>;

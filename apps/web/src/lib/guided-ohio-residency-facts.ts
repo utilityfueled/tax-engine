@@ -3,6 +3,8 @@ import type { TaxYearInput } from '@/models/inputs';
 import { OhioResidencyFactsSchema, ohioNrcCategories, type OhioNrcCategory, type OhioResidencyFacts } from '@/models/ohio-residency';
 import { calculateOhioITNRC } from '@/engine/state/oh-it-nrc';
 export interface OhioResidencyDraft {
+    /** Bound only by explicit confirmation; old boolean-only saves require reconfirmation. */
+    originalFederalSources?: Record<string, unknown>;
     taxYear: string;
     sourceReference: string;
     sourceFactsConfirmed: boolean | null;
@@ -86,14 +88,32 @@ export function ohioResidencyFactErrors(data: OhioResidencyDraft | undefined, ta
         return { 'ohio-residency-reconciliation': error instanceof Error ? error.message : 'Reconcile the actual owner domicile and source amounts.' };
     }
 }
-/** Snapshot only the current original; no amount or residence is inferred. */
+/** Canonical private originals exclude their two self-referential Ohio roots only. */
+export function snapshotGuidedOhioOriginals(input: TaxYearInput): Record<string, unknown> {
+    return structuredClone(Object.fromEntries(Object.entries(input).filter(([key]) => key !== 'ohioResidency' && key !== 'ohioPayments')));
+}
+function stableOhioOriginal(value: unknown): string {
+    if (Array.isArray(value)) return '[' + value.map(stableOhioOriginal).join(',') + ']';
+    if (value && typeof value === 'object') return '{' + Object.entries(value).filter(([, child]) => child !== undefined)
+        .sort(([a], [b]) => a.localeCompare(b)).map(([key, child]) => JSON.stringify(key) + ':' + stableOhioOriginal(child)).join(',') + '}';
+    return JSON.stringify(value) ?? 'null';
+}
+export function assertGuidedOhioOriginals(input: TaxYearInput, retained: Record<string, unknown> | undefined): void {
+    if (!retained || stableOhioOriginal(retained) !== stableOhioOriginal(snapshotGuidedOhioOriginals(input)))
+        throw new Error('Actual Ohio original sources are missing or stale; explicitly reconfirm current owner, year and federal originals.');
+}
+/** Only an explicit confirmation may bind the current private originals. */
+export function confirmGuidedOhioResidencyFacts(input: TaxYearInput, draft: OhioResidencyDraft | undefined): OhioResidencyDraft {
+    if (!draft) throw new Error('Actual Ohio residency source facts are required.');
+    const candidate = { ...structuredClone(draft), sourceFactsConfirmed: true, originalFederalSources: snapshotGuidedOhioOriginals(input) };
+    buildGuidedOhioResidencyFacts(candidate, input);
+    return candidate;
+}
+/** Pure replay of retained originals; reading never refreshes an earlier confirmation. */
 export function buildGuidedOhioResidencyFacts(data: OhioResidencyDraft | undefined, input: TaxYearInput): OhioResidencyFacts {
-    if (!data) throw new Error("Actual Ohio residency source facts are required.");
+    if (!data) throw new Error('Actual Ohio residency source facts are required.');
+    assertGuidedOhioOriginals(input, data.originalFederalSources);
     const errors = ohioResidencyFactErrors(data, input.taxpayer.taxYear, input.taxpayer.filingStatus);
-    if (Object.keys(errors).length)
-        throw new Error(Object.values(errors).join(' '));
-    const { ohioResidency: _, ohioPayments: _payments, ...original } = input as TaxYearInput & {
-        ohioResidency?: unknown; ohioPayments?:unknown;
-    };
-    return OhioResidencyFactsSchema.parse({ ...raw(data), originalFederalSources: structuredClone(original) });
+    if (Object.keys(errors).length) throw new Error(Object.values(errors).join(' '));
+    return OhioResidencyFactsSchema.parse(raw(data));
 }

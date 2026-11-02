@@ -35,24 +35,24 @@ its minimal enum/type/dropdown edits; it qualifies source capture only.
   archive SHA256`749bda2987b25952e367d7525b553bc5bccc6d289a49ddf938479371b7dc19fb`.
   This is exact unqualified work, not an all-green result. Later small changes
   retain separate full copies/receipts. Historical current06/16 is not current.
-- [ ] Shared PA preview/payment reconciliation eight: genuine5+4 behavior reds,
+- [x] Shared PA preview/payment reconciliation eight: genuine5+4 behavior reds,
   then36/six with types3/spec/strictlint/build; independent33/four approved,
   receipt`9cb8b9df8276d6c14dfb603742f6d2d2418080eb3ecaed126a0dccb55957ad13`.
   Exact frozen8: `nov02-parent-pa-shared-reviewed-candidate/manifest.json`.
   Legacy generic rows remain evidence and reconcile to distinct exact receipts;
-  extra scalar withholding cannot override originals. Main adoption pending.
-- [ ] PA UI/navigation eight:21 own controls, bounded86/10/types/spec/lint/build;
+  extra scalar withholding cannot override originals. Adopted with PA/OH guide package; main280/16 and all11 package checks pass.
+- [x] PA UI/navigation eight:21 own controls, bounded86/10/types/spec/lint/build;
   independent37/four approved, receipt`9fdea1ee74ea8d4dd50fe540b5225765513972ca37d68f48ab665cd04ef238a0`.
   Frozen8`nov02-pa-completion-state-panels/frozen-author-v1/frozen-package.json`,
   hash`041078ff3816a27353354f9e49ebf8a1ec40742c8a953adc0e53e0c558c4d083`.
-  Merge only owned delta and dependencies; preserve newer unrelated main work.
-- [ ] Ohio source confirmation/navigation19: reads previously recreated snapshots.
+  Adopted with reviewed Ohio/shared dependencies; main280/16 and all11 checks pass.
+- [x] Ohio source confirmation/navigation19: reads previously recreated snapshots.
   Explicit confirmation only now retains original identity/year/full facts;
   nested confirmations remain real facts.28/two and types3/spec/lint/bothbuilds
   pass privately. Broader75pass/5fail reflects investment-year/OID source gaps,
   not green qualification. Exact19`nov02-oh-source-navigation/frozen-author-v1/frozen-package.json`,
   hash`9819557c062133d4093f6af07cff0eb5e44d5351fe9c3d6fe9547b5094f532ed`;
-  independent review/adoption and dependency corrections remain.
+  independent104/15 approved receipt395304083ad24180dadb3836aafe4748d9288b3b5b2bf16acbe6863bdc2562a8; main280/16 and all11 checks pass after pushed investment correction.
 - [x] Investment actual-source year/OID successor: five owned products, actual
   blank-year UI, strict entered-year projection/schema admission and genuine OID
   row validation. Main source-first23:8fail/15pass then614/34+58/two with types3,

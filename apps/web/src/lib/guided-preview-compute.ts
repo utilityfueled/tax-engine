@@ -8,12 +8,12 @@ import Decimal from "decimal.js";
 import { sumAdditionalStateWithholding } from "./guided-state-facts";
 import { parseGuidedCurrency } from "./guided-currency";
 import { calculateFederalTax } from "@/engine/federal";
-import { calculatePAReturn } from "@/engine/state/pa-orchestrator";
+import {calculatePAOrdinaryReturn} from "@/engine/state/pa-ordinary-return";
 import { assertQofStateMethod } from "@/engine/forms/qof-inclusion";
 import { assertClaimOfRightStateMethod } from "@/engine/forms/claim-of-right";
 import { buildOhioResidentReturnInput } from "@/engine/state/oh-input-adapter";
 import { calculateOhioResidentReturn } from "@/engine/state/oh-return";
-import { buildGuidedOhioOverlay, buildGuidedPennsylvaniaOverrides } from "./guided-state-engine-inputs";
+import { buildGuidedOhioOverlay, buildGuidedStateOriginals } from "./guided-state-engine-inputs";
 import {
   calculateGenericStateReturn,
   type GenericStateReturnInput,
@@ -180,7 +180,7 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
 
     let stateResult: StatePreviewResult | null = null;
     const stateCode = state.segmentation.stateCode;
-    if (stateCode && state.sectionData["personal-info"]?.stateResidency === "full-year") {
+    if (stateCode && (stateCode === "OH" || stateCode === "PA" || state.sectionData["personal-info"]?.stateResidency === "full-year")) {
       const personalInfo = state.sectionData["personal-info"] as PersonalInfoData | undefined;
       const depCount = Number(personalInfo?.dependentCount ?? "0");
       if (!state.segmentation.filingStatus) return null;
@@ -193,11 +193,13 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
         assertQofStateMethod(taxInput, stateCode);
         assertClaimOfRightStateMethod(taxInput, stateCode);
         if (stateCode === "PA") {
-          const pa = calculatePAReturn(taxInput, buildGuidedPennsylvaniaOverrides(state)).pa40;
+          const currentOriginals=buildGuidedStateOriginals(taxInput,state);
+          const pa=calculatePAOrdinaryReturn(currentOriginals,currentOriginals.paOrdinaryReturnFacts,currentOriginals.paOrdinaryReturnCompletionSources).pa40;
           stateResult = { stateCode, stateName: "Pennsylvania", stateTax: pa.netTaxLiability,
             refund: pa.netOverpayment, balanceDue: pa.totalAmountDue, totalPayments: pa.totalPayments };
         } else if (stateCode === "OH") {
-          const oh = calculateOhioResidentReturn(buildOhioResidentReturnInput(taxInput, result, buildGuidedOhioOverlay(taxInput, state, result.taxExemptInterest))).it1040;
+          const currentOriginals = buildGuidedStateOriginals(taxInput, state);
+          const oh = calculateOhioResidentReturn(buildOhioResidentReturnInput(currentOriginals, result, buildGuidedOhioOverlay(currentOriginals, state, result.taxExemptInterest))).it1040;
           stateResult = { stateCode, stateName: "Ohio", stateTax: oh.line13_totalLiability,
             refund: oh.line26_refund, balanceDue: oh.line22_totalAmountDue, totalPayments: oh.line17_totalPayments };
         } else {

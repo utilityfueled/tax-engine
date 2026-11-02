@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // Spec: spec/federal/guided-panel-behavior.yaml.
 import React, { useState } from 'react';
+import { explicitlyConfirmFullYearOhioNavigationFixture } from '../../fixtures/guided-ohio-source-navigation.js';
 import { expect, it, vi } from 'vitest';
 import { SectionStateReturn } from '@/components/guided-interview/section-state-return';
 import { emptyStateReturnData, updateSectionData, validateSection, type GuidedFlowState } from '@/lib/guided-interview-flow';
@@ -79,6 +80,7 @@ it('reconciles state payment records through actual add edit and remove controls
 it('binds Ohio allocation edits and displays actual state result states', async () => {
   let state = startCompleteInterview({ filingStatus: 'single', incomeTypes: ['investments'], lifeEvents: [], stateCode: 'OH' });
   state.sectionData['income-investments'] = { interestEntries: [{ ...completeInterestSource, taxExemptInterest: '100.30' }], dividendEntries: [], brokerageEntries: [] };
+  explicitlyConfirmFullYearOhioNavigationFixture(state);
   const network = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('No network expected'));
   function Harness({ preview = null }: { preview?: GuidedPreviewMetrics | null }) {
     const [current, setCurrent] = useState<GuidedFlowState>(state);

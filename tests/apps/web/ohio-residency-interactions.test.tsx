@@ -17,19 +17,25 @@ it('collects actual domicile facts and invalidates confirmation after source edi
     const click = async (label: string) => { const b = [...container.querySelectorAll('button')].find(b => b.textContent === label); if (!b)
         throw new Error(`Missing button ${label}`); await act(async () => b.click()); };
     const change = async (label: string, value: string) => { const l = [...container.querySelectorAll('label')].find(l => l.querySelector('.guided-field-label')?.textContent === label); const field = l?.querySelector<HTMLInputElement | HTMLSelectElement>('input,select'); if (!field)
-        throw new Error(`Missing control ${label}`); const setter = Object.getOwnPropertyDescriptor(field.tagName === 'SELECT' ? HTMLSelectElement.prototype : HTMLInputElement.prototype, 'value')!.set!; await act(async () => { setter.call(field, value); field.dispatchEvent(new Event(field.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true })); }); };
+        throw new Error(`Missing control ${label}`); const setter = Object.getOwnPropertyDescriptor(field.tagName === 'SELECT' ? HTMLSelectElement.prototype : HTMLInputElement.prototype, 'value')?.set; if (!setter) throw new Error(`Missing native value setter for ${label}`); await act(async () => { setter.call(field, value); field.dispatchEvent(new Event(field.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true })); }); };
     try {
         await act(async () => root.render(<Harness />));
         await click('Add Ohio residency source facts');
         expect(latest?.taxYear).toBe('');
         expect(latest?.sourceFactsConfirmed).toBeNull();
         await click('Add primary owner domicile source');
-        expect(latest?.owners[0]!.status).toBe('');
-        expect(latest?.owners[0]!.periods[0]!.from).toBe('');
+        const owner = latest?.owners[0];
+        if (!owner) throw new Error('Adding a primary owner requires an actual owner row');
+        const period = owner.periods[0];
+        if (!period) throw new Error('Adding a primary owner requires a domicile period row');
+        expect(owner.status).toBe('');
+        expect(period.from).toBe('');
         await change('Ohio residency source year', '2025');
         await change('Ohio residency source reference', 'Actual synthetic domicile records');
-        await change('Ohio residency sources checked after the last edit', 'true');
-        expect(latest?.sourceFactsConfirmed).toBe(true);
+        const confirmation = [...container.querySelectorAll('button')].find(button => button.textContent === 'Confirm actual Ohio residency sources');
+        expect(confirmation).toBeTruthy();
+        expect(confirmation?.disabled).toBe(true);
+        expect(latest?.sourceFactsConfirmed).toBeNull();
         await change('Ohio residency source reference', 'Edited actual domicile records');
         expect(latest?.sourceFactsConfirmed).toBeNull();
         await click('Remove Ohio residency source facts');

@@ -1,0 +1,23 @@
+form: "Guided State Source Integration"
+fullName: "Actual PA and Ohio originals through guided state calculation"
+taxYear: 2025
+reference: "docs/upgrade-2026-execution-brief.md"
+lines:
+  - line: "source-packets"
+    description: "Confirm and retain actual whole-return source packets before state calculation"
+    formula: |
+      For selected Ohio require current confirmed owner residency and actual payments,
+      retaining raw special facts in saved guide data. Snapshot current private parsed
+      federal originals excluding both Ohio packets. For PA replay the actual residency
+      and reciprocal source packets, never replace original confirmation on calculation.
+      Missing facts block the state projection while federal calculation stays available.
+      This source binding alone does not establish complete return or filing eligibility.
+    testRef: "tests/guided-interview/state-originals-integration.test.ts::guided state originals retain actual packets for all Ohio residency categories"
+  - line: "invalidation"
+    description: "Upstream edits retain facts but invalidate prior source confirmations"
+    formula: |
+      Any changed upstream personal/income/adjustment/credit/payment/deduction values
+      invalidate Ohio residency/payment and PA residency/reciprocity confirmations.
+      Keep all previously entered periods, raw special facts, receipts and originals.
+      Reconfirmation is explicit; calculation cannot silently refresh consent.
+    testRef: "tests/guided-interview/state-originals-integration.test.ts::guided state source edits clear confirmation while retaining originals"

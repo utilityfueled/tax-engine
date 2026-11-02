@@ -1,5 +1,12 @@
 "use client";
 
+import type { TaxYearInput } from "@/models/inputs";
+import { OhioResidencyDetails } from "./ohio-residency-details";
+import { OhioPaymentDetails } from "./ohio-payment-details";
+import { PAResidencyDetails } from "./pa-residency-details";
+import { PAReciprocityDetails } from "./pa-reciprocity-details";
+import { PAOrdinaryReturnDetails } from "./pa-ordinary-return-details";
+import { PAOrdinaryReturnCompletionDetails } from "./pa-ordinary-return-completion-details";
 import { RetroShell } from "@/components/retro-shell";
 import type { GuidedPreviewMetrics, StatePreviewMetrics } from "@/lib/guided-interview-bridge";
 import {
@@ -107,8 +114,16 @@ export function SectionStateReturn({
   data,
   guidedPreview,
   onDataChange,
+  originalInput,
+  ordinaryOriginalInput,
+  taxYear,
+  filingStatus,
 }: {
   stateCode: SupportedStateCode;
+  originalInput?: TaxYearInput | null;
+  ordinaryOriginalInput?: TaxYearInput | null;
+  taxYear?: number | null;
+  filingStatus?: string | null;
   data: StateReturnData | undefined;
   guidedPreview: GuidedPreviewMetrics | null;
   onDataChange: (data: StateReturnData) => void;
@@ -120,6 +135,7 @@ export function SectionStateReturn({
   const stateRefund = parseGuidedDisplayAmount(stateMetrics?.stateRefund);
   const stateOwed = parseGuidedDisplayAmount(stateMetrics?.stateAmountOwed);
   const withholdingEntries = current.additionalStateWithholdingEntries ?? [];
+  const actualSourceState = stateCode === "PA" || stateCode === "OH";
 
   function updateWithholding(index: number, field: keyof StateWithholdingEntry, value: string) {
     onDataChange({ ...current, additionalStateWithholdingEntries: withholdingEntries.map((entry, entryIndex) => entryIndex === index ? { ...entry, [field]: value } : entry) });
@@ -189,8 +205,50 @@ export function SectionStateReturn({
           </div>
         )}
 
+        {stateCode === "OH" && <>
+          <OhioResidencyDetails originalInput={originalInput ?? null} data={current.ohioResidency} taxYear={taxYear} filingStatus={filingStatus}
+            onChange={ohioResidency => onDataChange({...current, ohioResidency})} />
+          <OhioPaymentDetails originalInput={originalInput ?? null} taxYear={taxYear} data={current.ohioPayments}
+            onChange={ohioPayments => onDataChange({...current, ohioPayments})} />
+        </>}
+        {stateCode === "PA" && <>
+          <PAResidencyDetails originalInput={originalInput ?? null} data={current.paResidencySources}
+            onChange={paResidencySources => onDataChange({...current, paResidencySources,
+              ...(current.paReciprocitySources ? {paReciprocitySources:{...current.paReciprocitySources,sourceFactsConfirmed:null}} : {})})} />
+          {current.paResidencySources && <PAReciprocityDetails originalInput={originalInput ?? null}
+            residencySources={current.paResidencySources} data={current.paReciprocitySources}
+            onChange={bound => onDataChange({...current,paResidencySources:bound.residencySources,paReciprocitySources:bound.reciprocitySources})} />}
+          <PAOrdinaryReturnDetails originalInput={ordinaryOriginalInput ?? null} data={current.paOrdinaryReturnFacts}
+            onChange={paOrdinaryReturnFacts => onDataChange({ ...current, paOrdinaryReturnFacts })} />
+          <PAOrdinaryReturnCompletionDetails originalInput={ordinaryOriginalInput ?? null} data={current.paOrdinaryReturnCompletionSources}
+            onChange={paOrdinaryReturnCompletionSources => onDataChange({ ...current, paOrdinaryReturnCompletionSources })} />
+        </>}
+
         {stateCode === "OH" && <OhioInterestDetails data={current.ohioInterestAllocation} onChange={ohioInterestAllocation => onDataChange({ ...current, ohioInterestAllocation })} />}
 
+        {actualSourceState ? <section aria-label="Saved state payment records">
+          <h3 className="guided-section-subheading">Saved entries to reconcile</h3>
+          <p className="guided-hint">Enter current withholding and payments in the actual source records above. Saved entries remain here for review against those originals. Remove a saved entry only after checking its source.</p>
+          {withholdingEntries.map((entry, index) => <div className="guided-card" key={index}>
+            <h4>Saved additional withholding source {index + 1}</h4>
+            <p>Payer: {entry.payer || "Unknown"}</p><p>Source form: {entry.documentType || "Unknown"}</p>
+            <p>Actual state: {entry.state || "Unknown"}; source year: {entry.taxYear || "Unknown"}</p>
+            <p>Saved amount: {entry.amount || "Unknown"}</p>
+            <button type="button" className="utility-button" aria-label={`Remove saved additional withholding source ${index + 1}`}
+              onClick={() => onDataChange({ ...current, additionalStateWithholdingEntries: withholdingEntries.filter((_, i) => i !== index) })}>Remove</button>
+          </div>)}
+          {current.additionalStateWithholding.trim() && <div className="guided-card">
+            <h4>Saved additional withholding total</h4><p>Saved amount: {current.additionalStateWithholding}</p>
+            <button type="button" className="utility-button" aria-label="Remove saved additional withholding total"
+              onClick={() => onDataChange({ ...current, additionalStateWithholding: "" })}>Remove</button>
+          </div>}
+          {current.stateEstimatedPayments.map((entry, index) => <div className="guided-card" key={index}>
+            <h4>Saved state estimated payment {index + 1}</h4>
+            <p>Actual state: {entry.state || "Unknown"}; date paid: {entry.date || "Unknown"}</p><p>Saved amount: {entry.amount || "Unknown"}</p>
+            <button type="button" className="utility-button" aria-label={`Remove saved state estimated payment ${index + 1}`}
+              onClick={() => handleRemovePayment(index)}>Remove</button>
+          </div>)}
+        </section> : <>
         <h3 className="guided-section-subheading">Additional State Withholding</h3>
         <p className="guided-hint">
           If you had state tax withheld from sources other than your W-2
@@ -244,15 +302,15 @@ export function SectionStateReturn({
           + Add State Estimated Payment
         </button>
 
+        </>}
+
         <details className="guided-expand" style={{ marginTop: "16px" }}>
           <summary className="guided-expand-trigger">About your {stateName} return</summary>
           <div className="guided-expand-body">
             <p>
-              Your state return is computed from your federal adjusted gross income
-              using {stateName}&apos;s tax rates, standard deduction, and personal exemptions.
-              The engine applies state-specific brackets and credits automatically.
-              Any state withholding from your W-2s and estimated payments is credited against
-              your state tax to determine your refund or balance due. This feature is
+              State calculations need the actual residency, income, eligibility and payment
+              records for the selected state and year. Complete the required source facts
+              and reconcile the originals before relying on an estimate. This feature is
               beta and experimental, is not comprehensive yet, and everything should
               be reviewed and verified by the tax preparer before filing.
             </p>

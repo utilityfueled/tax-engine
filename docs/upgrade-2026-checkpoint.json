@@ -13088,5 +13088,23 @@
     "database": "Prepared free isolatedNeon; autoapprovalblocked pending explicitauthorization",
     "email": "TestSMTP service/sender missing; requested",
     "boundary": "Useful authorized internal implementation remains; no final readiness or staging claim"
+  },
+  "continuation20261102GuidedStateIntegration": {
+    "baseCommit": "060cd90e",
+    "releaseReady": false,
+    "mainTests": {
+      "passed": 280,
+      "files": 16
+    },
+    "checks": "types3/spec/inventory generation+check/strictlint0/engine+webbuild/diff allpass",
+    "evidence": "nov02-parent-guided-state-main-final-green",
+    "sourceFirst": "PA20fail1pass +shared5genuinefail; diagnostics retained separately",
+    "independentReviews": [
+      "9fdea1ee74ea8d4dd50fe540b5225765513972ca37d68f48ab665cd04ef238a0",
+      "395304083ad24180dadb3836aafe4748d9288b3b5b2bf16acbe6863bdc2562a8",
+      "9cb8b9df8276d6c14dfb603742f6d2d2418080eb3ecaed126a0dccb55957ad13",
+      "90504cad616b2e682f79c81c4bf1397d34563cc5133193cfbe3a012f16c3d35a"
+    ],
+    "remaining": "Useful authorized internal adoption/implementation, global qualification and actual staging continue"
   }
 }

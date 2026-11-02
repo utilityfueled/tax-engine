@@ -1,5 +1,6 @@
 // Spec: spec/state/guided-ohio-interest.yaml; ORC5747.01(A)(1)-(3).
 import Decimal from "decimal.js";
+import { explicitlyConfirmFullYearOhioNavigationFixture } from "../fixtures/guided-ohio-source-navigation.js";
 import { describe, expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal";
 import { buildOhioResidentReturnInput } from "@/engine/state/oh-input-adapter";
@@ -7,7 +8,7 @@ import { TaxYearInputSchema } from "@/models/inputs";
 import { buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { updateSectionData, validateSection } from "@/lib/guided-interview-flow";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
-import { buildGuidedOhioOverlay } from "@/lib/guided-state-engine-inputs";
+import { buildGuidedOhioOverlay, buildGuidedStateOriginals } from "@/lib/guided-state-engine-inputs";
 import { actualOid } from "../fixtures/guided-oid";
 import { completeDividendSource, completeInterestSource, completeW2Entry, startCompleteInterview } from "./complete-facts";
 
@@ -18,17 +19,17 @@ const actualAllocation = {
 };
 function ohioFlow() {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["w2-wages", "investments"], lifeEvents: [], stateCode: "OH" });
-  state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, wages: "60000" }] };
+  state.sectionData["income-w2"] = { entries: [{ ...completeW2Entry, sourceTaxYear: "2025", wages: "60000" }] };
   state.sectionData["income-investments"] = { interestEntries: [{ ...completeInterestSource, taxExemptInterest: "100.10" }], dividendEntries: [{ ...completeDividendSource, exemptInterestDividends: "200.20" }], brokerageEntries: [],
     oidEntries: [{ ...actualOid, obligationType: "tax_exempt", originalIssueDiscount: "0", otherPeriodicInterest: "10.10", treasuryOID: "0", taxExemptOID: "100", specifiedPrivateActivityBond: false }] };
   return state;
 }
 function addAllocation(state: ReturnType<typeof ohioFlow>, changes: Record<string, unknown> = {}) {
   state.sectionData["state-return"] = { additionalStateWithholding: "", stateEstimatedPayments: [], ohioInterestAllocation: { ...actualAllocation, ...changes } };
-  return state;
+  return explicitlyConfirmFullYearOhioNavigationFixture(state);
 }
 function overlay(state: ReturnType<typeof ohioFlow>) {
-  const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
+  const input = buildGuidedStateOriginals(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state)), state);
   const federal = calculateFederalTax(input);
   return { input, federal, overlay: buildGuidedOhioOverlay(input, state, federal.taxExemptInterest) };
 }
@@ -68,7 +69,7 @@ describe("actual Ohio exempt-interest allocation", () => {
       expect(computeGuidedPreview(state)?.state).toBeNull();
     }
     const exact = addAllocation(ohioFlow(), { federalTaxExemptInterest: "9007199254740993.03", nonOhioStateLocalInterest: "9007199254740993.01", ohioStateLocalInterest: "0", otherInterestExemptFromOhio: "0.02", federalInterestTaxableByOhio: "0" });
-    const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(exact));
+    const input = buildGuidedStateOriginals(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(exact)), exact);
     expect(buildGuidedOhioOverlay(input, exact, new Decimal("9007199254740993.03"))).toMatchObject({ nonOhioStateLocalInterest: "9007199254740993.01", otherAdditions: "0" });
     expect(() => buildGuidedOhioOverlay(input, exact, new Decimal("9007199254740993.04"))).toThrow(/reconcile/i);
   });
