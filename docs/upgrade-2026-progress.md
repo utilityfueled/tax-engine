@@ -2079,3 +2079,24 @@ Source-first55fail/3pass precedes the minimal enum/type/dropdown changes;
 main103/10 and allninechecks/spec6760 pass. Independent118/11 includes15own
 controls. The retained positive DE800+1200→1535 rich-credit control now passes
 privately; full credit composition and upstream precision verification remain.
+
+
+## November2: source-year delivery and Preview-only cache
+
+Pushed `7e680e47` (finite actual PA source precision) and `e28f42a7` (actual
+INT/DIV source year, actual started-source years and Ohio OID rows). Main and
+independent evidence, retained source-first failures and exact scope are indexed
+in the active checklist and package ledgers. A refreshed fetch matches HEAD.
+
+Owner resumed the existing Vercel project. Actual resumed preview failed because
+its database branch no longer exists; homepage prerender incorrectly consumed a
+Next request signal before auth initialization. A minimal source-first fix passes
+eight local tests; independent controls/full hosted-build rehearsal remain.
+
+The free Upstash cache was created and connected after explicit user approval.
+The saved connection is Preview only; no credential values were accessed. A free
+isolated replacement database is prepared but creation awaits explicit approval
+after automatic review rejection. Test SMTP remains missing. No staging
+qualification or production deployment is claimed. PA household, credit and
+actual export work continues privately; the active index records current exact
+review/test evidence and remaining adoption work.

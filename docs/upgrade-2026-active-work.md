@@ -17,8 +17,9 @@ PA and Ohio, all three residency categories. Useful internal work remains.
 | `b572afcd` | Retain six canonical state packets | 105/seven, all9 | 88/11 |
 | `da15b188` | Actual50state/DC W2 source jurisdictions | 103/10, all9 | 118/11 |
 | `7e680e47` | Ordinary PA source precision | 90/five +38inventory controls, all9 | 25/three |
+| `e28f42a7` | Actual investment source years and OH OID rows | 614/34 +58/two, types3/spec/inventory/build | 41/six |
 
-The first eight are pushed to `upgrade/2026-baseline`. No threshold, monetary oracle,
+All listed commits are pushed to `upgrade/2026-baseline`. No threshold, monetary oracle,
 privacy control or readiness gate was reduced. Ohio PDF main validation reopens
 64PDFs/157pages with no fields/widgets/private IDs;167page/contact pixel checks
 exactly match frozen reviewed output. Canonical admission has six genuine main
@@ -28,10 +29,10 @@ its minimal enum/type/dropdown edits; it qualifies source capture only.
 ## Current internal queue
 
 - [ ] Shared integration source:
-  `.local/upgrade-work/root-state-integration-v2/source`. Full4290-file source
+  `.local/upgrade-work/root-state-integration-v2/source`. Full4284regular+6symlink source
   archive and hashes are durable in ignored evidence
-  `nov02-parent-state-integration-recovery/current-state-07/manifest.json`;
-  archive SHA256`b8f6e5477ae3ba9df7f94b0fb4591424789ba5e04747b6c33a12b02ecda867bc`.
+  `nov02-parent-state-integration-recovery/current-state-08/manifest.json`;
+  archive SHA256`749bda2987b25952e367d7525b553bc5bccc6d289a49ddf938479371b7dc19fb`.
   This is exact unqualified work, not an all-green result. Later small changes
   retain separate full copies/receipts. Historical current06/16 is not current.
 - [ ] Shared PA preview/payment reconciliation eight: genuine5+4 behavior reds,
@@ -58,41 +59,39 @@ its minimal enum/type/dropdown edits; it qualifies source capture only.
   spec, strictclean7files0/inventory/build/diff. Independent41/six approved
   `746d03d52b5192e74975cbbbc857f24d87d7e895517114d73807753476e43354`.
   Source-test migrations retain every monetary/negative oracle and original red.
-  Commit reference follows in the next checklist update; no source defaults.
-- [ ] PA rich actual resident-credit6: original DE800+1200→1535 control is now
-  green; all original17 pass after exact reviewed W2 jurisdiction dependency.
-  Frozen6`nov02-pa-resident-credit-sources/frozen-package.json`, hash
-  `28290828f29a9dbd1d3fec554b0e91620e798e636ee960ddece1dde5eb2a9dff`.
-  Complete filed returns/payment/refund/account originals remain required.
-  Independent review, upstream precision and composition remain separate work.
-- [x] PA source precision: pushed `7e680e47`; true main2fail/1pass becomes90/five
-  plus38inventory controls. Main types3/spec/strict0/inventory/build pass;
-  independent25/three/types/strict0 approved `acd4c179...`. Local context100
-  exercises finite source scope up to60digits; broader amounts/ordinary-facts
-  precision remain unqualified. Ledger`upgrade-2026-pa-source-precision-work.md`.
-- [ ] PA ordinary PDF10: honest union, genuine prepared context, R/N/P/school/PY
-  fields, actual SP children, refund/donation allocation and WPTC processing.
-  SevenPDFs/16pages pass strict field/widget/AP/privacy and author visual checks;
-  focused8+related100/seven pass. Captured unowned webtype2errors and3unchanged
-  lint warnings require fresh main checks. Frozen initial10
-  `nov02-pa-ordinary-pdf/frozen-package.json`, hash
-  `b427c095e912cefe61e750ccb7f74277087240128414af3fb0c4d79e6ae5ef7a`.
-  Parent proved one actual SSN leak through a free-text final reason. Render-only
-  sanitizer candidate`842b0d7fd87daa86afcbe2f079eb7a16e920fce375effe39cc4f2fb422b3532e`
-  also protects school-name output using the existing private-key contract;
-  original sources/digests/money stay intact. Ninth author control and independent20
-  remain queued; corrected output cannot be adopted before passing review.
-- [ ] Root workspace PA export5: actual full3-residency renderer/context path has
-  one genuine behavior failure plus a missing-packet message diagnostic before
-  a minimal workspace edit. Fresh ordinary composition/context-before-redaction
-  and a clear missing-source message are implemented privately; first green
-  pending. Evidence`nov02-parent-pa-workspace-export/`; no passing export claim.
-- [ ] Root actual PA credit composition5: three genuine positive failures/two
-  negative passes before typed nested completion credit sources and fresh replay.
-  Exact complete-history/netpayment/withholding reconciliation, PA40/SP/penalty
-  credit order and audit integration implemented privately; first green pending.
-  No new excluded canonical root. Evidence`nov02-parent-pa-credit-composition/`.
-  Positive source-aware G-L PDF/UI methods remain required successors.
+  Pushed `e28f42a7`; no source defaults.
+- [ ] PA rich resident-credit6 and root composition5: exact frozen source
+  `28290828...` plus `dfdcec5e...` now pass75/seven/types3/spec/strict0/build.
+  Independent52/four approved receipt
+  `7cc833b3eabef649ffe05166625229a6e1ce53e6f295ef6eb398ddc85861f829`.
+  Actual complete payment/refund/account originals, exact same-income caps and
+  credit-before-SP/penalty order remain required. Main adoption and positive G-L
+  PDF/UI methods remain successors. No general resident-credit qualification.
+- [ ] PA ordinary PDF10: original actual final-reason privacy failure and school
+  appearance clipping were corrected before independent approval. Final frozen10
+  `nov02-pa-ordinary-pdf/frozen-package-school-appearance.json` SHA
+  `6bce7c04e63df98118132e6c140ce183d792699b5d4636f5bd7da2885a4c2881`.
+  Independent31pass/one known unsupported skip and sevenPDFs/17pages with exact
+  structure/privacy/visual inspection approved receipt
+  `9f8b30416d5b4531f37d48f0d838f8465993898cb11848d19ee9fbb392926ddb`.
+  Original unsupported household positive remains recorded; successor below.
+- [ ] Root workspace actual PA export: five focused controls plus shared paths
+  pass15/four/types3/spec/strict0/build. All three actual renderer packets each
+  14pages reopen without fields/widgets/private IDs. Root inspected all42 pages
+  via contact sheets and six PA40 pages at full size; exact visual receipt
+  `nov02-parent-pa-workspace-export/root-visual-review.json`. Independent13 own
+  controls prepared before runtime. Main adoption and independent runtime pending.
+- [ ] PA nonchild dependent household: official-source-first37 controls exposed
+  19 genuine failures; four-product candidate gives37/37 plus87 prior controls.
+  An invalid positive2026 composer expectation was corrected spec-first to direct
+  2026 facts plus the existing unavailable-rulepack exception; original evidence
+  retained and no readiness gate relaxed. Types3/spec/strict0/engine build pass;
+  web build also passes; freeze, independent review and main adoption pending.
+- [ ] Hosted homepage request boundary: genuine actual-module regression fails
+  one ofthree before removing the catch around Next request headers. Eight/two,
+  types3/spec/strict0 pass privately; independent5 and synthetic dead-DB build
+  prepared. First unresolved bare-module mock diagnostic is retained separately,
+  not counted as genuine proof. Main adoption and staging checks pending.
 - [ ] Finish every other required state household, income-class, local, SD,
   credit, special and dated-payment method. Guards are not completed methods.
 - [ ] Final integrated full suite/coverage/types/spec/inventory/build/lint/browser,
@@ -106,15 +105,24 @@ candidates, period and spend authorization; independent held-out AI labels and
 human security/privacy review; owner decisions on80 OS advisory IDs by November7;
 final2026 official forms and qualification. Agent review is not human review.
 
-Read-only hosting refresh: the signed-in Chrome browser reaches the project.
-Latest `da15b188` preview `AX56o11JrCBnJT46vNBNZb5ADntY` explicitly says it could
-not be built because the entire project is paused. The project overview shows
-“Resume Project” and existing production domains; resuming also restores the
-production site. That page is open for the owner, and the user will resume it personally.
-Actual resume and preview availability are not yet observed. No resume/redeploy/configuration
-change was performed. The API environment-metadata403 and same-scoped CLI
-account denial remain separate access limits. Evidence
-`nov02-parent-hosted-access-refresh/browser-access-receipt.json`.
+Hosting refresh: owner resumed the existing project; actual resumed preview
+`dpl_C95NwGMRGPKE6yEAwDJ7jSNygvtm` failed homepage prerender against a deleted
+Postgres branch (SQL28000). Sentry source-map uploads also report403; compilation
+and types pass before the database failure. API environment metadata403 and CLI
+account denial remain, while signed-in browser metadata is usable.
+
+User authorized a free Upstash cache and explicitly approved its connection to
+Preview only. `tax-engine-staging-rate-limit` is Available/Free in iad1, eviction
+false; saved connection table confirms tax-engine / Preview only. No credentials
+were revealed. Names KV_REST_API_URL/TOKEN already match the existing adapter.
+Evidence `nov02-parent-hosted-access-refresh/staging-redis-browser.json`.
+Actual hosted rate-limit operation remains untested until a valid preview runs.
+
+A free isolated Neon database setup is prepared in the browser. Automatic review
+blocked continuing because database creation/access authorization was not
+explicit; approval request is pending. Production and unrelated existing stores
+remain excluded. Test SMTP service/sender credentials are also requested; do not
+paste secrets into chat. No database created or production operation performed.
 
 IRS1040/1-A endpoints still served2025 on November2. Existing global CI/coverage
 and runtime records retain their exact earlier commits and are not qualification
