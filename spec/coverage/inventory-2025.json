@@ -12723,6 +12723,31 @@
       "knownGaps": []
     },
     {
+      "key": "state/pa-source-precision",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf",
+      "specPath": "spec/state/pa-source-precision.yaml",
+      "enginePath": "src/engine/state/pa-residency-sources.ts",
+      "packetPath": null,
+      "implementationTestRefs": [
+        "tests/engine/state/pa-source-precision.test.ts::ordinary PA source precision preserves both sides of the large half-dollar boundary",
+        "tests/engine/state/pa-source-precision.test.ts::ordinary PA source precision retains sixty source digits before reporting",
+        "tests/engine/state/pa-source-precision.test.ts::ordinary PA source precision preserves global Decimal configuration and original facts"
+      ],
+      "implementationNote": "Local Decimal source aggregation and printed-tax rounding in the existing ordinary PA residency method. Independently exercised finite sources up to60 digits; no packet qualification, e-file business rules or current2026 filing readiness.",
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-use-tax",
       "jurisdiction": "state",
       "taxYear": 2025,

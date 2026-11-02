@@ -10,11 +10,13 @@ import { AuditTrail } from "@/utils/audit.js";
 import { calculatePAReciprocalCompensation } from "./pa-reciprocity.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 
+const Money=Decimal.clone({precision:100,rounding:Decimal.ROUND_HALF_UP});
+
 const error = (detail: string): never => { throw new Error(`PA ordinary residency sources: ${detail}`); };
 function reference(value: unknown): void { if (typeof value !== "string" || !value.trim()) error("confirm the actual source reference"); }
 function amount(value: unknown): Decimal {
   if (typeof value !== "string" || !/^\d+(\.\d+)?$/.test(value)) return error("actual nonnegative monetary amount is missing or invalid; enter known zero explicitly");
-  const result = new Decimal(value); if (!result.isFinite()) return error("nonfinite source amount"); return result;
+  const result = new Money(value); if (!result.isFinite()) return error("nonfinite source amount"); return result;
 }
 function stable(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
@@ -29,7 +31,7 @@ function semantic(value: unknown, year: number, key = ""): unknown {
     .filter(([, v]) => v !== undefined && v !== null && v !== "" && v !== "0" && !(Array.isArray(v) && v.length === 0)));
   if (typeof value === "string") {
     if (/ein|tin|ssn/i.test(key)) return value.replace(/\D/g, "");
-    if (/^-?\d+(\.\d+)?$/.test(value)) return new Decimal(value).toString();
+    if (/^-?\d+(\.\d+)?$/.test(value)) return new Money(value).toString();
     return value.trim().replace(/\s+/g, " ").toUpperCase();
   }
   return value;
@@ -111,7 +113,7 @@ export function calculatePAResidencySources(input: TaxYearInput, rawSources: unk
   const residency = deriveResidency(source, year);
   const residentAt = (date: number) => residency.residentPeriods.some(p => p.from <= date && date <= p.through);
   const domicilePeriodAt = (date: number) => residency.periods.findIndex(p => p.from <= date && date <= p.through);
-  let compensation = new Decimal(0), excludedCompensation = new Decimal(0), interest = new Decimal(0), excludedInterest = new Decimal(0);
+  let compensation = new Money(0), excludedCompensation = new Money(0), interest = new Money(0), excludedInterest = new Money(0);
   const actualW2Rows = new Map<number, ReturnType<typeof calculateW2StateLocalSources>>();
   const verifyRows = (rows: PAResidencySources["wages"] | PAResidencySources["interest"], originals: unknown[], kind: "wage" | "interest") => {
     if (rows.length !== originals.length) return error("every current original must have exactly one source row, including known zero originals");
@@ -137,13 +139,13 @@ export function calculatePAResidencySources(input: TaxYearInput, rawSources: unk
   verifyRows(source.wages, input.w2s, "wage"); verifyRows(source.interest, input.form1099Int, "interest");
   const reciprocalPacket = (input as TaxYearInput & { paReciprocitySources?: unknown }).paReciprocitySources;
   const reciprocal = reciprocalPacket === undefined ? undefined : calculatePAReciprocalCompensation(input, source, reciprocalPacket);
-  let excludedReciprocalCompensation = new Decimal(0);
+  let excludedReciprocalCompensation = new Money(0);
   for (const row of source.wages) {
     if (row.ordinaryCashCompensationOnlyConfirmed !== true || row.noPAFederalCompensationDifferencesConfirmed !== true || !row.payroll.length) return error("actual ordinary cash payroll and PA/federal compensation facts required");
     const w2 = input.w2s[row.originalIndex as number];
     for (const key of ["box12CodeD", "box12CodeE", "box12CodeF", "box12CodeG", "box12CodeH", "box12CodeS", "box12CodeW", "box12CodeT", "box10DependentCareBenefits", "allocatedTips"] as const) if (w2[key] !== undefined && !amount(w2[key]).isZero()) return error("retained nonordinary PA/federal wage adjustment requires its actual source method");
     if (w2.militaryService?.activeDuty === true) return error("military compensation requires its actual PA source method");
-    let gross = new Decimal(0), included = new Decimal(0), excluded = new Decimal(0), reciprocalExcluded = new Decimal(0);
+    let gross = new Money(0), included = new Money(0), excluded = new Money(0), reciprocalExcluded = new Money(0);
     const references = new Set<string>();
     for (const [payrollIndex, payroll] of row.payroll.entries()) {
       reference(payroll.sourceReference); if (references.has(payroll.sourceReference.trim())) return error("duplicate payroll-source reference"); references.add(payroll.sourceReference.trim());
@@ -168,7 +170,7 @@ export function calculatePAResidencySources(input: TaxYearInput, rawSources: unk
     if (row.ordinaryPersonalBankInterestConfirmed !== true || !row.credits.length) return error("actual nonbusiness bank-interest classification and dated credit ledger required");
     const original = input.form1099Int[row.originalIndex as number];
     for (const key of ["earlyWithdrawalPenalty", "usSavingsBondInterest", "foreignTaxPaid", "taxExemptInterest", "privateActivityBondInterest", "paDirectObligationInterest"] as const) if (original[key] !== undefined && !amount(original[key]).isZero()) return error("nonordinary interest boxes require their actual PA class/basis method");
-    let gross = new Decimal(0); const references = new Set<string>();
+    let gross = new Money(0); const references = new Set<string>();
     for (const credit of row.credits) {
       reference(credit.sourceReference); if (references.has(credit.sourceReference.trim())) return error("duplicate dated interest source reference"); references.add(credit.sourceReference.trim());
       const value = amount(credit.amount), received = day(credit.creditedOn, year); gross = gross.plus(value);

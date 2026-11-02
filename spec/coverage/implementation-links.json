@@ -1595,6 +1595,16 @@
         "tests/engine/federal-student-loan-sources.test.ts::routes actual loan sources once and preserves eligibility and unknown distinctions"
       ],
       "note": "The named method is exercised through this shared engine module by this specification's own regression references. No additional packet or filing support is claimed. This association neither changes scenario exclusions nor establishes independent human review."
+    },
+    {
+      "key": "state/pa-source-precision",
+      "enginePath": "src/engine/state/pa-residency-sources.ts",
+      "testRefs": [
+        "tests/engine/state/pa-source-precision.test.ts::ordinary PA source precision preserves both sides of the large half-dollar boundary",
+        "tests/engine/state/pa-source-precision.test.ts::ordinary PA source precision retains sixty source digits before reporting",
+        "tests/engine/state/pa-source-precision.test.ts::ordinary PA source precision preserves global Decimal configuration and original facts"
+      ],
+      "note": "Local Decimal source aggregation and printed-tax rounding in the existing ordinary PA residency method. Independently exercised finite sources up to60 digits; no packet qualification, e-file business rules or current2026 filing readiness."
     }
   ]
 }
