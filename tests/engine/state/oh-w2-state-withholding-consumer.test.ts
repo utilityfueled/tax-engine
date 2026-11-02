@@ -1,3 +1,4 @@
+import { actualOidStateSource } from '../../fixtures/investment-source-year-oh-oid.js';
 /** Spec: state/oh-w2-state-withholding-consumer.yaml; originals before outputs. */
 import { expect, it } from "vitest";
 import { calculateFederalTax } from "@/engine/federal.js";
@@ -72,15 +73,17 @@ it("OH actual W2 consumer preserves every existing nonW2 owner year and withhold
   // Isolated source-metadata probes do not qualify missing income-form facts.
   for (const key of ["formW2G", "form1099G", "form1099K", "form1099R", "form1099Nec", "form1099Misc", "form1099Int", "form1099Div", "form1099B", "form1099OID"] as const) {
     const input = ohioActualW2WithholdingFixture();
-    const row: Record<string, unknown> = { taxYear: 2025, accountHolder: "primary", state: "OH", stateWithheld: "0" };
+    const field = key === "form1099OID" ? "stateWithholding" : "stateWithheld";
+    const actualRows = [{ state: "OH", statePayerId: "Synthetic actual OID payerID", stateWithheld: "0" }];
+    const row: Record<string, unknown> = key === "form1099OID" ? { ...actualOidStateSource(actualRows) } : { taxYear: 2025, accountHolder: "primary", state: "OH", stateWithheld: "0" };
     (input as unknown as Record<string, unknown>)[key] = [row];
     const bind = () => rebindOhioConsumerOuter(input);
     bind();
     expect(buildOhioPaymentSource(input, input.ohioPayments).estimatedPayments.toString()).toBe("0");
-    delete row.stateWithheld;
+    delete row[field];
     bind();
     expect(() => buildOhioPaymentSource(input, input.ohioPayments)).toThrow(/withholding/i);
-    row.stateWithheld = "0";
+    row[field] = key === "form1099OID" ? structuredClone(actualRows) : "0";
     row.taxYear = 2024;
     bind();
     expect(() => buildOhioPaymentSource(input, input.ohioPayments)).toThrow(/year/i);
@@ -89,7 +92,7 @@ it("OH actual W2 consumer preserves every existing nonW2 owner year and withhold
     bind();
     expect(() => buildOhioPaymentSource(input, input.ohioPayments)).toThrow(/owner/i);
     row.accountHolder = "primary";
-    row.stateWithheld = "NaN";
+    row[field] = key === "form1099OID" ? [{ ...actualRows[0], stateWithheld: "NaN" }] : "NaN";
     bind();
     expect(() => buildOhioPaymentSource(input, input.ohioPayments)).toThrow(/withholding/i);
   }
@@ -158,4 +161,11 @@ it("OH actual W2 consumer binds current full private identity without audit leak
   const audit = JSON.stringify(result.lines);
   expect(audit).toContain(after);
   for (const value of [input.taxpayer.primary.ssn, ohio.employerStateID, ohio.sourceReference]) expect(audit).not.toContain(value);
+});
+
+it("OH actual W2 source consumer rejects the historical fake scalar OID probe", () => {
+  const input = ohioActualW2WithholdingFixture();
+  (input as unknown as Record<string, unknown>).form1099OID = [{ taxYear: 2025, accountHolder: "primary", state: "OH", stateWithheld: "0" }];
+  rebindOhioConsumerOuter(input);
+  expect(() => buildOhioPaymentSource(input, input.ohioPayments)).toThrow(/OID.*withholding/i);
 });

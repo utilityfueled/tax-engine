@@ -286,7 +286,8 @@ export function buildScheduleCInput(
 // ── Investment income converters ──────────────────────────────────────────
 
 function investmentSourceInput(entry: InvestmentSourceData) {
-  return { payerTin: entry.payerTin?.trim() || undefined, accountReference: entry.accountReference?.trim() || undefined, accountHolder: entry.accountHolder === "primary" || entry.accountHolder === "spouse" ? entry.accountHolder : undefined, state: entry.state?.trim().toUpperCase() || undefined, stateWithheld: entry.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(entry.stateWithheld) };
+  const year = entry.sourceTaxYear?.trim();
+  return { taxYear: year && /^\d{4}$/.test(year) ? Number(year) : undefined, payerTin: entry.payerTin?.trim() || undefined, accountReference: entry.accountReference?.trim() || undefined, accountHolder: entry.accountHolder === "primary" || entry.accountHolder === "spouse" ? entry.accountHolder : undefined, state: entry.state?.trim().toUpperCase() || undefined, stateWithheld: entry.stateTaxReporting === "none" ? "0" : toOptionalDecimalString(entry.stateWithheld) };
 }
 
 export function buildInterestInputs(entries: InterestEntryData[] | undefined, taxYear?: number | null) {

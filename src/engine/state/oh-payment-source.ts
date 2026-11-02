@@ -1,5 +1,6 @@
 /** Spec: state/ohio-payments.yaml. Source projection, not a payment override. */
 import Decimal from 'decimal.js';
+import { calculateForm1099OID } from '@/engine/forms/form-1099-oid.js';
 import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
@@ -70,7 +71,7 @@ export function buildOhioPaymentSource(input: TaxYearInput, raw: unknown): OhioP
         unknown[] | undefined,
         string
     ]> = [
-        [input.w2s, 'stateTaxWithheld'], [input.formW2G, 'stateWithheld'], [input.form1099G, 'stateWithheld'], [input.form1099K, 'stateWithheld'], [input.form1099R, 'stateWithheld'], [input.form1099Nec, 'stateWithheld'], [input.form1099Misc, 'stateWithheld'], [input.form1099Int, 'stateWithheld'], [input.form1099Div, 'stateWithheld'], [input.form1099B, 'stateWithheld'], [input.form1099OID, 'stateWithheld'],
+        [input.w2s, 'stateTaxWithheld'], [input.formW2G, 'stateWithheld'], [input.form1099G, 'stateWithheld'], [input.form1099K, 'stateWithheld'], [input.form1099R, 'stateWithheld'], [input.form1099Nec, 'stateWithheld'], [input.form1099Misc, 'stateWithheld'], [input.form1099Int, 'stateWithheld'], [input.form1099Div, 'stateWithheld'], [input.form1099B, 'stateWithheld'],
     ];
     for (const [statements, field] of statementGroups)
         for (const [index, statement] of (statements ?? []).entries()) {
@@ -93,6 +94,25 @@ export function buildOhioPaymentSource(input: TaxYearInput, raw: unknown): OhioP
             if (!actual.isZero() && (typeof row.state !== 'string' || !/^[A-Z]{2}$/.test(row.state.trim().toUpperCase())))
                 fail('actual state for nonzero statement withholding is missing');
         }
+    // OID Boxes12/13/14 are separate original rows, never a scalar OH zero.
+    // Validate every actual jurisdiction, including knownzero and nonOhio rows.
+    const oidSources = input.form1099OID ?? [];
+    if (oidSources.length) {
+        const supportedStates = new Set('AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY'.split(' '));
+        for (const source of oidSources) {
+            if (source.taxYear !== facts.taxYear || !source.accountHolder || !owners.has(source.accountHolder))
+                fail('actual OID statement owner/year is missing or differs from current originals');
+            if (!Array.isArray(source.stateWithholding))
+                fail('actual OID state withholding rows or confirmed empty rows are required');
+            for (const row of source.stateWithholding) {
+                if (!row || !supportedStates.has(row.state) || typeof row.statePayerId !== 'string')
+                    fail('actual OID state jurisdiction and payer ID are required; unsupported jurisdictions need their source method');
+            }
+        }
+        const oid = calculateForm1099OID(oidSources, facts.taxYear);
+        if (!oid.sourceFactsVerified)
+            fail('actual verified OID original classifications and recipient amounts are required');
+    }
     const payoff = facts.remainingTaxPayment;
     const endpointDates = ['2025-04-15', '2025-06-16', '2025-09-15', '2026-01-15'];
     const dated = facts.paymentRows.some(row => !new Decimal(row.amount).isZero() && !endpointDates.includes(row.date))

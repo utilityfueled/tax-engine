@@ -17,6 +17,7 @@ export function InvestmentSourceIdentity({ data, onChange }: { data: InvestmentS
 
 export function InterestSourceDetails({ data, onChange }: { data: InterestEntryData; onChange: (field: keyof InterestEntryData, value: string) => void }) {
   return <details className="guided-expand"><summary className="guided-expand-trigger">Remaining actual 1099-INT boxes</summary><div className="guided-expand-body">
+    <TextFact label="Actual 1099-INT calendar year" value={data.sourceTaxYear ?? ""} onChange={value => onChange("sourceTaxYear", value)} />
     <p className="guided-hint">Check every box and enter 0 only when your actual form confirms no amount. Unknown stays unanswered. Complete the preference worksheet for positive Box 9. Bond premiums and market discount still need separate recipient worksheets.</p>
     {interestSourceAmounts.filter(([field]) => field !== "interestIncome" && field !== "federalWithheld").map(([field, label]) => <CurrencyField key={field} label={label} value={data[field] ?? ""} onChange={value => onChange(field, value)} />)}
     <TextFact label="Box 7 foreign country or territory" value={data.foreignCountry ?? ""} onChange={value => onChange("foreignCountry", value)} />
@@ -27,6 +28,7 @@ export function InterestSourceDetails({ data, onChange }: { data: InterestEntryD
 export function DividendSourceDetails({ data, onChange }: { data: DividendEntryData; onChange: (field: keyof DividendEntryData, value: string) => void }) {
   const existing = new Set(["ordinaryDividends", "qualifiedDividends", "capitalGainDistributions", "federalWithheld", "section199ADividends", "foreignTaxPaid"]);
   return <details className="guided-expand"><summary className="guided-expand-trigger">Remaining actual 1099-DIV boxes</summary><div className="guided-expand-body">
+    <TextFact label="Actual 1099-DIV calendar year" value={data.sourceTaxYear ?? ""} onChange={value => onChange("sourceTaxYear", value)} />
     <p className="guided-hint">Review included capital-gain categories and exempt dividends separately. Enter actual zero for empty source amounts. Complete the preference worksheet for positive Box 13. Return-of-capital basis and section 1202/897 distributions still need separate worksheets.</p>
     {dividendSourceAmounts.filter(([field]) => !existing.has(field)).map(([field, label]) => <CurrencyField key={field} label={label} value={data[field] ?? ""} onChange={value => onChange(field, value)} />)}
     <TextFact label="Box 8 foreign country or territory" value={data.foreignCountry ?? ""} onChange={value => onChange("foreignCountry", value)} />

@@ -160,6 +160,7 @@ const PrivateActivityBondFactsSchema = z.object({
 });
 
 export const Form1099IntSchema = z.object({
+  taxYear: z.number().int().optional(), // Actual original calendar year; omission remains unknown.
   payer: z.string(),
   accountReference: z.string().trim().min(1).optional(), // Actual local account identity for source-bound tax elections; omission remains unknown.
   payerTin: z.string().optional(), // Payer TIN shown on the recipient copy; used for IL Schedule IL-WIT Column B auto-attachment
@@ -179,6 +180,7 @@ export const Form1099IntSchema = z.object({
 });
 
 export const Form1099DivSchema = z.object({
+  taxYear: z.number().int().optional(), // Actual original calendar year; omission remains unknown.
   payer: z.string(),
   accountReference: z.string().trim().min(1).optional(), // Actual local account identity for source-bound tax elections; omission remains unknown.
   payerTin: z.string().optional(), // Payer TIN shown on the recipient copy; used for IL Schedule IL-WIT Column B auto-attachment

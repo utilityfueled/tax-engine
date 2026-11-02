@@ -50,11 +50,11 @@ export const completeEducationClaimant = {
 export const completeHouseholdEmployee = { name: "Actual Employee", cashWages: "0", federalIncomeTaxWithheld: "0", isSpouse: false, isChildUnder21: false, isParent: false, isUnder18NonPrincipal: false };
 
 /** Complete fictional investment source facts for synthetic tests, never UI defaults. */
-const sourceIdentity = { accountHolder: "primary" as const, payerTin: "12-3456789", stateTaxReporting: "none" as const, state: "", stateWithheld: "0" };
+const sourceIdentity = { sourceTaxYear: "2025", accountHolder: "primary" as const, payerTin: "12-3456789", stateTaxReporting: "none" as const, state: "", stateWithheld: "0" };
 export const completeInterestSource = { ...emptyInterestEntry, ...sourceIdentity, payer: "Actual bank", interestIncome: "0", federalWithheld: "0", earlyWithdrawalPenalty: "0", usSavingsBondInterest: "0", foreignTaxPaid: "0", foreignCountry: "", taxExemptInterest: "0", privateActivityBondInterest: "0", marketDiscount: "0", bondPremium: "0", treasuryBondPremium: "0", taxExemptBondPremium: "0" };
 export const completeDividendSource = { ...emptyDividendEntry, ...sourceIdentity, payer: "Actual fund", ordinaryDividends: "0", qualifiedDividends: "0", capitalGainDistributions: "0", federalWithheld: "0", section199ADividends: "0", foreignTaxPaid: "0", foreignCountry: "", section1250Gain: "0", section1202Gain: "0", collectiblesGain: "0", nondividendDistributions: "0", exemptInterestDividends: "0", specifiedPrivateActivityBondInterest: "0", section897OrdinaryDividends: "0", section897CapitalGain: "0" };
 export const completeTransactionSource = { ...emptyCapitalGainTransaction, description: "Actual security", dateAcquired: "2024-01-02", dateSold: "2025-02-03", proceeds: "0", costBasis: "0", holdingPeriod: "long" as const, basisReportedToIRS: false, digitalAsset: false, washSale: false, washSaleDisallowed: "0", adjustments: "0", sourceClassificationConfirmed: true, specialGainCharacter: "ordinary" as const };
-export const completeBrokerageSource = { ...sourceIdentity, broker: "Actual broker", federalWithheld: "0", transactions: [completeTransactionSource] };
+export const completeBrokerageSource = { ...sourceIdentity, sourceId: "Synthetic actual brokerage original", broker: "Actual broker", federalWithheld: "0", transactions: [completeTransactionSource] };
 
 export const completeInterestEntry = completeInterestSource;
 export const completeDividendEntry = completeDividendSource;

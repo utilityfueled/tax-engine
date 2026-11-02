@@ -20,7 +20,7 @@ it('collects source classifications and exact original capital records', async (
     await act(async () => root.render(<Harness />)); await click('Add capital source worksheet');
     expect(latest?.sourceTaxYear).toBeUndefined(); expect(latest?.amtBasisAndCarryoversSameAsRegularConfirmed).toBeUndefined();
     await click('Copy current investment records for review');
-    expect(latest?.longTermAssets?.[0]).toMatchObject({ sourceTaxYear: undefined, character: 'collectible', proceeds: '9007199254740993.03' });
+    expect(latest?.longTermAssets?.[0]).toMatchObject({ sourceTaxYear: '2025', character: 'collectible', proceeds: '9007199254740993.03' });
     await change('Capital worksheet tax year', '2025'); await change('Prior short-term capital loss carryover', '-1000');
     await change('Does the return include Form 2439', 'false'); expect(latest?.form2439Present).toBe(false);
     await change('Asset 1 original tax year', '2025'); await change('Asset 1 original source reference', 'private actual source');

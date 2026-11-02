@@ -1,3 +1,4 @@
+import { actualOidStateSource } from '../../fixtures/investment-source-year-oh-oid.js';
 /** Spec: state/ohio-payments.yaml. Literal originals retained before product. */
 import { it, expect } from 'vitest';
 import { calculateFederalTax } from '@/engine/federal.js';
@@ -38,8 +39,9 @@ it.each(withholdingStatements)('preserves actual modeled Ohio withholding metada
     // This isolated source-metadata probe does not claim full income-form qualification.
     const input = ohioPaymentFixture();
     const raw = input as unknown as Record<string, unknown>;
-    const field = key === 'w2s' ? 'stateTaxWithheld' : 'stateWithheld';
-    const row: Record<string, unknown> = { taxYear: 2025, accountHolder: 'primary', state: ' OH ', [field]: '0' };
+    const field = key === 'w2s' ? 'stateTaxWithheld' : key === 'form1099OID' ? 'stateWithholding' : 'stateWithheld';
+    const actualRows = [{ state: 'OH', statePayerId: 'Synthetic actual OID payerID', stateWithheld: '0' }];
+    const row: Record<string, unknown> = key === 'form1099OID' ? { ...actualOidStateSource(actualRows) } : { taxYear: 2025, accountHolder: 'primary', state: ' OH ', [field]: '0' };
     raw[key] = [row];
     const bind = () => { const { ohioResidency: _r, ohioPayments: _p, ...original } = input; input.ohioPayments.originalFederalSources = structuredClone(original); };
     bind();
@@ -47,7 +49,7 @@ it.each(withholdingStatements)('preserves actual modeled Ohio withholding metada
     delete row[field];
     bind();
     expect(() => buildOhioPaymentSource(input, input.ohioPayments)).toThrow(/withholding/i);
-    row[field] = '0';
+    row[field] = key === 'form1099OID' ? structuredClone(actualRows) : '0';
     row.taxYear = 2024;
     bind();
     expect(() => buildOhioPaymentSource(input, input.ohioPayments)).toThrow(/year/i);
@@ -56,7 +58,7 @@ it.each(withholdingStatements)('preserves actual modeled Ohio withholding metada
     bind();
     expect(() => buildOhioPaymentSource(input, input.ohioPayments)).toThrow(/owner/i);
     row.accountHolder = 'primary';
-    row[field] = '-0.01';
+    row[field] = key === 'form1099OID' ? [{ ...actualRows[0], stateWithheld: '-0.01' }] : '-0.01';
     bind();
     expect(() => buildOhioPaymentSource(input, input.ohioPayments)).toThrow(/withholding/i);
 });
@@ -132,3 +134,10 @@ it('preserves actual endpoint account payments made after an earlier filing', ()
     expect(buildOhioPaymentSource(input, input.ohioPayments).estimatedPayments.toString()).toBe('100');
 });
 it('preserves actual timely endpoint coverage instead of rejecting all estimated payments', () => { const input = ohioPaymentFixture(); Object.assign(input.ohioPayments, { paymentRows: ['2025-04-15', '2025-06-16', '2025-09-15', '2026-01-15'].map((date, index) => { const row = actualOhioPayment(input, '523', date); row.sourceId = 'current-' + index; row.original.confirmationNumber = 'ACTUAL-QUARTER-' + index; return row; }) }); const result = calculate(input); expect(result.itsd2210?.safeHarborA).toBe(true); expect(result.itsd2210?.line17_totalPenalty.toString()).toBe('0'); expect(result.it1040.line15_estimatedPayments.toString()).toBe('2092'); });
+
+it('rejects historical invented scalar OID withholding as actual payment evidence', () => {
+    const input = ohioPaymentFixture();
+    (input as unknown as Record<string, unknown>).form1099OID = [{ taxYear: 2025, accountHolder: 'primary', state: ' OH ', stateWithheld: '0' }];
+    const { ohioResidency: _r, ohioPayments: _p, ...original } = input; input.ohioPayments.originalFederalSources = structuredClone(original);
+    expect(() => buildOhioPaymentSource(input, input.ohioPayments)).toThrow(/OID.*withholding/i);
+});

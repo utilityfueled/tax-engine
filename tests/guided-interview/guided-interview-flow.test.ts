@@ -1136,6 +1136,7 @@ describe("investment section routing", () => {
       stateCode: null,
     };
     const state: GuidedFlowState = {
+      taxYear: 2025,
       phase: "interview",
       segmentation: investSegmentation,
       currentSectionIndex: 3,
@@ -2343,6 +2344,7 @@ describe("validateSection", () => {
 
   it("returns complete for investment section with interest income", () => {
     let state = startInterview({ filingStatus: "single", incomeTypes: ["investments"], lifeEvents: [], stateCode: null });
+    state.taxYear = 2025;
     state = updateSectionData(state, "income-investments", {
       interestEntries: [{ ...completeInterestSource, interestIncome: "500" }],
       dividendEntries: [emptyDividendEntry],

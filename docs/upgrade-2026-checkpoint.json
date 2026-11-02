@@ -13065,5 +13065,15 @@
       "releaseReady": false,
       "historicalGlobalChecksNotCurrent": true
     }
+  },
+  "continuation20261102SourceYearAndPrecision": {
+    "status": "active; useful work remains; no readiness promotion",
+    "paPrecisionCommit": "7e680e47",
+    "paPrecisionChecks": "main90/5+38inventory/all9; independent25/3/types/lint; finite60digit source scope",
+    "investmentSourceYearOID": "Main8fail15pass red then614/34+58/2/types3/spec/inventory/strictclean7/build/diff; independent41/6 approved746d03d5; commit reference in nextupdate",
+    "rootPrivateCurrent": "current-state-08 archive749bda2987b25952e367d7525b553bc5bccc6d289a49ddf938479371b7dc19fb 4284regular+6symlinks",
+    "rootCredit": "75/7+types3/spec/strict0/build; exact5 frozen dfdcec5e9ffb2ed0ec306567d92bc1697ab8398b4bdc1f59eebcc3532588fc06; independent52/4/types/strict0 approved7cc833b3eabef649ffe05166625229a6e1ce53e6f295ef6eb398ddc85861f829",
+    "rootWorkspace": "15/4 actualrenderer tests/types3/spec/strict0/build; mainadoption andindependentreview pending",
+    "remaining": "All originalbrief criteria including actualhousehold/method/UI/export/state/staging/provider/human/release gates remain"
   }
 }

@@ -1,0 +1,47 @@
+form: "Guided-Investment-Source-Year-OH-OID"
+fullName: "Actual investment calendar-year originals and Ohio typed OID withholding evidence"
+taxYear: 2025
+reference: "https://www.irs.gov/instructions/i1099int"
+notes: |
+  Current continuous-use January2024 INT/DIV/OID source instructions and originals
+  refreshed2026-11-02; source-year identity supports2025/2026 actual records, never
+  year-specific law/form/filing qualification. No arithmetic or source amount defaults.
+lines:
+  - line: "actual-year"
+    description: "Require entered actual calendar year for every started INT/DIV/B"
+    formula: |
+      The current return year is not an original-source fact. Empty drafts remain
+      unknown. Started INT/DIV/B must retain their actual four-digit sourceTaxYear
+      matching the supported current return year; unknown, malformed or mismatching
+      originals block guided calculation. Existing brokerage year UI remains.
+      Do not fill a missing year from the selected return or another source record.
+    testRef: "tests/guided-interview/guided-investment-source-year-oh-oid.test.ts::actual investment source year is required for each started original"
+  - line: "canonical-year"
+    description: "Preserve entered year through bridge and canonical INT/DIV/B"
+    formula: |
+      Project numeric taxYear only from the explicitly entered actual source year.
+      INT/DIV canonical optional taxYear metadata must survive validation; legacy
+      canonical callers retain optional metadata behavior. Brokerage retains its
+      existing original withholding source builder. Every source amount, owner,
+      allocation, unsupported-method, duplicate and privacy guard is unchanged.
+    testRef: "tests/guided-interview/guided-investment-source-year-oh-oid.test.ts::actual investment years survive bridge and canonical validation without source defaults"
+  - line: "actual-year-ui"
+    description: "Collect actual original INT/DIV year with no selected-year default"
+    formula: |
+      Existing INT/DIV original detail collectors expose blank actual source-year
+      text fields. Native edits retain the exact input and invoke existing change
+      handling so source-bound downstream confirmations invalidate. No inferred
+      date, owner, year or zero; the brokerage source-year collector stays intact.
+    testRef: "tests/apps/web/investment-source-year-oh-oid.test.tsx::actual INT and DIV year controls remain blank until entered"
+  - line: "ohio-oid-source"
+    description: "Admit complete verified OID original state rows, not an absent scalar"
+    formula: |
+      Ohio actual payment originals validate each OID actual owner and calendar
+      year before the existing verified OID source engine. Explicit empty rows mean
+      known no reported state rows; absence is unknown. Validate all0/1/2 separate
+      actual state/payerID/Box14 amounts, including nonOhio and knownzero rows;
+      reject unknown jurisdiction, missing ID, duplicate rows, negative/nonfinite
+      amounts, stale snapshots, unverified records or unmatched owner/year.
+      Existing ScheduleWH/adapter alone select actual OH rows once with Decimal;
+      no fabricated stateWithheld scalar, OHzero, source override or future receipt.
+    testRef: "tests/engine/state/oh-payment-oid-row-sources.test.ts::Ohio actual OID payment evidence admits actual separate state rows without a scalar"

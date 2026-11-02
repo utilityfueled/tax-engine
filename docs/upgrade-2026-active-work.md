@@ -16,8 +16,9 @@ PA and Ohio, all three residency categories. Useful internal work remains.
 | `75846e7e` | Ohio actual W2 review PDFs | 68/eight, all9 | 42/four plus25/four |
 | `b572afcd` | Retain six canonical state packets | 105/seven, all9 | 88/11 |
 | `da15b188` | Actual50state/DC W2 source jurisdictions | 103/10, all9 | 118/11 |
+| `7e680e47` | Ordinary PA source precision | 90/five +38inventory controls, all9 | 25/three |
 
-All seven are pushed to `upgrade/2026-baseline`. No threshold, monetary oracle,
+The first eight are pushed to `upgrade/2026-baseline`. No threshold, monetary oracle,
 privacy control or readiness gate was reduced. Ohio PDF main validation reopens
 64PDFs/157pages with no fields/widgets/private IDs;167page/contact pixel checks
 exactly match frozen reviewed output. Canonical admission has six genuine main
@@ -51,26 +52,24 @@ its minimal enum/type/dropdown edits; it qualifies source capture only.
   not green qualification. Exact19`nov02-oh-source-navigation/frozen-author-v1/frozen-package.json`,
   hash`9819557c062133d4093f6af07cff0eb5e44d5351fe9c3d6fe9547b5094f532ed`;
   independent review/adoption and dependency corrections remain.
-- [ ] Investment actual-source year/OID successor: five owned products, actual
+- [x] Investment actual-source year/OID successor: five owned products, actual
   blank-year UI, strict entered-year projection/schema admission and genuine OID
-  row validation. Source-first23 has8fail/15pass before product, then23green.
-  Broader604pass/8fail exposed explicit synthetic-source setup migrations;
-  migrated614/34 now passes with types3/spec, strict baseline proof/build pending.
-  unchanged monetary/negative oracles and old originals remain preserved.
-  Scoped migrations/checks/freeze/review are in progress, evidence
-  `nov02-investment-source-year-oh-oid/`. No selected-year/withholding defaults.
+  row validation. Main source-first23:8fail/15pass then614/34+58/two with types3,
+  spec, strictclean7files0/inventory/build/diff. Independent41/six approved
+  `746d03d52b5192e74975cbbbc857f24d87d7e895517114d73807753476e43354`.
+  Source-test migrations retain every monetary/negative oracle and original red.
+  Commit reference follows in the next checklist update; no source defaults.
 - [ ] PA rich actual resident-credit6: original DE800+1200→1535 control is now
   green; all original17 pass after exact reviewed W2 jurisdiction dependency.
   Frozen6`nov02-pa-resident-credit-sources/frozen-package.json`, hash
   `28290828f29a9dbd1d3fec554b0e91620e798e636ee960ddece1dde5eb2a9dff`.
   Complete filed returns/payment/refund/account originals remain required.
   Independent review, upstream precision and composition remain separate work.
-- [ ] PA source precision4: independent Python150 oracles expose real19-digit
-  half-dollar error and60-digit false reconciliation failure.2fail/1pass before
-  local Money100 correction becomes83/five plus strictlint0. Global Decimal and
-  all originals remain unchanged. Frozen4`nov02-parent-pa-source-precision/first-green-package.json`;
-  independent5 controls/types/adoption pending. Other ordinary facts/PA40
-  precision boundaries and unbounded input policy remain explicitly unverified.
+- [x] PA source precision: pushed `7e680e47`; true main2fail/1pass becomes90/five
+  plus38inventory controls. Main types3/spec/strict0/inventory/build pass;
+  independent25/three/types/strict0 approved `acd4c179...`. Local context100
+  exercises finite source scope up to60digits; broader amounts/ordinary-facts
+  precision remain unqualified. Ledger`upgrade-2026-pa-source-precision-work.md`.
 - [ ] PA ordinary PDF10: honest union, genuine prepared context, R/N/P/school/PY
   fields, actual SP children, refund/donation allocation and WPTC processing.
   SevenPDFs/16pages pass strict field/widget/AP/privacy and author visual checks;

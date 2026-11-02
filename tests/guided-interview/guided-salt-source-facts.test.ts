@@ -9,7 +9,7 @@ import { calculateStateLocalIncomeTaxDeduction } from "@/engine/forms/state-loca
 function flow() {
   const state = startCompleteInterview({ filingStatus: "single", incomeTypes: ["interest-dividends", "self-employment"], lifeEvents: [], stateCode: null });
   state.taxYear = 2026;
-  state.sectionData["income-investments"] = { qofDispositionFacts: { sourceTaxYear: "2026", sourceReference: "Fictional complete records", sourceFactsConfirmed: true, allInvestmentsReviewed: true, disposedOfQofInvestment: false, deferredGainHeldAtYearEnd: false }, interestEntries: [{ ...completeInterestSource, stateTaxReporting: "single", state: "PA", stateWithheld: "0.10" }], dividendEntries: [{ ...completeDividendSource, stateTaxReporting: "single", state: "NY", stateWithheld: "0.20" }], brokerageEntries: [] };
+  state.sectionData["income-investments"] = { qofDispositionFacts: { sourceTaxYear: "2026", sourceReference: "Fictional complete records", sourceFactsConfirmed: true, allInvestmentsReviewed: true, disposedOfQofInvestment: false, deferredGainHeldAtYearEnd: false }, interestEntries: [{ ...completeInterestSource, sourceTaxYear: "2026", stateTaxReporting: "single", state: "PA", stateWithheld: "0.10" }], dividendEntries: [{ ...completeDividendSource, sourceTaxYear: "2026", stateTaxReporting: "single", state: "NY", stateWithheld: "0.20" }], brokerageEntries: [] };
   state.sectionData["income-self-employment"] = { ...completeBusinessSection, necEntries: [{ ...completeNecSource, stateTaxReporting: "single", state: "OH", stateWithheld: "0.30" }] };
   state.sectionData.deductions = { ...emptyDeductionData, method: "itemized", stateLocalTaxes: "1.00" };
   return state;

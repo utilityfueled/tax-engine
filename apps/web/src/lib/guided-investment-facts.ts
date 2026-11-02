@@ -14,6 +14,8 @@ import { qsbsSourceFactErrors, type QsbsSourceData } from "./guided-qsbs-sources
 import { digitalAssetFactErrors, isStartedDigitalAsset, type DigitalAssetEntryData } from "./guided-digital-asset-facts";
 
 export interface InvestmentSourceData extends PrivateActivitySourceData {
+  /** Actual original calendar year; omission stays unknown. */
+  sourceTaxYear?: string;
   payerTin?: string;
   accountReference?: string;
   accountHolder?: "primary" | "spouse" | "joint" | "";
@@ -33,7 +35,9 @@ export function isStartedInvestment(entry: InvestmentSourceData | CapitalGainTra
   return Object.values(entry).some(value => typeof value === "string" && value.trim() !== "");
 }
 
-function sourceIdentityErrors(entry: InvestmentSourceData, prefix: string, filingStatus: FilingStatus | null | undefined, errors: Record<string, string>) {
+function sourceIdentityErrors(entry: InvestmentSourceData, prefix: string, filingStatus: FilingStatus | null | undefined, taxYear: number | null | undefined, errors: Record<string, string>) {
+  const year = entry.sourceTaxYear?.trim();
+  if (!/^\d{4}$/.test(year ?? "") || (taxYear !== 2025 && taxYear !== 2026) || Number(year) !== taxYear) errors[`${prefix}-year`] = "Enter the actual investment form calendar year matching this return.";
   if (!["primary", "spouse"].includes(entry.accountHolder ?? "")) errors[`${prefix}-owner`] = "Identify the actual taxpayer owner. Joint accounts need separately established ownership allocations before this interview can calculate them.";
   if (entry.accountHolder === "spouse" && filingStatus !== "mfj") errors[`${prefix}-owner`] = "A spouse's income belongs on a joint return or their own return.";
   if (entry.stateTaxReporting === "single") {
@@ -69,7 +73,7 @@ export function investmentFactErrors(data: InvestmentData | undefined, filingSta
       if (!isStartedInvestment(entry)) return;
       const prefix = `${kind}-${index}`;
       if (!entry.payer.trim()) errors[`${prefix}-payer`] = "Enter the actual payer name from the source record.";
-      sourceIdentityErrors(entry, prefix, filingStatus, errors);
+      sourceIdentityErrors(entry, prefix, filingStatus, taxYear, errors);
       const fields = kind === "interest" ? interestSourceAmounts : dividendSourceAmounts;
       const values = entry as unknown as Record<string, string | undefined>;
       for (const [field, label] of fields) { const error = amountError(values[field], label); if (error) errors[`${prefix}-${field}`] = error; }
@@ -101,7 +105,7 @@ export function investmentFactErrors(data: InvestmentData | undefined, filingSta
     if (!isStartedInvestment(entry) && !entry.transactions.some(isStartedInvestment)) return;
     const prefix = `brokerage-${index}`;
     if (!entry.broker.trim()) errors[`${prefix}-broker`] = "Enter the actual broker name.";
-    sourceIdentityErrors(entry, prefix, filingStatus, errors);
+    sourceIdentityErrors(entry, prefix, filingStatus, taxYear, errors);
     const withholdingError = amountError(entry.federalWithheld, "broker federal withholding");
     if (withholdingError) errors[`${prefix}-federalWithheld`] = withholdingError;
     const started = entry.transactions.filter(isStartedInvestment);

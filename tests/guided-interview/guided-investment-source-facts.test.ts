@@ -42,8 +42,14 @@ describe("guided investment source records", () => {
     }
     state.sectionData["income-investments"] = { interestEntries: [], dividendEntries: [{ ...completeDividendSource, nondividendDistributions: "0.01" }], brokerageEntries: [] };
     expect(buildTaxInputFromGuidedData(state)).toBeNull();
-    state.sectionData["income-investments"] = { interestEntries: [], dividendEntries: [], brokerageEntries: [{ ...completeBrokerageSource, federalWithheld: "0.01" }] };
+    // An unbound original still cannot claim positive withholding.
+    state.sectionData["income-investments"] = { interestEntries: [], dividendEntries: [], brokerageEntries: [{ ...completeBrokerageSource, sourceId: undefined, federalWithheld: "0.01" }] };
     expect(buildTaxInputFromGuidedData(state)).toBeNull();
+    // Existing reviewed actual brokerage method accepts this same exact cent only
+    // with the actual synthetic original ID/year; do not restore a blanket TODO.
+    state.sectionData["income-investments"] = { interestEntries: [], dividendEntries: [], brokerageEntries: [{ ...completeBrokerageSource, federalWithheld: "0.01" }] };
+    expect(buildTaxInputFromGuidedData(state)?.form1099B[0]?.federalWithheld).toBe("0.01");
+    expect(buildTaxInputFromGuidedData(state)?.form1099B).toHaveLength(1);
   });
   it("preserves source-state withholding once and requires reconciliation of duplicate additional records", () => {
     const state = interview();
