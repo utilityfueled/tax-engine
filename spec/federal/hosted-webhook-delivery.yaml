@@ -1,0 +1,43 @@
+form: "Hosted-Webhook-Delivery"
+fullName: "Authenticated Stripe delivery retries and immutable event creation"
+taxYear: 2026
+reference: "https://docs.stripe.com/webhooks#automatic-retries; https://docs.stripe.com/webhooks#preventing-replay-attacks; docs/upgrade-2026-execution-brief.md"
+notes: |
+  Stripe retries an event using a new signed delivery timestamp. Immutable
+  event.created may legitimately precede delivery by days. Authenticate the raw
+  payload using Stripe's SDK and its nonzero 300 second signed-header tolerance.
+  Preserve the existing 60 second future-event guard, shape validation and ledger
+  idempotency. No provider call or staging qualification is inferred by tests.
+lines:
+  - line: "delayed-delivery"
+    description: "A freshly signed delivery can contain an old original event"
+    formula: "Accept an authenticated30 day old event; preserve its original eventCreatedAt in subscription persistence."
+    testRef: "tests/apps/web/hosted-webhook-delivery.test.ts::accepts a freshly signed 30 day old subscription event"
+  - line: "outage-recovery"
+    description: "Persistence failure does not permanently strand a retried event"
+    formula: "Do not mark before successful persistence; after a 1 day outage a fresh signature can retry the same original event."
+    testRef: "tests/apps/web/hosted-webhook-delivery.test.ts::recovers a subscription after a day long database outage"
+  - line: "credit-recovery"
+    description: "Delayed credit delivery keeps unique checkout idempotency"
+    formula: "Preserve exact 1500 paid/1000 credited cents and original creation time, and rely on checkoutSession uniqueness even when the same event is delivered twice."
+    testRef: "tests/apps/web/hosted-webhook-delivery.test.ts::persists delayed credit deliveries through the existing idempotent checkout ledger"
+  - line: "signed-replay"
+    description: "A stale delivery signature is rejected before persistence"
+    formula: "Reject an otherwise authentic delivery signed 301 seconds ago even when event.created is current."
+    testRef: "tests/apps/web/hosted-webhook-delivery.test.ts::rejects a stale signed delivery before persistence"
+  - line: "signed-boundary"
+    description: "The existing nonzero tolerance boundary remains inclusive"
+    formula: "Accept a signed delivery exactly 300 seconds old; do not turn off SDK recency validation."
+    testRef: "tests/apps/web/hosted-webhook-delivery.test.ts::accepts a signed delivery at the 300 second boundary"
+  - line: "signature-integrity"
+    description: "Old events are still authenticated without bypassing SDK checks"
+    formula: "Changing a signed original payload rejects before any subscription write."
+    testRef: "tests/apps/web/hosted-webhook-delivery.test.ts::rejects a changed original payload before persistence"
+  - line: "future-event"
+    description: "The existing future-event clock control remains separate"
+    formula: "Reject signed event.created 61 seconds in the future; accept 60 seconds of future skew."
+    testRef: "tests/apps/web/hosted-webhook-delivery.test.ts::preserves the separate future event clock guard"
+  - line: "created-shape"
+    description: "An old original event still requires a valid Unix creation timestamp"
+    formula: "Require event.created to be a nonnegative safe integer in seconds before any Date conversion or persistence; reject negative, fractional and unsafe timestamps without weakening legitimate old retry admission."
+    testRef: "tests/apps/web/hosted-webhook-delivery.test.ts::rejects malformed original creation timestamps before persistence (%j)"

@@ -539,7 +539,7 @@ describe("security: webhook event timestamp replay protection", () => {
     STRIPE_WEBHOOK_SECRET: webhookSecret
   };
 
-  function buildSignedWebhookRequest(eventCreated: number, eventId: string) {
+  function buildSignedWebhookRequest(eventCreated: number, eventId: string, deliveryTimestamp?: number) {
     const payload = JSON.stringify({
       id: eventId,
       type: "checkout.session.completed",
@@ -552,7 +552,7 @@ describe("security: webhook event timestamp replay protection", () => {
         }
       }
     });
-    const signature = signHostedBillingWebhookPayload(payload, webhookSecret);
+    const signature = signHostedBillingWebhookPayload(payload, webhookSecret, deliveryTimestamp);
 
     return new Request("http://localhost/api/billing/webhook", {
       method: "POST",
@@ -578,7 +578,7 @@ describe("security: webhook event timestamp replay protection", () => {
     expect(await response.json()).toEqual({ acknowledged: true });
   });
 
-  it("rejects a webhook event older than the max age window (replay attack)", async () => {
+  it("rejects a signed delivery older than the max age window (replay attack)", async () => {
     const now = 1774483200;
     const staleCreated = now - WEBHOOK_EVENT_MAX_AGE_SECONDS - 1;
     const { POST } = createHostedBillingWebhookRouteHandlers({
@@ -587,7 +587,9 @@ describe("security: webhook event timestamp replay protection", () => {
       subscriptionStore: createInMemoryHostedBillingSubscriptionStore()
     });
 
-    const response = await POST(buildSignedWebhookRequest(staleCreated, "evt_ts_stale"));
+    const response = await POST(buildSignedWebhookRequest(
+      staleCreated, "evt_ts_stale", Math.floor(Date.now() / 1000) - WEBHOOK_EVENT_MAX_AGE_SECONDS - 1
+    ));
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({
       error: "Invalid webhook request."

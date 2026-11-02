@@ -32,8 +32,9 @@ import { safeReadTextBody } from "./safe-body-parser";
 type BillingEnvironment = Record<string, string | undefined>;
 
 /**
- * Maximum age (in seconds) for a webhook event to be considered valid.
- * Events older than this are rejected to reduce replay risk.
+ * Maximum age (in seconds) of the signed delivery timestamp, verified by Stripe.
+ * event.created is immutable and may precede a legitimate retry by days.
+ * The existing exported name is retained for compatibility.
  */
 const WEBHOOK_EVENT_MAX_AGE_SECONDS = 300;
 
@@ -104,30 +105,22 @@ function readPlanIdFromSubscriptionItems(
   return null;
 }
 
-function isWebhookEventTimestampValid(
+function isWebhookEventCreationTimeValid(
   createdUnixSeconds: number,
   nowUnixSeconds: number,
-  maxAgeSeconds: number = WEBHOOK_EVENT_MAX_AGE_SECONDS,
   maxFutureSeconds: number = WEBHOOK_EVENT_MAX_FUTURE_SECONDS
 ): boolean {
-  const age = nowUnixSeconds - createdUnixSeconds;
-
-  if (age > maxAgeSeconds) {
-    return false;
-  }
-
-  if (age < -maxFutureSeconds) {
-    return false;
-  }
-
-  return true;
+  // Authentication and replay recency belong to the signed delivery header.
+  // Keep the independent future-created guard without rejecting old retries.
+  return createdUnixSeconds <= nowUnixSeconds + maxFutureSeconds;
 }
 
 function isStripeEventShape(event: Stripe.Event): boolean {
   return typeof event.id === "string"
     && typeof event.type === "string"
     && typeof event.created === "number"
-    && Number.isFinite(event.created)
+    && Number.isSafeInteger(event.created)
+    && event.created >= 0
     && typeof event.data === "object"
     && event.data !== null
     && "object" in event.data;
@@ -423,7 +416,7 @@ export function createHostedBillingWebhookRouteHandlers(
         event = dependencies.constructEvent
           ? dependencies.constructEvent(payload, signature, secret)
           : createStripeClient(env.STRIPE_SECRET_KEY?.trim() || "sk_test_placeholder")
-              .webhooks.constructEvent(payload, signature, secret);
+              .webhooks.constructEvent(payload, signature, secret, WEBHOOK_EVENT_MAX_AGE_SECONDS);
       } catch {
         return NextResponse.json(
           { error: "Invalid webhook request." },
@@ -440,7 +433,7 @@ export function createHostedBillingWebhookRouteHandlers(
 
       const nowUnixSeconds = dependencies.nowUnixSeconds ?? Math.floor(Date.now() / 1000);
 
-      if (!isWebhookEventTimestampValid(event.created, nowUnixSeconds)) {
+      if (!isWebhookEventCreationTimeValid(event.created, nowUnixSeconds)) {
         return NextResponse.json(
           { error: "Invalid webhook request." },
           { status: 400 }
