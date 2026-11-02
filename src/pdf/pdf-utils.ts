@@ -213,6 +213,19 @@ export async function savePdf(
   // Catalog-level forms/outlines are intentionally outside this opt-in route;
   // ordinary saved documents retain their original document and field structure.
   const output = options.pageOnlyTemporaryMerge ? await doc.copy() : doc;
+  if (options.pageOnlyTemporaryMerge) {
+    for (const page of output.getPages()) {
+      const annotations = page.node.Annots();
+      if (!annotations) continue;
+      // pdf-lib flattening can delete widget objects while leaving their page
+      // references. Clean only unresolved entries in the private output copy;
+      // resolved links and other non-widget annotations must remain intact.
+      for (let i = annotations.size() - 1; i >= 0; i--) {
+        if (output.context.lookup(annotations.get(i)) === undefined) annotations.remove(i);
+      }
+      if (annotations.size() === 0) page.node.delete(PDFName.of("Annots"));
+    }
+  }
   await mkdir(dirname(outputPath), { recursive: true });
   const bytes = await output.save({ objectsPerTick: 500, useObjectStreams: options.useObjectStreams ?? true });
   await writeFile(outputPath, bytes);

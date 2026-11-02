@@ -7888,6 +7888,26 @@
       ]
     },
     {
+      "key": "federal/pdf-page-only-temporary",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "Local opt-in review-export contract in src/pdf/pdf-utils.ts; applies to supported review years without opening filing gates",
+      "specPath": "spec/federal/pdf-page-only-temporary.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/pdf-review-policy",
       "jurisdiction": "federal",
       "taxYear": 2025,

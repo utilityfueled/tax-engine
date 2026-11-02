@@ -22,9 +22,12 @@ and has pushed these separately reviewed packages:
   separate. Contradictory no-state IDs reject; explicit scalar-ID recovery keeps
   other facts intact. Author 42 tests in 7 files, parent 18 in 5 (including 3 independent), main
   66 in 9, three types, 6,414 spec references, 606 inventory entries, lint and engine build pass.
-- [ ] Final-code production browser and actual downloaded-artifact review on
-  `8d74350d` is active. Earlier frozen collector/reopen evidence is retained but
-  does not qualify the later code or a full upload-to-delete journey.
+- [ ] Final-code production browser on `8d74350d` passes five cases and four saved
+  source oracles. Strict actual-download review passes 156/158 checks: both PA
+  packets retain 23 dangling PA40 annotation references. The [narrow repair](upgrade-2026-page-annotation-work.md)
+  passes 40 main tests and ten independently reviewed tests; fresh actual corrected
+  downloads remain pending. Original failed evidence is retained.
+  This seeded partial interview does not establish a full upload-to-delete journey.
 - [ ] [New-marriage NOL owner-income method](upgrade-2026-scope-audit-20261101.md)
   is required internal work. Source research, spec-first implementation and a
   separate review are active. Old charity/current-joint queue prose is partly
@@ -32,7 +35,8 @@ and has pushed these separately reviewed packages:
   unfinished source research or inventing allocation rules.
 - [ ] Current integrated full test/coverage/static/build/browser and native
   arm64/amd64 recovery/SBOM/scans remain required after the remaining code.
-  CI/Web on `5293f451` are running; historical green `a3e43a9f` does not qualify this head.
+  CI/Web on `75e0d9fb` are running; superseded `5293f451` runs were cancelled.
+  Historical green `a3e43a9f` does not qualify this head.
 
 Rule versions are `2025.215` / `2026.213-law-integration-draft`. Tax year 2026 stays
 incomplete; filing and model promotion remain disabled. Human tax/AI/security

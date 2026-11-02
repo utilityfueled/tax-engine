@@ -1,0 +1,21 @@
+form: "Review PDF temporary page serialization"
+fullName: "Flattened page-only merge inputs preserve valid annotations and remove unresolved references"
+taxYear: 2026
+reference: "Local opt-in review-export contract in src/pdf/pdf-utils.ts; applies to supported review years without opening filing gates"
+notes: |
+  This changes only explicitly uncompressed, flattened, page-only temporary merge
+  inputs. Ordinary interactive saves retain their original document structure.
+  It does not qualify a physical template or enable a filing export.
+lines:
+  - line: "resolved-page-references"
+    description: "A temporary page must not retain a reference to an absent annotation object"
+    formula: "After the existing no-fields/no-widgets checks, copy the document and remove only annotation references that do not resolve in the copied context. Preserve every resolved non-widget annotation, page content, review metadata, source document and ordinary serialization behavior. Independently reopen the saved bytes and require zero unresolved annotations."
+    testRef: "tests/pdf/page-only-merge-components.test.ts::removes only unresolved annotations from copied temporary pages"
+  - line: "actual-pa40-pages"
+    description: "The actual Pennsylvania physical template must produce structurally readable temporary pages after flattening"
+    formula: "Use the committed physical PA40 template and diagnostic gain200/withholding123. Flatten through the existing implementation; save with explicit page-only temporary options. Independent pypdf must resolve all page annotations, report no fields/widgets and retain values/notices. This is a structural diagnostic, not tax or template qualification."
+    testRef: "tests/pdf/page-only-merge-components.test.ts::removes dangling references left by flattening the actual PA40 template"
+  - line: "interactive-controls"
+    description: "Do not silently discard real interactive content"
+    formula: "Reject a component with any canonical field or resolved page widget before output creation, including orphan widgets absent from catalog Fields. Resolved non-widget annotations stay present. The caller's document and default interactive export remain unchanged."
+    testRef: "tests/pdf/page-only-merge-components.test.ts::rejects an orphan page widget before creating output even when catalog fields are empty"

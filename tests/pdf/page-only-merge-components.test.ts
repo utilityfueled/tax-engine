@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { PDFDocument, PDFString, PDFName } from "pdf-lib";
+import { PDFDocument, PDFString, PDFName, PDFRef } from "pdf-lib";
 import { afterEach, expect, it } from "vitest";
 import { savePdf, flattenForm } from "@/pdf/pdf-utils.js";
 import { markReviewPdf, REVIEW_PDF_NOTICE } from "@/pdf/export-policy.js";
@@ -64,4 +64,69 @@ it("rejects an orphan page widget before creating output even when catalog field
   await expect(savePdf(doc, output, { useObjectStreams: false, pageOnlyTemporaryMerge: true }))
     .rejects.toThrow(/flattened|interactive|widget/);
   await expect(stat(join(dir, "not-created"))).rejects.toMatchObject({ code: "ENOENT" });
+});
+
+
+// Spec: spec/federal/pdf-page-only-temporary.yaml resolved-page-references.
+it("removes only unresolved annotations from copied temporary pages", async () => {
+  const dir = await directory();
+  const doc = await actualDoc(true);
+  const page = doc.getPages()[0];
+  const link = doc.context.obj({ Type: "Annot", Subtype: "Link", Rect: [40, 40, 140, 60],
+    A: { Type: "Action", S: "URI", URI: PDFString.of("https://example.invalid/source") } });
+  const linkRef = doc.context.register(link);
+  const missingRef = PDFRef.of(98765, 0);
+  page.node.addAnnot(linkRef);
+  page.node.addAnnot(missingRef);
+  const originalAnnotations = page.node.Annots();
+  if (!originalAnnotations) throw new Error("Missing original synthetic annotations");
+  const before = originalAnnotations.asArray().map(String);
+  const ordinary = join(dir, "ordinary-with-original-reference.pdf");
+  const temporary = join(dir, "temporary-with-resolved-link.pdf");
+  await savePdf(doc, ordinary, { useObjectStreams: false });
+  await savePdf(doc, temporary, { useObjectStreams: false, pageOnlyTemporaryMerge: true });
+  expect(page.node.Annots()?.asArray().map(String)).toEqual(before);
+  expect(doc.context.lookup(linkRef)).toBe(link);
+  expect(doc.context.lookup(missingRef)).toBeUndefined();
+  const values = JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", `
+import sys,json
+from pypdf import PdfReader
+def read(path):
+ r=PdfReader(path); annotations=[a.get_object() for p in r.pages for a in p.get('/Annots',[])]
+ return {'unresolved':sum(a is None for a in annotations),'links':[str(a.get('/A',{}).get('/URI')) for a in annotations if a is not None and a.get('/Subtype')=='/Link'],'widgets':sum(a is not None and a.get('/Subtype')=='/Widget' for a in annotations),'fields':len(r.get_fields() or {}),'pages':[p.extract_text() or '' for p in r.pages]}
+print(json.dumps([read(p) for p in sys.argv[1:]]))`, ordinary, temporary], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 5000 }));
+  // The two original widget refs left by flattening plus the explicit missing ref.
+  expect(values[0].unresolved).toBe(3);
+  expect(values[1].unresolved).toBe(0);
+  expect(values[1].links).toEqual(["https://example.invalid/source"]);
+  expect(values[0].links).toEqual(values[1].links);
+  expect(values[1].widgets).toBe(0);
+  expect(values[1].fields).toBe(0);
+  expect(values[1].pages).toEqual(values[0].pages);
+  expect(values[1].pages[0]).toContain("12345.67");
+  expect(values[1].pages[0].split(REVIEW_PDF_NOTICE)).toHaveLength(2);
+});
+
+// Spec: spec/federal/pdf-page-only-temporary.yaml actual-pa40-pages.
+it("removes dangling references left by flattening the actual PA40 template", async () => {
+  const dir = await directory();
+  const doc = await PDFDocument.load(await readFile("forms/blank/2025/pa-40.pdf"));
+  doc.getForm().getTextField("5. Net Gain or Loss from Sale, etc. of Property").setText("200");
+  doc.getForm().getTextField("13. Total PA Tax Withheld").setText("123");
+  await markReviewPdf(doc);
+  await flattenForm(doc.getForm());
+  const path = join(dir, "actual-pa40-temporary.pdf");
+  await savePdf(doc, path, { useObjectStreams: false, pageOnlyTemporaryMerge: true });
+  const values = JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", `
+import sys,json
+from pypdf import PdfReader
+r=PdfReader(sys.argv[1]);annotations=[a.get_object() for p in r.pages for a in p.get('/Annots',[])]
+print(json.dumps({'unresolved':sum(a is None for a in annotations),'widgets':sum(a is not None and a.get('/Subtype')=='/Widget' for a in annotations),'fields':len(r.get_fields() or {}),'pages':[p.extract_text() or '' for p in r.pages]}))`, path], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 5000 }));
+  expect(values.unresolved).toBe(0);
+  expect(values.widgets).toBe(0);
+  expect(values.fields).toBe(0);
+  expect(values.pages).toHaveLength(2);
+  expect(values.pages[0]).toContain("200");
+  expect(values.pages[1]).toContain("123");
+  for (const page of values.pages) expect(page.split(REVIEW_PDF_NOTICE)).toHaveLength(2);
 });
