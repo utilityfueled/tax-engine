@@ -12043,6 +12043,25 @@
       ]
     },
     {
+      "key": "state/pa-residency-sources",
+      "jurisdiction": "state",
+      "taxYear": 2026,
+      "sourceAuthority": "https://www.pacodeandbulletin.gov/Display/pacode?file=/secure/pacode/data/061/chapter121/s121.8.html&d=reduce",
+      "specPath": "spec/state/pa-residency-sources.yaml",
+      "enginePath": "src/engine/state/pa-residency-sources.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-rev-1630",
       "jurisdiction": "state",
       "taxYear": 2025,
