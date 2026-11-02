@@ -347,7 +347,7 @@ lines:
     testRef: "tests/pdf/fill-pa-40.test.ts::PA40 diagnostic projection keeps zero-credit mapping separate from source admission"
 
   - line: "printed-income-rounding"
-    description: "2025 and draft 2026 PA-40 Part A uses reported whole-dollar lines before tax"
+    description: "2024, 2025 and draft 2026 PA-40 Part A uses reported whole-dollar lines before tax"
     formula: |
       Keep exact admissible original source cents through within-class aggregation.
       Round aggregate input lines 1a, 1b, 2 through 8, and 10 once using Decimal
@@ -362,7 +362,41 @@ lines:
       reported adjusted-income and tax lines. Retrieved 2026-11-02 at
       https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
       Source SHA e8996504a4302a65055e697ba6301a3e41a411a4802645a5fc5f653f7538c172.
-      This correction leaves the historical 2024 path unchanged and does not
-      qualify final 2026 physical forms, payment methods or upstream source
-      eligibility. The existing draft 2026 computation carries this method.
+      Fresh 2024 PA-40 IN printed page 4 confirms the identical whole-dollar
+      rule (retrieved 2026-11-02, SHA
+      de983ef28babe59e4e5da1ed0100f996e219b2aaa2119757eace746170c0a822).
+      The historical 2024 cents path is corrected under that actual source;
+      original exact source records and prior whole-dollar tests stay intact.
+      The existing draft 2026 computation carries this method; final 2026
+      physical forms and upstream source eligibility are not qualified here.
     testRef: "tests/engine/state/pa-40.test.ts::PA-40 printed income - rounds reported classes before adding income and computing tax"
+
+  - line: "reported-payments"
+    description: "Whole-dollar printed payment and credit lines precede total arithmetic"
+    formula: |
+      Aggregate exact admissible raw source cents within each reported line,
+      then roundDollar once for 13, 14, 15, 16, 17, 20, 21, 22, 23 and 25.
+      Line18 is reported14+15+16+17; printed24 sums reported13+18+21+22+23.
+      Preserve original source values; do not round each receipt/source first.
+      The existing unprinted refundable helper remains in legacy helper totals
+      only; exclude it from printed24 and printed26/28/29. It cannot be passed
+      off as WPTC on paper. Existing paper/source guards remain in force.
+    notes: |
+      Actual 2024/2025 PA40IN whole-dollar rules and actual2025PA40 lines18/24.
+      Source-only independent review receipt4945532feda3747177c296c8736f42e984163687d55df1153382f292ac47e43c.
+      An admissible allowed credit is a caller precondition, not established by
+      rounding a bare amount. No actual receipt/date/eligibility is inferred.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 reported settlement - sums reported payment lines without changing exact originals"
+
+  - line: "reported-penalties"
+    description: "One reported line27 combines the already-reported REV1630 transfer and unprinted late components"
+    formula: |
+      Given the admissible already-reported REV1630 line16 transfer, add its
+      whole-dollar amount to exact unprinted late penalty and late interest;
+      roundDollar their sum once for printed27. Retain component amounts for
+      the audit, without rounding each late component independently. Use this
+      reported27, reported24, reported12 and reported25 for net28/29 arithmetic.
+      A preexisting overpayment offsets27 before amount due is reported.
+      Preserve printed one-dollar due/overpayment values; payment/issuance
+      policy and actual refund elections are separate from printed arithmetic.
+    testRef: "tests/engine/state/pa-40.test.ts::PA-40 reported settlement - combines unprinted late components once and nets the reported penalty"

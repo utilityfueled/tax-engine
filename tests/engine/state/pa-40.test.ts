@@ -400,7 +400,8 @@ describe("Pennsylvania PA-40 Personal Income Tax Return", () => {
       expect(result.totalEstimatedPaymentsAndCredits.toNumber()).toBe(800);
       expect(result.totalPayments.toNumber()).toBe(2050);
       expect(result.totalCredits.toNumber()).toBe(225);
-      expect(result.totalPaymentsAndCredits.toNumber()).toBe(2275);
+      // Printed24 excludes the250 unprinted helper; legacy2050 payment helper stays above.
+      expect(result.totalPaymentsAndCredits.toNumber()).toBe(2025);
     });
 
     it("PA-40 refundable credits increase total payments and refund", () => {
@@ -1139,7 +1140,7 @@ describe("Pennsylvania PA-40 Personal Income Tax Return", () => {
 // amounts are pinned from actual 2025 PA-40 IN before implementation outputs.
 describe("PA-40 reported income class arithmetic", () => {
   it("PA-40 printed income - rounds reported classes before adding income and computing tax", () => {
-    for (const taxYear of [2025, 2026]) {
+    for (const taxYear of [2024, 2025, 2026]) {
       for (const [wages, bank, reportedWages, reportedBank, total, tax] of [
         ["16.49", ".49", "16", "0", "16", "0"],
         ["16.49", ".50", "16", "1", "17", "1"],
@@ -1189,4 +1190,85 @@ describe("PA-40 reported income class arithmetic", () => {
   });
 
 
+});
+
+// Spec: spec/state/pa-40.yaml, reported-payments/reported-penalties.
+// Actual2024/2025 whole-dollar source rules and independent pre-output originals.
+describe("PA-40 reported payment and penalty arithmetic", () => {
+  it("PA-40 reported settlement - sums reported payment lines without changing exact originals", () => {
+    for (const taxYear of [2024, 2025, 2026]) {
+      const input = makeInput({ taxYear, compensation: d("10000"), stateWithholding: d("100.50"),
+        creditFromPriorYear: d(".49"), estimatedPayments: d(".49"), extensionPayment: d(".49"), nonresidentTaxWithheld: d(".49") });
+      const result = calculatePA40(input);
+      expect(result.stateWithholding.toString()).toBe("101");
+      expect(result.totalEstimatedPaymentsAndCredits.toString()).toBe("0");
+      expect(result.totalPaymentsAndCredits.toString()).toBe("101");
+      expect(result.taxDue.toString()).toBe("206");
+      expect(result.totalAmountDue.toString()).toBe("206");
+      expect(result.lines.find(line => line.line === "18")?.value.toString()).toBe("0");
+      expect(input.stateWithholding.toString()).toBe("100.5");
+      expect(input.estimatedPayments.toString()).toBe("0.49");
+      // Both exact50.25 sources belong to13; their100.50 sum reports101 once.
+      expect(calculatePA40(makeInput({ taxYear, stateWithholding: d("50.25").plus("50.25") })).stateWithholding.toString()).toBe("101");
+      expect(calculatePA40(makeInput({ taxYear, estimatedPayments: d("25.25").plus("25.25") })).estimatedPayments.toString()).toBe("51");
+    }
+  });
+
+  it("PA-40 reported settlement - combines unprinted late components once and nets the reported penalty", () => {
+    for (const taxYear of [2024, 2025, 2026]) {
+      const input = makeInput({ taxYear, compensation: d("10000"), stateWithholding: d("317.49"),
+        underpaymentPenalty: d("1"), lateFilingOrPaymentPenalty: d(".49"), latePaymentInterest: d(".49") });
+      const result = calculatePA40(input);
+      expect(result.penaltiesAndInterest.toString()).toBe("2");
+      expect(result.lines.find(line => line.line === "27")?.value.toString()).toBe("2");
+      expect(result.totalAmountDue.toString()).toBe("0");
+      expect(result.netOverpayment.toString()).toBe("8");
+      expect(result.lateFilingOrPaymentPenalty.toString()).toBe("0.49");
+      expect(result.latePaymentInterest.toString()).toBe("0.49");
+      expect(input.stateWithholding.toString()).toBe("317.49");
+      // Existing overpayment offsets penalties before printed28/29 settlement.
+      const due = calculatePA40(makeInput({ taxYear, compensation: d("10000"), stateWithholding: d("317"), lateFilingOrPaymentPenalty: d("15") }));
+      expect(due.totalAmountDue.toString()).toBe("5");
+      expect(due.netOverpayment.toString()).toBe("0");
+    }
+  });
+});
+
+// Spec: reported-payments/reported-penalties. Supplemental independent originals.
+describe("PA-40 printed credit and small-balance boundaries", () => {
+  it("PA-40 reported settlement - rounds allowed credit and use-tax lines before totaling", () => {
+    for (const taxYear of [2024, 2025, 2026]) {
+      const result = calculatePA40(makeInput({ taxYear, compensation: d("10000"), stateWithholding: d("100.49"),
+        creditFromPriorYear: d("25.50"), estimatedPayments: d("25.50"), extensionPayment: d("25.50"), nonresidentTaxWithheld: d("25.50"),
+        taxForgivenessCredit: d("10.50"), residentCredit: d("5.49"), otherCredits: d("20.50"), useTax: d(".50") }));
+      expect(result.totalEstimatedPaymentsAndCredits.toString()).toBe("104");
+      expect(result.totalPaymentsAndCredits.toString()).toBe("241");
+      expect(result.useTax.toString()).toBe("1");
+      expect(result.taxDue.toString()).toBe("67");
+      expect(result.totalAmountDue.toString()).toBe("67");
+    }
+  });
+
+  it("PA-40 reported settlement - preserves printed one-dollar balances independently of issuance", () => {
+    for (const taxYear of [2024, 2025, 2026]) {
+      const due = calculatePA40(makeInput({ taxYear, compensation: d("10000"), stateWithholding: d("306") }));
+      expect(due.taxDue.toString()).toBe("1");
+      expect(due.totalAmountDue.toString()).toBe("1");
+      const overpaid = calculatePA40(makeInput({ taxYear, compensation: d("10000"), stateWithholding: d("308") }));
+      expect(overpaid.netOverpayment.toString()).toBe("1");
+      expect(overpaid.totalAmountDue.toString()).toBe("0");
+    }
+  });
+
+  it("PA-40 reported settlement - excludes unprinted helper credits from paper settlement", () => {
+    const result = calculatePA40(makeInput({ compensation: d("10000"), stateWithholding: d("307"), refundableCredits: d("433") }));
+    expect(result.refundableCredits.toString()).toBe("433");
+    expect(result.totalPayments.toString()).toBe("740");
+    expect(result.overpayment.toString()).toBe("433");
+    expect(result.totalPaymentsAndCredits.toString()).toBe("307");
+    expect(result.taxDue.toString()).toBe("0");
+    expect(result.totalAmountDue.toString()).toBe("0");
+    expect(result.netOverpayment.toString()).toBe("0");
+    expect(result.lines.find(line => line.line === "24")?.value.toString()).toBe("307");
+  });
 });

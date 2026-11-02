@@ -203,10 +203,11 @@ export function calculatePA40AllowedOtherCredits(input: PA40AllowedOtherCreditsI
 // ---------------------------------------------------------------------------
 
 export function calculatePA40(originalInput: PA40Input): PA40Result {
-  // Spec: printed-income-rounding. Sources are aggregated exactly by the caller;
-  // round each reported Part A line once before its downstream arithmetic.
-  // Keep original cents untouched and the separately scoped 2024 path unchanged.
-  const input: PA40Input = originalInput.taxYear >= 2025 ? {
+  // Spec: printed-income-rounding/reported-payments. Aggregate exact originals
+  // within each line first, then round that reported line once for arithmetic.
+  // Actual 2024 and 2025 instructions use the same rule; 2026 remains draft.
+  // Retain original cents, including unprinted late-payment components.
+  const input: PA40Input = {
     ...originalInput,
     compensation: roundDollar(originalInput.compensation),
     unreimbursedExpenses: roundDollar(originalInput.unreimbursedExpenses),
@@ -218,7 +219,17 @@ export function calculatePA40(originalInput: PA40Input): PA40Result {
     estateTrustIncome: roundDollar(originalInput.estateTrustIncome),
     gamblingIncome: roundDollar(originalInput.gamblingIncome),
     otherDeductions: roundDollar(originalInput.otherDeductions),
-  } : originalInput;
+    stateWithholding: roundDollar(originalInput.stateWithholding),
+    creditFromPriorYear: roundDollar(originalInput.creditFromPriorYear),
+    estimatedPayments: roundDollar(originalInput.estimatedPayments),
+    extensionPayment: roundDollar(originalInput.extensionPayment),
+    nonresidentTaxWithheld: roundDollar(originalInput.nonresidentTaxWithheld),
+    taxForgivenessEligibilityIncome: roundDollar(originalInput.taxForgivenessEligibilityIncome),
+    taxForgivenessCredit: roundDollar(originalInput.taxForgivenessCredit),
+    residentCredit: roundDollar(originalInput.residentCredit),
+    otherCredits: roundDollar(originalInput.otherCredits),
+    useTax: roundDollar(originalInput.useTax),
+  };
   const constants = STATE_TAX_CONSTANTS.pa[input.taxYear];
   if (!constants) {
     throw new Error(`PA constants not available for tax year ${input.taxYear}`);
@@ -393,13 +404,13 @@ export function calculatePA40(originalInput: PA40Input): PA40Result {
   audit.record("PA-40", "23a", "Net tax liability after credits", netTaxLiability, "Line 12 - Line 22a, floor at 0");
 
   // Line 24: Total payments and credits on the printed PA-40
-  const totalPaymentsAndCredits = totalPayments.plus(totalCredits);
+  const totalPaymentsAndCredits = sum(input.stateWithholding, totalEstimatedPaymentsAndCredits, totalCredits);
   audit.record(
     "PA-40",
     "24",
     "Total payments and credits",
     totalPaymentsAndCredits,
-    "Line 13 + Line 18 + Line 21 + Line 22 + Line 23, plus supported engine-only refundable credits",
+    "Line 13 + Line 18 + Line 21 + Line 22 + Line 23; excludes unprinted engine-only refundable helpers",
   );
 
   // -----------------------------------------------------------------------
@@ -435,17 +446,17 @@ export function calculatePA40(originalInput: PA40Input): PA40Result {
   audit.record("PA-40", "25a", "Underpayment penalty component", underpaymentPenalty, "From REV-1630 Line 16");
   audit.record("PA-40", "25b", "Late filing or payment penalty component", lateFilingOrPaymentPenalty, "Penalty for filing late and/or failing to pay tax by the due date");
   audit.record("PA-40", "25c", "Late payment interest component", latePaymentInterest, "Interest for late filing/payment");
-  const penaltiesAndInterest = sum(
+  const penaltiesAndInterest = roundDollar(sum(
     underpaymentPenalty,
     lateFilingOrPaymentPenalty,
     latePaymentInterest,
-  );
+  ));
   audit.record(
     "PA-40",
     "27",
     "Penalties and interest",
     penaltiesAndInterest,
-    "REV-1630 underpayment interest + late filing/payment penalty + late-payment interest",
+    "Round the sum of reported REV-1630 interest and unprinted late penalty/interest once",
   );
 
   const settlementDifference = totalPaymentsAndCredits.minus(totalPATax).minus(penaltiesAndInterest);
