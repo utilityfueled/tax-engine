@@ -34,9 +34,13 @@ and has pushed these separately reviewed packages:
   separate review are active. Old charity/current-joint queue prose is partly
   superseded; the audit identifies actual remaining methods without externalizing
   unfinished source research or inventing allocation rules.
+- [ ] [Five precise source derivations](upgrade-2026-source-questions-20261101.md)
+  retain fresh official passages and competing originals. Parent verifies all 50
+  bound files and 23+56 independent Decimal checks. No controlling allocation was
+  established; named methods remain guarded and further tax interpretation is required.
 - [ ] Current integrated full test/coverage/static/build/browser and native
   arm64/amd64 recovery/SBOM/scans remain required after the remaining code.
-  CI/Web on `75e0d9fb` are running; superseded `5293f451` runs were cancelled.
+  Current-head CI/Web completion remains pending; intermediate runs are historical.
   Historical green `a3e43a9f` does not qualify this head.
 
 Rule versions are `2025.215` / `2026.213-law-integration-draft`. Tax year 2026 stays

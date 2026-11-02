@@ -117,3 +117,7 @@ Disabled physical candidates for Schedules C and R are now committed in
 records author and parent field, saved-value, appearance and visual checks.
 Schedule C final 2026 instructions, complete scenario data and required human
 qualification remain separate; neither candidate is registered for exports.
+
+## Supplemental statutory currency check
+
+The [prepared source questions](upgrade-2026-source-questions-20261101.md) use the newer OLRC PL 119-136 snapshot through October 22, 2026. Eight old/new public pages for sections 172/56/108/911 were retained and compared. Manual review found no changed operative wording, after explicit citation-spacing and duplicated-editorial-footnote differences; raw source bytes and diffs remain intact. Separate section 170 individual percentage/floor and carryover texts also match the earlier snapshot. The whole section 170 body is not claimed byte-identical. This does not refresh the entire Code or resolve the five precise allocation questions.

@@ -12189,6 +12189,22 @@
         "workers": 1,
         "log": ".local/upgrade-evidence/nov01-parent-pdf-annotations/main-all-pdf.log"
       }
+    },
+    "sourceDerivationRefresh": {
+      "document": "docs/upgrade-2026-source-questions-20261101.md",
+      "currentOLRCSnapshot": "119-136 through October 22, 2026",
+      "fourSectionComparison": "172/56/108/911 operative wording unchanged after explicit editorial formatting/footnote exclusions; raw bytes/diffs retained",
+      "section170Comparison": "Individual percentage/floor and carryover scopes unchanged; no whole-body byte identity claim",
+      "CODReceiptSha256": "64cca61a26d0bd6f19bce8dc22787b8159f1068baadbf30f65c05f5d3e2f12d3",
+      "charityReceiptSha256": "2d9c1dcd44963b0ec0b899963ec769b291bb792d90b7258f1a814e8bdaa6e684",
+      "parentVerifiedFiles": 50,
+      "independentDecimalChecks": [
+        23,
+        56
+      ],
+      "productInvoked": false,
+      "newControllingMethodIdentified": false,
+      "status": "Precise source derivations remain open; no arbitrary allocation/clamp, credential classification or human qualification inferred."
     }
   }
 }
