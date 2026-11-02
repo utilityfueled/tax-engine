@@ -11995,7 +11995,6 @@
     "goal": "active",
     "priorContext": "October28 unfinished-package context is superseded by the delivered October31 packages; retain historical evidence.",
     "currentInternalWork": [
-      "Repair and independently recheck unresolved PA40 annotation references in actual production-browser downloaded PDFs; four source oracles and five browser cases pass, strict artifacts fail2/158.",
       "New-marriage NOL owner-income source method: official research/spec-first private implementation and separate review.",
       "Current integrated full CI, coverage and native arm64/amd64 runtime/recovery/SBOM/advisory evidence after remaining code.",
       "Continue bounded source-method research identified by scope audit; do not externalize unimplemented methods."
@@ -12039,6 +12038,17 @@
           41371732072
         ],
         "status": "in_progress observed2026-11-02 UTC; no completed-result claim"
+      },
+      "e3da672b": {
+        "ci": [
+          41372863252,
+          41372860125
+        ],
+        "web": [
+          41372863221,
+          41372860096
+        ],
+        "status": "in_progress observed; no completed-result claim"
       }
     },
     "sourceRefresh": {
@@ -12121,8 +12131,8 @@
       "inventoryEntries": 604,
       "humanQualified": false
     },
-    "currentHead": "8d74350d",
-    "currentRemoteHead": "8d74350d",
+    "currentHead": "e3da672b",
+    "currentRemoteHead": "e3da672b",
     "currentRuleVersions": {
       "2025": "2025.215",
       "2026": "2026.213-law-integration-draft"
@@ -12142,8 +12152,22 @@
       "independentArtifactFailed": 2,
       "failure": "Both PA17-page packets retain23 unresolved /Annots refs on PA40 pages1/2. OH packets have zero. All tax/withholding/refund, physical content/geometry, notices and privacy checks pass. Qualification remains failed.",
       "evidenceDirectory": ".local/upgrade-evidence/nov01-da-browser-review",
-      "fixStatus": "Narrow source correction independently reviewed (10tests/2files including2unchangedprivatecontrols) and integrated; main40tests/4files, all3types/spec/inventory/scopedlintpass. Fresh committed-source downloads pending.",
-      "boundary": "Seeded local synthetic partial-interview browser evidence; no staging, full journey or final-form/human qualification."
+      "fixStatus": "Committed/pushed e3da672b; fresh actual committed-source artifact review passes within stated bounded scope. Original failure retained.",
+      "boundary": "Seeded local synthetic partial-interview browser evidence; no staging, full journey or final-form/human qualification.",
+      "correctedCommit": "e3da672b416cce39e935a0f7b66a752929b6e8c1",
+      "correctedArtifactChecks": {
+        "strictPDFPassed": 158,
+        "strictPDFFailed": 0,
+        "savedOriginalPassed": 68,
+        "physicalPAPassed": 4,
+        "scalarRecoveryPassed": 11,
+        "parentPageTextStructurePassed": 224,
+        "pages": 72,
+        "renderedRelevantPages": 22,
+        "contactSheets": 4,
+        "uiCaptures": 9
+      },
+      "correctedReviewReceiptSha256": "d32368c6a63e909c60d1fbc4f371ba1de71e888b7faa79f422a8f69d87347936"
     },
     "pageAnnotationCorrection": {
       "document": "docs/upgrade-2026-page-annotation-work.md",
@@ -12156,8 +12180,15 @@
       "independentFiles": 2,
       "specReferences": 6417,
       "inventoryEntries": 607,
-      "actualFinalDownloads": "pending",
-      "originalArtifactChecks": "156passed/2failed; retained"
+      "actualFinalDownloads": "Passed:5browser,4saved-result,158strictPDF,68saved-original,4physicalPA,11recovery plus224parentpage-text/structure assertions.",
+      "originalArtifactChecks": "156passed/2failed; retained",
+      "broaderPDFTests": {
+        "passed": 1426,
+        "files": 253,
+        "seconds": "236.13",
+        "workers": 1,
+        "log": ".local/upgrade-evidence/nov01-parent-pdf-annotations/main-all-pdf.log"
+      }
     }
   }
 }

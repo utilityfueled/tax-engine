@@ -22,12 +22,13 @@ and has pushed these separately reviewed packages:
   separate. Contradictory no-state IDs reject; explicit scalar-ID recovery keeps
   other facts intact. Author 42 tests in 7 files, parent 18 in 5 (including 3 independent), main
   66 in 9, three types, 6,414 spec references, 606 inventory entries, lint and engine build pass.
-- [ ] Final-code production browser on `8d74350d` passes five cases and four saved
-  source oracles. Strict actual-download review passes 156/158 checks: both PA
-  packets retain 23 dangling PA40 annotation references. The [narrow repair](upgrade-2026-page-annotation-work.md)
-  passes 40 main tests and ten independently reviewed tests; fresh actual corrected
-  downloads remain pending. Original failed evidence is retained.
-  This seeded partial interview does not establish a full upload-to-delete journey.
+- [x] `e3da672b`: [temporary PDF annotation repair](upgrade-2026-page-annotation-work.md),
+  after two retained PA artifact failures. Forty main tests, ten independently
+  reviewed tests, all three types/spec/inventory/lint pass. Exact committed-source
+  production browser passes five cases and four source oracles. Fresh downloads
+  pass 158 strict PDF, 68 saved-source, four PA physical and 11 recovery checks;
+  parent separately passes 224 unchanged-text/structure checks over all 72 pages.
+  Seeded partial interviews do not establish a full upload-to-delete journey.
 - [ ] [New-marriage NOL owner-income method](upgrade-2026-scope-audit-20261101.md)
   is required internal work. Source research, spec-first implementation and a
   separate review are active. Old charity/current-joint queue prose is partly
