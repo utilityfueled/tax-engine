@@ -16812,5 +16812,83 @@
       "final2026 forms",
       "current full coverage/distribution/hosted/provider/security qualification"
     ]
+  },
+  "ohResidentCreditNativeBrowser20261103": {
+    "baseCommit": "bbfabb65",
+    "status": "bounded current-main native browser and saved artifacts verified",
+    "applicationProductsChanged": false,
+    "journeys": 4,
+    "viewports": [
+      "1280x900",
+      "390x844"
+    ],
+    "cohorts": [
+      "distinct250.00",
+      "cents250.25"
+    ],
+    "workers": 1,
+    "retries": 0,
+    "actualDownloads": 8,
+    "screenshots": 16,
+    "geometryRecords": 16,
+    "financialOracles": {
+      "distinct": {
+        "credit": "1000",
+        "tax": "1323",
+        "requestedRefund": "677"
+      },
+      "cents": {
+        "credit": "1001",
+        "tax": "1322",
+        "requestedRefund": "678"
+      }
+    },
+    "filingRequestStatus": 400,
+    "checks": {
+      "spec": "7852/7852",
+      "ASTControls": 742,
+      "types": [
+        "root",
+        "web",
+        "contracts"
+      ],
+      "builds": [
+        "engine",
+        "web"
+      ],
+      "ownedStrictLintWarnings": 0,
+      "inventory": "generated+checked",
+      "historicalCustomImportClosure": "15 unchanged baseline diagnostics; not relabeled pass",
+      "initialInventoryCommand": "nonexistent spec:inventory:generate exited254; retained; actual spec:inventory and check passed"
+    },
+    "savedReview": {
+      "receipt": "f4fac6b14221fb3f75f2a3c22a47b5ba630a4f01cfccbcf169f5c0af2e8fb1e7",
+      "files": 8,
+      "pages": 184,
+      "resolvedObjects": 6888,
+      "oldToCurrentTextAndRGBParityPages": 184,
+      "initialReopenedRGBPairs": 92,
+      "strictPrivacy": "PASS",
+      "fieldsWidgetsAnnotationsActions": 0,
+      "sourceManifest": "12a909db9fbb51c41a7909fdaab642fd8107b6314186290281a3ccabf653ca7a"
+    },
+    "integrity": {
+      "committedPaths": 4901,
+      "mismatchesOutsideGeneratedInventory": 0,
+      "managedPortClosed": 3099
+    },
+    "localEvidence": {
+      "nov03-root-oh-rc-native-browser-main-actual/checks.json": "61d4d406cd7f1feba82c390c525a53d0bdc8b654f5c22cbf75e431ca1bd830c3",
+      "nov03-root-oh-rc-native-browser-main-inventory/checks.json": "5029fe6d637e43bc1e2156ac343910904bf81c22b0ba1cd6a26d9beb26592325",
+      "nov03-root-oh-rc-native-browser-main-source-first/after-runtime-integrity.json": "8ffd58047f19080538e31406ec6e51ac58cebc92107cba1ce58955635ea9e02e",
+      "nov03-root-oh-rc-native-browser-independent-review/independent-review-result.json": "f4fac6b14221fb3f75f2a3c22a47b5ba630a4f01cfccbcf169f5c0af2e8fb1e7"
+    },
+    "remaining": [
+      "official resident-credit financial companions",
+      "complete header browser",
+      "settled ticker accuracy not established by transient screenshots",
+      "broader cohorts",
+      "current full global/distribution/staging/provider/human/final2026 qualification"
+    ]
   }
 }
