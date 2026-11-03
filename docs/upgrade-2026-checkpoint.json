@@ -14101,6 +14101,62 @@
     "scope": "Named16 exact schema string0 replay only; actual proof required, no defaults/schema/monetary/tax methods change",
     "filingEligible": false,
     "humanQualified": false,
-    "integrationReviewSHA256": "44fe55636b2a5cebfe6a70cf8b7c58fc0a6468b82e5257a98371755bba7ca7c4"
+    "integrationReviewSHA256": "44fe55636b2a5cebfe6a70cf8b7c58fc0a6468b82e5257a98371755bba7ca7c4",
+    "commit": "944eb778ecadb0aebd70c033fe38faebbf077045",
+    "pushed": true
+  },
+  "nov03FullCoverage944": {
+    "numTotalTests": 22173,
+    "numPassedTests": 22132,
+    "numFailedTests": 8,
+    "numPendingTests": 33,
+    "numTotalTestSuites": 5247,
+    "numPassedTestSuites": 5237,
+    "numFailedTestSuites": 10,
+    "head": "944eb778ecadb0aebd70c033fe38faebbf077045",
+    "coverage": {
+      "statements": "90.92",
+      "branches": "86.79",
+      "functions": "87.88",
+      "lines": "94.18"
+    },
+    "coverageGate": "branches85 met, functions90 unmet; no thresholds changed; tests remain failing",
+    "failed": [
+      {
+        "path": "tests/guided-interview/guided-business-source-facts.test.ts",
+        "title": "guided business source records counts only actual matching state withholding and rejects duplicate source entries"
+      },
+      {
+        "path": "tests/guided-interview/guided-claim-of-right.test.ts",
+        "title": "uses actual source states once and requires the known non-W-2 tax allocation"
+      },
+      {
+        "path": "tests/guided-interview/guided-oid-source-facts.test.ts",
+        "title": "actual guided OID sources requires separate PA reconciliation and preserves exact state withholding"
+      },
+      {
+        "path": "tests/guided-interview/guided-retirement-source-facts.test.ts",
+        "title": "forwards actual recipient and matching state withholding without inventing local identity"
+      },
+      {
+        "path": "tests/guided-interview/guided-state-routing.test.ts",
+        "title": "selected state and dedicated previews uses dedicated PA and OH treatment for Treasury OID"
+      },
+      {
+        "path": "tests/guided-interview/guided-state-routing.test.ts",
+        "title": "selected state and dedicated previews preserves exact actual payments in dedicated state previews and export overlays"
+      },
+      {
+        "path": "tests/guided-interview/guided-unemployment-source-facts.test.ts",
+        "title": "uses actual source states once and requires the known non-W-2 tax allocation"
+      },
+      {
+        "path": "tests/apps/web/pa-royalty-workspace-packet.test.ts",
+        "title": "exports actual guided PA royalty records with private source binding"
+      }
+    ],
+    "logSHA256": "c655f43cc81200a470128e91e1ab1cceb65fabd4cde346e2c18899beea6aa789",
+    "qualified": false,
+    "summaryPath": ".local/upgrade-evidence/nov03-head944-coverage/summary.json"
   }
 }

@@ -2391,3 +2391,7 @@ The bounded current-original PA securities method now preserves signed securitie
 ### November 3: exact retained OID schema reconciliation
 
 The actual original-bound OID method now tolerates only the sixteen exact string0 values already injected by the existing canonical schema. Independent41/2 and fresh main1,150/34 pass after18genuine main failures; three types,7,285spec links, inventory730, strict lint0 and both builds pass. The two-part adapter diff preserves all newer source methods byte-for-byte. See [the OID ledger](upgrade-2026-pa-oid-legacy-source-replay.md). Mixed saved MISC claims/complete guided fixtures remain separate; no filing gate changes. Securities b625fbf9 is pushed.
+
+### November 3: complete coverage refresh at 944eb778
+
+The unchanged full coverage run records22,132pass/eightfail/33pending. Branches86.79% meet the85% gate; functions87.88% remain below90%. The original failures, exact source amounts and PostgreSQL pending cases remain recorded rather than weakened. See [the full verification evidence](upgrade-2026-head944-full-verification.md). Matching Preview metadata is READY; current CI/container qualification is still incomplete. OID944eb778 is committed and pushed. Focused source reconciliation, royalty-history correction and meaningful native integration work continue independently of external review and staging-account requirements.
