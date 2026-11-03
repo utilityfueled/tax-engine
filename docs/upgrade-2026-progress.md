@@ -2,6 +2,13 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] Actual current-care originals now compose printed PA23/refund600 once.
+  Separate review found and repaired six source-admission defects, preserving the
+  valid second-person/zero-expense1200 case. Main1885PAengine tests/111files,
+  all3types/spec/AST/inventory/strict/bothbuilds pass. [Scope and evidence](upgrade-2026-pa-ordinary-care-source-work.md).
+  Native and physical review qualification remain active; public2026 and filing
+  gates remain closed.
+
 - [x] `648dd8a3` is pushed: reconciled MISC cash is counted once across the guided
   SALT/state paths;314main tests/21files and all12package checks pass. Actual raw
   saved ledger values remain preserved. See the [package ledger](upgrade-2026-guided-zero-income-misc-withholding-reconciliation.md).

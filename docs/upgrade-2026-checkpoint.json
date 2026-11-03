@@ -14669,5 +14669,166 @@
     "resultSHA256": "c08b08bb62b602d52fe294a102daefe3695310dfb2f6b6407da8ac091b02b44d",
     "qualified": false,
     "evidenceBoundary": "Local synthetic unit coverage only; all coverage thresholds pass but three assertions fail; 33 isolated-PG tests pending here, separately exercised against PostgreSQL in prior bounded run."
+  },
+  "nov03MainActualCareComposition": {
+    "base": "92f20a4d4d4af716c906bdeb0aa49c6297a86b46",
+    "decision": "approve bounded actual care engine main integration",
+    "mainRED": "24tests22pass2genuinefail; log2a8e4b4cd49f0263613dc39e1f3bf637298a9b4517d465f2ad85a91b468287f5",
+    "actualMainPAEngineTests": 1885,
+    "actualMainPAEngineFiles": 111,
+    "freshOwnAndIndependentTestsAfterFixtureNarrowing": 43,
+    "checks": [
+      {
+        "name": "focused",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/engine/state/pa-"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-care-main/focused.log",
+        "sha256": "7854e99cf7008a656de735b78c3ff2e0b69133a9aff2a5258751005c73120673"
+      },
+      {
+        "name": "types-root",
+        "command": [
+          "pnpm",
+          "typecheck"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-care-main/types-root.log",
+        "sha256": "5888bcaa4f681b3f7bf48999ae0817c16b3af178b8c13f7d91414fdef8ea04d9"
+      },
+      {
+        "name": "types-web",
+        "command": [
+          "pnpm",
+          "typecheck:web"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-care-main/types-web.log",
+        "sha256": "249e0be3cf6277994e8d22e8440bebe6db10861cab79fe97aa4952837f3ff073"
+      },
+      {
+        "name": "types-contracts",
+        "command": [
+          "pnpm",
+          "typecheck:contracts"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-care-main/types-contracts.log",
+        "sha256": "0c2a6bff203db409d0f68d48f7b21a6ac6bd6098310256e72a9c6e558bc3943d"
+      },
+      {
+        "name": "spec",
+        "command": [
+          "pnpm",
+          "spec:validate"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-care-main/spec.log",
+        "sha256": "8cc51d135805c83c1d4ce202aa378a16ef5a9becf50742599d650927bd21eeba"
+      },
+      {
+        "name": "ast",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/spec/validate-testrefs.test.ts"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-care-main/ast.log",
+        "sha256": "4bb32ebf690c9c79bff1033e81a9281be22f260c8241aefa005a2b769f02eb84"
+      },
+      {
+        "name": "inventory",
+        "command": [
+          "pnpm",
+          "spec:inventory"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-care-main/inventory.log",
+        "sha256": "34ebf1f6ab4bd2cc8112bf0f253f6ff942c94e2287319200b89c1339575b2159"
+      },
+      {
+        "name": "inventory-check",
+        "command": [
+          "pnpm",
+          "spec:inventory:check"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-care-main/inventory-check.log",
+        "sha256": "846ee1105cfb137b691fc9b9faa383c54ef9f9e367b6b3416b2abe4ccb15cdef"
+      },
+      {
+        "name": "engine-build",
+        "command": [
+          "pnpm",
+          "build"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-care-main/engine-build.log",
+        "sha256": "d075c8ab15a7843462a88f3304147338e40a1fb638a358eeb51b2b7984d778ec"
+      },
+      {
+        "name": "author24-after-type-narrowing",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/engine/state/pa-ordinary-care-sources.test.ts",
+          "tests/engine/state/pa-ordinary-care-independent.test.ts"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-care-main-final/author24-after-type-narrowing.log",
+        "sha256": "862a432222380fd9f00795e7ec49725d5c9cad5ac9683c2b95f15aeca3d076bc"
+      },
+      {
+        "name": "strict",
+        "command": [
+          "pnpm",
+          "exec",
+          "eslint",
+          "src/models/pa-care-sources.ts",
+          "src/models/pa-ordinary-return-completion.ts",
+          "src/engine/state/pa-ordinary-care-sources.ts",
+          "src/engine/state/pa-ordinary-return.ts",
+          "tests/fixtures/pa-ordinary-care-sources.ts",
+          "tests/engine/state/pa-ordinary-care-sources.test.ts",
+          "tests/engine/state/pa-ordinary-care-independent.test.ts",
+          "--max-warnings",
+          "0"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-care-main-final/strict.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "web-build",
+        "command": [
+          "pnpm",
+          "build:web"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-care-main-final/web-build.log",
+        "sha256": "513da9cf6eee938a8fa5ee0d5b53f9fcb57e0a3701faf046b23d260c477b68c8"
+      },
+      {
+        "name": "diff",
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-care-main-final/diff.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "testAdjustment": "Only explicit actual fixture provider/person presence guards replace two non-null assertions; all24titles/negative branches and exact money oracles preserved; independent19 byte-exact",
+    "fourProductsAndIndependent19ExactApproved": true,
+    "independentReceiptSHA256": "f47581a285b020fc18fdbf75b9a087810de6fb5aef54791cb0521d0bf072fb0f",
+    "nativeOrPhysicalQualification": false,
+    "humanOrFilingQualification": false,
+    "rootReviewSHA256": "642ac114e6e7f114a084fd2c696cdbd105fb6cc3dd2d0dd1b1671d003b4b788b"
   }
 }
