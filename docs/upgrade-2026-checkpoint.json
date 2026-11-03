@@ -15535,5 +15535,39 @@
       "otherOhio/cohorts/distributions/staging/final2026/humanreviewremain"
     ],
     "ledger": "docs/upgrade-2026-oh-ordinary-official-review-work.md"
+  },
+  "nov03MainSchoolDistrictBrowser": {
+    "reviewedAt": "2026-11-03T14:11:35.254548+00:00",
+    "parentCommit": "a06b909c",
+    "decision": "APPROVE finite actualmainSDbrowser/mobilegeometry integration",
+    "distinctReviewer": "root; authorpa_facts_finish; engineeringnotrequiredhumanqualification",
+    "authorManifestSHA256": "ec99cd8b7af8a940e227b08497014b18ccf8a5e136c9b037022d133f7d00c6bb",
+    "source5ExactAfterChecks": true,
+    "mainRedLogSHA256": "8e29748dcbe607b46188663fee1b4dc05ec88dc60ce47d99aca0f4aa246608b8",
+    "mainGreenLogSHA256": "61428690998c052002dfd8e39ed9c264126fcfd9c110de3fdcb85c618e400757",
+    "mainPassingBrowsers": 3,
+    "retriesUsed": 0,
+    "staticChecks": 9,
+    "staticChecksSHA256": "b9f572587c497064fbbafeeb7986a62ab733c1eedee91dede15f0a92d0b19a20",
+    "actualArtifactsSHA256": "f2d5d745e9ae130c760130bc57a9cbf70e48730aaab515d339314264991bdd15",
+    "rootVisualInspection": "13capturecontact+actualmobileblankerror/confirmed+desktopconfirmed; repairedhorizontalgeometryfits; no broadUIqualification",
+    "allThreePhasesOutsideControls": 0,
+    "maxControlRight": 359,
+    "viewport": 390,
+    "fullErrorCharacters": 1842,
+    "old53AssertionsPreserved": true,
+    "onlyProductChange": "samealerttext overflowWrap:anywhere",
+    "limits": [
+      "finite2025Hillsdale0302singlefullresidentordinaryW2only",
+      "noactualphysicalSD100/WHqualification",
+      "freshwholebrowser/distributions/staging/human/final2026remain"
+    ],
+    "ledger": "docs/upgrade-2026-oh-school-district-browser-work.md",
+    "specReferences": 7647,
+    "strictASTControls": 786,
+    "inventoryEntries": 782,
+    "normalBrowserCollection": 548,
+    "normalBrowserFiles": 137,
+    "rootReviewSHA256": "d4a9e216d60c41bc51f152bb68bcaf1529e0f7529e52f3a0955d1fd8aaa0ab16"
   }
 }

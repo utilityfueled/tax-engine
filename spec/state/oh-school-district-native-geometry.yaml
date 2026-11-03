@@ -1,0 +1,17 @@
+form: "Ohio School District Native Mobile Geometry"
+fullName: "Preserve readable actual-source validation on the finite school collector"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Separate layout successor after native browser2PASS exposed retained mobile
+  screenshot clipping following blank confirmation. No arithmetic/source/parser
+  changes. Exact0a5c06bd production-managed pipeline; 390x844 viewport and original
+  config/timeouts/retries unchanged. html/body overflow-x clip makes documentwidth
+  alone inadequate; direct actual element rectangles and alert text scrollwidth
+  must fit. Full pre-repair validation message is independently retained from the
+  immutable previous trace; no truncation/hidden overflow or field/default changes.
+lines:
+  - line: "actual-blank-validation-geometry"
+    description: "Actual blank native sources remain readable before and after validation"
+    formula: "Start with complete unrelated fictional actualW2/Ohio residency/ITpayment originals and schoolroot absent. Add visible nativeblank sources. Capture actual collector/fieldset/input/select/button rectangles before confirmation, after explicit blank-confirm rejection with the complete existing error, and after entering only independently supplied actual2025 year clears error. Every rect must be within the unchanged390 viewport; alert scrollWidth <= clientWidth. Preserve all other unknown fields, nullconfirmation and absent original snapshot, schoolreview absent and zero never inferred."
+    testRef: "apps/web/tests/oh-school-district-native-geometry.spec.ts::keeps actual blank school source validation within the mobile viewport"

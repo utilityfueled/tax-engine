@@ -37,7 +37,7 @@ packages remain finite2025 methods with separate human/final2026 gates.
 | PA married ordinary | Original-bound J/M engine13f6768e; native/public source integration passes distinct104 and main7383controls/all13checks | Actual J/M browser origination, separate owned PA40/SP physical packet, additional married residency/history cohorts |
 | PA care | Actual-source composer7b2763b8, native730c07fa, count fixec1f7b5a, desktop/mobile+saved physical replayd76a2baf | Final integrated/distribution/staging/human qualification |
 | OH NR/PY business | Actual original-bound canonical business3b2a5e74 | Native origin/save/invalidation, physical companions, broader mixed-owner cohorts |
-| OH school district | Source core307d8d3a and native/public collector0a5c06bd, main602+1362tests/all14checks | Real browser entry/reload, actual official SD100/withholding physical companions, additional district/residency cohorts |
+| OH school district | Source core307d8d3a and native/public collector0a5c06bd, main602+1362tests/all14checks; actualdesktop/mobile2+geometry1 pass after retained69-element source-error RED | Actual official SD100/withholding physical companions, additional district/residency cohorts |
 | OH reciprocity/resident credit | Original-bound reciprocal ordinary wages6d9144e3 | Reciprocal native/physical rehearsal; distinct actual OH resident-credit original-return/remittance/refund source adapter remains internal work |
 | OH actual2025 physical | Source-bound finite ordinary VA nonresident four-companion review passes distinct13/current75, saved42cells/two statuses/all-object privacy and seven actual page renders | Actual distribution output, matching business/SD/reciprocal/credit physical scenarios and broader residency methods |
 

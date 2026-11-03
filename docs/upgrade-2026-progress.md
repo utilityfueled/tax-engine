@@ -2561,3 +2561,7 @@ The normal guide/public entry now retains complete two-owner originals and expli
 ### November3: finite Ohio official-form review output
 
 Actual original-bound2025 VA nonresident ordinary-W2 sources now produce four static official-form review companions/seven pages. Distinct saved-PDF review catches and verifies three physical corrections; current-main source-first2RED/11PASS and legacy-regressionRED precede the minimal guarded renderer. All75adjacent/support controls and12checks pass; saved42cells/two statuses, all-object privacy and seven visually inspected pages pass. See [the physical ledger](upgrade-2026-oh-ordinary-official-review-work.md). Filing, broader Ohio methods, final2026 and human/distribution/staging qualification remain open. PA married nativefbb9618b is pushed.
+
+### November3: school-district actual browser entry and mobile validation
+
+Actual desktop/mobile school sources now originate from blank controls, remain separately confirmed after same-cash source edits, preserve unknown elections across reload and reopen with schooltax1000/WH1100/refund100 separate fromIT3000. Distinct rootmain reproduces69-element mobile error overflow, then exact one-line wrapping repair passes all3browser cases without retries. All9static checks/548normalcollection pass; current13captures and zero-overflow phases verified. See [the browser ledger](upgrade-2026-oh-school-district-browser-work.md). Physical/broader SD/distributions/staging/human/final2026 gates remain open. Ohio physicala06b909c is pushed.
