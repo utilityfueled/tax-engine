@@ -42,32 +42,32 @@ in the progress history; their checks do not qualify newer heads.
 
 ## Current main package
 
-- PA dividend collector: exact author6 plus independent2, authorfreeze45150dc6;
-  independent74cb1107. Main genuineUI6fail precedes two products. Main697/eight
-  (new31+prior47+catalog619), types3/spec7027, inventory/strict0/builds/diff pass.
-  Unknown/zero, dated receipts, explicit source binding and edit invalidation
-  work across resident/PY/NR. Commit/push follows these checks.
+- PA digital canonical calculation/panel: exact15 author plus5 independent files,
+  corrected freeze43103e1c; distinct corrected review9b2f6040. Genuine main
+ 5fail/7pass precede products. Main753/12/types3/spec7043/catalog/inventory/
+ strict0/bothbuilds pass. Original2review failures and all original assertions
+ remain retained; rawpositivePA proof exception corrected narrowly. Commit/push
+ follows checks; actual officialD output remains separate. Dividend1286 pushed.
 
 ## Active private queue
 
-- [ ] Digital canonical core/UI15 frozen62a164cf, source-first5fail7pass,
-  owned23/three +prior83/five/types3/spec6998/strict0/builds pass. Independent
-  review by `oid_independent`: own16 frozen c8858414; runtime currently assigned.
-  Potential irrelevant no-PA remittance-confirmation guard is independently
-  tested, not yet a confirmed defect. Actual D output remains a separate gate.
-- [ ] Real official PA ScheduleD review mapper: `state_guides_review` owns a
-  fresh25d48 baseline plus exact digital15 overlay. Official blank five pages,
-  SHA154a8669; exact geometry/continuations/rounding/privacy/reconciliation and
-  all46-template assertions require spec-first actual PDF tests and review.
-  Current work is offline; no saved-output qualification yet. Declare the two
-  metadata corrections26ad3fa8 as a dependency for strict catalog checks.
-- [ ] PA personal unsecured-debt/foreign-interest source successor:
-  `pa_facts_finish`. Official7-source proposal f13931d5 and source-firstb9fe6bd8;
-  genuine integration6fail/3pass +baseline1, helper missing-module0tests separate.
-  New finite firstproduct4, all19 helper controls pass; six integrations exposed
-  missing explicit W2owner in the new supplemental fixture. Approved explicit
-  fictional owner evidence only; preserve raw original/money/assertions and no
-  production default. Next green runtime remains queued.
+- [ ] Actual official PA ScheduleD: `state_guides_review` owns fresh25d +
+  corrected digital15/metadata dependencies. Dsourcefirst80f5b148; genuine
+ 8fail/5pass context/readiness/registry, missingmapper0diagnostic separate.
+ Offline mapper/context/readiness products underway; no PDF marker/creation yet.
+ Official five-page asset154a8669, actual continuations/rounding/privacy/geometry,
+ saved-output inspection and distinct review remain required.
+- [ ] PA personal debt/foreign interest canonical10 frozen37fdb361:29focused
+ +89prior/types3/spec7014/inventory/strict0/bothbuilds pass. New guard-only lint
+ cleanup retains original assertions/failure logs. `oid_independent` now reviews
+ retained federal owner/security/property-transfer contradictions; no approval
+ or main adoption claimed. UI/workspace/PDF successor still required.
+- [ ] Historical PA full-return fixtures: `oh_dated_finish` retains original NJ
+ reciprocity contradictions as4explicit refund negatives; separate fictional NY
+ positives retain all154 original assertion lines and money. Original4fail and
+ sourcefirst5fail retained. Candidate122/2/types/spec7033/catalog620 pass; ten
+ historical lint warnings byteexact/0new, normal repository-policy check queued.
+ No engine/guard changes. Main integration and review pending.
 - [ ] Existing workspace PA/foreign-COD positive remains180/181 broader tests:
   original assertions unchanged, real ordinary/completion records required.
   PA personal unsecured cancellation can be excluded only with actual granular
@@ -86,9 +86,10 @@ in the progress history; their checks do not qualify newer heads.
 
 - [ ] Current exact-head full unit/coverage>=85%, all three types, strict specs,
   inventory, both builds, repository lint, full browser and actual container
-  browser/remote CI. Last complete remote refresh was dcab:32 unit failures and
-  28 browser failures; these are historical, not current passes. Run a fresh
-  complete unit suite after this integration group and diagnose every failure.
+  browser/remote CI. Complete local1286 unit run:21418pass/21fail/33pending
+  (21472 total), all21 state-related, exact receipt retained. No coveragepercent
+  measured. Last complete remote dcab:32unit/28browser failures remains historical.
+  Refresh complete unit/coverage/remote evidence after integrations.
 - [ ] Complete actual taxpayer facts, spouse/dependent/cross-document/year
   migrations, immutable2026 law and independently derived edge cases; follow the
   entire brief. Qualified human tax review remains unassigned. Form172/1202 edge

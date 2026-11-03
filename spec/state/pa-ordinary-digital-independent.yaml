@@ -1,0 +1,38 @@
+form: "PA Original Digital Independent Review"
+fullName: Independent finite source replay and canonical composition controls
+taxYear: 2025
+status: "independent-review-no-filing-qualification"
+sources:
+  - url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40d.pdf"
+    section: "Columns d/e/f; for-profit losses, line3 same-taxpayer net, line12 to PA40"
+    retrieved: "2026-11-03"
+  - url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+    section: "Payments are actual PA tax withheld, not federal/foreign withholding"
+    retrieved: "2026-11-03"
+notes: |
+  New controls are independent of author controls and retain exact admitted original
+  statements. No arbitrary numeric admission cap or invented payment answer.
+  No payment remittance or payer refund is asserted when no PA payment is claimed;
+  positive PA rows continue to require both true. Official D output is separate.
+  The mounted React controls are component evidence, not browser qualification.
+lines:
+  - line: "exact-consumer"
+    description: "Admitted original cancellation reaches complete return"
+    formula: "146digit original proceeds H+.51 minus actual PA basis H gives .51, printed gain1, income50001, tax1535; shared public Decimal and global precision unchanged."
+    testRef: "tests/engine/state/pa-ordinary-digital-independent.test.ts::independent admitted cancellation survives the complete PA return"
+  - line: "class-net"
+    description: "Original statements aggregate once and signed class loss cannot offset wages"
+    formula: "Two sales .49+.49 produce .98 then1; signed20.25-100 produces -79.75 then-80, no wage/SP offset."
+    testRef: "tests/engine/state/pa-ordinary-digital-independent.test.ts::independent distinct originals net once before class reporting"
+  - line: "no-claim"
+    description: "Absent or explicitly zero PA withholding has no invented remittance facts"
+    formula: "NoPApayment plus null payment/refund answers retains gain20, PA withholding0 and unchanged originals; positivePA remains guarded."
+    testRef: "tests/engine/state/pa-ordinary-digital-independent.test.ts::independent no-state original needs no invented remittance or refund answer"
+  - line: "proof"
+    description: "Current source owner/year/boxes and unsupported methods fail closed"
+    formula: "Actual positive PA .55 requires both true. Unknown proof, stale original and unsupported costs fail; outside state payments cannot be claimed as PA."
+    testRef: "tests/engine/state/pa-ordinary-digital-independent.test.ts::independent positive PA payment needs both original remittance proofs"
+  - line: "ui"
+    description: "Real source controls preserve unknowns and stale snapshots"
+    formula: "Blank year and proof stay unknown, edits revoke class/parent, current original reconfirm cannot silently refresh older return facts."
+    testRef: "tests/apps/web/pa-ordinary-digital-independent.test.tsx::independent original replacement remains stale until each explicit layer is reviewed"

@@ -1,0 +1,23 @@
+form: "PA Original Digital Subdollar Independent Review"
+fullName: Actual positive PA withholding proof precedes statement aggregation and printed rounding
+taxYear: 2025
+status: "independent-review-no-filing-qualification"
+sources:
+  - url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+    section: "Actual PA withholding and whole-dollar return reporting; physical federal state box alone does not establish payment entitlement"
+    retrieved: "2026-11-03"
+  - url: "https://www.legis.state.pa.us/WU01/LI/LI/US/HTM/1971/0/0002..HTM"
+    section: "Sections346/347 actual overpayment credit/refund basis; no DA-specific administrative approval claimed"
+    retrieved: "2026-11-03"
+notes: |
+  Supplemental source-first control leaves original independent16 files, archived
+  controls and 14pass/2fail receipt byte-exact. Both original statements have
+  positive actual PA withholding, so each requires actual remittance and no payer
+  refund true. Neither becomes a zero claim because it individually rounds to0.
+  Exact .49+.02 is .51 and the single final reported PA40 payment is1.
+  No source/form/human filing qualification or actual taxpayer facts are claimed.
+lines:
+  - line: "positive-before-rounding"
+    description: "Each actual positive original requires both proofs before aggregation"
+    formula: "OriginalPA.49 plus distinct originalPA.02 equals exact.51 then printed1; either null or false proof on either original rejects even though each individually rounds0. PA class20.25+20.25 reports41, income50041, tax1536, after payment1 remaining principal1535."
+    testRef: "tests/engine/state/pa-ordinary-digital-subdollar-independent.test.ts::independent actual subdollar PA payments require proof before aggregation and print once"

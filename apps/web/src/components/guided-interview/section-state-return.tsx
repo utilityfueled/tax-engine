@@ -4,6 +4,7 @@ import type { TaxYearInput } from "@/models/inputs";
 import { OhioResidencyDetails } from "./ohio-residency-details";
 import { OhioPaymentDetails } from "./ohio-payment-details";
 import { PAResidencyDetails } from "./pa-residency-details";
+import {PAOrdinaryDigitalDetails} from "./pa-ordinary-digital-details";
 import { PAReciprocityDetails } from "./pa-reciprocity-details";
 import { PAOrdinaryReturnDetails } from "./pa-ordinary-return-details";
 import { PAOrdinaryReturnCompletionDetails } from "./pa-ordinary-return-completion-details";
@@ -215,6 +216,9 @@ export function SectionStateReturn({
           <PAResidencyDetails originalInput={originalInput ?? null} data={current.paResidencySources}
             onChange={paResidencySources => onDataChange({...current, paResidencySources,
               ...(current.paReciprocitySources ? {paReciprocitySources:{...current.paReciprocitySources,sourceFactsConfirmed:null}} : {})})} />
+          {current.paResidencySources && <PAOrdinaryDigitalDetails originalInput={originalInput ?? null} residencySources={current.paResidencySources}
+            onChange={paResidencySources=>onDataChange({...current,paResidencySources,
+              ...(current.paReciprocitySources?{paReciprocitySources:{...current.paReciprocitySources,sourceFactsConfirmed:null}}:{})})} />}
           {current.paResidencySources && <PAReciprocityDetails originalInput={originalInput ?? null}
             residencySources={current.paResidencySources} data={current.paReciprocitySources}
             onChange={bound => onDataChange({...current,paResidencySources:bound.residencySources,paReciprocitySources:bound.reciprocitySources})} />}

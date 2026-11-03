@@ -1,5 +1,6 @@
 /** Private actual PA originals/drafts. No amount, date, answer or source year defaults to a fact. */
 import { z } from "zod";
+import {PAOrdinaryDigitalSourcesSchema} from "./pa-ordinary-digital-sources.js";
 import {PAOrdinaryBusinessSourceSchema} from "./pa-ordinary-business-sources.js";
 import {PAOrdinaryOIDSourcesSchema} from "./pa-ordinary-oid-sources.js";
 import { PAOrdinaryEmployeeSourcesSchema } from "./pa-ordinary-employee-sources.js";
@@ -47,6 +48,7 @@ export const PAResidencySourcesSchema = z.object({
   businesses: z.array(PAOrdinaryBusinessSourceSchema).optional(),
   oidAndMiscSources: PAOrdinaryOIDSourcesSchema.optional(),
   employeeSources: PAOrdinaryEmployeeSourcesSchema.optional(),
+  digitalSources: PAOrdinaryDigitalSourcesSchema.optional(),
   otherPAIncomeClassesConfirmedNone: answer, otherPAAdjustmentsConfirmedNone: answer,
 }).strict();
 

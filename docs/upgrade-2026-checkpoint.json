@@ -13503,5 +13503,44 @@
     "independentReceiptSHA256": "74cb110743d5e8ba70ebbdfb97ca02904676771e640800a6501aaabd86ecf563",
     "evidence": "nov03-parent-pa-dividend-main*",
     "releaseReady": false
+  },
+  "nov03MainPADigitalCanonical": {
+    "baseCommit": "1286e693",
+    "status": "main scoped checks and distinct corrected review pass; official D successor pending",
+    "sourceFirst": {
+      "tests": 12,
+      "failed": 5,
+      "passed": 7,
+      "logSHA256": "c4c44f05e973e4d4d1592eb79a0ee6f07423597e270ed77f7af638a8103411f0"
+    },
+    "main": {
+      "tests": 753,
+      "files": 12,
+      "specLines": 7043,
+      "types": "root/web/contracts pass",
+      "strictLint": "0warnings",
+      "inventory": "generation/check pass",
+      "builds": "engine/web pass",
+      "strictTestRefCatalog": "pass"
+    },
+    "authorPaths": 15,
+    "independentControlPaths": 5,
+    "authorFreezeSHA256": "43103e1c27b2d122e9779cef5722e901b30161168feeb189eb53377305847932",
+    "independentReceiptSHA256": "9b2f6040de9806abefedcc7176e46b390b95f33763743bd454b24a3a7dab7e4f",
+    "originalIndependentFailures": 2,
+    "correctedIndependentTests": 17,
+    "evidence": "nov03-parent-pa-digital-main*",
+    "releaseReady": false
+  },
+  "nov03CompleteMainUnitAt1286": {
+    "commit": "1286e69381088f166ff6733cdbd24a788ea9b955",
+    "total": 21472,
+    "passed": 21418,
+    "failed": 21,
+    "pending": 33,
+    "resultSHA256": "fbf4a0b14ef545c41ca44ab20d26b1dbd5db132ea1fd4b0af7f05ac88791dfbb",
+    "evidence": "nov03-current-main-full-unit",
+    "coverage": "not measured by this run",
+    "status": "failure details retained; state fixtures/methods actively being resolved"
   }
 }

@@ -2247,3 +2247,14 @@ precede the two reviewed products;697/eight, types3/spec7027/inventory/strict0/
 builds pass. Independent31new/source controls and47 prior controls approve. See
 the [collector ledger](upgrade-2026-guided-pa-dividend-sources-work.md). No engine
 formula or filing/human qualification gate changed.
+
+### November3 UTC: original-bound PA digital capital method
+
+Five genuine main failures precede the exact reviewed digital calculation and
+explicit source panel. Main753/12, types3/spec7043/strict catalog/inventory/strict0/
+both builds pass. Distinct review retained its original two failures, approved
+the narrow zero/no-state correction and independently passed17 controls, including
+eight positive sub-dollar proof denials. The [digital ledger](upgrade-2026-pa-digital-canonical-work.md)
+records scope, sources and hashes. Actual official D export, broader residency/
+ownership methods and qualified review remain open. The preceding complete1286
+unit run is recorded honestly as21418pass/21fail/33pending, not a global pass.

@@ -82,6 +82,7 @@ export function calculatePAOrdinaryReturnFacts(input:TaxYearInput,raw:unknown):P
  }for(const b of input.form1099Int){const n=localMoney(b.stateWithheld);if(b.state==='PA')withholding=withholding.plus(n);}for(const d of input.form1099Div){const n=localMoney(d.stateWithheld);if(d.state==='PA')withholding=withholding.plus(n);}
  withholding=withholding.plus(income.businessPAWithholding);
  if(income.oidSources)withholding=withholding.plus(income.oidSources.paWithholding);
+ if(income.digitalSources)withholding=withholding.plus(income.digitalSources.paWithholding);
  const outside=roundDollar(new Money(income.excludedNonPACompensation).plus(income.excludedReciprocalCompensation).minus(income.excludedNonPAEmployeeExpenses).plus(income.excludedNonPAInterest).plus(income.excludedNonPADividends).plus(income.excludedNonPABusinessIncome));let nontax=outside;const other:Record<string,Decimal>={};const spEntries=new Set<string>();
  if(facts.sp.allWorldwideSourcesCompleteConfirmed!==true)return fail('actual worldwide SP income sources are incomplete');
  for(const line of PA_SP_OTHER_LINES){const category=facts.sp.categories[line];ref(category.sourceReference);let exact=new Money(line==='2'?(income.oidSources?.worldwideExemptInterest??'0'):'0');

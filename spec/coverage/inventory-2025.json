@@ -10584,6 +10584,26 @@
       ]
     },
     {
+      "key": "state/guided-pa-ordinary-digital-sources",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": null,
+      "specPath": "spec/state/guided-pa-ordinary-digital-sources.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/guided-pa-ordinary-panels",
       "jurisdiction": "state",
       "taxYear": 2025,
@@ -12756,6 +12776,65 @@
       "efileBusinessRuleCoverageExists": false,
       "status": "partial",
       "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-ordinary-digital-independent",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": null,
+      "specPath": "spec/state/pa-ordinary-digital-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-ordinary-digital-sources",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": null,
+      "specPath": "spec/state/pa-ordinary-digital-sources.yaml",
+      "enginePath": "src/engine/state/pa-ordinary-digital-sources.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-ordinary-digital-subdollar-independent",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": null,
+      "specPath": "spec/state/pa-ordinary-digital-subdollar-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
