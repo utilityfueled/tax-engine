@@ -189,3 +189,15 @@ approved corrected outputs; four deliberate original missing references remain,
 zero unexpected references occur, and private identifiers are absent. Receipt
 `b83a0fc79f83988f9ad680648c1d5dd86eded140ab2c25c82d1251c8268ca796`.
 No fresh human or PDF/UA qualification is claimed.
+
+### Exact parameterized spec titles
+
+The stricter catalog test subsequently caught two shorthand PDF testRef values
+that omitted their literal ` %s` suffix. Both metadata strings now exactly match
+the unchanged test declarations. No formulas, controls, PDF product or artifacts
+changed. Current-worktree619 catalog checks pass; parsed non-testRef YAML values
+are independently identical, receipt
+`0f6698621b80e8fa3884441ce487abdb13edd8d5d42aa3723f6a2743fd375b01`.
+The original failed catalog run is retained under
+`nov03-parent-pa-dividend-main-green`. Future new-spec packages run this exact
+AST-based test as well as the existing spec validator.

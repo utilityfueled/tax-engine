@@ -35,7 +35,7 @@ lines:
   - line: "actual-pa40"
     description: "The committed physical PA40 template works in both ordinary serialization modes"
     formula: "Fill diagnostic gain200 and withholding123 on the actual template, explicitly flatten, and ordinary-save with object streams enabled and disabled. Independent strict reader resolves annotations, sees no fields/widgets, preserves both values and review notices. Original bad business PA40 PDFs remain retained as negative evidence."
-    testRef: "tests/pdf/standalone-flatten-annotations.test.ts::actual PA40 standalone flatten resolves annotations with object streams"
+    testRef: "tests/pdf/standalone-flatten-annotations.test.ts::actual PA40 standalone flatten resolves annotations with object streams %s"
   - line: "actual-call-chain"
     description: "The actual fillReturn flatten route emits structurally readable standalone components"
     formula: "Replay the existing actual resident ordinary-business fixture, redact identifiers through existing policy, and fillReturn with flatten true without pageOnlyTemporaryMerge. Independently read every saved component with strict recursive object resolution, require no fields/widgets/unresolved references, exact current monetary text and no original identifiers, unchanged inputs and disabled filing eligibility."

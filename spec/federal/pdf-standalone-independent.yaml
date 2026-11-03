@@ -17,7 +17,7 @@ lines:
   - line: "independent-standalone"
     description: "Saved resolved widgets and stable unrelated annotations"
     formula: "Both serialization modes preserve two painted text values, a link and review notices while explicit flatten removes all generated fields/widgets/missing refs"
-    testRef: "tests/pdf/standalone-flatten-independent.test.ts::independent standalone flatten serializes clean widget removal with object streams"
+    testRef: "tests/pdf/standalone-flatten-independent.test.ts::independent standalone flatten serializes clean widget removal with object streams %s"
   - line: "independent-defaults"
     description: "Interactive default and explicit flatten preservation boundaries"
     formula: "Interactive canonical/widget/signature structure stays present; links/popups/notes, old orphan/missing refs and unflattened structure stay unchanged"
