@@ -1,3 +1,4 @@
+import { guidedPAW2Complete } from "../fixtures/guided-pa-w2-complete";
 import { assertPAGuidedPaymentBoundary } from "../fixtures/assert-pa-guided-payment-boundary";
 // Spec: spec/federal/guided-input.yaml#w2-owner-and-source-state
 import { describe, expect, it } from "vitest";
@@ -58,13 +59,32 @@ describe("W-2 source facts", () => {
     expect(buildTaxInputFromGuidedData(flow(pending))).toBeNull();
   });
   it("credits only withholding from the state selected for the preview", () => {
+    // Distinct, explicitly fictional complete originals; no facts inferred from Box17.
+    let state = guidedPAW2Complete("NY").state;
+    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0");
+    state = guidedPAW2Complete("PA").state;
+    assertPAGuidedPaymentBoundary(state, "123.45", "123");
+    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("123");
+  });
+  it("keeps the original incomplete NY-to-PA flow blocked without inventing PA sources", () => {
+    // Exact predecessor raw sources are retained as incomplete; this is not a renamed complete case.
     const state = flow({ ...completeW2, accountHolder: "primary", wages: "30000", stateWages: "30000", stateWithheld: "123.45" });
     state.segmentation.filingStatus = "single";
     state.segmentation.stateCode = "PA";
     state.sectionData["personal-info"] = { ...completePersonalInfo, state: "PA" };
-    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0");
-    state.sectionData["income-w2"]!.entries[0].state = "PA";
-    assertPAGuidedPaymentBoundary(state, "123.45", "123");
-    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("123");
+    const before = JSON.stringify(state);
+    const ny = computeGuidedPreview(state);
+    expect(ny).not.toBeNull();
+    expect(ny?.state).toBeNull();
+    expect(JSON.stringify(state)).toBe(before);
+    const row = state.sectionData["income-w2"]?.entries[0];
+    if (!row) throw new Error("Original raw W2 fixture must retain its source");
+    row.state = "PA";
+    const pa = computeGuidedPreview(state);
+    expect(pa).not.toBeNull();
+    expect(pa?.state).toBeNull();
+    expect(row).toMatchObject({ wages: "30000", stateWages: "30000", stateWithheld: "123.45", state: "PA" });
+    expect(row.stateLocalSources).toBeUndefined();
+    expect(state.sectionData["state-return"]).toBeUndefined();
   });
 });

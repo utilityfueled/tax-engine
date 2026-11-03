@@ -6,7 +6,7 @@
 - PA debt/foreign canonical V3 now main750/eleven/types3/spec7077/inventory/
   strict0/both builds pass after genuine6fail4pass before products. Distinct
   V3 review9fe87c7d and main two-seam reviewdd98a643 approve, preserving digital.
-  Commit/push follows; actual UI/workspace/PDF and human gates remain open.
+  Committed/pushed69e42051; actual UI/workspace/PDF and human gates remain open.
 
 ## Active private queue
 
@@ -22,11 +22,12 @@
   merged core. Source-first8-file proposal; no product/UI qualification yet.
   Core V3 independently reviewed; original9+2 failures retained. Actual
   collector/workspace/PDF followthrough and broader methods remain open.
-- [ ] W2 test-only complete-source fixture candidate87504079: actual fictional
-  residency, filed NY final tax/payment/account and PA timing facts supplied
-  independently; original incomplete flow retained federalnonnull/PA-null.
-  Focused12/2+related37/4+catalog624/types3/spec7050/strict0 pass privately.
-  Frozen194adee8 and distinct static review2eb8f83b approve; main replay/integration pending. No product defaults.
+- W2 test-only fixture now current main679/seven/types3/spec7084/inventory/
+  strict0 after genuine1fail/tenpass and exact5-file adoption; distinct static
+  review2eb8f83b approves. No products or original monetary assertions changed.
+- [ ] Four generic PA bridge positives: `oid_independent` preparing actual
+  ordinary/completion/payment source successor; original positive behavior
+  and original incomplete-source negatives remain required.
 - [ ] Existing workspace PA/foreign-COD positive remains180/181 broader tests:
   original assertions unchanged; actual ordinary/completion records required.
 - [ ] Real royalty method: original MI withholding80.20 does not prove final

@@ -13642,6 +13642,41 @@
       "nov03-parent-pa-cod-foreign-main",
       "nov03-parent-pa-cod-foreign-main-red",
       "nov03-parent-pa-cod-foreign-main-green"
+    ],
+    "commit": "69e42051",
+    "pushed": true
+  },
+  "nov03MainGuidedPAW2Complete": {
+    "baseCommit": "69e42051",
+    "authorFreeze": "194adee85d017fd9fbfda86adfe3e819e54544d6e7e72bb35e36decd3fc26d37",
+    "independentStaticReview": "2eb8f83bec3096fac6423175bb6dcc10d1e9f86c8aa6589166acf15a3d42b408",
+    "mainBeforeMigration": {
+      "pass": 10,
+      "fail": 1,
+      "files": 2
+    },
+    "mainGreen": {
+      "pass": 679,
+      "files": 7,
+      "sourcePathControls": 49,
+      "types": 3,
+      "specReferences": 7084,
+      "inventory": true,
+      "strictWarnings": 0
+    },
+    "productChanges": 0,
+    "builds": "not repeated for test-only delta;69e both builds passed",
+    "originalAssertionsPreserved": [
+      "0",
+      "123",
+      "raw123.45"
+    ],
+    "actualUserEvidence": false,
+    "filingEligible": false,
+    "evidence": [
+      "nov03-parent-guided-pa-w2-main",
+      "nov03-parent-guided-pa-w2-main-red",
+      "nov03-parent-guided-pa-w2-main-green"
     ]
   }
 }

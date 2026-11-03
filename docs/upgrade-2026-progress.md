@@ -2289,3 +2289,11 @@ a foreign-country resident credit. Fresh main6fail4pass precedes products;
 750/eleven/types3/spec7077/inventory/strict0/both builds pass. Separate V3 and
 main seam reviews approve. See the [source ledger](upgrade-2026-pa-personal-debt-foreign-ledger.md).
 The actual collector, workspace/PDF, broader methods and human qualification remain open.
+
+### November3 UTC: complete original W-2 preview fixtures
+
+The existing PA positive now uses independently explicit fictional actual
+residency/payment/completion sources. Its0/123/raw123.45 assertions remain; the
+original incomplete flow remains a rejection case. Main ten-pass/one-fail red
+precedes exact reviewed test migration;679/seven/types3/spec7084/inventory/strict0
+pass without product changes. See the [fixture ledger](upgrade-2026-guided-pa-w2-complete-work.md).

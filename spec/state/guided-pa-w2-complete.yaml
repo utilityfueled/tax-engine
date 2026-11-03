@@ -1,0 +1,52 @@
+form: "Guided PA W2 canonical source fixture successor"
+fullName: "Explicit fictional 2025 complete originals preserve PA-only withholding preview"
+taxYear: 2025
+reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/deductions-and-credits"
+notes: |
+  These are new fictional source records, not facts inferred about any user.
+  PA taxes resident ordinary compensation at 3.07 percent. Box17 withholding
+  belongs to its actual jurisdiction; NY Box17 is not PA withholding.
+  Actual resident-credit qualification additionally requires complete final
+  other-state return, payment, refund and same-income work records. NY final
+  tax1000 is an independently stipulated fictional filed-return fact, not a
+  NY tax-law calculation and never inferred from withholding123.45. Actual NY
+  services are supported by explicit fictional payroll/work originals; NY
+  IT203 instructions identify services performed in NY as NY-source wages.
+  PA credit=min(finaltax1000,netpaid1000,30000*.0307)=921. This is a finite
+  source-bound method, not a tax-professional review or 2026 qualification.
+  Separate PA work case has Box17 PA123.45; printed PA40123 and remaining
+  principal798, payable April15. No estimates, prior credit or overpayment.
+  All W2 boxes, owner, actual2025 year, residency, ordinary facts, complete
+  worldwide SP and other-state/local/credit/care/NRK1 records are explicit.
+  Only explicit confirmation binds originals; reads never create facts.
+  The old raw incomplete NY-to-PA flow remains a negative with its original
+  sources preserved. No app, calculation, schema or readiness gate changes.
+lines:
+  - line: "NY"
+    description: "NY source withholding remains outside PA with complete actual credit sources"
+    formula: "NYBox17=123.45 plus balance876.55 =1000 netpaid; actualPAcredit921; PAWH0."
+    testRef: "tests/guided-interview/guided-pa-w2-complete.test.ts::complete fictional NY originals preserve PA withholding zero"
+  - line: "PA"
+    description: "PA source withholding retains raw cents and reported whole dollars"
+    formula: "PABox17=123.45 raw; printed PA40line17123; compensation30000 tax921; remaining798."
+    testRef: "tests/guided-interview/guided-pa-w2-complete.test.ts::complete fictional PA originals retain raw123.45 and printed123"
+  - line: "read-only"
+    description: "Reading a confirmed packet never refreshes or changes private originals"
+    formula: "Complete NY and PA preview reads leave serialized source records byte-identical."
+    testRef: "tests/guided-interview/guided-pa-w2-complete.test.ts::preview reads do not replace any privately retained original"
+  - line: "stale"
+    description: "Current source edits invalidate confirmed packets"
+    formula: "Changing currentstate or Box17 without explicit confirmation blocks PA preview."
+    testRef: "tests/guided-interview/guided-pa-w2-complete.test.ts::editing the W2 does not silently rebind the canonical source"
+  - line: "credit-known"
+    description: "Known NY withholding does not substitute for final tax or account proof"
+    formula: "Missing final return, payment, owner/year/asof mismatch, or account disagreement blocks credit."
+    testRef: "tests/guided-interview/guided-pa-w2-complete.test.ts::NY withholding cannot substitute for complete final tax and payment records"
+  - line: "existing-positive-preserved"
+    description: "Original exact withholding assertions remain on complete fictional counterparts"
+    formula: "NY complete counterpart PAWH0; separate PA complete counterpart raw123.45/printed123."
+    testRef: "tests/guided-interview/guided-w2-source-facts.test.ts::credits only withholding from the state selected for the preview"
+  - line: "incomplete-original"
+    description: "The unmodified legacy raw source flow cannot claim a complete PA preview"
+    formula: "Original NY then PA raw W2 still builds federal sources, but missing PA originals leave state preview null; retained sources never gain facts."
+    testRef: "tests/guided-interview/guided-w2-source-facts.test.ts::keeps the original incomplete NY-to-PA flow blocked without inventing PA sources"
