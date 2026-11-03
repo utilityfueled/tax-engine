@@ -1,8 +1,9 @@
+import { prepareOhioResidencyReview } from "@/engine/state/oh-residency-source.js";
 import {preparePARoyaltyReview} from "@/pdf/pa-royalty-review-context.js";
 import { preparePAWorkingCreditReview } from "@/pdf/pa-working-credit-review-context.js";
 import { hasInKindEducationReviewSources, prepareEducationReview } from "@/pdf/education-review-context.js";
 import { hasSavingsBondReviewSources, prepareSavingsBondReview } from "@/pdf/savings-bond-review-context.js";
-import { buildGuidedOhioOverlay, buildGuidedPennsylvaniaOverrides } from "./guided-state-engine-inputs";
+import { buildGuidedOhioOverlay, buildGuidedStateOriginals } from "./guided-state-engine-inputs";
 import "server-only";
 import Decimal from "decimal.js";
 
@@ -23,8 +24,8 @@ import {
 } from "@/models/inputs.js";
 import { supportedStates } from "@/lib/guided-interview-flow";
 import { calculateFederalTax } from "@/engine/federal.js";
-import { calculatePANonresidentReturn } from "@/engine/state/pa-nonresident-orchestrator.js";
-import { calculatePAReturn } from "@/engine/state/pa-orchestrator.js";
+import { calculatePAOrdinaryReturn } from "@/engine/state/pa-ordinary-return.js";
+import { preparePAOrdinaryReturnReview, isPAOrdinaryReturnResult } from "@/pdf/pa-ordinary-return-review-context.js";
 import { fillReturn } from "@/pdf/fill-return.js";
 import { redactReviewIdentifiers } from "@/pdf/redact-review-identifiers.js";
 import { prepareForm8949Review } from "@/pdf/form-8949-review-context.js";
@@ -430,24 +431,10 @@ function attachPennsylvaniaReturn(
   taxInput: TaxYearInput,
   result: ReturnType<typeof calculateFederalTax>,
   stateCode: string | null,
-  guidedFlowState?: GuidedFlowState | null,
 ) {
-  if (stateCode !== "PA" || result.stateReturns?.pennsylvania) {
-    return result;
-  }
-  if (!taxInput.paNonresidentReturn && taxInput.taxpayer.stateResidency !== "full-year") {
-    return result;
-  }
-
-  return {
-    ...result,
-    stateReturns: {
-      ...(result.stateReturns ?? {}),
-      pennsylvania: taxInput.paNonresidentReturn
-        ? calculatePANonresidentReturn(taxInput)
-        : calculatePAReturn(taxInput, buildGuidedPennsylvaniaOverrides(guidedFlowState)),
-    },
-  };
+  if (stateCode !== "PA") return result;
+  return {...result,stateReturns:{...(result.stateReturns??{}),
+    pennsylvania:calculatePAOrdinaryReturn(taxInput,taxInput.paOrdinaryReturnFacts,taxInput.paOrdinaryReturnCompletionSources)}};
 }
 
 async function buildReturnSummaryCoverPage(summary: PacketSummary) {
@@ -586,13 +573,17 @@ function buildTaxInputFromGuidedInterview(guidedFlowState: GuidedFlowState | nul
     return null;
   }
 
+  const stateSources=guidedFlowState.sectionData["state-return"];
+  if(guidedFlowState.segmentation.stateCode==="PA"&&(!stateSources?.paOrdinaryReturnFacts||!stateSources?.paOrdinaryReturnCompletionSources)){
+    throw new Error("Complete the actual Pennsylvania ordinary and completion source packets before exporting a review PDF.");
+  }
   const rawInput = buildTaxInputFromGuidedData(guidedFlowState);
 
   if (!rawInput) {
     return null;
   }
 
-  return TaxYearInputSchema.parse(rawInput);
+  return buildGuidedStateOriginals(TaxYearInputSchema.parse(rawInput), guidedFlowState);
 }
 
 function resolveFilledReturnTaxInput(
@@ -632,7 +623,6 @@ export async function buildWorkspaceFilledReturnDownload(
     resolved.taxInput,
     calculateFederalTax(resolved.taxInput),
     stateCode,
-    guidedFlowState,
   );
   // Identity participates in household matching and state worksheets. Keep it
   // intact through calculation, then redact only copies passed to renderers.
@@ -644,13 +634,17 @@ export async function buildWorkspaceFilledReturnDownload(
   const adoptionReview = hasHistoricalAdoptionSources(resolved.taxInput) ? prepareAdoptionReview(resolved.taxInput) : undefined;
   const scheduleEReview = hasScheduleEReviewSources(resolved.taxInput) ? prepareScheduleEReview(resolved.taxInput) : undefined;
   const paRoyaltyReview = resolved.taxInput.royaltyPropertySources && completeResult.stateReturns?.pennsylvania ? preparePARoyaltyReview(resolved.taxInput) : undefined;
-  const paWorkingCreditReview = completeResult.stateReturns?.pennsylvania && !resolved.taxInput.paNonresidentReturn
+  const paOrdinaryReview=completeResult.stateReturns?.pennsylvania&&isPAOrdinaryReturnResult(completeResult.stateReturns.pennsylvania)
+    ? preparePAOrdinaryReturnReview(resolved.taxInput):undefined;
+  const paWorkingCreditReview = completeResult.stateReturns?.pennsylvania && !paOrdinaryReview && !resolved.taxInput.paNonresidentReturn
     ? preparePAWorkingCreditReview(resolved.taxInput) : undefined;
   const qbiLossReview = resolved.taxInput.qbiLossSources ? prepareQbiLossReview(resolved.taxInput) : undefined;
   const eicReview = hasEicReviewSources(resolved.taxInput) ? prepareEicReview(resolved.taxInput) : undefined;
   const premiumTaxCreditReview = hasPremiumTaxCreditReviewSources(resolved.taxInput) ? preparePremiumTaxCreditReview(resolved.taxInput) : undefined;
   const educationReview = hasInKindEducationReviewSources(resolved.taxInput) ? prepareEducationReview(resolved.taxInput) : undefined;
   const savingsBondReview = hasSavingsBondReviewSources(resolved.taxInput) ? prepareSavingsBondReview(resolved.taxInput) : undefined;
+  const ohioOriginalReview = stateCode === "OH" ? prepareOhioResidencyReview(resolved.taxInput) : undefined;
+  const ohioSourceOverlay = stateCode === "OH" ? buildGuidedOhioOverlay(resolved.taxInput, guidedFlowState, completeResult.taxExemptInterest) : undefined;
   const redactedTaxInput = redactReviewIdentifiers(resolved.taxInput);
   const result = redactReviewIdentifiers(completeResult);
   const blankFormsDir = await resolveBlankFormsDir();
@@ -669,6 +663,7 @@ export async function buildWorkspaceFilledReturnDownload(
       scheduleEReview,
       paRoyaltyReview,
       paWorkingCreditReview,
+      paOrdinaryReview,
       eicReview,
       premiumTaxCreditReview,
       educationReview,
@@ -682,13 +677,13 @@ export async function buildWorkspaceFilledReturnDownload(
     });
     const filledForms = [...fillResult.filledForms];
 
-    if (stateCode === "OH" && resolved.taxInput.taxpayer.stateResidency === "full-year") {
-      const ohioOverlay = buildGuidedOhioOverlay(redactedTaxInput, guidedFlowState, result.taxExemptInterest);
+    if (stateCode === "OH") {
       const ohioReferencePacket = await fillOhioReferenceForms(
         redactedTaxInput,
         result,
         outputDir,
-        ohioOverlay,
+        ohioSourceOverlay,
+        ohioOriginalReview,
       );
       filledForms.push(...ohioReferencePacket.filledForms);
     }

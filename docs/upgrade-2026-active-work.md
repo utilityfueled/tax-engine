@@ -259,3 +259,21 @@ Parent real auth/billing regression:173/seven passes (`nov02-parent-hosted-previ
 - [x] Charity/COD fixture-only six adopted exact: main24/15/types3/spec6989/
   inventory/strict fixture checks pass; existing five warnings unchanged.
   Independent static approval8c8a84e5; original negative assertions preserved.
+
+- [x] Exact reviewed workspace exporter main61/six/types3/spec6999/inventory/
+  clean-owned strict0/bothbuilds/diff pass, after genuine4fail1pass. Existing
+  workspace fixture3nonnullwarnings/0errors retained under unchanged lintpolicy.
+  All15 mainPDF/253pages strict/private/text/fullRGB exact approvedparity,
+  independent d1aecd6f. Broader56workspace-consumer run underway beforecommit.
+- [ ] StandalonePDF rootstatic exact8/no merges manifest488b63da ready; root
+  runtime/mainadoption next. Browser7 distinctapproval a8a8c19a ready separately.
+- [ ] PA dividend actual UI sourcefirst6/6genuine failures; helpermissingmodule
+  diagnostic0tests separate. Private two-product candidate prepared, no green
+  runtimeyet. Actual digital canonical method spec/source work underway; royalty
+  outside-MI withholding/finaltax unknown remains a real richer-source gap.
+
+- Workspacebroader56files:180pass/1fail. Sole existing PA/foreign-COD positive
+  lacks actual PA ordinary/completion packets; originalassertions unchanged,
+  intentional sourceguard retained. Independent conformity/source investigation
+  active; no invented missingfacts or artificial negative migration. Scoped61
+  and actual15PDF review remain valid. Finalglobalcheck still fails.

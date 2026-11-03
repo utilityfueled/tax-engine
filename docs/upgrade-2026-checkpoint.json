@@ -13377,5 +13377,40 @@
     "evidence": "nov02-parent-charity-cod-main",
     "productsChanged": false,
     "releaseReady": false
+  },
+  "nov02MainWorkspaceStateExport": {
+    "baseCommit": "c3aa8b92",
+    "productSHA256": "f8feef155114d5ad65752ffd197d07de3b3f7ce19a729ba76413f9f0627624c3",
+    "status": "finite source-replay integration scoped checks and independent PDFs pass; broader181 has one unresolved PA-COD scenario",
+    "sourceFirst": {
+      "failed": 4,
+      "passed": 1
+    },
+    "scoped": {
+      "tests": 61,
+      "files": 6,
+      "specLines": 6999,
+      "types": "root/web/contracts pass",
+      "lint": "strict0 on clean owned paths; existing workspace fixture3 warnings0errors retained",
+      "builds": "engine and web pass",
+      "inventory": "generation/check pass"
+    },
+    "actualMainPDFs": {
+      "files": 15,
+      "pages": 253,
+      "allPagesTextAndPixelsExactApprovedCurrent": true,
+      "independentReceiptSHA256": "d1aecd6f7c4a1a246ffe964b41c422fd9507b058080a623679cea224eefd6e27"
+    },
+    "evidence": "nov02-parent-workspace-main*",
+    "releaseReady": false,
+    "broaderWorkspaceConsumers": {
+      "passed": 180,
+      "failed": 1,
+      "files": 56,
+      "failure": "existing PA/foreign-COD positive lacks actual ordinary/completion originals",
+      "assertionsChanged": false,
+      "independentSourceInvestigation": "active; no fabricated source facts",
+      "receipt": "nov02-parent-workspace-main/all-workspace-consumers.json"
+    }
   }
 }

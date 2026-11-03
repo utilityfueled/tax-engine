@@ -21,12 +21,16 @@ import { buildTaxInputFromGuidedData } from "../../../apps/web/src/lib/guided-in
 import { TaxYearInputSchema } from "../../../src/models/inputs";
 import { calculateFederalTax } from "../../../src/engine/federal";
 import * as federalEngine from "../../../src/engine/federal";
+import * as rendering from "@/pdf/fill-return";
 import { actualGuidedAdoptionHistory } from "../../fixtures/guided-adoption-prior-benefits";
 import { actualGuidedK1PassiveDistribution } from "../../fixtures/guided-k1-passive-distribution";
 import { startCompleteInterview, completeW2Entry } from "../../guided-interview/complete-facts";
 import { emptyDeductionData } from "../../../apps/web/src/lib/guided-interview-flow";
 import { actualGuidedK1Sources } from "../../fixtures/guided-k1-qbi-sources";
 import { actual, guidedForm8862 } from "../../fixtures/guided-form-8862";
+import { ohioPaymentFixture } from "../../fixtures/oh-payments";
+import { confirmGuidedOhioResidencyFacts } from "@/lib/guided-ohio-residency-facts";
+import { confirmGuidedOhioPaymentFacts } from "@/lib/guided-ohio-payment-facts";
 
 vi.mock("server-only", () => ({}));
 
@@ -348,24 +352,40 @@ function createGuidedFlowStateWithEnergyCredit(): GuidedFlowState {
   };
 }
 
-function createGuidedFlowStateWithOhioStateSelection(): GuidedFlowState {
-  const base = createGuidedFlowState();
-
-  return {
-    ...base,
-    segmentation: {
-      ...base.segmentation,
-      stateCode: "OH",
-    },
-    sectionData: {
-      ...base.sectionData,
-      "income-w2": { entries: base.sectionData["income-w2"]!.entries.map(entry => ({ ...entry, state: "OH" })) },
-      "personal-info": {
-        ...base.sectionData["personal-info"],
-        state: "OH",
-      },
+/** Explicit synthetic domicile/account originals, confirmed only when constructing this fixture. */
+function confirmActualOhioWorkspaceSources(state: GuidedFlowState, remainingTaxPayment: Record<string, unknown> = { status: 'no_remaining_tax', sourceReference: 'Synthetic account shows no remaining tax', sourceFactsConfirmed: true }): GuidedFlowState {
+  const originals = ohioPaymentFixture('full_year_resident');
+  const raw = buildTaxInputFromGuidedData(state);
+  if (!raw) throw new Error('Explicit synthetic current federal originals are required');
+  const input = TaxYearInputSchema.parse(raw);
+  const current: NonNullable<GuidedFlowState['sectionData']['state-return']> = {
+    stateEstimatedPayments: [], additionalStateWithholding: '',
+    ohioResidency: { ...originals.ohioResidency, taxYear: '2025' },
+    ohioPayments: {
+      ...originals.ohioPayments, taxYear: '2025',
+      specialFacts: { farmingFishingIncome: 'known_none', militaryDisasterRelief: 'known_none' },
+      remainingTaxPayment,
     },
   };
+  state.sectionData['state-return'] = current;
+  current.ohioResidency = confirmGuidedOhioResidencyFacts(input, current.ohioResidency);
+  current.ohioPayments = confirmGuidedOhioPaymentFacts(input, current.ohioPayments);
+  return state;
+}
+function createGuidedFlowStateWithOhioStateSelection(): GuidedFlowState {
+  const base = createGuidedFlowState();
+  const wages = base.sectionData['income-w2'];
+  const personal = base.sectionData['personal-info'];
+  if (!wages || !personal) throw new Error('Explicit synthetic wage and personal originals are required');
+  return confirmActualOhioWorkspaceSources({
+    ...base,
+    segmentation: { ...base.segmentation, stateCode: 'OH' },
+    sectionData: {
+      ...base.sectionData,
+      'income-w2': { entries: wages.entries.map(entry => ({ ...entry, sourceTaxYear: '2025', state: 'OH' })) },
+      'personal-info': { ...personal, state: 'OH' },
+    },
+  });
 }
 
 function createGuidedFlowStateWithUnderpayment(): GuidedFlowState {
@@ -741,12 +761,20 @@ describe("workspace filled return download", () => {
     personal.state = selectedState;
     personal.stateResidency = "part-year";
     state.segmentation.stateCode = selectedState;
-    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
-    expect(download.includedForms.some(form => form.startsWith("pa-") || form.startsWith("oh-"))).toBe(false);
+    const renderer = vi.spyOn(rendering, 'fillReturn');
+    try {
+      await expect(buildWorkspaceFilledReturnDownload(createWorkspace(), state)).rejects.toThrow(/actual|source|allocation|complete/i);
+      expect(renderer).not.toHaveBeenCalled();
+    } finally { renderer.mockRestore(); }
   });
   it("does not turn another state's W-2 withholding into an Ohio payment", async () => {
     const state = createGuidedFlowStateWithOhioStateSelection();
-    state.sectionData["income-w2"]!.entries[0].state = "IL";
+    const wage = state.sectionData['income-w2']?.entries[0];
+    if (!wage) throw new Error('Explicit synthetic wage original is required');
+    wage.state = 'IL';
+    expect(wage.wages).toBe('75000'); expect(wage.stateWithheld).toBe('3750');
+    // Official2025 booklet pp17/18: (75000-2150-26050)*.0275+342 =1629.
+    confirmActualOhioWorkspaceSources(state, { status: 'expected_payment', sourceReference: 'Synthetic intended April15 payment; official2025 bracket/exemption arithmetic', sourceFactsConfirmed: true, date: '2026-04-15', amountAppliedToTax: '1629' });
     const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state);
     expect(download.includedForms).toContain("oh-it-1040-reference.pdf");
     expect(download.includedForms).not.toContain("oh-schedule-of-withholding-reference.pdf");

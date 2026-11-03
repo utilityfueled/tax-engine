@@ -3,7 +3,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { rm, writeFile } from "fs/promises";
+import { mkdir, rm, writeFile } from "fs/promises";
 import { execFileSync } from "node:child_process";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -15,6 +15,13 @@ import type {
 } from "@tax-engine/contracts";
 import { buildWorkspaceStructuredFacts } from "@tax-engine/engine";
 import { calculatePANonresidentReturn } from "@/engine/state/pa-nonresident-orchestrator.js";
+import { calculatePAScheduleNRH } from "@/engine/state/pa-schedule-nrh";
+import Decimal from "decimal.js";
+import { paOrdinaryEmployeeReturnFixture } from "../../fixtures/pa-ordinary-employee-sources";
+import { calculatePAOrdinaryReturn } from "@/engine/state/pa-ordinary-return";
+import { confirmGuidedPAResidencySources } from "../../../apps/web/src/lib/guided-pa-residency-facts";
+import { confirmGuidedPAOrdinaryReturnFacts } from "../../../apps/web/src/lib/guided-pa-ordinary-return-facts";
+import { confirmGuidedPAOrdinaryReturnCompletionSources } from "../../../apps/web/src/lib/guided-pa-ordinary-return-completion";
 import { TaxYearInputSchema } from "../../../src/models/inputs";
 import { buildWorkspaceFilledReturnDownload } from "../../../apps/web/src/lib/workspace-filled-return";
 import { buildTaxInputFromGuidedData } from "../../../apps/web/src/lib/guided-interview-bridge";
@@ -229,7 +236,12 @@ function createGuidedFlowStateWithPennsylvaniaSelection(): GuidedFlowState {
   };
 }
 
-async function extractPdfText(contents: Uint8Array) {
+async function extractPdfText(contents: Uint8Array, artifactName?: string) {
+  const artifactDirectory = process.env.PA_ORDINARY_EMPLOYEE_PDF_OUTPUT;
+  if (artifactDirectory && artifactName) {
+    await mkdir(artifactDirectory, { recursive: true });
+    await writeFile(join(artifactDirectory, artifactName), contents);
+  }
   const outputPath = join(tmpdir(), `workspace-pennsylvania-nonresident-packet-${Date.now()}-${Math.random()}.pdf`);
 
   await writeFile(outputPath, contents);
@@ -252,8 +264,20 @@ print("\\n".join((page.extract_text() or "") for page in reader.pages))
   }
 }
 
+
+/** New explicit fictional originals, confirmed before the actual workspace read path. */
+function createActualEmployeeState(f: ReturnType<typeof paOrdinaryEmployeeReturnFixture>): GuidedFlowState {
+  const state = createGuidedFlowStateWithPennsylvaniaSelection();
+  const residency = confirmGuidedPAResidencySources(f.input, f.residency);
+  const current = { ...f.input, paResidencySources: residency };
+  const facts = confirmGuidedPAOrdinaryReturnFacts(current, f.facts);
+  const completion = confirmGuidedPAOrdinaryReturnCompletionSources(current, f.sources);
+  state.sectionData["state-return"] = { stateEstimatedPayments: [], additionalStateWithholding: "", paResidencySources: residency, paOrdinaryReturnFacts: facts, paOrdinaryReturnCompletionSources: completion };
+  return state;
+}
+
 describe("Pennsylvania nonresident workspace packet disclosure", () => {
-  it("buildWorkspaceFilledReturnDownload includes the Pennsylvania PA-40 packet for a nonresident return and keeps the business-rule disclosure honest", async () => {
+  it("retains the original NJ75000 and2500 scalar PA50000 estimate400 case as a missing-source rejection", async () => {
     vi.mocked(buildTaxInputFromGuidedData).mockReturnValue(
       TaxYearInputSchema.parse({
         taxpayer: {
@@ -307,22 +331,13 @@ describe("Pennsylvania nonresident workspace packet disclosure", () => {
       }),
     );
 
-    const download = await buildWorkspaceFilledReturnDownload(
-      createWorkspace(),
-      createGuidedFlowStateWithPennsylvaniaSelection(),
-    );
-    const pdfText = await extractPdfText(download.contents);
-
-    expect(calculatePANonresidentReturn).toHaveBeenCalledTimes(1);
-    expect(download.includedForms).toContain("pa-40-filled.pdf");
-    expect(pdfText).toContain("Packet completeness status: supported.");
-    expect(pdfText).toContain("E-file and business-rule validation: not-validated.");
-    expect(pdfText).not.toContain(
-      "No filled Pennsylvania state forms are included in this packet.",
-    );
+    await expect(buildWorkspaceFilledReturnDownload(
+      createWorkspace(), createGuidedFlowStateWithPennsylvaniaSelection(),
+    )).rejects.toThrow(/actual|ordinary|source|complete|reciprocal/i);
+    expect(calculatePANonresidentReturn).not.toHaveBeenCalled();
   });
 
-  it("buildWorkspaceFilledReturnDownload includes the Pennsylvania Schedule NRH reference summary for nonresident apportionment and marks the packet partial", async () => {
+  it("retains original NJ75000 and2500 scalar NRH260/10/90/1000 as a missing-source rejection", async () => {
     vi.mocked(buildTaxInputFromGuidedData).mockReturnValue(
       TaxYearInputSchema.parse({
         taxpayer: {
@@ -384,17 +399,75 @@ describe("Pennsylvania nonresident workspace packet disclosure", () => {
       }),
     );
 
-    const download = await buildWorkspaceFilledReturnDownload(
-      createWorkspace(),
-      createGuidedFlowStateWithPennsylvaniaSelection(),
-    );
-    const pdfText = await extractPdfText(download.contents);
+    await expect(buildWorkspaceFilledReturnDownload(
+      createWorkspace(), createGuidedFlowStateWithPennsylvaniaSelection(),
+    )).rejects.toThrow(/actual|ordinary|source|complete|reciprocal/i);
+    expect(calculatePANonresidentReturn).not.toHaveBeenCalled();
+  });
 
+  it("preserves the legacy direct NRH arithmetic in its explicit separate primitive boundary", () => {
+    const result = calculatePAScheduleNRH({ taxYear: 2025, compensation: {
+      method: "working_days", grossCompensation: new Decimal("75000"), totalDaysForEmployer: 260,
+      nonworkingDays: 10, daysWorkedInPennsylvania: 90, unreimbursedEmployeeBusinessExpenses: new Decimal("1000"),
+    } });
+    expect(result.selectedApportionmentFraction.toFixed(6)).toBe("0.360000");
+    expect(result.apportionedGrossCompensation.toFixed()).toBe("27000");
+    expect(result.apportionedEmployeeBusinessExpenses.toFixed()).toBe("360");
+    expect(result.netPATaxableCompensation.toFixed()).toBe("26640");
+  });
+
+  it("actual NY50000 payroll and original April15 estimate400 use the ordinary review route", async () => {
+    const f = paOrdinaryEmployeeReturnFixture("nonresident", "payroll");
+    const state = createActualEmployeeState(f);
+    vi.mocked(buildTaxInputFromGuidedData).mockReturnValue(f.input);
+    const result = calculatePAOrdinaryReturn(f.input, f.facts, f.sources);
+    expect(result.pa40.compensation.toFixed()).toBe("50000");
+    expect(result.pa40.estimatedPayments.toFixed()).toBe("400");
+    expect(result.pa40.taxDue.toFixed()).toBe("1135");
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state), pdfText = await extractPdfText(download.contents, "pa-nr-actual-payroll.pdf");
+    expect(calculatePANonresidentReturn).not.toHaveBeenCalled();
+    expect(download.includedForms).toContain("pa-40-filled.pdf");
+    expect(pdfText).toContain("Packet completeness status: partial.");
+    expect(pdfText).not.toContain("Packet completeness status: supported.");
+    expect(pdfText).toContain("E-file and business-rule validation: not-validated.");
+    expect(pdfText).not.toContain("No filled Pennsylvania state forms are included in this packet.");
+  });
+
+  it("actual NY260-calendar-day originals carry PA27000 UE360 and818 tax into partial references", async () => {
+    const f = paOrdinaryEmployeeReturnFixture();
+    const state = createActualEmployeeState(f);
+    vi.mocked(buildTaxInputFromGuidedData).mockReturnValue(f.input);
+    const result = calculatePAOrdinaryReturn(f.input, f.facts, f.sources);
+    expect(result.pa40.compensation.toFixed()).toBe("27000");
+    expect(result.pa40.unreimbursedExpenses.toFixed()).toBe("360");
+    expect(result.pa40.netCompensation.toFixed()).toBe("26640");
+    expect(result.pa40.taxLiability.toFixed()).toBe("818");
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state), pdfText = await extractPdfText(download.contents, "pa-nr-actual-nrh.pdf");
+    expect(calculatePANonresidentReturn).not.toHaveBeenCalled();
     expect(download.includedForms).toContain("pa-40-filled.pdf");
     expect(download.includedForms).toContain("pa-schedule-nrh-reference.pdf");
+    expect(download.includedForms).toContain("pa-schedule-ue-reference.pdf");
     expect(pdfText).toContain("Packet completeness status: partial.");
-    expect(pdfText).toContain(
-      "Pennsylvania Schedule NRH is included as a reference summary, not an official PA Schedule NRH filing copy.",
-    );
+    expect(pdfText).toContain("Pennsylvania Schedule NRH is included as a reference summary, not an official PA Schedule NRH filing copy.");
+    expect(pdfText).toContain("E-file and business-rule validation: not-validated.");
+    expect(pdfText).not.toContain("No filled Pennsylvania state forms are included in this packet.");
   });
+
+
+  it.each(["resident", "part_year"] as const)("actual employee %s workspace retains UE and review-only disclosure", async status => {
+    const f = paOrdinaryEmployeeReturnFixture(status);
+    const state = createActualEmployeeState(f);
+    vi.mocked(buildTaxInputFromGuidedData).mockReturnValue(f.input);
+    const result = calculatePAOrdinaryReturn(f.input, f.facts, f.sources);
+    expect(result.pa40.taxLiability.toFixed()).toBe(status === "resident" ? "2272" : "818");
+    expect(result.readiness.filingEligible).toBe(false);
+    const download = await buildWorkspaceFilledReturnDownload(createWorkspace(), state), pdfText = await extractPdfText(download.contents, `pa-${status}-actual-ue.pdf`);
+    expect(calculatePANonresidentReturn).not.toHaveBeenCalled();
+    expect(download.includedForms).toContain("pa-40-filled.pdf");
+    expect(download.includedForms).toContain("pa-schedule-ue-reference.pdf");
+    expect(pdfText).toContain("Packet completeness status: partial.");
+    expect(pdfText).toContain("E-file and business-rule validation: not-validated.");
+    for (const privateValue of [f.input.taxpayer.primary.ssn, "12-3456789", "Fictional Payroll Officer", "Fictional actual itemized and paid receipt 1"]) expect(pdfText).not.toContain(privateValue);
+  });
+
 });

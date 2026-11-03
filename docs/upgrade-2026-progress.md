@@ -2210,3 +2210,13 @@ An existing negative PDF control prepares its private PA context before
 redaction. Every amount and assertion is unchanged. Main24/15/types3/spec6989/
 inventory/fixture lint pass with independent static approval; see the fixture
 ledger. No COD builder defect, law change or source-year default was introduced.
+
+### November2: actual state source replay in workspace exports
+
+The reviewed one-product workspace adapter now calculates PA/OH from actual
+canonical source packets and prepares renderer contexts before redaction. Main
+61/six/types3/spec6999/inventory/builds pass after4 genuine failures/one pass.
+Independent review approves15 mainPDFs/253pages with exact text/render parity
+and strict privacy/reference checks. The [export ledger](upgrade-2026-workspace-state-export-ledger.md)
+distinguishes source-complete finite review methods from open filing/form and
+release qualification gates.

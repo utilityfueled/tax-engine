@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { rm, writeFile } from "fs/promises";
+import { mkdir, rm, writeFile } from "fs/promises";
 import { execFileSync } from "node:child_process";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -11,6 +11,9 @@ import type {
 } from "@tax-engine/contracts";
 import { buildWorkspaceStructuredFacts } from "@tax-engine/engine";
 import { buildWorkspaceFilledReturnDownload } from "../../../apps/web/src/lib/workspace-filled-return";
+import * as rendering from "@/pdf/fill-return";
+import {completeLegacyPAInvestmentPacket} from "../../fixtures/pa-ordinary-investment-sources";
+import {completeLegacyPABusinessPacket} from "../../fixtures/pa-ordinary-business-sources";
 import type { GuidedFlowState } from "../../../apps/web/src/lib/guided-interview-flow";
 import { completePersonalInfo, completeW2Entry, completeInterestEntry, completeDividendEntry, completeNecSource, completeBusinessSection, completeBusinessExpenses } from "../../guided-interview/complete-facts";
 
@@ -18,6 +21,7 @@ vi.mock("server-only", () => ({}));
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.restoreAllMocks();
 });
 
 function createDocument(
@@ -381,7 +385,9 @@ function createGuidedFlowStateWithPennsylvaniaScheduleCBusiness(): GuidedFlowSta
 }
 
 async function extractPdfText(contents: Uint8Array) {
-  const outputPath = join(tmpdir(), `workspace-pennsylvania-packet-${Date.now()}-${Math.random()}.pdf`);
+  const retained=process.env.TAX_ENGINE_PA_AB_REVIEW_OUTPUT_DIR;
+  const directory=retained??tmpdir();await mkdir(directory,{recursive:true});
+  const outputPath = join(directory, `workspace-pennsylvania-packet-${Date.now()}-${Math.random()}.pdf`);
 
   await writeFile(outputPath, contents);
 
@@ -399,17 +405,22 @@ print("\\n".join((page.extract_text() or "") for page in reader.pages))
       { encoding: "utf8" },
     );
   } finally {
-    await rm(outputPath, { force: true });
+    if(!retained)await rm(outputPath, { force: true });
   }
 }
 
 describe("Pennsylvania workspace packet disclosure", () => {
   it("buildWorkspaceFilledReturnDownload includes the Pennsylvania PA-40 packet and keeps the business-rule disclosure honest", async () => {
+    const renderer=vi.spyOn(rendering,"fillReturn");
     const download = await buildWorkspaceFilledReturnDownload(
       createWorkspace(),
-      createGuidedFlowStateWithPennsylvaniaStateSelection(),
+      completeLegacyPAInvestmentPacket(createGuidedFlowStateWithPennsylvaniaStateSelection(), "wages"),
     );
     const pdfText = await extractPdfText(download.contents);
+    const actual=renderer.mock.calls.at(-1)?.[1].stateReturns?.pennsylvania;
+    expect(actual).toMatchObject({methodVersion:"pa-ordinary-return-v1",residencyStatus:"resident"});
+    expect(actual?.pa40.taxLiability.toFixed()).toBe("2303");
+    expect(pdfText).not.toContain("111-22-3333");
 
     expect(download.includedForms).toContain("pa-40-filled.pdf");
     expect(pdfText).toContain("Packet completeness status: supported.");
@@ -420,11 +431,16 @@ describe("Pennsylvania workspace packet disclosure", () => {
   });
 
   it("buildWorkspaceFilledReturnDownload includes the Pennsylvania Schedule SP reference summary and marks the packet partial", async () => {
+    const renderer=vi.spyOn(rendering,"fillReturn");
     const download = await buildWorkspaceFilledReturnDownload(
       createWorkspace(),
-      createGuidedFlowStateWithPennsylvaniaTaxForgiveness(),
+      completeLegacyPAInvestmentPacket(createGuidedFlowStateWithPennsylvaniaTaxForgiveness(), "sp"),
     );
     const pdfText = await extractPdfText(download.contents);
+    const actual=renderer.mock.calls.at(-1)?.[1].stateReturns?.pennsylvania;
+    expect(actual).toMatchObject({methodVersion:"pa-ordinary-return-v1",residencyStatus:"resident"});
+    expect(actual?.pa40.taxLiability.toFixed()).toBe("184");
+    expect(pdfText).not.toContain("111-22-3333");
 
     expect(download.includedForms).toContain("pa-40-filled.pdf");
     expect(download.includedForms).toContain("pa-schedule-sp-reference.pdf");
@@ -435,11 +451,16 @@ describe("Pennsylvania workspace packet disclosure", () => {
   });
 
   it("buildWorkspaceFilledReturnDownload includes the Pennsylvania Schedule A reference summary and marks the packet partial", async () => {
+    const renderer=vi.spyOn(rendering,"fillReturn");
     const download = await buildWorkspaceFilledReturnDownload(
       createWorkspace(),
-      createGuidedFlowStateWithPennsylvaniaScheduleAInterest(),
+      completeLegacyPAInvestmentPacket(createGuidedFlowStateWithPennsylvaniaScheduleAInterest(), "interest"),
     );
     const pdfText = await extractPdfText(download.contents);
+    const actual=renderer.mock.calls.at(-1)?.[1].stateReturns?.pennsylvania;
+    expect(actual).toMatchObject({methodVersion:"pa-ordinary-return-v1",residencyStatus:"resident"});
+    expect(actual?.pa40.taxLiability.toFixed()).toBe("2395");
+    expect(pdfText).not.toContain("111-22-3333");
 
     expect(download.includedForms).toContain("pa-40-filled.pdf");
     expect(download.includedForms).toContain("pa-schedule-a-reference.pdf");
@@ -450,11 +471,16 @@ describe("Pennsylvania workspace packet disclosure", () => {
   });
 
   it("buildWorkspaceFilledReturnDownload includes the Pennsylvania Schedule B reference summary and marks the packet partial", async () => {
+    const renderer=vi.spyOn(rendering,"fillReturn");
     const download = await buildWorkspaceFilledReturnDownload(
       createWorkspace(),
-      createGuidedFlowStateWithPennsylvaniaScheduleBDividends(),
+      completeLegacyPAInvestmentPacket(createGuidedFlowStateWithPennsylvaniaScheduleBDividends(), "dividends"),
     );
     const pdfText = await extractPdfText(download.contents);
+    const actual=renderer.mock.calls.at(-1)?.[1].stateReturns?.pennsylvania;
+    expect(actual).toMatchObject({methodVersion:"pa-ordinary-return-v1",residencyStatus:"resident"});
+    expect(actual?.pa40.taxLiability.toFixed()).toBe("2379");
+    expect(pdfText).not.toContain("111-22-3333");
 
     expect(download.includedForms).toContain("pa-40-filled.pdf");
     expect(download.includedForms).toContain("pa-schedule-b-reference.pdf");
@@ -465,11 +491,17 @@ describe("Pennsylvania workspace packet disclosure", () => {
   });
 
   it("buildWorkspaceFilledReturnDownload includes the Pennsylvania Schedule C reference summary and marks the packet partial", async () => {
+    const renderer=vi.spyOn(rendering,"fillReturn");
     const download = await buildWorkspaceFilledReturnDownload(
       createWorkspace(),
-      createGuidedFlowStateWithPennsylvaniaScheduleCBusiness(),
+      completeLegacyPABusinessPacket(createGuidedFlowStateWithPennsylvaniaScheduleCBusiness()),
     );
     const pdfText = await extractPdfText(download.contents);
+    const actual=renderer.mock.calls.at(-1)?.[1].stateReturns?.pennsylvania;
+    expect(actual).toMatchObject({methodVersion:"pa-ordinary-return-v1",residencyStatus:"resident"});
+    expect(actual?.pa40.netBusinessIncome.toFixed()).toBe("15200");
+    expect(actual?.pa40.taxLiability.toFixed()).toBe("2769");
+    expect(pdfText).not.toContain("111-22-3333");
 
     expect(download.includedForms).toContain("pa-40-filled.pdf");
     expect(download.includedForms).toContain("pa-schedule-c-reference.pdf");

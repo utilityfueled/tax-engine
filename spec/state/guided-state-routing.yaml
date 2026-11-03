@@ -38,7 +38,7 @@ lines:
     testRef: "tests/guided-interview/guided-state-routing.test.ts::does not substitute generic calculations for missing dedicated state facts"
   - line: "residency-export"
     description: "Do not render a resident calculation for another residency"
-    formula: "PA/OH resident review packets require actual full-year resident facts; a PA nonresident packet requires its separate allocation input"
+    formula: "PA/OH review packets replay explicitly confirmed actual originals for the selected residency; missing part-year allocation sources reject before rendering instead of silently producing a federal-only packet"
     testRef: "tests/apps/web/workspace-filled-return.test.ts::does not print resident state forms for a part-year selection without allocations: %s"
 
   - line: "PA-guided-raw-and-printed-boundary"

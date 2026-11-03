@@ -12317,6 +12317,26 @@
       ]
     },
     {
+      "key": "state/oh-workspace-actual-source-export",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "spec/state/ohio-payments.yaml",
+      "specPath": "spec/state/oh-workspace-actual-source-export.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/ohio-payments",
       "jurisdiction": "state",
       "taxYear": 2025,
@@ -12398,6 +12418,26 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf",
       "specPath": "spec/state/pa-complete-shared-paths.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-complete-workspace-export",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "docs/upgrade-2026-execution-brief.md",
+      "specPath": "spec/state/pa-complete-workspace-export.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,
@@ -12500,9 +12540,11 @@
       "engineExists": true,
       "packetGenerationExists": true,
       "testCoverageExists": true,
-      "efileBusinessRuleCoverageExists": true,
-      "status": "supported",
-      "knownGaps": []
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing e-file and business-rule validation coverage"
+      ]
     },
     {
       "key": "state/pa-oid-business-merge-independent",
@@ -12650,11 +12692,10 @@
       "engineExists": true,
       "packetGenerationExists": false,
       "testCoverageExists": true,
-      "efileBusinessRuleCoverageExists": false,
+      "efileBusinessRuleCoverageExists": true,
       "status": "partial",
       "knownGaps": [
-        "Missing packet generation or inclusion rule",
-        "Missing e-file and business-rule validation coverage"
+        "Missing packet generation or inclusion rule"
       ]
     },
     {

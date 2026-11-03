@@ -1,0 +1,32 @@
+form: "Ohio workspace actual-original review export"
+fullName: "Current canonical Ohio originals and prepared private context through saved workspace review"
+taxYear: 2025
+reference: "spec/state/ohio-payments.yaml"
+notes: |
+  This is source integration verification of previously reviewed ordinary2025
+  Ohio and reference-PDF methods. No new tax formula, source-law qualification,
+  official filled Ohio PDF, filing permission or2026 gate is introduced.
+  Legacy free withholding/estimated overlays are replaced with current original
+  forms and original receipt packets. The original raw decimals and disclosures
+  remain pinned. Explicit synthetic source facts are test fixtures only.
+lines:
+  - line: "fractional-original-withholding"
+    description: "Canonical originals replace a free additional withholding override"
+    formula: "ActualW2 Ohio3750 + actualINT0.10 + DIV0.20 + B0.30 + R0.4 =3751 exactly, printed3751. No positive generic withholding scalar is admitted; old0.4 claim remains an explicit conflict negative."
+    testRef: "tests/apps/web/oh-state-packet.test.ts::includes actual investment withholding before additional payment overlays"
+  - line: "exact-receipts"
+    description: "Preserve all old fractional and above-binary-integer precision controls"
+    formula: "ActualR0.1 + INT0.2 plusW2Ohio3750 =3750.3 exactly, printed3750. Ten distinct actualApr15 originals(9x999999999999999 plus7199254741002.01) aggregate9007199254740993.01; separateJune15 original0.09 gives total9007199254740993.1 exactly. Each actual receipt preserves existing15-digit field bound; saved11rows match actual11originals1to1. A singleoversized9007199254740993.01 actualfield rejects. Canonical originals supply credit once, with no withholding/estimated scalar override. Old additional0.3 remains a conflict negative."
+    testRef: "tests/apps/web/oh-state-packet.test.ts::passes exact classified state amounts to the review packet overlay"
+  - line: "original-context-all-three"
+    description: "Current private originals precede redacted renderer calls for all residency categories"
+    formula: "Actual100000W2 original fixtures retain tax/penalty2323/105 fullyear,929/41 partyear,465/0 nonresident. Resolve the actual prepared token against the redacted input and actual federal result, and verify original owner/source snapshots survive privately. Reference-summary PDF is saved for each; actual SSN is absent."
+    testRef: "tests/apps/web/independent-oh-workspace-originals.test.ts::actual Ohio workspace prepared originals survive redaction for %s"
+  - line: "strict-saved-ledger"
+    description: "Each saved generic estimate matches an original exactly once"
+    formula: "Saved duplicate/mismatched or unmatched dated claims reject before reference renderer I/O; never discard saved claims or count canonical estimated originals twice. Missing or stale source snapshots reject without read refresh. Legacy unsupported100 withholding still blocks."
+    testRef: "tests/apps/web/independent-oh-workspace-originals.test.ts::Ohio workspace refuses duplicate saved receipt claims before rendering"
+  - line: "disclosure"
+    description: "Readiness and reference-summary notices remain accurate"
+    formula: "Packet completeness partial, business-rule validation not-validated, and Ohio reference-summary rather than official filled-PDF disclosure all remain. No review output enables filing."
+    testRef: "tests/apps/web/oh-state-packet.test.ts::buildWorkspaceFilledReturnDownload keeps Ohio packet disclosures honest when only reference-summary state forms are attached"
