@@ -2403,3 +2403,7 @@ The finite2025 source method preserves actualNY paid.20/refund0/outstanding.20 s
 ### November 3: mounted ordinary facts and residency integration
 
 Ten native control cases now exercise actual PA fact collection through exact state calculations, including dated investments, receipts, prior elections, household/SP records, refund allocations, missing/zero distinctions, reopening and privacy. Allten main cases, three types, strictlint0,7,310spec links, AST references and inventory/check pass with no product changes. See [the integration ledger](upgrade-2026-pa-ordinary-residency-native-work.md). This does not replace real browser or full-suite/function-coverage qualification. Pending-business852563ea is pushed.
+
+### November 3: retained royalty history and saved review output
+
+The bounded guided copyright method now validates actual historical MI/federal records separately from current expense corrections and preserves full saved history. Three fresh main failures precede integration; focused1377 passes plus a corrected strict-AST dependency, all eleven remaining checks, actual saved-workspace2 tests and desktop/mobile retained-history2 probes pass. Distinct final four-product review approves the merge, and root reopens/renders/inspects the saved18-page review packet. See [the source and output ledger](upgrade-2026-pa-guided-royalty-complete-work.md). Native full-history collection, original expense-edit browser flow, global and human/final2026 qualification remain open. Native ordinary/residency536de69d is pushed.

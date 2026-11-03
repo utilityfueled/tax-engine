@@ -1,6 +1,7 @@
 /** Actual PA royalty sources remain validated before render-only redaction. */
 import {createHash} from 'node:crypto';
 import {calculatePAReturn} from '@/engine/state/pa-orchestrator.js';
+import {calculatePAOrdinaryReturn} from '@/engine/state/pa-ordinary-return.js';
 import type {TaxYearInput} from '@/models/inputs.js';
 import type {TaxReturnResult} from '@/models/outputs.js';
 import {redactReviewIdentifiers} from './redact-review-identifiers.js';
@@ -16,7 +17,8 @@ export function preparePARoyaltyReview(input:TaxYearInput):PreparedPARoyaltyRevi
  if(!input.royaltyPropertySources)throw new Error('PA royalty review requires original property sources');
  const token:PreparedPARoyaltyReview=Object.freeze({[brand]:true as const});
  try{
-  const result=calculatePAReturn(input);
+  const canonical=input.paResidencySources!==undefined||input.paOrdinaryReturnFacts!==undefined||input.paOrdinaryReturnCompletionSources!==undefined;
+  const result=canonical?calculatePAOrdinaryReturn(input,input.paOrdinaryReturnFacts,input.paOrdinaryReturnCompletionSources):calculatePAReturn(input);
   contexts.set(token,{original:digest(input),redacted:digest(redactReviewIdentifiers(input)),state:stateDigest(result)});
  }catch(error){throw new Error(`PA royalty original source calculation is unavailable: ${error instanceof Error?error.message:'reconcile actual records'}`,{cause:error});}
  return token;

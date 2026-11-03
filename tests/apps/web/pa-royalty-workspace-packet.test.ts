@@ -8,12 +8,11 @@ import {buildWorkspaceFilledReturnDownload} from '@/lib/workspace-filled-return'
 import {createWorkspaceRecord} from '@/lib/workspace-storage';
 import {startCompleteInterview,completeW2Entry} from '../../guided-interview/complete-facts';
 import {actualGuidedPARoyaltySources} from '../../fixtures/guided-pa-royalty-sources';
+import {guidedPARoyaltyComplete} from '../../fixtures/guided-pa-royalty-complete';
 import {REVIEW_PDF_NOTICE} from '@/pdf/export-policy';
 vi.mock('server-only',()=>({}));
 it('exports actual guided PA royalty records with private source binding',async()=>{
- const state=startCompleteInterview({filingStatus:'single',incomeTypes:['w2-wages','royalties'],lifeEvents:[],stateCode:'PA'});
- state.sectionData['income-w2']={entries:[{...completeW2Entry,wages:'200000'}]};
- state.sectionData['income-royalties']=actualGuidedPARoyaltySources();
+ const state=guidedPARoyaltyComplete('workspace').state;
  const workspace=createWorkspaceRecord('synthetic-pa-royalty-export',{now:'2026-10-26T00:00:00.000Z'});
  workspace.returnSummary.targetTaxYear=2025;
  const before=JSON.stringify(state),dir=await mkdtemp(join(tmpdir(),'pa-royalty-workspace-'));
@@ -27,4 +26,13 @@ it('exports actual guided PA royalty records with private source binding',async(
   for(const page of pages){expect(page).toContain(REVIEW_PDF_NOTICE);for(const secret of ['111223333','royalty-original-1','royalty-account-1','Fictional private legal receipt','Fictional PA property classification record'])expect(page).not.toContain(secret);}
   expect(JSON.stringify(state)).toBe(before);
  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+// Source-first additive negative retains the exact formerly incomplete original cohort.
+it('retains raw incomplete royalty workspace sources as a denial',async()=>{
+ const state=startCompleteInterview({filingStatus:'single',incomeTypes:['w2-wages','royalties'],lifeEvents:[],stateCode:'PA'});
+ state.sectionData['income-w2']={entries:[{...completeW2Entry,wages:'200000'}]};
+ state.sectionData['income-royalties']=actualGuidedPARoyaltySources();
+ const workspace=createWorkspaceRecord('synthetic-pa-royalty-incomplete',{now:'2026-10-26T00:00:00.000Z'});workspace.returnSummary.targetTaxYear=2025;
+ const before=JSON.stringify(state);await expect(buildWorkspaceFilledReturnDownload(workspace,state)).rejects.toThrow(/Pennsylvania|sources|originals/i);expect(JSON.stringify(state)).toBe(before);
 });

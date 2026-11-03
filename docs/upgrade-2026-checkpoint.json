@@ -14197,5 +14197,38 @@
     "productsChanged": false,
     "realBrowserQualified": false,
     "integrationReviewSHA256": "733fa66d6537d942375c2f0c00dc9425fdba73aadb68c00b00cc1881f5685115"
+  },
+  "nov03GuidedPARoyaltyHistoryIntegration": {
+    "baseCommit": "536de69d12a743cb045d59ed10c3d29c2f52808e",
+    "products": 4,
+    "sourceFirst": "3genuineMainFailures",
+    "focused": "1377pass/1ASTdependencyfailure retained; exactworkspacefixtureadoption thenAST676pass",
+    "checks": "all11PASS types3/spec/inventory/check/strict0/bothbuilds/diff",
+    "privateDistinctReviewSHA256": "73/4 ff2f8e795aa1ae65436784f50bff883296a89db6694450097dafcb15123da4f4",
+    "mergedDistinctReviewSHA256": "fb3eaefe1a5046232af6e62214c517d0d8014e79f4b3c680086fd8984fb9ab08",
+    "workspaceTests": 2,
+    "savedPDF": {
+      "pages": 18,
+      "sha256": "65b008e116a1c9075763620eed1d2c4e0585e8116a29907bfe175d99cd26f8ad",
+      "strictObjects": 1299,
+      "rootVisualAllPages": true,
+      "reviewOnly": true
+    },
+    "browserProbes": {
+      "passed": 2,
+      "viewports": [
+        1280,
+        390
+      ],
+      "scope": "Partially seeded complete2025 records; retainedhistory invalidation/child+parentconfirmation/reload/privacy only",
+      "logSHA256": "d2ee4eb75d64f9df2fd53b9974f77634d38a567d67f41b0246f3b96913970bcf"
+    },
+    "evidence": ".local/upgrade-evidence/nov03-root-royalty-C-main/integration-review-result.json",
+    "remaining": [
+      "Native fullsettlement/historyorigination",
+      "Originalexpenseeditbrowserjourney",
+      "Fullglobalcoverage/PG/runtime/staging/human/final2026 qualification"
+    ],
+    "releaseReady": false
   }
 }
