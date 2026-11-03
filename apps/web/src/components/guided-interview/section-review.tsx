@@ -1,4 +1,6 @@
 "use client";
+import {isSeparateStatePreview} from '@/lib/guided-interview-bridge';
+import {PASeparateReturnPreview} from '@/components/pa-separate-return-preview';
 
 import { isStartedNec, sumKnownBusinessAmounts, type BusinessSourceData } from "@/lib/guided-business-facts";
 import { isStartedRental, knownRentalExpenses } from "@/lib/guided-rental-facts";
@@ -477,7 +479,8 @@ function StateReturnSummary({
   if (!stateCode) return <p className="guided-review-empty">No state return.</p>;
 
   const stateName = supportedStates.find((s) => s.code === stateCode)?.name ?? stateCode;
-  const stateMetrics = preview?.state ?? null;
+  const separateMetrics=isSeparateStatePreview(preview?.state)?preview?.state:null;
+  const stateMetrics = isSeparateStatePreview(preview?.state)?null:(preview?.state??null);
   const stateRefund = parseGuidedDisplayAmount(stateMetrics?.stateRefund);
   const stateOwed = parseGuidedDisplayAmount(stateMetrics?.stateAmountOwed);
 
@@ -490,6 +493,7 @@ function StateReturnSummary({
         <span className="guided-review-label">State</span>
         <span className="guided-review-value">{stateName} ({stateCode})</span>
       </div>
+      {separateMetrics&&<PASeparateReturnPreview metrics={separateMetrics}/>}
       {stateMetrics && (
         <>
           <div className="guided-review-row">

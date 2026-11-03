@@ -1,3 +1,4 @@
+import {isPAMarriedOrdinaryReturnResult,assertNoPAMarriedPaperExport} from '@/engine/state/pa-return-result.js';
 import { markReviewPdf } from "../../export-policy.js";
 import { assertPAWorkingCreditReview, type PreparedPAWorkingCreditReview } from "../../pa-working-credit-review-context.js";
 import {assertPAOrdinaryReturnReview,isPAOrdinaryReturnResult,type PreparedPAOrdinaryReturnReview} from "../../pa-ordinary-return-review-context.js";
@@ -211,6 +212,8 @@ export async function fillPA40(
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
   const paResult = result.stateReturns?.pennsylvania;
+  assertNoPAMarriedPaperExport(input,paResult);
+  if(isPAMarriedOrdinaryReturnResult(paResult))throw Error('Actual married PA paper mapping is unavailable.');
   if (!paResult) {
     throw new Error("No Pennsylvania state return result available");
   }

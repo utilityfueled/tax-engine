@@ -968,7 +968,8 @@ export interface SchoolDistrictPreviewMetrics {
   withholding:string;estimatedPayments:string;priorCredit:string;totalPayments:string;overpayment:string;
   outgoingCarryforward:string;refund:string;amountOwed:string;
 }
-export interface StatePreviewMetrics {
+export interface SingleStatePreviewMetrics {
+  kind?: 'single-return';
   schoolDistrict?:SchoolDistrictPreviewMetrics;
   stateCode: string;
   stateName: string;
@@ -978,6 +979,12 @@ export interface StatePreviewMetrics {
   stateWithholding: string;
 }
 
+export interface SeparateStatePreviewMetrics{
+ kind:'separate-returns';stateCode:string;stateName:string;
+ returns:Array<{accountHolder:'primary'|'spouse';displayName?:string;filingChoice:'M';stateTax:string;stateRefund:string;stateAmountOwed:string;stateWithholding:string}>;
+}
+export type StatePreviewMetrics=SingleStatePreviewMetrics|SeparateStatePreviewMetrics;
+export function isSeparateStatePreview(value:StatePreviewMetrics|null|undefined):value is SeparateStatePreviewMetrics{return value?.kind==='separate-returns';}
 export interface GuidedPreviewMetrics {
   totalIncome: string;
   agi: string;

@@ -1,3 +1,4 @@
+import {isPAMarriedOrdinaryReturnResult,assertNoPAMarriedPaperExport} from '@/engine/state/pa-return-result.js';
 import {fillPAOrdinaryScheduleD} from "./mappings/2025/fill-pa-ordinary-schedule-d.js";
 import {fillPAOrdinaryScheduleGL} from "./mappings/2025/fill-pa-ordinary-schedule-gl.js";
 import {calculateScheduleCReviewSource} from "./schedule-c-review-source.js";
@@ -444,6 +445,8 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  assertNoPAMarriedPaperExport(input,result.stateReturns?.pennsylvania);
+  if(isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania))throw Error('Actual married PA packet export is unavailable.');
   assertScheduleRSourceConsistency(input, result);
   const scheduleCSources=calculateScheduleCReviewSource(input,result.scheduleC);
   if(scheduleCSources&&!result.scheduleC)throw new Error("Schedule C actual source calculation is missing");
@@ -1261,7 +1264,7 @@ export async function fillReturn(
   }
 
   // ── PA-40 (if applicable — Pennsylvania state return) ──
-  if (result.stateReturns?.pennsylvania) {
+  if (result.stateReturns?.pennsylvania && !isPAMarriedOrdinaryReturnResult(result.stateReturns.pennsylvania)) {
     const pa40Path = join(blankFormsDir, "pa-40.pdf");
     const docPA40 = await fillPA40(input, result, pa40Path, options.paWorkingCreditReview,options.paOrdinaryReview);
     if (flatten) await flattenForm(docPA40.getForm());

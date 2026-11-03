@@ -2553,3 +2553,7 @@ The finite2025 Hillsdale0302 collector now preserves blank/unknown actual reside
 ### November3: original royalty browser source-contract replay
 
 Both original desktop/mobile expense-correction journeys now replay complete actual-source contracts while retaining all17old assertions,6478→6475 and immutable filed/cash history. Distinct offline review approves exact2paths; author4/4 and current-main2/2 production-managed cases pass with zero retries. All8main checks pass; root opens both captures. See [the browser ledger](upgrade-2026-pa-royalty-browser-source-successor.md). Fresh remote/image/global/staging/human/final2026 gates remain open. School native0a5c06bd is pushed.
+
+### November3: actual PA married sources through native/public review
+
+The normal guide/public entry now retains complete two-owner originals and explicit J/M choice, with one joint federal return and separate owner PA results/refund elections for M. Fresh main19genuinefail/11pass precede source-preserving six-file composition. Distinct104controls and main7383/762pass; all13checks including types3/strict29zero/bothbuilds pass, with33isolatedPGpending recorded. Prior parallel timeout failures and unchanged one-worker replay remain evidence. See [the integration ledger](upgrade-2026-pa-married-native-public-work.md). Separate physical/browser/remainingcohort/global/hosting/human/final2026 gates remain open. Royalty browser866c4d9d is pushed.

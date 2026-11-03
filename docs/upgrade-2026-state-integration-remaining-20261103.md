@@ -25,3 +25,25 @@ The implementation audit below is anchored to `518f7021`; its six referenced cor
 - Finalforms/filing: src/pdf/filing-return.ts provides a separate guarded complete-data path. Unavailable final2026 Form1040/TaxTable/remaining forms and actual human qualification remain external release dependencies. They do not block the isolated source/mapping software above. Filing/model/production/publication gates must remain unchanged.
 
 No conclusion of completeness. Recommended implementation order: PA spousal J/M source contract as assigned by parent; in parallel a bounded actual-care handoff and canonical OH ordinaryC integration; then one actual SD cohort, reciprocal/RC proof and matching official2025 physical outputs. Reevaluate scope after each coherent package; do not enumerate every specialist regime merely from an error string.
+
+## Current bounded integration crosswalk after866c4d9d
+
+The numbered research audit above is retained historically; its original
+rejection sites and queued status are not all current defects. Delivered
+packages remain finite2025 methods with separate human/final2026 gates.
+
+| Audit package | Verified delivered evidence | Useful internal successors still open |
+| --- | --- | --- |
+| PA married ordinary | Original-bound J/M engine13f6768e; native/public source integration passes distinct104 and main7383controls/all13checks | Actual J/M browser origination, separate owned PA40/SP physical packet, additional married residency/history cohorts |
+| PA care | Actual-source composer7b2763b8, native730c07fa, count fixec1f7b5a, desktop/mobile+saved physical replayd76a2baf | Final integrated/distribution/staging/human qualification |
+| OH NR/PY business | Actual original-bound canonical business3b2a5e74 | Native origin/save/invalidation, physical companions, broader mixed-owner cohorts |
+| OH school district | Source core307d8d3a and native/public collector0a5c06bd, main602+1362tests/all14checks | Real browser entry/reload, actual official SD100/withholding physical companions, additional district/residency cohorts |
+| OH reciprocity/resident credit | Original-bound reciprocal ordinary wages6d9144e3 | Reciprocal native/physical rehearsal; distinct actual OH resident-credit original-return/remittance/refund source adapter remains internal work |
+| OH actual2025 physical | Source-first finite ordinary VA nonresident four-companion candidate; independent saved38cell/status/privacy review exposed then verified fixes for L7a and Single placement | Current final peer receipt/main integration, actual distribution output, matching business/SD/reciprocal/credit physical scenarios |
+
+Royalty desktop/mobile source-contract successor866c4d9d passes current main
+2/2 with no retries after distinct offline review, preserving exact amounts
+and immutable historical records. It fixes the two observed0aa remote browser
+failures locally; it does not substitute for a fresh complete remote/image run.
+The actual0aa runtime/coverage evidence is separately recorded atb935ac57.
+Remaining external requirements in the execution brief remain unchanged.

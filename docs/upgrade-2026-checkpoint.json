@@ -15466,5 +15466,38 @@
     ],
     "status": "finite-current-main-browser-pass",
     "ledger": "docs/upgrade-2026-pa-royalty-browser-source-successor.md"
+  },
+  "nov03MainPAMarriedNativePublic": {
+    "reviewedAt": "2026-11-03T13:29:49.411080+00:00",
+    "parentCommit": "866c4d9d",
+    "status": "finite-main-technical-integration-pass",
+    "authorManifestSHA256": "9269e0878ab7f26c64c34b716561ff8730bf2754d8559bd22db4c4c651f1d119",
+    "distinctReviewSHA256": "fa1417c9cbf088d1906c45edf0da6dedffbb6d2225146fe90d6ccbd3ae74cdfb",
+    "manualMergeManifestSHA256": "ac2798fde308d4bbb7974155b09875d05f334ffcd43f67048e98954cb6ad44d7",
+    "mainRedLogSHA256": "54fcb7ac63c5d100541bb47b50af91b43f9aacb074783d92e9e4a5c799a14b7a",
+    "mainRed": "19actualpublicAPIbehaviorfail11pass, sixunchangedcanonicalpositivespass; noimportfail",
+    "mainPassingTests": 7383,
+    "mainPendingPostgresTests": 33,
+    "mainPassingFiles": 762,
+    "mainPendingFiles": 3,
+    "mainOneWorkerChecksSHA256": "0ab82b8798b6e20920569b484a53b4ae57ff735aef3714178d2fc5056509a160",
+    "mainThreeTypesChecksSHA256": "8d61107b09f2f32bdc7377f1da6345adc78038285ea1963acb6232aaead455c2",
+    "checksPassed": 13,
+    "specReferences": 7632,
+    "strictASTTests": 782,
+    "inventoryEntries": 778,
+    "ownedStrictPaths": 29,
+    "strictErrors": 0,
+    "strictWarnings": 0,
+    "engineAndWebBuildsPass": true,
+    "exactIntegrated32Paths": true,
+    "sixSharedManualMergesPreserveCurrentSD": true,
+    "retainedBroadFailure": "priorparallel7380pass3fail33pending:2unchanged5000mstimeouts+onependingrendererspillassertion; noassertion/limit changed; same765filesoneworkerPASS",
+    "limits": [
+      "finite2025twofullresidentownersordinaryW2/explicitJorM",
+      "browser/originalownerPA40SPphysical/othermarriedcohortsstillrequired",
+      "no2026filing/human/provider/stagingqualification"
+    ],
+    "ledger": "docs/upgrade-2026-pa-married-native-public-work.md"
   }
 }

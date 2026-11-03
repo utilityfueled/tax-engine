@@ -1,4 +1,5 @@
 import {buildGuidedOhioSchoolDistrictFacts,type OhioSchoolDistrictDraft} from './guided-ohio-school-district-facts';
+import {buildGuidedPAMarriedOrdinarySources,assertMarriedPASavedLedger} from './guided-pa-married-ordinary-sources';
 import { buildGuidedW2SourceContext, buildTaxInputFromGuidedData } from "./guided-interview-bridge";
 import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs";
 import type { PAOrdinaryReturnFacts } from "@/models/pa-ordinary-return-facts";
@@ -1315,6 +1316,7 @@ export const emptyStateEstimatedPayment: StateEstimatedPaymentEntry = {
 };
 
 export interface StateReturnData {
+  paMarriedOrdinarySources?: import('@/models/pa-married-ordinary-sources').PAMarriedOrdinarySources;
   zeroIncomeMiscSources?: ZeroIncomeMiscSourceDraft[];
   stateEstimatedPayments: StateEstimatedPaymentEntry[];
   additionalStateWithholding: string;
@@ -1587,6 +1589,9 @@ export function startInterview(segmentation: SegmentationAnswers, taxYear: numbe
 export function buildGuidedPAOrdinarySourceInput(state: GuidedFlowState): TaxYearInput | null {
   if (state.segmentation.stateCode !== "PA") return null;
   const data = state.sectionData["state-return"];
+  if(state.segmentation.filingStatus==='mfj'||data?.paMarriedOrdinarySources){
+    try{const raw=buildTaxInputFromGuidedData(state);const parsed=raw?TaxYearInputSchema.safeParse(raw):undefined;return parsed?.success?parsed.data:null;}catch{return null;}
+  }
   if (!data?.paResidencySources) return null;
   try {
     const raw = buildTaxInputFromGuidedData(state);
@@ -1607,6 +1612,10 @@ function paOrdinarySourceValues(value: unknown): unknown {
     .filter(([key]) => !["sourceFactsConfirmed", "originalFederalSources", "originalTaxpayer", "originalFederalDependent"].includes(key))
     .map(([key, child]) => [key, paOrdinarySourceValues(child)]));
   return value;
+}
+function paMarriedSourceValues(value:StateReturnData['paMarriedOrdinarySources']):unknown{
+ if(!value)return value;
+ return paOrdinarySourceValues({...value,wages:value.wages.map(({original:_original,originalRecipientSsn:_recipient,...facts})=>facts)});
 }
 function paCompletionSourceValues(value: GuidedPAOrdinaryReturnCompletionSources | undefined): unknown {
   if (!value) return value;
@@ -1629,7 +1638,7 @@ function ohioActualSourceValues(value: unknown): unknown {
 
 function paStateDependencyValues(value: StateReturnData | undefined): unknown {
   if (!value) return value;
-  const { paOrdinaryReturnFacts: _ordinary, paOrdinaryReturnCompletionSources: _completion, ...dependencies } = value;
+  const { paMarriedOrdinarySources: _married, paOrdinaryReturnFacts: _ordinary, paOrdinaryReturnCompletionSources: _completion, ...dependencies } = value;
   return dependencies;
 }
 
@@ -1726,8 +1735,10 @@ export function updateSectionData(
   const paDependenciesChanged = incomingStateReturn && guidedSourceValuesChanged(paStateDependencyValues(ohioStateReturn), paStateDependencyValues(incomingStateReturn));
   const paOrdinaryChanged = incomingStateReturn && guidedSourceValuesChanged(paOrdinarySourceValues(ohioStateReturn?.paOrdinaryReturnFacts), paOrdinarySourceValues(incomingStateReturn.paOrdinaryReturnFacts));
   const paCompletionChanged = incomingStateReturn && guidedSourceValuesChanged(paCompletionSourceValues(ohioStateReturn?.paOrdinaryReturnCompletionSources), paCompletionSourceValues(incomingStateReturn.paOrdinaryReturnCompletionSources));
-  const invalidatedPAStateReturn = incomingStateReturn && (paDependenciesChanged || paOrdinaryChanged || paCompletionChanged) ? {
+  const paMarriedChanged=incomingStateReturn&&guidedSourceValuesChanged(paMarriedSourceValues(ohioStateReturn?.paMarriedOrdinarySources),paMarriedSourceValues(incomingStateReturn.paMarriedOrdinarySources));
+  const invalidatedPAStateReturn = incomingStateReturn && (paDependenciesChanged || paOrdinaryChanged || paCompletionChanged || paMarriedChanged) ? {
     ...incomingStateReturn,
+    ...(incomingStateReturn.paMarriedOrdinarySources&&(paDependenciesChanged||paOrdinaryChanged||paCompletionChanged||paMarriedChanged)?{paMarriedOrdinarySources:{...incomingStateReturn.paMarriedOrdinarySources,sourceFactsConfirmed:null}}:{}),
     ...(incomingStateReturn.paOrdinaryReturnFacts && (paDependenciesChanged || paOrdinaryChanged)
       ? { paOrdinaryReturnFacts: { ...incomingStateReturn.paOrdinaryReturnFacts, sourceFactsConfirmed: null } } : {}),
     ...(incomingStateReturn.paOrdinaryReturnCompletionSources && (paDependenciesChanged || paCompletionChanged)
@@ -1780,6 +1791,7 @@ export function updateSectionData(
           ...(ohioStateReturn.ohioResidency ? {ohioResidency:{...ohioStateReturn.ohioResidency,sourceFactsConfirmed:null}} : {}),
           ...(ohioStateReturn.ohioPayments ? {ohioPayments:{...ohioStateReturn.ohioPayments,sourceFactsConfirmed:null}} : {}),
           ...(ohioStateReturn.ohioSchoolDistrict ? {ohioSchoolDistrict:{...ohioStateReturn.ohioSchoolDistrict,sourceFactsConfirmed:null}} : {}),
+          ...(ohioStateReturn.paMarriedOrdinarySources ? {paMarriedOrdinarySources:{...ohioStateReturn.paMarriedOrdinarySources,sourceFactsConfirmed:null}} : {}),
           ...(ohioStateReturn.paResidencySources ? {paResidencySources:{...ohioStateReturn.paResidencySources,sourceFactsConfirmed:null}} : {}),
           ...(ohioStateReturn.paReciprocitySources ? {paReciprocitySources:{...ohioStateReturn.paReciprocitySources,sourceFactsConfirmed:null}} : {}),
           ...(ohioStateReturn.paOrdinaryReturnFacts ? { paOrdinaryReturnFacts: { ...ohioStateReturn.paOrdinaryReturnFacts, sourceFactsConfirmed: null } } : {}),
@@ -2060,6 +2072,9 @@ function guidedPAOrdinaryReturnSourceErrors(state: GuidedFlowState): Record<stri
   if (state.segmentation.stateCode !== "PA") return {};
   const data = state.sectionData["state-return"], current = buildGuidedPAOrdinarySourceInput(state);
   const errors: Record<string, string> = {};
+  if(data?.paMarriedOrdinarySources||state.segmentation.filingStatus==='mfj'){
+    try{if(!data?.paMarriedOrdinarySources||!current)throw Error('Complete actual current federal and married PA household sources.');assertMarriedPASavedLedger(data);buildGuidedPAMarriedOrdinarySources(current,data.paMarriedOrdinarySources);}catch(error){errors.paMarriedOrdinarySources=error instanceof Error?error.message:'Reconcile actual married PA household sources.';}return errors;
+  }
   if (!current) errors.paResidencySources = "Complete and confirm the actual current federal and Pennsylvania residency sources.";
   if (!data?.paOrdinaryReturnFacts) errors.paOrdinaryReturnFacts = "Complete and confirm the actual Pennsylvania return records.";
   else if (current) {

@@ -1,4 +1,7 @@
 "use client";
+import {isSeparateStatePreview} from '@/lib/guided-interview-bridge';
+import {PASeparateReturnPreview} from '@/components/pa-separate-return-preview';
+import {PAMarriedOrdinaryDetails} from './pa-married-ordinary-details';
 import {ZeroIncomeMiscDetails} from './zero-income-misc-details';
 
 import type { TaxYearInput } from "@/models/inputs";
@@ -12,7 +15,7 @@ import { PAReciprocityDetails } from "./pa-reciprocity-details";
 import { PAOrdinaryReturnDetails } from "./pa-ordinary-return-details";
 import { PAOrdinaryReturnCompletionDetails } from "./pa-ordinary-return-completion-details";
 import { RetroShell } from "@/components/retro-shell";
-import type { GuidedPreviewMetrics, StatePreviewMetrics } from "@/lib/guided-interview-bridge";
+import type { GuidedPreviewMetrics } from "@/lib/guided-interview-bridge";
 import {
   type StateReturnData,
   type StateEstimatedPaymentEntry,
@@ -136,7 +139,8 @@ export function SectionStateReturn({
 }) {
   const current = data ?? emptyStateReturnData;
   const stateName = supportedStates.find((s) => s.code === stateCode)?.name ?? stateCode;
-  const stateMetrics: StatePreviewMetrics | null = guidedPreview?.state ?? null;
+  const separateMetrics=isSeparateStatePreview(guidedPreview?.state)?guidedPreview?.state:null;
+  const stateMetrics = isSeparateStatePreview(guidedPreview?.state)?null:(guidedPreview?.state??null);
 
   const stateRefund = parseGuidedDisplayAmount(stateMetrics?.stateRefund);
   const stateOwed = parseGuidedDisplayAmount(stateMetrics?.stateAmountOwed);
@@ -177,7 +181,7 @@ export function SectionStateReturn({
           Review the summary and enter your actual state estimated payments.
         </p>
 
-        {stateMetrics ? (
+        {separateMetrics?<PASeparateReturnPreview metrics={separateMetrics}/>:stateMetrics ? (
           <div className="guided-ticker-breakdown" style={{ marginTop: "16px", marginBottom: "16px" }} role="status" aria-live="polite">
             <StateSummaryRow
               label={`${stateMetrics.stateName} (${stateMetrics.stateCode})`}
@@ -235,7 +239,10 @@ export function SectionStateReturn({
           {(current.ohioResidency?.schoolDistrictStatus==='actual_district_sources_required'||current.ohioSchoolDistrict)&&<OhioSchoolDistrictDetails originalInput={originalInput??null} taxYear={taxYear} data={current.ohioSchoolDistrict} ohioResidency={current.ohioResidency} ohioPayments={current.ohioPayments} onChange={ohioSchoolDistrict=>onDataChange({...current,ohioSchoolDistrict})}/>}
 
         </>}
-        {stateCode === "PA" && <>
+        {stateCode==='PA'&&(filingStatus==='mfj'||current.paMarriedOrdinarySources!==undefined)?<>
+          <PAMarriedOrdinaryDetails originalInput={ordinaryOriginalInput??originalInput??null} data={current.paMarriedOrdinarySources} onChange={paMarriedOrdinarySources=>onDataChange({...current,paMarriedOrdinarySources})}/>
+          {(['paResidencySources','paReciprocitySources','paOrdinaryReturnFacts','paOrdinaryReturnCompletionSources']as const).filter(key=>current[key]!==undefined).map(key=><div key={key}><p>Retained {key} must be reviewed against the married household choice. It has not been discarded.</p><button type="button" onClick={()=>{const next={...current};delete next[key];onDataChange(next);}}>Remove reviewed conflicting {key}</button></div>)}
+        </>:stateCode === "PA" && <>
           <PAResidencyDetails originalInput={originalInput ?? null} data={current.paResidencySources}
             onChange={paResidencySources => onDataChange({...current, paResidencySources,
               ...(current.paReciprocitySources ? {paReciprocitySources:{...current.paReciprocitySources,sourceFactsConfirmed:null}} : {})})} />

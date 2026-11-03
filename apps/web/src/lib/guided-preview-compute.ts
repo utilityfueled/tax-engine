@@ -1,3 +1,5 @@
+import {calculatePAReturn} from '@/engine/state/pa-orchestrator';
+import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result';
 /**
  * Heavy preview computation — split from guided-interview-bridge so that the
  * tax engine + decimal.js are only loaded on-demand (dynamic import) instead
@@ -181,6 +183,7 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
     }
 
     let stateResult: StatePreviewResult | null = null;
+    let separateMetrics:StatePreviewMetrics|null=null;
     const stateCode = state.segmentation.stateCode;
     if (stateCode && (stateCode === "OH" || stateCode === "PA" || state.sectionData["personal-info"]?.stateResidency === "full-year")) {
       const personalInfo = state.sectionData["personal-info"] as PersonalInfoData | undefined;
@@ -196,9 +199,14 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
         assertClaimOfRightStateMethod(taxInput, stateCode);
         if (stateCode === "PA") {
           const currentOriginals=buildGuidedStateOriginals(taxInput,state);
-          const pa=calculatePAOrdinaryReturn(currentOriginals,currentOriginals.paOrdinaryReturnFacts,currentOriginals.paOrdinaryReturnCompletionSources).pa40;
-          stateResult = { stateCode, stateName: "Pennsylvania", stateTax: pa.netTaxLiability,
-            refund: pa.netOverpayment, balanceDue: pa.totalAmountDue, totalPayments: pa.totalPayments };
+          const married=currentOriginals.paMarriedOrdinarySources!==undefined?calculatePAReturn(currentOriginals):null;
+          if(married&&isPAMarriedOrdinaryReturnResult(married)){
+            if(married.filingMode==='M')separateMetrics={kind:'separate-returns',stateCode,stateName:'Pennsylvania',returns:married.returns.map(row=>{if(row.accountHolder==='joint')throw Error('Actual M return owner must remain separate');return{accountHolder:row.accountHolder,displayName:row.accountHolder==='primary'?currentOriginals.taxpayer.primary.firstName+' '+currentOriginals.taxpayer.primary.lastName:currentOriginals.taxpayer.spouse?.firstName+' '+currentOriginals.taxpayer.spouse?.lastName,filingChoice:'M',stateTax:row.pa40.taxLiability.toString(),stateRefund:row.refundDisposition.refund.toString(),stateAmountOwed:row.pa40.totalAmountDue.toString(),stateWithholding:row.pa40.totalPayments.toString()};})};
+            else{const row=married.returns[0];stateResult={stateCode,stateName:'Pennsylvania',stateTax:row.pa40.netTaxLiability,refund:row.refundDisposition.refund,balanceDue:row.pa40.totalAmountDue,totalPayments:row.pa40.totalPayments};}
+          }else{
+            const pa=calculatePAOrdinaryReturn(currentOriginals,currentOriginals.paOrdinaryReturnFacts,currentOriginals.paOrdinaryReturnCompletionSources).pa40;
+            stateResult={stateCode,stateName:'Pennsylvania',stateTax:pa.netTaxLiability,refund:pa.netOverpayment,balanceDue:pa.totalAmountDue,totalPayments:pa.totalPayments};
+          }
         } else if (stateCode === "OH") {
           const currentOriginals = buildGuidedStateOriginals(taxInput, state);
           const ohio = calculateOhioResidentReturn(buildOhioResidentReturnInput(currentOriginals, result, buildGuidedOhioOverlay(currentOriginals, state, result.taxExemptInterest)));
@@ -222,7 +230,8 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
       }
     }
 
-    return extractMetricsFromResult(result, stateResult);
+    const metrics=extractMetricsFromResult(result,stateResult);
+    return separateMetrics?{...metrics,state:separateMetrics}:metrics;
   } catch {
     return null;
   }

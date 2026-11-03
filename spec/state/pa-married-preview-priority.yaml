@@ -1,0 +1,18 @@
+form: "PA-Married-Preview-Priority"
+fullName: "Current separately owned PA returns versus saved workspace aggregate"
+taxYear: 2026
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf"
+notes: |
+  Presentation successor only; no tax arithmetic or filing qualification.
+  Actual finite2025 sharedSP13001 household with first original federal WH400
+  yields actual federal refund400 and separately owned PA refunds276 and83.
+  The same unchanged household is built through real native converter and engine.
+lines:
+  - line: "current-priority"
+    description: Fresh M sources outrank a retained one-return workspace display
+    formula: Mounted existing RefundTicker receives current actual separate M native fallback and explicitly fictional older workspace scalar preview federal1000 plus PA5000. It shows current federal400 separately with primary276 and spouse83, never total6000,759,359 or a household PA refund. Every current owner panel remains visible in the ready component branch.
+    testRef: "tests/apps/web/pa-married-preview-priority.test.tsx::Current actual separate M preview outranks older workspace aggregate"
+  - line: "ready-owner-panels"
+    description: Ready standalone ticker retains each actual PA account
+    formula: Without older engine preview, mounted RefundTicker still shows current federal400 and both actual owner panels with refund276 and83. Rendering only the empty/computing branch does not satisfy separate return presentation. No mocked calculation or hidden state injection.
+    testRef: "tests/apps/web/pa-married-preview-priority.test.tsx::Ready standalone ticker shows both actual M owner accounts"

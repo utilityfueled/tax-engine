@@ -1,4 +1,6 @@
 "use client";
+import type {SeparateStatePreviewMetrics} from "@/lib/guided-interview-bridge";
+import {PASeparateReturnPreview} from "@/components/pa-separate-return-preview";
 
 import { useEffect, useRef, useState } from "react";
 import Decimal from "decimal.js";
@@ -11,6 +13,7 @@ export interface RefundTickerPreviewData {
   filingState?: string;
   metrics: WorkspaceEnginePreview["metrics"];
   stateMetrics?: WorkspaceEnginePreview["stateMetrics"];
+  separateStateReturns?:SeparateStatePreviewMetrics;
 }
 
 const FILING_STATUS_LABELS: Record<string, string> = {
@@ -364,7 +367,7 @@ export function buildCombinedInputFromPreview(
 ): CombinedTickerInput {
   const fedRefund = preview.metrics.refund;
   const fedOwed = preview.metrics.amountOwed;
-  if (!preview.stateMetrics) {
+  if (preview.separateStateReturns || !preview.stateMetrics) {
     return { federalRefund: fedRefund, federalOwed: fedOwed, stateRefund: null, stateOwed: null };
   }
   return {
@@ -426,7 +429,8 @@ export function RefundTicker({
   const [breakdownOpen, setBreakdownOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(true);
 
-  const preview = enginePreview ?? fallbackPreview;
+  const preview = fallbackPreview?.separateStateReturns ? fallbackPreview : enginePreview ?? fallbackPreview;
+  const separateMetrics=preview&&"separateStateReturns"in preview?preview.separateStateReturns:undefined;
   const combinedInput = preview ? buildCombinedInputFromPreview(preview) : null;
   const hasState = combinedInput !== null && combinedInput.stateRefund !== null;
   const rawTarget = hasState
@@ -464,7 +468,8 @@ export function RefundTicker({
               {collapsed ? "Expand Ticker" : "Minimize Ticker"}
             </button>
           </div>
-          <div className={`guided-ticker-grid${collapsed ? " guided-ticker-grid-collapsed" : ""}`}>
+          {separateMetrics&&<PASeparateReturnPreview metrics={separateMetrics}/>}
+        <div className={`guided-ticker-grid${collapsed ? " guided-ticker-grid-collapsed" : ""}`}>
             <div
               className={`guided-ticker-item guided-ticker-item-hero${heroState === "computing" ? " guided-ticker-computing" : ""}`}
               role="status"
@@ -502,9 +507,11 @@ export function RefundTicker({
   const activePreview = preview as RefundTickerPreviewData;
   const { metrics } = activePreview;
 
-  const tickerLabel = hasState
-    ? computeCombinedTickerLabel(combinedInput as CombinedTickerInput)
-    : computeTickerLabel(activePreview);
+  const tickerLabel = separateMetrics
+    ? computeFederalTickerInfo(activePreview.metrics).label
+    : hasState
+      ? computeCombinedTickerLabel(combinedInput as CombinedTickerInput)
+      : computeTickerLabel(activePreview);
   const tickerValue = formatTickerCurrency(new Decimal(animatedValue).abs());
   const tickerClass = hasState
     ? computeCombinedTickerClass(combinedInput as CombinedTickerInput)
@@ -526,6 +533,7 @@ export function RefundTicker({
             {collapsed ? "Expand Ticker" : "Minimize Ticker"}
           </button>
         </div>
+        {separateMetrics&&<PASeparateReturnPreview metrics={separateMetrics}/>}
         <div className={`guided-ticker-grid${collapsed ? " guided-ticker-grid-collapsed" : ""}`}>
           <div
             className={`guided-ticker-item guided-ticker-item-hero ${tickerClass}${collapsed ? "" : " guided-ticker-clickable"}${pulsing ? " ticker-pulse" : ""}`}

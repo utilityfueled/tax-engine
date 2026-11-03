@@ -1,3 +1,4 @@
+import {isPAMarriedOrdinaryReturnResult,assertNoPAMarriedPaperExport} from '@/engine/state/pa-return-result.js';
 /** WPTC-only source binding; this context does not qualify unrelated PA payment sources. */
 import { createHash } from "node:crypto";
 import Decimal from "decimal.js";
@@ -13,8 +14,10 @@ const digest = (value: unknown): string => createHash("sha256").update(JSON.stri
 function fail(detail: string): never { throw new Error(`PA WPTC source review: ${detail}`); }
 export function preparePAWorkingCreditReview(input: TaxYearInput): PreparedPAWorkingCreditReview {
   if (![input.form1099B, input.form1099Nec, input.form1099Misc, input.form1099G, input.scheduleK1, input.form1098, input.form1095A, input.donations].every(Array.isArray)) fail("complete canonical original source arrays are required; field diagnostics do not admit actual source packets");
+  assertNoPAMarriedPaperExport(input);
   const original = structuredClone(input);
   const expected = calculatePAReturn(original);
+  if(isPAMarriedOrdinaryReturnResult(expected))return fail("married PA needs its own paper context");
   const token: PreparedPAWorkingCreditReview = Object.freeze({ [brand]: true as const });
   contexts.set(token, { original, originalDigest: digest(original), redactedDigest: digest(redactReviewIdentifiers(original)), expected });
   return token;
@@ -25,6 +28,7 @@ function sameAmount(actual: unknown, expected: Decimal, label: string): void {
 export function assertPAWorkingCreditReview(input: TaxYearInput, result: TaxReturnResult, token?: PreparedPAWorkingCreditReview): void {
   const saved = result.stateReturns?.pennsylvania;
   if (!saved) fail("PA result is missing");
+  if(isPAMarriedOrdinaryReturnResult(saved)||input.paMarriedOrdinarySources!==undefined)return fail("married PA needs its own paper context");
   if(("methodVersion"in saved && saved.methodVersion==="pa-ordinary-return-v1") || input.paOrdinaryReturnFacts!==undefined || input.paOrdinaryReturnCompletionSources!==undefined) fail("ordinary source result requires its own actual prepared context");
   if (result.taxYear !== input.taxpayer.taxYear) fail("actual and retained source years conflict");
   // The separate NR/part-year orchestrator has no WPTC source method yet.

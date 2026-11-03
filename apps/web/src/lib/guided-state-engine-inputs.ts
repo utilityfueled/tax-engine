@@ -1,4 +1,5 @@
 import {buildGuidedOhioSchoolDistrictFacts} from './guided-ohio-school-district-facts';
+import {buildGuidedPAMarriedOrdinarySources,assertMarriedPASavedLedger} from './guided-pa-married-ordinary-sources';
 import {reconcileGuidedZeroIncomeMiscWithholding}from './guided-zero-income-misc-withholding-reconciliation';
 import {ordinarySourcePrecision}from '@/engine/state/pa-ordinary-source-precision';
 import {reconcileGuidedRetirementWithholding,type RetirementWithholdingOriginal}from "./guided-retirement-withholding-reconciliation";
@@ -104,6 +105,11 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
     return {...input, ohioResidency, ohioPayments,...(ohioSchoolDistrict?{ohioSchoolDistrict}: {})};
   }
   if (state.segmentation.stateCode === "PA") {
+    if(data?.paMarriedOrdinarySources!==undefined||input.paMarriedOrdinarySources!==undefined){
+      if(!data?.paMarriedOrdinarySources)throw Error('Actual retained married PA household packet must reconcile with the current guide.');
+      assertMarriedPASavedLedger(data);
+      return{...input,paMarriedOrdinarySources:buildGuidedPAMarriedOrdinarySources(input,data.paMarriedOrdinarySources)};
+    }
     if (!data?.paResidencySources) throw new Error("Actual Pennsylvania residency sources are required.");
     const bound = data.paReciprocitySources
       ? buildGuidedPAReciprocitySources(input, data.paResidencySources, data.paReciprocitySources)

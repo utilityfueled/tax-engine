@@ -1,3 +1,4 @@
+import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result.js';
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import { shouldIncludePAScheduleEReferenceSummary } from "@/pdf/fill-pa-schedule-e.js";
@@ -259,6 +260,9 @@ export function assessReturnReadiness(
 
   let packetCompleteness: ReturnCompletenessStatus = "supported";
   let lineCompleteness: ReturnCompletenessStatus = "supported";
+  if(input.taxInput.paMarriedOrdinarySources!==undefined||isPAMarriedOrdinaryReturnResult(input.federalResult.stateReturns?.pennsylvania)){
+    packetCompleteness='partial';lineCompleteness='partial';findings.push('Married Pennsylvania review has no qualified separately owned PA40/SP packet; paper export remains unavailable.');
+  }
 
   const estimatedTax = input.federalResult.form2210;
   if (input.federalResult.estimatedTaxPenalty.gt(0) || estimatedTax?.requiresForm2210 || estimatedTax?.waiver) {

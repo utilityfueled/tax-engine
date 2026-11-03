@@ -1,4 +1,6 @@
 "use client";
+import {isSeparateStatePreview} from '@/lib/guided-interview-bridge';
+import {PASeparateReturnPreview} from '@/components/pa-separate-return-preview';
 import { buildGuidedW2SourceContext } from "@/lib/guided-interview-bridge";
 
 import { invalidateRoyaltySources } from "@/lib/guided-royalty-sources";
@@ -26,7 +28,6 @@ import {
 import { RetroShell } from "@/components/retro-shell";
 import {
   type GuidedPreviewMetrics,
-  type StatePreviewMetrics,
   buildTaxInputFromGuidedData,
   mapFilingStatus,
   buildGuidedFactAnswers,
@@ -281,7 +282,8 @@ function RefundTicker({
   const owed = new Decimal(hasMetrics ? metrics.amountOwed : "0");
 
   // State metrics — only available from the guided preview, not the workspace engine preview
-  const stateMetrics: StatePreviewMetrics | null = guidedPreview?.state ?? null;
+  const separateMetrics=isSeparateStatePreview(guidedPreview?.state)?guidedPreview?.state:null;
+  const stateMetrics = isSeparateStatePreview(guidedPreview?.state)?null:(guidedPreview?.state??null);
   const stateRefund = new Decimal(stateMetrics ? stateMetrics.stateRefund : "0");
   const stateOwed = new Decimal(stateMetrics ? stateMetrics.stateAmountOwed : "0");
   const stateRawAmount = stateRefund.gt(0) ? stateRefund : stateOwed.gt(0) ? stateOwed : 0;
@@ -331,6 +333,7 @@ function RefundTicker({
             {collapsed ? "Expand Ticker" : "Minimize Ticker"}
           </button>
         </div>
+        {separateMetrics&&<PASeparateReturnPreview metrics={separateMetrics}/>}
         <div className={`guided-ticker-grid${collapsed ? " guided-ticker-grid-collapsed" : ""}`}>
           <div
             className={`guided-ticker-item guided-ticker-item-hero ${tickerClass}${collapsed ? "" : " guided-ticker-clickable"}${pulsing ? " ticker-pulse" : ""}`}
@@ -1076,7 +1079,8 @@ function CompletionSummaryContent({
   const hasMetrics = metrics !== null;
   const refund = new Decimal(hasMetrics ? metrics.refund : "0");
   const owed = new Decimal(hasMetrics ? metrics.amountOwed : "0");
-  const stateMetrics: StatePreviewMetrics | null = guidedPreview?.state ?? null;
+  const separateMetrics=isSeparateStatePreview(guidedPreview?.state)?guidedPreview?.state:null;
+  const stateMetrics = isSeparateStatePreview(guidedPreview?.state)?null:(guidedPreview?.state??null);
   const stateRefund = new Decimal(stateMetrics ? stateMetrics.stateRefund : "0");
   const stateOwed = new Decimal(stateMetrics ? stateMetrics.stateAmountOwed : "0");
   const netResult = refund.minus(owed).plus(stateRefund).minus(stateOwed);
@@ -1094,6 +1098,7 @@ function CompletionSummaryContent({
       </section>
 
       <RetroShell title="Summary" eyebrow="REVIEW">
+        {separateMetrics&&<PASeparateReturnPreview metrics={separateMetrics}/>}
         <div className="guided-ticker-grid">
           {hasMetrics && (
             <div className={`guided-ticker-item guided-ticker-item-hero ${stateMetrics ? (netResult.gt(0) ? "guided-ticker-positive" : netResult.lt(0) ? "guided-ticker-negative" : "") : (refund.gt(0) ? "guided-ticker-positive" : owed.gt(0) ? "guided-ticker-negative" : "")}`}>

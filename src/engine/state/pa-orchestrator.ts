@@ -1,3 +1,4 @@
+import {calculatePAMarriedOrdinaryReturn,type PAMarriedOrdinaryReturnResult} from './pa-married-ordinary-return.js';
 import {calculateForm4562} from '@/engine/forms/form-4562.js';
 import { assertClaimOfRightStateMethod } from "@/engine/forms/claim-of-right.js";
 import { assertQofStateMethod } from "@/engine/forms/qof-inclusion.js";
@@ -1490,7 +1491,13 @@ function buildScheduleEK1FromPAPassThroughStatement(statement: PAPassThroughStat
 export function calculatePAReturn(
   input: TaxYearInput,
   overrides: PAOrchestratorOverrides = {},
-): PAOrchestratorResult {
+): PAOrchestratorResult | PAMarriedOrdinaryReturnResult {
+  // Canonical household sources are resolved before any legacy scalar fallback.
+  if(input.paMarriedOrdinarySources!==undefined){
+    if(Object.keys(overrides).length)throw new Error('Actual married PA household sources cannot be overridden by legacy scalars.');
+    if(input.taxpayer.taxYear!==2025)throw new Error('Public married PA review currently requires actual2025 qualified sources; final2026 public admission remains unavailable.');
+    return calculatePAMarriedOrdinaryReturn(input,input.paMarriedOrdinarySources);
+  }
   assertPAAmortizationSource(input);
   assertQofStateMethod(input, "Pennsylvania");
   assertClaimOfRightStateMethod(input, "Pennsylvania");

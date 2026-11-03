@@ -1,3 +1,4 @@
+import {assertNoPAMarriedPaperExport} from '@/engine/state/pa-return-result';
 import { prepareOhioResidencyReview } from "@/engine/state/oh-residency-source.js";
 import {preparePARoyaltyReview} from "@/pdf/pa-royalty-review-context.js";
 import { preparePAWorkingCreditReview } from "@/pdf/pa-working-credit-review-context.js";
@@ -433,6 +434,7 @@ function attachPennsylvaniaReturn(
   stateCode: string | null,
 ) {
   if (stateCode !== "PA") return result;
+  assertNoPAMarriedPaperExport(taxInput,result.stateReturns?.pennsylvania);
   return {...result,stateReturns:{...(result.stateReturns??{}),
     pennsylvania:calculatePAOrdinaryReturn(taxInput,taxInput.paOrdinaryReturnFacts,taxInput.paOrdinaryReturnCompletionSources)}};
 }
@@ -574,6 +576,7 @@ function buildTaxInputFromGuidedInterview(guidedFlowState: GuidedFlowState | nul
   }
 
   const stateSources=guidedFlowState.sectionData["state-return"];
+  if(stateSources?.paMarriedOrdinarySources!==undefined)throw new Error('Married Pennsylvania paper export requires the actual separately owned PA40/SP review successor.');
   if(guidedFlowState.segmentation.stateCode==="PA"&&(!stateSources?.paOrdinaryReturnFacts||!stateSources?.paOrdinaryReturnCompletionSources)){
     throw new Error("Complete the actual Pennsylvania ordinary and completion source packets before exporting a review PDF.");
   }

@@ -13,6 +13,8 @@ export { calculatePA40 } from "./engine/state/pa-40.js";
 export { calculatePALocalEIT } from "./engine/state/pa-local-eit.js";
 export { calculatePANonresidentReturn } from "./engine/state/pa-nonresident-orchestrator.js";
 export { calculatePhiladelphiaWageTax } from "./engine/state/pa-philadelphia-wage-tax.js";
+export {isPAMarriedOrdinaryReturnResult} from './engine/state/pa-return-result.js';
+export type {PennsylvaniaReturnResult} from './engine/state/pa-return-result.js';
 export { calculatePAReturn } from "./engine/state/pa-orchestrator.js";
 export { calculateREV1630 } from "./engine/state/pa-rev-1630.js";
 export { calculatePAScheduleA } from "./engine/state/pa-schedule-a.js";

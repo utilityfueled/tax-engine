@@ -1,4 +1,5 @@
 "use client";
+import {isSeparateStatePreview} from '@/lib/guided-interview-bridge';
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -616,7 +617,8 @@ export function ReturnWorkspaceScreen({
         refund: guidedPreview.refund,
         amountOwed: guidedPreview.amountOwed
       },
-      stateMetrics: guidedPreview.state
+      separateStateReturns:isSeparateStatePreview(guidedPreview.state)?guidedPreview.state:undefined,
+      stateMetrics: guidedPreview.state&&!isSeparateStatePreview(guidedPreview.state)
         ? {
             stateCode: guidedPreview.state.stateCode,
             stateTax: guidedPreview.state.stateTax,
