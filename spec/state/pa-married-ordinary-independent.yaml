@@ -1,0 +1,32 @@
+form: "PA married ordinary independent source review"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+notes: |
+  Independent review of frozen95659a9bfb2c36ec867a52d1153a2820e38adecbed7598c44321adb2a639385e.
+  Own PythonDecimal100 monetary oracles9a93fc1c4c9b4ba2c1b613d9bc93b501403554ca8c163d730729b2a6d8850c97
+  frozen before reading candidate products or outputs. Fresh actual2025PA40IN printed4/6-7/39,
+  SP form/instructions pages1-2/line5 rules, REV1630 before-begin/lines1-5,
+  and61PaCode117.2 independently read2026-11-03. No qualified human review.
+  Whole printed lines use HALF_UP after exact raw sums; different J/M sums are intentional.
+  Low-income complete fictional sources independently establish actual federalEIC0 by both actual agesover65;
+  no guessed EIC, synthetic single federal return, arbitrary household split or live agency evidence.
+  Public2026 remains unavailable. This technical review cannot qualify native UI or public PDF integration.
+lines:
+  - line: "independent-money"
+    formula: "Actual two-owner J wages80000 tax2456 versus M50000/30000 tax1535/921. Raw cents.25perowner give J80001/WH2457/overpay1 and M50000/30000/WH1535/921/balances0. SharedSP13001 rate90percent gives Jcredit359/M276+83, applied to actual claimant taxes only."
+    testRef: "tests/engine/state/pa-married-ordinary-independent.test.ts::independent-money %s %s"
+  - line: "reported-columns"
+    formula: "J rawwages10000.25+3000.25 rounds13001/rate90, Mreported10000+3000=13000/rate100. Gifts125.25each round J251/shared13251/rate80 versus M125+125/shared13250/rate90. Same-owner multipleW2 raw sum before rounding; same-employer different-owner originals remain distinct."
+    testRef: "tests/engine/state/pa-married-ordinary-independent.test.ts::reported-columns same-owner multiple actual W2s sum once"
+  - line: "actual-source-guards"
+    formula: "Complete current raw owner/year/date/identity/snapshot must reconcile every actual W2 including0. Unknown household/support/residency/worldwide source paths reject; actual unsupported originals reject even netzero. No independent rawargument override of attached canonical packet."
+    testRef: "tests/engine/state/pa-married-ordinary-independent.test.ts::actual-source-guards %s"
+  - line: "source-payments"
+    formula: "J/M withholding once from actualowner sources; complete account/return elections reconcile fresh paperoverpayment. No missing/refashioned/duplicate account receipt or invented cross-spouse application. Printedrefundrequest is not cashdelivered; PA does not issue refunds1orless."
+    testRef: "tests/engine/state/pa-married-ordinary-independent.test.ts::source-payments no opposing separate-owner invented settlement"
+  - line: "prior-exemption"
+    formula: "When currentREV independently has no penalty, unused priorSPproof need not be requested. When a positive penalty could arise, an actual prior return or no-return status alone does not establish whether claimant qualified for prior100percentSP; REV before-begin exemption is separate from Exception1 priorfiling restriction. Require actual exemption/eligibility source composition rather than assumefalse."
+    testRef: "tests/engine/state/pa-married-ordinary-independent.test.ts::prior-exemption no-return is not priorSP-ineligibility proof"
+  - line: "immutable-private"
+    formula: "Both household originals remain unchanged, no mockresult or remapped singleowners. Complete sourcecommitment changes for sameprintedmoney original identity/cent/date/reference changes; stable keyorder unchanged. Audit contains only numeric/source digest identifiers, not rawSSN/name/reference. Preserve global Decimal configuration and legacy/public2026 gates."
+    testRef: "tests/engine/state/pa-married-ordinary-independent.test.ts::immutable-private original commitments and canonical context"

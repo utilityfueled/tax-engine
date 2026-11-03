@@ -15206,5 +15206,39 @@
       "no human qualification"
     ],
     "reviewSHA256": "ee8910f9e143bf0812bf45a69bf9b20df9589d3c25d44d50a6609f682da637cc"
+  },
+  "nov03PAMarriedOrdinaryEngine": {
+    "status": "approved-finite-main-engine-integration",
+    "baseCommit": "3b2a5e74666387dcbb6da09a482f9a029c4596d2",
+    "author7ExactBeforeLedgerAppend": {
+      "src/models/pa-married-ordinary-sources.ts": "881b2fb35f5d3ea0f16e001ac0a66f040a3cbe27307a0deda7c0e9e17909563d",
+      "src/engine/state/pa-married-ordinary-return.ts": "0c55ed83f40c722e51fc9eb5100cb865881d1fddf34873d2fcea302205e097dd",
+      "spec/state/pa-married-ordinary-return.yaml": "52368109035c099b8c36a561f73201f82bfa628083ffa63adce81743f9b86bf4",
+      "tests/fixtures/pa-married-ordinary-return.ts": "b74a64240419dd8815f3fe69058aaed7b98c59ff78a1040a69b51e1bbdc52817",
+      "tests/engine/state/pa-married-ordinary-return.test.ts": "3953403501c03db5b6188f13972c71943612f19cb4aeba02020b081a8d7742e2",
+      "docs/upgrade-2026-pa-married-ordinary-work.md": "e283622f00875dd379a6099096377a8a5ddb9f6e0e1e6521ed3e21f908219733",
+      "src/models/inputs.ts": "6b8a936b202121a51fb27e99c756053a1ecb64f77fe82afb865e6d8b8e0dfd9b"
+    },
+    "peer2Exact": {
+      "tests/engine/state/pa-married-ordinary-independent.test.ts": "62cc71f6381146842e10f4a01cb2d866073186439a794608335d5dc2281a45d0",
+      "spec/state/pa-married-ordinary-independent.yaml": "2f1bd3620522f7ba1168f2d98b332eaa4f7b11c385b830495fc741a4a38ade1d"
+    },
+    "sourceFirstManifestSHA256": "8310d6287c123f1f35785e1b6be0654b05995a60b4b1d937959451ad24260a77",
+    "mainExistingApiRedSHA256": "52c24fffba05079bef1719d878fc5a197236fcdbe7a609aae57133c588b4d6c6",
+    "distinctReviewSHA256": "178cce006b13fde8d8028be44717bcd51f967074f976326713b07f1b802a0096",
+    "checksSHA256": "ca9ee0d129872df7703f8fa4281fba18189cec6d8d3309456099dca6133cd59c",
+    "passedCommands": 13,
+    "mainPATests": 2012,
+    "mainPAFiles": 113,
+    "specReferences": 7543,
+    "strictReferences": 703,
+    "inputDiff": "One schema import and optional source field, exact frozen position; no unrelated bytes",
+    "sourceReview": "Pure source-bound two-owner composition, fresh federal once, exact J aggregate versus M owner rounding, household SP, explicit actual elections, prior-SP positive penalty guard, no scalar overrides; source commitment numerics only",
+    "limits": [
+      "public/native/workspace/review/PDF integration required",
+      "actual prior-SP/other household source methods required",
+      "no human/final2026/staging/filing qualification"
+    ],
+    "reviewSHA256": "fd55b91b43b8e17c799af41df63bbf58781da77d3a0441f99a3ceb7937999fd9"
   }
 }

@@ -2515,3 +2515,7 @@ Actual MI browser attempt03 exposed a real monetary handoff defect: blur formatt
 ### November 3: native MI source and expense-edit browser rehearsal
 
 Actual main production desktop1280/mobile390 journeys pass2/2 with retries0, ten screenshots, console/privacy/overflow checks and verified server/port cleanup. Native source entry produces PA6478; actual expense49.25→149.25 and explicit reconfirmation produce6475, preserving filedAGI211001/current210901 and the separate filed workspace. Root opens allten captures and passes allnine integration checks. See [the browser ledger](upgrade-2026-pa-mi-native-browser-work.md). Animated aggregate frames are not exact-number visual evidence. Currency repair6c46f8ea is pushed; global, staging, human/final2026 and broader distribution journeys remain open.
+
+### November3: actual two-owner PA married engine
+
+The finite J/M composer binds two actual owner wage/payroll/residency/worldwideSP packets and computes fresh federal once. Joint totals and separate owner rounding/elections remain distinct; no federal owner split or cross-account settlement is invented. Distinct127 controls and main2,012/113 pass after source-first real RED and prior-SP guard correction; all13checks, including three types, strictlint and both builds, pass. See [the source ledger](upgrade-2026-pa-married-ordinary-work.md). Public/native/workspace/physical integration, remaining household methods and human/final2026 qualification remain open. OH business3b2a5e74 is pushed.

@@ -1,3 +1,4 @@
+import {PAMarriedOrdinarySourcesSchema} from './pa-married-ordinary-sources.js';
 /**
  * Zod schemas for all tax input documents.
  * Each schema validates the JSON input files in data/input/.
@@ -6155,6 +6156,7 @@ export const TaxYearInputSchema = z.object({
   paResidencySources: PAResidencySourcesSchema.optional(),
   paReciprocitySources: PAReciprocitySourcesSchema.optional(),
   paOrdinaryReturnFacts: PAOrdinaryReturnFactsSchema.optional(),
+  paMarriedOrdinarySources: PAMarriedOrdinarySourcesSchema.optional(),
   paOrdinaryReturnCompletionSources: PAOrdinaryReturnCompletionSourcesSchema.optional(),
   qofDispositionFacts: z.object({
     sourceTaxYear: z.number().int().optional(),
