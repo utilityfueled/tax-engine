@@ -13,3 +13,9 @@ TypeScript5.9.3, Decimal10.6.0, pdf-lib1.17.1, Sentry10.76.2, Node24.22.1, pnpm1
 Author focused evidence was121pass/one known public API fixture failure; its unchanged16.4.3 baseline reproduced the same failure. That actual reciprocal-source fixture was corrected independently in pushed `e3f7fd95`, retaining all monetary assertions and the exact old NJ input as a rejection control. With that separate commit, parent main now passes123/eight.
 
 Evidence under ignored `.local/upgrade-evidence/`: `nov02-next-1644-refresh/`, `nov02-next-1644-independent/`, `nov02-parent-next-1644-main/`, `nov02-parent-next-1644-main-ci-green/checks.json`, and `nov02-parent-next-1644-main-audits/checks.json`. Exact reviewed source copies and hashes are retained. These are bounded local checks; final full-suite/coverage/browser/runtime/advisory and actual staging qualification remain required. No deployment, production change, model promotion or filing readiness is established.
+
+November3UTC refresh at44e752d0 again reports zero registry advisories for522
+full/426 production dependencies. The official announcement still describes a
+forthcoming release; maintainer advisories show no November3 fix yet. The
+[separate Sentry11 review](upgrade-2026-sentry11-review.md) retains10.76.2 with
+an explicit privacy rationale and follow-up date. No dependency changed here.

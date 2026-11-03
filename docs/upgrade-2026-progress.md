@@ -2258,3 +2258,12 @@ eight positive sub-dollar proof denials. The [digital ledger](upgrade-2026-pa-di
 records scope, sources and hashes. Actual official D export, broader residency/
 ownership methods and qualified review remain open. The preceding complete1286
 unit run is recorded honestly as21418pass/21fail/33pending, not a global pass.
+
+### November3 UTC: separate SDK major review and fresh audits
+
+The [Sentry11 review](upgrade-2026-sentry11-review.md) retains10.76.2: the major
+changes collection defaults and requires separate transport/privacy qualification.
+No dependency or telemetry behavior changed. Fresh44e audits exit0 with zero
+reported advisories across522 full/426 production dependencies. The announced
+Next security fix remains unpublished at retrieval; image and human-review gates
+remain open. Source/audit receipts and a November7-or-advisory follow-up are retained.

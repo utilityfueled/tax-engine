@@ -100,7 +100,9 @@ in the progress history; their checks do not qualify newer heads.
 - [ ] Fresh npm/image/advisory exposure review. Next16.4.4 is maintenance only;
   November3 advance notice is not a published security fix. Refresh actual
   advisories/fixed versions.80 OS advisory owner decisions expire November7.
-  Sentry11 remains separately reviewable. FinalARM64/AMD64 images, SBOMs,
+  Separate Sentry11 review retains10.76.2 with explicit privacy rationale; follow
+  up by November7 or a relevant advisory. Fresh44e npm audits0/522 and0/426.
+  FinalARM64/AMD64 images, SBOMs,
   scans, upgrade/rollback/backup rehearsal and authorization remain required.
 - [ ] AI live provider availability/pricing/account runs, exact atomic settlement,
   independently human-reviewed representative200–300 cases/held-out repeats,

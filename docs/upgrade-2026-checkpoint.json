@@ -13542,5 +13542,25 @@
     "evidence": "nov03-current-main-full-unit",
     "coverage": "not measured by this run",
     "status": "failure details retained; state fixtures/methods actively being resolved"
+  },
+  "nov03Sentry11SeparateReview": {
+    "commitAssessed": "44e752d0a45021f544aa910d1bc40710ae157e1e",
+    "decision": "retain10.76.2; no dependency or telemetry change",
+    "reason": "SDK11 requires explicit category privacy and transport/integration qualification",
+    "nextReviewDue": "2026-11-07 or relevant advisory, whichever first",
+    "followupOwner": "active upgrade maintainer",
+    "audits": {
+      "allDependencies": 522,
+      "productionDependencies": 426,
+      "advisories": 0,
+      "bothExitCodes": 0
+    },
+    "sentry11Qualification": false,
+    "nextNovemberSecurityFix": "not published at retrieval; gate open",
+    "humanPrivacyReview": "unassigned",
+    "evidence": [
+      "nov03-sentry11-review",
+      "nov03-parent-current-advisory-audit"
+    ]
   }
 }
