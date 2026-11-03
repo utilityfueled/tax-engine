@@ -12333,6 +12333,26 @@
       "knownGaps": []
     },
     {
+      "key": "state/pa-business-independent",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40c.pdf",
+      "specPath": "spec/state/pa-business-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-complete-canonical-roots",
       "jurisdiction": "state",
       "taxYear": 2026,
@@ -12478,6 +12498,25 @@
       "efileBusinessRuleCoverageExists": true,
       "status": "supported",
       "knownGaps": []
+    },
+    {
+      "key": "state/pa-ordinary-business-sources",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40c.pdf",
+      "specPath": "spec/state/pa-ordinary-business-sources.yaml",
+      "enginePath": "src/engine/state/pa-ordinary-business-sources.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
     },
     {
       "key": "state/pa-ordinary-investment-sources",

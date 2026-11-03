@@ -13259,5 +13259,34 @@
     "independent": "59/3 overlapping;707af4852b3a3029c6bdbb635967d4af6fecf8fd3ebc24b8c32554bc86e95e9e",
     "actualRuntime": "prior11b6 synthetic nonexistentaccount signin Invalidorigin; fixed deployment untested",
     "releaseReady": false
+  },
+  "nov02MainBusinessSourceIntegration": {
+    "baseCommit": "dbd325ed333019f8710cef1bc0dc84d9ad515a07",
+    "status": "implemented-qualified-bounded-synthetic-package",
+    "ledger": "docs/upgrade-2026-pa-ordinary-business-source-ledger.md",
+    "testsPassed": 250,
+    "testFiles": 16,
+    "specReferences": 6905,
+    "checks": [
+      "types3",
+      "spec",
+      "inventory",
+      "inventory-check",
+      "owned-strict-lint",
+      "engine-build",
+      "web-build",
+      "diff"
+    ],
+    "sourceFirst": {
+      "failed": 2,
+      "passed": 12
+    },
+    "independentReviewSha256": "7467b06874f3ae76aa2cf08c8af7e6ba57ceb2d1c0c487d5dde9c319f64f4811",
+    "independentIntegrationSha256": "47967785b6a1095e1a1912119f4d565f94762c876073a92e2a71545dea6e92f7",
+    "savedMainPDFs": 3,
+    "savedMainPages": 54,
+    "allPageTextAndPixelParity": true,
+    "deferredWorkspaceMigration": true,
+    "releaseReady": false
   }
 }

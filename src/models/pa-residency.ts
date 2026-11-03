@@ -1,5 +1,6 @@
 /** Private actual PA originals/drafts. No amount, date, answer or source year defaults to a fact. */
 import { z } from "zod";
+import {PAOrdinaryBusinessSourceSchema} from "./pa-ordinary-business-sources.js";
 import {PAOrdinaryDividendSourceSchema} from "./pa-ordinary-investment-sources.js";
 
 const answer = z.boolean().nullable();
@@ -40,6 +41,8 @@ export const PAResidencySourcesSchema = z.object({
   wages: z.array(wageSource), interest: z.array(interestSource),
   // Absence is compatible only when no original1099DIV exists; replay enforces complete coverage.
   dividends: z.array(PAOrdinaryDividendSourceSchema).optional(),
+  // Absent only when no actual Schedule C/NEC original exists; replay enforces coverage.
+  businesses: z.array(PAOrdinaryBusinessSourceSchema).optional(),
   otherPAIncomeClassesConfirmedNone: answer, otherPAAdjustmentsConfirmedNone: answer,
 }).strict();
 

@@ -1339,7 +1339,13 @@ export async function fillReturn(
       filledForms.push(outputPathPAScheduleE);
     }
 
-    if (input.taxpayer.address.state.toUpperCase() === "PA" && input.scheduleC) {
+    if (isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)) {
+      // The prepared ordinary context already replayed the private actual business originals.
+      if (result.stateReturns.pennsylvania.scheduleC) {
+        const outputPathPAScheduleC = await fillPAScheduleCReference(result.stateReturns.pennsylvania.scheduleC, outputDir);
+        filledForms.push(outputPathPAScheduleC);
+      }
+    } else if (input.taxpayer.address.state.toUpperCase() === "PA" && input.scheduleC) {
       const outputPathPAScheduleC = await fillPAScheduleCReference(
         calculatePAScheduleC({
           taxYear: input.taxpayer.taxYear,

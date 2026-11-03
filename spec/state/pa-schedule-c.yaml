@@ -16,8 +16,9 @@ notes: |
 
   Important Pennsylvania-specific rules reflected here:
     - PA Schedule C line amounts are reported in whole dollars, so the engine
-      rounds each supported input line to the nearest dollar before computing
-      totals.
+      aggregates each complete printed line and rounds it once before computing
+      totals; travel and meals share Line31. A local precision bound covers accepted
+      input integer digits, fractional scale and term-count carry without global mutation.
     - Line 31 uses travel and entertainment as entered; Pennsylvania allows
       100 percent of ordinary, actual, reasonable, and necessary meals and
       entertainment expenses.
@@ -52,10 +53,10 @@ notes: |
 packetRules:
   packetBehavior: "reference-summary-pdf"
   includeWhen:
-    - "A Pennsylvania resident return packet is being assembled and validated input includes a supported Schedule C business"
-    - "The packet path computes the resident Pennsylvania Schedule C summary from the normalized Schedule C input"
+    - "A Pennsylvania legacy resident return or source-bound ordinary all-three-residency review packet is being assembled with a supported Schedule C business"
+    - "The legacy path computes its normalized summary; the actual ordinary path uses only the privately replayed selected Schedule C result"
   suppressWhen:
-    - "No Pennsylvania resident return packet is being assembled"
+    - "No validated Pennsylvania return packet is being assembled"
     - "No supported Schedule C input is present on the return"
   notes: |
     The Pennsylvania Personal Income Tax Guide says sole proprietors with net
@@ -290,10 +291,12 @@ lines:
 
   - line: "31"
     description: "Travel and entertainment"
-    formula: "Rounded travel expense + rounded meals expense"
+    formula: "Round the exact sum of actual travel and eligible meals once to the nearest whole dollar"
     notes: |
       Pennsylvania permits 100 percent of customary and reasonable business
       meals and entertainment, unlike the federal limitation.
+      Actual travel900.49 + eligible meals100.49 =1000.98; report Line31=1001.
+      The retained whole-form fixture therefore has total Line38=7352, not7351.
     testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 31 includes meals at 100 percent for Pennsylvania"
 
   - line: "32"
@@ -355,5 +358,5 @@ lines:
   - line: "39"
     description: "Net profit or loss"
     formula: "Line 5 - Line 38"
-    notes: "Flows to PA Class 4 business income on the resident return."
+    notes: "Flows to PA Class 4; actual all-three-residency allocation requires the separate complete ordinary business source method. Negative class does not offset another income class."
     testRef: "tests/engine/state/pa-schedule-c.test.ts::PA Schedule C Line 39 carries a net loss when expenses exceed income"

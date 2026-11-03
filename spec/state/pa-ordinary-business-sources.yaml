@@ -1,0 +1,66 @@
+form: "PA Ordinary Business Sources"
+fullName: "Actual primary sole-proprietor cash-service business records through all three PA residency categories"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40c.pdf"
+notes: |
+  Official PA Schedule C current unversioned March2026 revision retrieved2026-11-02;
+  bytes881347 SHA520555065fec4b85f757fa5cd2f3564c507464954553e376d1922bc7a75b8098.
+  It retains actual2025 barcode2503110054 and does not qualify final2026 filing.
+  Cash personal-service sole proprietor, actual primary owner, one business, no inventory,
+  assets/depreciation/homeoffice/working-capital investments/special adjustments in this finite method.
+  Actual ScheduleC and every NEC original are retained and privately compared, never scalar overrides.
+  Partly-within separate accounting requires independent profit centers: no inter-center transfers,
+  free outside buying and no geographic competition, plus complete books disclosing PA income,
+  costs, expenses and liabilities. Otherwise ScheduleNRH three-factor method remains required.
+  Business profit/loss remains its own class. No cross-class loss offsets/carryovers or federal
+  fifty-percent meal reduction. Unknown source statuses/amounts never become known zero.
+  New source UI and broader business methods remain separate required successors.
+lines:
+  - line: "originals"
+    description: "Current actual business and information-return originals"
+    formula: "Retain exact current primary ScheduleC and every NEC once including zero originals; actual owner/year, current uncorrected complete originals, commercial-enterprise and consistent cash-method records required. Explicit known-none source categories alone establish no other income/cost/adjustment."
+    testRef: "tests/engine/state/pa-ordinary-business-sources.test.ts::business source originals require complete current owner year and original coverage"
+  - line: "receipts"
+    description: "Dated actual cash receipts and linked customer refunds"
+    formula: "Sum dated actual invoices/cashbook bank receipts by linked NEC or explicit cashbook original; reconcile each original Box1 and canonical gross. Linked refunds cannot precede/exceed original receipts or double count. No invoices/transaction duplicates, future dates, incomplete records or unsupported cross-period deferred receipts. Gross minus actual returns is SectionI1c, COGS0 and otherincome0 only after explicit known-none records."
+    testRef: "tests/engine/state/pa-ordinary-business-sources.test.ts::business cash receipts and refunds reconcile actual original dollars"
+  - line: "expenses"
+    description: "Actual deductible costs preserve personal portions and source classification"
+    formula: "Each paid receipt carries invoice/vendor/date/location/category and actual paid=business+personal split; ordinary actual reasonable necessary cost, no capital/startup/ownerbenefit/incometax/personal amount inferred deductible. Linked refunds reduce actual associated business cost once. All canonical expense categories require explicit known-none or complete receipt coverage and exact canonical reconciliation."
+    testRef: "tests/engine/state/pa-ordinary-business-sources.test.ts::business actual expense classifications preserve personal costs and refunds"
+  - line: "printed-C"
+    description: "Replay printed PA Schedule C income and deduction lines"
+    formula: "1a=whole gross receipts;1b=whole customer returns;1c=1a-1b;2=knownzeroCOGS;3=1c;4=knownzero otherincome;5=3. Lines6/22/28/31/32/37 receive actual advertising/office/supplies/(travel+meals)/utilities/itemizedother. Round each complete printed line once. All remaining expense lines zero only from complete actual source classification.38=sum6through37;39=5-38. Existing18000less2800=15200;75000wages+15200=90200taxable, tax2769."
+    testRef: "tests/engine/state/pa-ordinary-business-sources.test.ts::business printed Schedule C retains original meals and expense dollars"
+  - line: "all-three"
+    description: "Actual separate books allocate source income costs expenses and liabilities"
+    formula: "Each receipt/refund/cost is linked to a documented operating location and actual service period. Fullresident includes all; partyear includes resident-period all-source and nonresident-period actual PA operations; nonresident includes actual PA operations only. Dates/locations and separate-book prerequisites required, not payerstate/address/calendar ratios. Preserve exact selected/excluded records and replay worldwide and selected printed schedules independently."
+    testRef: "tests/engine/state/pa-ordinary-business-sources.test.ts::business sources allocate actual independent centers for all three residencies"
+  - line: "loss"
+    description: "Business losses do not offset other classes"
+    formula: "PA40 business line preserves signed actual source net; totalPAincome adds only positive business class. Negative business does not offset compensation, interest or dividends; no carryover. Actual commercial profit history showing at least two positive years in current five-year window required for admitted loss. Outside eligibility business costs cannot exceed associated income to reduce SP other classes."
+    testRef: "tests/engine/state/pa-ordinary-business-sources.test.ts::business class losses preserve wages and require actual profitable history"
+  - line: "precision"
+    description: "Exact source aggregation and once-per-printed-line rounding"
+    formula: "Local Decimal precision at least100 and a proven input digit/scale/carry bound, without global mutation or monetary-field limits. Aggregate all same-line receipt cents before whole-dollar rounding, including travel0.49+meals0.49=>line31=1. Large gross123456789012345678901234567890.50 lessadvertising123456789012345678901234567880.49=>line39=11. Gross10^140+0.50 lessadvertising10^140-1+0.49 rounds to2; unbounded accepted Decimal inputs must not silently lose digits above100. Independent literal oracles precede any pureScheduleC precision repair."
+    testRef: "tests/engine/state/pa-ordinary-business-sources.test.ts::business Schedule C preserves exact large amounts and one rounding per printed line"
+  - line: "composition"
+    description: "PA40 SP WPTC withholding and resident-credit scopes"
+    formula: "Source business selected39 feeds PA40line4; positive outside business income enters worldwideSP once without using outside losses against other classes. DORFAQ4256 admits actualPA selfemployment net for WPTC, combined with actualPA service wages and fresh sameyear federalEIC; grossreceipts/federalmeal-limitednet never substitute. ActualNEC PA Box5 joins totalPAwithholding once per PA40INLine13. Ordinary employee resident-credit614 remains compensation-only; partyear tax990 lesscredit614 withactual799withholding givesrefund423. Business cannot satisfy missing employee sameincome proof."
+    testRef: "tests/engine/state/pa-ordinary-business-sources.test.ts::business composition preserves worldwide and compensation only credit boundaries"
+  - line: "confirmation"
+    description: "Only explicit confirmation binds current private business originals"
+    formula: "Existing explicit residency confirmation can copy selected actual ScheduleC/NEC originals only from supplied current input. Reads compare retained originals and fail stale/unknown; edits clear confirmation; no inferred cash method/locations/statuses/amounts. Source commitment includes every raw business record and retains original privacy."
+    testRef: "tests/engine/state/pa-ordinary-business-sources.test.ts::business guide confirmation alone binds current original business facts"
+  - line: "packet"
+    description: "The original positive business workspace gains actual source-backed Schedule C output"
+    formula: "Retain originalNEC18000, all expenses250/600/500/300/meals200/150/800, old reference/partial assertions and all four AB case bodies. Actual prepared context and source-derived ScheduleC result alone reach ordinary PDF path for all3; keep legacy path unchanged, suppress raw scalar recalculation for ordinary results, privacy and actual2025/notvalidated/reference gates unchanged. Direct diagnostic page merges must use the existing explicit flattened uncompressed pageOnlyTemporaryMerge route, same as actual workspace. Strict saved-reader traversal resolves every annotation object, has no fields/widgets and preserves privacy. Retain original standalone flattened PA40 dangling-reference evidence as a separate unresolved successor; this does not repair or qualify that route."
+    testRef: "tests/apps/web/pa-state-packet.test.ts::buildWorkspaceFilledReturnDownload includes the Pennsylvania Schedule C reference summary and marks the packet partial"
+  - line: "raw-cents"
+    description: "Raw business source cents remain distinct from reported class lines"
+    formula: "Actual NY business receipt0.49 and PA business receipt0.49 with explicit no costs => raw selected0.49, reported selected ScheduleC39=0, raw outside0.49, actual PA WPTC earned net0.49. Original bank outside80.49 plus outside wages24000 plus outside business0.49 => SPLine2 raw24080.98 rounds once24081. Do not separately round each outside source or use printed ScheduleC39 as actual earned net."
+    testRef: "tests/engine/state/pa-ordinary-business-cents-boundary.test.ts::business raw excluded and earned cents remain distinct from printed class income"
+  - line: "stable-result-decimals"
+    description: "Local exact arithmetic returns replay-stable real Decimal values"
+    formula: "Do all monetary operations in the proven local precision context, then construct public typed Decimal outputs from exact values without any arithmetic or global configuration change. Every ScheduleC field, nested audit value/input, business result field and explicit zero result must retain digits and a stable constructor so unchanged original replay passes existing strict prepared deep equality. No comparator/redaction/context weakening."
+    testRef: "tests/engine/state/pa-ordinary-business-replay-identity.test.ts::business exact local arithmetic returns replay stable Schedule C outputs"

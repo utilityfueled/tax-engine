@@ -81,10 +81,10 @@ describe("Pennsylvania Schedule C — Profit or Loss from Business or Profession
     expect(result.line22.toNumber()).toBe(600);
     expect(result.line27.toNumber()).toBe(700);
     expect(result.line28.toNumber()).toBe(800);
-    expect(result.line31.toNumber()).toBe(1000);
+    expect(result.line31.toNumber()).toBe(1001);
     expect(result.line32.toNumber()).toBe(1100);
     expect(result.line37.toNumber()).toBe(1200);
-    expect(result.line38.toNumber()).toBe(7351);
+    expect(result.line38.toNumber()).toBe(7352);
   });
 
   it("PA Schedule C Lines 7, 8, 9, 14, 16, 19, 21, and 24 carry additional printed deduction lines into total expenses", () => {

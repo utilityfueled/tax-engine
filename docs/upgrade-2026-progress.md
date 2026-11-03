@@ -2175,3 +2175,7 @@ The finite reviewed compensation resident-credit method now reaches whole-panel 
 ## November2: isolated hosted Preview origin
 
 The actual current Preview rejected sign-in with Invalidorigin. Exact hosted Preview now derives its canonical HTTPS origin only from validated server-owned generated deployment metadata, and closes local-draft/loopback exceptions even if NODE_ENV is development. Main132/7/all11 checks and independent59/3/types/strict0 pass after retained22 initial and3 independent failures. Original source controls and the production missing-app-URL negative remain. No auth check, wildcard trust, production configuration or readiness gate was relaxed. Actual deployment/runtime auth/email/recovery qualification follows separately.
+
+### November2 main PA business source package
+
+Actual original-bound finite cash-service business method now composes all three PA residency paths, once-only NEC withholding and worldwideSP/exact earned income. Main250tests/16files and types3/spec6905/inventory generation+check/strictlint/bothbuilds/diff pass; independent88/six and narrow main integration review approve. Three actual main PDFs/54pages pass strict object/privacy tests and full text/render parity to independently inspected corrected artifacts. The [business ledger](upgrade-2026-pa-ordinary-business-source-ledger.md) retains source-first failures, official authorities, hashes and limits. Existing whole-workspace migration, broader state methods, human/final-form and hosted/self-host qualification remain open.
