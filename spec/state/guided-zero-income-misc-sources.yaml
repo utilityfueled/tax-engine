@@ -1,0 +1,42 @@
+form: "Guided-Zero-Income-MISC-Sources"
+fullName: "Actual zero-income 2025 Form 1099-MISC and state remittance source capture"
+taxYear: 2025
+reference: "https://www.irs.gov/pub/irs-prior/i1099mec--2025.pdf"
+notes: |
+  April2025 official instructions pages1,4,7 establish revision, recipient/account
+  identity and separate Boxes16 withholding/17 state+payerID/18 state income.
+  This finite collector captures actual current uncorrected nonvoid 2025 originals
+  with every modeled actual income box explicitly zero and one positive state
+  withholding row. State credit/eligibility is not inferred from federal capture.
+  A separately dated actual remittance must reconcile exact cents to the original,
+  actual owner/year/state/payer/account and explicit no-payer-refund confirmation.
+  This remittance record is a source requirement of this bounded method, not an
+  IRS assertion that Box16 by itself proves actual payment or final state liability.
+  No new tax formula, state-law relaxation, generic-ledger authority, 2026 filing,
+  human qualification, production receipt, private-source logging or telemetry.
+  All names/SSNs/records in tests are explicitly fictional. Blank remains unknown.
+lines:
+  - line: "native-unknown"
+    formula: "A native source row starts every amount/year/identity/date/owner blank and every fact unknown. Adding a row never copies selected return year or recipient identity."
+    testRef: "tests/apps/web/guided-zero-income-misc-details.test.tsx::native zero-income MISC source starts unknown without copying taxpayer facts"
+  - line: "native-confirmation"
+    formula: "Only explicit successful confirmation binds entered originals; editing revokes confirmation while retaining the prior private snapshot. Reopening retains supplied zeros and unknowns."
+    testRef: "tests/apps/web/guided-zero-income-misc-details.test.tsx::native MISC source confirms explicitly and edits retain old originals"
+  - line: "original-once"
+    formula: "One actual fictional current2025 original with all income boxes0 and stateWH0.20 yields one canonical Form1099Misc, preserving Box16 exact0.20 and no PA eligibility or ordinary source packet auto-fill."
+    testRef: "tests/guided-interview/guided-zero-income-misc-sources.test.ts::actual zero-income MISC original reaches canonical sources exactly once"
+  - line: "fail-closed"
+    formula: "Started unconfirmed/unknown/stale/malformed/nonzero-income/wrong-year/wrong-owner/corrected/void originals reject; source reads never refresh retained snapshots."
+    testRef: "tests/guided-interview/guided-zero-income-misc-sources.test.ts::actual zero-income MISC rejects %s without refreshing originals"
+  - line: "receipt"
+    formula: "Actual remittance known paid and not payer-refunded, paid by explicit asof, exact amount/year/state/payer/account/recipient and normalized unique confirmation must reconcile once. No final state tax is inferred."
+    testRef: "tests/guided-interview/guided-zero-income-misc-sources.test.ts::actual zero-income MISC rejects remittance %s"
+  - line: "duplicate"
+    formula: "Reject repeated sourceID or normalized payer/account/year/owner across new rows and recovery/royalty originals; normalized receipt IDs reject semantic duplicate remittances while raw source records remain retained."
+    testRef: "tests/guided-interview/guided-zero-income-misc-sources.test.ts::actual zero-income MISC rejects duplicate original and semantic duplicate receipts"
+  - line: "legacy"
+    formula: "Absent collector preserves existing sources. A generic additionalWH0.20 ledger row never creates a Form1099Misc or substitutes for an actual original."
+    testRef: "tests/guided-interview/guided-zero-income-misc-sources.test.ts::generic ledger remains reconciliation and never creates an original"
+  - line: "persist"
+    formula: "Private local save/load preserves actual supplied source facts; current taxpayer identity/year changes invalidate replay without copying taxpayer facts into originals."
+    testRef: "tests/guided-interview/guided-zero-income-misc-sources.test.ts::actual zero-income MISC persists entered facts and rejects changed current taxpayer"

@@ -54,6 +54,7 @@ import { allPaymentFactErrors, deductionFactErrors, educationFactErrors, retirem
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import { adjustmentFactErrors, householdFactErrors } from "./guided-adjustment-facts";
 import { statePaymentFactErrors } from "./guided-state-facts";
+import {zeroIncomeMiscSourceFactErrors,type ZeroIncomeMiscSourceDraft} from './guided-zero-income-misc-sources';
 import { guidedOhioInterestFactErrors, type OhioInterestAllocation } from "./guided-ohio-interest-facts";
 import { careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitsData } from "./guided-dependent-care-benefits";
 import { careFactErrors } from "./guided-credit-facts";
@@ -1313,6 +1314,7 @@ export const emptyStateEstimatedPayment: StateEstimatedPaymentEntry = {
 };
 
 export interface StateReturnData {
+  zeroIncomeMiscSources?: ZeroIncomeMiscSourceDraft[];
   stateEstimatedPayments: StateEstimatedPaymentEntry[];
   additionalStateWithholding: string;
   additionalStateWithholdingEntries?: StateWithholdingEntry[];
@@ -2215,6 +2217,7 @@ export function validateSection(
       return VALID_SECTION; // Review is always valid
     case "state-return":
       return validateRequiredFacts({
+        ...zeroIncomeMiscSourceFactErrors(state),
         ...guidedPAOrdinaryReturnSourceErrors(state),
         ...guidedOhioActualSourceErrors(state),
         ...statePaymentFactErrors(getSectionData(state, "state-return"), state.taxYear, state.segmentation.stateCode),

@@ -10,6 +10,11 @@
 
 ## Active private queue
 
+- [x] Actual zero-income1099-MISC original collector: fresh main44fail/1pass
+  before products, four exact products plus two reviewed bridge hunks. Distinct
+  review66/4; main948/13/types3/spec7196/inventory/strict10zero/both builds pass.
+  No actual PA payment proof or readiness inferred; native proof UI remains open.
+
 - [x] Actual official PA ScheduleD: parent756/14/types3/spec7102/inventory/
   strict0/both builds; fresh original11fail5pass and mixed-six/privacy saved
   genuine REDs retained. Seven actual PDFs/39pages,7845 objects, physical fields,

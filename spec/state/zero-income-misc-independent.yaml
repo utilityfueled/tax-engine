@@ -1,0 +1,18 @@
+form: "Independent finite zero-income MISC collector review"
+fullName: "Actual original identity, remittance and explicit native capture"
+taxYear: 2025
+reference: "https://www.irs.gov/pub/irs-prior/i1099mec--2025.pdf"
+notes: |
+  Independent controls precede any reviewer runtime. April2025 original Box16
+  withholding and Box18 income are separate facts. This review qualifies neither
+  Pennsylvania law nor a payment credit, and must never supply omitted PA roots.
+  Unknown is not zero; positive income uses another method. Current year, entered
+  recipient, owner and original snapshot must all match. Exact original cents
+  survive without printed rounding, including two distinct0.20 remittances.
+lines:
+  - line: "source-boundary"
+    formula: "Replay complete actual current originals; reject altered/unknown/status/recipient and duplicate identities without mutation or silently supplying missing state facts."
+    testRef: "tests/guided-interview/zero-income-misc-independent.test.ts::literal source cents survive canonical replay without inventing state qualifications"
+  - line: "native"
+    formula: "Actual native fields start blank; every edit revokes confirmation, explicit confirmation binds only supplied originals, and private identifiers never enter visible text."
+    testRef: "tests/apps/web/zero-income-misc-independent.test.tsx::blank native row only confirms after every separately entered original and remittance fact"

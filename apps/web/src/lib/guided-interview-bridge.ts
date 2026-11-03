@@ -62,6 +62,7 @@ import { allPaymentFactErrors, assertKnownFacts, deductionFactErrors, educationF
 import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "./guided-adjustment-facts";
 import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
+import {buildGuidedZeroIncomeMiscSources} from './guided-zero-income-misc-sources';
 import { buildCareBenefitsInput, careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitSource } from "./guided-dependent-care-benefits";
 import { careFactErrors } from "./guided-credit-facts";
 import { buildActualEnergyInput, energyFactErrors } from "./guided-energy-facts";
@@ -760,6 +761,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
   const mortgageInputs = buildGuidedMortgageInputs(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse);
   let royaltyInputs: ReturnType<typeof buildGuidedRoyaltySources>;
   try { royaltyInputs = buildGuidedRoyaltySources(state, "form1099Misc" in mortgageInputs ? mortgageInputs.form1099Misc : undefined); } catch { return null; }
+  try { royaltyInputs={...royaltyInputs,form1099Misc:buildGuidedZeroIncomeMiscSources(state,royaltyInputs.form1099Misc)}; } catch { return null; }
   const donations = buildDonationsInput(deductionData, state.taxYear);
   const adjustments = buildAdjustmentsInput(adjustmentData, state.segmentation.filingStatus, state.taxYear, loanEducation);
   const studentLoans = buildStudentLoanInputs(adjustmentData?.studentLoanFacts, segmentation.filingStatus, state.taxYear, loanEducation, adjustmentData?.studentLoanInterest);

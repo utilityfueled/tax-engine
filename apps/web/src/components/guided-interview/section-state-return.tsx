@@ -1,4 +1,5 @@
 "use client";
+import {ZeroIncomeMiscDetails} from './zero-income-misc-details';
 
 import type { TaxYearInput } from "@/models/inputs";
 import { OhioResidencyDetails } from "./ohio-residency-details";
@@ -207,6 +208,8 @@ export function SectionStateReturn({
           </div>
         )}
 
+        <ZeroIncomeMiscDetails data={current.zeroIncomeMiscSources} taxYear={taxYear} filingStatus={filingStatus}
+          onChange={zeroIncomeMiscSources=>onDataChange({...current,zeroIncomeMiscSources})}/>
         {stateCode === "OH" && <>
           <OhioResidencyDetails originalInput={originalInput ?? null} data={current.ohioResidency} taxYear={taxYear} filingStatus={filingStatus}
             onChange={ohioResidency => onDataChange({...current, ohioResidency})} />
