@@ -1,4 +1,5 @@
 import { buildOhioSchoolDistrictSource } from './oh-sd-100-sources.js';
+import { readOhioReciprocalWageSource } from './oh-reciprocal-wage-source.js';
 import {roundDollar} from '@/utils/decimal.js';
 import {buildOhioPaymentSource} from './oh-payment-source.js';
 import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
@@ -766,6 +767,7 @@ export function buildOhioResidentReturnInput(
     if(!residency)throw new Error('Ohio actual payment sources: actual owner residency packet is required');
   }
 
+  if(residency?.reciprocalWageSources && Object.keys(overlay).some(key=>key!=='residency'&&key!=='payments'))throw new Error('Ohio actual reciprocal wage sources reject unbound financial overrides');
   if(residency?.businessSources && (overlay.qualifyingBusinessIncome!==undefined || overlay.otherBusinessIncome!==undefined))throw new Error('Ohio actual canonical business sources do not accept a supplied business income override');
   if(residency&&overlay.nonresidentCredit!==undefined)throw new Error("Ohio source-derived credit does not accept a supplied scalar override");
   assertQofStateMethod(taxInput, "Ohio");
@@ -1087,6 +1089,11 @@ export function buildOhioResidentReturnInput(
     const verified=buildOhioResidencySource(taxInput,federalResult,adapted,residency);
     adapted.residency=verified.facts;adapted.residencySourceDigest=verified.sourceDigest;
     if(verified.businessSource){adapted.residencyBusinessSource=verified.businessSource;adapted.qualifyingBusinessIncome=verified.canonicalQualifyingBusinessIncome;}
+    if(verified.reciprocalWageSource){
+      adapted.residencyReciprocalWageSource=verified.reciprocalWageSource;
+      adapted.federalAgi=roundDollar(federalResult.agi);
+      readOhioReciprocalWageSource(verified.reciprocalWageSource,verified.facts,adapted.federalAgi);
+    }
   }
   if(paymentFacts){
     if(!schoolDistrictFacts&&((adapted.schoolDistricts?.length??0)||residency?.schoolDistrictStatus!=='no_ohio_taxing_district_residency'))throw new Error('Ohio actual payment sources: actual SD/combined method is required');

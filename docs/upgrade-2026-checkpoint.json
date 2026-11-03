@@ -15374,5 +15374,26 @@
       "no human/final2026/staging/filing qualification"
     ],
     "rootReviewSHA256": "b319a1685c59b99816af53a322957d42d852698653a239c2e9d0cd9b271eaf01"
+  },
+  "nov03MainOhioReciprocalWages": {
+    "baseCommit": "0aa22e7f4abb490629d04d41a62eff75a5111c20",
+    "status": "finite-main-technical-integration-pass",
+    "authorV2ManifestSHA256": "d80ead28a945f57af3472c1bf0cc8cb84377bd090413b5cdb8eae437f983575f",
+    "distinctV2ReviewSHA256": "6fbaab4449174dfccdbc8865b35624325d4272e27f4cc83d0e24a3c38b9619b6",
+    "mainExistingApiRedSHA256": "416c12824ae7b63b07e5f9d7dfc7c202360fa60e7c1463ac506961f0e06ab455",
+    "mainRed": "76pass41oldschema/source-admissionfail; direct mutation preconditions requireadmission; authorV1 separately93pass24genuinefail",
+    "mainOhioTests": 1362,
+    "mainOhioFiles": 41,
+    "checksPassed": 13,
+    "checksSHA256": "79577478a75b9c4a8e8e5ce3ec946b545dc113323967f3c371e104d9edb962d3",
+    "specReferences": 7589,
+    "strictReferences": 708,
+    "fiveSharedManualMergesInverseExact": true,
+    "preservedCurrentBusinessAndSD": true,
+    "limits": [
+      "2025singleprimaryfullPAordinarycorporateemployee",
+      "nativecollector/physical/output/humanqualificationstillrequired",
+      "2026publicandfilinggatesclosed"
+    ]
   }
 }

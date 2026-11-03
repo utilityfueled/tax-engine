@@ -1,6 +1,7 @@
 import { buildOhioSchoolDistrictSource } from './oh-sd-100-sources.js';
 /** Spec: state/oh-input-adapter.yaml#actual-owner-residency-nrc-source. */
 import Decimal from 'decimal.js';
+import { calculateOhioReciprocalWageSource, type OhioReciprocalWageContext } from './oh-reciprocal-wage-source.js';
 import { calculateOhioCanonicalBusinessSource, readOhioCanonicalBusinessSource, type OhioCanonicalBusinessContext } from './oh-business-source.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
@@ -76,6 +77,7 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
     sourceDigest: string;
     businessSource?: OhioCanonicalBusinessContext;
     canonicalQualifyingBusinessIncome?: Decimal;
+    reciprocalWageSource?: OhioReciprocalWageContext;
 } {
     const parsed = OhioResidencyFactsSchema.safeParse(raw);
     if (!parsed.success)
@@ -97,6 +99,14 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
         fail('actual local/school withholding or residence requires separate district reconciliation');
     if ((ohio.otherStateTaxes?.length ?? 0) || ohio.residentCredit !== undefined) {
         fail('resident-period same-income credit linkage requires actual separate sources');
+    }
+    if (facts.reciprocalWageSources) {
+        if (facts.businessSources) fail('actual reciprocal wages and business require their separate composition');
+        const adjustments = calculateOhioScheduleOfAdjustments(ohio);
+        if (!adjustments.line14_totalAdditions.isZero() || !adjustments.line47_totalDeductions.isZero())
+            fail('reciprocal wages cannot override or suppress other actual state adjustments');
+        const reciprocalWageSource = calculateOhioReciprocalWageSource(input, result, facts);
+        return {facts, sourceDigest:digest({input:withoutFacts(input),facts}), reciprocalWageSource};
     }
     const businessSource = facts.businessSources ? calculateOhioCanonicalBusinessSource({taxInput:input,federalResult:result,residencyFacts:facts}) : undefined;
     const business = businessSource ? readOhioCanonicalBusinessSource(businessSource,facts,result.agi) : undefined;

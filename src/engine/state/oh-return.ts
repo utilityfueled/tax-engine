@@ -16,6 +16,7 @@ import type { OhioSchoolDistrictSourceProjection } from './oh-sd-100-sources.js'
  */
 
 import Decimal from "decimal.js";
+import { readOhioReciprocalWageSource, type OhioReciprocalWageContext } from "./oh-reciprocal-wage-source.js";
 import { calculateOhioDatedPaymentInterest } from "./oh-payment-dated-source.js";
 import type { OhioPaymentSourceProjection } from "./oh-payment-source.js";
 import type { OhioDatedPartIIResult } from "./oh-it-sd-2210-dated.js";
@@ -73,6 +74,7 @@ export interface OhioResidentReturnInput {
   sdEstimatedPaymentSchedule?:EstimatedPaymentEntry[];
   residency?:OhioResidencyFacts;
   residencyBusinessSource?:OhioCanonicalBusinessContext;
+  residencyReciprocalWageSource?:OhioReciprocalWageContext;
   residencySourceDigest?:string;
   paymentSourceDigest?:string;
   paymentDatedSource?:OhioPaymentSourceProjection;
@@ -272,7 +274,14 @@ export function calculateOhioResidentReturn(
   input: OhioResidentReturnInput,
 ): OhioResidentReturnResult {
   // Step 1: Schedule of Adjustments
+  if (input.residency?.reciprocalWageSources && !input.residencyReciprocalWageSource) {
+    throw new Error('Ohio actual reciprocal wages require their current unforgeable original context');
+  }
+  const reciprocal = input.residencyReciprocalWageSource && input.residency
+    ? readOhioReciprocalWageSource(input.residencyReciprocalWageSource, input.residency, input.federalAgi, input) : undefined;
+  if (input.residencyReciprocalWageSource && !reciprocal) throw new Error('Ohio actual reciprocal wage owner originals required');
   const adjustments = calculateOhioScheduleOfAdjustments({
+    reciprocityWages: reciprocal?.deduction,
     taxYear: input.taxYear,
     filingStatus: input.filingStatus,
     federalAgi: input.federalAgi,
@@ -313,6 +322,13 @@ export function calculateOhioResidentReturn(
     medicalCareExpenses: input.medicalCareExpenses,
     otherDeductions: input.otherDeductions,
   });
+
+  if (reciprocal && (!adjustments.line14_totalAdditions.isZero() || !adjustments.line47_totalDeductions.eq(reciprocal.deduction)
+    || !d(input.ohioWithholding).eq(reciprocal.withholding) || !d(input.estimatedPayments).isZero()
+    || !input.paymentSourceDigest || !input.residencySourceDigest || !input.paymentTiming
+    || input.residentCredit !== undefined || input.nonresidentCredit !== undefined || (input.otherStateTaxes?.length??0))) {
+    throw new Error('Ohio actual reciprocal wage return projections contradict current source context');
+  }
 
   // Step 2: IT 1040 first pass — compute tax before credits to feed the Schedule of Credits
   const firstPass = calculateOhioIT1040({
@@ -397,7 +413,7 @@ export function calculateOhioResidentReturn(
     ventureCapitalCredit: input.ventureCapitalCredit,
   });
 
-  const nonresidentCreditResult=input.residency?calculateOhioITNRC({taxYear:input.taxYear,filingStatus:input.filingStatus,federalAgi:input.federalAgi,ohioAgi:firstPass.line3_ohioAgi,taxRemainingBeforeResidencyCredits:creditsPreview.line37_taxLessAllCredits,residencyFacts:input.residency,businessSource:input.residencyBusinessSource}):null;
+  const nonresidentCreditResult=input.residency?calculateOhioITNRC({taxYear:input.taxYear,filingStatus:input.filingStatus,federalAgi:input.federalAgi,ohioAgi:firstPass.line3_ohioAgi,taxRemainingBeforeResidencyCredits:creditsPreview.line37_taxLessAllCredits,residencyFacts:reciprocal?.nrcFacts??input.residency,businessSource:input.residencyBusinessSource}):null;
   const nonresidentCreditAmount=nonresidentCreditResult?.line20??input.nonresidentCredit;
   // Step 3b: Compute resident credit (if other-state taxes provided and no pass-through override)
   let residentCreditResult: OhioResidentCreditResult | null = null;

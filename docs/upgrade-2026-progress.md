@@ -2,6 +2,13 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] Finite actual2025 PA employee reciprocity is integrated with current Ohio
+  business/SD guards. Distinct review exposed and verified repair of direct cash
+  and timing projections:117focused/225adjacent pass. Main1362Ohio tests/41files
+  and all13relevant checks pass; five narrow shared merges preserve current work.
+  Native facts, physical exports, broader residencies and human/final2026
+  qualification remain open. [Evidence](upgrade-2026-ohio-reciprocal-wage-work.md).
+
 - [x] Actual single-owner Ohio business originals now derive fresh C/SE/AGI/BID
   and NRC through the existing canonical API for the finite2025NR/PY cohort.
   Distinct123 and actualmain1078/38 pass; all13relevant checks pass. Zero/cancelling
