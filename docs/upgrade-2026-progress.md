@@ -2527,3 +2527,7 @@ Current-main production journeys enter actual care/provider/person originals, re
 ### November3: fresh full coverage passes at d76a2baf
 
 Full coverage now passes23,011tests/zero failures,1,767files, with33isolated PostgreSQL cases pending. Statements91.44%, branches87.12%, functions90.32% and lines94.46% pass all configured thresholds without changes. See [the exact-head evidence](upgrade-2026-headd76-full-verification.md). Current database/remoteCI/staging/runtime/human/final2026 qualification remains separate.
+
+### November3: actual Ohio school-district sources
+
+The bounded Hillsdale0302 method derives actual2025school income/WH/dated receipts from independent residence/Finder/currentW2/account sources, keeping municipal and IT1040 cash separate. Independent controls expose five retained-original omissions before the minimal seven-family guard; distinct corrected review approves. Main1,247/40 including two temporary realAPI proofs and all13checks pass after2genuineRED; five shared manual merges preserve newer business/JM bytes exactly. See [the source ledger](upgrade-2026-oh-school-district-sources-work.md). Native/publicmetrics/physical/allresidencies and human/final2026 qualification remain open. Coverage evidence09eb41fa is pushed.

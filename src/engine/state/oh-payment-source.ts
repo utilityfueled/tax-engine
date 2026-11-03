@@ -43,9 +43,10 @@ export function buildOhioPaymentSource(input: TaxYearInput, raw: unknown): OhioP
     const facts = parsed.data;
     if (facts.taxYear !== 2025 || input.taxpayer.taxYear !== facts.taxYear)
         fail('the actual year payment method is unavailable');
-    const { ohioResidency: _r, ohioPayments: _p, ...original } = input as TaxYearInput & {
+    const { ohioResidency: _r, ohioPayments: _p, ohioSchoolDistrict: _s, ...original } = input as TaxYearInput & {
         ohioResidency?: unknown;
         ohioPayments?: unknown;
+        ohioSchoolDistrict?: unknown;
     };
     if (digest(original) !== digest(facts.originalFederalSources))
         fail('current original federal snapshot differs');

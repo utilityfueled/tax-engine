@@ -1,3 +1,4 @@
+import { buildOhioSchoolDistrictSource } from './oh-sd-100-sources.js';
 import {roundDollar} from '@/utils/decimal.js';
 import {buildOhioPaymentSource} from './oh-payment-source.js';
 import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
@@ -754,6 +755,11 @@ export function buildOhioResidentReturnInput(
   const canonicalPayments=(taxInput as TaxYearInput&{ohioPayments?:OhioPaymentFacts}).ohioPayments;
   if(canonicalPayments&&overlay.payments&&JSON.stringify(canonicalPayments)!==JSON.stringify(overlay.payments))throw new Error('Ohio actual payment sources: canonical and overlay payment packets conflict');
   const paymentFacts=canonicalPayments??overlay.payments;
+  const schoolDistrictFacts=taxInput.ohioSchoolDistrict;
+  if(schoolDistrictFacts){
+    if(!canonical||!canonicalPayments)throw new Error('Ohio actual school district sources: independent canonical residency and IT1040 payment sources are required');
+    if(Object.entries(overlay).some(([key,value])=>value!==undefined&&key!=='residency'&&key!=='payments'))throw new Error('Ohio actual school district sources: finite source-bound return does not accept unbound district or state overrides');
+  }
   if(paymentFacts){
     const forbidden=['underpaymentPenalty','useTax','estimatedPayments','refundableCredits','amendedPriorOverpayment','latePaymentInterest','creditCarryforward','donations','computeUnderpaymentPenalty','priorYearTaxLiability','priorYearTimelyFiled','estimatedPaymentSchedule','ohioWithholdingOverride'] as const;
     if(forbidden.some(key=>overlay[key]!==undefined))throw new Error('Ohio actual payment sources: source-qualified facts do not accept unbound payment/credit/penalty overrides');
@@ -772,7 +778,7 @@ export function buildOhioResidentReturnInput(
   if (actualW2Rows.some(source => source !== undefined) && overlay.ohioWithholdingOverride !== undefined) {
     throw new Error("Ohio actual W2 withholding sources do not accept a scalar withholding override");
   }
-  if (residency && actualW2Rows.some(source => source?.localRows.some(row => row.withheld.gt(0)))) {
+  if (residency && !schoolDistrictFacts && actualW2Rows.some(source => source?.localRows.some(row => row.withheld.gt(0)))) {
     throw new Error("Ohio actual local/school withholding requires separate district reconciliation");
   }
   const actualOhioW2Withholding = actualW2Rows.flatMap(source => source?.stateRows ?? [])
@@ -814,7 +820,7 @@ export function buildOhioResidentReturnInput(
         ));
 
   const sdWithholding =
-    overlay.sdWithholdingOverride !== undefined
+    schoolDistrictFacts ? undefined : overlay.sdWithholdingOverride !== undefined
       ? overlay.sdWithholdingOverride
       : extractSchoolDistrictWithholding(w2s, form1099Rs);
 
@@ -932,7 +938,7 @@ export function buildOhioResidentReturnInput(
       : federalResult.form2441?.credit;
 
   const schoolDistricts =
-    overlay.schoolDistricts !== undefined
+    schoolDistrictFacts ? [] : overlay.schoolDistricts !== undefined
       ? resolveOverlaySchoolDistricts(federalResult.taxYear, overlay.schoolDistricts)
       : deriveSchoolDistrictsFromW2s(federalResult.taxYear, w2s);
 
@@ -1083,11 +1089,19 @@ export function buildOhioResidentReturnInput(
     if(verified.businessSource){adapted.residencyBusinessSource=verified.businessSource;adapted.qualifyingBusinessIncome=verified.canonicalQualifyingBusinessIncome;}
   }
   if(paymentFacts){
-    if((adapted.schoolDistricts?.length??0)||residency?.schoolDistrictStatus!=='no_ohio_taxing_district_residency')throw new Error('Ohio actual payment sources: actual SD/combined method is required');
+    if(!schoolDistrictFacts&&((adapted.schoolDistricts?.length??0)||residency?.schoolDistrictStatus!=='no_ohio_taxing_district_residency'))throw new Error('Ohio actual payment sources: actual SD/combined method is required');
     const source=buildOhioPaymentSource(taxInput,paymentFacts);
     adapted.paymentDatedSource=source.datedPayments ? source : undefined;adapted.paymentTaxCoverage=source.facts.remainingTaxPayment;adapted.paymentSourceDigest=source.sourceDigest;adapted.paymentMethodVersion=source.methodVersion;adapted.paymentTiming={kind:source.timingKind,valuationDate:source.valuationDate,asOfDate:source.asOfDate};
     adapted.ohioWithholding=roundDollar(d(adapted.ohioWithholding));adapted.estimatedPayments=roundDollar(source.estimatedPayments);adapted.estimatedPaymentSchedule=source.estimatedPaymentSchedule;adapted.priorYearTaxLiability=source.priorYearTaxLiability;adapted.priorYearTimelyFiled=source.priorYearTimelyFiled;
     adapted.useTax=roundDollar(source.useTax);adapted.creditCarryforward=roundDollar(source.creditCarryforward);adapted.donations=roundDollar(source.donations);adapted.latePaymentInterest=source.latePaymentInterest;adapted.computeUnderpaymentPenalty=true;
+  }
+  if(schoolDistrictFacts){
+    const source=buildOhioSchoolDistrictSource(taxInput,federalResult,adapted);
+    adapted.schoolDistrictSource=source;adapted.schoolDistricts=[source.district];
+    adapted.sdWithholding=source.sdWithholding;adapted.sdEstimatedPayments=source.estimatedPayments;
+    adapted.sdEstimatedPaymentSchedule=source.estimatedPaymentSchedule;
+    adapted.sdPriorYearTaxLiability=source.priorYearTaxLiability;adapted.sdPriorYearTimelyFiled=source.priorYearTimelyFiled;
+    adapted.sdCreditCarryforward=source.creditCarryforward;adapted.sdAmendedPriorOverpayment=new Decimal(0);adapted.sdLatePaymentInterest=new Decimal(0);
   }
   return adapted;
 }

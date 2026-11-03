@@ -1,3 +1,4 @@
+import type { OhioSchoolDistrictSourceProjection } from './oh-sd-100-sources.js';
 /**
  * Ohio Resident Return — Full orchestrator.
  *
@@ -68,6 +69,8 @@ import {
 // ---------------------------------------------------------------------------
 
 export interface OhioResidentReturnInput {
+  schoolDistrictSource?:OhioSchoolDistrictSourceProjection;
+  sdEstimatedPaymentSchedule?:EstimatedPaymentEntry[];
   residency?:OhioResidencyFacts;
   residencyBusinessSource?:OhioCanonicalBusinessContext;
   residencySourceDigest?:string;
@@ -244,6 +247,7 @@ export interface OhioResidentReturnInput {
 // ---------------------------------------------------------------------------
 
 export interface OhioResidentReturnResult {
+  schoolDistrictSource?:OhioSchoolDistrictSourceProjection;
   nonresidentCreditResult:ReturnType<typeof calculateOhioITNRC>|null;
   scheduleOfAdjustments: OhioScheduleOfAdjustmentsResult;
   it1040: OhioIT1040Result;
@@ -589,6 +593,7 @@ export function calculateOhioResidentReturn(
         estimatedPayments: d(input.sdEstimatedPayments),
         priorYearTaxLiability: input.sdPriorYearTaxLiability,
         priorYearTimelyFiled: input.sdPriorYearTimelyFiled,
+        estimatedPaymentSchedule: input.sdEstimatedPaymentSchedule,
       });
 
       sdUnderpaymentPenalty = sdItsd2210.line17_totalPenalty;
@@ -610,6 +615,10 @@ export function calculateOhioResidentReturn(
     });
   }
 
+  if(input.schoolDistrictSource){
+    if(!itsd2210?.line17_totalPenalty.isZero()||!sdItsd2210?.line17_totalPenalty.isZero())throw new Error('Ohio actual school district sources: separate positive/combined2210 penalty method required');
+    if(!sd100||!sd100.line16_taxDue.isZero()||d(input.sdCreditCarryforward).gt(sd100.line19_overpayment))throw new Error('Ohio actual school district sources: remaining-tax coverage or outgoing election contradicts actual return');
+  }
   // Combine audit trails: Adjustments → Resident Credit → Credits → IT/SD 2210 → IT 1040 → SD 100
   const lines = [
     ...adjustments.lines,
@@ -622,9 +631,12 @@ export function calculateOhioResidentReturn(
     ...it1040.lines,
     ...(sdItsd2210 ? sdItsd2210.lines : []),
     ...(sd100 ? sd100.lines : []),
+    ...(input.schoolDistrictSource?.residentIncome.lines??[]),
+    ...(input.schoolDistrictSource?.lines??[]),
   ];
 
   return {
+    ...(input.schoolDistrictSource?{schoolDistrictSource:input.schoolDistrictSource}:{}),
     scheduleOfAdjustments: adjustments,
     it1040,
     scheduleOfCredits: credits,

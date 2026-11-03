@@ -15300,5 +15300,79 @@
     "configuredThresholdsPass": true,
     "sourceMutationDuringRun": false,
     "scope": "local synthetic exact-head coverage;33PGpending; not remote/staging/human qualification"
+  },
+  "nov03MainSchoolDistrictCore": {
+    "status": "approved-finite-current-main-school-district-core",
+    "baseCommit": "09eb41fa24ae0252dc3d3604fa81bb7262263038",
+    "exactNewAuthor6BeforeLedgerAppend": {
+      "src/models/ohio-school-district.ts": "264c332d12561d1c5aeb907bcd1411dffa3af30a87e5ed44af0ae18161b4d295",
+      "src/engine/state/oh-sd-100-sources.ts": "5231e1e1bf43addc56a6f37d5bb184c8a96497a4781b1fd5498d2a508ba1bdd2",
+      "spec/state/oh-sd-100-sources.yaml": "52ad3e0bb1ea589f8737cec914aa9a6375f69be43863a3629f6029361f81526d",
+      "tests/engine/state/oh-sd-100-sources.test.ts": "5c4c4da007957b17039b3c1d9b24d19f78a58f38a045b8bdb7a9523aa7493b04",
+      "tests/fixtures/oh-school-district-sources.ts": "62803f065345508605447b08b4ecb390c698a1af0bef2046099d637c54922cf6",
+      "docs/upgrade-2026-oh-school-district-sources-work.md": "7fa6e60e01543b8d44b78c2ae5dd2f7119d02d661b82f912dbabe7bde764fbc3"
+    },
+    "exactPeer2": {
+      "spec/state/oh-sd-100-independent.yaml": "fc29c56162ab1bbda44b27097a802023eca22665f0b502704f431e07227ab4f1",
+      "tests/engine/state/oh-sd-100-independent.test.ts": "9bfde70b7733e1e15434a3501edd95ab3782e4dd56c137f4653c8e565b306cd7"
+    },
+    "fiveNarrowManualMerges": [
+      {
+        "path": "src/models/inputs.ts",
+        "beforeSHA256": "6b8a936b202121a51fb27e99c756053a1ecb64f77fe82afb865e6d8b8e0dfd9b",
+        "mergedSHA256": "1bea76624a6800fc8cc3d763278dd5c0273878131cee8a2f9e995620d4efaa77",
+        "exactInversePreservesAllCurrentBytes": true,
+        "operations": 2
+      },
+      {
+        "path": "src/engine/state/oh-residency-source.ts",
+        "beforeSHA256": "d87a9e65f84564e9b89d84f11aeebca1dc7b0eef195daf1351fb75521884e0ab",
+        "mergedSHA256": "e4717b443e705d1295c18fe9488b8dc7960d22ed8268ddd66e724fba2abeab24",
+        "exactInversePreservesAllCurrentBytes": true,
+        "operations": 4
+      },
+      {
+        "path": "src/engine/state/oh-input-adapter.ts",
+        "beforeSHA256": "869fb08a64b3ec89fe9fd98a7c7781636171838f5dec50b32b5fa86d936aa0ee",
+        "mergedSHA256": "e1785cfdccdc553db020375922014cf3200ea7ebd4ac9a613115647af5629e88",
+        "exactInversePreservesAllCurrentBytes": true,
+        "operations": 7
+      },
+      {
+        "path": "src/engine/state/oh-return.ts",
+        "beforeSHA256": "efd79e23172697ac35e3e0387d1616868e7ea02a7230a001de9ccc41a47c1bb1",
+        "mergedSHA256": "17f0e1ed15370af7884e9a94855863672cf658b07eb455f4bc62681c99778dd0",
+        "exactInversePreservesAllCurrentBytes": true,
+        "operations": 7
+      },
+      {
+        "path": "src/engine/state/oh-payment-source.ts",
+        "beforeSHA256": "fe15da814251280e796e7af91da42751cf23b64016749fafebbb83b4fd90706c",
+        "mergedSHA256": "df2d3dd65cd9ef18f79371ed6ba96d971bffb04f597f22f7b88d1ff94c2eb119",
+        "exactInversePreservesAllCurrentBytes": true,
+        "operations": 2
+      }
+    ],
+    "allCurrentBusinessAndMarriedInputBytesPreservedByInverse": true,
+    "authorV2SHA256": "dc3a67b2935186ebb3b5756742c4e33b554247f465a7377f44f8b3e79fb3c0e0",
+    "distinctV2StaticReviewSHA256": "afb3a20ed19fdacb441926bc2fdee005f4715c82e6849b0c9b6bfdc3c8fc2475",
+    "mainActualExistingApiRedSHA256": "bb96e012f178b0cd6f290d95da79b42ddfaa859f15e75745c88647a61e79c42d",
+    "mainOhioTestsPassed": 1247,
+    "mainOhioFiles": 40,
+    "temporaryActualApiProofsIncluded": 2,
+    "temporaryProofsRemovedAfterGreenRetainedInEvidence": true,
+    "checksPassed": 13,
+    "checksSHA256": "5b1c7f2c48a7afdb769cc8699c32bf50a39b2d396b64b5befa212d6b318cbf81",
+    "specReferences": 7569,
+    "strictReferences": 706,
+    "adapterWarnings": "unchanged prior two non-null assertions under repository policy; exact author baseline warning identity proof retained; no config/threshold change",
+    "sourceReview": "Verified original owner/address/Finder/residency/currentW2local classifications; SD/IT receipts distinct with semantic duplicate conservation; actualwhole printed source cohort and independent zero penalties; finite retained-family presence guards including seven reviewed additions; no municipal WH as SD and no inferred cash/periods",
+    "limits": [
+      "first2025singleunder65full365daysoneearnedHillsdale0302W2cohort",
+      "nativepublicreview/PDF/browser remain successors",
+      "PY/NR/multidistrict/traditional/otherfamilies/positivepenalty guarded",
+      "no human/final2026/staging/filing qualification"
+    ],
+    "rootReviewSHA256": "b319a1685c59b99816af53a322957d42d852698653a239c2e9d0cd9b271eaf01"
   }
 }

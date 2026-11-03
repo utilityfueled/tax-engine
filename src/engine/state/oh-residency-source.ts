@@ -1,3 +1,4 @@
+import { buildOhioSchoolDistrictSource } from './oh-sd-100-sources.js';
 /** Spec: state/oh-input-adapter.yaml#actual-owner-residency-nrc-source. */
 import Decimal from 'decimal.js';
 import { calculateOhioCanonicalBusinessSource, readOhioCanonicalBusinessSource, type OhioCanonicalBusinessContext } from './oh-business-source.js';
@@ -30,7 +31,7 @@ function fail(message: string): never {
     throw new Error(`Ohio actual residency sources: ${message}`);
 }
 function withoutFacts(input: TaxYearInput) {
-    const { ohioResidency: _, ohioPayments: _payments, ...source } = input as TaxYearInput & { ohioResidency?: unknown; ohioPayments?:unknown };
+    const { ohioResidency: _, ohioPayments: _payments, ohioSchoolDistrict: _school, ...source } = input as TaxYearInput & { ohioResidency?: unknown; ohioPayments?:unknown };
     return source;
 }
 const brand = Symbol('prepared Ohio original review');
@@ -88,9 +89,11 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
     const fresh = calculateFederalTax(input);
     if (digest(redactReviewIdentifiers(fresh)) !== digest(redactReviewIdentifiers(result)))
         fail('saved federal result is stale');
-    if (facts.schoolDistrictStatus !== 'no_ohio_taxing_district_residency')
+    if (input.ohioSchoolDistrict) {
+        buildOhioSchoolDistrictSource(input, result, ohio);
+    } else if (facts.schoolDistrictStatus !== 'no_ohio_taxing_district_residency')
         fail('actual school district residency sources require their separate method');
-    if ((input.w2s ?? []).some(w => d(w.localTaxWithheld).gt(0)) || (ohio.schoolDistricts?.length ?? 0))
+    if (!input.ohioSchoolDistrict && ((input.w2s ?? []).some(w => d(w.localTaxWithheld).gt(0)) || (ohio.schoolDistricts?.length ?? 0)))
         fail('actual local/school withholding or residence requires separate district reconciliation');
     if ((ohio.otherStateTaxes?.length ?? 0) || ohio.residentCredit !== undefined) {
         fail('resident-period same-income credit linkage requires actual separate sources');

@@ -1,3 +1,4 @@
+import { OhioSchoolDistrictFactsSchema } from './ohio-school-district.js';
 import {PAMarriedOrdinarySourcesSchema} from './pa-married-ordinary-sources.js';
 /**
  * Zod schemas for all tax input documents.
@@ -6153,6 +6154,7 @@ export const TaxYearInputSchema = z.object({
   taxpayer: TaxpayerSchema,
   ohioResidency: OhioResidencyFactsSchema.optional(),
   ohioPayments: OhioPaymentFactsSchema.optional(),
+  ohioSchoolDistrict: OhioSchoolDistrictFactsSchema.optional(),
   paResidencySources: PAResidencySourcesSchema.optional(),
   paReciprocitySources: PAReciprocitySourcesSchema.optional(),
   paOrdinaryReturnFacts: PAOrdinaryReturnFactsSchema.optional(),
