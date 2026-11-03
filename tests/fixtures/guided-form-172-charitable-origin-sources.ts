@@ -19,7 +19,7 @@ export function guidedCurrentCharitableOriginals() {
         contractLabor: '0', depreciation: '0', legalAndProfessional: '0', w2WagesPaid: '0', ubiaQualifiedProperty: '0', isSST: false, allInvestmentAtRisk: true,
         priorYearUnallowedLoss: '0', additionalWorksheetRequired: false, otherExpenseDescription: 'Fictional current operating expense',
         mealsEligibilityConfirmed: true, carExpenseWorksheetConfirmed: true, depreciationWorksheetConfirmed: true } },
-    interest: { payer: 'Actual bank', payerTin: '12-3456789', accountHolder: 'primary' as const, interestIncome: '30000', federalWithheld: '0',
+    interest: { sourceTaxYear: '2025', payer: 'Actual bank', payerTin: '12-3456789', accountHolder: 'primary' as const, interestIncome: '30000', federalWithheld: '0',
       earlyWithdrawalPenalty: '0', usSavingsBondInterest: '0', foreignTaxPaid: '0', foreignCountry: '', taxExemptInterest: '0', privateActivityBondInterest: '0',
       marketDiscount: '0', bondPremium: '0', treasuryBondPremium: '0', taxExemptBondPremium: '0', stateTaxReporting: 'none' as const },
     deductions: { method: 'itemized' as const, medicalExpenses: '0', stateLocalTaxes: '0', realEstateTaxes: '20000', personalPropertyTaxes: '0',

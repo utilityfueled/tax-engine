@@ -253,3 +253,9 @@ Parent real auth/billing regression:173/seven passes (`nov02-parent-hosted-previ
   Distinct independent review active; main adoption pending.
 - Structured PA dividend UI/source collector now privately assigned with no
   runtime yet. Other state methods and every brief completion gate remain open.
+
+- [x] Spec metadata package pushed `7db871df`:611refs/spec6984/same5PDF,
+  independent source extension and main3PDF/sixpage exact parity approved.
+- [x] Charity/COD fixture-only six adopted exact: main24/15/types3/spec6989/
+  inventory/strict fixture checks pass; existing five warnings unchanged.
+  Independent static approval8c8a84e5; original negative assertions preserved.

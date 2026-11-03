@@ -13367,5 +13367,15 @@
     "releaseReady": false,
     "independentEmployeeExtensionSHA256": "e46a9f02f67e2acbad80b9abc22f525da92a8300771052db8f3a0f7a3ed1987c",
     "independentMainPDFReceiptSHA256": "e1f9c5ba42c1134cfb64215134582b9418e6688204335d81ed0b0ab25372645a"
+  },
+  "nov02MainCharityCODFixtureMigration": {
+    "baseCommit": "7db871df",
+    "status": "main24/15 and scoped checks pass; independently reviewed fixture-only changes",
+    "specLines": 6989,
+    "lint": "strict0 on fixture and supplemental controls; existing workspace5 unchanged warnings0errors",
+    "independentReceiptSHA256": "8c8a84e53be6e5c9e29e4d95b2348816f6726fa2dbdd24e59a9548ca13db8135",
+    "evidence": "nov02-parent-charity-cod-main",
+    "productsChanged": false,
+    "releaseReady": false
   }
 }

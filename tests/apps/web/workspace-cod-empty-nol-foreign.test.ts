@@ -12,6 +12,7 @@ import { TaxYearInputSchema } from '@/models/inputs';
 import { calculateFederalTax } from '@/engine/federal';
 import { calculatePAReturn } from '@/engine/state/pa-orchestrator';
 import { prepareCodNolReview, codNolReviewOriginalSourceInput } from '@/pdf/cod-nol-review-context';
+import { preparePAWorkingCreditReview } from '@/pdf/pa-working-credit-review-context';
 import { redactReviewIdentifiers } from '@/pdf/redact-review-identifiers';
 import { fillReturn } from '@/pdf/fill-return';
 import { d } from '@/utils/decimal';
@@ -60,6 +61,7 @@ it('preserves the actual Pennsylvania attachment without relaxing federal output
   expect(input.taxpayer.address.state).toBe('PA');
   expect(input.taxpayer.stateResidency).toBe('full-year');
   const federal = calculateFederalTax(input), token = prepareCodNolReview(input);
+  const paWorkingCreditReview = preparePAWorkingCreditReview(input);
   expect(federal.stateReturns?.pennsylvania).toBeUndefined();
   const pennsylvania = calculatePAReturn(input, buildGuidedPennsylvaniaOverrides(state));
   const combined = { ...federal, stateReturns: { ...federal.stateReturns, pennsylvania } };
@@ -83,7 +85,7 @@ it('preserves the actual Pennsylvania attachment without relaxing federal output
     const output = join(directory, 'tampered');
     combined.foreignTaxCredit = d('1');
     await expect(fillReturn(redactReviewIdentifiers(input), combined, { outputDir: output,
-      blankFormsDir: 'forms/blank', codNolReview: token })).rejects.toThrow(/reconcile/i);
+      blankFormsDir: 'forms/blank', codNolReview: token, paWorkingCreditReview })).rejects.toThrow(/reconcile/i);
     expect(await readdir(output).catch(() => [])).toEqual([]);
     expect(state).toEqual(original);
     await expect(buildWorkspaceFilledReturnDownload(workspace)).rejects.toThrow(/guided interview/i);

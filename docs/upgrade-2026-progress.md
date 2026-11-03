@@ -2202,3 +2202,11 @@ unchanged five PDF controls, inventory and strict lint checks. Quoting and exact
 parameterized title links preserve parsed formulas and all original assertions.
 The [maintenance ledger](upgrade-2026-spec-reference-maintenance.md) retains
 original genuine failures and independent scope. Global readiness remains false.
+
+### November2: exact known-year charitable/COD fixtures
+
+Two stale synthetic originals now explicitly record their documented2025 year.
+An existing negative PDF control prepares its private PA context before
+redaction. Every amount and assertion is unchanged. Main24/15/types3/spec6989/
+inventory/fixture lint pass with independent static approval; see the fixture
+ledger. No COD builder defect, law change or source-year default was introduced.

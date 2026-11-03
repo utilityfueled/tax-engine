@@ -5159,6 +5159,26 @@
       ]
     },
     {
+      "key": "federal/guided-charitable-cod-source-fixture-contract",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "apps/web/src/lib/guided-investment-facts.ts; src/pdf/pa-working-credit-review-context.ts; src/pdf/cod-nol-review-context.ts",
+      "specPath": "spec/federal/guided-charitable-cod-source-fixture-contract.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/guided-child-election",
       "jurisdiction": "federal",
       "taxYear": 2025,

@@ -313,6 +313,7 @@
     "income-investments": {
       "interestEntries": [
         {
+          "sourceTaxYear": "2025",
           "payer": "Synthetic investment bank",
           "interestIncome": "5000",
           "federalWithheld": "0",
