@@ -15395,5 +15395,18 @@
       "nativecollector/physical/output/humanqualificationstillrequired",
       "2026publicandfilinggatesclosed"
     ]
+  },
+  "nov03Remote0aaVerification": {
+    "evidence": "docs/upgrade-2026-runtime-0aa22e7f-amd64.json",
+    "remoteCoveragePassed": true,
+    "remoteTests": 23215,
+    "branches": "87.31",
+    "selfhostBrowser": "538pass2fail5hostedskip",
+    "actualImageBrowser": "538pass2fail5hostedskip",
+    "recoverySixPhases": "passed-linux-amd64",
+    "scan": "176matches80IDs0critical; ownerconfirmationpendingNov7",
+    "localPostgres": "45pass0skip; cluster stoppedremoved; notstaging",
+    "currentReciprocalCommit": "6d9144e3d45dc9e3d23072c9a05ad0f1e77ef351",
+    "readiness": false
   }
 }

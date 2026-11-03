@@ -2,6 +2,13 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] Remote0aa coverage passes23,215tests/1,772files with0pending:
+  branches87.31%, functions90.57%; all unchanged coverage gates pass. Actual
+  AMD64 image completes six recovery phases, SBOM and scan (176matches/80known
+  advisories/0critical). Both browser suites still fail the same2PA royalty
+  source-contract journeys (538pass/5hostedskip). Fresh isolated PG45/5 passes;
+  staging evidence and release qualification remain pending. [Evidence](upgrade-2026-runtime-0aa22e7f-amd64.json).
+
 - [x] Finite actual2025 PA employee reciprocity is integrated with current Ohio
   business/SD guards. Distinct review exposed and verified repair of direct cash
   and timing projections:117focused/225adjacent pass. Main1362Ohio tests/41files
