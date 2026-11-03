@@ -183,6 +183,26 @@
       ]
     },
     {
+      "key": "federal/browser-federal-source-year-contract",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "apps/web/src/lib/guided-investment-facts.ts; existing calendar2025 browser source scenarios",
+      "specPath": "spec/federal/browser-federal-source-year-contract.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/c-k1-nec-receipt-sources",
       "jurisdiction": "federal",
       "taxYear": null,

@@ -13443,5 +13443,41 @@
       "unexpectedMissingReferences": 0,
       "allTextAndRenderedPagesExactApproved": true
     }
+  },
+  "nov02MainBrowserSourceYearFixtures": {
+    "baseCommit": "25d48d47",
+    "status": "independently reviewed fixture-only sourceyears; main scoped unit/browser/PDF checks pass",
+    "sourceFirst": {
+      "failed": 4,
+      "passed": 8
+    },
+    "unit": 12,
+    "actualBrowser": {
+      "passed": 10,
+      "specFiles": 5,
+      "viewports": [
+        1280,
+        390
+      ],
+      "workers": 1,
+      "retries": 0,
+      "skipped": 0,
+      "flaky": 0
+    },
+    "specLines": 7011,
+    "types": "root/web/contracts pass",
+    "strictLint": "0 warnings",
+    "inventory": "generation/check pass",
+    "productsChanged": false,
+    "independentReceiptSHA256": "a8a8c19af3addb8ed04e09daee2465d6aaeabfa6b7f7e3afcfbd92f52076979a",
+    "actualMainPDFs": {
+      "files": 6,
+      "pages": 90,
+      "strictPrivacyTextAndPixelsPass": true,
+      "receiptSHA256": "79601674a78d790b5ef369c2931f59ddba4c8873cfcdfadcd6a7a0898bdf09a0"
+    },
+    "ownedLoopbackServerClosed": true,
+    "evidence": "nov02-parent-browser-source-years*",
+    "releaseReady": false
   }
 }

@@ -2229,3 +2229,11 @@ preexisting malformed objects and unrelated tags/links. Main10 genuine failures/
 one pass precede the exact reviewed product;29/four, portable11, types3/spec7008/
 inventory/strict0/builds pass. The [PDF ledger](upgrade-2026-pdf-standalone-flatten-ledger.md)
 retains every original failure and the independent review boundary.
+
+### November2: explicit original years in federal browser scenarios
+
+Four stale synthetic originals now carry their documented2025 year. Every
+existing amount, assertion and product gate remains unchanged. Main12 unit and
+10 actual desktop/mobile checks pass with types3/spec7011/inventory/strict0.
+Allsix downloaded PDFs/90pages match independently inspected copies in text
+and pixels, with strict/privacy checks. See the [browser fixture ledger](upgrade-2026-browser-federal-source-year-ledger.md).

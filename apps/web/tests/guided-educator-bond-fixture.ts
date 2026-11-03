@@ -98,6 +98,7 @@ export function actualEducatorBondInterview() { return {
     "income-investments": {
       "interestEntries": [
         {
+          "sourceTaxYear": "2025",
           "payer": "Fictional Treasury original",
           "interestIncome": "0",
           "federalWithheld": "0",
