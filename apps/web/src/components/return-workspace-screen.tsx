@@ -2014,6 +2014,7 @@ export function ReturnWorkspaceScreen({
                   onChange={syncUpload}
                 />
               </label>
+              <p className="document-meta">{storageMessage === `${workspace.summary.totalDocuments} docs stored locally.` ? storageMessage : documentStatusMessage}</p>
               <div className="inline-actions">
                 <button className="utility-button" type="button" onClick={resetWorkspace}>
                   Reset Return

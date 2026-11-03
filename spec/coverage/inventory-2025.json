@@ -10167,6 +10167,26 @@
       ]
     },
     {
+      "key": "federal/workspace-upload-panel-status",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "docs/upgrade-2026-execution-brief.md",
+      "specPath": "spec/federal/workspace-upload-panel-status.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/browser-pa-digital-actual-sources",
       "jurisdiction": "state",
       "taxYear": 2025,

@@ -16989,5 +16989,123 @@
       "current remote global checks",
       "distribution/staging/provider/human/final2026 qualification"
     ]
+  },
+  "workspaceUploadPanelStatus20261103": {
+    "baseCommit": "72143bc9",
+    "status": "bounded current-main local managed17 verified",
+    "productDelta": "one upload-only status paragraph",
+    "browserCasesPassed": 17,
+    "browserRetries": 0,
+    "unchangedAssertionsBudgetsStorage": true,
+    "initialManagedAttempt": "16PASS/1FAIL duplicate unrelated Answer saved; retained6673dc54",
+    "sandboxAttempt": "EPERM binding3099 before browser cases; retained",
+    "checks": [
+      {
+        "name": "actual-workspace-upload",
+        "command": [
+          "node",
+          "scripts/run-tests.mjs",
+          "--browser",
+          "workspace-upload.spec.ts",
+          "--workers=1",
+          "--retries=0",
+          "--output=/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-workspace-upload-status-successor/test-results"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-workspace-upload-status-successor/actual-workspace-upload.log",
+        "sha256": "5169ab00638670a6dc8a43136bc58bbd2e0cbc61dd1e30713ef672538d9d44ef"
+      },
+      {
+        "name": "spec",
+        "command": [
+          "pnpm",
+          "spec:validate"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-workspace-upload-status-successor/spec.log",
+        "sha256": "8edb0bf73fa2db61b557d4ce40c9cb3062332708fcf026efde7a91c57cbd9515"
+      },
+      {
+        "name": "AST",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/spec/validate-testrefs.test.ts",
+          "--maxWorkers=1"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-workspace-upload-status-successor/AST.log",
+        "sha256": "dca88bf2469fbcb0ffdf8dee1cee75ecbacab3a47acf6c064174a0fa3efc9b2b"
+      },
+      {
+        "name": "root-types",
+        "command": [
+          "pnpm",
+          "typecheck"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-workspace-upload-status-successor/root-types.log",
+        "sha256": "5888bcaa4f681b3f7bf48999ae0817c16b3af178b8c13f7d91414fdef8ea04d9"
+      },
+      {
+        "name": "web-types",
+        "command": [
+          "pnpm",
+          "typecheck:web"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-workspace-upload-status-successor/web-types.log",
+        "sha256": "249e0be3cf6277994e8d22e8440bebe6db10861cab79fe97aa4952837f3ff073"
+      },
+      {
+        "name": "contracts-types",
+        "command": [
+          "pnpm",
+          "typecheck:contracts"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-workspace-upload-status-successor/contracts-types.log",
+        "sha256": "0c2a6bff203db409d0f68d48f7b21a6ac6bd6098310256e72a9c6e558bc3943d"
+      },
+      {
+        "name": "owned-strict",
+        "command": [
+          "pnpm",
+          "exec",
+          "eslint",
+          "apps/web/src/components/return-workspace-screen.tsx",
+          "--max-warnings=0"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-workspace-upload-status-successor/owned-strict.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "inventory",
+        "command": [
+          "pnpm",
+          "spec:inventory"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-workspace-upload-status-successor/inventory.log",
+        "sha256": "b2f99750d5fcd745e760c2a5aa3cb7f6f66cc2c712d33c235b19f01d9f9a8d51"
+      },
+      {
+        "name": "inventory-check",
+        "command": [
+          "pnpm",
+          "spec:inventory:check"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-workspace-upload-status-successor/inventory-check.log",
+        "sha256": "846ee1105cfb137b691fc9b9faa383c54ef9f9e367b6b3416b2abe4ccb15cdef"
+      }
+    ],
+    "independentReview": "b4d4e01a8613b7deef0b23dd08a05940250f74937b73ae8bcdb26f9e55317d90",
+    "remaining": [
+      "actual container image/current full distribution",
+      "hosted upload rehearsal",
+      "global/staging/provider/human/final2026 qualification"
+    ]
   }
 }

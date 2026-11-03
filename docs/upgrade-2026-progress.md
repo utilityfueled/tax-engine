@@ -2656,3 +2656,7 @@ Current-main native Virginia return/account and two linked remittance originals 
 ### November 3: independent PA residency export test cases
 
 The actual three-residency PDF loop now runs as three independent cases with the unchanged normal5s deadline. All original assertions and four negative bodies remain intact;21 affected controls plus spec/types/strict/inventory pass and distinct review approves. See [the test ledger](upgrade-2026-pa-workspace-export-test-isolation-work.md). Historical48ad coverage passed87.30% branches, while its plain unit/browser failures remain recorded; successor remote/global/distribution/staging/human/final2026 qualification is pending. Resident-credit browsere0f5ffc1 is pushed.
+
+### November 3: upload-panel status follows actual documents
+
+One display paragraph now shows the actual local upload acknowledgement or persisted document status in Upload Documents. The full unchanged17browser cases and8static sets pass; the first16/1 duplicate-answer failure is preserved and resolved without test or budget changes. Distinct review approves. See [the UI ledger](upgrade-2026-workspace-upload-panel-status-work.md). Hosted/container/fullglobal/staging/human/final2026 qualification remains open. PA test isolation72143bc9 is pushed separately.
