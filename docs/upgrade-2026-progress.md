@@ -2628,3 +2628,7 @@ Current-main refund/knownzero journeys pass4/4 without retries through native or
 ### November 3: actual married Pennsylvania review downloads
 
 Current-main J/M desktop/mobile journeys now verify actual200 and one saved review download, one federal household and separately owned PA40 pages through edit/reconfirm/reopen. All4browser cases and8static sets pass without retries. Distinct4logicalPDF/60unique page strict/privacy/physical/text/RGB and36geometry review passes. The new-reader printedline16 error is retained and corrected from official extension-payment authority without changing tax or source oracles. See [the browser ledger](upgrade-2026-pa-married-native-review-browser-work.md). Broader cohorts, fullglobal/dependency/distribution/staging/AI/human/final2026 gates remain open; reciprocalbrowserb45cda6c is pushed.
+
+### November 3: separately verified Next 16.4.5 update
+
+Next and its ESLint plugin now use16.4.5 with exact eleven-family integrity changes. Frozen install,480security/Compose controls, types3, lint and both builds pass; actual managed production browser28/28 passes without retries/skips. Independent static review approves the bounded dependency diff. Seven primary-advisory metadata conflicts/exposure limits remain assigned to this goal for recheck by November4 19:30UTC or before qualification, without risk acceptance. See [the security ledger](upgrade-2026-next-1645-security-work.md). Current images/global/staging/human qualification remain open; PA married browser82e97db7 and reciprocalbrowserb45cda6c are pushed.

@@ -15958,5 +15958,318 @@
     "noProductsChanged": true,
     "markerRepeated": false,
     "remaining": "broadercohorts/fullglobal/currentdependencies/hosting/selfhost/AI/human/final2026/filing"
+  },
+  "next1645Security20261103": {
+    "sourceBase": "82e97db70267bce3e9459c7c09655148fdbd9a04",
+    "owner": "Codex upgrade execution (active goal)",
+    "recheckExpiry": "2026-11-04T19:30:00Z",
+    "riskAccepted": false,
+    "releaseReady": false,
+    "advisories": [
+      {
+        "ghsa": "GHSA-mfr8-8qww-v76h",
+        "primaryURL": "https://github.com/vercel/next.js/security/advisories/GHSA-mfr8-8qww-v76h",
+        "officialMetadata": {
+          "ghsa_id": "GHSA-mfr8-8qww-v76h",
+          "published_at": "2026-11-03T18:39:36Z",
+          "severity": "medium",
+          "updated_at": "2026-11-03T18:39:36Z",
+          "vulnerabilities": [
+            {
+              "package": "next",
+              "patched_versions": "",
+              "vulnerable_version_range": ">= 16.3.0"
+            }
+          ]
+        },
+        "exposureStatus": "cache-preconditions-absent",
+        "evidence": "No use-cache or unstable_cache app calls. Actual installed default cacheComponents false; not overridden.",
+        "owner": "Codex upgrade execution (active goal)",
+        "recheckExpiry": "2026-11-04T19:30:00Z",
+        "ownerAcceptance": false,
+        "qualification": "bounded-static-only",
+        "metadataResolution": "open-not-proven-fixed-by-audit",
+        "requiredAction": "Refresh primary metadata and re-evaluate actual deployment exposure before qualification; deadline or any qualification attempt, whichever earlier."
+      },
+      {
+        "ghsa": "GHSA-vc7v-qv4w-wrv8",
+        "primaryURL": "https://github.com/vercel/next.js/security/advisories/GHSA-vc7v-qv4w-wrv8",
+        "officialMetadata": {
+          "ghsa_id": "GHSA-vc7v-qv4w-wrv8",
+          "published_at": "2026-11-03T18:39:40Z",
+          "severity": "medium",
+          "updated_at": "2026-11-03T18:39:40Z",
+          "vulnerabilities": [
+            {
+              "package": "next",
+              "patched_versions": "16.4.2",
+              "vulnerable_version_range": ">= 16.2.0"
+            }
+          ]
+        },
+        "exposureStatus": "cache-preconditions-absent",
+        "evidence": "No cacheComponents opt-in or nested use-cache/rootparam calls. API affected range conflicts patched16.4.2 field.",
+        "owner": "Codex upgrade execution (active goal)",
+        "recheckExpiry": "2026-11-04T19:30:00Z",
+        "ownerAcceptance": false,
+        "qualification": "bounded-static-only",
+        "metadataResolution": "open-not-proven-fixed-by-audit",
+        "requiredAction": "Refresh primary metadata and re-evaluate actual deployment exposure before qualification; deadline or any qualification attempt, whichever earlier."
+      },
+      {
+        "ghsa": "GHSA-rhh4-g77r-r9qj",
+        "primaryURL": "https://github.com/vercel/next.js/security/advisories/GHSA-rhh4-g77r-r9qj",
+        "officialMetadata": {
+          "ghsa_id": "GHSA-rhh4-g77r-r9qj",
+          "published_at": "2026-11-03T18:39:45Z",
+          "severity": "medium",
+          "updated_at": "2026-11-03T18:39:46Z",
+          "vulnerabilities": [
+            {
+              "package": "next",
+              "patched_versions": "",
+              "vulnerable_version_range": ">= 16.0.0, <= 16.4.2"
+            }
+          ]
+        },
+        "exposureStatus": "cache-preconditions-absent",
+        "evidence": "No use-cache binary arguments or cacheComponents opt-in.",
+        "owner": "Codex upgrade execution (active goal)",
+        "recheckExpiry": "2026-11-04T19:30:00Z",
+        "ownerAcceptance": false,
+        "qualification": "bounded-static-only",
+        "metadataResolution": "open-not-proven-fixed-by-audit",
+        "requiredAction": "Refresh primary metadata and re-evaluate actual deployment exposure before qualification; deadline or any qualification attempt, whichever earlier."
+      },
+      {
+        "ghsa": "GHSA-pc58-hwjq-p385",
+        "primaryURL": "https://github.com/vercel/next.js/security/advisories/GHSA-pc58-hwjq-p385",
+        "officialMetadata": {
+          "ghsa_id": "GHSA-pc58-hwjq-p385",
+          "published_at": "2026-11-03T18:39:48Z",
+          "severity": "medium",
+          "updated_at": "2026-11-03T18:39:48Z",
+          "vulnerabilities": [
+            {
+              "package": "next",
+              "patched_versions": "",
+              "vulnerable_version_range": ">= 16.0.0"
+            },
+            {
+              "package": "next",
+              "patched_versions": "",
+              "vulnerable_version_range": "< 16.0.0"
+            }
+          ]
+        },
+        "exposureStatus": "fetched-response-precondition-not-found-proxy-runtime-unverified",
+        "evidence": "AI provider response parsed by readBoundedResponse/schema and serialized as new JSON, local PDF generated internally. Auth response wraps local BetterAuth handler. Sentry /monitoring external rewrites exist; Next router uses httpxy proxyRequest, distinct from AppRouter fetched Response/fetch-cache path; no general proxy safety claim.",
+        "owner": "Codex upgrade execution (active goal)",
+        "recheckExpiry": "2026-11-04T19:30:00Z",
+        "ownerAcceptance": false,
+        "qualification": "bounded-static-only",
+        "metadataResolution": "open-not-proven-fixed-by-audit",
+        "requiredAction": "Refresh primary metadata and re-evaluate actual deployment exposure before qualification; deadline or any qualification attempt, whichever earlier."
+      },
+      {
+        "ghsa": "GHSA-f3mh-rxg3-f5g2",
+        "primaryURL": "https://github.com/vercel/next.js/security/advisories/GHSA-f3mh-rxg3-f5g2",
+        "officialMetadata": {
+          "ghsa_id": "GHSA-f3mh-rxg3-f5g2",
+          "published_at": "2026-11-03T18:39:54Z",
+          "severity": "medium",
+          "updated_at": "2026-11-03T18:39:54Z",
+          "vulnerabilities": [
+            {
+              "package": "next",
+              "patched_versions": "",
+              "vulnerable_version_range": ">= 16.0.0, <= 16.4.2"
+            },
+            {
+              "package": "next",
+              "patched_versions": "",
+              "vulnerable_version_range": ">= 15.0.0, <= 15.5.28"
+            }
+          ]
+        },
+        "exposureStatus": "sensitive-edge-cookie-precondition-not-found",
+        "evidence": "Explicit Edge opengraph is static ImageResponse; middleware uses NextResponse but never sets cookies; auth is default Node route. No sensitive Edge NextResponse cookie setter found.",
+        "owner": "Codex upgrade execution (active goal)",
+        "recheckExpiry": "2026-11-04T19:30:00Z",
+        "ownerAcceptance": false,
+        "qualification": "bounded-static-only",
+        "metadataResolution": "open-not-proven-fixed-by-audit",
+        "requiredAction": "Refresh primary metadata and re-evaluate actual deployment exposure before qualification; deadline or any qualification attempt, whichever earlier."
+      },
+      {
+        "ghsa": "GHSA-7qx7-33qx-rqx2",
+        "primaryURL": "https://github.com/vercel/next.js/security/advisories/GHSA-7qx7-33qx-rqx2",
+        "officialMetadata": {
+          "ghsa_id": "GHSA-7qx7-33qx-rqx2",
+          "published_at": "2026-11-03T18:39:51Z",
+          "severity": "medium",
+          "updated_at": "2026-11-03T18:39:51Z",
+          "vulnerabilities": [
+            {
+              "package": "next",
+              "patched_versions": "",
+              "vulnerable_version_range": ">= 16.0.0, <= 16.4.2"
+            },
+            {
+              "package": "next",
+              "patched_versions": "",
+              "vulnerable_version_range": ">= 15.0.0, <= 15.5.28"
+            }
+          ]
+        },
+        "exposureStatus": "attacker-svg-input-not-found",
+        "evidence": "All three next/image src are local static PNG. Default remotePatterns empty; no external pattern opt-in, no public SVG files or inspected SVG response route. Does not prove arbitrary optimizer endpoint/external rewrite behavior safe.",
+        "owner": "Codex upgrade execution (active goal)",
+        "recheckExpiry": "2026-11-04T19:30:00Z",
+        "ownerAcceptance": false,
+        "qualification": "bounded-static-only",
+        "metadataResolution": "open-not-proven-fixed-by-audit",
+        "requiredAction": "Refresh primary metadata and re-evaluate actual deployment exposure before qualification; deadline or any qualification attempt, whichever earlier."
+      },
+      {
+        "ghsa": "GHSA-vvgp-ww4w-46vf",
+        "primaryURL": "https://github.com/vercel/next.js/security/advisories/GHSA-vvgp-ww4w-46vf",
+        "officialMetadata": {
+          "ghsa_id": "GHSA-vvgp-ww4w-46vf",
+          "summary": "Cache poisoning of shared fallback shells in Cache Components via request-supplied placeholder route params",
+          "severity": "medium",
+          "vulnerabilities": [
+            {
+              "package": "next",
+              "patched_versions": "",
+              "vulnerable_version_range": ">= 16.4.0"
+            }
+          ],
+          "source": "https://api.github.com/repos/vercel/next.js/security-advisories; filtered actual Nov3 list retrieved this turn"
+        },
+        "exposureStatus": "cache-preconditions-absent",
+        "evidence": "Actual installed default cacheComponents false; no application opt-in or shared fallback cache shell feature use.",
+        "owner": "Codex upgrade execution (active goal)",
+        "recheckExpiry": "2026-11-04T19:30:00Z",
+        "ownerAcceptance": false,
+        "qualification": "bounded-static-only",
+        "metadataResolution": "open-not-proven-fixed-by-audit",
+        "requiredAction": "Refresh primary metadata and re-evaluate actual deployment exposure before qualification; deadline or any qualification attempt, whichever earlier."
+      }
+    ],
+    "checks": [
+      {
+        "name": "security-adjacent",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/apps/web/security-auth-billing.test.ts",
+          "tests/apps/web/security-auth-route-isolation.test.ts",
+          "tests/apps/web/security-cors-middleware.test.ts",
+          "tests/apps/web/security-data-protection.test.ts",
+          "tests/apps/web/security-env-secrets.test.ts",
+          "tests/apps/web/security-headers.test.ts",
+          "tests/apps/web/security-idor-isolation.test.ts",
+          "tests/apps/web/security-input-validation.test.ts",
+          "tests/apps/web/security-pii-detection.test.ts",
+          "tests/apps/web/security-provider-auth.test.ts",
+          "tests/apps/web/security-rate-limit.test.ts",
+          "tests/apps/web/security-trusted-origins.test.ts",
+          "tests/apps/web/security-upload-validation.test.ts",
+          "tests/scripts/compose-runtime-security.test.ts",
+          "--maxWorkers=1"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-next-1645-security-main-static/security-adjacent.log",
+        "sha256": "2b1747026cf8e5387bd7d9d5365dd95583c839970655d5b295d513afae679685"
+      },
+      {
+        "name": "root-types",
+        "command": [
+          "pnpm",
+          "typecheck"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-next-1645-security-main-static/root-types.log",
+        "sha256": "5888bcaa4f681b3f7bf48999ae0817c16b3af178b8c13f7d91414fdef8ea04d9"
+      },
+      {
+        "name": "contracts-types",
+        "command": [
+          "pnpm",
+          "typecheck:contracts"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-next-1645-security-main-static/contracts-types.log",
+        "sha256": "0c2a6bff203db409d0f68d48f7b21a6ac6bd6098310256e72a9c6e558bc3943d"
+      },
+      {
+        "name": "web-types",
+        "command": [
+          "pnpm",
+          "typecheck:web"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-next-1645-security-main-static/web-types.log",
+        "sha256": "249e0be3cf6277994e8d22e8440bebe6db10861cab79fe97aa4952837f3ff073"
+      },
+      {
+        "name": "lint",
+        "command": [
+          "pnpm",
+          "lint"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-next-1645-security-main-static/lint.log",
+        "sha256": "cf880eea3acdf05aec2db71c079aa7df53b63234e251b43a398be6f92fccb239"
+      },
+      {
+        "name": "engine-build",
+        "command": [
+          "pnpm",
+          "build"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-next-1645-security-main-static/engine-build.log",
+        "sha256": "d075c8ab15a7843462a88f3304147338e40a1fb638a358eeb51b2b7984d778ec"
+      },
+      {
+        "name": "web-build",
+        "command": [
+          "pnpm",
+          "build:web"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-next-1645-security-main-static/web-build.log",
+        "sha256": "d23894e4ede09a122cd0529df02f66bec429bbc2b410a8b7fbda9adee3f35eef"
+      },
+      {
+        "name": "production-browser",
+        "command": [
+          "pnpm",
+          "test:web",
+          "self-host-flows.spec.ts",
+          "account-recovery.spec.ts",
+          "help.spec.ts",
+          "workspace-guided-year.spec.ts",
+          "--reporter=list,json",
+          "--retries=0"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-next-1645-security-main-browser/production-browser.log",
+        "sha256": "af51869d980907c8863d8609f0a113aa260a5b97489483eb49573468cc7e5814"
+      }
+    ],
+    "browserStats": {
+      "passed": 28,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0,
+      "retries": 0
+    },
+    "cleanup": "Root lsof check found no3099 listener after managed run",
+    "noticeRefreshLimit": "Earlier root web retrieval observed release recommendation; root and peer later attempts return Internal Error. No old pre-release HTML substituted.",
+    "ledger": "docs/upgrade-2026-next-1645-security-work.md",
+    "evidence": ".local/upgrade-evidence/nov03-next-1645-security/owned-exposure-and-checks.json"
   }
 }
