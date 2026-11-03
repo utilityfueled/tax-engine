@@ -10564,6 +10564,26 @@
       ]
     },
     {
+      "key": "state/guided-pa-dividend-sources",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40b.pdf",
+      "specPath": "spec/state/guided-pa-dividend-sources.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/guided-pa-ordinary-panels",
       "jurisdiction": "state",
       "taxYear": 2025,
@@ -12498,6 +12518,26 @@
       "taxYear": 2025,
       "sourceAuthority": "docs/upgrade-2026-execution-brief.md",
       "specPath": "spec/state/pa-complete-workspace-export.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-dividend-independent",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/dividends; https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40b.pdf",
+      "specPath": "spec/state/pa-dividend-independent.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,

@@ -13479,5 +13479,29 @@
     "ownedLoopbackServerClosed": true,
     "evidence": "nov02-parent-browser-source-years*",
     "releaseReady": false
+  },
+  "nov03MainPADividendCollector": {
+    "baseCommit": "26ad3fa8",
+    "status": "main scoped checks and independent original-source/UI review pass",
+    "sourceFirstUIFailures": 6,
+    "main": {
+      "tests": 697,
+      "files": 8,
+      "newControls": 31,
+      "priorControls": 47,
+      "strictCatalog": 619,
+      "specLines": 7027,
+      "types": "root/web/contracts pass",
+      "strictLint": "0warnings",
+      "inventory": "generation/check pass",
+      "builds": "engine/web pass"
+    },
+    "ownedAuthorPaths": 6,
+    "independentControlsPaths": 2,
+    "products": 2,
+    "authorFreezeSHA256": "45150dc6083194a8145906f5cac6de6dbf7d6a9c252b1206ef039f630afbd069",
+    "independentReceiptSHA256": "74cb110743d5e8ba70ebbdfb97ca02904676771e640800a6501aaabd86ecf563",
+    "evidence": "nov03-parent-pa-dividend-main*",
+    "releaseReady": false
   }
 }

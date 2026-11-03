@@ -2237,3 +2237,13 @@ existing amount, assertion and product gate remains unchanged. Main12 unit and
 10 actual desktop/mobile checks pass with types3/spec7011/inventory/strict0.
 Allsix downloaded PDFs/90pages match independently inspected copies in text
 and pixels, with strict/privacy checks. See the [browser fixture ledger](upgrade-2026-browser-federal-source-year-ledger.md).
+
+### November3 UTC: actual dividend record collection
+
+The existing PA source panel now collects dated original dividends and RIC
+distributions for allthree residency categories, preserves unknown/zero drafts
+and requires explicit reconfirmation after edits. Six genuine main UI failures
+precede the two reviewed products;697/eight, types3/spec7027/inventory/strict0/
+builds pass. Independent31new/source controls and47 prior controls approve. See
+the [collector ledger](upgrade-2026-guided-pa-dividend-sources-work.md). No engine
+formula or filing/human qualification gate changed.

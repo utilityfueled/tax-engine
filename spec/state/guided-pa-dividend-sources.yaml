@@ -1,0 +1,34 @@
+form: "Guided-PA-Actual-Dividend-Sources"
+fullName: "Structured actual personal dividend statements and dated distribution credits"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40b.pdf"
+notes: |
+  Official 2025 Schedule B and current PA PIT Guide Dividends refreshed before tests.
+  This collector uses the existing restricted ordinary-personal source calculation.
+  Actual resident-period receipts determine allocation; fund address is not a source rule.
+  RIC capital gain distributions remain in the dividend class. No new tax formula,
+  source admission, final2026 form, human qualification or filing promotion.
+  Empty amounts, dates, years, classifications and original selections stay unknown.
+  Only explicit source confirmation may bind the current selected actual original.
+lines:
+  - line: "unknown"
+    formula: "Adding a statement or credit leaves amounts and dates empty, year/index null and classifications unconfirmed; knownzero remains distinct from empty."
+    testRef: "tests/apps/web/guided-pa-dividend-sources.test.ts::PA dividend draft starts with actual facts unknown"
+  - line: "schema"
+    formula: "Reuse the strict existing dividend source schema for retained drafts; unsupported scalar overrides are rejected."
+    testRef: "tests/apps/web/guided-pa-dividend-sources.test.ts::PA dividend draft preserves strict existing source schema"
+  - line: "edits"
+    formula: "Every substantive row edit revokes its source confirmation without changing retained original snapshots; only a direct confirmation answer changes that answer."
+    testRef: "tests/apps/web/guided-pa-dividend-sources.test.ts::PA dividend draft edits retain original identity and revoke source confirmation"
+  - line: "actual-controls"
+    formula: "Native controls collect selected original, actual year/reference, six explicit classifications and each actual dated ordinary/RIC distribution amount without backfilling defaults."
+    testRef: "tests/apps/web/pa-dividend-source-controls.test.tsx::actual PA dividend controls preserve unknown and knownzero drafts through reopening"
+  - line: "all-three"
+    formula: "Existing fictional March1000+200 and September1000+300 original credits produce resident2500/PY1300/NR0 dividends and existing total tax1615/839/184. Saved source drafts navigate through the real state canonical replay without refreshing originals."
+    testRef: "tests/apps/web/pa-dividend-source-controls.test.tsx::actual PA dividend controls reach saved canonical composition in %s"
+  - line: "stale"
+    formula: "Editing actual credits clears top and row confirmations, preserves old snapshots and blocks replay; equal-dollar original payer edits also reject until explicit valid reconfirmation."
+    testRef: "tests/apps/web/pa-dividend-source-controls.test.tsx::actual PA dividend controls invalidate edited sources and reject stale originals"
+  - line: "remove"
+    formula: "Removing a selected credit or dividend original changes only that source row; all unrelated payroll, bank, business and other private packets remain retained."
+    testRef: "tests/apps/web/pa-dividend-source-controls.test.tsx::actual PA dividend controls remove only the selected source and credit"
