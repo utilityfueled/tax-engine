@@ -14608,5 +14608,66 @@
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       }
     ]
+  },
+  "nov03FullCoverage91": {
+    "numTotalTests": 22690,
+    "numPassedTests": 22654,
+    "numFailedTests": 3,
+    "numPendingTests": 33,
+    "numTotalTestSuites": 5284,
+    "numPassedTestSuites": 5281,
+    "numFailedTestSuites": 3,
+    "failures": [
+      {
+        "file": "tests/guided-interview/guided-claim-of-right.test.ts",
+        "title": "uses actual source states once and requires the known non-W-2 tax allocation",
+        "messages": [
+          "AssertionError: expected undefined to be '12' // Object.is equality\n    at /Users/beebs/Documents/Programming/tax-engine/tests/guided-interview/guided-unemployment-source-facts.test.ts:69:66\n    at file:///Users/beebs/Documents/Programming/tax-engine/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/beebs/Documents/Programming/tax-engine/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/beebs/Documents/Programming/tax-engine/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///Users/beebs/Documents/Programming/tax-engine/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///Users/beebs/Documents/Programming/tax-engine/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest"
+        ]
+      },
+      {
+        "file": "tests/guided-interview/guided-retirement-source-facts.test.ts",
+        "title": "forwards actual recipient and matching state withholding without inventing local identity",
+        "messages": [
+          "AssertionError: expected undefined to be '0' // Object.is equality\n    at /Users/beebs/Documents/Programming/tax-engine/tests/guided-interview/guided-retirement-source-facts.test.ts:33:66\n    at file:///Users/beebs/Documents/Programming/tax-engine/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/beebs/Documents/Programming/tax-engine/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/beebs/Documents/Programming/tax-engine/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///Users/beebs/Documents/Programming/tax-engine/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///Users/beebs/Documents/Programming/tax-engine/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/ru"
+        ]
+      },
+      {
+        "file": "tests/guided-interview/guided-unemployment-source-facts.test.ts",
+        "title": "uses actual source states once and requires the known non-W-2 tax allocation",
+        "messages": [
+          "AssertionError: expected undefined to be '12' // Object.is equality\n    at /Users/beebs/Documents/Programming/tax-engine/tests/guided-interview/guided-unemployment-source-facts.test.ts:69:66\n    at file:///Users/beebs/Documents/Programming/tax-engine/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/beebs/Documents/Programming/tax-engine/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/beebs/Documents/Programming/tax-engine/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///Users/beebs/Documents/Programming/tax-engine/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///Users/beebs/Documents/Programming/tax-engine/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest"
+        ]
+      }
+    ],
+    "coverage": {
+      "statements": {
+        "percent": "91.43",
+        "covered": 74355,
+        "total": 81321
+      },
+      "branches": {
+        "percent": "87.08",
+        "covered": 67061,
+        "total": 77003
+      },
+      "functions": {
+        "percent": "90.22",
+        "covered": 14863,
+        "total": 16473
+      },
+      "lines": {
+        "percent": "94.43",
+        "covered": 59169,
+        "total": 62655
+      }
+    },
+    "head": "91b80d8a647706c4c3b70a7d5721abb6683e9d5c",
+    "allCoverageThresholdsPass": true,
+    "suitePass": false,
+    "fullLogSHA256": "a9c1fecc479f9af1d2955a46aa672c258c7f110fa416a1ab55d275c6118e1cf5",
+    "resultSHA256": "c08b08bb62b602d52fe294a102daefe3695310dfb2f6b6407da8ac091b02b44d",
+    "qualified": false,
+    "evidenceBoundary": "Local synthetic unit coverage only; all coverage thresholds pass but three assertions fail; 33 isolated-PG tests pending here, separately exercised against PostgreSQL in prior bounded run."
   }
 }

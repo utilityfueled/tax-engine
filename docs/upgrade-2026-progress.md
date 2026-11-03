@@ -9,12 +9,18 @@
   cases;24related tests, three typechecks, spec/inventory/lint and681strict
   references pass. Independent review's missing-remount finding is corrected;
   [evidence and limits](upgrade-2026-pa-resident-credit-native-entry-work.md).
-- [ ] Full coverage on648dd8a3 passes22,410tests, fails6 and skips33 isolated-PG
-  tests. Statements91.18%, branches86.89%, functions89.20%, lines94.29%.
-  Functions90% gate remains failed. Current failures: OID1, jointretirement1,
-  Treasury/state-routing2 and government-unemployment/claim-of-right2. No tests
-  or thresholds are weakened. Native Michigan entry and source-complete OID and
-  Treasury successors remain active; unresolved UC tax treatment stays explicit.
+- [x] Full coverage on pushed `91b80d8a` clears every coverage threshold:
+  statements91.43%, branches87.08%, functions90.22%, lines94.43%. This supersedes
+  the historical648dd8a3 function-gate failure. The suite itself still fails:
+  22,654pass/3fail/33pending out of22,690. The three failures are the original
+  government-benefit preview check (also executed through a test-module import)
+  and young joint-retirement preview. Legacy exact payment/rounding assertions
+  remain valid; canonical source-complete previews now require actual qualifying
+  source methods. Separate source-first contract migration is pending; actual
+  UC remittance treatment and joint retirement qualification remain blocked.
+  Log SHA256 `a9c1fecc479f9af1d2955a46aa672c258c7f110fa416a1ab55d275c6118e1cf5`;
+  raw result `c08b08bb62b602d52fe294a102daefe3695310dfb2f6b6407da8ac091b02b44d`.
+  These are local unit/coverage results, not a passing global or staging gate.
 
 The owner selected PA and Ohio, each with full-year resident, part-year resident and nonresident returns. Separate source-first state implementation/qualification work is active; selection does not activate unqualified outputs.
 
