@@ -2620,3 +2620,7 @@ Hosted billing now denies configured opposite-mode/unsupported keys before outbo
 ### November 3: fresh package audit and security-source follow-up
 
 A new 18:09 UTC full registry audit reports zero vulnerabilities across 522 dependencies on the unchanged lockfile. Official Next sources still present the scheduled seven-medium advance notice and 16.4.4 as latest stable observed; source-cache limits and the unqualified November fixes remain explicit. No version, threshold, image or risk acceptance changed. See [the security refresh](upgrade-2026-security-refresh-20261103-1425.md). PA public cffef1ac, OH business browser 970326c8 and hosted billing mode 80bc752f are committed and pushed; their focused evidence does not establish current full-suite, runtime, staging or human/final-form qualification.
+
+### November 3: actual reciprocal employee desktop/mobile lifecycle
+
+Current-main refund/knownzero journeys pass4/4 without retries through native originals, equal-cash source invalidation, unknown withholding reload, explicit reconfirmation, review download and reopen. Each actual review200 binds saved response bytes; separate filing400 stays denied. All7 scoped static sets pass; distinct saved4PDF/88page privacy/text/RGB and40geometry review passes. See [the browser ledger](upgrade-2026-oh-reciprocal-native-browser-work.md). No product change; official reciprocal physical forms, broader cohorts/currentglobal/distributions/staging/human/final2026 remain open. Security0e4c2df6 and hostedmode80bc752f are pushed.

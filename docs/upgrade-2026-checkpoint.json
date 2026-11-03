@@ -15910,5 +15910,32 @@
     "owner": "upgrade execution; recheck before release",
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-security-refresh-20261103-1425.md"
+  },
+  "ohReciprocalNativeBrowser20261103": {
+    "status": "bounded-local-pass",
+    "baseCommit": "0e4c2df6fc2930d4fc0efeb0052ba6555656696c",
+    "sourceFirstAuthorManifestSHA256": "6f788c5b3014ec3dc04db3f402850cb8846d38b959b383b6696858700e05edce",
+    "actualBrowser": {
+      "passed": 4,
+      "retries": 0,
+      "skipped": 0,
+      "logSHA256": "a8eeb970cf9731efc52e441f6b1005f6d3a22d7b44641733d95e68020beb8b33"
+    },
+    "static": "strict0/webtypes/OHspec/AST/collection4/inventory PASS; old command typo retained",
+    "savedArtifactReviewSHA256": "8f518165210ed23d1bce93d3ee59b4ae1faf4b942eba4cada45812ab2b58a8aa",
+    "rootReviewSHA256": "6ed9780fc7539fec1dfc1bb0c69e0e5ebcf7475d1eba22736372b9fb9f853fbd",
+    "savedPDFs": 4,
+    "pages": 88,
+    "geometryRecords": 40,
+    "PNGcaptures": 44,
+    "allPageTextAndRGBParity": true,
+    "productsChanged": false,
+    "scope": "Finite2025 PA reciprocal employee reference review; no filing/2026/human/currentglobal/distribution/staging qualification",
+    "previousCommittedPackages": {
+      "security": "0e4c2df6",
+      "hostedBillingMode": "80bc752f",
+      "PApublic": "cffef1ac",
+      "OHbusinessBrowser": "970326c8"
+    }
   }
 }

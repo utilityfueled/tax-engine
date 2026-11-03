@@ -1,0 +1,52 @@
+form: "Actual Ohio reciprocal employee native browser lifecycle"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Exact5ef2b385 isolated baseline, NEW browser/fixture/spec/ledger only.
+  Final2025 booklet printed5 nearest-dollar,17 Ohio-only withholding,20 ADJ14
+  eligible reciprocal employee compensation and35 NRC excludes deducted wages;
+  RC5747.01(A)(33) and5747.05(A)(2). Refreshed2026-11-03 before controls.
+  Prior independent Decimal receipt3f19cddc: raw60000.25 -> reported60000;
+  rawOhioWH2000.60 -> reported2001. Separate zero case raw60000.50 ->60001;
+  rawOhioWH0.00 ->0. OhioAGI/tax/NRCcredit0 in both. Refund requested2001/0.
+  Twelve actual primary-owned monthly originals: eleven wages5000.02 and
+  December5000.03/5000.28; withholding eleven166.72 +166.68 or twelve0.00.
+  No proof from mailing address, W2 scalar, payroll inference or current copies.
+  Initial storage seed supplies only unrelated complete fictional personal,
+  current W2/state-local originals and separately complete Ohio residency/account
+  originals. Reciprocal root, nested canonical source and StateReturn completion
+  absent. All reciprocal originals originate visibly; no post-origin storage writes.
+  Normal production-managed Chromium config, two existing workers and deadlines;
+  explicit retries0. Four journeys at1280x900/390x844, two independent cash cases.
+  Current PA reciprocal method exports reference-only review summaries, not
+  qualified official Ohio forms. Actual review200/PDF bytes required separately
+  from filing400. No provider/production/funds/final2026/human qualification.
+lines:
+  - line: "unknown-origination"
+    label: "Blank documentary records do not establish reciprocity"
+    formula: "Actual Add button exposes blank year, owner, identities, dates, values and unknown assurances; no payroll originals/captures. Actual blank confirmation remains guarded and no current state summary. Initial unscrolled and actual validation viewport geometry captured."
+    testRef: "apps/web/tests/oh-reciprocal-native.spec.ts::originates reciprocal employee originals and preserves actual source-bound review through reopen"
+  - line: "actual-entry-and-copy"
+    label: "Explicit source entry and checked current W2 copy"
+    formula: "Enter complete actual PA domicile, C-corporation employer, ordinary OH services and twelve separately owned dated payroll originals through controls. Select actual W2, explicitly check it then Copy. Only originalW2 changes; documentary originals remain exact. Explicit final confirmation captures current federal/residency/account sources."
+    testRef: "apps/web/tests/oh-reciprocal-native.spec.ts::originates reciprocal employee originals and preserves actual source-bound review through reopen"
+  - line: "literal-cash"
+    label: "Once-rounded actual wages and Ohio income-tax cash"
+    formula: "Raw60000.25/2000.60 reportAGI60000/ADJ14=60000/WH2001/refund2001; raw60000.50/0.00 reportAGI60001/ADJ14=60001/WH0/refund0. OhioAGI/tax/NRCcompensation/ratio/credit0; PA row excluded. Raw currentW2/payroll cents preserved, no double deduction."
+    testRef: "apps/web/tests/oh-reciprocal-native.spec.ts::originates reciprocal employee originals and preserves actual source-bound review through reopen"
+  - line: "source-replacement"
+    label: "Same-cash documentary edit invalidates current result"
+    formula: "Change payroll1 originalID only with unchanged cash/date/owner; confirmation invalid and current state summary absent. Retained federal/residency/account captures unchanged. Save/reload pending state, explicitly reconfirm and regain same actual result."
+    testRef: "apps/web/tests/oh-reciprocal-native.spec.ts::originates reciprocal employee originals and preserves actual source-bound review through reopen"
+  - line: "unknown-and-reopen"
+    label: "Actual zero is distinct from saved unknown"
+    formula: "Clear first payroll Ohio withholding166.72/0.00 to blank, reload and retain unknown/current denial with old captures unchanged. Blank confirmation remains guarded. Restore exact actual original amount, explicitly confirm, navigate MyReturns/reopen and retain exact raw packet/currentW2/parents. No read-time recapture."
+    testRef: "apps/web/tests/oh-reciprocal-native.spec.ts::originates reciprocal employee originals and preserves actual source-bound review through reopen"
+  - line: "geometry-and-privacy"
+    label: "Every native phase is usable at desktop and mobile widths"
+    formula: "Actual initial/validation/entered/confirmed/review/pending/unknown/reconfirmed/reopened/workspace captures. No document or panel/control/label/button horizontal overflow; actual selected anchor fully viewport and uncovered. No SSNs/private records in public summary or unrelated requests; no page/console errors or JSON editor."
+    testRef: "apps/web/tests/oh-reciprocal-native.spec.ts::originates reciprocal employee originals and preserves actual source-bound review through reopen"
+  - line: "actual-reference-export"
+    label: "Review output and filing denial are separate real operations"
+    formula: "Actual DownloadReviewPDF UI POST200 gives PDF purpose review/no-store; saved download equals response bytes. IT1040/NRC/adjustment references present, Ohio official forms absent; withholding companion only for actual positive cash. Pin IT1040 1/2b60000 or60001,3/8c/9/10=0,14/26=2001 or0; ADJ14 Reciprocitywages/47=60000 or60001; NRC1/16/19/20=0. Strict saved PDF no fields/widgets/SSNs/private IDs in text/metadata/all indirect object and decoded streams. Separate filingPOST400 generic response/no second download; reopen preserves exact sources. Visual inspection and actual page counts recorded after runtime."
+    testRef: "apps/web/tests/oh-reciprocal-native.spec.ts::originates reciprocal employee originals and preserves actual source-bound review through reopen"
