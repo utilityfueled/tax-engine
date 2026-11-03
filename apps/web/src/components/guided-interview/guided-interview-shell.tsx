@@ -318,7 +318,7 @@ function RefundTicker({
   };
 
   return (
-    <div className="guided-refund-ticker-sticky">
+    <div className={`guided-refund-ticker-sticky${separateMetrics ? " guided-refund-ticker-separate" : ""}`}>
       <RetroShell title="Live Ticker" eyebrow="ESTIMATE">
         <div className="guided-ticker-toolbar">
           <p className="guided-ticker-toolbar-copy">

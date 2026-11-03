@@ -1822,6 +1822,11 @@ body {
   min-width: 0;
 }
 
+/* Full separate-owner panels must scroll without covering the source interview. */
+.guided-refund-ticker-sticky.guided-refund-ticker-separate {
+  position: static;
+}
+
 .guided-ticker-toolbar {
   display: flex;
   justify-content: space-between;

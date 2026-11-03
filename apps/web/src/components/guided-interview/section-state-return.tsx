@@ -241,7 +241,7 @@ export function SectionStateReturn({
           {(current.ohioResidency?.schoolDistrictStatus==='actual_district_sources_required'||current.ohioSchoolDistrict)&&<OhioSchoolDistrictDetails originalInput={originalInput??null} taxYear={taxYear} data={current.ohioSchoolDistrict} ohioResidency={current.ohioResidency} ohioPayments={current.ohioPayments} onChange={ohioSchoolDistrict=>onDataChange({...current,ohioSchoolDistrict})}/>}
 
         </>}
-        {stateCode==='PA'&&(filingStatus==='mfj'||current.paMarriedOrdinarySources!==undefined)?<>
+        {stateCode==='PA'&&(filingStatus==='married_filing_jointly'||filingStatus==='mfj'||current.paMarriedOrdinarySources!==undefined)?<>
           <PAMarriedOrdinaryDetails originalInput={ordinaryOriginalInput??originalInput??null} data={current.paMarriedOrdinarySources} onChange={paMarriedOrdinarySources=>onDataChange({...current,paMarriedOrdinarySources})}/>
           {(['paResidencySources','paReciprocitySources','paOrdinaryReturnFacts','paOrdinaryReturnCompletionSources']as const).filter(key=>current[key]!==undefined).map(key=><div key={key}><p>Retained {key} must be reviewed against the married household choice. It has not been discarded.</p><button type="button" onClick={()=>{const next={...current};delete next[key];onDataChange(next);}}>Remove reviewed conflicting {key}</button></div>)}
         </>:stateCode === "PA" && <>

@@ -1640,6 +1640,14 @@ export function ReturnWorkspaceScreen({
           <Link className="utility-button workspace-link" href="/">
             Back to My Returns
           </Link>
+          <span
+            className="status-inline"
+            role="status"
+            aria-live="polite"
+            aria-label="Return status"
+          >
+            {storageMessage ?? documentStatusMessage}
+          </span>
         </div>
         {unsupportedTaxYearNotice ? (
           <p className="document-meta">{unsupportedTaxYearNotice}</p>
@@ -2010,14 +2018,6 @@ export function ReturnWorkspaceScreen({
                 <button className="utility-button" type="button" onClick={resetWorkspace}>
                   Reset Return
                 </button>
-                <span
-                  className="status-inline"
-                  role="status"
-                  aria-live="polite"
-                  aria-label="Return status"
-                >
-                  {storageMessage ?? documentStatusMessage}
-                </span>
               </div>
             </RetroShell>
 

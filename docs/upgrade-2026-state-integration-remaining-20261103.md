@@ -47,3 +47,8 @@ and immutable historical records. It fixes the two observed0aa remote browser
 failures locally; it does not substitute for a fresh complete remote/image run.
 The actual0aa runtime/coverage evidence is separately recorded atb935ac57.
 Remaining external requirements in the execution brief remain unchanged.
+
+Current married PA native J/M production-browser desktop/mobile rehearsal passes4/4
+firstattempt on0db95ea5 plus the reviewed five minimal UI corrections. All199affected
+controls and11static checks pass. See upgrade-2026-pa-married-native-browser-work.md;
+physical married forms and broader households remain separate successors.

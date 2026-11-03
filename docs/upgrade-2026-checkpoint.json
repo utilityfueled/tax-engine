@@ -15622,5 +15622,29 @@
     "inventoryEntries": 787,
     "rootReviewSHA256": "1894b0e3d53fb047716c44027e34580d63550fb19c980b0a8d7ca222cd8921e2",
     "ledger": "docs/upgrade-2026-ohio-resident-credit-sources-work.md"
+  },
+  "nov03MainPAMarriedNativeBrowser": {
+    "base": "0db95ea531d9d593292d23024c42ac0727e79b34",
+    "status": "reviewed; current-main actual4/4firstattempt; commit follows",
+    "sourceFirstMainRED": {
+      "failed": 3,
+      "passed": 5,
+      "logSHA256": "12ccebdb36c1f33344c3ac0accd689a5935fae96caf4065874454eb9bbc27394"
+    },
+    "affectedTests": 199,
+    "affectedFiles": 12,
+    "staticChecks": 11,
+    "staticReceiptSHA256": "c2c4f6e8ca3512de3157f36dfb26e8e285a66fb885b9f4cf6dad6337ece0a9e5",
+    "actualBrowserCases": 4,
+    "retries": 0,
+    "skips": 0,
+    "actualPNG": 36,
+    "rawGeometryBodies": 36,
+    "generic400NoDownloadBodies": 4,
+    "browserReceiptSHA256": "f841c451a45a096f166a57d9d7980f1d6c11f88744335a438994fa1728eb3e1d",
+    "reviewSHA256": "e3b7eeb45fd3c4cc2e03b3439191cde13e54cd49deea29bbd23deae625ee9353",
+    "physicalMarriedGuardOpen": false,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-pa-married-native-browser-work.md"
   }
 }

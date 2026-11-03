@@ -2574,3 +2574,7 @@ The finite2025 PA-domiciled ordinary Ohio employee collector retains blank/unkno
 ### November3: original-bound Ohio resident credit
 
 The finite2025 single Ohio resident/actual Virginia ordinary-wage method reconciles the complete filed return, net liability, applied remittances and completed refunds before deriving IT RC. Distinct117controls and current-main1786/70pass after genuine31RED/39pass; all13checks including types3/spec/AST/strict8/bothbuilds pass. See [the source ledger](upgrade-2026-ohio-resident-credit-sources-work.md). Native/physical, real transaction identity for distinct equal-day payments, broader cohorts/currentglobal/distributions/staging/human/final2026 remain open. Reciprocal nativecc15a904 is pushed.
+
+### November3: actual married PA desktop/mobile source entry
+
+Current-main J/M desktop1280/mobile390 journeys pass4/4 firstattempt with zero retries, preserving owned2456 or1535/921 results through actual source edits, invalidation, reconfirmation and reopening. Root reproduces3genuineRED/fivepass before five minimal product hunks;199affected tests and all11static checks pass, with the actual production web build. All36frames/rawgeometry/four guarded400responses are retained and reviewed. See [the browser ledger](upgrade-2026-pa-married-native-browser-work.md). Physical married forms, broader households, actual distributions/staging/human/final2026 remain separate; current0db remote coverage passes but unit/runtimebrowser jobs need follow-up.
