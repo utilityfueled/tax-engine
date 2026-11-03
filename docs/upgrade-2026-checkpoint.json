@@ -14079,6 +14079,28 @@
     "final2026Qualified": false,
     "integrationReviewSHA256": "ff82671e30270421cb0a01f55eb6387128f49d52fffab9fd711ca04f70f57ecb",
     "limits": "Technical source method only; collector/PDF/browser/final2026/human qualification open",
-    "finalMergedReviewSHA256": "2c829bed701f80fc5da57c48124371f705fe2c6c51c43023e419c0176b724e6a"
+    "finalMergedReviewSHA256": "2c829bed701f80fc5da57c48124371f705fe2c6c51c43023e419c0176b724e6a",
+    "commit": "b625fbf9f5821097860dda280d9236f07751e88f",
+    "pushed": true
+  },
+  "nov03MainOIDLegacyReplay": {
+    "base": "b625fbf9f5821097860dda280d9236f07751e88f",
+    "authorManifestSHA256": "76adccf8d4a73564e8f5d158fc65631c2073f463201e0616f0a26534bc2297a7",
+    "independentReviewSHA256": "88f23df6fc18edd5c2cb43a4e2be0fff083c8ca35726272526982c973cc1d44b",
+    "finalMainReviewSHA256": "756644051a9b9ae7bfd59917206e0e303ce5e49c7c77260f77f97384894fee9d",
+    "freshMainRedFailed": 18,
+    "freshMainRedPassed": 23,
+    "freshMainRedLogSHA256": "f2fc24dade067d9a6059da5ce52964a6140344d25904ef2fe9e43387be0b2494",
+    "tests": 1150,
+    "files": 34,
+    "specReferences": 7285,
+    "inventory": 730,
+    "types": 3,
+    "builds": 2,
+    "strictWarnings": 0,
+    "scope": "Named16 exact schema string0 replay only; actual proof required, no defaults/schema/monetary/tax methods change",
+    "filingEligible": false,
+    "humanQualified": false,
+    "integrationReviewSHA256": "44fe55636b2a5cebfe6a70cf8b7c58fc0a6468b82e5257a98371755bba7ca7c4"
   }
 }

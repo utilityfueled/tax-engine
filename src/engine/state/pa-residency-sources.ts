@@ -95,10 +95,14 @@ function deriveResidency(source: PAResidencySources, year: number) {
   return { status: derived, periods, residentPeriods };
 }
 
+// Exact inert values inserted by PAResidentReturnSchema around a retained OID source.
+// This does not qualify any other legacy method or replace actual source proof.
+const oidLegacySchemaZeroKeys = new Set<string>(["unreimbursedExpenses", "otherDeductions", "creditFromPriorYear", "extensionPayment", "estimatedPayments", "nonresidentTaxWithheld", "nontaxableIncome", "additionalEligibilityIncome", "spouseEligibilityIncome", "estateTrustIncome", "otherCredits", "priorYearPATaxableIncome", "priorYearTaxForgivenessCredit", "useTax", "lateFilingOrPaymentPenalty", "latePaymentInterest"]);
+
 function reconcileOIDOverride(input:TaxYearInput,source:PAResidencySources,amount:(value:unknown)=>Decimal):void {
   if(input.paNonresidentReturn!==undefined)return error('retained PA nonresident override needs its actual source integration');
   const legacy=input.paResidentReturn;if(legacy===undefined)return;
-  if(!source.oidAndMiscSources||Object.keys(legacy).some(key=>key!=='scheduleA')||!legacy.scheduleA||Object.keys(legacy.scheduleA).some(key=>key!=='oidSources'))return error('only the actual original-bound OID classification can reconcile a retained PA override');
+  if(!source.oidAndMiscSources||Object.entries(legacy).some(([key,value])=>key!=='scheduleA'&&(!oidLegacySchemaZeroKeys.has(key)||value!=='0'))||!legacy.scheduleA||Object.keys(legacy.scheduleA).some(key=>key!=='oidSources'))return error('only the actual original-bound OID classification can reconcile a retained PA override');
   const rows=legacy.scheduleA.oidSources;if(!rows||rows.length!==input.form1099OID.length||new Set(rows.map(row=>row.sourceId)).size!==rows.length)return error('retained OID classification needs exact current original coverage');
   for(const row of rows){reference(row.sourceReference);const index=input.form1099OID.findIndex(original=>original.sourceId===row.sourceId),proof=source.oidAndMiscSources.oid.find(candidate=>candidate.originalIndex===index);
     if(index<0||!proof||row.factsConfirmed!==true||row.strippedBond!==false||row.strippedBondExemptInterest!==undefined||!amount(row.bondPremiumNettedOnStatement).isZero()||!amount(row.paBondPremiumAmortization).isZero()||row.paTaxTreatment!==(proof.classification==='direct_us_treasury'?'us_government':'taxable'))return error('retained PA OID classification contradicts the current actual investment source');

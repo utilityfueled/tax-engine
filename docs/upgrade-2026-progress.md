@@ -2387,3 +2387,7 @@ The finite imported-settlement method separately binds actual remittance, printe
 ### November 3: actual PA securities and settled NY investment account
 
 The bounded current-original PA securities method now preserves signed securities/digital class aggregation and exact withholding. A separately documented NY erroneous-payment claim400 and received principal400 establish settled net0 without inventing an IT203 withholding credit. Distinct111/9 review and current-main1,107/32 pass; three types,7,272spec links, inventory728, strict20paths0 and both builds pass after source-first failures and manual successor merges. Added controls retain empty-securities digital ScheduleD and reject mixed/no-paid histories. See [the source ledger](upgrade-2026-pa-ordinary-brokerage-sources.md). Native/forms/human/final2026 gates remain open. MI settlement8d408eed is pushed.
+
+### November 3: exact retained OID schema reconciliation
+
+The actual original-bound OID method now tolerates only the sixteen exact string0 values already injected by the existing canonical schema. Independent41/2 and fresh main1,150/34 pass after18genuine main failures; three types,7,285spec links, inventory730, strict lint0 and both builds pass. The two-part adapter diff preserves all newer source methods byte-for-byte. See [the OID ledger](upgrade-2026-pa-oid-legacy-source-replay.md). Mixed saved MISC claims/complete guided fixtures remain separate; no filing gate changes. Securities b625fbf9 is pushed.

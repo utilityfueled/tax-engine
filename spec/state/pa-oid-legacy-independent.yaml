@@ -1,0 +1,33 @@
+form: "PA-OID-Legacy-Independent"
+fullName: "Independent finite OID default adapter review"
+taxYear: 2025
+reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest"
+notes: |
+  Independent technical review of an adapter, not a new tax-law method or human
+  qualification. The original seven author controls remain unchanged. Reuse their
+  declared fictional actual-builder constructor only as setup, with independent
+  literal assertions and adversarial source mutations below. Only sixteen existing
+  canonical defaults with exact string0 may be inert. The original guided raw input
+  has scheduleA only; no new values or original facts are manufactured on read.
+  Explicit wages60000 and TreasuryOID1000 retain compensation60000, taxable
+  interest0, and rounded PA tax1842. A separately declared ordinary taxable OID1000
+  case produces total61000 and rounded tax1873. Both cases retain current proof.
+lines:
+  - line: "sixteen"
+    formula: "For each of sixteen exact defaults independently replay actual builder originals. Reject 1, 0.00, -0, null, undefined and blank without changing sources. Null/blank must fail the unchanged canonical schema as well. No read mutation."
+    testRef: "tests/engine/state/pa-oid-legacy-independent.test.ts::independent exact default and unknown boundary %s"
+  - line: "unlisted"
+    formula: "Known scalar, boolean, array and schedule methods outside the sixteen names stay unsupported even when represented as zero, false or empty."
+    testRef: "tests/engine/state/pa-oid-legacy-independent.test.ts::independent unlisted inert-looking method %s"
+  - line: "schedule-a"
+    formula: "Zero-valued additional ScheduleA keys cannot hide within the allowed actual OID classification."
+    testRef: "tests/engine/state/pa-oid-legacy-independent.test.ts::independent zero ScheduleA extension %s"
+  - line: "source-replay"
+    formula: "Equal-dollar changed actual owner, current OID year, issuer, source ID, unconfirmed current proof, missing proof, missing coverage or contradictory legacy classification must fail current source replay."
+    testRef: "tests/engine/state/pa-oid-legacy-independent.test.ts::independent current original proof guard %s"
+  - line: "nonresident-override"
+    formula: "A retained nonresident scalar override remains unsupported and cannot be hidden behind default-only resident fields."
+    testRef: "tests/engine/state/pa-oid-legacy-independent.test.ts::independent nonresident override remains closed"
+  - line: "taxable-original"
+    formula: "A separate explicitly taxable original changes OID1000 from Treasury exclusion to PA taxable interest1000; wages60000 plus1000 yields rounded1873, not1842. No arbitrary amount or classification override."
+    testRef: "tests/engine/state/pa-oid-legacy-independent.test.ts::independent actual taxable OID classification retains1000"

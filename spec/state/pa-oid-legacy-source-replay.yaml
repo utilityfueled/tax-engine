@@ -1,0 +1,36 @@
+form: "PA-OID-Legacy-Source-Replay"
+fullName: "Exact schema-default reconciliation around actual original-bound PA OID classification"
+taxYear: 2025
+reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest"
+notes: |
+  Adapter correction only; no tax formula or classification change. The actual
+  guided builder emits paResidentReturn.scheduleA.oidSources for Treasury OID1000.
+  TaxYearInputSchema inserts sixteen optionalDecimal fields with exact value "0".
+  Those exact inert schema values may coexist with independently proven current
+  original OID classification. No absent unknown input is converted into zero by
+  this reconciliation; no schema/default is changed. Any positive, non-default
+  lexical zero, null/blank, extra method or contradictory actual proof still fails.
+  Actual W2 wages60000 and direct TreasuryOID1000 yield PA compensation60000,
+  PA taxable interest0 and tax1842; amounts are independently fictional sources.
+lines:
+  - line: "actual-builder-parse"
+    formula: "Replay exact raw guided builder through TaxYearInputSchema; retain sixteen exact injected zero keys and actual OID1000. Prove current original-bound Treasury classification without deleting defaults."
+    testRef: "tests/engine/state/pa-oid-legacy-source-replay.test.ts::actual guided builder schema defaults preserve original-bound Treasury1000"
+  - line: "positive-override"
+    formula: "Each named inert default becomes unsupported if its actual value is positive; original-bound OID proof cannot qualify another payment or tax method."
+    testRef: "tests/engine/state/pa-oid-legacy-source-replay.test.ts::every positive retained legacy override remains unsupported"
+  - line: "exact-default"
+    formula: "Only exact schema default string0 is allowed; an explicitly different lexical zero remains outside this finite reconciliation contract."
+    testRef: "tests/engine/state/pa-oid-legacy-source-replay.test.ts::nondefault lexical zeros cannot broaden the retained legacy contract"
+  - line: "unknown"
+    formula: "Explicit unknown null or blank remains invalid under the unchanged canonical schema; omitted optional values retain only the pre-existing schema behavior."
+    testRef: "tests/engine/state/pa-oid-legacy-source-replay.test.ts::explicit unknown legacy values are never inferred as zero"
+  - line: "other-method"
+    formula: "No other ScheduleA adjustment or other retained PA method may hide behind zero default reconciliation."
+    testRef: "tests/engine/state/pa-oid-legacy-source-replay.test.ts::other retained legacy methods remain unsupported"
+  - line: "proof"
+    formula: "Retained exact defaults do not waive current original coverage, confirmed classification or private source replay."
+    testRef: "tests/engine/state/pa-oid-legacy-source-replay.test.ts::missing or contradictory actual OID source proof remains rejected"
+  - line: "identity"
+    formula: "Equal-dollar changed current original identity remains stale against the exact retained source original."
+    testRef: "tests/engine/state/pa-oid-legacy-source-replay.test.ts::equal-dollar changed OID original remains stale"
