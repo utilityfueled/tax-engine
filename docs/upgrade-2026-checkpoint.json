@@ -13726,6 +13726,43 @@
       "nov03-parent-pa-digital-mixed-privacy-red",
       "nov03-parent-pa-digital-mixed-saved-red-refined",
       "nov03-pa-digital-official-independent/mixed-correction-review"
+    ],
+    "commit": "1b82c7ea",
+    "pushed": true
+  },
+  "nov03MainPAPersonalDebtForeignCollector": {
+    "baseCommit": "1b82c7ea",
+    "authorFreeze": "ea35ddf0b829c168160f39967c38b9a8dca70fe34c65edeb74516bba4b6d45b1",
+    "sourceBeforeProducts": {
+      "genuineUIFailures": 9,
+      "logSHA256": "ebe638dcc8f0b290b09daf06bb37603fb9b0e4bc7bc27333d3a4f366a100042e"
+    },
+    "productsExact": 3,
+    "green": {
+      "passed": 733,
+      "files": 12,
+      "types": 3,
+      "specReferences": 7117,
+      "inventory": true,
+      "strictWarnings": 0,
+      "engineBuild": true,
+      "webBuild": true
+    },
+    "independentReview": {
+      "receiptSHA256": "81311d1bcf254070a0d66eccb976dc864b4ad7784b6f7cbc04b2ee5278532b9f",
+      "passed": 45,
+      "files": 3,
+      "scope": "different author collector only; not reviewer own earlier core"
+    },
+    "fullWorkspacePDF": "pending separate successor",
+    "realBrowser": "pending",
+    "humanReview": "unassigned",
+    "filingEligible": false,
+    "evidence": [
+      "nov03-parent-pa-debt-foreign-collector-main",
+      "nov03-parent-pa-debt-foreign-collector-main-red",
+      "nov03-parent-pa-debt-foreign-collector-main-green",
+      "nov03-pa-personal-debt-foreign-guided-independent"
     ]
   }
 }

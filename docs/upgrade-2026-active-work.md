@@ -16,10 +16,11 @@
   privacy and visual/parity pass. Distinct final17 review0d53af0e approves.
   See [PDF ledger](upgrade-2026-pa-digital-official-pdf-ledger.md). Final2026,
   broader methods, original attachments and human/filing gates remain open.
-- [ ] PA personal debt/foreign collector: exact author8 freezeea35ddf0 and
-  distinct collector review81311d1b approve45/three, two types/strict0. Parent
-  fresh source-first replay, adoption of three products and checks/commit next.
-  Actual workspace/PDF followthrough and broader methods remain open.
+- [x] PA personal debt/foreign collector: exact author8 freezeea35ddf0 and
+  distinct collector review81311d1b approve45/three. Fresh main nine UI failures
+  precede exact three-product adoption;733/12/types3/spec7117/inventory/strict0/
+  both builds pass. Actual full workspace/PDF successor, browser and broader
+  methods remain open. Digital official PDF is committed/pushed1b82c7ea.
 - W2 test-only fixture now current main679/seven/types3/spec7084/inventory/
   strict0 after genuine1fail/tenpass and exact5-file adoption; distinct static
   review2eb8f83b approves. No products or original monetary assertions changed.

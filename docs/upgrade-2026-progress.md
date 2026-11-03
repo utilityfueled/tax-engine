@@ -2311,3 +2311,15 @@ both builds and distinct final17 review pass. Seven actual PDFs/39pages pass
 strict/object/physical/privacy checks; original33 pages retain exact text/pixel
 parity and new mixed pages were inspected. See the [PDF ledger](upgrade-2026-pa-digital-official-pdf-ledger.md).
 Final2026, broader paper methods, full-suite and human/filing gates remain open.
+
+
+### November3 UTC: native PA debt and foreign receipt collection
+
+The actual state panel now collects complete primary-owner personal-debt and
+foreign-bank evidence for allthree PA residencies, keeping unknown drafts,
+zero receipts and stale originals distinct. Edits revoke both child and parent
+confirmations; only explicit validated confirmation copies current originals.
+Nine genuine main failures precede exact three-product adoption;733/12/types3/
+spec7117/inventory/strict0/both builds pass. Distinct native-control review45/
+three approves the collector. See the [collector ledger](upgrade-2026-pa-personal-debt-foreign-guided-work.md).
+Actual full-workspace/PDF and browser successors remain separate work.
