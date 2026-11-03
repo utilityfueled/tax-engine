@@ -2371,3 +2371,7 @@ Seven native selectors now honor an explicit unknown owner choice, invalidate so
 ### November 3: digital source browser flow restored with complete records
 
 The original desktop/mobile cases now supply explicit fictional PA records and reconfirm changed sources through Continue and four visible source actions. All twenty prior assertions remain intact. Parent review, 685 tests across six files, three typechecks, 7,222 spec references, inventory, strict lint and both actual-main browser viewports pass. See [the fixture evidence](upgrade-2026-browser-pa-digital-actual-sources.md). No application or readiness gate changed; owner-clear fix `314cbba3` is pushed.
+
+### November 3: canonical PA copyright royalty classification
+
+Five exact independently reviewed products now derive the bounded2025 PA copyright class from complete actual-original and receipt records. The original6478 and edited6475 tax oracles, original MI80.20 withholding and12000.25 state-income boxes remain intact. Fresh main five genuine failures precede integration;908tests/15files, three types,7231 spec links, inventory719, strict lint0 and both builds pass. Distinct corrected review38/3 passes. See [the royalty ledger](upgrade-2026-pa-canonical-royalty-work.md). MI account settlement, guided/browser/PDF and human/final2026 qualification remain open. Digital browser fixture `5a6d3039` is pushed.

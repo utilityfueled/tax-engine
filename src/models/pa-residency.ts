@@ -1,3 +1,4 @@
+import {PAOrdinaryRoyaltySourcesSchema} from './pa-ordinary-royalty-sources.js';
 /** Private actual PA originals/drafts. No amount, date, answer or source year defaults to a fact. */
 import { z } from "zod";
 import {PAPersonalDebtDischargeSourceSchema,PAForeignBankTaxSourceSchema} from "./pa-personal-debt-foreign-sources.js";
@@ -49,6 +50,7 @@ export const PAResidencySourcesSchema = z.object({
   dividends: z.array(PAOrdinaryDividendSourceSchema).optional(),
   // Absent only when no actual Schedule C/NEC original exists; replay enforces coverage.
   businesses: z.array(PAOrdinaryBusinessSourceSchema).optional(),
+  royaltySources: PAOrdinaryRoyaltySourcesSchema.optional(),
   oidAndMiscSources: PAOrdinaryOIDSourcesSchema.optional(),
   employeeSources: PAOrdinaryEmployeeSourcesSchema.optional(),
   digitalSources: PAOrdinaryDigitalSourcesSchema.optional(),

@@ -13951,7 +13951,7 @@
     "oldAssertionLinesExactInOrder": 20,
     "productsChanged": false,
     "rootStaticFinding": [],
-    "browser": "Private bothviewport2pass with real Continue/fourconfirmations; actualmain pending",
+    "browser": "Actual main both viewports passed; hosted/native refund qualification remains separate",
     "evidenceBoundary": "No production data or product/gate changes",
     "tests": 685,
     "testFiles": 6,
@@ -13974,6 +13974,30 @@
     "fullHosted": false,
     "humanQualified": false,
     "filingEligible": false,
-    "integrationReviewSHA256": "a9f23058cc58930bb9bac4cf472e46cdb748081e7d4748cee47055b31ae5346d"
+    "integrationReviewSHA256": "a9f23058cc58930bb9bac4cf472e46cdb748081e7d4748cee47055b31ae5346d",
+    "commit": "5a6d3039ccdffd529d67e8e8aaf3153e6f18fac9",
+    "pushed": true
+  },
+  "nov03MainCanonicalRoyaltyA": {
+    "base": "5a6d3039ccdffd529d67e8e8aaf3153e6f18fac9",
+    "authorManifestSHA256": "72fae213bd90b7e972a76d184e7bae806787b150451814154c80d2850e1c00cb",
+    "independentReviewSHA256": "28b9726763ccc210b007f0279594334c82bb6119bd1c8c62c76cee99160d90e1",
+    "independentTests": 38,
+    "freshMainRedFailed": 5,
+    "freshMainRedPassed": 10,
+    "tests": 908,
+    "testFiles": 15,
+    "types": 3,
+    "specReferences": 7231,
+    "inventoryEntries": 719,
+    "strictWarnings": 0,
+    "builds": 2,
+    "passedCommands": 11,
+    "exactProducts": 5,
+    "integrationReviewSHA256": "8a91e5d94a576cc53106ba75946baf260a1b7cb9b6fa29c17d38d87cd4b24724",
+    "MISettlement": "B sourcefirst23 real3fail/20pass; implementation/review pending",
+    "humanQualified": false,
+    "final2026Qualified": false,
+    "filingEligible": false
   }
 }

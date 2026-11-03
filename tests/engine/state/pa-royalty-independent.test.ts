@@ -1,0 +1,40 @@
+// Spec: spec/state/pa-royalty-independent.yaml, independent.
+import Decimal from 'decimal.js';
+import {expect,it} from 'vitest';
+import {calculatePAResidencySources} from '@/engine/state/pa-residency-sources';
+import {calculatePAOrdinaryRoyaltySources} from '@/engine/state/pa-ordinary-royalty-sources';
+import {paOrdinaryRoyaltyFixture} from '../../fixtures/pa-ordinary-royalty-sources';
+import {paOrdinaryOIDFixture} from '../../fixtures/pa-ordinary-oid-sources';
+type F=ReturnType<typeof paOrdinaryRoyaltyFixture>;
+const run=(f:F)=>calculatePAResidencySources(f.input,f.residency);
+function property(f:F){const p=f.input.royaltyPropertySources?.properties?.[0];if(!p?.incomeSources?.[0]||!p.expenses?.[0]||!p.paTreatment?.expenses?.[0])throw Error('Independent actual property sources required');return p;}
+function bind(f:F){f.royaltySources.originalPropertySources=structuredClone(f.input.royaltyPropertySources);f.royaltySources.originals.forEach(row=>{row.original=structuredClone(f.input.form1099Misc[row.originalIndex]);});}
+function appendOriginal(f:F,kind:'case'|'spaces'|'distinct'){
+ const first=f.input.form1099Misc[0];if(!first)throw Error('Independent actual original required');
+ const next={...structuredClone(first),sourceId:'independently-entered-copy-2'};
+ if(kind==='case')next.payer=next.payer.toLowerCase();
+ if(kind==='spaces')next.payer=next.payer.replace(' ','  ');
+ if(kind==='distinct')next.payerTin='98-7654321';
+ f.input.form1099Misc.push(next);const proof=f.royaltySources.originals[0];if(!proof)throw Error('Independent proof required');f.royaltySources.originals.push({...structuredClone(proof),originalIndex:1,sourceReference:'Independent second original proof',original:structuredClone(next)});
+ const p=property(f);p.incomeSources?.push({sourceIndex:1,allocatedGross:'12000.25',original:Object.fromEntries(['sourceId','accountReference','taxYear','sourceFormRevision','payer','accountHolder','royalties'].map(key=>[key,next[key as keyof typeof next]]))});bind(f);
+}
+const cases:Array<[string,()=>void]>=[
+ ['original literal ScheduleE property/category net and retained MI originals',()=>{const f=paOrdinaryRoyaltyFixture(),before=structuredClone(f),r=run(f);expect(r.royaltySources?.scheduleE?.directRoyaltyNetIncome.toFixed()).toBe('11000');expect(r.taxBeforeCredits.toFixed()).toBe('6478');expect(f.input.form1099Misc[0]).toMatchObject({state:'MI',stateWithheld:'80.20',stateIncome:'12000.25',federalWithheld:'100.10'});expect(f).toEqual(before);}],
+ ['two same-category quarter-dollar receipts sum before whole-dollar rounding',()=>{const f=paOrdinaryRoyaltyFixture(),p=property(f);for(const row of p.expenses??[]){row.category='legal-professional';row.amountPaid='0.25';}for(const row of p.paTreatment?.expenses??[]){row.category='legal-professional';row.amountPaid='0.25';}bind(f);const r=run(f);expect(r.royaltySources?.scheduleE?.directRoyaltyExpenses.toFixed()).toBe('1');expect(r.totalOrdinaryPATaxableIncome.toFixed()).toBe('211999');}],
+ ['distinct category half-dollar receipts round on separate printed rows',()=>{const f=paOrdinaryRoyaltyFixture(),p=property(f);for(const row of p.expenses??[])row.amountPaid='0.50';for(const row of p.paTreatment?.expenses??[])row.amountPaid='0.50';bind(f);const r=run(f);expect(r.royaltySources?.scheduleE?.directRoyaltyExpenses.toFixed()).toBe('2');expect(r.totalOrdinaryPATaxableIncome.toFixed()).toBe('211998');}],
+ ['generic audit retains numerical lineage without receipt and taxpayer identities',()=>{const f=paOrdinaryRoyaltyFixture(),r=run(f),lines=r.royaltySources?.lines??[];expect(lines.length).toBeGreaterThan(5);const s=JSON.stringify(lines);for(const secret of ['Fictional private legal receipt','Fictional private agent receipt',f.input.taxpayer.primary.ssn])expect(s).not.toContain(secret);expect(lines.some(line=>line.value.toFixed()==='11000')).toBe(true);}],
+ ['calculation leaves global Decimal settings and sources unchanged',()=>{const f=paOrdinaryRoyaltyFixture(),before=structuredClone(f),precision=Decimal.precision,rounding=Decimal.rounding;run(f);expect(Decimal.precision).toBe(precision);expect(Decimal.rounding).toBe(rounding);expect(f).toEqual(before);}],
+ ['same original with payer display-case variation is duplicate',()=>{const f=paOrdinaryRoyaltyFixture();appendOriginal(f,'case');expect(()=>run(f)).toThrow(/duplicate|distinct|original/i);}],
+ ['same original with payer interior-space variation is duplicate',()=>{const f=paOrdinaryRoyaltyFixture();appendOriginal(f,'spaces');expect(()=>run(f)).toThrow(/duplicate|distinct|original/i);}],
+ ['genuinely distinct payerTIN same printed-name and account originals remain distinct',()=>{const f=paOrdinaryRoyaltyFixture();appendOriginal(f,'distinct');expect(run(f).royaltySources?.reportedIncome.toFixed()).toBe('23001');}],
+ ['same expense receipt identity with case variation cannot multiply deduction',()=>{const f=paOrdinaryRoyaltyFixture(),p=property(f);const receipt=p.expenses?.[0],pa=p.paTreatment?.expenses?.[0];if(!receipt||!pa)throw Error('Independent receipts required');p.expenses?.push({...structuredClone(receipt),sourceId:receipt.sourceId?.toUpperCase()});p.paTreatment?.expenses?.push({...structuredClone(pa),sourceId:pa.sourceId?.toUpperCase()});bind(f);expect(()=>run(f)).toThrow(/duplicate|receipt|identity/i);}],
+ ['receipt paid outside2025 denied even with matching source copies',()=>{const f=paOrdinaryRoyaltyFixture(),p=property(f);if(!p.expenses?.[0]||!p.paTreatment?.expenses?.[0])throw Error('Independent receipts required');p.expenses[0].paidDate='2026-01-01';p.paTreatment.expenses[0].paidDate='2026-01-01';bind(f);expect(()=>run(f)).toThrow(/date|year/i);}],
+ ['unknown expense reimbursement does not become no reimbursement',()=>{const f=paOrdinaryRoyaltyFixture(),p=property(f);if(!p.expenses?.[0])throw Error('Independent receipt required');Reflect.deleteProperty(p.expenses[0],'reimbursed');bind(f);expect(()=>run(f)).toThrow(/expense|fact/i);}],
+ ['original federal withholding equal-cent edit invalidates full snapshot',()=>{const f=paOrdinaryRoyaltyFixture();f.input.form1099Misc[0].federalWithheld='100.11';expect(()=>run(f)).toThrow(/original|confirmation/i);}],
+ ['property conservation denies undistributed original cent',()=>{const f=paOrdinaryRoyaltyFixture(),p=property(f);if(!p.incomeSources?.[0])throw Error('Independent source required');p.incomeSources[0].allocatedGross='12000.24';bind(f);expect(()=>run(f)).toThrow(/conserve|allocat/i);}],
+ ['2026 copied source method stays denied',()=>{const f=paOrdinaryRoyaltyFixture();f.input.taxpayer.taxYear=2026;expect(()=>calculatePAOrdinaryRoyaltySources(f.input,f.royaltySources,{status:'resident'})).toThrow(/scope|resident|year/i);}],
+ ['remaining zero-income MISC proof remaps correctly before royalty original',()=>{const f=paOrdinaryRoyaltyFixture(),z=paOrdinaryOIDFixture(),royalty=f.input.form1099Misc[0];f.input.form1099Misc=[structuredClone(z.input.form1099Misc[0]),royalty];f.royaltySources.originals[0].originalIndex=1;const p=property(f);if(!p.incomeSources?.[0])throw Error('Independent source required');p.incomeSources[0].sourceIndex=1;bind(f);Object.assign(f.residency,{oidAndMiscSources:{...structuredClone(z.oidAndMiscSources),owner:structuredClone(f.royaltySources.owner),oid:[]}});const r=run(f);expect(r.totalOrdinaryPATaxableIncome.toFixed()).toBe('211000');expect(r.oidSources?.paWithholding.toFixed()).toBe('0.2');}],
+ ['overlapping MISC royalty and OID proof cannot be hidden by remapping',()=>{const f=paOrdinaryRoyaltyFixture(),z=paOrdinaryOIDFixture();Object.assign(f.residency,{oidAndMiscSources:{...structuredClone(z.oidAndMiscSources),owner:structuredClone(f.royaltySources.owner),oid:[]}});expect(()=>run(f)).toThrow(/overlap|coverage|original/i);}],
+ ['an unclassified nonroyalty positive original remains rejected',()=>{const f=paOrdinaryRoyaltyFixture(),z=paOrdinaryOIDFixture();const other=structuredClone(z.input.form1099Misc[0]);other.otherIncome='1';f.input.form1099Misc.push(other);expect(()=>run(f)).toThrow(/MISC|method|source/i);}],
+];
+it.each(cases)('independent PA royalty source case: %s',(_name,check)=>check());

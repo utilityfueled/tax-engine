@@ -1,0 +1,66 @@
+/** Finite original-bound cash copyright class. Spec: pa-ordinary-royalty-sources.yaml. */
+import Decimal from 'decimal.js';
+import {Form1099MiscSchema,type TaxYearInput} from '@/models/inputs.js';
+import {PAOrdinaryRoyaltySourcesSchema} from '@/models/pa-ordinary-royalty-sources.js';
+import {RoyaltyPropertySourcesSchema} from '@/models/royalty-property-sources.js';
+import type {PAScheduleEResult} from './pa-schedule-e.js';
+import type {PARoyaltyPropertyResult} from './pa-royalty-property-sources.js';
+import {ordinarySourcePrecision,publicOrdinaryMoney,publicOrdinaryLines} from './pa-ordinary-source-precision.js';
+import {AuditTrail} from '@/utils/audit.js';
+function fail(message:string):never{throw new Error(`PA ordinary royalty sources: ${message}`);}
+function stable(value:unknown):string{if(Array.isArray(value))return`[${value.map(stable).join(',')}]`;if(value&&typeof value==='object')return`{${Object.entries(value).filter(([,v])=>v!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>JSON.stringify(k)+':'+stable(v)).join(',')}}`;return JSON.stringify(value)??'null';}
+function text(value:unknown):string{if(typeof value!=='string'||!value.trim())return fail('actual source identity/reference missing');return value.trim();}
+function identity(value:unknown):string{return text(value).replace(/\s+/g,' ').toUpperCase();}
+export interface PAOrdinaryRoyaltySourcesResult{coveredOriginalIndices:number[];reportedIncome:Decimal;scheduleE?:PAScheduleEResult;lines:PARoyaltyPropertyResult['lines'];}
+export function calculatePAOrdinaryRoyaltySources(input:TaxYearInput,raw:unknown,residency:{status:string}):PAOrdinaryRoyaltySourcesResult{
+ const Money=Decimal.clone({precision:ordinarySourcePrecision(input,raw),rounding:Decimal.ROUND_HALF_UP});
+ const money=(v:unknown):Decimal=>{if(typeof v!=='string'||!/^\d+(\.\d{1,2})?$/.test(v))return fail('actual known nonnegative source amount required');const d=new Money(v);if(!d.isFinite())return fail('finite source amount required');return d;};
+ const zero=()=>new Money(0),round=(d:Decimal)=>d.toDecimalPlaces(0,Decimal.ROUND_HALF_UP),pub=publicOrdinaryMoney;
+ if(raw===undefined){if(input.royaltyPropertySources!==undefined||input.form1099Misc.some(row=>money(row.royalties).gt(0)))return fail('actual complete royalty source packet required');return{coveredOriginalIndices:[],reportedIncome:pub(zero()),lines:[]};}
+ const parsed=PAOrdinaryRoyaltySourcesSchema.safeParse(raw);if(!parsed.success)return fail('complete royalty source shape required');const source=parsed.data,year=input.taxpayer.taxYear;
+ if(year!==2025||source.sourceTaxYear!==year||source.sourceFactsConfirmed!==true||residency.status!=='resident'||input.taxpayer.filingStatus!=='single'||input.taxpayer.spouse)return fail('actual finite primary full-year resident copyright source scope required');text(source.sourceReference);
+ if(source.owner.accountHolder!=='primary'||stable(source.owner.originalTaxpayer)!==stable({firstName:input.taxpayer.primary.firstName,lastName:input.taxpayer.primary.lastName,ssn:input.taxpayer.primary.ssn}))return fail('actual original owner identity changed');
+ const ledgerParsed=RoyaltyPropertySourcesSchema.safeParse(input.royaltyPropertySources);if(!ledgerParsed.success||stable(ledgerParsed.data)!==stable(input.royaltyPropertySources)||stable(source.originalPropertySources)!==stable(input.royaltyPropertySources))return fail('current property source confirmation is missing or stale');const ledger=ledgerParsed.data;
+ if(ledger.sourceTaxYear!==year||ledger.sourceFactsConfirmed!==true||ledger.allDirectRoyaltySourcesIncluded!==true||!ledger.properties?.length)return fail('complete actual property ledger required');text(ledger.sourceReference);
+ const covered=new Set<number>(),identities=new Set<string>(),originalIds=new Set<string>();
+ for(const proof of source.originals){const index=proof.originalIndex,original=input.form1099Misc[index];text(proof.sourceReference);
+  if(!original||covered.has(index)||!Form1099MiscSchema.strict().safeParse(original).success||stable(proof.original)!==stable(original)||proof.sourceTaxYear!==year||proof.sourceFactsConfirmed!==true||proof.currentUncorrectedNonvoidOriginalConfirmed!==true||proof.allOriginalBoxesKnownConfirmed!==true||proof.royaltyOnlyIncomeConfirmed!==true)return fail('complete current distinct original confirmation required');
+  if(original.accountHolder!=='primary'||original.taxYear!==year||original.sourceFormRevision!=='2025-04')return fail('original owner/year/revision changed');
+  if(typeof original.payerTin!=='string'||!/^\d{9}$/.test(original.payerTin.replace(/\D/g,'')))return fail('actual complete payer original identity required');text(original.payer);const id=stable([original.payerTin.replace(/\D/g,''),identity(original.accountReference),year,original.accountHolder]);if(identities.has(id))return fail('duplicate economic original account');identities.add(id);const originalId=text(original.sourceId);if(originalIds.has(originalId))return fail('duplicate actual original identifier');originalIds.add(originalId);
+  for(const key of ['rents','otherIncome','fishingBoatProceeds','medicalPayments','substitutePayments','cropInsurance','grossAttorneyProceeds','fishPurchasedForResale','section409ADeferrals','nonqualifiedDeferredComp'] as const){if(!money(original[key]).isZero())return fail('nonroyalty original income requires its separate source method');}
+  if(original.directSales!==false||original.fatcaFilingRequirement!==false||original.cashTips!==undefined||original.qualifiedOvertimeCompensation!==undefined||original.treasuryTippedOccupationCodes!==undefined)return fail('actual original indicators require their separate method');if(original.excessGoldenParachute!==undefined&&!money(original.excessGoldenParachute).isZero())return fail('legacy compensation needs its separate method');money(original.royalties);money(original.federalWithheld);money(original.stateIncome);if((money(original.stateIncome).gt(0)||money(original.stateWithheld).gt(0))&&(!original.state||!/^[A-Z]{2}$/.test(original.state)||!original.payerStateId?.trim()))return fail('actual state original identity missing');const withholding=money(original.stateWithheld);if(withholding.gt(0)&&original.state!=='MI')return fail('actual non-MI royalty withholding requires its separate payment source method');
+  covered.add(index);
+ }
+ if(!covered.size)return fail('actual royalty originals required');
+ const propertyIds=new Set<string>(),receiptIds=new Set<string>(),allocated=new Map<number,Decimal>(),properties:PARoyaltyPropertyResult[]=[],audit=new AuditTrail();
+ for(const [sourceIndex,property]of ledger.properties.entries()){
+  const lineStart=audit.getLines().length;const id=text(property.propertyId);if(propertyIds.has(id))return fail('duplicate property identity');propertyIds.add(id);text(property.propertyReference);
+  if(property.accountHolder!=='primary'||property.propertyType!=='copyright')return fail('actual primary copyright classification required');
+  for(const key of ['tradeOrBusiness','operatingInterest','capitalDisposition','foreignSource','communityPropertyAllocationRequired']as const)if(property[key]!==false)return fail('unsupported or unknown property classification');
+  for(const key of ['cashMethod','sameRegularAmtTreatmentConfirmed','currentYearExpensesComplete']as const)if(property[key]!==true)return fail('actual complete cash/current property sources required');
+  for(const key of ['interestExpense','depreciationExpense','depletionExpense','otherExpenses','priorUnallowedExpenses']as const)if(!money(property[key]).isZero())return fail('additional property deduction requires its separate method');
+  if(!property.incomeSources?.length||property.expenses===undefined)return fail('actual complete property income and expense ledgers required');
+  let gross=zero();const local=new Set<number>();
+  for(const entry of property.incomeSources){const index=entry.sourceIndex;if(index===undefined||!covered.has(index)||local.has(index))return fail('unique covered original property allocation required');local.add(index);const original=input.form1099Misc[index],copy=entry.original;
+   if(!copy||stable(copy)!==stable(Object.fromEntries(['sourceId','accountReference','taxYear','sourceFormRevision','payer','accountHolder','royalties'].map(key=>[key,original[key as keyof typeof original]]))))return fail('property allocation current original identity changed');
+   const value=money(entry.allocatedGross);gross=gross.plus(value);allocated.set(index,(allocated.get(index)??zero()).plus(value));
+  }
+  const pa=property.paTreatment;if(!pa||pa.sourceTaxYear!==year||pa.sourceFactsConfirmed!==true||pa.accountHolder!=='primary'||pa.propertyType!=='copyright'||pa.ownerFullYearPAResident!==true||pa.paIncomeClass!=='royalties-copyrights-patents'||pa.forProfit!==true||pa.allExpenseClassificationsIncluded!==true||pa.expenses===undefined)return fail('actual complete PA royalty classification required');text(pa.sourceReference);
+  const categories={commissions:'6',insurance:'7','legal-professional':'8','management-fees':'9','property-production-taxes':'14'}as const,parts=new Map<string,Decimal>(),stateIds=new Set<string>();let rawExpenses=zero();
+  for(const receipt of property.expenses){const rid=identity(receipt.sourceId);if(receiptIds.has(rid))return fail('duplicate actual receipt identity');receiptIds.add(rid);text(receipt.sourceReference);
+   const date=receipt.paidDate;if(!date||!/^2025-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date+'T00:00:00Z'))||new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date)return fail('actual paid date in selected year required');
+   if(receipt.ordinaryNecessaryForProperty!==true||receipt.relatesOnlyToCurrentYear!==true||receipt.capitalOrImprovement!==false||receipt.personalOrOwnLabor!==false||receipt.reimbursed!==false||!receipt.category)return fail('actual allowed current expense facts required');
+   const stateRows=pa.expenses.filter(row=>identity(row.sourceId)===rid),state=stateRows[0];if(stateRows.length!==1||!state||state.category!==receipt.category||state.paidDate!==date||!money(state.amountPaid).eq(money(receipt.amountPaid))||state.relatesToRoyaltyRights!==true||state.surfaceRights!==false||state.netIncomeTax!==false)return fail('actual PA receipt classification identity/date/amount changed');stateIds.add(rid);
+   const value=money(receipt.amountPaid),category=categories[receipt.category];rawExpenses=rawExpenses.plus(value);parts.set(category,(parts.get(category)??zero()).plus(value));
+  }
+  if(stateIds.size!==pa.expenses.length)return fail('actual PA expense coverage is incomplete or duplicated');if(gross.lt(rawExpenses))return fail('actual property loss needs separate at-risk/history method');
+  const grossIncome=round(gross);let allowableExpenses=zero();for(const category of Object.values(categories)){const value=round(parts.get(category)??zero());allowableExpenses=allowableExpenses.plus(value);audit.record('PA-Royalty-Property',`${sourceIndex}:${category}`,'Allowed current royalty expense category',value,'Sum actual conserved category receipt cents then round once');}
+  const netIncome=grossIncome.minus(allowableExpenses);audit.record('PA-Royalty-Property',`${sourceIndex}:2`,'Gross royalties received',grossIncome,'Round conserved original gross once per actual property');audit.record('PA-Royalty-Property',`${sourceIndex}:19`,'Total allowed property expenses',allowableExpenses,'Sum printed expense categories');audit.record('PA-Royalty-Property',`${sourceIndex}:20`,'Property net income',Money.max(0,netIncome),'Positive printed income');audit.record('PA-Royalty-Property',`${sourceIndex}:21`,'Property net loss',Money.max(0,netIncome.negated()),'Positive printed loss magnitude');
+  properties.push({sourceIndex,accountHolder:'primary',grossIncome:pub(grossIncome),allowableExpenses:pub(allowableExpenses),netIncome:pub(netIncome),disallowedSurfaceExpenses:pub(zero()),lines:publicOrdinaryLines(audit.getLines().slice(lineStart))});
+ }
+ for(const index of covered)if(!allocated.get(index)?.eq(money(input.form1099Misc[index].royalties)))return fail('actual property allocations must exactly conserve every original gross');
+ for(const[index,original]of input.form1099Misc.entries())if(money(original.royalties).gt(0)&&!covered.has(index))return fail('complete royalty original coverage required');
+ const sum=(values:Decimal[])=>values.reduce((a,b)=>a.plus(b),zero()),gross=sum(properties.map(p=>p.grossIncome)),expenses=sum(properties.map(p=>p.allowableExpenses)),net=gross.minus(expenses),reported=Money.max(0,net),lines=publicOrdinaryLines(audit.getLines());
+ const scheduleE:PAScheduleEResult={taxYear:year,propertyGrossRents:pub(zero()),propertyNetIncome:pub(zero()),miscRents:pub(zero()),miscRoyalties:pub(gross),directRoyaltyExpenses:pub(expenses),directRoyaltyNetIncome:pub(net),royaltyProperties:properties,passThroughNetIncome:pub(zero()),taxpayerNetRentalRoyaltyIncome:pub(net),spouseNetRentalRoyaltyIncome:pub(zero()),reportableNetRentalRoyaltyIncome:pub(reported),totalAllowableExpenses:pub(expenses),netRentalRoyaltyIncome:pub(reported),properties:[],lines};
+ return{coveredOriginalIndices:[...covered],reportedIncome:pub(reported),scheduleE,lines};
+}
