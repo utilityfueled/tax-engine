@@ -107,3 +107,7 @@ and continue independent implementation while waiting.
 - [ ] Digital browser fixture: preserve original1536 oracles and incomplete-source negative, add separately explicit fictional actual PA records and visible reconfirmations. Prior both-viewport failures retained.
 - [ ] Brokerage candidate held: NY1099B is not established as IT203line62 withholding. Preserve frozen candidate and all original assertions; implement separately actual erroneous-payment claim, agency allowance and received-principal/full-account sources before review.
 - [ ] Royalty canonical class and distinct actual MI settlement source methods; preserve original80.20 withholding/stateIncome12000.25 and all original tax/PDF/browser assertions. A rounded80 form is not evidence of received80.20.
+
+- [x] Native owner-clear followup: seven actual control failures corrected with two handlers; static independent review plus 699 tests across eight files, three typechecks, 7,215 spec references, inventory checks, strict lint and the web build. [Evidence](upgrade-2026-refund-owner-clear-work.md). Native collector `fe26f9e5` pushed.
+- [ ] Corrected NY brokerage candidate with 99 passing tests across seven files candidate passed private checks and awaits parent full review/manual integration; the original unsupported NY form-credit candidate stays held.
+- [ ] Digital browser fixture now passes both private viewports with real Continue and four explicit confirmations; parent review/current-main verification pending.

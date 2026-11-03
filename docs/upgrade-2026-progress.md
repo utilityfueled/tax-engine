@@ -2363,3 +2363,7 @@ A finite2025 native collector retains actual original identity, known-zero incom
 ### November 3: native actual VA digital refund records
 
 Actual remittance, filed-return, application, award, received-refund and complete-account fields now have native controls with explicit confirmation and stale-source invalidation. Four exact independently reviewed products pass main779 tests/15files, three typechecks,7,214 spec references, inventory, strict ten-path lint and both builds after fresh five genuine failures. See [the package evidence](upgrade-2026-pa-digital-refund-native-work.md). MISC collector `ecf0c30a` is committed/pushed. Full browser, human and global readiness gates remain open.
+
+### November 3: clearing actual refund ownership
+
+Seven native selectors now honor an explicit unknown owner choice, invalidate source confirmation and preserve prior originals. Seven genuine failures precede two handler edits; distinct static review has no findings, and 699 tests across eight files, three typechecks, 7,215 spec references, inventory checks, strict lint and the web build pass. See [the bounded fix evidence](upgrade-2026-refund-owner-clear-work.md). Native refund package `fe26f9e5` is pushed; this is not full browser or human qualification.
