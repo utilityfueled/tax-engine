@@ -1,3 +1,5 @@
+import { guidedOhioCompleteDigital } from '../fixtures/guided-ohio-digital-complete';
+import { guidedPACompleteDigital } from '../fixtures/guided-pa-digital-complete';
 import { assertPAGuidedPaymentBoundary } from "../fixtures/assert-pa-guided-payment-boundary";
 // Spec: spec/federal/guided-digital-asset-sources.yaml.
 import { expect, it } from 'vitest';
@@ -114,7 +116,7 @@ it('captures original long-term DA identities beside other capital sources', () 
 });
 it('includes original digital withholding once in generic and dedicated state previews', () => {
   for (const stateCode of ['MI', 'PA', 'OH']) {
-    const state = stateFor(); state.segmentation.stateCode = stateCode;
+    let state = stateFor(); state.segmentation.stateCode = stateCode;
     state.sectionData['personal-info'] = { ...completePersonalInfo, state: stateCode };
     state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '50000', stateTaxReporting: 'single', state: stateCode, stateWages: '50000', stateWithheld: '0.40' }] };
     const sources = ['0.10', '0.20', '0.30'].map((stateWithheld, index) => {
@@ -124,11 +126,33 @@ it('includes original digital withholding once in generic and dedicated state pr
       return entry;
     });
     state.sectionData['income-investments'] = { interestEntries: [], dividendEntries: [], brokerageEntries: [], digitalAssetEntries: sources };
+    // A separate complete fictional PA case retains all original cents, including actual VA refund evidence.
+    if (stateCode === 'PA') state = guidedPACompleteDigital().state;
+    // Separate literal OH originals preserve raw.70, while canonical reporting is1.
+    if (stateCode === 'OH') state = guidedOhioCompleteDigital().state;
     const original = structuredClone(state);
     const input = buildTaxInputFromGuidedData(state); expect(input).not.toBeNull();
     if (stateCode === 'PA') assertPAGuidedPaymentBoundary(state, '0.7', '1');
-    expect(computeGuidedPreview(state)?.state?.stateWithholding, stateCode).toBe(stateCode === 'PA' ? '1' : '0.7');
+    expect(computeGuidedPreview(state)?.state?.stateWithholding, stateCode).toBe(stateCode === 'MI' ? '0.7' : '1');
     expect(computeGuidedPreview(state)?.totalIncome, stateCode).toBe('50030.75');
     expect(state).toEqual(original);
   }
+});
+
+it('keeps the original incomplete PA digital withholding flow blocked without inventing sources', () => {
+  const stateCode = 'PA', state = stateFor(); state.segmentation.stateCode = stateCode;
+  state.sectionData['personal-info'] = { ...completePersonalInfo, state: stateCode };
+  state.sectionData['income-w2'] = { entries: [{ ...completeW2Entry, wages: '50000', stateTaxReporting: 'single', state: stateCode, stateWages: '50000', stateWithheld: '0.40' }] };
+  const sources = ['0.10', '0.20', '0.30'].map((stateWithheld, index) => {
+    const entry = actualGuidedDigitalAsset();
+    Object.assign(entry, { sourceId: `Actual digital statement ${index}`, accountReference: `Actual account ${index}`, stateTaxReporting: 'single', state: index === 2 ? 'VA' : stateCode, stateWithheld });
+    for (const row of entry.transactions ?? []) Object.assign(row, { sourceId: `Actual disposition ${index}`, paCostBasis: '80.24', paBasisSourceReference: 'Actual Pennsylvania acquisition records', paBasisFactsConfirmed: true, paTransactionForProfitConfirmed: true });
+    return entry;
+  });
+  state.sectionData['income-investments'] = { interestEntries: [], dividendEntries: [], brokerageEntries: [], digitalAssetEntries: sources };
+  const original = structuredClone(state), input = buildTaxInputFromGuidedData(state);
+  expect(input).not.toBeNull(); assertPAGuidedPaymentBoundary(state, '0.7', '1');
+  const preview = computeGuidedPreview(state); expect(preview).not.toBeNull();
+  expect(preview?.totalIncome).toBe('50030.75'); expect(preview?.state).toBeNull();
+  expect(state.sectionData['state-return']).toBeUndefined(); expect(state).toEqual(original);
 });

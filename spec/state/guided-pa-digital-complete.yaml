@@ -1,0 +1,52 @@
+form: "Guided PA digital withholding complete-source successor"
+fullName: "Actual dated PA digital remittance and refunded VA original source boundary"
+taxYear: 2025
+reference: "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter111/s111.4.html"
+notes: |
+  Source-first finite method candidate, subject to independent review; not qualified. Preserve
+  original W2 withholding.40, PA original DA.10/.20, VA DA.30 and all original
+  federal amount50030.75. PA digital proceeds100.49 less PA basis80.24 each:
+  20.25*3=60.75, reported class61; compensation50000; taxround50061*.0307=1537.
+  PA withholding.40+.10+.20=.70 raw and1 reported; VA.30 never PA withholding.
+  All current W2, dated acquisitions/dispositions and PA remittance proof are
+  separately explicit fictional sources. No fields default or infer from WH.
+  Additional fictional VA original return independently states finaltax0;
+  original VA withholding.30 was actually refunded.30, posted and received;
+  complete March1 account netpaid0/unpaid0/overpay0. VA Code58.1-499 requires
+  a special written application for a refund below1; fictional written request
+  February16, agency award/posting February20 and receipt February21 are
+  separately explicit. Whole-dollar VA763 reports withheld/payments/refund0,
+  while exact statement/account/application original amounts remain.30.
+  These are different source fields, not a rounded-value refund inference.
+  PA Code111.4 disallows
+  credit for overpayment actually refunded. Neither withholding nor refund
+  alone proves final tax; all final return/account/source facts are required.
+  Current canonical API has no typed admission for these actual refund facts;
+  an actual method gap must be preserved, not replaced by an expected guard.
+  No VA liability computation, foreign credit, production guard relaxation,
+  PDF operation or2026 filing promotion is authorized by this fixture spec.
+lines:
+  - line: "retained-money"
+    description: "Retain exact legacy money; Ohio has a separate source-backed printed-boundary successor"
+    formula: "W2.40+PA digital.10+.20=.70→1; originalVA.30 excluded; federal50030.75."
+    testRef: "tests/guided-interview/guided-pa-digital-complete.test.ts::complete fictional digital sources retain every original withholding and gain amount"
+  - line: "actual-complete-preview"
+    description: "Actual fully refunded other-state source does not create PA credit or duplicate WH"
+    formula: "VA finaltax0; actualWH.30−receivedrefund.30=0; PAcredit0; PAwithholding.70→1; federal50030.75."
+    testRef: "tests/guided-interview/guided-pa-digital-complete.test.ts::complete fictional PA digital sources with actual VA refund preserve the positive preview"
+  - line: "actual-return"
+    description: "Existing canonical composition requires a real refund source successor"
+    formula: "Complete independently provided VA zero-tax/received-refund/account originals must admit rawPA.70/printed1 with zero resident credit."
+    testRef: "tests/guided-interview/guided-pa-digital-complete.test.ts::complete fictional digital evidence requires actual canonical refund admission"
+  - line: "incomplete-original"
+    description: "The original raw PA flow remains incomplete without invented canonical originals"
+    formula: "Keep all original W2.40 and DA.10/.20/VA.30; federalnonnull50030.75 and PA-null until actual sources are supplied."
+    testRef: "tests/guided-interview/guided-digital-asset-sources.test.ts::keeps the original incomplete PA digital withholding flow blocked without inventing sources"
+  - line: "completion-reconcile"
+    description: "Refund evidence never substitutes for matching complete jurisdiction history"
+    formula: "VA netpaid0 and exact grossWH.30 require actualpayments status and current typed proof; no missing jurisdiction or generic zero history bypass."
+    testRef: "tests/guided-interview/guided-pa-digital-complete.test.ts::canonical completion reconciles the actual refund and gross jurisdiction history"
+  - line: "completion-source-binding"
+    description: "Ordinary facts and actual received proof remain current on every read"
+    formula: "Unknown, missing, unreceived or stale refund packets reject without read refresh."
+    testRef: "tests/guided-interview/guided-pa-digital-complete.test.ts::canonical reads do not repair missing stale or unreceived refund sources"

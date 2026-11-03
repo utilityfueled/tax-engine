@@ -1,0 +1,19 @@
+form: "PA actual refunded digital remittance identity repair"
+fullName: "One normalized remittance original cannot establish two cash payments"
+taxYear: 2025
+reference: "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter111/s111.4.html"
+notes: |
+  Narrow source-integrity successor to frozen author17, independently withheld
+  for four real duplicate-remittance failures. Preserve all literal cash/source
+  originals and immutable peer16 controls. Two separate VA statements with.30
+  each require two actual distinct receipt identities, not a differently typed
+  copy of the same receipt. Identity is trim, collapse whitespace and uppercase,
+  using the existing pure helper identity() convention. Only Set comparison keys
+  normalize; raw originals and full source commitment remain unchanged. No tax
+  rate, cash amount, precision, refund/date/owner/year/readiness or other source
+  gate changes. Existing distinct two-receipt peer control stays0.60/refund0.60.
+lines:
+  - line: "semantic-duplicate"
+    description: "Case and whitespace variants preserve one actual remittance identity"
+    formula: "trim/collapse-whitespace/uppercase receipt IDs; reject duplicate normalized keys without modifying raw source records."
+    testRef: "tests/engine/state/pa-digital-refund-remittance-identity.test.ts::author semantic duplicate original remittance remains one receipt: %s"

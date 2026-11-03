@@ -1,0 +1,18 @@
+form: "PA digital refund private saved review PDF"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40d.pdf"
+notes: |
+  Separate fictional source records, not changes to the original cents fixture.
+  Three actual proceeds100.24/federalbasis90.24/PAbasis80.24 give federal30,
+  PA60; printed100 minus80 equals20 per row and the printed sum60 reconciles.
+  Wages50000 and PA60 give PA50060, tax1537, withholding1, principal1536.
+  Actual VA.30 refund sources remain independently explicit; application and
+  agency award identifiers are private even if repeated in an asset description.
+  Original snapshots must be reconfirmed explicitly before preparing the token.
+  Saved appearances and fields retain the safe full description and remove both
+  identifiers. Review only, no final2026 or filing qualification.
+lines:
+  - line: "actual-private-references"
+    description: "Saved complete packet protects refund source identifiers"
+    formula: "ActualPA60; replace both actual private identifiers in saved text/fields with REDACTED."
+    testRef: "tests/pdf/pa-digital-refund-private-saved-pdf.test.ts::protects actual refund application and award references in the saved complete packet"

@@ -13807,5 +13807,30 @@
       "nov03-parent-workspace-pa-cod-foreign-main-red",
       "nov03-parent-workspace-pa-cod-foreign-main-green"
     ]
+  },
+  "nov03MainVADigitalRefund": {
+    "status": "independently reviewed internal source/refund/PDF privacy method; native collector still open",
+    "base": "877f7d884e9c73fe980cbd95f720f7fd2a760201",
+    "sourceFreezeSHA256": "32641aa4b642e6aa963969db50e66d281de4d4e35df012ad2d8f49ebb9911335",
+    "coreIndependentApprovalSHA256": "0b5f767d425966014dc160d03937e164bbf84c508534128cd4a84d7aefaf1245",
+    "freshMainRed": "6pass/1genuinePApositivefailure",
+    "core": "47pass/6files",
+    "main": "773pass/14files;types3;spec7149;inventory;strict-new0;existing-product-errors0;bothbuilds;diff",
+    "actualSavedD": "1PDF/8pages;248fields;135widgets;allxref/AP/physical/privacy/rootvisualpassed",
+    "evidence": ".local/upgrade-evidence/nov03-parent-pa-digital-refund-main",
+    "filingEligible": false,
+    "humanQualified": false,
+    "commit": "next scoped commit; resolve exact SHA from branch history",
+    "finalPrivacyIndependentReviewSHA256": "35a46dc6889686c13632d0aec57266098644dd62d35fcf18caf42b401a4025c6",
+    "independentContextControls": "5/5 unchanged; actual saved8pages independently strict/render/visual checked"
+  },
+  "nov03Remote877Refresh": {
+    "head": "877f7d884e9c73fe980cbd95f720f7fd2a760201",
+    "push": "confirmed git ls-remote",
+    "CI706": 41578372476,
+    "Web705": 41578372517,
+    "workflowStatus": "in_progress at refresh; not passing evidence",
+    "preview": "dpl_FZ3BcRhbTxQogeF26Ub3qZ1jMBbm READY metadata only",
+    "actualAuthRecovery": "not qualified; owner password submission handoff"
   }
 }

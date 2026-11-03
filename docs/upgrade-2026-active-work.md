@@ -34,11 +34,12 @@
   packet and final2026/human/filing gates remain explicit.
 - [ ] Real royalty method: original MI withholding80.20 does not prove final
   tax/refund. No fabricated settlement or complete-composer waiver.
-- [ ] Digital withholding: genuine old1/new2 complete-positive failures retained.
-  Actual VA.30 special-request refund proof candidate19 now has corrected
-  semantic duplicate identity replay and distinct review0b5f767d:47/6 green.
-  Parent integration and actual refund UI/render privacy remain pending. No
-  positive dropped, inferred settlement or global guard bypass.
+- [ ] Digital withholding: exact corrected19 adopted after fresh main six-pass/
+  one genuine PA failure; core47/six pass. Actual saved D reproduces private
+  application/award leaks, then two-key collector correction passes773/14,
+  types3/spec7149/inventory/strict0/both builds and actual8-page strict/visual
+  checks. Distinct35a46dc6 review plus five independent controls pass; native refund
+  UI and broader methods remain open. No source settlement inferred.
 - [ ] Other remaining guided business/claim-of-right/foreign/investment/
   OID/retirement/unemployment/bridge/state-routing positive sources and actual
   PA/OH household/class/local/credit/special methods remain open. A guarded
@@ -50,7 +51,7 @@
   inventory, both builds, repository lint, full browser and actual container
   browser/remote CI. Complete local1286 unit run:21418pass/21fail/33pending
   (21472 total), all21 state-related, exact receipt retained. No coveragepercent
-  measured. Remote44e Web691/CI692 were cancelled, not passing. Last complete remote dcab:32unit/28browser failures remains historical.
+  measured. Remote877 Web705/CI706 are in_progress at refresh, not passing. Exact877 Preview READY metadata only; auth/recovery unqualified. Remote44e Web691/CI692 were cancelled, not passing. Last complete remote dcab:32unit/28browser failures remains historical.
   Refresh complete unit/coverage/remote evidence after integrations.
 - [ ] Complete actual taxpayer facts, spouse/dependent/cross-document/year
   migrations, immutable2026 law and independently derived edge cases; follow the

@@ -2335,3 +2335,17 @@ Distinct review approves the literal100000/3070/4000/930 example and final74page
 Allfive actual main PDFs/122pages pass strict/privacy checks and exact text/fullRGB
 parity. See the [workspace fixture ledger](upgrade-2026-workspace-pa-cod-foreign-sources.md).
 This remains a partial review packet with open final-form and human gates.
+
+
+### November3 UTC: actual VA digital refund and saved reference privacy
+
+Fresh main six-pass/one genuine PA source failure precedes exact reviewed refund
+method adoption. Actual application/award identifier leaks are reproduced in a
+separate paper-compatible example, then corrected in the existing source-text
+collector. Main773/14/types3/spec7149/inventory/new strict0/both builds pass;
+one saved D/eight pages passes strict/widget/physical/privacy and root visual
+checks. Distinct35a46dc6 review approves the exact integration and its five
+unchanged independent context controls pass; native collection and global gates
+remain open.
+See the [source ledger](upgrade-2026-guided-pa-digital-complete-work.md).
+Previous workspace source fixture is confirmed pushed as877f7d88.

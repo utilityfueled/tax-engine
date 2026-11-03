@@ -2,6 +2,7 @@
 import Decimal from 'decimal.js';
 import type { PAOrdinaryEmployeeSourcesResult } from "./pa-ordinary-employee-sources.js";
 import {calculatePAResidentCreditSources,type PAResidentCreditSourcesResult} from './pa-resident-credit-sources.js';
+import {calculatePADigitalTaxRefundSources} from './pa-digital-tax-refund-sources.js';
 import {PAOrdinaryReturnCompletionSourcesSchema,type PAOrdinaryReturnCompletionSources} from '@/models/pa-ordinary-return-completion.js';
 export type {PAOrdinaryReturnCompletionSources} from '@/models/pa-ordinary-return-completion.js';
 import {sha256} from '@noble/hashes/sha2.js';
@@ -48,18 +49,23 @@ function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnComple
  if(stable(sources.originalFederalSources)!==stable(snapshotPAOrdinaryReturnOriginals(input)))fail('completion original snapshot is stale; reconfirm actual original sources');
  const other=sources.otherStateTaxes;ref(other.sourceReference);
  if(other.allJurisdictionsAndPaymentsReviewedConfirmed!==true||other.status==='unknown')fail('actual complete other-state credit eligibility/payment history is unknown');
- if(other.status==='none_paid'&&other.residentCreditSources!==undefined)fail('a no-paid history cannot suppress supplied actual resident-credit originals');
- if(other.status==='actual_payments'&&!other.residentCreditSources)fail('actual paid history requires complete original resident-credit sources');
- const residentCredit=other.status==='actual_payments'?calculatePAResidentCreditSources(input,ordinaryRaw,other.residentCreditSources):undefined;
+ if(other.status==='none_paid'&&(other.residentCreditSources!==undefined||other.refundedDigitalSources!==undefined))fail('a no-paid history cannot suppress supplied actual resident-credit or refunded-digital originals');
+ if(other.residentCreditSources!==undefined&&other.refundedDigitalSources!==undefined)fail('mixed resident-credit and refunded digital originals require their actual source successor');
+ const refundedDigital=other.refundedDigitalSources===undefined?undefined:calculatePADigitalTaxRefundSources(input,ordinaryRaw,other.refundedDigitalSources);
+ if(other.status==='actual_payments'&&!other.residentCreditSources&&!refundedDigital)fail('actual paid history requires complete original resident-credit or actual full-refund sources');
+ const residentCredit=other.status==='actual_payments'&&other.residentCreditSources!==undefined?calculatePAResidentCreditSources(input,ordinaryRaw,other.residentCreditSources):undefined;
  if(residentCredit&&!residentCredit.perState.length)fail('empty actual credit claims cannot establish positive complete other-state payment history');
  const states=new Set<string>();for(const row of other.jurisdictions){ref(row.sourceReference);if(!/^[A-Z]{2}$/.test(row.state)||row.state==='PA'||states.has(row.state)||row.sourceTaxYear!==y||ssn(row.accountSsn)!==ssn(t.ssn)||name(row.accountName)!==name(t.firstName+' '+t.lastName)||row.completeThroughDate!==asOf)fail('other-state credit original owner/year/history is incomplete');states.add(row.state);const actual=residentCredit?.perState.find(claim=>claim.state===row.state);
   if(actual){
    const original=other.residentCreditSources?.claims.find(claim=>claim.state===row.state);if(!original)return fail('actual claimed state originals are missing');
    const withheld=original.payments.filter(payment=>payment.kind==='withholding').reduce((total,payment)=>total.plus(payment.amountAppliedToTax),new CreditMoney(0));
    if(!money(row.taxPaid).eq(actual.actualNetPayments)||!money(row.incomeTaxWithheld).eq(withheld))fail('complete other-state history does not reconcile actual net payments and withholding originals');
+  }else if(refundedDigital&&row.state==='VA'){
+   if(!money(row.taxPaid).eq(refundedDigital.actualNetTaxPaid)||!money(row.incomeTaxWithheld).eq(refundedDigital.actualVAWithholding))fail('complete VA history must reconcile exact original withholding and actually received full refund separately');
   }else if(!money(row.taxPaid).isZero()||!money(row.incomeTaxWithheld).isZero())fail('positive other-state history requires a matching source-qualified original return');
  }
  if(residentCredit?.perState.some(claim=>!states.has(claim.state)))fail('each actual claimed jurisdiction requires matching complete payment history');
+ if(refundedDigital&&!states.has('VA'))fail('actual VA refunded digital originals require complete matching jurisdiction history');
  const residency=PAResidencySourcesSchema.parse((input as TaxYearInput&{paResidencySources?:unknown}).paResidencySources);
  const actualW2Rows=input.w2s.map((w,index)=>w.stateLocalSources===undefined?undefined:calculateW2StateLocalSources(input,index,w.stateLocalSources));
  const actualW2States=input.w2s.flatMap((w,index)=>actualW2Rows[index]?.stateRows.map(row=>row.state)??[w.state]);
@@ -77,7 +83,7 @@ function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnComple
  for(const b of input.form1099Int)if(b.state&&b.state!=='PA'&&money(b.stateWithheld).gt(0))fail('actual other-state bank withholding requires its credit successor');
  for(const b of input.form1099OID)for(const row of b.stateWithholding??[])if(row.state!=='PA'&&money(row.stateWithheld).gt(0))fail('actual other-state OID withholding requires its credit/refund successor');
  for(const b of input.form1099Misc)if(b.state&&b.state!=='PA'&&money(b.stateWithheld).gt(0))fail('actual other-state MISC withholding requires its credit/refund successor');
- for(const row of calculatePAResidencySources(input,(input as TaxYearInput&{paResidencySources?:unknown}).paResidencySources).digitalSources?.stateWithholding??[])if(row.state!=='PA'&&row.amount.gt(0))fail('actual other-state digital withholding requires its credit/refund successor');
+ for(const row of calculatePAResidencySources(input,(input as TaxYearInput&{paResidencySources?:unknown}).paResidencySources).digitalSources?.stateWithholding??[])if(row.state!=='PA'&&row.amount.gt(0)&&!(row.state==='VA'&&refundedDigital))fail('actual other-state digital withholding requires its credit/refund successor');
  const oc=sources.restrictedCredits;ref(oc.sourceReference);if(oc.status!=='none_available'||oc.allAwardsTransfersCarryforwardsReviewedConfirmed!==true||oc.originalAwards.length||oc.originalTransfers.length||oc.originalCarryforwards.length)fail('restricted credit awards/transfers/carryforwards are unknown or need their actual successor');
  const care=sources.care;ref(care.sourceReference);if(care.status!=='no_qualifying_expenses'||care.allCarePaymentSourcesReviewedConfirmed!==true||care.allEmployerBenefitsIncludedConfirmed!==true||care.originalCarePayments.length||input.dependentCare!==undefined||input.dependentCareBenefits!==undefined||input.w2s.some(w=>!money(w.box10DependentCareBenefits).isZero()))fail('actual care credit/benefit sources are unknown or need their successor');
  const nrk=sources.nrk1;ref(nrk.sourceReference);if(nrk.status!=='none_received'||nrk.allReceivedStatementsReviewedConfirmed!==true||nrk.originalStatements.length)fail('actual NRK1 statement credit sources are unknown or need their successor');

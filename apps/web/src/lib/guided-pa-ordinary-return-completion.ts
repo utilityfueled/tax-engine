@@ -1,5 +1,6 @@
 import Decimal from 'decimal.js';
 import type {TaxYearInput} from '@/models/inputs';
+import {buildGuidedPADigitalTaxRefundSources} from './guided-pa-digital-tax-refund-sources';
 import {PAOrdinaryReturnCompletionSourcesSchema,PACompletionOriginalRecordSchema,type PAOrdinaryReturnCompletionSources,type PACompletionOriginalRecord} from '@/models/pa-ordinary-return-completion';
 import {assertGuidedPAResidentCreditPair,buildGuidedPAResidentCreditSources,type GuidedPAResidentCreditSources} from './guided-pa-resident-credit-sources';
 /** Persist private unknown drafts in web state; canonical builders validate before stripping. */
@@ -47,9 +48,12 @@ function canonicalSources(input:TaxYearInput,raw:unknown,ordinaryFacts?:unknown)
  const object=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw as Record<string,unknown>:undefined;
  const other=object?.otherStateTaxes&&typeof object.otherStateTaxes==='object'&&!Array.isArray(object.otherStateTaxes)?object.otherStateTaxes as Record<string,unknown>:undefined;
  const {residentCreditDraft,...originalOther}=other??{};
- const data=PAOrdinaryReturnCompletionSourcesSchema.parse(other?{...object,otherStateTaxes:originalOther}:raw),packet=data.otherStateTaxes.residentCreditSources;
+ const data=PAOrdinaryReturnCompletionSourcesSchema.parse(other?{...object,otherStateTaxes:originalOther}:raw),packet=data.otherStateTaxes.residentCreditSources,refundPacket=data.otherStateTaxes.refundedDigitalSources;
+ if(refundPacket!==undefined&&(packet!==undefined||residentCreditDraft!==undefined))fail('mixed resident-credit and refunded digital originals require their actual source successor');
+ if(refundPacket!==undefined&&data.otherStateTaxes.status!=='actual_payments')fail('reconcile actual refunded digital originals with complete actual payment history');
  if((residentCreditDraft!==undefined||packet!==undefined)&&data.otherStateTaxes.status!=='actual_payments')fail('reconcile retained resident-credit originals and draft with the actual other-state payment history');
  const facts=ordinaryFacts===undefined?input.paOrdinaryReturnFacts:ordinaryFacts;
+ if(refundPacket!==undefined)buildGuidedPADigitalTaxRefundSources(input,facts,refundPacket);
  const creditDraft=residentCreditDraft===undefined?undefined:assertGuidedPAResidentCreditPair(input,facts,residentCreditDraft,packet);
  if(packet!==undefined&&creditDraft===undefined)buildGuidedPAResidentCreditSources(input,facts,packet);
  return {data,...(creditDraft===undefined?{}:{creditDraft})};
