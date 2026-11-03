@@ -2519,3 +2519,7 @@ Actual main production desktop1280/mobile390 journeys pass2/2 with retries0, ten
 ### November3: actual two-owner PA married engine
 
 The finite J/M composer binds two actual owner wage/payroll/residency/worldwideSP packets and computes fresh federal once. Joint totals and separate owner rounding/elections remain distinct; no federal owner split or cross-account settlement is invented. Distinct127 controls and main2,012/113 pass after source-first real RED and prior-SP guard correction; all13checks, including three types, strictlint and both builds, pass. See [the source ledger](upgrade-2026-pa-married-ordinary-work.md). Public/native/workspace/physical integration, remaining household methods and human/final2026 qualification remain open. OH business3b2a5e74 is pushed.
+
+### November3: actual care desktop/mobile and saved review replay
+
+Current-main production journeys enter actual care/provider/person originals, retain unknowns, revoke confirmation after an equal-cash receipt-identity edit, export and reopen2/2 with zero retries. Root strictly reads four actual PDFs/76pages, checks16physical PA40 cells and the corrected count unit, and opens four critical pages/four browser frames. Allten static checks pass. See [the browser ledger](upgrade-2026-pa-care-browser-work.md). This remains finite local2025 evidence; full distribution/staging/human/final2026 qualification stays open. Married engine13f6768e is pushed.

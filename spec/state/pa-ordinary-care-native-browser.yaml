@@ -1,0 +1,29 @@
+form: "PA Ordinary Care Native Browser"
+fullName: "Actual current care receipts in the normal local production browser"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40dc.pdf"
+notes: |
+  Source-first browser regression for the already reviewed finite current care
+  method. Complete fictional general/federal summary and unrelated PA residency,
+  payment, SP and refund-disposition records may be seeded once. Federal actual
+  provider/person details and every PA care metadata/payment source are then
+  entered in native UI. PA care packet and metadata begin absent/unknown. No PA
+  source packet, calculation result, credit, received cash or cached PDF is seeded.
+  Independent literal originals: actual wages100000+bank120=PA100120; .0307
+  yields reported3074; actual PA withholding3074. Actual one-person current
+  care3000 at20percent yields600, printed23=600/24=3674/29=600/requested30=600.
+  This does not qualify upload-to-delete, official DC filing copy, full2026,
+  staged hosting, a provider result, or a qualified human review.
+lines:
+  - line: "native-entry-confirmation"
+    formula: "At1280 and390, begin unknown care metadata; create actual provider/person through Credits, actual PA receipt/document fields through State Return, explicitly capture current federal originals, then child+parent confirmation. PA estimate is unavailable until source-complete and shows existing ticker net tax2474 (gross3074 minus credit600)/refund600 only after confirmation. No read/reopen silently creates facts."
+    testRef: "apps/web/tests/pa-ordinary-care-native.spec.ts::enters actual care records confirms exports and reopens without inferred facts"
+  - line: "equal-cash-identity-edit"
+    formula: "Changing original receipt number without changing3000 revokes nested+outer confirmations, removes PA estimate, survives reload unknown, and only explicit child+parent re-review restores the same600. Original identities retained in private state; no monetary value invented."
+    testRef: "apps/web/tests/pa-ordinary-care-native.spec.ts::enters actual care records confirms exports and reopens without inferred facts"
+  - line: "saved-review-physical-source"
+    formula: "Actual public review download is saved and reopened strictly: flattened official PA40 source cells23=600/24=3674/29=600/30=600; DC clearly REFERENCE SUMMARY ONLY and not official filing copy; all pages review marked, no interactive widgets, dangling annotations or private source IDs. Reopened workspace exports again from persisted actual source facts."
+    testRef: "apps/web/tests/pa-ordinary-care-native.spec.ts::enters actual care records confirms exports and reopens without inferred facts"
+  - line: "managed-browser-privacy"
+    formula: "Normal committed Playwright production webServer, actual desktop/mobile responsive controls and screenshots, no framework/page/console errors; no actual source originals leave local origin or appear in requests except explicitly authorized local filled-return generation. Review response and saved bytes verified independently."
+    testRef: "apps/web/tests/pa-ordinary-care-native.spec.ts::enters actual care records confirms exports and reopens without inferred facts"

@@ -15240,5 +15240,39 @@
       "no human/final2026/staging/filing qualification"
     ],
     "reviewSHA256": "fd55b91b43b8e17c799af41df63bbf58781da77d3a0441f99a3ceb7937999fd9"
+  },
+  "nov03CareCurrentMainBrowser": {
+    "baseCommit": "13f6768e21b4704be8545776f2cfce1f2c3b49fa",
+    "status": "approved-finite-current-main-native-browser-and-saved-review",
+    "fourExactBeforeLedgerAppend": {
+      "spec/state/pa-ordinary-care-native-browser.yaml": "f403b0b6dbcd334a0630f63024b69498e7ac8ce568b3bf6e52f240f3e5779c3c",
+      "apps/web/tests/pa-ordinary-care-native.spec.ts": "bb1646bfd9b4d753f1f5d14bccac8c84aaa8ceb43d6648832543d47cb0bac349",
+      "tests/fixtures/guided-pa-care-browser.ts": "2678a5d38eb2a43cf4b89a920dbc5d27dcc0700db57ffeff5c9f62c8bc8f5fe6",
+      "docs/upgrade-2026-pa-care-browser-work.md": "73a86cbabae5f89f6ad83c891253734814547f2b32ac8fbbcacdd5f9617bfb44"
+    },
+    "staticChecksPassed": 10,
+    "desktopMobileTests": 2,
+    "browserWorkers": 1,
+    "browserRetries": 0,
+    "browserLogSHA256": "68cfb56ae7a2a7a7b57b31f0f017233b886d8696b7b78af890f53b0604f46ce6",
+    "actualSavedPdfs": 4,
+    "strictPagesRead": 76,
+    "physicalPA40CellsVerified": 16,
+    "criticalPdfPagesRenderedAndVisuallyInspected": 4,
+    "actualScreenshotsIndependentlyInspected": 4,
+    "visualLimits": "Four PA40/DC critical PDF pages and confirmed/reopened desktop/mobile frames; not all76pages. Animated top summary amounts excluded; detailed settled state rows net2474/refund600 correct.",
+    "countUnitSuccessor": "Actual current saved reference shows qualifying persons1 without currency prefix; original600credit preserved",
+    "strictSavedReviewSHA256": "737dc45dedcd4ef6a89c225887a8008101a791bf45aadef572056beb74057976",
+    "artifactHashesSHA256": "40a595196c23bc5b4a5b4669ea8333ea3bd0755a7fbf09fae663a7f9768e0e70",
+    "port3099Closed": true,
+    "rootReadOnlyLabelDiagnostic": "Initial inspection label Qualifying individuals mismatched actual Line1qualifyingpersons; corrected read-only probe only, original artifact/oracles unchanged. Diagnostic retained.",
+    "noProductChanges": true,
+    "limits": [
+      "Only unrelated fictional originals seeded once; native care/federalprovider/person facts entered",
+      "Not full upload-to-delete or hosted journey",
+      "2025 review only; officialDC filingcopy unavailable",
+      "No qualified human or final2026 qualification"
+    ],
+    "rootReviewSHA256": "2384ec1b557123e8bec27e2f93a940e44b9393a8688cc61151abb57e93e4b411"
   }
 }
