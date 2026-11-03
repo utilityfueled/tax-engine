@@ -14329,6 +14329,31 @@
     "independentStaticReviewSHA256": "89dec925be7ed754ecbe12c98d4d154ca07e3a80b14fe9ee931867cec2cecece53",
     "integrationReceiptSHA256": "148f325c351061e66395ad79620f83c91679fbf615e8787f96c907a0b4e7a1bb",
     "realBrowserQualified": false,
+    "releaseReady": false,
+    "commit": "8ef43fe2",
+    "pushed": true
+  },
+  "nov03CurrentSecurityAndPostgres": {
+    "applicationCommit": "648dd8a3451175e94020be99a6a6d8a42cb20bd8",
+    "fullAuditVulnerabilities": 0,
+    "fullAuditPackages": 522,
+    "productionAuditVulnerabilities": 0,
+    "productionAuditPackages": 426,
+    "nextLatest": "16.4.4",
+    "nextNov03SecurityPatch": "announced, not published at retrieval",
+    "postgresVersion": "16.14",
+    "postgresTests": 45,
+    "postgresSkipped": 0,
+    "all33NoDBSkipsExecuted": true,
+    "disposableServerStopped": true,
+    "postgresReceiptSHA256": "b53989868ed850f6bb1b91e2fda00274c1bbd92fe463970379e0db655fa75860",
+    "officialRawSuccesses": 16,
+    "ssaRaw": "403; official web fallback2026base184500 verified",
+    "finalCurrent1040Year": 2025,
+    "finalCurrentTaxTableYear": 2025,
+    "providerSpendUsd": "0",
+    "approvedProviderCeilingUsd": "5",
+    "stagingQualified": false,
     "releaseReady": false
   }
 }
