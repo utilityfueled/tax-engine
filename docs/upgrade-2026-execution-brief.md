@@ -213,3 +213,7 @@ Hosted billing now denies configured opposite-mode/unsupported keys before outbo
 ### November 3: actual reciprocal employee desktop/mobile lifecycle
 
 Current-main refund/knownzero journeys pass4/4 without retries through native originals, equal-cash source invalidation, unknown withholding reload, explicit reconfirmation, review download and reopen. Each actual review200 binds saved response bytes; separate filing400 stays denied. All7 scoped static sets pass; distinct saved4PDF/88page privacy/text/RGB and40geometry review passes. See [the browser ledger](upgrade-2026-oh-reciprocal-native-browser-work.md). No product change; official reciprocal physical forms, broader cohorts/currentglobal/distributions/staging/human/final2026 remain open. Security0e4c2df6 and hostedmode80bc752f are pushed.
+
+### November 3: actual married Pennsylvania review downloads
+
+Current-main J/M desktop/mobile journeys now verify actual200 and one saved review download, one federal household and separately owned PA40 pages through edit/reconfirm/reopen. All4browser cases and8static sets pass without retries. Distinct4logicalPDF/60unique page strict/privacy/physical/text/RGB and36geometry review passes. The new-reader printedline16 error is retained and corrected from official extension-payment authority without changing tax or source oracles. See [the browser ledger](upgrade-2026-pa-married-native-review-browser-work.md). Broader cohorts, fullglobal/dependency/distribution/staging/AI/human/final2026 gates remain open; reciprocalbrowserb45cda6c is pushed.

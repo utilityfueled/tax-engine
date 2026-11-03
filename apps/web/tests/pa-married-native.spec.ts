@@ -1,17 +1,36 @@
 // Spec: spec/state/pa-married-native-browser.yaml. No post-origin storage/source refresh.
 import {expect,test,type Locator,type Page,type TestInfo} from '@playwright/test';
+import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import type {ReturnWorkspaceRecord} from '@tax-engine/contracts';
+import {inspectMarriedReviewDownload,marriedReviewFiles} from './helpers/pa-married-review-inspection';
 import {guidedPAMarriedNativeFixture} from '../../../tests/fixtures/guided-pa-married-native';
 import {buildSectionRoute,type GuidedFlowState} from '../src/lib/guided-interview-flow';
 import type {PAMarriedOrdinarySources} from '../../../src/models/pa-married-ordinary-sources';
 type Mode='J'|'M';
 const confirmation='Confirm actual married PA household sources after the last edit';
-const deniedMessage='Could not generate the review PDF. Check required taxpayer facts, source documents and supported tax year.';
 const currentEmployer='Fictional newly reviewed Taylor employer same actual cash';
 function required<T>(value:T|null|undefined):T{if(value===null||value===undefined)throw Error('Explicit actual fictional browser source is required');return value;}
 function control(page:Page,label:string){return page.getByRole('textbox',{name:label,exact:true}).or(page.getByRole('combobox',{name:label,exact:true})).or(page.getByRole('spinbutton',{name:label,exact:true}));}
 async function enter(page:Page,label:string,value:string){const field=control(page,label);await expect(field).toHaveCount(1);if(await field.evaluate(node=>node.tagName)==='SELECT')await field.selectOption(value);else{await field.fill(value);await field.press('Tab');}}
 async function saved(page:Page,id:string):Promise<GuidedFlowState>{return page.evaluate(id=>{const raw=localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`);if(!raw)throw Error('Actual saved guided state is required');return JSON.parse(raw)as GuidedFlowState;},id);}
 async function packet(page:Page,id:string){return required((await saved(page,id)).sectionData['state-return']?.paMarriedOrdinarySources);}
+async function savedWorkspace(page:Page,id:string):Promise<ReturnWorkspaceRecord>{
+ return page.evaluate(id=>{const raw=localStorage.getItem('tax-engine.return-workspaces.v1');if(!raw)throw Error('Actual native workspace is required');const workspace=(JSON.parse(raw)as{workspaces:Record<string,ReturnWorkspaceRecord>}).workspaces[id];if(!workspace)throw Error('Actual saved workspace must exist');return workspace;},id);
+}
+/** Source-derived cover profile is checked before requesting any PDF, never injected or learned from output. */
+function assertNativeSourceProfile(workspace:ReturnWorkspaceRecord,state:GuidedFlowState,id:string){
+ expect(workspace.id).toBe(id);expect(workspace.returnSummary.targetTaxYear).toBe(2025);
+ expect(workspace.documents.map(row=>({id:row.id,kind:row.kind,coverage:row.coverage}))).toEqual([{id:'guided:w2',kind:'w2',coverage:'supported'}]);
+ expect(workspace.summary.pendingReviewDocuments).toBe(0);expect(workspace.summary.interviewQuestionsRemaining).toBe(0);
+ expect(workspace.seededReturn.reviewNotes).toEqual([]);expect(workspace.checklist.length).toBeGreaterThan(0);expect(workspace.checklist.map(row=>row.status)).toEqual(workspace.checklist.map(()=>'ready'));
+ expect(state.phase).toBe('complete');expect(state.taxYear).toBe(2025);
+}
+function privateSourceReferences(value:unknown):string[]{
+ if(Array.isArray(value))return value.flatMap(privateSourceReferences);
+ if(value===null||typeof value!=='object')return[];
+ return Object.entries(value).flatMap(([key,child])=>/sourceReference$/i.test(key)&&typeof child==='string'&&child.length>0?[child]:privateSourceReferences(child));
+}
 async function seedUnrelatedFederalOriginals(page:Page,mode:Mode){
  await page.goto('/returns/new');await expect(page).toHaveURL(/\/returns\/(?!new(?:[/?#]|$))[a-z0-9-]+(?:\?create=1)?$/i);
  const id=required(new URL(page.url()).pathname.split('/').at(-1));await expect.poll(()=>page.evaluate(id=>Boolean(JSON.parse(localStorage.getItem('tax-engine.return-workspaces.v1')??'{}').workspaces?.[id]),id)).toBe(true);
@@ -55,7 +74,7 @@ async function ownedResults(scope:Locator,mode:Mode){
  }else{
   const returns=scope.getByRole('region',{name:'Pennsylvania separate returns',exact:true});await expect(returns).toHaveCount(1);await expect(returns.getByRole('article')).toHaveCount(2);
   for(const[owner,tax]of [['Primary','$1,535'],['Spouse','$921']]){const article=returns.getByRole('article',{name:owner+' PA return',exact:true});await expect(article).toHaveCount(1);for(const[label,value]of [['Tax before credits',tax],['Payments',tax],['Requested refund','$0'],['Amount due','$0']])await expect(article.getByText(label,{exact:true}).locator('xpath=following-sibling::dd[1]')).toHaveText(value);}
-  await expect(scope.locator('.guided-ticker-breakdown-row,.guided-review-row').filter({hasText:/^State [Tt]ax/})).toHaveCount(0);await expect(returns.getByText('$2,456',{exact:true})).toHaveCount(0);await expect(returns).toContainText('Paper export still needs the qualified married-return forms.');
+  await expect(scope.locator('.guided-ticker-breakdown-row,.guided-review-row').filter({hasText:/^State [Tt]ax/})).toHaveCount(0);await expect(returns.getByText('$2,456',{exact:true})).toHaveCount(0);await expect(returns).toContainText('Supported PA40 and Schedule SP review pages require current source validation. Filing and separate local returns remain unqualified.');
  }
 }
 async function capture(page:Page,info:TestInfo,phase:string,scope:Locator,anchor:Locator){
@@ -83,10 +102,23 @@ for(const viewport of [{width:1280,height:900},{width:390,height:844}])for(const
   await page.locator('.guided-progress-step').filter({hasText:/^State Return$/}).click();await expect(active.getByRole('region',{name:'Pennsylvania separate returns',exact:true})).toHaveCount(0);await enter(page,'Wage 1 original source reference','Fictional browser actual revised same-cash Taylor employer original');await native.getByRole('button',{name:confirmation,exact:true}).click();await expect.poll(async()=>(await packet(page,id)).sourceFactsConfirmed).toBe(true);const reconfirmed=await packet(page,id);pinSources(reconfirmed,mode);expect(required(reconfirmed.wages[0]).original.employer).toEqual({name:currentEmployer,ein:'91-0000411'});expect(required(reconfirmed.wages[1]).original).toEqual(required(original.wages[1]).original);expect(reconfirmed.owners).toEqual(original.owners);await ownedResults(active,mode);await capture(page,info,'actual-reconfirmed',active,active.getByRole('heading',{name:'Pennsylvania State Return',exact:true}));
   await page.goto('/');await page.goto(`/returns/${id}`);await expect(control(page,'Wage 1 original source reference')).toHaveValue('Fictional browser actual revised same-cash Taylor employer original');expect(await packet(page,id)).toEqual(reconfirmed);await ownedResults(active,mode);await capture(page,info,'actual-native-reopened',native,control(page,'Married PA source tax year'));
   await page.locator('.guided-nav').getByRole('button',{name:'Continue',exact:true}).click();await page.locator('.guided-nav').getByRole('button',{name:'Open Full Return',exact:true}).click();await expect(page.locator('.guided-interview-shell')).toHaveCount(0);await expect(ticker).toHaveCount(1);if(mode==='M'){await ownedResults(ticker,mode);await expect(ticker.locator('.guided-ticker-label').filter({hasText:/^Federal (Refund|Balance Due|Result)$/})).toHaveCount(1);}await expect(page.getByText('Download a review PDF with taxpayer IDs removed, or save the workspace summary and audit notes as JSON. Filing exports are not yet qualified.',{exact:true})).toBeVisible();await expect(page.getByText('Download an experimental reference PDF for the forms and reference summaries we currently generate. It is not filing-ready, may omit supporting schedules or e-file checks, and Social Security numbers are redacted by design.',{exact:true})).toBeVisible();
-  const download=page.getByRole('button',{name:'Download Review PDF',exact:true});await expect(download).toHaveCount(1);await capture(page,info,'actual-workspace-paper-still-unavailable',download.locator('xpath=ancestor::section[1]'),download);
-  const endpoint=new URL('/api/workspace/filled-return',page.url()).href,responsePromise=page.waitForResponse(response=>response.url()===endpoint&&response.request().method()==='POST');await download.click();const response=await responsePromise;expect(response.status()).toBe(400);expect(await response.json()).toEqual({error:deniedMessage});await expect(page.getByRole('status',{name:'Return status',exact:true})).toHaveText(deniedMessage);expect(downloads).toEqual([]);await info.attach('actual-paper-denial',{body:JSON.stringify({status:response.status(),error:deniedMessage,downloads},null,2),contentType:'application/json'});
+  const download=page.getByRole('button',{name:'Download Review PDF',exact:true});await expect(download).toHaveCount(1);await capture(page,info,'actual-workspace-review-download',download.locator('xpath=ancestor::section[1]'),download);
+  const completeState=await saved(page,id);assertNativeSourceProfile(await savedWorkspace(page,id),completeState,id);expect(await packet(page,id)).toEqual(reconfirmed);
+  expect(reconfirmed.owners.map(row=>[row.accountHolder,row.payments.extensionPaymentsStatus,row.payments.originalReceipts])).toEqual([['primary','known_none',[]],['spouse','known_none',[]]]);
+  const endpoint=new URL('/api/workspace/filled-return',page.url()).href,responsePromise=page.waitForResponse(response=>response.url()===endpoint&&response.request().method()==='POST'),actualDownloadPromise=page.waitForEvent('download');
+  await download.click();const response=await responsePromise;expect(response.status()).toBe(200);
+  const sent=response.request().postDataJSON()as{workspace:ReturnWorkspaceRecord;guidedFlowState:GuidedFlowState};assertNativeSourceProfile(sent.workspace,sent.guidedFlowState,id);expect(sent.guidedFlowState.sectionData['state-return']?.paMarriedOrdinarySources).toEqual(reconfirmed);
+  const included=marriedReviewFiles(mode),filename=`${id}-2025-review-return.pdf`,headers=response.headers();
+  expect(headers['content-type']).toBe('application/pdf');expect(headers['content-disposition']).toBe(`attachment; filename="${filename}"`);expect(headers['x-tax-engine-export-purpose']).toBe('review');expect(headers['cache-control']).toBe('no-store, private');expect(headers['x-tax-engine-included-forms']?.split(',')).toEqual(included);expect(included.filter(name=>name==='f1040-filled.pdf')).toHaveLength(1);expect(included).not.toContain('pa-40-filled.pdf');expect(included.some(name=>name.endsWith('-sp-review.pdf'))).toBe(false);
+  const actualDownload=await actualDownloadPromise;expect(actualDownload.suggestedFilename()).toBe(filename);expect(await actualDownload.failure()).toBeNull();const actualPath=info.outputPath(filename);await actualDownload.saveAs(actualPath);
+  const savedBytes=await readFile(actualPath),responseBytes=await response.body();expect(savedBytes.equals(responseBytes)).toBe(true);expect(downloads).toEqual([filename]);
+  await expect(page.getByRole('status',{name:'Return status',exact:true})).toHaveText(`Downloaded ${filename} as an experimental reference packet with ${included.length} filled tax forms. Review the cover page warnings before relying on it.`);
+  const privatePDFValues=[f.input.taxpayer.primary.ssn,required(f.input.taxpayer.spouse).ssn,'900700411','900700412','91-0000411','910000411','91-0000412','910000412','paMarriedOrdinarySources','originalFederalSources','originalTaxpayer','Fictional browser primary actual household originals','Fictional browser spouse actual account search','Fictional browser actual revised same-cash Taylor employer original',...privateSourceReferences(reconfirmed)];
+  const audit=await inspectMarriedReviewDownload(actualPath,mode,privatePDFValues);expect(audit.sha256).toBe(createHash('sha256').update(responseBytes).digest('hex'));
+  await info.attach('actual-saved-review-byte-and-physical-audit',{body:JSON.stringify({status:response.status(),filename,included,responseSHA256:audit.sha256,downloads,...audit},null,2),contentType:'application/json'});await info.attach('actual-downloaded-review',{path:actualPath,contentType:'application/pdf'});
+  expect(await packet(page,id)).toEqual(reconfirmed);
   const beforeReopen=await packet(page,id);await page.goto('/');await page.goto(`/returns/${id}`);expect(await packet(page,id)).toEqual(beforeReopen);expect((await saved(page,id)).segmentation.filingStatus).toBe('mfj');expect((await saved(page,id)).sectionData['income-w2']?.entries.map(w=>[w.wages,w.stateWithheld])).toEqual([['50000','1535'],['30000','921']]);await expect(page.locator('textarea')).toHaveCount(0);expect(errors).toEqual([]);
-  const expectedConsole=consoleErrors.filter(row=>row.url===endpoint&&/400/.test(row.text));expect(expectedConsole.length).toBeLessThanOrEqual(1);expect(consoleErrors.filter(row=>!expectedConsole.includes(row))).toEqual([]);
-  const privateValues=[f.input.taxpayer.primary.ssn,required(f.input.taxpayer.spouse).ssn,'Fictional browser primary actual household originals','Fictional browser spouse actual account search'];for(const request of requests){if(request.url===endpoint&&request.method==='POST')continue;for(const value of privateValues)expect(request.url+'\n'+request.body).not.toContain(value);}expect(requests.filter(request=>request.url===endpoint&&request.method==='POST')).toHaveLength(1);expect(downloads).toEqual([]);
+  expect(consoleErrors).toEqual([]);
+  const privateValues=[f.input.taxpayer.primary.ssn,required(f.input.taxpayer.spouse).ssn,'Fictional browser primary actual household originals','Fictional browser spouse actual account search'];for(const request of requests){if(request.url===endpoint&&request.method==='POST')continue;for(const value of privateValues)expect(request.url+'\n'+request.body).not.toContain(value);}expect(requests.filter(request=>request.url===endpoint&&request.method==='POST')).toHaveLength(1);expect(downloads).toEqual([filename]);
  });
 });}

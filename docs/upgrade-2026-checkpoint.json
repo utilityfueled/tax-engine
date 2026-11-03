@@ -15937,5 +15937,26 @@
       "PApublic": "cffef1ac",
       "OHbusinessBrowser": "970326c8"
     }
+  },
+  "paMarriedNativeReviewBrowser20261103": {
+    "status": "bounded-local-pass",
+    "baseCommit": "b45cda6cfffbe15b05070337ae2f9bcd0379b5ca",
+    "authorManifestSHA256": "43c150110785d96ca15c04bf423243fc42fe1278ab50fc052627759ed71e3f68",
+    "mainActualPassed": 4,
+    "retries": 0,
+    "actualLogSHA256": "c201e1e501af43825b51976208443a901a201fbe66a1f10cd02d4c5bbeceb0e4",
+    "static8": "PASS",
+    "logicalDownloads": 4,
+    "retainedPDFCopies": 8,
+    "uniquePages": 60,
+    "objectsChecked": 4370,
+    "geometryRecords": 36,
+    "all60TextAndRGBParity": true,
+    "independentReviewSHA256": "f7032d5d5baa65de109145cd61c2fab32ad5a8d31b7397ab8a85f9b72abd6375",
+    "rootReviewSHA256": "f5d1ba7f73a6e4caffe7347a11462da248e93d7bd27e04fc3a4cd1ebcb3edd8f",
+    "priorLine16ReaderFailure": "retained and correctedspecfirstfromofficialauthority, unchangedtax/sourceoracles",
+    "noProductsChanged": true,
+    "markerRepeated": false,
+    "remaining": "broadercohorts/fullglobal/currentdependencies/hosting/selfhost/AI/human/final2026/filing"
   }
 }
