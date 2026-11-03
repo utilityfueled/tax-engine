@@ -8008,6 +8008,26 @@
       ]
     },
     {
+      "key": "federal/nol-filing-unit-native-boundaries",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i172",
+      "specPath": "spec/federal/nol-filing-unit-native-boundaries.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/nonitemized-allowable-charitable-carry",
       "jurisdiction": "federal",
       "taxYear": 2026,

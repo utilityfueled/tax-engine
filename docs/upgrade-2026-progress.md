@@ -2445,3 +2445,7 @@ The finite2025 source method retains actual unrefunded Ohio cash0.20 separately 
 ### November 3: native EIC history boundaries
 
 Nine real personal-section controls now cover unknown versus empty history, assessment dates, linked actual IRS allowances, spouse separation, intervening filed returns, ban notices, claim status and actual serialized reopening/invalidation. Parent review and main30tests/5files plus allten checks pass with no product changes or modified old assertions. See [the EIC source ledger](upgrade-2026-eic-history-native-boundaries.md). Global coverage and human qualification remain open. Pending Ohio OID06be2e1c is pushed.
+
+### November 3: native NOL owner and original-return boundaries
+
+Twenty-one mounted controls exercise actual filing-unit owner/return selections, separate filed computations and uses, marital years, current owner-document assignments, exact expense splits, unknown versus zero, JSON reopening and revoked confirmation. Known reviewed new-marriage and same-couple outputs remain intact; no products or old assertions change. Parent review, main43tests/6files and allten checks pass. See [the NOL source ledger](upgrade-2026-nol-filing-unit-native-boundaries.md). Global coverage and human qualification remain open. EIC6ac1464f is pushed.
