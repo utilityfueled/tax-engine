@@ -23,6 +23,16 @@ notes: |
   source references; rendered pages reviewed separately before qualification.
   Filing purpose remains400. No external services, production, funds, final2026,
   human interpretation or official business physical/filing qualification.
+  Source-first read-only privacy sampling proposal: use installed Playwright1.64.1
+  normalization on BOTH actual textContent and expected literal markers: remove
+  U+200B/U+00AD, trim and collapse whitespace; preserve case-sensitive substring
+  matching and each individual negative assertion. Null/missing-node reads cannot
+  satisfy the automatic poll. Original money, entry, blur, geometry and deadlines
+  remain unchanged. Literal zero-width, soft-hyphen, repeated-whitespace and
+  missing-node cases are pinned before the proposed helper; runtime not performed.
+  Same-package navigation setup: center-scroll the exact existing progress
+  element before its unchanged ordinary click. Keep all viewport/hit/containment
+  assertions, source/money/privacy expectations and original deadlines/retries.
 lines:
   - line: "blank-origin"
     label: "No business proof before actual native entry"

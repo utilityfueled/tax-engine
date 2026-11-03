@@ -17920,5 +17920,25 @@
     "configurationGateSuccessorPending": true,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-hosted-subscription-atomicity-work.md"
+  },
+  "ohNativeCombinedSuccessor20261103": {
+    "baseCommit": "a6f17d086dcfcd3fd730b42fc909a172c77c8381",
+    "status": "eight managed browser journeys and bounded independent saved review pass",
+    "managedCasesPassed": 8,
+    "managedTimeoutMs": 90000,
+    "retries": 0,
+    "checkSetsPassed": 8,
+    "pdfs": 8,
+    "pages": 252,
+    "pageTextAndPixelMatches": 248,
+    "expectedCoverChanges": 4,
+    "geometryPassed": 80,
+    "screenshotsInspected": 84,
+    "managedLogSha256": "332fb3c945e580316e53e97d54ff50b14033db4e6998a4269f4c9d18674368b6",
+    "independentReviewSha256": "fdcf3a3cfcde1bd82739abe417263f6f0423177f77caf6dd0409bba210f7f981",
+    "actualImageThirtySecondQualified": false,
+    "filingQualified": false,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-oh-native-browser-successor-work.md"
   }
 }

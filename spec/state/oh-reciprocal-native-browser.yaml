@@ -18,9 +18,24 @@ notes: |
   absent. All reciprocal originals originate visibly; no post-origin storage writes.
   Normal production-managed Chromium config, two existing workers and deadlines;
   explicit retries0. Four journeys at1280x900/390x844, two independent cash cases.
-  Current PA reciprocal method exports reference-only review summaries, not
-  qualified official Ohio forms. Actual review200/PDF bytes required separately
+  Current PA reciprocal method exports reference summaries plus official-form
+  review copies, not qualified filing forms. Actual review200/PDF bytes required separately
   from filing400. No provider/production/funds/final2026/human qualification.
+  Actual reciprocal companion inventory: positive withholding produces IT1040,
+  NRC, adjustments, credits and withholding official-form review copies (5files,
+  9 source pages); knownzero withholding omits withholding (4files,7 sourcepages).
+  These coexist with reference summaries and federal pages. Exact *-review.pdf
+  names describe actual review copies, never physical/source/filing qualification.
+  Source-first read-only privacy sampling proposal: use installed Playwright1.64.1
+  normalization on BOTH actual textContent and expected literal markers: remove
+  U+200B/U+00AD, trim and collapse whitespace; preserve case-sensitive substring
+  matching and each individual negative assertion. Null/missing-node reads cannot
+  satisfy the automatic poll. Original money, entry, blur, geometry and deadlines
+  remain unchanged. Literal zero-width, soft-hyphen, repeated-whitespace and
+  missing-node cases are pinned before the proposed helper; runtime not performed.
+  Same-package navigation setup: center-scroll the exact existing progress
+  element before its unchanged ordinary click. Keep all viewport/hit/containment
+  assertions, source/money/privacy expectations and original deadlines/retries.
 lines:
   - line: "unknown-origination"
     label: "Blank documentary records do not establish reciprocity"
@@ -48,5 +63,5 @@ lines:
     testRef: "apps/web/tests/oh-reciprocal-native.spec.ts::originates reciprocal employee originals and preserves actual source-bound review through reopen"
   - line: "actual-reference-export"
     label: "Review output and filing denial are separate real operations"
-    formula: "Actual DownloadReviewPDF UI POST200 gives PDF purpose review/no-store; saved download equals response bytes. IT1040/NRC/adjustment references present, Ohio official forms absent; withholding companion only for actual positive cash. Pin IT1040 1/2b60000 or60001,3/8c/9/10=0,14/26=2001 or0; ADJ14 Reciprocitywages/47=60000 or60001; NRC1/16/19/20=0. Strict saved PDF no fields/widgets/SSNs/private IDs in text/metadata/all indirect object and decoded streams. Separate filingPOST400 generic response/no second download; reopen preserves exact sources. Visual inspection and actual page counts recorded after runtime."
+    formula: "Actual DownloadReviewPDF UI POST200 gives PDF purpose review/no-store; saved download equals response bytes. IT1040/NRC/adjustment references coexist with exact official-form review copies:5 files/9 source pages for positive withholding,4 files/7 source pages for zero; no filing qualification. Withholding companion only for actual positive cash. Pin IT1040 1/2b60000 or60001,3/8c/9/10=0,14/26=2001 or0; ADJ14 Reciprocitywages/47=60000 or60001; NRC1/16/19/20=0. Strict saved PDF no fields/widgets/SSNs/private IDs in text/metadata/all indirect object and decoded streams. Separate filingPOST400 generic response/no second download; reopen preserves exact sources. Visual inspection and actual page counts recorded after runtime."
     testRef: "apps/web/tests/oh-reciprocal-native.spec.ts::originates reciprocal employee originals and preserves actual source-bound review through reopen"

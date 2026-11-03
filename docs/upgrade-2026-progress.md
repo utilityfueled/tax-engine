@@ -2704,3 +2704,7 @@ Actual included artifacts now determine whether the Ohio cover describes officia
 ### November 3: atomic authoritative subscription reconciliation
 
 Six source-first existing-API cases reproduce three genuine failures before the twelve-file repair. Current subscription state and the event receipt now commit together under customer/subscription locks, with a bounded authoritative provider read and retryable rollback. Root270/10files including eight actual local PostgreSQL failure/concurrency cases, zero skips and all13check sets pass; distinct static review approves the frozen candidate. See [the transaction ledger](upgrade-2026-hosted-subscription-atomicity-work.md). Actual successor Preview delivery, credit-pack settlement, a separate configuration-gate correction and broader global/recovery/human qualification remain open.
+
+### November 3: combined Ohio native browser successor
+
+All eight business/reciprocal journeys now pass without retries under the unchanged managed90s configuration. Exact progress targets are centered before ordinary clicks; privacy sampling preserves normalized matching and every individual negative assertion. Reciprocal inventory now asserts actual review-copy basenames without qualification. All eight scoped check sets and distinct saved8PDF/252page privacy/text/pixel plus80geometry review pass. See [the successor ledger](upgrade-2026-oh-native-browser-successor-work.md). The actual image30s workflow, broader cohorts, human/final2026 and release criteria remain open. Atomic billing5996cbda is pushed separately.
