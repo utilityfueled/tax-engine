@@ -1,0 +1,25 @@
+form: "PA actual mixed debt foreign-interest digital private references"
+fullName: "Independent exact-current canonical mixed-source privacy regressions"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40d.pdf"
+notes: |
+  Actual current complete canonical personal COD300/foreign bank5000/PAcash
+  wage95000 and original-bound digital100.49 minus actual PA80.24 combine to
+  PAprinted100020/tax3071/WH4000/refund929. Personal debt300 remains SPline10.
+  These are separately fictional complete source facts, not user records.
+  Typed debt qualification legalSourceReference/useSourceReference and foreign
+  tax receiptNumber are private source references admitted by the strict mixed
+  actual source method. If repeated inside an asset description they must be
+  redacted using actual original authority, preserving complete safe text and
+  all money/source digests. NEW fictional actual annual904j election has full
+  passive/payee eligibility, all current100USD receipt/source facts and
+  independently confirmed zero regular/AMT carryover histories through2024.
+  The original deduction carryover case and three guard diagnostics remain
+  immutable; no known prior carryover was changed to zero. No unsupported raw-field insertion or generic
+  no-source workaround; actual full mixed composer must first succeed.
+  All original independent11/control hashes and original D12 remain immutable.
+lines:
+  - line: "mixed-private"
+    description: "Complete canonical mixed originals protect known private legal/use/receipt references"
+    formula: "PA100020/tax3071/refund929 and D20 remain exact; full safe prefix/redaction/suffix, source state unchanged."
+    testRef: "tests/pdf/pa-ordinary-digital-cod-mixed-private-independent.test.ts::redacts actual mixed private source references after the complete canonical composer succeeds: %s"

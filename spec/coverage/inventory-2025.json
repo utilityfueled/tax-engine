@@ -12821,11 +12821,91 @@
       ]
     },
     {
+      "key": "state/pa-ordinary-digital-cod-mixed-private-independent",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40d.pdf",
+      "specPath": "spec/state/pa-ordinary-digital-cod-mixed-private-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-ordinary-digital-independent",
       "jurisdiction": "state",
       "taxYear": 2025,
       "sourceAuthority": null,
       "specPath": "spec/state/pa-ordinary-digital-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-ordinary-digital-mixed-private-saved-pdf",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": null,
+      "specPath": "spec/state/pa-ordinary-digital-mixed-private-saved-pdf.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-ordinary-digital-official-pdf",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": null,
+      "specPath": "spec/state/pa-ordinary-digital-official-pdf.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-ordinary-digital-paper-independent",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": null,
+      "specPath": "spec/state/pa-ordinary-digital-paper-independent.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,

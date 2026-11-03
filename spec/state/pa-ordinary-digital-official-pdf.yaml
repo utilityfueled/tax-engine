@@ -1,0 +1,74 @@
+form: "PA Ordinary Actual Digital Schedule D Review PDF"
+fullName: Original-bound official2025 PA Schedule D for the finite ordinary digital method
+taxYear: 2025
+status: internal-source-review-no-filing-qualification
+sources:
+  - url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40d.pdf"
+    section: "Official form04-25 and instructions03-26: whole dollars, actual PA basis, columns a-f, line3 sum, line12 to PA40line5; loss disclosure; digital Yes; continuation space"
+    retrieved: "2026-11-03"
+notes: |
+  The unchanged official5page asset SHA154a86698c3c7e81d2487ce518c767a8253781a7aa2b8fcd9974d8bb5ce4b30e
+  is a year2025 review-only snapshot, not final2026 mapping or filing qualification.
+  A genuine prepared private ordinary context replays all actual original sources
+  before redaction and projects only sanitized actual descriptions/dates/amounts.
+  No caller render facts or retained diagnostic line can establish source authority.
+  This is a paper projection, never a replacement engine calculation. Amounts use
+  Decimal and official whole-dollar half-up rules. Printed d-e must equal the
+  rounded actual row gain; sum of printed row gains must equal actual class5.
+  Mismatches fail PDF-only with originals/engine values retained. No invented
+  penny allocation, widened tax admission restriction, source refresh or truncation.
+  Keep official geometry/pages. More than12 rows use labelled review continuation
+  with all actual sanitized row facts; long names retain their complete sanitized
+  text in labelled references. Extracted physical whitespace is normalized
+  identically with the independent complete expected sanitized paragraph; no
+  missing, clipped or truncated characters are allowed. Source statements and
+  filing qualification remain open.
+lines:
+  - line: "actual-columns"
+    description: Actual PA acquisition basis differs from federal basis
+    formula: "100.49 proceeds rounds100; PA80.24 rounds80; actualgain20.25 rounds20; columns100-80=20; PA40line5=20 and tax1536. Federal90.24 stays unchanged."
+    testRef: "tests/pdf/pa-ordinary-digital-paper-context.test.ts::projects actual PA digital columns and class total from the genuine original context"
+  - line: "signed-loss-zero"
+    description: Every actual disposition needs disclosure including zero and class loss
+    formula: "PA100.49 basis yieldszero; PA200.49 yieldsloss100 with lossoval and negative100; neither cross-offsets wages. ActualdigitalYes remains true."
+    testRef: "tests/pdf/pa-ordinary-digital-paper-context.test.ts::keeps actual zero and loss paper classes without changing wage or SP amounts"
+  - line: "printed-reconcile"
+    description: Physical paper rounding can need a further supported method
+    formula: "100.49-80.50=19.99 reported20, printed100-81=19 rejects;100.50-80.49=20.01 reported20,printed101-80=21 rejects. These remain valid engine results. Two .49 rowgains print0+0 but classround1, so PDF rejects without allocating."
+    testRef: "tests/pdf/pa-ordinary-digital-paper-context.test.ts::rejects both printed column mismatch sides without changing the valid engine class"
+  - line: "actual-pdf"
+    description: Original official fields and paper totals with live appearances
+    formula: "Actual date01/15/25 to06/01/25,0.001 Bitcoin,100/80/20; taxpayerselected,digitalYes,SSNblank,line3=line12=20. Exact blank asset hash and all original template assertions remain."
+    testRef: "tests/pdf/pa-ordinary-digital-official-pdf.test.ts::fills official actual digital fields with independent PA basis and saved appearances"
+  - line: "continuation"
+    description: Complete actual transaction rows and long names remain readable
+    formula: "13 independently identified original sales100-80 each produce260;12 official rows plus labelled continuation retain13th row, exact class260. Long complete sanitized asset text is referenced, never clipped or dropped."
+    testRef: "tests/pdf/pa-ordinary-digital-official-pdf.test.ts::retains all thirteen actual sales in a labelled continuation without another tax total"
+  - line: "privacy-context"
+    description: Only current genuine private context can qualify sanitized paper facts
+    formula: "Formatted/digits primary SSN,brokerTIN,account andsource IDs embedded in an asset name cannot escape the opaque context; originals and SHA bindings remain exact. Forged/stale/tampered/stripped contexts reject before template IO."
+    testRef: "tests/pdf/pa-ordinary-digital-paper-context.test.ts::redacts known identifiers from complete actual asset descriptions without mutating originals"
+  - line: "packet-gates"
+    description: Actual attachment is distinct from the legacy reference and final filing
+    formula: "Ordinary positive/zero/loss digital source requires pa-schedule-d-filled.pdf; old reference alone cannot satisfy it. Review-only and2026unavailable gates and all old readiness controls remain."
+    testRef: "tests/pdf/pa-ordinary-digital-paper-context.test.ts::requires the distinct official ordinary Schedule D packet artifact"
+  - line: "physical-money"
+    description: Original form monetary fields cannot silently shrink beyond readable type
+    formula: "999999999999999999.49 minus actualPA999999999999999979.24 remains engine20.25/reported20/tax1536.18digit columns cannot fit62.252pt source widgets at readable7pt, so PDF rejects without changing source admission, amounts or geometry."
+    testRef: "tests/pdf/pa-ordinary-digital-official-pdf.test.ts::rejects a physically unrepresentable original money column without narrowing engine admission"
+  - line: "owner-checkbox"
+    description: The actual official owner field is a three-widget checkbox not a radio group
+    formula: "Original FTBtn/Ff0 has no radio flag, with widget onstates1/2/3. Singleowner selects canonical1 and appearance states1/Off/Off; never changes template flags or selects all owners."
+    testRef: "tests/pdf/pa-ordinary-digital-official-pdf.test.ts::selects only the primary original owner checkbox widget and clears spouse and joint"
+  - line: "typed-private-original-references"
+    description: Actual typed basis and state-account identifiers are private even inside printable asset names
+    formula: "basisSourceReference, paBasisSourceReference and stateIdentificationNumber are known private original identifiers. Render-only source collection removes their verbatim values from complete descriptions with [REDACTED], preserving source inputs/digests, whole safe prefix/suffix, all money, geometry and existing source/readiness gates."
+    testRef: "tests/pdf/pa-ordinary-digital-paper-context.test.ts::redacts actual typed basis and state-account references without changing originals: %s"
+  - line: "typed-private-saved-packet"
+    description: Newly discovered typed identifiers must stay private through actual complete packet rendering and saved PDF readback
+    formula: "A separately authored literal original embeds actual basisSourceReference, paBasisSourceReference and DA stateIdentificationNumber in one complete asset description; all three become [REDACTED] in the complete reference. Original100.49/PA80.24/gain20/tax1536 stay exact, saved canonical fields and all extracted text contain no private references, and the sixth retained PDF remains review-only with original source data unchanged."
+    testRef: "tests/pdf/pa-ordinary-digital-official-pdf.test.ts::keeps all three actual typed private references out of the saved complete packet Schedule D"
+  - line: "typed-private-physical-extraction"
+    description: Full complete literal sanitized source text survives physical character wrapping
+    formula: "The original actual PDF assertion failed only because physical wrap splits TYPED into TYP ED in extraction. Normalize both full independent literal expected paragraph and actual text by removing only whitespace; every nonwhitespace character and every other money/private/source/gate assertion stays exact. Save before assertions so a future genuine failure retains its actual PDF. No mapper, source facts, text truncation or amount change."
+    testRef: "tests/pdf/pa-ordinary-digital-official-pdf.test.ts::keeps all three actual typed private references out of the saved complete packet Schedule D"

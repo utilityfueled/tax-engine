@@ -1,0 +1,20 @@
+form: "PA digital mixed private saved PDF"
+fullName: "Actual original-bound debt and foreign-receipt privacy in saved Schedule D"
+taxYear: 2025
+sources:
+  - url: "https://www.irs.gov/pub/irs-pdf/p4557.pdf"
+    section: "Protect taxpayer data; source references are private rendering inputs"
+notes: |
+  NEW explicit fictional mixed cohort: federal included personal cancellation300,
+  actual no-collateral PA debt evidence, gross bank5000/foreign100 with separate
+  904j credit election and zero prior credit histories, wages95000 and digital
+  PA gain20. Known PA tax3071, withholding4000 and elected refund929. No previous
+  federal exclusion/carryover facts are overwritten. Earlier incompatible-source
+  diagnostics remain separate from actual six valid-composer privacy failures.
+  Redact all six actual debt/receipt references in the complete saved description,
+  preserving every nonprivate character, original, money field and readiness gate.
+lines:
+  - line: "saved-private-references"
+    description: "Six actual private references stay out of the saved complete packet D"
+    formula: "Literal full prefix + six REDACTED markers + full suffix; no private refs in saved text/fields. D100-80=20; PA3071/payments4000/refund929; original unchanged and filingfalse."
+    testRef: "tests/pdf/pa-ordinary-digital-mixed-private-saved-pdf.test.ts::keeps all six mixed debt and receipt references out of the saved complete packet D"

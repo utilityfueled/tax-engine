@@ -2297,3 +2297,17 @@ residency/payment/completion sources. Its0/123/raw123.45 assertions remain; the
 original incomplete flow remains a rejection case. Main ten-pass/one-fail red
 precedes exact reviewed test migration;679/seven/types3/spec7084/inventory/strict0
 pass without product changes. See the [fixture ledger](upgrade-2026-guided-pa-w2-complete-work.md).
+
+
+### November3 UTC: actual official PA Schedule D and saved privacy regression
+
+The finite original-bound digital review path now uses the actual unchanged
+2025 PA Schedule D, including signed losses, zeros, continuations and complete
+safe reference text. Fresh main failures precede adoption; independent mixed
+personal-debt/foreign-interest controls then expose six additional private
+references. The narrow collector correction passes both the unchanged controls
+and actual saved-PDF regression. Main756/14/types3/spec7102/inventory/strict0/
+both builds and distinct final17 review pass. Seven actual PDFs/39pages pass
+strict/object/physical/privacy checks; original33 pages retain exact text/pixel
+parity and new mixed pages were inspected. See the [PDF ledger](upgrade-2026-pa-digital-official-pdf-ledger.md).
+Final2026, broader paper methods, full-suite and human/filing gates remain open.

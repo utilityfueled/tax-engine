@@ -1,3 +1,4 @@
+import {fillPAOrdinaryScheduleD} from "./mappings/2025/fill-pa-ordinary-schedule-d.js";
 import {fillPAOrdinaryScheduleGL} from "./mappings/2025/fill-pa-ordinary-schedule-gl.js";
 import {calculateScheduleCReviewSource} from "./schedule-c-review-source.js";
 import {preparePARoyaltyReview,assertPARoyaltyReview,type PreparedPARoyaltyReview} from "./pa-royalty-review-context.js";
@@ -1430,8 +1431,14 @@ export async function fillReturn(
       filledForms.push(outputPathPAScheduleF);
     }
 
+    if(isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)&&result.stateReturns.pennsylvania.scheduleD){
+      const doc=await fillPAOrdinaryScheduleD(input,result,join(blankFormsDir,"pa-schedule-d.pdf"),options.paOrdinaryReview);
+      if(!doc)throw new Error("Actual ordinary ScheduleD paper source result is missing");
+      if(flatten)await flattenForm(doc.getForm());const path=join(outputDir,"pa-schedule-d-filled.pdf");await savePacketPdf(doc,path);filledForms.push(path);
+    }
     if (
-      hasPAScheduleD(result.stateReturns.pennsylvania)
+      !isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)
+      && hasPAScheduleD(result.stateReturns.pennsylvania)
       && shouldIncludePAScheduleDReferenceSummary(input, result.stateReturns.pennsylvania.scheduleD)
     ) {
       const outputPathPAScheduleD = await fillPAScheduleDReference(

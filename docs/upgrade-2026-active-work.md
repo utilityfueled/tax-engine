@@ -10,18 +10,16 @@
 
 ## Active private queue
 
-- [ ] Actual official PA ScheduleD author source12 frozen3ded99b3 passed27/3
-  and saved five outputs/27pages. Independent review found three actual typed
-  private-reference leaks (basisSourceReference,paBasisSourceReference,
-  DAstateIdentificationNumber). Narrow private collector correction passes41/4
-  including unchanged peer11. Sixth actual PDF with allthree references is
-  source-first bdbf6c33 and running next; final allsix/33page strict/render/visual
-  inspection, distinct review and parent integration remain required.
-- [ ] PA personal debt/foreign collector: author `state_guides_review` owns
-  new private source helper/component and one state-return UI seam against exact
-  merged core. Source-first8-file proposal; no product/UI qualification yet.
-  Core V3 independently reviewed; original9+2 failures retained. Actual
-  collector/workspace/PDF followthrough and broader methods remain open.
+- [x] Actual official PA ScheduleD: parent756/14/types3/spec7102/inventory/
+  strict0/both builds; fresh original11fail5pass and mixed-six/privacy saved
+  genuine REDs retained. Seven actual PDFs/39pages,7845 objects, physical fields,
+  privacy and visual/parity pass. Distinct final17 review0d53af0e approves.
+  See [PDF ledger](upgrade-2026-pa-digital-official-pdf-ledger.md). Final2026,
+  broader methods, original attachments and human/filing gates remain open.
+- [ ] PA personal debt/foreign collector: exact author8 freezeea35ddf0 and
+  distinct collector review81311d1b approve45/three, two types/strict0. Parent
+  fresh source-first replay, adoption of three products and checks/commit next.
+  Actual workspace/PDF followthrough and broader methods remain open.
 - W2 test-only fixture now current main679/seven/types3/spec7084/inventory/
   strict0 after genuine1fail/tenpass and exact5-file adoption; distinct static
   review2eb8f83b approves. No products or original monetary assertions changed.
@@ -53,7 +51,7 @@
   entire brief. Qualified human tax review remains unassigned. Form172/1202 edge
   interpretation remains held for qualified review, not an owner math question.
 - [ ] Final2026 official forms/maps and complete-data filing export qualification.
-  Refreshed IRS1040/instructions/tables still2025 on November2. Review PDFs and
+  Refreshed IRS1040/instructions/tables still2025 on November3. Review PDFs and
   agent artifact review do not establish filing or independent human readiness.
 - [ ] Fresh npm/image/advisory exposure review. Next16.4.4 is maintenance only;
   November3 advance notice is not a published security fix. Refresh actual

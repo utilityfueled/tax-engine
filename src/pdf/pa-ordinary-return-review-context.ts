@@ -7,10 +7,11 @@ import type {TaxReturnResult} from '@/models/outputs.js';
 import {PAResidencySourcesSchema} from '@/models/pa-residency.js';
 import {calculatePAOrdinaryReturn,type PAOrdinaryReturnResult} from '@/engine/state/pa-ordinary-return.js';
 import {PAOrdinaryReturnFactsSchema} from '@/models/pa-ordinary-return-facts.js';
+import {ordinarySourcePrecision} from '@/engine/state/pa-ordinary-source-precision.js';
 import {redactReviewIdentifiers} from './redact-review-identifiers.js';
 const brand=Symbol('actual prepared PA ordinary return review');
 export interface PreparedPAOrdinaryReturnReview {readonly [brand]:true}
-interface Context {original:TaxYearInput;originalDigest:string;redactedDigest:string;expected:PAOrdinaryReturnResult;residentCredit?:PAOrdinaryResidentCreditRenderFacts}
+interface Context {original:TaxYearInput;originalDigest:string;redactedDigest:string;expected:PAOrdinaryReturnResult;residentCredit?:PAOrdinaryResidentCreditRenderFacts;scheduleD?:PAOrdinaryScheduleDRenderFacts}
 const contexts=new WeakMap<PreparedPAOrdinaryReturnReview,Context>();
 const digest=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const fail=(detail:string):never=>{throw new Error('PA ordinary PDF source review: '+detail);};
@@ -70,6 +71,28 @@ function actualResidentCreditPaper(original:TaxYearInput,expected:PAOrdinaryRetu
  return {claimantName:redact(original.taxpayer.primary.firstName+' '+original.taxpayer.primary.lastName),totalCredit:result.totalCredit.toFixed(0),states};
 }
 
+/** Original-bound paper facts, never a caller tax or source override. */
+export interface PAOrdinaryScheduleDRowRenderFacts{description:string;dateAcquired:string;dateSold:string;proceeds:string;basis:string;gain:string;loss:boolean}
+export interface PAOrdinaryScheduleDRenderFacts{claimantName:string;total:string;rows:PAOrdinaryScheduleDRowRenderFacts[]}
+function actualDigitalPaper(original:TaxYearInput,expected:PAOrdinaryReturnResult):PAOrdinaryScheduleDRenderFacts|undefined{
+ const schedule=expected.scheduleD;if(!schedule)return;
+ if(!original.paResidencySources?.digitalSources||!original.form1099DA.length||!schedule.digitalAssetQuestionYes)return fail('actual digital paper originals and source result are missing');
+ if(!schedule.line12.eq(expected.pa40.netGainOrLoss))return fail('actual ScheduleD total differs from PA40line5');
+ const privateValues:string[]=[];
+ const collect=(value:unknown):void=>{if(!value||typeof value!=='object')return;for(const[key,item]of Object.entries(value)){if(typeof item==='string'&&/^(?:sourceId|sourceReference|basisSourceReference|paBasisSourceReference|legalSourceReference|useSourceReference|deductionSourceReference|relationshipSourceReference|propertySourceReference|receiptNumber|stateIdentificationNumber|brokerTin|payerTin|accountReference|confirmationNumber|ssn|ein|employerStateID|returnId)$/i.test(key))privateValues.push(item);else collect(item);}};
+ collect(original);const redact=privateSourceTextRedactor(original,privateValues),Money=Decimal.clone({precision:ordinarySourcePrecision(original.form1099DA),rounding:Decimal.ROUND_HALF_UP});
+ const printed=(value:Decimal):string=>{const rounded=value.toDecimalPlaces(0,Decimal.ROUND_HALF_UP);return rounded.isZero()?'0':rounded.toFixed(0);};
+ const date=(value:string):string=>{if(value==='VARIOUS')return value;const match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(value);if(!match||!Number.isFinite(new Date(value+'T00:00:00Z').getTime())||new Date(value+'T00:00:00Z').toISOString().slice(0,10)!==value)return fail('actual paper acquisition and sale dates are unsupported');return match[2]+'/'+match[3]+'/'+match[1].slice(-2);};
+ let total=new Money(0);const rows=original.form1099DA.flatMap(form=>form.transactions.map(transaction=>{
+  if(transaction.paCostBasis===undefined)return fail('actual PA paper basis is missing');
+  const proceeds=printed(new Money(transaction.proceeds)),basis=printed(new Money(transaction.paCostBasis)),gain=printed(new Money(transaction.proceeds).minus(transaction.paCostBasis));
+  if(!new Money(proceeds).minus(basis).eq(gain))return fail('printed paper columns need their actual rounding successor');
+  total=total.plus(gain);return {description:redact((transaction.quantity??'')+' '+transaction.digitalAssetName).trim(),dateAcquired:date(transaction.dateAcquired),dateSold:date(transaction.dateSold),proceeds,basis,gain,loss:new Money(gain).lt(0)};
+ }));
+ if(!total.eq(schedule.line12))return fail('printed paper row sum needs its actual rounding successor');
+ return {claimantName:redact(original.taxpayer.primary.firstName+' '+original.taxpayer.primary.lastName),total:printed(total),rows};
+}
+
 /** Structural routing only; source qualification always requires fresh original replay. */
 export function isPAOrdinaryReturnResult(value:unknown):value is PAOrdinaryReturnResult{return !!value&&typeof value==='object'&&'methodVersion'in value&&value.methodVersion==='pa-ordinary-return-v1';}
 export function preparePAOrdinaryReturnReview(input:TaxYearInput):PreparedPAOrdinaryReturnReview{
@@ -78,11 +101,11 @@ export function preparePAOrdinaryReturnReview(input:TaxYearInput):PreparedPAOrdi
  if(!input.paOrdinaryReturnFacts||!input.paOrdinaryReturnCompletionSources||!input.paResidencySources)return fail('complete actual ordinary completion and residency originals are required');
  const original=structuredClone(input),expected=calculatePAOrdinaryReturn(original,original.paOrdinaryReturnFacts,original.paOrdinaryReturnCompletionSources);
  if(expected.refundDisposition.donations.length>5)return fail('more than five original donation elections require their physical continuation method');
- const residentCredit=actualResidentCreditPaper(original,expected);
- const token:PreparedPAOrdinaryReturnReview=Object.freeze({[brand]:true as const});contexts.set(token,{original,expected,...(residentCredit?{residentCredit}:{}),originalDigest:digest(original),redactedDigest:digest(redactReviewIdentifiers(original))});return token;
+ const residentCredit=actualResidentCreditPaper(original,expected),scheduleD=actualDigitalPaper(original,expected);
+ const token:PreparedPAOrdinaryReturnReview=Object.freeze({[brand]:true as const});contexts.set(token,{original,expected,...(residentCredit?{residentCredit}:{}),...(scheduleD?{scheduleD}:{}),originalDigest:digest(original),redactedDigest:digest(redactReviewIdentifiers(original))});return token;
 }
 export interface PAOrdinaryReviewRenderFacts{
- filingStatus:'S'|'F';finalReturnReason:string;dependentChildren:number;residentCredit?:PAOrdinaryResidentCreditRenderFacts;
+ filingStatus:'S'|'F';finalReturnReason:string;dependentChildren:number;residentCredit?:PAOrdinaryResidentCreditRenderFacts;scheduleD?:PAOrdinaryScheduleDRenderFacts;
  residency:{status:'resident'|'part_year'|'nonresident';schoolCode:string;schoolDistrictName:string;from?:string;through?:string};
  requestedRefund:string;nextYearCredit:string;donations:Array<{code:string;amount:string}>;
 }
@@ -95,7 +118,7 @@ export function assertPAOrdinaryReturnReview(input:TaxYearInput,result:TaxReturn
  const original=context.original,facts=PAOrdinaryReturnFactsSchema.parse(original.paOrdinaryReturnFacts),residency=PAResidencySourcesSchema.parse(original.paResidencySources),expected=context.expected;
  const redactSourceText=privateSourceTextRedactor(original);
  const period=expected.residencyStatus==='part_year'?residency.residency.domicilePeriods.find(p=>p.state==='PA'):undefined;
- return {...(context.residentCredit?{residentCredit:structuredClone(context.residentCredit)}:{}),filingStatus:expected.filingChoice,finalReturnReason:redactSourceText(facts.filing.finalReturnReason),dependentChildren:expected.dependentChildren,
+ return {...(context.residentCredit?{residentCredit:structuredClone(context.residentCredit)}:{}),...(context.scheduleD?{scheduleD:structuredClone(context.scheduleD)}:{}),filingStatus:expected.filingChoice,finalReturnReason:redactSourceText(facts.filing.finalReturnReason),dependentChildren:expected.dependentChildren,
  residency:{status:expected.residencyStatus,schoolCode:expected.schoolDistrictCode,schoolDistrictName:redactSourceText(residency.residency.schoolDistrictName),...(period?{from:period.from,through:period.through}:{})},
  requestedRefund:expected.refundDisposition.refund.toFixed(0),nextYearCredit:expected.refundDisposition.nextYearCredit.toFixed(0),donations:expected.refundDisposition.donations.map(row=>({code:row.code,amount:row.amount.toFixed(0)}))};
 }

@@ -13677,6 +13677,55 @@
       "nov03-parent-guided-pa-w2-main",
       "nov03-parent-guided-pa-w2-main-red",
       "nov03-parent-guided-pa-w2-main-green"
+    ],
+    "commit": "77756d8f",
+    "pushed": true
+  },
+  "nov03MainPADigitalOfficialPDF": {
+    "baseCommit": "77756d8f",
+    "authorFreeze": "5e2c41850cb6e6468f3b4b1c87e855c571c65d1c70595c4a0ea3e3f27f99f8cc",
+    "sourceBeforeProducts": {
+      "failed": 11,
+      "passed": 5
+    },
+    "additionalMixedPrivacy": {
+      "sourceCasesFailed": 6,
+      "savedRefinedPrivacyAssertionsFailed": 7,
+      "unsupportedFixtureDiagnosticsRetained": true,
+      "productCorrection": "six exact private typed key names added only to sealed Schedule D description collector"
+    },
+    "green": {
+      "passed": 756,
+      "files": 14,
+      "types": 3,
+      "specReferences": 7102,
+      "inventory": true,
+      "strictWarnings": 0,
+      "engineBuild": true,
+      "webBuild": true
+    },
+    "savedArtifacts": {
+      "pdfs": 7,
+      "pages": 39,
+      "allIndirectObjects": 7845,
+      "strictPhysicalPrivacy": true,
+      "priorPagesExactPixelAndTextParity": 33,
+      "newMixedPagesInspected": 6
+    },
+    "finalIndependentReview": {
+      "passed": 17,
+      "receiptSHA256": "0d53af0eac4247ffa7c5d702163b89a8beb8117910e02e7d5b0547ad432abf20",
+      "scope": "agent technical source and artifact review only"
+    },
+    "humanReview": "unassigned",
+    "final2026Qualified": false,
+    "filingEligible": false,
+    "evidence": [
+      "nov03-parent-pa-digital-official-main",
+      "nov03-parent-pa-digital-official-mixed-green",
+      "nov03-parent-pa-digital-mixed-privacy-red",
+      "nov03-parent-pa-digital-mixed-saved-red-refined",
+      "nov03-pa-digital-official-independent/mixed-correction-review"
     ]
   }
 }

@@ -539,17 +539,18 @@ export function assessReturnReadiness(
       input.federalResult.stateReturns.pennsylvania.scheduleD,
     )
   ) {
-    const hasPAScheduleDReference = hasIncludedForm(
-      input.includedForms,
-      /^pa-schedule-d-reference\.pdf$/i,
-    );
-
+    const stateReturn=input.federalResult.stateReturns.pennsylvania;
     packetCompleteness = "partial";
-    findings.push(
-      hasPAScheduleDReference
+    if(stateReturn&&"methodVersion"in stateReturn&&stateReturn.methodVersion==="pa-ordinary-return-v1"){
+      const hasOfficial=input.includedForms.some(form=>form.replaceAll("\\","/").split("/").at(-1)?.toLowerCase()==="pa-schedule-d-filled.pdf");
+      if(!hasOfficial)findings.push("Pennsylvania ordinary Schedule D is missing from the review packet.");
+      findings.push("Pennsylvania ordinary Schedule D review forms do not include the original broker statements and filing qualification.");
+    }else{
+      const hasPAScheduleDReference = hasIncludedForm(input.includedForms,/^pa-schedule-d-reference\.pdf$/i);
+      findings.push(hasPAScheduleDReference
         ? "Pennsylvania Schedule D is included as a reference summary, not an official PA Schedule D filing copy."
-        : "Pennsylvania Schedule D applies, but no Schedule D packet artifact was generated.",
-    );
+        : "Pennsylvania Schedule D applies, but no Schedule D packet artifact was generated.");
+    }
   }
 
   if (
