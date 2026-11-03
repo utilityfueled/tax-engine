@@ -1,0 +1,40 @@
+form: PA-Brokerage-Composition-Successor-Independent
+tax_year: 2025
+description: "Additive technical boundary controls for actual settled NY brokerage accounts alongside independently modeled PA credit and refund packets. No tax-method or human qualification expansion."
+sources:
+  - spec/state/pa-ordinary-brokerage-sources.yaml
+  - spec/state/pa-royalty-tax-refund-sources.yaml
+  - spec/state/pa-digital-tax-refund-sources.yaml
+  - spec/state/pa-resident-credit-sources.yaml
+rules:
+  - id: single_method_boundary
+    description: "A retained nonempty settled NY account packet is an actual payment method. Reject its combination with resident-credit, VA digital-refund, or MI royalty-refund packets explicitly as mixed-method scope, before evaluating or silently dropping either method. Captured separate fictional source cohorts are retained without rebinding or treating them as qualified mixed facts."
+  - id: history_status
+    description: "none_paid cannot suppress retained original NY remittance400 or its separately allowed claim, principal400 received refund, and current zero-net account. Unknown payment-history status also remains unknown. Neither empty jurisdiction rows nor missing settlement proof may convert retained originals into no payment."
+  - id: positive_control
+    description: "The unmodified independently supplied complete fictional NY settlement remains admitted: IT203reported withholding0/requested refund0, original remittance400, separate allowed and received principal400, PAresidentcredit0/PAwithholding0. Read-only calculation retains complete original records and filingEligible false."
+lines:
+  - line: "positive-control"
+    description: "The single actual settled NY source method remains supported"
+    formula: "Retain original remittance400, separately received principal400, printed IT203withholding0/refund0 and PAcredit0/PAwithholding0; no read mutation or filing promotion."
+    testRef: "tests/engine/state/pa-brokerage-composition-successor-independent.test.ts::retains the actual complete NY-only settlement with zero PA credit and no read-time mutation"
+  - line: "single-method-boundary"
+    description: "Retained NY settlement cannot combine with the three other finite source methods"
+    formula: "Reject each separately retained resident-credit, VA digital-refund or MI royalty-refund packet as mixed-method scope; keep every captured source unchanged."
+    testRef: "tests/engine/state/pa-brokerage-composition-successor-independent.test.ts::rejects settled NY plus retained separate %s packet explicitly as mixed method"
+  - line: "no-paid-suppression"
+    description: "Retained actual settled payments survive no-paid and empty-jurisdiction claims"
+    formula: "Both retained and empty jurisdiction arrays must reject none_paid while actual settled NY original remittance remains; settlement to net0 is not historical no payment."
+    testRef: "tests/engine/state/pa-brokerage-composition-successor-independent.test.ts::none_paid cannot suppress actual settled NY remittance even with emptyjurisdictions=%s"
+  - line: "unknown-history"
+    description: "Settlement cannot manufacture complete payment-history confirmation"
+    formula: "Reject unknown other-state payment history status despite a retained settled NY packet."
+    testRef: "tests/engine/state/pa-brokerage-composition-successor-independent.test.ts::unknown history remains unknown despite the retained actual settled NY packet"
+  - line: "retained-original"
+    description: "Deleting settlement proof cannot erase current actual withholding"
+    formula: "A retained current original NY400 withholding remittance still requires actual qualifying settlement/payment evidence when none_paid is asserted."
+    testRef: "tests/engine/state/pa-brokerage-composition-successor-independent.test.ts::none_paid cannot erase a current NY withholding original by deleting its settlement packet"
+  - line: "empty-securities-preserves-digital"
+    description: "An explicit empty securities proof does not erase an actual digital ScheduleD"
+    formula: "The existing complete fictional digital source cohort has three current DA originals, zero B/INT/DIV originals, exact PA capitalgain60.75 and reported61 (three actual100.49 proceeds less actual PA80.24 basis; federal90.24 basis is separate). An independently supplied explicit complete empty securities packet covers all actual B/INT/DIV originals (all three arrays empty), with known owner/year and no other capital adjustments. It establishes no securities gain or withholding and must leave the existing direct-digital ScheduleD present, Yes question and line12=61. Source read must not mutate either cohort. This is source composition preservation, not an inferred zero or new filing method."
+    testRef: "tests/engine/state/pa-brokerage-composition-successor-independent.test.ts::preserves actual digital ScheduleD with complete empty securities packet=%s"

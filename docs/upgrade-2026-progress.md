@@ -2383,3 +2383,7 @@ The original guided foreign-credit positive now retains an explicit fictional202
 ### November 3: actual completed Michigan copyright refund
 
 The finite imported-settlement method separately binds actual remittance, printed MI return, full written claim, matching agency award, received full cash and complete account. Exact80.20 is preserved separately from printed80; a residual20cents cannot disappear. Independent84/6 and main957/18 pass after fresh3fail/20pass; three types,7238 spec links, inventory722, strict lint0 and both builds pass. See [the settlement ledger](upgrade-2026-pa-mi-royalty-refund-work.md). Guided/browser/PDF and human/final2026 gates remain open. Foreign-year fixture `b01bbc58` is pushed.
+
+### November 3: actual PA securities and settled NY investment account
+
+The bounded current-original PA securities method now preserves signed securities/digital class aggregation and exact withholding. A separately documented NY erroneous-payment claim400 and received principal400 establish settled net0 without inventing an IT203 withholding credit. Distinct111/9 review and current-main1,107/32 pass; three types,7,272spec links, inventory728, strict20paths0 and both builds pass after source-first failures and manual successor merges. Added controls retain empty-securities digital ScheduleD and reject mixed/no-paid histories. See [the source ledger](upgrade-2026-pa-ordinary-brokerage-sources.md). Native/forms/human/final2026 gates remain open. MI settlement8d408eed is pushed.

@@ -1,0 +1,50 @@
+form: PA-Brokerage-Final-Independent
+tax_year: 2025
+description: "Distinct technical replay of actual statement identity and settled NY principal. All records are explicit fictional fixtures; no human qualification."
+sources:
+  - spec/state/pa-ordinary-brokerage-sources.yaml
+  - https://www.nysenate.gov/legislation/laws/TAX/686
+  - https://www.nysenate.gov/legislation/laws/TAX/687
+  - https://www.pacodeandbulletin.gov/Display/pacode?file=/secure/pacode/data/061/chapter111/s111.4.html
+rules:
+  - id: actual_identity
+    description: "Actual account identifiers retain significant leading zeroes and punctuation. Known TIN digits bind payer identity; display labels and decimal formatting alone cannot establish distinct originals. Unknown payer/account identity remains conservative."
+  - id: settled_principal
+    description: "Actual refund principal alone settles withholding; separately known interest cannot replace missing principal. Current original snapshots, dates and a separately allowed written claim remain required. Refundable NY tax creates no PA resident credit."
+lines:
+  - line: "actual-identifiers"
+    description: "Actual account strings retain significant zeroes and punctuation"
+    formula: "Actual accounts000123/123 and A-001/A-1 independently retain two1000 gains, total2000, with no source mutation."
+    testRef: "tests/engine/state/pa-brokerage-final-independent.test.ts::retains actual distinct nonnumeric account identities %s and %s"
+  - line: "distinct-payers"
+    description: "Known actual distinct institutions remain admitted"
+    formula: "Two independently supplied different actual nine-digit payerTINs may retain matching account and financial originals, each1000gain, total2000."
+    testRef: "tests/engine/state/pa-brokerage-final-independent.test.ts::accepts two independently known payer TINs with equal account and financial originals"
+  - line: "same-payer"
+    description: "Payer formatting and display labels do not manufacture a second original"
+    formula: "Known actual payerTINdigits12-3456790 and12 3456790 plus same actual account/economics represent one original despite different display labels. Reject duplicate."
+    testRef: "tests/engine/state/pa-brokerage-final-independent.test.ts::rejects the same known TIN digits and actual account despite source and broker display changes"
+  - line: "unknown-payer"
+    description: "Unknown payer identity cannot be inferred from free display labels"
+    formula: "Absent actual payerTIN retains conservative economic duplicate detection regardless of account/source/display relabeling."
+    testRef: "tests/engine/state/pa-brokerage-final-independent.test.ts::does not use free display labels to distinguish otherwise equal originals with unknown payer identity"
+  - line: "numeric-format"
+    description: "Decimal formatting alone cannot distinguish actual originals"
+    formula: "Same actual account and financial transaction values1000/1000.00 cannot establish separately received or disposed source originals."
+    testRef: "tests/engine/state/pa-brokerage-final-independent.test.ts::does not count numeric transaction formatting as a second known account original"
+  - line: "principal-interest"
+    description: "Received total is distinct from refund principal"
+    formula: "Actual received total405 consists of tax principal400 plus separately known interest5. Only400 settles withholding and PAresidentcredit remains0; read retains packet."
+    testRef: "tests/engine/state/pa-brokerage-final-independent.test.ts::separates actual principal400 from actual interest5 without mutating the recorded receipt"
+  - line: "principal-shortfall"
+    description: "Interest cannot substitute for withheld tax principal"
+    formula: "Received400 allocated principal395 plus interest5 leaves missing principal5 against original withholding400 and cannot establish settled net0."
+    testRef: "tests/engine/state/pa-brokerage-final-independent.test.ts::does not treat interest5 as the missing principal5 in a fully settled account claim"
+  - line: "current-original"
+    description: "Equal dollars cannot replace actual source binding"
+    formula: "Edited current original with unchanged dollars invalidates its retained actual payment snapshot; reject stale proof instead of read-time repair."
+    testRef: "tests/engine/state/pa-brokerage-final-independent.test.ts::rejects an equal-dollar but edited current original until its actual payment snapshot is supplied"
+  - line: "actual-receipt-date"
+    description: "A future receipt cannot settle current account principal"
+    formula: "Received-on April16 cannot establish an account settled through April15; reject while retaining original packet."
+    testRef: "tests/engine/state/pa-brokerage-final-independent.test.ts::rejects future received principal and retains the original account history on a read"

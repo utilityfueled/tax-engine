@@ -1,3 +1,4 @@
+import {confirmFictionalInvestmentStateSources} from "../fixtures/pa-ordinary-brokerage-sources";
 import { assertPAGuidedPaymentBoundary } from "../fixtures/assert-pa-guided-payment-boundary";
 // Spec: spec/federal/guided-input.yaml, investment-source-records
 import { describe, expect, it } from "vitest";
@@ -53,7 +54,8 @@ describe("guided investment source records", () => {
   });
   it("preserves source-state withholding once and requires reconciliation of duplicate additional records", () => {
     const state = interview();
-    state.sectionData.deductions!.nonW2IncomeTaxesDeductedElsewhere = "0";
+    if (!state.sectionData.deductions) throw new Error("Fixture actual deduction sources missing");
+    state.sectionData.deductions.nonW2IncomeTaxesDeductedElsewhere = "0";
     state.sectionData["income-investments"] = { interestEntries: [{ ...completeInterestSource, interestIncome: "100", stateTaxReporting: "single", state: "NY", stateWithheld: "0.01" }], dividendEntries: [], brokerageEntries: [] };
     expect(buildTaxInputFromGuidedData(state)?.form1099Int[0]).toMatchObject({ state: "NY", stateWithheld: "0.01" });
     state.sectionData["state-return"] = { ...emptyStateReturnData, additionalStateWithholdingEntries: [{ payer: "Actual bank", documentType: "1099-INT", state: "NY", taxYear: "2025", amount: "0.01" }] };
@@ -82,12 +84,17 @@ describe("guided investment source records", () => {
   });
   it("credits only matching source-state investment withholding with exact cents", () => {
     const state = interview();
-    state.sectionData.deductions!.nonW2IncomeTaxesDeductedElsewhere = "0";
+    if (!state.sectionData.deductions) throw new Error("Fixture actual deduction sources missing");
+    state.sectionData.deductions.nonW2IncomeTaxesDeductedElsewhere = "0";
     state.segmentation.stateCode = "PA";
     state.sectionData["income-investments"] = { interestEntries: [{ ...completeInterestSource, stateTaxReporting: "single", state: "PA", stateWithheld: "0.10" }], dividendEntries: [{ ...completeDividendSource, stateTaxReporting: "single", state: "PA", stateWithheld: "0.20" }], brokerageEntries: [{ ...completeBrokerageSource, stateTaxReporting: "single", state: "NY", stateWithheld: "400" }] };
+    // New independently stated fictional PA/NY records supplement the unchanged originals.
+    confirmFictionalInvestmentStateSources(state, "NY");
     assertPAGuidedPaymentBoundary(state, "0.3", "0");
     expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0");
     state.sectionData["income-investments"].brokerageEntries[0].state = "PA";
+    expect(computeGuidedPreview(state)?.state).toBeNull();
+    confirmFictionalInvestmentStateSources(state, "PA");
     assertPAGuidedPaymentBoundary(state, "400.3", "400");
     expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("400");
   });

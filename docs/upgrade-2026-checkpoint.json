@@ -14044,6 +14044,41 @@
     "C": "sourcefirst guided/workspace/browser history preparation only",
     "humanQualified": false,
     "final2026Qualified": false,
-    "filingEligible": false
+    "filingEligible": false,
+    "commit": "8d408eedbfe2f889eff60f4219272d8048db4f3b",
+    "pushed": true
+  },
+  "nov03MainBrokerageSources": {
+    "base": "8d408eedbfe2f889eff60f4219272d8048db4f3b",
+    "authorManifestSHA256": "a1b3dedd9508261223d8739c0ca24d07587eae779a5f8318ee393f6999804634",
+    "independentReviewSHA256": "1d72b64ed02ae740b70ae3409f43424b0eb69a32405303f01d94bfb0cbce1267",
+    "sourceFirstMainRed": {
+      "failed": 1,
+      "passed": 7,
+      "sha256": "7fe0381128fc8eddb54ed9d709b5300d69a664b1660f4bb6d8da2ba4bff58063"
+    },
+    "sourceFirstSuccessorRed": {
+      "failed": 5,
+      "passed": 3,
+      "sha256": "00eb8145e0326d9246b80b06fd04c2f779156b6daf9aaaadf6906d6c1981dddd"
+    },
+    "emptySourceFirstRed": {
+      "failed": 1,
+      "passed": 9,
+      "logSHA256": "bb753f99bd9168d9d5e8f130864740a125f5dedf4674880eddfae0c4b01bad4f"
+    },
+    "focusedTests": 1107,
+    "files": 32,
+    "specReferences": 7272,
+    "inventory": 728,
+    "types": 3,
+    "strictWarnings": 0,
+    "builds": 2,
+    "filingEligible": false,
+    "humanQualified": false,
+    "final2026Qualified": false,
+    "integrationReviewSHA256": "ff82671e30270421cb0a01f55eb6387128f49d52fffab9fd711ca04f70f57ecb",
+    "limits": "Technical source method only; collector/PDF/browser/final2026/human qualification open",
+    "finalMergedReviewSHA256": "2c829bed701f80fc5da57c48124371f705fe2c6c51c43023e419c0176b724e6a"
   }
 }

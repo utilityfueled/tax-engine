@@ -1,0 +1,19 @@
+form: PA-Brokerage-Identity-Independent
+tax_year: 2025
+description: "Independent actual brokerage account identity controls; technical scope only."
+sources:
+  - spec/state/pa-ordinary-brokerage-sources.yaml
+rules:
+  - id: same_actual_account
+    description: "The same actual payer TIN, actual account, owner, year and transaction originals cannot be counted twice by changing statement labels or insignificant broker display whitespace."
+  - id: distinct_actual_accounts
+    description: "Separately supplied actual account identifiers distinguish economic originals even where payer, dates and transaction values happen to match. Two explicit independently sourced 1000 gains total 2000."
+lines:
+  - line: "same-actual-account"
+    description: "Reject duplicate actual original identity despite display-label changes"
+    formula: "Same supplied payer TIN and account with the same economic original remains one original; changed labels cannot create another gain."
+    testRef: "tests/engine/state/pa-brokerage-identity-independent.test.ts::rejects the same actual TIN/account original disguised by broker display whitespace"
+  - line: "distinct-actual-accounts"
+    description: "Retain two independently supplied account identities"
+    formula: "Exact source gains1000 plus1000 from distinct supplied accounts equal2000 before and after whole-dollar reporting."
+    testRef: "tests/engine/state/pa-brokerage-identity-independent.test.ts::retains independently supplied distinct actual accounts with matching transaction values"

@@ -85,7 +85,8 @@ export function calculatePAOrdinaryReturnFacts(input:TaxYearInput,raw:unknown):P
  if(income.oidSources)withholding=withholding.plus(income.oidSources.paWithholding);
  if(income.digitalSources)withholding=withholding.plus(income.digitalSources.paWithholding);
  if(income.retirementSources)withholding=withholding.plus(income.retirementSources.paWithholding);
- const outside=roundDollar(new Money(income.excludedNonPACompensation).plus(income.excludedReciprocalCompensation).minus(income.excludedNonPAEmployeeExpenses).plus(income.excludedNonPAInterest).plus(income.excludedNonPADividends).plus(income.excludedNonPABusinessIncome));let nontax=outside;const other:Record<string,Decimal>={};const spEntries=new Set<string>();
+ if(income.brokerageSources)withholding=withholding.plus(income.brokerageSources.paWithholding);
+ const outside=roundDollar(new Money(income.excludedNonPACompensation).plus(income.excludedReciprocalCompensation).minus(income.excludedNonPAEmployeeExpenses).plus(income.excludedNonPAInterest).plus(income.excludedNonPADividends).plus(income.excludedNonPABusinessIncome).plus(Money.max(0,income.brokerageSources?.excludedNonPAGainOrLoss??0)));let nontax=outside;const other:Record<string,Decimal>={};const spEntries=new Set<string>();
  if(facts.sp.allWorldwideSourcesCompleteConfirmed!==true)return fail('actual worldwide SP income sources are incomplete');
  for(const line of PA_SP_OTHER_LINES){const category=facts.sp.categories[line];ref(category.sourceReference);let exact=new Money(line==='2'?(income.oidSources?.worldwideExemptInterest??'0'):'0');
   if(category.status==='known_none'){if(category.entries.length)return fail('known-none SP category contradicts retained original entries');}

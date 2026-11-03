@@ -2,6 +2,8 @@ import {calculatePAOrdinaryRoyaltySources,type PAOrdinaryRoyaltySourcesResult} f
 import {calculatePARetirementSources,type PARetirementSourcesResult}from './pa-retirement-sources.js';
 /** Source-derived ordinary PA residency/tax bases. Spec: spec/state/pa-residency-sources.yaml. */
 import Decimal from "decimal.js";
+import {calculatePAOrdinaryBrokerageSources,type PAOrdinaryBrokerageSourcesResult} from "./pa-ordinary-brokerage-sources.js";
+import type {PAScheduleDResult} from "./pa-schedule-d.js";
 import {calculatePAPersonalDebtAndForeignBankSources,type PAPersonalDebtAndForeignBankSourcesResult} from "./pa-personal-debt-foreign-sources.js";
 import {calculatePAOrdinaryDigitalSources,type PAOrdinaryDigitalSourcesResult} from "./pa-ordinary-digital-sources.js";
 import {calculatePAOrdinaryBusinessSources} from "./pa-ordinary-business-sources.js";
@@ -115,6 +117,8 @@ export interface PAResidencySourcesResult {
   oidSources?:PAOrdinaryOIDSourcesResult;
   digitalSources?:PAOrdinaryDigitalSourcesResult;
   retirementSources?:PARetirementSourcesResult;
+  brokerageSources?:PAOrdinaryBrokerageSourcesResult;
+  reportedCapitalGainOrLoss:Decimal; scheduleD?:PAScheduleDResult;
   personalDebtSources?:PAPersonalDebtAndForeignBankSourcesResult;
   employeeSources?: PAOrdinaryEmployeeSourcesResult; unreimbursedEmployeeExpenses: Decimal; excludedNonPAEmployeeExpenses: Decimal; actualPAServiceCompensation?: Decimal;
   sourceCommitment: string; lines: CalculatedLine[];
@@ -137,7 +141,7 @@ function amount(value: unknown): Decimal {
   if (source.otherPAIncomeClassesConfirmedNone !== true || source.otherPAAdjustmentsConfirmedNone !== true) return error("confirm complete ordinary source scope; unknown other classes/adjustments are not zero");
   for (const key of ["w2s", "form1099Int", "form1099Div", "form1099B", "form1099Nec", "form1099Misc", "scheduleK1"] as const) if (!Array.isArray(input[key])) return error("complete current canonical document arrays are required before source derivation");
   const personalDebtSources=calculatePAPersonalDebtAndForeignBankSources(input,{personalDebtDischarges:source.personalDebtDischarges,foreignBankTaxSources:source.foreignBankTaxSources});
-  for (const key of ["form1099B", "scheduleK1", "formW2G", "form1099G", "form1099K", "form1099Q", "form1099SA", "formSSA1099", "formRRB1099", "rentalProperties", "homeSales", "savingsBondRedemptions", "scheduleK1Form1041", "paPassThroughStatements", "paScheduleJStatements", "paScheduleGLStatements"] as const) {
+  for (const key of ["scheduleK1", "formW2G", "form1099G", "form1099K", "form1099Q", "form1099SA", "formSSA1099", "formRRB1099", "rentalProperties", "homeSales", "savingsBondRedemptions", "scheduleK1Form1041", "paPassThroughStatements", "paScheduleJStatements", "paScheduleGLStatements"] as const) {
     const rows = input[key]; if (Array.isArray(rows) && rows.length) return error("additional retained income originals need their actual PA class source method");
   }
   if (input.scheduleF !== undefined || input.cryptoIncome !== undefined || input.form4797 !== undefined || input.form6252.length || input.form6781 !== undefined || input.form8824.length) return error("additional retained income source needs its actual PA class source method");
@@ -156,6 +160,15 @@ function amount(value: unknown): Decimal {
   const retirementSources=calculatePARetirementSources(input,source.retirementSources,residency);
   const business=calculatePAOrdinaryBusinessSources(input,source.businesses,residency);
   const digitalSources=calculatePAOrdinaryDigitalSources(input,source.digitalSources,residency);
+  const brokerageSources=calculatePAOrdinaryBrokerageSources(input,source.brokerageSources,{status:residency.status,residentPeriods:residency.residentPeriods.map(p=>({from:new Date(p.from*86400000).toISOString().slice(0,10),through:new Date(p.through*86400000).toISOString().slice(0,10)}))});
+  const hasBrokerage=source.brokerageSources!==undefined||input.form1099B.length>0;
+  const reportedCapitalGainOrLoss=hasBrokerage?new Money(brokerageSources.rawGainOrLoss).plus(digitalSources.rawGainOrLoss).toDecimalPlaces(0,Decimal.ROUND_HALF_UP):digitalSources.reportedGainOrLoss;
+  let scheduleD=brokerageSources.scheduleD??digitalSources.scheduleD;
+  if(hasBrokerage&&digitalSources.scheduleD&&scheduleD){
+    const capitalAudit=new AuditTrail();capitalAudit.record("PA-Schedule-D","digital-assets","Actual digital asset question",new Decimal(1),"Actual original direct digital disposition requires Yes");
+    for(const line of ["1","3","12","12-taxpayer","12-pa40"])capitalAudit.record("PA-Schedule-D",line,"Actual combined same-owner capital class",publicOrdinaryMoney(reportedCapitalGainOrLoss),"Exact qualified security and digital source gains combined before one whole-dollar class rounding");
+    scheduleD={...scheduleD,digitalAssetQuestionYes:true,line1:publicOrdinaryMoney(reportedCapitalGainOrLoss),line3:publicOrdinaryMoney(reportedCapitalGainOrLoss),line12:publicOrdinaryMoney(reportedCapitalGainOrLoss),taxpayerLine12:publicOrdinaryMoney(reportedCapitalGainOrLoss),reportableNetGainOrLoss:publicOrdinaryMoney(reportedCapitalGainOrLoss),lines:publicOrdinaryLines(capitalAudit.getLines())};
+  }
   const residentAt = (date: number) => residency.residentPeriods.some(p => p.from <= date && date <= p.through);
   const domicilePeriodAt = (date: number) => residency.periods.findIndex(p => p.from <= date && date <= p.through);
   let compensation = new Money(0), excludedCompensation = new Money(0), interest = new Money(0), excludedInterest = new Money(0);
@@ -267,9 +280,11 @@ function amount(value: unknown): Decimal {
     if(!Form1099DivSchema.strict().safeParse(current).success||stable(row.original)!==stable(current)||current.taxYear!==year||current.accountHolder!=="primary")return error("actual dividend original owner/year/identity is missing or stale");
     reference(current.payer);
     const economicIdentity=stable(semantic(current,year));if(dividendIdentities.has(economicIdentity))return error("duplicate economic dividend original");dividendIdentities.add(economicIdentity);
-    for(const key of ["ordinaryDividends","qualifiedDividends","totalCapitalGainDistributions","section1250Gain","section1202Gain","collectiblesGain","nondividendDistributions","federalWithheld","section199ADividends","foreignTaxPaid","exemptInterestDividends","specifiedPrivateActivityBondInterest","paExemptInterestDividendAllocation","stateWithheld"] as const)amount(current[key]);
+    for(const key of ["ordinaryDividends","qualifiedDividends","totalCapitalGainDistributions","section1250Gain","section1202Gain","collectiblesGain","nondividendDistributions","federalWithheld","section199ADividends","foreignTaxPaid","exemptInterestDividends","specifiedPrivateActivityBondInterest","stateWithheld"] as const)amount(current[key]);
+    const paExemptAllocation=current.paExemptInterestDividendAllocation===undefined&&amount(current.exemptInterestDividends).isZero()&&row.noOtherPADividendAdjustmentsConfirmed===true?new Money(0):amount(current.paExemptInterestDividendAllocation);
     if(amount(current.qualifiedDividends).gt(amount(current.ordinaryDividends)))return error("qualified dividend subset contradicts actual original ordinary income");
-    for(const key of ["section1250Gain","section1202Gain","collectiblesGain","nondividendDistributions","section199ADividends","foreignTaxPaid","exemptInterestDividends","specifiedPrivateActivityBondInterest","paExemptInterestDividendAllocation"] as const)if(!amount(current[key]).isZero())return error("actual special dividend source class or adjustment requires its successor");
+    for(const key of ["section1250Gain","section1202Gain","collectiblesGain","nondividendDistributions","section199ADividends","foreignTaxPaid","exemptInterestDividends","specifiedPrivateActivityBondInterest"] as const)if(!amount(current[key]).isZero())return error("actual special dividend source class or adjustment requires its successor");
+    if(!paExemptAllocation.isZero())return error("actual PA dividend allocation contradicts this qualified zero-Box12 source method");
     if(amount(current.stateWithheld).gt(0)&&current.state!=="PA")return error("actual outside or unknown jurisdiction dividend withholding requires its source successor");
     if(!row.credits.length)return error("actual complete dated dividend distribution ledger is required");
     let originalOrdinary=new Money(0),originalCapital=new Money(0);const refs=new Set<string>();
@@ -304,7 +319,7 @@ function amount(value: unknown): Decimal {
     additionAdjustments:scheduleB.additionAdjustments.map(entry=>({...entry,amount:publicOrdinaryMoney(entry.amount)})),reductionAdjustments:scheduleB.reductionAdjustments.map(entry=>({...entry,amount:publicOrdinaryMoney(entry.amount)})),lines:publicOrdinaryLines(scheduleB.lines)};
   const reportedCompensation = roundDollar(compensation), reportedInterest = scheduleA.line16,reportedDividends=scheduleB.line12;
   if (employeeSources && !reportedCompensation.minus(unreimbursedEmployeeExpenses).eq(employeeNetTotal)) return error("actual per-employer versus aggregate printed compensation precision requires its separate method");
-  const taxable = Money.max(0,new Money(reportedCompensation).minus(unreimbursedEmployeeExpenses)).plus(reportedInterest).plus(reportedDividends).plus(Money.max(business.reportedBusinessIncome,0)).plus(Money.max(digitalSources.reportedGainOrLoss,0)).plus(royaltySources.reportedIncome), tax = roundDollar(taxable.times("0.0307"));
+  const taxable = Money.max(0,new Money(reportedCompensation).minus(unreimbursedEmployeeExpenses)).plus(reportedInterest).plus(reportedDividends).plus(Money.max(business.reportedBusinessIncome,0)).plus(Money.max(reportedCapitalGainOrLoss,0)).plus(royaltySources.reportedIncome), tax = roundDollar(taxable.times("0.0307"));
   // The collector packet is the sole excluded key; all actual canonical facts remain privately bound.
   const originalInput = Object.fromEntries(Object.entries(input).filter(([key]) => key !== "paResidencySources"));
   const commitment = bytesToHex(sha256(new TextEncoder().encode(stable({ version: "pa-ordinary-residency-v1", year, input: originalInput, rawSources }))));
@@ -316,11 +331,13 @@ function amount(value: unknown): Decimal {
   audit.merge(scheduleA.lines);audit.merge(scheduleB.lines);audit.merge(business.lines);
   if (employeeSources) audit.merge(employeeSources.lines);
   audit.merge(retirementSources.lines);audit.merge(royaltySources.lines);
+  if(hasBrokerage)audit.merge(brokerageSources.lines);
   if(source.personalDebtDischarges!==undefined||source.foreignBankTaxSources!==undefined)audit.merge(personalDebtSources.lines);
   audit.record("PA-Residency-Sources","dividends","Actual ordinary PA personal dividend distributions",dividends,"Actual received/credited distributions during confirmed resident periods; exact outside-period distributions excluded");
   audit.record("PA-Residency-Sources", "ordinary-tax", "Ordinary PA tax before credits and payments", tax, "Sum reported whole-dollar classes, multiply by3.07%, then whole-dollar tax rounding; no credit/payment/penalty qualification");
   return { residencyStatus:residency.status,schoolDistrictCode:source.residency.schoolDistrictCode,
     ...((source.personalDebtDischarges!==undefined||source.foreignBankTaxSources!==undefined)?{personalDebtSources}:{}),
+    ...(hasBrokerage?{brokerageSources}:{}),reportedCapitalGainOrLoss:publicOrdinaryMoney(reportedCapitalGainOrLoss),...(scheduleD?{scheduleD}:{}),
     compensation:publicOrdinaryMoney(compensation),interest:publicOrdinaryMoney(interest),reportedCompensation:publicOrdinaryMoney(reportedCompensation),reportedInterest:publicOrdinaryMoney(reportedInterest),dividends:publicOrdinaryMoney(dividends),reportedDividends:publicOrdinaryMoney(reportedDividends),excludedNonPADividends:publicOrdinaryMoney(excludedNonPADividends),scheduleA,scheduleB:publicScheduleB,
     ...(employeeSources?{employeeSources,actualPAServiceCompensation:publicOrdinaryMoney(actualPAServiceCompensation)}:{}),unreimbursedEmployeeExpenses:publicOrdinaryMoney(unreimbursedEmployeeExpenses),excludedNonPAEmployeeExpenses:publicOrdinaryMoney(excludedNonPAEmployeeExpenses),
     netBusinessIncome:business.netBusinessIncome,reportedBusinessIncome:business.reportedBusinessIncome,excludedNonPABusinessIncome:business.excludedNonPABusinessIncome,actualPABusinessEarnedIncome:business.actualPABusinessEarnedIncome,businessPAWithholding:business.paWithholding,...(business.scheduleC?{scheduleC:business.scheduleC,worldwideScheduleC:business.worldwideScheduleC}:{}),

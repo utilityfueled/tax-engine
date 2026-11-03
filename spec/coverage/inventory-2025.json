@@ -12673,6 +12673,66 @@
       ]
     },
     {
+      "key": "state/pa-brokerage-composition-successor-independent",
+      "jurisdiction": "state",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": "spec/state/pa-brokerage-composition-successor-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-brokerage-final-independent",
+      "jurisdiction": "state",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": "spec/state/pa-brokerage-final-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-brokerage-identity-independent",
+      "jurisdiction": "state",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": "spec/state/pa-brokerage-identity-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-business-independent",
       "jurisdiction": "state",
       "taxYear": 2025,
@@ -12952,6 +13012,47 @@
       ]
     },
     {
+      "key": "state/pa-investment-account-independent",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.nysenate.gov/legislation/laws/TAX/686",
+      "specPath": "spec/state/pa-investment-account-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-investment-withholding-account",
+      "jurisdiction": "state",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/state/pa-investment-withholding-account.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-local-eit",
       "jurisdiction": "state",
       "taxYear": 2025,
@@ -13119,6 +13220,25 @@
       "efileBusinessRuleCoverageExists": true,
       "status": "supported",
       "knownGaps": []
+    },
+    {
+      "key": "state/pa-ordinary-brokerage-sources",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40d.pdf",
+      "specPath": "spec/state/pa-ordinary-brokerage-sources.yaml",
+      "enginePath": "src/engine/state/pa-ordinary-brokerage-sources.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
     },
     {
       "key": "state/pa-ordinary-business-sources",

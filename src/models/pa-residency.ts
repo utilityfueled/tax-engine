@@ -1,6 +1,7 @@
 import {PAOrdinaryRoyaltySourcesSchema} from './pa-ordinary-royalty-sources.js';
 /** Private actual PA originals/drafts. No amount, date, answer or source year defaults to a fact. */
 import { z } from "zod";
+import {PAOrdinaryBrokerageSourcesSchema} from "./pa-ordinary-brokerage-sources.js";
 import {PAPersonalDebtDischargeSourceSchema,PAForeignBankTaxSourceSchema} from "./pa-personal-debt-foreign-sources.js";
 import {PAOrdinaryDigitalSourcesSchema} from "./pa-ordinary-digital-sources.js";
 import {PAOrdinaryBusinessSourceSchema} from "./pa-ordinary-business-sources.js";
@@ -55,6 +56,7 @@ export const PAResidencySourcesSchema = z.object({
   employeeSources: PAOrdinaryEmployeeSourcesSchema.optional(),
   digitalSources: PAOrdinaryDigitalSourcesSchema.optional(),
   retirementSources: PARetirementSourcesSchema.optional(),
+  brokerageSources: PAOrdinaryBrokerageSourcesSchema.optional(),
   personalDebtDischarges: z.array(PAPersonalDebtDischargeSourceSchema).optional(),
   foreignBankTaxSources: z.array(PAForeignBankTaxSourceSchema).optional(),
   otherPAIncomeClassesConfirmedNone: answer, otherPAAdjustmentsConfirmedNone: answer,

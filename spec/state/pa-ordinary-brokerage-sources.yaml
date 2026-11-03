@@ -1,0 +1,68 @@
+form: "PA Ordinary Brokerage Sources"
+fullName: "Actual personal investment security originals and distinct settled NY withholding accounts"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40d.pdf"
+notes: |
+  Official eight-source research and exact current bytes retrieved 2026-11-03; approved scope proposal b436ee83.
+  PA40IN e8996504 printed4 permits INT/DIV originals showing PA withholding. REV415 e64161ea printed18/PDF20 expressly names B/INT/DIV.
+  PA ScheduleD154a8669 requires actual PA adjusted basis; separate nonbusiness intangible classification, same-owner losses, all3 source periods.
+  IRS2025 B55bbe7df boxes14-16 are state amounts, not federal backup withholding. NY2025IT203 d0a8fee1 separates refund election from actual receipt/offsets.
+  Private current originals, adaptive local Decimal and stable public Decimal values; no federal-basis/owner/year/payment/default inference.
+  Actual2025 finite primary-owner method only.2026, richer securities methods, filing, qualified-human and physical forms qualification remain gated.
+lines:
+  - line: "source-originals"
+    description: "Current complete original coverage and PA property classification"
+    formula: "Each currentB original including knownzero has unique actual index/year/owner/source identity and private equal snapshot; each transaction has explicit current row, documented PA basis/proceeds/fees/dates and income-producing ordinary personal-security classification. Unknown/current correction/digital/business/gift/inheritance/compensation/wash/QOF/short/derivative/installment methods reject. A legal zero-only statement row requires separately retained broker explanation and explicit no-economic-disposition/zero-original confirmations. Never infer a completed sale from zero."
+    testRef: "tests/engine/state/pa-ordinary-brokerage-sources.test.ts::ordinary brokerage originals preserve explicit zero without inventing a disposal"
+  - line: "same-owner-class"
+    description: "Actual included securities gains and losses share one class"
+    formula: "For each qualified actual sale use exact proceeds net of original sale costs minus separately source-established PA adjusted basis. Aggregate same-owner signed class gains/losses, not federal short/long tax results; zero floor applies only when adding this class to PA total. No cross-class loss offset or federal capital-loss carryover. Signed raw values remain distinct from whole reported ScheduleD summary."
+    testRef: "tests/engine/state/pa-ordinary-brokerage-sources.test.ts::ordinary brokerage actual same-owner sales retain net class loss and exact gain"
+  - line: "actual-residency"
+    description: "Personal intangible gains follow actual parent-derived residency periods"
+    formula: "Full resident includes qualified year sales; partyear includes sale and actual receipt wholly in the same validated resident-status interval; nonresident personal nonbusiness intangible sales excluded. A cross-period unsettled/disputed receipt needs its successor, never dayratio/sourcepayer-state inference. Outside signed gains preserve worldwide source reconciliation."
+    testRef: "tests/engine/state/pa-ordinary-brokerage-composition.test.ts::ordinary brokerage composition allocates all3 actual resident dates and worldwide SP"
+  - line: "withholding"
+    description: "Exact original PA payments once and separate foreign jurisdictions"
+    formula: "Typed current INT/DIV/B original links reconcile complete known state/amount and actual positive PA remittance/no-payer-refund proof. Include onlyPA once; never add federal/other-state boxes. Original exact.10+.20=.30 rounds0; actual additionalPA400=.30+400=400.30 rounds400 atPA40 total line. Unknown state/source/duplicate original rejects."
+    testRef: "tests/engine/state/pa-ordinary-brokerage-composition.test.ts::ordinary brokerage source payments retain exact matching cents without NY credit"
+  - line: "settled-NY-account"
+    description: "Distinct actual original NY settled error account never becomes PA credit"
+    formula: "One actual filed original2025IT203 with matching current federal AGI and filing identity, zero liability with all income/classes reviewed/noNYsource corroboration, actual reported withholding0 and requested form refund0. Form1099B does not establish an IT203line62 credit. Require a separate actual written erroneous-income-tax-payment claim linked to each currentB remittance and the filed return, an actual commissioner certificate and comptroller approval allowing exact principal400, distinct actual received refund principal400 with separately known interest allocation, and a dated agency account net0/unpaid0/outstanding0 through exactPA asOf. Claim/determination/receipt identifiers, owner/year/current originals and ordered actual dates must reconcile; unknown/pending/missing approval or unknown principal allocation rejects. NYTaxLaw686(a),(f) and687 govern the separate actual-payment overpayment/allowance evidence; no current IT113X form is invented. No inference from zero gain or refund claim. Future/stale/partial/399refund/positive liability/unresolved offset or transfer reject. Completion history status actual_payments retains gross400/nettax0 matched to this proof: a received refund does not make the original payment disappear. A matching NY resident-credit claim cannot coexist with the whole-account zero-tax settlement; existing foreignWH guards persist. This B-only settled-account method cannot suppress an actual additional NY withholding original from INT/DIV/W2/OID/MISC/DA. Full composition rejects missing or stale received-refund/account proof even after completion confirmation."
+    testRef: "tests/engine/state/pa-investment-withholding-account.test.ts::settled NY account replays actual received refund without creating a resident credit"
+  - line: "DIV-zero-applicability"
+    description: "Inapplicable PA exempt allocation does not mutate knownzero federal original"
+    formula: "Only explicit original Box12zero plus confirmed no-other-PA-dividend-adjustment permits absent PA-specific optional exemption allocation as inapplicable. Provided nonzero contradictions reject. Unknown/positive Box12 stays guarded. Never insert a fake zero in the canonical original."
+    testRef: "tests/engine/state/pa-ordinary-brokerage-composition.test.ts::ordinary brokerage zero Box12 permits only inapplicable absent PA allocation"
+  - line: "composition"
+    description: "Actual same-class sources reach prepared ordinary results and SP"
+    formula: "Combine exact same-owner brokerage and separately reviewed DA raw capital gains before one ScheduleD class rounding; preserve supported source methods and exclude signed class losses from other classes. PA40/ordinary total, worldwide SP, source commitment and credit compensation limits use appropriate reported classes; disclosure/gates remain. No ScheduleD arithmetic changes without separate actual red."
+    testRef: "tests/engine/state/pa-ordinary-brokerage-composition.test.ts::ordinary brokerage combines digital and securities cents before one class rounding"
+  - line: "snapshot-guide"
+    description: "Explicit original confirmation only; stale reads reject"
+    formula: "Source original bindings change only on explicit existing confirmation action. Reopen/read compares current owner/original/year and never refreshes. NYtoPA edit first stales confirmation; a new explicit actual PA remittance record and inapplicableNYhistory removal must be separately confirmed before unchanged matching withholding assertions can pass. Old incomplete setup retains federal preview and returns state:null, preserving the existing absent-state API."
+    testRef: "tests/guided-interview/guided-investment-source-facts.test.ts::credits only matching source-state investment withholding with exact cents"
+
+  - line: "settled-NY-separate-claim-correction"
+    description: "Separate actual allowed erroneous-payment claim without unsupported NY return withholding credit"
+    formula: "Original IT203 withholding/refund0 is an actual separate record. Actual written claim principal equals linked B remittances; actual agency determination links return/claim and commissioner/comptroller documentary approvals, allows payment/overpayment/refund principal equally; received total equals known principal plus known interest, while only principal settles original tax payments. All records current owner/year/NY, no invented defaults or refreshed originals. Preserve old unsupported400formcredit fixture as rejected historical premise, all28 original guided assertions/raw amounts unchanged. Whole-dollar form reporting never creates a sub-dollar or B credit."
+    testRef: "tests/engine/state/pa-investment-withholding-claim-correction.test.ts::actual NY erroneous-payment claim settles principal without a form withholding credit"
+
+  - line: "settled-NY-semantic-receipt-identity"
+    description: "Source receipt identity ignores nonsemantic case and whitespace"
+    formula: "Normalize receipt/payment identities by trimming, collapsing insignificant whitespace and normalizing case before uniqueness/link equality; duplicate copies of the same agency receipt cannot split400 principal into200+200. Each independent receipt allocation remains separately actual principal/interest and must reconcile total. Reject every admitted other-family NY remittance, including known R stateWithheld/stateTaxWithheld aliases, G/K/W2G, rather than declaring an incomplete B-only account settled."
+    testRef: "tests/engine/state/pa-investment-withholding-claim-correction.test.ts::actual NY claim rejects duplicate principal receipts despite semantic ID formatting"
+
+  - line: "settled-NY-optional-legacy-family"
+    description: "Optional absent 1099R collection retains existing caller contract"
+    formula: "The canonical TaxYearInput contract permits absent form1099R collection. The known-remittance scan iterates actual supplied R records (including both aliases) when present, and creates no records or amount defaults when absent. Actual complete agency/return source proof is still mandatory and known positive NY originals still reject."
+    testRef: "tests/engine/state/pa-investment-withholding-claim-correction.test.ts::actual NY claim preserves optional absent R collection without inventing originals"
+
+  - line: "actual-account-identity-correction"
+    description: "Known actual payer and account identify an economic original independently of broker display text"
+    formula: "Use supplied current original payerTIN only when valid nine digits, and actual nonblank accountReference when provided, plus current year/owner/economic transaction originals. Ignore sourceId labels and broker display aliases where actual payerTIN identifies the institution. Same actual account/owner/year/transactions is a duplicate despite broker interior whitespace or display change. No monetary or current-source comparison changes; original private account and names remain bound in source commitment. Unknown actual account never fabricated from sourceId/display; retain conservative value-based duplicate detection for unknown identity. Distinct independently supplied actual accounts A and B can hold identical1000 gains, resulting2000, without merging their current original sources. Account strings are retained as actual identifiers rather than treated as amount strings. This fixes independently reproduced defects; no tax rule/method/readiness promotion."
+    testRef: "tests/engine/state/pa-brokerage-identity-independent.test.ts::rejects the same actual TIN/account original disguised by broker display whitespace"
+  - line: "distinct-actual-account-correction"
+    description: "Separately supplied actual accounts preserve both economic originals"
+    formula: "Actual payerTIN12-3456790 and distinct source-confirmed accountA/accountB with otherwise same originals each yield1000, total raw/reported2000. Account distinction is unavailable when actual account unknown; sourceId/display relabeling cannot establish it."
+    testRef: "tests/engine/state/pa-brokerage-identity-independent.test.ts::retains independently supplied distinct actual accounts with matching transaction values"
