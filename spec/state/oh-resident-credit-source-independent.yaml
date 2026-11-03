@@ -1,0 +1,43 @@
+form: "Ohio resident-credit source independent controls"
+fullName: "Independent finite Virginia same-income and paid-account review"
+taxYear: 2025
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
+notes: |
+  Independent source oracles were pinned before reading the new implementation.
+  Actual2025 IT RC lines1–7 and Ohio booklet printed16,18,40 control.
+  Fictional actual-source originals are not external agency verification.
+  Single full-year Ohio resident corporate W2 employee with Virginia services only.
+  No native/physical/2026/filing or qualified human review is established.
+  OhioAGI100000 less exemption1900 = taxable98100. Tax=342+.0275*(98100-26050)
+  =2323.375 rounded2323. Per-state actual A/B round once; ratio truncates4,
+  min1; limit rounds ratio*2323. Paid tax is liability after nonpayment credits
+  reconciled to actual applied cash minus completed refunds, not gross withholding.
+lines:
+  - line: "literal"
+    description: "Independently derived whole-dollar limits and zero"
+    formula: "A20000/B1500→ratio.2/limit465/credit465/OH1858/refund142; A27778/B1300→.2777/645/645/OH1678/refund322"
+    testRef: "tests/engine/state/oh-resident-credit-source-independent.test.ts::Ohio RC independent literal worksheet %s"
+  - line: "raw-cash"
+    description: "Aggregate actual cents once and retain all originals"
+    formula: "Applied600.24+599.76-refund200=1000 paid; credit1000/refund677"
+    testRef: "tests/engine/state/oh-resident-credit-source-independent.test.ts::Ohio RC independent raw receipt aggregation stays exact and immutable"
+  - line: "source-guards"
+    description: "Current owner/year/income/payment evidence must agree"
+    formula: "Reject actual conflicting or unknown originals before producing any state return; no TypeError-only false positives"
+    testRef: "tests/engine/state/oh-resident-credit-source-independent.test.ts::Ohio RC independent rejects actual source contradiction %s"
+  - line: "unknown"
+    description: "Unknown source money is not zero"
+    formula: "Reject missing/null/blank/nonfinite/negative/overprecision actual amounts"
+    testRef: "tests/engine/state/oh-resident-credit-source-independent.test.ts::Ohio RC independent rejects unknown actual money %s"
+  - line: "context"
+    description: "Preserve source authority in direct adapted calls"
+    formula: "Known source rows cannot become an unauthenticated scalar credit after context deletion or financial mutation"
+    testRef: "tests/engine/state/oh-resident-credit-source-independent.test.ts::Ohio RC independent rejects altered direct projection %s"
+  - line: "privacy"
+    description: "No raw identity or packet details in public result"
+    formula: "Digest-only audit; immutable stable repeated result; global Decimal precision unchanged"
+    testRef: "tests/engine/state/oh-resident-credit-source-independent.test.ts::Ohio RC independent public result hides private originals without mutation"
+  - line: "legacy"
+    description: "Existing standalone scalar worksheet retains its contract"
+    formula: "Source-less scalar paired0 remains0; existing non-source scalar60000/1000 gives credit1000"
+    testRef: "tests/engine/state/oh-resident-credit-source-independent.test.ts::Ohio RC independent preserves the standalone scalar worksheet"

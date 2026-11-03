@@ -1,3 +1,4 @@
+import { readOhioResidentCreditSource } from './oh-resident-credit-source.js';
 import { buildOhioSchoolDistrictSource } from './oh-sd-100-sources.js';
 import { readOhioReciprocalWageSource } from './oh-reciprocal-wage-source.js';
 import {roundDollar} from '@/utils/decimal.js';
@@ -767,6 +768,7 @@ export function buildOhioResidentReturnInput(
     if(!residency)throw new Error('Ohio actual payment sources: actual owner residency packet is required');
   }
 
+  if(residency?.residentCreditSources && Object.keys(overlay).some(key=>key!=='residency'&&key!=='payments'))throw new Error('Ohio actual resident-credit sources reject unbound financial overrides');
   if(residency?.reciprocalWageSources && Object.keys(overlay).some(key=>key!=='residency'&&key!=='payments'))throw new Error('Ohio actual reciprocal wage sources reject unbound financial overrides');
   if(residency?.businessSources && (overlay.qualifyingBusinessIncome!==undefined || overlay.otherBusinessIncome!==undefined))throw new Error('Ohio actual canonical business sources do not accept a supplied business income override');
   if(residency&&overlay.nonresidentCredit!==undefined)throw new Error("Ohio source-derived credit does not accept a supplied scalar override");
@@ -1088,6 +1090,11 @@ export function buildOhioResidentReturnInput(
     if(overlay.schoolDistricts===undefined)adapted.schoolDistricts=[];
     const verified=buildOhioResidencySource(taxInput,federalResult,adapted,residency);
     adapted.residency=verified.facts;adapted.residencySourceDigest=verified.sourceDigest;
+    if(verified.residentCreditSource){
+      adapted.residencyResidentCreditSource=verified.residentCreditSource;
+      adapted.otherStateTaxes=readOhioResidentCreditSource(verified.residentCreditSource,verified.facts).otherStateTaxes;
+      adapted.federalAgi=roundDollar(federalResult.agi);
+    }
     if(verified.businessSource){adapted.residencyBusinessSource=verified.businessSource;adapted.qualifyingBusinessIncome=verified.canonicalQualifyingBusinessIncome;}
     if(verified.reciprocalWageSource){
       adapted.residencyReciprocalWageSource=verified.reciprocalWageSource;
@@ -1110,5 +1117,6 @@ export function buildOhioResidentReturnInput(
     adapted.sdPriorYearTaxLiability=source.priorYearTaxLiability;adapted.sdPriorYearTimelyFiled=source.priorYearTimelyFiled;
     adapted.sdCreditCarryforward=source.creditCarryforward;adapted.sdAmendedPriorOverpayment=new Decimal(0);adapted.sdLatePaymentInterest=new Decimal(0);
   }
+  if(adapted.residencyResidentCreditSource&&adapted.residency)readOhioResidentCreditSource(adapted.residencyResidentCreditSource,adapted.residency,adapted);
   return adapted;
 }

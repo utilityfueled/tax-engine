@@ -1,3 +1,4 @@
+import { buildOhioResidentCreditSource, type OhioResidentCreditSourceContext } from './oh-resident-credit-source.js';
 import { buildOhioSchoolDistrictSource } from './oh-sd-100-sources.js';
 /** Spec: state/oh-input-adapter.yaml#actual-owner-residency-nrc-source. */
 import Decimal from 'decimal.js';
@@ -78,6 +79,7 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
     businessSource?: OhioCanonicalBusinessContext;
     canonicalQualifyingBusinessIncome?: Decimal;
     reciprocalWageSource?: OhioReciprocalWageContext;
+    residentCreditSource?: OhioResidentCreditSourceContext;
 } {
     const parsed = OhioResidencyFactsSchema.safeParse(raw);
     if (!parsed.success)
@@ -97,6 +99,12 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
         fail('actual school district residency sources require their separate method');
     if (!input.ohioSchoolDistrict && ((input.w2s ?? []).some(w => d(w.localTaxWithheld).gt(0)) || (ohio.schoolDistricts?.length ?? 0)))
         fail('actual local/school withholding or residence requires separate district reconciliation');
+    if (facts.residentCreditSources) {
+        if (ohio.otherStateTaxes !== undefined || ohio.residentCredit !== undefined)
+            fail('actual resident-credit sources reject caller credit or other-state tax rows');
+        const residentCreditSource = buildOhioResidentCreditSource(input, result, facts);
+        return { facts, sourceDigest: digest({ input: withoutFacts(input), facts }), residentCreditSource };
+    }
     if ((ohio.otherStateTaxes?.length ?? 0) || ohio.residentCredit !== undefined) {
         fail('resident-period same-income credit linkage requires actual separate sources');
     }

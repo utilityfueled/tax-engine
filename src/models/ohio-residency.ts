@@ -1,5 +1,6 @@
 /** Actual Ohio domicile and IT NRC source facts. No address or day-ratio defaults. */
 import { z } from 'zod';
+import { OhioResidentCreditSourcesSchema } from './ohio-resident-credit-sources.js';
 import { OhioReciprocalWageSourcesSchema } from './ohio-reciprocal-wage-sources.js';
 import { OhioCanonicalBusinessSourcesSchema } from './ohio-canonical-business-sources.js';
 export const ohioNrcCategories = ['wages', 'capitalGains', 'rentsRoyalties', 'gambling', 'interestDividends', 'pensions', 'unemployment', 'otherIncome', 'federalAdjustments'] as const;
@@ -15,6 +16,7 @@ export const OhioResidencyFactsSchema = z.object({
     schoolDistrictStatus: z.enum(['no_ohio_taxing_district_residency', 'actual_district_sources_required']),
     businessSources: OhioCanonicalBusinessSourcesSchema.optional(),
     reciprocalWageSources: OhioReciprocalWageSourcesSchema.optional(),
+    residentCreditSources: OhioResidentCreditSourcesSchema.optional(),
     originalFederalSources: z.record(z.string(), z.unknown()).optional(),
     owners: z.array(z.object({ accountHolder: z.enum(['primary', 'spouse']), status: z.enum(['full_year_resident', 'part_year_resident', 'nonresident']), sourceReference: ref,
         periods: z.array(z.object({ from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), domicileState: z.string().regex(/^[A-Z]{2}$/) }).strict()).min(1),

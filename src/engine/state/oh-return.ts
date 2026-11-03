@@ -1,3 +1,4 @@
+import { readOhioResidentCreditSource, type OhioResidentCreditSourceContext } from "./oh-resident-credit-source.js";
 import type { OhioSchoolDistrictSourceProjection } from './oh-sd-100-sources.js';
 /**
  * Ohio Resident Return — Full orchestrator.
@@ -75,6 +76,7 @@ export interface OhioResidentReturnInput {
   residency?:OhioResidencyFacts;
   residencyBusinessSource?:OhioCanonicalBusinessContext;
   residencyReciprocalWageSource?:OhioReciprocalWageContext;
+  residencyResidentCreditSource?:OhioResidentCreditSourceContext;
   residencySourceDigest?:string;
   paymentSourceDigest?:string;
   paymentDatedSource?:OhioPaymentSourceProjection;
@@ -274,6 +276,18 @@ export function calculateOhioResidentReturn(
   input: OhioResidentReturnInput,
 ): OhioResidentReturnResult {
   // Step 1: Schedule of Adjustments
+  const hasSourceQualifiedResidentCredit = (
+    input.residency !== undefined
+    || input.residencySourceDigest !== undefined
+    || input.paymentSourceDigest !== undefined
+  ) && (input.otherStateTaxes !== undefined || input.residentCredit !== undefined);
+  if ((input.residency?.residentCreditSources || hasSourceQualifiedResidentCredit)
+    && !input.residencyResidentCreditSource) {
+    throw new Error('Ohio actual resident-credit sources require current original context');
+  }
+  const residentSource = input.residencyResidentCreditSource && input.residency
+    ? readOhioResidentCreditSource(input.residencyResidentCreditSource,input.residency,input) : undefined;
+  if(input.residencyResidentCreditSource&&!residentSource)throw new Error('Ohio actual resident-credit sources require current owner facts');
   if (input.residency?.reciprocalWageSources && !input.residencyReciprocalWageSource) {
     throw new Error('Ohio actual reciprocal wages require their current unforgeable original context');
   }
@@ -640,6 +654,7 @@ export function calculateOhioResidentReturn(
     ...adjustments.lines,
     ...(residentCreditResult ? residentCreditResult.lines : []),
     ...(nonresidentCreditResult?.lines??[]),
+    ...(residentSource?[{form:"OH-RESIDENT-CREDIT",line:"actual-resident-credit-source-commitment",description:"Actual current same-income paid other-state original sources",value:new Decimal(0),formula:"Complete actual private source commitment; no private references printed",inputs:{"Original source commitment":residentSource.sourceCommitment}}]:[]),
     ...(input.residencySourceDigest?[{form:"OH-IT-NRC",line:"actual-source-commitment",description:"Actual Ohio owner residency original sources",value:new Decimal(0),formula:"Complete source commitment; no private source references printed",inputs:{"Original source commitment":input.residencySourceDigest}}]:[]),
     ...(input.paymentSourceDigest?[{form:'OH-IT/SD-2210',line:'actual-payment-source-commitment',description:'Actual Ohio current account payment sources',value:new Decimal(0),formula:'Current actual private originals; digest only',inputs:{'Original source commitment':input.paymentSourceDigest,'State method version':input.paymentMethodVersion??'','Tax year':String(input.taxYear),'Timing kind':input.paymentTiming?.kind??'','Return filed/expected date':input.paymentTiming?.valuationDate??'','As of date':input.paymentTiming?.asOfDate??'','Remaining-tax payment kind':input.paymentTaxCoverage?.status??'','Remaining-tax payment date':input.paymentTaxCoverage?.date??''}}]:[]),
     ...credits.lines,

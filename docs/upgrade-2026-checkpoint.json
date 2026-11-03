@@ -15598,5 +15598,29 @@
       "browser/physical/additionalcohorts/distributions/staging/human/final2026remain"
     ],
     "ledger": "docs/upgrade-2026-oh-reciprocal-wages-guided-work.md"
+  },
+  "nov03MainOhioResidentCreditSources": {
+    "at": "2026-11-03T14:50:23.016422+00:00",
+    "parentCommit": "cc15a904d2eb84c43e1db99a65d335be8ea8e9e9",
+    "all12ExpectedHashesBeforeDocumentation": true,
+    "checksPassed": 13,
+    "checksSHA256": "1b7da31a527081fd08a76d9b7ff5c0469973ddaca3617946ba99e93b3af73b3f",
+    "testsPassed": 1786,
+    "filesPassed": 70,
+    "independent47AndAuthor70": 117,
+    "review": "Read all six product changes and distinct independent controls. Exact optional packet, same-income source linkage, complete actual VA original account and refund reconciliation; WeakMap context rejects stale or forged projections. Existing standalone scalar helper unchanged. No native/physical/2026/filing gate enabled. Existing adapter warnings remain two and scoped new/other paths strict zero.",
+    "limits": [
+      "finite2025singleOHfullresidentordinaryVAwages",
+      "same-day equal payments conservatively rejected pending real transaction identity",
+      "native/physical/broadercohorts/global/distributions/staging/human/final2026 remain"
+    ],
+    "mainExistingAPIRed": "31genuinefail39pass; later projection negatives stop at positive precondition",
+    "mainRedLogSHA256": "35303ac0a3cc2971be93fdac3baa2791355b43aaaa8c1527831df932950bc662",
+    "independentReceiptSHA256": "691c2556f260e4d2910bdb0d49b9855caeaecc3d8642572f87a1951d92ba9c28",
+    "specReferences": 7678,
+    "strictASTControls": 790,
+    "inventoryEntries": 787,
+    "rootReviewSHA256": "1894b0e3d53fb047716c44027e34580d63550fb19c980b0a8d7ca222cd8921e2",
+    "ledger": "docs/upgrade-2026-ohio-resident-credit-sources-work.md"
   }
 }
