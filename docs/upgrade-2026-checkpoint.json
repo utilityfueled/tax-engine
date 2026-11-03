@@ -16647,5 +16647,97 @@
     ],
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-oh-resident-credit-native-work.md"
+  },
+  "paMarriedTickerDisclosure20261103": {
+    "sourceCommit": "84a4cc878c2a4ac46daa58995643c8842064f866",
+    "fullUnit": {
+      "passed": 24259,
+      "failed": 2,
+      "skipped": 0,
+      "files": 1813,
+      "trackedRegularSourcesUnchanged": 4882,
+      "logSha256": "15172146627152600be4bc768c1fa7cc3082362374aba3a82eedfef0d0e16d3d",
+      "postgres": "Actual new disposable loopback PostgreSQL16.14, stopped/removed"
+    },
+    "failure": "Two stale shared disclosure assertions after intended cffef1ac public review routing",
+    "successor": "Spec-first full-current-disclosure assertion; no product or monetary/layout/gate changes",
+    "focusedPassed": 4,
+    "adjacentPassed": 115,
+    "adjacentFiles": 5,
+    "specLines": 7817,
+    "astPassed": 739,
+    "strictWarnings": 0,
+    "checks": [
+      {
+        "name": "focused4",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/apps/web/pa-married-native-ticker-geometry.test.tsx",
+          "--maxWorkers=1"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-pa-married-ticker-disclosure-main-green/focused4.log",
+        "sha256": "af6c7652ea40e438c388c918f6384e4d8ca18adcb9e9998f2c5f9ffea29fc8dc"
+      },
+      {
+        "name": "adjacent",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/apps/web/refund-ticker.test.tsx",
+          "tests/apps/web/refund-ticker-animation.test.tsx",
+          "tests/apps/web/pa-married-native-browser-boundary.test.tsx",
+          "tests/apps/web/pa-married-preview-priority.test.tsx",
+          "tests/apps/web/pa-married-native-preview.test.ts",
+          "--maxWorkers=1"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-pa-married-ticker-disclosure-main-green/adjacent.log",
+        "sha256": "74fc66e788c5463b5d42a6c920db2775995fda216639dc2eb4ea8d262d36622b"
+      },
+      {
+        "name": "spec",
+        "command": [
+          "pnpm",
+          "spec:validate"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-pa-married-ticker-disclosure-main-green/spec.log",
+        "sha256": "75c962ed238bfbbc84c50080a8497407bacd2b7acabc41a749648786005c2f1c"
+      },
+      {
+        "name": "ast",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/spec/validate-testrefs.test.ts",
+          "--maxWorkers=1"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-pa-married-ticker-disclosure-main-green/ast.log",
+        "sha256": "e2caa69bd528b17f456b8546aed365e78291f24d755d5ddd4e8209e884571f4e"
+      },
+      {
+        "name": "strict-owned",
+        "command": [
+          "pnpm",
+          "exec",
+          "eslint",
+          "tests/apps/web/pa-married-native-ticker-geometry.test.tsx",
+          "--max-warnings=0"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-pa-married-ticker-disclosure-main-green/strict-owned.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "peerReviewSha256": "15a519bcda71af482e0964a3539f942ab4538693e6b5fb676aedbe88abb9d4b7",
+    "ledger": "docs/upgrade-2026-pa-married-ticker-disclosure-work.md",
+    "releaseQualified": false,
+    "remaining": [
+      "Full successor unit/coverage",
+      "All current distribution/staging/AI/human/final2026 criteria"
+    ]
   }
 }

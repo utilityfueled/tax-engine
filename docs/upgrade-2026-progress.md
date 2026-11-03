@@ -2640,3 +2640,7 @@ The finite original-bound reciprocal method now retains actual nonnegative PA wi
 ### November 3: native Ohio resident-credit original records
 
 The finite2025 single Ohio resident/Virginia ordinary-W2 collector now preserves actual filed return, completed account and distinct settled-bank/applied-agency payment originals through explicit confirmation and JSON replay. Current-main4genuine admission/UI failures precede six reviewed products;57focused+379adjacent and all13checks pass. Distinct review and root7 independent controls preserve unsupported-source/paired-payment guards. See [the native ledger](upgrade-2026-oh-resident-credit-native-work.md). Actual browser, resident district/county facts, physical forms, broader cohorts/global/staging/human/final2026 remain open. SeparatePAWH afb29967 and security7a4be2bb are pushed.
+
+### November 3: full PostgreSQL-backed unit run and ticker disclosure successor
+
+Exact84a4 full unit execution yields24,259PASS/2FAIL/0SKIP across1,813files; the two failures share an obsolete PA married ticker disclosure expectation. Spec-first correction now requires the entire current source-validated PA40/SP review disclosure and explicit filing/local denial, preserving all money/layout guards. Independent review and affected4+adjacent115/spec7817/AST739/strict0 pass. See [the disclosure ledger](upgrade-2026-pa-married-ticker-disclosure-work.md). Full successor/global coverage and distribution/staging/human/final2026 gates remain open; nativeRC84a4cc87 is pushed.
