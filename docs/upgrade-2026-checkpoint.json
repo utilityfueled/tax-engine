@@ -17898,5 +17898,27 @@
     "coverPagesRenderedAndOpened": 1,
     "filingOr2026Activation": false,
     "ledger": "docs/upgrade-2026-oh-review-cover-inventory-work.md"
+  },
+  "hostedSubscriptionAtomicity20261103": {
+    "baseCommit": "a6f17d086dcfcd3fd730b42fc909a172c77c8381",
+    "status": "bounded local transaction implementation and independent static review pass",
+    "sourceFirstExistingApiControls": 6,
+    "before": {
+      "failed": 3,
+      "passed": 3
+    },
+    "focusedAndAdjacentPassed": 270,
+    "files": 10,
+    "skipped": 0,
+    "actualPostgresPassed": 8,
+    "checkSetsPassed": 13,
+    "independentReviewSha256": "b05d37e2f9abcad13f80985bffbc7051c556814b7f814ff77727c6860fbcf698",
+    "checksSha256": "8b738ff1805bd9fa6a5270541891d5b69b7a75c9c030eef3735ee7729b70c298",
+    "terminalReceiptSha256": "7955c3b1debdbef8cb2eae18cca765c36e80508ee4c283a3bfa2fb26f941549c",
+    "newPreviewSignedDeliveryProved": false,
+    "creditPackSettlementProved": false,
+    "configurationGateSuccessorPending": true,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-hosted-subscription-atomicity-work.md"
   }
 }

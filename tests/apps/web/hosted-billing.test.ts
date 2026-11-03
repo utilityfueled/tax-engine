@@ -1,3 +1,4 @@
+import { createHostedBillingRouteForwardingAdapter, type HostedBillingRouteCustomer } from "../../fixtures/hosted-billing-route-forwarding-adapter";
 import { describe, expect, it, vi } from "vitest";
 // Synthetic availability lets this suite exercise Stripe adapter behavior.
 // The real disabled production gate is covered in ai-credit-sales-readiness.
@@ -619,7 +620,8 @@ describe("hosted billing", () => {
       getExistingPersistedSubscriptionByCustomerId: async () => null,
       deletePersistedSubscription: async () => {},
       persistSubscription,
-      markEventProcessed
+      markEventProcessed,
+      reconcileSubscription: createHostedBillingRouteForwardingAdapter({ persistSubscription, markEventProcessed })
     });
 
     await expect(POST(new Request("http://localhost/api/billing/webhook", {
@@ -687,12 +689,7 @@ describe("hosted billing", () => {
       cancelAtPeriodEnd: false,
       currentPeriodEnd: null
     }));
-    const { POST } = createHostedBillingWebhookRouteHandlers({
-      env,
-      now: "2026-03-12T00:00:00.000Z",
-      nowUnixSeconds: 1773273600,
-      getExistingPersistedSubscription: async () => null,
-      getExistingPersistedSubscriptionByCustomerId: async () => ({
+    const replacementCustomer = async (): Promise<HostedBillingRouteCustomer> => ({
         subscriptionId: "sub_old",
         customerId: "cus_replacement",
         workspaceOwnerId: "user_replacement",
@@ -703,10 +700,18 @@ describe("hosted billing", () => {
         updatedAt: "2026-03-01T00:00:00.000Z",
         cancelAtPeriodEnd: false,
         currentPeriodEnd: null
-      }),
+      });
+    const { POST } = createHostedBillingWebhookRouteHandlers({
+      env,
+      now: "2026-03-12T00:00:00.000Z",
+      nowUnixSeconds: 1773273600,
+      getExistingPersistedSubscription: async () => null,
+      getExistingPersistedSubscriptionByCustomerId: replacementCustomer,
       deletePersistedSubscription,
       persistSubscription,
-      markEventProcessed: async () => true
+      markEventProcessed: async () => true,
+      reconcileSubscription: createHostedBillingRouteForwardingAdapter({ persistSubscription, markEventProcessed: async () => true,
+        getExistingPersistedSubscriptionByCustomerId: replacementCustomer, deletePersistedSubscription })
     });
 
     const response = await POST(new Request("http://localhost/api/billing/webhook", {

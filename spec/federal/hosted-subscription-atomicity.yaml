@@ -1,0 +1,39 @@
+form: "Hosted-Subscription-Atomicity"
+fullName: "Authenticated subscription reconciliation and durable event receipt"
+taxYear: 2026
+reference: "https://docs.stripe.com/webhooks#event-ordering; https://docs.stripe.com/webhooks#handle-duplicate-events; https://www.postgresql.org/docs/16/tutorial-transactions.html"
+notes: |
+  Source-first proposal only. No runtime or product change is claimed. Stripe
+  retries deliveries and does not promise generation-order delivery; event.created
+  has second resolution and is neither a deduplication key nor authoritative
+  subscription ordering. Local updated_at is processing telemetry only.
+  These existing-route tests inject the current persistence boundary, authenticate
+  synthetic raw payloads with the actual SDK, and make no network/DB request.
+  They can expose route recovery/duplicate defects but cannot prove SQL rollback
+  or concurrency. Separate disposable PostgreSQL tests are mandatory before an
+  atomic database implementation is qualified. No tax arithmetic changes.
+lines:
+  - line: "successful-baseline"
+    description: "Authenticated first delivery saves the entitlement and receipt"
+    formula: "One active Starter subscription for the exact synthetic owner/customer/subscription and exactly one event receipt; acknowledge 200."
+    testRef: "tests/apps/web/hosted-subscription-atomicity.test.ts::commits a first authenticated subscription and event receipt"
+  - line: "write-failure-baseline"
+    description: "Existing failure-before-write recovery remains intact"
+    formula: "A failed subscription write records no receipt; a freshly signed retry succeeds."
+    testRef: "tests/apps/web/hosted-subscription-atomicity.test.ts::keeps a pre-write failure retryable without an event receipt"
+  - line: "receipt-failure-retry"
+    description: "A failure after the subscription write cannot be silently acknowledged on retry"
+    formula: "Inject receipt failure after saved subscription; retry same immutable event with fresh signature 10 seconds later. Acknowledgment requires that exact event receipt to exist, irrespective of the local processing timestamp. An atomic implementation may roll back the first state write."
+    testRef: "tests/apps/web/hosted-subscription-atomicity.test.ts::completes the receipt after a post-write receipt failure and fresh retry"
+  - line: "processing-clock"
+    description: "Local processing time cannot erase a distinct authenticated provider event"
+    formula: "Existing event created at T-200 was processed at T. A distinct event created at T-100 is delivered at T+1. It must be reconciled and receipted, not acknowledged unprocessed merely because T-100 is earlier than local updated_at T. No assertion makes event.created a complete ordering authority."
+    testRef: "tests/apps/web/hosted-subscription-atomicity.test.ts::does not silently discard a distinct event using the local processing clock"
+  - line: "duplicate"
+    description: "A durably processed event does not execute a second subscription mutation"
+    formula: "Deliver identical valid event twice with the same synthetic clock. Exactly one entitlement mutation and one stored event ID; both acknowledgments 200. Event ID deduplication must precede any second mutation."
+    testRef: "tests/apps/web/hosted-subscription-atomicity.test.ts::does not rewrite entitlement for an already receipted event"
+  - line: "authentication"
+    description: "Atomicity work preserves raw-payload authentication"
+    formula: "A changed raw payload signed for different original bytes rejects 400 before either persistence operation."
+    testRef: "tests/apps/web/hosted-subscription-atomicity.test.ts::rejects changed signed bytes before either persistence operation"

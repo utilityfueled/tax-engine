@@ -1,3 +1,4 @@
+import { createHostedBillingRouteForwardingAdapter } from "../../fixtures/hosted-billing-route-forwarding-adapter";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 import {
@@ -41,6 +42,7 @@ describe("hosted Stripe signed delivery recovery", () => {
     const persistSubscription = vi.fn(async () => {});
     const markEventProcessed = vi.fn(async () => true);
     const handlers = createHostedBillingWebhookRouteHandlers({ env, persistSubscription, markEventProcessed,
+      reconcileSubscription: createHostedBillingRouteForwardingAdapter({ persistSubscription, markEventProcessed }),
       getExistingPersistedSubscription: async () => null,
       getExistingPersistedSubscriptionByCustomerId: async () => null });
     return { ...handlers, persistSubscription, markEventProcessed };

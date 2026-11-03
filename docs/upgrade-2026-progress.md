@@ -2700,3 +2700,7 @@ The official 16.4.5 release and updated advance notice now independently confirm
 ### November 3: truthful Ohio review packet cover inventory
 
 Actual included artifacts now determine whether the Ohio cover describes official-form review copies, reference summaries or both. The exact eight known basenames do not promote readiness: partial/not-validated/nonfiling and unavailable2026 gates remain. Source-first25 controls reproduce13genuineRED/12PASS before the narrow fix;46focused+15adjacent/all11tail checks pass. Distinct actual32-page public PDF privacy and full-size cover review passes. See [the cover ledger](upgrade-2026-oh-review-cover-inventory-work.md). Full global, final artifacts, staging, final2026 forms and human qualification remain open.
+
+### November 3: atomic authoritative subscription reconciliation
+
+Six source-first existing-API cases reproduce three genuine failures before the twelve-file repair. Current subscription state and the event receipt now commit together under customer/subscription locks, with a bounded authoritative provider read and retryable rollback. Root270/10files including eight actual local PostgreSQL failure/concurrency cases, zero skips and all13check sets pass; distinct static review approves the frozen candidate. See [the transaction ledger](upgrade-2026-hosted-subscription-atomicity-work.md). Actual successor Preview delivery, credit-pack settlement, a separate configuration-gate correction and broader global/recovery/human qualification remain open.

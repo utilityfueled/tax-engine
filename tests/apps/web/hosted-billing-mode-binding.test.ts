@@ -1,3 +1,4 @@
+import { createHostedBillingRouteForwardingAdapter } from "../../fixtures/hosted-billing-route-forwarding-adapter";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // spec/federal/hosted-billing-mode-binding.yaml. Synthetic account-level key
 // strings and API spies only; real SDK signature verification, no provider HTTP.
@@ -100,6 +101,8 @@ function signed(raw: string, timestamp = now, original = raw) {
 }
 function webhook(facts: Env, constructor?: (raw: string) => ReturnType<typeof JSON.parse>) {
   return createHostedBillingWebhookRouteHandlers({ env: facts, nowUnixSeconds: now,
+    reconcileSubscription: createHostedBillingRouteForwardingAdapter({ persistSubscription: mocks.persist, markEventProcessed: mocks.mark,
+      getExistingPersistedSubscriptionByCustomerId: mocks.existing, deletePersistedSubscription: mocks.remove }),
     rateLimitStore: createRateLimitStore(), persistSubscription: mocks.persist, markEventProcessed: mocks.mark,
     recordAiCreditPurchase: mocks.credit, deletePersistedSubscription: mocks.remove,
     getExistingPersistedSubscription: mocks.existing, getExistingPersistedSubscriptionByCustomerId: mocks.existing,
