@@ -1,0 +1,33 @@
+form: "Guided-MISC-Independent"
+fullName: "Independent finite MISC saved-claim source and once-only SALT review"
+taxYear: 2025
+reference: "https://www.irs.gov/instructions/i1040sca"
+notes: |
+  Source worksheet and source-proof controls only. Native original withholding is
+  one payment; a saved generic claim cannot create another payment. No state/full
+  return, filing, human review, PDF or native browser qualification is inferred.
+lines:
+  - line: "raw-salt"
+    formula: "Original W2 2000 + OID .10 + MISC .20 + estimate .30 = 2000.60 in each PA/OH source worksheet; mixed pension500 + W22000 + MISC.20 =2500.20. Saved descriptions add0."
+    testRef: "tests/guided-interview/guided-misc-independent.test.ts::independent raw original SALT money counts each original once"
+  - line: "matching"
+    formula: "Two different actual originals .20+.37=.57 can be matched after source reorder; ambiguous equal-payer/equal-cent accounts cannot be chosen by order."
+    testRef: "tests/guided-interview/guided-misc-independent.test.ts::independent distinct source order and exact cents remain source-bound"
+  - line: "native-unknown"
+    formula: "Unknown, false, stale, positive-income and overprecision actual native original facts cannot become canonical zero defaults."
+    testRef: "tests/guided-interview/guided-misc-independent.test.ts::independent native source unknowns remain unknown (%s)"
+  - line: "canonical-current"
+    formula: "Actual current canonical identity, full originals and state proof remain mandatory; parsed schema zero does not replace actual .20 original."
+    testRef: "tests/guided-interview/guided-misc-independent.test.ts::independent canonical source replacement rejects (%s)"
+  - line: "saved-claims"
+    formula: "Saved zero/unmatched/overprecision/duplicate/unsupported rows cannot invent money; ledger scalar and rows must reconcile exactly. Duplicate assignment means supplying the complete MISC subgroup used by production, rather than requesting one explicit source subset."
+    testRef: "tests/guided-interview/guided-misc-independent.test.ts::independent saved ledger edits cannot create cash (%s)"
+  - line: "context"
+    formula: "Federal source reconciliation requires exact current originals and current interview identity before duplicate descriptions are subtracted; no caller amount or copied context is trusted."
+    testRef: "tests/guided-interview/guided-misc-independent.test.ts::independent source context cannot be replaced (%s)"
+  - line: "privacy-purity"
+    formula: "Reconciliation returns only existing indices and exact Decimal money, no raw TIN/account/remittance. A replay changes no raw originals, ledger, snapshot or confirmation."
+    testRef: "tests/guided-interview/guided-misc-independent.test.ts::independent replay preserves raw originals and returns no private identifiers"
+  - line: "state-proof"
+    formula: "Removing canonical PA/OH proof, including complete Ohio packet deletion, cannot qualify a current saved MISC state claim."
+    testRef: "tests/guided-interview/guided-misc-independent.test.ts::independent current state proof cannot be removed (%s)"

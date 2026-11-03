@@ -6,7 +6,7 @@ import {buildNecInputs} from './guided-business-facts';
 export {buildNecInputs} from './guided-business-facts';
 import { buildGuidedCurrentMtcOriginals } from './guided-current-minimum-tax-credit';
 import type { z } from "zod";
-import type { TaxYearInputSchema } from "@/models/inputs";
+import type { TaxYearInputSchema, Form1099Misc } from "@/models/inputs";
 import { buildGuidedCryptoDonations, cryptoDonationFactErrors } from './guided-crypto-donations';
 import { buildGuidedRoyaltySources, royaltySourceFactErrors } from "./guided-royalty-sources";
 import { buildGuidedQofFacts } from "./guided-qof-facts";
@@ -50,6 +50,7 @@ import { buildSavingsBondInputs, savingsBondFactErrors } from "./guided-savings-
  */
 
 import Decimal from "decimal.js";
+import { ordinarySourcePrecision } from "@/engine/state/pa-ordinary-source-precision";
 import { buildGuidedNiitSources, guidedNiitFactErrors } from "./guided-niit-facts";
 import { parseGuidedCurrency, hasGuidedCurrency, formatGuidedDollars, sumGuidedDisplayAmounts } from "./guided-currency";
 import { childCreditExclusionValues, dependentFactErrors, personalFactErrors } from "./guided-taxpayer-facts";
@@ -63,6 +64,7 @@ import { nonitemizedElectionFactErrors } from "./guided-nonitemized-election";
 import { adjustmentFactErrors, householdFactErrors, isDeductibleAlimony } from "./guided-adjustment-facts";
 import { statePaymentFactErrors, sumAdditionalStateWithholding } from "./guided-state-facts";
 import {buildGuidedZeroIncomeMiscSources} from './guided-zero-income-misc-sources';
+import {reconcileGuidedZeroIncomeMiscOriginalClaims} from './guided-zero-income-misc-withholding-reconciliation';
 import { buildCareBenefitsInput, careBenefitsFactErrors, guidedCareBenefitSources, type CareBenefitSource } from "./guided-dependent-care-benefits";
 import { careFactErrors } from "./guided-credit-facts";
 import { buildActualEnergyInput, energyFactErrors } from "./guided-energy-facts";
@@ -372,19 +374,54 @@ export function buildDependents(
 
 // ── Schedule A (itemized deductions) converter ──────────────────────────────
 
-export function buildScheduleAInput(deductionData: DeductionData | undefined, stateReturnData?: StateReturnData, retirementEntries?:RetirementEntryData[], taxYear?:number) {
+export function buildScheduleAInput(deductionData: DeductionData | undefined, stateReturnData?: StateReturnData, retirementEntries?:RetirementEntryData[], taxYear?:number, miscContext?:{state:GuidedFlowState;originals:ReadonlyArray<Form1099Misc>}) {
   if (!deductionData) return undefined;
   assertKnownFacts(deductionFactErrors({ ...deductionData, mortgageInterest: "", mortgageEntries: [], mortgageWorksheet: undefined }));
-  const matchedRetirement=stateReturnData?.paResidencySources?.retirementSources!==undefined
-    ?reconcileGuidedRetirementWithholding((retirementEntries??[]).filter(isStartedRetirement).map(retirementSourceInput),stateReturnData,taxYear??0).matchedAmount
-    :new Decimal(0);
+  let matchedRetirement = new Decimal(0);
+  if (stateReturnData?.paResidencySources?.retirementSources !== undefined) {
+    assertKnownFacts(statePaymentFactErrors(stateReturnData, taxYear, 'PA'));
+    const rows = stateReturnData.additionalStateWithholdingEntries ?? [];
+    if (rows.some(row => row.documentType !== '1099-R' && row.documentType !== '1099-MISC')) {
+      throw new Error('Additional source types require their separate actual source reconciliation.');
+    }
+    if (rows.some(row => row.documentType === '1099-MISC') && !stateReturnData.zeroIncomeMiscSources?.length) {
+      throw new Error('Actual finite MISC originals are required before mixed-source validation.');
+    }
+    const retirement = rows.filter(row => row.documentType === '1099-R');
+    const Money = Decimal.clone({
+      precision: ordinarySourcePrecision(stateReturnData, retirementEntries, rows.map(row => parseGuidedCurrency(row.amount).toFixed())),
+      rounding: Decimal.ROUND_HALF_UP,
+    });
+    const retirementData = {
+      ...stateReturnData,
+      additionalStateWithholdingEntries: retirement,
+      additionalStateWithholding: retirement.reduce((sum, row) => sum.plus(parseGuidedCurrency(row.amount)), new Money(0)).toFixed(),
+    };
+    matchedRetirement = reconcileGuidedRetirementWithholding(
+      (retirementEntries ?? []).filter(isStartedRetirement).map(retirementSourceInput), retirementData, taxYear ?? 0,
+    ).matchedAmount;
+  }
+  let matchedMisc = new Decimal(0);
+  const miscClaims = stateReturnData?.additionalStateWithholdingEntries?.filter(row => row.documentType === '1099-MISC') ?? [];
+  if (deductionData.method === 'itemized' && stateReturnData?.zeroIncomeMiscSources?.length && miscClaims.length) {
+    if (!miscContext || miscContext.state.sectionData['state-return'] !== stateReturnData) {
+      throw new Error('Actual current MISC original context is required before itemized source reconciliation.');
+    }
+    matchedMisc = reconcileGuidedZeroIncomeMiscOriginalClaims(
+      miscContext.originals, miscContext.state, miscContext.state.segmentation.stateCode ?? '', miscClaims,
+    ).matchedAmount;
+  }
+  const Money = Decimal.clone({
+    precision: ordinarySourcePrecision(deductionData, stateReturnData, matchedRetirement.toFixed(), matchedMisc.toFixed()),
+    rounding: Decimal.ROUND_HALF_UP,
+  });
   const fields = {
     nonW2IncomeTaxesDeductedElsewhere: deductionData.nonW2IncomeTaxesDeductedElsewhere,
     gamblingWinnings: deductionData.gamblingWinnings,
     ...(deductionData.method === "itemized" ? {
       medicalExpenses: deductionData.medicalExpenses,
       additionalStateLocalIncomeTaxes: hasEnteredAmount(deductionData.stateLocalTaxes) || stateReturnData?.additionalStateWithholdingEntries?.length
-        ? parseGuidedCurrency(deductionData.stateLocalTaxes).plus(sumAdditionalStateWithholding(stateReturnData)).minus(matchedRetirement).toFixed() : undefined,
+        ? new Money(parseGuidedCurrency(deductionData.stateLocalTaxes)).plus(sumAdditionalStateWithholding(stateReturnData)).minus(matchedRetirement).minus(matchedMisc).toFixed() : undefined,
       realEstateTaxes: deductionData.realEstateTaxes,
       personalPropertyTaxes: deductionData.personalPropertyTaxes,
       investmentInterestExpense: deductionData.investmentInterestExpense,
@@ -757,11 +794,11 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
   const formSSA1099 = buildSocialSecurityInputs(socialSecurityData);
   const formRRB1099 = buildRailroadSocialSecurityInputs(socialSecurityData);
   const form1099G = buildUnemploymentInputs(unemploymentData, { taxYear: state.taxYear, filingStatus: segmentation.filingStatus, personalInfo, stateData: stateReturnData, deductions: deductionData });
-  const scheduleA = buildScheduleAInput(deductionData, stateReturnData, retirementData?.entries, state.taxYear);
   const mortgageInputs = buildGuidedMortgageInputs(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse);
   let royaltyInputs: ReturnType<typeof buildGuidedRoyaltySources>;
   try { royaltyInputs = buildGuidedRoyaltySources(state, "form1099Misc" in mortgageInputs ? mortgageInputs.form1099Misc : undefined); } catch { return null; }
   try { royaltyInputs={...royaltyInputs,form1099Misc:buildGuidedZeroIncomeMiscSources(state,royaltyInputs.form1099Misc)}; } catch { return null; }
+  const scheduleA = buildScheduleAInput(deductionData, stateReturnData, retirementData?.entries, state.taxYear, {state,originals:royaltyInputs.form1099Misc});
   const donations = buildDonationsInput(deductionData, state.taxYear);
   const adjustments = buildAdjustmentsInput(adjustmentData, state.segmentation.filingStatus, state.taxYear, loanEducation);
   const studentLoans = buildStudentLoanInputs(adjustmentData?.studentLoanFacts, segmentation.filingStatus, state.taxYear, loanEducation, adjustmentData?.studentLoanInterest);

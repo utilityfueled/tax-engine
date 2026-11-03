@@ -14229,7 +14229,9 @@
       "Originalexpenseeditbrowserjourney",
       "Fullglobalcoverage/PG/runtime/staging/human/final2026 qualification"
     ],
-    "releaseReady": false
+    "releaseReady": false,
+    "commit": "0a67a27a",
+    "pushed": true
   },
   "nov03GuidedBusinessPACompleteIntegration": {
     "baseCommit": "0a67a27ad9f93875c671a5239f6f19dc17981163",
@@ -14246,6 +14248,29 @@
     "preexistingOldFileWarnings": 21,
     "newWarnings": 0,
     "evidence": ".local/upgrade-evidence/nov03-root-guided-business-main/integration-review-result.json",
+    "releaseReady": false,
+    "commit": "064c12d6",
+    "pushed": true
+  },
+  "nov03GuidedMiscReconciliationIntegration": {
+    "baseCommit": "064c12d6",
+    "products": 4,
+    "sourceFirst": {
+      "passed": 3,
+      "failed": 5,
+      "logSHA256": "1264e0894a23ed1c92b821e4b57d37c09f7b627debe837272670dff8f87bb9d5"
+    },
+    "mainTests": {
+      "passed": 314,
+      "files": 21
+    },
+    "checks": "all12PASS types3/spec/AST/inventory/check/strict0/bothbuilds/diff",
+    "originalIndependentReviewSHA256": "fdf9f80cfafd06331bb39526fe3ee633b82b956e6498d777a825d9943c2329c1",
+    "integrationOnlyReviewSHA256": "ec3620a99985452e064c6693c47655015bb4c3517b65d4a4f32658b340adf67c",
+    "sourceOnlySALTDoesNotQualifyState": true,
+    "currentBusinessCorePreserved": "55d65869",
+    "separatelyAdoptedSyntheticFixture": "16aa905759956ec07b83c87079bc4abc0adede4f94fd30ae214737d4dc0869f9",
+    "evidence": ".local/upgrade-evidence/nov03-root-misc-main/integration-review-result.json",
     "releaseReady": false
   }
 }

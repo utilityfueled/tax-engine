@@ -1,3 +1,5 @@
+import {reconcileGuidedZeroIncomeMiscWithholding}from './guided-zero-income-misc-withholding-reconciliation';
+import {ordinarySourcePrecision}from '@/engine/state/pa-ordinary-source-precision';
 import {reconcileGuidedRetirementWithholding,type RetirementWithholdingOriginal}from "./guided-retirement-withholding-reconciliation";
 import { buildGuidedOhioResidencyFacts } from "./guided-ohio-residency-facts";
 import { buildGuidedOhioPaymentFacts } from "./guided-ohio-payment-facts";
@@ -25,12 +27,22 @@ function estimatedPayments(data: StateReturnData): string {
 }
 
 /** Saved generic rows are retained evidence, never a second source of credit. */
-function reconcileSavedStateLedger(data:StateReturnData|undefined,year:number,code:string,receipts:ReadonlyArray<{date:string;amount:string}>,retirementOriginals?:ReadonlyArray<RetirementWithholdingOriginal>):void{
+function reconcileSavedStateLedger(data:StateReturnData|undefined,year:number,code:string,receipts:ReadonlyArray<{date:string;amount:string}>,retirementOriginals?:ReadonlyArray<RetirementWithholdingOriginal>,sourceContext?:{input:TaxYearInput;state:GuidedFlowState}):void{
   if(!data)return;
   assertKnownFacts(statePaymentFactErrors(data,year,code));
   if(sumAdditionalStateWithholding(data).gt(0)){
-    if(code!=='PA'||retirementOriginals===undefined)throw new Error("Actual canonical source forms must reconcile saved additional state withholding; a generic amount cannot override originals.");
-    reconcileGuidedRetirementWithholding(retirementOriginals,data,year);
+    const rows=data.additionalStateWithholdingEntries??[],misc=rows.filter(row=>row.documentType==='1099-MISC'),retirement=rows.filter(row=>row.documentType==='1099-R');
+    if(rows.some(row=>row.documentType!=='1099-MISC'&&row.documentType!=='1099-R'))throw new Error("Actual canonical source forms must reconcile saved additional state withholding; a generic amount cannot override originals.");
+    if(misc.length){
+      if(!sourceContext)throw new Error("Actual current finite MISC source context is required.");
+      reconcileGuidedZeroIncomeMiscWithholding(sourceContext.input,sourceContext.state,code,misc);
+    }
+    if(retirement.length){
+      if(code!=='PA'||retirementOriginals===undefined)throw new Error("Actual canonical retirement source forms must reconcile saved additional state withholding.");
+      const Money=Decimal.clone({precision:ordinarySourcePrecision(data,sourceContext?.input,retirementOriginals),rounding:Decimal.ROUND_HALF_UP});
+      const savedRetirement={...data,additionalStateWithholdingEntries:retirement,additionalStateWithholding:retirement.reduce((sum,row)=>sum.plus(parseGuidedCurrency(row.amount)),new Money(0)).toFixed()};
+      reconcileGuidedRetirementWithholding(retirementOriginals,savedRetirement,year);
+    }
   }
   const used=new Set<number>();
   for(const saved of data.stateEstimatedPayments){
@@ -55,7 +67,7 @@ export function buildGuidedOhioOverlay(taxInput: TaxYearInput, state: GuidedFlow
   }
   if(taxInput.ohioPayments!==undefined||data?.ohioPayments!==undefined){
     if(!taxInput.ohioPayments)throw new Error("Actual canonical Ohio payment sources are required before payment reconciliation.");
-    reconcileSavedStateLedger(data,taxInput.taxpayer.taxYear,"OH",taxInput.ohioPayments.paymentRows.filter(row=>row.kind==='estimated'));
+    reconcileSavedStateLedger(data,taxInput.taxpayer.taxYear,"OH",taxInput.ohioPayments.paymentRows.filter(row=>row.kind==='estimated'),undefined,{input:taxInput,state});
     return result;
   }
   if (data?.additionalStateWithholdingEntries?.length) {
@@ -97,7 +109,7 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
       ...("reciprocitySources" in bound ? {paReciprocitySources:bound.reciprocitySources} : {})};
     // Replays only: no confirmation action and no refreshed snapshot on read.
     const paOrdinaryReturnFacts=buildGuidedPAOrdinaryReturnFacts(current,data.paOrdinaryReturnFacts);
-    reconcileSavedStateLedger(data,input.taxpayer.taxYear,"PA",paOrdinaryReturnFacts.payments.rows.filter(row=>row.original.kind==='estimated').map(row=>({date:row.original.date,amount:row.original.amount})),input.form1099R??[]);
+    reconcileSavedStateLedger(data,input.taxpayer.taxYear,"PA",paOrdinaryReturnFacts.payments.rows.filter(row=>row.original.kind==='estimated').map(row=>({date:row.original.date,amount:row.original.amount})),input.form1099R??[],{input:current,state});
     const paOrdinaryReturnCompletionSources=buildGuidedPAOrdinaryReturnCompletionSources(current,data.paOrdinaryReturnCompletionSources,paOrdinaryReturnFacts);
     return {...current,paOrdinaryReturnFacts,paOrdinaryReturnCompletionSources};
   }

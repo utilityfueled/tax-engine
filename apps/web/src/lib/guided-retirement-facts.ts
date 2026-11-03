@@ -1,3 +1,6 @@
+import Decimal from 'decimal.js';
+import {ordinarySourcePrecision}from '@/engine/state/pa-ordinary-source-precision';
+import {statePaymentFactErrors}from './guided-state-facts';
 import type { FilingStatus, RetirementEntryData, StateReturnData } from "./guided-interview-flow";
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
@@ -59,8 +62,15 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
   const reconciledOriginals=new Set<number>();
   if(stateData?.paResidencySources?.retirementSources!==undefined&&stateData.additionalStateWithholdingEntries?.length){
     try{
+      const rows=stateData.additionalStateWithholdingEntries;
+      if(Object.keys(statePaymentFactErrors(stateData,taxYear,'PA')).length)throw new Error('Reconcile the exact whole saved source ledger before retirement validation.');
+      if(rows.some(row=>row.documentType!=='1099-R'&&row.documentType!=='1099-MISC'))throw new Error('Additional source types require their separate actual source reconciliation.');
+      if(rows.some(row=>row.documentType==='1099-MISC')&&!stateData.zeroIncomeMiscSources?.length)throw new Error('Actual finite MISC originals are required before mixed-source validation.');
+      const retirement=rows.filter(row=>row.documentType==='1099-R');
+      const Money=Decimal.clone({precision:ordinarySourcePrecision(stateData,entries,rows.map(row=>parseGuidedCurrency(row.amount).toFixed())),rounding:Decimal.ROUND_HALF_UP});
+      const retirementData={...stateData,additionalStateWithholdingEntries:retirement,additionalStateWithholding:retirement.reduce((sum,row)=>sum.plus(parseGuidedCurrency(row.amount)),new Money(0)).toFixed()};
       const started=(entries??[]).map((entry,index)=>({entry,index})).filter(({entry})=>isStartedRetirement(entry));
-      const match=reconcileGuidedRetirementWithholding(started.map(({entry})=>retirementSourceInput(entry)),stateData,taxYear??0);
+      const match=reconcileGuidedRetirementWithholding(started.map(({entry})=>retirementSourceInput(entry)),retirementData,taxYear??0);
       for(const index of match.matchedOriginalIndices)reconciledOriginals.add(started[index].index);
     }catch(error){errors['retirement-withholding-reconciliation']=error instanceof Error?error.message:'Reconcile actual retirement withholding sources.';}
   }
