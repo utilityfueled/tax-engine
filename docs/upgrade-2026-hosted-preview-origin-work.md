@@ -54,3 +54,9 @@ rehearsals. A READY deployment or anonymous session response does not satisfy
 those criteria. Production settings, credentials, deployment and readiness were
 not changed. The user is completing the SMTP password save; provider project
 access and independent human reviews remain separate open gates.
+
+## Actual Preview origin regression check
+
+The pushed `dbd325ed` deployment `dpl_GB5jFcdwVV16536oTbaDrGBnkJvG` became READY at the exact generated deployment URL. In the existing signed-in browser, a nonexistent synthetic `.invalid` account now returns **Invalid email or password**; the prior deployment returned **Invalid origin** for that same bounded sign-in probe. No account was created, secret read, temporary share link generated or production configuration changed. This proves the observed origin failure is cleared; it does not establish account/session/database persistence or any other staging criterion. Exact nonsecret receipt is retained under `nov02-parent-hosted-preview-origin/actual-browser-origin-probe.json`.
+
+A fresh metadata-only search still reports no `TAX_ENGINE_AUTH_SMTP_PASSWORD`; the user said they completed Zoho and are saving the password directly in Vercel. No value was revealed or copied. SMTP delivery/recovery tests remain pending that save and a deployment including it.

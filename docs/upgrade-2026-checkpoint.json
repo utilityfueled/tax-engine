@@ -13287,6 +13287,17 @@
     "savedMainPages": 54,
     "allPageTextAndPixelParity": true,
     "deferredWorkspaceMigration": true,
+    "releaseReady": false,
+    "commit": "d055122cf6afe3b20ef5f62c5e89bcdddbf2465d"
+  },
+  "nov02ActualPreviewOriginProbe": {
+    "commit": "dbd325ed333019f8710cef1bc0dc84d9ad515a07",
+    "deploymentId": "dpl_GB5jFcdwVV16536oTbaDrGBnkJvG",
+    "observedResult": "Invalid email or password",
+    "previousResult": "Invalid origin",
+    "evidence": ".local/upgrade-evidence/nov02-parent-hosted-preview-origin/actual-browser-origin-probe.json",
+    "accountPersistenceQualified": false,
+    "smtpPasswordSavePending": true,
     "releaseReady": false
   }
 }

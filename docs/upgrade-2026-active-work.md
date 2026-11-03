@@ -191,3 +191,6 @@ Parent real auth/billing regression:173/seven passes (`nov02-parent-hosted-previ
 - [ ] OID downstream admitted-source precision: actual red tests prove lost low-order cents in residency/printed composition. Dedicated source-first consumer/PA40/SP successor in progress.
 - [ ] Employee UE/NRH packet completeness: actual four saved workspace failures and eight readiness red controls retained; source-aware count/label repair in progress.
 - [ ] Standalone flattened PA40 dangling annotation references: separate source-first PDF utility repair active.
+
+- [x] Pushed `d055122c`: actual PA business source package,250/16 + all13 checks including separate inventory check.
+- [x] Pushed `dbd325ed`: exact hosted Preview origin source fix. Its actual generated Preview now returns invalid-credential rejection for the synthetic nonexistent account instead of Invalid origin. Account persistence and remaining hosted criteria are still unverified; SMTP secret save remains pending.
