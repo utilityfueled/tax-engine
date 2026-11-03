@@ -15798,7 +15798,36 @@
     "actualCorrectedDelivery": "pending fresh source-bound Preview; historical account/mail/reset succeeded before correction",
     "releaseReady": false,
     "rootReviewSHA256": "29a8f5936d71574aba140b196d3a24ab2f6f38b312cbbde6b57da182352530da",
-    "commit": "pending coherent commit",
-    "pushed": false
+    "commit": "b42afbf53ad7e894da4ef9e0987b152c6b669a68",
+    "pushed": true
+  },
+  "nov03MainOhioBusinessNativeBrowser": {
+    "at": "2026-11-03T17:58:49.466297+00:00",
+    "base": "b42afbf53ad7e894da4ef9e0987b152c6b669a68",
+    "verdict": "APPROVE finite2025 Ohio ordinary-business actual native browser scope",
+    "staticChecksPassed": 13,
+    "affectedTests": 98,
+    "affectedFiles": 3,
+    "actualCasesPassed": 4,
+    "retries": 0,
+    "skips": 0,
+    "actualLogSHA256": "e27b9ae75ef6dfefedf44ad68a1fa2ddf7d12e2c756a36ad5ff6cc5511ed9c65",
+    "sandboxPreconditionFailureRetained": "zero outcomes; listen EPERM3099; identical command with local-server permission passes",
+    "independentArtifactReviewSHA256": "cefbb1685a216b54740ecafcf1f1e79dc0be8c9fdbf0d7da6a1b68031a7048a2",
+    "actualPDFs": 4,
+    "actualPages": 132,
+    "actualPhasePNGs": 40,
+    "geometryRecords": 40,
+    "fieldsWidgetsActions": 0,
+    "strictObjects": 4412,
+    "decodedStreams": 3568,
+    "all132TextAndRenderedPixelParity": true,
+    "changedPNGsIndividuallyInspected": 7,
+    "productReview": "Only import ZodError and use bounded actionable message for actual Zod failures; schema/confirmation/arithmetic/readiness unchanged",
+    "officialBusinessPhysicalQualification": false,
+    "humanTaxReview": false,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-oh-business-native-browser-work.md",
+    "rootReviewSHA256": "3824bb1b9fdb144dbe1a701d8163d4c94afb4ec60b5a7ab6c38a334fb83bb27e"
   }
 }

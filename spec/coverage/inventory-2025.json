@@ -12380,6 +12380,26 @@
       ]
     },
     {
+      "key": "state/oh-business-native-browser",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc.pdf",
+      "specPath": "spec/state/oh-business-native-browser.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-business-native-independent",
       "jurisdiction": "state",
       "taxYear": 2025,

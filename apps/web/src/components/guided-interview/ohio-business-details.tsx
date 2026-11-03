@@ -1,5 +1,6 @@
 'use client';
 import {useState} from 'react';
+import {ZodError} from 'zod';
 import type {TaxYearInput} from '@/models/inputs';
 import {emptyOhioBusinessDraft,emptyOhioBusinessReceipt,emptyOhioBusinessDeduction,confirmGuidedOhioBusinessFacts,type OhioBusinessDraft} from '@/lib/guided-ohio-business-facts';
 import {confirmGuidedOhioResidencyFacts,type OhioResidencyDraft} from '@/lib/guided-ohio-residency-facts';
@@ -73,7 +74,7 @@ export function OhioBusinessDetails({data,residency,originalInput,onChange}:{dat
    <button type="button" onClick={()=>edit(['federalDeductionSources'],data.federalDeductionSources.filter((_,index)=>index!==i))}>Remove personal deduction {i+1}</button>
   </fieldset>;})}<button type="button" onClick={()=>edit(['federalDeductionSources'],[...data.federalDeductionSources,emptyOhioBusinessDeduction()])}>Add actual personal federal deduction original</button></fieldset>
   <p role="status">{data.sourceFactsConfirmed===true?'Actual business originals explicitly confirmed.':'Actual business originals need confirmation.'}</p>
-  <button type="button" disabled={!originalInput||!residency} onClick={()=>{if(!originalInput||!residency)return;try{const confirmed=confirmGuidedOhioBusinessFacts(originalInput,data);confirmGuidedOhioResidencyFacts(originalInput,{...residency,businessSources:confirmed});setError(null);onChange(confirmed);}catch(e){setError(e instanceof Error?e.message:'Complete and reconcile the actual business originals.');}}}>Confirm actual Ohio business source records</button>
+  <button type="button" disabled={!originalInput||!residency} onClick={()=>{if(!originalInput||!residency)return;try{const confirmed=confirmGuidedOhioBusinessFacts(originalInput,data);confirmGuidedOhioResidencyFacts(originalInput,{...residency,businessSources:confirmed});setError(null);onChange(confirmed);}catch(e){setError(e instanceof ZodError?'Complete the actual business source fields and confirmations from your records, then confirm again. Leave unknown answers blank; use zero only when known.':e instanceof Error?e.message:'Complete and reconcile the actual business originals.');}}}>Confirm actual Ohio business source records</button>
   {error&&<p role="alert">{error}</p>}
  </section>;
 }

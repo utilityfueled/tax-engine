@@ -197,3 +197,7 @@ parser and denies invalid platform metadata before SMTP. Fresh main39fail/19pass
 precedes adoption; distinct11+author42/old5+adjacent202 all pass (260/15), with
 all12 checks and zero lint warnings. See [the hosting ledger](upgrade-2026-hosted-preview-recovery-origin-work.md).
 Corrected actual Preview delivery and all broader qualification gates remain open.
+
+### November 3: actual Ohio business desktop/mobile sources
+
+Current-main nonresident/part-year journeys pass4/4 with zero retries, preserving actual property/payroll/receipt/deduction originals and unknown-zero distinctions through edits and reopening. The narrow Zod validation message repair keeps source and tax guards unchanged. All13 static sets and98 affected controls pass; distinct saved4PDF/132page privacy, text/pixel parity and40geometry review passes. See [the browser ledger](upgrade-2026-oh-business-native-browser-work.md). Official business physical forms, broader cohorts, human/final2026 and distribution/staging qualification remain open. Preview recovery-origin fixb42afbf5 is pushed.
