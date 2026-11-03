@@ -1,0 +1,39 @@
+form: "Guided PA actual retirement withholding reconciliation"
+fullName: "Current original source identity binds retained generic claims exactlyonce"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+notes: |
+  A generic saved1099R claim is evidence to reconcile, never a payment original.
+  Allow onlyexactcurrent year/primary owner/PA/payer/Decimal amount, unique actual
+  originalIndex with knownpayerTIN/account identity. Ambiguous originalmatches,
+  duplicateclaims, unknownsources orunsupportedtypes block; no amountoverride.
+  Newhelper is limited to PA with retained finite retirement packet; OHandother
+  existing duplicate/source guards unchanged. All actualretirement completeness
+  checks continue. PA puremethod independently replays the fullcurrent proof.
+  Federal SALT alreadycounts actual1099R500. Matching generic500 remains saved
+  but contributes0 additionalScheduleA and0 extraPA credit; totals2500not3000.
+lines:
+  - line: "matching"
+    description: "One claimed500 matches one original500"
+    formula: "Current originalIndex0 actualPA500, stable source/ledger, matchedAmount500 only identifies an existingoriginal."
+    testRef: "tests/guided-interview/guided-pa-retirement-withholding-reconciliation.test.ts::one saved PA500 claim matches the actual current original index without mutation"
+  - line: "absence"
+    description: "No saved claims creates no payment"
+    formula: "No ledgerclaims yields matchedAmount0 andnoindices; no defaults added."
+    testRef: "tests/guided-interview/guided-pa-retirement-withholding-reconciliation.test.ts::absent claims do not invent retirement sources or payments"
+  - line: "unmatched"
+    description: "Unmatched claims reject"
+    formula: "Differentpayer/year/state/amount/type orunknownoriginal identity cannot overrideactualpayment."
+    testRef: "tests/guided-interview/guided-pa-retirement-withholding-reconciliation.test.ts::unmatched saved claims cannot override actual current sources"
+  - line: "distinct"
+    description: "Ambiguous or duplicated identities reject"
+    formula: "Two matchingoriginals or two savedclaims foroneoriginal cannot count500 twice."
+    testRef: "tests/guided-interview/guided-pa-retirement-withholding-reconciliation.test.ts::duplicate claims and ambiguous current originals cannot be assigned by order"
+  - line: "known-original"
+    description: "Current original identity and amount must be known"
+    formula: "No missingyear/owner/payerTIN/account/currentPAamount orconflictingalias fallback."
+    testRef: "tests/guided-interview/guided-pa-retirement-withholding-reconciliation.test.ts::unknown original identity owner amount or conflicting aliases cannot authorize claims"
+  - line: "itemized"
+    description: "Actual500 included once at federal and PA boundaries"
+    formula: "W22000+R500=2500; matchedgeneric500 adds0ScheduleA."
+    testRef: "tests/guided-interview/guided-pa-bridge-complete.test.ts::itemized federal and PA payments count actual Pension500 once despite its matching saved ledger"

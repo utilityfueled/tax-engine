@@ -1,0 +1,34 @@
+form: "PA actual early estimate receipt sources"
+fullName: "Actual intended installment dates with conservative REV1630 coordination"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_rev-1630.pdf"
+notes: |
+  Preserve each actual receipt date and current-owner original. Intended installment
+  period is strictly after the previous published endpoint (first period starts
+  January1 inclusive) and on or before its published due date. June15 remains15
+  before June16 due date. No late, future, invalid or duplicate original admission.
+  Projection explicitly records a nonendpoint estimate. Composer uses its already
+  computed REV1630 result: if nonendpoint receipt and penaltyRequired, deny for
+  actual dated successor; never duplicate tax arithmetic or infer safe harbors.
+  Existing later-clearing and other timing/source controls remain intact.
+lines:
+  - line: "actual-timing"
+    description: "Actual early receipt allowed only within intended period"
+    formula: "Published2025 endpoints April15 June16 Sept15 Jan15; retain actual June15 amount1000 and sum4000/refund2158."
+    testRef: "tests/engine/state/pa-ordinary-early-estimate-sources.test.ts::retains actual June15 before published June16 and marks the nonendpoint source"
+  - line: "endpoint"
+    description: "Published endpoint remains explicit without nonendpoint flag"
+    formula: "Actual separately fictional June16 payment has same1000 amount, flagfalse."
+    testRef: "tests/engine/state/pa-ordinary-early-estimate-sources.test.ts::published endpoint retains the exact amount with explicit nonendpoint false"
+  - line: "outside-period"
+    description: "No late or incorrectly assigned early receipt"
+    formula: "Intended2 receipt June17 orApril15, impossible/futuredate, mismatchedowner/year/confirmation remain denied."
+    testRef: "tests/engine/state/pa-ordinary-early-estimate-sources.test.ts::rejects actual receipts outside their intended installment period"
+  - line: "penalty"
+    description: "Nonendpoint sources cannot use endpoint penalty calculations"
+    formula: "After actualREV1630 replay, nonendpoint pluspenaltyRequired => datedmethod required; no new safeharbor facts."
+    testRef: "tests/engine/state/pa-ordinary-early-estimate-sources.test.ts::nonendpoint receipt with actual remaining underpayment retains the dated method denial"
+  - line: "retained-predecessor-actual-early-receipt"
+    description: "The predecessor April14 receipt50 remains a real positive"
+    formula: "Actual2025April14/intended1/asofApril15 retains50 andnonendpointtrue; April16/asof17 is a genuine wrong-period negative."
+    testRef: "tests/engine/state/pa-ordinary-return-facts.test.ts::PA ordinary facts retain the predecessor actual April14 payment50 before the first due date"

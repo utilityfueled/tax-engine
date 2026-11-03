@@ -2,6 +2,8 @@ import type { FilingStatus, RetirementEntryData, StateReturnData } from "./guide
 import { parseGuidedCurrency } from "./guided-currency";
 import { amountError, hasEnteredAmount } from "./guided-required-facts";
 import { buildGuidedIraBasisSources, type GuidedIraBasisContext } from "./guided-ira-basis";
+import {reconcileGuidedRetirementWithholding}from "./guided-retirement-withholding-reconciliation";
+import {retirementSourceInput}from "./guided-retirement-source-inputs";
 import { isStartedRetirement } from "./guided-retirement-source-inputs";
 export { isStartedRetirement } from "./guided-retirement-source-inputs";
 
@@ -53,6 +55,14 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
     try {
       basisBound = !!buildGuidedIraBasisSources(basisContext.data, entries, taxYear, filingStatus, basisContext.personal, basisContext.adjustments);
     } catch (error) { errors['retirement-basis-sources'] = error instanceof Error ? error.message : 'Complete and reconcile actual IRA basis sources.'; }
+  }
+  const reconciledOriginals=new Set<number>();
+  if(stateData?.paResidencySources?.retirementSources!==undefined&&stateData.additionalStateWithholdingEntries?.length){
+    try{
+      const started=(entries??[]).map((entry,index)=>({entry,index})).filter(({entry})=>isStartedRetirement(entry));
+      const match=reconcileGuidedRetirementWithholding(started.map(({entry})=>retirementSourceInput(entry)),stateData,taxYear??0);
+      for(const index of match.matchedOriginalIndices)reconciledOriginals.add(started[index].index);
+    }catch(error){errors['retirement-withholding-reconciliation']=error instanceof Error?error.message:'Reconcile actual retirement withholding sources.';}
   }
   const sourceIds = new Set<string>();
   (entries ?? []).forEach((entry, index) => {
@@ -109,12 +119,12 @@ export function retirementFactErrors(entries: RetirementEntryData[] | undefined,
       const distribution = location === "state" ? entry.stateDistribution : entry.localDistribution;
       if (reporting === "single") {
         if (!identity || (location === "state" && !/^[A-Z]{2}$/.test(identity))) fail(`${location}-identity`, `Enter the actual ${location} identity from the retirement form.`);
-        for (const [value, label] of [[withheld, `${location} tax withheld`], [distribution, `${location} distribution`]]) { const message = amountError(value, label!); if (message) fail(`${location}-${label}`, message); }
+        for (const [value, label] of [[withheld, `${location} tax withheld`], [distribution, `${location} distribution`]] as const) { const message = amountError(value, label); if (message) fail(`${location}-${label}`, message); }
       } else if (reporting === "none") {
         if (identity || [withheld, distribution].some(value => hasEnteredAmount(value) && (amountError(value, "source amount") || !parseGuidedCurrency(value).isZero()))) fail(`${location}-reporting`, `Reconcile saved ${location} amounts with the answer that no ${location} section was reported.`);
       } else fail(`${location}-reporting`, reporting === "multiple" ? `Multiple ${location} retirement records need their separate source allocations.` : `Confirm actual ${location} reporting on the source form.`);
     }
-    if (entry.stateTaxReporting === "single" && stateData?.additionalStateWithholdingEntries?.some(other => other.documentType === "1099-R" && other.payer.trim().toLowerCase() === entry.payer.trim().toLowerCase() && other.state === entry.state && other.taxYear === entry.sourceTaxYear)) fail("duplicate-withholding", "This retirement source withholding was also entered as additional state withholding. Reconcile it before counting the payment twice.");
+    if (!reconciledOriginals.has(index) && entry.stateTaxReporting === "single" && stateData?.additionalStateWithholdingEntries?.some(other => other.documentType === "1099-R" && other.payer.trim().toLowerCase() === entry.payer.trim().toLowerCase() && other.state === entry.state && other.taxYear === entry.sourceTaxYear)) fail("duplicate-withholding", "This retirement source withholding was also entered as additional state withholding. Reconcile it before counting the payment twice.");
     if (boundIra ? entry.otherRetirementWorksheetRequired !== false : entry.additionalWorksheetRequired !== false) fail("additional-worksheet", boundIra ? "Confirm whether another retirement method beyond the ordinary IRA basis records is needed." : "Confirm whether basis, Roth/conversion, QCD, contribution returns, disaster relief, penalty exceptions or other retirement worksheets are needed. Those unresolved facts must be completed before the ordinary route can calculate.");
     if (entry.sourceFactsConfirmed !== true) fail("confirmation", "Confirm the complete retirement source facts after the last edit.");
   });

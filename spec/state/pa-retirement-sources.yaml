@@ -1,0 +1,56 @@
+form: "PA finite eligible retirement sources"
+fullName: "Original-bound full-year primary eligible employer retirement income and withholding"
+taxYear: 2025
+reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/gross-compensation"
+notes: |
+  Technical finite2025 primary full-year resident method, no human qualification.
+  61PaCode101.6(c)(8)(iii)(A)(I) excludes actual distributions after retirement
+  after reaching plan age/service. Federal Code7 or401a alone is insufficient.
+  Four separately confirmed eligible-plan features, actual formeremployer/service
+  separation and age65 retirement, exact current owner/DOB/index/year/fulloriginal
+  and contributions/recovery knownzero are required. Source is not Acme current
+  wages. No IRA, insurance/annuity, early incentive, death/survivor/disability,
+  ESOP/KSOP, excess/rollover/conversion or federal specialworksheet admission.
+  Eligible5000 excluded PA compensation and SP Line10 (2025SP instructions).
+  ActualPA Box14500 with actualremittance/no refund proof counts once; positive
+  subdollar requires proof before aggregation; zero/noPA does notinvent payment.
+  All nullable answers unknown until explicit evidence; no default confirmations.
+  No unqualified residual original may escape source coverage. Exact Decimal
+  adaptive precision and stable public copies, no canonical source mutation.
+lines:
+  - line: "eligible"
+    description: "Actual eligible5000 pension and500PAwithholding"
+    formula: "Eligible retirement5000 => PA compensation0/SP0; actualPA500 once."
+    testRef: "tests/engine/state/pa-retirement-sources.test.ts::original-bound eligible employer retirement excludes5000 and includes actualPA500 once"
+  - line: "unknown"
+    description: "Unknown or false finite qualifications reject"
+    formula: "Every required plan/original/retirement/source answer must be explicitlytrue."
+    testRef: "tests/engine/state/pa-retirement-sources.test.ts::unknown or false qualification facts cannot become eligible retirement"
+  - line: "binding"
+    description: "Exact original and taxpayer identity remains binding"
+    formula: "Current owner/index/year/DOB/source snapshot changes require reconfirmation."
+    testRef: "tests/engine/state/pa-retirement-sources.test.ts::current original identity year and owner changes cannot reuse pension proof"
+  - line: "coverage"
+    description: "Every original exactlyonce"
+    formula: "Missing duplicated extra or uncovered original retirement statements reject."
+    testRef: "tests/engine/state/pa-retirement-sources.test.ts::every current retirement original requires one distinct source row"
+  - line: "chronology"
+    description: "Retirement mustfollow requiredage anddistribution mustfollow retirement"
+    formula: "ActualretirementFeb28 after65birthdayFeb15, distributionDec31; unqualified chronologies denied."
+    testRef: "tests/engine/state/pa-retirement-sources.test.ts::plan age and actual separation distribution chronology are binding"
+  - line: "special"
+    description: "Contradictory or special actual source boxes denied"
+    formula: "ActualIRA/code1/nonzero contribution/survivor/conversion/otherstate facts cannot be overwritten."
+    testRef: "tests/engine/state/pa-retirement-sources.test.ts::retained special or contradictory original boxes cannot be overridden by qualifications"
+  - line: "actual-payment"
+    description: "Raw positive actualPA requires remittance evidence"
+    formula: "Raw0.49 requires bothactualpayment/no refund true, while actualzero noPA needs no inventedpositivepayment."
+    testRef: "tests/engine/state/pa-retirement-sources.test.ts::raw positive PA withholding requires proof before rounding and zero noPA does not"
+  - line: "precision"
+    description: "Actual source cents remain exact"
+    formula: "Aggregate two distinctactualoriginals withlarge100digit withholdingplus0.01 without precisionloss; publicDecimals remain shared copies."
+    testRef: "tests/engine/state/pa-retirement-sources.test.ts::actual source aggregation keeps arbitrary admitted digits and stable public Decimal copies"
+  - line: "lifetime-payment-feature"
+    description: "Optional lump sum does not establish recurring lifetime retirement features"
+    formula: "Explicit recurringLifetimePaymentsAvailableConfirmed true from actual eligibleplan; missing/null/false rejects evenwhen lump-sum/Code7 fields are true."
+    testRef: "tests/engine/state/pa-retirement-sources.test.ts::eligible plan requires actual recurring lifetime payments beyond a lump sum option"

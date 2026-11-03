@@ -24,9 +24,11 @@
 - W2 test-only fixture now current main679/seven/types3/spec7084/inventory/
   strict0 after genuine1fail/tenpass and exact5-file adoption; distinct static
   review2eb8f83b approves. No products or original monetary assertions changed.
-- [ ] Four generic PA bridge positives: `oid_independent` preparing actual
-  ordinary/completion/payment source successor; original positive behavior
-  and original incomplete-source negatives remain required.
+- [x] Four generic PA bridge positives now use separately fictional actual
+  ordinary/completion/payment sources; original amounts and incomplete negatives
+  retained. Finite primary eligible retirement and early estimates pass distinct
+  review and main1,069/21/types3/spec7186/inventory/all18strict0/both builds.
+  Joint retirement and native original-source collection remain open.
 - [x] Existing workspace PA/foreign-COD positive now uses explicit separately
   fictional complete sources; all22 old assertions/rawfederal inputs unchanged,
   main677/five/types3/spec7121/inventory/strict0, distinct87732512 approval and
@@ -34,7 +36,7 @@
   packet and final2026/human/filing gates remain explicit.
 - [ ] Real royalty method: original MI withholding80.20 does not prove final
   tax/refund. No fabricated settlement or complete-composer waiver.
-- [ ] Digital withholding: exact corrected19 adopted after fresh main six-pass/
+- [ ] Digital withholding (core/PDF pushed `fcf41e68`): exact corrected19 adopted after fresh main six-pass/
   one genuine PA failure; core47/six pass. Actual saved D reproduces private
   application/award leaks, then two-key collector correction passes773/14,
   types3/spec7149/inventory/strict0/both builds and actual8-page strict/visual
@@ -51,7 +53,7 @@
   inventory, both builds, repository lint, full browser and actual container
   browser/remote CI. Complete local1286 unit run:21418pass/21fail/33pending
   (21472 total), all21 state-related, exact receipt retained. No coveragepercent
-  measured. Remote877 Web705/CI706 are in_progress at refresh, not passing. Exact877 Preview READY metadata only; auth/recovery unqualified. Remote44e Web691/CI692 were cancelled, not passing. Last complete remote dcab:32unit/28browser failures remains historical.
+  measured. Remote877 browser completed532pass/4fail/5skip (digital and royalty sources); isolated container upgrade/recovery/rollback passed on877 only. This is not current-head qualification. Exact877 Preview READY metadata only; auth/recovery unqualified. Remote44e Web691/CI692 were cancelled, not passing. Last complete remote dcab:32unit/28browser failures remains historical.
   Refresh complete unit/coverage/remote evidence after integrations.
 - [ ] Complete actual taxpayer facts, spouse/dependent/cross-document/year
   migrations, immutable2026 law and independently derived edge cases; follow the

@@ -1,3 +1,4 @@
+import { guidedPABridgeComplete } from "../fixtures/guided-pa-bridge-complete";
 import { syntheticStudentLoanFacts } from "../fixtures/student-loan-source";
 import { energySource, sourceImprovement, sourceCleanProperty } from "../fixtures/energy-source";
 import { completeCareSource } from "./care-source-fixture";
@@ -2028,7 +2029,7 @@ describe("computeGuidedPreview — rental income", () => {
 // ── State return — preview with state estimated payments ────────────────────
 
 describe("computeGuidedPreview with state return data", () => {
-  function buildStateFlowState(stateReturnData?: StateReturnData): GuidedFlowState {
+  function buildIncompleteStateFlowState(stateReturnData?: StateReturnData): GuidedFlowState {
     let state = startInterview({
       filingStatus: "single",
       incomeTypes: ["w2-wages"],
@@ -2058,7 +2059,11 @@ describe("computeGuidedPreview with state return data", () => {
     return state;
   }
 
-  it("computes state preview without state return section data", () => {
+  function buildStateFlowState(stateReturnData?: StateReturnData): GuidedFlowState {
+    return guidedPABridgeComplete(stateReturnData).state;
+  }
+
+  it("computes state preview without generic state payment entries", () => {
     const state = buildStateFlowState();
     const preview = computeGuidedPreview(state);
     expect(preview).not.toBeNull();
@@ -2117,6 +2122,19 @@ describe("computeGuidedPreview with state return data", () => {
     expect(previewDefault!.state!.stateRefund).toBe(previewEmpty!.state!.stateRefund);
     expect(previewDefault!.state!.stateAmountOwed).toBe(previewEmpty!.state!.stateAmountOwed);
     expect(previewDefault!.state!.stateWithholding).toBe(previewEmpty!.state!.stateWithholding);
+  });
+  it("keeps the original absent and empty PA source flows incomplete", () => {
+    const originals: Array<StateReturnData | undefined> = [undefined, { ...emptyStateReturnData },
+      { stateEstimatedPayments: [], additionalStateWithholding: "500", additionalStateWithholdingEntries: [{ payer: "Example Pension", documentType: "1099-R", state: "PA", taxYear: "2025", amount: "500" }] },
+      { stateEstimatedPayments: [{ state: "PA", date: "2025-04-15", amount: "1000" }, { state: "PA", date: "2025-06-15", amount: "1000" }], additionalStateWithholding: "" }];
+    for (const data of originals) {
+      const state = buildIncompleteStateFlowState(data), before = JSON.stringify(state), preview = computeGuidedPreview(state);
+      expect(preview).not.toBeNull();
+      expect(preview?.state).toBeNull();
+      expect(JSON.stringify(state)).toBe(before);
+      expect(state.sectionData["income-w2"]?.entries[0]).toMatchObject({ employerName: "Acme Corp", wages: "60000", federalWithheld: "8000", stateWithheld: "2000" });
+      expect(state.sectionData["state-return"]?.paResidencySources).toBeUndefined();
+    }
   });
 });
 

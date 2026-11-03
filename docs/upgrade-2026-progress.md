@@ -2349,3 +2349,9 @@ unchanged independent context controls pass; native collection and global gates
 remain open.
 See the [source ledger](upgrade-2026-guided-pa-digital-complete-work.md).
 Previous workspace source fixture is confirmed pushed as877f7d88.
+
+### November 3: PA actual retirement, saved withholding and dated-payment bridge
+
+The bounded primary2025 eligible401(a) retirement method, exact saved1099R withholding reconciliation and actual early-installment method pass distinct technical review and main1,069tests/21files. Three typechecks,7,186 spec references, inventory generation/check, strict18-path lint and both builds pass. Source-first fresh main185pass/4fail and independent2fail→2pass receipts remain retained. See [the package evidence](upgrade-2026-guided-pa-bridge-complete-work.md). VA digital refund source/PDF commit `fcf41e68` is pushed. Joint retirement, broader source methods, final2026/human review and global gates remain open.
+
+Remote877 browser completed532pass/4fail/5skip, with two digital and two royalty cases missing complete actual PA sources. Its isolated container upgrade/recovery/rollback succeeded; this does not qualify the later head or hosted staging. Receipt `.local/upgrade-evidence/nov03-remote877-detailed-refresh.json`.

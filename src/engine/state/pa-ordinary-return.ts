@@ -111,6 +111,7 @@ export function calculatePAOrdinaryReturn(input:TaxYearInput,ordinaryRaw:unknown
  const quarters:[Decimal,Decimal,Decimal,Decimal]=[publicOrdinaryMoney(localMoney(p.quarterlyEstimatedPayments[0]).plus(p.priorCreditCarryforward)),p.quarterlyEstimatedPayments[1],p.quarterlyEstimatedPayments[2],p.quarterlyEstimatedPayments[3]];
  // The admitted actual April15 extension receipt is later than the Q4 due date.
  const rev1630=calculateREV1630({taxYear:year,taxLiability:beforePenalties.taxLiability,withholdingAndCredits:publicOrdinaryMoney(localMoney(beforePenalties.stateWithholding).plus(beforePenalties.nonresidentTaxWithheld).plus(beforePenalties.taxForgivenessCredit).plus(beforePenalties.residentCredit).plus(beforePenalties.otherCredits)),quarterlyEstimatedPayments:quarters,priorYearPATaxableIncome:p.priorYearPATaxableIncome,priorYearTaxForgivenessCredit:p.priorYearTaxForgivenessCredit,priorYear100PercentForgiveness:p.priorYear100PercentForgiveness});
+ if(p.hasNonendpointEstimatedPayment&&rev1630.penaltyRequired)return fail('actual nonendpoint estimate with underpayment requires its dated-payment successor method');
  if(rev1630.penaltyRequired&&rev1630.quarters.some((q,i)=>q.underpayment.gt(0)&&!q.exception1Met&&quarters.slice(i+1).some(n=>n.gt(0))))return fail('later actual payment can clear earlier underpayment; actual dated-payment successor required');
  const remaining=p.timing.remainingTaxPayment;
  if(beforePenalties.taxDue.gt(0)){

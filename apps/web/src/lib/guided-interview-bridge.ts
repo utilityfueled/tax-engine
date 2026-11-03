@@ -1,3 +1,4 @@
+import {reconcileGuidedRetirementWithholding}from "./guided-retirement-withholding-reconciliation";
 import { W2Schema } from "@/models/inputs";
 import { calculateW2StateLocalSources, type W2StateLocalSourceContext } from "@/engine/forms/w2-state-local";
 import {calculateScheduleCSourceFacts} from "../../../../src/engine/schedules/schedule-c-source-facts.js";
@@ -370,16 +371,19 @@ export function buildDependents(
 
 // ── Schedule A (itemized deductions) converter ──────────────────────────────
 
-export function buildScheduleAInput(deductionData: DeductionData | undefined, stateReturnData?: StateReturnData) {
+export function buildScheduleAInput(deductionData: DeductionData | undefined, stateReturnData?: StateReturnData, retirementEntries?:RetirementEntryData[], taxYear?:number) {
   if (!deductionData) return undefined;
   assertKnownFacts(deductionFactErrors({ ...deductionData, mortgageInterest: "", mortgageEntries: [], mortgageWorksheet: undefined }));
+  const matchedRetirement=stateReturnData?.paResidencySources?.retirementSources!==undefined
+    ?reconcileGuidedRetirementWithholding((retirementEntries??[]).filter(isStartedRetirement).map(retirementSourceInput),stateReturnData,taxYear??0).matchedAmount
+    :new Decimal(0);
   const fields = {
     nonW2IncomeTaxesDeductedElsewhere: deductionData.nonW2IncomeTaxesDeductedElsewhere,
     gamblingWinnings: deductionData.gamblingWinnings,
     ...(deductionData.method === "itemized" ? {
       medicalExpenses: deductionData.medicalExpenses,
       additionalStateLocalIncomeTaxes: hasEnteredAmount(deductionData.stateLocalTaxes) || stateReturnData?.additionalStateWithholdingEntries?.length
-        ? parseGuidedCurrency(deductionData.stateLocalTaxes).plus(sumAdditionalStateWithholding(stateReturnData)).toFixed() : undefined,
+        ? parseGuidedCurrency(deductionData.stateLocalTaxes).plus(sumAdditionalStateWithholding(stateReturnData)).minus(matchedRetirement).toFixed() : undefined,
       realEstateTaxes: deductionData.realEstateTaxes,
       personalPropertyTaxes: deductionData.personalPropertyTaxes,
       investmentInterestExpense: deductionData.investmentInterestExpense,
@@ -484,16 +488,20 @@ export function buildRetirementInputs(entries: RetirementEntryData[] | undefined
 
 export function buildSocialSecurityInputs(data: SocialSecurityData | undefined) {
   assertKnownFacts(socialSecurityFactErrors(data));
-  return socialSecurityEntries(data).filter(entry => isStartedSocialSecurity(entry) && entry.sourceType === "ssa-1099" && entry.beneficiaryRole !== "other").map(entry => ({
-    recipient: entry.recipient!.trim(), netBenefits: toDecimalString(entry.netBenefits), federalWithheld: toDecimalString(entry.federalWithheld),
-  }));
+  return socialSecurityEntries(data).filter(entry => isStartedSocialSecurity(entry) && entry.sourceType === "ssa-1099" && entry.beneficiaryRole !== "other").map(entry => {
+    if(typeof entry.recipient!=="string")throw new Error("Enter the actual legal beneficiary's name, which may differ from the representative payee.");
+    return {
+    recipient: entry.recipient.trim(), netBenefits: toDecimalString(entry.netBenefits), federalWithheld: toDecimalString(entry.federalWithheld),
+  };});
 }
 
 export function buildRailroadSocialSecurityInputs(data: SocialSecurityData | undefined) {
   assertKnownFacts(socialSecurityFactErrors(data));
-  return socialSecurityEntries(data).filter(entry => isStartedSocialSecurity(entry) && entry.sourceType === "rrb-1099" && entry.beneficiaryRole !== "other").map(entry => ({
-    recipient: entry.recipient!.trim(), netSocialSecurityEquivalentBenefitPortion: toDecimalString(entry.netBenefits), federalWithheld: toDecimalString(entry.federalWithheld),
-  }));
+  return socialSecurityEntries(data).filter(entry => isStartedSocialSecurity(entry) && entry.sourceType === "rrb-1099" && entry.beneficiaryRole !== "other").map(entry => {
+    if(typeof entry.recipient!=="string")throw new Error("Enter the actual legal beneficiary's name, which may differ from the representative payee.");
+    return {
+    recipient: entry.recipient.trim(), netSocialSecurityEquivalentBenefitPortion: toDecimalString(entry.netBenefits), federalWithheld: toDecimalString(entry.federalWithheld),
+  };});
 }
 
 function buildSocialSecurityElectionInput(data: SocialSecurityData | undefined) {
@@ -748,7 +756,7 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
   const formSSA1099 = buildSocialSecurityInputs(socialSecurityData);
   const formRRB1099 = buildRailroadSocialSecurityInputs(socialSecurityData);
   const form1099G = buildUnemploymentInputs(unemploymentData, { taxYear: state.taxYear, filingStatus: segmentation.filingStatus, personalInfo, stateData: stateReturnData, deductions: deductionData });
-  const scheduleA = buildScheduleAInput(deductionData, stateReturnData);
+  const scheduleA = buildScheduleAInput(deductionData, stateReturnData, retirementData?.entries, state.taxYear);
   const mortgageInputs = buildGuidedMortgageInputs(deductionData, state.taxYear, segmentation.filingStatus, personalInfo.spouse);
   let royaltyInputs: ReturnType<typeof buildGuidedRoyaltySources>;
   try { royaltyInputs = buildGuidedRoyaltySources(state, "form1099Misc" in mortgageInputs ? mortgageInputs.form1099Misc : undefined); } catch { return null; }

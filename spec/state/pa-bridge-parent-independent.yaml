@@ -1,0 +1,19 @@
+form: "Independent PA retirement and payment source boundaries"
+taxYear: 2025
+reference: "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter101/s101.6.html"
+notes: |
+  Independently authored controls against the immutable candidate, before runtime.
+  A taxpayer born February29 1960 is certainly65 by March1 2025. A complete
+  eligible plan retirement on March1 and distribution December1 must retain
+  actual5000 exclusion/500 withholding. This does not resolve February28 age.
+  The same actual current-owner Q1 receipt copied with spacing-only changes in
+  its identifier is still one economic payment and must not add another1000.
+lines:
+  - line: "leap-owner"
+    description: "A valid leap-day original does not produce an impossible birthday"
+    formula: "1960-02-29 actual birth; retirement2025-03-01; distribution2025-12-01; exclude5000/PAWH500."
+    testRef: "tests/engine/state/pa-bridge-parent-independent.test.ts::admits fully documented retirement after the leap-day owner has certainly reached65"
+  - line: "payment-identity"
+    description: "Spacing changes cannot turn one original into two tax payments"
+    formula: "One actual Q1 original1000 is counted once; duplicated same receipt rejects."
+    testRef: "tests/engine/state/pa-bridge-parent-independent.test.ts::rejects spacing-only duplicate actual estimated-payment receipt identifiers"

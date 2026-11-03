@@ -7,6 +7,8 @@ import {PAOrdinaryOIDSourcesSchema} from "./pa-ordinary-oid-sources.js";
 import { PAOrdinaryEmployeeSourcesSchema } from "./pa-ordinary-employee-sources.js";
 import {PAOrdinaryDividendSourceSchema} from "./pa-ordinary-investment-sources.js";
 
+import {PARetirementSourcesSchema}from "./pa-retirement-sources.js";
+
 const answer = z.boolean().nullable();
 const sourceYear = z.number().int().nullable();
 const period = z.object({ from: z.string(), through: z.string() }).strict();
@@ -50,6 +52,7 @@ export const PAResidencySourcesSchema = z.object({
   oidAndMiscSources: PAOrdinaryOIDSourcesSchema.optional(),
   employeeSources: PAOrdinaryEmployeeSourcesSchema.optional(),
   digitalSources: PAOrdinaryDigitalSourcesSchema.optional(),
+  retirementSources: PARetirementSourcesSchema.optional(),
   personalDebtDischarges: z.array(PAPersonalDebtDischargeSourceSchema).optional(),
   foreignBankTaxSources: z.array(PAForeignBankTaxSourceSchema).optional(),
   otherPAIncomeClassesConfirmedNone: answer, otherPAAdjustmentsConfirmedNone: answer,

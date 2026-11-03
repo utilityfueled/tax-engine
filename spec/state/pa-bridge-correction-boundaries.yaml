@@ -1,0 +1,18 @@
+form: "Finite PA bridge correction boundaries"
+taxYear: 2025
+reference: "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/gross-compensation"
+notes: |
+  Source integrity correction; no birthday-law ruling for February28.
+  A validated1960Feb29 owner is certainly65 by2025March1; February28 stays
+  outside this finite admitted method. Never construct invalid2025Feb29.
+  Semantically identical actual receipt confirmations differ only in
+  whitespace/case; normalize comparison identity while retaining raw records.
+lines:
+  - line: "leap-certain-bound"
+    description: "Conservative actual leap birth chronology"
+    formula: "March1/2 retirement after65 admits; February27/28 remains denied."
+    testRef: "tests/engine/state/pa-bridge-correction-boundaries.test.ts::retains a conservative leap-day age boundary with actual valid dates"
+  - line: "receipt-identity"
+    description: "Whitespace variants cannot double-count one actual receipt"
+    formula: "Trim/collapse whitespace/uppercase identity; actual distinct confirmation500 adds exactly once."
+    testRef: "tests/engine/state/pa-bridge-correction-boundaries.test.ts::rejects internal whitespace duplicate receipts while preserving distinct actual originals"
