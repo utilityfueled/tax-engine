@@ -2441,3 +2441,7 @@ Blank native fields now collect the actual MI remittance, filed return, written 
 ### November 3: actual pending Ohio OID account
 
 The finite2025 source method retains actual unrefunded Ohio cash0.20 separately from printed withholding0 and refund0; PA credit remains0. Complete fictional original120.30/printed120, full-year nonOH personal-interest allocation and actual credited agency account are independently bound; no20cent refund is invented. Fresh main failure precedes exact integration;959tests/67files and all12 checks pass, including both builds. Independent28 controls and separate final merge review preserve native MI and other source methods. See [the source ledger](upgrade-2026-pa-oid-pending-oh-account-work.md). Native/browser/human/final2026 gates remain open. MI nativee2d04061 is pushed.
+
+### November 3: native EIC history boundaries
+
+Nine real personal-section controls now cover unknown versus empty history, assessment dates, linked actual IRS allowances, spouse separation, intervening filed returns, ban notices, claim status and actual serialized reopening/invalidation. Parent review and main30tests/5files plus allten checks pass with no product changes or modified old assertions. See [the EIC source ledger](upgrade-2026-eic-history-native-boundaries.md). Global coverage and human qualification remain open. Pending Ohio OID06be2e1c is pushed.

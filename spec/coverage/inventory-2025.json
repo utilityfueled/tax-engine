@@ -1653,6 +1653,26 @@
       ]
     },
     {
+      "key": "federal/eic-history-native-boundaries",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i8862",
+      "specPath": "spec/federal/eic-history-native-boundaries.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/eic-investment-capital",
       "jurisdiction": "federal",
       "taxYear": 2025,

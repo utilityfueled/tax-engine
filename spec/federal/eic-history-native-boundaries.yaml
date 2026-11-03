@@ -1,0 +1,54 @@
+form: "Native EIC history boundary controls"
+fullName: "Mounted actual denial allowance and filing chronology source entry"
+taxYear: 2025
+irsReference: "https://www.irs.gov/instructions/i8862"
+notes: |
+  Refreshed 2026-11-03. Existing finite method only; no tax engine/product changes.
+  IRS i8862 December2025 Exceptions distinguishes an actual later allowance after
+  supplied documents from merely filing a return; Pub596 chapter5 examples3/4
+  distinguish conduct bans and an intervening original return. 26CFR1.32-3(b),(e)
+  binds deficiency assessment and each joint filers own unresolved history.
+  All sources and dates here are explicitly fictional, not taxpayer evidence.
+  Expected decisions are specified before runtime. Unknown is never known-empty;
+  a native confirmation never completes a separate current Form8862 method.
+  Tests mount the real personal section and exercise native fields/buttons before
+  canonical source conversion, resolver and federal admission. No mocked resolver.
+  Childless joint wage10000 EIC649 is the published2025 maximum; active ban EIC0.
+  Actualdates and supplied history drive both, never a user-entered credit.
+lines:
+  - line: "unknown"
+    description: "starts unknown and requires actual empty histories before admitting the claim"
+    formula: "Starting a draft/copying identities does not infer dates, empty histories or confirmations; complete native no-history records allow EIC649 for fictional joint wages10000."
+    testRef: "tests/apps/web/eic-history-native-boundaries.test.tsx::starts unknown and requires actual empty histories before admitting the claim"
+  - line: "known-date"
+    description: "preserves unknown known-not-occurred and actual assessment dates through native edits"
+    formula: "Missing assessment stays undefined; explicit not-occurred is null; occurred without actual date remains invalid; actual dates are retained and edits revoke confirmation."
+    testRef: "tests/apps/web/eic-history-native-boundaries.test.tsx::preserves unknown known-not-occurred and actual assessment dates through native edits"
+  - line: "allowance"
+    description: "requires actual linked later IRS allowance before clearing a deficiency denial"
+    formula: "A fictional assessed2023 deficiency needs8862; actual2024 return filed2025-03-15 and IRS allowance2025-09-01 with documents and the original denial link clears only that denial."
+    testRef: "tests/apps/web/eic-history-native-boundaries.test.tsx::requires actual linked later IRS allowance before clearing a deficiency denial"
+  - line: "allowance-links"
+    description: "rejects missing duplicate and unlinked native allowance links"
+    formula: "Actual allowance without a denial link or duplicate links cannot resolve a denial; editing/removing link records invalidates confirmation and never silently repairs history."
+    testRef: "tests/apps/web/eic-history-native-boundaries.test.tsx::rejects missing duplicate and unlinked native allowance links"
+  - line: "joint"
+    description: "keeps one filers allowance separate from the spouses unresolved history"
+    formula: "A primary allowance cannot resolve a spouses separately bound denial; removing the wrong-owner allowance does not remove either actual denial."
+    testRef: "tests/apps/web/eic-history-native-boundaries.test.tsx::keeps one filers allowance separate from the spouses unresolved history"
+  - line: "intervening"
+    description: "derives the ban from native intervening original-return chronology"
+    formula: "2024 denied original filed2025-03-15; 2025 original actually filed2026-02-01 before final2026-02-15; reckless ordinary range2026-2027 leaves2025 unbarred but8862 required. Missing history is not an empty list."
+    testRef: "tests/apps/web/eic-history-native-boundaries.test.tsx::derives the ban from native intervening original-return chronology"
+  - line: "notice"
+    description: "retains an actual zero credit while rejecting conflicting ban notice years"
+    formula: "2024 original filed2025-03-15 and final2025-12-01 implies two-year ban2025-2026; actual notice first-eligible2027 matches,2028 conflicts. Notice cannot override chronology; canonical EIC0 is source-derived."
+    testRef: "tests/apps/web/eic-history-native-boundaries.test.tsx::retains an actual zero credit while rejecting conflicting ban notice years"
+  - line: "claim-status"
+    description: "clears incompatible claim dates only after an explicit native status change"
+    formula: "Preparing uses actual preparation date and filed uses actual claim filing date; status changes clear the opposite date but never insert the replacement date."
+    testRef: "tests/apps/web/eic-history-native-boundaries.test.tsx::clears incompatible claim dates only after an explicit native status change"
+  - line: "reopen"
+    description: "reopens serialized native histories without changes and invalidates actual subsequent edits"
+    formula: "Actual JSON serialized native packet mounted again causes no onChange; entered records/knownfalse/null remain visible; substantive edit clears confirmations, retained originals survive and canonical admission stops."
+    testRef: "tests/apps/web/eic-history-native-boundaries.test.tsx::reopens serialized native histories without changes and invalidates actual subsequent edits"
