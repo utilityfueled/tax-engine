@@ -14020,6 +14020,30 @@
     "passedCommands": 9,
     "productionChanged": false,
     "old3TestSourceExact": true,
-    "reviewSHA256": "f81e8f61ed3bd43cf3ac1406293a46bc638ebdcbcbe5ecf2c51c62ce0f7c81d7"
+    "reviewSHA256": "f81e8f61ed3bd43cf3ac1406293a46bc638ebdcbcbe5ecf2c51c62ce0f7c81d7",
+    "commit": "b01bbc58",
+    "pushed": true
+  },
+  "nov03MainMIRoyaltyRefundB": {
+    "base": "b01bbc58",
+    "authorManifestSHA256": "87a3c3b4e733da26340618f3232c69c807914ac801c7d0ef89b97e49bac0a5ea",
+    "independentReviewSHA256": "3a6827fd5be80bc2fed199651ddeb49f90d19b28396498b7642a28bdb410dba5",
+    "independentTests": 84,
+    "freshMainRedFailed": 3,
+    "freshMainRedPassed": 20,
+    "tests": 957,
+    "testFiles": 18,
+    "types": 3,
+    "specReferences": 7238,
+    "inventoryEntries": 722,
+    "strictWarnings": 0,
+    "builds": 2,
+    "passedCommands": 11,
+    "exactProducts": 4,
+    "integrationReviewSHA256": "964bc7c94eff45f5b7e297e20381de8f578f5a5bf6ae8451cfd12631aa5aaa3d",
+    "C": "sourcefirst guided/workspace/browser history preparation only",
+    "humanQualified": false,
+    "final2026Qualified": false,
+    "filingEligible": false
   }
 }

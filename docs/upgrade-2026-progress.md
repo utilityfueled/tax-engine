@@ -2379,3 +2379,7 @@ Five exact independently reviewed products now derive the bounded2025 PA copyrig
 ### November 3: foreign-credit original-year fixture
 
 The original guided foreign-credit positive now retains an explicit fictional2025 statement year. Two real failures precede the one-field fixture correction; allfive focused tests, three types, spec/inventory and strict lint pass, preserving the old three tests byte-for-byte and the missing-year rejection. See [the fixture ledger](upgrade-2026-foreign-original-year-work.md). Full unit refresh at172fc records21918pass/10fail/33pending; global gates remain open. Royalty classification `172fc23b` is pushed.
+
+### November 3: actual completed Michigan copyright refund
+
+The finite imported-settlement method separately binds actual remittance, printed MI return, full written claim, matching agency award, received full cash and complete account. Exact80.20 is preserved separately from printed80; a residual20cents cannot disappear. Independent84/6 and main957/18 pass after fresh3fail/20pass; three types,7238 spec links, inventory722, strict lint0 and both builds pass. See [the settlement ledger](upgrade-2026-pa-mi-royalty-refund-work.md). Guided/browser/PDF and human/final2026 gates remain open. Foreign-year fixture `b01bbc58` is pushed.

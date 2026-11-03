@@ -1,0 +1,11 @@
+form: "PA actual MI copyright refund minimum"
+taxYear: 2025
+reference: "https://www.michigan.gov/-/media/Project/Websites/taxes/Forms/IIT/TY2025/MI-1040-Book.pdf"
+notes: "MI2025 instructions line39 state refunds below one dollar are not paid. Separate fictional imported claim/award/cash facts cannot overwrite that constraint. Exact1.30 is independently evidenced despite printed1; exact.30 with printed0 contradicts published minimum. No arbitrary monetary digit limit or claim-equals-cash inference. Original80.20 cohort remains unchanged."
+lines:
+  - line: "above-minimum"
+    formula: "Actual original1.30, filed1, separate full claim/agencyaward/received1.30, fully settled account0 -> PAcredit0; PA6478 unchanged"
+    testRef: "tests/engine/state/pa-royalty-refund-minimum.test.ts::admits independently evidenced full MI refund above the one-dollar payment minimum"
+  - line: "below-minimum"
+    formula: "Actual original.30, printed0, claimed agency refund.30 -> reject contradiction with published less-than-one-dollar nonpayment rule"
+    testRef: "tests/engine/state/pa-royalty-refund-minimum.test.ts::rejects a below-one-dollar MI refund cohort inconsistent with the published payment minimum"
