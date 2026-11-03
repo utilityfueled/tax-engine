@@ -12465,6 +12465,66 @@
       "knownGaps": []
     },
     {
+      "key": "state/pa-oid-business-merge-independent",
+      "jurisdiction": "state",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": "spec/state/pa-oid-business-merge-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-oid-consumer-independent",
+      "jurisdiction": "state",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": "spec/state/pa-oid-consumer-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-oid-corrected-cash-replay-independent",
+      "jurisdiction": "state",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": "spec/state/pa-oid-corrected-cash-replay-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-oid-sources",
       "jurisdiction": "state",
       "taxYear": 2026,
@@ -12534,6 +12594,85 @@
       "status": "unsupported",
       "knownGaps": [
         "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-ordinary-oid-consumer-precision",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40a.pdf",
+      "specPath": "spec/state/pa-ordinary-oid-consumer-precision.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-ordinary-oid-independent",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter103/s103.16.html",
+      "specPath": "spec/state/pa-ordinary-oid-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-ordinary-oid-precision-integration",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40a.pdf",
+      "specPath": "spec/state/pa-ordinary-oid-precision-integration.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-ordinary-oid-sources",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest",
+      "specPath": "spec/state/pa-ordinary-oid-sources.yaml",
+      "enginePath": "src/engine/state/pa-ordinary-oid-sources.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
@@ -12633,6 +12772,27 @@
       "knownGaps": [
         "Missing engine implementation",
         "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-ordinary-source-precision",
+      "jurisdiction": "state",
+      "taxYear": null,
+      "sourceAuthority": null,
+      "specPath": null,
+      "enginePath": "src/engine/state/pa-ordinary-source-precision.ts",
+      "packetPath": null,
+      "specExists": false,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": false,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing spec coverage",
+        "Missing packet generation or inclusion rule",
+        "Missing complete spec-linked regression coverage",
         "Missing e-file and business-rule validation coverage"
       ]
     },

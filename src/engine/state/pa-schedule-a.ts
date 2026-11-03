@@ -4,16 +4,12 @@
  */
 
 import Decimal from "decimal.js";
+import {ordinarySourcePrecision,publicOrdinaryMoney,publicOrdinaryLines} from "./pa-ordinary-source-precision.js";
 import { AuditTrail } from "@/utils/audit.js";
 import { roundDollar } from "@/utils/decimal.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 
 const SUPPORTED_TAX_YEARS = new Set([2024, 2025, 2026]);
-// Local precision preserves admitted source digits without changing other calculations.
-const Money=Decimal.clone({precision:100,rounding:Decimal.ROUND_HALF_UP});
-const sum=(...values:Decimal[]):Decimal=>values.reduce((total,value)=>total.plus(value),new Money(0));
-const zeroFloor=(value:Decimal):Decimal=>value.lt(0)?new Money(0):new Money(value);
-
 export interface PAScheduleAAdjustmentEntry {
   description: string;
   amount: Decimal;
@@ -58,20 +54,23 @@ export interface PAScheduleAResult {
   lines: CalculatedLine[];
 }
 
-function normalizeAmount(value?: Decimal): Decimal {
-  return zeroFloor(roundDollar(new Money(value ?? 0)));
-}
-
-function normalizeAdjustments(
-  entries?: PAScheduleAAdjustmentEntry[],
-): Array<Required<PAScheduleAAdjustmentEntry>> {
-  return (entries ?? []).map((entry) => ({
-    description: entry.description,
-    amount: normalizeAmount(entry.amount),
-  }));
-}
-
 export function calculatePAScheduleA(input: PAScheduleAInput): PAScheduleAResult {
+  const Money=Decimal.clone({precision:ordinarySourcePrecision(input),rounding:Decimal.ROUND_HALF_UP});
+  const sum=(...values:Decimal[]):Decimal=>values.reduce((total,value)=>total.plus(value),new Money(0));
+  const zeroFloor=(value:Decimal):Decimal=>value.lt(0)?new Money(0):new Money(value);
+  function normalizeAmount(value?: Decimal): Decimal {
+    return zeroFloor(roundDollar(new Money(value ?? 0)));
+  }
+
+  function normalizeAdjustments(
+    entries?: PAScheduleAAdjustmentEntry[],
+  ): Array<Required<PAScheduleAAdjustmentEntry>> {
+    return (entries ?? []).map((entry) => ({
+      description: entry.description,
+      amount: normalizeAmount(entry.amount),
+    }));
+  }
+
   if (!SUPPORTED_TAX_YEARS.has(input.taxYear)) {
     throw new Error(`PA Schedule A constants not available for tax year ${input.taxYear}`);
   }
@@ -119,24 +118,24 @@ export function calculatePAScheduleA(input: PAScheduleAInput): PAScheduleAResult
   audit.record("PA-Schedule-A", "16", "Total PA-taxable interest income", line16, "max(0, Line 10 + Line 11 + Line 12 + Line 13 + Line 14 + Line 15)");
 
   return {
-    additionAdjustments,
-    reductionAdjustments,
-    line1,
-    line2,
-    line3,
-    line4,
-    line5,
-    line6,
-    line7,
-    line8,
-    line9,
-    line10,
-    line11,
-    line12,
-    line13,
-    line14,
-    line15,
-    line16,
-    lines: audit.getLines(),
+    additionAdjustments:additionAdjustments.map(entry=>({...entry,amount:publicOrdinaryMoney(entry.amount)})),
+    reductionAdjustments:reductionAdjustments.map(entry=>({...entry,amount:publicOrdinaryMoney(entry.amount)})),
+    line1:publicOrdinaryMoney(line1),
+    line2:publicOrdinaryMoney(line2),
+    line3:publicOrdinaryMoney(line3),
+    line4:publicOrdinaryMoney(line4),
+    line5:publicOrdinaryMoney(line5),
+    line6:publicOrdinaryMoney(line6),
+    line7:publicOrdinaryMoney(line7),
+    line8:publicOrdinaryMoney(line8),
+    line9:publicOrdinaryMoney(line9),
+    line10:publicOrdinaryMoney(line10),
+    line11:publicOrdinaryMoney(line11),
+    line12:publicOrdinaryMoney(line12),
+    line13:publicOrdinaryMoney(line13),
+    line14:publicOrdinaryMoney(line14),
+    line15:publicOrdinaryMoney(line15),
+    line16:publicOrdinaryMoney(line16),
+    lines: publicOrdinaryLines(audit.getLines()),
   };
 }

@@ -1,0 +1,81 @@
+form: PA-Ordinary-OID-Sources
+fullName: Source-bound personal OID and original-form Pennsylvania withholding after reviewed A/B
+status: internal-source-method-review-only
+taxYear: 2025
+reference: https://www.pa.gov/agencies/revenue/forms-and-publications/pa-personal-income-tax-guide/interest
+sources:
+  - https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40a.pdf
+  - https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
+  - https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/taxlawpoliciesbulletinsnotices/taxbulletins/pit/documents/pit_bulletin_2024-01.pdf
+  - https://www.pacodeandbulletin.gov/Display/pacode?file=/secure/pacode/data/061/chapter103/s103.16.html&d=reduce
+  - https://uscode.house.gov/view.xhtml?edition=prelim&num=0&req=granuleid%3AUSC-prelim-title31-section3124
+  - https://www.treasurydirect.gov/marketable-securities/tax-forms-and-withholding/
+  - https://www.irs.gov/pub/irs-prior/f1099msc--2025.pdf
+  - https://www.irs.gov/pub/irs-pdf/f1099oid.pdf
+notes: |
+  Spec and literal controls precede product changes against exact reviewed A/B14.
+  Prior6a88-only reds are historical evidence and do not establish this baseline. This finite personal-interest
+  method supplies neither source qualification nor filing readiness. The existing
+  residency engine derives actual resident periods; the new pure helper applies
+  those validated periods without inferring residency from mailing address.
+  Original owner, year, complete boxes, instrument identity and exact dated
+  accruals/receipts must be explicit. Missing or unsupported facts reject.
+  The PIT guide's broad OID paragraph/table says government OID is taxable; its
+  direct-obligation exemption, binding 61 Pa.Code103.16(e), 31USC3124(a), Bulletin
+  2024-01 and final ScheduleA line7 support this narrower direct Treasury case.
+  A federal Treasury label alone proves no direct legal ownership or exemption.
+  Stripped instruments, guaranteed agencies, premium, market discount, negative
+  inflation adjustment and recipient/basis changes need their separate methods.
+  Final2025 PA40 booklet line13 has a stale MISC Box15 reference; the actual2025
+  original reports state withholding in Box16 and nonqualified compensation in15.
+  Page4 expressly admits INT/DIV originals showing PA withholding, so the line13
+  enumeration is not exhaustive. Actual OID Box14 withholding is retained as a
+  payment-original method requiring independent source agreement, not inferred
+  from income exemption or an unsubstantiated scalar. No actual user facts are
+  invented by explicit fictional erroneous-withholding control originals.
+  2026 source-year replay does not override unavailable final2026 rulepacks/forms.
+  Exact arithmetic derives local precision from admitted source integer digits,
+  fractional scales and addition carry; no fixed precision silently removes a
+  source cent or reconciles different originals. Public result Decimal instances
+  use the stable shared constructor without mutating its global precision.
+  Actual PA remittance/no-payer-refund must both be true for a positive PA claim.
+  An original with actual no PA withholding accepts truthful known-false payment
+  confirmation; no payment may be invented. Missing status remains a guard.
+  Independent unchanged six controls and genuine21pass3fail receipt precede repair.
+lines:
+  - line: original-coverage
+    formula: Every retained OID and MISC original has one unique current source row, including known zero originals
+    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::rejects missing source rows and stale original identity
+  - line: taxable-interest
+    formula: Sum ordinary personal taxable OID and coupon accruals in validated PA resident periods
+    testRef: tests/engine/state/pa-ordinary-oid-sources.test.ts::allocates actual taxable OID accruals to all three residencies
+  - line: treasury-exemption
+    formula: Direct nonstripped Treasury OID and coupon interest adds zero PA taxable interest
+    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::admits actual direct Treasury OID while preserving all three literal PA taxes
+  - line: reported-interest
+    formula: Round aggregate exact bank plus source-qualified taxable OID interest once to whole dollars
+    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::combines bank and OID cents before one PA class rounding
+  - line: SP-2
+    formula: Aggregate worldwide direct Treasury exempt interest with additional original SP2 entries once before reporting
+    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::preserves worldwide exempt Treasury income for SP line2
+  - line: SP-6
+    formula: Outside-period ordinary taxable OID joins actual outside PA bank and compensation eligibility income once
+    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::keeps outside-period taxable OID in worldwide SP income
+  - line: PA-withholding
+    formula: Sum actual PA OID Box14 and actual zero-income MISC Box16 once with actual W2 and bank withholding
+    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::retains exact original OID and MISC withholding before reported PA40 rounding
+  - line: non-PA-withholding
+    formula: Preserve every actual state row for the complete other-state history guard; no withholding equals resident credit assumption
+    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::retains positive outside-state withholding and requires its actual credit successor
+  - line: zero-income-MISC
+    formula: All original MISC income boxes and indicators must be explicitly known zero or false; no positive business or rent class inferred
+    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::rejects known positive or unknown MISC income while preserving erroneous actual withholding
+  - line: source-privacy
+    formula: Return only numeric audit values and opaque digest; preserve private original references without placing them in audit text
+    testRef: tests/engine/state/pa-ordinary-oid-sources.test.ts::binds private originals without leaking identifiers or changing originals
+  - line: no-override
+    formula: Any retained legacy PA OID adjustment must exactly match replayed original source classification; other legacy adjustments reject
+    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::reconciles retained PA OID classification and rejects a free schedule override
+  - line: original-shape
+    formula: Reject unsupported original fields/status and contradictory private-activity classifications rather than accepting schema-stripped source facts
+    testRef: tests/engine/state/pa-ordinary-oid-sources.test.ts::rejects unknown original status fields and contradictory private-activity classification

@@ -441,3 +441,8 @@ lines:
       so nonselected widgets do not force pdf-lib to regenerate official marks.
       Original field flags, on-state names, geometry and original asset stay fixed.
     testRef: "tests/pdf/pa40-actual-2025-physical.test.ts::PA40 actual2025 physical - retains official on appearances after default save"
+
+  - line: "accepted-source-precision"
+    description: "Accepted source digits survive reported class aggregation and tax computation"
+    formula: "Use a local per-call Decimal context derived from actual admitted digit widths, scales and sum carry. No amount cap or global mutation. ActualOID reportedinterest10^140+123 pluswages50000 yieldsPAincome10^140+50123; exacttax307*10^136+1539. Preserve unchanged per-line rounding, all eligibility/credit/no-cross-class-loss rules and stable public results/audits."
+    testRef: "tests/engine/state/pa-ordinary-oid-printed-boundaries.test.ts::preserves accepted OID printed inputs through standalone PA40"

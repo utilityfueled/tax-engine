@@ -214,3 +214,8 @@ lines:
       - "0% forgiveness: credit is $0"
       - "Partial forgiveness: credit is rounded portion of tax"
     testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP credit equals tax liability times forgiveness percentage - partial forgiveness"
+
+  - line: "accepted-source-eligibility-precision"
+    description: "Accepted OID source eligibility income retains all low order digits"
+    formula: "Use a local per-call Decimal context derived from actual admitted digit widths, scales and sum carry. No amount cap or global mutation. ActualOID reportedinterest10^140+123 pluswages50000 yieldsPAincome10^140+50123; exacttax307*10^136+1539. Preserve unchanged per-line rounding, all eligibility/credit/no-cross-class-loss rules and stable public results/audits."
+    testRef: "tests/engine/state/pa-ordinary-oid-printed-boundaries.test.ts::preserves accepted OID eligibility through standalone Schedule SP"

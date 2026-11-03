@@ -9,7 +9,8 @@
  */
 
 import Decimal from "decimal.js";
-import { zeroFloor, roundDollar } from "@/utils/decimal.js";
+import {ordinarySourcePrecision,publicOrdinaryMoney,publicOrdinaryLines} from "./pa-ordinary-source-precision.js";
+import { roundDollar } from "@/utils/decimal.js";
 import { AuditTrail } from "@/utils/audit.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 
@@ -201,6 +202,9 @@ export function getForgivenessPercentage(
 // ---------------------------------------------------------------------------
 
 export function calculateScheduleSP(input: ScheduleSPInput): ScheduleSPResult {
+  const Money=Decimal.clone({precision:ordinarySourcePrecision(input),rounding:Decimal.ROUND_HALF_UP});
+  const zeroFloor=(value:Decimal):Decimal=>value.lt(0)?new Money(0):new Money(value);
+  input={...input,paTaxableIncome:new Money(input.paTaxableIncome),nontaxableIncome:new Money(input.nontaxableIncome),taxLiability:new Money(input.taxLiability),taxPaidToOtherStates:new Money(input.taxPaidToOtherStates),additionalEligibilityIncome:input.additionalEligibilityIncome===undefined?undefined:new Money(input.additionalEligibilityIncome)};
   const constants = PA_SCHEDULE_SP_CONSTANTS[input.taxYear];
   if (!constants) {
     throw new Error(`PA Schedule SP constants not available for tax year ${input.taxYear}`);
@@ -220,7 +224,7 @@ export function calculateScheduleSP(input: ScheduleSPInput): ScheduleSPResult {
   audit.record("PA-Schedule-SP", "A-2", "Nontaxable income additions", input.nontaxableIncome,
     "Tax-exempt interest and other Schedule SP-includable nontaxable income");
 
-  const additionalEligibilityIncome = zeroFloor(input.additionalEligibilityIncome ?? new Decimal(0));
+  const additionalEligibilityIncome = zeroFloor(input.additionalEligibilityIncome ?? new Money(0));
 
   // Line A-3: Total eligibility income
   const eligibilityIncome = zeroFloor(
@@ -246,7 +250,7 @@ export function calculateScheduleSP(input: ScheduleSPInput): ScheduleSPResult {
   const dependentClaimantBlocked = input.isClaimedAsDependentOnAnotherFederalReturn === true
     && input.claimingHouseholdQualifiesForTaxForgiveness !== true;
   const forgivenessPercentage = dependentClaimantBlocked
-    ? new Decimal(0)
+    ? new Money(0)
     : getForgivenessPercentage(
         eligibilityIncome,
         input.filingCategory,
@@ -294,18 +298,18 @@ export function calculateScheduleSP(input: ScheduleSPInput): ScheduleSPResult {
     `$${taxLiabilityAfterOtherStateTaxes} × ${forgivenessPercentage}% = $${taxForgivenessCredit}`);
 
   return {
-    paTaxableIncome: input.paTaxableIncome,
-    nontaxableIncome: input.nontaxableIncome,
-    additionalEligibilityIncome,
-    eligibilityIncome,
+    paTaxableIncome: publicOrdinaryMoney(input.paTaxableIncome),
+    nontaxableIncome: publicOrdinaryMoney(input.nontaxableIncome),
+    additionalEligibilityIncome: publicOrdinaryMoney(additionalEligibilityIncome),
+    eligibilityIncome: publicOrdinaryMoney(eligibilityIncome),
     filingCategory: input.filingCategory,
     dependents: input.dependents,
-    baseThreshold,
-    forgivenessPercentage,
-    taxLiability: input.taxLiability,
-    taxPaidToOtherStates: input.taxPaidToOtherStates,
-    taxLiabilityAfterOtherStateTaxes,
-    taxForgivenessCredit,
-    lines: audit.getLines(),
+    baseThreshold: publicOrdinaryMoney(baseThreshold),
+    forgivenessPercentage: publicOrdinaryMoney(forgivenessPercentage),
+    taxLiability: publicOrdinaryMoney(input.taxLiability),
+    taxPaidToOtherStates: publicOrdinaryMoney(input.taxPaidToOtherStates),
+    taxLiabilityAfterOtherStateTaxes: publicOrdinaryMoney(taxLiabilityAfterOtherStateTaxes),
+    taxForgivenessCredit: publicOrdinaryMoney(taxForgivenessCredit),
+    lines: publicOrdinaryLines(audit.getLines()),
   };
 }

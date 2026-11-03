@@ -1,0 +1,34 @@
+form: PA-Ordinary-OID-Consumer-Precision
+fullName: Exact accepted OID source values through actual PA consumers
+status: internal-source-bound-precision-correction
+taxYear: 2025
+reference: https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40a.pdf
+notes: |
+  Existing actual canonical and residency schemas accept these long amounts without
+  a 60-digit maximum. Preserve every accepted source digit, never introduce a cap.
+  Official2025 ScheduleA instructions p3 require whole dollars per printed line;
+  lines4/9/10/16 add/subtract the already reported lines. Raw selected/excluded
+  income remains exact independently of that printed rounding. Local precision
+  derives from actual integer digits, scale, term count and carry/cancellation;
+  no global mutation. Public results/audits must use stable real Decimal values.
+  All originals, source eligibility/remittance guards, earlier18+6 controls and
+  independent actual integration probe remain unchanged. No readiness promotion.
+lines:
+  - line: accepted-source-chain
+    formula: ActualOID10^140+2.51 from pre-move10^140+0.49 and post-move2.02 plus bank120 gives rawresident10^140+122.51; partyear42.02 andoutside10^140+80.49; nonresident0 andoutside10^140+122.51. PrintedA resident10^140+123, partyear43 after individuallyroundedbaseline/reduction, nonresident0.
+    testRef: tests/engine/state/pa-ordinary-oid-consumer-precision.test.ts::preserves accepted dated OID source cents and printed lines for all three residencies
+  - line: printed-cancellation
+    formula: ActualScheduleAfederal10^140+120.50 rounds10^140+121; actualTreasury10^140+0.49 rounds10^140; printedline16=121. Decimal inputs have no imposed maximum and cancellation must preserve all small residual digits.
+    testRef: tests/engine/state/pa-ordinary-oid-consumer-precision.test.ts::preserves printed Schedule A cancellation above fixed precision
+  - line: withholding
+    formula: ActualOIDPAwithholding10^140+0.49 plus existingMISC0.20 plus W21539 equals10^140+1539.69 without another rounding or duplicate count. Actualremittance andnorefund proof remain required.
+    testRef: tests/engine/state/pa-ordinary-oid-consumer-precision.test.ts::preserves every accepted OID withholding cent through ordinary projection
+  - line: worldwide
+    formula: ActualexemptTreasury10^140+0.49 plus explicitlydocumentedSPline2income0.02 roundsline2once to10^140+1; distinctline3income0.51 rounds1; totalSPnontaxable10^140+2. Outsideordinarypartyearcompensation24000+outsideinterest10^140+80.49 rounds10^140+24080 once.
+    testRef: tests/engine/state/pa-ordinary-oid-consumer-precision.test.ts::preserves accepted Treasury and outside OID worldwide SP totals
+  - line: stable-public
+    formula: Freshreplays are deepStrictEqual including allScheduleA andresidency/projectionauditvalues andinputs; all returnedDecimals use stable publicconstructor without rounding, and all suppliedoriginals/globalDecimalconfig remain unchanged.
+    testRef: tests/engine/state/pa-ordinary-oid-consumer-precision.test.ts::returns replay stable public Decimals and unchanged source originals
+  - line: full-composition-probe
+    formula: Independentlystated actualsourceOID10^140+2.51 withoriginalwages50000+bank120 yieldsPA40base10^140+50123 andtax307*10^136+1539. Actual1539.30withholding givesroundedprincipal307*10^136, recorded as explicitfictionalexpectedApril15payment. Fullcomposer mustpreservetheseliterals orremainknownblocked; sourceonlygreens donotqualifyfullchain.
+    testRef: tests/engine/state/pa-ordinary-oid-consumer-composition.test.ts::preserves accepted actual OID values through full PA composition

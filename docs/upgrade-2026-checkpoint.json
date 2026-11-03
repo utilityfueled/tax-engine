@@ -13299,5 +13299,20 @@
     "accountPersistenceQualified": false,
     "smtpPasswordSavePending": true,
     "releaseReady": false
+  },
+  "nov02MainOIDSourceAndConsumerIntegration": {
+    "baseCommit": "dcab64b1a0ab2fdd0d456d857eeef30ef87665cf",
+    "testsPassed": 489,
+    "testFiles": 30,
+    "specReferences": 6944,
+    "checks": "types3/spec/inventorygeneration+check/strictownedlint0/engine+webbuild/diff",
+    "evidence": "nov02-parent-pa-oid-main{,-green,-remaining,-pdf}",
+    "independentIntegrationSHA256": "b42e523c26dc7d4f2dd9bebf8a6fb5651c7169831403fe98076f826ac1e7c71d",
+    "independentCorrectedConsumersSHA256": "e265eae45e859dcc64d38c25bda8e8fe75eecdf90b566576d59f2f7b305a8059",
+    "businessRegressionPDFs": 3,
+    "businessRegressionPages": 54,
+    "fullTextPixelParity": true,
+    "globalChecksNotCurrent": true,
+    "releaseReady": false
   }
 }

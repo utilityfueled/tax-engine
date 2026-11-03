@@ -2179,3 +2179,8 @@ The actual current Preview rejected sign-in with Invalidorigin. Exact hosted Pre
 ### November2 main PA business source package
 
 Actual original-bound finite cash-service business method now composes all three PA residency paths, once-only NEC withholding and worldwideSP/exact earned income. Main250tests/16files and types3/spec6905/inventory generation+check/strictlint/bothbuilds/diff pass; independent88/six and narrow main integration review approve. Three actual main PDFs/54pages pass strict object/privacy tests and full text/render parity to independently inspected corrected artifacts. The [business ledger](upgrade-2026-pa-ordinary-business-source-ledger.md) retains source-first failures, official authorities, hashes and limits. Existing whole-workspace migration, broader state methods, human/final-form and hosted/self-host qualification remain open.
+
+
+### November2: source-bound PA OID and complete consumer arithmetic
+
+Actual original-bound personal OID and zero-income MISC remittance now compose with the existing business method for allthree residencies. Main489/30 and all scoped checks pass; ten integrated products and distinct mixed12 controls have independent agent approval. Adaptive local Decimal arithmetic retains admitted cents, cancellation and large printed-tax/refund residuals without changing global settings or monetary oracles. Three business regression PDFs/54pages match independently inspected outputs exactly. Both [OID source](upgrade-2026-pa-ordinary-oid-sources-work.md) and [consumer precision](upgrade-2026-pa-oid-consumer-precision-work.md) ledgers preserve failures, official sources and exact receipts. Structured UI/workspace successors and all human/form/hosted/release gates remain open.

@@ -2,6 +2,8 @@
 import Decimal from "decimal.js";
 import {calculatePAOrdinaryBusinessSources} from "./pa-ordinary-business-sources.js";
 import type {PAScheduleCResult} from "./pa-schedule-c.js";
+import {ordinarySourcePrecision,publicOrdinaryMoney,publicOrdinaryLines} from "./pa-ordinary-source-precision.js";
+import {calculatePAOrdinaryOIDSources,type PAOrdinaryOIDSourcesResult} from "./pa-ordinary-oid-sources.js";
 import { calculateW2StateLocalSources } from "../forms/w2-state-local.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
@@ -14,14 +16,9 @@ import {calculatePAScheduleA,type PAScheduleAResult} from "./pa-schedule-a.js";
 import {calculatePAScheduleB,type PAScheduleBResult} from "./pa-schedule-b.js";
 import type { CalculatedLine } from "@/models/outputs.js";
 
-const Money=Decimal.clone({precision:100,rounding:Decimal.ROUND_HALF_UP});
 
 const error = (detail: string): never => { throw new Error(`PA ordinary residency sources: ${detail}`); };
 function reference(value: unknown): void { if (typeof value !== "string" || !value.trim()) error("confirm the actual source reference"); }
-function amount(value: unknown): Decimal {
-  if (typeof value !== "string" || !/^\d+(\.\d+)?$/.test(value)) return error("actual nonnegative monetary amount is missing or invalid; enter known zero explicitly");
-  const result = new Money(value); if (!result.isFinite()) return error("nonfinite source amount"); return result;
-}
 function stable(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
   if (value && typeof value === "object") return `{${Object.entries(value).filter(([, v]) => v !== undefined).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${JSON.stringify(k)}:${stable(v)}`).join(",")}}`;
@@ -35,7 +32,7 @@ function semantic(value: unknown, year: number, key = ""): unknown {
     .filter(([, v]) => v !== undefined && v !== null && v !== "" && v !== "0" && !(Array.isArray(v) && v.length === 0)));
   if (typeof value === "string") {
     if (/ein|tin|ssn/i.test(key)) return value.replace(/\D/g, "");
-    if (/^-?\d+(\.\d+)?$/.test(value)) return new Money(value).toString();
+    if (/^-?\d+(\.\d+)?$/.test(value)) return new Decimal(value).toString();
     return value.trim().replace(/\s+/g, " ").toUpperCase();
   }
   return value;
@@ -91,6 +88,16 @@ function deriveResidency(source: PAResidencySources, year: number) {
   return { status: derived, periods, residentPeriods };
 }
 
+function reconcileOIDOverride(input:TaxYearInput,source:PAResidencySources,amount:(value:unknown)=>Decimal):void {
+  if(input.paNonresidentReturn!==undefined)return error('retained PA nonresident override needs its actual source integration');
+  const legacy=input.paResidentReturn;if(legacy===undefined)return;
+  if(!source.oidAndMiscSources||Object.keys(legacy).some(key=>key!=='scheduleA')||!legacy.scheduleA||Object.keys(legacy.scheduleA).some(key=>key!=='oidSources'))return error('only the actual original-bound OID classification can reconcile a retained PA override');
+  const rows=legacy.scheduleA.oidSources;if(!rows||rows.length!==input.form1099OID.length||new Set(rows.map(row=>row.sourceId)).size!==rows.length)return error('retained OID classification needs exact current original coverage');
+  for(const row of rows){reference(row.sourceReference);const index=input.form1099OID.findIndex(original=>original.sourceId===row.sourceId),proof=source.oidAndMiscSources.oid.find(candidate=>candidate.originalIndex===index);
+    if(index<0||!proof||row.factsConfirmed!==true||row.strippedBond!==false||row.strippedBondExemptInterest!==undefined||!amount(row.bondPremiumNettedOnStatement).isZero()||!amount(row.paBondPremiumAmortization).isZero()||row.paTaxTreatment!==(proof.classification==='direct_us_treasury'?'us_government':'taxable'))return error('retained PA OID classification contradicts the current actual investment source');
+  }
+}
+
 export interface PAResidencySourcesResult {
   residencyStatus: PAResidencyStatus; schoolDistrictCode: string;
   compensation: Decimal; interest: Decimal; reportedCompensation: Decimal; reportedInterest: Decimal;
@@ -99,10 +106,16 @@ export interface PAResidencySourcesResult {
   excludedNonPAInterest: Decimal; totalOrdinaryPATaxableIncome: Decimal; taxBeforeCredits: Decimal;
   netBusinessIncome:Decimal;reportedBusinessIncome:Decimal;excludedNonPABusinessIncome:Decimal;actualPABusinessEarnedIncome:Decimal;businessPAWithholding:Decimal;
   scheduleC?:PAScheduleCResult;worldwideScheduleC?:PAScheduleCResult;
+  oidSources?:PAOrdinaryOIDSourcesResult;
   sourceCommitment: string; lines: CalculatedLine[];
 }
 
 export function calculatePAResidencySources(input: TaxYearInput, rawSources: unknown): PAResidencySourcesResult {
+  const Money=Decimal.clone({precision:ordinarySourcePrecision(input,rawSources),rounding:Decimal.ROUND_HALF_UP});
+function amount(value: unknown): Decimal {
+  if (typeof value !== "string" || !/^\d+(\.\d+)?$/.test(value)) return error("actual nonnegative monetary amount is missing or invalid; enter known zero explicitly");
+  const result = new Money(value); if (!result.isFinite()) return error("nonfinite source amount"); return result;
+}
   const parsed = PAResidencySourcesSchema.safeParse(rawSources);
   if (!parsed.success) return error("actual source packet shape is incomplete or contains unsupported facts");
   const source = parsed.data, year = input.taxpayer?.taxYear;
@@ -113,11 +126,12 @@ export function calculatePAResidencySources(input: TaxYearInput, rawSources: unk
   if (!owner || !/^\d{9}$/.test(owner.ssn.replace(/\D/g, "")) || stable(owner) !== stable({ firstName: actual.firstName, lastName: actual.lastName, ssn: actual.ssn })) return error("actual original owner identity does not match the current taxpayer");
   if (source.otherPAIncomeClassesConfirmedNone !== true || source.otherPAAdjustmentsConfirmedNone !== true) return error("confirm complete ordinary source scope; unknown other classes/adjustments are not zero");
   for (const key of ["w2s", "form1099Int", "form1099Div", "form1099B", "form1099Nec", "form1099Misc", "scheduleK1"] as const) if (!Array.isArray(input[key])) return error("complete current canonical document arrays are required before source derivation");
-  for (const key of ["form1099B", "form1099Misc", "scheduleK1", "form1099R", "formW2G", "form1099G", "form1099K", "form1099DA", "form1099OID", "form1099C", "form1099Q", "form1099SA", "formSSA1099", "formRRB1099", "rentalProperties", "homeSales", "savingsBondRedemptions", "scheduleK1Form1041", "paPassThroughStatements", "paScheduleJStatements", "paScheduleGLStatements"] as const) {
+  for (const key of ["form1099B", "scheduleK1", "form1099R", "formW2G", "form1099G", "form1099K", "form1099DA", "form1099C", "form1099Q", "form1099SA", "formSSA1099", "formRRB1099", "rentalProperties", "homeSales", "savingsBondRedemptions", "scheduleK1Form1041", "paPassThroughStatements", "paScheduleJStatements", "paScheduleGLStatements"] as const) {
     const rows = input[key]; if (Array.isArray(rows) && rows.length) return error("additional retained income originals need their actual PA class source method");
   }
   if (input.scheduleF !== undefined || input.cryptoIncome !== undefined || input.form4797 !== undefined || input.form6252.length || input.form6781 !== undefined || input.form8824.length) return error("additional retained income source needs its actual PA class source method");
-  if (input.paResidentReturn !== undefined || input.paNonresidentReturn !== undefined) return error("retained PA override packet must be reconciled by the source-bound integration method");
+  if ((input.form1099OID.length||input.form1099Misc.length)&&source.oidAndMiscSources===undefined)return error("retained OID/MISC originals require their complete actual source method");
+  reconcileOIDOverride(input,source,amount);
   const residency = deriveResidency(source, year);
   const business=calculatePAOrdinaryBusinessSources(input,source.businesses,residency);
   const residentAt = (date: number) => residency.residentPeriods.some(p => p.from <= date && date <= p.through);
@@ -216,10 +230,29 @@ export function calculatePAResidencySources(input: TaxYearInput, rawSources: unk
     if(!originalOrdinary.eq(amount(current.ordinaryDividends))||!originalCapital.eq(amount(current.totalCapitalGainDistributions)))return error("actual dated distributions do not reconcile complete current original Box1a and Box2a");
     ordinaryDividends=ordinaryDividends.plus(originalOrdinary);capitalDistributions=capitalDistributions.plus(originalCapital);
   }
-  const scheduleA=calculatePAScheduleA({taxYear:year,federalInterestIncome:interest.plus(excludedInterest),reductionAdjustments:excludedInterest.gt(0)?[{description:"Non-Residency Period Interest",amount:excludedInterest}]:[]});
+  const oidSources=source.oidAndMiscSources===undefined?undefined:calculatePAOrdinaryOIDSources(input,source.oidAndMiscSources,residency.residentPeriods.map(p=>({from:new Date(p.from*86400000).toISOString().slice(0,10),through:new Date(p.through*86400000).toISOString().slice(0,10)})));
+  if(oidSources){interest=interest.plus(oidSources.taxableInterest);excludedInterest=excludedInterest.plus(oidSources.excludedNonresidentInterest);}
+  const governmentInterest=oidSources?.worldwideExemptInterest??new Money(0);
+  const scheduleA=calculatePAScheduleA({taxYear:year,federalInterestIncome:interest.plus(excludedInterest).plus(governmentInterest),usGovernmentInterest:governmentInterest,reductionAdjustments:excludedInterest.gt(0)?[{description:"Non-Residency Period Interest",amount:excludedInterest}]:[]});
   const scheduleB=calculatePAScheduleB({taxYear:year,federalDividendIncome:ordinaryDividends,capitalGainDistributions:capitalDistributions,reductionAdjustments:excludedNonPADividends.gt(0)?[{description:"Non-Residency Period Ordinary and Capital Gain Distributions",amount:excludedNonPADividends}]:[]});
+  const publicScheduleB:PAScheduleBResult={...scheduleB,
+    line1:publicOrdinaryMoney(scheduleB.line1),
+    line2:publicOrdinaryMoney(scheduleB.line2),
+    line3:publicOrdinaryMoney(scheduleB.line3),
+    line4:publicOrdinaryMoney(scheduleB.line4),
+    line5:publicOrdinaryMoney(scheduleB.line5),
+    line6:publicOrdinaryMoney(scheduleB.line6),
+    line7:publicOrdinaryMoney(scheduleB.line7),
+    line8:publicOrdinaryMoney(scheduleB.line8),
+    line9a:publicOrdinaryMoney(scheduleB.line9a),
+    line9b:publicOrdinaryMoney(scheduleB.line9b),
+    line9c:publicOrdinaryMoney(scheduleB.line9c),
+    line10:publicOrdinaryMoney(scheduleB.line10),
+    line11:publicOrdinaryMoney(scheduleB.line11),
+    line12:publicOrdinaryMoney(scheduleB.line12),
+    additionAdjustments:scheduleB.additionAdjustments.map(entry=>({...entry,amount:publicOrdinaryMoney(entry.amount)})),reductionAdjustments:scheduleB.reductionAdjustments.map(entry=>({...entry,amount:publicOrdinaryMoney(entry.amount)})),lines:publicOrdinaryLines(scheduleB.lines)};
   const reportedCompensation = roundDollar(compensation), reportedInterest = scheduleA.line16,reportedDividends=scheduleB.line12;
-  const taxable = reportedCompensation.plus(reportedInterest).plus(reportedDividends).plus(Decimal.max(business.reportedBusinessIncome,0)), tax = roundDollar(taxable.times("0.0307"));
+  const taxable = new Money(reportedCompensation).plus(reportedInterest).plus(reportedDividends).plus(Money.max(business.reportedBusinessIncome,0)), tax = roundDollar(taxable.times("0.0307"));
   // The collector packet is the sole excluded key; all actual canonical facts remain privately bound.
   const originalInput = Object.fromEntries(Object.entries(input).filter(([key]) => key !== "paResidencySources"));
   const commitment = bytesToHex(sha256(new TextEncoder().encode(stable({ version: "pa-ordinary-residency-v1", year, input: originalInput, rawSources }))));
@@ -231,8 +264,8 @@ export function calculatePAResidencySources(input: TaxYearInput, rawSources: unk
   audit.merge(scheduleA.lines);audit.merge(scheduleB.lines);audit.merge(business.lines);
   audit.record("PA-Residency-Sources","dividends","Actual ordinary PA personal dividend distributions",dividends,"Actual received/credited distributions during confirmed resident periods; exact outside-period distributions excluded");
   audit.record("PA-Residency-Sources", "ordinary-tax", "Ordinary PA tax before credits and payments", tax, "Sum reported whole-dollar classes, multiply by3.07%, then whole-dollar tax rounding; no credit/payment/penalty qualification");
-  return { residencyStatus: residency.status, schoolDistrictCode: source.residency.schoolDistrictCode,
-    compensation, interest, reportedCompensation, reportedInterest,dividends,reportedDividends,excludedNonPADividends,scheduleA,scheduleB, excludedNonPACompensation: excludedCompensation, excludedReciprocalCompensation, excludedNonPAInterest: excludedInterest,
+  return { residencyStatus:residency.status,schoolDistrictCode:source.residency.schoolDistrictCode,
+    compensation:publicOrdinaryMoney(compensation),interest:publicOrdinaryMoney(interest),reportedCompensation:publicOrdinaryMoney(reportedCompensation),reportedInterest:publicOrdinaryMoney(reportedInterest),dividends:publicOrdinaryMoney(dividends),reportedDividends:publicOrdinaryMoney(reportedDividends),excludedNonPADividends:publicOrdinaryMoney(excludedNonPADividends),scheduleA,scheduleB:publicScheduleB,
     netBusinessIncome:business.netBusinessIncome,reportedBusinessIncome:business.reportedBusinessIncome,excludedNonPABusinessIncome:business.excludedNonPABusinessIncome,actualPABusinessEarnedIncome:business.actualPABusinessEarnedIncome,businessPAWithholding:business.paWithholding,...(business.scheduleC?{scheduleC:business.scheduleC,worldwideScheduleC:business.worldwideScheduleC}:{}),
-    totalOrdinaryPATaxableIncome: taxable, taxBeforeCredits: tax, sourceCommitment: commitment, lines: audit.getLines() };
+    excludedNonPACompensation:publicOrdinaryMoney(excludedCompensation),excludedReciprocalCompensation:publicOrdinaryMoney(excludedReciprocalCompensation),excludedNonPAInterest:publicOrdinaryMoney(excludedInterest),totalOrdinaryPATaxableIncome:publicOrdinaryMoney(taxable),taxBeforeCredits:publicOrdinaryMoney(tax),oidSources,sourceCommitment:commitment,lines:publicOrdinaryLines([...audit.getLines(),...(oidSources?.lines??[])]) };
 }
