@@ -15499,5 +15499,41 @@
       "no2026filing/human/provider/stagingqualification"
     ],
     "ledger": "docs/upgrade-2026-pa-married-native-public-work.md"
+  },
+  "nov03MainOhioOrdinaryOfficialReview": {
+    "reviewedAt": "2026-11-03T13:49:17.052525+00:00",
+    "parentCommit": "fbb9618b",
+    "status": "finite2025-main-redacted-physical-review-pass",
+    "authorV4ManifestSHA256": "5ec573605ee9d3a86baf10eee522ae9010392d25afafabe30d105891b460bb76",
+    "distinctV4ReviewSHA256": "bae0ad99c209b943b2872566d58829e09469edbde9e4d84a3af88b56292ea399",
+    "distinctV5ReviewSHA256": "b78c51c2fa7e27972cef1919e4f66b8515b8ca4b427ae33dc4640dec62d3b170",
+    "mainRed": "2genuinefail11pass; originalphysicalfilesabsent",
+    "mainRedSHA256": "52c865cac39645a13d43b0b8973889fcaad50450cf71a9a5835116a5d16fb7f1",
+    "legacyRegressionRedSHA256": "e64e524fe2b05c3f52b37291eb3d7c6db3234897959be0022853008fd750e5c7",
+    "passingTests": 75,
+    "passingFiles": 9,
+    "checksPassed": 12,
+    "checksSHA256": "2dcd4cb27386976784456317d288f3fc96982f0b56a78ed4d4248a5cfd7607c5",
+    "actualArtifactChecksSHA256": "3f8b43e4471321b202fb25bd0d54ddb86aebced948373f79cf6d5e028c49fb41",
+    "specReferences": 7641,
+    "strictASTControls": 784,
+    "inventoryEntries": 780,
+    "strictErrors": 0,
+    "strictWarnings": 0,
+    "officialFiles": 4,
+    "officialPages": 7,
+    "allSavedFiles": 9,
+    "allSavedPages": 19,
+    "paintedTextCells": 42,
+    "paintedStatusPlacements": 2,
+    "allXrefObjects": 591,
+    "officialXrefObjects": 532,
+    "rootReviewSHA256": "b1f06d0ea991314687a14cfbfe7e87aa0da90d142936d787732cfad3ec3835b1",
+    "limits": [
+      "2025singlefullVAresidentordinaryW2actualOhioNRsourcecohortonly",
+      "staticredactedreviewnotfiling",
+      "otherOhio/cohorts/distributions/staging/final2026/humanreviewremain"
+    ],
+    "ledger": "docs/upgrade-2026-oh-ordinary-official-review-work.md"
   }
 }

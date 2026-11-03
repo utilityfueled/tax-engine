@@ -2557,3 +2557,7 @@ Both original desktop/mobile expense-correction journeys now replay complete act
 ### November3: actual PA married sources through native/public review
 
 The normal guide/public entry now retains complete two-owner originals and explicit J/M choice, with one joint federal return and separate owner PA results/refund elections for M. Fresh main19genuinefail/11pass precede source-preserving six-file composition. Distinct104controls and main7383/762pass; all13checks including types3/strict29zero/bothbuilds pass, with33isolatedPGpending recorded. Prior parallel timeout failures and unchanged one-worker replay remain evidence. See [the integration ledger](upgrade-2026-pa-married-native-public-work.md). Separate physical/browser/remainingcohort/global/hosting/human/final2026 gates remain open. Royalty browser866c4d9d is pushed.
+
+### November3: finite Ohio official-form review output
+
+Actual original-bound2025 VA nonresident ordinary-W2 sources now produce four static official-form review companions/seven pages. Distinct saved-PDF review catches and verifies three physical corrections; current-main source-first2RED/11PASS and legacy-regressionRED precede the minimal guarded renderer. All75adjacent/support controls and12checks pass; saved42cells/two statuses, all-object privacy and seven visually inspected pages pass. See [the physical ledger](upgrade-2026-oh-ordinary-official-review-work.md). Filing, broader Ohio methods, final2026 and human/distribution/staging qualification remain open. PA married nativefbb9618b is pushed.

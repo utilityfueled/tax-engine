@@ -1,4 +1,5 @@
 import {resolveOhioResidencyReview,type PreparedOhioResidencyReview} from "../../../engine/state/oh-residency-source.js";
+import {fillOhioOrdinaryOfficialReview} from './fill-oh-ordinary-official-review.js';
 import { assertPdfExportAllowed } from "../../export-policy.js";
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
@@ -424,5 +425,6 @@ export async function fillOhioReferenceForms(
     );
   }
 
+  filledForms.push(...await fillOhioOrdinaryOfficialReview(taxInput,federalResult,outputDir,overlay,reviewContext));
   return { filledForms };
 }
