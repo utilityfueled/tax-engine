@@ -13446,6 +13446,45 @@
       ]
     },
     {
+      "key": "state/pa-oid-pending-oh-account",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://codes.ohio.gov/ohio-revised-code/section-5747.20",
+      "specPath": "spec/state/pa-oid-pending-oh-account.yaml",
+      "enginePath": "src/engine/state/pa-oid-pending-oh-account.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-oid-pending-oh-independent",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://codes.ohio.gov/ohio-revised-code/section-5747.20",
+      "specPath": "spec/state/pa-oid-pending-oh-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-oid-sources",
       "jurisdiction": "state",
       "taxYear": 2026,

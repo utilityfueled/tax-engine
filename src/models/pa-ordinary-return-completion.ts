@@ -1,3 +1,4 @@
+import {PAOIDPendingOHAccountSchema} from './pa-oid-pending-oh-account.js';
 import {PARoyaltyTaxRefundSourcesSchema} from './pa-royalty-tax-refund-sources.js';
 /** Exact reviewed composer contract; metadata collection does not qualify any credit. */
 import {z} from 'zod';
@@ -7,7 +8,7 @@ const answer=z.boolean().nullable(),reference=z.string(),originals=z.array(z.rec
 export const PAOrdinaryReturnCompletionSourcesSchema=z.object({
  sourceTaxYear:z.number().int().nullable(),sourceReference:reference,sourceFactsConfirmed:answer,
  originalFederalSources:z.record(z.string(),z.unknown()),owner:z.object({firstName:z.string(),lastName:z.string(),ssn:z.string()}).strict(),
- otherStateTaxes:z.object({status:z.enum(['unknown','none_paid','actual_payments']),sourceReference:reference,allJurisdictionsAndPaymentsReviewedConfirmed:answer,residentCreditSources:PAResidentCreditSourcesSchema.optional(),refundedDigitalSources:PADigitalTaxRefundSourcesSchema.optional(),refundedRoyaltySources:PARoyaltyTaxRefundSourcesSchema.optional(),jurisdictions:z.array(z.object({state:z.string(),sourceReference:reference,sourceTaxYear:z.number().int().nullable(),accountName:z.string(),accountSsn:z.string(),completeThroughDate:z.string(),taxPaid:z.string(),incomeTaxWithheld:z.string()}).strict())}).strict(),
+ otherStateTaxes:z.object({status:z.enum(['unknown','none_paid','actual_payments']),sourceReference:reference,allJurisdictionsAndPaymentsReviewedConfirmed:answer,residentCreditSources:PAResidentCreditSourcesSchema.optional(),refundedDigitalSources:PADigitalTaxRefundSourcesSchema.optional(),refundedRoyaltySources:PARoyaltyTaxRefundSourcesSchema.optional(),pendingOIDOHSources:PAOIDPendingOHAccountSchema.optional(),jurisdictions:z.array(z.object({state:z.string(),sourceReference:reference,sourceTaxYear:z.number().int().nullable(),accountName:z.string(),accountSsn:z.string(),completeThroughDate:z.string(),taxPaid:z.string(),incomeTaxWithheld:z.string()}).strict())}).strict(),
  restrictedCredits:z.object({status:z.enum(['unknown','none_available','actual_awards']),sourceReference:reference,allAwardsTransfersCarryforwardsReviewedConfirmed:answer,originalAwards:originals,originalTransfers:originals,originalCarryforwards:originals}).strict(),
  care:z.object({status:z.enum(['unknown','no_qualifying_expenses','actual_expenses']),sourceReference:reference,allCarePaymentSourcesReviewedConfirmed:answer,allEmployerBenefitsIncludedConfirmed:answer,originalCarePayments:originals}).strict(),
  nrk1:z.object({status:z.enum(['unknown','none_received','actual_statements']),sourceReference:reference,allReceivedStatementsReviewedConfirmed:answer,originalStatements:originals}).strict(),

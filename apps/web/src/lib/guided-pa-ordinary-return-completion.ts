@@ -1,3 +1,5 @@
+import {buildGuidedPAOIDPendingOHAccount} from './guided-pa-oid-pending-oh-account';
+import {PAOrdinaryReturnFactsSchema} from '@/models/pa-ordinary-return-facts';
 import {assertGuidedPARoyaltyTaxRefundPair,type GuidedPARoyaltyTaxRefundDraft} from './guided-pa-royalty-tax-refund-collection';
 import {GuidedPARoyaltyTaxRefundSourcesSchema,buildGuidedPARoyaltyTaxRefundSources,type GuidedPARoyaltyTaxRefundSources} from './guided-pa-royalty-tax-refund-sources';
 import Decimal from 'decimal.js';
@@ -55,6 +57,11 @@ function canonicalSources(input:TaxYearInput,raw:unknown,ordinaryFacts?:unknown)
  const royaltyDraft=royaltyRaw===undefined?undefined:GuidedPARoyaltyTaxRefundSourcesSchema.parse(royaltyRaw);
  const royaltyPacket=royaltyDraft===undefined?undefined:buildGuidedPARoyaltyTaxRefundSources(input,facts,royaltyDraft);
  const data=PAOrdinaryReturnCompletionSourcesSchema.parse(other?{...object,otherStateTaxes:{...originalOther,...(royaltyPacket===undefined?{}:{refundedRoyaltySources:royaltyPacket})}}:raw),packet=data.otherStateTaxes.residentCreditSources,refundPacket=data.otherStateTaxes.refundedDigitalSources;
+ const pendingOH=data.otherStateTaxes.pendingOIDOHSources;
+ if(pendingOH!==undefined){
+  if(data.otherStateTaxes.status!=='actual_payments'||packet!==undefined||residentCreditDraft!==undefined||refundPacket!==undefined||refundedDigitalDraft!==undefined||royaltyPacket!==undefined)fail('reconcile pending Ohio OID originals with their complete unmixed actual payment history');
+  buildGuidedPAOIDPendingOHAccount(input,pendingOH,PAOrdinaryReturnFactsSchema.parse(facts).timing.asOfDate);
+ }
  if(royaltyPacket!==undefined&&(packet!==undefined||residentCreditDraft!==undefined||refundPacket!==undefined||refundedDigitalDraft!==undefined))fail('mixed MI royalty and other actual tax source methods require their actual successor');
  if(royaltyPacket!==undefined&&data.otherStateTaxes.status!=='actual_payments')fail('reconcile retained actual MI royalty originals with complete actual payment history');
  if((refundPacket!==undefined||refundedDigitalDraft!==undefined)&&(packet!==undefined||residentCreditDraft!==undefined))fail('mixed resident-credit and refunded digital originals require their actual source successor');

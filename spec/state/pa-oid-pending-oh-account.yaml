@@ -1,0 +1,48 @@
+form: "PA OID Pending Ohio Account"
+fullName: "Actual outstanding Ohio OID remittance with mandatory zero PA credit"
+taxYear: 2025
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5747.20"
+notes: |
+  Finite technical source combination, not independent human qualification.
+  ORC5747.20(B)(6),2025Ohio booklet ITNRC10 exclude personal nonbusiness interest
+  accrued during full-year nonOH domicile; actual account source and filed originals
+  establish liability0 and cash still outstanding, never a deemed refund.
+  ORC5747.11(B)(1) certifies refund payment only above$1; no subdollar award inferred.
+  PA111.4/.5 require qualified same-income and established paid liability for credit.
+  Complete exact120.30 originals and reported120 remain separate. Preserve missing
+  payerTIN, blankOHstateID, all original guided titles/amounts/assertions and known
+  unknown initial state. No postal, official physical form or2026 readiness claim.
+lines:
+  - line: "existing-api"
+    formula: "Explicitly authored complete oldOID sources retain exact100.10+20.20,PA.10/OH.20; original preview PAwithholding0 after full source composition, not omitted state. Ohio actualcash/outstanding.20 and refund0 remain distinct; zeroOHliability/eligibleincome gives PAcredit0."
+    testRef: "tests/guided-interview/guided-pa-oid-original-complete.test.ts::complete original OID cohort reaches the existing preview without changing its original amounts"
+  - line: "legacy-unknown"
+    formula: "Old missing completion facts remain unknown and cannot acquire a pending account from the withholding amount alone."
+    testRef: "tests/guided-interview/guided-pa-oid-original-complete.test.ts::the original incomplete guided cohort stays incomplete"
+  - line: "account"
+    formula: "Actual2025single primary full-year nonOH personal investment, originalOID and remittance coverage, historical filed originals, complete current agency account; exactpaid.20-refunds0=.20outstanding, liability0/credit0."
+    testRef: "tests/engine/state/pa-oid-pending-oh-account.test.ts::keeps actual pending Ohio cash separate from zero liability and zero PA credit"
+  - line: "sources"
+    formula: "Reject missing/false/stale owner/year/date/remittance/history/account/complete scope, fictional receipt claims, positiveOHsource income or liability, paid-vs-printed rounding coercion and partial current history. All historical originals remain exact rather than confirmation-refresh."
+    testRef: "tests/engine/state/pa-oid-pending-oh-account.test.ts::rejects incomplete or contradictory pending account %s"
+  - line: "hidden-families"
+    formula: "No actual otherOH withholding family or duplicated/remapped current original can disappear behind an OID-only account. Normalize jurisdiction spelling and prove complete source coverage."
+    testRef: "tests/engine/state/pa-oid-pending-oh-account.test.ts::rejects an omitted actual Ohio withholding family %s"
+  - line: "exact-originals"
+    formula: "Retain original120.30 separately from printed120; same-dollar changed source/current historical original mismatch rejects. Unknown payerTIN remains absent. Stable source commitment contains only digest in public result and cannot leak SSN/ref/raw original. No side effects/global Decimal changes."
+    testRef: "tests/engine/state/pa-oid-pending-oh-account.test.ts::binds complete private original sources without rounding or mutating them"
+  - line: "guided-pair"
+    formula: "Empty draft retains unknown facts. Explicit confirm validates actual packet, never invents historical sources; read replay is immutable and factual edits clear confirmation. Opaque prepared original replay validates before redaction/I/O through existing completion context."
+    testRef: "tests/engine/state/pa-oid-pending-oh-account.test.ts::pending account confirmation is explicit and reading cannot refresh historical sources"
+  - line: "cash-history"
+    formula: "Completion actual_payments uses cashpaid.20/withheld.20, not nonepaid or liability0; missing packet, mixedmethods and stale same-money original sources reject."
+    testRef: "tests/guided-interview/guided-pa-oid-original-complete.test.ts::completion cannot erase pending Ohio cash or downgrade source proof %s"
+  - line: "original-context"
+    formula: "Prepare complete actual originals before redaction. Genuine original/redacted input with its opaque token accepts; equal-money owner/payer/reference/history changes and fresh context with old saved result reject. No PDF or browser execution is inferred."
+    testRef: "tests/guided-interview/guided-pa-oid-original-complete.test.ts::prepared original context retains actual pending cash and permits its redacted rendering input"
+  - line: "context-stale"
+    formula: "Every actual original source change, including identical amounts with changed owner/payer/private source/history, invalidates prior original context."
+    testRef: "tests/guided-interview/guided-pa-oid-original-complete.test.ts::prepared original context rejects equal-money source change %s"
+  - line: "context-result"
+    formula: "A new valid prepared context cannot authorize a saved result calculated from different originals, even when all reported money is unchanged."
+    testRef: "tests/guided-interview/guided-pa-oid-original-complete.test.ts::fresh original context rejects the retained equal-money old result"

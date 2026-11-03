@@ -1,3 +1,4 @@
+import { supplementGuidedPAOIDOriginalSources } from '../fixtures/guided-pa-oid-original-complete';
 import { assertPAGuidedPaymentBoundary } from "../fixtures/assert-pa-guided-payment-boundary";
 // Spec: spec/federal/guided-oid-sources.yaml.
 import { describe, expect, it } from "vitest";
@@ -92,6 +93,7 @@ describe("actual guided OID sources", () => {
     expect(buildTaxInputFromGuidedData(flow(entry, "PA"))).toBeNull();
     entry.paFacts = { sourceReference: "PA worksheet", factsConfirmed: true, paTaxTreatment: "taxable", strippedBond: false, bondPremiumNettedOnStatement: "0", paBondPremiumAmortization: "0" };
     const state = flow(entry, "PA"); state.sectionData.deductions = { ...emptyDeductionData, nonW2IncomeTaxesDeductedElsewhere: "0" };
+    supplementGuidedPAOIDOriginalSources(state);
     const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
     expect(input.form1099OID[0].stateWithholding).toEqual(entry.stateWithholding);
     expect(calculatePAOIDSources(input.form1099OID, input.paResidentReturn?.scheduleA?.oidSources, 2025).stateWithholding.toFixed()).toBe("0.1");

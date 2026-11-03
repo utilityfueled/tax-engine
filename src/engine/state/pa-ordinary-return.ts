@@ -1,3 +1,4 @@
+import {calculatePAOIDPendingOHAccount,type PAOIDPendingOHAccountResult} from './pa-oid-pending-oh-account.js';
 import {calculatePARoyaltyTaxRefundSources} from './pa-royalty-tax-refund-sources.js';
 import type {PAScheduleEResult} from './pa-schedule-e.js';
 /** Pure review-only source composition. Spec: state/pa-ordinary-return.yaml. */
@@ -35,6 +36,7 @@ export interface PAOrdinaryReturnResult {
  employeeSources?:PAOrdinaryEmployeeSourcesResult;
  residentCreditSources?:PAResidentCreditSourcesResult;
  pendingBusinessAccounts?:PABusinessPendingAccountResult[];
+ pendingOIDOHAccount?:PAOIDPendingOHAccountResult;
  pa40:PA40Result;scheduleA:PAScheduleAResult;scheduleB:PAScheduleBResult;scheduleC?:PAScheduleCResult;scheduleD?:PAScheduleDResult;scheduleE?:PAScheduleEResult;scheduleSP:ScheduleSPResult;rev1630:REV1630Result;workingCredit:PAWorkingPennsylvaniansTaxCreditResult;
  wptcProcessing:{stage:'department-processing-reference';credit:Decimal;creditAppliedToTaxDue:Decimal;remainingTaxDueBeforePenalties:Decimal;additionalOverpaymentBeforePenalties:Decimal};
  refundDisposition:{refund:Decimal;nextYearCredit:Decimal;donations:Array<{code:string;amount:Decimal}>};
@@ -57,6 +59,9 @@ function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnComple
  const pendingBusinessAccounts=(residency.businesses??[]).flatMap(b=>b.pendingNYAccountSources===undefined?[]:[calculatePABusinessPendingAccountSources(input,b.pendingNYAccountSources,asOf)]);
  const pendingNY=pendingBusinessAccounts[0];
  const other=sources.otherStateTaxes;ref(other.sourceReference);
+ const pendingOH=other.pendingOIDOHSources===undefined?undefined:calculatePAOIDPendingOHAccount(input,other.pendingOIDOHSources,asOf);
+ if(pendingOH&&(pendingNY||other.residentCreditSources!==undefined||other.refundedDigitalSources!==undefined||other.refundedRoyaltySources!==undefined||settledInvestmentAccounts.length>0))fail('mixed pending Ohio OID and other payment methods require their actual successor');
+ if(pendingOH&&other.status!=='actual_payments')fail('actual pending Ohio OID remittance requires complete actual-payments history');
  if(pendingNY&&(other.residentCreditSources!==undefined||other.refundedDigitalSources!==undefined||other.refundedRoyaltySources!==undefined||settledInvestmentAccounts.length>0))fail('mixed pending business and other payment methods require their actual successor');
  if(pendingNY&&other.status!=='actual_payments')fail('actual pending business remittance requires complete actual-payments history');
  if(other.allJurisdictionsAndPaymentsReviewedConfirmed!==true||other.status==='unknown')fail('actual complete other-state credit eligibility/payment history is unknown');
@@ -64,7 +69,7 @@ function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnComple
  if([other.residentCreditSources,other.refundedDigitalSources,other.refundedRoyaltySources,...(settledInvestmentAccounts.length?[settledInvestmentAccounts]:[])].filter(value=>value!==undefined).length>1)fail('mixed resident-credit and actual refund packets or settled investment payment methods require their actual source successor');
  const refundedRoyalty=other.refundedRoyaltySources===undefined?undefined:calculatePARoyaltyTaxRefundSources(input,ordinaryRaw,other.refundedRoyaltySources);
  const refundedDigital=other.refundedDigitalSources===undefined?undefined:calculatePADigitalTaxRefundSources(input,ordinaryRaw,other.refundedDigitalSources);
- if(other.status==='actual_payments'&&!other.residentCreditSources&&!refundedDigital&&!refundedRoyalty&&!settledInvestmentAccounts.length&&!pendingNY)fail('actual paid history requires complete original resident-credit or actual full-refund sources');
+ if(other.status==='actual_payments'&&!other.residentCreditSources&&!refundedDigital&&!refundedRoyalty&&!settledInvestmentAccounts.length&&!pendingNY&&!pendingOH)fail('actual paid history requires complete original resident-credit or actual full-refund sources');
  const residentCredit=other.status==='actual_payments'&&other.residentCreditSources!==undefined?calculatePAResidentCreditSources(input,ordinaryRaw,other.residentCreditSources):undefined;
  if(residentCredit&&!residentCredit.perState.length)fail('empty actual credit claims cannot establish positive complete other-state payment history');
  const states=new Set<string>();for(const row of other.jurisdictions){ref(row.sourceReference);if(!/^[A-Z]{2}$/.test(row.state)||row.state==='PA'||states.has(row.state)||row.sourceTaxYear!==y||ssn(row.accountSsn)!==ssn(t.ssn)||name(row.accountName)!==name(t.firstName+' '+t.lastName)||row.completeThroughDate!==asOf)fail('other-state credit original owner/year/history is incomplete');states.add(row.state);const actual=residentCredit?.perState.find(claim=>claim.state===row.state);
@@ -72,6 +77,8 @@ function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnComple
    const original=other.residentCreditSources?.claims.find(claim=>claim.state===row.state);if(!original)return fail('actual claimed state originals are missing');
    const withheld=original.payments.filter(payment=>payment.kind==='withholding').reduce((total,payment)=>total.plus(payment.amountAppliedToTax),new CreditMoney(0));
    if(!money(row.taxPaid).eq(actual.actualNetPayments)||!money(row.incomeTaxWithheld).eq(withheld))fail('complete other-state history does not reconcile actual net payments and withholding originals');
+  }else if(pendingOH&&row.state==='OH'){
+   if(!money(row.taxPaid).eq(pendingOH.actualNetRemittances)||!money(row.incomeTaxWithheld).eq(pendingOH.actualWithholding)||!pendingOH.paCredit.isZero())fail('actual pending Ohio OID cash history must reconcile exact net remittances and gross withholding');
   }else if(pendingNY&&row.state==='NY'){
    if(!money(row.taxPaid).eq(pendingNY.actualNetRemittances)||!money(row.incomeTaxWithheld).eq(pendingNY.actualWithholding)||!pendingNY.paCredit.isZero())fail('actual pending NY business cash history must reconcile net remittances and gross withholding separately');
   }else if(refundedDigital&&row.state==='VA'){
@@ -83,6 +90,7 @@ function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnComple
  if(residentCredit?.perState.some(claim=>!states.has(claim.state)))fail('each actual claimed jurisdiction requires matching complete payment history');
  if(refundedRoyalty&&!states.has('MI'))fail('actual MI refunded royalty originals require complete matching jurisdiction history');
  if(refundedDigital&&!states.has('VA'))fail('actual VA refunded digital originals require complete matching jurisdiction history');
+ if(pendingOH&&!states.has('OH'))fail('actual pending Ohio OID requires complete matching jurisdiction history');
  if(pendingNY&&!states.has('NY'))fail('actual pending NY business requires complete matching jurisdiction history');
  if(settledInvestmentAccounts.some(account=>!states.has(account.state)))fail('actual settled investment account requires matching complete jurisdiction history');
  const actualW2Rows=input.w2s.map((w,index)=>w.stateLocalSources===undefined?undefined:calculateW2StateLocalSources(input,index,w.stateLocalSources));
@@ -101,7 +109,7 @@ function completeCreditSources(input:TaxYearInput,sources:PAOrdinaryReturnComple
  for(const b of input.form1099Int)if(b.state&&b.state!=='PA'&&money(b.stateWithheld).gt(0))fail('actual other-state bank withholding requires its credit successor');
  for(const b of input.form1099Div)if(b.state&&b.state!=='PA'&&money(b.stateWithheld).gt(0))fail('actual other-state dividend withholding requires its credit/refund successor');
  for(const b of input.form1099B)if(b.state&&b.state!=='PA'&&money(b.stateWithheld).gt(0)&&!settledInvestmentAccounts.some(account=>account.state===b.state))fail('actual other-state brokerage withholding requires its source-qualified settled-account successor');
- for(const b of input.form1099OID)for(const row of b.stateWithholding??[])if(row.state!=='PA'&&money(row.stateWithheld).gt(0))fail('actual other-state OID withholding requires its credit/refund successor');
+ for(const b of input.form1099OID)for(const row of b.stateWithholding??[])if(row.state!=='PA'&&money(row.stateWithheld).gt(0)&&!(row.state==='OH'&&pendingOH))fail('actual other-state OID withholding requires its credit/refund successor');
  for(const[index,b]of input.form1099Misc.entries())if(b.state&&b.state!=='PA'&&money(b.stateWithheld).gt(0)&&!(b.state==='MI'&&refundedRoyalty?.coveredOriginalIndices.includes(index)))fail('actual other-state MISC withholding requires its credit/refund successor');
  for(const row of calculatePAResidencySources(input,(input as TaxYearInput&{paResidencySources?:unknown}).paResidencySources).digitalSources?.stateWithholding??[])if(row.state!=='PA'&&row.amount.gt(0)&&!(row.state==='VA'&&refundedDigital))fail('actual other-state digital withholding requires its credit/refund successor');
  const oc=sources.restrictedCredits;ref(oc.sourceReference);if(oc.status!=='none_available'||oc.allAwardsTransfersCarryforwardsReviewedConfirmed!==true||oc.originalAwards.length||oc.originalTransfers.length||oc.originalCarryforwards.length)fail('restricted credit awards/transfers/carryforwards are unknown or need their actual successor');
@@ -149,7 +157,9 @@ export function calculatePAOrdinaryReturn(input:TaxYearInput,ordinaryRaw:unknown
  const audit=new AuditTrail();audit.record('PA-Ordinary-Return','source','Complete ordinary source commitment',zero,'SHA256 binds unchanged canonical/PA originals and actual complete eligibility sources',{sourceCommitment:commitment});
  if(residentCredit)audit.merge(residentCredit.lines);
  const pendingBusinessAccounts=(input.paResidencySources?.businesses??[]).flatMap(b=>b.pendingNYAccountSources===undefined?[]:[calculatePABusinessPendingAccountSources(input,b.pendingNYAccountSources,p.timing.asOfDate)]);
+ const pendingOIDOHAccount=sources.otherStateTaxes.pendingOIDOHSources===undefined?undefined:calculatePAOIDPendingOHAccount(input,sources.otherStateTaxes.pendingOIDOHSources,p.timing.asOfDate);
+ if(pendingOIDOHAccount)audit.merge(pendingOIDOHAccount.lines);
  audit.merge(income.lines);audit.merge(p.lines);audit.merge(scheduleSP.lines);audit.merge(rev1630.lines);audit.merge(workingCredit.lines);audit.merge(pa40.lines);
  const blockers=['review-only-not-qualified-for-filing','separate-local-return-required',...(year===2026?['final-2026-forms-unqualified']:[]),...(workingCredit.credit.gt(0)?['filed-federal1040-copy-required-for-department-processing']:[])];
- return {taxYear:year,sourceCommitment:commitment,methodVersion:'pa-ordinary-return-v1',residencyStatus:income.residencyStatus,filingChoice:p.paFilingChoice,schoolDistrictCode:income.schoolDistrictCode,dependentChildren:p.spDependentChildren,timingStatus:p.timing.kind as 'filed'|'expected',...(income.employeeSources?{employeeSources:income.employeeSources}:{}),...(residentCredit?{residentCreditSources:residentCredit}:{}),...(pendingBusinessAccounts.length?{pendingBusinessAccounts}:{}),pa40,scheduleA:income.scheduleA,scheduleB:income.scheduleB,...(income.scheduleC?{scheduleC:income.scheduleC}:{}),...(income.scheduleD?{scheduleD:income.scheduleD}:{}),...(income.royaltySources?.scheduleE?{scheduleE:income.royaltySources.scheduleE}:{}),scheduleSP,rev1630,workingCredit,wptcProcessing:{stage:'department-processing-reference',credit:workingCredit.credit,creditAppliedToTaxDue:applied,remainingTaxDueBeforePenalties:zeroFloor(localMoney(pa40.taxDue).minus(applied)),additionalOverpaymentBeforePenalties:zeroFloor(localMoney(workingCredit.credit).minus(pa40.taxDue))},refundDisposition:{refund:p.refundRequested,nextYearCredit:p.nextYearCreditRequested,donations:p.donations},penaltyCode:rev1630.totalInterest.gt(0)?latePenalty.gt(0)?'B':'E':latePenalty.gt(0)?'L':null,localBoundary:{status:'separate_return_required',jurisdictions:sources.local.jurisdictions.map(row=>({name:row.name,sourceReference:row.sourceReference}))},readiness:{formStatus:year===2026?'draft_2026_review_only':'actual_2025_review_only',filingEligible:false,blockers},lines:audit.getLines()};
+ return {taxYear:year,sourceCommitment:commitment,methodVersion:'pa-ordinary-return-v1',residencyStatus:income.residencyStatus,filingChoice:p.paFilingChoice,schoolDistrictCode:income.schoolDistrictCode,dependentChildren:p.spDependentChildren,timingStatus:p.timing.kind as 'filed'|'expected',...(income.employeeSources?{employeeSources:income.employeeSources}:{}),...(residentCredit?{residentCreditSources:residentCredit}:{}),...(pendingBusinessAccounts.length?{pendingBusinessAccounts}:{}),...(pendingOIDOHAccount?{pendingOIDOHAccount}:{}),pa40,scheduleA:income.scheduleA,scheduleB:income.scheduleB,...(income.scheduleC?{scheduleC:income.scheduleC}:{}),...(income.scheduleD?{scheduleD:income.scheduleD}:{}),...(income.royaltySources?.scheduleE?{scheduleE:income.royaltySources.scheduleE}:{}),scheduleSP,rev1630,workingCredit,wptcProcessing:{stage:'department-processing-reference',credit:workingCredit.credit,creditAppliedToTaxDue:applied,remainingTaxDueBeforePenalties:zeroFloor(localMoney(pa40.taxDue).minus(applied)),additionalOverpaymentBeforePenalties:zeroFloor(localMoney(workingCredit.credit).minus(pa40.taxDue))},refundDisposition:{refund:p.refundRequested,nextYearCredit:p.nextYearCreditRequested,donations:p.donations},penaltyCode:rev1630.totalInterest.gt(0)?latePenalty.gt(0)?'B':'E':latePenalty.gt(0)?'L':null,localBoundary:{status:'separate_return_required',jurisdictions:sources.local.jurisdictions.map(row=>({name:row.name,sourceReference:row.sourceReference}))},readiness:{formStatus:year===2026?'draft_2026_review_only':'actual_2025_review_only',filingEligible:false,blockers},lines:audit.getLines()};
 }
