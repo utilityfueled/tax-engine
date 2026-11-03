@@ -34,3 +34,23 @@ announcement response
 This is source and audit evidence, with no new risk acceptance or image
 publication. The upgrade execution owns follow-up remediation; owner approval
 of any remaining release exceptions is still missing.
+
+## 18:09 UTC refresh on the same lockfile
+
+At 18:09:13 UTC a new full `pnpm audit --json` exits 0 with 522 dependencies
+and zero reported vulnerabilities at every severity. The lockfile remains
+`4f5d42856f6942abc8143f6a161a3aeda68b657496e94127e9fcbc25e5b034d2`;
+raw audit SHA256 remains
+`5a53e55cf00fe12cf2baa62be93e62a01b390225c1294be768cb4472b14a3b2a`.
+The independent new invocation and timestamp are retained in
+`.local/upgrade-evidence/nov03-root-security-1813/receipt.json`. The directory
+label is an identifier; its recorded UTC timestamp is authoritative.
+
+A later fresh read of the official announcement, maintainer releases and
+[maintainer advisories](https://github.com/vercel/next.js/security/advisories)
+still presents the advance notice and 16.4.4 as the latest stable release
+observed. These fetched pages do not establish that a newer uncached release
+or unpublished advisory does not exist. The promised seven medium fixes,
+applicability review and final-image qualification remain open. The upgrade
+execution owns the recheck before release; no new exception or risk acceptance
+is granted. No dependency, pinned tool, coverage gate or runtime image changed.

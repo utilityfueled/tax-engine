@@ -149,8 +149,12 @@
     }
   ],
   "packageAudit": {
-    "evidence": ".local/upgrade-evidence/final-audit.json",
-    "evidenceSha256": "7f2a453eddf34072123667b1ffbd999d3da4e99fc338c9270f81f83e35b3ae2d",
+    "at": "2026-11-03T18:09:13.714040+00:00",
+    "evidence": ".local/upgrade-evidence/nov03-root-security-1813/receipt.json",
+    "evidenceSha256": "955ccc01f1859d2c436f0958caa39bf5f59dc8a472a82bf4a5a91c5ffb72d36a",
+    "rawAuditSha256": "5a53e55cf00fe12cf2baa62be93e62a01b390225c1294be768cb4472b14a3b2a",
+    "lockfileSha256": "4f5d42856f6942abc8143f6a161a3aeda68b657496e94127e9fcbc25e5b034d2",
+    "exitCode": 0,
     "metadata": {
       "vulnerabilities": {
         "info": 0,
@@ -159,12 +163,17 @@
         "high": 0,
         "critical": 0
       },
-      "dependencies": 488,
+      "dependencies": 522,
       "devDependencies": 0,
       "optionalDependencies": 0,
-      "totalDependencies": 488
+      "totalDependencies": 522
     },
-    "limitation": "Package advisory results do not assess deployed reachability or operating-system packages."
+    "previousHistoricalEvidence": {
+      "path": ".local/upgrade-evidence/final-audit.json",
+      "sha256": "7f2a453eddf34072123667b1ffbd999d3da4e99fc338c9270f81f83e35b3ae2d"
+    },
+    "limitation": "Registry audit only; scheduled Next security release, current final-image scans and release qualification remain open.",
+    "unchangedLockfileVerifiedAtCommit": "80bc752f751ebd642cb039a1c65c7e8e6a603403"
   },
   "container": {
     "tag": "localhost/tax-engine:2026-upgrade",
@@ -15892,5 +15901,14 @@
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-hosted-billing-mode-binding-work.md",
     "rootReviewSHA256": "9094bd92e7f0b8a6595171b137316493d44819e62279b32b14c3a3a0e673b3e6"
+  },
+  "nov03EveningSecurityRefresh": {
+    "audit": "2026-11-03T18:09:13.714040+00:00",
+    "unchangedLockfile": true,
+    "nextStableObserved": "16.4.4",
+    "scheduledNovemberSecurityReleaseQualified": false,
+    "owner": "upgrade execution; recheck before release",
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-security-refresh-20261103-1425.md"
   }
 }
