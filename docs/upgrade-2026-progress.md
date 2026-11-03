@@ -2692,3 +2692,7 @@ Exact reviewed NEW5 plus the pinned IT RC asset now compose on771d6cf2 with sepa
 ### November 3: scoped Preview database observations
 
 With the owner's explicit two-account approval, the existing Neon Query editor ran in read-only mode and returned metadata and scalar counts only. The exact sandbox event has one processed row; its subscription belongs to A and remains active Starter, while B has no claim to it. That subscription checkout has zero AI-credit-pack grants, as expected. All three prior workspace tuples have zero rows. Offline independent receipt review passes; executed SQL bytes were not retained, and no crash-atomicity, credit-pack settlement, new delivery, forensic erasure or final-artifact qualification is claimed. See the sandbox-billing and tenant-workspace ledgers. Separately, three new existing-API webhook tests expose retry/processing-clock/duplicate-write defects; implementation and real PostgreSQL verification continue.
+
+### November 3: independently retrieved Next security recommendation
+
+The official 16.4.5 release and updated advance notice now independently confirm the branch's existing version as the producer's security release for all seven tracked advisories. The seven affected/patched metadata conflicts retain their owner and November 4 19:30 UTC-or-before-qualification deadline. See the Next 16.4.5 security ledger for the source receipt and static/runtime limits. No package, lockfile, risk acceptance or readiness gate changed.
