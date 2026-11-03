@@ -14536,5 +14536,77 @@
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       }
     ]
+  },
+  "nov03ActualNativeMIBrowser": {
+    "base": "6c46f8ea43d384f786606965fd82c57b2bf59fba",
+    "runtime": "actualmain production .next / isolated localhost self-host",
+    "browserReceiptSHA256": "1cd25721fa83241f0691b885d4ae277c5f135fe713980165edadeff8bf8e0034",
+    "tests": 2,
+    "passed": 2,
+    "viewports": [
+      "1280x900",
+      "390x844"
+    ],
+    "retries": 0,
+    "skipped": 0,
+    "rootVisualReview": "Root opened all10: readable mobile controls/no horizontal overflow; actual refund80.20/currentexpense149.25/filedAGI211001/current210901 preserved. Desktop detailedtax6478\u21926475. Animated aggregate frames are transient and not exact-number visual evidence; reopened settled48147 confirmed.",
+    "sourceReview": "exactsourcefirstfacts/oracles; only accessible-role locatorcorrection; no postinitialstoragewrite",
+    "priorAttemptsRetained": [
+      1,
+      2,
+      3
+    ],
+    "filingEligible": false,
+    "stagingQualified": false,
+    "serverStopped": true,
+    "portClosed": true,
+    "rootReviewSHA256": "836ef27ef46ad03e4303fb74d77049eb3805e81d9b398193215e1ed2adbc7368",
+    "checks": [
+      {
+        "name": "types-root",
+        "exitCode": 0,
+        "sha256": "5888bcaa4f681b3f7bf48999ae0817c16b3af178b8c13f7d91414fdef8ea04d9"
+      },
+      {
+        "name": "types-web",
+        "exitCode": 0,
+        "sha256": "249e0be3cf6277994e8d22e8440bebe6db10861cab79fe97aa4952837f3ff073"
+      },
+      {
+        "name": "types-contracts",
+        "exitCode": 0,
+        "sha256": "0c2a6bff203db409d0f68d48f7b21a6ac6bd6098310256e72a9c6e558bc3943d"
+      },
+      {
+        "name": "spec",
+        "exitCode": 0,
+        "sha256": "17ff071b5dda906ac9afb26d396d36cf74ef3f5b22f69768030ab5b97000b75a"
+      },
+      {
+        "name": "ast",
+        "exitCode": 0,
+        "sha256": "b43171e2b7af7e1997cf5887466b0bc97739a3bf47a6d534440baa6c11339b5f"
+      },
+      {
+        "name": "inventory",
+        "exitCode": 0,
+        "sha256": "af951c102d6f02f1eefb6e8846ebe0a17a90621ab1c7681c658c63a63bc61b49"
+      },
+      {
+        "name": "inventory-check",
+        "exitCode": 0,
+        "sha256": "846ee1105cfb137b691fc9b9faa383c54ef9f9e367b6b3416b2abe4ccb15cdef"
+      },
+      {
+        "name": "strict",
+        "exitCode": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "diff",
+        "exitCode": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
   }
 }

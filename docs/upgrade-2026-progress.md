@@ -2461,3 +2461,7 @@ The [current integration queue](upgrade-2026-state-integration-remaining-2026110
 ### November 3: native PA currency confirmation repair
 
 Actual MI browser attempt03 exposed a real monetary handoff defect: blur formatted6475 as6,475 and strict ordinary confirmation rejected it. One local component wrapper now normalizes monetary callbacks with the existing string helper. Genuine26fail/1pass precedes75passes/6files; root source review, three types, spec/AST/inventory/strictlint and web build pass. See [the repair ledger](upgrade-2026-pa-ordinary-native-currency-work.md). Canonical parser, source invalidation and text references remain intact; full browser replay and global qualification continue.
+
+### November 3: native MI source and expense-edit browser rehearsal
+
+Actual main production desktop1280/mobile390 journeys pass2/2 with retries0, ten screenshots, console/privacy/overflow checks and verified server/port cleanup. Native source entry produces PA6478; actual expense49.25→149.25 and explicit reconfirmation produce6475, preserving filedAGI211001/current210901 and the separate filed workspace. Root opens allten captures and passes allnine integration checks. See [the browser ledger](upgrade-2026-pa-mi-native-browser-work.md). Animated aggregate frames are not exact-number visual evidence. Currency repair6c46f8ea is pushed; global, staging, human/final2026 and broader distribution journeys remain open.
