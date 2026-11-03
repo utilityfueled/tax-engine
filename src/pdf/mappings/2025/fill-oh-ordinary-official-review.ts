@@ -11,6 +11,7 @@ import { calculateOhioResidentReturn } from '@/engine/state/oh-return.js';
 import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
 import { redactReviewIdentifiers } from '@/pdf/redact-review-identifiers.js';
 import { assertPdfExportAllowed, markReviewPdf } from '@/pdf/export-policy.js';
+import { resolveReviewTemplateDirectory } from '@/pdf/template-registry.js';
 import { d, roundDollar, zeroFloor } from '@/utils/decimal.js';
 
 const bundleHash = '4e6432e23df3bf181a8e9d7ee5d5bb7e2e96a6a21dd65fa39c625fb8a7e2f57c';
@@ -21,8 +22,8 @@ const itFields: Record<string, string> = {
   '14':'L14','15':'L15','16':'L16','17':'L17','19':'L19','20':'L20',
   '21':'L21','22':'L22','23':'L23','24':'L24','26':'L26',
 };
-async function loadExact(filename: string, hash: string, expectedPages: number) {
-  const bytes = await readFile(join('forms','blank','2025',filename));
+async function loadExact(sourceDirectory: string, filename: string, hash: string, expectedPages: number) {
+  const bytes = await readFile(join(sourceDirectory,filename));
   if (createHash('sha256').update(bytes).digest('hex') !== hash) throw new Error('Ohio official review source revision changed.');
   const doc = await PDFDocument.load(bytes);
   if (doc.getPageCount() !== expectedPages) throw new Error('Ohio official review page inventory changed.');
@@ -96,6 +97,7 @@ async function flattenSource(doc: PDFDocument, sourceHasOrphan: boolean) {
 export async function fillOhioOrdinaryOfficialReview(
   input: TaxYearInput, federal: TaxReturnResult, outputDir: string,
   overlay: OhioOverlayInput, context?: PreparedOhioResidencyReview,
+  blankFormsDir = join('forms','blank'),
 ): Promise<string[]> {
   assertPdfExportAllowed(input.taxpayer.taxYear,federal.taxYear);
   if(!input.ohioResidency||!input.ohioPayments||Object.keys(overlay).length)return [];
@@ -134,7 +136,8 @@ export async function fillOhioOrdinaryOfficialReview(
     .plus(result.scheduleOfCredits.line39_residentCredit):undefined;
   if(printedCreditTotal!==undefined&&!result.it1040.line10_taxAfterCredits.eq(zeroFloor(result.it1040.line8c_totalTax.minus(printedCreditTotal))))
     throw new Error('Ohio printed review credit arithmetic disagrees with canonical tax.');
-  const display=redactReviewIdentifiers(original),bundle=await loadExact('oh-it1040-bundle.pdf',bundleHash,13),nrcDoc=await loadExact('oh-it-nrc.pdf',nrcHash,3);
+  const sourceDirectory=resolveReviewTemplateDirectory(blankFormsDir,input.taxpayer.taxYear);
+  const display=redactReviewIdentifiers(original),bundle=await loadExact(sourceDirectory,'oh-it1040-bundle.pdf',bundleHash,13),nrcDoc=await loadExact(sourceDirectory,'oh-it-nrc.pdf',nrcHash,3);
   const primary=display.taxpayer.primary,address=display.taxpayer.address;
   for(const[name,value]of Object.entries({TP_FN:primary.firstName.toUpperCase(),TP_LN:primary.lastName.toUpperCase(),ADDRESS1:address.street.toUpperCase(),CITY:address.city.toUpperCase(),STATE:address.state,ZIP:address.zip,SD_NUM:'9999',PRIM_NON_RES_STATE:reciprocal?'PA':'VA',L4_EXEMPT:'1'}))text(bundle,name,value);
   const skipsAmountDue=result.it1040.line19_netPayments.gt(result.it1040.line13_totalLiability);

@@ -755,6 +755,7 @@ export async function buildWorkspaceFilledReturnDownload(
         outputDir,
         ohioSourceOverlay,
         ohioOriginalReview,
+        blankFormsDir,
       );
       filledForms.push(...ohioReferencePacket.filledForms);
     }

@@ -263,3 +263,8 @@ Exact80bc752f Preview test checkout completes without real funds; actual signed 
 ### November 3: workspace cache-policy follow-up
 
 The bounded returned-response fix passes local52+199 controls and required static/build checks;18 database-dependent skips remain unexecuted. Historical80bc header failures are retained. [Current-Preview header replay and two-owner isolation/cleanup evidence remain pending](upgrade-2026-hosted-workspace-cache-policy-work.md); no deployed-fix or release claim is made.
+
+
+### November 3: explicit Ohio review template root
+
+The actual public web-cwd ENOENT is resolved by forwarding the workspace's existing versioned template root through Ohio review helpers. Main15focused+155adjacent and all13checks pass with pinned source/privacy/replay/year/filing guards intact; see [the root-integration ledger](upgrade-2026-oh-review-template-root-work.md). Actual native-to-physical/browser and container deadline successors, broader staging/global/provider/human/final2026 and release qualification remain open.

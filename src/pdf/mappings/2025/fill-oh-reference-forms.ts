@@ -246,6 +246,7 @@ export async function fillOhioReferenceForms(
   outputDir: string,
   overlay: OhioOverlayInput = {},
   reviewContext?:PreparedOhioResidencyReview,
+  blankFormsDir = join('forms','blank'),
 ): Promise<OhioReferencePacketResult> {
   assertPdfExportAllowed(taxInput.taxpayer.taxYear, federalResult.taxYear);
   const hasResidency=Boolean((taxInput as TaxYearInput&{ohioResidency?:unknown;ohioPayments?:unknown}).ohioResidency??overlay.residency)||Boolean((taxInput as TaxYearInput&{ohioPayments?:unknown}).ohioPayments??overlay.payments);
@@ -427,7 +428,7 @@ export async function fillOhioReferenceForms(
     );
   }
 
-  filledForms.push(...await fillOhioOrdinaryOfficialReview(taxInput,federalResult,outputDir,overlay,reviewContext));
-  filledForms.push(...await fillOhioSchoolDistrictOfficialReview(taxInput,federalResult,outputDir,overlay,reviewContext));
+  filledForms.push(...await fillOhioOrdinaryOfficialReview(taxInput,federalResult,outputDir,overlay,reviewContext,blankFormsDir));
+  filledForms.push(...await fillOhioSchoolDistrictOfficialReview(taxInput,federalResult,outputDir,overlay,reviewContext,blankFormsDir));
   return { filledForms };
 }

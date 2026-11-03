@@ -2674,3 +2674,8 @@ Exact80bc752f Preview test checkout completes without real funds; actual signed 
 ### November 3: hosted workspace cache-policy source correction
 
 Historical80bc Preview exposed missing private/no-store headers on two authenticated ready workspace lists and failed nine cache-policy preflight checks; five unauthenticated requests still correctly denied401. No cache leak or authenticated write is proved. The bounded five-handler wrapper now passes52 source-first controls and199 adjacent controls, with18 database-dependent skips explicitly unexecuted; all12 successor static/build checks pass after retaining and correcting the first strict-web union failure. See [the cache-policy ledger](upgrade-2026-hosted-workspace-cache-policy-work.md). Actual new-Preview header replay and two-owner write/isolation/cleanup rehearsal remain pending; this is not staging/release qualification.
+
+
+### November 3: Ohio official review templates use the resolved workspace root
+
+A genuine current-main public-API ENOENT under apps/web cwd precedes the four-path propagation fix; main15focused+155adjacent and all13checks pass. The earlier two actual native HTTP400 failures and interrupted/unrun remainder remain distinct retained evidence. Exact pinned templates, money/source facts, private-context replay and export gates stay intact. See [the integration ledger](upgrade-2026-oh-review-template-root-work.md). Actual managed native-to-physical and container deadline replay, broader global/staging/provider/human/final2026 and release criteria remain pending.

@@ -17536,5 +17536,84 @@
       "Authorized two-owner workspace/document write/read/isolation/delete/cleanup rehearsal",
       "Broader staging/global/release qualification remains pending"
     ]
+  },
+  "ohReviewTemplateRoot20261103": {
+    "status": "bounded-current-main-template-root-integration-verified",
+    "releaseReady": false,
+    "scope": "Same existing explicit workspace blankFormsDir propagated to Ohio ordinary/reciprocal and school physical companions; no new source lookup fallback, tax calculation, template revision or readiness promotion",
+    "ledger": "docs/upgrade-2026-oh-review-template-root-work.md",
+    "sourceFirst": {
+      "spec": "spec/state/oh-review-template-root.yaml",
+      "test": "tests/apps/web/oh-review-template-root.test.ts",
+      "frozenAuthorManifestSha256": "f8c41f11ed7918cdf0d4f53a74aedfd832b06c927438a86d2892349ec16829e0",
+      "parentIndependentReviewReceiptSha256": "e28e0fadbfedbbf86bfaac0621fca81f5a10b0889734a0e8189bc9bcd8c891cd",
+      "controls": 15
+    },
+    "retainedEvidence": {
+      "privateUnsyncedWorkspaceSetupFailure": {
+        "status": "prerequisite-only-not-product-RED",
+        "logSha256": "fd0ba87510cf5d4b184fa60492f27f3b1b273374d21bee471c518f4662388337"
+      },
+      "historicalCurrentC6NativeBrowser": {
+        "completedDesktopHTTP400": 2,
+        "mobileInterrupted": 1,
+        "mobileUnrun": 1,
+        "businessUnrun": 4,
+        "actualResponseBodyCaptured": false,
+        "genericLiveStatusCaptured": true,
+        "receiptSha256": "ca88b1d072d061b354647d91f86fc8e0b2844675be48a67e77436c58aa503af1"
+      },
+      "genuineMainPublicApiRed": {
+        "selectedFailed": 1,
+        "filtered": 14,
+        "cwd": "apps/web",
+        "failure": "ENOENT forms/blank/2025/oh-it1040-bundle.pdf",
+        "logSha256": "e49e6c530f538692c9db62104c89af20c6676ee2b8143b6830e60cf3919a07ee"
+      }
+    },
+    "currentMain": {
+      "session83042ExitCode": 0,
+      "checkCount": 13,
+      "checksSha256": "59a9a47bf0a62a5aa65760828a9d35c8aeded25963ccba1a0a8e266d1e70e706",
+      "evidence": ".local/upgrade-evidence/nov03-root-oh-template-root/checks.json",
+      "focusedPassed": 15,
+      "adjacentPassed": 155,
+      "adjacentFiles": 12,
+      "types": [
+        "root",
+        "contracts",
+        "web"
+      ],
+      "specLines": 7877,
+      "astControlsPassed": 746,
+      "strictWarnings": 0,
+      "inventoryControlsPassed": 38,
+      "builds": [
+        "engine",
+        "web"
+      ],
+      "productsExactReviewedCandidate": {
+        "apps/web/src/lib/workspace-filled-return.ts": true,
+        "src/pdf/mappings/2025/fill-oh-reference-forms.ts": true,
+        "src/pdf/mappings/2025/fill-oh-ordinary-official-review.ts": true,
+        "src/pdf/mappings/2025/fill-oh-school-district-official-review.ts": true
+      }
+    },
+    "unchangedBoundaries": [
+      "tax/source monetary oracles",
+      "exact template hash and page/widget checks",
+      "opaque source replay before asset I/O",
+      "identifier privacy",
+      "2026 public export denial",
+      "filing denial",
+      "normal test/browser deadlines and retry settings"
+    ],
+    "remaining": [
+      "Actual managed native-to-physical browser replay after integration",
+      "Actual current-image native/browser deadline successor",
+      "Broader global/dependency/distribution and staging/provider qualification",
+      "Qualified human and final2026 source/form review",
+      "Entire execution-brief completion criteria remain active"
+    ]
   }
 }

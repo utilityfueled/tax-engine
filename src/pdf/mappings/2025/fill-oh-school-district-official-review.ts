@@ -11,6 +11,7 @@ import { calculateOhioResidentReturn } from '@/engine/state/oh-return.js';
 import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
 import { redactReviewIdentifiers } from '@/pdf/redact-review-identifiers.js';
 import { assertPdfExportAllowed, markReviewPdf } from '@/pdf/export-policy.js';
+import { resolveReviewTemplateDirectory } from '@/pdf/template-registry.js';
 import { d, roundDollar } from '@/utils/decimal.js';
 
 const sourceHash = '4b065c66f85d9f732e52bc45c78f5ba2d9439c10a9ee1da5dbb95a35bea38a5e';
@@ -38,8 +39,8 @@ function selectActualStatus(doc: PDFDocument, name: string, value: string) {
   }
   if (selected !== 1) throw new Error('Ohio school official status source inventory changed.');
 }
-async function loadOfficialSource() {
-  const bytes = await readFile(join('forms','blank','2025','oh-sd100-bundle.pdf'));
+async function loadOfficialSource(sourceDirectory: string) {
+  const bytes = await readFile(join(sourceDirectory,'oh-sd100-bundle.pdf'));
   if (createHash('sha256').update(bytes).digest('hex') !== sourceHash) throw new Error('Ohio school official source revision changed.');
   const doc = await PDFDocument.load(bytes);
   if (doc.getPageCount() !== 5) throw new Error('Ohio school official page inventory changed.');
@@ -90,6 +91,7 @@ async function loadOfficialSource() {
 export async function fillOhioSchoolDistrictOfficialReview(
   input: TaxYearInput, federal: TaxReturnResult, outputDir: string,
   overlay: OhioOverlayInput, context?: PreparedOhioResidencyReview,
+  blankFormsDir = join('forms','blank'),
 ): Promise<string[]> {
   assertPdfExportAllowed(input.taxpayer.taxYear, federal.taxYear);
   if (!input.ohioSchoolDistrict || Object.keys(overlay).length) return [];
@@ -120,7 +122,7 @@ export async function fillOhioSchoolDistrictOfficialReview(
   if (sd.districtDetails.length !== 1 || !detail || detail.districtNumber !== '0302' || detail.taxType !== 'earned_income')
     throw new Error('Ohio school official district result differs from its actual source cohort.');
   const display = redactReviewIdentifiers(original), primary = display.taxpayer.primary, address = display.taxpayer.address;
-  const doc = await loadOfficialSource();
+  const doc = await loadOfficialSource(resolveReviewTemplateDirectory(blankFormsDir,input.taxpayer.taxYear));
   // Pinned2025 source COLA37 incorrectly allows4chars; the official table's
   // exact0302 decimal .0125 needs5. Only this marked review-copy field changes.
   const rateField = doc.getForm().getTextField('COLA37');
