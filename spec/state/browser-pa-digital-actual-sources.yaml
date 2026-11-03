@@ -1,0 +1,44 @@
+form: "Browser PA digital source fixture migration"
+fullName: "Explicit fictional current PA sources retain original digital/browser oracles"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+notes: |
+  Fixture-only successor on fcf41e68. Original incomplete browser setup and all
+  assertion lines remain retained. New records are independently fictional,
+  never inferred actual taxpayer facts or production defaults. Original federal
+  mailing address stays AustinTX; the separately stated actual full-year PA
+  domicile/home is not inferred from that address. Actual full-year2024 PA filed
+  return with zero taxable income/credit is new supplied fictional source evidence
+  for the prior-year estimated-payment method, not a result-derived tax waiver.
+  Actual2025 expected April15 payment1536 is stated independently. No VA or other
+  state withholding/refund exists on these originals; do not invent one.
+  Federal100.49-90.24=10.25; PA100.49-80.24=20.25 reported20; PA50020*.0307
+  =1535.614 rounds1536. Preserve all old federal3875/table and withholding amounts.
+  Actual user source edits stale all affected PA snapshots; native explicit child,
+  residency, ordinaryfacts and completion confirmations restore them in order.
+  The fictional taxpayer explicitly elects the standard deduction before source
+  confirmation, so normal JSON/storage loading preserves the same source input.
+  After editing, native Continue validates and records the completed Investments
+  visit before revisiting the previously confirmed State Return section.
+lines:
+  - line: "positive"
+    formula: "Complete explicit fictional originals reach actual whole PA preview1536 and federal50010.25 without changing raw source monetary facts."
+    testRef: "tests/guided-interview/browser-pa-digital-actual-sources.test.ts::complete browser digital sources preserve original federal and PA money"
+  - line: "incomplete"
+    formula: "Historical incomplete browser setup cannot qualify a PA estimate; do not replace the positive browser with this denial."
+    testRef: "tests/guided-interview/browser-pa-digital-actual-sources.test.ts::original incomplete browser flow remains a separate source guard"
+  - line: "stale"
+    formula: "Changing actual basis source identity stales containing source packets; no read refresh, reconfirm all actual dependencies explicitly."
+    testRef: "tests/guided-interview/browser-pa-digital-actual-sources.test.ts::basis reference edit stales actual containing sources without mutating them"
+  - line: "source"
+    formula: "Unknown actual prior/payment/household/payroll source facts cannot be supplied by an expected positive amount."
+    testRef: "tests/guided-interview/browser-pa-digital-actual-sources.test.ts::missing actual browser payment and source facts cannot qualify the positive"
+  - line: "raw"
+    formula: "Only the four PA source roots are excluded from source-snapshot equality; the actual W2 source packet and all federal identity/amount/private originals remain included and unchanged."
+    testRef: "tests/guided-interview/browser-pa-digital-actual-sources.test.ts::complete PA roots preserve explicitly admitted federal originals exactly"
+  - line: "desktop-mobile"
+    formula: "Both desktop/mobile originalbrowser assertions retained, with explicit native PA reconfirmation after actual digital edits and no auto-rebinding."
+    testRef: "apps/web/tests/guided-digital-asset-sources.spec.ts::preserves original digital sources and independent state basis"
+  - line: "saved-source-replay"
+    formula: "Explicit fictional standard deduction election is present before source confirmation; normal JSON/storage hydration must preserve the actual PA result1536 and all original source monetary facts."
+    testRef: "tests/guided-interview/browser-pa-digital-actual-sources.test.ts::saved browser source packets replay through actual storage hydration"

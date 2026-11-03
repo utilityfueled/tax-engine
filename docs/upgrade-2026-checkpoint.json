@@ -13941,6 +13941,39 @@
     "productAfter": "6baf2b139fa1852efbffabc90380e4611f044567f98d3b4c8acf7a4c6a069753",
     "fullBrowser": "pending broader native refund entry flow",
     "humanQualified": false,
-    "integrationResultSHA256": "aba257b2952ac40f212872428419b14f17497daa7bc08093b05da6fa34194d53"
+    "integrationResultSHA256": "aba257b2952ac40f212872428419b14f17497daa7bc08093b05da6fa34194d53",
+    "commit": "314cbba3",
+    "pushed": true
+  },
+  "nov03MainDigitalBrowserActualSources": {
+    "base": "314cbba38959d7a08f9f3819ccc2621bc3774bc6",
+    "sourceManifestSHA256": "e12fe70b73e054c712968d6c98ba1c30c95493ad179ea190ff21e81abc69f493",
+    "oldAssertionLinesExactInOrder": 20,
+    "productsChanged": false,
+    "rootStaticFinding": [],
+    "browser": "Private bothviewport2pass with real Continue/fourconfirmations; actualmain pending",
+    "evidenceBoundary": "No production data or product/gate changes",
+    "tests": 685,
+    "testFiles": 6,
+    "types": 3,
+    "specReferences": 7222,
+    "inventoryEntries": 716,
+    "strictWarnings": 0,
+    "passedCommands": 9,
+    "browserMainPassed": 2,
+    "browserMainLogSHA256": "77354716ff99cc00c87563e84c7579c53b90fcdab53480b6f4cf3309d3ca2fe2",
+    "serverStopped": true,
+    "portClosed": true,
+    "checksSHA256": "8e632ef10f97ddcc29977de2479bd00fed4a2a55a922804408c1b48d045b86c7",
+    "builds": "Product-identical current314 owner-clear workingtree webpack buildf72c retained; no redundant test-only rebuild",
+    "screenshots": {
+      "browser/browser-results/guided-digital-asset-sourc-622a4-and-independent-state-basis-chromium/digital-source-390.png": "c7526f4f484c29e84c237ac0a059ff19015d2aa53772f927af7173c9607e1ea4",
+      "browser/browser-results/guided-digital-asset-sourc-bef86-and-independent-state-basis-chromium/digital-source-1280.png": "366194f3330aca20f6295aa922f2f5d4f61c0f0a1f057c8370c6b213ce94557a"
+    },
+    "visualReview": "Both actual saved desktop/mobile screenshots inspected: retained PA80.24, unknown confirmations and missing-info estimate; no document overflow. Native controls and all20 historical assertion lines retained.",
+    "fullHosted": false,
+    "humanQualified": false,
+    "filingEligible": false,
+    "integrationReviewSHA256": "a9f23058cc58930bb9bac4cf472e46cdb748081e7d4748cee47055b31ae5346d"
   }
 }

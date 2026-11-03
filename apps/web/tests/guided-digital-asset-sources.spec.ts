@@ -2,6 +2,7 @@
 import { expect, test } from '@playwright/test';
 import { actualGuidedDigitalAsset } from '../../../tests/fixtures/guided-digital-asset-sources';
 import { taxpayerFacts2025 } from './guided-fixtures';
+import { browserPADigitalActualSources } from '../../../tests/fixtures/browser-pa-digital-actual-sources';
 
 const personal = { ...taxpayerFacts2025, firstName: 'Jordan', ssn: '111-22-3333' };
 const w2 = { employerName: 'Synthetic digital employer', employerEin: '12-3456789', accountHolder: 'primary', wages: '50000', federalWithheld: '3875',
@@ -20,14 +21,11 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       const source = actualGuidedDigitalAsset();
       if (!source.transactions?.[0]) throw new Error('Missing synthetic original disposition');
       Object.assign(source.transactions[0], { paCostBasis: '80.24', paBasisSourceReference: 'Actual Pennsylvania acquisition ledger', paBasisFactsConfirmed: true, paTransactionForProfitConfirmed: true });
-      await page.evaluate(({ id, personal, w2, source }) => {
+      const { state } = browserPADigitalActualSources(personal, w2, source);
+      await page.evaluate(({ id, state }) => {
         localStorage.setItem(`tax-engine:guided-mode:${id}`, 'true');
-        localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`, JSON.stringify({ factsVersion: 2, phase: 'interview', taxYear: 2025,
-          currentSectionIndex: 2, completedSections: ['personal-info', 'income-w2'],
-          segmentation: { filingStatus: 'single', incomeTypes: ['w2-wages', 'investments'], lifeEvents: [], stateCode: 'PA' },
-          sectionData: { 'personal-info': personal, 'income-w2': { entries: [w2] },
-            'income-investments': { interestEntries: [], dividendEntries: [], brokerageEntries: [], digitalAssetEntries: [source] } } }));
-      }, { id, personal, w2, source });
+        localStorage.setItem(`tax-engine.guided-flow-state.v1:${id}`, JSON.stringify(state));
+      }, { id, state });
       await page.reload();
       // Published single Tax Table row34250-34300 gives3875 federal tax. Actual PA
       // wages50000 + reported gain20 at3.07% gives1536; federal Box4 adds0.10 refund.
@@ -46,6 +44,20 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 
       await page.getByRole('textbox', { name: 'DA 1 sale 1 — Pennsylvania basis reference', exact: true }).fill('synthetic-private-PA-acquisition');
       for (const name of [basis, paBasis, statement]) await expect(page.getByRole('combobox', { name, exact: true })).toHaveValue('');
       for (const name of [basis, paBasis, statement]) await page.getByRole('combobox', { name, exact: true }).selectOption('true');
+      // A changed original requires explicit confirmations through all containing
+      // actual-source panels. Reads and saved fixture data do not refresh proofs.
+      // Leave the actually completed investment section through normal validation.
+      await page.getByRole('button', { name: 'Continue', exact: true }).click();
+      await expect(page.getByRole('button', { name: 'State Return', exact: true })).toBeEnabled();
+      await page.getByRole('button', { name: 'State Return', exact: true }).click();
+      for (const name of [
+        'Confirm actual PA digital sources after the last edit',
+        'Confirm all actual PA source records after the last edit',
+        'Confirm all actual PA return sources after the last edit',
+        'Confirm actual PA completion sources after the last edit',
+      ]) await page.getByRole('button', { name, exact: true }).click();
+      await expect(page.getByRole('button', { name: 'Investments', exact: true })).toBeEnabled();
+      await page.getByRole('button', { name: 'Investments', exact: true }).click();
       await expect(page.locator('.guided-ticker-value-hero').first()).toHaveText('$1,536');
       await expect.poll(() => page.evaluate(id => JSON.parse(localStorage.getItem(`tax-engine.guided-flow-state.v1:${id}`) ?? '{}').sectionData?.['income-investments']?.digitalAssetEntries?.[0]?.sourceFactsConfirmed, id)).toBe(true);
       await page.reload(); await open();

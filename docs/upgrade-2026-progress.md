@@ -2367,3 +2367,7 @@ Actual remittance, filed-return, application, award, received-refund and complet
 ### November 3: clearing actual refund ownership
 
 Seven native selectors now honor an explicit unknown owner choice, invalidate source confirmation and preserve prior originals. Seven genuine failures precede two handler edits; distinct static review has no findings, and 699 tests across eight files, three typechecks, 7,215 spec references, inventory checks, strict lint and the web build pass. See [the bounded fix evidence](upgrade-2026-refund-owner-clear-work.md). Native refund package `fe26f9e5` is pushed; this is not full browser or human qualification.
+
+### November 3: digital source browser flow restored with complete records
+
+The original desktop/mobile cases now supply explicit fictional PA records and reconfirm changed sources through Continue and four visible source actions. All twenty prior assertions remain intact. Parent review, 685 tests across six files, three typechecks, 7,222 spec references, inventory, strict lint and both actual-main browser viewports pass. See [the fixture evidence](upgrade-2026-browser-pa-digital-actual-sources.md). No application or readiness gate changed; owner-clear fix `314cbba3` is pushed.
