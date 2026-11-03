@@ -15106,7 +15106,9 @@
     "coverageEvidence": "92f20a4d4d4af716c906bdeb0aa49c6297a86b46",
     "actualCareEngine": "7b2763b8",
     "normalBrowserAliasRepair": "824245ac",
-    "sourceBoundaryContracts": "0100f40c50ff350b074b22f546472a6a7e1482de"
+    "sourceBoundaryContracts": "0100f40c50ff350b074b22f546472a6a7e1482de",
+    "nativeCare": "730c07fa",
+    "DCReferenceCount": "ec1f7b5a"
   },
   "currentValidation20261103": {
     "unitHead": "0100f40c50ff350b074b22f546472a6a7e1482de",
@@ -15161,5 +15163,48 @@
     "correctedSavedPagesVisuallyReviewed": 2,
     "status": "finite-display-correction-pass",
     "filingCopyQualified": false
+  },
+  "nov03MainOhioCanonicalBusiness": {
+    "baseCommit": "ec1f7b5acead303c4d04053f14d17928acb3affa",
+    "status": "approved-finite-actual-canonical-ordinary-business-main",
+    "exactAuthor12BeforeLedgerAppend": {
+      "src/models/ohio-canonical-business-sources.ts": "bc515886c1839085f182b06d9dbb23c40fd3c50e7df72f523cbb821cbd6a7886",
+      "src/engine/state/oh-business-source.ts": "ae187372540a896bdc15120675ea806999305d69605a8dc9682766e261ab03d1",
+      "spec/state/oh-canonical-business-sources.yaml": "5a3e61c23e3385fbd56ee00626b2021efb8cc188a57086559cf9f2b468abf856",
+      "tests/fixtures/oh-canonical-business-sources.ts": "480a5801692e39eb014322ed07e1a46f4d979fa0c07cc98996cb63e326dddaa6",
+      "tests/engine/state/oh-canonical-business-sources.test.ts": "0af3149a3f8e9c1581dea08754ffef241d985ac709936abd59a24d7f01c0d607",
+      "tests/engine/state/oh-canonical-business-2026-draft.test.ts": "08e6c8d631b7b4a42d49ff908aa993507d29c7bd9eff42669bc2969040349efb",
+      "docs/upgrade-2026-ohio-canonical-business-work.md": "7b8be4e0ba75b36471121e4629f3526d7361378d8b8a63b879fed1b78f69eaf6",
+      "src/models/ohio-residency.ts": "f00a5ef962b53b4ec2862f72973aed9cd11dfda0556eed64460582bc2d391fa5",
+      "src/engine/state/oh-residency-source.ts": "d87a9e65f84564e9b89d84f11aeebca1dc7b0eef195daf1351fb75521884e0ab",
+      "src/engine/state/oh-input-adapter.ts": "869fb08a64b3ec89fe9fd98a7c7781636171838f5dec50b32b5fa86d936aa0ee",
+      "src/engine/state/oh-it-nrc.ts": "4eff44ad372542fab86ab468c7cb26326c14f0b251ab660d49c0343692534b98",
+      "src/engine/state/oh-return.ts": "efd79e23172697ac35e3e0387d1616868e7ea02a7230a001de9ccc41a47c1bb1"
+    },
+    "exactPeer56Paths": {
+      "spec/state/oh-canonical-business-independent.yaml": "c0be61d632e0996f9c1175427575c012f42a3ce4b4e69c04c2a92f5a637a3bc0",
+      "tests/engine/state/oh-canonical-business-independent.test.ts": "9c92872cfabeb538fe36a7fcf3883d9ba048a1f0acf1b287585db3213632818a"
+    },
+    "authorFreezeSHA256": "82ea3a146677d31860221aefab70be72ea9eba7c620a9100961c80c3cfebb627",
+    "distinctReviewSHA256": "f32be47f24b1324370aa88f39b177e106b96bd78acc2cea97f7dcb738c7418bb",
+    "actualMainExistingApiRedSHA256": "17b3819c8afc4fb921a9dc508474d61d5a9665aa7911de0aaaa52f10dcc2b299",
+    "sharedFiveBeforeExact": true,
+    "mainTestsPassed": 1078,
+    "mainTestFiles": 38,
+    "temporaryExistingApiProofsIncluded": 2,
+    "temporarySourceFirstProofsRemovedAfterGreenPreservedInEvidence": true,
+    "allPassedCommands": 13,
+    "checksSHA256": "f05c0a2b05014a72cb0b25da7e7fde5b06ef2f1df6693876eba5d706e087efb3",
+    "specReferences": 7522,
+    "strictReferences": 701,
+    "adapterWarnings": "same two baseline non-null assertions; repository lint policy0errors; no config or threshold change",
+    "limits": [
+      "single-primary ordinary C 2025 NR/PY source cohort",
+      "2026 partial draft evidence only; public federal rulepack denied",
+      "no native collector/full source payment or physical export qualification",
+      "signedloss/joint/multibusiness/otherincome/deductiontiming successors guarded",
+      "no human qualification"
+    ],
+    "reviewSHA256": "ee8910f9e143bf0812bf45a69bf9b20df9589d3c25d44d50a6609f682da637cc"
   }
 }

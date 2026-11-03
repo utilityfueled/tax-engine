@@ -1,0 +1,37 @@
+form: "Ohio canonical business independent technical review"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc-fi.pdf"
+notes: |
+  Independent review of frozen candidate d6c9dc37e7516331f6e0d64555a534c9443917cf2fa7e6cf1ec176f22285c865.
+  Python Decimal100 oracles frozen before candidate outputs, SHA31a030dc787190b1c668246d9474dd5b18bf52d4ea8f273a8e0f8cad854f92b4.
+  Official2025booklet printed26-27/36-39; NRC II/III; RC5747.21(B),5747.20(A),(B)(6),(C),
+  RC5747.02(A)(4),5747.025 and authenticated5733.05(B)(2) PDF refreshed2026-11-03.
+  Current5733.05 HTML timed out repeatedly; authenticatedMarch27,2020 version independently retrieved.
+  IRS2025ScheduleSE and SSA contribution base176100/184500 refreshed. No human tax qualification.
+  Initial PY dates are supplied fictional originals; all deduction accrued after actualOHJanJun residency.
+  2026 tests are draft-only; no registry overrides, mocks, qualified-year or final-form claim.
+lines:
+  - line: "source-oracle"
+    label: "Independent whole-dollar monetary chains"
+    formula: "C profits100000/400000/1000000 produce2025halfSE7065/16275/24309; AGI92935/383725/975691; BID92935/250000/250000; remainingOHtax0/0/1877. Draft2026halfSE7065/16796/24830,remaining0/0/1875."
+    testRef: "tests/engine/state/oh-canonical-business-independent.test.ts::source-oracle actual2025 %s %s"
+  - line: "factor-once"
+    label: "Annual apportionment and personal deduction are distinct"
+    formula: "Property.5 times.25 plus sales.25 times.75=.3125; zero payroll removes20weight; C gross profit apportioned once, no resident-period add-on, no halfSE reduction of business numerator. PY I14zero follows actual December original."
+    testRef: "tests/engine/state/oh-canonical-business-independent.test.ts::factor-once actual raw ledger and AGI cap"
+  - line: "draft-closed"
+    label: "Draft derivation cannot promote public registries"
+    formula: "Explicit2026 constants only; source-derived partial AGI and NRC checks; public2026Federal/Ohio absent and publicFederal throws."
+    testRef: "tests/engine/state/oh-canonical-business-independent.test.ts::draft-closed source2026 %s %s"
+  - line: "raw-cents-identity"
+    label: "Bind raw cent values and equal-money identities"
+    formula: "Original gross400000.04/Ohio100000.01 retains exact.25 sales ratio. Actual2025 expense.04 leaves Cnet400000 and AGI383725; draft2026zeroexpense yields half16796, AGI383204.04, III125000. Identity and one-cent source changes invalidate context/current original proof."
+    testRef: "tests/engine/state/oh-canonical-business-independent.test.ts::raw-cents-identity exact draft cents are originals"
+  - line: "original-guards"
+    label: "Unknown contradictory stale or invented proof is rejected"
+    formula: "Actual owner, year, dates, exact originals, nonempty sources even netzero, duplicate normalized invoices/documents and deduction originals must reconcile. Unhandled income sources cannot disappear in a C-only partial derivation."
+    testRef: "tests/engine/state/oh-canonical-business-independent.test.ts::original-guards %s"
+  - line: "opaque-private"
+    label: "Opaque source token and immutable private inputs"
+    formula: "No serialized/forged token or bare scalar conveys source authority. Current packet and AGI must match context; return audit emits only commitments. No caller mutation/globalDecimal change."
+    testRef: "tests/engine/state/oh-canonical-business-independent.test.ts::opaque-private cannot clone or forge source authority"

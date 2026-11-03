@@ -18,6 +18,7 @@ import Decimal from "decimal.js";
 import { calculateOhioDatedPaymentInterest } from "./oh-payment-dated-source.js";
 import type { OhioPaymentSourceProjection } from "./oh-payment-source.js";
 import type { OhioDatedPartIIResult } from "./oh-it-sd-2210-dated.js";
+import type { OhioCanonicalBusinessContext } from "./oh-business-source.js";
 import type {OhioResidencyFacts} from "@/models/ohio-residency.js";
 import {calculateOhioITNRC} from "./oh-it-nrc.js";
 import type { FilingStatus } from "@/models/constants.js";
@@ -68,6 +69,7 @@ import {
 
 export interface OhioResidentReturnInput {
   residency?:OhioResidencyFacts;
+  residencyBusinessSource?:OhioCanonicalBusinessContext;
   residencySourceDigest?:string;
   paymentSourceDigest?:string;
   paymentDatedSource?:OhioPaymentSourceProjection;
@@ -391,7 +393,7 @@ export function calculateOhioResidentReturn(
     ventureCapitalCredit: input.ventureCapitalCredit,
   });
 
-  const nonresidentCreditResult=input.residency?calculateOhioITNRC({taxYear:input.taxYear,filingStatus:input.filingStatus,federalAgi:input.federalAgi,ohioAgi:firstPass.line3_ohioAgi,taxRemainingBeforeResidencyCredits:creditsPreview.line37_taxLessAllCredits,residencyFacts:input.residency}):null;
+  const nonresidentCreditResult=input.residency?calculateOhioITNRC({taxYear:input.taxYear,filingStatus:input.filingStatus,federalAgi:input.federalAgi,ohioAgi:firstPass.line3_ohioAgi,taxRemainingBeforeResidencyCredits:creditsPreview.line37_taxLessAllCredits,residencyFacts:input.residency,businessSource:input.residencyBusinessSource}):null;
   const nonresidentCreditAmount=nonresidentCreditResult?.line20??input.nonresidentCredit;
   // Step 3b: Compute resident credit (if other-state taxes provided and no pass-through override)
   let residentCreditResult: OhioResidentCreditResult | null = null;

@@ -2,6 +2,12 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] Actual single-owner Ohio business originals now derive fresh C/SE/AGI/BID
+  and NRC through the existing canonical API for the finite2025NR/PY cohort.
+  Distinct123 and actualmain1078/38 pass; all13relevant checks pass. Zero/cancelling
+  unsupported original families reject. Native/payment/physical successors and
+  broader selected-state methods remain active. [Evidence](upgrade-2026-ohio-canonical-business-work.md).
+
 - [x] DC reference count now displays persons1/2 without currency; dollar
   credits600/1200 remain exact. SavedPDF2RED→13saved/adjacentPASS, type/spec/AST/
   inventory/strict checks and distinct static review pass; both corrected pages

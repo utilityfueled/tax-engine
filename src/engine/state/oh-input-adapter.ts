@@ -760,6 +760,7 @@ export function buildOhioResidentReturnInput(
     if(!residency)throw new Error('Ohio actual payment sources: actual owner residency packet is required');
   }
 
+  if(residency?.businessSources && (overlay.qualifyingBusinessIncome!==undefined || overlay.otherBusinessIncome!==undefined))throw new Error('Ohio actual canonical business sources do not accept a supplied business income override');
   if(residency&&overlay.nonresidentCredit!==undefined)throw new Error("Ohio source-derived credit does not accept a supplied scalar override");
   assertQofStateMethod(taxInput, "Ohio");
   assertClaimOfRightStateMethod(taxInput, "Ohio");
@@ -1079,6 +1080,7 @@ export function buildOhioResidentReturnInput(
     if(overlay.schoolDistricts===undefined)adapted.schoolDistricts=[];
     const verified=buildOhioResidencySource(taxInput,federalResult,adapted,residency);
     adapted.residency=verified.facts;adapted.residencySourceDigest=verified.sourceDigest;
+    if(verified.businessSource){adapted.residencyBusinessSource=verified.businessSource;adapted.qualifyingBusinessIncome=verified.canonicalQualifyingBusinessIncome;}
   }
   if(paymentFacts){
     if((adapted.schoolDistricts?.length??0)||residency?.schoolDistrictStatus!=='no_ohio_taxing_district_residency')throw new Error('Ohio actual payment sources: actual SD/combined method is required');

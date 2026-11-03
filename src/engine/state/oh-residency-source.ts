@@ -1,5 +1,6 @@
 /** Spec: state/oh-input-adapter.yaml#actual-owner-residency-nrc-source. */
 import Decimal from 'decimal.js';
+import { calculateOhioCanonicalBusinessSource, readOhioCanonicalBusinessSource, type OhioCanonicalBusinessContext } from './oh-business-source.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
 import { calculateFederalTax } from '@/engine/federal.js';
@@ -72,6 +73,8 @@ export function resolveOhioResidencyReview(input: TaxYearInput, result: TaxRetur
 export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnResult, ohio: OhioResidentReturnInput, raw: unknown): {
     facts: OhioResidencyFacts;
     sourceDigest: string;
+    businessSource?: OhioCanonicalBusinessContext;
+    canonicalQualifyingBusinessIncome?: Decimal;
 } {
     const parsed = OhioResidencyFactsSchema.safeParse(raw);
     if (!parsed.success)
@@ -92,12 +95,15 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
     if ((ohio.otherStateTaxes?.length ?? 0) || ohio.residentCredit !== undefined) {
         fail('resident-period same-income credit linkage requires actual separate sources');
     }
+    const businessSource = facts.businessSources ? calculateOhioCanonicalBusinessSource({taxInput:input,federalResult:result,residencyFacts:facts}) : undefined;
+    const business = businessSource ? readOhioCanonicalBusinessSource(businessSource,facts,result.agi) : undefined;
+    const effectiveOhio = business ? {...ohio,qualifyingBusinessIncome:business.worksheet.businessIncomeBeforeDeductionCap} : ohio;
     const full = facts.owners.every(o => o.status === 'full_year_resident');
     if (!full) {
 
-        if (input.scheduleC || input.scheduleF || (input.scheduleK1?.length ?? 0) || (input.form1099Nec?.length ?? 0) || (input.rentalProperties?.length ?? 0) || (input.scheduleK1Form1041?.length ?? 0))
+        if ((!business && input.scheduleC) || input.scheduleF || (input.scheduleK1?.length ?? 0) || (input.form1099Nec?.length ?? 0) || (input.rentalProperties?.length ?? 0) || (input.scheduleK1Form1041?.length ?? 0))
             fail('actual business/rental originals require Section II/III or separate nonbusiness classification');
-        if (!d(ohio.qualifyingBusinessIncome).isZero())
+        if (!business && !d(ohio.qualifyingBusinessIncome).isZero())
             fail('business income cannot be inferred zero');
 
         for (const owner of facts.owners) {
@@ -115,7 +121,8 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
             add(b.accountHolder, 'interestDividends', d(b.interestIncome).plus(d(b.usSavingsBondInterest)));
         for (const b of input.form1099Div ?? [])
             add(b.accountHolder, 'interestDividends', d(b.ordinaryDividends));
-        const expected: Record<OhioNrcCategory, Decimal> = { wages: result.totalWages, capitalGains: result.capitalGainLoss, rentsRoyalties: new Decimal(0), gambling: new Decimal(0), interestDividends: result.totalInterest.plus(result.totalDividends), pensions: result.iraDistributionsTaxable.plus(result.pensionDistributionsTaxable), unemployment: new Decimal(0), otherIncome: result.otherIncome.plus(result.socialSecurityBenefitsTaxable), federalAdjustments: result.adjustmentsToIncome };
+        if(business) add('primary','federalAdjustments',business.deductibleHalf);
+        const expected: Record<OhioNrcCategory, Decimal> = { wages: result.totalWages, capitalGains: result.capitalGainLoss, rentsRoyalties: new Decimal(0), gambling: new Decimal(0), interestDividends: result.totalInterest.plus(result.totalDividends), pensions: result.iraDistributionsTaxable.plus(result.pensionDistributionsTaxable), unemployment: new Decimal(0), otherIncome: result.otherIncome.minus(business?.worksheet.columnA ?? new Decimal(0)).plus(result.socialSecurityBenefitsTaxable), federalAdjustments: result.adjustmentsToIncome };
         for (const category of ohioNrcCategories) {
             if (!roundDollar(categoryTotals[category]).eq(expected[category]))
                 fail(`actual ${category} needs a separately qualified original classification`);
@@ -127,18 +134,18 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
         }
         if (facts.owners.some(o => (o.stateAdditions?.length ?? 0) || (o.stateDeductions?.length ?? 0)))
             fail('claimed adjustment source rows require complete actual current line reconciliation');
-        const actualAdjustments = calculateOhioScheduleOfAdjustments(ohio);
-        if (!actualAdjustments.line14_totalAdditions.isZero() || !actualAdjustments.line47_totalDeductions.isZero())
+        const actualAdjustments = calculateOhioScheduleOfAdjustments(effectiveOhio);
+        if (!actualAdjustments.line14_totalAdditions.isZero() || !actualAdjustments.line47_totalDeductions.minus(business?.worksheet.businessIncomeDeduction ?? new Decimal(0)).isZero())
             fail('actual Ohio additions/deductions require complete allocation and exclusion sources');
         // Initial canonical cohort has no state adjustments. The isolated worksheet
         // accepts actual listed rows; no exclusions or depreciation are guessed here.
         if (!d(ohio.nonOhioStateLocalInterest).isZero() || !d(ohio.federalInterestExemptFromOhio).isZero() || !d(ohio.taxableSocialSecurity).isZero())
             fail('actual Ohio adjustment/exclusion allocations need their separate source method');
-        const probe = calculateOhioITNRC({ taxYear: ohio.taxYear, filingStatus: ohio.filingStatus, federalAgi: ohio.federalAgi, ohioAgi: ohio.federalAgi, taxRemainingBeforeResidencyCredits: '0', residencyFacts: facts, expectedFederalCategories: expected });
+        const probe = calculateOhioITNRC({ taxYear: ohio.taxYear, filingStatus: ohio.filingStatus, federalAgi: ohio.federalAgi, ohioAgi: business?.ohioAgi ?? ohio.federalAgi, taxRemainingBeforeResidencyCredits: '0', residencyFacts: facts, businessSource, expectedFederalCategories: expected });
         if (!probe.line7.isZero() || !probe.line8.isZero())
             fail('actual Ohio adjustment allocation needs complete current adjustment source reconciliation');
     }
     // Also validate every full-resident timeline, without fabricating NRC amounts.
-    calculateOhioITNRC({ taxYear: ohio.taxYear, filingStatus: ohio.filingStatus, federalAgi: ohio.federalAgi, ohioAgi: ohio.federalAgi, taxRemainingBeforeResidencyCredits: '0', residencyFacts: facts });
-    return { facts, sourceDigest: digest({ input: withoutFacts(input), facts }) };
+    calculateOhioITNRC({ taxYear: ohio.taxYear, filingStatus: ohio.filingStatus, federalAgi: ohio.federalAgi, ohioAgi: business?.ohioAgi ?? ohio.federalAgi, taxRemainingBeforeResidencyCredits: '0', residencyFacts: facts, businessSource });
+    return { facts, sourceDigest: digest({ input: withoutFacts(input), facts }), ...(businessSource && business ? {businessSource,canonicalQualifyingBusinessIncome:business.worksheet.businessIncomeBeforeDeductionCap} : {}) };
 }
