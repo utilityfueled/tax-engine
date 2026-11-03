@@ -11,9 +11,10 @@ import { redactReviewIdentifiers } from "@/pdf/redact-review-identifiers.js";
 import { calculateW2StateLocalSources } from "@/engine/forms/w2-state-local.js";
 import { ohioReferenceFixture, statuses, ohioConsumerPacket, ohioConsumerOHRow, ohioConsumerW2, rebindOhioConsumerW2, allOhioSourceFamilies } from "../fixtures/oh-w2-withholding-reference.js";
 function requiredFile(paths: string[], ending: string) { const file = paths.find(path => path.endsWith(ending)); if (!file) throw new Error(`Expected actual saved reference ${ending}`); return file; }
-function strictText(path: string) {
-  return execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", "from pypdf import PdfReader\nimport sys\nr=PdfReader(sys.argv[1],strict=True)\nassert not r.get_fields()\nfor p in r.pages:\n assert all(a.get_object().get('/Subtype')!='/Widget' for a in p.get('/Annots',[]))\nprint('\\n'.join(p.extract_text() or '' for p in r.pages))", path], { encoding: "utf8" });
+function strictTexts(paths: string[]): Record<string, string> {
+  return JSON.parse(execFileSync(process.env.TAX_ENGINE_PDF_TEST_PYTHON ?? "python3", ["-c", "from pypdf import PdfReader\nimport sys,json\ntexts={}\nfor path in sys.argv[1:]:\n r=PdfReader(path,strict=True)\n assert not r.get_fields()\n for p in r.pages:\n  assert all(a.get_object().get('/Subtype')!='/Widget' for a in p.get('/Annots',[]))\n texts[path]='\\n'.join(p.extract_text() or '' for p in r.pages)\nprint(json.dumps(texts))", ...paths], { encoding: "utf8" })) as Record<string, string>;
 }
+function strictText(path: string) { return strictTexts([path])[path]; }
 async function retain(paths: string[], name: string) {
   const root = process.env.OH_W2_REFERENCE_ARTIFACT_DIR; if (!root) return;
   await mkdir(join(root, name), { recursive: true });
@@ -28,14 +29,15 @@ it.each(statuses)("OH actual W2 references save all three residencies from priva
       const wh = packet.filledForms.find(p => p.endsWith("/oh-schedule-of-withholding-reference.pdf"));
       const positive = mode !== "zero" && mode !== "no_oh";
       expect(Boolean(wh), `${status}/${mode}`).toBe(positive);
+      const texts = strictTexts(packet.filledForms);
       for (const file of packet.filledForms) {
-        const text = strictText(file); expect(text).toContain("REFERENCE SUMMARY ONLY");
+        const text = texts[file]; expect(text).toContain("REFERENCE SUMMARY ONLY");
         for (const secret of [input.taxpayer.primary.ssn, "PRIVATE-SYNTHETIC-OH-W2-ORIGINAL", "PRIVATE-OH-STATE-ID", "PRIVATE-ACTUAL-PA-FIRST"]) expect(text).not.toContain(secret);
         expect((await readFile(file)).length).toBeGreaterThan(1000);
       }
-      if (wh) { const text = strictText(wh); expect(text).toContain("Value: 1000"); expect(text).toContain(calculateW2StateLocalSources(input, 0, ohioConsumerPacket(input)).sourceCommitment); expect(text).toContain("Reported Ohio IT1040 line14"); }
+      if (wh) { const text = texts[wh]; expect(text).toContain("Value: 1000"); expect(text).toContain(calculateW2StateLocalSources(input, 0, ohioConsumerPacket(input)).sourceCommitment); expect(text).toContain("Reported Ohio IT1040 line14"); }
       const it1040 = requiredFile(packet.filledForms, "/oh-it-1040-reference.pdf");
-      expect(strictText(it1040)).toContain("Line 14: Ohio income tax withheld");
+      expect(texts[it1040]).toContain("Line 14: Ohio income tax withheld");
       await retain(packet.filledForms, `${status}-${mode}`); expect(input).toEqual(before);
     } finally { await rm(dir, { recursive: true, force: true }); }
   }
