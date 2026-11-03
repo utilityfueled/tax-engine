@@ -2,12 +2,26 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] Native actual-care entry and saved monetary checks pass75/6 plus8PDF
+  controls; all13relevant checksets pass. Blank/unknown facts, explicit capture,
+  edit invalidation and original replay remain intact. Parent visual inspection
+  found the existing DC reference prints the person count as currency; that
+  immediate display correction and actual browser successor remain active.
+  [Evidence and limits](upgrade-2026-pa-ordinary-care-source-work.md).
+
+- [x] Pushed `0100f40c` full `pnpm test`:22,704pass/0fail/33isolated-PG
+  pending. This resolves the three unit assertions recorded at91b80; fresh
+  coverage for current source remains required. Full log SHA256
+  `7e53e7b31ae06949102585d67d2c2b8784ca1194fcd3272c1342bf4e939a0820`.
+  Recent pushed packages: careengine`7b2763b8`, normalbrowserrepair`824245ac`,
+  preservedsourcecontracts`0100f40c`. SeparatePG and staging evidence remain distinct.
+
 - [x] UC/young joint-retirement regression contracts preserve every original
   cash/age/code and legacy money assertion; exact source fixture extraction
   removes duplicated test registration. Main18/4 and all11relevant checks pass.
   Source-incomplete PA remains unavailable, with named tax-method blockers.
   [Review and limits](upgrade-2026-pa-government-uc-source-boundary-work.md).
-  Full unit/coverage gates await a fresh run.
+  Full unit gate passes at0100f40c as recorded above; current coverage remains required.
 
 - [x] Normal browser collection now uses the existing web TypeScript alias map
   for shared fixtures: actualmain0→543tests/134files, both unchanged native MI
@@ -18,7 +32,7 @@
   Separate review found and repaired six source-admission defects, preserving the
   valid second-person/zero-expense1200 case. Main1885PAengine tests/111files,
   all3types/spec/AST/inventory/strict/bothbuilds pass. [Scope and evidence](upgrade-2026-pa-ordinary-care-source-work.md).
-  Native and physical review qualification remain active; public2026 and filing
+  Native entry and saved monetary controls pass below; official DC and browser qualification remain active. Public2026 and filing
   gates remain closed.
 
 - [x] `648dd8a3` is pushed: reconciled MISC cash is counted once across the guided
@@ -35,7 +49,7 @@
   government-benefit preview check (also executed through a test-module import)
   and young joint-retirement preview. Legacy exact payment/rounding assertions
   remain valid; canonical source-complete previews now require actual qualifying
-  source methods. Separate source-first contract migration is pending; actual
+  source methods. That source-first contract migration is delivered in0100f40c; actual
   UC remittance treatment and joint retirement qualification remain blocked.
   Log SHA256 `a9c1fecc479f9af1d2955a46aa672c258c7f110fa416a1ab55d275c6118e1cf5`;
   raw result `c08b08bb62b602d52fe294a102daefe3695310dfb2f6b6407da8ac091b02b44d`.

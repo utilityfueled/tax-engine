@@ -1,0 +1,19 @@
+form: "PA Ordinary Care Native"
+fullName: "Native actual current care receipt collection"
+taxYear: 2025
+reference: "https://www.palegis.us/statutes/unconsolidated/law-information/view-statute?act=176&chpt=16W&iFrame=true&sessInd=0&smthLwInd=0&txtType=HTM&yr=1929"
+notes: |
+  Source collection only; all engine, actual-federal, residency, final-form and
+  filing gates remain separate. Native controls retain actual provider/person
+  assignments, paid/incurred dates, cash and original receipt identities. No
+  read, remount, preview or serialization silently refreshes confirmed facts.
+  Explicit capture alone binds current federal care originals after review.
+  Blank is unknown; zero is an actual amount; monetary display decoration
+  cannot enter strict canonical original strings. Actual metadata stays private.
+lines:
+  - line: "native-origination"
+    formula: "Actual native document metadata and payment originals plus explicit reviewed federal care capture and parent confirmation produce printed PA23/refund600 once."
+    testRef: "tests/apps/web/pa-ordinary-care-native.test.tsx::native PA care receipts originate actual sources and preserve reopened originals"
+  - line: "unknown-and-zero"
+    formula: "New collection year/amount/status are unknown; actual zero is retained and cannot invent a positive eligible source; edits revoke child and parent confirmation."
+    testRef: "tests/apps/web/pa-ordinary-care-native.test.tsx::native PA care source blanks zeros and edits retain their actual meaning"

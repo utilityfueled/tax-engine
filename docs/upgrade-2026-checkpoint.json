@@ -15087,5 +15087,71 @@
     "finalGlobalRunPending": true,
     "qualifiedStateOrFiling": false,
     "rootReviewSHA256": "3ff0d2e3e730d5e5a5ba251250980f60b3b567906213abb19e683f4c99e9bace"
+  },
+  "nov03FullUnit0100": {
+    "numTotalTests": 22737,
+    "numPassedTests": 22704,
+    "numFailedTests": 0,
+    "numPendingTests": 33,
+    "numTotalTestSuites": 5287,
+    "numPassedTestSuites": 5287,
+    "numFailedTestSuites": 0,
+    "success": true,
+    "head": "0100f40c50ff350b074b22f546472a6a7e1482de",
+    "logSHA256": "7e53e7b31ae06949102585d67d2c2b8784ca1194fcd3272c1342bf4e939a0820",
+    "resultSHA256": "5a6606b1f0f49ea3b0650f08544f1f1af6b4e2c005477cabc81fb768ab4f5c04",
+    "coverageMeasured": false
+  },
+  "nov03DeliveredCommits": {
+    "coverageEvidence": "92f20a4d4d4af716c906bdeb0aa49c6297a86b46",
+    "actualCareEngine": "7b2763b8",
+    "normalBrowserAliasRepair": "824245ac",
+    "sourceBoundaryContracts": "0100f40c50ff350b074b22f546472a6a7e1482de"
+  },
+  "currentValidation20261103": {
+    "unitHead": "0100f40c50ff350b074b22f546472a6a7e1482de",
+    "unitPassed": 22704,
+    "unitFailed": 0,
+    "isolatedPostgresPendingInThisRun": 33,
+    "currentCoveragePending": "Last91b80 thresholds allpassed but suite had3fail, nowclosedby0100unit; freshcoverage aftercurrentpackages required",
+    "releaseReady": false,
+    "nativeCarePackage": "75native+adjacent and8savedPDF controls;13checksetsPASS; known preexisting reference count display fix active"
+  },
+  "nov03NativeActualCareSources": {
+    "status": "approved-finite-native-source-entry-and-saved-money-controls",
+    "baseCommit": "0100f40c50ff350b074b22f546472a6a7e1482de",
+    "paths": {
+      "apps/web/src/lib/guided-pa-care-sources.ts": "c041e8d0ab1d512acda1aee4128b51e21b6974655902a3026bc1b722f49b1c61",
+      "apps/web/src/components/guided-interview/pa-care-sources-details.tsx": "1b791a5c9ba53d31716d4aa142280c16b9e9c2349be03c8d18720ad0cae98657",
+      "apps/web/src/lib/guided-pa-ordinary-return-completion.ts": "9bd8e33bf3442310ea2d09bb3ebe4d7e793e0b4b7872967f2e66d3d7222b9599",
+      "apps/web/src/components/guided-interview/pa-ordinary-return-completion-details.tsx": "8390ffdfab08eb1b70ebcbae11ccafe0e870d76e0743beda509941b25e3ce485",
+      "spec/state/pa-ordinary-care-native.yaml": "4ec999453409acb625f2b5e838bc7dcccde94da7b118bfca4990c007363e44c4",
+      "tests/apps/web/pa-ordinary-care-native.test.tsx": "1c6041334d9b01785603acb6ea973e0bf62d662b9f09d753eee699c9c540c738",
+      "spec/state/pa-ordinary-care-native-independent.yaml": "d3afe09fec20f902c844899ee7f05427263e776047d33462a1e63be32837b2e2",
+      "tests/apps/web/pa-ordinary-care-native-independent.test.tsx": "9d9e0cfa3381cfe3007be8c472a0c26543dfb30fcd4ed4d20afd50bcf796f51a",
+      "spec/state/pa-ordinary-care-source-pdf.yaml": "16122bfa0d214bf39d697a52b2ac2349fad5c6f55960d630c3c4867f5fc38824",
+      "tests/pdf/pa-ordinary-care-source-pdf.test.ts": "15d33f2b5806ddceeb7f92ea28564df43286ed52323a44ba577abdaf034cee16"
+    },
+    "mainExistingNativeRedSHA256": "95ed84dac6486cb1fc0476ccfc73cf3248b017648b58c0a0642d0c02daf93539",
+    "independentReviewSHA256": "d65c0884db89d9649b4c144479c7465eac87ae6d13f16cbe3fc0aaaeff4f627e",
+    "checksSHA256": "204d6ff95fee0e4a47019bdc4816c617c19f591bb325f784642213f361fdd860",
+    "checksPassed": 13,
+    "nativeAndAdjacentTests": 75,
+    "savedPdfTests": 8,
+    "mainCriticalRendersInspected": [
+      "08-1.png",
+      "08-2.png",
+      "09-1.png"
+    ],
+    "knownVisualDefect": "Existing DC reference renderer incorrectly prefixes qualifying-person count with currency: $1. Separate source-first correction queued immediately. Monetary600 and officialPAcells exact; no full PDF visual qualification claimed.",
+    "limits": [
+      "2025 finite single full-year actual care cohort",
+      "browser successor active",
+      "officialDC filing copy unavailable in this reference renderer",
+      "no human review or 2026 qualification",
+      "no staging qualification"
+    ],
+    "localEvidence": ".local/upgrade-evidence/nov03-root-care-native-main",
+    "reviewSHA256": "1140deeb1bdef937816c2b9269641d1be4b00ae9cc0b1936332951c6d06f56b6"
   }
 }

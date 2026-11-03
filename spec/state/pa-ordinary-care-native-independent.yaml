@@ -1,0 +1,35 @@
+form: "PA Ordinary Care Native Independent"
+fullName: "Independent native actual care source boundaries"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40dc.pdf"
+notes: |
+  Source-first independent literals: wages100000 plus interest120 gives PA100120,
+  tax3074, actual withholding3074. Actual one-person3000 care yields credit600;
+  actual two-person6000 care yields1200. Source confirmation is not tax eligibility.
+  Native blanks are unknown, no source read/mount rewrites originals, and source
+  edits revoke nested and enclosing confirmations. No filing/browser qualification.
+lines:
+  - line: "unknown"
+    formula: "Mount/read/remount and newly added records preserve explicit unknowns without callbacks or inferred year, owner, money or reviewed status."
+    testRef: "tests/apps/web/pa-ordinary-care-native-independent.test.tsx::independent native care opens and reopens without changing actual originals"
+  - line: "capture"
+    formula: "Only explicit reviewed capture replaces the actual federal care snapshot; source changes cannot refresh it implicitly."
+    testRef: "tests/apps/web/pa-ordinary-care-native-independent.test.tsx::independent native care requires an explicit reviewed capture and preserves stale originals"
+  - line: "money"
+    formula: "Decoration is removed from actual money strings; blank remains unknown and actual zero remains zero."
+    testRef: "tests/apps/web/pa-ordinary-care-native-independent.test.tsx::independent native care money retains blank zero and exact cents"
+  - line: "invalidation"
+    formula: "Every care source field, assignment, receipt and metadata edit revokes nested and enclosing confirmation without refreshing the retained federal original."
+    testRef: "tests/apps/web/pa-ordinary-care-native-independent.test.tsx::independent native care edit revokes both confirmations %s"
+  - line: "source-stage"
+    formula: "Actual source confirmation does not grant a credit; contradictory date/identity/cash originals are rejected by actual return replay."
+    testRef: "tests/apps/web/pa-ordinary-care-native-independent.test.tsx::independent native care confirmed source cannot bypass actual receipt replay %s"
+  - line: "literal"
+    formula: "One-person actual3000 yields600 and actual two-person6000 yields1200, with exact source originals retained once."
+    testRef: "tests/apps/web/pa-ordinary-care-native-independent.test.tsx::independent native care carries original one and two person money once"
+  - line: "new-source"
+    formula: "Explicit federal capture cannot infer a source year, reference, payment or confirmation for a new draft."
+    testRef: "tests/apps/web/pa-ordinary-care-native-independent.test.tsx::independent native care new record capture does not infer a year payment or owner fact"
+  - line: "collection-actions"
+    formula: "Adding and explicitly removing source rows or the collection revokes enclosing confirmation; records are never removed on reads."
+    testRef: "tests/apps/web/pa-ordinary-care-native-independent.test.tsx::independent native care source collection action revokes enclosing confirmation %s"
