@@ -16,7 +16,7 @@
   privacy and visual/parity pass. Distinct final17 review0d53af0e approves.
   See [PDF ledger](upgrade-2026-pa-digital-official-pdf-ledger.md). Final2026,
   broader methods, original attachments and human/filing gates remain open.
-- [x] PA personal debt/foreign collector: exact author8 freezeea35ddf0 and
+- [x] PA personal debt/foreign collector (pusheda9614c47): exact author8 freezeea35ddf0 and
   distinct collector review81311d1b approve45/three. Fresh main nine UI failures
   precede exact three-product adoption;733/12/types3/spec7117/inventory/strict0/
   both builds pass. Actual full workspace/PDF successor, browser and broader
@@ -27,12 +27,17 @@
 - [ ] Four generic PA bridge positives: `oid_independent` preparing actual
   ordinary/completion/payment source successor; original positive behavior
   and original incomplete-source negatives remain required.
-- [ ] Existing workspace PA/foreign-COD positive remains180/181 broader tests:
-  original assertions unchanged; actual ordinary/completion records required.
+- [x] Existing workspace PA/foreign-COD positive now uses explicit separately
+  fictional complete sources; all22 old assertions/rawfederal inputs unchanged,
+  main677/five/types3/spec7121/inventory/strict0, distinct87732512 approval and
+  five actual PDFs/122pages strict/privacy/pixel/text parity pass. Partial review
+  packet and final2026/human/filing gates remain explicit.
 - [ ] Real royalty method: original MI withholding80.20 does not prove final
   tax/refund. No fabricated settlement or complete-composer waiver.
 - [ ] Digital withholding: genuine old1/new2 complete-positive failures retained.
-  Actual VA .30 special-request refund proof needs narrow typed method; no
+  Actual VA.30 special-request refund proof candidate19 now has corrected
+  semantic duplicate identity replay and distinct review0b5f767d:47/6 green.
+  Parent integration and actual refund UI/render privacy remain pending. No
   positive dropped, inferred settlement or global guard bypass.
 - [ ] Other remaining guided business/claim-of-right/foreign/investment/
   OID/retirement/unemployment/bridge/state-routing positive sources and actual

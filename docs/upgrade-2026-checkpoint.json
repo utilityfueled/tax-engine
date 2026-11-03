@@ -13635,7 +13635,7 @@
     },
     "exactNewModules": 2,
     "manualSharedSeamsPreservingDigital": 2,
-    "actualUIWorkspacePDF": "pending",
+    "actualUIWorkspacePDF": "all3 collector verified; resident mixed workspace/PDF verified; broader scope remains open",
     "humanReview": "unassigned",
     "filingEligible": false,
     "evidence": [
@@ -13754,7 +13754,7 @@
       "files": 3,
       "scope": "different author collector only; not reviewer own earlier core"
     },
-    "fullWorkspacePDF": "pending separate successor",
+    "fullWorkspacePDF": "resident separately explicit COD/foreign workspace example verified; broader methods remain open",
     "realBrowser": "pending",
     "humanReview": "unassigned",
     "filingEligible": false,
@@ -13763,6 +13763,49 @@
       "nov03-parent-pa-debt-foreign-collector-main-red",
       "nov03-parent-pa-debt-foreign-collector-main-green",
       "nov03-pa-personal-debt-foreign-guided-independent"
+    ],
+    "commit": "a9614c47",
+    "pushed": true
+  },
+  "nov03MainWorkspacePACODForeignFixture": {
+    "baseCommit": "a9614c47",
+    "authorFreeze": "327e99f32ccca3955758c0459beb6c55c822f2d46c31094cb898dbecaa418e23",
+    "independentReview": "87732512b7b264de8900070fa150ee50be95b38aafb0fb673d4e67907ec2d912",
+    "sourceBeforeMigration": {
+      "passed": 1,
+      "genuineFailed": 1,
+      "missingModuleDiagnostics": 0
+    },
+    "productsChanged": 0,
+    "originalAssertionLinesExactInOrder": 22,
+    "rawFederalCanonicalInputsEqual": true,
+    "green": {
+      "passed": 677,
+      "files": 5,
+      "types": 3,
+      "specReferences": 7121,
+      "inventory": true,
+      "strictWarnings": 0
+    },
+    "builds": "product-identicala961 both builds retained; no redundant test-only rerun",
+    "mainSavedPDFs": {
+      "count": 5,
+      "pages": 122,
+      "allObjectsPrivacyFlattenedNoFieldsWidgets": true,
+      "allRGBAndPageTextExactToIndependentlyInspected": true,
+      "rootPAFullSizePages": [
+        24,
+        25,
+        26
+      ]
+    },
+    "completeFilingPacket": false,
+    "humanReview": "unassigned",
+    "filingEligible": false,
+    "evidence": [
+      "nov03-parent-workspace-pa-cod-foreign-main",
+      "nov03-parent-workspace-pa-cod-foreign-main-red",
+      "nov03-parent-workspace-pa-cod-foreign-main-green"
     ]
   }
 }

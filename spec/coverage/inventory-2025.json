@@ -13973,6 +13973,26 @@
         "Missing packet generation or inclusion rule",
         "Missing e-file and business-rule validation coverage"
       ]
+    },
+    {
+      "key": "state/workspace-pa-cod-foreign-sources",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/taxlawpoliciesbulletinsnotices/taxbulletins/pit/documents/pit_bulletin_2009-02.pdf",
+      "specPath": "spec/state/workspace-pa-cod-foreign-sources.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
     }
   ]
 }

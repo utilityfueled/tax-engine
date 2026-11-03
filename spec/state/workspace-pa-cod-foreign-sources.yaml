@@ -1,0 +1,38 @@
+form: "Workspace PA Personal COD and Foreign Interest Source Fixture"
+fullName: "Explicit fictional PA source completion for the preserved federal foreign carry workspace packet"
+taxYear: 2025
+status: "internal-source-fixture-no-filing-qualification"
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/taxlawpoliciesbulletinsnotices/taxbulletins/pit/documents/pit_bulletin_2009-02.pdf"
+notes: |
+  No calculation or product changes. Independently authored NEW fictional Jane PA
+  supporting originals were absent from the earlier federal-only guide. Raw federal
+  originals, original22 assertion lines and all327/145 carry/token/privacy/tamper/no-output
+  assertions remain unchanged. The old incomplete PA setup remains a negative control.
+  Approved core69e42051 and actualD1b82c7ea are dependency sources, not independently
+  reviewed by this author. Parent main integration and distinct fixture review required.
+  Explicit source binder establishes current primary/full-year PA domicile, ordinary
+  cash payroll95000, gross bank5000 actual dated credits3000March31+2000Sept30,
+  actual foreign Canada tax100September15 and complete personal unsecured300 discharge.
+  No federal insolvency inference, no SP300 insertion and no foreign-country PA credit.
+  Separate original prior/payment/use/worldwide/local/credits/filing/relief records state
+  finite complete facts; unknowns are not filled by withholding. The independently
+  specified fictional written refund election is930, nextyear0/donationsnone, not a
+  calculated-source default. Fictional filedApril15 receipt/account records are only
+  test source records and do not establish actual human filing/staging evidence.
+lines:
+  - line: "positive-preservation"
+    description: "Existing PA attachment positive obtains current actual canonical sources"
+    formula: "Same raw guided95000wages+5000gross bank=100000; Decimal0.0307*100000=3070. Original PAWH4000 countedonce. With separately complete no additionalpayment/credit/use/penalty source records and explicit930refund election,4000-3070=930. SPworldwide100000, countrycredit0. Federal carries327/145, original token replays/redaction/tamperedcredit no-output and immutable state remain."
+    testRef: "tests/apps/web/workspace-cod-empty-nol-foreign.test.ts::preserves the actual Pennsylvania attachment without relaxing federal output binding"
+  - line: "source-admission"
+    description: "Missing original source facts remain a real admission failure"
+    formula: "The exact previous PA-address/WH-only setup cannot export without actual PA residency/ordinary/completion packets. Never turn the old positive into an expected rejection; preserve it positively using separate new complete source records."
+    testRef: "tests/apps/web/workspace-cod-empty-nol-foreign.test.ts::retains the original incomplete PA COD workspace as a source admission negative"
+  - line: "raw-originals"
+    description: "Source supplementation changes no canonical federal original"
+    formula: "Canonical raw input built from complete-guide fixture equals raw input from old incomplete PA setup exactly; only state source packets are added to private guide. No federal election/debt/foreign/history amount or source owner rewrite."
+    testRef: "tests/apps/web/workspace-cod-empty-nol-foreign.test.ts::new explicit PA source supplements preserve every preexisting canonical federal original"
+  - line: "unknown-guard"
+    description: "Actual source gaps and incompatible refund elections remain guarded"
+    formula: "Unknown legal/payment/history/date/care or receipt99vs100 and refund929vs930 cannot export. Saved source snapshots remain unchanged; no read-confirmation or calculated replacement election."
+    testRef: "tests/apps/web/workspace-cod-empty-nol-foreign.test.ts::PA COD actual source gaps reject without snapshot refresh or PDF export: %s"

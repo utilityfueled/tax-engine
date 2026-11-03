@@ -2323,3 +2323,15 @@ Nine genuine main failures precede exact three-product adoption;733/12/types3/
 spec7117/inventory/strict0/both builds pass. Distinct native-control review45/
 three approves the collector. See the [collector ledger](upgrade-2026-pa-personal-debt-foreign-guided-work.md).
 Actual full-workspace/PDF and browser successors remain separate work.
+
+
+### November3 UTC: complete resident PA/COD workspace fixture
+
+The original positive now receives separately explicit fictional Jane PA source
+records; raw federal inputs and all22 original assertions remain unchanged.
+Fresh main one-pass/one genuine source-admission failure precedes the reviewed
+migration;677/five/types3/spec7121/inventory/strict0 pass without product changes.
+Distinct review approves the literal100000/3070/4000/930 example and final74pages.
+Allfive actual main PDFs/122pages pass strict/privacy checks and exact text/fullRGB
+parity. See the [workspace fixture ledger](upgrade-2026-workspace-pa-cod-foreign-sources.md).
+This remains a partial review packet with open final-form and human gates.
