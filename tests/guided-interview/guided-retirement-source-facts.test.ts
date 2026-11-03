@@ -4,6 +4,8 @@ import { expect, it } from "vitest";
 import { buildGuidedFactAnswers, buildGuidedSyntheticDocuments, buildRetirementInputs, buildTaxInputFromGuidedData } from "@/lib/guided-interview-bridge";
 import { Form1099RSchema, TaxYearInputSchema } from "@/models/inputs";
 import { calculateFederalTax } from "@/engine/federal";
+import { calculatePAReturn } from "@/engine/state/pa-orchestrator";
+import { buildGuidedPennsylvaniaOverrides } from "@/lib/guided-state-engine-inputs";
 import { completeRetirementSource, startCompleteInterview } from "./complete-facts";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import { loadGuidedFlowState } from "@/lib/guided-interview-flow";
@@ -30,7 +32,11 @@ it("forwards actual recipient and matching state withholding without inventing l
   ] };
   expect(buildTaxInputFromGuidedData(state)?.form1099R?.[0]).toMatchObject({ accountHolder: "spouse", state: "PA", stateWithheld: "0.10", stateDistribution: "1000" });
   assertPAGuidedPaymentBoundary(state, "0.1", "0");
-    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0");
+  // The old zero is a whole-dollar legacy projection, not a qualified joint PA result.
+  const legacy = calculatePAReturn(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state)), buildGuidedPennsylvaniaOverrides(state));
+  expect(legacy.pa40.stateWithholding.toFixed()).toBe("0");
+  const beforeRead = JSON.stringify(state), preview = computeGuidedPreview(state);
+  expect(preview).not.toBeNull(); expect(preview?.state).toBeNull(); expect(JSON.stringify(state)).toBe(beforeRead);
   state.sectionData["income-retirement"].entries[0]!.stateTaxReporting = "none";
   expect(buildTaxInputFromGuidedData(state)).toBeNull();
 });

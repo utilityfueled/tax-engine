@@ -1,0 +1,32 @@
+form: "PA preserved government UC and joint retirement source boundary"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+notes: |
+  Finite regression contract only. No PA tax classification or complete positive
+  UC/joint-retirement method is implemented. Preserve all original source cash,
+  years, identities and young code7 recipients. Legacy raw/printed projections
+  remain explicit arithmetic controls, never canonical readiness or line13 proof.
+  Canonical state:null is unavailable output, not zero cash or a refund decision.
+  GovernmentUC erroneous remittance classification, joint per-owner facts and
+  young code7 issuer/basis interpretation remain unresolved with no human review.
+lines:
+  - line: "actual-cash"
+    label: "Government original retained with explicit federal allocation"
+    formula: "Preserve MFJ primaryUC1000.10 federalWH0 PAstateWH12.34; unknown nonW2 deduction allocation blocks input, explicit known0 permits unchanged federal source. No invented agency, posting, refund or transfer."
+    testRef: "tests/guided-interview/pa-government-uc-source-boundary.test.ts::preserves the actual government statement and federal income while PA output is unavailable"
+  - line: "legacy-arithmetic"
+    label: "Legacy projection separate from unavailable canonical method"
+    formula: "Existing production legacy adapter retains PAraw12.34/reported12 and NY-source exclusion0. Keep these exact money checks; canonical preview federal succeeds and state is null for either incomplete source cohort."
+    testRef: "tests/guided-interview/pa-government-uc-source-boundary.test.ts::retains the legacy projection without inventing NY liability or canonical PA qualification"
+  - line: "duplicate-claim"
+    label: "Saved generic claim is not agency remittance proof"
+    formula: "A saved extraPA1099G12.34 cannot duplicate the actual original or establish a Department-posted credit; retain original and reject input."
+    testRef: "tests/guided-interview/pa-government-uc-source-boundary.test.ts::rejects a duplicate saved government claim without suppressing actual cash"
+  - line: "retained-class"
+    label: "Government class needs its actual method even with known zero withholding"
+    formula: "A separate otherwise valid single-owner ordinary residency fixture still rejects retainedgovernmentG for its actual class, for both actualstateWH12.34 and explicit0. This isolates class admission from the original joint guard and does not replace the oldMFJ cohort."
+    testRef: "tests/guided-interview/pa-government-uc-source-boundary.test.ts::requires the retained government class method even with actual withholding %s"
+  - line: "joint-retirement"
+    label: "Preserve young joint recipients and both actual state statements"
+    formula: "Keep primary1990/spouse1992, code7 gross1000 taxable1000 each, spousePA.10 primaryNY.20. Existing legacyhelper raw.1/reported0 remains executed; federal2000/WH0 computed; canonicalPA unavailable without actualjoint/contract/basis/other-state methods. Read does not fill or mutate missing facts."
+    testRef: "tests/guided-interview/pa-government-uc-source-boundary.test.ts::keeps young joint retirement originals and legacy cents while canonical PA remains unavailable"

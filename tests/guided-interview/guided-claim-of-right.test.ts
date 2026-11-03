@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 import { buildGovernmentPaymentSourceRecords } from '@/lib/guided-government-payment-inputs';
 import { unemploymentFactErrors, type UnemploymentEntryData } from '@/lib/guided-unemployment-facts';
 import type { UnemploymentData } from '@/lib/guided-interview-flow';
-import { unemploymentSource } from './guided-unemployment-source-facts.test';
+import { unemploymentSource } from '../fixtures/guided-government-uc-original';
 
 const facts = { priorRepaymentOriginalYear: '2024', priorRepaymentEarlierTax: '12,000', priorRepaymentRefiguredTax: '10,900', priorRepaymentReference: 'Fictional earlier return', priorRepaymentConfirmed: true, priorRepaymentSeparateReturn: false };
 const errors = (entry: Partial<UnemploymentEntryData>) => unemploymentFactErrors({ entries: [{ ...unemploymentSource, ...entry }] } as UnemploymentData, 'single', 2025);

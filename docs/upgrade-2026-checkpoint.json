@@ -14932,5 +14932,160 @@
     "configSHA256": "e837ce163d0df2933a43867951e28e863203af80ce776af029a7c1c6e317eefb",
     "independentRepairReceiptSHA256": "881558fd23db7a11cdf9afd53f7f5752a4816313179458c0305442bd8c3a7a5a",
     "rootReviewSHA256": "5f7a6211cc923ad766156c80dc13a6b6c13829882838d62895ea66e9126ed5c6"
+  },
+  "nov03UCAndRetirementSourceContract": {
+    "base": "824245ac86d41738880f51a84be32da97433bc01",
+    "scope": "Test/spec/fixture contract only, no tax product changed",
+    "mainOriginalRED": "23tests/20pass/3fail; sourcecomplete six alreadypass, all actual legacycash asserts executed",
+    "redLogSHA256": "8c1e7d9814cc1cb008c2b6e67d45d66baa5554da89eca2c39c93981908e2f2cb",
+    "mainGreen": {
+      "tests": 18,
+      "files": 4
+    },
+    "testsPreserved": "all12unique originalcontrols plusnew6; duplicate5registration from testmoduleimport removed viaexactfixturemove, no substantivecase removed",
+    "cashPreserved": [
+      "UC1000.10/fedWH0/PAWH12.34 andlegacy12",
+      "NYsourceWH12.34 retained; legacyPA0",
+      "primary1990/spouse1992 code7gross1000each; spousePA.10/primaryNY.20; legacyPAraw.1/printed0"
+    ],
+    "canonicalContract": "Federalnonnull; sourceincompletePAstate:null means unavailable, neverzerooriginalcash. Reads preservealloriginals. DuplicateadditionalGclaimstillrejects.",
+    "blockersRetained": [
+      "PA-GOV-UC-ERRONEOUS-REMITTANCE-CLASSIFICATION",
+      "youngCode7issuer/contract/basis",
+      "actualjointperownerPA/worldwideSP/sourcehistories"
+    ],
+    "allEightExactFrozen": true,
+    "independentRootReview": true,
+    "checks": [
+      {
+        "name": "focused18",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/guided-interview/guided-unemployment-source-facts.test.ts",
+          "tests/guided-interview/guided-claim-of-right.test.ts",
+          "tests/guided-interview/guided-retirement-source-facts.test.ts",
+          "tests/guided-interview/pa-government-uc-source-boundary.test.ts"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-uc-contract-main/focused18.log",
+        "sha256": "aac9ff2d251297ce7515e8f435f4622b1aa9475205d1ceaee0c5cc88f049b0f6"
+      },
+      {
+        "name": "types-root",
+        "command": [
+          "pnpm",
+          "typecheck"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-uc-contract-main/types-root.log",
+        "sha256": "5888bcaa4f681b3f7bf48999ae0817c16b3af178b8c13f7d91414fdef8ea04d9"
+      },
+      {
+        "name": "types-web",
+        "command": [
+          "pnpm",
+          "typecheck:web"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-uc-contract-main/types-web.log",
+        "sha256": "249e0be3cf6277994e8d22e8440bebe6db10861cab79fe97aa4952837f3ff073"
+      },
+      {
+        "name": "types-contracts",
+        "command": [
+          "pnpm",
+          "typecheck:contracts"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-uc-contract-main/types-contracts.log",
+        "sha256": "0c2a6bff203db409d0f68d48f7b21a6ac6bd6098310256e72a9c6e558bc3943d"
+      },
+      {
+        "name": "spec",
+        "command": [
+          "pnpm",
+          "spec:validate"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-uc-contract-main/spec.log",
+        "sha256": "1599c5c2ba13a638dd349099f2f070060da44c9f3a44b1ab95388a4b8fc61ddc"
+      },
+      {
+        "name": "ast",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/spec/validate-testrefs.test.ts"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-uc-contract-main/ast.log",
+        "sha256": "7ef6ae53e59a78bafaca98c730d72a47bc8b64bb1bbdb05f77882bb0e8a5c04c"
+      },
+      {
+        "name": "inventory",
+        "command": [
+          "pnpm",
+          "spec:inventory"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-uc-contract-main/inventory.log",
+        "sha256": "4adf16b59312ca8cef50db2be34e8b3f547ef440565345a51422f96905074f7e"
+      },
+      {
+        "name": "inventory-check",
+        "command": [
+          "pnpm",
+          "spec:inventory:check"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-uc-contract-main/inventory-check.log",
+        "sha256": "846ee1105cfb137b691fc9b9faa383c54ef9f9e367b6b3416b2abe4ccb15cdef"
+      },
+      {
+        "name": "new-strict",
+        "command": [
+          "pnpm",
+          "exec",
+          "eslint",
+          "tests/fixtures/guided-government-uc-original.ts",
+          "tests/guided-interview/pa-government-uc-source-boundary.test.ts",
+          "--max-warnings",
+          "0"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-uc-contract-main/new-strict.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "existing-policy",
+        "command": [
+          "pnpm",
+          "exec",
+          "eslint",
+          "tests/guided-interview/guided-unemployment-source-facts.test.ts",
+          "tests/guided-interview/guided-claim-of-right.test.ts",
+          "tests/guided-interview/guided-retirement-source-facts.test.ts"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-uc-contract-main/existing-policy.log",
+        "sha256": "9c55c38e570fd80d7cd9fce5321348aed6337ceb47682d8c55be400d649d9520"
+      },
+      {
+        "name": "diff",
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-uc-contract-main/diff.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "historical12WarningsExactProofSHA256": "8c93a42d29ec4a0a2714328ec8b0ff1b26592358c325246c12064a10d7aaa1f4",
+    "finalGlobalRunPending": true,
+    "qualifiedStateOrFiling": false,
+    "rootReviewSHA256": "3ff0d2e3e730d5e5a5ba251250980f60b3b567906213abb19e683f4c99e9bace"
   }
 }

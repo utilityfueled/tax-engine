@@ -2,6 +2,13 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] UC/young joint-retirement regression contracts preserve every original
+  cash/age/code and legacy money assertion; exact source fixture extraction
+  removes duplicated test registration. Main18/4 and all11relevant checks pass.
+  Source-incomplete PA remains unavailable, with named tax-method blockers.
+  [Review and limits](upgrade-2026-pa-government-uc-source-boundary-work.md).
+  Full unit/coverage gates await a fresh run.
+
 - [x] Normal browser collection now uses the existing web TypeScript alias map
   for shared fixtures: actualmain0→543tests/134files, both unchanged native MI
   journeys pass2/2 with zero retries. Both earlier Web765 precollection failures

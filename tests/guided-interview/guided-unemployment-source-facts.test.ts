@@ -2,15 +2,15 @@ import { assertPAGuidedPaymentBoundary } from "../fixtures/assert-pa-guided-paym
 // Spec: spec/federal/guided-input.yaml, government-payment-source-records
 import { expect, it } from "vitest";
 import { buildGuidedFactAnswers, buildGuidedSyntheticDocuments, buildTaxInputFromGuidedData, buildUnemploymentInputs } from "@/lib/guided-interview-bridge";
+import { calculatePAReturn } from "@/engine/state/pa-orchestrator";
+import { TaxYearInputSchema } from "@/models/inputs";
+import { buildGuidedPennsylvaniaOverrides } from "@/lib/guided-state-engine-inputs";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import { emptyDeductionData, emptyStateReturnData, type UnemploymentData, validateSection } from "@/lib/guided-interview-flow";
 import { startCompleteInterview } from "./complete-facts";
 
-export const unemploymentSource = {
-  sourceTaxYear: "2025", sourceFormRevision: "2024-03", payer: "Actual State Agency", payerTin: "12-3456789", accountReference: "actual-government-source", accountHolder: "primary" as const, recipientTaxIdLast4: "3333", programType: "government-unemployment" as const,
-  compensation: "1000.10", federalWithheld: "0", stateOrLocalTaxRefund: "0", rtaaPayments: "0", taxableGrants: "0", agriculturePayments: "0", marketGain: "0", tradeOrBusinessRefund: false,
-  currentYearRepaid: "0", priorYearRepaid: "0", unrecoveredAfterTaxContributions: "0", actualReceiptConfirmed: true, additionalWorksheetRequired: false, sourceFactsConfirmed: true, stateTaxReporting: "none" as const,
-};
+import { unemploymentSource } from "../fixtures/guided-government-uc-original";
+
 const data = (entries = [unemploymentSource]): UnemploymentData => ({ compensation: "", federalWithheld: "", entries });
 function flow() {
   const state = startCompleteInterview({ filingStatus: "mfj", incomeTypes: ["unemployment"], lifeEvents: [], stateCode: "PA" });
@@ -66,9 +66,16 @@ it("uses actual source states once and requires the known non-W-2 tax allocation
   state.sectionData.deductions = { ...emptyDeductionData, nonW2IncomeTaxesDeductedElsewhere: "0" };
   expect(buildTaxInputFromGuidedData(state)?.form1099G?.[0]).toMatchObject({ state: "PA", stateWithheld: "12.34" });
   assertPAGuidedPaymentBoundary(state, "12.34", "12");
-    expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("12");
+  // Legacy arithmetic remains executable; it does not establish a qualified G payment method.
+  const legacyPA = calculatePAReturn(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state)), buildGuidedPennsylvaniaOverrides(state));
+  expect(legacyPA.pa40.stateWithholding.toFixed()).toBe("12");
+  const beforePARead = JSON.stringify(state), paPreview = computeGuidedPreview(state);
+  expect(paPreview).not.toBeNull(); expect(paPreview?.state).toBeNull(); expect(JSON.stringify(state)).toBe(beforePARead);
   state.sectionData["income-unemployment"]!.entries![0]!.state = "NY";
-  expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0");
+  const legacyNYSource = calculatePAReturn(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state)), buildGuidedPennsylvaniaOverrides(state));
+  expect(legacyNYSource.pa40.stateWithholding.toFixed()).toBe("0");
+  const beforeNYRead = JSON.stringify(state), nyPreview = computeGuidedPreview(state);
+  expect(nyPreview).not.toBeNull(); expect(nyPreview?.state).toBeNull(); expect(JSON.stringify(state)).toBe(beforeNYRead);
   state.sectionData["income-unemployment"]!.entries![0]!.state = "PA";
   state.sectionData["state-return"] = { ...emptyStateReturnData, additionalStateWithholdingEntries: [{ payer: source.payer, documentType: "1099-G", state: "PA", taxYear: "2025", amount: "12.34" }] };
   expect(buildTaxInputFromGuidedData(state)).toBeNull();
