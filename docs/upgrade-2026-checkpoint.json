@@ -14271,6 +14271,64 @@
     "currentBusinessCorePreserved": "55d65869",
     "separatelyAdoptedSyntheticFixture": "16aa905759956ec07b83c87079bc4abc0adede4f94fd30ae214737d4dc0869f9",
     "evidence": ".local/upgrade-evidence/nov03-root-misc-main/integration-review-result.json",
+    "releaseReady": false,
+    "commit": "648dd8a3451175e94020be99a6a6d8a42cb20bd8",
+    "pushed": true
+  },
+  "nov03FullCoverage648": {
+    "numTotalTests": 22449,
+    "numPassedTests": 22410,
+    "numFailedTests": 6,
+    "numPendingTests": 33,
+    "head": "648dd8a3451175e94020be99a6a6d8a42cb20bd8",
+    "coverage": {
+      "statements": "91.18",
+      "branches": "86.89",
+      "functions": "89.20",
+      "lines": "94.29"
+    },
+    "failed": [
+      {
+        "path": "tests/guided-interview/guided-claim-of-right.test.ts",
+        "title": "uses actual source states once and requires the known non-W-2 tax allocation"
+      },
+      {
+        "path": "tests/guided-interview/guided-oid-source-facts.test.ts",
+        "title": "actual guided OID sources requires separate PA reconciliation and preserves exact state withholding"
+      },
+      {
+        "path": "tests/guided-interview/guided-retirement-source-facts.test.ts",
+        "title": "forwards actual recipient and matching state withholding without inventing local identity"
+      },
+      {
+        "path": "tests/guided-interview/guided-state-routing.test.ts",
+        "title": "selected state and dedicated previews uses dedicated PA and OH treatment for Treasury OID"
+      },
+      {
+        "path": "tests/guided-interview/guided-state-routing.test.ts",
+        "title": "selected state and dedicated previews preserves exact actual payments in dedicated state previews and export overlays"
+      },
+      {
+        "path": "tests/guided-interview/guided-unemployment-source-facts.test.ts",
+        "title": "uses actual source states once and requires the known non-W-2 tax allocation"
+      }
+    ],
+    "logSHA256": "0aa449700fb839e5d41a69f4c1c9437660dfa7fdc2a0c1780b1e8c87de57650a",
+    "qualified": false
+  },
+  "nov03ResidentCreditNativeEntry": {
+    "base": "648dd8a3",
+    "productsChanged": false,
+    "newTests": 3,
+    "focusedTests": 24,
+    "files": 3,
+    "types": 3,
+    "strictReferences": 681,
+    "checksPassed": 9,
+    "newWarnings": 0,
+    "independentStaticReviewSHA256": "89dec925be7ed754ecbe12c98d4d154ca07e3a80b14fe9ee931867cec2cecece53",
+    "integrationReceiptSHA256": "148f325c351061e66395ad79620f83c91679fbf615e8787f96c907a0b4e7a1bb",
+    "realBrowserQualified": false,
     "releaseReady": false
   }
 }

@@ -2,6 +2,20 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] `648dd8a3` is pushed: reconciled MISC cash is counted once across the guided
+  SALT/state paths;314main tests/21files and all12package checks pass. Actual raw
+  saved ledger values remain preserved. See the [package ledger](upgrade-2026-guided-zero-income-misc-withholding-reconciliation.md).
+- [x] Native resident-credit entry/reopening verification adds3meaningful mounted
+  cases;24related tests, three typechecks, spec/inventory/lint and681strict
+  references pass. Independent review's missing-remount finding is corrected;
+  [evidence and limits](upgrade-2026-pa-resident-credit-native-entry-work.md).
+- [ ] Full coverage on648dd8a3 passes22,410tests, fails6 and skips33 isolated-PG
+  tests. Statements91.18%, branches86.89%, functions89.20%, lines94.29%.
+  Functions90% gate remains failed. Current failures: OID1, jointretirement1,
+  Treasury/state-routing2 and government-unemployment/claim-of-right2. No tests
+  or thresholds are weakened. Native Michigan entry and source-complete OID and
+  Treasury successors remain active; unresolved UC tax treatment stays explicit.
+
 The owner selected PA and Ohio, each with full-year resident, part-year resident and nonresident returns. Separate source-first state implementation/qualification work is active; selection does not activate unqualified outputs.
 
 Historical November2 application source was `1bde0b12` (pushed), rules2025.223/2026.221-law-integration-draft. Schedule R is delivered in13a5d28e after56independent controls/387saved-artifactchecks; Schedule C in75f78914 after31controls/475artifactchecks and main2158tests/44files. Historical1040 required-zero rendering is delivered in1ca9550f after seven independent controls/24artifactchecks and618main tests/6files, three types/spec6510/inventory613/lint/enginebuild. Actual-source Form4562 amortization→C is delivered in97698bc0 after35independent tests/30PDFs/3958readerchecks/13visuals and main2209tests/50files,3types/spec6518/inventory613/lint/bothbuilds. Runtime minimization is delivered in3202e7b9 after actual candidate image/recovery/SBOM/scan and independent review; Philadelphia2026 component rates are delivered in7a4b7f68 after66independent tests/433main tests and all nine checks. Ohio printed resident-credit aggregation/truncation is corrected in `3e08ad01` after six independent probes,250 main tests/six files, three types/spec6523/inventory613/lint/build; original-source eligibility and payment proof remain an active successor. PA working-credit arithmetic, paper/processing separation and original-bound exports are delivered in `326bad2d` after independent27controls/61combined tests/166saved-artifactchecks, shared review and main1,055tests/60files/all nine package checks. The bounded Ohio owner/NRC source method is delivered in `bfb62e23` after12independent controls/nine saved-reference pages,815main tests/30files and all package checks. Inactive actual2025 Ohio physical candidates follow in `9bd35402` after1,669independent checks/55pages and eight main tests/two files/all nine checks; full source-bound output, payments and selected-state completion remain required. Final integrated CI/runtime/artifact qualification remains required.
