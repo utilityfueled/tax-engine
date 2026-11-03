@@ -2170,3 +2170,8 @@ return/W2 attachments, final2026 forms and human qualification remain required.
 ## November2: actual guided resident-credit originals
 
 The finite reviewed compensation resident-credit method now reaches whole-panel confirmation, saved-state navigation and canonical replay using current ordinary facts. Main129/12 and all11 scoped checks pass after6 genuine root failures/9passes; the separate collector positive failure and diagnostic mismatch are retained honestly. Unknown/null/zero source drafts survive saving, edits require reconfirmation, and only validated web drafts are stripped from canonical output. No engine formula, monetary oracle or filing gate changed. Remaining OID/business/NRH/workspace and external qualification work continues.
+
+
+## November2: isolated hosted Preview origin
+
+The actual current Preview rejected sign-in with Invalidorigin. Exact hosted Preview now derives its canonical HTTPS origin only from validated server-owned generated deployment metadata, and closes local-draft/loopback exceptions even if NODE_ENV is development. Main132/7/all11 checks and independent59/3/types/strict0 pass after retained22 initial and3 independent failures. Original source controls and the production missing-app-URL negative remain. No auth check, wildcard trust, production configuration or readiness gate was relaxed. Actual deployment/runtime auth/email/recovery qualification follows separately.

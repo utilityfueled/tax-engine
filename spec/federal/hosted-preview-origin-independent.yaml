@@ -1,0 +1,20 @@
+form: Hosted-Preview-Origin-Independent
+fullName: Independent generated-host validation and real request origin boundary
+taxYear: 2026
+reference: https://vercel.com/docs/environment-variables/system-environment-variables
+lines:
+  - line: generated-host-shape
+    formula: Reject controlcharacters unicode IP aliases and overlong DNSlabels; normalize ASCII host case only
+    testRef: tests/apps/web/hosted-preview-origin-independent.test.ts::rejects additional ambiguous or malformed generated hostnames
+  - line: actual-request-origin
+    formula: Real NextRequest middleware trusts exact selected generated HTTPSOrigin independentof Host and Forwarded spoofing; foreign Origin denied with VaryOrigin
+    testRef: tests/apps/web/hosted-preview-origin-independent.test.ts::rejects foreign browser origins despite trusted-looking forwarded headers
+  - line: no-local-draft
+    formula: Hosted exact Vercelpreview never prefers local draft evenif NODE_ENVdevelopment and sharedappURLlocalhost
+    testRef: tests/apps/web/hosted-preview-origin-independent.test.ts::never prefers a local draft for an exact hosted preview
+  - line: no-local-access
+    formula: Hosted exact Vercelpreview disablesloopbackworkspace resume API andAIaccess acrossproductionanddevelopment
+    testRef: tests/apps/web/hosted-preview-origin-independent.test.ts::never enables loopback resume or API access for an exact hosted preview
+  - line: no-local-cors
+    formula: Actualmiddleware rejectsloopbackbrowserOrigin in exacthostedpreview evenif NODE_ENVdevelopment andsharedappURLlocalhost
+    testRef: tests/apps/web/hosted-preview-origin-independent.test.ts::never admits a loopback browser origin for an exact hosted preview

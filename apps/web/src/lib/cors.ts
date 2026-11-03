@@ -7,6 +7,7 @@
 
 import {
   isHostedProductionEnvironment,
+  isHostedVercelPreviewEnvironment,
   isLoopbackHostname,
   resolveHostedAppBaseUrl
 } from "./hosted-runtime-safety";
@@ -65,7 +66,7 @@ export function getAllowedOrigins(env: CorsEnvironment = process.env): Set<strin
     }
   }
 
-  if (origins.size === 0 && !isHostedProductionEnvironment(env)) {
+  if (origins.size === 0 && !isHostedProductionEnvironment(env) && !isHostedVercelPreviewEnvironment(env)) {
     origins.add("http://localhost:3000");
   }
 
@@ -76,7 +77,7 @@ function isAllowedLoopbackOrigin(
   origin: string | null,
   env: CorsEnvironment = process.env
 ) {
-  if (!origin || isHostedProductionEnvironment(env)) {
+  if (!origin || isHostedProductionEnvironment(env) || isHostedVercelPreviewEnvironment(env)) {
     return false;
   }
 

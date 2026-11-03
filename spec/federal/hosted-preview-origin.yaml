@@ -1,0 +1,41 @@
+form: Hosted-Preview-Origin
+fullName: Exact deployment origin for isolated hosted Vercel previews
+taxYear: 2026
+reference: https://vercel.com/docs/environment-variables/system-environment-variables
+notes: |
+  Server-owned VERCEL_URL is the generated deployment hostname, without scheme.
+  Exact hosted/VERCEL_ENV=preview uses that deployment's HTTPS origin for auth,
+  recovery, CORS and application links. Shared production TAX_ENGINE_APP_URL is
+  not the preview's canonical URL. Request Host/Forwarded/Origin headers never
+  establish trust. No wildcard or unrelated preview hostname becomes trusted.
+  Missing or invalid deployment metadata blocks access, even in development.
+  All other deployment environments retain the existing explicit app URL policy.
+lines:
+  - line: exact-preview-origin
+    description: Use only valid deployment hostname in exact hosted preview
+    formula: |
+      In hosted mode and exact VERCEL_ENV=preview, validate VERCEL_URL as a bare
+      DNS hostname ending .vercel.app with nonempty labels, no URL scheme, port,
+      userinfo, path, query, fragment, wildcard, whitespace or malformed labels.
+      Return https:// plus that exact hostname as valid configured app URL.
+      Do not fall back to shared app URL or production domain when invalid.
+    testRef: tests/apps/web/hosted-preview-origin.test.ts::selects the exact server-owned deployment origin
+  - line: reject-invalid-metadata
+    description: Reject missing and malformed deployment hostnames
+    formula: Missing/invalid hostname yields blocked true and no valid configured URL.
+    testRef: tests/apps/web/hosted-preview-origin.test.ts::blocks invalid preview metadata without shared-origin fallback
+  - line: trust-propagation
+    description: Auth and CORS trust only the selected deployment origin
+    formula: |
+      Existing explicitly configured extra trusted origins retain their existing
+      policy. Selection itself adds only the exact deployment HTTPS origin.
+      Another project's origin and shared production URL are not inferred trust.
+      Search indexing and local resume remain disabled in hosted previews.
+      The existing database/auth integration positive supplies an explicit
+      fictional generated hostname. Its missing-origin negative uses VERCEL_URL
+      in Preview and retains the original missing-app-URL negative in Production.
+    testRef: tests/apps/web/hosted-preview-origin.test.ts::propagates exact origin without widening preview trust
+  - line: preserve-other-modes
+    description: Preserve production, development and self-host URL contracts
+    formula: Outside exact hosted preview, retain explicit TAX_ENGINE_APP_URL policy.
+    testRef: tests/apps/web/hosted-preview-origin.test.ts::preserves explicit URL outside exact hosted preview

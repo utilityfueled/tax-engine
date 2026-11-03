@@ -67,13 +67,16 @@ describe("isolated hosted preview database selection", () => {
     const env = { ...preview, DATABASE_URL: undefined,
       BETTER_AUTH_SECRET: "synthetic-preview-auth-secret-at-least32-characters",
       TAX_ENGINE_APP_URL: "https://preview.tax.invalid",
+      VERCEL_URL: "tax-engine-selector-synthetic.vercel.app",
     };
     expect(getHostedAuthConfig(env)).toMatchObject({ mode: "live", databaseConfigured: true, blocked: false });
     expect(getHostedAuthConfig({ ...env, NODE_ENV: "development", DATABASE_URL: shared,
       TAX_ENGINE_STAGING_DATABASE_DATABASE_URL: undefined,
     })).toMatchObject({ databaseConfigured: false, blocked: true });
     expect(getHostedAuthConfig({ ...env, BETTER_AUTH_SECRET: undefined }).blocked).toBe(true);
-    expect(getHostedAuthConfig({ ...env, TAX_ENGINE_APP_URL: undefined }).blocked).toBe(true);
+    expect(getHostedAuthConfig({ ...env, VERCEL_URL: undefined }).blocked).toBe(true);
+    expect(getHostedAuthConfig({ ...env, VERCEL_ENV: "production", DATABASE_URL: staging,
+      TAX_ENGINE_APP_URL: undefined }).blocked).toBe(true);
   });
 
   it.each(["production", "development", "Preview", undefined])(

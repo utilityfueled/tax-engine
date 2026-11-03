@@ -13247,5 +13247,17 @@
     "independentCollector": "e26205a6d974ecbeb451c9766512a09c99f0747c599b503fb72c691c96f3d2be",
     "rootReview": "all7products/full15controls/actualall3oracles/currentbeforehashes",
     "releaseReady": false
+  },
+  "continuation20261102HostedPreviewOrigin": {
+    "baseCommit": "91b43955",
+    "mainTests": {
+      "passed": 132,
+      "files": 7
+    },
+    "checks": "all11pass;types3/spec6879/inventorygeneration+check/strictlint0/bothbuilds/diff",
+    "sourceFirst": "27=22fail5pass; independent17=14pass3genuinefail",
+    "independent": "59/3 overlapping;707af4852b3a3029c6bdbb635967d4af6fecf8fd3ebc24b8c32554bc86e95e9e",
+    "actualRuntime": "prior11b6 synthetic nonexistentaccount signin Invalidorigin; fixed deployment untested",
+    "releaseReady": false
   }
 }
