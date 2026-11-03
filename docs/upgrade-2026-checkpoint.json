@@ -14369,5 +14369,21 @@
     "commit": "7334c690",
     "pushed": true,
     "strictAST": 682
+  },
+  "nov03NativeMIRoyaltyCollector": {
+    "baseCommit": "e5e00fb4",
+    "products": 7,
+    "callerWiresIncluded": 2,
+    "freshMainMissingUIRED": "b3372b04fb7d39ffce3a119e57febbf772adc7344b9b6f430481089e20ba3a8b",
+    "mainTests": 245,
+    "files": 17,
+    "nativeAuthorTests": 40,
+    "independentTests": 31,
+    "adjacentTests": 174,
+    "checksPassed": 13,
+    "independentReviewSHA256": "37f0976a58212496ebf0a04bdceab60114809aba77b24f3d887bbbe824225f71",
+    "mainReviewSHA256": "4ab655762d1dcc4edc5910fe0507e43525c0bf4446cfce20abb7752700feb17a",
+    "realBrowserQualified": false,
+    "releaseReady": false
   }
 }

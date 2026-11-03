@@ -10864,6 +10864,26 @@
       ]
     },
     {
+      "key": "state/guided-pa-royalty-native",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.michigan.gov/-/media/Project/Websites/taxes/Forms/IIT/TY2025/MI-1040-Book.pdf",
+      "specPath": "spec/state/guided-pa-royalty-native.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/guided-pa-royalty-sources",
       "jurisdiction": "state",
       "taxYear": 2025,
@@ -14349,6 +14369,26 @@
       "taxYear": 2025,
       "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf",
       "specPath": "spec/state/pa-royalty-main-integration.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-royalty-native-independent",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-206-110",
+      "specPath": "spec/state/pa-royalty-native-independent.yaml",
       "enginePath": null,
       "packetPath": null,
       "specExists": true,

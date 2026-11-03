@@ -743,6 +743,7 @@ function SectionContent({
       } catch { /* Actual incomplete federal sources stay unavailable for confirmation. */ }
       return (
         <SectionStateReturn
+          currentWorkspaceId={workspace.id}
           stateCode={state.segmentation.stateCode as SupportedStateCode}
           originalInput={originalInput}
           ordinaryOriginalInput={buildGuidedPAOrdinarySourceInput(state)}

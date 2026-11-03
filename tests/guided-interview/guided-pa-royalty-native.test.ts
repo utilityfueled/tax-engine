@@ -1,0 +1,48 @@
+// Spec: spec/state/guided-pa-royalty-native.yaml. Frozen before the collection product.
+import {expect,it}from 'vitest';
+import {emptyGuidedPARoyaltyTaxRefundDraft,draftGuidedPARoyaltyTaxRefundSources,updateGuidedPARoyaltyTaxRefundDraft,captureGuidedPARoyaltyFiledOriginals,confirmGuidedPARoyaltyTaxRefundDraft,assertGuidedPARoyaltyTaxRefundPair}from '@/lib/guided-pa-royalty-tax-refund-collection';
+import {buildGuidedPAOrdinaryReturnCompletionSources,confirmGuidedPAOrdinaryReturnCompletionSources}from '@/lib/guided-pa-ordinary-return-completion';
+import {snapshotPAOrdinaryReturnOriginals}from '@/engine/state/pa-ordinary-return-facts';
+import {TaxYearInputSchema}from '@/models/inputs';
+import {buildTaxInputFromGuidedData}from '@/lib/guided-interview-bridge';
+import {nativeMIRoyaltyFixture}from '../fixtures/guided-pa-royalty-native';
+function selected(f:ReturnType<typeof nativeMIRoyaltyFixture>){return{currentWorkspaceId:f.currentWorkspaceId,selectedWorkspaceId:f.historicalWorkspaceId,selectedState:f.historicalState,selectedOriginalsReviewedConfirmed:true};}
+it('creates a wholly unknown private MI draft',()=>{
+ const d=emptyGuidedPARoyaltyTaxRefundDraft();expect(d.sourceTaxYear).toBeNull();expect(d.sourceFactsConfirmed).toBeNull();expect(d.owner).toEqual({firstName:'',lastName:'',ssn:''});expect(d.originalFederalSources).toEqual({});expect(d.statements).toEqual([]);expect(d.refund.amount).toBe('');expect(d.refund.actuallyReceivedConfirmed).toBeNull();expect(d.filedReturn.finalTax).toBe('');expect(d.filedReturn.reportedWithholding).toBe('');expect(d.account.netTaxPaymentsReported).toBe('');expect(d.filedFederalHistory.originalFederalSources).toEqual({});expect(d.filedFederalHistory.originalGuidedPropertySources).toEqual({});expect(d.filedFederalHistory.filedFederalAGI).toBe('');expect(d.correctionStatus).toBe('unknown');expect(d.historicalExpenseCorrection.actualAdditionalExpense).toBe('');expect(d.historicalExpenseCorrection.michiganTaxEffect).toBe('');
+});
+it('captures independently entered historical originals only on explicit action',()=>{
+ const f=nativeMIRoyaltyFixture(true),draft=draftGuidedPARoyaltyTaxRefundSources(f.refund),old=JSON.stringify({draft,state:f.historicalState,current:f.input});
+ const capture=captureGuidedPARoyaltyFiledOriginals(draft,selected(f));const raw=buildTaxInputFromGuidedData(f.historicalState);if(!raw)throw Error('Actual independent historical federal original required');expect(capture.filedFederalHistory.originalFederalSources).toEqual(snapshotPAOrdinaryReturnOriginals(TaxYearInputSchema.parse(raw)));expect(capture.filedFederalHistory.originalFederalSources).not.toEqual(snapshotPAOrdinaryReturnOriginals(f.input));expect(capture.filedFederalHistory.originalGuidedPropertySources).toEqual(f.historicalData);expect(capture.filedFederalHistory.filedFederalAGI).toBe('211001');expect(capture.sourceFactsConfirmed).toBeNull();expect(capture.filedFederalHistory.sourceFactsConfirmed).toBeNull();expect(JSON.stringify({draft,state:f.historicalState,current:f.input})).toBe(old);
+ f.historicalState.sectionData['income-royalties']={};expect(capture.filedFederalHistory.originalGuidedPropertySources).toEqual(f.historicalData);
+});
+it.each(['unknown-current','same-current','unknown-selected','incomplete-selected','unreviewed-selection']as const)('rejects unavailable or unreviewed historical original selection: %s',kind=>{
+ const f=nativeMIRoyaltyFixture(),draft=draftGuidedPARoyaltyTaxRefundSources(f.refund),choice=selected(f);
+ if(kind==='unknown-current')choice.currentWorkspaceId='';if(kind==='same-current')choice.selectedWorkspaceId=choice.currentWorkspaceId;if(kind==='unknown-selected')choice.selectedWorkspaceId='';if(kind==='incomplete-selected')choice.selectedState.sectionData['income-royalties']={};if(kind==='unreviewed-selection')choice.selectedOriginalsReviewedConfirmed=false;
+ const before=JSON.stringify({draft,choice});expect(()=>captureGuidedPARoyaltyFiledOriginals(draft,choice)).toThrow(/historical|original|current|review|select|source|royalty/i);expect(JSON.stringify({draft,choice})).toBe(before);
+});
+it('requires an exact current confirmed MI draft and packet before parent projection',()=>{
+ const f=nativeMIRoyaltyFixture(),draft=draftGuidedPARoyaltyTaxRefundSources(f.refund),pair=confirmGuidedPARoyaltyTaxRefundDraft(f.input,f.facts,draft);
+ expect(pair.packet.filedFederalHistory).toEqual(f.refund.filedFederalHistory);expect(pair.packet.filedReturn).toEqual(f.refund.filedReturn);expect(pair.packet.refund.amount).toBe('80.20');expect(()=>assertGuidedPARoyaltyTaxRefundPair(f.input,f.facts,pair.draft,pair.packet)).not.toThrow();
+ const completion={...f.completion,otherStateTaxes:{...f.completion.otherStateTaxes,refundedRoyaltyDraft:pair.draft,refundedRoyaltySources:pair.packet}};const c=confirmGuidedPAOrdinaryReturnCompletionSources(f.input,completion,f.facts);const canonical=buildGuidedPAOrdinaryReturnCompletionSources(f.input,c,f.facts);expect(Reflect.has(canonical.otherStateTaxes,'refundedRoyaltyDraft')).toBe(false);expect(Reflect.has(canonical.otherStateTaxes.refundedRoyaltySources??{},'filedFederalHistory')).toBe(false);
+ const changed=updateGuidedPARoyaltyTaxRefundDraft(pair.draft,{refund:{...pair.draft.refund,confirmationNumber:'New actual receipt'}});expect(()=>assertGuidedPARoyaltyTaxRefundPair(f.input,f.facts,changed,pair.packet)).toThrow();expect(()=>assertGuidedPARoyaltyTaxRefundPair(f.input,f.facts,pair.draft,undefined)).toThrow();expect(()=>confirmGuidedPAOrdinaryReturnCompletionSources(f.input,{...completion,otherStateTaxes:{...completion.otherStateTaxes,refundedRoyaltyDraft:changed}},f.facts)).toThrow();
+ expect(()=>buildGuidedPAOrdinaryReturnCompletionSources(f.input,f.completion,f.facts)).not.toThrow();
+});
+it.each(['sourceReference','completeThroughDate','owner','statements','filedReturn','writtenClaim','agencyAward','refund','account','filedFederalHistory','historicalExpenseCorrection']as const)('keeps source originals while invalidating actual edits: %s',key=>{
+ const f=nativeMIRoyaltyFixture(true),draft=draftGuidedPARoyaltyTaxRefundSources(f.refund),before=JSON.stringify(draft);
+ const patch=key==='sourceReference'?{sourceReference:'Actual revised reference'}:key==='completeThroughDate'?{completeThroughDate:'2026-03-19'}:{[key]:structuredClone(draft[key])};
+ const next=updateGuidedPARoyaltyTaxRefundDraft(draft,patch);expect(next.sourceFactsConfirmed).toBeNull();expect(next.originalFederalSources).toEqual(draft.originalFederalSources);expect(next.filedReturn).toEqual(draft.filedReturn);expect(next.filedFederalHistory.originalFederalSources).toEqual(draft.filedFederalHistory.originalFederalSources);expect(JSON.stringify(draft)).toBe(before);expect(()=>assertGuidedPARoyaltyTaxRefundPair(f.input,f.facts,next,f.refund)).toThrow();
+});
+it('preserves actual correction records instead of treating unknown or none as no correction',()=>{
+ const f=nativeMIRoyaltyFixture(true),draft=draftGuidedPARoyaltyTaxRefundSources(f.refund),before=JSON.stringify(f.refund);expect(draft.correctionStatus).toBe('reported');
+ for(const correctionStatus of['unknown','none']as const){const changed={...draft,correctionStatus};expect(()=>confirmGuidedPARoyaltyTaxRefundDraft(f.input,f.facts,changed)).toThrow();expect(changed.historicalExpenseCorrection).toEqual(draft.historicalExpenseCorrection);}
+ const pair=confirmGuidedPARoyaltyTaxRefundDraft(f.input,f.facts,draft);expect(pair.packet.filedFederalHistory?.filedFederalAGI).toBe('211001');expect(pair.packet.historicalExpenseCorrection?.currentFederalAGI).toBe('210901');expect(pair.packet.historicalExpenseCorrection?.actualAdditionalExpense).toBe('100');expect(pair.packet.historicalExpenseCorrection?.originalLegalReceipt.amountPaid).toBe('49.25');expect(pair.packet.historicalExpenseCorrection?.correctedLegalReceipt.amountPaid).toBe('149.25');expect(JSON.stringify(f.refund)).toBe(before);
+});
+it.each(['unknown-year','unknown-owner','unknown-refund','not-received','unknown-history','missing-claim','wrong-award','missing-source','future-refund','stale-current']as const)('rejects incomplete actual MI source collection: %s',kind=>{
+ const f=nativeMIRoyaltyFixture(),draft=draftGuidedPARoyaltyTaxRefundSources(f.refund);
+ if(kind==='unknown-year')draft.sourceTaxYear=null;if(kind==='unknown-owner')draft.owner={firstName:'',lastName:'',ssn:''};if(kind==='unknown-refund')draft.refund.amount='';if(kind==='not-received')draft.refund.actuallyReceivedConfirmed=null;if(kind==='unknown-history')draft.filedFederalHistory.sourceFactsConfirmed=null;if(kind==='missing-claim')draft.writtenClaim.applicationId='';if(kind==='wrong-award')draft.agencyAward.refundAwarded='80';if(kind==='missing-source')draft.account.sourceReference='';if(kind==='future-refund')draft.refund.receivedOn='2026-03-21';if(kind==='stale-current')f.input.form1099Misc[0].payer='Edited current same-money payer';
+ const before=JSON.stringify(draft);expect(()=>confirmGuidedPARoyaltyTaxRefundDraft(f.input,f.facts,draft)).toThrow();expect(JSON.stringify(draft)).toBe(before);
+});
+it('saved source replay does not refresh historical records',()=>{
+ const f=nativeMIRoyaltyFixture(true),pair=confirmGuidedPARoyaltyTaxRefundDraft(f.input,f.facts,draftGuidedPARoyaltyTaxRefundSources(f.refund)),saved=JSON.stringify(pair),reopened=JSON.parse(saved)as typeof pair;
+ expect(()=>assertGuidedPARoyaltyTaxRefundPair(f.input,f.facts,reopened.draft,reopened.packet)).not.toThrow();expect(JSON.stringify(reopened)).toBe(saved);f.input.taxpayer.primary.firstName='Changed current owner';expect(()=>assertGuidedPARoyaltyTaxRefundPair(f.input,f.facts,reopened.draft,reopened.packet)).toThrow();expect(JSON.stringify(reopened)).toBe(saved);
+});

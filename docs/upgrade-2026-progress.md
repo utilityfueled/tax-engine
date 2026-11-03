@@ -2433,3 +2433,7 @@ Actual current native MISC originals now reconcile saved PA/OH claims without ad
 ### November 3: complete original-bound state routing tests
 
 The original PA/OH positive routing checks now use separately explicit complete fictional records. All four titles and prior executable assertions remain, except the source-proven Ohio printed2000.6→2000 correction; raw2000.60 remains a separate control. Original incomplete paths stay unavailable for state results. Main280tests/11files, types3/spec/strictAST/inventory/check/ownedlint0 pass with parent review and no product changes. See [the source ledger](upgrade-2026-guided-state-routing-source-successor.md). Michigan native history and OID source successors continue; global, staging and human/final2026 qualification remain open.
+
+### November 3: native Michigan settlement and independent filed history
+
+Blank native fields now collect the actual MI remittance, filed return, written claim, award, received refund, complete account and separate historical originals. Unknown values remain unknown; explicit capture excludes the current return and retains filed figures through later corrections. Fresh actual-main missing-action failure precedes exact reviewed integration. Main245tests/17files and all13checks pass; independent31 controls execute both real caller seams. See [the native source ledger](upgrade-2026-pa-mi-royalty-native-work.md). Full real-browser origination/expense-edit rehearsal, global and human/final2026 gates remain open. Routing7334c690 and its generated inventorye5e00fb4 are pushed.

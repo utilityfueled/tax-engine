@@ -1,3 +1,4 @@
+import {assertGuidedPARoyaltyTaxRefundPair,type GuidedPARoyaltyTaxRefundDraft} from './guided-pa-royalty-tax-refund-collection';
 import {GuidedPARoyaltyTaxRefundSourcesSchema,buildGuidedPARoyaltyTaxRefundSources,type GuidedPARoyaltyTaxRefundSources} from './guided-pa-royalty-tax-refund-sources';
 import Decimal from 'decimal.js';
 import type {TaxYearInput} from '@/models/inputs';
@@ -5,7 +6,7 @@ import {buildGuidedPADigitalTaxRefundSources,assertGuidedPADigitalTaxRefundPair,
 import {PAOrdinaryReturnCompletionSourcesSchema,PACompletionOriginalRecordSchema,type PAOrdinaryReturnCompletionSources,type PACompletionOriginalRecord} from '@/models/pa-ordinary-return-completion';
 import {assertGuidedPAResidentCreditPair,buildGuidedPAResidentCreditSources,type GuidedPAResidentCreditSources} from './guided-pa-resident-credit-sources';
 /** Persist private unknown drafts in web state; canonical builders validate before stripping. */
-export type GuidedPAOrdinaryReturnCompletionSources=PAOrdinaryReturnCompletionSources&{otherStateTaxes:PAOrdinaryReturnCompletionSources['otherStateTaxes']&{residentCreditDraft?:GuidedPAResidentCreditSources;refundedDigitalDraft?:GuidedPADigitalTaxRefundSources;refundedRoyaltySources?:GuidedPARoyaltyTaxRefundSources}};
+export type GuidedPAOrdinaryReturnCompletionSources=PAOrdinaryReturnCompletionSources&{otherStateTaxes:PAOrdinaryReturnCompletionSources['otherStateTaxes']&{residentCreditDraft?:GuidedPAResidentCreditSources;refundedDigitalDraft?:GuidedPADigitalTaxRefundSources;refundedRoyaltySources?:GuidedPARoyaltyTaxRefundSources;refundedRoyaltyDraft?:GuidedPARoyaltyTaxRefundDraft}};
 type Sources=GuidedPAOrdinaryReturnCompletionSources;
 const excludedRoots=['paResidencySources','paReciprocitySources','paOrdinaryReturnFacts','paOrdinaryReturnCompletionSources'];
 const states=new Set('AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR RI SC SD TN TX UT VT VA WA WV WI WY'.split(' '));
@@ -45,11 +46,12 @@ function actualSources(input:TaxYearInput,data:Sources):void{
  const relief=data.lateFilingRelief;if(relief.allActualReliefSourcesReviewedConfirmed!==true)fail('confirm complete actual agency-relief record review');if(relief.status==='no_actual_relief_records'&&relief.originalAgencyRelief.length)fail('reconcile no-relief status with retained agency original records');if(relief.status==='actual_relief'&&!relief.originalAgencyRelief.length)fail('retain actual agency-relief original document metadata');records(relief.originalAgencyRelief,'agency_relief');
 }
 /** Strip exactly the typed web draft only after proving its current confirmed source pair. */
-function canonicalSources(input:TaxYearInput,raw:unknown,ordinaryFacts?:unknown):{data:PAOrdinaryReturnCompletionSources;creditDraft?:GuidedPAResidentCreditSources;refundDraft?:GuidedPADigitalTaxRefundSources;royaltyDraft?:GuidedPARoyaltyTaxRefundSources}{
+function canonicalSources(input:TaxYearInput,raw:unknown,ordinaryFacts?:unknown):{data:PAOrdinaryReturnCompletionSources;creditDraft?:GuidedPAResidentCreditSources;refundDraft?:GuidedPADigitalTaxRefundSources;royaltyDraft?:GuidedPARoyaltyTaxRefundSources;royaltyCollectionDraft?:GuidedPARoyaltyTaxRefundDraft}{
  const object=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw as Record<string,unknown>:undefined;
  const other=object?.otherStateTaxes&&typeof object.otherStateTaxes==='object'&&!Array.isArray(object.otherStateTaxes)?object.otherStateTaxes as Record<string,unknown>:undefined;
- const {residentCreditDraft,refundedDigitalDraft,...originalOther}=other??{};
+ const {residentCreditDraft,refundedDigitalDraft,refundedRoyaltyDraft,...originalOther}=other??{};
  const facts=ordinaryFacts===undefined?input.paOrdinaryReturnFacts:ordinaryFacts,royaltyRaw=other?.refundedRoyaltySources;
+ const royaltyCollectionDraft=refundedRoyaltyDraft===undefined?undefined:assertGuidedPARoyaltyTaxRefundPair(input,facts,refundedRoyaltyDraft,royaltyRaw);
  const royaltyDraft=royaltyRaw===undefined?undefined:GuidedPARoyaltyTaxRefundSourcesSchema.parse(royaltyRaw);
  const royaltyPacket=royaltyDraft===undefined?undefined:buildGuidedPARoyaltyTaxRefundSources(input,facts,royaltyDraft);
  const data=PAOrdinaryReturnCompletionSourcesSchema.parse(other?{...object,otherStateTaxes:{...originalOther,...(royaltyPacket===undefined?{}:{refundedRoyaltySources:royaltyPacket})}}:raw),packet=data.otherStateTaxes.residentCreditSources,refundPacket=data.otherStateTaxes.refundedDigitalSources;
@@ -62,11 +64,11 @@ function canonicalSources(input:TaxYearInput,raw:unknown,ordinaryFacts?:unknown)
  if(refundPacket!==undefined&&refundDraft===undefined)buildGuidedPADigitalTaxRefundSources(input,facts,refundPacket);
  const creditDraft=residentCreditDraft===undefined?undefined:assertGuidedPAResidentCreditPair(input,facts,residentCreditDraft,packet);
  if(packet!==undefined&&creditDraft===undefined)buildGuidedPAResidentCreditSources(input,facts,packet);
- return {data,...(creditDraft===undefined?{}:{creditDraft}),...(refundDraft===undefined?{}:{refundDraft}),...(royaltyDraft===undefined?{}:{royaltyDraft})};
+ return {data,...(creditDraft===undefined?{}:{creditDraft}),...(refundDraft===undefined?{}:{refundDraft}),...(royaltyDraft===undefined?{}:{royaltyDraft}),...(royaltyCollectionDraft===undefined?{}:{royaltyCollectionDraft})};
 }
 /** This explicit source action alone replaces the completion identity and federal snapshot.
  * It never confirms or refreshes ordinary facts or the nested resident-credit originals. */
-export function confirmGuidedPAOrdinaryReturnCompletionSources(input:TaxYearInput,draft:unknown,ordinaryFacts?:unknown):Sources{const {data,creditDraft,refundDraft,royaltyDraft}=canonicalSources(input,draft,ordinaryFacts);actualSources(input,data);const t=input.taxpayer.primary;return {...data,sourceFactsConfirmed:true,owner:{firstName:t.firstName,lastName:t.lastName,ssn:t.ssn},originalFederalSources:snapshotPAOrdinaryReturnCompletionOriginals(input),...(creditDraft===undefined&&refundDraft===undefined&&royaltyDraft===undefined?{}:{otherStateTaxes:{...data.otherStateTaxes,...(creditDraft===undefined?{}:{residentCreditDraft:creditDraft}),...(refundDraft===undefined?{}:{refundedDigitalDraft:refundDraft}),...(royaltyDraft===undefined?{}:{refundedRoyaltySources:royaltyDraft})}})};}
+export function confirmGuidedPAOrdinaryReturnCompletionSources(input:TaxYearInput,draft:unknown,ordinaryFacts?:unknown):Sources{const {data,creditDraft,refundDraft,royaltyDraft,royaltyCollectionDraft}=canonicalSources(input,draft,ordinaryFacts);actualSources(input,data);const t=input.taxpayer.primary;return {...data,sourceFactsConfirmed:true,owner:{firstName:t.firstName,lastName:t.lastName,ssn:t.ssn},originalFederalSources:snapshotPAOrdinaryReturnCompletionOriginals(input),...(creditDraft===undefined&&refundDraft===undefined&&royaltyDraft===undefined&&royaltyCollectionDraft===undefined?{}:{otherStateTaxes:{...data.otherStateTaxes,...(creditDraft===undefined?{}:{residentCreditDraft:creditDraft}),...(refundDraft===undefined?{}:{refundedDigitalDraft:refundDraft}),...(royaltyDraft===undefined?{}:{refundedRoyaltySources:royaltyDraft}),...(royaltyCollectionDraft===undefined?{}:{refundedRoyaltyDraft:royaltyCollectionDraft})}})};}
 /** Fresh source replay on read; emit strict canonical facts without changing saved web state. */
 export function buildGuidedPAOrdinaryReturnCompletionSources(input:TaxYearInput,draft:unknown,ordinaryFacts?:unknown):PAOrdinaryReturnCompletionSources{const {data}=canonicalSources(input,draft,ordinaryFacts);actualSources(input,data);if(data.sourceFactsConfirmed!==true)fail('confirm actual sources after the last edit');const t=input.taxpayer.primary;if(stable(data.owner)!==stable({firstName:t.firstName,lastName:t.lastName,ssn:t.ssn}))fail('current actual owner changed; reconfirm original sources');if(stable(data.originalFederalSources)!==stable(snapshotPAOrdinaryReturnCompletionOriginals(input)))fail('current original sources changed; retained original snapshot is stale');return data;}
 /** Explicit method boundaries only; this is never a calculation-readiness result. */

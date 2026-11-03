@@ -1,0 +1,61 @@
+form: "Native Michigan copyright settlement and actual filed history origination"
+taxYear: 2025
+reference: "https://www.michigan.gov/-/media/Project/Websites/taxes/Forms/IIT/TY2025/MI-1040-Book.pdf"
+notes: |
+  Web source collector only: unchanged reviewed canonical B and web C finite single-primary2025
+  full-year PA nonbusiness copyright/full actually received MI refund method. No new tax law,
+  liability computation, amendment conclusion, agency claim entitlement, readiness or filing gate.
+  Filed originals originate independently in a separate local return; known current workspace is
+  excluded and unknown current identity cannot silently authorize history capture. Only explicit
+  selection/capture reads selected stored originals. Reads and edits do not refresh filed history.
+  All source dates, years, owner, amount, state and choices start blank/null/unknown; actual0 differs
+  from unknown. Full settlement/claim/award/receivedcash/account/use/paid-receipt facts are required.
+  Typed private draft persists separately, with exact current confirmed C pair before strict strip.
+  Pending draft cannot disappear. None-correction cannot erase actual retained correction records.
+  Existing imported C packets remain supported. All money exact Decimal; no new arithmetic here.
+lines:
+  - line: "literal-source"
+    formula: "Independent literal original/current federal211000.5/210900.5, printed211001/210901; PA6478/6475; MI remittance80.20, printed80, actualreceived80.20, netpaid0, PAcredit0."
+    testRef: "tests/apps/web/pa-royalty-native-details.test.tsx::retains actual reviewed original and correction literal oracles"
+  - line: "mounted-absent"
+    formula: "Existing completion component without MI packet exposes add native entry and actual fields, no JSON editor; this is real mounted behavior independent of missing-module diagnostics."
+    testRef: "tests/apps/web/pa-royalty-native-details.test.tsx::offers native MI collection when no retained packet exists"
+  - line: "mounted-blank"
+    formula: "All years indices amounts dates answers owner/state are unknown and pending records persist save/remount; unknown is never silently stripped."
+    testRef: "tests/apps/web/pa-royalty-native-details.test.tsx::retains unknown MI records on save and remount"
+  - line: "mounted-positive"
+    formula: "Originate every remittance/use/return/claim/award/receivedcash/account/history field from absent packet using native controls; explicit historical selection and child then separate parent confirmation yields exact80.20/printed80 and PA6478."
+    testRef: "tests/apps/web/pa-royalty-native-details.test.tsx::originates complete MI history and settlement through actual labeled controls"
+  - line: "mounted-edit"
+    formula: "Every agency/source/history edit invalidates child and parent while retaining all old private originals."
+    testRef: "tests/apps/web/pa-royalty-native-details.test.tsx::clears child and parent confirmation for an actual MI edit: %s"
+  - line: "empty-draft"
+    formula: "No factual defaults; explicit blank source roots and correction unknown."
+    testRef: "tests/guided-interview/guided-pa-royalty-native.test.ts::creates a wholly unknown private MI draft"
+  - line: "historical-capture"
+    formula: "Explicit capture copies only selected independent full historical federal/royalty originals, never current; neither caller state mutates."
+    testRef: "tests/guided-interview/guided-pa-royalty-native.test.ts::captures independently entered historical originals only on explicit action"
+  - line: "historical-denials"
+    formula: "Missing current ID, same selected ID, missing selected original, incomplete bridge or unknown actual selection-review proof rejects rather than cloning current input."
+    testRef: "tests/guided-interview/guided-pa-royalty-native.test.ts::rejects unavailable or unreviewed historical original selection: %s"
+  - line: "pair"
+    formula: "Exact current confirmed draft/packet preserves actual filed records and strips only webdraft; pending/missing/different/stale pair denies; imported C unchanged."
+    testRef: "tests/guided-interview/guided-pa-royalty-native.test.ts::requires an exact current confirmed MI draft and packet before parent projection"
+  - line: "update"
+    formula: "Every actual edit retains sources and clears child/history/correction confirmations; no money/owner/date invention."
+    testRef: "tests/guided-interview/guided-pa-royalty-native.test.ts::keeps source originals while invalidating actual edits: %s"
+  - line: "correction"
+    formula: "Unknown/none cannot erase actual correction rows; positive actual correction conserves original/current AGI and receipts without changing filed figures."
+    testRef: "tests/guided-interview/guided-pa-royalty-native.test.ts::preserves actual correction records instead of treating unknown or none as no correction"
+  - line: "source-denials"
+    formula: "Known wrong/unknown source owner year amount date review or receipt is not rescued by confirmations."
+    testRef: "tests/guided-interview/guided-pa-royalty-native.test.ts::rejects incomplete actual MI source collection: %s"
+  - line: "json-read"
+    formula: "Saved JSON roundtrip retains historical and pending fields; replay neither selects local record nor refreshes originals."
+    testRef: "tests/guided-interview/guided-pa-royalty-native.test.ts::saved source replay does not refresh historical records"
+  - line: "mounted-correction-positive"
+    formula: "Native actual original/current receipt use amendment-review and post-review complete-account fields originate a real separately documented100 correction; historical211001 stays, current210901/PA6475; no agency amendment conclusion inferred."
+    testRef: "tests/apps/web/pa-royalty-native-details.test.tsx::originates full actual historical expense correction records through native controls"
+  - line: "independent-filed-use-entry"
+    formula: "Filed copyright-use facts are independently entered from historical records; current copyright-use cannot silently populate historical original use. Same40controls and money remain; mounted complete entry now explicitly supplies every actual filed-use field."
+    testRef: "tests/apps/web/pa-royalty-native-details.test.tsx::originates complete MI history and settlement through actual labeled controls"

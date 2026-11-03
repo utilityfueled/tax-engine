@@ -114,6 +114,7 @@ function StateSummaryRow({
 
 export function SectionStateReturn({
   stateCode,
+  currentWorkspaceId,
   data,
   guidedPreview,
   onDataChange,
@@ -123,6 +124,7 @@ export function SectionStateReturn({
   filingStatus,
 }: {
   stateCode: SupportedStateCode;
+  currentWorkspaceId?: string;
   originalInput?: TaxYearInput | null;
   ordinaryOriginalInput?: TaxYearInput | null;
   taxYear?: number | null;
@@ -231,7 +233,7 @@ export function SectionStateReturn({
             onChange={bound => onDataChange({...current,paResidencySources:bound.residencySources,paReciprocitySources:bound.reciprocitySources})} />}
           <PAOrdinaryReturnDetails originalInput={ordinaryOriginalInput ?? null} data={current.paOrdinaryReturnFacts}
             onChange={paOrdinaryReturnFacts => onDataChange({ ...current, paOrdinaryReturnFacts })} />
-          <PAOrdinaryReturnCompletionDetails originalInput={ordinaryOriginalInput ?? null} ordinaryFacts={current.paOrdinaryReturnFacts} data={current.paOrdinaryReturnCompletionSources}
+          <PAOrdinaryReturnCompletionDetails currentWorkspaceId={currentWorkspaceId} originalInput={ordinaryOriginalInput ?? null} ordinaryFacts={current.paOrdinaryReturnFacts} data={current.paOrdinaryReturnCompletionSources}
             onChange={paOrdinaryReturnCompletionSources => onDataChange({ ...current, paOrdinaryReturnCompletionSources })} />
         </>}
 
