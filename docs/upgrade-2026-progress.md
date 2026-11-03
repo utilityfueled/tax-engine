@@ -2220,3 +2220,12 @@ Independent review approves15 mainPDFs/253pages with exact text/render parity
 and strict privacy/reference checks. The [export ledger](upgrade-2026-workspace-state-export-ledger.md)
 distinguishes source-complete finite review methods from open filing/form and
 release qualification gates.
+
+### November2: standalone flattened-PDF reference repair
+
+The explicit flatten operation now removes only widget references deleted by
+that operation, including their invalidated structure kids, while retaining
+preexisting malformed objects and unrelated tags/links. Main10 genuine failures/
+one pass precede the exact reviewed product;29/four, portable11, types3/spec7008/
+inventory/strict0/builds pass. The [PDF ledger](upgrade-2026-pdf-standalone-flatten-ledger.md)
+retains every original failure and the independent review boundary.

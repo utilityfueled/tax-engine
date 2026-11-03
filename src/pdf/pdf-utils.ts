@@ -3,7 +3,7 @@
  * Formatting and field-setting helpers for IRS fillable PDFs.
  */
 
-import { PDFDocument, PDFForm, PDFTextField, PDFCheckBox, StandardFonts, ParseSpeeds, PDFDict, PDFName } from "pdf-lib";
+import { PDFDocument, PDFForm, PDFTextField, PDFCheckBox, StandardFonts, ParseSpeeds, PDFArray, PDFDict, PDFName, PDFObject, PDFRef, PDFStream } from "pdf-lib";
 import { readFile, writeFile, mkdir } from "fs/promises";
 import { basename, dirname } from "path";
 import Decimal from "decimal.js";
@@ -242,7 +242,81 @@ export async function flattenForm(form: PDFForm): Promise<void> {
   } catch {
     // Some PDFs have partial appearance metadata; fall back to flattening anyway.
   }
+  // pdf-lib can delete a widget object while leaving its page annotation ref.
+  // Snapshot only resolved widgets so unrelated invalid originals stay visible.
+  const pageWidgets = form.doc.getPages().map(page => {
+    const widgets = new Set<PDFRef>();
+    for (const reference of page.node.Annots()?.asArray() ?? []) {
+      const annotation = form.doc.context.lookup(reference);
+      if (reference instanceof PDFRef && annotation instanceof PDFDict
+        && form.doc.context.lookup(annotation.get(PDFName.of("Subtype"))) === PDFName.of("Widget")) widgets.add(reference);
+    }
+    return { page, widgets };
+  });
   form.flatten({ updateFieldAppearances: false });
+  const deletedWidgets = new Set<PDFRef>();
+  for (const { page, widgets } of pageWidgets) {
+    for (const reference of widgets) {
+      if (form.doc.context.lookup(reference) === undefined) deletedWidgets.add(reference);
+    }
+    const annotations = page.node.Annots();
+    if (!annotations) continue;
+    for (let i = annotations.size() - 1; i >= 0; i--) {
+      const reference = annotations.get(i);
+      if (reference instanceof PDFRef && widgets.has(reference) && deletedWidgets.has(reference)) annotations.remove(i);
+    }
+    // Keep the array even when empty: pdf-lib caches page normalization and a
+    // subsequent addAnnot must still be able to append a valid annotation.
+  }
+  removeDeletedWidgetStructureKids(form, deletedWidgets);
+}
+
+/** Keep existing tags, pruning only OBJR kids invalidated by this flatten. */
+function removeDeletedWidgetStructureKids(form: PDFForm, deletedWidgets: Set<PDFRef>): void {
+  if (deletedWidgets.size === 0) return;
+  const context = form.doc.context;
+  const root = context.lookup(form.doc.catalog.get(PDFName.of("StructTreeRoot")));
+  if (!(root instanceof PDFDict)) return;
+  const visited = new Set<PDFObject>();
+  const removedIndirectKids = new Set<PDFRef>();
+  const prune = (kid: PDFObject): boolean => {
+    const object = context.lookup(kid);
+    if (!(object instanceof PDFDict) && !(object instanceof PDFArray)) return false;
+    if (object instanceof PDFDict && context.lookup(object.get(PDFName.of("Type"))) === PDFName.of("OBJR")) {
+      const target = object.get(PDFName.of("Obj"));
+      if (target instanceof PDFRef && deletedWidgets.has(target)) {
+        if (kid instanceof PDFRef) removedIndirectKids.add(kid);
+        return true;
+      }
+      return false;
+    }
+    if (visited.has(object)) return false;
+    visited.add(object);
+    if (object instanceof PDFArray) {
+      for (let i = object.size() - 1; i >= 0; i--) if (prune(object.get(i))) object.remove(i);
+    } else {
+      const children = object.get(PDFName.of("K"));
+      if (children && prune(children)) object.delete(PDFName.of("K"));
+    }
+    return false;
+  };
+  prune(root);
+  // Do not serialize a now-unreachable indirect OBJR containing the deleted ref.
+  // Preserve it if some other original structure still references it; that
+  // ambiguity must stay visible rather than creating another dangling ref.
+  const containsReference = (object: PDFObject, reference: PDFRef, seen: Set<PDFObject>): boolean => {
+    if (object instanceof PDFRef) return object === reference;
+    if (seen.has(object)) return false;
+    seen.add(object);
+    if (object instanceof PDFArray) return object.asArray().some(value => containsReference(value, reference, seen));
+    if (object instanceof PDFDict) return object.values().some(value => containsReference(value, reference, seen));
+    if (object instanceof PDFStream) return containsReference(object.dict, reference, seen);
+    return false;
+  };
+  for (const reference of removedIndirectKids) {
+    if (!context.enumerateIndirectObjects().some(([objectReference, object]) => objectReference !== reference
+      && containsReference(object, reference, new Set()))) context.delete(reference);
+  }
 }
 
 /**

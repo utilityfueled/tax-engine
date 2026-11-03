@@ -13412,5 +13412,36 @@
       "independentSourceInvestigation": "active; no fabricated source facts",
       "receipt": "nov02-parent-workspace-main/all-workspace-consumers.json"
     }
+  },
+  "nov02MainStandalonePDFFlatten": {
+    "baseCommit": "0b7e181b",
+    "productSHA256": "64e72959df002721cdedae0681f1c4f066bdc69d3ea70285656d2df43511d481",
+    "status": "main scoped checks and independent actual-artifact/portable-harness review pass",
+    "sourceFirst": {
+      "failed": 10,
+      "passed": 1
+    },
+    "tests": {
+      "focused": 29,
+      "files": 4,
+      "normalSuiteWithoutPrivateOutputVariable": 11
+    },
+    "specLines": 7008,
+    "types": "root/web/contracts pass",
+    "strictLint": "0 warnings",
+    "builds": "engine/web pass",
+    "inventory": "generated/check pass",
+    "deliberateOriginalInvalidityPreserved": true,
+    "priorIndependentReceiptSHA256": "8871e57e103eaf3fbb529122f6fafe761d5d11bd9c284a95e48a636dc6710be9",
+    "evidence": "nov02-parent-pdf-standalone-main*",
+    "releaseReady": false,
+    "independentMainReviewSHA256": "b83a0fc79f83988f9ad680648c1d5dd86eded140ab2c25c82d1251c8268ca796",
+    "actualMainPDFs": {
+      "files": 28,
+      "pages": 52,
+      "intentionalOriginalMissingReferences": 4,
+      "unexpectedMissingReferences": 0,
+      "allTextAndRenderedPagesExactApproved": true
+    }
   }
 }

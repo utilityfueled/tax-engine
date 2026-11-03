@@ -277,3 +277,18 @@ Parent real auth/billing regression:173/seven passes (`nov02-parent-hosted-previ
   intentional sourceguard retained. Independent conformity/source investigation
   active; no invented missingfacts or artificial negative migration. Scoped61
   and actual15PDF review remain valid. Finalglobalcheck still fails.
+
+- [x] Pushed workspace finite source-replay integration `0b7e181b`; scoped61
+  and15PDF253page independentchecks pass. Broader180/181/56 failure remains
+  exact original PA-COD positive; official conformity and missing source details
+  now identified, source-contract successor under independent work.
+- [x] Main standalonePDF exactcorrected product64e729: genuine10fail1pass
+  before, then29/four +normal-no-private-env11, types3/spec7008/inventory/
+  strict0/bothbuilds/diff pass. Minimal temp-output harness correction retains
+  every testbody/assertion. Mainactual28PDF52pages independentreview active.
+
+- [x] StandalonePDF main28/52pages distinct review approved b83a0fc7; helper
+  portability leaves entire11testbody suffix exact. Readycommit/push.
+- [ ] Dividend6 frozen45150dc6, author9+659/type3/spec6991/strict0/builds;
+  distinctreview active, no mainadoptionyet. Digitalcore20 nowpass afterretained
+  genuine redundant-scalar guardfailure; actualwholepanel3RED, offlineUI next.

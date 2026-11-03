@@ -8153,6 +8153,46 @@
       ]
     },
     {
+      "key": "federal/pdf-standalone-flatten",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://pdf-lib.js.org/docs/api/classes/pdfform#flatten; pinned pdf-lib 1.17.1 PDFForm.ts flatten/removeField; local review-export contract",
+      "specPath": "spec/federal/pdf-standalone-flatten.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/pdf-standalone-independent",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://pdf-lib.js.org/docs/api/classes/pdfform#flatten",
+      "specPath": "spec/federal/pdf-standalone-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/personal-credit-ordering",
       "jurisdiction": "federal",
       "taxYear": null,

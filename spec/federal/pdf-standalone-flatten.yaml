@@ -1,0 +1,54 @@
+form: "Standalone flattened review PDF annotation integrity"
+fullName: "Only widget references invalidated by the explicit flatten operation are removed"
+taxYear: 2026
+reference: "https://pdf-lib.js.org/docs/api/classes/pdfform#flatten; pinned pdf-lib 1.17.1 PDFForm.ts flatten/removeField; local review-export contract"
+notes: |
+  This structural repair applies to explicitly flattened review documents, including
+  ordinary standalone savePdf and fillReturn flatten routes. It changes no tax
+  arithmetic, template qualification, identity redaction, signature workflow, filing
+  gates or default interactive export. It does not repair unrelated invalid inputs.
+  Snapshot the actual resolved widget references on each page before flattening.
+  After existing appearance generation and flattening, remove only those snapshot
+  references that no longer resolve. Do not remove any resolved annotation, including
+  orphan widgets absent from catalog Fields; do not erase preexisting missing refs.
+  Tagged forms can also reference deleted widgets from StructTreeRoot descendant
+  /K object-reference (OBJR) children. Remove only children targeting the same proven
+  deleted widgets. Preserve other tags, MCR/MCIDs, parent identities and ParentTree
+  mappings. This does not tag newly painted appearances or claim PDF/UA conformance.
+  Retain an existing page Annots array when it becomes empty: pdf-lib caches page
+  normalization, so deleting the key can break later addAnnot operations. The
+  unchanged original temporary-merge regression must still add its link/missing
+  ref after flatten, and its intentional missing-ref oracle must remain visible.
+  Independent review found three supported representation boundaries: resolve
+  indirect name-valued Widget Subtype and OBJR Type entries before classification;
+  include a PDFStream's dictionary when checking whether an indirect pruned OBJR
+  is still referenced by original extension metadata. Preserve that object and its
+  existing ambiguity rather than creating a new dangling extension reference.
+  Immutable independent eleven controls/spec/reader cover these boundaries in
+  spec/federal/pdf-standalone-independent.yaml. Initial eight pass/three failures
+  and exact malformed saved artifacts remain retained as evidence.
+lines:
+  - line: "standalone-synthetic"
+    description: "Ordinary saved flattened bytes resolve every generated widget reference"
+    formula: "A two-page form with one shared text field and a checkbox is flattened once and saved without pageOnlyTemporaryMerge. Independently reopened bytes have no fields/widgets/unresolved references, retain values and valid Link/Text annotations, and have one review notice per page."
+    testRef: "tests/pdf/standalone-flatten-annotations.test.ts::repairs only widget refs invalidated by standalone flatten across shared-field pages"
+  - line: "actual-pa40"
+    description: "The committed physical PA40 template works in both ordinary serialization modes"
+    formula: "Fill diagnostic gain200 and withholding123 on the actual template, explicitly flatten, and ordinary-save with object streams enabled and disabled. Independent strict reader resolves annotations, sees no fields/widgets, preserves both values and review notices. Original bad business PA40 PDFs remain retained as negative evidence."
+    testRef: "tests/pdf/standalone-flatten-annotations.test.ts::actual PA40 standalone flatten resolves annotations with object streams"
+  - line: "actual-call-chain"
+    description: "The actual fillReturn flatten route emits structurally readable standalone components"
+    formula: "Replay the existing actual resident ordinary-business fixture, redact identifiers through existing policy, and fillReturn with flatten true without pageOnlyTemporaryMerge. Independently read every saved component with strict recursive object resolution, require no fields/widgets/unresolved references, exact current monetary text and no original identifiers, unchanged inputs and disabled filing eligibility."
+    testRef: "tests/pdf/standalone-flatten-annotations.test.ts::actual ordinary fillReturn standalone components resolve without temporary merge"
+  - line: "narrow-removal"
+    description: "Do not conceal invalid originals or discard unresolved form ambiguity"
+    formula: "A preexisting missing reference remains present after flatten and ordinary save. A resolved orphan page Widget absent from Fields and valid Link/Text annotations also remain. Only the resolved canonical field widget deleted by this flatten disappears. The original temporary-merge synthetic missing reference remains unresolved under ordinary save (expected count 3 becomes 1 because the two generated widget refs are repaired)."
+    testRef: "tests/pdf/standalone-flatten-annotations.test.ts::preserves preexisting missing refs and orphan widget ambiguity"
+  - line: "interactive-signature-structure"
+    description: "Default interactive save does not invoke cleanup or flatten signatures"
+    formula: "Save an interactive synthetic form with text and checkbox values plus an unsigned signature field structure. Independent canonical Fields and page Widgets agree on values and appearance streams; checkbox widget AS equals canonical V and names an available AP/N state. Set the synthetic checkbox after adding its widget so the source fixture itself is visually consistent. The signature field, value dictionary and byte range remain present. This is structural preservation only, not cryptographic signature validation or signed-document flatten authorization."
+    testRef: "tests/pdf/standalone-flatten-annotations.test.ts::default interactive save preserves canonical widgets and signature structure"
+  - line: "deleted-widget-structure-kids"
+    description: "Prune only stale object-reference kids for widgets deleted by this flatten"
+    formula: "A mixed synthetic structure tree contains direct and indirect deleted-widget OBJRs, valid link and orphan-widget OBJRs, retained MCR MCID7, stable parent IDs, IDTree and ParentTree values. After explicit flatten and standalone save, strict recursive reader resolves every reachable ref, only deleted-widget kids are absent, and all retained tags/MCIDs/parent mappings remain exact. Existing full-return strict control exercises eight physical federal tagged templates with 592 deleted-widget OBJRs. Unused former-widget ParentTree keys remain resolved to preserved parents; no new accessibility or signed-document claim."
+    testRef: "tests/pdf/standalone-flatten-annotations.test.ts::prunes only deleted-widget structure kids and preserves mixed tags and parent mappings"

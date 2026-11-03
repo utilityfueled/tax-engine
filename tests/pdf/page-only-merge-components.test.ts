@@ -95,8 +95,9 @@ def read(path):
  r=PdfReader(path); annotations=[a.get_object() for p in r.pages for a in p.get('/Annots',[])]
  return {'unresolved':sum(a is None for a in annotations),'links':[str(a.get('/A',{}).get('/URI')) for a in annotations if a is not None and a.get('/Subtype')=='/Link'],'widgets':sum(a is not None and a.get('/Subtype')=='/Widget' for a in annotations),'fields':len(r.get_fields() or {}),'pages':[p.extract_text() or '' for p in r.pages]}
 print(json.dumps([read(p) for p in sys.argv[1:]]))`, ordinary, temporary], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 5000 }));
-  // The two original widget refs left by flattening plus the explicit missing ref.
-  expect(values[0].unresolved).toBe(3);
+  // Spec: pdf-standalone-flatten.yaml narrow-removal. The two generated widget
+  // refs are now repaired by flattenForm; the explicit preexisting missing ref stays.
+  expect(values[0].unresolved).toBe(1);
   expect(values[1].unresolved).toBe(0);
   expect(values[1].links).toEqual(["https://example.invalid/source"]);
   expect(values[0].links).toEqual(values[1].links);
