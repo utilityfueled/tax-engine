@@ -2590,3 +2590,7 @@ Actual2025 single-primary NR/PY C records now originate from blank property/payr
 ### November3: separately owned married Pennsylvania official review forms
 
 Finite2025 original-bound J/M households now render actual owned PA40 and positive-credit Schedule SP review companions. Three genuine current-main failures precede unchanged reviewed adoption; distinct19 plus author9 and adjacent249 yield277/15PASS, and all12checks pass. Root strictly checks actual12PDF/24pages, compares all24page pixels and inspects every page. See [the physical ledger](upgrade-2026-pa-married-official-review-work.md). Public download routing, broader cohorts, qualified human/final2026 and distribution/staging gates remain open. Ohio nativebusiness869a3ce4 is pushed.
+
+### November3: distinct Ohio resident-credit payment originals
+
+Finite2025 Virginia paid-tax records now distinguish equal-day/equal-value balance payments using linked settled-bank and applied-agency originals, rejecting reused trace/posting identities globally. Fresh four-case mainRED precedes unchanged reviewed adoption. Distinct31 plus original165 and disjoint1765 yield1961/73PASS; all12checks pass. See [the transaction ledger](upgrade-2026-ohio-resident-credit-transactions-work.md). Source validation does not authenticate external accounts; native/physical/human/final2026/distribution/staging qualification remains open. PAphysical608fa550 is pushed.

@@ -77,11 +77,27 @@ export function buildOhioResidentCreditSource(input:TaxYearInput,result:TaxRetur
  if(!new D(filed.federalAgi).eq(wages)||!new D(filed.incomeTaxedByVirginia).eq(virginia)||!new D(filed.withholding).eq(va.withheld.toFixed())||!new D(filed.incomeTaxBeforeCredits).minus(filed.nonrefundableCredits).eq(filed.netIncomeTax)||!new D(filed.netIncomeTax).eq(account.netIncomeTax))fail('actual same income net liability after credits and original W2 withholding do not reconcile');
  for(const record of [filed,account])for(const key of ['outgoingCredit','otherTaxes','penalties','interest'] as const)if(!new D(record[key]).isZero())fail('other actual account taxes/credits/penalties need separate composition');
  if(!new D(account.unpaidTax).isZero()||!new D(account.unappliedPayments).isZero())fail('actual paid complete account required; unsettled tax is not paid');
- let withheld=new D(0),estimated=new D(0),balance=new D(0),refund=new D(0);const receiptIds=new Set<string>(),receiptRefs=new Set<string>(),semantic=new Set<string>();
+ let withheld=new D(0),estimated=new D(0),balance=new D(0),refund=new D(0);
+ const receiptIds=new Set<string>(),receiptRefs=new Set<string>(),semantic=new Map<string,boolean>();
+ const bankTraces=new Set<string>(),agencyPostings=new Set<string>();
  for(const [list,refundList] of [[account.payments,false],[account.refunds,true]] as const)for(const row of list){
   const id=normalize(row.sourceId),ref=normalize(row.sourceReference),day=date(row.date),meaning=digest({kind:row.kind,date:row.date,amount:new D(row.amount).toFixed()});
-  if(digest(row.originalTaxpayer)!==digest(identity)||receiptIds.has(id)||receiptRefs.has(ref)||semantic.has(meaning)||day<date('2025-01-01')||day>date(account.statementDate)||refundList!==(row.kind==='refund')||refundList&&day<date(filed.filedDate))fail('actual unique applied payment/refund originals owner chronology differs');
-  receiptIds.add(id);receiptRefs.add(ref);semantic.add(meaning);
+  if(digest(row.originalTaxpayer)!==digest(identity)||receiptIds.has(id)||receiptRefs.has(ref)||day<date('2025-01-01')||day>date(account.statementDate)||refundList!==(row.kind==='refund')||refundList&&day<date(filed.filedDate))fail('actual unique applied payment/refund originals owner chronology differs');
+  const originals=row.transactionOriginals;
+  if(originals){
+   if(refundList||row.kind!=='balance')fail('settled ACH-credit balance originals cannot establish withholding estimates or refunds');
+   const bank=originals.bankTransferOriginal,posting=originals.agencyPostingOriginal;
+   if(digest(bank.originalTaxpayer)!==digest(identity)||digest(posting.originalTaxpayer)!==digest(identity)
+      ||!new D(bank.amount).gt(0)||!new D(bank.amount).eq(row.amount)||!new D(posting.amount).eq(row.amount)
+      ||date(bank.settlementDate)!==day||date(posting.postingDate)<day||date(posting.postingDate)>date(account.statementDate)
+      ||posting.accountSourceReference!==account.sourceReference||posting.achTraceNumber!==bank.achTraceNumber)
+    fail('actual settled bank and applied agency transaction originals do not reconcile');
+   const postingId=normalize(posting.postingId);
+   if(bankTraces.has(bank.achTraceNumber)||agencyPostings.has(postingId))fail('an actual bank trace or agency posting cannot establish two payments');
+   bankTraces.add(bank.achTraceNumber);agencyPostings.add(postingId);
+  }
+  if(semantic.has(meaning)&&(!semantic.get(meaning)||!originals))fail('indistinguishable receipt rows require distinct actual bank and agency transaction originals');
+  receiptIds.add(id);receiptRefs.add(ref);semantic.set(meaning,Boolean(originals));
   if(row.kind==='withholding')withheld=withheld.plus(row.amount);else if(row.kind==='estimated')estimated=estimated.plus(row.amount);else if(row.kind==='balance')balance=balance.plus(row.amount);else refund=refund.plus(row.amount);
  }
  if(!withheld.eq(filed.withholding)||!estimated.eq(filed.estimatedPayments)||!balance.eq(filed.balancePayments)||!refund.eq(filed.refund)||!withheld.plus(estimated).plus(balance).minus(refund).eq(account.netIncomeTax))fail('completed account net applied payments/refunds do not equal actual net income tax');

@@ -5,7 +5,17 @@ const date=z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const money=z.string().regex(/^\d{1,15}(?:\.\d{1,2})?$/);
 const person=z.object({firstName:ref,lastName:ref,ssn:ref}).strict();
 const identity={taxYear:z.literal(2025),accountHolder:z.literal('primary'),originalTaxpayer:person};
-const receipt=z.object({...identity,sourceId:ref,sourceReference:ref,kind:z.enum(['withholding','estimated','balance','refund']),date,amount:money}).strict();
+// Actual ACH-credit originals, not an arbitrary provider/filing confirmation.
+// Virginia Electronic Payment Guide Appendix B: mandatory numeric15 entry trace.
+const transactionIdentity={...identity,sourceReference:ref,stateCode:z.literal('VA'),
+ purpose:z.literal('individual_income_tax_balance'),taxPeriodEnd:z.literal('2025-12-31'),
+ amount:money,achTraceNumber:z.string().regex(/^\d{15}$/)};
+const transactionOriginals=z.object({
+ kind:z.literal('settled_ach_credit'),
+ bankTransferOriginal:z.object({...transactionIdentity,settlementDate:date,status:z.literal('settled')}).strict(),
+ agencyPostingOriginal:z.object({...transactionIdentity,accountSourceReference:ref,postingDate:date,postingId:ref,status:z.literal('applied')}).strict(),
+}).strict();
+const receipt=z.object({...identity,sourceId:ref,sourceReference:ref,kind:z.enum(['withholding','estimated','balance','refund']),date,amount:money,transactionOriginals:transactionOriginals.optional()}).strict();
 export const OhioResidentCreditSourcesSchema=z.object({
  sourceTaxYear:z.literal(2025),sourceReference:ref,sourceFactsConfirmed:z.literal(true),accountHolder:z.literal('primary'),originalTaxpayer:person,originalW2:z.record(z.string(),z.unknown()),
  allIncomeOriginalsIncludedConfirmed:z.literal(true),noOtherIncomeOrAdjustmentsConfirmed:z.literal(true),noSpecialCompensationConfirmed:z.literal(true),taxDeductedInFederalAgi:z.literal('none'),

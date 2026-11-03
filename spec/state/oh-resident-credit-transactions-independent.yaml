@@ -1,0 +1,22 @@
+form: "OH-RESIDENT-CREDIT-TRANSACTIONS-INDEPENDENT"
+taxYear: 2025
+jurisdiction: "OH"
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5747.05"
+sourceRevision: "B(5)(c), F effective2025-09-30; Virginia Electronic Payment Guide AppendixB printed16"
+reviewStatus: "independent technical controls before candidate product inspection; qualified human review pending"
+lines:
+  - line: "actual-settlement"
+    description: "Distinct independent bank settlement and applied agency posting bind actual owner/year/VA/purpose/period/cent amount/trace/account/date. Numeric15 ACH trace is specific to this rail, not a generic confirmation."
+    formula: "actual_paid = withholding + distinct_settled_applied_balance_receipts - completed_refund; no initiation-as-paid"
+    testRef: "tests/engine/state/oh-resident-credit-transactions-independent.test.ts::independent receipt originals retain literal paid tax %s"
+  - line: "no-duplicate-cash"
+    description: "Every same-day equal-value collision member needs bank and agency originals. Distinct source display references cannot make reused traces or postings distinct cash."
+    formula: "credit = min(round(actual_paid),1394); Ohio_refund = 2000 - (2323 - credit)"
+    testRef: "tests/engine/state/oh-resident-credit-transactions-independent.test.ts::independent receipt originals reject reused cash identity %s"
+
+  - line: "contradictory-original"
+    formula: "Deny unknown/mismatched actual settlement and agency proof without producing cash; no oracle or product change"
+    testRef: "tests/engine/state/oh-resident-credit-transactions-independent.test.ts::independent receipt originals reject contradictory proof %s"
+  - line: "private-binding"
+    formula: "Proof and account references remain private; altered same-cash adapted receipt denies; old unique receipt stays supported"
+    testRef: "tests/engine/state/oh-resident-credit-transactions-independent.test.ts::independent receipt originals preserve private binding and known legacy path"

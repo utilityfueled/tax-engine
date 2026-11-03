@@ -181,3 +181,9 @@ pages pass strict privacy and reviewed pixel/visual checks. See
 [the renderer ledger](upgrade-2026-pa-married-official-review-work.md). This does
 not complete public routing, broader cohorts, final2026 forms, human review or
 hosted/self-hosted qualification. All completion criteria above remain required.
+
+Execution evidence2026-11-03: the bounded Ohio resident-credit linked-payment
+source successor passes distinct31/current-main1961 plus all12 checks. See
+[the transaction ledger](upgrade-2026-ohio-resident-credit-transactions-work.md).
+External account authenticity, native/physical/human/final2026 and deployment
+qualification remain separate required evidence.
