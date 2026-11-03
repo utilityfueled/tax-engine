@@ -15115,7 +15115,7 @@
     "isolatedPostgresPendingInThisRun": 33,
     "currentCoveragePending": "Last91b80 thresholds allpassed but suite had3fail, nowclosedby0100unit; freshcoverage aftercurrentpackages required",
     "releaseReady": false,
-    "nativeCarePackage": "75native+adjacent and8savedPDF controls;13checksetsPASS; known preexisting reference count display fix active"
+    "nativeCarePackage": "730c07fa pushed;75native+adjacent/8savedPDF/13checksetsPASS; DCreferencecountdisplay nowcorrected2RED\u219213PASS, actualbrowseractive"
   },
   "nov03NativeActualCareSources": {
     "status": "approved-finite-native-source-entry-and-saved-money-controls",
@@ -15153,5 +15153,13 @@
     ],
     "localEvidence": ".local/upgrade-evidence/nov03-root-care-native-main",
     "reviewSHA256": "1140deeb1bdef937816c2b9269641d1be4b00ae9cc0b1936332951c6d06f56b6"
+  },
+  "nov03DCReferenceCountDisplay": {
+    "reviewSHA256": "a44c935addfc8e1ec9ee883ecf087eef10d4dc7ec2aab21e4640e575cd6e3d04",
+    "redSHA256": "7226bc042caf5614ad9adc4ef74b6a2846a31bf217d520c2693f1e0f335f58c8",
+    "savedAndAdjacentTests": 13,
+    "correctedSavedPagesVisuallyReviewed": 2,
+    "status": "finite-display-correction-pass",
+    "filingCopyQualified": false
   }
 }

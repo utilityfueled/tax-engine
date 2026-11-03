@@ -89,3 +89,20 @@ Independent receipt SHA256
 Actual normal-browser desktop/mobile qualification is a successor in progress.
 Broader care methods, full upload-to-delete journeys, final2026 forms, filing
 exports and required human review remain separate criteria.
+
+### Reference count display correction
+
+The visual defect above is corrected in a separate display-only package.
+Spec-linked saved outputs for one and two persons both genuinely failed before
+product (RED SHA256 `7226bc042caf5614ad9adc4ef74b6a2846a31bf217d520c2693f1e0f335f58c8`).
+Explicit count/USD units preserve counts1/2 without currency, credits600/1200
+with currency, and the reference-only disclosure. Thirteen saved/adjacent tests,
+root types, spec/AST/inventory and zero-warning scoped lint pass. The first
+strict run exposed six pre-existing nonnull warnings in the adjacent test;
+explicit guards preserve every original assertion and the final run passes.
+Parent rendered and inspected both corrected saved pages; no clipping or
+incorrect units remain. Distinct static review approves the four exact paths
+(receipt SHA256 `1b80ca7c5a17b0073b9338cf133854546f246b9e7cb4cb8df328ed10a36f5867`).
+Parent review SHA256 `a44c935addfc8e1ec9ee883ecf087eef10d4dc7ec2aab21e4640e575cd6e3d04` in
+`.local/upgrade-evidence/nov03-root-dc-units-main-final/root-review.json`.
+This remains a reference summary; official DC physical qualification is open.

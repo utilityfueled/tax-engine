@@ -21,6 +21,7 @@ export const PA_SCHEDULE_DC_REFERENCE_FILENAME = "pa-schedule-dc-reference.pdf";
 export interface PAScheduleDCReferenceSummaryLine {
   label: string;
   value: string;
+  unit: "count" | "USD";
 }
 
 export interface PAScheduleDCReferenceSummary {
@@ -104,9 +105,9 @@ export function buildPAScheduleDCReferenceSummary(
     introduction: "This page summarizes the supported Pennsylvania Schedule DC child and dependent care credit computation. It is not an official PA Schedule DC filing copy.",
     filingTrigger: "Attach when the resident return computes a positive Pennsylvania child and dependent care enhancement credit for PA-40 Line 23.",
     totals: [
-      { label: "Line 1 qualifying persons", value: result.qualifyingPersons.toString() },
-      { label: "Federal Form 2441 Line 9a credit", value: result.federalCredit.toString() },
-      { label: "PA-40 Line 23 Schedule DC credit", value: result.credit.toString() },
+      { label: "Line 1 qualifying persons", value: result.qualifyingPersons.toString(), unit: "count" },
+      { label: "Federal Form 2441 Line 9a credit", value: result.federalCredit.toString(), unit: "USD" },
+      { label: "PA-40 Line 23 Schedule DC credit", value: result.credit.toString(), unit: "USD" },
     ],
   };
 }
@@ -162,7 +163,7 @@ export async function fillPAScheduleDCReference(
   y -= 16;
 
   for (const total of summary.totals) {
-    y = drawWrappedText(page, `${total.label}: ${formatWholeDollar(total.value)}`, {
+    y = drawWrappedText(page, `${total.label}: ${total.unit === "count" ? total.value : formatWholeDollar(total.value)}`, {
       font: regular,
       size: BODY_FONT_SIZE,
       x: PAGE_MARGIN,

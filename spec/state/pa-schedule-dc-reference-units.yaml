@@ -1,0 +1,13 @@
+form: "PA Schedule DC reference units"
+fullName: "Saved reference summary count and currency units"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40dc.pdf"
+notes: |
+  Official line1 is a qualifying-person count, not dollars. Reference summaries
+  must preserve that distinction while displaying dollar credits with currency.
+  This display correction does not qualify an official filing copy or change
+  tax arithmetic, source admission, withholding, or any readiness gate.
+lines:
+  - line: "count-and-currency"
+    formula: "Render actual count1 or2 as an unprefixed integer; preserve federal and PA credits600 or1200 as currency. Reopen saved PDF and check extracted text, review disclosure and one-page layout."
+    testRef: "tests/pdf/pa-schedule-dc-reference-units.test.ts::saved DC reference displays persons as a count and credits as currency %s"

@@ -2,11 +2,16 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] DC reference count now displays persons1/2 without currency; dollar
+  credits600/1200 remain exact. SavedPDF2RED→13saved/adjacentPASS, type/spec/AST/
+  inventory/strict checks and distinct static review pass; both corrected pages
+  visually inspected. Official DC filing-copy qualification remains open.
+
 - [x] Native actual-care entry and saved monetary checks pass75/6 plus8PDF
   controls; all13relevant checksets pass. Blank/unknown facts, explicit capture,
   edit invalidation and original replay remain intact. Parent visual inspection
   found the existing DC reference prints the person count as currency; that
-  immediate display correction and actual browser successor remain active.
+  display correction is delivered immediately below; actual browser successor remains active.
   [Evidence and limits](upgrade-2026-pa-ordinary-care-source-work.md).
 
 - [x] Pushed `0100f40c` full `pnpm test`:22,704pass/0fail/33isolated-PG
