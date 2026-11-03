@@ -1,4 +1,4 @@
-/** Spec: state/oh-ordinary-official-review.yaml. Static redacted review only. */
+/** Specs: state/oh-ordinary-official-review.yaml; state/oh-reciprocal-official-review.yaml. Static redacted review only. */
 import { createHash } from 'node:crypto';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -11,7 +11,7 @@ import { calculateOhioResidentReturn } from '@/engine/state/oh-return.js';
 import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
 import { redactReviewIdentifiers } from '@/pdf/redact-review-identifiers.js';
 import { assertPdfExportAllowed, markReviewPdf } from '@/pdf/export-policy.js';
-import { d, roundDollar } from '@/utils/decimal.js';
+import { d, roundDollar, zeroFloor } from '@/utils/decimal.js';
 
 const bundleHash = '4e6432e23df3bf181a8e9d7ee5d5bb7e2e96a6a21dd65fa39c625fb8a7e2f57c';
 const nrcHash = '7e2f83559370510e129a6d720e090ae08aeefffcc75083c0b91561df85639c52';
@@ -74,7 +74,7 @@ function group(doc: PDFDocument, name: string, value: string) {
 async function flattenSource(doc: PDFDocument, sourceHasOrphan: boolean) {
   const form=doc.getForm(),pages=new Set(doc.getPages().map(p=>p.ref.toString()));let orphans=0;
   // The exact-hash bundle retains 103 text/check widgets on three non-page templates.
-  // None can appear on the seven selected review pages; clear and remove them before flattening.
+  // None can appear on the selected review pages; clear and remove them before flattening.
   for(const field of form.getFields()) {
     const widgets=field.acroField.getWidgets();
     for(let index=widgets.length-1;index>=0;index--){
@@ -101,6 +101,9 @@ export async function fillOhioOrdinaryOfficialReview(
   if(!input.ohioResidency||!input.ohioPayments||Object.keys(overlay).length)return [];
   const original=resolveOhioResidencyReview(input,federal,context);
   const adapted=buildOhioResidentReturnInput(original,federal),result=calculateOhioResidentReturn(adapted);
+  // The canonical adapter and return have already replayed this opaque source context.
+  // A domicile label or caller deduction never selects the reciprocal physical method.
+  const reciprocal=adapted.residencyReciprocalWageSource!==undefined;
   // Retained originals need their own physical companions even when net zero.
   if(Object.entries(original).some(([key,value])=>/^(?:form|schedule)/.test(key)&&value!==undefined&&value!==null&&(!Array.isArray(value)||value.length>0))||
     original.royaltyPropertySources||(original.rentalProperties?.length??0)>0||original.cryptoIncome||original.netOperatingLoss||original.adjustments||
@@ -108,33 +111,59 @@ export async function fillOhioOrdinaryOfficialReview(
   const owner=original.ohioResidency?.owners[0],w2=original.w2s[0],nrc=result.nonresidentCreditResult;
   if(original.taxpayer.filingStatus!=='single'||original.taxpayer.spouse||original.taxpayer.dependents.length||original.w2s.length!==1||!w2||w2.stateLocalSources===undefined||
     original.ohioResidency?.owners.length!==1||owner?.accountHolder!=='primary'||owner.status!=='nonresident'||owner.periods.length!==1||
-    owner.periods[0]?.from!=='2025-01-01'||owner.periods[0]?.to!=='2025-12-31'||owner.periods[0]?.domicileState!=='VA'||
+    owner.periods[0]?.from!=='2025-01-01'||owner.periods[0]?.to!=='2025-12-31'||owner.periods[0]?.domicileState!==(reciprocal?'PA':'VA')||
     original.ohioSchoolDistrict||!nrc||nrc.fullResidentOnly||!federal.agi.eq(w2.wages)||!federal.adjustmentsToIncome.isZero()||
-    !result.scheduleOfAdjustments.line14_totalAdditions.isZero()||!result.scheduleOfAdjustments.line47_totalDeductions.isZero()||
+    !result.scheduleOfAdjustments.line14_totalAdditions.isZero()||
+    (reciprocal?(!result.scheduleOfAdjustments.line14_reciprocityWages.eq(adapted.federalAgi)||!result.scheduleOfAdjustments.line47_totalDeductions.eq(adapted.federalAgi)):!result.scheduleOfAdjustments.line47_totalDeductions.isZero())||
     !result.scheduleOfCredits.line40_totalNonrefundableCredits.eq(nrc.line20)||!result.it1040.line16_refundableCredits.isZero()||
     !result.it1040.line11_underpaymentPenalty.isZero()||!result.it1040.line12_useTax.isZero()||!result.it1040.line15_estimatedPayments.isZero()||
     !result.it1040.line18_amendedPriorOverpayment.isZero()||!result.it1040.line21_latePaymentInterest.isZero()||
     !result.it1040.line24_creditCarryforward.isZero()||!result.it1040.line25_donations.isZero()||result.it1040.line3_ohioAgi.isNegative())return [];
   const sources=calculateW2StateLocalSources(original,0,w2.stateLocalSources),oh=sources.stateRows.filter(row=>row.state==='OH');
   if([nrc.line2,nrc.line3,nrc.line4,nrc.line5,nrc.line6,nrc.line7,nrc.line8,nrc.line10,nrc.line11,nrc.line12,nrc.line13,nrc.line14].some(value=>!value.isZero()))return [];
-  if(oh.length!==1||sources.localRows.length||!sources.stateRows.every(row=>row.state==='OH'||row.withheld.isZero()))return [];
+  if(oh.length!==1||sources.localRows.length||!sources.stateRows.every(row=>row.state==='OH'||(reciprocal?row.state==='PA':row.withheld.isZero())))return [];
   const ohioRow=oh[0];if(!ohioRow)throw new Error('Actual Ohio withholding row required.');
+  // Schedule W lists only statements with actual Ohio withholding; raw cents
+  // remain source facts even when the reported whole-dollar total rounds to zero.
+  const includeWithholding=!reciprocal||!ohioRow.withheld.isZero();
+  // Printed Credits40 sums nominal lines10/36/38/39 and transfers to IT1040L9.
+  // Canonical applied credits remain capped by tax; they are never mutated here.
+  const printedCreditTotal=reciprocal?result.scheduleOfCredits.line10_totalFirstBatch
+    .plus(result.scheduleOfCredits.line36_totalSecondBatch)
+    .plus(result.scheduleOfCredits.line38_nonresidentCredit)
+    .plus(result.scheduleOfCredits.line39_residentCredit):undefined;
+  if(printedCreditTotal!==undefined&&!result.it1040.line10_taxAfterCredits.eq(zeroFloor(result.it1040.line8c_totalTax.minus(printedCreditTotal))))
+    throw new Error('Ohio printed review credit arithmetic disagrees with canonical tax.');
   const display=redactReviewIdentifiers(original),bundle=await loadExact('oh-it1040-bundle.pdf',bundleHash,13),nrcDoc=await loadExact('oh-it-nrc.pdf',nrcHash,3);
   const primary=display.taxpayer.primary,address=display.taxpayer.address;
-  for(const[name,value]of Object.entries({TP_FN:primary.firstName.toUpperCase(),TP_LN:primary.lastName.toUpperCase(),ADDRESS1:address.street.toUpperCase(),CITY:address.city.toUpperCase(),STATE:address.state,ZIP:address.zip,SD_NUM:'9999',PRIM_NON_RES_STATE:'VA',L4_EXEMPT:'1'}))text(bundle,name,value);
+  for(const[name,value]of Object.entries({TP_FN:primary.firstName.toUpperCase(),TP_LN:primary.lastName.toUpperCase(),ADDRESS1:address.street.toUpperCase(),CITY:address.city.toUpperCase(),STATE:address.state,ZIP:address.zip,SD_NUM:'9999',PRIM_NON_RES_STATE:reciprocal?'PA':'VA',L4_EXEMPT:'1'}))text(bundle,name,value);
   const skipsAmountDue=result.it1040.line19_netPayments.gt(result.it1040.line13_totalLiability);
   for(const line of result.it1040.lines){const name=itFields[line.line];if(name&&!(skipsAmountDue&&['20','21','22'].includes(line.line)))text(bundle,name,line.value.toFixed(0));}
   text(bundle,'L7a',result.it1040.line7_taxableNonbusinessIncome.toFixed(0));
   for(const name of ['L25A','L25B','L25C','L25D','L25E','L25F','L25G'])text(bundle,name,'0');
   for(const line of result.scheduleOfCredits.lines){if(/^\d+$/.test(line.line))text(bundle,`SchedC_L${line.line}`,line.value.toFixed(0));}
-  for(const[name,value]of Object.entries({SchedW_A:result.it1040.line14_ohioWithholding.toFixed(0),SchedW_B_L1_PS:'P',SchedW_B_L1_WAGE:roundDollar(d(w2.wages)).toFixed(0),SchedW_B_L1_FITW:roundDollar(d(w2.federalWithheld)).toFixed(0),SchedW_B_L1_OHWAGE:roundDollar(ohioRow.wages).toFixed(0),SchedW_B_L1_OHIT:roundDollar(ohioRow.withheld).toFixed(0)}))text(bundle,name,value);
+  if(printedCreditTotal!==undefined){
+    text(bundle,'SchedC_L40',printedCreditTotal.toFixed(0));
+    text(bundle,'L9',printedCreditTotal.toFixed(0));
+  }
+  if(reciprocal){
+    // This validated finite inventory has only the printed line14 reciprocal deduction.
+    // Preserve the existing federal-wage NRC column A below; the canonical NRC view
+    // already excludes the same deducted compensation from Ohio column B.
+    for(let line=1;line<=47;line++)text(bundle,`SchedA_L${line}`,'0');
+    text(bundle,'SchedA_L14',result.scheduleOfAdjustments.line14_reciprocityWages.toFixed(0));
+    text(bundle,'SchedA_L47',result.scheduleOfAdjustments.line47_totalDeductions.toFixed(0));
+  }
+  if(includeWithholding)for(const[name,value]of Object.entries({SchedW_A:result.it1040.line14_ohioWithholding.toFixed(0),SchedW_B_L1_PS:'P',SchedW_B_L1_WAGE:roundDollar(d(w2.wages)).toFixed(0),SchedW_B_L1_FITW:roundDollar(d(w2.federalWithheld)).toFixed(0),SchedW_B_L1_OHWAGE:roundDollar(ohioRow.wages).toFixed(0),SchedW_B_L1_OHIT:roundDollar(ohioRow.withheld).toFixed(0)}))text(bundle,name,value);
   for(const[name,value]of Object.entries({'1a':roundDollar(federal.totalWages).toFixed(0),'1b':nrc.line1.toFixed(0),'2a':'0','2b':'0','3a':'0','3b':'0','4a':'0','4b':'0','5b':'0','6b':'0','7b':'0','8b':'0','9b':nrc.line9.toFixed(0),'16b':nrc.line16.toFixed(0),'17b':nrc.line17.toFixed(0),'18b':nrc.line18.toFixed(0),'19':nrc.line19.toFixed(4).replace(/^0\./,'.'),'20':nrc.line20.toFixed(0)}))text(nrcDoc,name,value);
   await bundle.getForm().updateFieldAppearances(await bundle.embedFont(StandardFonts.Helvetica));
   await nrcDoc.getForm().updateFieldAppearances(await nrcDoc.embedFont(StandardFonts.Helvetica));
   group(bundle,'CHK_PRIM_RES','3');group(bundle,'CHK_FILING_STATUS','1');
   await flattenSource(bundle,true);await flattenSource(nrcDoc,false);
   const plans=[{source:bundle,pages:[0,1],name:'oh-it-1040-review.pdf'},{source:nrcDoc,pages:[0],name:'oh-it-nrc-review.pdf'},
-    {source:bundle,pages:[6,7],name:'oh-schedule-credits-review.pdf'},{source:bundle,pages:[10,11],name:'oh-schedule-of-withholding-review.pdf'}];
+    ...(reciprocal?[{source:bundle,pages:[2,3],name:'oh-schedule-adjustments-review.pdf'}]:[]),
+    {source:bundle,pages:[6,7],name:'oh-schedule-credits-review.pdf'},
+    ...(includeWithholding?[{source:bundle,pages:[10,11],name:'oh-schedule-of-withholding-review.pdf'}]:[])];
   const prepared: Array<{path:string;bytes:Uint8Array}>=[];
   for(const plan of plans){
     const clean=await PDFDocument.create();for(const page of await clean.copyPages(plan.source,plan.pages))clean.addPage(page);

@@ -17107,5 +17107,197 @@
       "hosted upload rehearsal",
       "global/staging/provider/human/final2026 qualification"
     ]
+  },
+  "ohReciprocalOfficialPhysical20261103": {
+    "baseCommit": "57087e81",
+    "status": "bounded current-main reciprocal2025 review verified",
+    "genuineMainRed": {
+      "passed": 1,
+      "failedMissingOfficialPackets": 2,
+      "unselected": 37,
+      "log": "2a1e3f7472c91bfaae62f8dbf537aa0cd2d3b2e6a182ec2c3161afc5532e4bd7"
+    },
+    "focusedPassed": 40,
+    "adjacentPassed": 302,
+    "adjacentFiles": 21,
+    "ASTControls": 744,
+    "checks": [
+      {
+        "name": "physical40-main",
+        "command": [
+          "env",
+          "OH_RECIPROCAL_OFFICIAL_ARTIFACT_DIR=/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-physical-main/artifacts",
+          "pnpm",
+          "test",
+          "tests/pdf/oh-reciprocal-official-review.test.ts",
+          "--maxWorkers=1"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-physical-main/physical40-main.log",
+        "sha256": "a7bbb439ac0e52b3f15e08b815224ae3078aab54aa56ed506c9c90049d2a864b"
+      },
+      {
+        "name": "adjacent21",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/apps/web/oh-reciprocal-wages-guided-details.test.tsx",
+          "tests/apps/web/w2-state-local-details.test.tsx",
+          "tests/apps/web/oh-reciprocal-wages-guided-integration.test.ts",
+          "tests/apps/web/guided-w2-state-local-facts.test.ts",
+          "tests/apps/web/oh-reciprocal-wages-guided-facts.test.ts",
+          "tests/apps/web/oh-reciprocal-native-independent.test.ts",
+          "tests/engine/w2-state-local-consumers.test.ts",
+          "tests/engine/w2-state-local-independent.test.ts",
+          "tests/engine/w2-state-local-canonical.test.ts",
+          "tests/engine/state/oh-reciprocal-wage-sources.test.ts",
+          "tests/engine/state/oh-reciprocal-wages-independent.test.ts",
+          "tests/pdf/oh-ordinary-official-review.test.ts",
+          "tests/pdf/oh-official-ordinary-physical-independent.test.ts",
+          "tests/engine/forms/w2-state-local.test.ts",
+          "tests/engine/state/oh-reciprocal-pa-withholding.test.ts",
+          "tests/apps/web/tax-year-support.test.tsx",
+          "tests/pdf/export-policy.test.ts",
+          "tests/pdf/oh-residency-reference.test.ts",
+          "tests/pdf/oh-w2-withholding-reference.test.ts",
+          "tests/pdf/fill-oh-reference-forms.test.ts",
+          "tests/pdf/oh-payment-reference.test.ts",
+          "--maxWorkers=1"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-physical-main/adjacent21.log",
+        "sha256": "bc1917d1021e30e4742c23753d8c7897017e1444cd4c026f82833bbd4ad9f60e"
+      },
+      {
+        "name": "root-types",
+        "command": [
+          "pnpm",
+          "typecheck"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-physical-main/root-types.log",
+        "sha256": "5888bcaa4f681b3f7bf48999ae0817c16b3af178b8c13f7d91414fdef8ea04d9"
+      },
+      {
+        "name": "web-types",
+        "command": [
+          "pnpm",
+          "typecheck:web"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-physical-main/web-types.log",
+        "sha256": "249e0be3cf6277994e8d22e8440bebe6db10861cab79fe97aa4952837f3ff073"
+      },
+      {
+        "name": "contract-types",
+        "command": [
+          "pnpm",
+          "typecheck:contracts"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-physical-main/contract-types.log",
+        "sha256": "0c2a6bff203db409d0f68d48f7b21a6ac6bd6098310256e72a9c6e558bc3943d"
+      },
+      {
+        "name": "spec",
+        "command": [
+          "pnpm",
+          "spec:validate"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-physical-main/spec.log",
+        "sha256": "389c2c8f5ec93cc2f98381f94a1d6140fd3f8ed7ceac8d53e88fb9a4809092ac"
+      },
+      {
+        "name": "ast",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/spec/validate-testrefs.test.ts",
+          "--maxWorkers=1"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-physical-main/ast.log",
+        "sha256": "d920a8720f047bbc41fb0e9cc12e7c3cb33d319e20d5335fd31d98a76e5ff042"
+      },
+      {
+        "name": "strict-owned4",
+        "command": [
+          "pnpm",
+          "exec",
+          "eslint",
+          "src/pdf/mappings/2025/fill-oh-ordinary-official-review.ts",
+          "apps/web/src/lib/tax-year-support.ts",
+          "tests/fixtures/oh-reciprocal-official-review.ts",
+          "tests/pdf/oh-reciprocal-official-review.test.ts",
+          "--max-warnings=0"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-physical-main/strict-owned4.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "private-inventory-generate",
+        "command": [
+          "pnpm",
+          "spec:inventory"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-physical-main/private-inventory-generate.log",
+        "sha256": "3a082d2f46f0ca0c4fcd877478a9263fd09aadcf020d55f49d6c824afc20d813"
+      },
+      {
+        "name": "private-inventory-check",
+        "command": [
+          "pnpm",
+          "spec:inventory:check"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-physical-main/private-inventory-check.log",
+        "sha256": "846ee1105cfb137b691fc9b9faa383c54ef9f9e367b6b3416b2abe4ccb15cdef"
+      },
+      {
+        "name": "engine-build",
+        "command": [
+          "pnpm",
+          "build"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-physical-main/engine-build.log",
+        "sha256": "d075c8ab15a7843462a88f3304147338e40a1fb638a358eeb51b2b7984d778ec"
+      },
+      {
+        "name": "web-build",
+        "command": [
+          "pnpm",
+          "build:web"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-physical-main/web-build.log",
+        "sha256": "ab22d6716b5649ddcf43a6e65cb3d319855b6f29c82f44070b5b48ba1f24b280"
+      }
+    ],
+    "originalIndependentReview": "0db39f066180b48fe56264afbb95f5eef996c8ee5989ced9271f42224f343bdb",
+    "currentMainSavedReview": "a01e47f2de673e991b155a3b6b7b8932afbc97f92ce27086bf621f46ba198c99",
+    "saved": {
+      "files": 81,
+      "pages": 163,
+      "resolvedObjects": 5588,
+      "streams": 4082,
+      "officialTextRGBExactPages": 71,
+      "reviewNoticeExactlyOncePages": 163
+    },
+    "rawWithholding": {
+      "positive2000.60": "5files/9pages",
+      "knownZero0.00": "4files/7pages no ScheduleW or output-path writes",
+      "positive0.49": "5files/9pages despite reported0"
+    },
+    "printedNominalCredit": "20; canonical applied0/tax0/cash unchanged",
+    "filing2026": "denied",
+    "remaining": [
+      "native-to-new-physical browser",
+      "broader cohorts",
+      "current full global/distributions/staging/provider/human/final2026 qualification"
+    ]
   }
 }

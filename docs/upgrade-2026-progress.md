@@ -2660,3 +2660,7 @@ The actual three-residency PDF loop now runs as three independent cases with the
 ### November 3: upload-panel status follows actual documents
 
 One display paragraph now shows the actual local upload acknowledgement or persisted document status in Upload Documents. The full unchanged17browser cases and8static sets pass; the first16/1 duplicate-answer failure is preserved and resolved without test or budget changes. Distinct review approves. See [the UI ledger](upgrade-2026-workspace-upload-panel-status-work.md). Hosted/container/fullglobal/staging/human/final2026 qualification remains open. PA test isolation72143bc9 is pushed separately.
+
+### November 3: official reciprocal employee review companions
+
+Complete original-bound PA reciprocal wages now produce the required2025 Ohio official review pages. Main2genuineRED precede exact reviewed adoption;40focused+302adjacent and all12checks pass. Distinct current81PDF/163page strict/privacy review passes; all71official pages match approved text/RGB. Knownzero omits ScheduleW; positive0.49 retains it despite reported0, and nominal printed20 credit leaves canonical tax/cash unchanged. See [the physical ledger](upgrade-2026-oh-reciprocal-official-review-work.md). Native-to-physical/browser/global/distribution/staging/human/final2026 remain open. Uploadstatus57087e81 is pushed separately.
