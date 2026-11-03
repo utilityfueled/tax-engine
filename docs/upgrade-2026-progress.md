@@ -2696,3 +2696,7 @@ With the owner's explicit two-account approval, the existing Neon Query editor r
 ### November 3: independently retrieved Next security recommendation
 
 The official 16.4.5 release and updated advance notice now independently confirm the branch's existing version as the producer's security release for all seven tracked advisories. The seven affected/patched metadata conflicts retain their owner and November 4 19:30 UTC-or-before-qualification deadline. See the Next 16.4.5 security ledger for the source receipt and static/runtime limits. No package, lockfile, risk acceptance or readiness gate changed.
+
+### November 3: truthful Ohio review packet cover inventory
+
+Actual included artifacts now determine whether the Ohio cover describes official-form review copies, reference summaries or both. The exact eight known basenames do not promote readiness: partial/not-validated/nonfiling and unavailable2026 gates remain. Source-first25 controls reproduce13genuineRED/12PASS before the narrow fix;46focused+15adjacent/all11tail checks pass. Distinct actual32-page public PDF privacy and full-size cover review passes. See [the cover ledger](upgrade-2026-oh-review-cover-inventory-work.md). Full global, final artifacts, staging, final2026 forms and human qualification remain open.

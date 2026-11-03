@@ -13326,6 +13326,26 @@
       ]
     },
     {
+      "key": "state/oh-review-packet-cover-inventory",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "src/pdf/mappings/2025/fill-oh-ordinary-official-review.ts",
+      "specPath": "spec/state/oh-review-packet-cover-inventory.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-review-template-root",
       "jurisdiction": "state",
       "taxYear": 2025,

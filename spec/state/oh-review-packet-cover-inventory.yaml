@@ -1,0 +1,32 @@
+form: "Ohio actual review packet cover inventory"
+taxYear: 2025
+reference: "src/pdf/mappings/2025/fill-oh-ordinary-official-review.ts"
+notes: |
+  Description of actual artifacts only, not new tax calculation/readiness authority.
+  Existing API workspace-filled-return passes basename of every actual filledForms
+  artifact into assessReturnReadiness before building the visible summary cover.
+  Exact known official-form review filenames describe review copies only; they
+  cannot establish correct source facts, complete forms, final mapping or filing.
+  Existing reference-only warning remains verbatim when no known review copy exists.
+  No mutation of readiness metadata, mapping gates, tax results or filing policy.
+lines:
+  - line: "mixed-actual-inventory"
+    label: "Mixed official-form review copies and references are described truthfully"
+    formula: "For selected OH with at least one exact known review filename plus actual references, packet remains partial and findings state official-form review copies and reference summaries, review-only and incomplete filing coverage; remove the false all-reference-only claim."
+    testRef: "tests/utils/oh-review-packet-cover-inventory.test.ts::describes actual mixed Ohio artifact inventory %s"
+  - line: "known-review-copy-only"
+    label: "An actual known review companion is an artifact, not qualification"
+    formula: "Each exact generated known review filename alone establishes only partial review inventory, never complete/qualified/validated. Recognize only the actual eight generated filenames, case-insensitively; not arbitrary official or review suffixes."
+    testRef: "tests/utils/oh-review-packet-cover-inventory.test.ts::recognizes only the actual generated Ohio review basename %s"
+  - line: "reference-only-compatible"
+    label: "Keep the existing reference-only statement"
+    formula: "OH reference artifacts without known official-form review copies preserve the existing warning, partial status, not-validated and filingQualified=false."
+    testRef: "tests/utils/oh-review-packet-cover-inventory.test.ts::retains the exact legacy reference-only warning"
+  - line: "no-artifact-or-fake"
+    label: "No actual Ohio companion cannot claim generated physical copies"
+    formula: "Missing OH artifacts or unrelated/fake/suffixed official-looking filenames alone remain unsupported; fake filenames mixed with actual reference do not establish any official-form review-copy statement."
+    testRef: "tests/utils/oh-review-packet-cover-inventory.test.ts::does not claim Ohio review copies from fake or unrelated name %s"
+  - line: "unchanged-year-filing-policy"
+    label: "Inventory does not activate 2026 or filing exports"
+    formula: "Public calculation and review export for2026 remain unavailable; 2025 filing export remains denied; every assessment keeps filingQualified=false/businessRuleValidation=not-validated and inputs/results unchanged."
+    testRef: "tests/utils/oh-review-packet-cover-inventory.test.ts::preserves public year and filing gates and has no side effects"

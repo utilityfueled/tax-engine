@@ -358,8 +358,12 @@ export function assessReturnReadiness(
       input.includedForms,
       /^oh-.*-reference\.pdf$/i,
     );
+    const hasOhioReviewForms = hasIncludedForm(
+      input.includedForms,
+      /^oh-(?:it-(?:1040|nrc|rc)|schedule-(?:adjustments|credits|of-withholding)|sd-(?:100|withholding))-review\.pdf$/i,
+    );
 
-    if (!hasOhioReferenceForms) {
+    if (!hasOhioReferenceForms && !hasOhioReviewForms) {
       packetCompleteness = "unsupported";
       findings.push(
         "Ohio was selected, but no Ohio packet artifacts were generated.",
@@ -367,7 +371,9 @@ export function assessReturnReadiness(
     } else {
       packetCompleteness = "partial";
       findings.push(
-        "Ohio packet output is currently generated as reference-summary pages, not official filled Ohio PDFs.",
+        hasOhioReviewForms
+          ? `Ohio packet includes official-form review copies${hasOhioReferenceForms ? " and reference summaries" : ""}. These review-only artifacts do not establish complete Ohio filing coverage or filing qualification.`
+          : "Ohio packet output is currently generated as reference-summary pages, not official filled Ohio PDFs.",
       );
     }
   }
