@@ -228,3 +228,7 @@ Parent real auth/billing regression:173/seven passes (`nov02-parent-hosted-previ
 - [x] Employee main final561/36/types3/spec6984/inventory generation+check/strict0/bothbuilds/diff, eleven source products; distinct integrated mixed5 approval `56355d14`. Existing wholeworkspace7 remains deferred with exactf8 exporter. Commit reference follows after push.
 - [x] Current privatewholeworkspace61/six and15 actualoutputs generated. Earlier baseline basicPDFs differ in stronger ScheduleA reference/disclosure; strict/text/pixel comparison correctly stopped instead of claiming fullparity. Independent updated-artifact review active.
 - [x] CI metadata candidate22files: existing608/608 and fullspec6944/6944 pass with same3PDF residency cases and all assertions/formulas/validators preserved. Mainadoption/review stillpending.
+
+
+- [x] Pushed `90f7b6d1`: actual employee source/UE/NRH package,561/36/all scoped checks; exactf8 workspace successor remains separate.
+- [x] User saved SMTP app password; fresh Vercel metadata confirms Secret +Preview only, no value read. New90f7 Preview BUILDING at firstread. See hosted SMTP ledger; delivery/recovery/persistence remain unverified.

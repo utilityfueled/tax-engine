@@ -2189,3 +2189,8 @@ Actual original-bound personal OID and zero-income MISC remittance now compose w
 ### November2: complete finite PA employee originals and UE/NRH composition
 
 Eleven source products now compose actual employer calendars, payroll, signed synthetic proof and direct expense receipts with existing business/OID paths. Main561/36 and all scoped checks pass after4 genuine source-admission failures/four passes. Distinct source77/seven plus66PDFpages and separate mixed-source5/control review approve the finite method. Both [source ledger](upgrade-2026-pa-ordinary-employee-sources-work.md) and active index retain exact failures, hashes, sources and method limits. The whole-workspace exporter, taxable/included-W2 reimbursements, richer methods, human/final-form and hosting/release gates remain separate outstanding work.
+
+
+### November2: Preview SMTP secret saved
+
+The user saved the Zoho app password directly in Vercel; fresh metadata confirms Secret and Preview only without revealing its value. New90f7 Preview build follows that save. Actual authentication/delivery and hosted recovery tests remain pending; see the [SMTP evidence ledger](upgrade-2026-hosted-smtp-preview-work.md).

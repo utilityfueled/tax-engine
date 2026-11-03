@@ -13297,7 +13297,7 @@
     "previousResult": "Invalid origin",
     "evidence": ".local/upgrade-evidence/nov02-parent-hosted-preview-origin/actual-browser-origin-probe.json",
     "accountPersistenceQualified": false,
-    "smtpPasswordSavePending": true,
+    "smtpPasswordSavePending": false,
     "releaseReady": false
   },
   "nov02MainOIDSourceAndConsumerIntegration": {
@@ -13333,6 +13333,21 @@
     "workspaceMigrationDeferred": true,
     "taxableReimbursementSuccessorPending": true,
     "globalChecksNotCurrent": true,
+    "releaseReady": false
+  },
+  "nov02PreviewSMTPSecret": {
+    "userSaved": true,
+    "verifiedMetadata": true,
+    "type": "Secret",
+    "environments": [
+      "Preview"
+    ],
+    "valueRevealed": false,
+    "evidenceSHA256": "820180fa83b4f9525eb9119da130bf2888c95c9dae03bd57283443f5da1a8829",
+    "newPreviewDeployment": "dpl_5B9y47CwMdnjdp1CSJssxVUMXL7J",
+    "stateAtFirstRead": "BUILDING",
+    "smtpDeliveryVerified": false,
+    "productionChanged": false,
     "releaseReady": false
   }
 }
