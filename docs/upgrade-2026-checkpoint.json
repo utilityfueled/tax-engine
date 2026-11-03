@@ -15115,7 +15115,7 @@
     "unitPassed": 22704,
     "unitFailed": 0,
     "isolatedPostgresPendingInThisRun": 33,
-    "currentCoveragePending": "Last91b80 thresholds allpassed but suite had3fail, nowclosedby0100unit; freshcoverage aftercurrentpackages required",
+    "currentCoveragePending": "Superseded for d76a2baf: fullcoverage23011PASS0FAIL33PGpending;91.44statements/87.12branches/90.32functions/94.46lines allthresholdsPASS. Later source integrations require finalhead refresh.",
     "releaseReady": false,
     "nativeCarePackage": "730c07fa pushed;75native+adjacent/8savedPDF/13checksetsPASS; DCreferencecountdisplay nowcorrected2RED\u219213PASS, actualbrowseractive"
   },
@@ -15274,5 +15274,31 @@
       "No qualified human or final2026 qualification"
     ],
     "rootReviewSHA256": "2384ec1b557123e8bec27e2f93a940e44b9393a8688cc61151abb57e93e4b411"
+  },
+  "nov03FullCoverageD76": {
+    "numTotalTests": 23044,
+    "numPassedTests": 23011,
+    "numFailedTests": 0,
+    "numPendingTests": 33,
+    "numTotalTestSuites": 5296,
+    "numPassedTestSuites": 5296,
+    "numFailedTestSuites": 0,
+    "success": true,
+    "head": "d76a2bafee7cb383f7d3d0a979e9690a0c2fdf99",
+    "logSHA256": "84d34ea825280a509414decf619a43fb520e421ce7fbfc24b1ca392822c7db71",
+    "resultSHA256": "f33c9a4fe1701534fe073b55d68c15ebef28049ccbaafa025c0f96c177bb28ec",
+    "coverage": {
+      "statements": "91.44",
+      "branches": "87.12",
+      "functions": "90.32",
+      "lines": "94.46"
+    },
+    "postgresPending": 33,
+    "printedFilesPassed": 1767,
+    "printedFilesSkipped": 3,
+    "seconds": 148.98,
+    "configuredThresholdsPass": true,
+    "sourceMutationDuringRun": false,
+    "scope": "local synthetic exact-head coverage;33PGpending; not remote/staging/human qualification"
   }
 }
