@@ -15436,5 +15436,35 @@
     "authorManifestSHA256": "3106ea898d9221436beb04999676924c4342c9319c52a8a61219b385e4a7546f",
     "status": "finite-main-technical-integration-pass",
     "ledger": "docs/upgrade-2026-oh-school-district-guided-work.md"
+  },
+  "nov03MainRoyaltyBrowserSuccessor": {
+    "reviewedAt": "2026-11-03T13:07:36.767050+00:00",
+    "parentHead": "0a5c06bd",
+    "scope": "exact2authorpaths; root inspected old17assertions/newnativecurrent-historysequence +actual2screenshots",
+    "authorManifestSHA256": "4850e7cc2bb5eb0af04b3f3f50d3de0ebf13413dfff4fcbc464e1ad3d93aae47",
+    "independentReviewSHA256": "a20f048f63f3ec4773a90dd8f2d311e2e3ae851ae59bcb976cf1aef516092d53",
+    "checksSHA256": "77022f611bd143de61e5c3bb68c5d49a486f0f88bca5c65d32943577bc596583",
+    "checksPassed": 8,
+    "mainDesktopMobilePassed": 2,
+    "retriesUsed": 0,
+    "oldCaseDurationSeconds": [
+      "9.0",
+      "7.8"
+    ],
+    "actualBrowserLogSHA256": "0cab9a2cde9afa05bf908bd959b75ccc3c2d9a17cbd7b8c61be46143d8d8a5b7",
+    "artifacts": {
+      ".local/upgrade-evidence/nov03-root-royalty-browser-main/actual-main-artifacts/.last-run.json": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903",
+      ".local/upgrade-evidence/nov03-root-royalty-browser-main/actual-main-artifacts/pa-royalty-sources-PA-orig-13721-correction-and-local-reload-chromium/pa-royalty-1280.png": "4989b4312e8227da1ca5d563768f8c2e875d4c0e6013b961ce28baba624b5735",
+      ".local/upgrade-evidence/nov03-root-royalty-browser-main/actual-main-artifacts/pa-royalty-sources-PA-orig-9c7c1-correction-and-local-reload-chromium/pa-royalty-390.png": "530f2ea2dad43b545eb0441ffac1ff6ced29b1fceaf46a76719f2901c5b9cbc8"
+    },
+    "port3099EmptyAndRunnerClosed": true,
+    "noProductOrGateChanges": true,
+    "limits": [
+      "localproductionmanagedselfhostbrowseronly",
+      "currentremoteCI/images/staging/fullglobalstillrequired",
+      "nohuman/final2026qualification"
+    ],
+    "status": "finite-current-main-browser-pass",
+    "ledger": "docs/upgrade-2026-pa-royalty-browser-source-successor.md"
   }
 }

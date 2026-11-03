@@ -35,7 +35,7 @@ lines:
     testRef: "tests/guided-interview/guided-pa-royalty-sources.test.ts::copies only actual state originals while preserving zero and unknown ledgers"
   - line: "browser-recovery"
     description: "Keep separate federal and PA readiness after actual browser corrections and reload"
-    formula: "A changed receipt invalidates both source confirmations. Federal confirmation restores only the federal result; PA additionally needs refreshed originals and state confirmation. Blank resident answer stays unknown across reload."
+    formula: "Retain complete actual residency, payroll, return facts, payment timing, MI settlement and immutable filed history for the original211001 federal AGI/6478 PA tax. Legal49.25 to149.25 restores federal210901 only after actual statement review. PA originals remain49.25 until explicit copy; PA6475 additionally requires native current residency, expected principal6475 and ordinary facts review, separately supplied actual historical expense correction/amendment review, MI child confirmation and parent completion. Every partial review keeps PA unavailable; no post-edit JSON refresh or inferred history. Filed211001/legal49.25/refund80.20 remains unchanged. Blank property resident answer stays unknown across reload; copied149.25 and actual false survive without computed net overrides or private requests."
     testRef: "apps/web/tests/pa-royalty-sources.spec.ts::reconciles original state receipts through correction and local reload"
   - line: "actual-workspace-export"
     description: "Render the guided PA source through the complete workspace export"

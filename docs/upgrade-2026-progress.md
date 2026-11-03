@@ -2549,3 +2549,7 @@ The bounded Hillsdale0302 method derives actual2025school income/WH/dated receip
 ### November3: native Ohio school-district sources and separate review metrics
 
 The finite2025 Hillsdale0302 collector now preserves blank/unknown actual residence, Finder, W2, receipt/account, prior-credit and election originals through confirmation and reopening. Public SD100 cash/priorcredit/refund figures remain separate from IT1040. Fresh main17genuinefail/3pass precede exact reviewed adoption; distinct106controls and main602/20 plus1362Ohio/41 and all14checks pass. See [the native source ledger](upgrade-2026-oh-school-district-guided-work.md). Broader SD/native-browser/physical/human/final2026 qualification remains open. Reciprocal6d9144e3 and runtime-evidenceb935ac57 are pushed.
+
+### November3: original royalty browser source-contract replay
+
+Both original desktop/mobile expense-correction journeys now replay complete actual-source contracts while retaining all17old assertions,6478→6475 and immutable filed/cash history. Distinct offline review approves exact2paths; author4/4 and current-main2/2 production-managed cases pass with zero retries. All8main checks pass; root opens both captures. See [the browser ledger](upgrade-2026-pa-royalty-browser-source-successor.md). Fresh remote/image/global/staging/human/final2026 gates remain open. School native0a5c06bd is pushed.
