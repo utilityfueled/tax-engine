@@ -2453,3 +2453,7 @@ Twenty-one mounted controls exercise actual filing-unit owner/return selections,
 ### November 3: explicit current royalty originals after an expense edit
 
 One explicit-confirmation helper now binds actual current property/MISC originals before unchanged strict validation. The read path and all filedMIhistory remain unchanged. Fresh main6pass/1genuine failure precedes the fix; independent10 source-preservation controls and main979tests/71files plus all12checks pass. See [the fix ledger](upgrade-2026-pa-royalty-current-original-confirmation.md). Full native browser, global and human/final2026 qualification continue; NOL518f7021 is pushed.
+
+### November 3: remaining selected-state implementation audit
+
+The [current integration queue](upgrade-2026-state-integration-remaining-20261103.md) identifies six concrete internal packages beyond global checks: PA spouse/J/M and actual care composition; OH canonical NR/PY business, taxing districts, reciprocal/resident-credit sources and actual2025 physical outputs. Referenced core boundaries are rechecked byte-for-byte at d77f136e. PA married-source and OH business-source research continue while native browser verification runs. These are not recast as external credential/form blockers. Checkpoint authorization text now reflects the already approved5USD cap and configured Preview services. No readiness gate changed.
