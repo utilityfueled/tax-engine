@@ -1,0 +1,24 @@
+form: "PA Royalty Current Original Confirmation"
+fullName: "Explicit PA residency royalty original-source successor"
+taxYear: 2025
+reference: "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/pennsylvania-personal-income-tax-guide.html"
+notes: |
+  No new calculation or tax interpretation. Existing source model requires exact
+  current canonical royalty property ledger/originalMISC snapshots. A user action
+  may replace current snapshots only after existing strict calculation replay.
+  Read never refreshes, unknown/false classification stays unknown/false, actual
+  filed Michigan history remains a separate immutable source. No new amounts,
+  source owner/year/classification or review booleans supplied by product.
+lines:
+  - line: "explicit-correction"
+    formula: "Original receipt49.25->149.25 and explicit PA copied originals produce known current canonical ledger; old residency read rejects. Explicit residency confirmation alone binds already supplied current royalty property andMISC originals, preserving all prior records and MI filed211001/history49.25."
+    testRef: "tests/guided-interview/pa-royalty-current-original-confirmation.test.ts::explicit confirmation binds supplied current royalty originals after an actual receipt edit"
+  - line: "read-does-not-bind"
+    formula: "Replay unchanged stale snapshots fails, including after same-money source identifier edits; original saved source is never mutated."
+    testRef: "tests/guided-interview/pa-royalty-current-original-confirmation.test.ts::read cannot silently follow changed current property originals"
+  - line: "known-current-guards"
+    formula: "Current source must already exist and qualify; missing property originals, unknown/false PA classification, false nested source confirmation or missing selected MISC original cannot be rescued by top explicit confirmation."
+    testRef: "tests/guided-interview/pa-royalty-current-original-confirmation.test.ts::explicit binding cannot invent or repair unknown current source facts %s"
+  - line: "unchanged"
+    formula: "No-op explicit confirmation preserves actual amount/classification/documents and independent filed history unchanged."
+    testRef: "tests/guided-interview/pa-royalty-current-original-confirmation.test.ts::unchanged current originals remain exact on explicit confirmation"

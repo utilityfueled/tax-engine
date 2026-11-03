@@ -1,0 +1,31 @@
+form: "PA royalty explicit reconfirmation independent boundaries"
+fullName: "Independent current-original binding and no read-time repair controls"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40e.pdf"
+notes: |
+  Technical source-contract review only, not a new tax interpretation. Existing
+  finite single primary full-year2025copyright method remains unchanged.
+  Independent source arithmetic: wages200000 plus PA reported royalty net11000 yields
+  PA6478; actual additional legal receipt100 lowers current PA net to10900 and
+  PA6475. Filed Michigan federal AGI211001 and receipt49.25 remain historical.
+  Current receipt149.25 is separately supplied by the corrected fictional fixture.
+  Explicit confirmation may deep-copy already actual current property/MISC records
+  only after unchanged strict classifier replay. It cannot infer facts, promote
+  nested review answers, repair mismatched owners/years or manufacture indexes.
+  Read replays old snapshots and rejects current-source differences unchanged.
+lines:
+  - line: "current-receipt"
+    formula: "Current actual149.25 receipt changes6478to6475 only after explicit PA residency confirmation; preserve all input/draft/history bytes and clone current originals"
+    testRef: "tests/guided-interview/pa-royalty-reconfirm-independent.test.ts::explicit reconfirmation binds current receipt sources while preserving filed historical originals"
+  - line: "same-cash-original"
+    formula: "A changed current MISC payer-state identifier with identical amounts is stale on read; explicit confirmation copies that actual complete original and returned clones share no references"
+    testRef: "tests/guided-interview/pa-royalty-reconfirm-independent.test.ts::same cash current MISC identity changes require explicit original rebinding without aliasing"
+  - line: "owner-year"
+    formula: "Keep nested royalty owner, source year, actual original year and selected return year guarded; top explicit confirmation cannot relabel them"
+    testRef: "tests/guided-interview/pa-royalty-reconfirm-independent.test.ts::explicit reconfirmation cannot repair actual royalty owner or year conflicts %s"
+  - line: "coverage-index"
+    formula: "Missing or duplicate linked original indexes cannot be filled from unrelated statements; input and saved source stay unchanged after rejection"
+    testRef: "tests/guided-interview/pa-royalty-reconfirm-independent.test.ts::explicit reconfirmation retains distinct actual original index coverage %s"
+  - line: "original-review"
+    formula: "A null all-box confirmation or false current-uncorrected original answer stays unqualified; top confirmation cannot promote either fact"
+    testRef: "tests/guided-interview/pa-royalty-reconfirm-independent.test.ts::explicit reconfirmation cannot promote missing or false per-original review %s"

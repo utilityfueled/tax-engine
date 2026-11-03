@@ -14430,6 +14430,22 @@
     "productsChanged": false,
     "parentReviewSHA256": "274b30d5fe17d7c392bc2e33a6c3a55e2c12bba547f7fa8dc4fabd3c208be99f",
     "globalCoverageMeasured": false,
+    "releaseReady": false,
+    "commit": "518f7021",
+    "pushed": true
+  },
+  "nov03ExplicitCurrentRoyaltyConfirmation": {
+    "baseCommit": "518f7021",
+    "products": 1,
+    "freshRED": "6pass1fail82a3c642",
+    "independentControls": 10,
+    "independentReviewSHA256": "0d5bab7a0f6768709e8d7b0f76fb491891953ab78966d3d6125bccb18e80aeae",
+    "mainTests": 979,
+    "files": 71,
+    "checksPassed": 12,
+    "mainReceiptSHA256": "dd5f504a0c963a10a9f6ca77008699330c50a8bdede7dd6e9a7fe52cad30c697",
+    "readPathByteExact": true,
+    "filedMIHistoryPreserved": true,
     "releaseReady": false
   }
 }

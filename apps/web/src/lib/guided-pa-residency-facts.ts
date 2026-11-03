@@ -25,10 +25,23 @@ export function confirmGuidedPAResidencySources(input: TaxYearInput, draft: unkn
   const owner = data.owner.accountHolder === "primary" ? input.taxpayer.primary
     : data.owner.accountHolder === "spouse" ? input.taxpayer.spouse : undefined;
   if (!owner) throw new Error("PA residency sources require the actual selected taxpayer owner");
+  let royaltySources = data.royaltySources;
+  if (royaltySources !== undefined) {
+    const currentProperties = input.royaltyPropertySources;
+    if (currentProperties === undefined) throw new Error("PA residency sources require actual current royalty property originals");
+    royaltySources = { ...royaltySources, originalPropertySources: structuredClone(currentProperties),
+      originals: royaltySources.originals.map(row => {
+        const original = input.form1099Misc[row.originalIndex];
+        if (original === undefined) throw new Error("PA residency sources require each actual current royalty statement original");
+        return { ...row, original: structuredClone(original) };
+      }),
+    };
+  }
   const candidate: PAResidencySources = {
     ...data, sourceFactsConfirmed: true,
     owner: { accountHolder: data.owner.accountHolder,
       originalTaxpayer: { firstName: owner.firstName, lastName: owner.lastName, ssn: owner.ssn } },
+    ...(royaltySources === undefined ? {} : { royaltySources }),
     ...(data.employeeSources === undefined ? {} : { employeeSources: {
       ...data.employeeSources,
       owner: { accountHolder: data.employeeSources.owner.accountHolder, ...(data.employeeSources.owner.accountHolder === data.owner.accountHolder ? { originalTaxpayer: { firstName: owner.firstName, lastName: owner.lastName, ssn: owner.ssn } } : {}) },

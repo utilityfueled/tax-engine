@@ -2449,3 +2449,7 @@ Nine real personal-section controls now cover unknown versus empty history, asse
 ### November 3: native NOL owner and original-return boundaries
 
 Twenty-one mounted controls exercise actual filing-unit owner/return selections, separate filed computations and uses, marital years, current owner-document assignments, exact expense splits, unknown versus zero, JSON reopening and revoked confirmation. Known reviewed new-marriage and same-couple outputs remain intact; no products or old assertions change. Parent review, main43tests/6files and allten checks pass. See [the NOL source ledger](upgrade-2026-nol-filing-unit-native-boundaries.md). Global coverage and human qualification remain open. EIC6ac1464f is pushed.
+
+### November 3: explicit current royalty originals after an expense edit
+
+One explicit-confirmation helper now binds actual current property/MISC originals before unchanged strict validation. The read path and all filedMIhistory remain unchanged. Fresh main6pass/1genuine failure precedes the fix; independent10 source-preservation controls and main979tests/71files plus all12checks pass. See [the fix ledger](upgrade-2026-pa-royalty-current-original-confirmation.md). Full native browser, global and human/final2026 qualification continue; NOL518f7021 is pushed.
