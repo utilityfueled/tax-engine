@@ -2608,3 +2608,7 @@ Corrected actual Preview delivery and all broader qualification gates remain ope
 ### November 3: actual Ohio business desktop/mobile sources
 
 Current-main nonresident/part-year journeys pass4/4 with zero retries, preserving actual property/payroll/receipt/deduction originals and unknown-zero distinctions through edits and reopening. The narrow Zod validation message repair keeps source and tax guards unchanged. All13 static sets and98 affected controls pass; distinct saved4PDF/132page privacy, text/pixel parity and40geometry review passes. See [the browser ledger](upgrade-2026-oh-business-native-browser-work.md). Official business physical forms, broader cohorts, human/final2026 and distribution/staging qualification remain open. Preview recovery-origin fixb42afbf5 is pushed.
+
+### November 3: separately owned Pennsylvania public review downloads
+
+Original-bound2025 J/M households now reach the public and workspace Review PDF paths with one actual federal household and separately owned PA40/SP pages. Genuine13RED/23PASS precedes exact reviewed adoption;260affected controls and all12checks pass. Bounded summary pagination preserves every warning, source line and font while keeping text on the page. Distinct54PDF/192page strict/privacy/text/pixel review passes. See [the public-download ledger](upgrade-2026-pa-married-workspace-review-work.md). Actual browser successor, broader cohorts, qualified human/final2026 and distribution/staging gates remain open. Ohio business browser970326c8 is pushed.

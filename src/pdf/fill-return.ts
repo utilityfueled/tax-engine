@@ -1,4 +1,6 @@
-import {isPAMarriedOrdinaryReturnResult,assertNoPAMarriedPaperExport} from '@/engine/state/pa-return-result.js';
+import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result.js';
+import {resolvePAMarriedReturnReview,type PreparedPAMarriedReturnReview} from './pa-married-return-review-context.js';
+import {fillPAMarriedOfficialReview} from './mappings/2025/fill-pa-married-official-review.js';
 import {fillPAOrdinaryScheduleD} from "./mappings/2025/fill-pa-ordinary-schedule-d.js";
 import {fillPAOrdinaryScheduleGL} from "./mappings/2025/fill-pa-ordinary-schedule-gl.js";
 import {calculateScheduleCReviewSource} from "./schedule-c-review-source.js";
@@ -419,6 +421,8 @@ export interface FillReturnOptions {
   paWorkingCreditReview?: PreparedPAWorkingCreditReview;
   /** Actual complete ordinary originals, privately prepared before redaction. */
   paOrdinaryReview?:PreparedPAOrdinaryReturnReview;
+  /** Actual complete household and owned results, privately prepared before redaction. */
+  paMarriedReview?:PreparedPAMarriedReturnReview;
   /** Actual EIC child records, validated before identifier redaction. */
   eicReview?: PreparedEicReview;
   /** Actual policy allocation and whole-return income, validated before redaction. */
@@ -445,8 +449,14 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
-  assertNoPAMarriedPaperExport(input,result.stateReturns?.pennsylvania);
-  if(isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania))throw Error('Actual married PA packet export is unavailable.');
+  const paMarriedReview=options.paMarriedReview;
+  const marriedRequested=input.paMarriedOrdinarySources!==undefined||isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania)||paMarriedReview!==undefined;
+  if(marriedRequested){
+    if(!input.paMarriedOrdinarySources||!isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania)||!paMarriedReview)throw Error('Actual married PA originals, owned result and original prepared review context are required.');
+    if(options.paOrdinaryReview!==undefined||options.paWorkingCreditReview!==undefined||options.paRoyaltyReview!==undefined)throw Error('Married PA context cannot be replaced or mixed with a legacy scalar review context.');
+    // Validate complete actual household and exact owned results before template/file I/O.
+    resolvePAMarriedReturnReview(input,result,paMarriedReview);
+  }
   assertScheduleRSourceConsistency(input, result);
   const scheduleCSources=calculateScheduleCReviewSource(input,result.scheduleC);
   if(scheduleCSources&&!result.scheduleC)throw new Error("Schedule C actual source calculation is missing");
@@ -456,10 +466,10 @@ export async function fillReturn(
   const scheduleEReview = requiresScheduleEReview(input, result) || options.scheduleEReview
     ? options.scheduleEReview ?? prepareScheduleEReview(input) : undefined;
   if (scheduleEReview) assertScheduleEReview(input, result, scheduleEReview);
-  const paRoyaltyReview = (input.royaltyPropertySources && result.stateReturns?.pennsylvania) || options.paRoyaltyReview
+  const paRoyaltyReview = !paMarriedReview && ((input.royaltyPropertySources && result.stateReturns?.pennsylvania) || options.paRoyaltyReview)
     ? options.paRoyaltyReview ?? preparePARoyaltyReview(input) : undefined;
   if (paRoyaltyReview) assertPARoyaltyReview(input,result,paRoyaltyReview);
-  if (result.stateReturns?.pennsylvania){
+  if (!paMarriedReview && result.stateReturns?.pennsylvania){
     if(isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)||input.paOrdinaryReturnFacts!==undefined||input.paOrdinaryReturnCompletionSources!==undefined||options.paOrdinaryReview!==undefined){
       if(options.paWorkingCreditReview!==undefined)throw new Error("PA ordinary result requires its actual ordinary prepared context");
       assertPAOrdinaryReturnReview(input,result,options.paOrdinaryReview);
@@ -1264,7 +1274,13 @@ export async function fillReturn(
   }
 
   // ── PA-40 (if applicable — Pennsylvania state return) ──
-  if (result.stateReturns?.pennsylvania && !isPAMarriedOrdinaryReturnResult(result.stateReturns.pennsylvania)) {
+  if(paMarriedReview){
+    const documents=await fillPAMarriedOfficialReview(input,result,blankFormsDir,paMarriedReview);
+    for(const {filename,doc}of documents){
+      const outputPath=join(outputDir,filename);
+      await savePacketPdf(doc,outputPath);filledForms.push(outputPath);
+    }
+  } else if (result.stateReturns?.pennsylvania && !isPAMarriedOrdinaryReturnResult(result.stateReturns.pennsylvania)) {
     const pa40Path = join(blankFormsDir, "pa-40.pdf");
     const docPA40 = await fillPA40(input, result, pa40Path, options.paWorkingCreditReview,options.paOrdinaryReview);
     if (flatten) await flattenForm(docPA40.getForm());

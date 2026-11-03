@@ -1,4 +1,6 @@
-import {assertNoPAMarriedPaperExport} from '@/engine/state/pa-return-result';
+import {assertNoPAMarriedPaperExport,isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result';
+import {calculatePAMarriedOrdinaryReturn} from '@/engine/state/pa-married-ordinary-return';
+import {preparePAMarriedReturnReview} from '@/pdf/pa-married-return-review-context';
 import { prepareOhioResidencyReview } from "@/engine/state/oh-residency-source.js";
 import {preparePARoyaltyReview} from "@/pdf/pa-royalty-review-context.js";
 import { preparePAWorkingCreditReview } from "@/pdf/pa-working-credit-review-context.js";
@@ -120,6 +122,12 @@ const FORM_LABELS: Record<string, string> = {
   "nj-1040-filled.pdf": "New Jersey NJ-1040",
   "ny-it201-filled.pdf": "New York IT-201",
   "pa-40-filled.pdf": "Pennsylvania PA-40",
+  "pa-joint-40-review.pdf": "Joint Pennsylvania PA-40",
+  "pa-joint-sp-review.pdf": "Joint Pennsylvania Schedule SP",
+  "pa-primary-40-review.pdf": "Primary Pennsylvania PA-40",
+  "pa-primary-sp-review.pdf": "Primary Pennsylvania Schedule SP",
+  "pa-spouse-40-review.pdf": "Spouse Pennsylvania PA-40",
+  "pa-spouse-sp-review.pdf": "Spouse Pennsylvania Schedule SP",
   "pa-schedule-a-reference.pdf": "Pennsylvania Schedule A (reference summary)",
   "pa-schedule-b-reference.pdf": "Pennsylvania Schedule B (reference summary)",
   "pa-schedule-c-reference.pdf": "Pennsylvania Schedule C (reference summary)",
@@ -263,6 +271,8 @@ function drawBulletList(
     x,
     y,
     maxWidth,
+    nextPage,
+    freshBodyY,
     bulletGap = 14,
     bulletColor = rgb(0.13, 0.13, 0.13),
   }: {
@@ -271,33 +281,55 @@ function drawBulletList(
     x: number;
     y: number;
     maxWidth: number;
+    nextPage: () => { page: PDFPage; y: number };
+    freshBodyY: number;
     bulletGap?: number;
     bulletColor?: ReturnType<typeof rgb>;
   },
 ) {
+  let activePage = page;
   let cursorY = y;
+  const lineHeight = size * 1.35;
+  const continuePage = () => {
+    const continued = nextPage();
+    activePage = continued.page;
+    cursorY = continued.y;
+  };
 
   for (const bullet of bullets) {
-    page.drawText("•", {
-      x,
-      y: cursorY,
-      font,
-      size,
-      color: bulletColor,
-    });
-    cursorY = drawWrappedText(page, bullet, {
-      font,
-      size,
-      x: x + bulletGap,
-      y: cursorY,
-      maxWidth: maxWidth - bulletGap,
-      lineHeight: size * 1.35,
-      color: bulletColor,
-    });
+    const lines = wrapText(bullet, font, size, maxWidth - bulletGap);
+    const lastLineOffset = lineHeight * (lines.length - 1);
+    // Keep a whole bullet together when it fits a fresh page. Only a bullet
+    // longer than a fresh body is split, at its existing wrapped line breaks.
+    if (cursorY - lastLineOffset < PAGE_MARGIN
+      && freshBodyY - lastLineOffset >= PAGE_MARGIN) {
+      continuePage();
+    }
+    let needsBullet = true;
+    for (const line of lines) {
+      if (cursorY < PAGE_MARGIN) {
+        continuePage();
+        needsBullet = true;
+      }
+      if (needsBullet) {
+        activePage.drawText("•", {
+          x, y: cursorY, font, size, color: bulletColor,
+        });
+        needsBullet = false;
+      }
+      activePage.drawText(line, {
+        x: x + bulletGap,
+        y: cursorY,
+        font,
+        size,
+        color: bulletColor,
+      });
+      cursorY -= lineHeight;
+    }
     cursorY -= 6;
   }
 
-  return cursorY;
+  return { page: activePage, y: cursorY };
 }
 
 function resolveStateCode(
@@ -377,6 +409,14 @@ function buildPacketSummary(
     "Verify every line, schedule, payment, withholding amount, and filing obligation before relying on this packet.",
   ];
 
+  if(isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania)){
+    compiledBullets.push(`Owned Pennsylvania review pages: ${formatIncludedForms(includedForms.filter(form=>/^pa-(joint|primary|spouse)-(40|sp)-review\.pdf$/.test(form)))}.`);
+    compiledBullets.push(result.stateReturns.pennsylvania.filingMode==='M'
+      ?'The two owned Pennsylvania returns keep each person’s tax, payments and requested refund separate. The federal return is one actual household.'
+      :'The owned joint Pennsylvania review uses the same actual federal household.');
+    missingBullets.push('Filing and separate local returns remain unqualified. Review each actual owned PA40 and Schedule SP page with its original source documents.');
+  }
+
   if (isSelectedStatePacketUnsupported && stateName) {
     missingBullets.push(
       `No filled ${stateName} state forms are included in this packet. Treat any state output as incomplete reference material until it is verified separately.`
@@ -434,6 +474,10 @@ function attachPennsylvaniaReturn(
   stateCode: string | null,
 ) {
   if (stateCode !== "PA") return result;
+  if(taxInput.paMarriedOrdinarySources!==undefined){
+    return {...result,stateReturns:{...(result.stateReturns??{}),
+      pennsylvania:calculatePAMarriedOrdinaryReturn(taxInput,taxInput.paMarriedOrdinarySources)}};
+  }
   assertNoPAMarriedPaperExport(taxInput,result.stateReturns?.pennsylvania);
   return {...result,stateReturns:{...(result.stateReturns??{}),
     pennsylvania:calculatePAOrdinaryReturn(taxInput,taxInput.paOrdinaryReturnFacts,taxInput.paOrdinaryReturnCompletionSources)}};
@@ -441,130 +485,151 @@ function attachPennsylvaniaReturn(
 
 async function buildReturnSummaryCoverPage(summary: PacketSummary) {
   const doc = await PDFDocument.create();
-  const page = doc.addPage([LETTER_PAGE_WIDTH, LETTER_PAGE_HEIGHT]);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const regular = await doc.embedFont(StandardFonts.Helvetica);
   const warningColor = rgb(0.62, 0.19, 0.14);
   const borderColor = rgb(0.16, 0.16, 0.16);
   const lightPanel = rgb(0.98, 0.95, 0.88);
-  let y = LETTER_PAGE_HEIGHT - PAGE_MARGIN;
-  const warningPanelHeight = 142;
-  const warningPanelBottom = y - warningPanelHeight;
+  const sectionPage = (continued: boolean, section: string, color: ReturnType<typeof rgb>) => {
+    const page = doc.addPage([LETTER_PAGE_WIDTH, LETTER_PAGE_HEIGHT]);
+    let y = LETTER_PAGE_HEIGHT - PAGE_MARGIN;
+    const warningPanelHeight = 142;
+    const warningPanelBottom = y - warningPanelHeight;
 
-  page.drawRectangle({
-    x: PAGE_MARGIN,
-    y: warningPanelBottom,
-    width: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
-    height: warningPanelHeight,
-    color: lightPanel,
-    borderColor,
-    borderWidth: 2,
-  });
-
-  y = drawWrappedText(page, "EXPERIMENTAL TAX RETURN REFERENCE", {
-    font: bold,
-    size: 20,
-    x: PAGE_MARGIN + 16,
-    y: y - 30,
-    maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
-    lineHeight: 24,
-    color: warningColor,
-  });
-  y = drawWrappedText(page, "DO NOT SUBMIT AS-IS", {
-    font: bold,
-    size: 18,
-    x: PAGE_MARGIN + 16,
-    y: y - 8,
-    maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
-    lineHeight: 22,
-    color: borderColor,
-  });
-  y = drawWrappedText(
-    page,
-    "This packet is an experimental reference copy only. It may omit required filing forms, elections, adjustments, or supporting schedules.",
-    {
-      font: regular,
-      size: 10.5,
-      x: PAGE_MARGIN + 16,
-      y: y - 12,
-      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
-      lineHeight: 14,
-      color: borderColor,
-    }
-  );
-  drawWrappedText(
-    page,
-    "Review every page independently before relying on any value in this packet.",
-    {
-      font: regular,
-      size: 10.5,
-      x: PAGE_MARGIN + 16,
-      y: y - 6,
-      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
-      lineHeight: 14,
-      color: borderColor,
-    }
-  );
-
-  y = warningPanelBottom - 24;
-  y = drawWrappedText(page, summary.headline, {
-    font: bold,
-    size: 15,
-    x: PAGE_MARGIN,
-    y,
-    maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
-    lineHeight: 18,
-    color: borderColor,
-  });
-  y = drawWrappedText(
-    page,
-    "The summary below is generated from structured return data and should be treated as a starting point for review, not a filing certification.",
-    {
-      font: regular,
-      size: 10.5,
+    page.drawRectangle({
       x: PAGE_MARGIN,
-      y: y - 6,
-      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
-      lineHeight: 14,
+      y: warningPanelBottom,
+      width: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
+      height: warningPanelHeight,
+      color: lightPanel,
+      borderColor,
+      borderWidth: 2,
+    });
+
+    y = drawWrappedText(page, "EXPERIMENTAL TAX RETURN REFERENCE", {
+      font: bold,
+      size: 20,
+      x: PAGE_MARGIN + 16,
+      y: y - 30,
+      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
+      lineHeight: 24,
+      color: warningColor,
+    });
+    y = drawWrappedText(page, "DO NOT SUBMIT AS-IS", {
+      font: bold,
+      size: 18,
+      x: PAGE_MARGIN + 16,
+      y: y - 8,
+      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
+      lineHeight: 22,
       color: borderColor,
-    }
-  );
+    });
+    y = drawWrappedText(
+      page,
+      "This packet is an experimental reference copy only. It may omit required filing forms, elections, adjustments, or supporting schedules.",
+      {
+        font: regular,
+        size: 10.5,
+        x: PAGE_MARGIN + 16,
+        y: y - 12,
+        maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
+        lineHeight: 14,
+        color: borderColor,
+      }
+    );
+    drawWrappedText(
+      page,
+      "Review every page independently before relying on any value in this packet.",
+      {
+        font: regular,
+        size: 10.5,
+        x: PAGE_MARGIN + 16,
+        y: y - 6,
+        maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 32,
+        lineHeight: 14,
+        color: borderColor,
+      }
+    );
 
-  y -= 18;
-  y = drawWrappedText(page, "What was compiled", {
-    font: bold,
-    size: 13,
-    x: PAGE_MARGIN,
-    y,
-    maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
-    lineHeight: 16,
-    color: borderColor,
-  });
-  y = drawBulletList(page, summary.compiledBullets, {
+    y = warningPanelBottom - 24;
+    y = drawWrappedText(page, continued ? `${summary.headline} (CONTINUED)` : summary.headline, {
+      font: bold,
+      size: 15,
+      x: PAGE_MARGIN,
+      y,
+      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
+      lineHeight: 18,
+      color: borderColor,
+    });
+    y = drawWrappedText(
+      page,
+      "The summary below is generated from structured return data and should be treated as a starting point for review, not a filing certification.",
+      {
+        font: regular,
+        size: 10.5,
+        x: PAGE_MARGIN,
+        y: y - 6,
+        maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
+        lineHeight: 14,
+        color: borderColor,
+      }
+    );
+
+    y -= 18;
+    y = drawWrappedText(page, section, {
+      font: bold,
+      size: 13,
+      x: PAGE_MARGIN,
+      y,
+      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
+      lineHeight: 16,
+      color,
+    });
+    return { page, y: y - 8 };
+  };
+  const first = sectionPage(false, "What was compiled", borderColor);
+  const compiled = drawBulletList(first.page, summary.compiledBullets, {
     font: regular,
     size: 10.5,
     x: PAGE_MARGIN + 2,
-    y: y - 8,
+    y: first.y,
     maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 2,
+    freshBodyY: first.y,
+    nextPage: () => sectionPage(true, "What was compiled", borderColor),
   });
 
-  y -= 8;
-  y = drawWrappedText(page, "What may be missing or still needs review", {
-    font: bold,
-    size: 13,
-    x: PAGE_MARGIN,
-    y,
-    maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
-    lineHeight: 16,
-    color: warningColor,
-  });
-  drawBulletList(page, summary.missingBullets, {
+  let missingPage = compiled.page;
+  let missingY = compiled.y - 8;
+  const firstMissingLines = wrapText(summary.missingBullets[0] ?? "", regular, 10.5,
+    LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 2 - 14);
+  // A section heading stays with its first whole bullet when that bullet fits
+  // a fresh body; an overlong first bullet still keeps at least its first line.
+  const firstMissingOffset = Math.min(10.5 * 1.35 * (firstMissingLines.length - 1),
+    first.y - PAGE_MARGIN);
+  if (missingY - 16 - 8 - firstMissingOffset < PAGE_MARGIN) {
+    const continued = sectionPage(true, "What may be missing or still needs review", warningColor);
+    missingPage = continued.page;
+    missingY = continued.y;
+  } else {
+    missingY = drawWrappedText(missingPage, "What may be missing or still needs review", {
+      font: bold,
+      size: 13,
+      x: PAGE_MARGIN,
+      y: missingY,
+      maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2,
+      lineHeight: 16,
+      color: warningColor,
+    }) - 8;
+  }
+  drawBulletList(missingPage, summary.missingBullets, {
     font: regular,
     size: 10.5,
     x: PAGE_MARGIN + 2,
-    y: y - 8,
+    y: missingY,
     maxWidth: LETTER_PAGE_WIDTH - PAGE_MARGIN * 2 - 2,
     bulletColor: borderColor,
+    freshBodyY: first.y,
+    nextPage: () => sectionPage(true, "What may be missing or still needs review", warningColor),
   });
 
   return doc.save();
@@ -576,8 +641,8 @@ function buildTaxInputFromGuidedInterview(guidedFlowState: GuidedFlowState | nul
   }
 
   const stateSources=guidedFlowState.sectionData["state-return"];
-  if(stateSources?.paMarriedOrdinarySources!==undefined)throw new Error('Married Pennsylvania paper export requires the actual separately owned PA40/SP review successor.');
-  if(guidedFlowState.segmentation.stateCode==="PA"&&(!stateSources?.paOrdinaryReturnFacts||!stateSources?.paOrdinaryReturnCompletionSources)){
+  const marriedSources=stateSources?.paMarriedOrdinarySources!==undefined;
+  if(guidedFlowState.segmentation.stateCode==="PA"&&!marriedSources&&(!stateSources?.paOrdinaryReturnFacts||!stateSources?.paOrdinaryReturnCompletionSources)){
     throw new Error("Complete the actual Pennsylvania ordinary and completion source packets before exporting a review PDF.");
   }
   const rawInput = buildTaxInputFromGuidedData(guidedFlowState);
@@ -636,10 +701,12 @@ export async function buildWorkspaceFilledReturnDownload(
     ? prepareCharitableReview(resolved.taxInput) : undefined;
   const adoptionReview = hasHistoricalAdoptionSources(resolved.taxInput) ? prepareAdoptionReview(resolved.taxInput) : undefined;
   const scheduleEReview = hasScheduleEReviewSources(resolved.taxInput) ? prepareScheduleEReview(resolved.taxInput) : undefined;
-  const paRoyaltyReview = resolved.taxInput.royaltyPropertySources && completeResult.stateReturns?.pennsylvania ? preparePARoyaltyReview(resolved.taxInput) : undefined;
+  const paMarriedReview=isPAMarriedOrdinaryReturnResult(completeResult.stateReturns?.pennsylvania)
+    ?preparePAMarriedReturnReview(resolved.taxInput):undefined;
+  const paRoyaltyReview = !paMarriedReview && resolved.taxInput.royaltyPropertySources && completeResult.stateReturns?.pennsylvania ? preparePARoyaltyReview(resolved.taxInput) : undefined;
   const paOrdinaryReview=completeResult.stateReturns?.pennsylvania&&isPAOrdinaryReturnResult(completeResult.stateReturns.pennsylvania)
     ? preparePAOrdinaryReturnReview(resolved.taxInput):undefined;
-  const paWorkingCreditReview = completeResult.stateReturns?.pennsylvania && !paOrdinaryReview && !resolved.taxInput.paNonresidentReturn
+  const paWorkingCreditReview = completeResult.stateReturns?.pennsylvania && !paMarriedReview && !paOrdinaryReview && !resolved.taxInput.paNonresidentReturn
     ? preparePAWorkingCreditReview(resolved.taxInput) : undefined;
   const qbiLossReview = resolved.taxInput.qbiLossSources ? prepareQbiLossReview(resolved.taxInput) : undefined;
   const eicReview = hasEicReviewSources(resolved.taxInput) ? prepareEicReview(resolved.taxInput) : undefined;
@@ -667,6 +734,7 @@ export async function buildWorkspaceFilledReturnDownload(
       paRoyaltyReview,
       paWorkingCreditReview,
       paOrdinaryReview,
+      paMarriedReview,
       eicReview,
       premiumTaxCreditReview,
       educationReview,
