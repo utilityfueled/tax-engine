@@ -4,6 +4,7 @@ import {ZeroIncomeMiscDetails} from './zero-income-misc-details';
 import type { TaxYearInput } from "@/models/inputs";
 import { OhioResidencyDetails } from "./ohio-residency-details";
 import { OhioPaymentDetails } from "./ohio-payment-details";
+import {OhioSchoolDistrictDetails} from "./ohio-school-district-details";
 import { PAResidencyDetails } from "./pa-residency-details";
 import {PAOrdinaryDigitalDetails} from "./pa-ordinary-digital-details";
 import {PAPersonalDebtForeignDetails} from "./pa-personal-debt-foreign-details";
@@ -183,15 +184,15 @@ export function SectionStateReturn({
               value=""
             />
             <StateSummaryRow
-              label="State Tax"
+              label={stateMetrics.schoolDistrict?"Ohio IT1040 Tax":"State Tax"}
               value={formatCurrency(stateMetrics.stateTax)}
             />
             <StateSummaryRow
-              label="State Payments"
+              label={stateMetrics.schoolDistrict?"Ohio IT1040 Payments":"State Payments"}
               value={formatCurrency(stateMetrics.stateWithholding)}
             />
             <StateSummaryRow
-              label={stateRefund.gt(0) ? "State Refund" : stateOwed.gt(0) ? "State Balance Due" : "State Result"}
+              label={stateMetrics.schoolDistrict ? (stateRefund.gt(0) ? "Ohio IT1040 Refund" : stateOwed.gt(0) ? "Ohio IT1040 Balance Due" : "Ohio IT1040 Result") : (stateRefund.gt(0) ? "State Refund" : stateOwed.gt(0) ? "State Balance Due" : "State Result")}
               value={
                 stateRefund.gt(0)
                   ? formatCurrency(stateMetrics.stateRefund)
@@ -210,6 +211,20 @@ export function SectionStateReturn({
           </div>
         )}
 
+        {stateMetrics?.schoolDistrict&&<section className="guided-ticker-breakdown" aria-label="School district return review"><h3>SD100 — {stateMetrics.schoolDistrict.districtName} ({stateMetrics.schoolDistrict.districtCode})</h3><p>2025 earned-income district calculation. Payments are separate from Ohio IT1040. A calculated refund is not received cash.</p>
+          <StateSummaryRow label="School district earned income" value={formatCurrency(stateMetrics.schoolDistrict.earnedIncome)}/>
+          <StateSummaryRow label="School district tax" value={formatCurrency(stateMetrics.schoolDistrict.tax)}/>
+          <StateSummaryRow label="School district withholding" value={formatCurrency(stateMetrics.schoolDistrict.withholding)}/>
+          <StateSummaryRow label="School district estimated payments" value={formatCurrency(stateMetrics.schoolDistrict.estimatedPayments)}/>
+          <StateSummaryRow label="School district prior credit" value={formatCurrency(stateMetrics.schoolDistrict.priorCredit)}/>
+          <StateSummaryRow label="School district total payments" value={formatCurrency(stateMetrics.schoolDistrict.totalPayments)}/>
+          <StateSummaryRow label="School district overpayment" value={formatCurrency(stateMetrics.schoolDistrict.overpayment)}/>
+          <StateSummaryRow label="Actual school credit election" value={formatCurrency(stateMetrics.schoolDistrict.outgoingCarryforward)}/>
+          <StateSummaryRow label="Calculated school district refund" value={formatCurrency(stateMetrics.schoolDistrict.refund)}/>
+          <StateSummaryRow label="School district balance due" value={formatCurrency(stateMetrics.schoolDistrict.amountOwed)}/>
+          <p>Physical school-district forms and filing remain unavailable pending their separate qualification.</p>
+        </section>}
+
         <ZeroIncomeMiscDetails data={current.zeroIncomeMiscSources} taxYear={taxYear} filingStatus={filingStatus}
           onChange={zeroIncomeMiscSources=>onDataChange({...current,zeroIncomeMiscSources})}/>
         {stateCode === "OH" && <>
@@ -217,6 +232,8 @@ export function SectionStateReturn({
             onChange={ohioResidency => onDataChange({...current, ohioResidency})} />
           <OhioPaymentDetails originalInput={originalInput ?? null} taxYear={taxYear} data={current.ohioPayments}
             onChange={ohioPayments => onDataChange({...current, ohioPayments})} />
+          {(current.ohioResidency?.schoolDistrictStatus==='actual_district_sources_required'||current.ohioSchoolDistrict)&&<OhioSchoolDistrictDetails originalInput={originalInput??null} taxYear={taxYear} data={current.ohioSchoolDistrict} ohioResidency={current.ohioResidency} ohioPayments={current.ohioPayments} onChange={ohioSchoolDistrict=>onDataChange({...current,ohioSchoolDistrict})}/>}
+
         </>}
         {stateCode === "PA" && <>
           <PAResidencyDetails originalInput={originalInput ?? null} data={current.paResidencySources}

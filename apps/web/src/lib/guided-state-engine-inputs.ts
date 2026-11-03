@@ -1,3 +1,4 @@
+import {buildGuidedOhioSchoolDistrictFacts} from './guided-ohio-school-district-facts';
 import {reconcileGuidedZeroIncomeMiscWithholding}from './guided-zero-income-misc-withholding-reconciliation';
 import {ordinarySourcePrecision}from '@/engine/state/pa-ordinary-source-precision';
 import {reconcileGuidedRetirementWithholding,type RetirementWithholdingOriginal}from "./guided-retirement-withholding-reconciliation";
@@ -98,7 +99,9 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
   if (state.segmentation.stateCode === "OH") {
     const ohioResidency = buildGuidedOhioResidencyFacts(data?.ohioResidency, input);
     const ohioPayments = buildGuidedOhioPaymentFacts(data?.ohioPayments, input);
-    return {...input, ohioResidency, ohioPayments};
+    const ohioSchoolDistrict=ohioResidency.schoolDistrictStatus==='actual_district_sources_required'||data?.ohioSchoolDistrict||input.ohioSchoolDistrict
+      ?buildGuidedOhioSchoolDistrictFacts(input,data?.ohioSchoolDistrict,data?.ohioResidency,data?.ohioPayments):undefined;
+    return {...input, ohioResidency, ohioPayments,...(ohioSchoolDistrict?{ohioSchoolDistrict}: {})};
   }
   if (state.segmentation.stateCode === "PA") {
     if (!data?.paResidencySources) throw new Error("Actual Pennsylvania residency sources are required.");

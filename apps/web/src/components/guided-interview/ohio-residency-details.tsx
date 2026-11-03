@@ -100,7 +100,7 @@ export function OhioResidencyDetails({ data, onChange, filingStatus, taxYear, or
                     <button type="button" className="utility-button" onClick={() => edit(copy => { copy.owners = copy.owners.filter(row => row.accountHolder !== key); })}>Remove {key} owner domicile source</button>
                 </fieldset>;
             })}
-            {needsAmounts && <>
+            {(needsAmounts || data.schoolDistrictStatus === 'actual_district_sources_required') && <>
                 <BooleanFact label="All actual federal income and adjustment sources included" value={data.allFederalSourcesIncludedConfirmed} onChange={value => edit(copy => { copy.allFederalSourcesIncludedConfirmed = value; })} />
                 <BooleanFact label="Actual sources contain no business income requiring Ohio apportionment" value={data.noBusinessIncomeConfirmed} onChange={value => edit(copy => { copy.noBusinessIncomeConfirmed = value; })} />
             </>}

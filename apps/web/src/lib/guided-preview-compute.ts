@@ -34,6 +34,7 @@ import {
   mapFilingStatus,
   type GuidedPreviewMetrics,
   type StatePreviewMetrics,
+  type SchoolDistrictPreviewMetrics,
 } from "./guided-interview-bridge";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -42,7 +43,7 @@ function decimalToString(val: { toString(): string }): string {
   return val.toString();
 }
 
-type StatePreviewResult = Pick<GenericStateReturnResult, "stateCode" | "stateName" | "stateTax" | "refund" | "balanceDue" | "totalPayments">;
+type StatePreviewResult = Pick<GenericStateReturnResult, "stateCode" | "stateName" | "stateTax" | "refund" | "balanceDue" | "totalPayments"> & {schoolDistrict?:SchoolDistrictPreviewMetrics};
 
 function extractStateMetrics(stateResult: StatePreviewResult): StatePreviewMetrics {
   return {
@@ -52,6 +53,7 @@ function extractStateMetrics(stateResult: StatePreviewResult): StatePreviewMetri
     stateRefund: decimalToString(stateResult.refund),
     stateAmountOwed: decimalToString(stateResult.balanceDue),
     stateWithholding: decimalToString(stateResult.totalPayments),
+    ...(stateResult.schoolDistrict?{schoolDistrict:stateResult.schoolDistrict}: {}),
   };
 }
 
@@ -199,9 +201,16 @@ function runGuidedPreview(state: GuidedFlowState | null | undefined, onBlocked: 
             refund: pa.netOverpayment, balanceDue: pa.totalAmountDue, totalPayments: pa.totalPayments };
         } else if (stateCode === "OH") {
           const currentOriginals = buildGuidedStateOriginals(taxInput, state);
-          const oh = calculateOhioResidentReturn(buildOhioResidentReturnInput(currentOriginals, result, buildGuidedOhioOverlay(currentOriginals, state, result.taxExemptInterest))).it1040;
+          const ohio = calculateOhioResidentReturn(buildOhioResidentReturnInput(currentOriginals, result, buildGuidedOhioOverlay(currentOriginals, state, result.taxExemptInterest)));
+          const oh=ohio.it1040,sd=ohio.sd100,source=ohio.schoolDistrictSource,schoolPacket=currentOriginals.ohioSchoolDistrict;
+          if(currentOriginals.ohioSchoolDistrict&&(!sd||!source))throw new Error('Actual required school district result is unavailable.');
+          if(sd&&source&&(source.district.districtNumber!=='0302'||!schoolPacket))throw new Error('Verified finite school district review context is unavailable.');
           stateResult = { stateCode, stateName: "Ohio", stateTax: oh.line13_totalLiability,
-            refund: oh.line26_refund, balanceDue: oh.line22_totalAmountDue, totalPayments: oh.line17_totalPayments };
+            refund: oh.line26_refund, balanceDue: oh.line22_totalAmountDue, totalPayments: oh.line17_totalPayments,
+            ...(sd&&source&&schoolPacket?{schoolDistrict:{districtCode:'0302',districtName:'Hillsdale LSD',taxYear:schoolPacket.taxYear,taxType:'earned_income' as const,
+              earnedIncome:source.residentIncome.line33.toString(),tax:sd.line10_totalLiability.toString(),withholding:sd.line11_sdWithholding.toString(),
+              estimatedPayments:schoolPacket.payments.account.estimatedPaymentsCredited,priorCredit:schoolPacket.payments.account.priorCreditApplied,totalPayments:sd.line13_totalPayments.toString(),
+              overpayment:sd.line19_overpayment.toString(),outgoingCarryforward:sd.line20_creditCarryforward.toString(),refund:sd.line21_refund.toString(),amountOwed:sd.line18_totalAmountDue.toString()}}: {}) };
         } else {
           stateResult = tryComputeStatePreview(stateCode, taxInput.taxpayer.taxYear, filingStatus,
             result.agi, result.taxableIncome, Number.isNaN(depCount) ? 0 : depCount,

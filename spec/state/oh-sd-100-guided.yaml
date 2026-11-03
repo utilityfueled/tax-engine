@@ -1,0 +1,89 @@
+form: "Ohio SD100 native actual source collection"
+fullName: "Finite 2025 Hillsdale earned-income guided collection and separate review"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Source-first successor to reviewed actual SD core. No new law/rate/core/PDF method.
+  Only actual2025 single primary under65 full365day OH/Hillsdale0302 ordinaryW2
+  with independently complete IT1040 and SD100 sources and zero separate penalties.
+  No inferred Finder residence, missing-year, source identity, local classification,
+  empty-account completeness, actual paid/refund/carry, no-return, no-credit or zero.
+  All draft source fields initially blank/null; incomplete/unsupported typed records
+  survive JSON/save/remount. Only explicit confirmation binds current raw originals.
+  Snapshot excludes exactly ohioResidency/ohioPayments/ohioSchoolDistrict; allother
+  originals retained. Read never refreshes. Source edits invalidate dependentSD;
+  raw federal edits invalidate allOH3; confirmation-only header changes do not.
+  Full-year all-source/noBusiness confirmations must be answerable for actualSD.
+  Native guide uses same canonical source replay as normal preview/export, never
+  a preattached root or fabricated Ohio result. IT1040/SD100 receipts and results
+  remain separate. Public review exposes only typed Decimal-string metrics; no
+  private owner/address/receipt/reference/original snapshot. Calculated refund is
+  not received cash. Missing/stale/unsupportedSD preserves federal and blocks an
+  apparently complete Ohio result. Existing no-district path stays unchanged.
+  Physical SD mapping, all3 residency expansion, 2026/public readiness and filing
+  remain separately gated. Existing PDF cannot silently omit actual requiredSD.
+lines:
+  - line: "literal-source-baseline"
+    description: "Independent complete fictional originals before native output"
+    formula: "80000wages*.0125=1000SDtax; SDWH1100 =>overpayment/refund100; ITWH3000 remains separate. Four actual100 timely receipts+SDWH600=>payments1000/refund0. Outgoing25<=overpayment100 =>refund75."
+    testRef: "tests/apps/web/oh-sd-100-guided-integration.test.ts::SD native baseline fictional current originals reconcile before guide changes"
+  - line: "actual-mounted-entry"
+    description: "Absent packet must originate through existing section"
+    formula: "Actual district selected and no SD draft: Add actual Ohio school district source facts is available; adding starts unknown and cannot confirm or calculate."
+    testRef: "tests/apps/web/oh-sd-100-guided-integration.test.ts::SD native existing section offers absent packet origination"
+  - line: "fullresident-source-facts"
+    description: "Full-year source facts remain explicit"
+    formula: "Actual district/fullresident displays allFederalSourcesIncludedConfirmed and noBusinessIncomeConfirmed; no auto true."
+    testRef: "tests/apps/web/oh-sd-100-guided-integration.test.ts::SD native fullresident actual district exposes required source question %s"
+  - line: "normal-state-layering"
+    description: "Actual normal source path includes district packet"
+    formula: "Raw federal -> read existing actual residency/payment -> read SD -> attach canonical allThree; no preattached root; no changes to raw originals."
+    testRef: "tests/apps/web/oh-sd-100-guided-integration.test.ts::SD native normal bridge replays the actual third packet without preattachment"
+  - line: "mandatory-navigation"
+    description: "No false complete state on missing/unknown district originals"
+    formula: "Actual-district status requires current confirmedSD; missing/stale/unknown rejects state navigation while raw federal remains available."
+    testRef: "tests/apps/web/oh-sd-100-guided-integration.test.ts::SD native navigation blocks missing actual district packet without losing federal"
+  - line: "snapshot-three-only"
+    description: "Avoid confirmation cycle with exact exclusions"
+    formula: "Exclude Ohio3 only, retaining unchanged allother current originals; an added SD packet cannot stale independently confirmed raw Ohio2."
+    testRef: "tests/apps/web/oh-sd-100-guided-integration.test.ts::SD native raw snapshot excludes exactly three Ohio roots"
+  - line: "material-invalidation"
+    description: "Current sources and dependent district confirmation"
+    formula: "Any SD edit invalidates own header; residency/payment edits invalidate dependentSD; owner/year/W2 edits invalidateOH3; preserve previous snapshots; no-op/header-only confirm retains."
+    testRef: "tests/apps/web/oh-sd-100-guided-integration.test.ts::SD native flow invalidates district confirmation for actual edit %s"
+  - line: "separate-public-results"
+    description: "Honest safe public review metrics"
+    formula: "Emit separate schoolDistrict SD100 metrics, never add district cash/refund to IT1040; show actualsource tax1000/refund100 or75, safe typed values only. Missing actualSD leaves federal but no apparently complete Ohio state."
+    testRef: "tests/apps/web/oh-sd-100-guided-integration.test.ts::SD native preview retains separate district tax payment and refund %s"
+  - line: "unknown-draft"
+    description: "Typed native records without monetary/default inference"
+    formula: "Blank/null required answers remain unknown; source year/district/owner/localrow/taxType/priorstatus/extensions/timing/money never default; zero preserved only explicitly."
+    testRef: "tests/apps/web/oh-sd-100-guided-facts.test.ts::SD draft empty fields remain unknown and unconfirmed"
+  - line: "source-replay"
+    description: "Explicit confirmed finite actual input"
+    formula: "Only actual confirm builds canonical source after full replay; retained-original edit without confirm rejects including equal-dollar source identity change. Reading and failedconfirm mutate nothing."
+    testRef: "tests/apps/web/oh-sd-100-guided-facts.test.ts::SD draft explicit confirm binds actual originals without mutating inputs"
+  - line: "source-guards"
+    description: "Unknown or contradictory native records"
+    formula: "Each real required source field must be complete; no implicit money/identity/date/classification/quarterly receipts/credit election. Known unsupported original families preserve actualrecords and block."
+    testRef: "tests/apps/web/oh-sd-100-guided-facts.test.ts::SD draft retains and rejects unknown or contradictory source %s"
+  - line: "native-complete-fields"
+    description: "Every canonical source field is natively reachable"
+    formula: "Structured identity/residence/lookup/income/W2/local/account/prior/carry/receipt/timing/election fields originate without JSON textarea or arbitrary object entry; all edits invalidate."
+    testRef: "tests/apps/web/oh-sd-100-guided-details.test.tsx::SD panel natively originates all required source fields and confirms %s"
+  - line: "persisted-incomplete"
+    description: "Save/remount pending actual records"
+    formula: "JSON/save/remount preserves unknown answers, actualzero and incomplete rows; no source refresh or auto confirmation."
+    testRef: "tests/apps/web/oh-sd-100-guided-details.test.tsx::SD panel remount preserves pending rows unknown and actual zero"
+  - line: "native-edit-reset"
+    description: "Native edits preserve old originals and clear confirmation"
+    formula: "Each actual source monetary/text/date/enum/boolean edit clears ownheader; currency only normalizes valid grouping, never reference strings or invalidmoney."
+    testRef: "tests/apps/web/oh-sd-100-guided-details.test.tsx::SD panel clears confirmation after native edit %s"
+  - line: "separate-estimate-cash-prior-credit"
+    description: "Prior credit is not a second cash estimated payment"
+    formula: "Explicit fictional prior filed overpayment/election/available/applied100; actual cash estimated payments0; current school withholding1100 => line12 cash+prior100,total payments1200,overpayment/refund200. Public cash estimatedPayments0 and priorCredit100 remain separate; no received-refund assertion."
+    testRef: "tests/apps/web/oh-sd-100-guided-integration.test.ts::SD native public cash estimates exclude separately shown actual prior credit"
+  - line: "unknown-original-printed-position"
+    description: "Retained original row with unknown position is visible and unselectable"
+    formula: "An actual original W2 local row with printedRow null stays in private originals; display an unknown disabled position option, never a guessed row0 or1. Preserve current draft and all source money; unknown actual row cannot establish a current confirmed source."
+    testRef: "tests/apps/web/oh-sd-100-guided-details.test.tsx::SD panel retains actual unknown printed position as a disabled source option"

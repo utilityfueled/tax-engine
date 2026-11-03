@@ -2545,3 +2545,7 @@ Full coverage now passes23,011tests/zero failures,1,767files, with33isolated Pos
 ### November3: actual Ohio school-district sources
 
 The bounded Hillsdale0302 method derives actual2025school income/WH/dated receipts from independent residence/Finder/currentW2/account sources, keeping municipal and IT1040 cash separate. Independent controls expose five retained-original omissions before the minimal seven-family guard; distinct corrected review approves. Main1,247/40 including two temporary realAPI proofs and all13checks pass after2genuineRED; five shared manual merges preserve newer business/JM bytes exactly. See [the source ledger](upgrade-2026-oh-school-district-sources-work.md). Native/publicmetrics/physical/allresidencies and human/final2026 qualification remain open. Coverage evidence09eb41fa is pushed.
+
+### November3: native Ohio school-district sources and separate review metrics
+
+The finite2025 Hillsdale0302 collector now preserves blank/unknown actual residence, Finder, W2, receipt/account, prior-credit and election originals through confirmation and reopening. Public SD100 cash/priorcredit/refund figures remain separate from IT1040. Fresh main17genuinefail/3pass precede exact reviewed adoption; distinct106controls and main602/20 plus1362Ohio/41 and all14checks pass. See [the native source ledger](upgrade-2026-oh-school-district-guided-work.md). Broader SD/native-browser/physical/human/final2026 qualification remains open. Reciprocal6d9144e3 and runtime-evidenceb935ac57 are pushed.

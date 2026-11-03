@@ -1,0 +1,35 @@
+form: "Ohio school district independent native boundaries"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Independent source-first controls before native product inspection. Printed51
+  Hillsdale0302 rate.0125 earned income, printed58 SD100line12 includes actual
+  estimates and priorcredit. Literal80000*.0125=1000; WH1100+actualprior60
+  gives1160payments/160overpayment; explicitoutgoing30 gives130refund.
+  Separate IT1040withholding3000 stays separate. No actual agency cash,
+  native browser, physical-form, 2026, readiness or human review is inferred.
+lines:
+  - line: "render-and-unknown"
+    label: "Pure mount, unknown source facts, explicit zero"
+    formula: "Rendering/remounting originals changes no records or callbacks. Added source starts unknown; blank confirm cannot infer owner/year/account/history/elections. Entered0 survives pending JSON while blank remains unknown."
+    testRef: "tests/apps/web/oh-school-district-native-independent.test.tsx::independent SD mount and remount never capture originals or invoke updates"
+  - line: "native-edits"
+    label: "Actual edit invalidates confirmation"
+    formula: "Receipt/source/date/account/lookup/election edits clear prior source confirmation and retain original snapshot; explicit final confirmation is required."
+    testRef: "tests/apps/web/oh-school-district-native-independent.test.tsx::independent SD native edit revokes confirmation %s"
+  - line: "current-originals"
+    label: "Current complete originals must replay"
+    formula: "Same-money source identity change, unknown issued-row position, missing actual withholding and pending snapshots cannot become complete. Build/read/failedconfirm have no sideeffects."
+    testRef: "tests/apps/web/oh-school-district-native-independent.test.tsx::independent SD stale or missing actual original denies %s"
+  - line: "dependent-confirmations"
+    label: "Parent updates revoke current school proof"
+    formula: "Real residency/payment/federal-source edits revoke dependent school source confirmation, retaining saved originals. No-op/read-only remount does not."
+    testRef: "tests/apps/web/oh-school-district-native-independent.test.tsx::independent SD parent source edit revokes district confirmation %s"
+  - line: "prior-credit-vs-cash"
+    label: "Prior credit is not estimated cash"
+    formula: "Actualprior60, cash0,schoolWH1100,total1160,tax1000,overpayment160,outgoing30,refund130; no private originals enter public district metrics. ITWH3000 is separate."
+    testRef: "tests/apps/web/oh-school-district-native-independent.test.tsx::independent SD prior credit and cash remain distinct with explicit election"
+  - line: "unknown-printed-row"
+    label: "Unknown actual printed position stays unselected"
+    formula: "Originalnull position remains visible as disabled unknown option, never converted to0/1. Rendering cannot alter retained originals or establish current confirmation."
+    testRef: "tests/apps/web/oh-school-district-native-independent.test.tsx::independent SD unknown original position remains disabled and unmodified"

@@ -962,7 +962,14 @@ export function buildTaxInputFromGuidedData(state: GuidedFlowState): GuidedTaxIn
 
 // ── Preview metrics ─────────────────────────────────────────────────────────
 
+/** Display-only validated SD100 figures; no raw private source packet or received-refund assertion. */
+export interface SchoolDistrictPreviewMetrics {
+  districtCode:string;districtName:string;taxYear:number;taxType:'earned_income';earnedIncome:string;tax:string;
+  withholding:string;estimatedPayments:string;priorCredit:string;totalPayments:string;overpayment:string;
+  outgoingCarryforward:string;refund:string;amountOwed:string;
+}
 export interface StatePreviewMetrics {
+  schoolDistrict?:SchoolDistrictPreviewMetrics;
   stateCode: string;
   stateName: string;
   stateTax: string;

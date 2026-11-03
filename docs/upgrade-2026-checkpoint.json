@@ -15408,5 +15408,33 @@
     "localPostgres": "45pass0skip; cluster stoppedremoved; notstaging",
     "currentReciprocalCommit": "6d9144e3d45dc9e3d23072c9a05ad0f1e77ef351",
     "readiness": false
+  },
+  "nov03MainNativeSchoolDistrict": {
+    "baseCommit": "b935ac5777f599998655f70e9993f5c0302f8d2f",
+    "reviewedAt": "2026-11-03T13:03:31.230360+00:00",
+    "author16ExactBeforeDocumentation": true,
+    "sharedEightBaselineExact": true,
+    "distinctPeer2Exact": true,
+    "peerReviewSHA256": "dc287a0434973ca0972a6e39520e43dceaeb49abc119eaa36b5948f6508a2ab8",
+    "checksSHA256": "54aa84cace5599c886d1a76b8528fa003410903e189a59b03deef50d9695882a",
+    "nativeAdjacentTests": 602,
+    "nativeAdjacentFiles": 20,
+    "allOhioTests": 1362,
+    "allOhioFiles": 41,
+    "checksPassed": 14,
+    "specLinks": 7611,
+    "ASTReferences": 710,
+    "inventoryEntries": 774,
+    "mainRed": "20actualexistingAPIcontrols:17genuinefail3pass beforeproducts",
+    "mainRedSHA256": "c0c9507b7e264423b61ccd7545d11fad41a8fba16095c62cade0a25a562b59a4",
+    "review": "All8existing paths exactauthor because baseline matched; root inspected bridge/preview/invalidation/collection/UI; source originals remain private, separate school cash/priorcredit/outgoing/refund metrics. Current reciprocal/business core untouched. No monetary engine change, readiness change or old assertion removed.",
+    "limits": [
+      "finite2025fullresident0302ordinaryW2",
+      "broaderSDcohorts/browser/physicalstillrequired",
+      "2026filingandhumanreviewremainopen"
+    ],
+    "authorManifestSHA256": "3106ea898d9221436beb04999676924c4342c9319c52a8a61219b385e4a7546f",
+    "status": "finite-main-technical-integration-pass",
+    "ledger": "docs/upgrade-2026-oh-school-district-guided-work.md"
   }
 }

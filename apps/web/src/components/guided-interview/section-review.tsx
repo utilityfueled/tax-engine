@@ -493,12 +493,12 @@ function StateReturnSummary({
       {stateMetrics && (
         <>
           <div className="guided-review-row">
-            <span className="guided-review-label">State tax</span>
+            <span className="guided-review-label">{stateMetrics.schoolDistrict ? "Ohio IT1040 tax" : "State tax"}</span>
             <span className="guided-review-value">{formatCurrency(stateMetrics.stateTax)}</span>
           </div>
           <div className="guided-review-row">
             <span className="guided-review-label">
-              {stateRefund.gt(0) ? "State refund" : stateOwed.gt(0) ? "State balance due" : "State result"}
+              {stateMetrics.schoolDistrict ? (stateRefund.gt(0) ? "Ohio IT1040 refund" : stateOwed.gt(0) ? "Ohio IT1040 balance due" : "Ohio IT1040 result") : (stateRefund.gt(0) ? "State refund" : stateOwed.gt(0) ? "State balance due" : "State result")}
             </span>
             <span className="guided-review-value">
               {stateRefund.gt(0)
@@ -510,6 +510,10 @@ function StateReturnSummary({
           </div>
         </>
       )}
+      {stateMetrics?.schoolDistrict&&<section aria-label="School district final review"><h4>SD100 — {stateMetrics.schoolDistrict.districtName} ({stateMetrics.schoolDistrict.districtCode})</h4><p>2025 earned-income district result; these payments are separate from IT1040. A calculated refund is not received cash.</p>
+        {([['School earned income',stateMetrics.schoolDistrict.earnedIncome],['School tax',stateMetrics.schoolDistrict.tax],['School withholding',stateMetrics.schoolDistrict.withholding],['School estimated payments',stateMetrics.schoolDistrict.estimatedPayments],['School prior credit',stateMetrics.schoolDistrict.priorCredit],['School total payments',stateMetrics.schoolDistrict.totalPayments],['School overpayment',stateMetrics.schoolDistrict.overpayment],['Actual school credit election',stateMetrics.schoolDistrict.outgoingCarryforward],['Calculated school refund',stateMetrics.schoolDistrict.refund],['School balance due',stateMetrics.schoolDistrict.amountOwed]]as const).map(([label,value])=><div key={label} className="guided-review-row"><span className="guided-review-label">{label}</span><span className="guided-review-value">{formatCurrency(value)}</span></div>)}
+        <p>Physical school-district forms and filing remain unavailable pending their separate qualification.</p>
+      </section>}
       {totalEstimated.gt(0) && (
         <div className="guided-review-row">
           <span className="guided-review-label">
