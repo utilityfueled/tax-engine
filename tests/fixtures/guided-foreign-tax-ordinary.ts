@@ -10,7 +10,7 @@ export function guidedOrdinaryCreditFixture() {
     amtCarryback: { taxYear: '2024', election: 'form1116_credit', sourceFactsConfirmed: true, allPriorUseIncludedConfirmed: true,
       sourceReference: 'Actual prior zero-capacity AMT return', limitation: '0', currentTaxes: '0', priorCarryoversUsed: '0' },
   } };
-  const investment = { interestEntries: [{ ...input.form1099Int[0], accountHolder: 'primary' as const,
+  const investment = { interestEntries: [{ ...input.form1099Int[0], sourceTaxYear: '2025', accountHolder: 'primary' as const,
     stateTaxReporting: 'none' as const, state: '', stateWithheld: '0', privateActivityBondInterest: '0',
     marketDiscount: '0', bondPremium: '0', treasuryBondPremium: '0', taxExemptBondPremium: '0' }], dividendEntries: [], brokerageEntries: [] };
   return { facts, investment };

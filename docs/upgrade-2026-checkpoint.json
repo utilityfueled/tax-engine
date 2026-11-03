@@ -13998,6 +13998,28 @@
     "MISettlement": "B sourcefirst23 real3fail/20pass; implementation/review pending",
     "humanQualified": false,
     "final2026Qualified": false,
-    "filingEligible": false
+    "filingEligible": false,
+    "commit": "172fc23bfd0ee787f7c0dad913a07061377882e1",
+    "pushed": true
+  },
+  "nov03FullUnit172fc": {
+    "head": "172fc23bfd0ee787f7c0dad913a07061377882e1",
+    "passed": 21918,
+    "failed": 10,
+    "pending": "33 isolated PostgreSQL integration cases",
+    "total": 21961,
+    "logSHA256": "ba6581ebcbe9000f7486b7f34772972724f24964c10cf880bdc530c32f687835",
+    "coverageMeasured": false
+  },
+  "nov03ForeignOriginalYearFixture": {
+    "tests": 5,
+    "types": 3,
+    "specReferences": 7232,
+    "inventoryEntries": 719,
+    "strictWarnings": 0,
+    "passedCommands": 9,
+    "productionChanged": false,
+    "old3TestSourceExact": true,
+    "reviewSHA256": "f81e8f61ed3bd43cf3ac1406293a46bc638ebdcbcbe5ecf2c51c62ce0f7c81d7"
   }
 }

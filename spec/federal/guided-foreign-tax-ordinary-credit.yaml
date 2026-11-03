@@ -24,6 +24,10 @@ notes: |
   canonical audits, both credits and all vintage/carryback/new-carry conservation,
   prints opaque source identities and retains one review notice per page.
 lines:
+  - line: "fictional-source-year"
+    description: "The independently supplied fictional interest original retains its actual calendar year"
+    formula: "Supply explicit 2025 original-year evidence in the synthetic fixture; preserve all original payer/account/income/tax values. Missing source year remains unsupported in production, even where the annual foreign tax election has a year."
+    testRef: "tests/guided-interview/guided-foreign-tax-original-year.test.ts::retains the independently supplied foreign interest original year"
   - line: "source"
     description: "Actual ordinary source entry with independent histories"
     formula: "Normalize actual year and Decimal values; require source confirmation and preserve missing or false answers; no manufactured prior capacity"

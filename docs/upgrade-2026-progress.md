@@ -2375,3 +2375,7 @@ The original desktop/mobile cases now supply explicit fictional PA records and r
 ### November 3: canonical PA copyright royalty classification
 
 Five exact independently reviewed products now derive the bounded2025 PA copyright class from complete actual-original and receipt records. The original6478 and edited6475 tax oracles, original MI80.20 withholding and12000.25 state-income boxes remain intact. Fresh main five genuine failures precede integration;908tests/15files, three types,7231 spec links, inventory719, strict lint0 and both builds pass. Distinct corrected review38/3 passes. See [the royalty ledger](upgrade-2026-pa-canonical-royalty-work.md). MI account settlement, guided/browser/PDF and human/final2026 qualification remain open. Digital browser fixture `5a6d3039` is pushed.
+
+### November 3: foreign-credit original-year fixture
+
+The original guided foreign-credit positive now retains an explicit fictional2025 statement year. Two real failures precede the one-field fixture correction; allfive focused tests, three types, spec/inventory and strict lint pass, preserving the old three tests byte-for-byte and the missing-year rejection. See [the fixture ledger](upgrade-2026-foreign-original-year-work.md). Full unit refresh at172fc records21918pass/10fail/33pending; global gates remain open. Royalty classification `172fc23b` is pushed.
