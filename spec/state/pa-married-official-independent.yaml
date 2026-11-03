@@ -1,0 +1,33 @@
+form: PA-Married-Official-Independent
+fullName: Independent source-bound owned PA40 and SP physical review controls
+taxYear: 2025
+reference: https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf
+notes: |
+  Independent official source/oracles frozen b28bfe0a before renderer existed.
+  Own executable controls frozen before candidate product/output inspection.
+  Exact PA40 fcd76486, SP cf8c6d0b, booklet e8996504. Physical geometry and
+  actual selected appearances control; misleading SP2/3 tooltips do not.
+  New fictional quarter-dollar outside-household gift originals are explicitly
+  supplied perowner; no original six source cases or monetary oracles changed.
+  Static redacted review only, no2026/filing/human/agency qualification.
+lines:
+  - line: "owned-physical"
+    description: Independent literal whole cents and shared-SP owner cells
+    formula: Jwhole80000/2456/2456/refund0 and Jcents80001/2457/2456/request1; Mwhole and cents primary50000/1535/spouse30000/921. SharedSP J13001/tax399/SP359; Mprimary10000/tax307/SP276 and spouse3001/tax92/SP83. All financial cells are exact in saved source rectangles, with fresh exact knownzero numeric source amounts. Absent optional PA40 zero classes may be blank or0; booklet printed23 mandates blank27 and0on25. Actual29/30/31 remain exact requested cash. SP2through10 mandatory0 per printed38 remains strict. Conditional unclaimed claims stay blank. Schoolcode02745 and original identities only, no fabricated signature/date/bank.
+    testRef: "tests/pdf/pa-married-official-independent.test.ts::independent PA married source physical cells and selected appearances $mode $name"
+  - line: "gift-rounding"
+    description: Independently authored perowner actual outside-household gifts
+    formula: Each actualgift.25 rounds0 in separate columns, so M B5=C5=0 and combined11=13001; joint raw.25+.25=.50 rounds1, so J A5=1 and A11=13002. Whole-category source transfers must reconcile, not copy incompatible shared totals. Table2 remains.90 and own credits359/276/83 unchanged.
+    testRef: "tests/pdf/pa-married-official-independent.test.ts::independent PA married actual gift columns reconcile %s"
+  - line: "actual-input"
+    description: Original input path redacts after private authority validation
+    formula: Original-input call and canonical-redacted-input call render the same source-bound financial cells without exposing SSNs/EINs/private source records. A separately authored fictional identity change explicitly reconstructs complete actual EIC history before current married originals are bound. Identifiers embedded in confirmed actual display names are removed; originals and result remain unchanged.
+    testRef: "tests/pdf/pa-married-official-independent.test.ts::independent PA married original-input display privacy"
+  - line: "authority"
+    description: Ownership order context and strict monetary authority before IO
+    formula: Changedmode, returned owner order, owner cash, filing election, current equal-money name or stripped private packet cannot replay an old opaque token. Copied or missing token is not authority. Rejection must be source/context related before missing-template IO, not TypeError or filesystem incidental failure.
+    testRef: "tests/pdf/pa-married-official-independent.test.ts::independent PA married stale authority rejects before IO %s"
+  - line: "template-year"
+    description: Source revisions public guards and year remain closed
+    formula: Either independently changed PA40 or SP bytes is rejected; no source-year substitution. Existing public full-return path remains denied without explicit prepared ownership. Saved everyobject refs/privacy and everypage review notice remain mandatory.
+    testRef: "tests/pdf/pa-married-official-independent.test.ts::independent PA married source revision rejects %s"

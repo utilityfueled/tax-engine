@@ -1,0 +1,47 @@
+form: "PA-Married-Official-Review"
+fullName: Original-bound separately owned Pennsylvania married review forms
+taxYear: 2025
+reference: https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf
+notes: |
+  Final2025 PA40 SHA256 fcd7648601f3ce5a7a258be49c54aa1c604e1c61c1fe9175351451ac6087d8b3.
+  Final2025 SP eight-page source SHA256 cf8c6d0b819f90fa56993f0647895e7e4000e36e42607c36a6a89d9170d82a5b; select only physical pages1/2.
+  Booklet SHA256 e8996504a4302a65055e697ba6301a3e41a411a4802645a5fc5f653f7538c172; retrieved2026-11-03.
+  Static marked redacted review only. No filing gate, final2026 mapping, synthetic owner federal, account transfer or issued-refund assertion.
+  Actual fullresident living/cohabiting two-owner ordinary sources only; initial physical cohort has zero EIC/WPTC and independently zero penalty.
+lines:
+  - line: "context"
+    description: Complete actual household and fresh result before template IO
+    formula: Opaque prepared context binds complete original canonical input and attached actual married source packet, fresh unchanged federal household and exact married result. Only exact original or its canonical redaction is accepted. Forged, stale, stripped, wrong-year and changed-result projections reject before IO. Exact semantic comparison preserves actual Decimal type and value plus every property/undefined value, while independently cloned Decimal constructor function identities cannot make equal current results unequal. Plain-string money remains invalid.
+    testRef: "tests/pdf/pa-married-official-review.test.ts::PA married official review rejects changed authority before IO"
+  - line: "owner"
+    description: Actual separately owned PA40 identities and status
+    formula: J emits one joint PA40 with actual primary/spouse identities. M emits two distinct owner PA40s using each actual claimant and actual partner identity for rendering only. Federal filing status and original income ownership remain unchanged. School code and name follow actual owner source. Actual filing choice J or M and resident status are explicit, never inferred from federal status.
+    testRef: "tests/pdf/pa-married-official-review.test.ts::PA married official review preserves owned physical forms $mode $name"
+  - line: "pa40-income"
+    description: PA40 printed1a through12
+    formula: Project actual return compensation1a/net1c and total9/adjusted11, with known-zero1b/2/3/4/5/6/7/8/10, and actual tax12 from the existing source-bound result. J rounds combined raw sources once; M uses each actual printed owner result. Never recompute or allocate tax in a renderer.
+    testRef: "tests/pdf/pa-married-official-review.test.ts::PA married official review preserves owned physical forms $mode $name"
+  - line: "pa40-cash"
+    description: PA40 printed13 through36 and actual refund elections
+    formula: Project actual owned withholding13, actual known-zero14/15/16/17, reported18/22/23/24/25/26/27/28/29 and positive claimedSP20/21, explicit elected30/31 and actual donation code/amount32through36. First independently zero penalty/WPTC only. No shared-account settlement or default refund. Positive SP explicitly selects married19a and actual zero children19b. Without a claimedpositiveSP leave19a/19b/20/21 blank and retain actual eligibility internally; this is conservative rendering policy, not an asserted express blank mandate. Actual requestedrefund1 remains1; printed24 instructions say PA does not issue refunds1orless, so a visible review disclosure must prevent any issued-cash claim.
+    testRef: "tests/pdf/pa-married-official-review.test.ts::PA married official review preserves owned physical forms $mode $name"
+  - line: "sp-status"
+    description: SP identity eligibility and SectionsI/II
+    formula: Emit actual SP only when its actual credit is positive. Both actual names remain even for M; all identifiers are blank in review. Actual not-dependent answer is No; inapplicable dependent-taxpayer question is blank. Married SectionI3 is selected; J selects3a, M selects3b and its same-information certification. Actual zero dependent children; no fabricated dependent rows, deceased or separated status.
+    testRef: "tests/pdf/pa-married-official-review.test.ts::PA married official review preserves owned physical forms $mode $name"
+  - line: "sp-income"
+    description: SP SectionIII printed1through11
+    formula: J uses ColumnA actual combined compensation1 and actual combined gift5, rounding each combined category once. M uses claimantColumnB and actual partnerColumnC compensation1/gifts5 with each owner reported rounding; on the partner return ownership reverses consistently. Actual first-cohort known-zero categories2/3/4/6/7/8/9/10 remain zero. Combinedline11 is actual shared eligibility income from existing result. Physical printed2 is nontaxable interest and3 alimony despite legacy field-name reversals; bind geometry to printed labels.
+    testRef: "tests/pdf/pa-married-official-review.test.ts::PA married official review preserves owned physical forms $mode $name"
+  - line: "sp-credit"
+    description: SP SectionIV printed12through16
+    formula: Use actual return PA tax12, actual resident credit13, actual net tax14, existing shared Table2 percentage expressed as Decimal fraction15 and existing actual credit16. Left region is J, right region M. Never apply one owner's tax or refund to another. Output no instruction pages.
+    testRef: "tests/pdf/pa-married-official-review.test.ts::PA married official review preserves owned physical forms $mode $name"
+  - line: "revision"
+    description: Exact source bytes and canonical appearance checks
+    formula: Pin both final blank hashes before mapping. Enumerate full canonical fields and every page widget, remove only understood source controls or reuse their true parent linkage. Never blindly reattach duplicates. Every authored expected value must have canonical V, corresponding current widget V and nonempty normal appearance before static flatten; saved output has no AcroForm or Widgets. Reopen actual saved pages and check true physical printed rectangles.
+    testRef: "tests/pdf/pa-married-official-review.test.ts::PA married official review rejects changed template bytes"
+  - line: "privacy"
+    description: Redaction and saved review output
+    formula: Privately validate complete originals then render safe identity only. No SSN/TIN/EIN/account/source references anywhere in saved PDF objects or text, including identifiers embedded in displayed names. Every physical page has exactly one review-only notice, no signature/date/preparer/bank invention and no draft/final2026 or filing authorization. Preserve original input and complete result.
+    testRef: "tests/pdf/pa-married-official-review.test.ts::PA married official review preserves owned physical forms $mode $name"

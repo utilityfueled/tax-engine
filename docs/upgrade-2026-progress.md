@@ -2586,3 +2586,7 @@ Current2025 Hillsdale0302 originals now produce static SD100 and positive-withho
 ### November3: native Ohio ordinary business records
 
 Actual2025 single-primary NR/PY C records now originate from blank property/payroll/receipt/deduction controls and retain explicit confirmations through JSON save/reopen. Sourcefirst3genuineRED precede six products; distinct59+author39 and current-main98/3 plus5,586/650pass. All types/spec/AST/strict/build/inventory checks pass;33PG-dependent tests remain skipped. Three narrow shared additions preserve current PA/reciprocal/SD paths. See [the native ledger](upgrade-2026-ohio-business-native-work.md). Actual browser/physical/broadercohort/final2026/human/distribution/staging qualification remains open. Schoolphysicalf76c481f is pushed.
+
+### November3: separately owned married Pennsylvania official review forms
+
+Finite2025 original-bound J/M households now render actual owned PA40 and positive-credit Schedule SP review companions. Three genuine current-main failures precede unchanged reviewed adoption; distinct19 plus author9 and adjacent249 yield277/15PASS, and all12checks pass. Root strictly checks actual12PDF/24pages, compares all24page pixels and inspects every page. See [the physical ledger](upgrade-2026-pa-married-official-review-work.md). Public download routing, broader cohorts, qualified human/final2026 and distribution/staging gates remain open. Ohio nativebusiness869a3ce4 is pushed.

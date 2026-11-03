@@ -147,10 +147,13 @@ export const PA_40_FIELDS = {
 } as const;
 
 type PAPacketResult = PAOrchestratorResult | PANonresidentOrchestratorResult | PAOrdinaryReturnResult;
+/** Render fields only; this does not confer source qualification. */
+export type PA40FieldProjection=Pick<PAPacketResult,'pa40'|'scheduleSP'> & Partial<Pick<PAOrdinaryReturnResult,'rev1630'>>;
 
 /** Render-only original facts. Diagnostic callers do not gain source qualification. */
 export interface PA40DiagnosticRenderFacts {
   filingStatus?: "S" | "J" | "M" | "F";
+  taxForgivenessCategory?: "married";
   residency?: { status: "resident" | "part_year" | "nonresident"; schoolCode: string; schoolDistrictName: string; from?: string; through?: string };
   requestedRefund?: string;
   finalReturnReason?:string;
@@ -257,7 +260,7 @@ export async function fillPA40(
 }
 
 /** Internal scalar field projection: it does not validate original taxpayer sources. */
-function applyPA40FieldMap(doc: PDFDocument, taxpayer: TaxYearInput["taxpayer"], paResult: PAPacketResult, facts?: PA40DiagnosticRenderFacts): void {
+function applyPA40FieldMap(doc: PDFDocument, taxpayer: TaxYearInput["taxpayer"], paResult: PA40FieldProjection, facts?: PA40DiagnosticRenderFacts): void {
   const form = doc.getForm();
   const F = PA_40_FIELDS;
   const pa40 = paResult.pa40;
@@ -291,7 +294,7 @@ function applyPA40FieldMap(doc: PDFDocument, taxpayer: TaxYearInput["taxpayer"],
 export async function projectPA40DiagnosticFields(
   doc: PDFDocument,
   taxpayer: TaxYearInput["taxpayer"],
-  projection: PAPacketResult,
+  projection: PA40FieldProjection,
   facts?: PA40DiagnosticRenderFacts,
 ): Promise<PDFDocument> {
   assertPdfExportAllowed(taxpayer.taxYear, taxpayer.taxYear);
@@ -364,7 +367,7 @@ function fillPersonalInfo(
 function fillFilingInfo(
   form: ReturnType<PDFDocument["getForm"]>,
   tp: TaxYearInput["taxpayer"],
-  paResult: PAPacketResult,
+  paResult: PA40FieldProjection,
   facts?: PA40DiagnosticRenderFacts,
 ): void {
   const F = PA_40_FIELDS;
@@ -410,6 +413,7 @@ function fillFilingInfo(
   }
   // Tax Forgiveness checkbox (if Schedule SP credit > 0)
   setCheckBox(form, F.taxForgiveness, paResult.scheduleSP.taxForgivenessCredit.gt(0));
+  if(facts?.taxForgivenessCategory==="married"&&paResult.scheduleSP.taxForgivenessCredit.gt(0))selectOfficialWidget(form,F.taxForgiveness,"2");
 
   // REV-1630 checkbox (underpayment penalty)
   if ("rev1630"in paResult && paResult.rev1630?.totalInterest.gt(0)) {
