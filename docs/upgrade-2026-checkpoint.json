@@ -15569,5 +15569,34 @@
     "normalBrowserCollection": 548,
     "normalBrowserFiles": 137,
     "rootReviewSHA256": "d4a9e216d60c41bc51f152bb68bcaf1529e0f7529e52f3a0955d1fd8aaa0ab16"
+  },
+  "nov03MainReciprocalWagesNative": {
+    "reviewedAt": "2026-11-03T14:36:34.681952+00:00",
+    "parentCommit": "a00a8220",
+    "decision": "finite2025-currentmain-source-integration-pass",
+    "author11ManifestSHA256": "fcbe8a6b9c453d97afbcba70b1820c6347832e21e729ada3d68c8e43d07c7e14",
+    "independent15AndAuthor54Pass": 69,
+    "independentReceiptSHA256": "8eba53173cf2674ff27d2bb802de27f6b95322ca6386c80b258dcb09fd854816",
+    "mainExistingAPIRed": "13genuinefail4pass; sixcanonicalpreconditionsretained",
+    "mainRedLogSHA256": "8538e65b7d24a5e568280266114468317c99e12854b5717574d983cd2bf615dd",
+    "mainTestsPassed": 2003,
+    "mainFilesPassed": 82,
+    "checksPassed": 12,
+    "checksSHA256": "99915b129d174009d635090e5492b4a5f2f33fbf54610ad63f6aa24675cf6d17",
+    "specReferences": 7663,
+    "strictASTControls": 788,
+    "inventoryEntries": 784,
+    "strictOwnedTSPaths": 10,
+    "strictWarnings": 0,
+    "threeSharedCompositionsPreservePAJMAndSD": true,
+    "all13ExpectedHashesBeforeDocumentation": true,
+    "engineAndWebBuildsPass": true,
+    "rootReviewSHA256": "0536997c2ffb38c18b8708bd6f3ded58dc7f4f87b6e2d1cda50fbf4fbabe7a76",
+    "retainedInitialBroadFailure": "2001pass2old5sPDFtimeouts; currentisolated11pass2timeout; exact4c735baseline13PASS; a00a8220batchessamestrictassertions5sunchanged; same82replayPASS",
+    "limits": [
+      "finite2025singlePAfullresidentordinaryCcorpOhioemployeeW2",
+      "browser/physical/additionalcohorts/distributions/staging/human/final2026remain"
+    ],
+    "ledger": "docs/upgrade-2026-oh-reciprocal-wages-guided-work.md"
   }
 }

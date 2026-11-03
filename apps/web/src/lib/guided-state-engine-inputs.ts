@@ -1,3 +1,4 @@
+import {buildGuidedOhioReciprocalWages} from './guided-oh-reciprocal-wages';
 import {buildGuidedOhioSchoolDistrictFacts} from './guided-ohio-school-district-facts';
 import {buildGuidedPAMarriedOrdinarySources,assertMarriedPASavedLedger} from './guided-pa-married-ordinary-sources';
 import {reconcileGuidedZeroIncomeMiscWithholding}from './guided-zero-income-misc-withholding-reconciliation';
@@ -98,7 +99,10 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
   if (!state) return input;
   const data = state.sectionData["state-return"];
   if (state.segmentation.stateCode === "OH") {
-    const ohioResidency = buildGuidedOhioResidencyFacts(data?.ohioResidency, input);
+    if(input.ohioResidency?.reciprocalWageSources&&!data?.ohioReciprocalWages)throw new Error('Reconcile the retained canonical reciprocal sources with actual native originals before replacing them.');
+    const ohioResidency = data?.ohioReciprocalWages
+      ?buildGuidedOhioReciprocalWages(input,data.ohioReciprocalWages,data.ohioResidency,data.ohioPayments)
+      :buildGuidedOhioResidencyFacts(data?.ohioResidency, input);
     const ohioPayments = buildGuidedOhioPaymentFacts(data?.ohioPayments, input);
     const ohioSchoolDistrict=ohioResidency.schoolDistrictStatus==='actual_district_sources_required'||data?.ohioSchoolDistrict||input.ohioSchoolDistrict
       ?buildGuidedOhioSchoolDistrictFacts(input,data?.ohioSchoolDistrict,data?.ohioResidency,data?.ohioPayments):undefined;

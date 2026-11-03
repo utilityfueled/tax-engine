@@ -2565,3 +2565,8 @@ Actual original-bound2025 VA nonresident ordinary-W2 sources now produce four st
 ### November3: school-district actual browser entry and mobile validation
 
 Actual desktop/mobile school sources now originate from blank controls, remain separately confirmed after same-cash source edits, preserve unknown elections across reload and reopen with schooltax1000/WH1100/refund100 separate fromIT3000. Distinct rootmain reproduces69-element mobile error overflow, then exact one-line wrapping repair passes all3browser cases without retries. All9static checks/548normalcollection pass; current13captures and zero-overflow phases verified. See [the browser ledger](upgrade-2026-oh-school-district-browser-work.md). Physical/broader SD/distributions/staging/human/final2026 gates remain open. Ohio physicala06b909c is pushed.
+
+
+### November3: native reciprocal wages from actual separate originals
+
+The finite2025 PA-domiciled ordinary Ohio employee collector retains blank/unknown documentary/payroll originals and separately confirmed current residency/IT account sources through native entry and saved replay. Distinct69controls and current-main2003/82 pass after genuine13RED/fourpass and source-preserving shared composition. All12checks, including types3/strict10zero/bothbuilds, pass. See [the source ledger](upgrade-2026-oh-reciprocal-wages-guided-work.md). Prior two PDF timeouts remain retained; separately reviewed a00a8220 batches the same strict per-file checks without changing the five-second deadline. Security48a75f52 and providerd7d80f8b source refreshes are pushed. Browser/physical/cohorts/currentglobal/staging/human/final2026 qualification remains open.

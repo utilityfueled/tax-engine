@@ -1,0 +1,32 @@
+form: "Independent native Ohio reciprocal original review"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf"
+notes: |
+  Independent before-product Decimal/control receipt3f961b086b1dbc2fff430f6714d86245eec8150369d54c671a955478258de64d.
+  Fictional actual2025 single-primary fullPAresident corporate Ohio employee;
+  existing original-bound core and official printed ADJ14, not a new legal rule.
+  Own distinct raw60000.99/WH1999.49 gives printed60001/1999;60000.01/1999.50
+  gives60000/2000;60000.00/0.00 gives60000/0. OhioAGI/tax0. Requested not received.
+  No filing, human, live account, broader cohort or2026 qualification.
+lines:
+  - line: "cash"
+    formula: "Both actual row positions preserve raw originals and independent printed AGI/ADJ14/withholding/refund; no PA cash enters Ohio."
+    testRef: "tests/apps/web/oh-reciprocal-native-independent.test.ts::independent native reciprocal originals preserve separate exact cash and raw cents %s %s"
+  - line: "parents"
+    formula: "Same-cash residency/account/refund source identity edits revoke child commitment; pure reads cannot refresh; explicit confirmation alone captures current reviewed parents."
+    testRef: "tests/apps/web/oh-reciprocal-native-independent.test.ts::independent reciprocal confirmation never refreshes changed parent %s"
+  - line: "unknown"
+    formula: "Actual zero stays explicit; deleting a documentary monetary fact never becomes zero or an accepted receipt."
+    testRef: "tests/apps/web/oh-reciprocal-native-independent.test.ts::independent reciprocal source preserves known zero and unknown distinctly"
+  - line: "unsupported"
+    formula: "A valid retained zero NEC original remains present and blocks finite wage-only confirmation after explicitly updated parent commitments."
+    testRef: "tests/apps/web/oh-reciprocal-native-independent.test.ts::independent reciprocal source blocks retained unsupported originals even at zero"
+  - line: "contradiction"
+    formula: "Different current canonical residency/payment roots cannot be silently replaced by a native packet."
+    testRef: "tests/apps/web/oh-reciprocal-native-independent.test.ts::independent reciprocal source refuses contradictory canonical roots %s"
+  - line: "privacy"
+    formula: "Saved JSON and every original remain immutable during repeated replay; safe public output excludes private source markers and SSN."
+    testRef: "tests/apps/web/oh-reciprocal-native-independent.test.ts::independent reciprocal source replay is immutable and public output private"
+  - line: "blank"
+    formula: "A new native draft carries no invented year, owner, identity, selected original, documentary period or payroll amount."
+    testRef: "tests/apps/web/oh-reciprocal-native-independent.test.ts::independent new reciprocal draft keeps documentary facts unknown"

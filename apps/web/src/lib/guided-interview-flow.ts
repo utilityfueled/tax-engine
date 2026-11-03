@@ -1,3 +1,4 @@
+import {buildGuidedOhioReciprocalWages,type OhioReciprocalWagesDraft} from './guided-oh-reciprocal-wages';
 import {buildGuidedOhioSchoolDistrictFacts,type OhioSchoolDistrictDraft} from './guided-ohio-school-district-facts';
 import {buildGuidedPAMarriedOrdinarySources,assertMarriedPASavedLedger} from './guided-pa-married-ordinary-sources';
 import { buildGuidedW2SourceContext, buildTaxInputFromGuidedData } from "./guided-interview-bridge";
@@ -1325,6 +1326,7 @@ export interface StateReturnData {
   ohioResidency?: OhioResidencyDraft;
   ohioPayments?: OhioPaymentDraft;
   ohioSchoolDistrict?: OhioSchoolDistrictDraft;
+  ohioReciprocalWages?: OhioReciprocalWagesDraft;
   paResidencySources?: PAResidencySources;
   paReciprocitySources?: PAReciprocitySources;
   paOrdinaryReturnFacts?: PAOrdinaryReturnFacts;
@@ -1636,6 +1638,12 @@ function ohioActualSourceValues(value: unknown): unknown {
   return JSON.stringify(stable(Object.fromEntries(Object.entries(value).filter(([key]) => key !== "sourceFactsConfirmed" && key !== "originalFederalSources"))));
 }
 
+function ohioReciprocalActualSourceValues(value: OhioReciprocalWagesDraft | undefined): unknown {
+  if (!value) return value;
+  const {originalResidencySources:_residency,originalPaymentSources:_payments,...actual}=value;
+  return ohioActualSourceValues(actual);
+}
+
 function paStateDependencyValues(value: StateReturnData | undefined): unknown {
   if (!value) return value;
   const { paMarriedOrdinarySources: _married, paOrdinaryReturnFacts: _ordinary, paOrdinaryReturnCompletionSources: _completion, ...dependencies } = value;
@@ -1747,11 +1755,13 @@ export function updateSectionData(
   const ohioResidencyChanged = incomingStateReturn && guidedSourceValuesChanged(ohioActualSourceValues(ohioStateReturn?.ohioResidency), ohioActualSourceValues(incomingStateReturn.ohioResidency));
   const ohioPaymentsChanged = incomingStateReturn && guidedSourceValuesChanged(ohioActualSourceValues(ohioStateReturn?.ohioPayments), ohioActualSourceValues(incomingStateReturn.ohioPayments));
   const ohioSchoolDistrictChanged = incomingStateReturn && guidedSourceValuesChanged(ohioActualSourceValues(ohioStateReturn?.ohioSchoolDistrict), ohioActualSourceValues(incomingStateReturn.ohioSchoolDistrict));
-  const invalidatedOhioStateReturn = incomingStateReturn && (ohioResidencyChanged || ohioPaymentsChanged || ohioSchoolDistrictChanged) ? {
+  const ohioReciprocalChanged = incomingStateReturn && guidedSourceValuesChanged(ohioReciprocalActualSourceValues(ohioStateReturn?.ohioReciprocalWages), ohioReciprocalActualSourceValues(incomingStateReturn.ohioReciprocalWages));
+  const invalidatedOhioStateReturn = incomingStateReturn && (ohioResidencyChanged || ohioPaymentsChanged || ohioSchoolDistrictChanged || ohioReciprocalChanged) ? {
     ...(invalidatedPAStateReturn ?? incomingStateReturn),
     ...(incomingStateReturn.ohioResidency && ohioResidencyChanged ? { ohioResidency: { ...incomingStateReturn.ohioResidency, sourceFactsConfirmed: null } } : {}),
     ...(incomingStateReturn.ohioPayments && ohioPaymentsChanged ? { ohioPayments: { ...incomingStateReturn.ohioPayments, sourceFactsConfirmed: null } } : {}),
     ...(incomingStateReturn.ohioSchoolDistrict ? { ohioSchoolDistrict: { ...incomingStateReturn.ohioSchoolDistrict, sourceFactsConfirmed: null } } : {}),
+    ...(incomingStateReturn.ohioReciprocalWages && (ohioResidencyChanged || ohioPaymentsChanged || ohioSchoolDistrictChanged || ohioReciprocalChanged) ? {ohioReciprocalWages:{...incomingStateReturn.ohioReciprocalWages,sourceFactsConfirmed:null}} : {}),
   } : undefined;
   return {
     ...state,
@@ -1792,6 +1802,7 @@ export function updateSectionData(
           ...(ohioStateReturn.ohioPayments ? {ohioPayments:{...ohioStateReturn.ohioPayments,sourceFactsConfirmed:null}} : {}),
           ...(ohioStateReturn.ohioSchoolDistrict ? {ohioSchoolDistrict:{...ohioStateReturn.ohioSchoolDistrict,sourceFactsConfirmed:null}} : {}),
           ...(ohioStateReturn.paMarriedOrdinarySources ? {paMarriedOrdinarySources:{...ohioStateReturn.paMarriedOrdinarySources,sourceFactsConfirmed:null}} : {}),
+          ...(ohioStateReturn.ohioReciprocalWages ? {ohioReciprocalWages:{...ohioStateReturn.ohioReciprocalWages,sourceFactsConfirmed:null}} : {}),
           ...(ohioStateReturn.paResidencySources ? {paResidencySources:{...ohioStateReturn.paResidencySources,sourceFactsConfirmed:null}} : {}),
           ...(ohioStateReturn.paReciprocitySources ? {paReciprocitySources:{...ohioStateReturn.paReciprocitySources,sourceFactsConfirmed:null}} : {}),
           ...(ohioStateReturn.paOrdinaryReturnFacts ? { paOrdinaryReturnFacts: { ...ohioStateReturn.paOrdinaryReturnFacts, sourceFactsConfirmed: null } } : {}),
@@ -2103,6 +2114,10 @@ function guidedOhioActualSourceErrors(state: GuidedFlowState): Record<string, st
     catch (error) { errors.ohioResidency = error instanceof Error ? error.message : "Reconcile the actual Ohio residency sources."; }
     try { buildGuidedOhioPaymentFacts(data?.ohioPayments, parsed.data); }
     catch (error) { errors.ohioPayments = error instanceof Error ? error.message : "Reconcile the actual Ohio payment sources."; }
+    if(data?.ohioReciprocalWages){
+      try{buildGuidedOhioReciprocalWages(parsed.data,data.ohioReciprocalWages,data.ohioResidency,data.ohioPayments);}
+      catch(error){errors.ohioReciprocalWages=error instanceof Error?error.message:'Complete and explicitly confirm the actual reciprocal wage originals.';}
+    }
     if(data?.ohioResidency?.schoolDistrictStatus==='actual_district_sources_required'||data?.ohioSchoolDistrict){
       try{buildGuidedOhioSchoolDistrictFacts(parsed.data,data?.ohioSchoolDistrict,data?.ohioResidency,data?.ohioPayments);}
       catch(error){errors.ohioSchoolDistrict=error instanceof Error?error.message:'Complete and explicitly confirm the actual school district records.';}
