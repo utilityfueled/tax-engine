@@ -17299,5 +17299,31 @@
       "broader cohorts",
       "current full global/distributions/staging/provider/human/final2026 qualification"
     ]
+  },
+  "stagingSandboxBilling20261103": {
+    "sourceCommit": "80bc752f751ebd642cb039a1c65c7e8e6a603403",
+    "deployment": "dpl_HfauLa1AFrxqkSVokJmrd7R6YKPj",
+    "mode": "test",
+    "realFundsMoved": false,
+    "checkout": "complete/paid/livemodefalse/Starter1900USDcents",
+    "actualSignedDelivery": {
+      "utc": "2026-11-03T21:27:29Z",
+      "status": 200,
+      "acknowledged": true
+    },
+    "sameEventManualReplay": {
+      "utc": "2026-11-03T21:35:04Z",
+      "status": 200,
+      "acknowledged": true
+    },
+    "authenticatedBillingAfterBoth": "200/Starter active/AIqualificationpending",
+    "redactedReceiptSHA256": "0eeb20763c93f6b9e5f845895a50896fcfff64266a242ca7335af4c94a20bafc",
+    "remaining": [
+      "DB row-count/exact atomic credit reconciliation",
+      "automatic failed delivery retry/backoff/outages/limits",
+      "two-account tenant/persistence/deletion/telemetry/upload limits",
+      "staging migrations/restore/rollback/finalartifact/human security review"
+    ],
+    "releaseReady": false
   }
 }

@@ -2664,3 +2664,8 @@ One display paragraph now shows the actual local upload acknowledgement or persi
 ### November 3: official reciprocal employee review companions
 
 Complete original-bound PA reciprocal wages now produce the required2025 Ohio official review pages. Main2genuineRED precede exact reviewed adoption;40focused+302adjacent and all12checks pass. Distinct current81PDF/163page strict/privacy review passes; all71official pages match approved text/RGB. Knownzero omits ScheduleW; positive0.49 retains it despite reported0, and nominal printed20 credit leaves canonical tax/cash unchanged. See [the physical ledger](upgrade-2026-oh-reciprocal-official-review-work.md). Native-to-physical/browser/global/distribution/staging/human/final2026 remain open. Uploadstatus57087e81 is pushed separately.
+
+
+### November 3: actual Preview sandbox checkout and signed replay
+
+Exact80bc752f Preview test checkout completes without real funds; actual signed checkout.session.completed and manual same-event replay both return200. Authenticated billing reads after each show Starter active and AI qualification pending. See [the sandbox ledger](upgrade-2026-staging-sandbox-billing-work.md). This does not prove DB event row-count/exact credit effects, automatic failed-delivery retries, outages, tenant/recovery or final-artifact qualification; those checks continue. Reciprocal physicalc6bd8bad is pushed separately.
