@@ -2457,3 +2457,7 @@ One explicit-confirmation helper now binds actual current property/MISC original
 ### November 3: remaining selected-state implementation audit
 
 The [current integration queue](upgrade-2026-state-integration-remaining-20261103.md) identifies six concrete internal packages beyond global checks: PA spouse/J/M and actual care composition; OH canonical NR/PY business, taxing districts, reciprocal/resident-credit sources and actual2025 physical outputs. Referenced core boundaries are rechecked byte-for-byte at d77f136e. PA married-source and OH business-source research continue while native browser verification runs. These are not recast as external credential/form blockers. Checkpoint authorization text now reflects the already approved5USD cap and configured Preview services. No readiness gate changed.
+
+### November 3: native PA currency confirmation repair
+
+Actual MI browser attempt03 exposed a real monetary handoff defect: blur formatted6475 as6,475 and strict ordinary confirmation rejected it. One local component wrapper now normalizes monetary callbacks with the existing string helper. Genuine26fail/1pass precedes75passes/6files; root source review, three types, spec/AST/inventory/strictlint and web build pass. See [the repair ledger](upgrade-2026-pa-ordinary-native-currency-work.md). Canonical parser, source invalidation and text references remain intact; full browser replay and global qualification continue.

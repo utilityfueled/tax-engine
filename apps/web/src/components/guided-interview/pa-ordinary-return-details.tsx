@@ -1,9 +1,11 @@
 "use client";
-import {useState} from 'react';
+import {useState,type ComponentProps} from 'react';
 import type {TaxYearInput} from '@/models/inputs';
 import {PA_SP_OTHER_LINES,PA_SP_INCOME_KINDS,type PAOrdinaryReturnFacts} from '@/models/pa-ordinary-return-facts';
 import {emptyGuidedPAOrdinaryReturnFacts,updateGuidedPAOrdinaryReturnFacts,confirmGuidedPAOrdinaryReturnFacts} from '@/lib/guided-pa-ordinary-return-facts';
-import {TextFact,BooleanFact} from './fact-fields';import {CurrencyField} from './currency-field';
+import {TextFact,BooleanFact} from './fact-fields';import {CurrencyField as NativeCurrencyField,parseCurrencyInput} from './currency-field';
+// Currency display formatting must not enter strict original-source amounts.
+function CurrencyField({onChange,...props}:ComponentProps<typeof NativeCurrencyField>){return <NativeCurrencyField {...props} onChange={value=>onChange(parseCurrencyInput(value))}/>;}
 type Facts=PAOrdinaryReturnFacts;type SP=NonNullable<Facts['filing']['claimingHouseholdSP']>;
 const labels={returnType:'return type',kind:'payment kind',date:'date',confirmationNumber:'confirmation number',paTaxableIncome:'PA taxable income',nontaxableIncome:'nontaxable eligibility income',taxLiability:'PA tax liability',residentCredit:'resident credit',reportedForgivenessPercentage:'reported forgiveness percentage (0–100)',reportedCredit:'reported tax forgiveness credit',residency:'residency',filingStatus:'filing status',filedOn:'filed date',taxableIncome:'taxable income',taxForgivenessCredit:'tax forgiveness credit',filingExtension:'filing extension',paymentExtension:'payment extension',factsConfirmed:'actual original facts checked',federalReturnClaimConfirmed:'actually claimed on the federal return',noOtherClaimByAgreementOrDecreeConfirmed:'no other parent may claim this child by agreement or decree'} as const;
 const blankIdentity=()=>({accountName:'',accountSsn:''});

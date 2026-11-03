@@ -1,0 +1,22 @@
+form: "PA Ordinary Native Currency"
+fullName: "Monetary control handoff to strict PA original-source facts"
+taxYear: 2025
+reference: "https://www.pa.gov/agencies/revenue/resources/tax-types-and-information/personal-income-tax/pennsylvania-personal-income-tax-guide.html"
+notes: |
+  No tax law, rounding or canonical source schema change. Native CurrencyField
+  blur formats thousands with commas; only monetary callbacks in the ordinary
+  panel remove UI currency decoration before retaining canonical source strings.
+  The existing parseCurrencyInput helper performs string operations, not Number
+  or floating-point arithmetic. Blank stays blank, zero stays explicit, invalid
+  text is not converted to zero, and edits still clear source confirmation.
+  Textual references and strict canonical monetary admission remain unchanged.
+lines:
+  - line: "blur-confirmation"
+    formula: "Actual native entry6475 then blur retains6475, explicit confirmation replays actual sources. Comma-formatted canonical input is still rejected."
+    testRef: "tests/apps/web/pa-ordinary-native-currency.test.tsx::native blurred6475 confirms actual ordinary sources without weakening canonical money"
+  - line: "all-monetary-seams"
+    formula: "Each ordinary panel monetary callback preserves exact1234.50 after real blur and invalidates confirmation; existing originals remain unchanged."
+    testRef: "tests/apps/web/pa-ordinary-native-currency.test.tsx::ordinary native monetary callback normalizes only currency decoration %s"
+  - line: "unknown-and-zero"
+    formula: "Blank remains unknown and cannot confirm; explicit zero remains0; invalid text remains invalid; monetary source references retain literal commas."
+    testRef: "tests/apps/web/pa-ordinary-native-currency.test.tsx::native currency retains unknown zero and invalid facts without editing references"

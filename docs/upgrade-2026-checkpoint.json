@@ -14464,5 +14464,77 @@
     ],
     "status": "implementation remains; first andthird in research; browser/global verification continues",
     "releaseReady": false
+  },
+  "nov03NativePACurrencyRepair": {
+    "base": "05437c5109526e362fdf491fdf2b0cc09ecda94d",
+    "status": "approved bounded UI handoff after root source review",
+    "authorManifestSHA256": "39093605d2d8f178fd2002acb8f0807307234d4053e710a525af246ec5153ac0",
+    "mainTests": "75/6",
+    "sourceReview": [
+      "one local typed wrapper, all25 monetary seams",
+      "canonical strict parser untouched",
+      "source invalidation unchanged",
+      "literal references unchanged",
+      "blank/zero/invalid preserved"
+    ],
+    "browserStatus": "attempt03 actual6478 correction blocked by this bug; browser successor retained separately, no complete journey claim",
+    "filingEligible": false,
+    "checks": [
+      {
+        "name": "focused-new27-and-priors",
+        "exitCode": 0,
+        "sha256": "ce7e91b5241986657506e166a1e24fe8dee7e59cb4471a106bd9774899bea4eb"
+      },
+      {
+        "name": "types-root",
+        "exitCode": 0,
+        "sha256": "5888bcaa4f681b3f7bf48999ae0817c16b3af178b8c13f7d91414fdef8ea04d9"
+      },
+      {
+        "name": "types-web",
+        "exitCode": 0,
+        "sha256": "249e0be3cf6277994e8d22e8440bebe6db10861cab79fe97aa4952837f3ff073"
+      },
+      {
+        "name": "types-contracts",
+        "exitCode": 0,
+        "sha256": "0c2a6bff203db409d0f68d48f7b21a6ac6bd6098310256e72a9c6e558bc3943d"
+      },
+      {
+        "name": "spec",
+        "exitCode": 0,
+        "sha256": "17ff071b5dda906ac9afb26d396d36cf74ef3f5b22f69768030ab5b97000b75a"
+      },
+      {
+        "name": "strict-owned",
+        "exitCode": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "ast",
+        "exitCode": 0,
+        "sha256": "2e1702834a7e8a9e176cee10061c9c0a24ec683200bcda1f38a0093c0074ff5a"
+      },
+      {
+        "name": "inventory",
+        "exitCode": 0,
+        "sha256": "af951c102d6f02f1eefb6e8846ebe0a17a90621ab1c7681c658c63a63bc61b49"
+      },
+      {
+        "name": "inventory-check",
+        "exitCode": 0,
+        "sha256": "846ee1105cfb137b691fc9b9faa383c54ef9f9e367b6b3416b2abe4ccb15cdef"
+      },
+      {
+        "name": "build-web",
+        "exitCode": 0,
+        "sha256": "2ffe51d34b751fdff845f7d3825c6d4e2d4704169d7dcbefd948964f1d116b01"
+      },
+      {
+        "name": "diff",
+        "exitCode": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
   }
 }
