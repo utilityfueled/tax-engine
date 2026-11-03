@@ -1,4 +1,4 @@
-form: PA-Business-Independent
+form: "PA-Business-Independent"
 fullName: Independent actual source business and printed-line controls
 taxYear: 2025
 reference: https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40c.pdf
@@ -8,45 +8,45 @@ notes: |
   with complete records. Printed line31 aggregates travel and meals before rounding.
   Literal oracles independently derived using Python Decimal; no product output used.
 lines:
-  - line: review-1
+  - line: "review-1"
     formula: "replays independently calculated selected business for %s"
     testRef: "tests/engine/state/pa-business-independent.test.ts::replays independently calculated selected business for %s"
-  - line: review-2
+  - line: "review-2"
     formula: "keeps exact source net separate from independently rounded gross and returns lines"
     testRef: "tests/engine/state/pa-business-independent.test.ts::keeps exact source net separate from independently rounded gross and returns lines"
-  - line: review-3
+  - line: "review-3"
     formula: "uses the complete printed travel and meal line and full PA meal amount"
     testRef: "tests/engine/state/pa-business-independent.test.ts::uses the complete printed travel and meal line and full PA meal amount"
-  - line: review-4
+  - line: "review-4"
     formula: "preserves accepted one hundred sixty digit cancellation without global mutation"
     testRef: "tests/engine/state/pa-business-independent.test.ts::preserves accepted one hundred sixty digit cancellation without global mutation"
-  - line: review-5
+  - line: "review-5"
     formula: "preserves raw huge source cents and rejects an exact original discrepancy"
     testRef: "tests/engine/state/pa-business-independent.test.ts::preserves raw huge source cents and rejects an exact original discrepancy"
-  - line: review-6
+  - line: "review-6"
     formula: "returns stable nested public Decimals without mutating actual originals"
     testRef: "tests/engine/state/pa-business-independent.test.ts::returns stable nested public Decimals without mutating actual originals"
-  - line: review-7
+  - line: "review-7"
     formula: "retains actual NEC PA cents exactly once"
     testRef: "tests/engine/state/pa-business-independent.test.ts::retains actual NEC PA cents exactly once"
-  - line: review-8
+  - line: "review-8"
     formula: "rejects a same-dollar changed original client rather than refreshing source identity"
     testRef: "tests/engine/state/pa-business-independent.test.ts::rejects a same-dollar changed original client rather than refreshing source identity"
-  - line: review-9
+  - line: "review-9"
     formula: "rejects a cash receipt whose payment crosses the actual residency transition"
     testRef: "tests/engine/state/pa-business-independent.test.ts::rejects a cash receipt whose payment crosses the actual residency transition"
-  - line: review-10
+  - line: "review-10"
     formula: "rejects unsupported nonindependent profit centers even at identical totals"
     testRef: "tests/engine/state/pa-business-independent.test.ts::rejects unsupported nonindependent profit centers even at identical totals"
-  - line: review-11
+  - line: "review-11"
     formula: "rejects source transactions reused across receipt and expense classes"
     testRef: "tests/engine/state/pa-business-independent.test.ts::rejects source transactions reused across receipt and expense classes"
-  - line: review-12
+  - line: "review-12"
     formula: "rejects actual vendor refunds beyond the paid business split"
     testRef: "tests/engine/state/pa-business-independent.test.ts::rejects actual vendor refunds beyond the paid business split"
-  - line: review-13
+  - line: "review-13"
     formula: "rejects unknown complete-source category without inventing zero"
     testRef: "tests/engine/state/pa-business-independent.test.ts::rejects unknown complete-source category without inventing zero"
-  - line: review-14
+  - line: "review-14"
     formula: "binds same-dollar transaction proof in the private source commitment"
     testRef: "tests/engine/state/pa-business-independent.test.ts::binds same-dollar transaction proof in the private source commitment"

@@ -1,24 +1,24 @@
-form: PA-Ordinary-OID-Independent
+form: "PA-Ordinary-OID-Independent"
 fullName: Independent exact original OID source review controls
 status: internal-independent-controls
 taxYear: 2025
 reference: https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter103/s103.16.html
 lines:
-  - line: exact-source-sums
+  - line: "exact-source-sums"
     formula: Preserve every accepted decimal digit and fractional cent across actual original OID and withholding additions; no silent precision truncation
-    testRef: tests/engine/state/pa-ordinary-oid-independent.test.ts::preserves accepted source digits beyond fixed100 precision
-  - line: exact-reconciliation
+    testRef: "tests/engine/state/pa-ordinary-oid-independent.test.ts::preserves accepted source digits beyond fixed100 precision"
+  - line: "exact-reconciliation"
     formula: Original OID and coupon each reconcile exactly, including a difference beyond the100th significant digit
-    testRef: tests/engine/state/pa-ordinary-oid-independent.test.ts::rejects an actual original discrepancy beyond fixed100 precision
-  - line: replay
+    testRef: "tests/engine/state/pa-ordinary-oid-independent.test.ts::rejects an actual original discrepancy beyond fixed100 precision"
+  - line: "replay"
     formula: Pure repeated source replay yields stable structurally equal public results without input mutation
-    testRef: tests/engine/state/pa-ordinary-oid-independent.test.ts::repeats the exact pure source replay
-  - line: outside-original
+    testRef: "tests/engine/state/pa-ordinary-oid-independent.test.ts::repeats the exact pure source replay"
+  - line: "outside-original"
     formula: Keep actual non-PA withholding original and source rows without treating it as PA payment
-    testRef: tests/engine/state/pa-ordinary-oid-independent.test.ts::preserves other-state withholding independently from actual PA payment
-  - line: strict-remittance
+    testRef: "tests/engine/state/pa-ordinary-oid-independent.test.ts::preserves other-state withholding independently from actual PA payment"
+  - line: "strict-remittance"
     formula: Reject missing actual payment or refunded payer confirmation before using actual PA payment
-    testRef: tests/engine/state/pa-ordinary-oid-independent.test.ts::requires actual remittance and not-refunded proof even for physical PA state boxes
-  - line: known-no-PA-remittance
+    testRef: "tests/engine/state/pa-ordinary-oid-independent.test.ts::requires actual remittance and not-refunded proof even for physical PA state boxes"
+  - line: "known-no-PA-remittance"
     formula: An actual original with no PA withholding requires no invented PA payment; known no actual PA remittance is false while all original facts remain confirmed
-    testRef: tests/engine/state/pa-ordinary-oid-independent.test.ts::admits actual known no PA withholding without inventing a PA remittance
+    testRef: "tests/engine/state/pa-ordinary-oid-independent.test.ts::admits actual known no PA withholding without inventing a PA remittance"

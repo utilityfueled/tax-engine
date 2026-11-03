@@ -13349,5 +13349,23 @@
     "smtpDeliveryVerified": false,
     "productionChanged": false,
     "releaseReady": false
+  },
+  "nov02SpecReferenceMaintenance": {
+    "status": "main scoped checks pass; independent source and actual saved PDF review approved",
+    "baseCommit": "1a4ec2139f163ccc34be5bd76c54ae8d024fb043",
+    "paths": "22 YAML metadata plus one existing PDF test declaration; validators and formulas unchanged",
+    "checks": {
+      "metadata": 611,
+      "pdfTests": 5,
+      "specLines": 6984,
+      "inventory": "pass",
+      "strictLint": "0 warnings",
+      "diff": "pass"
+    },
+    "originalIndependentReceiptSHA256": "36c0bf23af2fbeed13f8886ecbf99ca23559d92d5e497ac3b242005a0b4e4040",
+    "evidence": "nov02-parent-spec-metadata-main*",
+    "releaseReady": false,
+    "independentEmployeeExtensionSHA256": "e46a9f02f67e2acbad80b9abc22f525da92a8300771052db8f3a0f7a3ed1987c",
+    "independentMainPDFReceiptSHA256": "e1f9c5ba42c1134cfb64215134582b9418e6688204335d81ed0b0ab25372645a"
   }
 }

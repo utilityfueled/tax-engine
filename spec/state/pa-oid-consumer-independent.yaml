@@ -1,4 +1,4 @@
-form: PA OID downstream independent precision review
+form: "PA OID downstream independent precision review"
 year: 2025
 status: independent-controls-before-runtime-not-qualification
 sources:
@@ -6,18 +6,18 @@ sources:
   - https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
 notes: Official whole-dollar lines preserve exact underlying cents. Independently derived Python Decimal1000 oracles use 10^167 and .48/.52, all three actual residencies. Original immutable OID guards, privacy, no amount bound/global mutation and review-only status remain. No human or final2026 qualification. Full composer probes include actual overpayment allocation and department-processing remaining-tax helper, not just PA40 core.
 lines:
-  - line: all-three
+  - line: "all-three"
     formula: resident raw B+149.52 reported B+150; partyear raw69.04 outsideB+80.48 printed70; nonresident raw0 outsideB+149.52 printed0
-    testRef: tests/engine/state/pa-oid-consumer-independent.test.ts::keeps actual %s dates raw cents and printed ScheduleA
-  - line: cancellation
+    testRef: "tests/engine/state/pa-oid-consumer-independent.test.ts::keeps actual %s dates raw cents and printed ScheduleA"
+  - line: "cancellation"
     formula: round(B+33.48)-round(B+.52)=32; reverse fractions yields34, no loss of residual
-    testRef: tests/engine/state/pa-oid-consumer-independent.test.ts::retains cancellation %s against %s
-  - line: worldwide
+    testRef: "tests/engine/state/pa-oid-consumer-independent.test.ts::retains cancellation %s against %s"
+  - line: "worldwide"
     formula: Treasury original B+29.52 plus actual SP2 entry.01 gives rounded B+30; SP3 .52 gives1; outside wage/bank SP6 is0/24080/44120
-    testRef: tests/engine/state/pa-oid-consumer-independent.test.ts::retains actual Treasury worldwide SP in %s
-  - line: withholding-and-composer
+    testRef: "tests/engine/state/pa-oid-consumer-independent.test.ts::retains actual Treasury worldwide SP in %s"
+  - line: "withholding-and-composer"
     formula: Actual OID PA withholding B+.48 plus MISC.20 plus W21539 gives B+1539.68; printed withholdingB+1540 with actual tax1539 requires refundB+1. Actual taxable original produces PA40baseB+50150 taxround(base*.0307), principal tax-1539 retained also in department helper.
-    testRef: tests/engine/state/pa-oid-consumer-independent.test.ts::retains actual source withholding cents before printed line once
-  - line: remaining-source-contract
+    testRef: "tests/engine/state/pa-oid-consumer-independent.test.ts::retains actual source withholding cents before printed line once"
+  - line: "remaining-source-contract"
     formula: retain subcent rawknownamounts; ScheduleSP subtractionB+.59-.52=B+.07; freshpublicDecimal deepreplay and sourceprivacy; stale original rejects
-    testRef: tests/engine/state/pa-oid-consumer-independent.test.ts::keeps original canonical identity private and replay stable public Decimals
+    testRef: "tests/engine/state/pa-oid-consumer-independent.test.ts::keeps original canonical identity private and replay stable public Decimals"

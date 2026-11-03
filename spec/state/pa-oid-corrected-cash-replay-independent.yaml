@@ -1,13 +1,13 @@
-form: PA corrected downstream cash reconciliation independent review
+form: "PA corrected downstream cash reconciliation independent review"
 year: 2025
 status: independent-controls-before-runtime
 sources:
   - https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
 notes: Original16 peer controls remain byte-exact. These distinct cash-allocation/replay controls qualify only corrected source arithmetic and immutable privacy/readiness behavior; no final2026 or filing qualification.
 lines:
-  - line: exact-split
+  - line: "exact-split"
     formula: ActualOIDwithholdingB+.48 plusMISC.20 plusW21539 roundsB+1540; tax1539 givesoverpaymentB+1. Election refundB-2,next1,donation2 exactlyequalsB+1. Missingone dollar muststillreject.
-    testRef: tests/engine/state/pa-oid-corrected-cash-replay-independent.test.ts::reconciles large refund plus known positive carry and donation without hiding residual
-  - line: public-replay
+    testRef: "tests/engine/state/pa-oid-corrected-cash-replay-independent.test.ts::reconciles large refund plus known positive carry and donation without hiding residual"
+  - line: "public-replay"
     formula: Deepreplay entire corrected fullcomposition mustbe equal with stable public Decimal constructors, unchanged originals and globalDecimal configuration.
-    testRef: tests/engine/state/pa-oid-corrected-cash-replay-independent.test.ts::returns full-source constructor stable repeatable public composition and originals
+    testRef: "tests/engine/state/pa-oid-corrected-cash-replay-independent.test.ts::returns full-source constructor stable repeatable public composition and originals"

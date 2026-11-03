@@ -15,39 +15,39 @@ notes: |
   remain closed. SectionIII adjustments, amended returns, dual residency, reciprocal
   exceptions, business, loss/class and deduction allocations require richer successors.
 lines:
-  - line: originals
+  - line: "originals"
     description: Complete current owner year originals and actual filed other return
     formula: Require actual2025 source year/current owner, complete actual returns/payments/refunds review through facts asof, exact federal snapshot excluding four PA replay roots, exact raw PA residency/reciprocity/facts. Replay actual ordinary source methods; retain complete filed nonresident original state return with source reference/ID/date and all schedules. No source tax, liability or credit inferred from W2 withholding.
     testRef: "tests/engine/state/pa-resident-credit-sources.test.ts::PA resident credit rejects missing stale owner year and unfiled originals"
-  - line: compensation
+  - line: "compensation"
     description: Same income and actual resident period under PA source rules
     formula: Each wage claim requires a complete validated actual canonical W2 state/local source packet (no unknown legacy row count), and links current W2 original/index and actual canonical payroll/index to a retained current owner/year external work original. State/date/service period/pay date/exact ordinary compensation reconcile. Entire work record is outside PA, within a PA resident period, and actual physical services in claimed state. No overlapping payroll identity or duplicate claim across states. Positive outside resident-period or mixed/unknown state allocations require successor.
     testRef: "tests/engine/state/pa-resident-credit-sources.test.ts::PA resident credit qualifies only same actual resident period compensation"
-  - line: residency
+  - line: "residency"
     description: Actual all three residency classes
     formula: Full-year resident qualifies actual outside wages; part-year qualifies only actual resident-period wages; nonresident has no resident credit. Empty confirmed claims yield0, never imply other-state history or local completion. Literal fullresident50000 source cap1535, partyear20000 source cap614, nonresident0 with exact replayed PA tax1539/799/184.
     testRef: "tests/engine/state/pa-resident-credit-sources.test.ts::PA resident credit applies actual resident periods in all three classes"
-  - line: reciprocal
+  - line: "reciprocal"
     description: Reciprocal ordinary employee tax is refund not resident credit
     formula: Ordinary compensation in IN/MD/NJ/OH/VA/WV cannot be resident credit. Reject positive such claims with refund/source-method guard, without treating business or Ohio20percent-shareholder or dual residents as ordinary employees. No inference of exceptions; they require their qualified successors.
     testRef: "tests/engine/state/pa-resident-credit-sources.test.ts::PA resident credit rejects ordinary reciprocal employee withholding"
-  - line: 4a
+  - line: "4a"
     description: Original other-state liability after documented nonpayment credits
     formula: Actual filed return tax before credits minus original nonpayment credit entries equals reported tax after credits; all original credits reviewed. Positive mutual PA-tax credit or unknown/nonordinary credit classification rejects. Filed-return liability is not gross withholding and cannot be caller free allowedcredit.
     testRef: "tests/engine/state/pa-resident-credit-sources.test.ts::PA resident credit uses final liability after actual nonpayment credits"
-  - line: 4b
+  - line: "4b"
     description: Actual net payments with complete current tax account
     formula: Sum exact actual tax payment originals, subtract actual refund/offset/nextyear-transfer originals; never include a planned payment or penalty/interest component. Unique owner/year/state receipts and actual dates through valuation required. Original W2 withholding payment must equal actual stateBox17 once. Account reported netpaid/unpaid/outstanding overpayment reconcile actual liability/payment/refund arithmetic. Sum source cents before one printed line round.
     testRef: "tests/engine/state/pa-resident-credit-sources.test.ts::PA resident credit subtracts actual refunds transfers and offsets before cap"
-  - line: 4c-4e
+  - line: "4c-4e"
     description: Paid liability bound and explicit zero adjustment scope
     formula: Printed4c=min(whole4a,whole4b). SectionIII adjustment4d=0 only because all actual other-state taxable compensation is identical eligible resident-period source income, with no unsupported classes/deductions/losses or duplicate class allocation; other positive facts reject.4e=4c. Current amended or adjusted liability differing from original requires retained chain successor, never stale original reuse.
     testRef: "tests/engine/state/pa-resident-credit-sources.test.ts::PA resident credit guards amendments apportionment and unsupported positive classes"
-  - line: 5-6
+  - line: "5-6"
     description: Printed same-income cap and resident credit
     formula: Sum exact same eligible compensation perstate then round once; do not duplicate or exceed actual PA reported compensation class.5=roundDollar(printed same-income compensation*0.0307).6=min(4e,5). Sum separate state6 credits capped by replayed actualPA tax before credits. Resident credit precedes tax forgiveness/restricted-credit integration; this pure result does not integrate those methods itself.
     testRef: "tests/engine/state/pa-resident-credit-sources.test.ts::PA resident credit preserves printed cents thresholds and separate state cap"
-  - line: privacy-gates
+  - line: "privacy-gates"
     description: Exact originals source commitment and preserved readiness boundaries
     formula: SHA256 binds raw packet, current original snapshots, raw PA sources/facts and actual timing; audit uses digest and arithmetic only, no original names/TINs/receipt/source-reference leakage or caller mutation. No shared schema/form/PDF/composer changes, free credit override, current2026 qualification or filing promotion.
     testRef: "tests/engine/state/pa-resident-credit-sources.test.ts::PA resident credit binds private originals without audit leakage or mutation"

@@ -34,7 +34,7 @@ lines:
   - line: "original-consistency"
     description: "Original source identity and actual relationship proofs"
     formula: "Require current full original equality at exact originalIndex and all three nullable confirmations true, actual nonempty sourceReference, supported nonchild relation consistent with retained canonical relationship, valid distinct nonowner SSN and nonfuture birthdate. Child original cannot be relabelled as a parent or other nonchild."
-    testRef: "tests/engine/state/pa-nonchild-dependent-household.test.ts::PA nonchild sources reject incomplete or contradictory proof"
+    testRef: "tests/engine/state/pa-nonchild-dependent-household.test.ts::PA nonchild sources reject incomplete or contradictory proof: %s"
   - line: "child-rules-unchanged"
     description: "Preserve actual child qualification and source completeness"
     formula: "Existing child federal claim/relationship/agreement/decree checks remain mandatory, including valid adult child. Unknown or omitted nonchild proof stays blocked; no absent array inference for uncovered federaldependents. Complete existing child-only packets remain unchanged."

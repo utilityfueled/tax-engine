@@ -122,7 +122,7 @@ Actual hosted rate-limit operation remains untested until a valid preview runs.
 
 The user explicitly approved a free isolated Neon database and Preview-only connection. Initial provisioning and later plan-fetch attempts failed; a fresh retry succeeded. `tax-engine-staging-postgres` is Available/Free in iad1 with Auth/Realtime off. Saved connection confirms tax-engine / Preview only / Sensitive. Its isolated prefix installs `TAX_ENGINE_STAGING_DATABASE_DATABASE_URL`; the old shared DATABASE_URL was not modified. The actual preview-only selector has main10fail/5pass red, then89/four/all11 package checks; real auth/billing regression recorded in its ledger. Deployment and runtime qualification still await the pushed selector.
 
-All four nonsecret SMTP settings are saved Preview only, sender `support@vivalatax.com`. The user created a Zoho app password and is completing its direct Vercel Secret/Preview save; the last refreshed metadata still showed no saved SMTP password. No secret was read. Runtime email delivery is untested.
+All four nonsecret SMTP settings are saved Preview only, sender `support@vivalatax.com`. The user saved the Zoho app password; refreshed metadata confirms Secret/Preview only. No secret was read. Runtime email delivery is untested.
 
 The user approved up to$5 total synthetic provider-run spend and will provide project access. No provider run or spend is established. No qualified human tax reviewer is selected; a plain-language review packet is being prepared. The review requirement is not waived.
 
@@ -232,3 +232,24 @@ Parent real auth/billing regression:173/seven passes (`nov02-parent-hosted-previ
 
 - [x] Pushed `90f7b6d1`: actual employee source/UE/NRH package,561/36/all scoped checks; exactf8 workspace successor remains separate.
 - [x] User saved SMTP app password; fresh Vercel metadata confirms Secret +Preview only, no value read. New90f7 Preview BUILDING at firstread. See hosted SMTP ledger; delivery/recovery/persistence remain unverified.
+
+## Latest resumption, after `1a4ec213`
+
+- SMTP configuration is confirmed Secret/Preview only. Exact `1a4ec213` Preview
+  `dpl_FMb7d7xJhDT1anrZ7hWqh6eC3Utv` is READY; root opened the real account UI.
+  Owner test-account handoff is pending for actual email/recovery testing. No
+  delivery, persistence or recovery success is claimed.
+- CI metadata maintenance now passes main611/611 and spec6984/6984; unchanged
+  five PDF controls and strict lint/inventory pass. See spec-reference ledger.
+- Whole-workspace exporter remains exactf8feef, private61/six. Independent15PDF/
+  253page approval `384c8c9e`;249 pages exact prior rendering, four intentional
+  added/changed ScheduleA/cover pages independently inspected. Main adoption next.
+- Standalone PDF repair independently approved corrected11/22pages `8871e57e`;
+  main adoption remains pending, original three failures retained.
+- Charity/COD six-file fixture migration independently approved `8c8a84e5`,
+  private24unique/15; main adoption pending, no COD builder defect inferred.
+- Browser four actual source-year fixture migration frozen7 `2fe3e60b`, true
+  red4unit+5browser then12unit+10desktop/mobile; six PDFs/90pages inspected.
+  Distinct independent review active; main adoption pending.
+- Structured PA dividend UI/source collector now privately assigned with no
+  runtime yet. Other state methods and every brief completion gate remain open.

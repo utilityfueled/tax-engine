@@ -1,4 +1,4 @@
-form: PA-Ordinary-OID-Sources
+form: "PA-Ordinary-OID-Sources"
 fullName: Source-bound personal OID and original-form Pennsylvania withholding after reviewed A/B
 status: internal-source-method-review-only
 taxYear: 2025
@@ -43,39 +43,39 @@ notes: |
   confirmation; no payment may be invented. Missing status remains a guard.
   Independent unchanged six controls and genuine21pass3fail receipt precede repair.
 lines:
-  - line: original-coverage
+  - line: "original-coverage"
     formula: Every retained OID and MISC original has one unique current source row, including known zero originals
-    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::rejects missing source rows and stale original identity
-  - line: taxable-interest
+    testRef: "tests/engine/state/pa-ordinary-oid-admission.test.ts::rejects missing source rows and stale original identity"
+  - line: "taxable-interest"
     formula: Sum ordinary personal taxable OID and coupon accruals in validated PA resident periods
-    testRef: tests/engine/state/pa-ordinary-oid-sources.test.ts::allocates actual taxable OID accruals to all three residencies
-  - line: treasury-exemption
+    testRef: "tests/engine/state/pa-ordinary-oid-sources.test.ts::allocates actual taxable OID accruals to all three residencies"
+  - line: "treasury-exemption"
     formula: Direct nonstripped Treasury OID and coupon interest adds zero PA taxable interest
-    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::admits actual direct Treasury OID while preserving all three literal PA taxes
-  - line: reported-interest
+    testRef: "tests/engine/state/pa-ordinary-oid-admission.test.ts::admits actual direct Treasury OID while preserving all three literal PA taxes"
+  - line: "reported-interest"
     formula: Round aggregate exact bank plus source-qualified taxable OID interest once to whole dollars
-    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::combines bank and OID cents before one PA class rounding
-  - line: SP-2
+    testRef: "tests/engine/state/pa-ordinary-oid-admission.test.ts::combines bank and OID cents before one PA class rounding"
+  - line: "SP-2"
     formula: Aggregate worldwide direct Treasury exempt interest with additional original SP2 entries once before reporting
-    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::preserves worldwide exempt Treasury income for SP line2
-  - line: SP-6
+    testRef: "tests/engine/state/pa-ordinary-oid-admission.test.ts::preserves worldwide exempt Treasury income for SP line2"
+  - line: "SP-6"
     formula: Outside-period ordinary taxable OID joins actual outside PA bank and compensation eligibility income once
-    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::keeps outside-period taxable OID in worldwide SP income
-  - line: PA-withholding
+    testRef: "tests/engine/state/pa-ordinary-oid-admission.test.ts::keeps outside-period taxable OID in worldwide SP income"
+  - line: "PA-withholding"
     formula: Sum actual PA OID Box14 and actual zero-income MISC Box16 once with actual W2 and bank withholding
-    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::retains exact original OID and MISC withholding before reported PA40 rounding
-  - line: non-PA-withholding
+    testRef: "tests/engine/state/pa-ordinary-oid-admission.test.ts::retains exact original OID and MISC withholding before reported PA40 rounding"
+  - line: "non-PA-withholding"
     formula: Preserve every actual state row for the complete other-state history guard; no withholding equals resident credit assumption
-    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::retains positive outside-state withholding and requires its actual credit successor
-  - line: zero-income-MISC
+    testRef: "tests/engine/state/pa-ordinary-oid-admission.test.ts::retains positive outside-state withholding and requires its actual credit successor"
+  - line: "zero-income-MISC"
     formula: All original MISC income boxes and indicators must be explicitly known zero or false; no positive business or rent class inferred
-    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::rejects known positive or unknown MISC income while preserving erroneous actual withholding
-  - line: source-privacy
+    testRef: "tests/engine/state/pa-ordinary-oid-admission.test.ts::rejects known positive or unknown MISC income while preserving erroneous actual withholding"
+  - line: "source-privacy"
     formula: Return only numeric audit values and opaque digest; preserve private original references without placing them in audit text
-    testRef: tests/engine/state/pa-ordinary-oid-sources.test.ts::binds private originals without leaking identifiers or changing originals
-  - line: no-override
+    testRef: "tests/engine/state/pa-ordinary-oid-sources.test.ts::binds private originals without leaking identifiers or changing originals"
+  - line: "no-override"
     formula: Any retained legacy PA OID adjustment must exactly match replayed original source classification; other legacy adjustments reject
-    testRef: tests/engine/state/pa-ordinary-oid-admission.test.ts::reconciles retained PA OID classification and rejects a free schedule override
-  - line: original-shape
+    testRef: "tests/engine/state/pa-ordinary-oid-admission.test.ts::reconciles retained PA OID classification and rejects a free schedule override"
+  - line: "original-shape"
     formula: Reject unsupported original fields/status and contradictory private-activity classifications rather than accepting schema-stripped source facts
-    testRef: tests/engine/state/pa-ordinary-oid-sources.test.ts::rejects unknown original status fields and contradictory private-activity classification
+    testRef: "tests/engine/state/pa-ordinary-oid-sources.test.ts::rejects unknown original status fields and contradictory private-activity classification"

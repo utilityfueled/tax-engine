@@ -16,7 +16,7 @@ lines:
       into completion details, enabling actual nested source confirmation without
       circularly inserting facts into current originals. Native explicit nested
       and top-level buttons alone confirm their respective retained records.
-    testRef: "tests/apps/web/pa-resident-credit-root-integration.test.tsx::whole PA state panel explicitly confirms actual credit and completion sources"
+    testRef: "tests/apps/web/pa-resident-credit-root-integration.test.tsx::whole PA state panel explicitly confirms actual credit and completion sources: %s"
   - line: "saved-web-draft"
     description: "Retain structured unknown source drafts through real JSON storage"
     formula: |
@@ -33,7 +33,7 @@ lines:
       confirmed ordinary facts then pass them explicitly as completion replay third
       argument. Actual resident/PY credit pairs can navigate; pending/edited/stale
       sources remain partial and saved originals are never refreshed on reads.
-    testRef: "tests/apps/web/pa-resident-credit-root-integration.test.tsx::actual saved PA credit navigation is complete without mutating originals"
+    testRef: "tests/apps/web/pa-resident-credit-root-integration.test.tsx::actual saved PA credit navigation is complete without mutating originals: %s"
   - line: "canonical-boundary"
     description: "Canonical builder validates whole actual pair before stripping only web draft"
     formula: |
@@ -43,7 +43,7 @@ lines:
       source snapshots before removing residentCreditDraft only from canonical
       output. Preserve original private web state unchanged. Unknown/null/zero
       sources are neither silently omitted nor converted to eligible tax payments.
-    testRef: "tests/apps/web/pa-resident-credit-root-integration.test.tsx::actual canonical PA credit preserves literal tax credit refund for all residencies"
+    testRef: "tests/apps/web/pa-resident-credit-root-integration.test.tsx::actual canonical PA credit preserves literal tax credit refund for all residencies: %s"
   - line: "source-guards"
     description: "Reject stale or edited actual records without inventing authority"
     formula: |
@@ -51,4 +51,4 @@ lines:
       unknown payment kind/null original index or unconfirmed explicit zero cannot
       pass navigation or canonical build. Preserve all old originals, raw actual
       rows and confirmed packet identity. All filing/2026/readiness gates remain.
-    testRef: "tests/apps/web/pa-resident-credit-root-integration.test.tsx::actual canonical PA credit rejects edited pending originals while retaining all records"
+    testRef: "tests/apps/web/pa-resident-credit-root-integration.test.tsx::actual canonical PA credit rejects edited pending originals while retaining all records: %s"

@@ -1,12 +1,12 @@
-form: PA-Ordinary-OID-Precision-Integration
+form: "PA-Ordinary-OID-Precision-Integration"
 fullName: Independent actual original OID downstream precision
 status: internal-independent-source-controls
 taxYear: 2025
 reference: https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40a.pdf
 lines:
-  - line: actual-admission
+  - line: "actual-admission"
     formula: Both actual canonical and residency source schemas admit the provided long original, so downstream arithmetic must retain every accepted source digit
-    testRef: tests/engine/state/pa-ordinary-oid-precision-integration.test.ts::preserves accepted OID digits through actual residency and Schedule A
-  - line: class-reporting
+    testRef: "tests/engine/state/pa-ordinary-oid-precision-integration.test.ts::preserves accepted OID digits through actual residency and Schedule A"
+  - line: "class-reporting"
     formula: Sum actual taxable OID with actual bank120 exactly before whole printed Schedule A line1 and16 rounding; no unsupported source maximum is inferred
-    testRef: tests/engine/state/pa-ordinary-oid-precision-integration.test.ts::preserves accepted OID digits through actual residency and Schedule A
+    testRef: "tests/engine/state/pa-ordinary-oid-precision-integration.test.ts::preserves accepted OID digits through actual residency and Schedule A"

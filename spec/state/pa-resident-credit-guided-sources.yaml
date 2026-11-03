@@ -32,7 +32,7 @@ lines:
   - line: "original-records"
     description: "Complete structured source fields and receipt reconciliation"
     formula: "Retain actual work owner/year/state/paid/service dates/amount/two ordinary-service answers; filed original return identity/date/status/residency/full schedules/allcredits/ordinaryincome answers and actual tax/nonpayment credit lines; all payment/refund/offset/nextyeartransfer originals and complete accountasof/netpaid/unpaid/overpayment/adjustment answers. Exact Decimal arithmetic remains solely in reviewed engine; unknown/missing/mismatch/duplicate facts reject."
-    testRef: "tests/apps/web/guided-pa-resident-credit-sources.test.ts::PA credit rejects incomplete mismatched or unsupported actual sources"
+    testRef: "tests/apps/web/guided-pa-resident-credit-sources.test.ts::PA credit rejects incomplete mismatched or unsupported actual sources: %s"
   - line: "read-no-refresh"
     description: "Saved canonical source reads compare retained originals"
     formula: "Build/read replays confirmed actual facts and unchanged rich packet; changed federal/PA/ordinary originals or source dates fail without mutating snapshots. Explicit nested confirmation cannot repair stale ordinary facts by refreshing them. Source field edits clear nested confirmation and retain originals."

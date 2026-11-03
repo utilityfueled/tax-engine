@@ -2194,3 +2194,11 @@ Eleven source products now compose actual employer calendars, payroll, signed sy
 ### November2: Preview SMTP secret saved
 
 The user saved the Zoho app password directly in Vercel; fresh metadata confirms Secret and Preview only without revealing its value. New90f7 Preview build follows that save. Actual authentication/delivery and hosted recovery tests remain pending; see the [SMTP evidence ledger](upgrade-2026-hosted-smtp-preview-work.md).
+
+### November2: spec-reference maintenance
+
+Existing metadata checks now pass611/611 on current main, with fullspec6984/6984,
+unchanged five PDF controls, inventory and strict lint checks. Quoting and exact
+parameterized title links preserve parsed formulas and all original assertions.
+The [maintenance ledger](upgrade-2026-spec-reference-maintenance.md) retains
+original genuine failures and independent scope. Global readiness remains false.
