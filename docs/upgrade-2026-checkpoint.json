@@ -17804,5 +17804,65 @@
       "Qualified human tax interpretation and final2026 source/form review",
       "Filing/release completion criteria remain active"
     ]
+  },
+  "previewScopedReadonlyDatabase20261103": {
+    "status": "PASS_BOUNDED_ROOT_EXECUTED_READONLY_OBSERVATIONS",
+    "at": "2026-11-03T22:57:45.061822+00:00",
+    "executor": "ROOT via CUA existing Vercel Neon Query editor",
+    "reviewerExecutedNetworkOrDatabase": false,
+    "previewOnly": true,
+    "queryEditorReadOnlyChecked": true,
+    "rejectedBroaderDataUIOpened": false,
+    "additionalPermissionRequiredForSafeAlternative": false,
+    "schema": {
+      "targetedApplicationTables": 7,
+      "observedColumns": 68,
+      "identityAndProfileTables": 2,
+      "observedColumnsIdentityProfile": 12,
+      "userIdAndEmailTextColumnsVerified": true
+    },
+    "actualReceipt": ".local/upgrade-evidence/nov03-preview-scoped-readonly-actual/receipt.json",
+    "actualReceiptSHA256": "c0b216944d55161177c31e609d62aadb485a55a6c266577603be2f0186ad7916",
+    "billingScalarsSHA256": "f7af461f51ea20cbed55a47476440e3d6cee1067c5d10dc2c242377a7cf9c553",
+    "cleanupScalarsSHA256": "9e6380b17ab7a8a531eaa07bc8286393a5343da294c9bae95121ce2b1c6fc071",
+    "queryPlanSHA256": "2cabb148e8c5088e5a173dcc8096f95faf9294b6314504e95ed83ebf61fe0ad6",
+    "billingObserved": {
+      "scopeValid": true,
+      "actorAIdentityRows": "1",
+      "actorBIdentityRows": "1",
+      "exactEventRows": "1",
+      "expectedTypeProcessedRows": "1",
+      "actorAExactSubscriptionRows": "1",
+      "actorAActiveStarterRows": "1",
+      "lastEventStillMatchesRows": "1",
+      "actorBSameSubscriptionRows": "0",
+      "subscriptionCheckoutPurchaseRows": "0",
+      "subscriptionCheckoutAiCreditCents": "0"
+    },
+    "cleanupObserved": {
+      "scopeValid": true,
+      "a-own": "0",
+      "b-own": "0",
+      "b-same-id": "0"
+    },
+    "uiVariantGuard": "Total owner2/distinct2 and distinct input emails; actual per-actor identity counts1/1 plus expected three cleanup labels validate only this observation. Stronger planned per-actor guard remains preferred.",
+    "executedSQLBytesRetained": false,
+    "independentReviewScope": "Receipt/CSV integrity, described variant logic, scalar cardinalities and source-plan limits; not independent external execution or byte-for-byte executed SQL verification.",
+    "mutations": 0,
+    "query07Executed": false,
+    "creditPackSettlementProved": false,
+    "crashAtomicityProved": false,
+    "releaseReady": false,
+    "remaining": [
+      "credit-cycle aggregate and AI credit-pack settlement/provider-spend reconciliation",
+      "controlled crash/retry and event ordering qualification",
+      "final-artifact hosted security, limits/outages/migration/restore/rollback",
+      "blob durability/forensic erasure and complete release gates"
+    ],
+    "ledgers": [
+      "docs/upgrade-2026-staging-sandbox-billing-work.md",
+      "docs/upgrade-2026-staging-tenant-workspace-work.md"
+    ],
+    "independentReviewSha256": "dd289a1e81e24413c6e13fb68568d55e6dec6a5d14f1dd2e9158ae95f74b35bd"
   }
 }
