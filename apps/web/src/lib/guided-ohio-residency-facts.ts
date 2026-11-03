@@ -104,9 +104,9 @@ export function ohioResidencyFactErrors(data: OhioResidencyDraft | undefined, ta
         return { 'ohio-residency-reconciliation': error instanceof Error ? error.message : 'Reconcile the actual owner domicile and source amounts.' };
     }
 }
-/** Canonical private originals exclude their three self-referential Ohio roots only. */
+/** Canonical federal originals exclude only the self-referential Ohio source roots. */
 export function snapshotGuidedOhioOriginals(input: TaxYearInput): Record<string, unknown> {
-    return structuredClone(Object.fromEntries(Object.entries(input).filter(([key]) => key !== 'ohioResidency' && key !== 'ohioPayments' && key !== 'ohioSchoolDistrict')));
+    return structuredClone(Object.fromEntries(Object.entries(input).filter(([key]) => key !== 'ohioResidency' && key !== 'ohioPayments' && key !== 'ohioSchoolDistrict' && key !== 'ohioReturnHeaderSources')));
 }
 function stableOhioOriginal(value: unknown): string {
     if (Array.isArray(value)) return '[' + value.map(stableOhioOriginal).join(',') + ']';

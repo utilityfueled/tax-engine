@@ -1,3 +1,4 @@
+import {buildGuidedOhioReturnHeaderSources} from './guided-ohio-return-header-sources';
 import {buildGuidedOhioReciprocalWages} from './guided-oh-reciprocal-wages';
 import {buildGuidedOhioResidentCreditSources} from './guided-ohio-resident-credit-sources';
 import {buildGuidedOhioSchoolDistrictFacts} from './guided-ohio-school-district-facts';
@@ -100,6 +101,7 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
   if (!state) return input;
   const data = state.sectionData["state-return"];
   if (state.segmentation.stateCode === "OH") {
+    if(input.ohioReturnHeaderSources&&!data?.ohioReturnHeaderSources)throw Error('Retained actual Ohio header originals require the native packet and reconfirmation.');
     if(input.ohioResidency?.residentCreditSources&&!data?.ohioResidency?.residentCreditSources)throw Error('Retained actual Ohio resident-credit originals require the native packet and reconfirmation.');
     if(input.ohioResidency?.businessSources&&!data?.ohioResidency?.businessSources)throw Error('Retained actual Ohio business source records require the current native packet and reconfirmation.');
     if(input.ohioResidency?.reciprocalWageSources&&!data?.ohioReciprocalWages)throw new Error('Reconcile the retained canonical reciprocal sources with actual native originals before replacing them.');
@@ -110,7 +112,8 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
     if(data?.ohioResidency?.residentCreditSources)ohioResidency=buildGuidedOhioResidentCreditSources(input,data.ohioResidency.residentCreditSources,ohioResidency,ohioPayments);
     const ohioSchoolDistrict=ohioResidency.schoolDistrictStatus==='actual_district_sources_required'||data?.ohioSchoolDistrict||input.ohioSchoolDistrict
       ?buildGuidedOhioSchoolDistrictFacts(input,data?.ohioSchoolDistrict,data?.ohioResidency,data?.ohioPayments):undefined;
-    return {...input, ohioResidency, ohioPayments,...(ohioSchoolDistrict?{ohioSchoolDistrict}: {})};
+    const ohioReturnHeaderSources=data?.ohioReturnHeaderSources?buildGuidedOhioReturnHeaderSources(input,data.ohioReturnHeaderSources,data.ohioResidency,data.ohioPayments):undefined;
+    return {...input, ohioResidency, ohioPayments,...(ohioSchoolDistrict?{ohioSchoolDistrict}: {}),...(ohioReturnHeaderSources?{ohioReturnHeaderSources}:{})};
   }
   if (state.segmentation.stateCode === "PA") {
     if(data?.paMarriedOrdinarySources!==undefined||input.paMarriedOrdinarySources!==undefined){

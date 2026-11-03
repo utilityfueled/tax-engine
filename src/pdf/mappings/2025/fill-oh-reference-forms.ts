@@ -1,7 +1,7 @@
 import { fillOhioSchoolDistrictOfficialReview } from './fill-oh-school-district-official-review.js';
 import {resolveOhioResidencyReview,type PreparedOhioResidencyReview} from "../../../engine/state/oh-residency-source.js";
 import {fillOhioOrdinaryOfficialReview} from './fill-oh-ordinary-official-review.js';
-import { assertPdfExportAllowed } from "../../export-policy.js";
+import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
 import {
@@ -206,6 +206,7 @@ async function createReferencePdf(
 
   const filePath = join(outputDir, fileName);
   await mkdir(outputDir, { recursive: true });
+  await markReviewPdf(doc);
   await writeFile(filePath, await doc.save());
   return filePath;
 }

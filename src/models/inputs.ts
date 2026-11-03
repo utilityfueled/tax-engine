@@ -1,3 +1,4 @@
+import { OhioReturnHeaderSourcesSchema } from './ohio-return-header-sources.js';
 import { OhioSchoolDistrictFactsSchema } from './ohio-school-district.js';
 import {PAMarriedOrdinarySourcesSchema} from './pa-married-ordinary-sources.js';
 /**
@@ -6154,6 +6155,7 @@ export const TaxYearInputSchema = z.object({
   taxpayer: TaxpayerSchema,
   ohioResidency: OhioResidencyFactsSchema.optional(),
   ohioPayments: OhioPaymentFactsSchema.optional(),
+  ohioReturnHeaderSources: OhioReturnHeaderSourcesSchema.optional(),
   ohioSchoolDistrict: OhioSchoolDistrictFactsSchema.optional(),
   paResidencySources: PAResidencySourcesSchema.optional(),
   paReciprocitySources: PAReciprocitySourcesSchema.optional(),

@@ -16739,5 +16739,78 @@
       "Full successor unit/coverage",
       "All current distribution/staging/AI/human/final2026 criteria"
     ]
+  },
+  "ohResidentHeaderSources20261103": {
+    "baseCommit": "48ad9f694cb1bd99f152a3cdd3c780cd0e511523",
+    "status": "bounded implementation verified; release qualification open",
+    "scope": "2025 single primary full-year Ohio resident, one actual365-day Columbus2503/Franklin location; explicit source originals only",
+    "sources": {
+      "bookletUrl": "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf",
+      "bookletSha256": "931b21e7484ba96e561cf2346d8a7d2a8005bd990724b5903c9a90acede5f50e",
+      "printedPages": [
+        15,
+        50
+      ],
+      "countyAuthority": [
+        "https://www.ohiosos.gov/directories/county-boards-of-elections",
+        "https://codes.ohio.gov/ohio-revised-code/section-2301.02"
+      ]
+    },
+    "red": {
+      "genuineAdmissionAndLifecycleFailures": 12,
+      "messageSpecificityFailureAlreadyDeniedStaleInput": 1,
+      "futureMissingModuleFailuresCounted": 0,
+      "retainedSavedNoticeFailure": true
+    },
+    "checks": {
+      "focused": 85,
+      "adjacent": 440,
+      "pdfAdjacent": 32,
+      "total": 557,
+      "files": 26,
+      "skipsInFinalCommands": 0,
+      "types": [
+        "root",
+        "web",
+        "contracts"
+      ],
+      "builds": [
+        "engine",
+        "web"
+      ],
+      "specReferences": "7844/7844",
+      "specValidatorTests": 28,
+      "inventory": "generated and checked",
+      "strictOwnedLint": "zero warnings"
+    },
+    "sourceReviews": {
+      "sharedEight": "c27c93731ba842412a204ef6f5dd5b61ab04533e7ccb0e5311c75e25df52d7f7",
+      "twoLineNoticeFinalizer": "05f2bcd82eb513420fcb50bf6ab1deacac3520a05620316559c55c723bef4596"
+    },
+    "savedArtifacts": {
+      "files": 5,
+      "pages": 11,
+      "objects": 73,
+      "streams": 32,
+      "strictPrivacy": "PASS",
+      "allPageNotice": "exactly one",
+      "bodyPixelParity": "all11 exact outside existing bottom18pt notice band",
+      "visualInspection": "ROOT opened all11page contact; readable, no overlap or clipping observed"
+    },
+    "localEvidence": {
+      "nov03-root-oh-return-header-main-final/checks.json": "b5a97fd9ce5c596ad6f858e8fa23ec29415bd52849043f4f7b4812f3275e2f80",
+      "nov03-root-oh-return-header-main-tail/checks.json": "f3006295c206cd6d7ea69d38d38343bf5648e0158416302b6cfb74c894bd768a",
+      "nov03-root-oh-return-header-final-build/checks.json": "008a8e77bc5e6867a2ae47b6a31dc877f27f6f2ce791f004467a292a4d19caaf",
+      "nov03-root-oh-return-header-final-artifact-review/strict-report.json": "2eaad98ffb49030799064cd331188e23c32e99999294c2baf7feff8792e83934",
+      "nov03-root-oh-return-header-final-artifact-review/render-report.json": "0c7498a89b34917dd2a61b7a07f426c77fa9e77df46c419642cf6f37c61cbfec"
+    },
+    "remaining": [
+      "actual native header browser lifecycle",
+      "official resident financial companions",
+      "other districts/counties/locations/households/years",
+      "qualified human review",
+      "final2026 forms",
+      "current full coverage/distribution/hosted/provider/security qualification"
+    ]
   }
 }

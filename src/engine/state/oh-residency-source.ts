@@ -33,7 +33,7 @@ function fail(message: string): never {
     throw new Error(`Ohio actual residency sources: ${message}`);
 }
 function withoutFacts(input: TaxYearInput) {
-    const { ohioResidency: _, ohioPayments: _payments, ohioSchoolDistrict: _school, ...source } = input as TaxYearInput & { ohioResidency?: unknown; ohioPayments?:unknown };
+    const { ohioResidency: _, ohioPayments: _payments, ohioSchoolDistrict: _school, ohioReturnHeaderSources: _header, ...source } = input as TaxYearInput & { ohioResidency?: unknown; ohioPayments?:unknown };
     return source;
 }
 const brand = Symbol('prepared Ohio original review');

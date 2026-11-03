@@ -103,7 +103,7 @@ export function buildOhioResidentCreditSource(input:TaxYearInput,result:TaxRetur
  if(!withheld.eq(filed.withholding)||!estimated.eq(filed.estimatedPayments)||!balance.eq(filed.balancePayments)||!refund.eq(filed.refund)||!withheld.plus(estimated).plus(balance).minus(refund).eq(account.netIncomeTax))fail('completed account net applied payments/refunds do not equal actual net income tax');
  const tax=new D(account.netIncomeTax);if(tax.gt(0)&&!virginia.gt(0))fail('actual positive paid tax requires the same eligible positive income');
  const rows:OtherStateTaxEntry[]=[{stateCode:'VA',incomeType:'compensation',doubleTaxedIncome:tax.gt(0)?virginia.toFixed():'0',taxPaid:tax.toFixed()}];
- const {ohioResidency:_r,ohioPayments:_p,ohioSchoolDistrict:_s,...federalOriginal}=input;
+ const {ohioResidency:_r,ohioPayments:_p,ohioSchoolDistrict:_s,ohioReturnHeaderSources:_h,...federalOriginal}=input;
  const expected:Record<string,unknown>={taxYear:2025,filingStatus:'single',federalAgi:roundDollar(result.agi),exemptions:1,residency:structuredClone(facts),residencySourceDigest:digest({input:federalOriginal,facts}),
   otherStateTaxes:rows,residentCredit:undefined,nonresidentCredit:undefined,schoolDistricts:[],isSenior:false,bothSpousesHaveQualifyingIncome:false,
   paymentSourceDigest:payments.sourceDigest,paymentMethodVersion:payments.methodVersion,paymentDatedSource:undefined,paymentTaxCoverage:payments.facts.remainingTaxPayment,paymentTiming:{kind:payments.timingKind,valuationDate:payments.valuationDate,asOfDate:payments.asOfDate},
