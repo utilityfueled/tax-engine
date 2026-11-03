@@ -2,7 +2,11 @@ import Decimal from 'decimal.js';
 import type { TaxYearInput } from '@/models/inputs';
 import { OhioResidencyFactsSchema, ohioNrcCategories, type OhioNrcCategory, type OhioResidencyFacts } from '@/models/ohio-residency';
 import { calculateOhioITNRC } from '@/engine/state/oh-it-nrc';
+import {calculateFederalTax} from '@/engine/federal';
+import {calculateOhioCanonicalBusinessSource,readOhioCanonicalBusinessSource} from '@/engine/state/oh-business-source';
+import {buildGuidedOhioBusinessFacts,type OhioBusinessDraft} from './guided-ohio-business-facts';
 export interface OhioResidencyDraft {
+    businessSources?: OhioBusinessDraft;
     /** Bound only by explicit confirmation; old boolean-only saves require reconfirmation. */
     originalFederalSources?: Record<string, unknown>;
     taxYear: string;
@@ -46,10 +50,12 @@ function normalizedAmount(value: string): string {
     const text = value.trim();
     return /^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?$/.test(text) ? text.replace(/,/g, '') : value;
 }
-function raw(data: OhioResidencyDraft) {
+function raw(data: OhioResidencyDraft, input?:TaxYearInput) {
+    if(data.businessSources&&!input)throw Error('Actual current federal originals are required to replay Ohio business sources.');
     const allFull = data.owners.length > 0 && data.owners.every(owner => owner.status === 'full_year_resident');
     return {
         ...data, taxYear: Number(data.taxYear),
+        ...(data.businessSources&&input?{businessSources:buildGuidedOhioBusinessFacts(data.businessSources,input)}:{}),
         allFederalSourcesIncludedConfirmed: data.allFederalSourcesIncludedConfirmed ?? undefined,
         noBusinessIncomeConfirmed: data.noBusinessIncomeConfirmed ?? undefined,
         owners: data.owners.map(owner => ({
@@ -63,12 +69,14 @@ function raw(data: OhioResidencyDraft) {
         })),
     };
 }
-export function ohioResidencyFactErrors(data: OhioResidencyDraft | undefined, taxYear: number | null | undefined, filingStatus: string | null | undefined): Record<string, string> {
+export function ohioResidencyFactErrors(data: OhioResidencyDraft | undefined, taxYear: number | null | undefined, filingStatus: string | null | undefined, input?:TaxYearInput): Record<string, string> {
     if (!data)
         return { ohioResidency: 'Enter the actual Ohio owner domicile source facts, including full-year residency.' };
     if (taxYear == null || !/^\d{4}$/.test(data.taxYear) || String(taxYear) !== data.taxYear)
         return { 'ohio-residency-year': 'Enter the actual source year matching this return.' };
-    const parsed = OhioResidencyFactsSchema.safeParse(raw(data));
+    let parsed:ReturnType<typeof OhioResidencyFactsSchema.safeParse>;
+    try{parsed = OhioResidencyFactsSchema.safeParse(raw(data,input));}
+    catch(error){return {'ohio-business-originals':error instanceof Error?error.message:'Complete the actual current Ohio business originals.'};}
     if (!parsed.success)
         return Object.fromEntries(parsed.error.issues.map(issue => [`ohio-residency-${issue.path.join('-')}`, `Complete the actual ${issue.path.join(' ')} source facts; use zero only when known.`]));
     try {
@@ -81,7 +89,11 @@ export function ohioResidencyFactErrors(data: OhioResidencyDraft | undefined, ta
                     const value = new Decimal(owner.amounts[category].federalAmount);
                     agi = category === 'federalAdjustments' ? agi.minus(value) : agi.plus(value);
                 }
-        calculateOhioITNRC({ taxYear, filingStatus: filingStatus ?? '', federalAgi: agi.toDecimalPlaces(0, Decimal.ROUND_HALF_UP), ohioAgi: agi.toDecimalPlaces(0, Decimal.ROUND_HALF_UP), taxRemainingBeforeResidencyCredits: '0', residencyFacts: parsed.data });
+        let ohioAgi=agi.toDecimalPlaces(0,Decimal.ROUND_HALF_UP);
+        const businessFederal=parsed.data.businessSources&&input?calculateFederalTax(input):undefined;
+        const businessSource=parsed.data.businessSources&&input&&businessFederal?calculateOhioCanonicalBusinessSource({taxInput:input,residencyFacts:parsed.data,federalResult:businessFederal}):undefined;
+        if(businessSource&&businessFederal){const actual=readOhioCanonicalBusinessSource(businessSource,parsed.data,businessFederal.agi);agi=actual.federalAgi;ohioAgi=actual.ohioAgi;}
+        calculateOhioITNRC({ taxYear, filingStatus: filingStatus ?? '', federalAgi: agi.toDecimalPlaces(0, Decimal.ROUND_HALF_UP), ohioAgi, taxRemainingBeforeResidencyCredits: '0', residencyFacts: parsed.data,...(businessSource?{businessSource}:{}) });
         return {};
     }
     catch (error) {
@@ -113,7 +125,7 @@ export function confirmGuidedOhioResidencyFacts(input: TaxYearInput, draft: Ohio
 export function buildGuidedOhioResidencyFacts(data: OhioResidencyDraft | undefined, input: TaxYearInput): OhioResidencyFacts {
     if (!data) throw new Error('Actual Ohio residency source facts are required.');
     assertGuidedOhioOriginals(input, data.originalFederalSources);
-    const errors = ohioResidencyFactErrors(data, input.taxpayer.taxYear, input.taxpayer.filingStatus);
+    const errors = ohioResidencyFactErrors(data, input.taxpayer.taxYear, input.taxpayer.filingStatus,input);
     if (Object.keys(errors).length) throw new Error(Object.values(errors).join(' '));
-    return OhioResidencyFactsSchema.parse(raw(data));
+    return OhioResidencyFactsSchema.parse(raw(data,input));
 }

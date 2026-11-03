@@ -1,0 +1,45 @@
+form: "Independent native Ohio ordinary business source review"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc.pdf"
+notes: |
+  Independent source-first review. Final 2025 NRC, booklet printed26-27/36-39,
+  ScheduleBusiness11-16, RC5747.21 and5733.05; IRS2025ScheduleSE4a/7/10-13.
+  Actual single primary ordinary service C only, actual NR or PY dates. Property
+  originals10000/20000 and purchaser-benefit sales.25 with known zero payroll:
+  remove .20 payroll weight once, .5*.25+.25*.75=.3125. Never prorate by PYdays.
+  Full actual personal half-SE deduction original accrues Dec31 outside actual
+  Jan1-Jun30 OHperiod; NRC14=0. Blank/unknown is never evidence of zero.
+  Expected values derived with Python Decimal before candidate product inspection.
+  No current C recapture on reads. Explicit user confirmation captures actual current C;
+  it does not mutate retained prior source evidence.
+  Independent controls add to unchanged author35 and4serialization controls.
+  No final2026, human-tax, physical-form, filing, hosted or release qualification.
+lines:
+  - line: "literal-source-oracles"
+    label: "Actual annual source arithmetic survives native confirmation and saved JSON"
+    formula: "2025 profit100000: halfSE7065 AGI92935 BID92935 OhioAGI0 tax0 NRC0 remaining0;400000:halfSE16275 AGI383725 BID250000 OhioAGI133725 tax3955 NRC3955 remaining0;1000000:halfSE24309 AGI975691 BID250000 OhioAGI725691 tax21771 NRC19894 remaining1877; NRC19 truncates4places."
+    testRef: "tests/guided-interview/guided-ohio-business-independent.test.ts::independently replays actual %s %s business sources with %s saved JSON"
+  - line: "unknown-is-not-zero"
+    label: "Native unknown original fields remain unknown"
+    formula: "Empty source records cannot confirm; blank statutory zero fields cannot pass. Present actual0 payroll/rent and source originals may pass unchanged."
+    testRef: "tests/guided-interview/guided-ohio-business-independent.test.ts::independently rejects blank actual source field %s"
+  - line: "source-mutation"
+    label: "Read and explicit confirmation preserve source identity"
+    formula: "Changed current C or canonical source data require actual new original records. No source recapture, silent caller mutation, inferred timing, duplicate original or owner/year/status replacement."
+    testRef: "tests/guided-interview/guided-ohio-business-independent.test.ts::independently rejects altered source evidence %s"
+  - line: "undefined-path-metadata"
+    label: "Serialization restoration can restore only authentic original undefined own paths"
+    formula: "Reject missing original source packet, missing metadata, duplicate path, inherited or prototype path, wrong business index, missing path segments and claimed deletion of populated source fields. Syntactically valid unknown undefined leaves may restore in raw child binding; canonical parent exact tagged-original comparison rejects them before arithmetic. Never traverse prototype or mutate input."
+    testRef: "tests/guided-interview/guided-ohio-business-independent.test.ts::independently rejects forged saved undefined metadata %s"
+  - line: "public-source-boundary"
+    label: "Actual public state binding and unchanged year gate"
+    formula: "Public guided binding yields canonical same-source NRC and original federal snapshot; current changes invalidate saved packet. Public2026 engine denies incomplete pack."
+    testRef: "tests/guided-interview/guided-ohio-business-independent.test.ts::preserves the public 2026 denial after actual year replacement"
+  - line: "canonical-parent-undefined-identity"
+    label: "Distinct public parent rejection of forged undefined identity"
+    formula: "Verified diagnostic source boundary: raw helper structural restoration may produce a child packet with an invented undefined own leaf; parent canonical NRC exact tagged-current-original comparison rejects before arithmetic. Original raw-helper overbroad expectation and first failure remain retained evidence."
+    testRef: "tests/guided-interview/guided-ohio-business-independent.test.ts::rejects a forged undefined leaf at the canonical parent source boundary"
+  - line: "raw-child-structural-boundary"
+    label: "Structural child binding does not grant canonical eligibility"
+    formula: "Observe restored unknown undefined own leaf at raw child boundary without calling it eligible. Separate canonical parent control requires exact original identity rejection before any arithmetic. No product or money change."
+    testRef: "tests/guided-interview/guided-ohio-business-independent.test.ts::observes raw structural restoration without granting canonical undefined identity"

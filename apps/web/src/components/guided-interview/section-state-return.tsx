@@ -6,6 +6,8 @@ import {ZeroIncomeMiscDetails} from './zero-income-misc-details';
 
 import type { TaxYearInput } from "@/models/inputs";
 import { OhioResidencyDetails } from "./ohio-residency-details";
+import {OhioBusinessDetails} from "./ohio-business-details";
+import {emptyOhioResidencyDraft} from "@/lib/guided-ohio-residency-facts";
 import { OhioPaymentDetails } from "./ohio-payment-details";
 import {OhioReciprocalWagesDetails} from "./ohio-reciprocal-wages-details";
 import {OhioSchoolDistrictDetails} from "./ohio-school-district-details";
@@ -233,6 +235,8 @@ export function SectionStateReturn({
         <ZeroIncomeMiscDetails data={current.zeroIncomeMiscSources} taxYear={taxYear} filingStatus={filingStatus}
           onChange={zeroIncomeMiscSources=>onDataChange({...current,zeroIncomeMiscSources})}/>
         {stateCode === "OH" && <>
+          {(originalInput?.scheduleC||current.ohioResidency?.businessSources!==undefined)&&<OhioBusinessDetails originalInput={originalInput??null} data={current.ohioResidency?.businessSources} residency={current.ohioResidency}
+            onChange={businessSources=>onDataChange({...current,ohioResidency:{...structuredClone(current.ohioResidency??emptyOhioResidencyDraft),businessSources,sourceFactsConfirmed:null}})}/>}
           <OhioResidencyDetails originalInput={originalInput ?? null} data={current.ohioResidency} taxYear={taxYear} filingStatus={filingStatus}
             onChange={ohioResidency => onDataChange({...current, ohioResidency})} />
           <OhioPaymentDetails originalInput={originalInput ?? null} taxYear={taxYear} data={current.ohioPayments}

@@ -99,6 +99,7 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
   if (!state) return input;
   const data = state.sectionData["state-return"];
   if (state.segmentation.stateCode === "OH") {
+    if(input.ohioResidency?.businessSources&&!data?.ohioResidency?.businessSources)throw Error('Retained actual Ohio business source records require the current native packet and reconfirmation.');
     if(input.ohioResidency?.reciprocalWageSources&&!data?.ohioReciprocalWages)throw new Error('Reconcile the retained canonical reciprocal sources with actual native originals before replacing them.');
     const ohioResidency = data?.ohioReciprocalWages
       ?buildGuidedOhioReciprocalWages(input,data.ohioReciprocalWages,data.ohioResidency,data.ohioPayments)

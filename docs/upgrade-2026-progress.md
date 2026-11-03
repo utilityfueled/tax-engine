@@ -2582,3 +2582,7 @@ Current-main J/M desktop1280/mobile390 journeys pass4/4 firstattempt with zero r
 ### November3: official school-district review companions
 
 Current2025 Hillsdale0302 originals now produce static SD100 and positive-withholding SDWH review pages alongside separate IT1040 references. Distinct review and root1,518/46 plus all12checks pass after6genuineRED; retained33/33 and76savedPDFs/167pages pass all-object/privacy checks. Independent219physicalcells and all50officialpage pixel comparisons pass; root views the actual contacts and critical pages. See [the physical ledger](upgrade-2026-oh-school-district-official-review-work.md). Broader cohorts, human/final2026/filing/distribution/staging qualification remain open. Married browser209f666c is pushed.
+
+### November3: native Ohio ordinary business records
+
+Actual2025 single-primary NR/PY C records now originate from blank property/payroll/receipt/deduction controls and retain explicit confirmations through JSON save/reopen. Sourcefirst3genuineRED precede six products; distinct59+author39 and current-main98/3 plus5,586/650pass. All types/spec/AST/strict/build/inventory checks pass;33PG-dependent tests remain skipped. Three narrow shared additions preserve current PA/reciprocal/SD paths. See [the native ledger](upgrade-2026-ohio-business-native-work.md). Actual browser/physical/broadercohort/final2026/human/distribution/staging qualification remains open. Schoolphysicalf76c481f is pushed.

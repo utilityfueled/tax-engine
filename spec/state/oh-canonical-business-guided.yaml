@@ -1,0 +1,34 @@
+form: "Ohio ordinary NR/PY business native sources"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc-fi.pdf"
+notes: |
+  Actual source collector for the delivered canonical single-primary ordinary C
+  Section II/III method. Source first on a06b909c. No calculation/model changes.
+  Booklet printed35-39 and RC5747.21 govern existing formulas. Child original
+  confirmation and parent residency confirmation are separate actions. Current
+  IT payment sources require their existing independent confirmation. Unknown,
+  edited and retained unsupported originals do not become zero or refreshed facts.
+  No joint, multiple businesses, W2/NEC composition, signed loss, special industry,
+  unresolved precision, public2026, official PDF or filing qualification.
+lines:
+  - line: "native-source-admission"
+    formula: "Actual current single primary C original captured only by explicit source confirmation. Complete actual property/payroll/purchaser-benefit and dated personal deduction originals compose delivered canonical business context; fresh federal AGI is not a sum of nonbusiness NRC categories."
+    testRef: "tests/guided-interview/guided-ohio-business-sources.test.ts::originates actual native business source through existing state API %s"
+  - line: "unchanged-money"
+    formula: "Actual property10000/20000 both endpoints, no rental or employee payroll, actual Ohio service receipts1/4 of total -> propertyweight.25+salesweight.75 -> exactfactor.3125. C400000 ->halfSE16275/AGI383725/BID250000/Ohio133725/tax3955/NRC3955/remaining0; same NR/PY original timing. No source or cash defaults."
+    testRef: "tests/guided-interview/guided-ohio-business-sources.test.ts::preserves independently pinned business worksheet %s %s"
+  - line: "source-replay"
+    formula: "Reads and JSON reopen retain original snapshots and confirmations exactly. Explicit child action retains full canonical original business source packet as well as current raw federal originals; direct flag-only edited source cannot match that retained packet. Current source year/owner/C/property/receipt/deduction/domicile/payment edits require reconfirmation; no refresh-on-read, duplicate receipt, inherited zero, scalar AGI or fabricated factor."
+    testRef: "tests/guided-interview/guided-ohio-business-sources.test.ts::rejects missing stale or unsupported native business source %s"
+  - line: "invalidation"
+    formula: "Actual child or linked federal/residency/payment edits retain all records while revoking child and parent confirmations. Pure explicit confirmation and unchanged remount do not revoke themselves. Existing ordinary nonbusiness and PA source behavior remain unchanged."
+    testRef: "tests/guided-interview/guided-ohio-business-sources.test.ts::revokes linked native business confirmation after %s"
+  - line: "native-blank-entry"
+    formula: "Absent packet opens as actual unknown fields without callbacks or a current-C snapshot. User enters source year, owner, status, property/payroll, all receipt and deduction originals and classifications; actual0 is explicit. Current C is captured only by the confirmation action; no C income is added again."
+    testRef: "tests/apps/web/ohio-business-details.test.tsx::offers blank actual business source origination in the existing state section"
+  - line: "native-confirmation"
+    formula: "Actual typed records including comma money normalize exactly on confirmation, preserve source identity/date, and revoke child/parent after edits. Missing parent/payment/source originals remain blocked; mounting or reopening does not capture or call onChange."
+    testRef: "tests/apps/web/ohio-business-details.test.tsx::captures actual entered business originals only after explicit confirmation"
+  - line: "lossless-original-reopen"
+    formula: "Explicit business capture records exact own undefined-value paths in each authored C original; an actual empty list is known, missing metadata is unknown. JSON replay restores only these retained undefined leaves in cloned source records, never current-source recapture. Duplicate, malformed, out-of-bounds, prototype-bearing or defined-value-overwriting paths reject. Core strict tagged identity and all original financial amounts remain unchanged."
+    testRef: "tests/guided-interview/guided-ohio-business-sources.test.ts::rejects missing or unsafe retained serialization metadata %s"

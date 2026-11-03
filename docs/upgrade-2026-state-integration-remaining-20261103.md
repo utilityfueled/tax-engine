@@ -54,3 +54,5 @@ controls and11static checks pass. See upgrade-2026-pa-married-native-browser-wor
 physical married forms and broader households remain separate successors.
 
 - School-district physical review: finite2025 Hillsdale0302 original-bound SD100/SDWH implemented and independently reviewed. Root1,518/46/all12checks plus retained33 pass;76savedPDFs/167pages and219physicalcells checked,50officialpages pixel-match reviewed artifacts. Broader methods/households and final2026/human/filing/release gates remain open. See `upgrade-2026-oh-school-district-official-review-work.md`.
+
+- Ordinary2025 Ohio C NR/PY native entry is integrated after independent59+author39 and main5,586tests/650files pass.33PG tests stay skipped. Actual NR/PY desktop/mobile review/export/reopen journeys and matching physical forms remain separate work; see `upgrade-2026-ohio-business-native-work.md`.
