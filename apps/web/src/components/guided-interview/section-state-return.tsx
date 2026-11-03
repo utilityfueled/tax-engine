@@ -7,6 +7,7 @@ import {ZeroIncomeMiscDetails} from './zero-income-misc-details';
 import type { TaxYearInput } from "@/models/inputs";
 import { OhioResidencyDetails } from "./ohio-residency-details";
 import {OhioBusinessDetails} from "./ohio-business-details";
+import {OhioResidentCreditDetails} from "./ohio-resident-credit-details";
 import {emptyOhioResidencyDraft} from "@/lib/guided-ohio-residency-facts";
 import { OhioPaymentDetails } from "./ohio-payment-details";
 import {OhioReciprocalWagesDetails} from "./ohio-reciprocal-wages-details";
@@ -241,6 +242,8 @@ export function SectionStateReturn({
             onChange={ohioResidency => onDataChange({...current, ohioResidency})} />
           <OhioPaymentDetails originalInput={originalInput ?? null} taxYear={taxYear} data={current.ohioPayments}
             onChange={ohioPayments => onDataChange({...current, ohioPayments})} />
+          <OhioResidentCreditDetails originalInput={originalInput??null} data={current.ohioResidency?.residentCreditSources} residency={current.ohioResidency} payments={current.ohioPayments}
+            onChange={residentCreditSources=>onDataChange({...current,ohioResidency:{...structuredClone(current.ohioResidency??emptyOhioResidencyDraft),residentCreditSources}})}/>
           <OhioReciprocalWagesDetails originalInput={originalInput??null} taxYear={taxYear} data={current.ohioReciprocalWages} ohioResidency={current.ohioResidency} ohioPayments={current.ohioPayments} onChange={ohioReciprocalWages=>onDataChange({...current,ohioReciprocalWages})}/>
           {(current.ohioResidency?.schoolDistrictStatus==='actual_district_sources_required'||current.ohioSchoolDistrict)&&<OhioSchoolDistrictDetails originalInput={originalInput??null} taxYear={taxYear} data={current.ohioSchoolDistrict} ohioResidency={current.ohioResidency} ohioPayments={current.ohioPayments} onChange={ohioSchoolDistrict=>onDataChange({...current,ohioSchoolDistrict})}/>}
 

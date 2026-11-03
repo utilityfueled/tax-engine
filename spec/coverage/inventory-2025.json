@@ -12988,6 +12988,46 @@
       "knownGaps": []
     },
     {
+      "key": "state/oh-resident-credit-native",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://codes.ohio.gov/ohio-revised-code/section-5747.05",
+      "specPath": "spec/state/oh-resident-credit-native.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/oh-resident-credit-native-independent",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://codes.ohio.gov/ohio-revised-code/section-5747.05",
+      "specPath": "spec/state/oh-resident-credit-native-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-resident-credit-source",
       "jurisdiction": "state",
       "taxYear": null,

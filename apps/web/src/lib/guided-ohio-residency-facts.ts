@@ -1,4 +1,5 @@
 import Decimal from 'decimal.js';
+import type {OhioResidentCreditDraft} from './guided-ohio-resident-credit-sources';
 import type { TaxYearInput } from '@/models/inputs';
 import { OhioResidencyFactsSchema, ohioNrcCategories, type OhioNrcCategory, type OhioResidencyFacts } from '@/models/ohio-residency';
 import { calculateOhioITNRC } from '@/engine/state/oh-it-nrc';
@@ -6,6 +7,7 @@ import {calculateFederalTax} from '@/engine/federal';
 import {calculateOhioCanonicalBusinessSource,readOhioCanonicalBusinessSource} from '@/engine/state/oh-business-source';
 import {buildGuidedOhioBusinessFacts,type OhioBusinessDraft} from './guided-ohio-business-facts';
 export interface OhioResidencyDraft {
+    residentCreditSources?: OhioResidentCreditDraft;
     businessSources?: OhioBusinessDraft;
     /** Bound only by explicit confirmation; old boolean-only saves require reconfirmation. */
     originalFederalSources?: Record<string, unknown>;
@@ -53,8 +55,10 @@ function normalizedAmount(value: string): string {
 function raw(data: OhioResidencyDraft, input?:TaxYearInput) {
     if(data.businessSources&&!input)throw Error('Actual current federal originals are required to replay Ohio business sources.');
     const allFull = data.owners.length > 0 && data.owners.every(owner => owner.status === 'full_year_resident');
+    // The entered child has its own strict conversion and complete-source replay after parent/payment confirmation.
+    const {residentCreditSources:_residentCredit,...parent}=data;
     return {
-        ...data, taxYear: Number(data.taxYear),
+        ...parent, taxYear: Number(data.taxYear),
         ...(data.businessSources&&input?{businessSources:buildGuidedOhioBusinessFacts(data.businessSources,input)}:{}),
         allFederalSourcesIncludedConfirmed: data.allFederalSourcesIncludedConfirmed ?? undefined,
         noBusinessIncomeConfirmed: data.noBusinessIncomeConfirmed ?? undefined,

@@ -16438,5 +16438,214 @@
       "Full currentglobal/distribution/staging/human/final2026 qualification"
     ],
     "ledger": "docs/upgrade-2026-oh-reciprocal-pa-withholding-work.md"
+  },
+  "ohResidentCreditNative20261103": {
+    "base": "afb29967e5b787e7a0e5eb22b8a5f3ba4043a919",
+    "candidateSHA256": "9a9cc65816e8e5e6cfc88cfef7cde0ef7bbd2ceb498c996627fb6b716485b194",
+    "exactPathsBeforeResultsAppend": {
+      "apps/web/src/lib/guided-ohio-resident-credit-sources.ts": "7db8502d2fb9b6e507b405bfa579273d9f9fd7b2e8716463eebfbd40ca93387d",
+      "apps/web/src/components/guided-interview/ohio-resident-credit-details.tsx": "b738a7e00e74122f506cd3c9b50d1677a5afd03a2dad34b8087db75f924e4765",
+      "spec/state/oh-resident-credit-native.yaml": "b40dee3ff98dcd79b25273481fa79855f49ff37392267385f6988c40b423203a",
+      "tests/fixtures/guided-oh-resident-credit-complete.ts": "65b19e33369a4dad5cc44999e63af247cf1109b95eee20702be15871dae88630",
+      "tests/guided-interview/guided-oh-resident-credit-sources.test.ts": "e7f312cb6fa9bd861e1c6a3b6457d5f03116be5622ca823909918ebab8b1b22a",
+      "tests/apps/web/oh-resident-credit-native.test.tsx": "f93fc44e4646812fee687cf57f021b7cedb946046c045d70690f041829f1fdeb",
+      "docs/upgrade-2026-oh-resident-credit-native-work.md": "e96fe8484f0d24f8f4ee442e051a6307ed8490e6fcc786725bf1ed8e23d3a34b",
+      "apps/web/src/lib/guided-ohio-residency-facts.ts": "404d7615d69707c9eca21fbb769f2182a8d925491159cf231ecb02af2868ee24",
+      "apps/web/src/lib/guided-interview-flow.ts": "c85d6117aff7adb8947a7bc01441137272dd519ef38b9cb2092d8feb8ff680fe",
+      "apps/web/src/lib/guided-state-engine-inputs.ts": "b9244edaf672d49b3ed9f6b591023ff778bd3a1457f19833fa82c24c085ddf48",
+      "apps/web/src/components/guided-interview/section-state-return.tsx": "9de104696f79eecbe080755192ee954bb061753bcfed9c3602b8bdcf299df1d5",
+      "spec/state/oh-resident-credit-native-independent.yaml": "7a8372f7fad5235aa91d1234ff28d1f6d5d25205116034b8457efcf45ad12b50",
+      "tests/guided-interview/guided-oh-rc-native-independent.test.ts": "1646a1a4fca4e33112074c39057af7b57d413f61cac418ef3aadd9771bf89e25"
+    },
+    "sourceFirstAuthorSelected": "3 genuine existingAPI fail /1 canonical pass /46 unselected",
+    "sourceFirstRoot": "1 genuine existingguideadmission fail /6 negative pass",
+    "focusedPassed": 57,
+    "adjacentPassed": 379,
+    "adjacentFiles": 14,
+    "checks": [
+      {
+        "name": "native-focused57",
+        "command": [
+          "node",
+          "scripts/run-tests.mjs",
+          "run",
+          "tests/guided-interview/guided-oh-resident-credit-sources.test.ts",
+          "tests/apps/web/oh-resident-credit-native.test.tsx",
+          "tests/guided-interview/guided-oh-rc-native-independent.test.ts",
+          "--maxWorkers=1",
+          "--reporter=verbose"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-resident-credit-native-main-green/native-focused57.log",
+        "sha256": "c601aad8db53ce0916debd96f49d64090110fa1ac1486b394d352de103142c6c"
+      },
+      {
+        "name": "root-types",
+        "command": [
+          "pnpm",
+          "typecheck"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-resident-credit-native-main-green/root-types.log",
+        "sha256": "5888bcaa4f681b3f7bf48999ae0817c16b3af178b8c13f7d91414fdef8ea04d9"
+      },
+      {
+        "name": "contracts-types",
+        "command": [
+          "pnpm",
+          "typecheck:contracts"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-resident-credit-native-main-green/contracts-types.log",
+        "sha256": "0c2a6bff203db409d0f68d48f7b21a6ac6bd6098310256e72a9c6e558bc3943d"
+      },
+      {
+        "name": "web-types",
+        "command": [
+          "pnpm",
+          "typecheck:web"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-resident-credit-native-main-green/web-types.log",
+        "sha256": "249e0be3cf6277994e8d22e8440bebe6db10861cab79fe97aa4952837f3ff073"
+      },
+      {
+        "name": "non-pdf-adjacent",
+        "command": [
+          "node",
+          "scripts/run-tests.mjs",
+          "run",
+          "tests/engine/state/oh-resident-credit-sources.test.ts",
+          "tests/engine/state/oh-resident-credit-source-independent.test.ts",
+          "tests/engine/state/oh-resident-credit-transactions.test.ts",
+          "tests/engine/state/oh-resident-credit-transactions-independent.test.ts",
+          "tests/guided-interview/guided-ohio-residency.test.ts",
+          "tests/guided-interview/guided-ohio-payments.test.ts",
+          "tests/guided-interview/guided-ohio-source-navigation.test.ts",
+          "tests/guided-interview/guided-ohio-business-sources.test.ts",
+          "tests/guided-interview/guided-ohio-business-independent.test.ts",
+          "tests/apps/web/ohio-business-details.test.tsx",
+          "tests/apps/web/ohio-residency-interactions.test.tsx",
+          "tests/apps/web/guided-ohio-source-confirmation.test.tsx",
+          "tests/apps/web/oh-reciprocal-native-independent.test.ts",
+          "tests/apps/web/oh-school-district-native-independent.test.tsx",
+          "--maxWorkers=1",
+          "--reporter=dot"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-resident-credit-native-main-green/non-pdf-adjacent.log",
+        "sha256": "8fa126a9293f228370ef73079bd24b3ed642d63aa3e4073aa66bed01554ca6bd"
+      },
+      {
+        "name": "spec",
+        "command": [
+          "pnpm",
+          "spec:validate"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-resident-credit-native-main-green/spec.log",
+        "sha256": "75c962ed238bfbbc84c50080a8497407bacd2b7acabc41a749648786005c2f1c"
+      },
+      {
+        "name": "ast",
+        "command": [
+          "node",
+          "scripts/run-tests.mjs",
+          "run",
+          "tests/spec/validate-testrefs.test.ts",
+          "--maxWorkers=1",
+          "--reporter=dot"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-resident-credit-native-main-green/ast.log",
+        "sha256": "d2b9a3d007ebbaeb2bab8098e3a2c8c6c43cbf5ad8d80bc3c8d3cb12e264e855"
+      },
+      {
+        "name": "new-and-peer-strict",
+        "command": [
+          "pnpm",
+          "exec",
+          "eslint",
+          "apps/web/src/lib/guided-ohio-resident-credit-sources.ts",
+          "apps/web/src/components/guided-interview/ohio-resident-credit-details.tsx",
+          "tests/fixtures/guided-oh-resident-credit-complete.ts",
+          "tests/guided-interview/guided-oh-resident-credit-sources.test.ts",
+          "tests/apps/web/oh-resident-credit-native.test.tsx",
+          "tests/guided-interview/guided-oh-rc-native-independent.test.ts",
+          "--max-warnings=0"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-resident-credit-native-main-green/new-and-peer-strict.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "existing-guide-lint",
+        "command": [
+          "pnpm",
+          "exec",
+          "eslint",
+          "apps/web/src/lib/guided-ohio-residency-facts.ts",
+          "apps/web/src/lib/guided-interview-flow.ts",
+          "apps/web/src/lib/guided-state-engine-inputs.ts",
+          "apps/web/src/components/guided-interview/section-state-return.tsx"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-resident-credit-native-main-green/existing-guide-lint.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "inventory-generate",
+        "command": [
+          "pnpm",
+          "spec:inventory"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-resident-credit-native-main-green/inventory-generate.log",
+        "sha256": "eaebbf086dd999fe69762a47641034e696d2da19ae50bad4fd35426e30c25db8"
+      },
+      {
+        "name": "inventory-check",
+        "command": [
+          "pnpm",
+          "spec:inventory:check"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-resident-credit-native-main-green/inventory-check.log",
+        "sha256": "846ee1105cfb137b691fc9b9faa383c54ef9f9e367b6b3416b2abe4ccb15cdef"
+      },
+      {
+        "name": "engine-build",
+        "command": [
+          "pnpm",
+          "build"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-resident-credit-native-main-green/engine-build.log",
+        "sha256": "d075c8ab15a7843462a88f3304147338e40a1fb638a358eeb51b2b7984d778ec"
+      },
+      {
+        "name": "web-build",
+        "command": [
+          "pnpm",
+          "build:web"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-resident-credit-native-main-green/web-build.log",
+        "sha256": "c423d2eb59e8f54dec1aa5b173fd2be9e1c999bf852051ab3537f34c26489442"
+      }
+    ],
+    "all13ChecksPass": true,
+    "specReferences": 7817,
+    "astPassed": 739,
+    "peerReceiptSHA256": "4335aaf61e78aab47004ba1dda1aceaa349a76cfd5bbfcb5e9b5aae765b16e0c",
+    "rootReview": "Full6products/shared4diffs and sourcefirst controls reviewed; actual sharedbeforehashes exactlycurrentmain; no composition loss. Derivedinventoryadds2unsupported auditentries only. Retained all RED/fixture setup/metadata/unuseddiagnostics and corrected narrow causes without oracle/gate changes.",
+    "remaining": [
+      "Actual native browser source lifecycle",
+      "Actual resident header/district source collection",
+      "Official resident-credit physical review forms",
+      "Currentglobal/distribution/staging/human/final2026 gates"
+    ],
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-oh-resident-credit-native-work.md"
   }
 }
