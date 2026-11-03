@@ -29,6 +29,11 @@ export function confirmGuidedPAResidencySources(input: TaxYearInput, draft: unkn
     ...data, sourceFactsConfirmed: true,
     owner: { accountHolder: data.owner.accountHolder,
       originalTaxpayer: { firstName: owner.firstName, lastName: owner.lastName, ssn: owner.ssn } },
+    ...(data.employeeSources === undefined ? {} : { employeeSources: {
+      ...data.employeeSources,
+      owner: { accountHolder: data.employeeSources.owner.accountHolder, ...(data.employeeSources.owner.accountHolder === data.owner.accountHolder ? { originalTaxpayer: { firstName: owner.firstName, lastName: owner.lastName, ssn: owner.ssn } } : {}) },
+      employers: data.employeeSources.employers.map(row => ({ ...row, originalW2: row.originalIndex === null ? undefined : structuredClone(input.w2s[row.originalIndex]) })),
+    } }),
     wages: data.wages.map(row => ({ ...row, original: row.originalIndex === null ? undefined : structuredClone(input.w2s[row.originalIndex]) })),
     interest: data.interest.map(row => ({ ...row, original: row.originalIndex === null ? undefined : structuredClone(input.form1099Int[row.originalIndex]) })),
     ...(data.dividends===undefined?{}:{dividends:data.dividends.map(row=>({...row,original:row.originalIndex===null?undefined:structuredClone(input.form1099Div[row.originalIndex])}))}),

@@ -2,6 +2,7 @@
 import { z } from "zod";
 import {PAOrdinaryBusinessSourceSchema} from "./pa-ordinary-business-sources.js";
 import {PAOrdinaryOIDSourcesSchema} from "./pa-ordinary-oid-sources.js";
+import { PAOrdinaryEmployeeSourcesSchema } from "./pa-ordinary-employee-sources.js";
 import {PAOrdinaryDividendSourceSchema} from "./pa-ordinary-investment-sources.js";
 
 const answer = z.boolean().nullable();
@@ -45,6 +46,7 @@ export const PAResidencySourcesSchema = z.object({
   // Absent only when no actual Schedule C/NEC original exists; replay enforces coverage.
   businesses: z.array(PAOrdinaryBusinessSourceSchema).optional(),
   oidAndMiscSources: PAOrdinaryOIDSourcesSchema.optional(),
+  employeeSources: PAOrdinaryEmployeeSourcesSchema.optional(),
   otherPAIncomeClassesConfirmedNone: answer, otherPAAdjustmentsConfirmedNone: answer,
 }).strict();
 

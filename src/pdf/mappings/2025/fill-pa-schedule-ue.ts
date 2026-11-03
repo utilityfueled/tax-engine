@@ -106,7 +106,7 @@ export function buildPAScheduleUEReferenceSummary(
     title: "Pennsylvania Schedule UE Employee Business Expense Reference Summary",
     warningLabel: "REFERENCE SUMMARY ONLY",
     introduction: "This page summarizes the supported Pennsylvania Schedule UE employee business expense computation. It is not an official PA Schedule UE filing copy.",
-    filingTrigger: "Attach when the Pennsylvania resident return reports supported PA Schedule UE expenses or employer reimbursements for one employer.",
+    filingTrigger: "Attach when the Pennsylvania return reports supported PA Schedule UE expenses or employer reimbursements for one employer.",
     totals: [
       { label: "Section II vehicle expenses", value: result.totalVehicleExpenses.toString() },
       { label: "Section III travel expenses", value: result.totalTravelExpenses.toString() },

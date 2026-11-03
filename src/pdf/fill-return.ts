@@ -1268,6 +1268,20 @@ export async function fillReturn(
     await savePacketPdf(docPA40, outputPathPA40);
     filledForms.push(outputPathPA40);
 
+    // Actual employee amounts come from the already asserted pre-redaction ordinary context.
+    // Each employer keeps its own UE/NRH reference; no scalar legacy packet is fabricated.
+    if (isPAOrdinaryReturnResult(result.stateReturns.pennsylvania) && result.stateReturns.pennsylvania.employeeSources) {
+      for (const [index, employee] of result.stateReturns.pennsylvania.employeeSources.perEmployer.entries()) {
+        const employerDir = index === 0 ? outputDir : join(outputDir, `pa-employee-${index + 1}`);
+        if (shouldIncludePAScheduleUEReferenceSummary(employee.scheduleUE)) {
+          filledForms.push(await fillPAScheduleUEReference(employee.scheduleUE, employerDir));
+        }
+        if (employee.residentPeriod === false && (employee.rawGrossCompensation.gt(0) || employee.scheduleUE.totalExpenses.gt(0))) {
+          filledForms.push(await fillPAScheduleNRHReference(input, employee.scheduleNRH, employerDir, employee));
+        }
+      }
+    }
+
     if(isPAOrdinaryReturnResult(result.stateReturns.pennsylvania)&&result.stateReturns.pennsylvania.pa40.residentCredit.gt(0)){
       const schedules=await fillPAOrdinaryScheduleGL(input,result,join(blankFormsDir,"pa-schedule-g-l.pdf"),options.paOrdinaryReview);
       for(const {state,doc}of schedules){if(flatten)await flattenForm(doc.getForm());const path=join(outputDir,"pa-schedule-g-l-"+state.toLowerCase()+"-filled.pdf");await savePacketPdf(doc,path);filledForms.push(path);}

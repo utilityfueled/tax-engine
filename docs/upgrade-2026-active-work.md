@@ -213,3 +213,18 @@ Parent real auth/billing regression:173/seven passes (`nov02-parent-hosted-previ
 - [ ] StandalonePDF distinct11 produced8pass/three real failures (legal indirect Widget/OBJR names; shared stream-dictionary reference). Findings `a25176c0`; narrow author correction queued, no main adoption.
 - [ ] Exactdcab remote refresh sees browser/container/coverage failures alongside passing lint/types/build/spec; failure diagnosis active. These are not current global passes.
 - [ ] SMTP password save remains unconfirmed. Automatic review rejected refresh because it could discard an unsaved entry; settings left untouched and save confirmation requested. No delivery evidence.
+
+
+## Latest integrated employee and independent PDF queue
+
+- [x] Pushed `cdd14e82`: OID original sources/consumer arithmetic,489/30/all scoped checks, three business regressionPDFs/54pages exact reviewed parity.
+- [x] Employee repaired20 independently approved77/seven +66savedpages (`8df301750f4141213275a858e6c889df822baf886f0b77d3a1b6990e4129fd87`). Main source-first4fail/4pass precedes eleven products, six manual overlaps preserving business/OID. Main556/35 and all11 checks pass; final mixed5/source seam review active. Evidence `nov02-parent-pa-employee-main*`.
+- [x] Corrected standalonePDF independently approved unchanged11 +22savedpages (`8871e57e103eaf3fbb529122f6fafe761d5d11bd9c284a95e48a636dc6710be9`). Exact authorfreeze `5d00db8f` retains original three failures,29/four/fullchecks and intentional preexisting invalidity. Main adoption remains separate after current employee package.
+- [ ] Current whole-workspace candidate rebased with actual main OID/employee paths; reviewed exporter still exactf8feef. Prepared61/six +15PDFs (existing11 operation retained, newemployee4marker not run yet). Fifteen-artifact strict/all-saved-object/text/pixel comparison script prepared; no result claimed before execution.
+- [ ] CI failure diagnosis corrected: no confirmed COD builder product defect. Test-only charity/COD source-year/pre-redaction context migration frozen `d65b56b8`,24unique/15+types3/spec; every original assertion preserved; independent review/mainadoption pending. Exact diagnosis V2 `c37e8df2` supersedes provisional builder attribution.
+- [ ] Seven CI spec metadata links/quoting are being repaired separately with validators/tests unchanged. Browser actual-year fixture migration separately assigned; PA richer-source method gaps remain genuine implementation work.
+
+
+- [x] Employee main final561/36/types3/spec6984/inventory generation+check/strict0/bothbuilds/diff, eleven source products; distinct integrated mixed5 approval `56355d14`. Existing wholeworkspace7 remains deferred with exactf8 exporter. Commit reference follows after push.
+- [x] Current privatewholeworkspace61/six and15 actualoutputs generated. Earlier baseline basicPDFs differ in stronger ScheduleA reference/disclosure; strict/text/pixel comparison correctly stopped instead of claiming fullparity. Independent updated-artifact review active.
+- [x] CI metadata candidate22files: existing608/608 and fullspec6944/6944 pass with same3PDF residency cases and all assertions/formulas/validators preserved. Mainadoption/review stillpending.

@@ -9,6 +9,7 @@ import {
   type PDFPage,
 } from "pdf-lib";
 import type { TaxYearInput } from "@/models/inputs.js";
+import type { PAActualEmployeeResult } from "@/engine/state/pa-ordinary-employee-sources.js";
 import type { PAScheduleNRHResult } from "@/engine/state/pa-schedule-nrh.js";
 
 const PAGE_WIDTH = 612;
@@ -115,21 +116,22 @@ export function shouldIncludePAScheduleNRHReferenceSummary(input: TaxYearInput) 
 export function buildPAScheduleNRHReferenceSummary(
   input: TaxYearInput,
   result: PAScheduleNRHResult,
+  actualEmployee?: PAActualEmployeeResult,
 ): PAScheduleNRHReferenceSummary {
-  if (!shouldIncludePAScheduleNRHReferenceSummary(input)) {
+  if (!actualEmployee && !shouldIncludePAScheduleNRHReferenceSummary(input)) {
     throw new Error("PA Schedule NRH reference summary requires supported Schedule NRH input");
   }
 
-  const scheduleNRH = getScheduleNRHInput(input)!;
+  const scheduleNRH = getScheduleNRHInput(input);
   const sections: PAScheduleNRHReferenceSummarySection[] = [];
 
-  if (scheduleNRH.compensation) {
+  if (actualEmployee || scheduleNRH?.compensation) {
     sections.push({
       heading: "Compensation apportionment",
       lines: [
         {
           label: "Selected method",
-          value: scheduleNRH.compensation.method === "business_volume"
+          value: !actualEmployee && scheduleNRH?.compensation?.method === "business_volume"
             ? "Business volume"
             : "Working days",
         },
@@ -169,7 +171,7 @@ export function buildPAScheduleNRHReferenceSummary(
     });
   }
 
-  if (scheduleNRH.businessApportionment) {
+  if (!actualEmployee && scheduleNRH?.businessApportionment) {
     sections.push({
       heading: "Business apportionment",
       lines: [
@@ -222,12 +224,13 @@ export async function fillPAScheduleNRHReference(
   input: TaxYearInput,
   result: PAScheduleNRHResult,
   outputDir: string,
+  actualEmployee?: PAActualEmployeeResult,
 ) {
   assertPdfExportAllowed(input.taxpayer.taxYear, input.taxpayer.taxYear);
   const doc = await PDFDocument.create();
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const regular = await doc.embedFont(StandardFonts.Helvetica);
-  const summary = buildPAScheduleNRHReferenceSummary(input, result);
+  const summary = buildPAScheduleNRHReferenceSummary(input, result, actualEmployee);
 
   let page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   let y = PAGE_HEIGHT - PAGE_MARGIN;

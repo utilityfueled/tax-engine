@@ -627,6 +627,30 @@ export function assessReturnReadiness(
   }
 
   const ordinaryPA=input.federalResult.stateReturns?.pennsylvania;
+  if (
+    normalizedStateCode === "PA"
+    && ordinaryPA
+    && "methodVersion" in ordinaryPA
+    && ordinaryPA.methodVersion === "pa-ordinary-return-v1"
+    && ordinaryPA.employeeSources
+  ) {
+    const employees = ordinaryPA.employeeSources.perEmployer;
+    const requiredUE = employees.filter(employee => shouldIncludePAScheduleUEReferenceSummary(employee.scheduleUE)).length;
+    const requiredNRH = employees.filter(employee => employee.residentPeriod === false && (employee.rawGrossCompensation.gt(0) || employee.scheduleUE.totalExpenses.gt(0))).length;
+    const countArtifacts = (filename: string) => input.includedForms.filter(form => form.replaceAll("\\", "/").split("/").at(-1)?.toLowerCase() === filename).length;
+    if (requiredUE > 0) {
+      packetCompleteness = "partial";
+      findings.push(countArtifacts("pa-schedule-ue-reference.pdf") >= requiredUE
+        ? "Pennsylvania Schedule UE is included as a reference summary, not an official PA Schedule UE filing copy."
+        : "Pennsylvania Schedule UE applies, but no complete set of employer Schedule UE packet artifacts was generated.");
+    }
+    if (requiredNRH > 0) {
+      packetCompleteness = "partial";
+      findings.push(countArtifacts("pa-schedule-nrh-reference.pdf") >= requiredNRH
+        ? "Pennsylvania Schedule NRH is included as a reference summary, not an official PA Schedule NRH filing copy."
+        : "Pennsylvania Schedule NRH applies, but no complete set of employer Schedule NRH packet artifacts was generated.");
+    }
+  }
   if(normalizedStateCode==="PA"&&ordinaryPA&&"methodVersion"in ordinaryPA&&ordinaryPA.methodVersion==="pa-ordinary-return-v1"&&ordinaryPA.pa40.residentCredit.gt(0)){
     packetCompleteness="partial";
     const states=ordinaryPA.residentCreditSources?.perState.filter(row=>row.credit.gt(0)).map(row=>row.state)??[];

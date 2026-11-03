@@ -13314,5 +13314,25 @@
     "fullTextPixelParity": true,
     "globalChecksNotCurrent": true,
     "releaseReady": false
+  },
+  "nov02MainEmployeeSourceIntegration": {
+    "baseCommit": "cdd14e82f9be3847e0e7113f4539269d1bbf8857",
+    "testsPassed": 561,
+    "testFiles": 36,
+    "specReferences": 6984,
+    "checks": "types3/spec/inventorygeneration+check/strictownedlint0/engine+webbuild/diff",
+    "evidence": "nov02-parent-pa-employee-main{,-red,-green,-final}",
+    "sourceFirst": {
+      "failed": 4,
+      "passed": 4,
+      "classification": "existing-entry admission/confirmation assertions, not arithmetic or missing modules"
+    },
+    "independentSourceSHA256": "8df301750f4141213275a858e6c889df822baf886f0b77d3a1b6990e4129fd87",
+    "independentMainSHA256": "56355d14dd398f9c39cbdb4502189cd2acba9269fa7a7a2b93be29e61d11e321",
+    "reviewedAuthorPDFPages": 66,
+    "workspaceMigrationDeferred": true,
+    "taxableReimbursementSuccessorPending": true,
+    "globalChecksNotCurrent": true,
+    "releaseReady": false
   }
 }

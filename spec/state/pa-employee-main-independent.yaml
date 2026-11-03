@@ -1,0 +1,32 @@
+form: PA Employee Main Merge Independent Review
+fullName: Actual employee, separate-books business and Treasury OID composition
+status: internal-independent-agent-controls-no-filing-promotion
+taxYear: 2025
+reference: https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf
+sourceDependencies:
+  - state/pa-ordinary-employee-sources.yaml
+  - state/pa-ordinary-business-sources.yaml
+  - state/pa-ordinary-oid-sources.yaml
+  - state/pa-ordinary-return.yaml
+notes: |
+  Freeze these literal controls before runtime against the captured main merge.
+  This is a fictional composite of already documented actual original fixtures,
+  not new real-user facts or a new unsupported tax method. Both locations keep
+  independent business books. Employee employment remains entirely in NY domicile
+  for PY; PA residence starts October1. Treasury ownership/accruals and all
+  remittance confirmations remain explicit original records. Original NEC PA
+  withholding is explicitly25c in this composite, OID10c and MISC20c; total55c
+  must round once to printed1, never disappear or count twice.
+lines:
+  - line: all3
+    description: Preserve three independently qualified source methods together
+    formula: Resident wage75000-UE1000=74000, plus business18000-2800=15200 gives taxable89200 and tax2738. PY/NR wage27000-UE360=26640 plus PA business9000-2800=6200 gives taxable32840 and tax1008. Treasury1000 is exempt PA interest, ScheduleA federal1000 reduction1000 line16zero. WH.10+.20+.25=.55 rounds1; principal2737 or1007. No estimates or taxforgiveness.
+    testRef: tests/engine/state/pa-employee-main-independent.test.ts::merged actual employee business and OID sources preserve all3 literal return boundaries
+  - line: SP
+    description: Worldwide SP income remains identical after allocation
+    formula: Resident outside0 plus exemptTreasury1000 gives nontaxable1000 and eligibility90200. PY/NR outside employee48000-640UE plus business9000=56360; exemptTreasury1000 gives nontaxable57360; taxable32840+nontaxable57360=90200.
+    testRef: tests/engine/state/pa-employee-main-independent.test.ts::merged actual employee business and OID sources preserve all3 literal return boundaries
+  - line: current-originals
+    description: Every child packet retains its actual original snapshot
+    formula: Equalmoney employee employer edit, Treasury original change, missing other-original remittance confirmation and mismatching business original each reject. Guide reads retain all actual nested packets without refreshing. Source inputs remain immutable; public source outputs do not expose private taxpayerSSN.
+    testRef: tests/engine/state/pa-employee-main-independent.test.ts::merged source original guards do not disappear at any of the three methods

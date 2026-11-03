@@ -12393,6 +12393,26 @@
       ]
     },
     {
+      "key": "state/pa-employee-main-independent",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf",
+      "specPath": "spec/state/pa-employee-main-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-local-eit",
       "jurisdiction": "state",
       "taxYear": 2025,
@@ -12566,6 +12586,45 @@
       "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40c.pdf",
       "specPath": "spec/state/pa-ordinary-business-sources.yaml",
       "enginePath": "src/engine/state/pa-ordinary-business-sources.ts",
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": true,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "partial",
+      "knownGaps": [
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-ordinary-employee-independent",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40ue.pdf",
+      "specPath": "spec/state/pa-ordinary-employee-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-ordinary-employee-sources",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/pa-40nrh.pdf",
+      "specPath": "spec/state/pa-ordinary-employee-sources.yaml",
+      "enginePath": "src/engine/state/pa-ordinary-employee-sources.ts",
       "packetPath": null,
       "specExists": true,
       "engineExists": true,

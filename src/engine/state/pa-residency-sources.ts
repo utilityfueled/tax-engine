@@ -4,6 +4,7 @@ import {calculatePAOrdinaryBusinessSources} from "./pa-ordinary-business-sources
 import type {PAScheduleCResult} from "./pa-schedule-c.js";
 import {ordinarySourcePrecision,publicOrdinaryMoney,publicOrdinaryLines} from "./pa-ordinary-source-precision.js";
 import {calculatePAOrdinaryOIDSources,type PAOrdinaryOIDSourcesResult} from "./pa-ordinary-oid-sources.js";
+import { calculatePAOrdinaryEmployeeSources, type PAOrdinaryEmployeeSourcesResult } from "./pa-ordinary-employee-sources.js";
 import { calculateW2StateLocalSources } from "../forms/w2-state-local.js";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
@@ -107,6 +108,7 @@ export interface PAResidencySourcesResult {
   netBusinessIncome:Decimal;reportedBusinessIncome:Decimal;excludedNonPABusinessIncome:Decimal;actualPABusinessEarnedIncome:Decimal;businessPAWithholding:Decimal;
   scheduleC?:PAScheduleCResult;worldwideScheduleC?:PAScheduleCResult;
   oidSources?:PAOrdinaryOIDSourcesResult;
+  employeeSources?: PAOrdinaryEmployeeSourcesResult; unreimbursedEmployeeExpenses: Decimal; excludedNonPAEmployeeExpenses: Decimal; actualPAServiceCompensation?: Decimal;
   sourceCommitment: string; lines: CalculatedLine[];
 }
 
@@ -137,6 +139,9 @@ function amount(value: unknown): Decimal {
   const residentAt = (date: number) => residency.residentPeriods.some(p => p.from <= date && date <= p.through);
   const domicilePeriodAt = (date: number) => residency.periods.findIndex(p => p.from <= date && date <= p.through);
   let compensation = new Money(0), excludedCompensation = new Money(0), interest = new Money(0), excludedInterest = new Money(0);
+  const employeeSources = source.employeeSources === undefined ? undefined : calculatePAOrdinaryEmployeeSources(input, source.employeeSources);
+  const actualEmployees = new Map(employeeSources?.perEmployer.map(row => [row.originalIndex, row]));
+  let unreimbursedEmployeeExpenses = new Money(0), excludedNonPAEmployeeExpenses = new Money(0), actualPAServiceCompensation = new Money(0), employeeNetTotal = new Money(0);
   const actualW2Rows = new Map<number, ReturnType<typeof calculateW2StateLocalSources>>();
   const verifyRows = (rows: PAResidencySources["wages"] | PAResidencySources["interest"], originals: unknown[], kind: "wage" | "interest") => {
     if (rows.length !== originals.length) return error("every current original must have exactly one source row, including known zero originals");
@@ -168,6 +173,14 @@ function amount(value: unknown): Decimal {
     const w2 = input.w2s[row.originalIndex as number];
     for (const key of ["box12CodeD", "box12CodeE", "box12CodeF", "box12CodeG", "box12CodeH", "box12CodeS", "box12CodeW", "box12CodeT", "box10DependentCareBenefits", "allocatedTips"] as const) if (w2[key] !== undefined && !amount(w2[key]).isZero()) return error("retained nonordinary PA/federal wage adjustment requires its actual source method");
     if (w2.militaryService?.activeDuty === true) return error("military compensation requires its actual PA source method");
+    const employee = actualEmployees.get(row.originalIndex as number);
+    if (employee) {
+      if (employee.payroll.length !== row.payroll.length || employee.employmentPeriods.some(period => domicilePeriodAt(day(period.from, year)) !== domicilePeriodAt(day(period.through, year))) || (residency.status === "part_year" && new Set(employee.employmentPeriods.map(period => domicilePeriodAt(day(period.from, year)))).size !== 1)) return error("actual employee employment crossing domicile periods requires its separate method");
+      for (const [index, payroll] of row.payroll.entries()) {
+        const derived = employee.payroll[index];
+        if (!derived || payroll.paidOn !== derived.paidOn || payroll.serviceFrom !== derived.serviceFrom || payroll.serviceThrough !== derived.serviceThrough || !amount(payroll.grossCompensation).eq(derived.grossCompensation) || !amount(payroll.paServicesCompensation).eq(derived.paServicesCompensation) || !amount(payroll.outsidePAServicesCompensation).eq(derived.outsidePAServicesCompensation)) return error("actual calendar-derived payroll amounts/dates do not reconcile retained PA payroll; no free source override");
+      }
+    }
     let gross = new Money(0), included = new Money(0), excluded = new Money(0), reciprocalExcluded = new Money(0);
     const references = new Set<string>();
     for (const [payrollIndex, payroll] of row.payroll.entries()) {
@@ -186,7 +199,25 @@ function amount(value: unknown): Decimal {
     if (!gross.eq(amount(w2.wages))) return error("actual payroll ledger does not reconcile current original W2 compensation");
     const actualRows = actualW2Rows.get(row.originalIndex as number);
     const reportedPAWages = actualRows === undefined ? (w2.state === "PA" ? amount(w2.stateWages) : undefined) : actualRows.stateRows.find(state => state.state === "PA")?.wages;
-    if (reportedPAWages !== undefined && !reportedPAWages.eq(included)) return error("PA payroll and original reported compensation differ; actual NRH/source correction required");
+    if (reportedPAWages !== undefined && !reportedPAWages.eq(included)) {
+      if (!employee) return error("PA payroll and original reported compensation differ; actual NRH/source correction required");
+      const employeeOriginal = source.employeeSources?.employers.find(actual => actual.originalIndex === row.originalIndex);
+      if (!employeeOriginal) return error("actual original employer correction proof is missing");
+      reference(employeeOriginal.statement.w2CorrectionExplanation);
+    }
+    if (employee) {
+      const firstPay = row.payroll[0]; if (!firstPay) return error("actual employee payroll is missing");
+      const residentJob = residentAt(day(firstPay.paidOn, year));
+      employee.residentPeriod = residentJob;
+      const eligible = residentJob ? employee.scheduleUE.lineJ : employee.scheduleNRH.line16;
+      const reportedJobGross = roundDollar(included.minus(reciprocalExcluded));
+      const deduction = Money.min(reportedJobGross, eligible);
+      unreimbursedEmployeeExpenses = unreimbursedEmployeeExpenses.plus(deduction);
+      employeeNetTotal = employeeNetTotal.plus(Money.max(0, reportedJobGross.minus(deduction)));
+      const worldwideDeduction = Money.min(roundDollar(gross), employee.scheduleUE.lineJ);
+      excludedNonPAEmployeeExpenses = excludedNonPAEmployeeExpenses.plus(Money.min(roundDollar(excluded.plus(reciprocalExcluded)), Money.max(0, worldwideDeduction.minus(deduction))));
+      actualPAServiceCompensation = actualPAServiceCompensation.plus(Money.max(0, new Money(employee.rawPAServiceCompensation).minus(employee.rawPAAllowableExpenses).minus(reciprocalExcluded)));
+    }
     compensation = compensation.plus(included.minus(reciprocalExcluded)); excludedCompensation = excludedCompensation.plus(excluded); excludedReciprocalCompensation = excludedReciprocalCompensation.plus(reciprocalExcluded);
   }
   for (const row of source.interest) {
@@ -252,7 +283,8 @@ function amount(value: unknown): Decimal {
     line12:publicOrdinaryMoney(scheduleB.line12),
     additionAdjustments:scheduleB.additionAdjustments.map(entry=>({...entry,amount:publicOrdinaryMoney(entry.amount)})),reductionAdjustments:scheduleB.reductionAdjustments.map(entry=>({...entry,amount:publicOrdinaryMoney(entry.amount)})),lines:publicOrdinaryLines(scheduleB.lines)};
   const reportedCompensation = roundDollar(compensation), reportedInterest = scheduleA.line16,reportedDividends=scheduleB.line12;
-  const taxable = new Money(reportedCompensation).plus(reportedInterest).plus(reportedDividends).plus(Money.max(business.reportedBusinessIncome,0)), tax = roundDollar(taxable.times("0.0307"));
+  if (employeeSources && !reportedCompensation.minus(unreimbursedEmployeeExpenses).eq(employeeNetTotal)) return error("actual per-employer versus aggregate printed compensation precision requires its separate method");
+  const taxable = Money.max(0,new Money(reportedCompensation).minus(unreimbursedEmployeeExpenses)).plus(reportedInterest).plus(reportedDividends).plus(Money.max(business.reportedBusinessIncome,0)), tax = roundDollar(taxable.times("0.0307"));
   // The collector packet is the sole excluded key; all actual canonical facts remain privately bound.
   const originalInput = Object.fromEntries(Object.entries(input).filter(([key]) => key !== "paResidencySources"));
   const commitment = bytesToHex(sha256(new TextEncoder().encode(stable({ version: "pa-ordinary-residency-v1", year, input: originalInput, rawSources }))));
@@ -262,10 +294,12 @@ function amount(value: unknown): Decimal {
   audit.record("PA-Residency-Sources", "reported-compensation", "Reported ordinary PA compensation", reportedCompensation, "Aggregate exact actual compensation class, then round once to whole dollars");
   audit.record("PA-Residency-Sources", "reported-interest", "Reported ordinary PA interest", reportedInterest, "Replay official Schedule A line totals, preserving included/excluded source cents separately");
   audit.merge(scheduleA.lines);audit.merge(scheduleB.lines);audit.merge(business.lines);
+  if (employeeSources) audit.merge(employeeSources.lines);
   audit.record("PA-Residency-Sources","dividends","Actual ordinary PA personal dividend distributions",dividends,"Actual received/credited distributions during confirmed resident periods; exact outside-period distributions excluded");
   audit.record("PA-Residency-Sources", "ordinary-tax", "Ordinary PA tax before credits and payments", tax, "Sum reported whole-dollar classes, multiply by3.07%, then whole-dollar tax rounding; no credit/payment/penalty qualification");
   return { residencyStatus:residency.status,schoolDistrictCode:source.residency.schoolDistrictCode,
     compensation:publicOrdinaryMoney(compensation),interest:publicOrdinaryMoney(interest),reportedCompensation:publicOrdinaryMoney(reportedCompensation),reportedInterest:publicOrdinaryMoney(reportedInterest),dividends:publicOrdinaryMoney(dividends),reportedDividends:publicOrdinaryMoney(reportedDividends),excludedNonPADividends:publicOrdinaryMoney(excludedNonPADividends),scheduleA,scheduleB:publicScheduleB,
+    ...(employeeSources?{employeeSources,actualPAServiceCompensation:publicOrdinaryMoney(actualPAServiceCompensation)}:{}),unreimbursedEmployeeExpenses:publicOrdinaryMoney(unreimbursedEmployeeExpenses),excludedNonPAEmployeeExpenses:publicOrdinaryMoney(excludedNonPAEmployeeExpenses),
     netBusinessIncome:business.netBusinessIncome,reportedBusinessIncome:business.reportedBusinessIncome,excludedNonPABusinessIncome:business.excludedNonPABusinessIncome,actualPABusinessEarnedIncome:business.actualPABusinessEarnedIncome,businessPAWithholding:business.paWithholding,...(business.scheduleC?{scheduleC:business.scheduleC,worldwideScheduleC:business.worldwideScheduleC}:{}),
     excludedNonPACompensation:publicOrdinaryMoney(excludedCompensation),excludedReciprocalCompensation:publicOrdinaryMoney(excludedReciprocalCompensation),excludedNonPAInterest:publicOrdinaryMoney(excludedInterest),totalOrdinaryPATaxableIncome:publicOrdinaryMoney(taxable),taxBeforeCredits:publicOrdinaryMoney(tax),oidSources,sourceCommitment:commitment,lines:publicOrdinaryLines([...audit.getLines(),...(oidSources?.lines??[])]) };
 }

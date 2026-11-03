@@ -1,0 +1,27 @@
+form: "PA actual employee independent review"
+fullName: "Independent literal employee source and finite-method controls"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40ue.pdf"
+notes: |
+  Distinct independent agent review of exact frozen author19 a1851764.
+  Literal source arithmetic controls preserve actual facts, originals and gates.
+  Fixed/per-diem expense gaps are not deductible. Actual reimbursement excess
+  must enter compensation or be rejected by this finite non-excess method.
+  Multiple original reimbursement records must reconcile aggregate actual cost.
+  Employer confirmations cannot supply missing actual W2 Box8 amounts.
+  Exact raw receipt arithmetic must preserve admitted mixed integer/scale span.
+  Unknown or stale owner, employer, payroll, calendar, expense and signatures fail.
+  Separate employers cannot offset wages; source-bound all3 remain review-only.
+lines:
+  - line: "independent-employee-source-contract"
+    description: "Literal all3/day/UE/source/precision and fail-closed boundaries"
+    formula: "Original75000; 90/250=.36; gross27000; UE1000*.36=360; net26640; tax818; resident74000 tax2272"
+    testRef: "tests/engine/state/pa-ordinary-employee-independent.test.ts::independent actual employee all3 literals preserve originals and readiness"
+  - line: "independent-reimbursement-excess"
+    description: "No missing taxable excess through fixed or duplicate exact records"
+    formula: "Paired1000 expenses and1500 fixed or2000 exact reimbursement cannot silently omit500/1000 taxable compensation"
+    testRef: "tests/engine/state/pa-ordinary-employee-independent.test.ts::independent actual employee fixed allowance excess requires its unsupported taxable-excess method"
+  - line: "independent-source-span"
+    description: "Exact admitted raw receipt digit span"
+    formula: "10^140 plus10^-141 retains both actual original digits before printing"
+    testRef: "tests/engine/state/pa-ordinary-employee-independent.test.ts::independent actual employee raw receipts preserve mixed integer and fractional span"

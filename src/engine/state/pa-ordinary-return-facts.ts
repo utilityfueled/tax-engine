@@ -47,6 +47,7 @@ export function calculatePAOrdinaryReturnFacts(input:TaxYearInput,raw:unknown):P
  }
  const sourcePacket=(input as TaxYearInput&{paResidencySources?:unknown}).paResidencySources;const income=calculatePAResidencySources(input,sourcePacket);const residency=PAResidencySourcesSchema.parse(sourcePacket);
  const asOf=day(facts.timing.asOfDate),filingDate=day(facts.timing.date),timing=facts.timing;
+ if(residency.employeeSources && day(residency.employeeSources.asOfDate)>asOf)return fail("actual employer/expense proof is later than confirmed filing source as-of");
  if(timing.kind===''||(timing.kind==='filed'?filingDate>asOf:filingDate<asOf))return fail('actual filed versus expected filing date contradicts as-of sources');
  if(timing.returnKind!=='original'||timing.filingExtension!=='none'||timing.paymentExtension!=='none')return fail('amended/extension timing requires its actual dated successor method');
  if(filingDate<`${y}-01-01`)return fail('filing date predates its source tax year');
@@ -81,7 +82,7 @@ export function calculatePAOrdinaryReturnFacts(input:TaxYearInput,raw:unknown):P
  }for(const b of input.form1099Int){const n=localMoney(b.stateWithheld);if(b.state==='PA')withholding=withholding.plus(n);}for(const d of input.form1099Div){const n=localMoney(d.stateWithheld);if(d.state==='PA')withholding=withholding.plus(n);}
  withholding=withholding.plus(income.businessPAWithholding);
  if(income.oidSources)withholding=withholding.plus(income.oidSources.paWithholding);
- const outside=roundDollar(new Money(income.excludedNonPACompensation).plus(income.excludedReciprocalCompensation).plus(income.excludedNonPAInterest).plus(income.excludedNonPADividends).plus(income.excludedNonPABusinessIncome));let nontax=outside;const other:Record<string,Decimal>={};const spEntries=new Set<string>();
+ const outside=roundDollar(new Money(income.excludedNonPACompensation).plus(income.excludedReciprocalCompensation).minus(income.excludedNonPAEmployeeExpenses).plus(income.excludedNonPAInterest).plus(income.excludedNonPADividends).plus(income.excludedNonPABusinessIncome));let nontax=outside;const other:Record<string,Decimal>={};const spEntries=new Set<string>();
  if(facts.sp.allWorldwideSourcesCompleteConfirmed!==true)return fail('actual worldwide SP income sources are incomplete');
  for(const line of PA_SP_OTHER_LINES){const category=facts.sp.categories[line];ref(category.sourceReference);let exact=new Money(line==='2'?(income.oidSources?.worldwideExemptInterest??'0'):'0');
   if(category.status==='known_none'){if(category.entries.length)return fail('known-none SP category contradicts retained original entries');}
@@ -113,7 +114,7 @@ export function calculatePAOrdinaryReturnFacts(input:TaxYearInput,raw:unknown):P
  const disposition=facts.disposition;ref(disposition.sourceReference);const refund=localWhole(disposition.refundRequested),next=localWhole(disposition.nextYearCreditRequested);const codes=new Set<string>();
  const donations=disposition.donations.map(d=>{if(d.code==='H')return fail('donation H requires its actual Schedule P successor');if(!['A','B','C','D','E','F','G','I','J'].includes(d.code)||codes.has(d.code))return fail('actual donation code is unsupported or duplicate');codes.add(d.code);const amount=localWhole(d.amount);if(!amount.gt(0))return fail('actual donation must be positive');return {code:d.code,amount};});
  if(donations.length>5||disposition.kind===''||(disposition.kind==='no_overpayment'&&(!refund.eq(0)||!next.eq(0)||donations.length)))return fail('actual overpayment allocation is unknown or contradictory');
- const service=residency.wages.reduce((total,row)=>row.payroll.reduce((sum,p)=>sum.plus(localMoney(p.paServicesCompensation)),total),new Money(0));
+ const service=income.actualPAServiceCompensation??residency.wages.reduce((total,row)=>row.payroll.reduce((sum,p)=>sum.plus(localMoney(p.paServicesCompensation)),total),new Money(0));
  const commitment=bytesToHex(sha256(new TextEncoder().encode(stable({version:'pa-ordinary-return-facts-v1',input:snapshotPAOrdinaryReturnOriginals(input),paResidencySources:sourcePacket,paReciprocitySources:(input as TaxYearInput&{paReciprocitySources?:unknown}).paReciprocitySources,facts}))));const audit=new AuditTrail();
  audit.record('PA-Ordinary-Return-Sources','source','Original source commitment',new Money(0),'SHA256 binds current private originals, replayed PA income packets and complete source facts',{sourceCommitment:commitment});
  for(const [line,value] of Object.entries({...other,'6':outside}))audit.record('PA-Ordinary-Return-Sources','SP-'+line,'Reported source eligibility income',value,'Aggregate actual source category once, then report whole dollars');
