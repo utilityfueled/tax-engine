@@ -1,0 +1,87 @@
+form: "Ohio actual resident-credit official-source review companions"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itrc-fi.pdf"
+notes: |
+  Source-first finite2025 original-bound static review only. NEW5 ownership; root
+  separately owns actualasset/sharedrouting/pre-firstIO/gates/headercomposition.
+  ExactIT1040bundle4e6432e2 andITRCebd9960d; booklet931b21e7 printed15/17/18/
+  33/40/47/48/50 plusORC5747.05 govern existingreviewed formulas. FreshITRCweb
+  InternalError retained; rawNov2HTTP200source independentlyread, nofreshfetchclaim.
+  Require canonical current residentCreditSources and its full existing validation,
+  freshfederal/canonicalOhio result, opaqueoriginalcontext and actualheader2503/
+  Franklin originals. Header-only/legacyRCscalar/noRC do not establish this method.
+  Two independentlyauthored fictionalbank+agency receipts250 or250.25, WH1200,
+  receivedVArefund700=>netpaid1000/1000.50, reportedRC1000/1001. OhioAGI100000,
+  exemption1900/taxable98100/tax2323, .6000limit1394, Ohiotax1323/1322 and actual
+  OHWH2000=>requestedOhioRefund677/678. Requested is not receivedOhio cash.
+  Actualresidence825andmail412 are separate originalfacts. District2503/countyFRAN
+  derive only from actual validated header originals, never mailing/ZIP or9999.
+  NEWfixture actualOHemployerbusinessaccount07100412 or071004129 is explicit, not
+  inferred from EIN/address. Actual8digits printunchanged; actual9digits printfirst8
+  perofficialScheduleWithholdingpage1. Missing/malformed source deniescompletepaper. Business
+  EIN907100412/account07100412 may print; personalSSN/TIN andprivate refs may not.
+  Sevenselectedsourcepages356widgets minus20namedauthoringcontrols=336datawidgets
+  percohort. Independentall672expectedfilled/blank/Off/sourcebounds frozen before
+  output. IT RCRATIOactualMaxLen6 admits0.6000 withoutchangingtemplate. Original
+  amended18/refund-skipped20/21/22 blank; actualpublicreferencefallback preserved.
+  Every page reviewnotice; no tax/core/model/formactivation/2026/filing/humanclaim.
+  Complete offline source audit of all1233expectations identifies original Schedule
+  Credits1 zero as an initial oracle erratum: printed1 transfers IT1040 8c, hence2323
+  in originalcohorts and660 in NEWrawcohorts. Preserve original672/initial561 artifacts
+  and every failed run; no other matrix values change under this correction.
+  NEW raw40k source has only VAincome40000, so ITRCtotalSUM_A=40000; do not inherit
+  original60k cohort total. Original672 were unchanged by that SUM_A fix; the separate
+  ScheduleCredits1 erratum below is the explicit current exception. Retain initial561.
+  Original button Off appearances may paint white backgrounds/gray borders. Saved
+  button selection is determined by exact original widget Off/on appearance operator
+  signatures at unchanged source bounds, not by the mere presence of a paint operator.
+  Five exact unselected spouse widgets lack source Off streams; only their source-
+  dimension perimeter-only unchecked appearance from pinned pdf-lib1.17.1 is accepted
+  as Off, with original AS/MK/no-border defaults verified. Interior/extra paint denies.
+  Intentional blank projected text uses the pdf-lib empty-value representation: no /V
+  and getText undefined are equivalent to the commanded empty string only; every
+  nonempty projected string must still be retained exactly, with saved blank cells
+  independently checked by the unchanged physical controls.
+lines:
+  - line: "canonical-baseline"
+    formula: "Current existing canonicalRC/header validation and federal/Ohio computation reproduce literal1000/1323/677 or1001/1322/678 with complete originals unchanged."
+    testRef: "tests/pdf/oh-resident-credit-official-review.test.ts::Ohio resident credit physical existing source baseline %s"
+  - line: "existing-api-packet"
+    formula: "Existing publicfillOhioReferenceForms actualpreparedredacted original emits fourofficialsourcecompanions: IT1040two, ITRCone, Creditstwo, Withholdingtwo pages; noNRC. Nofuturehelperimport inRED."
+    testRef: "tests/pdf/oh-resident-credit-official-review.test.ts::Ohio resident credit physical existing API emits complete original-bound official companions %s"
+  - line: "all-physical-cells"
+    formula: "For each of336databearingoriginalwidgets, actualsavedpaint at originalsourcebounds equals independentfilledtext/blank/Off or exactselectedstatus; no textleak into originallyblank cells. SourceRATIO0.6000 and VArow/sums match actualwhole-dollar method."
+    testRef: "tests/pdf/oh-resident-credit-official-review.test.ts::Ohio resident credit physical existing API emits complete original-bound official companions %s"
+  - line: "printed-conditionals"
+    formula: "Originalreturn leaves18blank; actualnetpayments2000 exceedsliability so20/21/22blank;23/26refund677or678. Actualresident/Single marksmustpaintwithin normalizedoriginalsourcebounds. CountyFRAN/SD2503 and mailing412 remain distinct from actualresidence825."
+    testRef: "tests/pdf/oh-resident-credit-official-review.test.ts::Ohio resident credit physical existing API emits complete original-bound official companions %s"
+  - line: "privacy-static"
+    formula: "Afteractualsave/reopen strict=True: everyxrefincludingorphans/compressedobjects resolvesnonNone; zero fields/widgets/annotations/actions; alltext/bytes/streams/metadata personal/sourceprivate sentinels absent; rawbyte strings and decodedstreams each scanned inLatin1/UTF8/UTF16/UTF16BE/UTF16LE; eachpage reviewnotice. BusinessEIN/account retained fromactualoriginal only."
+    testRef: "tests/pdf/oh-resident-credit-official-review.test.ts::Ohio resident credit physical existing API emits complete original-bound official companions %s"
+  - line: "source-preflight"
+    formula: "CurrentRC/header/payment/federal/context mutations deny before new output path exists; no caller override or staleequalmoney original. Rootpublicrouting mustpreflight beforefirstIO, notmerely appendhelper afterreferences."
+    testRef: "tests/pdf/oh-resident-credit-official-review.test.ts::Ohio resident credit physical rejects conflicting actual original before output %s"
+  - line: "actual-business-account"
+    formula: "Missing/malformed actualOHemployeraccount cannot become blank substitute or EIN-derived digits; independentlycurrent coherent originals require actual8or9numeric sourcecharacters; source9printsfirst8 under officialScheduleWithholdingpage1, keepingactualfulloriginal privatelybound."
+    testRef: "tests/pdf/oh-resident-credit-official-review.test.ts::Ohio resident credit physical rejects incomplete actual employer account before output %s"
+  - line: "cash-boundary"
+    formula: "Actualknownzero unrepresentedcash remainszero; calleruseTax/refundable/donation/carry scalar cannot change finiteexistingcash method."
+    testRef: "tests/pdf/oh-resident-credit-official-review.test.ts::Ohio resident credit physical rejects caller cash before output %s"
+  - line: "legacy-reference"
+    formula: "Absent actualheader cannot invent2503/FRAN or completeofficialcompanions; retainexistingRC financialreference and unchangedmoney."
+    testRef: "tests/pdf/oh-resident-credit-official-review.test.ts::Ohio resident credit physical preserves reference-only output without actual header"
+  - line: "raw-ohio-withholding-baseline"
+    formula: "NEW complete40k original knownOHBox17=0.00 or0.49: MAGI40000 exemption2400, taxable37600, rawOhio659.625 rounds660; actualVA40000/paid1000 ratio1.0000 credit660, netOhio0, reportedWH0, penalty0/refund0. No oldcohort change."
+    testRef: "tests/pdf/oh-resident-credit-official-review.test.ts::Ohio resident credit raw withholding new source baseline %s"
+  - line: "raw-ohio-withholding-physical"
+    formula: "Only actualrawpositiveOhioWH includes officialScheduleW; knownraw0 omitsit. Raw0.49 retainsW even though reportedtotal/Box17round0. Independently561additionalfilled/blank/status/sourceboundsexpectations preserve672originals."
+    testRef: "tests/pdf/oh-resident-credit-official-review.test.ts::Ohio resident credit raw withholding physical scope %s"
+  - line: "opaque-token-identity"
+    formula: "After a genuine current token prerequisite, forged empty/spread/prototype tokens reject beforetemplate/outputI/O; only exact privateWeakMapkey can materialize its immutablevalidatedprojection. No directtoken revocation semantics added."
+    testRef: "tests/pdf/oh-resident-credit-official-review.test.ts::Ohio resident credit physical rejects forged helper tokens before output"
+  - line: "source-caller-overlay"
+    formula: "PresentRCcurrentcanonical/header preflight rejects everycaller overlaykey including actualzero useTax0 and positive10; no user-provided moneyprojection."
+    testRef: "tests/pdf/oh-resident-credit-official-review.test.ts::Ohio resident credit physical prepare rejects caller overlay %s"
+  - line: "nonrc-header-reference"
+    formula: "NEW coherentactual100k/OHWH3000/VAWH1200/noRCcompleteoriginal yields tax2323/refund677 and validatesfactual2503/FRANheader; prepareundefined/no token retainsgenericempty-overlayreferences, no newRCofficialpacket or arbitrarycash qualification."
+    testRef: "tests/pdf/oh-resident-credit-official-review.test.ts::Ohio resident credit physical preserves valid nonRC header reference semantics"

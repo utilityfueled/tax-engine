@@ -17688,5 +17688,121 @@
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-staging-tenant-workspace-work.md",
     "supersedesPendingPreviewStateOnlyForExact377fe": true
+  },
+  "ohResidentCreditOfficialPhysical20261103": {
+    "status": "bounded-main-source-routing-and-fresh-saved-artifact-review-pass",
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-oh-resident-credit-official-review-work.md",
+    "historicalPrivate": {
+      "base": "48ad9f694cb1bd99f152a3cdd3c780cd0e511523",
+      "separatelyRecordedParentHeaderOverlay": true,
+      "focusedPassed": 41,
+      "independentSavedReview": {
+        "receipt": ".local/upgrade-evidence/nov03-oh-rc-official-independent/independent-review-result.json",
+        "sha256": "68ecb5135f4c289c12b862264dec2cc9b81af63ab3faffce3d6c387ee78a3ee1",
+        "pdfs": 15,
+        "pages": 26,
+        "sourceCellExpectations": 1233,
+        "notFreshMainArtifacts": true
+      }
+    },
+    "mainComposition": {
+      "baseCommit": "771d6cf2d16b06d5624a8bd83a099e584de39599",
+      "dirtySourceHashesBeforePublication": {
+        "src/pdf/mappings/2025/fill-oh-resident-credit-official-review.ts": "a1ad5bbde7194cff51f77b60fafd5364fbcf0011e99af6aa59a19b202ec77d11",
+        "src/pdf/mappings/2025/fill-oh-reference-forms.ts": "2aa3c47863fbe8835fa386d92a31d83c660a076659bb8632b95e20307d28ef22",
+        "forms/blank/2025/oh-it-rc.pdf": "ebd9960d6a8004d6803f0f22238f989043db794e9ebc9aa9fcb3d5588112cb48",
+        "spec/state/oh-resident-credit-official-review.yaml": "52374297c7a6d0ee10cc3f100b93b23097281e9740050c91d4be8ffce25f9ed8",
+        "tests/fixtures/oh-resident-credit-official-review.ts": "694ff154f88b6cd766fd59e3bce3426f45f47caa47948860ff76fedf5ba10656",
+        "tests/pdf/oh-resident-credit-official-review.test.ts": "5e2e05fa93eadd7c55a928e8ac370a290791009d5b913bb4f9725c082465e375",
+        "spec/state/oh-resident-credit-template-root.yaml": "e674671f69570014dc97ee295884dd92202a7353c0852b0342e7c3b2ab7ca5ca",
+        "tests/apps/web/oh-resident-credit-template-root.test.ts": "3ff318dbb36f9cb863a68a00fde412d690ca77b013230ca69297e4e763554a92"
+      },
+      "newFiveAndOriginalAssetExactAdoptionReceiptSha256": "8242e2ae4a637af4685076a1c454b151585e319ae7ff87bd12a1e77dad518e77",
+      "publicUnwiredRed": {
+        "failed": 2,
+        "filtered": 39,
+        "logSha256": "dc0b37a9049f0b6dcf2ea3fe77fe43f9dabd7569fea3d37ad1fa522a922890a0"
+      },
+      "afterDispatcherWiringPassed": 41,
+      "newRootRed": {
+        "failed": 10,
+        "passed": 7,
+        "logSha256": "257f5f4b474f8c139c94da92274435e8125d57a91653166a88b558cba5491973"
+      },
+      "combinedGreen": {
+        "passed": 58,
+        "files": 2,
+        "logSha256": "c71e0e2df4eb7d326148cca8431037aebbb4206a4bbeff79566d0b330125450a"
+      },
+      "rootOnlyRepairReceiptSha256": "df5d0ae0334db5859e14158e400ab29b1963f96473010cc06f48852e328b4885",
+      "rootOnlyPatchSha256": "97f95cfe66d1953dbd308c5296e5fff6dbf0cfd51f0e6cb8783a552218da5a0c",
+      "narrowIndependentStaticReceiptSha256": "43aa456e76f2c2cb8c513632cfe2130f1b9eaad8b7e9f91b6340d09c93fde6d8"
+    },
+    "tail": {
+      "session99004ExitCode": 0,
+      "completedSets": 12,
+      "checksSha256": "8686b45d0ae9116a6187b60c1e9858098484bc0b17f79b9ec574b13638f6a39a",
+      "templateRootPassed": 15,
+      "adjacentPassed": 280,
+      "adjacentFiles": 10,
+      "projectTypes": 3,
+      "specReferences": 7899,
+      "astControls": 748,
+      "strictWarnings": 0,
+      "inventoryGenerationAndCheck": true,
+      "engineBuild": true,
+      "webBuild": true
+    },
+    "retainedSourceErrata": [
+      "Initial 9-digit-negative premise corrected to10-digit malformed original before source-bound runtime; original first8-digit print rule retained",
+      "Original four-run import and reader diagnostics retained separately from genuine2missing-companion RED",
+      "Empty text/unchecked appearance reading and UTF encoding privacy strengthening retained",
+      "Raw40k SUM_A40000 source correction and four ScheduleCredits1 expected2323/660 corrections independently sourced before reaching affected assertions",
+      "Genuine raw-zero unwanted ScheduleW failure precedes source Decimal-zero conditional; positive0.49 retains companion"
+    ],
+    "priorSeparatePushedCommits": {
+      "ohioTemplateRoot": "89ae0b71c133d0e8dc2ffbc965ec3303016fc90a",
+      "hostedCachePolicy": "377fe75500f2be900176c71bfb2150b3d1a66628",
+      "previewTenantEvidence": "771d6cf2d16b06d5624a8bd83a099e584de39599"
+    },
+    "freshMainSavedArtifactIndependentReview": {
+      "status": "PASS_BOUNDED",
+      "claimed": true,
+      "receipt": ".local/upgrade-evidence/nov03-root-oh-rc-main-saved-independent/independent-review-result.json",
+      "receiptSha256": "d59155f194c7333c5713e5411c8c9835d4f3993851f507f6cd6376d5f7c49e7a",
+      "sourceBindingSha256": "8b53a80351bdf8556e1717a43041d6293209e4e0bc7459b13a729d27a1842737",
+      "evidenceManifestSha256": "2d07cdd40de13c33ee65caedf17b2022fc55a6351bcca157bc3d93698ba765a7",
+      "actualOutputManifestSha256": "7268eaf5b1631223a209d9f794f340b606fc445ec130a0a34b7323e2f87e3db4",
+      "retainedSubset": {
+        "passed": 4,
+        "filtered": 37,
+        "ofTotal": 41,
+        "logSha256": "534872a62ed58361dada48210227a13c06266c91efb727263ec3c5f6bf22f1d5"
+      },
+      "pdfs": 15,
+      "pages": 26,
+      "sourceCells": 1233,
+      "xrefObjects": 2141,
+      "decodedStreams": 1724,
+      "strictPrivacyFieldsActionsWidgets": "PASS",
+      "reviewNoticePerPage": 1,
+      "textMatches": 15,
+      "freshRgbMatches": 26,
+      "pdfBytesDifferAll15": true,
+      "allCurrent26FullsizeNewVisualOpenClaimed": false,
+      "actualCurrentRawZeroContactOpened": true,
+      "helperExactReviewedRootSuccessor": true,
+      "fixtureTestSpecExactPrior": true,
+      "priorPrivateApprovalNotSubstituted": true,
+      "noNewRuntimeByReviewer": true,
+      "noHumanTaxQualification": true
+    },
+    "remaining": [
+      "Native-to-official public browser replay",
+      "Current-image/distribution and broader global/staging/provider qualification",
+      "Qualified human tax interpretation and final2026 source/form review",
+      "Filing/release completion criteria remain active"
+    ]
   }
 }

@@ -1,3 +1,4 @@
+import { prepareOhioResidentCreditOfficialReview, fillOhioResidentCreditOfficialReview } from './fill-oh-resident-credit-official-review.js';
 import { fillOhioSchoolDistrictOfficialReview } from './fill-oh-school-district-official-review.js';
 import {resolveOhioResidencyReview,type PreparedOhioResidencyReview} from "../../../engine/state/oh-residency-source.js";
 import {fillOhioOrdinaryOfficialReview} from './fill-oh-ordinary-official-review.js';
@@ -254,6 +255,7 @@ export async function fillOhioReferenceForms(
   const original = hasResidency || hasActualW2 || reviewContext !== undefined
     ? resolveOhioResidencyReview(taxInput, federalResult, reviewContext)
     : taxInput;
+  const residentCreditOfficialReview = prepareOhioResidentCreditOfficialReview(taxInput, federalResult, overlay, reviewContext);
   const ohioInput = buildOhioResidentReturnInput(original, federalResult, overlay);
   const ohioResult = calculateOhioResidentReturn(ohioInput);
   const digitalCapitalInput = calculateDigitalAssetStateSources(original, "OH");
@@ -430,5 +432,6 @@ export async function fillOhioReferenceForms(
 
   filledForms.push(...await fillOhioOrdinaryOfficialReview(taxInput,federalResult,outputDir,overlay,reviewContext,blankFormsDir));
   filledForms.push(...await fillOhioSchoolDistrictOfficialReview(taxInput,federalResult,outputDir,overlay,reviewContext,blankFormsDir));
+  if (residentCreditOfficialReview) filledForms.push(...await fillOhioResidentCreditOfficialReview(residentCreditOfficialReview,outputDir,blankFormsDir));
   return { filledForms };
 }

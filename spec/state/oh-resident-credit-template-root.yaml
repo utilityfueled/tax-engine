@@ -1,0 +1,54 @@
+form: "Ohio resident-credit explicit review template root integration"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itrc-fi.pdf"
+notes: |
+  Source-first adoption companion only. No new tax computation, physical-cell oracle,
+  source facts, filing/2026 qualification, asset revision or generic template fallback.
+  Read-only dependencies are independently approved RC NEW5 manifest1d3da839 and ROOT
+  shared dispatcher/ITRC asset plus the separately qualified template-root four-path
+  integration. ROOT owns all product/main application. This NEW spec/test is private
+  until approved; no candidate helper or dispatcher repair has been authored here.
+  Existing source-complete distinct/cents originals imply credit1000/1001, tax1323/1322,
+  OH withholding2000, requested refund677/678. Canonical source baselines precede PDF
+  generation. Actual source headers2503/FRAN and business accounts07100412/071004129
+  remain explicit originals, never location or account inference.
+  Production web cwd is apps/web, while exact sources remain repository forms/blank.
+  Public optional sixth argument accepts explicit pack or year directory. The RC
+  materializer needs an additive optional THIRD root argument; it must receive the
+  SAME supplied root, resolve supported2025 with resolveReviewTemplateDirectory, and
+  read BOTH exact bundle4e6432e2 and ITRCebd9960d assets there. Never cwd-search or fall
+  back to a valid repository asset after a supplied root is absent or tampered.
+  Default repository-cwd calls retain their existing forms/blank contract. Preparing
+  current source projection remains pure and before first reference/output I/O.
+  Supplied invalid assets deny before direct materializer output mkdir/write; public
+  references may already be staged under existing architecture, which is not changed.
+  Every chdir belongs to test-only fork execution and is restored in finally. Normal
+  5000ms budgets remain unchanged, one worker, no deadline/retry/filing-gate changes.
+  Seven positive physical invocations expect four files/seven pages each: 28 selected
+  official PDFs/49 pages if every positive is retained. Existing reference summaries
+  are separately accounted; failed invocations can retain additional actual outputs.
+lines:
+  - line: "canonical-baseline"
+    formula: "Fresh complete distinct/cents originals retain credit1000/1001, tax1323/1322, OHWH2000, requested refund677/678 and unchanged raw inputs. No PDF output needed."
+    testRef: "tests/apps/web/oh-resident-credit-template-root.test.ts::RC template root actual source baseline %s"
+  - line: "default-compatible"
+    formula: "Existing public five-argument RC call at repository cwd keeps its exact four official filenames and 2/1/2/2 pages, with immutable source inputs."
+    testRef: "tests/apps/web/oh-resident-credit-template-root.test.ts::RC default repository root remains compatible"
+  - line: "public-web-root"
+    formula: "Real public reference API at apps/web cwd forwards explicit pack/year root to RC physical loading for both distinct/cents source cases, retaining all four official files/seven pages and private source immutability."
+    testRef: "tests/apps/web/oh-resident-credit-template-root.test.ts::RC public web cwd uses supplied root %s %s"
+  - line: "direct-web-root"
+    formula: "Genuine opaque prepared projection materializes from apps/web cwd using the exact supplied pack/year root, independently of repository cwd. No forged context or raw scalar projection."
+    testRef: "tests/apps/web/oh-resident-credit-template-root.test.ts::RC direct prepared web cwd uses supplied root %s"
+  - line: "asset-no-fallback"
+    formula: "Each actual bundle/ITRC source is independently missing or altered in an explicit temporary root while other source is exact. Direct materializer must reject before output mkdir, even when cwd provides a valid alternative repository asset."
+    testRef: "tests/apps/web/oh-resident-credit-template-root.test.ts::RC supplied source denies without alternate fallback %s %s"
+  - line: "source-precedes-assets"
+    formula: "Changed same-dollar actual owner or payer with retained original opaque context rejects before output/asset access, rather than being masked by nonexistent-root ENOENT. No TypeError false positive."
+    testRef: "tests/apps/web/oh-resident-credit-template-root.test.ts::RC stale source precedes explicit asset I O %s"
+  - line: "forged-token"
+    formula: "An invented empty token cannot materialize physical documents or create output, regardless of supplied valid root."
+    testRef: "tests/apps/web/oh-resident-credit-template-root.test.ts::RC root cannot qualify an invented prepared token"
+  - line: "unavailable-year"
+    formula: "Explicit2026 current source cannot acquire2025 physical output via a supplied2025 directory; existing law/export guard denies before output."
+    testRef: "tests/apps/web/oh-resident-credit-template-root.test.ts::RC root cannot qualify unavailable2026"

@@ -268,3 +268,7 @@ The bounded returned-response fix passes local52+199 controls and required stati
 ### November 3: explicit Ohio review template root
 
 The actual public web-cwd ENOENT is resolved by forwarding the workspace's existing versioned template root through Ohio review helpers. Main15focused+155adjacent and all13checks pass with pinned source/privacy/replay/year/filing guards intact; see [the root-integration ledger](upgrade-2026-oh-review-template-root-work.md). Actual native-to-physical/browser and container deadline successors, broader staging/global/provider/human/final2026 and release qualification remain open.
+
+### November 3: finite resident-credit official review routing
+
+The source-bound2025 resident/Virginia employee review now reaches the public dispatcher with an explicit versioned template root. Main2missing-companion RED then41PASS, and17root controls10RED/7PASS then combined58PASS, precede all12tail checks passing. Distinct fresh-main15PDF/26page/all1233-cell strict/privacy review now passes with exact text15/RGB26 parity to approved prior outputs; older private and narrow-root receipts remain separately bounded. See [the resident-credit ledger](upgrade-2026-oh-resident-credit-official-review-work.md). Native/browser/distribution/global/staging/provider/human/final2026 and release gates remain open.
