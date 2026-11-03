@@ -241,3 +241,7 @@ The finite2025 single full-year resident now supplies actual residential, Finder
 ### November 3: actual resident-credit desktop/mobile lifecycle
 
 Current-main native Virginia return/account and two linked remittance originals pass4desktop/mobile journeys without retries, through same-cash identity edits, unknown/zero, save/reopen and two actual review downloads each. All10 scoped static/inventory sets pass; independent8PDF/184page strict/privacy review passes with184old-to-current text/RGB matches,92initial/reopen pairs and16geometry records. See [the browser ledger](upgrade-2026-oh-resident-credit-native-browser-work.md). Outputs remain financial references; official resident companions, complete header browser, broader cohorts and global/distribution/staging/provider/human/final2026 gates remain open. Headerbbfabb65 is pushed.
+
+### November 3: independent PA residency export test cases
+
+The actual three-residency PDF loop now runs as three independent cases with the unchanged normal5s deadline. All original assertions and four negative bodies remain intact;21 affected controls plus spec/types/strict/inventory pass and distinct review approves. See [the test ledger](upgrade-2026-pa-workspace-export-test-isolation-work.md). Historical48ad coverage passed87.30% branches, while its plain unit/browser failures remain recorded; successor remote/global/distribution/staging/human/final2026 qualification is pending. Resident-credit browsere0f5ffc1 is pushed.

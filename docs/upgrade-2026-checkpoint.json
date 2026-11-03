@@ -16890,5 +16890,104 @@
       "broader cohorts",
       "current full global/distribution/staging/provider/human/final2026 qualification"
     ]
+  },
+  "paWorkspaceExportTestIsolation20261103": {
+    "baseCommit": "e0f5ffc1",
+    "status": "bounded test isolation verified; current remote full suite pending",
+    "applicationProductsChanged": false,
+    "focusedPassed": 7,
+    "adjacentPassed": 14,
+    "normalTimeoutMs": 5000,
+    "coverageTimeoutMs": 15000,
+    "allOriginalAssertionsAndNegativeBodiesPreserved": true,
+    "checks": [
+      {
+        "name": "fullfile",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/apps/web/pa-complete-workspace-export.test.ts",
+          "--maxWorkers=1"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-workspace-export-unit-isolation-green/fullfile.log",
+        "sha256": "f8789733a699689fa1da8b8ae302d0d0b4827d52235ff898f882f9e7681139fe"
+      },
+      {
+        "name": "adjacent",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/apps/web/pa-married-workspace-review.test.ts",
+          "--maxWorkers=1"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-workspace-export-unit-isolation-green/adjacent.log",
+        "sha256": "c42795c84ed889979f9a17bb45e4b24288b3a294526c4130c20519b2fd3f810e"
+      },
+      {
+        "name": "spec",
+        "command": [
+          "pnpm",
+          "spec:validate"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-workspace-export-unit-isolation-green/spec.log",
+        "sha256": "5ab8e7bdd78011efd90a929b7acc46d273f44734a926d0f178fd8af0759f3938"
+      },
+      {
+        "name": "types",
+        "command": [
+          "pnpm",
+          "typecheck"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-workspace-export-unit-isolation-green/types.log",
+        "sha256": "5888bcaa4f681b3f7bf48999ae0817c16b3af178b8c13f7d91414fdef8ea04d9"
+      },
+      {
+        "name": "strict",
+        "command": [
+          "pnpm",
+          "exec",
+          "eslint",
+          "tests/apps/web/pa-complete-workspace-export.test.ts",
+          "--max-warnings=0"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-workspace-export-unit-isolation-green/strict.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "inventory-generate",
+        "command": [
+          "pnpm",
+          "spec:inventory"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-workspace-export-unit-isolation-green/inventory-generate.log",
+        "sha256": "1ba231174c2e17432771ba3278830ffe2175980b8493c441d16dcf047705dc9b"
+      },
+      {
+        "name": "inventory-check",
+        "command": [
+          "pnpm",
+          "spec:inventory:check"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-pa-workspace-export-unit-isolation-green/inventory-check.log",
+        "sha256": "846ee1105cfb137b691fc9b9faa383c54ef9f9e367b6b3416b2abe4ccb15cdef"
+      }
+    ],
+    "independentReview": "0132e588a71f20c625b3818368d0c90ba199706f611b75bcbe1df0d1f370d7de",
+    "historical48adCoverage": {
+      "testsPassed": 24261,
+      "branchPercent": "87.30",
+      "currentHeadQualification": false
+    },
+    "remaining": [
+      "current remote global checks",
+      "distribution/staging/provider/human/final2026 qualification"
+    ]
   }
 }

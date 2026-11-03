@@ -6,8 +6,8 @@ notes: "Review-only path; final2026 form and filing gates remain closed. Use act
 lines:
   - line: "all-three"
     description: "Fresh actual ordinary result and private context reach the actual renderer for each residency category"
-    formula: "Build current canonical originals; calculate actual ordinary PA1539 resident,799 partyear,184 nonresident; prepare genuine original review context before redaction; call real fillReturn with redacted input/result and context; merge actual PA40 review pages. Never substitute legacy orchestration or prior preview results."
-    testRef: "tests/apps/web/pa-complete-workspace-export.test.ts::complete PA workspace exports replay all three actual ordinary residency results"
+    formula: "Build current canonical originals; calculate actual ordinary PA1539 resident,799 partyear,184 nonresident; prepare genuine original review context before redaction; call real fillReturn with redacted input/result and context; merge actual PA40 review pages. Never substitute legacy orchestration or prior preview results. Each actual residency executes as an independent case under the unchanged normal5000ms deadline, preventing one slow three-render loop from continuing into another test spy."
+    testRef: "tests/apps/web/pa-complete-workspace-export.test.ts::complete PA workspace exports replay actual ordinary residency result %s"
   - line: "unknown"
     description: "Unknown actual completion sources stop before rendering"
     formula: "Missing actual completion packet rejects for all3 residency categories; preserve sources and do not create a context or write forms."

@@ -19,10 +19,10 @@ r=PdfReader(sys.argv[1],strict=True)
 print(json.dumps({'pages':len(r.pages),'text':'\\n'.join(p.extract_text() or '' for p in r.pages),'fields':len(r.get_fields() or {}),'widgets':sum(1 for p in r.pages for a in (p.get('/Annots') or []) if a.get_object().get('/Subtype')=='/Widget')}))`,file],{encoding:'utf8',timeout:30000})) as {pages:number;text:string;fields:number;widgets:number};}
  finally{if(!output)await rm(directory,{recursive:true,force:true});}
 }
-it('complete PA workspace exports replay all three actual ordinary residency results',async()=>{
+it.each([['resident','1539'],['part_year','799'],['nonresident','184']] as const)('complete PA workspace exports replay actual ordinary residency result %s',async(status,tax)=>{
  const renderer=vi.spyOn(rendering,'fillReturn');
- try{for(const [status,tax] of [['resident','1539'],['part_year','799'],['nonresident','184']] as const){
-  renderer.mockClear();const state=guidedPACompleteOriginals(status),before=structuredClone(state);
+ try{
+  const state=guidedPACompleteOriginals(status),before=structuredClone(state);
   const download=await buildWorkspaceFilledReturnDownload(stateOriginalsReviewWorkspace(),state);
   expect(renderer).toHaveBeenCalledTimes(1);const call=renderer.mock.calls[0];if(!call)throw Error('Actual renderer was omitted');
   const [input,result,options]=call;
@@ -36,7 +36,7 @@ it('complete PA workspace exports replay all three actual ordinary residency res
   const scanned=await inspectPacket(download.contents,status);expect(scanned.pages).toBeGreaterThanOrEqual(4);expect(scanned.fields).toBe(0);expect(scanned.widgets).toBe(0);
   expect(scanned.text).toMatch(/review/i);expect(scanned.text).not.toContain(ssn);expect(scanned.text).not.toContain(ssn.replace(/\D/g,''));
   expect(state).toEqual(before);
- }}finally{renderer.mockRestore();}
+ }finally{renderer.mockRestore();}
 });
 it('complete PA workspace rejects missing source packet before actual rendering',async()=>{
  const renderer=vi.spyOn(rendering,'fillReturn');try{for(const status of ['resident','part_year','nonresident'] as const){const state=guidedPACompleteOriginals(status);delete state.sectionData['state-return']?.paOrdinaryReturnCompletionSources;await expect(buildWorkspaceFilledReturnDownload(stateOriginalsReviewWorkspace(),state)).rejects.toThrow(/actual|complete|source|confirm/i);}expect(renderer).not.toHaveBeenCalled();}finally{renderer.mockRestore();}
