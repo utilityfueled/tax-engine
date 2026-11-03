@@ -39,6 +39,8 @@ const playwrightBaseUrl = process.env.PLAYWRIGHT_BASE_URL?.trim() || "http://127
 const disableManagedWebServer = process.env.PLAYWRIGHT_DISABLE_WEBSERVER === "true";
 
 export default defineConfig({
+  // Shared fixtures outside this app need the same web and engine alias map.
+  tsconfig: path.resolve(appDir, "tsconfig.json"),
   testDir: "./tests",
   timeout: 90_000,
   /* Exercise the production bundle; independent browser contexts isolate storage. */

@@ -23,3 +23,6 @@ lines:
   - line: "privacy-and-viewports"
     formula: "Desktop1280/mobile390 both run same source journey; no JSON editor/rawpacket entry, no source originals in request URLs/bodies, no browser page/console errors, no horizontal document overflow; retain screenshots at nativeconfirmed/corrected/reopened states."
     testRef: "apps/web/tests/pa-mi-native-history.spec.ts::originates MI settlement and preserves filed history through actual expense correction"
+  - line: "normal-runner-collection"
+    formula: "Normal pnpm test:web --list must collect every existing browser test and both unchanged nativeMI desktop/mobile journeys from the committed configuration. Shared root fixtures use the existing web tsconfig for web and engine aliases throughout their import graph. Fixture originals, literal tax oracles, assertions, privacy checks, worker/retry limits, timeouts and normal runner prerequisites remain unchanged."
+    testRef: "apps/web/tests/pa-mi-native-history.spec.ts::originates MI settlement and preserves filed history through actual expense correction"

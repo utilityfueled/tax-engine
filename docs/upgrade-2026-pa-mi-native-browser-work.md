@@ -20,3 +20,24 @@ Retained attempt01 was loopback-bind EPERM beforetests. Attempt02 exposed a test
 All10named screenshots are retained with full hashes under local evidence nov03-pa-mi-native-browser/browser-main-attempt-04. Console error, request-private-data and horizontal-overflow assertions pass. Offline review inspected every screenshot: mobile shows receivedrefund80.20, editedreceipt149.25, filedAGI211001 and currentAGI210901 independently; desktop detailed PArows6478 then6475 are correct. Some desktop top-summary screenshots capture intermediate number-animation values; they are not settled aggregate-number evidence. The reopened desktop total48147 is settled and equals41672 federal due plus6475 PA. No new tax-law/human/filing/deployment/model qualification is claimed.
 
 Root integration: all ten actual attempt04 screenshots opened independently. Readable mobile inputs and actual80.20refund/149.25expense/filed211001/current210901 are retained; detailed desktop rows show6478→6475. Transient animated aggregate frames are expressly excluded as exact-number visual evidence. Actual main types3, spec, strict AST references, generated inventory/check, strict browser lint0 and diff checks all pass. Root review receipt SHA `836ef27ef46ad03e4303fb74d77049eb3805e81d9b398193215e1ed2adbc7368`. This qualifies the finite local source journey only; upload/export/delete, staging, full release and human qualification remain separate.
+
+## Normal runner collection repair
+
+Web workflow765 failed both browser distributions before collection: the shared
+root fixture's web imports were resolved against the nearest root engine-only
+TypeScript config. Explicitly selecting the existing web tsconfig in Playwright
+preserves its web/engine aliases throughout the import graph. No fixture, money
+oracle, assertion, application alias, privacy check, worker/retry default or test
+timeout changed. This is a harness fix, not completed staging evidence.
+
+Private supportedNode24 and actual main7b2763b8 both reproduce0tests before the
+repair; normal unfiltered collection then passes543tests/134files, including the
+541older tests and both new native journeys. Main spec/AST/inventory/strict/diff
+checks pass. The normal managed self-host production build runs both unchanged
+desktop/mobile journeys2/2 with zero retries; managedport3099 closes afterward.
+Root opens refreshed mobile confirmed/reopened frames and verifies refund80.20
+and filedAGI211001, alongside the earlier ten-frame visual review.
+
+Root review SHA256: `5f7a6211cc923ad766156c80dc13a6b6c13829882838d62895ea66e9126ed5c6`.
+Normal browser log: `6ffb3a8dba61a3a4c0e82fdbad9d3facbbbfc6b71a92d6a971767a0eab6db1bc`.
+Full remote Web qualification remains pending its next committed-source run.

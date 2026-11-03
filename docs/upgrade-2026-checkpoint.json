@@ -14830,5 +14830,107 @@
     "nativeOrPhysicalQualification": false,
     "humanOrFilingQualification": false,
     "rootReviewSHA256": "642ac114e6e7f114a084fd2c696cdbd105fb6cc3dd2d0dd1b1671d003b4b788b"
+  },
+  "nov03NormalBrowserCollectionRepair": {
+    "base": "7b2763b861ad096c798119588fb3e82c6ae5bbc2",
+    "problem": "Web#765 bothnormal andactualimagejobs failprecollection: rootfixture webalias uses nearest roottsconfig",
+    "rootNormalREDLogSHA256": "5815095491f715cb84302a7d41f2e63d860e30adb7c63727a0a600a728638de3",
+    "repair": "Explicit existingwebtsconfig applieswebandenginealiases throughoutPlaywrightfixturegraph; no fixture/test/runner/aliasmapchanges",
+    "mainNormalCollected": 543,
+    "mainNormalFiles": 134,
+    "unchangedActualNativeJourneysPassed": 2,
+    "retries": 0,
+    "workers": 1,
+    "port3099Closed": true,
+    "rootVisualReview": "Opened refreshed390confirmed/reopened: actualrefund80.20 and immutablefiledAGI211001 retained, readable/mobile,nohorizontaloverflow; original10framevisualreviewremains",
+    "checks": [
+      {
+        "name": "normal-collection",
+        "command": [
+          "pnpm",
+          "test:web",
+          "--list"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-web-collection-main/normal-collection.log",
+        "sha256": "b6b2460a0fd081dc45f12ada2eefd8147e409ec7d519055d0e03b69b3cec256c"
+      },
+      {
+        "name": "spec",
+        "command": [
+          "pnpm",
+          "spec:validate"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-web-collection-main/spec.log",
+        "sha256": "f9b3b238f60d9b402e7caac8c3a972034af83ce9410dbd519ced9dfef1991434"
+      },
+      {
+        "name": "ast",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/spec/validate-testrefs.test.ts"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-web-collection-main/ast.log",
+        "sha256": "fa93da9d5d4712bc8332a300b4fd922285fa42572275da3c228b5f24299a62b1"
+      },
+      {
+        "name": "inventory-check",
+        "command": [
+          "pnpm",
+          "spec:inventory:check"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-web-collection-main/inventory-check.log",
+        "sha256": "846ee1105cfb137b691fc9b9faa383c54ef9f9e367b6b3416b2abe4ccb15cdef"
+      },
+      {
+        "name": "strict",
+        "command": [
+          "pnpm",
+          "exec",
+          "eslint",
+          "apps/web/playwright.config.ts",
+          "--max-warnings",
+          "0"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-web-collection-main/strict.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "diff",
+        "command": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-web-collection-main/diff.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "normal-native-mi",
+        "command": [
+          "env",
+          "TAX_ENGINE_DEPLOYMENT_MODE=self-host",
+          "pnpm",
+          "test:web",
+          "pa-mi-native-history.spec.ts",
+          "--retries=0",
+          "--workers=1",
+          "--output=/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-web-collection-browser/results"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-web-collection-browser/normal-native-mi.log",
+        "sha256": "6ffb3a8dba61a3a4c0e82fdbad9d3facbbbfc6b71a92d6a971767a0eab6db1bc"
+      }
+    ],
+    "qualifiedStagingOrFiling": false,
+    "configSHA256": "e837ce163d0df2933a43867951e28e863203af80ce776af029a7c1c6e317eefb",
+    "independentRepairReceiptSHA256": "881558fd23db7a11cdf9afd53f7f5752a4816313179458c0305442bd8c3a7a5a",
+    "rootReviewSHA256": "5f7a6211cc923ad766156c80dc13a6b6c13829882838d62895ea66e9126ed5c6"
   }
 }

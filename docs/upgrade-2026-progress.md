@@ -2,6 +2,11 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] Normal browser collection now uses the existing web TypeScript alias map
+  for shared fixtures: actualmain0→543tests/134files, both unchanged native MI
+  journeys pass2/2 with zero retries. Both earlier Web765 precollection failures
+  remain recorded; a fresh complete remote run is still required. [Evidence](upgrade-2026-pa-mi-native-browser-work.md).
+
 - [x] Actual current-care originals now compose printed PA23/refund600 once.
   Separate review found and repaired six source-admission defects, preserving the
   valid second-person/zero-expense1200 case. Main1885PAengine tests/111files,
