@@ -68,6 +68,18 @@ export interface HostedWorkspaceRouteContext {
   workspaceId: string;
 }
 
+function privateWorkspaceResponse<Arguments extends unknown[], Result extends Response | undefined>(
+  handler: (...args: Arguments) => Promise<Result>
+) {
+  return async (...args: Arguments): Promise<Result> => {
+    const response = await handler(...args);
+    if (response !== undefined) {
+      response.headers.set("Cache-Control", "private, no-store, max-age=0");
+    }
+    return response;
+  };
+}
+
 function buildOwnerRequiredResponse() {
   return NextResponse.json({
     availability: "owner-required" as const,
@@ -560,7 +572,7 @@ export function createHostedWorkspaceRouteHandlers(
     return checkRateLimitForEnvironment(uploadStore, `upload:${clientId}`, rateLimitTiers.upload, env);
   }
 
-  return {
+  const handlers = {
     async list(request: Request) {
       const rateCheck = await applyApiRateLimit(request);
 
@@ -782,5 +794,13 @@ export function createHostedWorkspaceRouteHandlers(
         return buildPersistenceUnavailableResponse(error);
       }
     }
+  };
+
+  return {
+    list: privateWorkspaceResponse(handlers.list),
+    get: privateWorkspaceResponse(handlers.get),
+    save: privateWorkspaceResponse(handlers.save),
+    delete: privateWorkspaceResponse(handlers.delete),
+    uploadDocument: privateWorkspaceResponse(handlers.uploadDocument)
   };
 }

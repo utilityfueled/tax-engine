@@ -17325,5 +17325,216 @@
       "staging migrations/restore/rollback/finalartifact/human security review"
     ],
     "releaseReady": false
+  },
+  "hostedWorkspaceCachePolicy20261103": {
+    "status": "bounded local returned-response correction verified; actual new Preview pending",
+    "sourceHashes": {
+      "apps/web/src/lib/hosted-workspace-route.ts": "7c66af72bb0ef8bd81e660608c65c56b69409144ceeaa995d2859c4e4374d071",
+      "spec/federal/hosted-workspace-cache-policy.yaml": "0c3c01abf57d750f5942e5897ea8d7c1b4324a981c02638017d298886db78bed",
+      "tests/apps/web/hosted-workspace-cache-policy.test.ts": "1c36eee36901e67f8af983a0e29070f1058d5409af8a1de9dcce30273e090367"
+    },
+    "historicalPreviewSource": "80bc752f751ebd642cb039a1c65c7e8e6a603403",
+    "historicalPreflight": {
+      "cachePolicyFailures": 9,
+      "authenticatedReadyWorkspaceLists": 2,
+      "unauthenticatedOwnerRequired401": 5,
+      "authenticatedWriteTuples": 0,
+      "cleanupVerifiedTuples": 0,
+      "cacheLeakDemonstrated": false
+    },
+    "sourceFirstRed": {
+      "failed": 52,
+      "productUnchanged": true,
+      "logSha256": "f366f8eeb63aa8ddb7ff58db0d93cade4357685aee88f7cd63b0a1afb3b46be4"
+    },
+    "firstStrictWebTypes": {
+      "exitCode": 2,
+      "retained": true,
+      "logSha256": "584f18c9e9e4fb6551eb7ecdc651ce50f6c4919f05e0838855c757021c3d9500",
+      "cause": "wrapper initially excluded existing Response|undefined result inference"
+    },
+    "successor": {
+      "focusedPassed": 52,
+      "adjacentPassed": 199,
+      "databaseDependentSkipped": 18,
+      "skipsExecuted": false,
+      "checkSetsPassed": 12,
+      "typesProjectsPassed": 3,
+      "specRefs": 7871,
+      "brokenRefs": 0,
+      "astTests": 745,
+      "strictErrors": 0,
+      "strictWarnings": 0,
+      "inventoryEntries": 812,
+      "buildsPassed": 2,
+      "checks": [
+        {
+          "name": "focused52",
+          "command": [
+            "/opt/homebrew/bin/pnpm",
+            "test",
+            "tests/apps/web/hosted-workspace-cache-policy.test.ts",
+            "--maxWorkers=1"
+          ],
+          "at": "2026-11-03T22:15:36.189277+00:00",
+          "exitCode": 0,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-hosted-workspace-cache-policy/successor-strict-types/focused52.log",
+          "sha256": "e634aafad19e2b5279d995fb2a13ddbcc7117c6323178e48270a9e69c29d11fa"
+        },
+        {
+          "name": "adjacent12",
+          "command": [
+            "/opt/homebrew/bin/pnpm",
+            "test",
+            "tests/apps/web/hosted-workspace-route.test.ts",
+            "tests/apps/web/hosted-document-route.test.ts",
+            "tests/apps/web/workspace-persistence.test.ts",
+            "tests/apps/web/hosted-privacy.test.ts",
+            "tests/apps/web/hosted-postgres-workspace.test.ts",
+            "tests/apps/web/security-cors-middleware.test.ts",
+            "tests/apps/web/hosted-preview-origin.test.ts",
+            "tests/apps/web/hosted-preview-origin-independent.test.ts",
+            "tests/apps/web/security-rate-limit.test.ts",
+            "tests/apps/web/shared-rate-limit-outages.test.ts",
+            "tests/apps/web/hosted-database-outages.test.ts",
+            "tests/apps/web/hosted-metadata-migration.test.ts",
+            "--maxWorkers=1"
+          ],
+          "at": "2026-11-03T22:15:42.925171+00:00",
+          "exitCode": 0,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-hosted-workspace-cache-policy/successor-strict-types/adjacent12.log",
+          "sha256": "d122bb0bca385309e7c577e4fed85150c88f6e812399e2e21177453f37e9deae"
+        },
+        {
+          "name": "types",
+          "command": [
+            "/opt/homebrew/bin/pnpm",
+            "typecheck"
+          ],
+          "at": "2026-11-03T22:16:03.211617+00:00",
+          "exitCode": 0,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-hosted-workspace-cache-policy/successor-strict-types/types.log",
+          "sha256": "5888bcaa4f681b3f7bf48999ae0817c16b3af178b8c13f7d91414fdef8ea04d9"
+        },
+        {
+          "name": "contracts",
+          "command": [
+            "/opt/homebrew/bin/pnpm",
+            "typecheck:contracts"
+          ],
+          "at": "2026-11-03T22:16:12.805924+00:00",
+          "exitCode": 0,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-hosted-workspace-cache-policy/successor-strict-types/contracts.log",
+          "sha256": "0c2a6bff203db409d0f68d48f7b21a6ac6bd6098310256e72a9c6e558bc3943d"
+        },
+        {
+          "name": "web-types",
+          "command": [
+            "/opt/homebrew/bin/pnpm",
+            "typecheck:web"
+          ],
+          "at": "2026-11-03T22:16:14.025254+00:00",
+          "exitCode": 0,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-hosted-workspace-cache-policy/successor-strict-types/web-types.log",
+          "sha256": "249e0be3cf6277994e8d22e8440bebe6db10861cab79fe97aa4952837f3ff073"
+        },
+        {
+          "name": "spec",
+          "command": [
+            "/opt/homebrew/bin/pnpm",
+            "spec:validate"
+          ],
+          "at": "2026-11-03T22:16:19.943464+00:00",
+          "exitCode": 0,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-hosted-workspace-cache-policy/successor-strict-types/spec.log",
+          "sha256": "e701b8f775872637f5430468058b5ccb723fb26fe141b1631e89b433bde023ca"
+        },
+        {
+          "name": "AST",
+          "command": [
+            "/opt/homebrew/bin/pnpm",
+            "test",
+            "tests/spec/validate-testrefs.test.ts",
+            "--maxWorkers=1"
+          ],
+          "at": "2026-11-03T22:16:21.380644+00:00",
+          "exitCode": 0,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-hosted-workspace-cache-policy/successor-strict-types/AST.log",
+          "sha256": "bf421206c99a56098749df5a50137e87fb26194c31927456623103b23018adfc"
+        },
+        {
+          "name": "strict",
+          "command": [
+            "/opt/homebrew/bin/pnpm",
+            "exec",
+            "eslint",
+            "apps/web/src/lib/hosted-workspace-route.ts",
+            "tests/apps/web/hosted-workspace-cache-policy.test.ts",
+            "--max-warnings=0"
+          ],
+          "at": "2026-11-03T22:16:24.566700+00:00",
+          "exitCode": 0,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-hosted-workspace-cache-policy/successor-strict-types/strict.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "inventory-generate",
+          "command": [
+            "/opt/homebrew/bin/pnpm",
+            "spec:inventory"
+          ],
+          "at": "2026-11-03T22:16:25.834279+00:00",
+          "exitCode": 0,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-hosted-workspace-cache-policy/successor-strict-types/inventory-generate.log",
+          "sha256": "cb724e716e9e711c583ef2abf649ddc099528aef657d62bfaad19ea1bdf53200"
+        },
+        {
+          "name": "inventory-check",
+          "command": [
+            "/opt/homebrew/bin/pnpm",
+            "spec:inventory:check"
+          ],
+          "at": "2026-11-03T22:16:27.839557+00:00",
+          "exitCode": 0,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-hosted-workspace-cache-policy/successor-strict-types/inventory-check.log",
+          "sha256": "846ee1105cfb137b691fc9b9faa383c54ef9f9e367b6b3416b2abe4ccb15cdef"
+        },
+        {
+          "name": "build",
+          "command": [
+            "/opt/homebrew/bin/pnpm",
+            "build"
+          ],
+          "at": "2026-11-03T22:16:29.753776+00:00",
+          "exitCode": 0,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-hosted-workspace-cache-policy/successor-strict-types/build.log",
+          "sha256": "d075c8ab15a7843462a88f3304147338e40a1fb638a358eeb51b2b7984d778ec"
+        },
+        {
+          "name": "web-build",
+          "command": [
+            "/opt/homebrew/bin/pnpm",
+            "build:web"
+          ],
+          "at": "2026-11-03T22:16:40.918316+00:00",
+          "exitCode": 0,
+          "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-hosted-workspace-cache-policy/successor-strict-types/web-build.log",
+          "sha256": "18638cef9bec216c6b6d1a5bc716951408e0616d1a9754ef83ac8f78392642bd"
+        }
+      ]
+    },
+    "independentStaticReview": {
+      "receiptSha256": "08731ec92fd4cf1c7a215db08145833cd2944506590278777e4c88fe699bf33a",
+      "strictRepairReceiptSha256": "50bdb62b4c824dc5d87f18ac86c6653f14d0b0615f5885381b565477e6f8c0a6",
+      "independentRuntime": false
+    },
+    "ledger": "docs/upgrade-2026-hosted-workspace-cache-policy-work.md",
+    "actualNewPreviewValidated": false,
+    "releaseReady": false,
+    "remaining": [
+      "New Preview authenticated and unauthenticated cache-header replay",
+      "Authorized two-owner workspace/document write/read/isolation/delete/cleanup rehearsal",
+      "Broader staging/global/release qualification remains pending"
+    ]
   }
 }

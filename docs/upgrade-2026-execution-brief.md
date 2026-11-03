@@ -258,3 +258,8 @@ Complete original-bound PA reciprocal wages now produce the required2025 Ohio of
 ### November 3: actual Preview sandbox checkout and signed replay
 
 Exact80bc752f Preview test checkout completes without real funds; actual signed checkout.session.completed and manual same-event replay both return200. Authenticated billing reads after each show Starter active and AI qualification pending. See [the sandbox ledger](upgrade-2026-staging-sandbox-billing-work.md). This does not prove DB event row-count/exact credit effects, automatic failed-delivery retries, outages, tenant/recovery or final-artifact qualification; those checks continue. Reciprocal physicalc6bd8bad is pushed separately.
+
+
+### November 3: workspace cache-policy follow-up
+
+The bounded returned-response fix passes local52+199 controls and required static/build checks;18 database-dependent skips remain unexecuted. Historical80bc header failures are retained. [Current-Preview header replay and two-owner isolation/cleanup evidence remain pending](upgrade-2026-hosted-workspace-cache-policy-work.md); no deployed-fix or release claim is made.
