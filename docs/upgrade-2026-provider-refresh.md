@@ -92,3 +92,35 @@ Remaining external inputs are approved provider account access and spend cap,
 independent human review of the 240 draft cases and resulting answers, actual
 staging account/billing/outage/recovery evidence, and any eventual owner-approved
 rollout. The full upgrade's final-head checks remain in the central checklist.
+
+## November 3 documentation refresh
+
+The official pages were fetched again on November 3. Standard text rates,
+cache rates, long-context multipliers and the January Gemini price change still
+match the October 25 registry. That registry retains its original retrieval
+date; this is a separate public-source check, with no rate or runtime change.
+Sources: [OpenAI pricing](https://developers.openai.com/api/docs/pricing),
+[Google pricing](https://aistudio.google.com/docs/pricing#gemini-3.8-flash).
+
+The exact [Luna](https://developers.openai.com/api/docs/models/gpt-6-luna) and
+[Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) pages still
+document structured outputs and the configured High and Low/High efforts.
+[Gemini 3.8 Flash](https://aistudio.google.com/docs/models/gemini-3.8-flash)
+documents structured outputs and High thinking. No account probe was performed.
+
+[OpenAI's lifecycle page](https://developers.openai.com/api/docs/deprecations)
+still schedules GPT-5 Mini retirement for December 11, 2026.
+[Google's lifecycle page](https://aistudio.google.com/docs/deprecations)
+lists no announced shutdown for the two selected Flash profiles. These findings
+do not establish future or account-specific availability.
+
+The pricing page now explicitly describes a FedRAMP endpoint surcharge effective
+November 1. No such endpoint is qualified by this refresh. Any proposed endpoint,
+processing tier or charge category must pass the existing exact-price and
+account-capability checks before a paid run. No route or model is promoted.
+
+The approved synthetic-run ceiling is $5; actual provider spending remains $0.
+Project credentials, independently reviewed cases, held-out measurements and
+hosted billing/recovery evidence remain missing. Local source receipts are in
+`.local/upgrade-evidence/nov03-provider-documentation/`. This documentation-only
+change passes `git diff --check`; it does not claim new runtime test results.
