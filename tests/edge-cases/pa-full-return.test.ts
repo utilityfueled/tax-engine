@@ -607,21 +607,58 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
       }],
     });
 
+    // Separate fictional NY employee example. This is a new synthetic arithmetic
+    // case, not a relabeling of the historical NJ facts retained above. Assume
+    // the 40000 compensation is NY-source and final NY income tax paid is 1400;
+    // the scalar does not establish filed-return/payment eligibility evidence.
+    const nonreciprocalFixture = structuredClone(fixture);
+    const nyW2 = nonreciprocalFixture.w2s[1];
+    const njStatement = fixture.paScheduleGLStatements?.[0];
+    if (!nyW2 || !njStatement) throw new Error("Synthetic NY case requires the retained second wage and credit rows");
+    nyW2.employer = { name: "Fictional NY Corp", ein: "22-2222222" };
+    nyW2.state = "NY";
+    nonreciprocalFixture.paScheduleGLStatements = [{ ...njStatement, stateCode: "NY" }];
+
+    // Spec: spec/state/pa-full-return-reciprocal-fixtures.yaml
+    it("retains the original NJ wage-credit input as a reciprocal refund rejection", () => {
+      const before = JSON.stringify(fixture);
+      expect(() => calculatePAReturn(fixture)).toThrow(/reciprocal employee tax requires refund/);
+      expect(JSON.stringify(fixture)).toBe(before);
+    });
+
+    it("rejects explicit normalized NJ compensation without changing original wages or withholding", () => {
+      const withoutStatement = { ...fixture, paScheduleGLStatements: [] };
+      expect(() => calculatePAReturn(withoutStatement, {
+        otherStateCredits: [{ stateCode: " nj ", incomeClass: "compensation",
+          incomeTaxableByBothStates: d(40000), taxPaidToOtherState: d(1400) }],
+      })).toThrow(/reciprocal employee tax requires refund/);
+      expect(fixture.w2s.map((row) => [row.wages, row.stateTaxWithheld])).toEqual([
+        ["60000", "1842"], ["40000", "1400"],
+      ]);
+    });
+
+    it("preserves exact nonreciprocal resident-credit arithmetic without qualifying source evidence", () => {
+      const result = calculatePAReturn(nonreciprocalFixture);
+      expect(result.scheduleGL.totalCredit.toFixed()).toBe("1228");
+      expect(result.pa40.residentCredit.toFixed()).toBe("1228");
+      expect(result.pa40.taxLiability.toFixed()).toBe("3070");
+    });
+
     it("includes non-PA W-2 wages in resident compensation", () => {
-      const result = calculatePAReturn(fixture);
+      const result = calculatePAReturn(nonreciprocalFixture);
       expect(result.mappedIncome.compensation.toNumber()).toBe(100000);
     });
 
     it("only counts PA withholding", () => {
-      const result = calculatePAReturn(fixture);
+      const result = calculatePAReturn(nonreciprocalFixture);
       // Only PA withholding
       expect(result.stateWithholding.toNumber()).toBe(1842);
     });
 
     it("applies Schedule G-L resident credit from statement input", () => {
-      const result = calculatePAReturn(fixture);
+      const result = calculatePAReturn(nonreciprocalFixture);
       // PA tax on $60,000 = $1,842
-      // Schedule G-L credit limited by PA tax on NJ income proportion
+      // Schedule G-L credit limited by PA tax on fictional NY income proportion
       expect(result.scheduleGL.totalCredit.gt(d(0))).toBe(true);
       // Credit cannot exceed PA tax liability
       expect(result.pa40.residentCredit.lte(result.pa40.taxLiability)).toBe(true);
@@ -1432,10 +1469,29 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
       }],
     });
 
+    it("retains the original low-income NJ override as reciprocal refund rejection", () => {
+      expect(() => calculatePAReturn(fixture, {
+        otherStateCredits: [{ stateCode: "NJ", incomeTaxableByBothStates: d(5000),
+          taxPaidToOtherState: d(200) }], otherCredits: d(50),
+      })).toThrow(/reciprocal employee tax requires refund/);
+    });
+
+    it("rejects the low-income NJ compensation override with explicit classification", () => {
+      expect(() => calculatePAReturn(fixture, {
+        otherStateCredits: [{ stateCode: "NJ", incomeClass: "compensation",
+          incomeTaxableByBothStates: d(5000), taxPaidToOtherState: d(200) }],
+        otherCredits: d(50),
+      })).toThrow(/reciprocal employee tax requires refund/);
+    });
+
     it("forgiveness + resident credit + other credits all reduce tax", () => {
+      // Separate fictional NY-source compensation 5000 within annual wages 14000.
+      // PA withholding 430 stays unchanged; final NY tax paid 200 is supplied for
+      // legacy arithmetic only, not inferred from withholding or source proof.
       const result = calculatePAReturn(fixture, {
         otherStateCredits: [{
-          stateCode: "NJ",
+          stateCode: "NY",
+          incomeClass: "compensation",
           incomeTaxableByBothStates: d(5000),
           taxPaidToOtherState: d(200),
         }],
@@ -1445,13 +1501,13 @@ describe.sequential("Pennsylvania Full-Return Edge Cases", () => {
       expect(result.pa40.taxLiability.toNumber()).toBe(430);
       // Married + 0 deps: base $13,000
       // Income $14,000 → $1,000 above → 4 tiers above = 60% forgiveness
-      // Schedule SP first subtracts $200 tax paid to NJ, leaving $230.
-      // Forgiveness credit: $230 × 60% = $138
-      expect(result.pa40.taxForgivenessCredit.toNumber()).toBe(138);
+      // Schedule SP Line 13 subtracts the allowed resident credit $154, leaving $276.
+      // Forgiveness credit: $276 × 60% = $165.60 → $166
+      expect(result.pa40.taxForgivenessCredit.toNumber()).toBe(166);
       expect(result.pa40.residentCredit.toNumber()).toBe(154);
-      // Total credits = $138 forgiveness + $154 resident + $50 other = $342
-      expect(result.pa40.totalCredits.toNumber()).toBe(342);
-      expect(result.pa40.netTaxLiability.toNumber()).toBe(88);
+      // Total credits = $166 forgiveness + $154 resident + $50 other = $370
+      expect(result.pa40.totalCredits.toNumber()).toBe(370);
+      expect(result.pa40.netTaxLiability.toNumber()).toBe(60);
     });
   });
 

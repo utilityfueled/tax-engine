@@ -1,0 +1,24 @@
+form: "PA SP printed resident credit carry"
+fullName: "Independent cents controls for printed PA40 line22 carried to SP line13"
+taxYear: 2025
+sources:
+  - url: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf"
+    section: "SectionIV lines12 through16, printed PA40 line22 resident credit"
+    retrieved: "2026-11-03"
+notes: |
+  New explicit fictional legacy arithmetic conditions, not qualified source facts.
+  PA tax430 and SP60percent: raw allowed credit80.49 reports80, giving
+  (430-80)*0.60=210. Raw80.50 or80.51 reports81, giving
+  (430-81)*0.60=209.40, reported209. Subtracting the raw80.50 instead
+  incorrectly gives209.70, reported210. Carry the actual printed whole-dollar
+  line in both resident and part-year callers. Keep the primitive's public field
+  names, original records, source guards and final2026 gates unchanged.
+lines:
+  - line: "resident-printed-carry"
+    description: "Resident caller carries the printed whole-dollar credit"
+    formula: "Credit80.49→80 and forgiveness210; credit80.50/80.51→81 and forgiveness209."
+    testRef: "tests/engine/state/pa-sp-printed-resident-credit.test.ts::resident carries the printed credit for actual cents %s"
+  - line: "part-year-printed-carry"
+    description: "Part-year caller carries the same printed line without changing residency scope"
+    formula: "Same source amounts and SP rate; printed line13 must equal printed PA40 line22."
+    testRef: "tests/engine/state/pa-sp-printed-resident-credit.test.ts::part-year carries the printed credit for actual cents %s"

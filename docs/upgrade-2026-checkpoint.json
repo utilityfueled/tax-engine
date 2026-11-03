@@ -13562,5 +13562,52 @@
       "nov03-sentry11-review",
       "nov03-parent-current-advisory-audit"
     ]
+  },
+  "nov03MainPASPLaw": {
+    "baseCommit": "15e9a392",
+    "sources": "official2025 PA SP SectionIV13/whole-dollar instructions refreshed2026-11-03",
+    "authorFreeze": "22b6b4f82764da84ea33242701a375d93f78e8063d1147454e0054873b35fa7c",
+    "rootDelta": "roundDollar at resident and PY line22 carries; explicit NR import; source-first cents spec/six controls",
+    "genuineReds": {
+      "law": "6fail5pass",
+      "printedCents": "6fail10softassertions",
+      "firstGreenDiagnostic": "missing import20fail retained; no oracle change"
+    },
+    "green": {
+      "tests": 1165,
+      "files": 10,
+      "types": 3,
+      "specReferences": 7062,
+      "inventory": true,
+      "strictProductsNewTestsWarnings": 0,
+      "historicalFileWarnings": 140,
+      "newHistoricalWarnings": 0,
+      "engineBuild": true,
+      "webBuild": true
+    },
+    "independentReview": {
+      "decision": "approved-narrow-internal-law-integration",
+      "receiptSha256": "949a834cd835d0ad9d85abed3091c6251b30fd4264a50c37c3eb7cc54642e0d1",
+      "runtime": "parent1165 validated; reviewer read-only Python Decimal and sources, no Node rerun"
+    },
+    "humanReview": "unassigned",
+    "filingQualified": false,
+    "evidence": [
+      "nov03-parent-pa-sp-credit-main",
+      "nov03-parent-pa-sp-credit-main-green",
+      "nov03-parent-pa-sp-credit-main-green-v2"
+    ]
+  },
+  "nov03Remote44eRefresh": {
+    "commit": "44e752d0a45021f544aa910d1bc40710ae157e1e",
+    "Web691": {
+      "runId": 41567517554,
+      "conclusion": "cancelled"
+    },
+    "CI692": {
+      "runId": 41567517463,
+      "conclusion": "cancelled"
+    },
+    "passingClaim": false
   }
 }

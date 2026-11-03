@@ -2042,7 +2042,8 @@ describe.sequential("Pennsylvania PA Orchestrator", () => {
 
       expect(result.scheduleGL.totalCredit.toNumber()).toBe(307);
       expect(result.scheduleSP.forgivenessPercentage.toNumber()).toBe(100);
-      expect(result.scheduleSP.taxPaidToOtherStates.toNumber()).toBe(500);
+      // Official 2025 Schedule SP Line 13 carries the capped PA-40 Line 22 credit.
+      expect(result.scheduleSP.taxPaidToOtherStates.toNumber()).toBe(307);
       expect(result.scheduleSP.taxLiabilityAfterOtherStateTaxes.toNumber()).toBe(0);
       expect(result.scheduleSP.taxForgivenessCredit.toNumber()).toBe(0);
       expect(result.pa40.totalCredits.toNumber()).toBe(307);

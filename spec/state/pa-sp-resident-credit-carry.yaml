@@ -1,0 +1,59 @@
+form: "PA Schedule SP resident-credit carry law successor"
+fullName: "2025 Schedule SP Section IV line13 equals PA40 line22 resident credit"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40sp.pdf"
+notes: |
+  Official2025 Schedule SP page2 SectionIV13 uses PA40 line22 resident credit;
+  its instructions page8 and PA40IN page39 repeat this. Line14=12−13;
+  line16=14*line15, whole-dollar half-up. Raw other-state tax paid may exceed
+  allowable resident credit and must not replace line13. The public legacy
+  taxPaidToOtherStates field name remains unchanged; its intended input is the
+  line22 credit. Source eligibility, foreign facts and ordinary source gates are
+  unchanged. Current actual ordinary composer already supplies base.residentCredit.
+  Frozen predecessor fixture3 and old138/342/88 expectations remain immutable
+  evidence; successor officially corrects them to166/370/60. No filing promotion.
+lines:
+  - line: "resident-limited"
+    description: "Resident line13 carries the limited G-L credit"
+    formula: "MFJ income14000 tax430; NY shared5000 paid200; line22=min200,round5000*.0307=154)=154; SP14=276;60%*276=165.6→166; other50; credits370; net60."
+    testRef: "tests/engine/state/pa-sp-resident-credit-carry.test.ts::resident SP line13 uses the allowed resident credit rather than raw paid tax"
+  - line: "statement-precedence"
+    description: "Carry the same selected G-L source used by PA40"
+    formula: "Selected NY statement5000/paid200→154 takes precedence over explicit overridepaid80; SP13 and PA40line22 both154."
+    testRef: "tests/engine/state/pa-sp-resident-credit-carry.test.ts::statement precedence carries the selected PA40 resident credit into SP"
+  - line: "paid-below-cap"
+    description: "Payment-limited credit remains unchanged"
+    formula: "NY paid80 below PA limit154: residentcredit80; SPbase350;60%=210; plus80+50=340; net90."
+    testRef: "tests/engine/state/pa-sp-resident-credit-carry.test.ts::resident credit below the PA cap carries the actual limited amount"
+  - line: "raw-paid-invariance"
+    description: "Increasing raw paid tax beyond the G-L cap cannot shrink SP"
+    formula: "NY paid800 on same5000 income remains residentcredit154; SP166; credits370;net60."
+    testRef: "tests/engine/state/pa-sp-resident-credit-carry.test.ts::raw tax above the PA cap cannot reduce forgiveness further"
+  - line: "total-cap"
+    description: "SP receives the final whole-return cap"
+    formula: "NY shared30000/paid1000 yields pre-cap921; whole-return PA tax430 caps line22at430; SPbase0 and forgiveness0."
+    testRef: "tests/engine/state/pa-sp-resident-credit-carry.test.ts::SP uses the final total resident credit after the whole-return cap"
+  - line: "zero-credit"
+    description: "Zero resident credit preserves prior forgiveness behavior"
+    formula: "No G-L; line13zero;430*.60=258; other50; total308;net122."
+    testRef: "tests/engine/state/pa-sp-resident-credit-carry.test.ts::zero resident credit preserves the existing forgiveness calculation"
+  - line: "part-year-limited"
+    description: "Part-year legacy integration follows the same printed line13"
+    formula: "Synthetic PA resident-period compensation14000 and no outsideperiod income; selected NY5000/paid200→154; SP166, total370,net60. No actual residency qualification inferred."
+    testRef: "tests/engine/state/pa-sp-resident-credit-carry.test.ts::part-year SP line13 uses the resident credit after the PA cap"
+  - line: "part-year-below-cap"
+    description: "Part-year payment-limited credit remains unchanged"
+    formula: "Same synthetic annual/residentperiod wages14000; NYpaid80→credit80; SP210;total340;net90."
+    testRef: "tests/engine/state/pa-sp-resident-credit-carry.test.ts::part-year SP preserves a credit below the PA cap"
+  - line: "nonresident-zero"
+    description: "Nonresident Schedule G-L remains ignored"
+    formula: "NR otherstateentriesignored→line22zero and SP13zero; MFJworldwide14000→60%;SP258."
+    testRef: "tests/engine/state/pa-sp-resident-credit-carry.test.ts::nonresident entries remain ignored and SP line13 stays zero"
+  - line: "aggregate-credit"
+    description: "SP13 uses aggregate rounded credit rather than aggregate raw tax"
+    formula: "NY1000/paid100→31;DE2000/paid100→61; line22=92; SPbase338*.60=202.8→203;other50;total345;net85."
+    testRef: "tests/engine/state/pa-sp-resident-credit-carry.test.ts::SP carries the sum of allowed state credits rather than summed raw taxes"
+  - line: "reciprocal-guard"
+    description: "Law correction cannot bypass the existing reciprocal employee guard"
+    formula: "NJ compensation5000/paid200 continues to reject with refund requirement."
+    testRef: "tests/engine/state/pa-sp-resident-credit-carry.test.ts::reciprocal employee credit rejection remains unchanged"

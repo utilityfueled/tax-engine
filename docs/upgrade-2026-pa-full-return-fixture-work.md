@@ -1,0 +1,9 @@
+# PA full-return synthetic G-L source and SP law correction
+
+The immutable fixture-only predecessor remains under `.local/upgrade-evidence/nov03-pa-full-return-reciprocal-fixtures/frozen-final`, manifestd702f8b0ee36b1f16a8962410fb799e00f0b04b98620812c49f91321d9d5abf0. It retained all154 historical assertions while correcting the reciprocal synthetic source examples. Independent review then identified that three retained SP monetary outputs were wrong under official2025 Schedule SP SectionIV13. This successor preserves every before version and corrects those three outputs rather than treating old tests as legal authority.
+
+Original synthetic NJ employee facts remain verbatim refund-guard negatives. Separate explicitly fictional NY compensation cases preserve every original income, withholding, supplied paid-tax amount and other-credit input. No actual taxpayer facts, return/payment qualification or filing authorization are invented.
+
+Official2025 SP13 carries PA40line22 resident credit after G-L caps. Thus tax430, NY shared5000/paid200 and othercredit50 yield residentcredit154; SP(430−154)*60%=165.60→166; totalcredits370;net60. The old138/342/88 outputs followed the incorrect raw-paid-tax200 SP reduction and remain only immutable failure evidence. All other151 original assertion lines remain unchanged, including income100000, PAwithholding1842 and positive G-L controls. The existing resident-orchestrator diagnostic500→307 is corrected for the same official line13 rule; its SPzero and other final outputs stay unchanged.
+
+The separate law successor ledger/spec/regressions document the six genuine new failures and narrow resident/PY caller fix. Nonresident zero, actual ordinary source composition, reciprocal rejection, primitive arithmetic, privacy and readiness gates stay unchanged. Validation is recorded there; this document does not supply qualified human tax review.

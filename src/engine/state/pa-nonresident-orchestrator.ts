@@ -13,7 +13,7 @@
 import { assertClaimOfRightStateMethod } from "@/engine/forms/claim-of-right.js";
 import { assertQofStateMethod } from "@/engine/forms/qof-inclusion.js";
 import Decimal from "decimal.js";
-import { d, sum } from "@/utils/decimal.js";
+import { d, roundDollar, sum } from "@/utils/decimal.js";
 import type { TaxYearInput } from "@/models/inputs.js";
 import { calculatePA40, type PA40Input, type PA40Result } from "@/engine/state/pa-40.js";
 import {
@@ -702,9 +702,8 @@ export function calculatePANonresidentReturn(
     filingCategory === "married" ? (resolved.spouseEligibilityIncome ?? ZERO) : ZERO,
   );
   const nontaxableIncome = deriveReciprocalStateNontaxableIncome(input, resolved);
-  const taxPaidToOtherStates = sum(
-    ...effectiveOtherStateCredits.map((entry) => entry.taxPaidToOtherState),
-  );
+  // 2025 Schedule SP Section IV Line 13 carries PA-40 Line 22 after G-L caps.
+  const taxPaidToOtherStates = roundDollar(scheduleGL.totalCredit);
   const scheduleSP = calculateScheduleSP({
     taxYear,
     filingCategory,

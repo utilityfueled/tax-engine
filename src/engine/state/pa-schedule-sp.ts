@@ -84,7 +84,7 @@ export interface ScheduleSPInput {
   /** PA-40 Line 12 tax liability (to apply forgiveness percentage to) */
   taxLiability: Decimal;
 
-  /** Schedule SP line for tax paid to other states or countries before forgiveness applies */
+  /** 2025 Schedule SP Line 13: PA-40 Line 22 resident credit; legacy field name retained. */
   taxPaidToOtherStates: Decimal;
 
   /** Taxpayer is claimed as a dependent on another person's federal return */
@@ -115,9 +115,9 @@ export interface ScheduleSPResult {
 
   /** Line C-1: Tax liability */
   taxLiability: Decimal;
-  /** Line C-1a: Tax paid to other states or countries */
+  /** Line C-1a: PA-40 Line 22 resident credit (2025 Schedule SP Line 13). */
   taxPaidToOtherStates: Decimal;
-  /** Line C-1b: Tax liability remaining after other-state tax reduction */
+  /** Line C-1b: Tax liability remaining after the resident-credit reduction. */
   taxLiabilityAfterOtherStateTaxes: Decimal;
   /** Line C-2: Tax forgiveness credit */
   taxForgivenessCredit: Decimal;
@@ -270,16 +270,16 @@ export function calculateScheduleSP(input: ScheduleSPInput): ScheduleSPResult {
   audit.record("PA-Schedule-SP", "C-1", "PA-40 tax liability", input.taxLiability,
     "From PA-40 Line 12");
 
-  // Line C-1a: Tax paid to other states or countries
+  // Line C-1a: Resident credit from PA-40 Line 22 (2025 Schedule SP Line 13)
   audit.record(
     "PA-Schedule-SP",
     "C-1a",
-    "Tax paid to other states or countries",
+    "Resident credit from PA-40 Line 22",
     input.taxPaidToOtherStates,
-    "From Schedule G-L / other-state tax amounts before forgiveness is applied",
+    "2025 Schedule SP Line 13 carries PA-40 Line 22 after applicable resident-credit caps",
   );
 
-  // Line C-1b: Tax liability remaining after the other-state tax reduction
+  // Line C-1b: Tax liability remaining after the resident-credit reduction
   const taxLiabilityAfterOtherStateTaxes = zeroFloor(
     input.taxLiability.minus(input.taxPaidToOtherStates),
   );

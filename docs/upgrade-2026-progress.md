@@ -2267,3 +2267,14 @@ No dependency or telemetry behavior changed. Fresh44e audits exit0 with zero
 reported advisories across522 full/426 production dependencies. The announced
 Next security fix remains unpublished at retrieval; image and human-review gates
 remain open. Source/audit receipts and a November7-or-advisory follow-up are retained.
+
+### November3 UTC: SP resident-credit ordering and printed carry
+
+Source-first law controls expose the old raw-paid-tax reduction, and separate
+resident/part-year cents controls expose raw credit80.50 carried instead of its
+printed81. Both callers now carry whole-dollar PA40line22 into SP13. The small
+legacy regression corrections follow official2025 SP, with original NJ reciprocity
+inputs retained as rejection cases and explicit fictional NY arithmetic positives.
+Main1,165/ten/types3/spec7062/inventory/strict0/both builds pass; historical lint
+warnings remain unchanged. See the [law ledger](upgrade-2026-pa-sp-resident-credit-law-work.md).
+This does not establish full-suite, human, final2026 form or filing readiness.

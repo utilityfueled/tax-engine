@@ -1943,9 +1943,8 @@ export function calculatePAReturn(
     .plus(usGovExemptInterest)
     .plus(excludedHomeSaleGainForScheduleSP)
     .plus(paLotteryExempt);
-  const taxPaidToOtherStates = sum(
-    ...effectiveOtherStateCredits.map((credit) => credit.taxPaidToOtherState),
-  );
+  // 2025 Schedule SP Section IV Line 13 carries PA-40 Line 22 after G-L caps.
+  const taxPaidToOtherStates = roundDollar(scheduleGL.totalCredit);
   const filingCategory = mapFilingCategory(input.taxpayer, resolvedOverrides);
   const additionalEligibilityIncome = (resolvedOverrides.additionalEligibilityIncome ?? ZERO).plus(
     filingCategory === "married"

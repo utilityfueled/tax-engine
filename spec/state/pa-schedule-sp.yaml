@@ -19,7 +19,7 @@ notes: |
     - Each dependent adds $9,500 to all thresholds
     - Thresholds step by $250 per 10% decrease in forgiveness
     - If eligibility income exceeds the 10% threshold, forgiveness is 0%
-    - Forgiveness applies after subtracting tax paid to other states or countries
+    - Forgiveness applies after subtracting the resident credit from PA-40 Line 22
       from PA-40 tax liability, as directed on the official Schedule SP
       instructions before the percentage is applied
     - A taxpayer who is claimed as a dependent on another person's federal
@@ -190,27 +190,29 @@ lines:
     testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP credit equals tax liability times forgiveness percentage - 100% forgiveness"
 
   - line: "C-1a"
-    description: "Tax paid to other states or countries"
-    formula: "Sum of Schedule G-L / other-state tax amounts carried into Schedule SP before forgiveness is computed"
+    description: "Resident credit from PA-40 Line 22 (2025 Schedule SP Line 13)"
+    formula: "Final allowed resident credit from PA-40 Line 22, after per-state and total Schedule G-L caps"
     notes: |
-      The official Schedule SP instructions direct the taxpayer to subtract tax
-      paid to other states or countries from PA tax liability before applying
-      the forgiveness percentage.
+      Official 2025 Schedule SP Section IV Line 13 and its instructions carry
+      the resident credit from PA-40 Line 22. The legacy public input name
+      taxPaidToOtherStates is retained, but raw tax paid or withheld is not this
+      line. Existing direct primitive tests supply the line13 reduction amount;
+      callers must carry the allowed resident credit, not aggregate raw tax.
     testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP subtracts tax paid to other states before computing forgiveness credit"
 
   - line: "C-1b"
     description: "Tax eligible for forgiveness"
     formula: "Line C-1 - Line C-1a, floor at 0"
-    notes: "This is the amount of PA tax remaining after the other-state tax reduction and before the forgiveness percentage is applied."
+    notes: "This is the amount of PA tax remaining after the resident-credit reduction and before the forgiveness percentage is applied."
     testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP subtracts tax paid to other states before computing forgiveness credit"
 
   - line: "C-2"
     description: "Tax forgiveness credit"
     formula: "Line C-1b × forgiveness percentage (Line B-4), rounded to nearest dollar"
-    notes: "This amount transfers to PA-40 Line 19."
+    notes: "This amount transfers to PA-40 Line 21 (2025 Schedule SP Line 16)."
     edgeCases:
       - "100% forgiveness: credit equals full tax liability"
-      - "Tax paid to other states fully offsets PA tax before forgiveness: credit is $0"
+      - "Resident credit fully offsets PA tax before forgiveness: credit is $0"
       - "0% forgiveness: credit is $0"
       - "Partial forgiveness: credit is rounded portion of tax"
     testRef: "tests/engine/state/pa-schedule-sp.test.ts::PA Schedule SP credit equals tax liability times forgiveness percentage - partial forgiveness"
