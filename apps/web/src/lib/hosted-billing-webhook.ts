@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
 import type { HostedPlanId } from "@tax-engine/contracts";
-import { getHostedBillingConfig } from "./hosted-billing";
+import { getHostedBillingConfig, isHostedStripeKeyModeCompatible } from "./hosted-billing";
 import {
   deleteHostedSubscriptionBySubscriptionId,
   getHostedSubscriptionByCustomerId,
@@ -366,6 +366,13 @@ export function createHostedBillingWebhookRouteHandlers(
         });
       }
 
+      if (!isHostedStripeKeyModeCompatible(env, config.mode)) {
+        return NextResponse.json(
+          { error: "Hosted billing is unavailable. Please contact the administrator." },
+          { status: 503 }
+        );
+      }
+
       const secret = env.STRIPE_WEBHOOK_SECRET?.trim();
 
       if (!secret) {
@@ -434,6 +441,13 @@ export function createHostedBillingWebhookRouteHandlers(
       const nowUnixSeconds = dependencies.nowUnixSeconds ?? Math.floor(Date.now() / 1000);
 
       if (!isWebhookEventCreationTimeValid(event.created, nowUnixSeconds)) {
+        return NextResponse.json(
+          { error: "Invalid webhook request." },
+          { status: 400 }
+        );
+      }
+
+      if (typeof event.livemode !== "boolean" || event.livemode !== (config.mode === "live")) {
         return NextResponse.json(
           { error: "Invalid webhook request." },
           { status: 400 }

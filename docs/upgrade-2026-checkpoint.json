@@ -15795,11 +15795,12 @@
     "mainREDLogSHA256": "715ab11633be8a2077483b5cbb47f1785b7a07c10d1638b5ab1cbd1bf927730f",
     "checksSHA256": "c3ebfe3951dcd720a4c2f35b5621499ab9dd73ce0f818cecb518e9650fd5c1bc",
     "sourceManifestSHA256": "5d5d0d8e7f64cec5d964a8aa2bf1d28f67210de1c6f308a19609a49331b92290",
-    "actualCorrectedDelivery": "pending fresh source-bound Preview; historical account/mail/reset succeeded before correction",
+    "actualCorrectedDelivery": "PASSED exactb42 Preview delivery/origin/reset200/oldsessionrevoked/replay400/oldpassword401/newpassword200; broaderstaging remains",
     "releaseReady": false,
     "rootReviewSHA256": "29a8f5936d71574aba140b196d3a24ab2f6f38b312cbbde6b57da182352530da",
     "commit": "b42afbf53ad7e894da4ef9e0987b152c6b669a68",
-    "pushed": true
+    "pushed": true,
+    "actualAuthReceiptSHA256": "8db210eee38e1683a22ef54612f8fdd49488951973bfe5fca88933aefd813d24"
   },
   "nov03MainOhioBusinessNativeBrowser": {
     "at": "2026-11-03T17:58:49.466297+00:00",
@@ -15860,6 +15861,36 @@
     "actualNativeBrowserSuccessor": false,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-pa-married-workspace-review-work.md",
-    "rootReviewSHA256": "eb9b2a2ac1881e05a780db7db857881cfc4d78086e22a0236ff77a51f622c6a6"
+    "rootReviewSHA256": "eb9b2a2ac1881e05a780db7db857881cfc4d78086e22a0236ff77a51f622c6a6",
+    "commit": "cffef1ac33d09f9e5681b5570f9ccf3bc1d991c7",
+    "pushed": true
+  },
+  "nov03MainHostedBillingModeBinding": {
+    "at": "2026-11-03T18:17:48.503271+00:00",
+    "base": "cffef1ac33d09f9e5681b5570f9ccf3bc1d991c7",
+    "verdict": "APPROVE finite configured-key/signed-event mode binding; no confirmed product finding",
+    "reviewedProductPatchSHA256": "6b1b2f8b79f4fe68a58625436b68530d58d0e1d231aef6a1938e2f364cb25db0",
+    "rootIndependentControls": 16,
+    "rootIndependentBeforeImplementationRED": 12,
+    "authorNewControls": 33,
+    "mainRED": 36,
+    "mainREDPass": 122,
+    "mainREDLogSHA256": "51e0965e0470643a20eac1a9751287fff08edb10ba6e0ca3423d642f71038398",
+    "mainFocused": 158,
+    "mainAdjacent": 188,
+    "PGSkipped": 10,
+    "checks": 13,
+    "checksSHA256": "529666fe0178b3370c623e0fe0c3287beaeb04d768f50d929dded07b6cb7218d",
+    "strictNewProductWarnings": 0,
+    "existingFixtureWarnings": 11,
+    "existingFixtureErrors": 0,
+    "types3": true,
+    "bothBuilds": true,
+    "review": "Common finite sk/rk test/live prefix/nonempty mode evidence; unknown forms explicitly outside finite adapter. All runtimes gate configured conflicts before custom/default outgoing effects. Webhook needs no API key or prices; SDK/raw bytes/shape/time precede explicit matching boolean mode and all writes. Self-host/nonproduction missing-key behavior preserved. Original fixture changes only explicit false modes; assertions/money unchanged.",
+    "realProviderQualification": false,
+    "liveStripeCalls": false,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-hosted-billing-mode-binding-work.md",
+    "rootReviewSHA256": "9094bd92e7f0b8a6595171b137316493d44819e62279b32b14c3a3a0e673b3e6"
   }
 }

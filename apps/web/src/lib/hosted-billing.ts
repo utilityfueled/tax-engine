@@ -176,6 +176,22 @@ function getStripeSecretKey(env: BillingEnvironment) {
   return env.STRIPE_SECRET_KEY?.trim() || null;
 }
 
+/** Local mode evidence for account-level keys, not credential validation. */
+export function isHostedStripeKeyModeCompatible(
+  env: BillingEnvironment,
+  mode: HostedBillingMode
+): boolean {
+  const key = getStripeSecretKey(env);
+
+  // Missing keys retain existing development adapters and signature-only
+  // webhooks. Production outbound configuration still requires a key.
+  if (!key || mode === "disabled") return true;
+
+  return [`sk_${mode}_`, `rk_${mode}_`].some((prefix) => {
+    return key.startsWith(prefix) && key.length > prefix.length;
+  });
+}
+
 function createStripeClient(secretKey: string) {
   return new Stripe(secretKey, {
     apiVersion: "2026-09-30.endive"
@@ -264,12 +280,13 @@ export function getHostedBillingConfig(
   const hasWebhookSecret = Boolean(env.STRIPE_WEBHOOK_SECRET?.trim());
   const nodeEnv = env.NODE_ENV?.trim().toLowerCase() || "development";
   const blocked = deploymentMode === "hosted"
-    && nodeEnv === "production"
-    && (!hasSecret || !hasStarterPrice || !hasPlusPrice || !hasWebhookSecret || appBaseUrl.blocked);
+    && (!isHostedStripeKeyModeCompatible(env, mode)
+      || (nodeEnv === "production"
+        && (!hasSecret || !hasStarterPrice || !hasPlusPrice || !hasWebhookSecret || appBaseUrl.blocked)));
 
   if (blocked) {
     console.error(
-      "[security] CRITICAL: hosted billing is missing Stripe configuration. " +
+      "[security] CRITICAL: hosted billing configuration is missing or incompatible with its mode. " +
       "Set TAX_ENGINE_APP_URL, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, " +
       "STRIPE_PRICE_ID_STARTER_MONTHLY, and STRIPE_PRICE_ID_PLUS_MONTHLY."
     );

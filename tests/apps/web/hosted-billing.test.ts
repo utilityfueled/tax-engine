@@ -263,7 +263,7 @@ describe("hosted billing", () => {
   it("verifies webhook signatures and normalizes subscription state changes", async () => {
     const subscriptionStore = createInMemoryHostedBillingSubscriptionStore();
     const payload = JSON.stringify({
-      id: "evt_1",
+      id: "evt_1", livemode: false,
       type: "checkout.session.completed",
       created: 1773273600,
       data: {
@@ -333,7 +333,7 @@ describe("hosted billing", () => {
         "stripe-signature": "invalid"
       },
       body: JSON.stringify({
-        id: "evt_invalid",
+        id: "evt_invalid", livemode: false,
         type: "checkout.session.completed",
         data: {
           object: {}
@@ -350,7 +350,7 @@ describe("hosted billing", () => {
   it("persists hosted subscription state transitions and preserves prior metadata", async () => {
     const subscriptionStore = createInMemoryHostedBillingSubscriptionStore();
     const initialPayload = JSON.stringify({
-      id: "evt_checkout",
+      id: "evt_checkout", livemode: false,
       type: "checkout.session.completed",
       created: 1773273600,
       data: {
@@ -365,7 +365,7 @@ describe("hosted billing", () => {
       }
     });
     const updatePayload = JSON.stringify({
-      id: "evt_update",
+      id: "evt_update", livemode: false,
       type: "customer.subscription.updated",
       created: 1773277200,
       data: {
@@ -378,7 +378,7 @@ describe("hosted billing", () => {
       }
     });
     const deletePayload = JSON.stringify({
-      id: "evt_delete",
+      id: "evt_delete", livemode: false,
       type: "customer.subscription.deleted",
       created: 1773280800,
       data: {
@@ -477,7 +477,7 @@ describe("hosted billing", () => {
     const subscriptionStore = createInMemoryHostedBillingSubscriptionStore();
     const secret = "whsec_plan_change";
     const checkoutPayload = JSON.stringify({
-      id: "evt_plan_checkout",
+      id: "evt_plan_checkout", livemode: false,
       type: "checkout.session.completed",
       created: 1773273600,
       data: {
@@ -493,7 +493,7 @@ describe("hosted billing", () => {
       }
     });
     const updatePayload = JSON.stringify({
-      id: "evt_plan_update",
+      id: "evt_plan_update", livemode: false,
       type: "customer.subscription.updated",
       created: 1773277200,
       data: {
@@ -579,7 +579,7 @@ describe("hosted billing", () => {
       DATABASE_URL: "postgres://tax_engine:test@localhost:5432/tax_engine"
     };
     const payload = JSON.stringify({
-      id: "evt_retry",
+      id: "evt_retry", livemode: false,
       type: "checkout.session.completed",
       created: 1773273600,
       data: {
@@ -659,7 +659,7 @@ describe("hosted billing", () => {
       DATABASE_URL: "postgres://tax_engine:test@localhost:5432/tax_engine"
     };
     const payload = JSON.stringify({
-      id: "evt_replacement",
+      id: "evt_replacement", livemode: false,
       type: "checkout.session.completed",
       created: 1773273600,
       data: {
@@ -757,7 +757,7 @@ describe("hosted billing", () => {
         "content-type": "application/json",
         "stripe-signature": "ignored"
       },
-      body: JSON.stringify({ id: "evt_bypass", type: "checkout.session.completed", data: { object: {} } })
+      body: JSON.stringify({ id: "evt_bypass", livemode: false, type: "checkout.session.completed", data: { object: {} } })
     }));
 
     expect(response.status).toBe(200);
@@ -783,7 +783,7 @@ describe("hosted billing", () => {
 
   it("records AI helper credit purchases from checkout.session.completed webhooks", async () => {
     const payload = JSON.stringify({
-      id: "evt_ai_credit_pack",
+      id: "evt_ai_credit_pack", livemode: false,
       type: "checkout.session.completed",
       created: 1_775_000_000,
       data: {

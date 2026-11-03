@@ -199,7 +199,7 @@ describe("security: webhook signature enforcement", () => {
         "content-type": "application/json"
       },
       body: JSON.stringify({
-        id: "evt_no_sig",
+        id: "evt_no_sig", livemode: false,
         type: "checkout.session.completed",
         data: { object: {} }
       })
@@ -226,7 +226,7 @@ describe("security: webhook signature enforcement", () => {
         "x-tax-engine-signature": "any-signature"
       },
       body: JSON.stringify({
-        id: "evt_no_secret",
+        id: "evt_no_secret", livemode: false,
         type: "checkout.session.completed",
         data: { object: {} }
       })
@@ -242,7 +242,7 @@ describe("security: webhook signature enforcement", () => {
 
   it("rejects webhooks signed with a different secret", async () => {
     const payload = JSON.stringify({
-      id: "evt_wrong_key",
+      id: "evt_wrong_key", livemode: false,
       type: "checkout.session.completed",
       data: { object: {} }
     });
@@ -271,7 +271,7 @@ describe("security: webhook signature enforcement", () => {
 describe("security: webhook response does not leak internal state", () => {
   it("returns only an acknowledgment without subscription details", async () => {
     const payload = JSON.stringify({
-      id: "evt_leak_check",
+      id: "evt_leak_check", livemode: false,
       type: "checkout.session.completed",
       created: 1774483200,
       data: {
@@ -348,7 +348,7 @@ describe("security: webhook body size limit", () => {
   it("accepts webhook payloads within the 64 KB body size limit", async () => {
     const secret = "whsec_size_ok";
     const payload = JSON.stringify({
-      id: "evt_size_ok",
+      id: "evt_size_ok", livemode: false,
       type: "checkout.session.completed",
       created: 1774569600,
       data: {
@@ -389,7 +389,7 @@ describe("security: webhook event idempotency", () => {
   it("deduplicates a replayed webhook event with the same event ID", async () => {
     const subscriptionStore = createInMemoryHostedBillingSubscriptionStore();
     const payload = JSON.stringify({
-      id: "evt_replay_1",
+      id: "evt_replay_1", livemode: false,
       type: "checkout.session.completed",
       created: 1774483200,
       data: {
@@ -459,7 +459,7 @@ describe("security: webhook event idempotency", () => {
   it("processes a new event for the same subscription after a different event was already stored", async () => {
     const subscriptionStore = createInMemoryHostedBillingSubscriptionStore();
     const checkoutPayload = JSON.stringify({
-      id: "evt_first",
+      id: "evt_first", livemode: false,
       type: "checkout.session.completed",
       created: 1774483200,
       data: {
@@ -471,7 +471,7 @@ describe("security: webhook event idempotency", () => {
       }
     });
     const updatePayload = JSON.stringify({
-      id: "evt_second",
+      id: "evt_second", livemode: false,
       type: "customer.subscription.updated",
       created: 1774486800,
       data: {
@@ -541,7 +541,7 @@ describe("security: webhook event timestamp replay protection", () => {
 
   function buildSignedWebhookRequest(eventCreated: number, eventId: string, deliveryTimestamp?: number) {
     const payload = JSON.stringify({
-      id: eventId,
+      id: eventId, livemode: false,
       type: "checkout.session.completed",
       created: eventCreated,
       data: {
@@ -629,7 +629,7 @@ describe("security: webhook event timestamp replay protection", () => {
 
   it("rejects a webhook event with no created field", async () => {
     const payload = JSON.stringify({
-      id: "evt_no_created",
+      id: "evt_no_created", livemode: false,
       type: "checkout.session.completed",
       data: {
         object: {
@@ -662,7 +662,7 @@ describe("security: webhook event timestamp replay protection", () => {
 
   it("rejects a webhook event with non-numeric created field", async () => {
     const payload = JSON.stringify({
-      id: "evt_bad_created",
+      id: "evt_bad_created", livemode: false,
       type: "checkout.session.completed",
       created: "2026-03-26T00:00:00.000Z",
       data: {
@@ -711,7 +711,7 @@ describe("security: webhook Content-Type enforcement", () => {
         "content-type": "text/plain",
         "x-tax-engine-signature": "any"
       },
-      body: JSON.stringify({ id: "evt_ct", type: "test", created: 0, data: { object: {} } })
+      body: JSON.stringify({ id: "evt_ct", livemode: false, type: "test", created: 0, data: { object: {} } })
     }));
 
     expect(response.status).toBe(415);
@@ -758,7 +758,7 @@ describe("security: webhook Content-Type enforcement", () => {
       headers: {
         "x-tax-engine-signature": "any"
       },
-      body: JSON.stringify({ id: "evt_noct", type: "test", created: 0, data: { object: {} } })
+      body: JSON.stringify({ id: "evt_noct", livemode: false, type: "test", created: 0, data: { object: {} } })
     }));
 
     expect(response.status).toBe(415);
@@ -771,7 +771,7 @@ describe("security: webhook Content-Type enforcement", () => {
     const now = 1774483200;
     const secret = "whsec_ct_charset";
     const payload = JSON.stringify({
-      id: "evt_charset",
+      id: "evt_charset", livemode: false,
       type: "checkout.session.completed",
       created: now,
       data: {
@@ -854,7 +854,7 @@ describe("security: webhook metadata ID format validation", () => {
     const now = 1774483200;
     const secret = "whsec_id_validation";
     const payload = JSON.stringify({
-      id: "evt_bad_cust",
+      id: "evt_bad_cust", livemode: false,
       type: "checkout.session.completed",
       created: now,
       data: {
@@ -895,7 +895,7 @@ describe("security: webhook metadata ID format validation", () => {
     const now = 1774483200;
     const secret = "whsec_id_validation";
     const payload = JSON.stringify({
-      id: "evt_bad_owner",
+      id: "evt_bad_owner", livemode: false,
       type: "checkout.session.completed",
       created: now,
       data: {
@@ -945,7 +945,7 @@ describe("security: webhook event ordering protection", () => {
     // First: process a recent checkout event at T=100
     const baseTime = 1774483200;
     const recentPayload = JSON.stringify({
-      id: "evt_recent",
+      id: "evt_recent", livemode: false,
       type: "checkout.session.completed",
       created: baseTime + 100,
       data: {
@@ -974,7 +974,7 @@ describe("security: webhook event ordering protection", () => {
     // Second: an older event (created at T=0) arrives late, delivered at T=120
     // It's within the 5-min timestamp window but older than what we stored.
     const stalePayload = JSON.stringify({
-      id: "evt_stale",
+      id: "evt_stale", livemode: false,
       type: "customer.subscription.updated",
       created: baseTime,
       data: {
@@ -1025,7 +1025,7 @@ describe("security: webhook event ordering protection", () => {
     // First: process a checkout event at T=100
     const baseTime = 1774483200;
     const checkoutPayload = JSON.stringify({
-      id: "evt_checkout_ord",
+      id: "evt_checkout_ord", livemode: false,
       type: "checkout.session.completed",
       created: baseTime + 100,
       data: {
@@ -1052,7 +1052,7 @@ describe("security: webhook event ordering protection", () => {
     // Second: cancellation arrives with an OLDER timestamp (T=0), delivered at T=120
     // Within 5-min window but older than stored record. Cancellations should always apply.
     const cancelPayload = JSON.stringify({
-      id: "evt_cancel_ord",
+      id: "evt_cancel_ord", livemode: false,
       type: "customer.subscription.deleted",
       created: baseTime,
       data: {
@@ -1099,7 +1099,7 @@ describe("security: webhook Stripe object type validation", () => {
   it("rejects checkout event with mismatched object type (e.g. customer instead of checkout.session)", async () => {
     const subscriptionStore = createInMemoryHostedBillingSubscriptionStore();
     const payload = JSON.stringify({
-      id: "evt_wrong_obj_type",
+      id: "evt_wrong_obj_type", livemode: false,
       type: "checkout.session.completed",
       created: now,
       data: {
@@ -1136,7 +1136,7 @@ describe("security: webhook Stripe object type validation", () => {
   it("rejects subscription.updated event with checkout.session object type", async () => {
     const subscriptionStore = createInMemoryHostedBillingSubscriptionStore();
     const payload = JSON.stringify({
-      id: "evt_sub_wrong_obj",
+      id: "evt_sub_wrong_obj", livemode: false,
       type: "customer.subscription.updated",
       created: now,
       data: {
@@ -1172,7 +1172,7 @@ describe("security: webhook Stripe object type validation", () => {
   it("accepts checkout event with correct object type (checkout.session)", async () => {
     const subscriptionStore = createInMemoryHostedBillingSubscriptionStore();
     const payload = JSON.stringify({
-      id: "evt_correct_obj",
+      id: "evt_correct_obj", livemode: false,
       type: "checkout.session.completed",
       created: now,
       data: {
@@ -1209,7 +1209,7 @@ describe("security: webhook Stripe object type validation", () => {
   it("accepts event without object type field (backwards compatibility with existing events)", async () => {
     const subscriptionStore = createInMemoryHostedBillingSubscriptionStore();
     const payload = JSON.stringify({
-      id: "evt_no_obj_field",
+      id: "evt_no_obj_field", livemode: false,
       type: "checkout.session.completed",
       created: now,
       data: {
@@ -1244,7 +1244,7 @@ describe("security: webhook Stripe object type validation", () => {
   it("webhook responses are indistinguishable for valid, deduplicated, and stale events", async () => {
     const subscriptionStore = createInMemoryHostedBillingSubscriptionStore();
     const payload = JSON.stringify({
-      id: "evt_indistinguish",
+      id: "evt_indistinguish", livemode: false,
       type: "checkout.session.completed",
       created: now,
       data: {

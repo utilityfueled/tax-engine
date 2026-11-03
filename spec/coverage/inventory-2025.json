@@ -6414,6 +6414,46 @@
       "knownGaps": []
     },
     {
+      "key": "federal/hosted-billing-mode-binding",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://docs.stripe.com/keys; https://docs.stripe.com/api/authentication; https://docs.stripe.com/api/events/object; https://docs.stripe.com/webhooks",
+      "specPath": "spec/federal/hosted-billing-mode-binding.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/hosted-billing-mode-independent",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://docs.stripe.com/api/events/object; https://docs.stripe.com/keys",
+      "specPath": "spec/federal/hosted-billing-mode-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-homepage-request-boundary",
       "jurisdiction": "federal",
       "taxYear": 2026,

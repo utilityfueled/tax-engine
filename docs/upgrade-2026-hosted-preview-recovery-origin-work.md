@@ -75,3 +75,5 @@ denial, old-session revocation and old/new password checks were observed on
 Fresh corrected Preview delivery/reset, tenant/billing/outage/human reviews and
 final artifact qualification remain open. No recipient, password, session, recovery
 token or private access link is published.
+
+Actual source-bound staging verification on b42afbf53ad7e894da4ef9e0987b152c6b669a68 / deployment dpl_8pDxcXUhKGtsQhqoW2dHpiFwodcV now passes. The approved isolated account signs in200; Zoho delivers a support@vivalatax.com recovery message using the exact Preview deployment origin with a fragment token, without the old staging-domain origin. Reset returns200/private-no-store; the pre-reset session is revoked, consumed-token replay400, old-password sign-in401 and new-password sign-in200. Private credentials/tokens remain ignored0600 files; no secret is committed. Receipt `.local/upgrade-evidence/nov03-staging-signup-api/b42-recovery-completed-redacted.json` records the exact source and limits. This bounded remote auth result is distinct from later source identity, full hosted tenant/security/billing/outage qualification and production operation.

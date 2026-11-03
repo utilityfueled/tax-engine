@@ -26,7 +26,7 @@ describe("hosted Stripe signed delivery recovery", () => {
 
   function subscriptionPayload(created: number) {
     return JSON.stringify({
-      id: "evt_delivery_recovery", type: "checkout.session.completed", created,
+      id: "evt_delivery_recovery", livemode: false, type: "checkout.session.completed", created,
       data: { object: { object: "checkout.session", customer: "cus_delivery",
         subscription: "sub_delivery", metadata: { hostedOwnerId: "owner-delivery", planId: "starter" } } }
     });
@@ -71,7 +71,7 @@ describe("hosted Stripe signed delivery recovery", () => {
 
   it("persists delayed credit deliveries through the existing idempotent checkout ledger", async () => {
     const created = now - 3 * 86400;
-    const payload = JSON.stringify({ id: "evt_delivery_credits", type: "checkout.session.completed", created,
+    const payload = JSON.stringify({ id: "evt_delivery_credits", livemode: false, type: "checkout.session.completed", created,
       data: { object: { object: "checkout.session", id: "cs_delivery_credits", customer: "cus_delivery",
         amount_total: 1500, currency: "usd", metadata: { purchaseKind: "ai-credit-pack",
           hostedOwnerId: "owner-delivery", aiCreditCents: "1000" } } } });
