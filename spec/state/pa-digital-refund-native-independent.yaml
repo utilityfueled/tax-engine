@@ -1,0 +1,44 @@
+form: "PA-Digital-Refund-Native-Independent-Review"
+fullName: "Independent actual refund draft, confirmation and privacy controls"
+taxYear: 2025
+reference: "https://law.lis.virginia.gov/vacode/title58.1/chapter3/section58.1-499/"
+notes: |
+  Independently refreshed official VA58.1-499(D) and61PaCode111.4(b) before runtime.
+  VA amounts strictly below1 need special written application; exactly1 does not
+  trigger that threshold. Actual award/received refund/full zero-netpaid account
+  remain separate factual originals. No PA credit on an actually refunded foreign
+  overpayment. Explicitly fictional sources are not external attestation.
+  Review covers only four native collector products, no tax-core law qualification,
+  final2026 forms, production data, human review or filing promotion. Parent/child
+  confirmations and exact current pairs must remain fail closed without read repair.
+lines:
+  - line: "threshold"
+    formula: "Independent actual1.00 full refund with known no specialapplication is admitted;0.99 requires actual submitted application and received refund, not a request."
+    testRef: "tests/guided-interview/pa-digital-refund-native-independent.test.ts::independent VA application threshold is strictly below one dollar"
+  - line: "unknowns"
+    formula: "Unknown or retained conflicting application choices are rejected and never erased on reads. Zero and requested-only refunds are not actually received full refunds."
+    testRef: "tests/guided-interview/pa-digital-refund-native-independent.test.ts::independent refund replay rejects %s and retains private records"
+  - line: "pair"
+    formula: "Draft and canonical packet must both be confirmed and exactly equal before stripping web-only keys; equal-dollar proof/original/asof changes reject without repair."
+    testRef: "tests/guided-interview/pa-digital-refund-native-independent.test.ts::independent canonical boundary rejects %s without repairing either side"
+  - line: "scope"
+    formula: "Presence of residentcredit draft or packet with fullrefund sources stays unsupported; no scalar paidtax/credit override can be silently stripped."
+    testRef: "tests/guided-interview/pa-digital-refund-native-independent.test.ts::independent completion preserves mixed-credit and unknown-field guards"
+  - line: "canonical"
+    formula: "Confirmed private draft survives JSON roundtrip; strict canonical completion strips only refundedDigitalDraft after child pair validation and emits PAcredit0, rawrefund0.30."
+    testRef: "tests/guided-interview/pa-digital-refund-native-independent.test.ts::independent confirmed draft roundtrip emits strict canonical zero-credit sources"
+  - line: "native-blank"
+    formula: "Native add leaves actual year/owner/amount/date/application choice unknown; no taxpayer SSN or source snapshots are rendered as text, hidden fields or JSON."
+    testRef: "tests/apps/web/pa-digital-refund-native-independent.test.tsx::independent native add preserves unknowns and minimizes private source rendering"
+  - line: "native-edit"
+    formula: "Editing original remittance source clears child draft, child packet and parent confirmation while retaining old originals and unrelated actual source groups."
+    testRef: "tests/apps/web/pa-digital-refund-native-independent.test.tsx::independent native remittance edit invalidates child and parent and retains originals"
+  - line: "native-read"
+    formula: "Rerendering a stale current input produces no onChange and leaves retained originals unchanged; it cannot repair or confirm the child pair."
+    testRef: "tests/apps/web/pa-digital-refund-native-independent.test.tsx::independent native stale reads never call source mutation or repair snapshots"
+  - line: "native-receipt"
+    formula: "Unknown actual-received fact cannot be replaced by award/request; failed explicit confirmation retains source evidence and blocked parent."
+    testRef: "tests/apps/web/pa-digital-refund-native-independent.test.tsx::independent native pending receipt cannot be promoted by award or parent confirmation"
+  - line: "native-remove"
+    formula: "Explicit child removal clears only its pair and parent confirmation; actual VA gross withholding history and other original source groups remain retained."
+    testRef: "tests/apps/web/pa-digital-refund-native-independent.test.tsx::independent native removal retains foreign history and unrelated originals"

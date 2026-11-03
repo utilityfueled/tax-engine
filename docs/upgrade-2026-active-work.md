@@ -100,3 +100,10 @@ policy. Direct account API redirects to Vercel SSO; no protection bypass or new
 share link is authorized. No account creation/delivery/recovery success is
 established. Do not refresh/discard the pending form. Keep that handoff available
 and continue independent implementation while waiting.
+
+## November 3 native refund integration
+
+- [x] Actual VA refund native collector: distinct twenty-control review plus author nine; fresh main five genuine failures, then779/15,types3/spec7214/inventory714/strict ten paths0/both builds. See [source-first and review receipts](upgrade-2026-pa-digital-refund-native-work.md). MISC collector `ecf0c30a` is pushed.
+- [ ] Digital browser fixture: preserve original1536 oracles and incomplete-source negative, add separately explicit fictional actual PA records and visible reconfirmations. Prior both-viewport failures retained.
+- [ ] Brokerage candidate held: NY1099B is not established as IT203line62 withholding. Preserve frozen candidate and all original assertions; implement separately actual erroneous-payment claim, agency allowance and received-principal/full-account sources before review.
+- [ ] Royalty canonical class and distinct actual MI settlement source methods; preserve original80.20 withholding/stateIncome12000.25 and all original tax/PDF/browser assertions. A rounded80 form is not evidence of received80.20.

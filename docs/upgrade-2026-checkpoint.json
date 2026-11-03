@@ -13896,6 +13896,29 @@
     "actualPAProofUI": "pending",
     "humanQualified": false,
     "filingEligible": false,
-    "evidence": ".local/upgrade-evidence/nov03-parent-zero-income-misc-main*"
+    "evidence": ".local/upgrade-evidence/nov03-parent-zero-income-misc-main*",
+    "commit": "ecf0c30aa6c00a1a1f8bdef31423997bec36b175",
+    "pushed": true
+  },
+  "nov03MainPADigitalRefundNative": {
+    "base": "ecf0c30aa6c00a1a1f8bdef31423997bec36b175",
+    "authorManifestSHA256": "1a9addbea501670ba85c47ef00955519505664ca1a61b8ec8d82131161543bc5",
+    "independentReviewSHA256": "23669bf1e004110d584ba88ab5b8602eac5a000cf5fdc8e7dce8b428bd7eecbb",
+    "mainIntegrationReviewSHA256": "963774f8b15098dd4de8b425e67b26cab2777f8aa63d6b08439436cd8802f1e6",
+    "freshMainRed": "five genuine absent native controls",
+    "exactProducts": 4,
+    "tests": 779,
+    "files": 15,
+    "types": 3,
+    "specReferences": 7214,
+    "inventoryEntries": 714,
+    "strictTypeScriptPaths": 10,
+    "strictWarnings": 0,
+    "bothBuilds": true,
+    "passedCommands": 11,
+    "fullBrowser": "pending",
+    "humanQualified": false,
+    "filingEligible": false,
+    "evidence": ".local/upgrade-evidence/nov03-parent-pa-refund-native-main*"
   }
 }

@@ -12753,6 +12753,46 @@
       ]
     },
     {
+      "key": "state/pa-digital-refund-native",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://law.lis.virginia.gov/vacode/title58.1/chapter3/section58.1-499/",
+      "specPath": "spec/state/pa-digital-refund-native.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/pa-digital-refund-native-independent",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://law.lis.virginia.gov/vacode/title58.1/chapter3/section58.1-499/",
+      "specPath": "spec/state/pa-digital-refund-native-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/pa-digital-refund-private-saved-pdf",
       "jurisdiction": "state",
       "taxYear": 2025,

@@ -2359,3 +2359,7 @@ Remote877 browser completed532pass/4fail/5skip, with two digital and two royalty
 ### November 3: actual zero-income MISC originals
 
 A finite2025 native collector retains actual original identity, known-zero income boxes and exact positive state remittance, requires explicit confirmation, rejects stale/duplicate records, and appends originals once. It does not construct PA payment eligibility. Distinct66-control review and main948tests/13files pass after fresh44fail/1pass. Three typechecks,7,196 spec references, inventory, strict ten-path lint and both builds pass. See [the source and integration ledger](upgrade-2026-guided-zero-income-misc-work.md). PA retirement/dated bridge is committed/pushed `1d601c06`; November3 public provider documentation refresh is separately committed/pushed `d43142b7` without model promotion or paid calls.
+
+### November 3: native actual VA digital refund records
+
+Actual remittance, filed-return, application, award, received-refund and complete-account fields now have native controls with explicit confirmation and stale-source invalidation. Four exact independently reviewed products pass main779 tests/15files, three typechecks,7,214 spec references, inventory, strict ten-path lint and both builds after fresh five genuine failures. See [the package evidence](upgrade-2026-pa-digital-refund-native-work.md). MISC collector `ecf0c30a` is committed/pushed. Full browser, human and global readiness gates remain open.

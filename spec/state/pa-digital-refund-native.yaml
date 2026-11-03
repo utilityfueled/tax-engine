@@ -1,0 +1,47 @@
+form: "Native actual VA digital tax refund source collection"
+taxYear: 2025
+reference: "https://law.lis.virginia.gov/vacode/title58.1/chapter3/section58.1-499/"
+notes: |
+  Collect actual originals; never compute VA liability or infer refund receipt.
+  VA58.1-499D requires special written taxpayer application below1;
+  61PaCode111.4b denies PAcredit for actual overpayment subsequently refunded.
+  Existing finite2025 single primary full-year PA method only, unchanged.
+  Native retained draft: every year/date/state/amount/answer starts blank/null.
+  Owner selection explicitly attests current primary ownership; no SSN JSON editor.
+  Every edit clears child and parent confirmations. Reads never refresh originals.
+  Explicit specialApplicationStatus unknown/none/reported stays web-only; unknown
+  rejects, none cannot erase retained reported application records. Strict strip
+  requires current exact confirmed child pair before parent canonical construction.
+lines:
+  - line: "entry"
+    description: "Existing completion section exposes native actual refund collector"
+    formula: "Actual refund entry button and structured labeled native fields; no JSON editor."
+    testRef: "tests/apps/web/pa-digital-refund-native.test.tsx::offers native actual refund source collection in completion records"
+  - line: "blank"
+    description: "Unknown sources stay unknown across saving and remount"
+    formula: "Blank/null amount/year/state/status; reads do not confirm or replace originals."
+    testRef: "tests/apps/web/pa-digital-refund-native.test.tsx::retains blank private refund records without confirming on reads"
+  - line: "native-complete"
+    description: "Actual source fields can establish both sub-dollar and larger refund records"
+    formula: "Actual0.30 requires reported application; actual1.30 none explicitly chosen; child thenparent confirmation yields actual credit0."
+    testRef: "tests/apps/web/pa-digital-refund-native.test.tsx::completes actual refund originals through native controls: %s"
+  - line: "edit"
+    description: "Child receipt edits invalidate child and parent"
+    formula: "Retain actual records, source flagsnull; builder denies until actual reconfirmation."
+    testRef: "tests/apps/web/pa-digital-refund-native.test.tsx::invalidates both confirmations after a native receipt edit"
+  - line: "empty-helper"
+    description: "Blank helper supplies no tax facts"
+    formula: "No factual year/jurisdiction/payment defaults or confirmed original snapshots."
+    testRef: "tests/guided-interview/pa-digital-refund-native.test.ts::starts a retained refund draft with unknown facts"
+  - line: "pair"
+    description: "Canonical parent validates exact retained child pair"
+    formula: "Equal current confirmed pair strips onlytypedwebdraft; changed/pending/missing/stale pairrejects."
+    testRef: "tests/guided-interview/pa-digital-refund-native.test.ts::requires an exact current confirmed refund draft pair before stripping"
+  - line: "application-choice"
+    description: "Unknown is distinct from explicit no special application"
+    formula: "Unknown rejects; none cannot erase populated original; sub-dollar none stillrejects existingcore."
+    testRef: "tests/guided-interview/pa-digital-refund-native.test.ts::preserves actual application records until explicitly reconciled"
+  - line: "zero-and-receipts"
+    description: "Actual positive originals cannot become zero or duplicate receipts"
+    formula: "Retained exact0 payment/edit/duplicatecurrentindex rejects; original amounts remain unchanged."
+    testRef: "tests/guided-interview/pa-digital-refund-native.test.ts::rejects zero edited and duplicate original receipts without changing saved sources"
