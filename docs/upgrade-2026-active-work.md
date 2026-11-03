@@ -1,12 +1,12 @@
 ## Current main package
 
-- Digital canonical method committed/pushed44e752d0; separate Sentry11 review
-  committed/pushed15e9a392. The SDK remains10.76.2; actual npm audits0.
-- PA SP law correction now passes1,165/ten, types3/spec7062/inventory/strict0/
-  both builds on main. Source-first11 law +six printed-cents controls retain
-  genuine failures. Corrected line13 carries printed PA40line22 after G-L caps;
-  old138/342/88 law outputs become166/370/60. Distinct read-only agent review949a834c approved;
-  small tax commit/push follows. See resident-credit law ledger.
+- Digital canonical44e752d0, separate Sentry11 review15e9a392 and PA SP law
+  correction3ff0f4c0 are committed/pushed. SP1,165/ten/types3/spec7062/
+  inventory/strict0/both builds and distinct review949a834c pass.
+- PA debt/foreign canonical V3 now main750/eleven/types3/spec7077/inventory/
+  strict0/both builds pass after genuine6fail4pass before products. Distinct
+  V3 review9fe87c7d and main two-seam reviewdd98a643 approve, preserving digital.
+  Commit/push follows; actual UI/workspace/PDF and human gates remain open.
 
 ## Active private queue
 
@@ -17,22 +17,24 @@
   including unchanged peer11. Sixth actual PDF with allthree references is
   source-first bdbf6c33 and running next; final allsix/33page strict/render/visual
   inspection, distinct review and parent integration remain required.
-- [ ] PA personal debt/foreign source V3 exact11 frozena719fce6 independently
-  approved9fe87c7d with33 controls. Retained debtor/security/property/proceeds
-  and actual-charge conflicts now reject. Original9+2 independent failures
-  remain preserved. Author62/six/types/spec/strict0 pass; main must merge only
-  two shared seams without overwriting digital44, replay genuine reds, check
-  both builds and commit. Actual collector/workspace/PDF successor still open.
+- [ ] PA personal debt/foreign collector: author `state_guides_review` owns
+  new private source helper/component and one state-return UI seam against exact
+  merged core. Source-first8-file proposal; no product/UI qualification yet.
+  Core V3 independently reviewed; original9+2 failures retained. Actual
+  collector/workspace/PDF followthrough and broader methods remain open.
 - [ ] W2 test-only complete-source fixture candidate87504079: actual fictional
   residency, filed NY final tax/payment/account and PA timing facts supplied
   independently; original incomplete flow retained federalnonnull/PA-null.
   Focused12/2+related37/4+catalog624/types3/spec7050/strict0 pass privately.
-  Freeze, distinct review and main integration pending. No product defaults.
+  Frozen194adee8 and distinct static review2eb8f83b approve; main replay/integration pending. No product defaults.
 - [ ] Existing workspace PA/foreign-COD positive remains180/181 broader tests:
   original assertions unchanged; actual ordinary/completion records required.
 - [ ] Real royalty method: original MI withholding80.20 does not prove final
   tax/refund. No fabricated settlement or complete-composer waiver.
-- [ ] Other remaining guided business/claim-of-right/digital/foreign/investment/
+- [ ] Digital withholding: genuine old1/new2 complete-positive failures retained.
+  Actual VA .30 special-request refund proof needs narrow typed method; no
+  positive dropped, inferred settlement or global guard bypass.
+- [ ] Other remaining guided business/claim-of-right/foreign/investment/
   OID/retirement/unemployment/bridge/state-routing positive sources and actual
   PA/OH household/class/local/credit/special methods remain open. A guarded
   unsupported scenario does not complete its method.

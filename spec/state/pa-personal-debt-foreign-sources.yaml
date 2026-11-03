@@ -1,0 +1,49 @@
+form: "PA Personal Debt and Foreign Bank Sources"
+fullName: "Finite actual purely personal unsecured cancellation and foreign-taxed ordinary bank interest"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/taxlawpoliciesbulletinsnotices/taxbulletins/pit/documents/pit_bulletin_2009-02.pdf"
+notes: |
+  Official seven source bytes and independent conditional3070 trace frozen in
+  nov02-pa-cod-foreign-source-investigation/proposal-freeze.json f13931d5c4abfa7061508087b28c0896b54852ceca8031e89a8cd63660b7bfe4.
+  Bulletin2009-02 III/IV.A/D/V: purely personal unsecured use is outsidePA classes;
+  employment, priorPA deductions, mixed business/investment use and property methods remain unsupported.
+  Interest guide: ordinary personal interest is gross income allocated at actual receipt dates.
+  Deductions/Credits guide: federal itemized taxes/foreign credits do not carry toPA;
+  foreign countries do not qualify for resident credit for years starting2014.
+  Tax Forgiveness guide excludes cancellation with no cash/property from eligibility income.
+  No PA federal NOL/attribute deduction; keep empty actual regular/AMT histories and federal327/145.
+  New explicitly fictional original supplemental records are authored as such; previous data has UNKNOWN personal-use qualifications.
+  UI collector, broaderCOD, final2026 forms and filing readiness are not qualified by this finite primitive.
+lines:
+  - line: "classification"
+    description: "Actual primary personal debt outside PA taxable income"
+    formula: "Every1099C exactly once; complete current original/owner/year/event/date/creditor/account/legal discharge, full cancelled principal+interest+fees, purely personal use with no PA deduction/basis/business/rent/investment/employment/service consideration or property/newcash transfer. Unknown or unsupported requires separate method. PA taxable and SP cash/property eligibility inclusion are both0, not a federal insolvency exclusion."
+    testRef: "tests/engine/state/pa-personal-debt-foreign-sources.test.ts::personal COD source replay preserves exact classification and originals"
+  - line: "foreign-interest"
+    description: "Gross ordinary bank interest and actual foreign tax source"
+    formula: "ForeignBankTaxSources each positiveBox6 once; exact original owner/year/country/foreigncountry jurisdiction and actual USD paid tax receipt total reconcileBox6. Never deductforeign100 from gross5000 or allowcountry residentcredit. Interest receipts remain actual datedgross3000March31+2000Sept30; taxreceiptSept15 is not interest receipt."
+    testRef: "tests/engine/state/pa-personal-debt-foreign-integration.test.ts::foreign ordinary bank allocation uses actual credits for all3: %s"
+  - line: "input-gates"
+    description: "No old generic confirmation manufactures PA facts"
+    formula: "Missing granular debt/foreign originals, wrong owner/year/statement/amount, duplicate or missingcoverage, nullanswers and stale retained snapshots reject. Legacy incomplete COD remains negative; source reads do not refresh confirmations."
+    testRef: "tests/engine/state/pa-personal-debt-foreign-sources.test.ts::personal COD rejects each unknown or unsupported factual condition: %s"
+  - line: "precision"
+    description: "Exact raw cancelled charges and foreign tax cents"
+    formula: "Adaptive per-call Decimal precision from admitted digit/scale/count/carry, no global mutation/inputbound widening. Original cancelled total equals principal+interest+fees once; originalBox3 is included interest, not added again. Stable public Decimal constructors/audits preserve huge/cents values and immutable originals."
+    testRef: "tests/engine/state/pa-personal-debt-foreign-sources.test.ts::personal and foreign source exact large cents survive repeated public outputs"
+  - line: "composition"
+    description: "Actual composition preserves gross classes and federal current-tax binding"
+    formula: "Fullresident95000+5000=100000 tax3070;4000 originalPAWH countedonce. With separately explicitcomplete factual timely/noothercredit/use/refund sources overpayment930; never infer completion from calculated930. SP excludes cancellation300 and includesworldwide100000. Federal foreign carries327/145 unchanged. Other missing actualPA sources stillreject."
+    testRef: "tests/engine/state/pa-personal-debt-foreign-integration.test.ts::complete fictional sources compose PA3070 without federal foreign election changes"
+  - line: "readiness"
+    description: "Source commitment privacy and readiness"
+    formula: "Bind all rawcurrentoriginals and actualsourceproofs; sameamount edits invalidate commitment. Publicaudit never emits identifiers, private originalinputunchanged. Existing filingfalse and unavailable2026 law/form gates remain. Collector is explicitly pending."
+    testRef: "tests/engine/state/pa-personal-debt-foreign-integration.test.ts::PA source confirmation and original edits remain fail closed"
+  - line: "retained-debtor-security"
+    description: "Finite unsecured method reconciles actual debtor identity and linked original boxes"
+    formula: "Actual PA noCollateralOfAnyKindConfirmed true with existing source reference or matching confirmed current federal unsecuredPersonalDebtConfirmed true establishes unsecured status. Optional absent/null PA answer is unknown, never default true. With neither evidence reject; explicit false in either retained source rejects. Actual retained accountHolder/name/SSNlast4 and personallyLiable/FMV reconcile current primary/original; absent optional identity is not a contradiction. Source-confirmed business/investment/mixed proceeds, explicit noPropertyTransfer false or unsecured false cannot be overwritten. No assertion that all secured personal debt is taxable; those methods remain outside this finite IV.A scope."
+    testRef: "tests/engine/state/pa-personal-debt-foreign-correction.test.ts::actual PA-only unsecured proof accepts without federal exclusion metadata"
+  - line: "retained-actual-charges"
+    description: "Confirmed retained actual charge totals reconcile current original"
+    formula: "If linked retained personalDebt is sourceFactsConfirmed true and supplies actualDischargedAmount or actualDischargedInterest, each supplied value must equal current1099C amountDischarged or included interest respectively, matching existing federal source consumer semantics. Missing optional values remain absent and are not defaulted or universally required. Reject explicit400vs300 or30vs0 contradiction; no override, no replacement source amounts. Combined noPayment/newBorrowing false is not treated as proof of a PA cash/property receipt."
+    testRef: "tests/engine/state/pa-personal-debt-retained-amount-independent.test.ts::independent current retained actual discharge amounts cannot contradict PA complete charges: %s"

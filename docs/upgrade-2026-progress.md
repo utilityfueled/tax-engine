@@ -2278,3 +2278,14 @@ inputs retained as rejection cases and explicit fictional NY arithmetic positive
 Main1,165/ten/types3/spec7062/inventory/strict0/both builds pass; historical lint
 warnings remain unchanged. See the [law ledger](upgrade-2026-pa-sp-resident-credit-law-work.md).
 This does not establish full-suite, human, final2026 form or filing readiness.
+
+### November3 UTC: finite personal cancellation and gross foreign interest
+
+The exact reviewedV3 source helper and two preserved-digital integration seams
+now accept complete current personal unsecured debt and foreign-bank receipts.
+Original federal exclusions do not manufacture PA qualifications; retained actual
+identity/security/charge conflicts reject. Gross interest stays gross, without
+a foreign-country resident credit. Fresh main6fail4pass precedes products;
+750/eleven/types3/spec7077/inventory/strict0/both builds pass. Separate V3 and
+main seam reviews approve. See the [source ledger](upgrade-2026-pa-personal-debt-foreign-ledger.md).
+The actual collector, workspace/PDF, broader methods and human qualification remain open.

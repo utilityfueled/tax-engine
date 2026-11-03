@@ -13596,7 +13596,9 @@
       "nov03-parent-pa-sp-credit-main",
       "nov03-parent-pa-sp-credit-main-green",
       "nov03-parent-pa-sp-credit-main-green-v2"
-    ]
+    ],
+    "commit": "3ff0f4c0",
+    "pushed": true
   },
   "nov03Remote44eRefresh": {
     "commit": "44e752d0a45021f544aa910d1bc40710ae157e1e",
@@ -13609,5 +13611,37 @@
       "conclusion": "cancelled"
     },
     "passingClaim": false
+  },
+  "nov03MainPAPersonalDebtForeign": {
+    "baseCommit": "3ff0f4c0",
+    "authorV3": "a719fce6641cc9d01fed47cf6dd7b0fc184b460fc5526e74735e8edf1f57e446",
+    "independentV3Review": "9fe87c7d487b9ebf966e33709db922418d98075170979fb5fbec2a2ac912d2aa",
+    "mainSeamReview": "dd98a643dd7500a24ac1d1f5ae324645bdc83abee2e54a1484a8b0b5624239a8",
+    "mainBeforeProducts": {
+      "passed": 4,
+      "failed": 6,
+      "files": 2,
+      "logSHA256": "1d9452a20049f186307b1cf5ae6a362f6072089aed15de8e6e0cd32c3f0c5c68"
+    },
+    "mainGreen": {
+      "passed": 750,
+      "files": 11,
+      "types": 3,
+      "specReferences": 7077,
+      "inventory": true,
+      "strictWarnings": 0,
+      "engineBuild": true,
+      "webBuild": true
+    },
+    "exactNewModules": 2,
+    "manualSharedSeamsPreservingDigital": 2,
+    "actualUIWorkspacePDF": "pending",
+    "humanReview": "unassigned",
+    "filingEligible": false,
+    "evidence": [
+      "nov03-parent-pa-cod-foreign-main",
+      "nov03-parent-pa-cod-foreign-main-red",
+      "nov03-parent-pa-cod-foreign-main-green"
+    ]
   }
 }
