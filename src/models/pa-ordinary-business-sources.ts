@@ -1,9 +1,11 @@
 /** Private actual cash-service business source records. No source defaults or inferred zero. */
 import {z} from 'zod';
+import {PABusinessPendingAccountSourcesSchema} from './pa-business-pending-account.js';
 const answer=z.boolean().nullable();
 const original=z.record(z.string(),z.unknown()).optional();
 const expenseCategory=z.enum(['advertising','amortization','badDebts','bankCharges','carAndTruck','commissionsAndFees','contractLabor','depletion','depreciation','duesAndPublications','employeeBenefitPrograms','businessInterest','freight','idcsAmortization','idcsCurrentExpensing','section179Expense','insurance','laundryAndCleaning','legalAndProfessional','managementFees','officeExpense','pensionAndProfitSharing','postage','rentOnBusinessProperty','repairsAndMaintenance','startupCostsDirectExpense','supplies','taxes','telephone','travel','meals','utilities','wages','otherExpenses']);
 export const PAOrdinaryBusinessSourceSchema=z.object({
+ pendingNYAccountSources:PABusinessPendingAccountSourcesSchema.optional(),
  sourceTaxYear:z.number().int().nullable(),sourceReference:z.string(),sourceFactsConfirmed:answer,
  owner:z.object({accountHolder:z.enum(['','primary','spouse']),originalTaxpayer:z.object({firstName:z.string(),lastName:z.string(),ssn:z.string()}).strict().optional()}).strict(),
  businessIdentity:z.object({name:z.string(),activity:z.string(),businessCode:z.string(),einStatus:z.enum(['','issued','not_issued']),ein:z.string(),sourceReference:z.string()}).strict(),

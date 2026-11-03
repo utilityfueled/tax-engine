@@ -2395,3 +2395,7 @@ The actual original-bound OID method now tolerates only the sixteen exact string
 ### November 3: complete coverage refresh at 944eb778
 
 The unchanged full coverage run records22,132pass/eightfail/33pending. Branches86.79% meet the85% gate; functions87.88% remain below90%. The original failures, exact source amounts and PostgreSQL pending cases remain recorded rather than weakened. See [the full verification evidence](upgrade-2026-head944-full-verification.md). Matching Preview metadata is READY; current CI/container qualification is still incomplete. OID944eb778 is committed and pushed. Focused source reconciliation, royalty-history correction and meaningful native integration work continue independently of external review and staging-account requirements.
+
+### November 3: actual outstanding NY business remittance
+
+The finite2025 source method preserves actualNY paid.20/refund0/outstanding.20 separately from liability0 and mandatoryPAcredit0 for allthree PA residencies. Fresh main3genuine failures/11passes precede integration; main1,234/38, three types,7,300spec links, inventory/check, strict13paths0 and both builds pass. Distinct25 cash/source/privacy controls and finalfive-product integration review approve the exact addition while preserving newer royalty/brokerage/digital behavior. See [the source ledger](upgrade-2026-pa-business-pending-account.md). Native/guided fixture/workspace/human/final2026 gates remain open; no filing promotion.

@@ -14158,5 +14158,28 @@
     "logSHA256": "c655f43cc81200a470128e91e1ab1cceb65fabd4cde346e2c18899beea6aa789",
     "qualified": false,
     "summaryPath": ".local/upgrade-evidence/nov03-head944-coverage/summary.json"
+  },
+  "nov03MainBusinessPendingAccount": {
+    "base": "69848bce",
+    "authorManifestSHA256": "0aa8fd4eb70e52584272f4d3fc5f8f039f0a9d93ddb1d09bc93933733d9de5af",
+    "independentFinalReviewSHA256": "c602bc4019ff2be6fa2f45c0c821e3015b73b97bab3190ca2900b35d44e14ba2",
+    "freshMainRedFailed": 3,
+    "freshMainRedPassed": 11,
+    "freshMainRedLogSHA256": "f39ca4273dec8c709fc5439264762f2f99da060fbc50d5627ee520a7097b448f",
+    "distinctAdditionalTests": 25,
+    "mainTests": 1234,
+    "files": 38,
+    "types": 3,
+    "specReferences": 7300,
+    "inventory": 732,
+    "strictWarnings": 0,
+    "builds": 2,
+    "passedCommands": 11,
+    "exactProducts": 4,
+    "manualComposerPreservesNewerMethods": true,
+    "humanQualified": false,
+    "filingEligible": false,
+    "scope": "Finite2025 actual outstanding NY zero-business remittance, mandatoryzeroPAcredit; collectors/workspace/browser/legacyfixture separate",
+    "integrationReviewSHA256": "54c6fd0b089df1a8ff5728331192baf544b515f10d7c19ca15e95ea9eedc409c"
   }
 }
