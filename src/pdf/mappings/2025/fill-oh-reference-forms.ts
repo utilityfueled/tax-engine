@@ -1,3 +1,4 @@
+import { fillOhioSchoolDistrictOfficialReview } from './fill-oh-school-district-official-review.js';
 import {resolveOhioResidencyReview,type PreparedOhioResidencyReview} from "../../../engine/state/oh-residency-source.js";
 import {fillOhioOrdinaryOfficialReview} from './fill-oh-ordinary-official-review.js';
 import { assertPdfExportAllowed } from "../../export-policy.js";
@@ -426,5 +427,6 @@ export async function fillOhioReferenceForms(
   }
 
   filledForms.push(...await fillOhioOrdinaryOfficialReview(taxInput,federalResult,outputDir,overlay,reviewContext));
+  filledForms.push(...await fillOhioSchoolDistrictOfficialReview(taxInput,federalResult,outputDir,overlay,reviewContext));
   return { filledForms };
 }

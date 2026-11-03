@@ -1,0 +1,28 @@
+form: "Independent actual Ohio school-district review packet"
+taxYear: 2025
+reference: "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/sd100bundle-fi.pdf"
+notes: |
+  Independently pinned final2025 blank SHA4b065c66 and booklet SHA931b21e.
+  Exact4c735 private; raw fixture facts only before candidate products.
+  Singleprimary/full-year Hillsdale0302/ordinary80000 W2, separate OhioITWH3000.
+  No native collector, postal validation, actual agency evidence, final2026,
+  filing or human qualification. Stale PDF field names are not printed labels.
+lines:
+  - line: "independent-earned-base"
+    formula: "Official booklet51 Hillsdale0302 E=.0125; actualwages80000, noSE, MAGI80000 => SD29/31/32/33=80000;34=.0125;35/37/38=1000. Exemptions2150 yield printed5=77850 but do not reduce earned base. No municipal50 or separateIT3000 in SDWH."
+    testRef: "tests/pdf/oh-school-district-official-independent.test.ts::independent SD original arithmetic and exact physical cells %s"
+  - line: "independent-payments"
+    formula: "Base WH1100=>payments1100/over100/request100; estimates600+400=>1000/request0; outgoing25=>request75; actualprior100+WH1100=>1200/request200; zeroWH+estimates1000=>1000/request0/noWHcompanion. Requestedrefund is not receipt/issuance."
+    testRef: "tests/pdf/oh-school-district-official-independent.test.ts::independent SD original arithmetic and exact physical cells %s"
+  - line: "printed-conditional"
+    formula: "Original-only packet leaves amended printed14 blank. When printed15>10, source explicitly jumps19: printed16/17/18 stayblank. Printed13 is rawfieldL14;19rawL20;20rawL21;21rawL22. Read actual saved text at independently pinned printed coordinates, not strings anywhere or stale tooltip names."
+    testRef: "tests/pdf/oh-school-district-official-independent.test.ts::independent SD original arithmetic and exact physical cells %s"
+  - line: "actual-rate-and-status"
+    formula: "Printed34 rawCOLA37 originalMaxLen4 conflicts actual5-character .0125; exact5 is allowed only at unchanged sourcebounds. Source Single and Primary only are visibly selected; spouse/joint/MFS/amended/NOL/extension remainblank. No previous filled source appearance may leak."
+    testRef: "tests/pdf/oh-school-district-official-independent.test.ts::independent SD original arithmetic and exact physical cells %s"
+  - line: "exact-source-before-io"
+    formula: "Opaque current private originals authorize permitted redacted render only. Missing/fabricated context, equal-money changed employer or actual sourceReference, changed schoolclassification/prioraccount, stale federal result and2026 mismatch deny before directory I/O."
+    testRef: "tests/pdf/oh-school-district-official-independent.test.ts::independent SD denies before output I/O %s"
+  - line: "privacy-and-static"
+    formula: "Reopened saved official3SDpages and positiveWH1page have no personal SSN/TIN/account/private source references, fields/widgets/actions/embeddedfiles; explicit nonpersonal employer EIN910000302 and Ohio employer withholding ID12345678 remain source-reconciled, one exactreviewnotice on everypage, and literal monetary appearances at exact officialrectangles. Municipal-first excludes city50 once; zeroSchoolWH omitsWHschedule entirely."
+    testRef: "tests/pdf/oh-school-district-official-independent.test.ts::independent SD original arithmetic and exact physical cells %s"

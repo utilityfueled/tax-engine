@@ -52,3 +52,5 @@ Current married PA native J/M production-browser desktop/mobile rehearsal passes
 firstattempt on0db95ea5 plus the reviewed five minimal UI corrections. All199affected
 controls and11static checks pass. See upgrade-2026-pa-married-native-browser-work.md;
 physical married forms and broader households remain separate successors.
+
+- School-district physical review: finite2025 Hillsdale0302 original-bound SD100/SDWH implemented and independently reviewed. Root1,518/46/all12checks plus retained33 pass;76savedPDFs/167pages and219physicalcells checked,50officialpages pixel-match reviewed artifacts. Broader methods/households and final2026/human/filing/release gates remain open. See `upgrade-2026-oh-school-district-official-review-work.md`.

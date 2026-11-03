@@ -15646,5 +15646,32 @@
     "physicalMarriedGuardOpen": false,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-pa-married-native-browser-work.md"
+  },
+  "nov03MainSDOfficialReview": {
+    "at": "2026-11-03T16:14:04.639002+00:00",
+    "base": "209f666c62a9a96f1a32f45cb34f4c1bb9b9653c",
+    "verdict": "APPROVE finite2025 SD official review companions; no confirmed product finding",
+    "authorManifestSHA256": "b02546ffd6a93974f48702a7b306925219efa200044654bb791cd1818b024b7f",
+    "independentReviewSHA256": "77143e51e23b4f67b6444e131eafa845cea39d5e6602ff7deae6ede139fb9295",
+    "mainREDLogSHA256": "8305e470f6d57943306c37cfe451968c022697de9b519858daa9ad0b87f3ad19",
+    "mainChecksSHA256": "7a64c2f111ff0c6d4deafb2eedac17295559cd3d23f4cdd8799e10f4abf532ab",
+    "mainRetainedReplaySHA256": "3fc0af8f3cbafe4d489f9fef5466522189c8d9f6b9f571c73f0b72273aea3e0a",
+    "savedArtifactReviewSHA256": "ecb26123ad9e5a3852a2fc0a422bd2f7b0db36860f2b3ed6068a5e4604dac080",
+    "peerPortablePathCleanupSHA256": "e0ca5fdfce0d238d562c51609cd143a4d380674fedea5acfaa096a1a5688bc89",
+    "reviewedDispatcherDiff": "only import and companion append",
+    "allMainAffectedTests": 1518,
+    "files": 46,
+    "retainedFocusedTests": 33,
+    "savedPDFs": 76,
+    "pages": 167,
+    "officialPDFs": 24,
+    "officialPages": 50,
+    "distinctPDFiumCells": 219,
+    "privateIdsAndSourceReferencesChecked": 29,
+    "readinessUnchanged": true,
+    "humanReview": false,
+    "rootReviewSHA256": "d029fc81435acd25fbc05d09f7f9eea98acd5a00267dda55b66c87950f89762d",
+    "commit": "pending coherent commit",
+    "pushed": false
   }
 }
