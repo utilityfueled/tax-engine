@@ -17615,5 +17615,78 @@
       "Qualified human and final2026 source/form review",
       "Entire execution-brief completion criteria remain active"
     ]
+  },
+  "stagingTenantWorkspace377fe20261103": {
+    "status": "bounded actual Preview evidence reviewed; no independent network replay",
+    "source": "377fe75500f2be900176c71bfb2150b3d1a66628",
+    "deploymentId": "dpl_3FNBHW7dCDAHK6MLFFLGqDmfUxi5",
+    "deploymentState": "READY root-verified",
+    "target": "https://tax-engine-r0os8ck8t-utility-fueled-llc.vercel.app",
+    "auth": {
+      "actors": 2,
+      "signin200": 2,
+      "session200": 2,
+      "oneAttemptEach": true,
+      "sessionPrivateNoStore": true
+    },
+    "preflight": {
+      "status": "PASS",
+      "listedEvents": 7,
+      "sourcePathRequests": 13,
+      "unauthenticatedOwnerRequired401": 5,
+      "headerFailures": 0,
+      "workspaceWrites": 0
+    },
+    "lifecycle": {
+      "status": "PASS",
+      "listedEvents": 7,
+      "sourcePathRequests": 32,
+      "saveRevisionPosts": 5,
+      "freshClientReloadAssertions": 4,
+      "crossOwnerGetNullAssertions": 2,
+      "crossDeleteVictimUnchangedAssertions": 2,
+      "sameIdOtherNamespaceSave": true,
+      "victimUnchangedAfterSameIdSave": true,
+      "uniqueWriteTuples": 3,
+      "cleanupVerifiedTuples": 3,
+      "unrelatedBaselinePreservedForBoth": true,
+      "headerFailures": 0
+    },
+    "transientUpload": {
+      "status": "PASS",
+      "listedEvents": 3,
+      "sourcePathRequests": 11,
+      "pngBytes": 68,
+      "metadataOnlyResponse": true,
+      "workspaceAbsentBeforeAndAfter": true,
+      "durableBlobReadbackProven": false,
+      "headerFailures": 0
+    },
+    "requestsCountsMethod": "Recounted executed successful source branches, not independently logged network capture or whole-session request total",
+    "sourceOnlyTargetCommitChangedFromOld": true,
+    "receiptHashes": {
+      "receipt-auth-a.json": "75396cd5353b57a0e4526e9a6b98824e1ea3611ad31ed47c1c845dd20ecafc8f",
+      "receipt-auth-b.json": "52eb82a2282a599395835288a0b46d03fb42b99a9deb27793f5123eb65310087",
+      "receipt-lifecycle.json": "acd9791a00b61c0dd19e1b9ac77b5679bb299c37c8c2de690bbf579514359b0e",
+      "receipt-platform-access.json": "60f4f358e87614f601c02363d80c1b1329f4647bed832b04ea9d844f2bd158dd",
+      "receipt-preflight.json": "2dd2c3005e028923b1d00bb3a95c9be7a35dada23263849d3eb82b1fb1448644",
+      "receipt-transient-upload.json": "2588e12f2a53e24fce0010f1762ed9b7516beee27d5cdb3eaa95315c8258a193"
+    },
+    "rehearsalSha256": "da9d3ea2f4b21b3ce28f8f500c35eb2e12502086840b130274350b6e0089cb40",
+    "deploymentBindingReviewedSha256": "4366b6f59cbc4383947da3079d8db6a0ae8a87ea15b619fb4931f766321d4587",
+    "findings": [],
+    "networkExecutedByReviewer": false,
+    "nodeExecutedByReviewer": false,
+    "privateCredentialsCookiesActorIdsRead": false,
+    "limits": [
+      "No DB row-count or independent provider durability proof",
+      "No25MB boundary/abuse or forensic-erasure validation",
+      "No session UI/browser lifecycle qualification",
+      "No outage/migration/restore/rollback/final-artifact proof",
+      "No broad staging/global/release or final2026 qualification"
+    ],
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-staging-tenant-workspace-work.md",
+    "supersedesPendingPreviewStateOnlyForExact377fe": true
   }
 }

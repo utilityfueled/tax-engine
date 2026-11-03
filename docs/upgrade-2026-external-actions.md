@@ -86,3 +86,8 @@ November3 current local source/advisory/PostgreSQL receipts and limits are in th
 [refresh record](upgrade-2026-refresh-20261103.md). All45existing DB-file cases pass
 on a new disposable local PostgreSQL16.14 cluster, including33previously skipped
 cases. This does not complete the authorized remote staging rehearsal.
+
+
+### November3: bounded377fe Preview tenant/workspace successor
+
+The earlier remaining-Preview row now has additional exact-source evidence: READY377fe passes fresh2actor sign-ins, private/no-store preflight, two-owner workspace save/revision/fresh reload/cross-owner/same-ID namespace checks,3tuple deletion/readback and preserved unrelated baselines, plus a68-byte metadata-only transient upload without shell retention. See [the tenant ledger](upgrade-2026-staging-tenant-workspace-work.md). This narrows that row's finite API-workspace/isolation/cleanup work only for377fe. DB/event/credit row reconciliation, provider durability,25MB/forensic/session-UI, outages/migrations/restore/rollback and final-artifact/integrated staging/release work remain pending; old80bc failures and all human/final2026 gates remain unchanged.

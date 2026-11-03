@@ -21,3 +21,8 @@ Evidence index (safe receipts only):
 - `.local/upgrade-evidence/nov03-root-hosted-workspace-cache-policy-independent-review/receipt.json` and `strict-union-repair-static-successor.json`: bounded independent static judgments.
 
 Exact proposed source/check hashes are retained with this private document draft's manifest. No credential, cookie, token or raw actor/workspace payload is reproduced here.
+
+
+## Successor: actual377fe Preview header and tenant rehearsal
+
+The earlier “new Preview pending” state above is historical. Root-verified READY377fe Preview now passes fresh A/Bsign-ins, preflight with zero header failures, the actual two-owner save/revision/reload/isolation/same-ID namespace lifecycle with all3 unique tuples cleanup verified, and a separate68-byte transient upload with metadata-only/no-shell-retention checks. [The tenant ledger](upgrade-2026-staging-tenant-workspace-work.md) preserves exact counts, receipts and limits. Historical80bc nine header failures remain intact; no cache disclosure, DB row-count/provider durability,25MB/forensic/session-UI/final-artifact or release qualification is asserted.

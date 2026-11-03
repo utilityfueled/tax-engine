@@ -2679,3 +2679,8 @@ Historical80bc Preview exposed missing private/no-store headers on two authentic
 ### November 3: Ohio official review templates use the resolved workspace root
 
 A genuine current-main public-API ENOENT under apps/web cwd precedes the four-path propagation fix; main15focused+155adjacent and all13checks pass. The earlier two actual native HTTP400 failures and interrupted/unrun remainder remain distinct retained evidence. Exact pinned templates, money/source facts, private-context replay and export gates stay intact. See [the integration ledger](upgrade-2026-oh-review-template-root-work.md). Actual managed native-to-physical and container deadline replay, broader global/staging/provider/human/final2026 and release criteria remain pending.
+
+
+### November3: actual377fe tenant workspace and transient upload
+
+ExactREADY377fe Preview now passes fresh two-actor auth, preflight with zero cache-header failures, source-bound save/revision/fresh reload/cross-owner/same-ID namespace checks and cleanup of all3 unique synthetic owner/ID tuples with unrelated baselines unchanged. Separate68-byte upload returns metadata only and creates no workspace shell. [The tenant ledger](upgrade-2026-staging-tenant-workspace-work.md) distinguishes actual API evidence from unproved DB row counts/provider durability,25MB/forensic/session-UI, outages and final-artifact/release qualification. Historical80bc failures remain preserved.
