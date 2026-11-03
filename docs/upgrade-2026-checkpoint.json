@@ -14230,5 +14230,22 @@
       "Fullglobalcoverage/PG/runtime/staging/human/final2026 qualification"
     ],
     "releaseReady": false
+  },
+  "nov03GuidedBusinessPACompleteIntegration": {
+    "baseCommit": "0a67a27ad9f93875c671a5239f6f19dc17981163",
+    "products": 1,
+    "sourceFirst": "7pass1genuinefail28cab6a61e97d12faf1ab4e15b0c74a38b9a7b70a3753a66b5057bc398ddf4e0",
+    "mainTests": {
+      "passed": 244,
+      "files": 13
+    },
+    "checks": "all12PASS types3/spec/AST/inventory/check/new+engine strict0/bothbuilds/diff",
+    "distinctReviewSHA256": "87910eed53c92f8a9e6aa304941c1444f33cc989a993999bc6fc3d830462e045",
+    "distinctTests": "own9+author20+prior202=231/10,overlapnotaddedtomain",
+    "old8Titles27ControlsExact": true,
+    "preexistingOldFileWarnings": 21,
+    "newWarnings": 0,
+    "evidence": ".local/upgrade-evidence/nov03-root-guided-business-main/integration-review-result.json",
+    "releaseReady": false
   }
 }

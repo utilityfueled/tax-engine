@@ -1,0 +1,52 @@
+form: "Guided-PA-Complete-Zero-Business"
+fullName: "Explicit fictional current PA business sources preserving the existing zero-income withholding positive"
+taxYear: 2025
+reference: "https://www.pacodeandbulletin.gov/secure/pacode/data/061/chapter111/s111.4.html"
+notes: |
+  Fixture-only source completion; no new calculation, source method, defaults or legal qualification.
+  Preserve the old eight titles, twenty-seven assertion lines, raw zero NEC income,
+  PA.10/NY.20 then PA.10/PA.20, original payer/TIN/primary owner and returnyear2025.
+  New independently explicit fictional original-year documents supply2025 ONLY in the
+  complete positive setup. Original unknown-year/raw incomplete case remains retained.
+  New actual complete resident PA books, no NY domicile/operations, original IT2030,
+  remittance.20, refundreceived0/outstanding.20, complete ordinary dates/payments/local/
+  eligibility sources are separately supplied, never inferred from zero income or WH.
+  After the explicit NY→PA original correction, independently supplied allPA originals,
+  completeNYknownzero account history and no pendingNY packet are newly confirmed.
+  Reads never confirm/rebind; pending actual cash is not zero liability/refund receipt.
+  Current normal bridge must replay exact sources. If it cannot, retain the actual failure
+  and request a bounded product successor; never work around the production path.
+lines:
+  - line: "legacy-incomplete"
+    formula: "Old unknown-year/unbound PA source data preserves federal preview but no complete state result."
+    testRef: "tests/guided-interview/guided-business-pa-complete.test.ts::old incomplete business source remains unqualified"
+  - line: "pending-positive"
+    formula: "Explicit actualPA.10 + NY.20 pending complete zero-income sources produce rawPA.1, printed0, tax0 and PAcredit0 without assuming NYrefund. Normal bridge read remains required."
+    testRef: "tests/guided-interview/guided-business-pa-complete.test.ts::complete fictional pending NY records use the normal guided pipeline"
+  - line: "all-pa-positive"
+    formula: "A separate explicit corrected-original/allPA source action produces rawPA.3 printed0, no pendingNY account, complete noNYpayment evidence."
+    testRef: "tests/guided-interview/guided-business-pa-complete.test.ts::separately confirmed all PA correction preserves exact cents"
+  - line: "original-preservation"
+    formula: "New actual2025 source-year supplement adds only explicit2025 and state sources; all prior raw amounts/payers/TINs/primary owner/year remain unchanged."
+    testRef: "tests/guided-interview/guided-business-pa-complete.test.ts::complete supplement preserves raw old amounts and owner"
+  - line: "unknown-year"
+    formula: "Removing actual source-year proof after completion cannot be silently inferred from returnyear."
+    testRef: "tests/guided-interview/guided-business-pa-complete.test.ts::missing actual NEC year remains unknown"
+  - line: "stale-source"
+    formula: "Same-money owner edit, NY→PA original edit or missing pending remittance rejects state while keeping federal; no current snapshot refresh."
+    testRef: "tests/guided-interview/guided-business-pa-complete.test.ts::retained business source confirmations reject actual changes %s"
+  - line: "saved-roundtrip"
+    formula: "JSON save/reopen retains actual pending cash .20/refunds0/outstanding.20 and exact source snapshots; normal read replays without mutation."
+    testRef: "tests/guided-interview/guided-business-pa-complete.test.ts::complete pending source save reopen does not refresh originals"
+  - line: "absent-preview-api"
+    formula: "The current preview API explicitly represents unqualified state as null. Five newly authored negative-case expectations use toBeNull, preserving rejection, federal preservation and all source/money inputs. Prior undefined-expectation diagnostics remain retained."
+    testRef: "tests/guided-interview/guided-business-pa-complete.test.ts::old incomplete business source remains unqualified"
+  - line: "separate-confirmation-input"
+    formula: "Explicit confirmation accepts current raw federal originals plus separately supplied actual residency source without requiring the caller to preattach state context. Neither confirmation nor ordinary read may infer missing source facts."
+    testRef: "tests/guided-interview/guided-business-pa-complete.test.ts::explicit current business source confirmation needs no preattached residency"
+  - line: "raw-source-context"
+    formula: "The already validated source argument is the local actual business context for the raw residency calculation; original input/source remain unchanged and actualPAwithholding.1 is preserved."
+    testRef: "tests/guided-interview/guided-business-pa-complete.test.ts::separate actual residency packet supports current bare federal originals"
+  - line: "current-original-context"
+    formula: "A changed equal-dollar current payer cannot be repaired by local source attachment; retained original source proof must reject."
+    testRef: "tests/guided-interview/guided-business-pa-complete.test.ts::local source context cannot refresh stale current NEC originals"

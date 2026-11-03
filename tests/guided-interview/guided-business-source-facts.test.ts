@@ -1,3 +1,4 @@
+import { completeGuidedBusinessPA } from "../fixtures/guided-business-pa-complete";
 import { assertPAGuidedPaymentBoundary } from "../fixtures/assert-pa-guided-payment-boundary";
 // Spec: spec/federal/guided-input.yaml, business-source-records
 import { describe, expect, it } from "vitest";
@@ -95,9 +96,11 @@ describe("guided business source records", () => {
     state.sectionData.deductions!.nonW2IncomeTaxesDeductedElsewhere = "0";
     state.segmentation.stateCode = "PA";
     state.sectionData["income-self-employment"]!.necEntries = [{ ...source, stateWithheld: "0.10" }, { ...source, payerName: "Other client", state: "NY", stateWithheld: "0.20" }];
+    completeGuidedBusinessPA(state, "pending_ny");
     assertPAGuidedPaymentBoundary(state, "0.1", "0");
     expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0");
     state.sectionData["income-self-employment"]!.necEntries[1].state = "PA";
+    completeGuidedBusinessPA(state, "all_pa");
     assertPAGuidedPaymentBoundary(state, "0.3", "0");
     expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe("0");
     state.sectionData["state-return"] = { ...emptyStateReturnData, additionalStateWithholdingEntries: [{ payer: "Actual client", documentType: "1099-NEC", state: "PA", taxYear: "2025", amount: "0.10" }] };

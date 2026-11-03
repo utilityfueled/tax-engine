@@ -162,7 +162,10 @@ function amount(value: unknown): Decimal {
     projectedOID={...projectedOID,miscWithholding:projectedOID.miscWithholding.map(row=>({...row,originalIndex:remainingMisc.findIndex(original=>original.index===row.originalIndex)}))};
   }
   const retirementSources=calculatePARetirementSources(input,source.retirementSources,residency);
-  const business=calculatePAOrdinaryBusinessSources(input,source.businesses,residency);
+  const business=calculatePAOrdinaryBusinessSources(
+    source.businesses?.some(b=>b.pendingNYAccountSources!==undefined)
+      ? {...input,paResidencySources:source} : input,
+    source.businesses,residency);
   const digitalSources=calculatePAOrdinaryDigitalSources(input,source.digitalSources,residency);
   const brokerageSources=calculatePAOrdinaryBrokerageSources(input,source.brokerageSources,{status:residency.status,residentPeriods:residency.residentPeriods.map(p=>({from:new Date(p.from*86400000).toISOString().slice(0,10),through:new Date(p.through*86400000).toISOString().slice(0,10)}))});
   const hasBrokerage=source.brokerageSources!==undefined||input.form1099B.length>0;
