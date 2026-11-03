@@ -1,12 +1,14 @@
 // Spec: spec/state/guided-state-routing.yaml. Expected values use actual source rules.
 import { describe, expect, it } from "vitest";
 import { buildTaxInputFromGuidedData, buildGuidedSyntheticDocuments } from "@/lib/guided-interview-bridge";
-import { validateSection, emptyDeductionData } from "@/lib/guided-interview-flow";
+import { validateSection } from "@/lib/guided-interview-flow";
 import { computeGuidedPreview } from "@/lib/guided-preview-compute";
 import { TaxYearInputSchema } from "@/models/inputs";
-import { buildGuidedOhioOverlay, buildGuidedPennsylvaniaOverrides } from "@/lib/guided-state-engine-inputs";
-import { calculatePAReturn } from "@/engine/state/pa-orchestrator";
+import { buildGuidedOhioOverlay, buildGuidedPennsylvaniaOverrides, buildGuidedStateOriginals } from "@/lib/guided-state-engine-inputs";
 import { calculateFederalTax } from "@/engine/federal";
+import { completeTreasuryRouting } from "../fixtures/guided-state-routing-complete";
+import { calculatePAOrdinaryReturn } from "@/engine/state/pa-ordinary-return";
+import { calculatePAOrdinaryReturnFacts } from "@/engine/state/pa-ordinary-return-facts";
 import { actualOid } from "../fixtures/guided-oid";
 import { completeW2Entry, startCompleteInterview } from "./complete-facts";
 
@@ -43,31 +45,29 @@ describe("selected state and dedicated previews", () => {
     expect(computeGuidedPreview(federal)?.state).toBeNull();
   });
   it("uses dedicated PA and OH treatment for Treasury OID", () => {
-    const pa = stateFlow("PA", "PA"); paSource(pa);
+    const pa = completeTreasuryRouting("PA").state;
     // $60,000 PA wages ×3.07%; direct Treasury OID is exempt. No forgiveness at this income.
     expect(computeGuidedPreview(pa)?.state).toMatchObject({ stateTax: "1842", stateRefund: "158", stateAmountOwed: "0", stateWithholding: "2000" });
-    const oh = stateFlow("OH");
+    const oh = completeTreasuryRouting("OH").state;
     const withTreasury = computeGuidedPreview(oh);
-    const noTreasury = structuredClone(oh);
-    noTreasury.sectionData["income-investments"] = { interestEntries: [], dividendEntries: [], brokerageEntries: [], oidEntries: [] };
+    const noTreasury = completeTreasuryRouting("OH", false).state;
     expect(withTreasury?.state).not.toBeNull();
     expect(withTreasury?.state?.stateTax).toBe(computeGuidedPreview(noTreasury)?.state?.stateTax);
   });
   it("preserves exact actual payments in dedicated state previews and export overlays", () => {
     for (const code of ["PA", "OH"]) {
-      const state = stateFlow(code, code);
-      const source = code === "PA" ? paSource(state) : state.sectionData["income-investments"]?.oidEntries?.[0];
-      if (!source) throw new Error("Missing synthetic source");
-      source.stateTaxReporting = "single";
-      source.stateWithholding = [{ state: code, statePayerId: "actual-id", stateWithheld: "0.10" }];
-      state.sectionData["state-return"] = { additionalStateWithholding: "0.20", additionalStateWithholdingEntries: [{ payer: "Separate actual payer", documentType: "1099-MISC", state: code, taxYear: "2025", amount: "0.20" }], stateEstimatedPayments: [{ state: code, date: "2025-04-15", amount: "0.30" }] };
-      state.sectionData.deductions = { ...emptyDeductionData, nonW2IncomeTaxesDeductedElsewhere: "0" };
-      const input = TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state));
-      expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe(code === "PA" ? "2000" : "2000.6");
-      if (code === "OH") expect(buildGuidedOhioOverlay(input, state, calculateFederalTax(input).taxExemptInterest)).toMatchObject({ ohioWithholdingOverride: "2000.3", estimatedPayments: "0.3" });
+      const state = completeTreasuryRouting(code as "PA" | "OH", true, true).state;
+      const input = buildGuidedStateOriginals(TaxYearInputSchema.parse(buildTaxInputFromGuidedData(state)), state);
+      expect(computeGuidedPreview(state)?.state?.stateWithholding).toBe(code === "PA" ? "2000" : "2000");
+      if (code === "OH") {
+        const overlay = buildGuidedOhioOverlay(input, state, calculateFederalTax(input).taxExemptInterest);
+        expect(overlay.ohioWithholdingOverride).toBeUndefined();
+        expect(overlay.estimatedPayments).toBeUndefined();
+      }
       else {
-        const result = calculatePAReturn(input, buildGuidedPennsylvaniaOverrides(state));
-        expect(result.stateWithholding.toFixed()).toBe("2000.3");
+        const result = calculatePAOrdinaryReturn(input, input.paOrdinaryReturnFacts, input.paOrdinaryReturnCompletionSources);
+        const raw = calculatePAOrdinaryReturnFacts(input, input.paOrdinaryReturnFacts);
+        expect(raw.paWithholding.toFixed()).toBe("2000.3");
         expect(result.pa40.stateWithholding.toFixed()).toBe("2000");
         expect(buildGuidedPennsylvaniaOverrides(state).estimatedPayments?.toFixed()).toBe("0.3");
         expect(result.pa40.estimatedPayments.toFixed()).toBe("0");

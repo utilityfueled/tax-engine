@@ -14355,5 +14355,16 @@
     "approvedProviderCeilingUsd": "5",
     "stagingQualified": false,
     "releaseReady": false
+  },
+  "nov03CompleteStateRouting": {
+    "baseCommit": "4561cf007d2b989f6d8f39d5e671503452122dec",
+    "productsChanged": false,
+    "mainTests": 280,
+    "mainFiles": 11,
+    "checksPassed": 10,
+    "originalTitles": 4,
+    "soleAuthorizedOracleCorrection": "OH canonical printed withholding2000.6\u21922000; raw2000.60 retained",
+    "mainReviewSHA256": "16b20c94ccdec04e08578ce0331cfdd222176a4e29d0686f1e0dd5c8a9d1dee2",
+    "releaseReady": false
   }
 }

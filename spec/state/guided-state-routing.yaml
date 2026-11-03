@@ -26,7 +26,7 @@ lines:
     testRef: "tests/guided-interview/guided-state-routing.test.ts::uses dedicated PA and OH treatment for Treasury OID"
   - line: "payments"
     description: "Keep source withholding and dated estimated payments exact and distinct"
-    formula: "keep matching-source withholding + reconciled additional withholding and dated estimates exact through source aggregation; PA rounds each printed payment line once before adding its reported total; OH retains its dedicated method; do not count OID twice or drop sources"
+    formula: "keep matching-source withholding + reconciled additional withholding and dated estimates exact through source aggregation; PA rounds each printed payment line once before adding its reported total; canonical OH also rounds each printed withholding/payment line once; preserve exact raw source amounts and historical direct legacy-adapter coverage separately; do not count OID or matched MISC twice or drop sources"
     testRef: "tests/guided-interview/guided-state-routing.test.ts::preserves exact actual payments in dedicated state previews and export overlays"
   - line: "PA-source-withholding"
     description: "Include actual PA brokerage withholding and require source jurisdiction"

@@ -1,0 +1,47 @@
+form: "Guided state routing actual-source successor"
+fullName: "Explicit fictional current Treasury originals and raw versus printed payments"
+taxYear: 2025
+reference: "https://codes.ohio.gov/ohio-revised-code/section-5703.055"
+notes: |
+  Source-only2025 test migration; no product/fixture/gate changes. Preserve old4
+  titles, actual60000/2000/1000/.10/.20/.30 source amounts and all PA literals.
+  OfficialOhio2025booklet printed17 separates withholding14 and payments15;
+  ORC5703.055 nearest-dollar applies each reportedline. RawWH2000.30 plus
+  rawestimates0.30=2000.60; reported2000+0=2000. Existing raw2000.6 preview
+  expectation requires genuine source-completeRED before its sole correction.
+  Treasury exemption: Ohioadjustments26/booklet22 and PAcurrentinterestguide.
+  Exactbase648 committedcompletefixture is independentlyfictional readonly
+  dependency; no defaults, freecredits, hidden documents or readtime refresh.
+lines:
+  - line: "PA-current"
+    description: "complete source routing preserves PA Treasury tax and reported payments"
+    formula: "Actual60000 wages with Treasury1000 exempt; current PA tax1842 and refund158; originals immutable"
+    testRef: "tests/guided-interview/guided-state-routing-source-successor.test.ts::complete source routing preserves PA Treasury tax and reported payments"
+  - line: "OH-current"
+    description: "complete source routing compares independently confirmed Ohio Treasury variants"
+    formula: "FederalAGI61000 minus Treasury1000 or60000 minus0 both produce Ohio tax1217"
+    testRef: "tests/guided-interview/guided-state-routing-source-successor.test.ts::complete source routing compares independently confirmed Ohio Treasury variants"
+  - line: "unknown"
+    description: "old incomplete routing sources remain federal positives and canonical state negatives"
+    formula: "No actual state source packet is inferred from selected jurisdiction"
+    testRef: "tests/guided-interview/guided-state-routing-source-successor.test.ts::old incomplete routing sources remain federal positives and canonical state negatives"
+  - line: "payment-boundary"
+    description: "complete routing retains raw payment cents and separately reported canonical lines"
+    formula: "RawWH2000.30 and estimate0.30; per-line whole-dollar2000 and0; reported2000 not rawcombined2000.60"
+    testRef: "tests/guided-interview/guided-state-routing-source-successor.test.ts::complete routing retains raw payment cents and separately reported canonical lines"
+  - line: "legacy-API"
+    description: "legacy routing adapter arithmetic retains original PA and OH literal controls"
+    formula: "Original preMISC source input plus explicit legacyledger yields raw2000.3/.3 and PAprinted2000/0/refund158; this directlegacyAPI control is not current complete qualification"
+    testRef: "tests/guided-interview/guided-state-routing-source-successor.test.ts::legacy routing adapter arithmetic retains original PA and OH literal controls"
+  - line: "stale"
+    description: "clearing a retained Treasury original cannot refresh either state packet on read"
+    formula: "Postconfirmation source removal invalidates canonicalpreview and preserves savedrecords"
+    testRef: "tests/guided-interview/guided-state-routing-source-successor.test.ts::clearing a retained Treasury original cannot refresh either state packet on read"
+  - line: "ledger"
+    description: "saved routing ledger changes require exact actual remittance and receipt reconciliation"
+    formula: "Changing only saved MISC or estimate amount invalidates current canonicalmethod, never grants anothercredit"
+    testRef: "tests/guided-interview/guided-state-routing-source-successor.test.ts::saved routing ledger changes require exact actual remittance and receipt reconciliation"
+  - line: "no-override"
+    description: "complete Ohio source routing rejects free payment overrides"
+    formula: "Canonicalpaymentoriginals own actual amounts; preview/exportoverlay supplies no withholding/estimate override"
+    testRef: "tests/guided-interview/guided-state-routing-source-successor.test.ts::complete Ohio source routing rejects free payment overrides"
