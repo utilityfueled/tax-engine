@@ -6494,6 +6494,46 @@
       ]
     },
     {
+      "key": "federal/hosted-preview-recovery-independent",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://vercel.com/docs/environment-variables/system-environment-variables",
+      "specPath": "spec/federal/hosted-preview-recovery-independent.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/hosted-preview-recovery-origin",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://vercel.com/docs/environment-variables/system-environment-variables",
+      "specPath": "spec/federal/hosted-preview-recovery-origin.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-webhook-delivery",
       "jurisdiction": "federal",
       "taxYear": 2026,

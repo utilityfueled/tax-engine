@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import type SMTPTransport from "nodemailer/lib/smtp-transport";
 import { resolveDeploymentMode } from "./deployment-mode";
-import { isLoopbackHostname } from "./hosted-runtime-safety";
+import { isHostedVercelPreviewEnvironment, isLoopbackHostname, resolveHostedAppBaseUrl } from "./hosted-runtime-safety";
 import { isRecoveryToken } from "./hosted-recovery-contract";
 export { isRecoveryToken } from "./hosted-recovery-contract";
 
@@ -37,8 +37,14 @@ export function getHostedRecoveryMailConfig(env: RecoveryEnvironment = process.e
   if (!/^\d{1,5}$/u.test(rawPort)) return null;
   const port = Number(rawPort);
   if (port < 1 || port > 65535) return null;
+  let appUrl = env.TAX_ENGINE_APP_URL ?? "";
+  if (isHostedVercelPreviewEnvironment(env)) {
+    const resolved = resolveHostedAppBaseUrl(env);
+    if (resolved.blocked || !resolved.hasValidConfiguredUrl) return null;
+    appUrl = resolved.appBaseUrl;
+  }
   let app: URL;
-  try { app = new URL(env.TAX_ENGINE_APP_URL ?? ""); } catch { return null; }
+  try { app = new URL(appUrl); } catch { return null; }
   if (app.username || app.password || app.search || app.hash || app.pathname !== "/") return null;
   const insecureRequested = env.TAX_ENGINE_AUTH_SMTP_ALLOW_INSECURE_LOOPBACK === "true";
   const nonProduction = (env.NODE_ENV?.trim().toLowerCase() || "development") !== "production";

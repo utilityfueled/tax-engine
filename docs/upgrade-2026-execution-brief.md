@@ -187,3 +187,13 @@ source successor passes distinct31/current-main1961 plus all12 checks. See
 [the transaction ledger](upgrade-2026-ohio-resident-credit-transactions-work.md).
 External account authenticity, native/physical/human/final2026 and deployment
 qualification remain separate required evidence.
+
+
+### November 3: validated Preview recovery email origin
+
+Actual staging email exposed a stale configured origin. The bounded hosting fix
+selects the existing validated Preview origin before the unchanged strict mail
+parser and denies invalid platform metadata before SMTP. Fresh main39fail/19pass
+precedes adoption; distinct11+author42/old5+adjacent202 all pass (260/15), with
+all12 checks and zero lint warnings. See [the hosting ledger](upgrade-2026-hosted-preview-recovery-origin-work.md).
+Corrected actual Preview delivery and all broader qualification gates remain open.

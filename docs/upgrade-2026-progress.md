@@ -2594,3 +2594,13 @@ Finite2025 original-bound J/M households now render actual owned PA40 and positi
 ### November3: distinct Ohio resident-credit payment originals
 
 Finite2025 Virginia paid-tax records now distinguish equal-day/equal-value balance payments using linked settled-bank and applied-agency originals, rejecting reused trace/posting identities globally. Fresh four-case mainRED precedes unchanged reviewed adoption. Distinct31 plus original165 and disjoint1765 yield1961/73PASS; all12checks pass. See [the transaction ledger](upgrade-2026-ohio-resident-credit-transactions-work.md). Source validation does not authenticate external accounts; native/physical/human/final2026/distribution/staging qualification remains open. PAphysical608fa550 is pushed.
+
+
+### November 3: validated Preview recovery email origin
+
+Actual staging email exposed a stale configured origin. The bounded hosting fix
+selects the existing validated Preview origin before the unchanged strict mail
+parser and denies invalid platform metadata before SMTP. Fresh main39fail/19pass
+precedes adoption; distinct11+author42/old5+adjacent202 all pass (260/15), with
+all12 checks and zero lint warnings. See [the hosting ledger](upgrade-2026-hosted-preview-recovery-origin-work.md).
+Corrected actual Preview delivery and all broader qualification gates remain open.
