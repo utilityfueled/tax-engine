@@ -1,0 +1,26 @@
+form: "PA ordinary return native source entry"
+fullName: "PA ordinary return native source entry and source replay"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+notes: |
+  These native tests exercise existing 2025 source methods with fictional originals.
+  Each expected amount comes from dated records and the published Pennsylvania rules.
+lines:
+  - line: "refund"
+    formula: "The resident originals contain wages 50,000 and interest 120. The rounded 3.07% tax is 1,539. Withholding 2,539 leaves 1,000, distributed as refund 700, next-year credit 200 and donation 100. Reopening must preserve the source and an amended election must reconcile again."
+    testRef: "tests/apps/web/pa-ordinary-facts-native.test.tsx::Native ordinary entry reconciles refund elections on the complete return"
+  - line: "payments"
+    formula: "Two distinct Q1 receipts 125.39 and 70.62 total 196.01. A separate 37 elected credit requires a filed 2024 return, its original election and a matching 2025 account credit. A no-return history, mismatched account, erased amount or duplicate confirmation number cannot confirm."
+    testRef: "tests/apps/web/pa-ordinary-facts-native.test.tsx::Native payment originals keep installments separate from a prior election"
+  - line: "household"
+    formula: "The fictional federal return lists a son and two parents. Each original requires its own identity and relationship proof. Only the son counts on PA Schedule SP. A duplicate parent or missing original cannot confirm."
+    testRef: "tests/apps/web/pa-ordinary-facts-native.test.tsx::Native household review counts one child and retains two nonchild originals"
+  - line: "prior-sp"
+    formula: "A filed 2024 full-year return reports taxable income 3,000 and tax forgiveness 92. A completed SP with that taxable income, zero other income and no dependents qualifies for 100%. Zero on the prior return cannot corroborate a 92 credit."
+    testRef: "tests/apps/web/pa-ordinary-facts-native.test.tsx::Native prior PA40 and completed SP must agree on actual forgiveness"
+  - line: "use-tax"
+    formula: "An itemized 125 purchase used in Philadelphia incurs 10 of use tax at 8% before 2 already paid. The April 15 expected payment of 8 agrees with the full return. A separately documented 125.50 gift increases whole-dollar SP eligibility income by 126. Changing the merchant receipt alone cannot confirm."
+    testRef: "tests/apps/web/pa-ordinary-facts-native.test.tsx::Native purchase and worldwide receipts produce the documented PA liability"
+  - line: "balance"
+    formula: "A 40 balance remittance for an 839 liability after 799 withholding must match the dated PA-40 payment original. It contributes zero to estimated and extension payments. A forecast cannot supply that original."
+    testRef: "tests/apps/web/pa-ordinary-facts-native.test.tsx::Native filed balance payment stays separate from estimated and extension payments"

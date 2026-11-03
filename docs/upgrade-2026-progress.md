@@ -2399,3 +2399,7 @@ The unchanged full coverage run records22,132pass/eightfail/33pending. Branches8
 ### November 3: actual outstanding NY business remittance
 
 The finite2025 source method preserves actualNY paid.20/refund0/outstanding.20 separately from liability0 and mandatoryPAcredit0 for allthree PA residencies. Fresh main3genuine failures/11passes precede integration; main1,234/38, three types,7,300spec links, inventory/check, strict13paths0 and both builds pass. Distinct25 cash/source/privacy controls and finalfive-product integration review approve the exact addition while preserving newer royalty/brokerage/digital behavior. See [the source ledger](upgrade-2026-pa-business-pending-account.md). Native/guided fixture/workspace/human/final2026 gates remain open; no filing promotion.
+
+### November 3: mounted ordinary facts and residency integration
+
+Ten native control cases now exercise actual PA fact collection through exact state calculations, including dated investments, receipts, prior elections, household/SP records, refund allocations, missing/zero distinctions, reopening and privacy. Allten main cases, three types, strictlint0,7,310spec links, AST references and inventory/check pass with no product changes. See [the integration ledger](upgrade-2026-pa-ordinary-residency-native-work.md). This does not replace real browser or full-suite/function-coverage qualification. Pending-business852563ea is pushed.

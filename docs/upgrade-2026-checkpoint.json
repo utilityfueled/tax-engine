@@ -14180,6 +14180,22 @@
     "humanQualified": false,
     "filingEligible": false,
     "scope": "Finite2025 actual outstanding NY zero-business remittance, mandatoryzeroPAcredit; collectors/workspace/browser/legacyfixture separate",
-    "integrationReviewSHA256": "54c6fd0b089df1a8ff5728331192baf544b515f10d7c19ca15e95ea9eedc409c"
+    "integrationReviewSHA256": "54c6fd0b089df1a8ff5728331192baf544b515f10d7c19ca15e95ea9eedc409c",
+    "commit": "852563ea",
+    "pushed": true
+  },
+  "nov03NativeOrdinaryResidency": {
+    "base": "852563eaf2349bfcf27ef8126525a40e6f03c507",
+    "authorManifestSHA256": "fae3877c7b2f0a59b4573dced6520af6b3ee11af4a50ec20c4291ce00136f148",
+    "mainTests": 10,
+    "files": 2,
+    "types": 3,
+    "specReferences": 7310,
+    "inventory": 734,
+    "strictWarnings": 0,
+    "passedCommands": 10,
+    "productsChanged": false,
+    "realBrowserQualified": false,
+    "integrationReviewSHA256": "733fa66d6537d942375c2f0c00dc9425fdba73aadb68c00b00cc1881f5685115"
   }
 }

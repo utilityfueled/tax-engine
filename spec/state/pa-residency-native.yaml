@@ -1,0 +1,20 @@
+form: "PA ordinary residency native source entry"
+fullName: "PA ordinary residency native source entry and source replay"
+taxYear: 2025
+reference: "https://www.pa.gov/content/dam/copapwp-pagov/en/revenue/documents/formsandpublications/formsforindividuals/pit/documents/2025/2025_pa-40in.pdf"
+notes: |
+  These native tests exercise existing 2025 source methods with fictional originals.
+  Each expected amount comes from dated records and the published Pennsylvania rules.
+lines:
+  - line: "entry"
+    formula: "January through June outside PA includes 6,000 of PA services. All 20,000 of July through December pay is taxable in PA. September personal interest 40 and September ordinary dividend 1,000 plus RIC distribution 300 produce PA income 27,340, tax 839 and remaining tax 40 after withholding 799."
+    testRef: "tests/apps/web/pa-residency-native.test.tsx::Native part-year entry allocates payroll and dated investments on the PA return"
+  - line: "timing"
+    formula: "Moving the 40 September personal bank credit to June 30, before the actual July move, reduces PA interest from 40 to zero. Moving the 1,200 March fund receipt into July admits it. The resulting income 28,500 produces tax 875. Reopening must preserve the recorded dates."
+    testRef: "tests/apps/web/pa-residency-native.test.tsx::Native dated credit edits change residency allocation without changing the annual original"
+  - line: "gaps"
+    formula: "A missing residency day count or gross-services split cannot pass on a partly completed year. A blank nonresident-period service source differs from a documented zero. Duplicated bank statements, absent payroll and uncovered domicile dates cannot be replaced by the mailing address."
+    testRef: "tests/apps/web/pa-residency-native.test.tsx::Native missing records and explicit zero have different residency consequences"
+  - line: "privacy"
+    formula: "A changed original identity invalidates canonical replay. Rendering the saved record must preserve it byte-for-byte, and DOM text, non-source controls and public audit output must not disclose private taxpayer or payer identifiers."
+    testRef: "tests/apps/web/pa-residency-native.test.tsx::Native residency reopening retains snapshots without exposing private identifiers"
