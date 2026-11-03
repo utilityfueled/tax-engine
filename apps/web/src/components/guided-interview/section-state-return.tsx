@@ -220,7 +220,7 @@ export function SectionStateReturn({
             onChange={bound => onDataChange({...current,paResidencySources:bound.residencySources,paReciprocitySources:bound.reciprocitySources})} />}
           <PAOrdinaryReturnDetails originalInput={ordinaryOriginalInput ?? null} data={current.paOrdinaryReturnFacts}
             onChange={paOrdinaryReturnFacts => onDataChange({ ...current, paOrdinaryReturnFacts })} />
-          <PAOrdinaryReturnCompletionDetails originalInput={ordinaryOriginalInput ?? null} data={current.paOrdinaryReturnCompletionSources}
+          <PAOrdinaryReturnCompletionDetails originalInput={ordinaryOriginalInput ?? null} ordinaryFacts={current.paOrdinaryReturnFacts} data={current.paOrdinaryReturnCompletionSources}
             onChange={paOrdinaryReturnCompletionSources => onDataChange({ ...current, paOrdinaryReturnCompletionSources })} />
         </>}
 

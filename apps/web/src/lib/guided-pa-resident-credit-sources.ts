@@ -1,0 +1,37 @@
+import {z} from 'zod';
+import type {TaxYearInput} from '@/models/inputs';
+import {PAResidentCreditSourcesSchema,type PAResidentCreditSources} from '@/models/pa-resident-credit-sources';
+import {PAResidencySourcesSchema} from '@/models/pa-residency';
+import {calculatePAOrdinaryReturnFacts,snapshotPAOrdinaryReturnOriginals} from '@/engine/state/pa-ordinary-return-facts';
+import {calculatePAResidentCreditSources} from '@/engine/state/pa-resident-credit-sources';
+const claim=PAResidentCreditSourcesSchema.shape.claims.element;
+const credit=claim.shape.filedReturn.shape.nonpaymentCredits.element.extend({kind:z.enum(['','other_than_pa_resident_credit','pa_resident_tax_credit','unknown'])}).strict();
+const wage=claim.shape.wages.element.extend({w2Index:z.number().int().nullable(),payrollIndex:z.number().int().nullable(),originalW2:claim.shape.wages.element.shape.originalW2.optional(),originalPayroll:claim.shape.wages.element.shape.originalPayroll.optional()}).strict();
+const payment=claim.shape.payments.element.extend({kind:z.enum(['','withholding','estimate','extension','balance_payment']),originalW2:claim.shape.payments.element.shape.originalW2.optional()}).strict();
+const refund=claim.shape.refunds.element.extend({kind:z.enum(['','refund','next_year_transfer','offset'])}).strict();
+const draftClaim=claim.extend({wages:z.array(wage),filedReturn:claim.shape.filedReturn.extend({returnKind:z.enum(['','original','amended']),nonpaymentCredits:z.array(credit)}).strict(),payments:z.array(payment),refunds:z.array(refund)}).strict();
+/** Web-only persisted draft. Unknown source fields do not become canonical facts. */
+export const PAResidentCreditDraftSchema=PAResidentCreditSourcesSchema.partial({originalFederalSources:true,originalPAResidencySources:true,originalPAReciprocitySources:true,originalPAFacts:true}).extend({claims:z.array(draftClaim)}).strict();
+export type GuidedPAResidentCreditSources=z.infer<typeof PAResidentCreditDraftSchema>;
+export type PAResidentCreditClaimDraft=z.infer<typeof draftClaim>;
+const identity=()=>({sourceTaxYear:null,accountName:'',accountSsn:'',state:'',sourceReference:''});
+export function emptyPAResidentCreditWage():z.infer<typeof wage>{return {w2Index:null,payrollIndex:null,workOriginal:{...identity(),paidOn:'',serviceFrom:'',serviceThrough:'',compensation:'',ordinaryEmployeeNotShareholderConfirmed:null,allPhysicalServicesInThisStateConfirmed:null}};}
+export function emptyPAResidentCreditPayment():z.infer<typeof payment>{return {...identity(),confirmationNumber:'',kind:'',date:'',amountAppliedToTax:'',w2Index:null};}
+export function emptyPAResidentCreditRefund():z.infer<typeof refund>{return {...identity(),confirmationNumber:'',kind:'',date:'',amountAppliedToTax:''};}
+export function emptyPAResidentCreditNonpaymentCredit():z.infer<typeof credit>{return {sourceReference:'',originalLine:'',kind:'',amount:''};}
+export function emptyPAResidentCreditClaim():PAResidentCreditClaimDraft{return {state:'',sourceReference:'',wages:[],filedReturn:{...identity(),returnId:'',returnKind:'',filingStatus:'',residency:'',filedOn:'',completeFiledReturnAndSchedulesConfirmed:null,allNonpaymentCreditsReviewedConfirmed:null,ordinaryCompensationNoExpenseOrOtherAdjustmentConfirmed:null,allOtherIncomeClassesKnownZeroConfirmed:null,reportedTaxableCompensation:'',taxBeforeNonpaymentCredits:'',nonpaymentCredits:[],taxAfterNonpaymentCredits:''},payments:[],refunds:[],account:{...identity(),completeThroughDate:'',allPaymentsRefundsTransfersAndOffsetsReviewedConfirmed:null,noAmendmentsAssessmentsOrOtherAdjustmentsConfirmed:null,netTaxPaymentsReported:'',unpaidTaxReported:'',overpaymentOutstandingReported:''}};}
+export function emptyGuidedPAResidentCreditSources():GuidedPAResidentCreditSources{return {sourceTaxYear:null,sourceReference:'',sourceFactsConfirmed:null,accountName:'',accountSsn:'',completeThroughDate:'',allClaimedReturnsAndSourcePeriodsReviewedConfirmed:null,claims:[]};}
+export function updateGuidedPAResidentCreditSources(data:GuidedPAResidentCreditSources,patch:Partial<GuidedPAResidentCreditSources>):GuidedPAResidentCreditSources{return {...data,...patch,sourceFactsConfirmed:null};}
+const fail=(message:string):never=>{throw new Error('PA resident-credit originals: '+message);};
+function stable(value:unknown):string{if(Array.isArray(value))return '['+value.map(stable).join(',')+']';if(value&&typeof value==='object')return '{'+Object.entries(value).filter(([,v])=>v!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>JSON.stringify(k)+':'+stable(v)).join(',')+'}';return JSON.stringify(value)??'null';}
+function existingFacts(input:TaxYearInput,facts:unknown):void{if(facts===undefined||facts===null)fail('complete current confirmed actual ordinary return facts first');calculatePAOrdinaryReturnFacts(input,facts);}
+/** Only this explicit action binds current originals; it cannot repair stale ordinary facts. */
+export function confirmGuidedPAResidentCreditSources(input:TaxYearInput,facts:unknown,raw:unknown):PAResidentCreditSources{
+ existingFacts(input,facts);const draft=PAResidentCreditDraftSchema.parse(raw),pa=PAResidencySourcesSchema.parse(input.paResidencySources);
+ const candidate=PAResidentCreditSourcesSchema.parse({...draft,sourceFactsConfirmed:true,originalFederalSources:snapshotPAOrdinaryReturnOriginals(input),originalPAResidencySources:structuredClone(input.paResidencySources),originalPAReciprocitySources:structuredClone(input.paReciprocitySources??null),originalPAFacts:structuredClone(facts),claims:draft.claims.map(c=>({...c,wages:c.wages.map(w=>{if(w.w2Index===null||w.payrollIndex===null) return fail('select the actual W2 and its actual payroll source before confirmation');const originalW2=input.w2s[w.w2Index],originalPayroll=pa.wages.find(row=>row.originalIndex===w.w2Index)?.payroll[w.payrollIndex];if(!originalW2||!originalPayroll)return fail('selected actual W2 or payroll original is missing');return {...w,originalW2:structuredClone(originalW2),originalPayroll:structuredClone(originalPayroll)};}),payments:c.payments.map(p=>{if(p.kind==='withholding'){if(p.w2Index===null||!input.w2s[p.w2Index])return fail('select the actual withholding W2 original');return {...p,originalW2:structuredClone(input.w2s[p.w2Index])};}return {...p,originalW2:p.w2Index===null?null:p.originalW2};})}))});
+ calculatePAResidentCreditSources(input,facts,candidate);return candidate;
+}
+/** Fresh source replay on reads; no confirmation, owner substitution or snapshot refresh. */
+export function buildGuidedPAResidentCreditSources(input:TaxYearInput,facts:unknown,raw:unknown):PAResidentCreditSources{existingFacts(input,facts);const packet=PAResidentCreditSourcesSchema.parse(raw);calculatePAResidentCreditSources(input,facts,packet);return packet;}
+/** Pending actual drafts are never silently discarded by canonical serialization. */
+export function assertGuidedPAResidentCreditPair(input:TaxYearInput,facts:unknown,rawDraft:unknown,rawPacket:unknown):GuidedPAResidentCreditSources{const draft=PAResidentCreditDraftSchema.parse(rawDraft);if(draft.sourceFactsConfirmed!==true)fail('confirm the retained actual draft after the last edit');if(rawPacket===undefined)fail('the saved actual draft needs explicit resident-credit original confirmation');const packet=buildGuidedPAResidentCreditSources(input,facts,rawPacket);if(stable(draft)!==stable(packet))fail('retained actual draft differs from its explicitly confirmed original packet; review and reconfirm');return draft;}

@@ -1,0 +1,54 @@
+form: "Guided-PA-Resident-Credit-Root-Integration"
+fullName: "Actual PA resident-credit sources through whole state panel and canonical replay"
+taxYear: 2025
+reference: "docs/upgrade-2026-execution-brief.md"
+notes: |
+  Integration only of reviewed finite compensation resident-credit source method.
+  Official Schedule G-L revision03-24 and reviewed actual2025 methods remain the
+  authority. No new formula, factual default, broad credit qualification, filing,
+  final2026 law/form, provider or hosting readiness is established here.
+lines:
+  - line: "whole-panel-context"
+    description: "Pass current confirmed ordinary facts separately to actual credit collector"
+    formula: |
+      Source-only ordinaryOriginalInput excludes the ordinary facts root by design.
+      Whole SectionStateReturn must pass current.paOrdinaryReturnFacts explicitly
+      into completion details, enabling actual nested source confirmation without
+      circularly inserting facts into current originals. Native explicit nested
+      and top-level buttons alone confirm their respective retained records.
+    testRef: "tests/apps/web/pa-resident-credit-root-integration.test.tsx::whole PA state panel explicitly confirms actual credit and completion sources"
+  - line: "saved-web-draft"
+    description: "Retain structured unknown source drafts through real JSON storage"
+    formula: |
+      StateReturnData uses exported GuidedPAOrdinaryReturnCompletionSources.
+      Save/load and rerender retain blank payment kinds, null source indices,
+      explicit zero amounts, current and old private originals and nested drafts.
+      Neither a read nor a no-op save confirms or discards pending actual records.
+      Source edits clear confirmation and stale/unequal packets block validation.
+    testRef: "tests/apps/web/pa-resident-credit-root-integration.test.tsx::whole PA state panel retains unknown private draft through saved reopening"
+  - line: "fresh-navigation"
+    description: "Flow validation replays completion with actual separate ordinary facts"
+    formula: |
+      Existing ordinary source input has no ordinary-facts self-root. Validate
+      confirmed ordinary facts then pass them explicitly as completion replay third
+      argument. Actual resident/PY credit pairs can navigate; pending/edited/stale
+      sources remain partial and saved originals are never refreshed on reads.
+    testRef: "tests/apps/web/pa-resident-credit-root-integration.test.tsx::actual saved PA credit navigation is complete without mutating originals"
+  - line: "canonical-boundary"
+    description: "Canonical builder validates whole actual pair before stripping only web draft"
+    formula: |
+      BuildGuidedStateOriginals replays current residency/reciprocity and ordinary
+      facts, then passes freshly validated ordinary facts to completion helper.
+      Validate full typed draft/canonical packet identity and exact current actual
+      source snapshots before removing residentCreditDraft only from canonical
+      output. Preserve original private web state unchanged. Unknown/null/zero
+      sources are neither silently omitted nor converted to eligible tax payments.
+    testRef: "tests/apps/web/pa-resident-credit-root-integration.test.tsx::actual canonical PA credit preserves literal tax credit refund for all residencies"
+  - line: "source-guards"
+    description: "Reject stale or edited actual records without inventing authority"
+    formula: |
+      Missing ordinary facts, changed actual source input, pending/unequal draft,
+      unknown payment kind/null original index or unconfirmed explicit zero cannot
+      pass navigation or canonical build. Preserve all old originals, raw actual
+      rows and confirmed packet identity. All filing/2026/readiness gates remain.
+    testRef: "tests/apps/web/pa-resident-credit-root-integration.test.tsx::actual canonical PA credit rejects edited pending originals while retaining all records"

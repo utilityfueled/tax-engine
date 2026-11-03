@@ -13235,5 +13235,17 @@
     "independent": "211/11 d5919b55be4668d52e154461b30ccfabc7c6967960f89eed1acebd0b163d3ec3;83artifact/sourcepagesinspected",
     "workspace": "reviewed4actualABfixturebodiesdeferredwithwholeworkspace;oldbusinesspositiveunchanged",
     "releaseReady": false
+  },
+  "continuation20261102PAResidentCreditGuided": {
+    "baseCommit": "11b6c925",
+    "mainTests": {
+      "passed": 129,
+      "files": 12
+    },
+    "sourceFirst": "collector1positivefailure1diagnosticmismatch11pass; root6genuinefail9pass",
+    "checks": "all11pass;types3/spec6870/inventorygeneration+check/strictlint0/bothbuilds/diff",
+    "independentCollector": "e26205a6d974ecbeb451c9766512a09c99f0747c599b503fb72c691c96f3d2be",
+    "rootReview": "all7products/full15controls/actualall3oracles/currentbeforehashes",
+    "releaseReady": false
   }
 }

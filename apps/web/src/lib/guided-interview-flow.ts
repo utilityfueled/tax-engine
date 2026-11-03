@@ -1,13 +1,12 @@
 import { buildGuidedW2SourceContext, buildTaxInputFromGuidedData } from "./guided-interview-bridge";
 import { TaxYearInputSchema, type TaxYearInput } from "@/models/inputs";
 import type { PAOrdinaryReturnFacts } from "@/models/pa-ordinary-return-facts";
-import type { PAOrdinaryReturnCompletionSources } from "@/models/pa-ordinary-return-completion";
 import { buildGuidedOhioResidencyFacts } from "./guided-ohio-residency-facts";
 import { buildGuidedOhioPaymentFacts } from "./guided-ohio-payment-facts";
 import { buildGuidedPAResidencySources } from "./guided-pa-residency-facts";
 import { buildGuidedPAReciprocitySources } from "./guided-pa-reciprocity-facts";
 import { buildGuidedPAOrdinaryReturnFacts } from "./guided-pa-ordinary-return-facts";
-import { buildGuidedPAOrdinaryReturnCompletionSources } from "./guided-pa-ordinary-return-completion";
+import { buildGuidedPAOrdinaryReturnCompletionSources, type GuidedPAOrdinaryReturnCompletionSources } from "./guided-pa-ordinary-return-completion";
 import { calculateW2StateLocalSources } from "@/engine/forms/w2-state-local";
 import type { W2StateLocalSources } from "@/models/w2-state-local";
 import type { OhioResidencyDraft } from "./guided-ohio-residency-facts";
@@ -1323,7 +1322,7 @@ export interface StateReturnData {
   paResidencySources?: PAResidencySources;
   paReciprocitySources?: PAReciprocitySources;
   paOrdinaryReturnFacts?: PAOrdinaryReturnFacts;
-  paOrdinaryReturnCompletionSources?: PAOrdinaryReturnCompletionSources;
+  paOrdinaryReturnCompletionSources?: GuidedPAOrdinaryReturnCompletionSources;
 }
 
 export interface StateWithholdingEntry {
@@ -1605,7 +1604,7 @@ function paOrdinarySourceValues(value: unknown): unknown {
     .map(([key, child]) => [key, paOrdinarySourceValues(child)]));
   return value;
 }
-function paCompletionSourceValues(value: PAOrdinaryReturnCompletionSources | undefined): unknown {
+function paCompletionSourceValues(value: GuidedPAOrdinaryReturnCompletionSources | undefined): unknown {
   if (!value) return value;
   const { owner: _boundOwner, ...facts } = value;
   return paOrdinarySourceValues(facts);
@@ -2062,7 +2061,7 @@ function guidedPAOrdinaryReturnSourceErrors(state: GuidedFlowState): Record<stri
   }
   if (!data?.paOrdinaryReturnCompletionSources) errors.paOrdinaryReturnCompletionSources = "Complete and confirm the actual Pennsylvania completion records.";
   else if (current) {
-    try { buildGuidedPAOrdinaryReturnCompletionSources(current, data.paOrdinaryReturnCompletionSources); }
+    try { buildGuidedPAOrdinaryReturnCompletionSources(current, data.paOrdinaryReturnCompletionSources, data.paOrdinaryReturnFacts); }
     catch (error) { errors.paOrdinaryReturnCompletionSources = error instanceof Error ? error.message : "Reconcile the actual Pennsylvania completion records."; }
   }
   return errors;

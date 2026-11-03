@@ -1,7 +1,10 @@
 import Decimal from 'decimal.js';
 import type {TaxYearInput} from '@/models/inputs';
 import {PAOrdinaryReturnCompletionSourcesSchema,PACompletionOriginalRecordSchema,type PAOrdinaryReturnCompletionSources,type PACompletionOriginalRecord} from '@/models/pa-ordinary-return-completion';
-type Sources=PAOrdinaryReturnCompletionSources;
+import {assertGuidedPAResidentCreditPair,buildGuidedPAResidentCreditSources,type GuidedPAResidentCreditSources} from './guided-pa-resident-credit-sources';
+/** Persist private unknown drafts in web state; canonical builders validate before stripping. */
+export type GuidedPAOrdinaryReturnCompletionSources=PAOrdinaryReturnCompletionSources&{otherStateTaxes:PAOrdinaryReturnCompletionSources['otherStateTaxes']&{residentCreditDraft?:GuidedPAResidentCreditSources}};
+type Sources=GuidedPAOrdinaryReturnCompletionSources;
 const excludedRoots=['paResidencySources','paReciprocitySources','paOrdinaryReturnFacts','paOrdinaryReturnCompletionSources'];
 const states=new Set('AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR RI SC SD TN TX UT VT VA WA WV WI WY'.split(' '));
 const fail=(message:string):never=>{throw new Error('PA completion sources: '+message);};
@@ -39,9 +42,22 @@ function actualSources(input:TaxYearInput,data:Sources):void{
  const local=data.local;if(local.allResidentAndWorkJurisdictionsReviewedConfirmed!==true||!local.jurisdictions.length)fail('complete actual local obligation sources');const localSeen=new Set<string>();for(const r of local.jurisdictions){ref(r.name);ref(r.sourceReference);const key=identity(r.name);if(localSeen.has(key)||r.returnRequired===null)fail('actual local obligation is unknown or duplicate');localSeen.add(key);}if(!local.jurisdictions.some(r=>r.returnRequired===true))fail('reconcile separate local return status with actual local obligation records');
  const relief=data.lateFilingRelief;if(relief.allActualReliefSourcesReviewedConfirmed!==true)fail('confirm complete actual agency-relief record review');if(relief.status==='no_actual_relief_records'&&relief.originalAgencyRelief.length)fail('reconcile no-relief status with retained agency original records');if(relief.status==='actual_relief'&&!relief.originalAgencyRelief.length)fail('retain actual agency-relief original document metadata');records(relief.originalAgencyRelief,'agency_relief');
 }
-/** This explicit source action alone replaces the privately retained identity and original snapshot. */
-export function confirmGuidedPAOrdinaryReturnCompletionSources(input:TaxYearInput,draft:unknown):Sources{const data=PAOrdinaryReturnCompletionSourcesSchema.parse(draft);actualSources(input,data);const t=input.taxpayer.primary;return {...data,sourceFactsConfirmed:true,owner:{firstName:t.firstName,lastName:t.lastName,ssn:t.ssn},originalFederalSources:snapshotPAOrdinaryReturnCompletionOriginals(input)};}
-/** Source-only fresh read validation; no computation, inferred credit or snapshot refresh. */
-export function buildGuidedPAOrdinaryReturnCompletionSources(input:TaxYearInput,draft:unknown):Sources{const data=PAOrdinaryReturnCompletionSourcesSchema.parse(draft);actualSources(input,data);if(data.sourceFactsConfirmed!==true)fail('confirm actual sources after the last edit');const t=input.taxpayer.primary;if(stable(data.owner)!==stable({firstName:t.firstName,lastName:t.lastName,ssn:t.ssn}))fail('current actual owner changed; reconfirm original sources');if(stable(data.originalFederalSources)!==stable(snapshotPAOrdinaryReturnCompletionOriginals(input)))fail('current original sources changed; retained original snapshot is stale');return data;}
+/** Strip exactly the typed web draft only after proving its current confirmed source pair. */
+function canonicalSources(input:TaxYearInput,raw:unknown,ordinaryFacts?:unknown):{data:PAOrdinaryReturnCompletionSources;creditDraft?:GuidedPAResidentCreditSources}{
+ const object=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw as Record<string,unknown>:undefined;
+ const other=object?.otherStateTaxes&&typeof object.otherStateTaxes==='object'&&!Array.isArray(object.otherStateTaxes)?object.otherStateTaxes as Record<string,unknown>:undefined;
+ const {residentCreditDraft,...originalOther}=other??{};
+ const data=PAOrdinaryReturnCompletionSourcesSchema.parse(other?{...object,otherStateTaxes:originalOther}:raw),packet=data.otherStateTaxes.residentCreditSources;
+ if((residentCreditDraft!==undefined||packet!==undefined)&&data.otherStateTaxes.status!=='actual_payments')fail('reconcile retained resident-credit originals and draft with the actual other-state payment history');
+ const facts=ordinaryFacts===undefined?input.paOrdinaryReturnFacts:ordinaryFacts;
+ const creditDraft=residentCreditDraft===undefined?undefined:assertGuidedPAResidentCreditPair(input,facts,residentCreditDraft,packet);
+ if(packet!==undefined&&creditDraft===undefined)buildGuidedPAResidentCreditSources(input,facts,packet);
+ return {data,...(creditDraft===undefined?{}:{creditDraft})};
+}
+/** This explicit source action alone replaces the completion identity and federal snapshot.
+ * It never confirms or refreshes ordinary facts or the nested resident-credit originals. */
+export function confirmGuidedPAOrdinaryReturnCompletionSources(input:TaxYearInput,draft:unknown,ordinaryFacts?:unknown):Sources{const {data,creditDraft}=canonicalSources(input,draft,ordinaryFacts);actualSources(input,data);const t=input.taxpayer.primary;return {...data,sourceFactsConfirmed:true,owner:{firstName:t.firstName,lastName:t.lastName,ssn:t.ssn},originalFederalSources:snapshotPAOrdinaryReturnCompletionOriginals(input),...(creditDraft===undefined?{}:{otherStateTaxes:{...data.otherStateTaxes,residentCreditDraft:creditDraft}})};}
+/** Fresh source replay on read; emit strict canonical facts without changing saved web state. */
+export function buildGuidedPAOrdinaryReturnCompletionSources(input:TaxYearInput,draft:unknown,ordinaryFacts?:unknown):PAOrdinaryReturnCompletionSources{const {data}=canonicalSources(input,draft,ordinaryFacts);actualSources(input,data);if(data.sourceFactsConfirmed!==true)fail('confirm actual sources after the last edit');const t=input.taxpayer.primary;if(stable(data.owner)!==stable({firstName:t.firstName,lastName:t.lastName,ssn:t.ssn}))fail('current actual owner changed; reconfirm original sources');if(stable(data.originalFederalSources)!==stable(snapshotPAOrdinaryReturnCompletionOriginals(input)))fail('current original sources changed; retained original snapshot is stale');return data;}
 /** Explicit method boundaries only; this is never a calculation-readiness result. */
 export function paOrdinaryReturnCompletionMethodWarnings(data:Sources):string[]{const warnings:string[]=[];if(data.otherStateTaxes.status==='actual_payments')warnings.push('other-state-tax-credit-source-method-required');if(data.restrictedCredits.status==='actual_awards')warnings.push('restricted-credit-source-method-required');if(data.care.status==='actual_expenses')warnings.push('care-credit-source-method-required');if(data.nrk1.status==='actual_statements')warnings.push('nrk1-credit-source-method-required');if(data.lateFilingRelief.status==='actual_relief')warnings.push('late-filing-relief-source-method-required');warnings.push(data.local.status==='unknown'?'local-obligation-sources-unknown':'separate-local-return-required');return warnings;}

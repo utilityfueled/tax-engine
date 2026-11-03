@@ -2165,3 +2165,8 @@ and page text match those independently inspected outputs; strict field/widget,
 appearance and privacy checks pass. Temporary-directory portability and the new
 45th template registry entry preserve every assertion. Original other-state
 return/W2 attachments, final2026 forms and human qualification remain required.
+
+
+## November2: actual guided resident-credit originals
+
+The finite reviewed compensation resident-credit method now reaches whole-panel confirmation, saved-state navigation and canonical replay using current ordinary facts. Main129/12 and all11 scoped checks pass after6 genuine root failures/9passes; the separate collector positive failure and diagnostic mismatch are retained honestly. Unknown/null/zero source drafts survive saving, edits require reconfirmation, and only validated web drafts are stripped from canonical output. No engine formula, monetary oracle or filing gate changed. Remaining OID/business/NRH/workspace and external qualification work continues.

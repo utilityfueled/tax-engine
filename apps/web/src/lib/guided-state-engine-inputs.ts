@@ -94,7 +94,7 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
     // Replays only: no confirmation action and no refreshed snapshot on read.
     const paOrdinaryReturnFacts=buildGuidedPAOrdinaryReturnFacts(current,data.paOrdinaryReturnFacts);
     reconcileSavedStateLedger(data,input.taxpayer.taxYear,"PA",paOrdinaryReturnFacts.payments.rows.filter(row=>row.original.kind==='estimated').map(row=>({date:row.original.date,amount:row.original.amount})));
-    const paOrdinaryReturnCompletionSources=buildGuidedPAOrdinaryReturnCompletionSources(current,data.paOrdinaryReturnCompletionSources);
+    const paOrdinaryReturnCompletionSources=buildGuidedPAOrdinaryReturnCompletionSources(current,data.paOrdinaryReturnCompletionSources,paOrdinaryReturnFacts);
     return {...current,paOrdinaryReturnFacts,paOrdinaryReturnCompletionSources};
   }
   return input;
