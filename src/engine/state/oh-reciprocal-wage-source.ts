@@ -61,7 +61,9 @@ export function calculateOhioReciprocalWageSource(input:TaxYearInput,result:TaxR
   if(digest(source.originalTaxpayer)!==digest({firstName:person.firstName,lastName:person.lastName,ssn:person.ssn})||digest(source.originalW2)!==digest(w2)||w2.accountHolder!=='primary'||w2.taxYear!==2025)fail('current actual full W2 owner year or identity differs');
   const actual=calculateW2StateLocalSources(input,0,w2.stateLocalSources);
   const ohio=actual.stateRows.find(row=>row.state==='OH'),pa=actual.stateRows.find(row=>row.state==='PA');
-  if(actual.stateRows.length!==2||!ohio||!pa||actual.localRows.length||!pa.withheld.isZero()||!ohio.wages.eq(w2.wages)||!pa.wages.eq(w2.wages))fail('complete actual PA/OH wage rows and no local reporting required');
+  // The original-row validator already requires finite nonnegative source strings.
+  // PA cash remains separate; this finite method admits at most two significant decimal places.
+  if(actual.stateRows.length!==2||!ohio||!pa||actual.localRows.length||pa.withheld.decimalPlaces()>2||!ohio.wages.eq(w2.wages)||!pa.wages.eq(w2.wages))fail('complete actual PA/OH wage rows and no local reporting required');
   const nonwageArrays=['form1099Int','form1099Div','form1099B','form1099DA','form1099Nec','form1099Misc','form1099G','form1099OID','formW2G','form1099K','form1099C','form1099Q','form1099R','form1099SA','formSSA1099','formRRB1099','scheduleK1','scheduleK1Form1041','rentalProperties','homeSales','form6252','form8814','form8824','savingsBondRedemptions'] as const;
   if(nonwageArrays.some(key=>(input[key]?.length??0)>0)||input.scheduleC||input.scheduleF||input.netOperatingLoss||input.form172||input.cryptoIncome||input.form4797||input.form6781||input.form4137||input.form8919||input.socialSecurityLumpSumElection||input.royaltyPropertySources||input.adjustments)fail('retained other income originals need their separate source composition even when zero or cancelling');
   if(Object.entries(input).some(([key,value])=>/^(?:form|schedule)/.test(key)&&value!==undefined&&value!==null&&(!Array.isArray(value)||value.length>0)))fail('other retained form or schedule originals require separate composition');

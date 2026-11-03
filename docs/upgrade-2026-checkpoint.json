@@ -16271,5 +16271,172 @@
     "noticeRefreshLimit": "Earlier root web retrieval observed release recommendation; root and peer later attempts return Internal Error. No old pre-release HTML substituted.",
     "ledger": "docs/upgrade-2026-next-1645-security-work.md",
     "evidence": ".local/upgrade-evidence/nov03-next-1645-security/owned-exposure-and-checks.json"
+  },
+  "ohReciprocalSeparatePaWithholding20261103": {
+    "base": "7a4be2bb5e846109fdba039742eb5d71edc3d197",
+    "sourceFirstRED": {
+      "failed": 12,
+      "passed": 33,
+      "logSHA256": "28f73380fdedd2c02f081df9bb14d3d4967bdedcae5e4a28f582cd68e00eb029",
+      "separateSourcePrecondition": "PASS"
+    },
+    "focusedPassed": 45,
+    "adjacentPassed": 219,
+    "adjacentFiles": 14,
+    "all12ChecksPass": true,
+    "astPassed": 737,
+    "peerReceiptSHA256": "75e808ed76337e237560b6cae22745fcebcc8b23fda7bbe58c9ecc9e6569f8fd",
+    "checks": [
+      {
+        "name": "focused45-first-green",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/engine/state/oh-reciprocal-pa-withholding.test.ts",
+          "--maxWorkers=1"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-pa-withholding-main-green/focused45-first-green.log",
+        "sha256": "9d5b8eea4c35fc8e769763cea175aa6527734050adf0706d738f8480d8858ba0"
+      },
+      {
+        "name": "adjacent14",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/apps/web/oh-reciprocal-wages-guided-details.test.tsx",
+          "tests/apps/web/w2-state-local-details.test.tsx",
+          "tests/apps/web/oh-reciprocal-wages-guided-integration.test.ts",
+          "tests/apps/web/guided-w2-state-local-facts.test.ts",
+          "tests/apps/web/oh-reciprocal-wages-guided-facts.test.ts",
+          "tests/apps/web/oh-reciprocal-native-independent.test.ts",
+          "tests/engine/w2-state-local-consumers.test.ts",
+          "tests/engine/w2-state-local-independent.test.ts",
+          "tests/engine/w2-state-local-canonical.test.ts",
+          "tests/engine/state/oh-reciprocal-wage-sources.test.ts",
+          "tests/engine/state/oh-reciprocal-wages-independent.test.ts",
+          "tests/pdf/oh-ordinary-official-review.test.ts",
+          "tests/pdf/oh-official-ordinary-physical-independent.test.ts",
+          "tests/engine/forms/w2-state-local.test.ts",
+          "--maxWorkers=1"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-pa-withholding-main-green/adjacent14.log",
+        "sha256": "c61c598ec157e0e0da8bd871736f9f94d6cbf609d39ee2e0ef011de2b745ee17"
+      },
+      {
+        "name": "root-types",
+        "command": [
+          "pnpm",
+          "typecheck"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-pa-withholding-main-green/root-types.log",
+        "sha256": "5888bcaa4f681b3f7bf48999ae0817c16b3af178b8c13f7d91414fdef8ea04d9"
+      },
+      {
+        "name": "web-types",
+        "command": [
+          "pnpm",
+          "typecheck:web"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-pa-withholding-main-green/web-types.log",
+        "sha256": "249e0be3cf6277994e8d22e8440bebe6db10861cab79fe97aa4952837f3ff073"
+      },
+      {
+        "name": "contract-types",
+        "command": [
+          "pnpm",
+          "typecheck:contracts"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-pa-withholding-main-green/contract-types.log",
+        "sha256": "0c2a6bff203db409d0f68d48f7b21a6ac6bd6098310256e72a9c6e558bc3943d"
+      },
+      {
+        "name": "spec",
+        "command": [
+          "pnpm",
+          "spec:validate"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-pa-withholding-main-green/spec.log",
+        "sha256": "fbc8b4f88338fa89faa5d831202158caf577aa62ec754e7379c32c5758bcb54a"
+      },
+      {
+        "name": "ast",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/spec/validate-testrefs.test.ts",
+          "--maxWorkers=1"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-pa-withholding-main-green/ast.log",
+        "sha256": "d1103d4aad3adceda05803b80de7080eee5e01b5ffee8dccafc8f7ab0853a6ea"
+      },
+      {
+        "name": "strict-owned3",
+        "command": [
+          "pnpm",
+          "exec",
+          "eslint",
+          "src/engine/state/oh-reciprocal-wage-source.ts",
+          "tests/fixtures/oh-reciprocal-pa-withholding.ts",
+          "tests/engine/state/oh-reciprocal-pa-withholding.test.ts",
+          "--max-warnings=0"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-pa-withholding-main-green/strict-owned3.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "engine-build",
+        "command": [
+          "pnpm",
+          "build"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-pa-withholding-main-green/engine-build.log",
+        "sha256": "d075c8ab15a7843462a88f3304147338e40a1fb638a358eeb51b2b7984d778ec"
+      },
+      {
+        "name": "web-build",
+        "command": [
+          "pnpm",
+          "build:web"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-pa-withholding-main-green/web-build.log",
+        "sha256": "b00810f2901fd9022070c61ff59862462ae19502d8b25ecc01043a8b436a4efd"
+      },
+      {
+        "name": "private-inventory-generate",
+        "command": [
+          "pnpm",
+          "spec:inventory"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-pa-withholding-main-green/private-inventory-generate.log",
+        "sha256": "ea7c75894f9fa365ca25b06043442bc9d1a6cea2dcea0136e09af816dd4f9613"
+      },
+      {
+        "name": "private-inventory-check",
+        "command": [
+          "pnpm",
+          "spec:inventory:check"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov03-root-oh-reciprocal-pa-withholding-main-green/private-inventory-check.log",
+        "sha256": "846ee1105cfb137b691fc9b9faa383c54ef9f9e367b6b3416b2abe4ccb15cdef"
+      }
+    ],
+    "releaseReady": false,
+    "remaining": [
+      "Separate actual reciprocal official-form output",
+      "Full currentglobal/distribution/staging/human/final2026 qualification"
+    ],
+    "ledger": "docs/upgrade-2026-oh-reciprocal-pa-withholding-work.md"
   }
 }

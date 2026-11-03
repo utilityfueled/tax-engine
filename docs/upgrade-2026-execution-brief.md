@@ -221,3 +221,7 @@ Current-main J/M desktop/mobile journeys now verify actual200 and one saved revi
 ### November 3: separately verified Next 16.4.5 update
 
 Next and its ESLint plugin now use16.4.5 with exact eleven-family integrity changes. Frozen install,480security/Compose controls, types3, lint and both builds pass; actual managed production browser28/28 passes without retries/skips. Independent static review approves the bounded dependency diff. Seven primary-advisory metadata conflicts/exposure limits remain assigned to this goal for recheck by November4 19:30UTC or before qualification, without risk acceptance. See [the security ledger](upgrade-2026-next-1645-security-work.md). Current images/global/staging/human qualification remain open; PA married browser82e97db7 and reciprocalbrowserb45cda6c are pushed.
+
+### November 3: separate PA cash in Ohio reciprocal sources
+
+The finite original-bound reciprocal method now retains actual nonnegative PA withholding independently of Ohio cash. Main12genuineRED/33PASS precede the one-guard change;45focused+219adjacent and all12checks pass. Distinct review verifies official authority and independent cash oracles; PA1842.01/.02 never enters Ohio withholding/refund2001/0. The cent-precision cohort boundary stays explicit. See [the source ledger](upgrade-2026-oh-reciprocal-pa-withholding-work.md). Physical reciprocal output/global/distribution/staging/human/final2026 remain open. Next security7a4be2bb is pushed separately.
