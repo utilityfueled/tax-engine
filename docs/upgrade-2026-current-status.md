@@ -23,7 +23,7 @@ Documentation-only commits through4190b5d3 follow8487 without changing its appli
 
 The later bounded native inventory admits its three exact empty volatile directories and passes final safety, then stops on Podman125/readlink at exact candidate inspection. No archive/deletion/export follows; the root cause remains under investigation. [Retained native evidence](upgrade-2026-8487-native-build-export-work.md).
 
-Isolated hosted outage provisioning now has a separate Preview project, empty Neon branch and test Stripe catalog. The unused Redis cache was deleted after its $20 minimum rejected the approved $1 budget; a replacement decision is pending. Direct read-only Neon identity passes, while provider-owned maintenance PUBLIC CONNECT prevents the unchanged exclusive-database bootstrap. No new deployment or outage qualification is claimed. See [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).
+Isolated hosted outage provisioning now has a separate Preview project, empty Neon branch and test Stripe catalog. The original unused Redis cache was deleted. The separately approved replacement now has a verified $20 automatic cutoff and Sensitive Preview-only access for the isolated project, retaining a $1 actual-spend limit and 240-request ceiling. Direct read-only Neon identity passes, while provider-owned maintenance PUBLIC CONNECT prevents the unchanged exclusive-database bootstrap. No new deployment or outage qualification is claimed. See [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).
 
 ## Work continuing independently
 
@@ -64,3 +64,5 @@ All existing-state preservation classifications match, with independent actual
 review. No guest is booted or qualified; shared-routing startup and every
 same-image native gate remain open. The old candidate's zero-byte layer records
 are diagnosed but not repaired. [Current native ledger](upgrade-2026-8487-native-build-export-work.md).
+
+The independently reviewed NOLOGIN bootstrap V2 now retains one actual failure: fresh catalog comparison passes, then role metadata validation stops before COMMIT and cleanup ROLLBACK returns. No database-create attempt, password or LOGIN occurs. The separate rollback-only diagnostic now captures safe metadata and passes fresh before/after catalog reconciliation, including target absence; its strict-policy mismatch awaits independent interpretation. This is not a confirmed setup or privacy PASS. See [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).

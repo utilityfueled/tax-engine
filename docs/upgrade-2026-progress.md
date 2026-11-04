@@ -3074,3 +3074,18 @@ the separate stopped2CPU/8192MiB/80GiB VM and exactly two empty scoped mounts.
 See [the native ledger](upgrade-2026-8487-native-build-export-work.md). No guest
 boot, application build or native qualification is inferred. The shared-routing
 startup boundary and all same-image release gates remain open.
+
+### November 4: isolated Redis connected; NOLOGIN setup failure retained
+
+The separately approved replacement Redis cache now has its provider-verified
+$20 automatic cutoff and Sensitive access only for the isolated project’s
+Preview, with $1 actual-spend and240-request limits unchanged. No outage result
+is inferred. Independent review resolves two setup-helper guard defects before
+actual execution; the one actual NOLOGIN setup then stops on a role metadata
+assertion before COMMIT, with ROLLBACK returned and no database-create attempt.
+Its107queries/five rollbacks and partial/unknown failure remain retained.
+See [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).
+The separately reviewed rollback-only diagnostic now passes217queries/10rollbacks
+with fresh before/after baseline reconciliation and target absence. Safe metadata
+captures a strict-policy mismatch for independent interpretation; privacy, LOGIN,
+deployment and broader hosting qualification remain open.

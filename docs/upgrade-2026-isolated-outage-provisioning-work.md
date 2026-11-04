@@ -7,14 +7,16 @@ These observations do not qualify a deployed artifact. Production is untouched.
 
 The owner approved a separate Preview-only project, empty Neon branch/database,
 dedicated Redis resource, and separate Stripe Sandbox. The later Redis approval
-permits at most $1 actual spending and a brief disconnected setup window.
+permits at most $1 actual spending, a $20 automatic cutoff and a brief
+disconnected setup window. The specific existing-integration Install workflow
+was subsequently approved.
 
 | Component | Actual result | Next gate |
 | --- | --- | --- |
-| Vercel | Separate `tax-engine-outage-8487` project created; Preview-only deployment/billing/rate-prefix settings and four auth/Stripe bindings saved. CLI sign-in expressly approved. No deployment yet. | App database/role, Redis, webhook/origin configuration, exact-source build and runtime checks. |
-| Neon | Separate free project and schema-only `qa-outage-8487` branch created; integration connected to Preview only. Read-only direct connection proves empty application catalogs, absent target role/database, TLS1.3 with certificate/hostname verification, and SCRAM-SHA-256-PLUS with validated server proof. | Strict bootstrap refuses provider-maintenance PUBLIC CONNECT. No app role/database, migrations or permission mutations performed. |
+| Vercel | Separate `tax-engine-outage-8487` project created; Preview-only deployment/billing/rate-prefix settings and four auth/Stripe bindings saved. CLI sign-in expressly approved. No deployment yet. | App database/role, webhook/origin configuration, exact-source build and runtime checks. |
+| Neon | Separate free project and schema-only `qa-outage-8487` branch created; integration connected to Preview only. Read-only direct connection proves empty application catalogs, absent target role/database, TLS1.3 with certificate/hostname verification, and SCRAM-SHA-256-PLUS with validated server proof. | Strict bootstrap refuses provider-maintenance PUBLIC CONNECT. No app role/database is durably created; a later temporary role transaction and rollback diagnostic are recorded below. Migrations remain unexecuted. |
 | Stripe | New isolated sandbox identity verified. Two synthetic Starter/Plus products and monthly test prices created; four catalog POSTs in twelve total requests. Key remains private and Preview-only. | No customer, trial, webhook or charge endpoints invoked by this bootstrap. Automatic failed delivery/retry and exact reconciliation remain untested. |
-| Redis | Disconnected cache created; no app connection, data or test commands. Budget form rejects $1 with minimum $20. Unused cache permanently deleted after the owner's explicit deletion approval; installed-products readback confirms absence. | Pending owner decision: permit $20 automatic cutoff while retaining $1 actual spend, or keep Redis rehearsal blocked. No replacement created and no $20 budget saved. |
+| Redis | The original unused cache was deleted. A separately approved replacement now exists in iad1 with auto-upgrade/eviction off. Its provider UI verifies Budget: $20; the pre-budget display showed zero commands and $0.00. | The owner approved the separate credential grant; the cache is now connected only to the isolated project’s Preview with Sensitive enabled and Production/Development excluded. Retain the $1 actual-spend limit and 240-request ceiling before rehearsal; no outage qualification follows from provisioning. |
 
 ## Retained database failures and current permission boundary
 
@@ -74,7 +76,7 @@ SCRAM-SHA-256-PLUS remain enforced. No relation contents, passwords, function
 bodies or connection strings are selected. All sessions close according to the
 reviewed receipt path; no independent backend-session observation is claimed.
 
-Independent actual-evidence review verifies all 26 catalog sections per database,
+Independent actual-evidence review verifies all 25 catalog sections per database,
 row field allowlists, source/authority bindings and bounds. It identifies no
 ordinary user/tax relation in the baseline. It does identify provider-owned
 relations/routines in postgres and PUBLIC SELECT on two statistics views.
@@ -104,3 +106,63 @@ return zero. Its failure evidence remains preserved. V2 requires a verified,
 exact inventory-only PASS before exit0; 46 author/independent offline controls
 pass before the actual operation. This correction enables no privacy or release
 claim.
+
+## NOLOGIN setup: reviewed guards and retained actual failure
+
+Independent review of the first setup helper found two concrete defects:
+preflight counters were omitted from its aggregate receipt, and an observed
+asynchronous session error could precede another durable mutation. Both original
+negative controls remain failed and frozen. The separately reviewed V2 fixes
+both; 26 author Node, 14 author Python and five distinct independent controls
+pass. Phase limits remain unchanged and their aggregate is explicit, rather
+than describing the later phase as the entire operation.
+
+ROOT reviewed and bound that exact successor, then executed it once. Fresh
+read-only catalog comparison passes. The role transaction stops during its
+create/metadata stage, before a role COMMIT attempt; its cleanup ROLLBACK returns.
+There is no confirmed committed mutation, database-create attempt, password,
+LOGIN or new deployment. The receipt remains
+`FAIL_PARTIAL_OR_UNKNOWN_NO_RETRY_ROLE_MUST_REMAIN_NOLOGIN`; rollback alone does
+not replace independent state reconciliation. The retained failure has no SQL
+state or detailed assertion difference, so its provider cause remains unknown.
+A separate bounded diagnostic is being prepared; this helper is not retried.
+
+The actual operation reports 107 ordinary queries, five cleanup rollbacks,
+21,891 rows and 3,962,324 row-JSON bytes in 16,424 ms. Those totals include the
+100-query preflight. All privacy, app-role readiness, literal CONNECT,
+template0 and provider-hop qualification flags remain false.
+
+Retained SHA256 bindings:
+
+- V2 source manifest: `b747c09d89c52080874f48e1d55f6292ac250fac2f41e66df2d4f49533dab270`.
+- Independent source-review receipt: `73d88eafcd688f6e7b24b8fb2b1bc57b1babecd2d246cfea535cb4bc35b710be`.
+- Actual failed setup receipt: `e7e75d564f34e7652e59ce616b3597af5a9ad54d4971b51666c73c4a3027b250`.
+
+The earlier catalog review's prose count of 26 was incorrect; its complete key
+set and 100-query accounting were correct. A preserved independent correction
+identifies 25 categories without changing the inventory or its qualification.
+The Redis cutoff screenshot and raw setup evidence remain private and ignored;
+no credential values are included in this ledger.
+
+## Rollback-only role metadata diagnostic
+
+The separately reviewed diagnostic completes once with
+`PASS_ROLE_METADATA_CAPTURE_ROLLBACK_RECONCILED_ONLY`. It captures safe role
+attributes and membership metadata before evaluating the prior strict policy,
+which reports `MISMATCH_REQUIRES_INDEPENDENT_REVIEW`. No policy is relaxed.
+Both local transactions roll back and close; fresh full catalog reconciliations
+before and after match the original three-database baseline and prove target
+role/database absence on that source path. No committed mutation, password,
+LOGIN, database creation or deployment occurs. Physical OID/WAL advancement is
+not represented as byte-identical restoration.
+
+The closed launcher verifies receipt binding and reports exit0 without stderr.
+Actual accounting is217ordinary queries,10cleanup rollbacks,43,815rows and
+7,929,858row-JSON bytes in32,017ms, within the declared aggregate bounds.
+All privacy, app-privilege, CONNECT, provider-hop and bootstrap-assumption
+qualification flags remain false. Independent actual-metadata review is next;
+this result authorizes no setup retry or model/release promotion.
+
+- Diagnostic source manifest: `0504ca317295a0fbcc134f679a8ff6f2721ab0e88889c0dcad9f0f3a1fbea224`.
+- Independent source-review receipt: `b99494bc2054edc3b8d685c48546aea35649e762bafe221a9a9ef0d939ff1f2a`.
+- Actual diagnostic receipt: `47c8120ce5021889db546cf56bb49d67fa1ee5647d9897584b5c42fa869235b9`.

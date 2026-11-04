@@ -19274,5 +19274,62 @@
     "guestVersionQualified": false,
     "nativeQualified": false,
     "next": "REVIEW_AND_AUTHORIZE_BOUNDED_SHARED_ROUTING_STARTUP_THEN_OWNED_VM_DIAGNOSTIC"
+  },
+  "nov04IsolatedRedisReplacement": {
+    "status": "CONNECTED_PREVIEW_ONLY_CUTOFF_VERIFIED",
+    "ledger": "docs/upgrade-2026-isolated-outage-provisioning-work.md",
+    "project": "tax-engine-outage-8487",
+    "region": "iad1",
+    "sensitive": true,
+    "environments": [
+      "preview"
+    ],
+    "autoUpgrade": false,
+    "eviction": false,
+    "automaticCutoffUSD": "20",
+    "actualSpendingLimitUSD": "1",
+    "maximumRehearsalRequests": 240,
+    "preBudgetObservedCommands": 0,
+    "preBudgetObservedCostUSD": "0.00",
+    "credentialsPrinted": false,
+    "outageQualified": false
+  },
+  "nov04NoLoginBootstrapV2": {
+    "status": "FAIL_PARTIAL_OR_UNKNOWN_NO_RETRY_ROLE_MUST_REMAIN_NOLOGIN",
+    "ledger": "docs/upgrade-2026-isolated-outage-provisioning-work.md",
+    "sourceManifestSHA256": "b747c09d89c52080874f48e1d55f6292ac250fac2f41e66df2d4f49533dab270",
+    "independentSourceReceiptSHA256": "73d88eafcd688f6e7b24b8fb2b1bc57b1babecd2d246cfea535cb4bc35b710be",
+    "actualReceiptSHA256": "e7e75d564f34e7652e59ce616b3597af5a9ad54d4971b51666c73c4a3027b250",
+    "failureStage": "role:create-nologin",
+    "roleCommitAttempted": false,
+    "databaseCreateAttempted": false,
+    "cleanupRollbackReturned": true,
+    "postSessionAbsenceIndependentlyObserved": false,
+    "ordinaryQueries": 107,
+    "cleanupQueries": 5,
+    "rows": 21891,
+    "rowJSONBytes": 3962324,
+    "elapsedMs": 16424,
+    "passwordCreated": false,
+    "loginEnabled": false,
+    "privacyQualified": false,
+    "next": "REVIEWED_TEMPORARY_ROLE_METADATA_AND_ROLLBACK_DIAGNOSTIC"
+  },
+  "nov04RoleRollbackDiagnostic": {
+    "status": "PASS_ROLE_METADATA_CAPTURE_ROLLBACK_RECONCILED_ONLY",
+    "ledger": "docs/upgrade-2026-isolated-outage-provisioning-work.md",
+    "actualReceiptSHA256": "47c8120ce5021889db546cf56bb49d67fa1ee5647d9897584b5c42fa869235b9",
+    "independentSourceReceiptSHA256": "b99494bc2054edc3b8d685c48546aea35649e762bafe221a9a9ef0d939ff1f2a",
+    "strictPolicyComparison": "MISMATCH_REQUIRES_INDEPENDENT_REVIEW",
+    "beforeBaselineReconciled": true,
+    "afterBaselineReconciled": true,
+    "ordinaryQueries": 217,
+    "cleanupQueries": 10,
+    "rows": 43815,
+    "rowJSONBytes": 7929858,
+    "elapsedMs": 32017,
+    "committedMutations": [],
+    "privacyQualified": false,
+    "next": "INDEPENDENT_ACTUAL_METADATA_REVIEW_AND_NARROW_SOURCE_SUCCESSOR"
   }
 }
