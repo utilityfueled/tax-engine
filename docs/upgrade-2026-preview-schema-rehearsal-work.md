@@ -32,7 +32,43 @@ neither failure is relabeled successful. The V5.1 validated synthetic backup is
 retained privately with its hash; credentials, hostnames and row contents are not
 published.
 
-Current-source rehearsal, final deployed artifacts, real outages, provider
-internal transport evidence, historical DDL/PITR coverage and independent human
-security/privacy review remain required. No production deployment, model request,
-filing activation or risk acceptance occurred.
+## Current-source successor
+
+Exact application `a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45` now also passes
+the same bounded synthetic mechanism on the approved Preview database. The fresh
+archive contains 5,041 regular files and six exact literal links. A distinct
+source review verifies 45,520 provenance assertions and the minimal inverse to
+V5.3 before execution; the current tracked pool-closure helper replaces its
+identical historical inline closure. Offline frozen installation is recorded
+separately from the dependency-free source preparation.
+
+The actual November4 17:26–17:27 UTC operation passes dry-run, malformed-row
+transaction rollback, apply, native PostgreSQL18.6 custom backup, complete
+single-transaction restore, exact normalized catalog and nine-table/twelve-row
+baseline parity, reapply and idempotence. Exact cost `0.0000006` and budget100
+cents remain unchanged. The 25,431-byte backup has36 allowlisted TOC entries.
+Outside-schema catalog identities are unchanged; no real application rows are
+read or written. RESTRICT cleanup confirms schema/relations absent, current raw
+pool ended and zero own sessions; generated credential and owned temporary
+files are removed. All tracked source bytes remain exact after execution.
+
+Operation receipt SHA256:
+`aabde7cd1090e2e148152a9e312080ebfafb19d969bdfb315c29d05c6b959831`.
+Independent source-review SHA256:
+`27e29ce5059bd17260558b55d039427b1d7bcc88029951842936df1e93b67302`.
+Distinct saved-runtime review SHA256:
+`64a75e5de7c2c18305fc9d57a1c9ec2fa5e10f67d7a90a1eaea555c7df8e74e9`.
+That review passes10,361 checks of the closed receipts and unchanged executed
+source. Successful cleanup removed transient snapshots and the synthetic dump;
+the reviewer traces their assertions and saved hashes rather than claiming a
+second database query or independent inspection of removed bytes.
+Saved receipts are in ignored
+`nov04-preview-schema-current-a4ac-sourcefirst/actual-root-current-a4ac-v1`.
+Node negotiates verified TLS1.3 and native libpq uses verify-full/system roots
+with minimumTLS1.2. Backend SSL remains false; internal-hop encryption is still
+unqualified.
+
+Final deployed-artifact integration, real outages, provider internal transport
+evidence, historical DDL/PITR coverage and independent human security/privacy
+review remain required. No production deployment, model request, filing
+activation or risk acceptance occurred.

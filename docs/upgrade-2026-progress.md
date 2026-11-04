@@ -2927,3 +2927,58 @@ V5.1/V5.2 failures and intervening read-only reconciliations stay retained. See
 [the bounded database ledger](upgrade-2026-preview-schema-rehearsal-work.md).
 Verified client TLS does not resolve the provider-internal transport observation.
 Final-source/global/artifact/staging and external review gates remain open.
+
+
+### November 4: actual private document recovery and separate source comparison
+
+Privacy commit3d13cfe1 preserves local original bytes/IDs while hosted shells use
+workspace-scoped pseudonyms. Its actual Preview passes upload/reopen, explicitly
+confirmed synthetic2025 federal review (refund885),12-page strict/visual PDF
+checks, encrypted backup/restore and approved deletion with scoped DB before/after
+verification. See [the journey ledger](upgrade-2026-preview-document-recovery-journey-work.md).
+The sample fixture supplies illustrative values; no real taxpayer extraction or
+state/final2026/filing qualification is claimed. Provider internal transport
+remains unverified. Recovery-pool3db0a4ad separately passes actual disposablePG16
+restore/reapply and zero-session/schema cleanup. Ohio perf a4ac9f0e separately
+preserves all durable commitments/federal replay while avoiding three transient
+hash comparisons; distinct review,501 relevant controls, types3/spec8209/AST777,
+inventory and builds2 pass. Actual timing, full final-source/distribution/staging
+and external qualification remain open.
+
+### November 4: current-source database recovery and measured managed comparison
+
+Exacta4ac now passes the isolated Preview-schema mechanism with current tracked
+pool closure: dry-run/rollback/apply, nativePG18.6 backup/full catalog and data
+restore, reapply/idempotence, exact0.0000006cost/100cents, RESTRICT cleanup,
+schema absent and sessions0. Distinct source review precedes the actual run;
+outside catalog identities stay unchanged and no real application rows are read
+or written. ClientTLS1.3/CA/hostname passes; provider internal-hop encryption
+remains unverified. See [the database ledger](upgrade-2026-preview-schema-rehearsal-work.md).
+
+The fresh managed3db0→a4ac comparison passes4cases at each revision at unchanged
+30s/retry0. Observed case totals70.857s→64.987s are one serial pair, with no
+causal/native/CI speedup claim. Distinct saved8PDF/240page/88PNG review verifies
+120text/RGB page pairs and80geometry records, with no actionable finding; see
+[the comparison ledger](upgrade-2026-oh-source-material-equality-work.md).
+Current full unit/coverage and remote jobs continue; final native artifacts,
+deployed integration and all external review/form/provider/advisory gates remain.
+
+### November 4: completed remote checks and fixed human-review source delta
+
+Exacta4ac remote CI passes25,238 unit and coverage tests/1,853files, with87.54%
+branch coverage at the unchanged85% gate. Managed browser passes565/five hosted
+skips; Web fails its immutable AMD64 image browser550PASS/15FAIL/fiveSKIP at
+30s/retry0. Smoke/six-phase recovery and full source/config/rootfs/SBOM/scan
+binding pass, without accepting181matches/80advisoryIDs or qualifying the image.
+See [the exact remote ledger](upgrade-2026-a4ac-remote-verification-work.md).
+
+Test-only8487 repairs the synchronous PA PDF stdin lifecycle using the existing
+bounded file-descriptor helper. Its focused3cases and required checks pass; its
+full unit now passes25,238/1,853/zero skips including all six PostgreSQL files.
+Coverage/tails remain running. Commit62a8975a publishes the fixedf09→a4ac
+[human-review companion](upgrade-2026-independent-review-delta-a4ac-20261104.md),
+with every human decision blank. Commit85d72dfb separately records36 actual
+[official-source/provider GETs](upgrade-2026-public-source-refresh-afternoon-20261104.md).
+No final2026 packet, provider access/run, risk acceptance or human approval is
+inferred. Native8487 configuration is fixed before those documentation-only
+commits; actual native and deployed-security work continues.

@@ -18493,14 +18493,9 @@
     "ledger": "docs/upgrade-2026-hosted-preview-runtime-identity-work.md"
   },
   "currentContinuation20261104": {
-    "applicationSource": "76af2285b7e0a805841dd26b0be209f7b3fc334d",
+    "applicationSource": "8487fb4b6d8818d83739fb902fc0730e19698053",
     "index": "docs/upgrade-2026-current-status.md",
-    "localFullVerificationSource": "f09a3dd7ad2f3a12f02a8d50efd0da01050033e6",
     "currentFullVerificationPassed": false,
-    "currentManagedReciprocalPassed": 4,
-    "managedObserverExit": 1,
-    "managedObserverDiagnostic": "18 new Next runtime route-cache files; all preexisting bundle entries and tracked source exact",
-    "managedReceiptSHA256": "c77227dc833cecc535a7f3ff1d11e20501c039b51fb619e64638afa29c73af48",
     "hostedRuntimeObserved": {
       "source": "3a959a3d7c19ac1c00dd6a134f9b5d6927dc684e",
       "node": "26.13.0",
@@ -18512,7 +18507,7 @@
     "activeSoftware": [
       "Final-source complete unit/coverage/browser/PostgreSQL/CI checks",
       "Final-source isolated native image export/restart/import/smoke/recovery/SBOM qualification",
-      "Approved Preview synthetic schema migration/restore after required Vercel verification",
+      "Current isolated Preview schema mechanism PASS; deployed outage/integration remains",
       "Actual approved-budget provider qualification after secure project credential setup"
     ],
     "imageAdvisories": {
@@ -18522,7 +18517,7 @@
       "evidence": "docs/upgrade-2026-image-advisories-20261104.json"
     },
     "releaseReady": false,
-    "applicationCommit": "76af2285b7e0a805841dd26b0be209f7b3fc334d",
+    "applicationCommit": "8487fb4b6d8818d83739fb902fc0730e19698053",
     "ohPartYearSchoolPaper": {
       "commit": "a757d735",
       "focusedMainPassed": 22,
@@ -18638,6 +18633,20 @@
       "sourceValidated": true,
       "newRemoteRuntimePassed": false,
       "ledger": "docs/upgrade-2026-ci-immutable-image-work.md"
+    },
+    "historicalLocalFullVerificationSource": "f09a3dd7ad2f3a12f02a8d50efd0da01050033e6",
+    "historicalManagedObserver": {
+      "currentManagedReciprocalPassed": 4,
+      "managedObserverExit": 1,
+      "managedObserverDiagnostic": "18 new Next runtime route-cache files; all preexisting bundle entries and tracked source exact",
+      "managedReceiptSHA256": "c77227dc833cecc535a7f3ff1d11e20501c039b51fb619e64638afa29c73af48"
+    },
+    "currentLocalFullVerification": {
+      "source": "8487fb4b6d8818d83739fb902fc0730e19698053",
+      "status": "RUNNING",
+      "priorA4acStoppedOnNativeEOF": true,
+      "priorA4acFilesCompleted": 1852,
+      "priorA4acCoverageExecuted": false
     }
   },
   "nov04B254GlobalAndArtifactEvidence": {
@@ -18763,5 +18772,174 @@
       "currentFinalSourceQualified": false
     },
     "ledger": "docs/upgrade-2026-preview-schema-rehearsal-work.md"
+  },
+  "nov04ActualPreviewDocumentRecoveryAndDeletion": {
+    "status": "PASS_BOUNDED_ACTUAL_PREVIEW_SYNTHETIC_2025_JOURNEY",
+    "utc": "2026-11-04T17:03:01.568929+00:00",
+    "sourceCommit": "3d13cfe116f0ee491551c0546ed1bdeaa71a0d93",
+    "deployment": "dpl_BxurQS6Ko6mrvdrifu1DMhFukNXs",
+    "originalUploadReopen": true,
+    "fixtureAmountsExplicitlyConfirmed": true,
+    "pdf": {
+      "sha256": "602411a6584ff155c1527dbb20c93889ab535f80e022f939637962b5bd7eaa31",
+      "pages": 12,
+      "logicalReceiptSHA256": "c0cbebf7a1c777076dabcfe4f6a121088ca26e38cd782a6142a84a5852f589c1",
+      "visualReceiptSHA256": "8511621cc6e2d3bdab785067dd0fabdda4e57318ebbd34c2d55d3714716261b8"
+    },
+    "completedBackupSHA256": "ea12ea4c1ebbc92cf5911849fd4e39ff559dcbb172577c3d71d353fc285b098d",
+    "beforeDeleteSHA256": "1cc6bffadcc10c779d7913e26b870c30477ced4e92a118635a4a5055b7363263",
+    "afterDeleteSHA256": "5ffa86ab9b0b8345a93fda880eec78be118396bfa92f94ec5dd65525eb9a3f0e",
+    "deleteUserExplicitlyApproved": true,
+    "afterDeletedRows": 0,
+    "otherTwoReturnsPersistAfterReload": true,
+    "earlierActualRestoreAndReexportParitySHA256": "eb2e1ffeee79e7212aea23d52e0a9b84fb466e9c200e65327b96e5d998e3357f",
+    "completedBackupRestoreUIStarted": true,
+    "completedBackupRestoreVerificationPending": false,
+    "limits": [
+      "Official blank W2 matches built-in synthetic fixture; no actual taxpayer extraction or independent tax oracle.",
+      "2025 federal-only review, no state/final2026/filing qualification.",
+      "Client CA/hostname/TLS1.3 verified; provider internal hop unverified.",
+      "No forensic erasure or unrelated account inspection claim."
+    ],
+    "ledger": "docs/upgrade-2026-preview-document-recovery-journey-work.md",
+    "completedBackupRestoreActualUIPassed": true,
+    "completedRestoredRefund": "885",
+    "completedRestoredYear": 2025,
+    "completedRestoredReexportParitySHA256": "a5fd266847bf140dbbfc560f803c18e69c40318ce2094a2d1ab2942537d0fa71"
+  },
+  "nov04OhioSourceMaterialEquality": {
+    "commit": "a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45",
+    "mainFocusedPassed": 501,
+    "threeTypeChecks": true,
+    "specReferences": 8209,
+    "astTests": 777,
+    "bothBuilds": true,
+    "sourcePackageSHA256": "30c1e2dfed022844bb53be4ad5f71ee5778ac4d51113b92a411c9a7ebff19e95",
+    "independentSHA256": "e9ffefa8859d21d4223875b9f77ef6693ee347405e582e7a8dd47062557ef115",
+    "browserTimingImprovementProven": false,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-oh-source-material-equality-work.md",
+    "managedComparison": {
+      "baselineCommit": "3db0a4adbcb77841e42384502f7bfe865bfacced",
+      "successorCommit": "a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45",
+      "baselinePass": 4,
+      "successorPass": 4,
+      "skips": 0,
+      "retries": 0,
+      "testDeadlineMs": 30000,
+      "cliWorkers": 2,
+      "actualWorkers": 1,
+      "observedCaseTotalsMs": [
+        70857,
+        64987
+      ],
+      "singleSerialPairOnly": true,
+      "nativeOrCausalPerformanceEvidence": false,
+      "terminalReceiptSHA256": "b603725b08178389be17fc702c15a8b8e85a54ee8e3f68d9dc5a70beddf3b13f",
+      "independentSavedReviewSHA256": "18ee82d12123f1fa670ba9a2c7a15491cf9af73859fff76a6e471a65cb51b71c",
+      "savedPDFs": 8,
+      "savedPages": 240,
+      "pairedTextAndRGBPages": 120,
+      "geometryRecords": 80,
+      "savedPNGs": 88
+    }
+  },
+  "nov04CurrentPreviewSchemaMechanism": {
+    "sourceCommit": "a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45",
+    "status": "PASS_SCHEMA_MECHANISM_CLIENT_TLS_ONLY",
+    "operationReceiptSHA256": "aabde7cd1090e2e148152a9e312080ebfafb19d969bdfb315c29d05c6b959831",
+    "independentSourceReviewSHA256": "27e29ce5059bd17260558b55d039427b1d7bcc88029951842936df1e93b67302",
+    "tables": 9,
+    "syntheticRows": 12,
+    "dryRunRollbackApplyRestoreReapplyIdempotence": true,
+    "exactCost": "0.0000006",
+    "budgetCents": "100",
+    "outsideCatalogUnchanged": true,
+    "ownSessionsRemaining": 0,
+    "schemaAbsent": true,
+    "runtimePoolEnded": true,
+    "realApplicationRowsReadOrWritten": false,
+    "clientTLSVerified": true,
+    "backendSSL": false,
+    "internalHopEncryptionQualified": false,
+    "releaseReady": false,
+    "independentSavedReviewSHA256": "64a75e5de7c2c18305fc9d57a1c9ec2fa5e10f67d7a90a1eaea555c7df8e74e9",
+    "savedIndependentReviewPending": false
+  },
+  "nov04A4acRemoteVerification": {
+    "source": "a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45",
+    "unitPassed": 25238,
+    "coveragePassed": 25238,
+    "testFiles": 1853,
+    "coveragePercent": {
+      "statements": 91.81,
+      "branches": 87.54,
+      "functions": 90.69,
+      "lines": 95.03
+    },
+    "managedPassed": 565,
+    "managedHostedSkips": 5,
+    "containerImage": "sha256:534f7cc0f8e370272fc8eac0ffc7b8e9c5783a4ebeaf99143cdcf077c0362c48",
+    "syntheticMerge": "e28f71074e8824d5b42cf38054ce465de082c820",
+    "tree": "696da57a66191f7b7d2127d84bba1f6101339be5",
+    "containerPassed": 550,
+    "containerFailed": 15,
+    "containerHostedSkips": 5,
+    "containerDeadlineMs": 30000,
+    "containerRetries": 0,
+    "sixRecoveryPhasesPassed": true,
+    "SBOMAndScanImageBindingPassed": true,
+    "imageAdvisoryMatches": 181,
+    "imageAdvisoryIDs": 80,
+    "imageCritical": 0,
+    "riskAccepted": false,
+    "imageQualified": false,
+    "CIWorkflow": 41872762743,
+    "CIConclusion": "success",
+    "webWorkflow": 41872762805,
+    "webConclusion": "failure",
+    "finalMetadataReceiptSHA256": "e28aa736017271ccf78cac3b165e09010dd7a634ec083a0e2c1d1967544142ef",
+    "ledger": "docs/upgrade-2026-a4ac-remote-verification-work.md"
+  },
+  "nov04Current8487Verification": {
+    "source": "8487fb4b6d8818d83739fb902fc0730e19698053",
+    "unitPassed": 25238,
+    "testFiles": 1853,
+    "unitSkipped": 0,
+    "conditionalDBFiles": 6,
+    "conditionalDBAssertions": 53,
+    "unitJSONSHA256": "7a4941556a6b26d6e2704911eb3b7d8328b2d296505c642cbce94bcadbd96da6",
+    "coverageStatus": "RUNNING",
+    "remainingChecksStatus": "PENDING",
+    "nativeRuntimeExecuted": false,
+    "nativeInitialConfigSHA256": "9ce97a6a411c73c7d533f6ca77be78c7224cfbfa022e6425d4ad426fe0e39fc4",
+    "releaseReady": false
+  },
+  "nov04IndependentReviewDelta": {
+    "publishedCommit": "62a8975a",
+    "sourceFrom": "f09a3dd7ad2f3a12f02a8d50efd0da01050033e6",
+    "sourceTo": "a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45",
+    "changedPaths": 118,
+    "unchangedRelatedPins": 169,
+    "oldFixtureMembersUnchanged": 388,
+    "additionalFixtureFiles": 3,
+    "humanReviewComplete": false,
+    "ledger": "docs/upgrade-2026-independent-review-delta-a4ac-20261104.md",
+    "later8487Delta": "Only test-reader import and engineering ledger; no application change."
+  },
+  "nov04AfternoonPrimaryRefresh": {
+    "publishedCommit": "85d72dfb",
+    "retrievedUTC": "2026-11-04T16:59:36.806694+00:00",
+    "publicGETs": 36,
+    "HTTP200": 29,
+    "HTTP404": 7,
+    "allBodyHashesReverified": true,
+    "sourceResultSHA256": "85d38a9f426f149583b64582a9713244cf73277775a09325c9fe1823319e411a",
+    "ledger": "docs/upgrade-2026-public-source-refresh-afternoon-20261104.md",
+    "providerCalls": 0,
+    "providerSpendUSD": "0",
+    "completeFinal2026Packet": false,
+    "nextAdvisoryObligationUTC": "2026-11-04T19:30:00Z or before qualification",
+    "risksAccepted": false
   }
 }
