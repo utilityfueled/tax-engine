@@ -19,9 +19,21 @@ const prior = z.discriminatedUnion('status', [
     filedDate: date, filingExtension: none, line8: money, line19: money, electedCreditCarryforward: money,
   }).strict(),
 ]);
+/** Separate dated PY originals; no guessed resident percentage or cash projection. */
+const partYearWageSources = z.object({
+  method: z.literal('specific_payroll'), sourceReference: reference, allOriginalPayrollIncludedConfirmed: z.literal(true),
+  residenceOriginals: z.array(z.object({sourceReference: reference, from: date, through: date, domicileState: z.enum(['OH','VA']), originalAddress: address}).strict()).length(2),
+  payrollOriginals: z.array(z.object({sourceReference: reference, payrollId: reference, w2Index: z.number().int().nonnegative(), accountHolder: z.literal('primary'), taxYear: z.number().int(),
+    originalTaxpayer: identity, employer: z.object({name: reference, ein: reference}).strict(), paidOn: date, serviceFrom: date, serviceThrough: date,
+    serviceState: z.enum(['OH','VA']), noOhioServicesOutsideOhioConfirmed: z.literal(true), grossWages: money, federalWithheld: money,
+    stateRows: z.array(z.object({state: z.enum(['OH','VA']), wages: money, withheld: money}).strict()).min(1),
+    schoolReporting: z.discriminatedUnion('status', [z.object({status: z.literal('none')}).strict(),z.object({status: z.literal('reported'),districtCode: district,wages: money,withheld: money}).strict()]),
+  }).strict()).min(1),
+}).strict();
 export const OhioSchoolDistrictFactsSchema = z.object({
   taxYear: z.number().int().min(2025).max(2026), sourceReference: reference, sourceFactsConfirmed: z.literal(true),
   originalFederalSources: z.record(z.string(), z.unknown()),
+  partYearWageSources: partYearWageSources.optional(),
   owner: z.object({ accountHolder: z.literal('primary'), originalTaxpayer: identity }).strict(),
   residence: z.object({
     sourceReference: reference, originalAddress: address,

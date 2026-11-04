@@ -12,7 +12,7 @@ import { redactReviewIdentifiers } from '@/pdf/redact-review-identifiers.js';
 import { AuditTrail } from '@/utils/audit.js';
 import { buildOhioPaymentSource } from './oh-payment-source.js';
 import { calculateOhioResidentReturn, type OhioResidentReturnInput } from './oh-return.js';
-import { calculateOhioSDResidentIncome, type OhioSDResidentIncomeResult } from './oh-sd-100-resident-income.js';
+import { calculateOhioSDResidentIncome, type OhioSDResidentIncomeResult, type OhioSDResidentIncomeInput } from './oh-sd-100-resident-income.js';
 import { calculateOhioSD100, type SchoolDistrictEntry } from './oh-sd-100.js';
 import { calculateOhioITSD2210, type EstimatedPaymentEntry } from './oh-it-sd-2210.js';
 import { lookupOhioSchoolDistrictMetadata } from './oh-school-district-lookup.js';
@@ -55,7 +55,7 @@ function exactArithmetic(input: unknown): typeof Decimal {
   return Decimal.clone({ precision: integerDigits + scale + String(count + 1).length + 32, rounding: Decimal.ROUND_HALF_UP });
 }
 export interface OhioSchoolDistrictSourceProjection {
-  readonly methodVersion: 'oh-2025-sd100-ordinary-sources-v1';
+  readonly methodVersion: 'oh-2025-sd100-ordinary-sources-v1' | 'oh-2025-sd100-part-year-payroll-sources-v1';
   readonly sourceDigest: string;
   readonly district: SchoolDistrictEntry;
   readonly residentIncome: OhioSDResidentIncomeResult;
@@ -96,8 +96,14 @@ export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxR
   if (resident.taxYear !== 2025 || resident.schoolDistrictStatus !== 'actual_district_sources_required'
       || resident.allFederalSourcesIncludedConfirmed !== true || resident.noBusinessIncomeConfirmed !== true
       || digest(resident.originalFederalSources) !== digest(original)) fail('current actual Ohio full-residency source confirmation/snapshot differs');
-  const owner = resident.owners[0];
-  if (resident.owners.length !== 1 || !owner || owner.accountHolder !== 'primary' || owner.status !== 'full_year_resident') fail('actual full-year primary Ohio residency is required for this cohort');
+  const owner = resident.owners[0], partYear = facts.partYearWageSources;
+  if (resident.owners.length !== 1 || !owner || owner.accountHolder !== 'primary'
+      || owner.status !== (partYear ? 'part_year_resident' : 'full_year_resident')) fail('actual source method must match the primary Ohio residency status');
+  if (partYear) {
+    const periods = [...owner.periods].sort((a,b) => a.from.localeCompare(b.from));
+    if (periods.length !== 2 || periods[0]?.from !== '2025-01-01' || periods[0]?.to !== '2025-07-31' || periods[0]?.domicileState !== 'OH'
+        || periods[1]?.from !== '2025-08-01' || periods[1]?.to !== '2025-12-31' || periods[1]?.domicileState !== 'VA') fail('the separately supported complete212-day OH/153-day VA calendar is required');
+  } else {
   let ohioCursor = '2025-01-01';
   for (const period of [...owner.periods].sort((a, b) => a.from.localeCompare(b.from))) {
     const from = actualDate(period.from), through = actualDate(period.to);
@@ -105,6 +111,8 @@ export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxR
     ohioCursor = new Date(Date.parse(`${through}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
   }
   if (ohioCursor !== '2026-01-01') fail('actual complete full-year Ohio residency is required');
+
+  }
 
   // Presence of any other actual original requires its own method, even a zero.
   const otherArrays = ['form1099Int','form1099Div','form1099B','form1099DA','form1099Nec','form1099Misc','form1099G','form1099OID',
@@ -143,6 +151,7 @@ export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxR
       if (!actual || actual.localityNameStatus !== 'reported' || !actual.localityName.trim()) fail('actual local row/name is unknown or unreported');
       const localName = normalized(actual.localityName);
       if (declared.classification === 'municipal') {
+        if (partYear) fail('actual part-year municipal originals require their separately supported composition');
         const municipalCode = localName.match(/^(R\d{3,4})(?:\b|$)/)?.[1];
         if (!municipalCode || !declared.municipalityCode || normalized(declared.municipalityCode) !== municipalCode || declared.districtCode !== undefined) fail('actual municipal local row classification contradicts its original');
       } else if (declared.classification === 'school_district') {
@@ -153,11 +162,78 @@ export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxR
       } else fail('unresolved actual local row classification needs its separate method');
     }
   }
+  let residentWages = actualWages;
+  if (partYear) {
+    if (input.w2s.length !== 1) fail('the actual part-year payroll method requires one complete ordinary W2');
+    const homes = [...partYear.residenceOriginals].sort((a,b) => a.from.localeCompare(b.from));
+    for (let index = 0; index < homes.length; index += 1) {
+      const home = homes[index], domicile = [...owner.periods].sort((a,b) => a.from.localeCompare(b.from))[index];
+      const districtPeriod = [...facts.residence.periods].sort((a,b) => a.from.localeCompare(b.from))[index];
+      if (!home || !domicile || !districtPeriod || actualDate(home.from) !== domicile.from || actualDate(home.through) !== domicile.to
+          || home.domicileState !== domicile.domicileState || normalized(home.originalAddress.state) !== home.domicileState
+          || districtPeriod.from !== home.from || districtPeriod.through !== home.through
+          || districtPeriod.districtCode !== (home.domicileState === 'OH' ? '0302' : '9999')) fail('complete actual physical-home, Ohio domicile and school calendars differ');
+    }
+    if (facts.residence.periods.length !== 2 || !homes[0] || digest(homes[0].originalAddress) !== digest(facts.residence.originalAddress)
+        || digest(homes[0].originalAddress) !== digest(facts.residence.lookup.originalAddress)) fail('actual Ohio home and independent lookup originals differ');
+    const w2 = input.w2s[0];
+    if (!w2?.stateLocalSources) fail('actual current part-year W2 originals required');
+    const seenIds = new Set<string>(), seenReferences = new Set<string>();
+    const stateTotals = new Map<string,{wages:Decimal;withheld:Decimal}>();
+    let gross = new Exact(0), fitw = new Exact(0), districtWages = new Exact(0), districtCash = new Exact(0);
+    residentWages = new Exact(0);
+    for (const row of partYear.payrollOriginals) {
+      const identity = row.originalTaxpayer;
+      if (row.w2Index !== 0 || row.taxYear !== 2025 || row.accountHolder !== 'primary' || normalized(identity.firstName) !== normalized(person.firstName)
+          || normalized(identity.lastName) !== normalized(person.lastName) || actualSsn(identity.ssn) !== actualSsn(person.ssn) || identity.dateOfBirth !== person.dateOfBirth
+          || normalized(row.employer.name) !== normalized(w2.employer.name) || row.employer.ein.replace(/[-\s]/g,'') !== w2.employer.ein.replace(/[-\s]/g,'')) fail('actual payroll owner/year/index/employer differs from current originals');
+      const id = normalized(row.payrollId), reference = normalized(row.sourceReference);
+      if (seenIds.has(id) || seenReferences.has(reference)) fail('duplicate actual payroll identity');
+      seenIds.add(id); seenReferences.add(reference);
+      const paid = actualDate(row.paidOn), from = actualDate(row.serviceFrom), through = actualDate(row.serviceThrough);
+      const home = homes.find(value => paid >= value.from && paid <= value.through);
+      if (!home || from < home.from || through > home.through || from > through || through > paid || row.serviceState !== home.domicileState
+          || row.noOhioServicesOutsideOhioConfirmed !== true) fail('actual paid and performed services must agree with their complete home interval; VA has no Ohio services');
+      const wages = money(row.grossWages,'original payroll gross',true), withheld = money(row.federalWithheld,'original payroll federal withholding',true);
+      gross = gross.plus(wages); fitw = fitw.plus(withheld);
+      if (home.domicileState === 'OH') residentWages = residentWages.plus(wages);
+      const states = new Set<string>(); let stateWages = new Exact(0);
+      for (const state of row.stateRows) {
+        if (states.has(state.state) || state.state !== home.domicileState) fail('actual payroll state reporting contradicts its performed services/home');
+        states.add(state.state);
+        const amount = money(state.wages,'payroll state wages',true), cash = money(state.withheld,'payroll state withholding',true);
+        stateWages = stateWages.plus(amount);
+        const prior = stateTotals.get(state.state) ?? {wages:new Exact(0),withheld:new Exact(0)};
+        stateTotals.set(state.state,{wages:prior.wages.plus(amount),withheld:prior.withheld.plus(cash)});
+      }
+      if (!stateWages.eq(wages)) fail('actual payroll wages and printed state wages differ');
+      const school = row.schoolReporting;
+      if (home.domicileState === 'OH') {
+        if (school.status !== 'reported' || school.districtCode !== '0302' || !money(school.wages,'payroll school wages',true).eq(wages)) fail('actual resident payroll school wages are incomplete or contradict the selected district');
+        districtWages = districtWages.plus(wages); districtCash = districtCash.plus(money(school.withheld,'payroll school withholding',true));
+      } else if (school.status !== 'none') fail('actual VA payroll has unsupported school reporting');
+    }
+    if (!gross.eq(money(w2.wages,'current original wages',true)) || !fitw.eq(money(w2.federalWithheld,'current original federal withholding',true))) fail('complete actual annual payroll originals do not reconcile to current W2');
+    const rawStates = new Map<string,{wages:Decimal;withheld:Decimal}>();
+    for (const row of w2.stateLocalSources.stateRows) {
+      const prior = rawStates.get(row.state) ?? {wages:new Exact(0),withheld:new Exact(0)};
+      rawStates.set(row.state,{wages:prior.wages.plus(money(row.wages,'original state wages',true)),withheld:prior.withheld.plus(money(row.withheld,'original state withholding',true))});
+    }
+    if (stateTotals.size !== rawStates.size || [...rawStates].some(([state,total]) => {
+      const actual = stateTotals.get(state); return !actual || !actual.wages.eq(total.wages) || !actual.withheld.eq(total.withheld);
+    })) fail('complete actual payroll state wages/withholding differ from current original rows');
+    let localWages = new Exact(0);
+    for (const coverage of facts.w2Sources) for (const local of coverage.localRows) if (local.classification === 'school_district') {
+      const row = w2.stateLocalSources.localRows.find(value => value.printedRow === local.printedRow);
+      if (!row) fail('actual printed school wage original missing'); localWages = localWages.plus(money(row.wages,'original school wages',true));
+    }
+    if (!districtWages.eq(localWages) || !districtCash.eq(schoolWithholding)) fail('actual payroll district wages/cash do not reconcile to separately classified current local originals');
+  }
   if ((owner.stateAdditions?.length ?? 0) || (owner.stateDeductions?.length ?? 0)) fail('actual owner state adjustment source rows require their separate method');
   if (owner.amounts) {
     for (const [category, amounts] of Object.entries(owner.amounts)) {
       const expected = category === 'wages' ? actualWages : new Exact(0);
-      if (!new Exact(amounts.federalAmount).eq(expected) || !new Exact(amounts.residentAmount).eq(expected)
+      if (!new Exact(amounts.federalAmount).eq(expected) || !new Exact(amounts.residentAmount).eq(category === 'wages' ? residentWages : expected)
           || !new Exact(amounts.nonresidentOhioAmount).isZero()) fail('actual Ohio owner income classification contradicts current W2 originals');
     }
   }
@@ -174,19 +250,20 @@ export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxR
   if (actualDate(account.asOfDate) !== asOf || account.taxYear !== 2025 || actualSsn(account.accountSsn) !== actualSsn(person.ssn)
       || normalized(account.accountName) !== normalized(`${person.firstName} ${person.lastName}`)) fail('actual SD account owner/year/as-of records contradict current sources');
   const lookup = facts.residence.lookup;
-  if (digest(facts.residence.originalAddress) !== digest(input.taxpayer.address) || digest(lookup.originalAddress) !== digest(input.taxpayer.address)
-      || normalized(input.taxpayer.address.state) !== 'OH') fail('actual private residence/lookup address differs from current originals');
+  if (!partYear && (digest(facts.residence.originalAddress) !== digest(input.taxpayer.address) || digest(lookup.originalAddress) !== digest(input.taxpayer.address)
+      || normalized(input.taxpayer.address.state) !== 'OH')) fail('actual private residence/lookup address differs from current originals');
   if (lookup.taxYear !== 2025 || actualDate(lookup.lookupDate) > asOf || lookup.districtCode !== '0302' || normalized(lookup.districtName) !== 'HILLSDALE LSD') fail('actual year-specific official district lookup does not match the finite verified district');
   const metadata = lookupOhioSchoolDistrictMetadata(2025, '0302');
   if (!metadata || metadata.taxType !== 'earned_income' || !new Exact(metadata.rate).eq('0.0125')) fail('verified official2025 district tax metadata unavailable');
-  if (facts.residence.periods.some(period => period.districtCode !== lookup.districtCode)) fail('actual school residence calendar requires a different district method');
-  const residentIncome = calculateOhioSDResidentIncome({
+  if (!partYear && facts.residence.periods.some(period => period.districtCode !== lookup.districtCode)) fail('actual school residence calendar requires a different district method');
+  const residentIncomeSources: OhioSDResidentIncomeInput = {
     taxYear: 2025, districtCode: '0302', filingStatus: 'single', annualMAGI: wages.toString(),
     residency: [{ owner: 'primary', periods: facts.residence.periods.map(period => ({ from: period.from, through: period.through, districtCode: period.districtCode })) }],
-    wages: { owner: 'primary', method: 'specific', residentAmount: wages.toString(), annual: { status: 'known', amount: wages.toString() } },
+    wages: { owner: 'primary', method: 'specific', residentAmount: residentWages.toString(), annual: { status: 'known', amount: wages.toString() } },
     selfEmployment: { owner: 'primary', method: 'specific', residentAmount: '0', annual: { status: 'known', amount: '0' } }, magiComponents: [],
-  });
-  if (residentIncome.residentDays !== 365 || !residentIncome.residencyFactor.eq(1)) fail('the actual365-day single district residency cohort is required');
+  };
+  const residentIncome = calculateOhioSDResidentIncome(residentIncomeSources);
+  if (partYear ? residentIncome.residentDays !== 212 || !residentIncome.residencyFactor.eq('0.5808') : residentIncome.residentDays !== 365 || !residentIncome.residencyFactor.eq(1)) fail('the actual365-day single district residency cohort is required');
 
   const paymentSources = buildOhioPaymentSource(input, input.ohioPayments);
   const itProjection: OhioResidentReturnInput = {
@@ -245,7 +322,7 @@ export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxR
   } else if (prior.status === 'filed_return' && !money(prior.electedCreditCarryforward, 'prior carry election', true).isZero()) fail('actual prior elected credit availability is unknown');
   if (!priorApplied.eq(money(account.priorCreditApplied, 'actual agency prior credit applied', true))) fail('actual prior credit application does not reconcile with complete agency account');
   const estimates = actualCash.plus(priorApplied);
-  const district: SchoolDistrictEntry = { districtNumber: '0302', taxType: 'earned_income', rate: '0.0125', residencyFactor: new Decimal(1), wages: residentIncome.line29, netSelfEmployment: residentIncome.line30 };
+  const district: SchoolDistrictEntry = { districtNumber: '0302', taxType: 'earned_income', rate: '0.0125', residencyFactor: residentIncome.residencyFactor, ...(partYear ? {residentIncomeSources} : {}), wages: residentIncome.line29, netSelfEmployment: residentIncome.line30 };
   const expectedTax = new Exact(residentIncome.line33.toString()).times('0.0125').toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
   const sd = calculateOhioSD100({ taxYear: 2025, ohioAgi: it.it1040.line3_ohioAgi, businessIncomeDeduction: it.scheduleOfAdjustments.line15_businessIncomeDeduction,
     exemptionAmount: it.it1040.line4_exemptions, isSenior: false, districts: [district], sdWithholding: new Decimal(schoolWithholding.toString()),
@@ -278,10 +355,11 @@ export function buildOhioSchoolDistrictSource(input: TaxYearInput, federal: TaxR
   if (!sd.line13_totalPayments.eq(exactPaid) || !sd.line15_netPayments.eq(exactPaid)
       || !sd.line19_overpayment.eq(exactOverpayment) || !sd.line21_refund.eq(exactRefund)) fail('existing printed payment arithmetic requires its separately exact source method');
   const sourceDigest = digest({ original, residency: resident, payments: paymentSources.facts, schoolDistrict: facts });
+  const methodVersion = partYear ? 'oh-2025-sd100-part-year-payroll-sources-v1' : 'oh-2025-sd100-ordinary-sources-v1';
   const audit = new AuditTrail();
   audit.record('OH-SD-100', 'actual-school-source-commitment', 'Actual independently reconciled school-district sources', new Decimal(0),
-    'Current private originals; commitment only, never private source references', { 'Original source commitment': sourceDigest, 'State method version': 'oh-2025-sd100-ordinary-sources-v1', 'Tax year': '2025' });
-  return { methodVersion: 'oh-2025-sd100-ordinary-sources-v1', sourceDigest, district, residentIncome,
+    'Current private originals; commitment only, never private source references', { 'Original source commitment': sourceDigest, 'State method version': methodVersion, 'Tax year': '2025' });
+  return { methodVersion, sourceDigest, district, residentIncome,
     sdWithholding: new Decimal(schoolWithholding.toString()), estimatedPayments: new Decimal(estimates.toString()),
     estimatedPaymentSchedule: schedule, priorYearTaxLiability: priorLiability, priorYearTimelyFiled: timely,
     creditCarryforward: new Decimal(outgoing.toString()), lines: audit.getLines(),

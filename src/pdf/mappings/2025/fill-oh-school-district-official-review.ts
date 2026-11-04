@@ -98,6 +98,7 @@ export async function fillOhioSchoolDistrictOfficialReview(
   const original = resolveOhioResidencyReview(input, federal, context);
   const adapted = buildOhioResidentReturnInput(original, federal), result = calculateOhioResidentReturn(adapted);
   const sd = result.sd100, source = result.schoolDistrictSource, facts = original.ohioSchoolDistrict;
+  if (source?.methodVersion === 'oh-2025-sd100-part-year-payroll-sources-v1') return []; // Actual PY paper dates/rows await their separately qualified method.
   const w2 = original.w2s[0], coverage = facts?.w2Sources[0];
   if (!sd || !source || !facts || original.w2s.length !== 1 || !w2?.stateLocalSources || !coverage || facts.w2Sources.length !== 1
       || original.taxpayer.dependents.length || coverage.w2Index !== 0) return [];

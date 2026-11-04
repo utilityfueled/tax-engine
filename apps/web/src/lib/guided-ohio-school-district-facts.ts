@@ -15,7 +15,16 @@ export interface SchoolReceiptOriginalDraft{accountName:string;accountSsn:string
 export interface SchoolReceiptDraft{sourceId:string;sourceReference:string;accountHolder:string;taxYear:string;returnType:string;kind:string;date:string;amount:string;appliedToThisReturnConfirmed:Confirmation;original:SchoolReceiptOriginalDraft}
 export interface SchoolPriorDraft{status:string;sourceReference:string;taxYear?:string;returnType?:string;districtCode?:string;accountName?:string;accountSsn?:string;filingStatus?:string;periodStart?:string;periodEnd?:string;returnKind?:string;filedDate?:string;filingExtension?:{kind:string};line8?:string;line19?:string;electedCreditCarryforward?:string}
 export interface SchoolCarryDraft{status:string;sourceReference:string;accountHolder?:string;accountSsn?:string;electedAmount?:string;availableForThisReturn?:string;appliedToThisReturnConfirmed?:Confirmation}
+export interface SchoolPartYearHomeDraft{sourceReference:string;from:string;through:string;domicileState:string;originalAddress:SourceAddress}
+export interface SchoolPartYearStateDraft{state:string;wages:string;withheld:string}
+export interface SchoolPartYearPayrollDraft{
+ sourceReference:string;payrollId:string;w2Index:number|null;accountHolder:string;taxYear:string;originalTaxpayer:SourceIdentity;employer:{name:string;ein:string};
+ paidOn:string;serviceFrom:string;serviceThrough:string;serviceState:string;noOhioServicesOutsideOhioConfirmed:Confirmation;grossWages:string;federalWithheld:string;
+ stateRows:SchoolPartYearStateDraft[];schoolReporting:{status:string;districtCode?:string;wages?:string;withheld?:string};
+}
+export interface SchoolPartYearWageDraft{method:string;sourceReference:string;allOriginalPayrollIncludedConfirmed:Confirmation;residenceOriginals:SchoolPartYearHomeDraft[];payrollOriginals:SchoolPartYearPayrollDraft[]}
 export interface OhioSchoolDistrictDraft{
+ partYearWageSources?:SchoolPartYearWageDraft;
  taxYear:string;sourceReference:string;sourceFactsConfirmed:Confirmation;originalFederalSources?:Record<string,unknown>;
  owner:{accountHolder:string;originalTaxpayer:SourceIdentity};
  residence:{sourceReference:string;originalAddress:SourceAddress;periods:SchoolPeriodDraft[];lookup:{sourceReference:string;taxYear:string;lookupDate:string;originalAddress:SourceAddress;districtCode:string;districtName:string;officialResultMatchedConfirmed:Confirmation}};
@@ -27,6 +36,10 @@ export interface OhioSchoolDistrictDraft{
   currentTiming:{kind:string;expectedDate?:string;filedDate?:string;asOfDate:string};filingExtension:{kind:string};paymentExtension:{kind:string};returnKind:string;specialMethod:string;refundDisposition:{sourceReference:string;outgoingCarryforward:string}};
 }
 const address=():SourceAddress=>({street:'',apt:'',city:'',state:'',zip:''});
+export function emptySchoolPartYearHome():SchoolPartYearHomeDraft{return{sourceReference:'',from:'',through:'',domicileState:'',originalAddress:address()};}
+export function emptySchoolPartYearState():SchoolPartYearStateDraft{return{state:'',wages:'',withheld:''};}
+export function emptySchoolPartYearPayroll():SchoolPartYearPayrollDraft{return{sourceReference:'',payrollId:'',w2Index:null,accountHolder:'',taxYear:'',originalTaxpayer:{firstName:'',lastName:'',ssn:'',dateOfBirth:''},employer:{name:'',ein:''},paidOn:'',serviceFrom:'',serviceThrough:'',serviceState:'',noOhioServicesOutsideOhioConfirmed:null,grossWages:'',federalWithheld:'',stateRows:[],schoolReporting:{status:''}};}
+export function emptySchoolPartYearWages():SchoolPartYearWageDraft{return{method:'',sourceReference:'',allOriginalPayrollIncludedConfirmed:null,residenceOriginals:[],payrollOriginals:[]};}
 export function emptySchoolPeriod():SchoolPeriodDraft{return{from:'',through:'',districtCode:'',sourceReference:''};}
 export function emptySchoolLocalRow():SchoolLocalRowDraft{return{printedRow:null,sourceReference:'',classification:'',districtCode:'',municipalityCode:''};}
 export function emptySchoolW2():SchoolW2Draft{return{w2Index:null,sourceReference:'',box14SchoolDistrictReporting:{status:'',sourceReference:''},localRows:[]};}
@@ -50,6 +63,23 @@ function checkDraftStructure(d:OhioSchoolDistrictDraft):void{
  for(const row of d.residence.periods)record(row,'residence period');
  for(const row of d.w2Sources){record(row,'W2 coverage');record(row.box14SchoolDistrictReporting,'W2 Box14');if(!Array.isArray(row.localRows))fail('actual printed local coverage is incomplete');for(const local of row.localRows)record(local,'local coverage');}
  for(const row of d.payments.paymentRows){record(row,'payment receipt');record(row.original,'original payment receipt');}
+ if(d.partYearWageSources!==undefined){
+  const py=d.partYearWageSources;record(py,'part-year payroll method');
+  if(!Array.isArray(py.residenceOriginals)||!Array.isArray(py.payrollOriginals))fail('actual part-year original lists are incomplete');
+  for(const home of py.residenceOriginals){record(home,'part-year original home');record(home.originalAddress,'part-year original home address');}
+  for(const row of py.payrollOriginals){record(row,'part-year original payroll');record(row.originalTaxpayer,'part-year payroll owner');record(row.employer,'part-year payroll employer');record(row.schoolReporting,'part-year payroll school reporting');if(!Array.isArray(row.stateRows))fail('actual part-year payroll state rows are incomplete');for(const state of row.stateRows)record(state,'part-year payroll state row');}
+ }
+
+}
+function partYearPacket(d:SchoolPartYearWageDraft){
+ return{...structuredClone(d),residenceOriginals:d.residenceOriginals.map(home=>({...home,originalAddress:actualAddress(home.originalAddress)})),
+  payrollOriginals:d.payrollOriginals.map(row=>{
+   const{status,...school}=row.schoolReporting;
+   if(status==='none'&&hasReported(school))fail('retained school payroll reporting contradicts known none; reconcile or explicitly remove those details');
+   return{...row,taxYear:year(row.taxYear),grossWages:normalizeSchoolCurrency(row.grossWages),federalWithheld:normalizeSchoolCurrency(row.federalWithheld),
+    stateRows:row.stateRows.map(state=>({...state,wages:normalizeSchoolCurrency(state.wages),withheld:normalizeSchoolCurrency(state.withheld)})),
+    schoolReporting:status==='none'?{status}:{...row.schoolReporting,wages:normalizeSchoolCurrency(row.schoolReporting.wages??''),withheld:normalizeSchoolCurrency(row.schoolReporting.withheld??'')}};
+  })};
 }
 function originalPacket(d:OhioSchoolDistrictDraft):unknown{
  checkDraftStructure(d);
@@ -59,7 +89,7 @@ function originalPacket(d:OhioSchoolDistrictDraft):unknown{
  if(prior.status==='no_return'&&hasReported(priorDetails))fail('retained filed prior-return details contradict no-return; review or explicitly remove those details');
  if(carry.status==='none'&&hasReported(carryDetails))fail('retained prior credit details contradict no-credit; review or explicitly remove those details');
  if(timing.kind==='expected'&&timing.filedDate?.trim()||timing.kind==='filed'&&timing.expectedDate?.trim())fail('retained actual filed and expected timing records conflict; reconcile the separate endpoint records');
- const raw={...structuredClone(d),taxYear:year(d.taxYear),residence:{...d.residence,originalAddress:actualAddress(d.residence.originalAddress),lookup:{...d.residence.lookup,taxYear:year(d.residence.lookup.taxYear),originalAddress:actualAddress(d.residence.lookup.originalAddress)}},
+ const raw={...structuredClone(d),...(d.partYearWageSources?{partYearWageSources:partYearPacket(d.partYearWageSources)}:{}),taxYear:year(d.taxYear),residence:{...d.residence,originalAddress:actualAddress(d.residence.originalAddress),lookup:{...d.residence.lookup,taxYear:year(d.residence.lookup.taxYear),originalAddress:actualAddress(d.residence.lookup.originalAddress)}},
   w2Sources:d.w2Sources.map(row=>({...row,localRows:row.localRows.map(local=>({...local,...(!local.districtCode?.trim()?{districtCode:undefined}:{}),...(!local.municipalityCode?.trim()?{municipalityCode:undefined}:{})}))})),
   payments:{...p,paymentRows:p.paymentRows.map(row=>({...row,taxYear:year(row.taxYear),amount:normalizeSchoolCurrency(row.amount),original:{...row.original,taxYear:year(row.original.taxYear),amount:normalizeSchoolCurrency(row.original.amount)}})),account:{...p.account,taxYear:year(p.account.taxYear),estimatedPaymentsCredited:normalizeSchoolCurrency(p.account.estimatedPaymentsCredited),priorCreditApplied:normalizeSchoolCurrency(p.account.priorCreditApplied)},
    priorReturn:prior.status==='no_return'?{status:prior.status,sourceReference:prior.sourceReference}:{...prior,taxYear:year(prior.taxYear??''),line8:normalizeSchoolCurrency(prior.line8??''),line19:normalizeSchoolCurrency(prior.line19??''),electedCreditCarryforward:normalizeSchoolCurrency(prior.electedCreditCarryforward??'')},
