@@ -402,13 +402,16 @@ async function createHostedAuth(
   env: AuthEnvironment = process.env,
   dependencies: HostedAuthRuntimeDependencies = {}
 ) {
-  const cacheKey = [
+  const cacheKey = JSON.stringify([
     config.baseURL,
     config.secret,
     config.mode,
     getHostedServerDatabaseConfig(env).databaseUrl ?? "memory",
+    // A cached auth instance captures its database runtime, including TLS policy.
+    env.NODE_ENV?.trim().toLowerCase() ?? null,
+    env.VERCEL_ENV ?? null,
     createHash("sha256").update(JSON.stringify(getHostedRecoveryMailConfig(env))).digest("hex"),
-  ].join("|");
+  ]);
   const cache = getHostedAuthPromiseCache();
   const existing = cache.get(cacheKey);
 
