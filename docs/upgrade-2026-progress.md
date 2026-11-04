@@ -2733,3 +2733,8 @@ The separate JSON save path now uses4MiB on Vercel, retains5MiB elsewhere and ha
 ### November 4: original-bound Ohio business official review pages
 
 The finite2025 ordinary Schedule C method now emits source-bound NR5/PY4 official companions with staged opaque bytes and private-original display protection. Genuine missing-output and four saved privacy failures precede the reviewed repair; current-main397 affected controls and all relevant static/build checks pass. Distinct100PDF/234page strict/privacy review,1426 cells and58 rendered/visually reviewed pages pass. The earlier own literal Credits1/11 and formatting/oracle errata remain explicit. See [the physical ledger](upgrade-2026-oh-business-official-review-work.md). Fixture amounts are not a literal admission allowlist; final2026, human, global/distribution/staging and release gates remain open. Workspace JSON8c03648c is pushed separately.
+
+
+### November 4: current-lock dependency and advisory refresh
+
+Production426 and all-dependency522 registry scopes both report zero findings against unchanged lockd199e234. All seven official Next advisory metadata conflicts remain unchanged, with the existing November4 19:30UTC-or-before-qualification recheck obligation and no risk acceptance. See [the security ledger](upgrade-2026-next-1645-security-work.md). Image/OS/runtime, independent human and release qualification remain separate. Ohio physical322f0221 is pushed; Node26 current-source full unit/coverage verification continues privately.

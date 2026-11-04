@@ -18082,5 +18082,32 @@
     "final2026Qualified": false,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-oh-business-official-review-work.md"
+  },
+  "currentLockSecurityRefresh20261104": {
+    "sourceCommit": "322f0221a0dccee006029ee7291e47c0dade8451",
+    "lockSHA256": "d199e2344fa6cf61402330f216e3f7ccf6bc9b5e7a568670b29a9fe27dc8c23f",
+    "productionAudit": {
+      "at": "2026-11-04T01:31:58.473832+00:00",
+      "dependencies": 426,
+      "reportedFindings": 0,
+      "rawSHA256": "e9cae4590babf78b982f74a1e3636a81d566e5b8ecfa70633c19f69b677dbdb4"
+    },
+    "allDependencyAudit": {
+      "at": "2026-11-04T01:48:05.191206+00:00",
+      "dependencies": 522,
+      "reportedFindings": 0,
+      "rawSHA256": "5a53e55cf00fe12cf2baa62be93e62a01b390225c1294be768cb4472b14a3b2a",
+      "initialSandboxDnsTimeoutRetained": true
+    },
+    "independentReceiptSHA256": "c588b5a5f0b9710a8d56306619143f58bb6a3e4731d5e7dd5f2893d7485db512",
+    "nextOfficialRelease": "16.4.5",
+    "sevenMetadataConflicts": "unchanged; no resolution or acceptance inferred",
+    "owner": "Codex upgrade execution (active goal)",
+    "recheckExpiryUTC": "2026-11-04T19:30:00Z",
+    "orBeforeAnyReleaseStagingQualification": true,
+    "riskAccepted": false,
+    "imageQualified": false,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-next-1645-security-work.md"
   }
 }

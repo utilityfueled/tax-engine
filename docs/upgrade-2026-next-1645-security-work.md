@@ -40,3 +40,31 @@ The official [16.4.5 release](https://github.com/vercel/next.js/releases/tag/v16
 The seven advisory pages still contain the recorded affected-range/patched-field conflicts. They remain open under Codex upgrade execution, with the existing November 4 19:30 UTC recheck or before any release/staging qualification, whichever comes first. The release assertion does not correct those machine-readable fields or constitute risk acceptance. Static inspection of 392 application files retains the existing cache-feature and Sentry external-proxy limits. No new package audit, registry integrity check, runtime proxy test or scan was executed for this documentation refresh.
 
 Independent source-bound receipt: `.local/upgrade-evidence/nov03-next-1645-security-independent-refresh/independent-refresh-result.json`, SHA256 `1569c11d5cb7ce807937351a3537a4ead9de08fedc90c739c4971edd858e49d1`, bound to `3a47565931609ef921080c18b5167063dee12681`. Earlier fetch failures and metadata conflicts remain retained. Current-source native ARM64/AMD64 image/SBOM/scan/recovery evidence, all 80 image-advisory owner decisions and independent human security/privacy review remain required. No release gate or acceptance changed.
+
+
+## November 4 current-lock registry and primary-advisory refresh
+
+At01:31UTC, the separate production-only registry audit reports zero findings
+across426 dependency entries (raw SHA
+`e9cae4590babf78b982f74a1e3636a81d566e5b8ecfa70633c19f69b677dbdb4`).
+At01:48UTC, the all-dependency audit reports zero findings across522 entries
+(raw SHA `5a53e55cf00fe12cf2baa62be93e62a01b390225c1294be768cb4472b14a3b2a`).
+Both bind the unchanged lock `d199e234`; their scopes are separate. The first
+sandbox all-dependency attempt timed out after DNS failure; the authorized
+read-only network retry succeeded. Those diagnostics remain retained.
+
+Distinct refresh receipt
+`c588b5a5f0b9710a8d56306619143f58bb6a3e4731d5e7dd5f2893d7485db512`
+binds source `322f0221`, all seven freshly captured official advisory APIs and
+[the official16.4.5 release](https://github.com/vercel/next.js/releases/tag/v16.4.5).
+The producer still lists all seven fixes; each advisory affected/patched
+metadata conflict remains unchanged. No newer fix or authoritative metadata
+resolution is inferred. Existing source exposure observations and the Sentry
+external-proxy caveat remain bounded, not runtime safety proof.
+
+Owner stays Codex upgrade execution in this active goal. Recheck expiry stays
+November4 19:30UTC or before any release/staging qualification, whichever first.
+That clock deadline is future at this refresh; no extension or risk acceptance
+is made. These registry results do not qualify image/OS/source reachability,
+current artifacts, recovery, independent human security/privacy or release.
+No dependency, lockfile or readiness gate changes in this evidence update.
