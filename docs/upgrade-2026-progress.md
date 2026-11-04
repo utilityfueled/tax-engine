@@ -3063,3 +3063,14 @@ failed. Initial NOLOGIN-role/newDB preparation is source-only; no password,
 LOGIN or deployment follows this inventory. See [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).
 Privacy, app privileges, internal-hop encryption and integrated hosted readiness
 remain unqualified.
+
+### November 4: verified official machine image and stopped test VM
+
+The exact published ARM64 image now downloads through the documented HTTPS CDN
+and passes922,390,904-byte/SHA256 checks. The two earlier rejected transfers
+remain retained. Reviewed local-file initialization then passes8calls with all
+five existing-state classifications matching. Independent actual review confirms
+the separate stopped2CPU/8192MiB/80GiB VM and exactly two empty scoped mounts.
+See [the native ledger](upgrade-2026-8487-native-build-export-work.md). No guest
+boot, application build or native qualification is inferred. The shared-routing
+startup boundary and all same-image release gates remain open.

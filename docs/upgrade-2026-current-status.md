@@ -57,3 +57,10 @@ lack all three PA packets. Current-main505focused controls, all eight
 static/build/lint checks and distinct behavioral review pass. Fixed CPU
 measurements are bounded function-level evidence. Fresh exact045fbedb full local
 checks now pass; actual image/browser/hosted qualification remains required. See [the successor ledger](upgrade-2026-pa-dependency-comparison-work.md).
+
+The later verified official machine-image transfer and local-file initialization
+now produce a separate stopped80GiB test VM with exactly two empty scoped mounts.
+All existing-state preservation classifications match, with independent actual
+review. No guest is booted or qualified; shared-routing startup and every
+same-image native gate remain open. The old candidate's zero-byte layer records
+are diagnosed but not repaired. [Current native ledger](upgrade-2026-8487-native-build-export-work.md).

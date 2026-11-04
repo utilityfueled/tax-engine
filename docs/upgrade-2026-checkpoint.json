@@ -19255,5 +19255,24 @@
     "template0ConnectionInventoryQualified": false,
     "providerInternalHopEncryptionQualified": false,
     "next": "SEPARATELY_REVIEWED_NOLOGIN_ROLE_AND_SYNTHETIC_DATABASE_BOOTSTRAP_THEN_METADATA_PRIVILEGES"
+  },
+  "nov04FreshNativeV5Initialization": {
+    "status": "PASS_NEW_STOPPED_VM_INIT_ONLY",
+    "applicationCommit": "045fbedbdfbe612cb3caa28956fa7228bb3df320",
+    "ledger": "docs/upgrade-2026-8487-native-build-export-work.md",
+    "downloadReceiptSHA256": "564a6c078393bcf774f66cd38ef781c47ef156002e3a76b539ca49f14eb12a95",
+    "initReceiptSHA256": "fe913f4713185fb27a90fd864affff5849f8439a943ad3169c2de7178624a99b",
+    "independentActualReceiptSHA256": "4b24b1e5f24747f26e6a425c61f9e40ffeaacd98aae51a19f4a2aacc55f29587",
+    "calls": 8,
+    "preservationClassificationsMatched": 5,
+    "newMachine": "tax-engine-native-20261104",
+    "CPUs": 2,
+    "memoryMiB": 8192,
+    "diskGiB": 80,
+    "mounts": 2,
+    "VMStarted": false,
+    "guestVersionQualified": false,
+    "nativeQualified": false,
+    "next": "REVIEW_AND_AUTHORIZE_BOUNDED_SHARED_ROUTING_STARTUP_THEN_OWNED_VM_DIAGNOSTIC"
   }
 }

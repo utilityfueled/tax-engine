@@ -174,3 +174,47 @@ target URL. No image bytes, decompression or VM operation occur. Its 43 author
 and 21 independent offline controls remain separate from this failed actual
 transfer. A successor's explicitly allowed public CDN redirect handling is
 under source review; the published size/hash and all native gates stay fixed.
+
+## Verified official image and separate stopped VM
+
+V4's actual transfer admits the documented CDN host but stops at an unsupported
+assumption that its object path begins `/sha256/`. The target is not retained
+or followed. V5 changes only that path predicate to a bounded absolute path;
+the seven exact official HTTPS CDN hosts, redirect/request ceilings, TLS checks
+and final size/hash checks remain fixed. Independent review passes86author and
+44additional offline controls. Both earlier transfer failures remain retained.
+
+Actual V5 succeeds with two requests: quay.io302 then cdn01.quay.io200. The
+closed, mode0400 file is exactly922,390,904bytes with SHA256
+`688df5f9826ad76176bca8eb720821c6f88e269a4529578aec075fd631087b31`,
+matching the published ARM64 descriptor. No signed redirect URL is saved or
+printed, and the downloader performs no VM operation.
+
+The separately reviewed INIT successor uses that verified local file, bypassing
+Docker reference parsing. Because Podman's decompressor inherits input mode,
+it creates a separately verified private0600 compressed copy for a writable
+guest disk; the0400 original stays unchanged. The exact reviewed controller
+has no start, SSH, engine, deletion, retry or application-source-copy capability.
+Its109author and24additional independent offline controls pass before execution.
+A stale historical authority file in the frozen source is retained and cannot
+authorize this successor; runtime uses a new, hash-bound authority filename.
+
+Actual init passes all eight calls. `tax-engine-native-20261104` is stopped,
+rootless AppleHV with2CPUs/8192MiB/80GiB and exactly two new empty mount
+directories, inputs read-only and outputs writable. All five existing-state
+classifications match: retained VM inspection/list, connections/default,
+shared socket/helper metadata and retained configuration bytes. Independent
+actual review passes18checks, including the exact persisted mounts, empty0700
+directories, owned0600 80GiB raw disk and current preservation metadata.
+Neither initialization nor that review boots or qualifies the guest.
+
+Receipt SHA256, paths relative to `.local/upgrade-evidence/`:
+
+- `nov04-new-native-vm-provision-sourcefirst-v5/download-sourcefirst/actual-download/receipt.json`: `564a6c078393bcf774f66cd38ef781c47ef156002e3a76b539ca49f14eb12a95`.
+- `nov04-new-native-vm-provision-sourcefirst-v5/actual-init/receipt.json`: `fe913f4713185fb27a90fd864affff5849f8439a943ad3169c2de7178624a99b`.
+- Independent actual INIT review: `4b24b1e5f24747f26e6a425c61f9e40ffeaacd98aae51a19f4a2aacc55f29587`.
+
+Startup requires a separate concrete shared-routing boundary and source review.
+Actual guest version/resources, new exact045 application build, strict Docker
+archive/restart/import, smoke, browser, recovery, SBOM/scan and release gates
+remain open. All old stores, candidates and failed receipts remain untouched.
