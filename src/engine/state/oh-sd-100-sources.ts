@@ -27,7 +27,7 @@ function stable(value: unknown): unknown {
 }
 function digest(value: unknown): string { return bytesToHex(sha256(new TextEncoder().encode(JSON.stringify(stable(value))))); }
 function sourceOriginals(input: TaxYearInput) {
-  const { ohioResidency: _r, ohioPayments: _p, ohioSchoolDistrict: _s, ...original } = input;
+  const { ohioResidency: _r, ohioPayments: _p, ohioSchoolDistrict: _s, ohioReturnHeaderSources: _header, ...original } = input;
   return original;
 }
 function actualDate(value: string): string {

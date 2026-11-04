@@ -8,6 +8,7 @@ import type { TaxReturnResult } from '@/models/outputs.js';
 import { resolveOhioResidencyReview, type PreparedOhioResidencyReview } from '@/engine/state/oh-residency-source.js';
 import { buildOhioResidentReturnInput, type OhioOverlayInput } from '@/engine/state/oh-input-adapter.js';
 import { calculateOhioResidentReturn } from '@/engine/state/oh-return.js';
+import { calculateOhioReturnHeaderSource } from '@/engine/state/oh-return-header-source.js';
 import { calculateW2StateLocalSources } from '@/engine/forms/w2-state-local.js';
 import { redactReviewIdentifiers } from '@/pdf/redact-review-identifiers.js';
 import { assertPdfExportAllowed, markReviewPdf } from '@/pdf/export-policy.js';
@@ -98,7 +99,11 @@ export async function fillOhioSchoolDistrictOfficialReview(
   const original = resolveOhioResidencyReview(input, federal, context);
   const adapted = buildOhioResidentReturnInput(original, federal), result = calculateOhioResidentReturn(adapted);
   const sd = result.sd100, source = result.schoolDistrictSource, facts = original.ohioSchoolDistrict;
-  if (source?.methodVersion === 'oh-2025-sd100-part-year-payroll-sources-v1') return []; // Actual PY paper dates/rows await their separately qualified method.
+  const partYear = source?.methodVersion === 'oh-2025-sd100-part-year-payroll-sources-v1';
+  // Default no-header PY still has no qualified county or second printed residence row.
+  if (partYear && !original.ohioReturnHeaderSources) return [];
+  const header = partYear ? calculateOhioReturnHeaderSource(original,original.ohioReturnHeaderSources) : undefined;
+  if (partYear && header?.methodVersion !== 'oh-2025-py-school-header-212-v1') return [];
   const w2 = original.w2s[0], coverage = facts?.w2Sources[0];
   if (!sd || !source || !facts || original.w2s.length !== 1 || !w2?.stateLocalSources || !coverage || facts.w2Sources.length !== 1
       || original.taxpayer.dependents.length || coverage.w2Index !== 0) return [];
@@ -134,7 +139,9 @@ export async function fillOhioSchoolDistrictOfficialReview(
   rateField.setMaxLength(5);
   for (const [name, value] of Object.entries({ TP_FN:primary.firstName.toUpperCase(), TP_LN:primary.lastName.toUpperCase(),
     ADDRESS1:address.street.toUpperCase(), ADDRESS2:address.apt?.toUpperCase() ?? '', CITY:address.city.toUpperCase(), STATE:address.state,
-    ZIP:address.zip, SD_NUM0:'0302', RES_END0:'12-31', day0:'365', res_factor0:source.residentIncome.residencyFactor.toFixed(4),
+    ZIP:address.zip, SD_NUM0:'0302', RES_END0:partYear?'07-31':'12-31', day0:partYear?'212':'365',
+    res_factor0:partYear?'.5808':source.residentIncome.residencyFactor.toFixed(4),
+    ...(partYear?{COUNTY:header?.header.ohioCounty??'',SD_NUM1A:'9999',RES_START1:'08-01',RES_END1:'12-31',day1:'153',res_factor1:'.4191'}:{}),
   })) text(doc, name, value);
   const skipAmountDue = sd.line15_netPayments.gt(sd.line10_totalLiability);
   for (const line of sd.lines) {
@@ -156,6 +163,7 @@ export async function fillOhioSchoolDistrictOfficialReview(
   })) text(doc, name, value);
   await doc.getForm().updateFieldAppearances(await doc.embedFont(StandardFonts.Helvetica));
   selectActualStatus(doc, 'CHK_FILING_STATUS', '1'); selectActualStatus(doc, 'PRIMARY_CHK0', '1');
+  if(partYear)selectActualStatus(doc,'PRIMARY_CHK1','1');
   doc.getForm().flatten({ updateFieldAppearances: false });
   doc.catalog.delete(PDFName.of('AcroForm')); doc.catalog.delete(PDFName.of('Names'));
   for (const page of doc.getPages()) { page.node.delete(PDFName.of('Annots')); page.node.delete(PDFName.of('AA')); }

@@ -6,6 +6,7 @@ import {OhioReturnHeaderSourcesSchema,OHIO_HEADER_2025_BOOKLET_SHA256} from '@/m
 import {OhioResidencyFactsSchema} from '@/models/ohio-residency.js';
 import {OhioPaymentFactsSchema} from '@/models/ohio-payments.js';
 import {calculateFederalTax} from '@/engine/federal.js';
+import {buildOhioResidentReturnInput} from './oh-input-adapter.js';
 import {buildOhioPaymentSource} from './oh-payment-source.js';
 import {buildOhioResidentCreditSource} from './oh-resident-credit-source.js';
 import {calculateOhioCanonicalBusinessSource} from './oh-business-source.js';
@@ -21,7 +22,7 @@ const encoded=(value:unknown)=>JSON.stringify(stable(value));
 function same(a:unknown,b:unknown){return encoded(a)===encoded(b);}
 function date(value:string):number{const n=Date.parse(value+'T00:00:00Z');if(!Number.isFinite(n)||new Date(n).toISOString().slice(0,10)!==value)return fail('valid actual document and residence dates are required');return n;}
 export interface OhioReturnHeaderSourceResult{
- readonly methodVersion:'oh-2025-resident-header-v1'|'oh-2025-py-business-header-212-v1';
+ readonly methodVersion:'oh-2025-resident-header-v1'|'oh-2025-py-business-header-212-v1'|'oh-2025-py-school-header-212-v1';
  readonly header:{readonly schoolDistrictNumber:string;readonly ohioCounty:string;readonly residency:'resident'|'part_year_resident'};
  readonly residentDays:number;
  /** Private binding; never include in public review/audit/provider payloads. */
@@ -36,15 +37,17 @@ export function calculateOhioReturnHeaderSource(input:TaxYearInput,raw:unknown):
  if(!residency.success||!payments.success)return fail('complete current independently confirmed domicile and payment sources are required');
  const facts=residency.data,paid=payments.data,person=context.taxpayer.primary,owner=facts.owners[0];
  const partYearBusiness=owner?.status==='part_year_resident'&&facts.businessSources!==undefined;
- if(context.taxpayer.taxYear!==2025||context.taxpayer.filingStatus!=='single'||context.taxpayer.spouse||facts.taxYear!==2025||paid.taxYear!==2025||facts.owners.length!==1||owner?.accountHolder!=='primary'||(!partYearBusiness&&owner.status!=='full_year_resident')||source.owner.accountHolder!=='primary')return fail('this finite header method requires the actual 2025 single primary full-year Ohio resident');
+ const partYearSchool=owner?.status==='part_year_resident'&&context.ohioSchoolDistrict?.partYearWageSources!==undefined;
+ const partYear=partYearBusiness||partYearSchool;
+ if(context.taxpayer.taxYear!==2025||context.taxpayer.filingStatus!=='single'||context.taxpayer.spouse||facts.taxYear!==2025||paid.taxYear!==2025||facts.owners.length!==1||owner?.accountHolder!=='primary'||(!partYear&&owner.status!=='full_year_resident')||source.owner.accountHolder!=='primary')return fail('this finite header method requires the actual 2025 single primary full-year Ohio resident');
  if(!person.dateOfBirth||!same(source.owner.originalTaxpayer,{firstName:person.firstName,lastName:person.lastName,ssn:person.ssn,dateOfBirth:person.dateOfBirth})||!/^\d{9}$/.test(person.ssn.replace(/[\s-]/g,'')))return fail('actual current owner identity and date of birth must match');
  if(date(person.dateOfBirth)>=date('2025-01-01'))return fail('actual current owner date of birth is inconsistent');
  if(!same(source.originalFederalSources,currentFederal)||!same(facts.originalFederalSources,currentFederal)||!same(paid.originalFederalSources,currentFederal)||!same(source.originalOhioResidencySources,facts)||!same(source.originalOhioPaymentSources,paid))return fail('retained complete federal, domicile or payment originals are stale');
- if(facts.schoolDistrictStatus!=='no_ohio_taxing_district_residency'||context.ohioSchoolDistrict||facts.reciprocalWageSources||facts.allFederalSourcesIncludedConfirmed!==true)return fail('separate actual district or income method composition is required');
+ if((partYearSchool?facts.schoolDistrictStatus!=='actual_district_sources_required':facts.schoolDistrictStatus!=='no_ohio_taxing_district_residency'||context.ohioSchoolDistrict!==undefined)||facts.reciprocalWageSources||facts.allFederalSourcesIncludedConfirmed!==true)return fail('separate actual district or income method composition is required');
  let residentDays:number;
- if(partYearBusiness){
+ if(partYear){
   // This distinct documentary family avoids interpreting the earlier181-day county case.
-  if(context.taxpayer.dependents.length||facts.noBusinessIncomeConfirmed!==false||facts.residentCreditSources)return fail('this finite part-year header requires only the actual primary ordinary business sources');
+  if(context.taxpayer.dependents.length||facts.noBusinessIncomeConfirmed!==(partYearBusiness?false:true)||facts.residentCreditSources||partYearSchool&&facts.businessSources)return fail('this finite part-year header requires only the separately supported primary ordinary sources');
   const periods=[...owner.periods].sort((a,b)=>a.from.localeCompare(b.from)),ohio=periods[0],other=periods[1];
   if(periods.length!==2||ohio?.from!=='2025-01-01'||ohio.to!=='2025-07-31'||ohio.domicileState!=='OH'||other?.from!=='2025-08-01'||other.to!=='2025-12-31'||other.domicileState!=='VA')return fail('complete actual212-day Ohio and153-day Virginia domicile originals are required');
   const residence=source.residence.periods[0];
@@ -52,7 +55,12 @@ export function calculateOhioReturnHeaderSource(input:TaxYearInput,raw:unknown):
   residentDays=(date(residence.through)-date(residence.from))/86400000+1;
   if(residentDays!==212)return fail('the actual supported majority-year residential calendar must cover212days');
   // Existing canonical/current source validators retain every income, invoice and deduction guard.
-  calculateOhioCanonicalBusinessSource({taxInput:context,residencyFacts:facts,federalResult:calculateFederalTax(context)});
+  if(partYearBusiness)calculateOhioCanonicalBusinessSource({taxInput:context,residencyFacts:facts,federalResult:calculateFederalTax(context)});
+  if(partYearSchool){
+   // The existing complete payroll/domicile/payment validator owns every monetary and source guard.
+   const adapted=buildOhioResidentReturnInput(context,calculateFederalTax(context));
+   if(adapted.schoolDistrictSource?.methodVersion!=='oh-2025-sd100-part-year-payroll-sources-v1'||!same(context.ohioSchoolDistrict?.residence.originalAddress,source.residence.originalAddress))return fail('actual school district home and complete current payroll sources must match the header');
+  }
   buildOhioPaymentSource(context,paid);
  }else{
   if(facts.businessSources||facts.noBusinessIncomeConfirmed!==true)return fail('separate actual district or income method composition is required');
@@ -66,11 +74,13 @@ export function calculateOhioReturnHeaderSource(input:TaxYearInput,raw:unknown):
  const address=source.residence.originalAddress,finder=source.finderOriginal,county=source.countyOriginal,list=source.officialInventoryOriginal;
  if(address.state!=='OH'||!same(address,finder.originalAddress)||!same(address,county.originalAddress))return fail('actual residential, queried Finder and county original addresses must agree');
  const asOf=date(source.asOfDate);if(asOf<date('2025-12-31')||date(finder.lookupDate)>asOf||date(county.recordDate)>asOf)return fail('actual header source dates exceed the stated review endpoint');
- if(finder.countyName.trim().toUpperCase()!=='FRANKLIN'||county.countyName.trim().toUpperCase()!=='FRANKLIN')return fail('actual county originals require the supported Franklin method; other reported counties remain unsupported');
+ const expectedCounty=partYearSchool?'ASHLAND':'FRANKLIN',expectedDistrict=partYearSchool?'0302':'2503';
+ if(finder.countyName.trim().toUpperCase()!==expectedCounty||county.countyName.trim().toUpperCase()!==expectedCounty)return fail('actual county originals require the separately supported county method');
  // Explicit official row evidence is required in addition to the taxing-rate index; null alone proves nothing.
- if(finder.districtCode!=='2503'||lookupOhioSchoolDistrictNumberByName(finder.districtName)!=='2503'||finder.schoolIncomeTax!=='none'||lookupOhioSchoolDistrictMetadata(2025,finder.districtCode)!==null)return fail('actual district originals require the separately supported non-taxing 2503 row');
- if(list.publication!=='ohio_2025_it1040_booklet'||list.publicationSha256!==OHIO_HEADER_2025_BOOKLET_SHA256||list.printedPage!==50||list.districtCode!=='2503'||lookupOhioSchoolDistrictNumberByName(list.districtName)!=='2503'||list.rateDisplay!=='-'||list.taxBaseDisplay!=='-')return fail('review the exact official 2025 district-list row matching the actual Finder original');
- return{methodVersion:partYearBusiness?'oh-2025-py-business-header-212-v1':'oh-2025-resident-header-v1',header:{schoolDistrictNumber:finder.districtCode,ohioCounty:county.countyName.trim().slice(0,4).toUpperCase(),residency:partYearBusiness?'part_year_resident':'resident'},residentDays,
+ const metadata=lookupOhioSchoolDistrictMetadata(2025,finder.districtCode);
+ if(finder.districtCode!==expectedDistrict||lookupOhioSchoolDistrictNumberByName(finder.districtName)!==expectedDistrict||(partYearSchool?finder.schoolIncomeTax!=='reported'||metadata?.taxType!=='earned_income'||!metadata.rate.eq('0.0125'):finder.schoolIncomeTax!=='none'||metadata!==null))return fail('actual district originals require their separately supported official row');
+ if(list.publication!=='ohio_2025_it1040_booklet'||list.publicationSha256!==OHIO_HEADER_2025_BOOKLET_SHA256||list.printedPage!==(partYearSchool?51:50)||list.districtCode!==expectedDistrict||lookupOhioSchoolDistrictNumberByName(list.districtName)!==expectedDistrict||list.rateDisplay!==(partYearSchool?'.0125':'-')||list.taxBaseDisplay!==(partYearSchool?'E':'-'))return fail('review the exact official 2025 district-list row matching the actual Finder original');
+ return{methodVersion:partYearSchool?'oh-2025-py-school-header-212-v1':partYearBusiness?'oh-2025-py-business-header-212-v1':'oh-2025-resident-header-v1',header:{schoolDistrictNumber:finder.districtCode,ohioCounty:county.countyName.trim().slice(0,4).toUpperCase(),residency:partYear?'part_year_resident':'resident'},residentDays,
  sourceCommitment:bytesToHex(sha256(new TextEncoder().encode(encoded({context,source})))),
- audit:[{rule:'actual-resident-header',description:partYearBusiness?'Current owner and complete212-day majority-year residential originals match the supported official district and county sources.':'Current owner and complete full-year residential originals match the supported official district and county sources.',status:'validated'}]};
+ audit:[{rule:'actual-resident-header',description:partYear?'Current owner and complete212-day majority-year residential originals match the supported official district and county sources.':'Current owner and complete full-year residential originals match the supported official district and county sources.',status:'validated'}]};
 }

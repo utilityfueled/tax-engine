@@ -117,3 +117,8 @@ lines:
     description: "Separate explicit fictional actual employer account for physical Schedule W"
     formula: "Public privacy review uses an independently supplied actual fictional Ohio employer ID07100412, never the old placeholder PRIVATE-OH-RC-STATE-ID or a production default. Explicitly reconfirm current parent/payment/native RC/header through existing APIs; no direct snapshot rebinding. Preserve all original header fixture, privacy/cash/source expectations and malformed employer-account negatives. Conditional fixture successor only after retained full-suite stack confirms the physical employer-ID guard. No tax or renderer change."
     testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header public review excludes private originals from every saved object without provider transfer"
+
+  - line: "part-year-school-212-sources"
+    description: "Separate actual212-day majority-year taxable district and county originals"
+    formula: "Single primary ordinary W2 current PY school method; explicitly supplied Ashland county/Finder same212-day Ohio home, official2025 booklet51 Hillsdale0302/.0125/E; complete parent/payment/school replay. Preserve full-year2503 and distinct PY business header methods. No county from district/address/ZIP, no amount allowlist or snapshot refresh."
+    testRef: "tests/engine/state/oh-school-district-part-year-official-review.test.ts::SD PY paper existing header API derives actual ASHL and0302 without mailing inference"
