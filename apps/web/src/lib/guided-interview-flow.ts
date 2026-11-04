@@ -1532,6 +1532,46 @@ export function computeFlowProgress(state: GuidedFlowState): FlowProgress {
   };
 }
 
+/** Display analysis of the entire current state, shared only within one render. */
+export interface GuidedRenderAnalysis {
+  completion: FlowCompletionSummary;
+  progress: FlowProgress;
+  sectionStatuses: ReadonlyMap<InterviewSectionId, VisitedSectionStatus>;
+}
+
+export function analyzeGuidedRender(state: GuidedFlowState): GuidedRenderAnalysis {
+  const sections = buildSectionRoute(state.segmentation);
+  const sectionStatuses = new Map(sections.map(section =>
+    [section.id, getVisitedSectionStatus(state, section.id)] as const));
+  const completion = sections.reduce<FlowCompletionSummary>((summary, section) => {
+    const status = sectionStatuses.get(section.id);
+    if (status === "complete") summary.completedSections += 1;
+    else if (status === "skipped") summary.skippedSections += 1;
+    else if (status === "needs-review") summary.needsReviewSections += 1;
+    return summary;
+  }, {
+    totalSections: sections.length,
+    completedSections: 0,
+    skippedSections: 0,
+    needsReviewSections: 0,
+    sections,
+  });
+  return {
+    completion,
+    sectionStatuses,
+    progress: {
+      currentSectionIndex: state.currentSectionIndex,
+      totalSections: completion.totalSections,
+      completedSections: completion.completedSections,
+      percentComplete: completion.totalSections > 0
+        ? Math.round((completion.completedSections / completion.totalSections) * 100)
+        : 0,
+      currentSection: sections[state.currentSectionIndex] ?? null,
+      sections,
+    },
+  };
+}
+
 // ── Navigation helpers ─────────────────────────────────────────────────────
 
 export function canGoBack(state: GuidedFlowState): boolean {

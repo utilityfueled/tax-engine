@@ -1,0 +1,24 @@
+form: Guided render analysis
+year: 2025
+source: Existing complete guided source validation and native review contracts; no tax arithmetic change
+notes:
+  - Analyze the actual entire current GuidedFlowState once for each root render and pass only derived display analysis to children.
+  - No cross-render or cross-owner cache; no narrowed tax input or omitted navigation/confirmation/source metadata.
+  - Preserve separate fresh preview, original-source collector, explicit action, export and persistence validation.
+  - Existing 5s unit deadlines, managed 90s/image 30s, worker/retry/assertion controls remain unchanged.
+lines:
+  - line: "one-current-render"
+    formula: 'A completed state-return is validated once for route/status/completion display in one actual whole shell render; preserve current source replay and all displayed statuses.'
+    testRef: "tests/apps/web/guided-render-analysis.test.tsx::analyzes completion sources once in one actual whole shell render %s"
+  - line: "source-status-parity"
+    formula: 'Confirmed refund is 2001; confirmed actual zero is 0; null confirmation, stale owner and changed year remain incomplete. No source originals are refreshed.'
+    testRef: "tests/apps/web/guided-render-analysis.test.tsx::preserves actual source status and preview boundary %s"
+  - line: "same-cash-native-edit"
+    formula: 'Actual documentary reference edit revokes confirmation while retaining all original payroll/federal snapshots and amounts.'
+    testRef: "tests/apps/web/guided-render-analysis.test.tsx::revokes actual same-cash native source confirmation without changing originals"
+  - line: "same-reference-current-state"
+    formula: 'An actual current in-memory state mutation is revalidated on a new whole render even when state reference identity is unchanged; null does not mean zero.'
+    testRef: "tests/apps/web/guided-render-analysis.test.tsx::revalidates a same-reference current source mutation on the next root render"
+  - line: "workspace-owner-isolation"
+    formula: 'Switching to another current workspace with stale owner snapshots cannot reuse the first owner complete status or source result.'
+    testRef: "tests/apps/web/guided-render-analysis.test.tsx::keeps actual workspace owner validation isolated on switch"

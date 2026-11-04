@@ -40,6 +40,7 @@ import {
   getStandardDeductionAmount,
   getSectionData,
   getVisitedSectionStatus,
+  type GuidedRenderAnalysis,
   supportedStates,
   type SupportedStateCode,
 } from "@/lib/guided-interview-flow";
@@ -592,10 +593,12 @@ function SectionReviewBlock({
 // ── Main review section ───────────────────────────────────────────────────
 
 export function SectionReview({
+  analysis,
   state,
   preview,
   onJumpToSection,
 }: {
+  analysis?: GuidedRenderAnalysis;
   state: GuidedFlowState;
   preview: GuidedPreviewMetrics | null;
   onJumpToSection: (sectionId: InterviewSectionId) => void;
@@ -736,7 +739,7 @@ export function SectionReview({
               sectionId={section.id}
               label={section.label}
               eyebrow={section.eyebrow}
-              sectionStatus={getVisitedSectionStatus(state, section.id)}
+              sectionStatus={analysis?.sectionStatuses.get(section.id) ?? getVisitedSectionStatus(state, section.id)}
               onEdit={() => onJumpToSection(section.id)}
             >
               {renderSectionSummary(section.id)}

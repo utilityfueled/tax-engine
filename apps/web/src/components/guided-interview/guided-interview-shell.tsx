@@ -59,7 +59,9 @@ import {
   canGoBack,
   canGoForward,
   clearGuidedFlowState,
-  computeFlowProgress,
+  analyzeGuidedRender,
+  type GuidedRenderAnalysis,
+  type FlowProgress,
   shouldPromptBeforeAdvance,
   emptyBrokerageEntry,
   emptyCreditsData,
@@ -82,7 +84,6 @@ import {
   resumeInterviewAtSection,
   saveGuidedFlowState,
   startInterview,
-  summarizeFlowCompletion,
   updateSectionData,
 } from "@/lib/guided-interview-flow";
 import { getBrowserStorage } from "@/lib/browser-storage";
@@ -109,12 +110,14 @@ import { ReturnHelpDock } from "../return-help-dock";
 
 function SectionProgressBar({
   state,
+  analysis,
   onJump,
 }: {
   state: GuidedFlowState;
+  analysis: GuidedRenderAnalysis;
   onJump: (sectionId: InterviewSectionId) => void;
 }) {
-  const progress = computeFlowProgress(state);
+  const progress = analysis.progress;
   const stepsRef = useRef<HTMLDivElement | null>(null);
   const stepRefs = useRef<Record<InterviewSectionId, HTMLButtonElement | null>>({} as Record<
     InterviewSectionId,
@@ -204,7 +207,7 @@ function SectionProgressBar({
           onScroll={syncOverflowState}
         >
           {progress.sections.map((section, index) => {
-            const sectionStatus = getVisitedSectionStatus(state, section.id);
+            const sectionStatus = analysis.sectionStatuses.get(section.id) ?? getVisitedSectionStatus(state, section.id);
             const isDone = sectionStatus === "complete";
             const isSkipped = sectionStatus === "skipped";
             const needsReview = sectionStatus === "needs-review";
@@ -269,7 +272,7 @@ function RefundTicker({
 }: {
   guidedPreview: GuidedPreviewMetrics | null;
   workspace: ReturnWorkspaceRecord;
-  progress: ReturnType<typeof computeFlowProgress>;
+  progress: FlowProgress;
 }) {
   const [breakdownOpen, setBreakdownOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(true);
@@ -475,6 +478,7 @@ function RefundTicker({
 
 function SectionContent({
   sectionId,
+  analysis,
   state,
   workspace,
   onUploadDocuments,
@@ -484,6 +488,7 @@ function SectionContent({
   section,
 }: {
   sectionId: InterviewSectionId;
+  analysis: GuidedRenderAnalysis;
   state: GuidedFlowState;
   workspace: ReturnWorkspaceRecord;
   onUploadDocuments?: (files: File[]) => Promise<string>;
@@ -732,6 +737,7 @@ function SectionContent({
     case "review":
       return (
         <SectionReview
+          analysis={analysis}
           state={state}
           preview={guidedPreview}
           onJumpToSection={onJumpToSection}
@@ -761,7 +767,7 @@ function SectionContent({
       );
     }
     case "final-review": {
-      const completion = summarizeFlowCompletion(state);
+      const completion = analysis.completion;
       const followUpSections = completion.skippedSections + completion.needsReviewSections;
       const requiresFollowUp = followUpSections > 0;
 
@@ -782,6 +788,7 @@ function SectionContent({
 
 function InterviewPhase({
   state,
+  analysis,
   guidedPreview,
   guidedPreviewBlockedBy,
   onStateChange,
@@ -790,6 +797,7 @@ function InterviewPhase({
   onFinish,
 }: {
   state: GuidedFlowState;
+  analysis: GuidedRenderAnalysis;
   guidedPreview: GuidedPreviewMetrics | null;
   guidedPreviewBlockedBy: string | null;
   onStateChange: (next: GuidedFlowState) => void;
@@ -797,7 +805,7 @@ function InterviewPhase({
   onUploadDocuments?: (files: File[]) => Promise<string>;
   onFinish: () => void;
 }) {
-  const progress = computeFlowProgress(state);
+  const progress = analysis.progress;
   const currentSection = progress.currentSection;
   const sectionRef = useRef<HTMLDivElement>(null);
   const prevSectionIndex = useRef(state.currentSectionIndex);
@@ -914,7 +922,7 @@ function InterviewPhase({
 
   return (
     <div className="guided-interview-phase" ref={sectionRef}>
-      <SectionProgressBar state={state} onJump={handleJump} />
+      <SectionProgressBar state={state} analysis={analysis} onJump={handleJump} />
 
       <RefundTicker guidedPreview={guidedPreview} workspace={workspace} progress={progress} />
       {guidedPreviewBlockedBy && <p role="status" className="guided-hint">This return cannot be figured yet: {guidedPreviewBlockedBy}</p>}
@@ -922,6 +930,7 @@ function InterviewPhase({
       <div key={currentSection?.id} className="guided-section-transition">
         {currentSection ? (
           <SectionContent
+            analysis={analysis}
             sectionId={currentSection.id as InterviewSectionId}
             state={state}
             workspace={workspace}
@@ -1006,6 +1015,7 @@ function InterviewPhase({
 }
 
 function CompletionScreen({
+  analysis,
   guidedPreview,
   guidedPreviewBlockedBy,
   workspace,
@@ -1023,15 +1033,16 @@ function CompletionScreen({
   onResumeSection: (sectionId: InterviewSectionId) => void;
   onRestart: () => void;
   onContinueToWorkspace: () => void;
+  analysis: GuidedRenderAnalysis;
 }) {
-  const completion = summarizeFlowCompletion(state);
+  const completion = analysis.completion;
   const requiresFollowUp = completion.skippedSections > 0 || completion.needsReviewSections > 0;
   const followUpSections = completion.skippedSections + completion.needsReviewSections;
-  const progress = computeFlowProgress(state);
+  const progress = analysis.progress;
 
   return (
     <div className="guided-completion">
-      <SectionProgressBar state={state} onJump={onResumeSection} />
+      <SectionProgressBar state={state} analysis={analysis} onJump={onResumeSection} />
 
       <RefundTicker guidedPreview={guidedPreview} workspace={workspace} progress={progress} />
       {guidedPreviewBlockedBy && <p role="status" className="guided-hint">This return cannot be figured yet: {guidedPreviewBlockedBy}</p>}
@@ -1243,8 +1254,10 @@ export function GuidedInterviewShell({
     () => workspace.returnSummary.targetTaxYear != null && flowState.taxYear !== workspace.returnSummary.targetTaxYear ? { metrics: null, blockedBy: null } : computeGuidedPreviewOutcome(flowState),
     [flowState, workspace.returnSummary.targetTaxYear],
   );
+  // Recompute from the entire actual state on every render; never retain a source-result cache.
+  const renderAnalysis = flowState.phase === "segmentation" ? null : analyzeGuidedRender(flowState);
   const currentSection = flowState.phase === "interview"
-    ? computeFlowProgress(flowState).currentSection
+    ? renderAnalysis?.progress.currentSection ?? null
     : null;
 
   function handleSegmentationComplete(answers: SegmentationAnswers) {
@@ -1313,8 +1326,9 @@ export function GuidedInterviewShell({
         />
       )}
 
-      {flowState.phase === "interview" && (
+      {flowState.phase === "interview" && renderAnalysis && (
         <InterviewPhase
+          analysis={renderAnalysis}
           state={flowState}
           guidedPreview={guidedPreview}
           guidedPreviewBlockedBy={guidedPreviewBlockedBy}
@@ -1325,8 +1339,9 @@ export function GuidedInterviewShell({
         />
       )}
 
-      {flowState.phase === "complete" && (
+      {flowState.phase === "complete" && renderAnalysis && (
         <CompletionScreen
+          analysis={renderAnalysis}
           guidedPreview={guidedPreview}
           guidedPreviewBlockedBy={guidedPreviewBlockedBy}
           workspace={workspace}

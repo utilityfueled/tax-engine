@@ -1,0 +1,22 @@
+# Guided per-render source analysis work
+
+Source-first controls only; products unchanged. This package is limited to one pure analysis of the actual entire current guided state per root render and passing that display analysis into children. It introduces no cross-render, narrowed-input or global cache, and does not replace current preview, explicit confirmation, source collector, export or action validation. Existing actual source/owner/year/unknown-versus-zero commitments and tax arithmetic remain unchanged.
+
+Prior read-only profile: exact82515575, one actual SSR interview render invokes reciprocal replay six times/federal fourteen; one completion render invokes reciprocal five/federal twelve. Four source replays in each come from repeated completion/status validation. Inclusive measured durations have stack-capture overhead, are nested, and do not establish browser CPU dominance or deadline clearance. Native30s and remote90s failures remain retained and unresolved.
+
+Meaningful controls cover actual whole-render repeated source validation, existing status/progress/money parity, same-cash source edit confirmation revocation, actual same-reference mutation on a subsequent render, and owner/workspace switching. No browser helper or budget/assertion/retry changes are part of this package. Runtime and product implementation results pending.
+
+## Bounded results
+
+On private exact825155757ca72304e9a1a363e385960705f52d8b, the original existing APIs produced four genuine repeated-analysis failures: interview/completion replayed the completed state-return four times per whole render; review/final-review five times. Eight original behavior controls passed. An initial NEW test used nonexistent W2.stateWithheld; its corrected assertion reads the actual Ohio stateLocalSources row withheld literal zero. The initial5-failure7-pass result and exact diff are preserved; the corrected real RED is4-failure8-pass.
+
+The three-product change adds analyzeGuidedRender and passes its derived route/status/completion/progress to the real child views. It is recomputed for every root render from the entire actual state. Legacy APIs remain unchanged; standalone SectionReview retains its original status fallback. Preview memo/dependencies, actual core/source/confirmation validation, navigation actions, source snapshots, persistence and exports remain unchanged.
+
+After implementation, all12 new controls passed, including actual mounted same-cash confirmation revocation, same-reference in-memory mutation and workspace owner switching. Unchanged adjacent279 tests/eight files passed. Root/web/contracts types all passed; generic spec validation8042 lines passed. The first AST run reported762 pass/one own metadata failure because the existing scanner requires double-quoted IDs/testRefs. Equivalent syntax-only quote correction retained every formula/ref value and all tests/products. Corrected AST763 passed. Owned strict lint4 TypeScript files had zero warnings; generated inventory830 entries/check passed; engine and web builds passed. No additional source changes followed these checks except this results-only ledger append.
+
+All failures and diagnostic corrections remain under .local/upgrade-evidence/nov04-guided-render-analysis. No main writes/commit, browser/image replay, new PDF or deployment occurred. These checks establish the bounded per-render sharing behavior, not managed90s/image30s clearance or global readiness. The earlier native four and remote6/16 deadline failures remain open pending actual reviewed replays. Single SSR duration samples are not browser CPU attribution or a speedup benchmark.
+
+
+ROOT integrated the exact six reviewed paths onto3a959 plus documentation-only commits e9a50c3c/68999490, verifying all existing before-bytes against82515575. Current-checkout12controls and279adjacent tests pass; all three types, spec8042, AST763, strictfour-file lint with zero warnings, inventory generation/check and both builds pass. Generated inventory exactly reproduces the frozen3c71849a delivery. Distinct source review876d396b confirms status/progress parity, entire-current-state traversal and unchanged fresh preview/source/action paths. Results and hashes are retained under ignored nov04-root-guided-render-checks.
+
+No browser/image replay has yet established deadline clearance for this implementation. The prior4native30s failures and remote6managed/16image failures remain authoritative historical outcomes. Current global and distribution/staging/provider/human/final2026 qualifications remain open.
