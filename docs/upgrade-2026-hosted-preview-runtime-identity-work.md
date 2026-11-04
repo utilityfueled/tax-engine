@@ -1,6 +1,6 @@
 # Hosted Preview runtime identity startup record
 
-Status: privately implemented and locally tested; not yet proof of actual hosted Node or bundled Undici identity. Exact source base f09a3dd7ad2f3a12f02a8d50efd0da01050033e6.
+Status: implemented, locally tested and observed in one actual Preview function. Implementation source base f09a3dd7ad2f3a12f02a8d50efd0da01050033e6; deployed observation is separately bound below.
 
 The existing Node startup branch now emits one structured console record only when the existing deployment-mode predicate identifies hosted Vercel Preview, after rate-limit validation succeeds. The record contains exactly a constant event marker and actual process Node version, bundled Undici version (null if unavailable), and architecture. It does not include environment contents, request data, owner/tax data or deployment identifiers. Existing server/Edge Sentry registration, request-error callback, public health response and telemetry privacy settings remain unchanged.
 
@@ -11,3 +11,9 @@ Evidence: `.local/upgrade-evidence/nov04-hosted-runtime-identity-source-audit/im
 A later owner-authenticated log observation must bind the marker to an actual function startup/invocation in the exact new Preview deployment. Build/local records do not establish hosted identity. A new observation cannot retroactively establish deployment73's historical runtime; one process observation does not prove all regions, instances or future provider patches. No new public diagnostic surface, credential or provider setting is introduced. Release, filing and human qualification remain separate.
 
 ROOT adopted the exact reviewed three paths after checking each existing baseline against f09. Current-checkout new12 + existing telemetry5 + support2 all pass (19/3 files), web types, four owned files strict lint with zero warnings, and production web build pass. Distinct privacy/source review a80d3c6b approves the bounded record and gating. Logs/hashes are retained under ignored nov04-root-small-packages-checks. This adds local integration evidence only; actual owner-only Preview function logs remain required.
+
+## Actual Preview observation — November 4
+
+Deployment dpl_7rze8ijvhyHRLHJ6zCRjbAVqz54L is READY for exact commit3a959a3d7c19ac1c00dd6a134f9b5d6927dc684e on the upgrade branch, with Preview target and iad1 region. A browser GET to its /api/health returned the unchanged `{"status":"ok"}`. Owner-scoped function logs at2026-11-04T05:33:05.014Z for that request contain the exact startup marker, Node26.13.0, Undici8.12.2 and architecturex64. The nonsecret [observation record](upgrade-2026-hosted-runtime-20261104.json) binds source, deployment and saved evidence.
+
+This establishes one actual deployed process identity. It does not establish every instance/region, future provider patches, production, hosted outage/security/billing/recovery checks or release readiness. Earlier local/build-only observations and their limitations remain historical evidence; no public diagnostic surface or configuration was added for this observation.
