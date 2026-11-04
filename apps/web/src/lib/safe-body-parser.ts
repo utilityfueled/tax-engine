@@ -24,6 +24,10 @@ export type SafeTextReadOutcome =
   | { ok: true; text: string }
   | SafeJsonParseError;
 
+export type SafeBinaryReadOutcome =
+  | { ok: true; bytes: Uint8Array<ArrayBuffer> }
+  | SafeJsonParseError;
+
 /** Maximum time to wait for the request body to arrive before aborting. */
 const BODY_READ_TIMEOUT_MS = 30_000;
 
@@ -88,6 +92,71 @@ class BodyTooLargeError extends Error {
   constructor() {
     super("Request body too large");
     this.name = "BodyTooLargeError";
+  }
+}
+
+/** Binary counterpart for bounded multipart input; no text decoding occurs. */
+export async function safeReadBinaryBody(
+  request: Request,
+  maxBodySize: number,
+  timeoutMs: number = BODY_READ_TIMEOUT_MS
+): Promise<SafeBinaryReadOutcome> {
+  const cancelBody = () => { void request.body?.cancel().catch(() => {}); };
+  if (request.signal.aborted) {
+    cancelBody();
+    return { ok: false, error: "Request cancelled.", status: 499 };
+  }
+  const declaredSize = Number.parseInt(request.headers.get("content-length") ?? "", 10);
+  if (declaredSize > maxBodySize) {
+    cancelBody();
+    return { ok: false, error: "Request body too large.", status: 413 };
+  }
+
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  request.signal.addEventListener("abort", abort, { once: true });
+  const read = async (): Promise<Uint8Array<ArrayBuffer>> => {
+    controller.signal.throwIfAborted();
+    if (!request.body) return new Uint8Array(0);
+    const reader = request.body.getReader();
+    // A producer's cancel promise is untrusted. Initiate cancellation, but do
+    // not await it: pending reads close immediately even if that promise hangs.
+    const cancel = () => { void reader.cancel().catch(() => {}); };
+    controller.signal.addEventListener("abort", cancel, { once: true });
+    let bytes = new Uint8Array(Math.min(maxBodySize, 64 * 1024));
+    let size = 0;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        controller.signal.throwIfAborted();
+        if (done) break;
+        if (value.byteLength > maxBodySize - size) {
+          cancel();
+          throw new BodyTooLargeError();
+        }
+        const nextSize = size + value.byteLength;
+        if (nextSize > bytes.byteLength) {
+          const expanded = new Uint8Array(Math.min(maxBodySize, Math.max(nextSize, bytes.byteLength * 2)));
+          expanded.set(bytes);
+          bytes = expanded;
+        }
+        bytes.set(value, size);
+        size = nextSize;
+      }
+      return bytes.slice(0, size);
+    } finally {
+      controller.signal.removeEventListener("abort", cancel);
+      reader.releaseLock();
+    }
+  };
+  try {
+    return { ok: true, bytes: await withTimeout(read(), timeoutMs, abort) };
+  } catch (error) {
+    if (request.signal.aborted) return { ok: false, error: "Request cancelled.", status: 499 };
+    if (error instanceof BodyTooLargeError) return { ok: false, error: "Request body too large.", status: 413 };
+    return { ok: false, error: "Failed to read request body.", status: 400 };
+  } finally {
+    request.signal.removeEventListener("abort", abort);
   }
 }
 

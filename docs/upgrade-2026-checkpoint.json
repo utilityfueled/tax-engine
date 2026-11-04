@@ -18249,5 +18249,73 @@
       "actual hosted Node26 runtime",
       "independent final human/security/form/AI qualification"
     ]
+  },
+  "hostedMultipartLimits20261104": {
+    "status": "bounded current Node26 composition and main affected checks passed",
+    "privateTestedBase": "84e9c5ae96358deb8f25dde4bd5b5b502b1b8d95",
+    "integrationBase": "9020e29ed4d781862683a1bb9b41107d6b133133",
+    "frozenManifestSha256": "27d42b54e12f0927307654cbcb92ce1128f253979b5e72b4222c0ee9d8d7fdd3",
+    "priorIndependentReviewSha256": "b65f20b30ddf1199d304a16f8394176bece8e57e336aef5884d491a06195bb2a",
+    "before": {
+      "failed": 19,
+      "passed": 14,
+      "total": 33
+    },
+    "uniqueAffectedPassed": 190,
+    "skipped": 0,
+    "unhandledErrors": 0,
+    "privateStaticBuildChecksetsPassed": 10,
+    "currentMainAffectedLogSha256": "08186027ff5b49fe9d4cfa0d33e4733d29a8a62a9c159067499b0c02bed937a1",
+    "currentMainChecks": [
+      {
+        "name": "affected190",
+        "command": [
+          "pnpm",
+          "test",
+          "tests/apps/web/hosted-upload-request-limits.test.ts",
+          "tests/apps/web/hosted-upload-error-response.test.ts",
+          "tests/apps/web/hosted-document-route.test.ts",
+          "tests/apps/web/security-upload-validation.test.ts",
+          "tests/apps/web/security-auth-route-isolation.test.ts",
+          "tests/apps/web/security-idor-isolation.test.ts",
+          "tests/apps/web/hosted-workspace-cache-policy.test.ts",
+          "tests/apps/web/workspace-persistence.test.ts",
+          "tests/apps/web/hosted-workspace-json-limits.test.ts",
+          "tests/apps/web/hosted-workspace-route.test.ts",
+          "tests/apps/web/request-body-lifecycle.test.ts",
+          "--maxWorkers=1",
+          "--fileParallelism=false"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov04-root-upload-main-checks/affected190.log",
+        "sha256": "08186027ff5b49fe9d4cfa0d33e4733d29a8a62a9c159067499b0c02bed937a1"
+      },
+      {
+        "name": "spec",
+        "command": [
+          "pnpm",
+          "spec:validate"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov04-root-upload-main-checks/spec.log",
+        "sha256": "6987838ae3d36a9b65fde8d8e4dfc7c691a0aad512c0a1d5f3bfe46b8b9d5fb9"
+      },
+      {
+        "name": "inventory-check",
+        "command": [
+          "pnpm",
+          "spec:inventory:check"
+        ],
+        "exitCode": 0,
+        "log": "/Users/beebs/Documents/Programming/tax-engine/.local/upgrade-evidence/nov04-root-upload-main-checks/inventory-check.log",
+        "sha256": "846ee1105cfb137b691fc9b9faa383c54ef9f9e367b6b3416b2abe4ccb15cdef"
+      }
+    ],
+    "globalUploadComposedQualified": false,
+    "actualNewPreviewQualified": false,
+    "existingJSONPolicyPreserved": true,
+    "lockSha256": "d199e2344fa6cf61402330f216e3f7ccf6bc9b5e7a568670b29a9fe27dc8c23f",
+    "ledger": "docs/upgrade-2026-hosted-upload-request-limits-work.md",
+    "releaseReady": false
   }
 }

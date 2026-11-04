@@ -16,7 +16,7 @@ import {
   resolveClientIdentifier,
   type RateLimitStore
 } from "./rate-limit";
-import { safeParseJsonBody } from "./safe-body-parser";
+import { safeParseJsonBody, safeReadBinaryBody } from "./safe-body-parser";
 import {
   createWorkspacePersistenceAdapter,
   resolveHostedDocumentBlobStore,
@@ -324,17 +324,24 @@ async function readWorkspaceSnapshotFromRequest(
 }
 
 const DOCUMENT_UPLOAD_MAX_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
+// Conservative app policy below Vercel's documented 4.5 MB request limit.
+const VERCEL_DOCUMENT_MAX_SIZE_BYTES = 4 * 1024 * 1024;
+const VERCEL_DOCUMENT_MAX_REQUEST_BYTES = VERCEL_DOCUMENT_MAX_SIZE_BYTES + 256 * 1024;
 
 /** Maximum time to wait for multipart form data to arrive before aborting (30 seconds). */
 const FORM_DATA_READ_TIMEOUT_MS = 30_000;
 
-function withFormDataTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+function withFormDataTimeout<T>(promise: Promise<T>, ms: number, signal: AbortSignal): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("Form data read timed out.")), ms);
+    const abort = () => { cleanup(); reject(new Error("Request cancelled.")); };
+    const timer = setTimeout(() => { cleanup(); reject(new Error("Form data read timed out.")); }, ms);
+    function cleanup() { clearTimeout(timer); signal.removeEventListener("abort", abort); }
+    signal.addEventListener("abort", abort, { once: true });
+    if (signal.aborted) abort();
 
     promise.then(
-      (value) => { clearTimeout(timer); resolve(value); },
-      (error) => { clearTimeout(timer); reject(error); }
+      (value) => { cleanup(); resolve(value); },
+      (error) => { cleanup(); reject(error); }
     );
   });
 }
@@ -456,29 +463,41 @@ const DOCUMENT_UPLOAD_MAX_REQUEST_SIZE = DOCUMENT_UPLOAD_MAX_SIZE_BYTES + 1024 *
 async function readHostedDocumentBlobFromRequest(
   request: Request,
   workspaceId: string,
-  now: () => string
+  now: () => string,
+  env: HostedWorkspaceRouteEnvironment
 ) {
-  const contentLength = request.headers.get("content-length");
-
-  if (contentLength) {
-    const declaredSize = parseInt(contentLength, 10);
-
-    if (!Number.isNaN(declaredSize) && declaredSize > DOCUMENT_UPLOAD_MAX_REQUEST_SIZE) {
-      return {
-        response: buildBadRequestResponse(
-          "Uploaded file exceeds the 25 MB size limit."
-        )
-      } as const;
-    }
+  const vercelHosted = resolveDeploymentMode(env) === "hosted"
+    && (env.VERCEL === "1" || ["preview", "production", "development"].includes(env.VERCEL_ENV ?? ""));
+  const fileLimit = vercelHosted ? VERCEL_DOCUMENT_MAX_SIZE_BYTES : DOCUMENT_UPLOAD_MAX_SIZE_BYTES;
+  const requestLimit = vercelHosted ? VERCEL_DOCUMENT_MAX_REQUEST_BYTES : DOCUMENT_UPLOAD_MAX_REQUEST_SIZE;
+  const tooLarge = () => vercelHosted
+    ? NextResponse.json({ error: "Uploaded file or multipart request exceeds the hosted upload limit. Maximum file size is 4 MiB." }, { status: 413 })
+    : buildBadRequestResponse("Uploaded file exceeds the 25 MB size limit.");
+  const deadline = Date.now() + FORM_DATA_READ_TIMEOUT_MS;
+  const body = await safeReadBinaryBody(request, requestLimit, FORM_DATA_READ_TIMEOUT_MS);
+  if (!body.ok) {
+    return { response: body.status === 413
+      ? tooLarge()
+      : body.status === 499
+        ? NextResponse.json({ error: "Request cancelled." }, { status: 499 })
+        : buildBadRequestResponse("Hosted document uploads require multipart form data with a file.") } as const;
   }
 
   let formData: FormData;
 
   try {
-    formData = await withFormDataTimeout(request.formData(), FORM_DATA_READ_TIMEOUT_MS);
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw new Error("Form data read timed out.");
+    // Only bounded, byte-exact input reaches multipart parsing. Parsing shares
+    // the original read deadline rather than receiving another 30 seconds.
+    formData = await withFormDataTimeout(new Response(body.bytes, {
+      headers: { "content-type": request.headers.get("content-type") ?? "" }
+    }).formData(), remaining, request.signal);
   } catch {
     return {
-      response: buildBadRequestResponse(
+      response: request.signal.aborted
+        ? NextResponse.json({ error: "Request cancelled." }, { status: 499 })
+        : buildBadRequestResponse(
         "Hosted document uploads require multipart form data with a file."
       )
     } as const;
@@ -496,13 +515,7 @@ async function readHostedDocumentBlobFromRequest(
     } as const;
   }
 
-  if (file.size > DOCUMENT_UPLOAD_MAX_SIZE_BYTES) {
-    return {
-      response: buildBadRequestResponse(
-        "Uploaded file exceeds the 25 MB size limit."
-      )
-    } as const;
-  }
+  if (file.size > fileLimit) return { response: tooLarge() } as const;
 
   const mediaType = file.type?.toLowerCase().trim();
 
@@ -523,6 +536,9 @@ async function readHostedDocumentBlobFromRequest(
   }
 
   const fileBytes = new Uint8Array(await file.arrayBuffer());
+  if (request.signal.aborted) {
+    return { response: NextResponse.json({ error: "Request cancelled." }, { status: 499 }) } as const;
+  }
 
   if (!matchesMagicBytes(fileBytes, mediaType)) {
     return {
@@ -781,7 +797,8 @@ export function createHostedWorkspaceRouteHandlers(
       const payload = await readHostedDocumentBlobFromRequest(
         request,
         context.workspaceId,
-        () => dependencies.now?.() ?? new Date().toISOString()
+        () => dependencies.now?.() ?? new Date().toISOString(),
+        dependencies.env ?? process.env
       );
 
       if ("response" in payload) {

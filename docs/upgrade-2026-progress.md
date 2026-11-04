@@ -2,6 +2,14 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] Hosted multipart upload requests now enforce measured binary/envelope limits,
+  bounded cancellation and fixed platform413 guidance. Current source-first
+  19FAIL/14PASS precedes190unique affected tests passing without skips/unhandled
+  errors; private ten type/spec/strict/inventory/build sets and current main
+  190/spec/inventory checks pass. The committed JSON boundary stays intact.
+  Actual new Preview and final distribution/global qualification remain open.
+  [Evidence](upgrade-2026-hosted-upload-request-limits-work.md).
+
 - [x] Owner verification now permits the fresh5996 Preview database follow-up:
   actual read-only results show one fresh receipt, one cleanup receipt, one named
   current subscription state and zero wrong-owner rows. Both approved actors have

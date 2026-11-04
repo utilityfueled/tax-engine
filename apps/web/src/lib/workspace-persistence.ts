@@ -805,6 +805,11 @@ async function requestHostedDocumentBlobPersistence(
   fetchFn: PersistenceFetch
 ) {
   const response = await fetchFn(endpoint, init);
+  // The hosting platform can reject before our JSON handler runs. Do not read
+  // or echo that potentially private plaintext/HTML response body.
+  if (response.status === 413) {
+    throw new Error("This document is too large for this hosted upload. Please choose a file no larger than 4 MiB and try again.");
+  }
   const payload = await response.json() as HostedDocumentBlobPersistenceResponse | HostedPersistenceErrorResponse;
 
   if (!response.ok && response.status !== 401) {
