@@ -18493,7 +18493,7 @@
     "ledger": "docs/upgrade-2026-hosted-preview-runtime-identity-work.md"
   },
   "currentContinuation20261104": {
-    "applicationSource": "4b9b93e38a7e00670ea0423db0c5154d9cd20422",
+    "applicationSource": "51a8d4c4055329c09ff9e62ca878d1cfbc2df8d4",
     "index": "docs/upgrade-2026-current-status.md",
     "localFullVerificationSource": "f09a3dd7ad2f3a12f02a8d50efd0da01050033e6",
     "currentFullVerificationPassed": false,
@@ -18510,11 +18510,11 @@
       "evidence": "docs/upgrade-2026-hosted-runtime-20261104.json"
     },
     "activeSoftware": [
-      "Auth-instance TLS policy cache binding",
-      "Schedule AI page3 source-bound physical review and saved-output verification",
-      "Final-source native image recovery/replay and whole-suite checks",
       "Actual Ohio part-year school guided-to-paper lifecycle",
-      "Approved Preview synthetic schema migration/restore after credential handoff"
+      "Final-source complete unit/coverage/browser/PostgreSQL/CI checks",
+      "Final-source isolated native image export/restart/import/smoke/recovery/SBOM qualification",
+      "Approved Preview synthetic schema migration/restore after credential handoff",
+      "Remaining source-complete federal NOL/COD method audit and implementation where authority is determinate"
     ],
     "imageAdvisories": {
       "matchesEach": 181,
@@ -18523,7 +18523,7 @@
       "evidence": "docs/upgrade-2026-image-advisories-20261104.json"
     },
     "releaseReady": false,
-    "applicationCommit": "4b9b93e38a7e00670ea0423db0c5154d9cd20422",
+    "applicationCommit": "51a8d4c4055329c09ff9e62ca878d1cfbc2df8d4",
     "ohPartYearSchoolPaper": {
       "commit": "a757d735",
       "focusedMainPassed": 22,
@@ -18547,7 +18547,16 @@
       "isolatedPrivateApiBasePassed": true,
       "isolatedPrivateApiBaseReceiptSha256": "240df4be529236ca97d755b4a6567eab1371ab8ee93e4df3bddc2441e6a6da1d",
       "verifiedBaseOciSha256": "8c837ce449ba53fb5f3d8352430a7a113fe4b74ef52ccc516e17cc8ea51cb7bb",
-      "finalSourceApplicationBuildExecuted": false
+      "finalSourceApplicationBuildExecuted": false,
+      "previousExactExport": {
+        "source": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
+        "image": "a19e168da153371ff7ec30a27340cbcc7fd248585216b54c3806d7964f3dcf87",
+        "receipt": "aea9fa52dc28bbb02d0da2d61bd92db3a0508c2d8b9a40ddfbbb7ef694f7d2a2",
+        "archive": "20aff304f656a42deb8b37c07f0206946863a0153d5f10bbbd4e500ce5145d35",
+        "blobs": 12,
+        "metadataAndVolumesExact": true,
+        "finalResourceFloorsPassed": true
+      }
     },
     "hostedHttpFaultRehearsal": {
       "commit": "5b5cc475",
@@ -18566,8 +18575,51 @@
       "mainAdjacentPassed": 201,
       "mainChecksetsPassed": 10,
       "actualHttpRepeatPassed": 13,
-      "authInstanceCacheSuccessorComplete": false,
-      "ledger": "docs/upgrade-2026-hosted-remote-database-tls-work.md"
+      "authInstanceCacheSuccessorComplete": true,
+      "ledger": "docs/upgrade-2026-hosted-remote-database-tls-work.md",
+      "authInstanceCacheCommit": "59953bde",
+      "authInstanceMainFocused": 94
+    },
+    "form2210PhysicalReview": {
+      "commit": "e3ec646c",
+      "mainFocused": 41,
+      "mainExisting": 222,
+      "mainChecksets": 14,
+      "savedPDFs": 142,
+      "savedPages": 335,
+      "independentCells": 1680,
+      "independentReceipt": "abdfc2b9e4c921d9283c41df5f784fd7c9c3ea02b4580eb84067ba56a340ea62",
+      "legacyActiveCatalogFollowup": true,
+      "filingQualified": false
+    },
+    "ohTruthfulReviewDisclosure": {
+      "commit": "f60004558d5b748053f7e3d05eaf7795bed53fd0",
+      "newControls": 7,
+      "existingControls": 91,
+      "mainChecksets": 11
+    },
+    "pdfActiveContent": {
+      "commit": "51a8d4c4055329c09ff9e62ca878d1cfbc2df8d4",
+      "genuineRed": 3,
+      "positiveBefore": 1,
+      "focusedAfter": 4,
+      "allPdfPassed": 1948,
+      "pdfFiles": 297,
+      "workspacePassed": 62,
+      "checksetsPassed": 13,
+      "independentReceipt": "634b1475d7ac9038adfdbf98462673d9ea2a00a2368b8ceb2f6ca335f15376fb",
+      "savedPDFs": 4,
+      "savedPages": 6,
+      "allRGBPairsExact": true,
+      "scope": "Mapped review action entrypoints; not arbitrary PDF or XFA sanitization"
+    },
+    "ohPartYearNativeIntegration": {
+      "actualJourneys": 4,
+      "passed": 0,
+      "failure": "Header replay omits confirmed school originals; header-only invalidation also clears school confirmation",
+      "actualLogSha256": "e9f8f6ae3bda7f2a1f57239f3d4a4d617de730b01f231f531c68ef67920a4717",
+      "fixStatus": "Source-first proposal and distinct invalidation controls in progress",
+      "filingQualified": false
     }
   }
 }

@@ -2835,3 +2835,41 @@ separate auth-instance cache-policy gap; its ten new controls yield six genuine
 failures/four passes, and that internal successor remains in progress. See
 [the TLS ledger](upgrade-2026-hosted-remote-database-tls-work.md). No deployed
 plaintext or broad hosted qualification is inferred.
+
+### November4: source-bound Schedule AI and accurate Ohio review disclosures
+
+Commite3ec646c delivers the annualized worksheet's physical page3 and separate
+owner PartII with source-bound original capture and actual saved-artifact
+readiness proof. Current41new/222existing controls and all14main sets pass;
+distinct142PDF/335page review verifies1680source cells and8owner positions.
+Retained120legacy federal PDFs preserve original Adobe scripts; this separate
+security follow-up is recorded, not hidden by an all-output approval. See
+[the Form2210 ledger](upgrade-2026-form-2210-schedule-ai-physical-review-work.md).
+Commitf6000455 corrects five stale Ohio disclosure slots and one obsolete
+browser copy assertion;7new/91existing controls and all11main sets pass.
+Actual part-year browser4 now runs separately; see
+[the disclosure ledger](upgrade-2026-oh-review-disclosure-work.md).
+Auth-cache59953bde is pushed with94focused and all7main sets passing.
+Final global/browser/image/staging/provider/human/form qualification remains open.
+
+### November 4: inherited executable PDF actions removed
+
+Commit 51a8d4c4 removes the source-tested action entrypoints from mapped review
+copies without changing fields, source artwork, ordinary links or calculations.
+Three genuine regressions precede the fix; 1,948 PDF tests, 62 workspace controls
+and all 13 relevant checksets pass. Independent four-PDF/six-page review verifies
+all objects and exact fields, appearances, text and RGB parity. This is a mapped
+review-copy repair, not arbitrary PDF/XFA qualification. See
+[the security ledger](upgrade-2026-review-pdf-active-content-work.md). Current
+global/browser/runtime/staging, provider, human and final-year gates remain open.
+
+### November 4: actual part-year school browser exposes header handoff
+
+Four unchanged-budget desktop/mobile refund/known-zero journeys now reach
+complete actual school-source confirmation, then fail at return-header
+confirmation. The header replay omits those confirmed originals and header-only
+invalidation clears their confirmation. A separately reviewed source-first
+integration repair is in progress. Earlier environment, label-wrapper and blank
+period setup failures remain retained separately; no passing browser or final
+artifact result is claimed. The current crosswalk records this integration
+gap alongside the delivered physical, TLS and PDF security packages.
