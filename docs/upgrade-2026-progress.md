@@ -2716,3 +2716,7 @@ Exact377fe Preview accepts a synthetic1MiB PNG and rejects5MiB at the platform41
 ### November 3: complete hosted webhook configuration guard
 
 The webhook now honors existing billing and durable database blocked flags before body/authentication/effects, preserving rate-limit and self-host precedence. Main10genuineRED/4PASS precedes exact reviewed adoption;114unique billing controls and all12check sets pass, including strictlint, inventory and both builds. Distinct static review passes. See [the ledger](upgrade-2026-hosted-webhook-configuration-gates-work.md). Actual deployment, SSL policy and broader hosted/release gates remain open.
+
+### November 4: actual subscription reconciliation Preview deliveries
+
+READY5996 Preview accepts a fresh sandbox subscription event, same-event duplicate and metadata-cleanup event with200. The temporary metadata is removed; ROOT reports14unchanged subscription fields. Distinct receipt/source consistency review passes, without independent network execution. The scoped scalar DB query waits for fresh Vercel verification;200alone is not exactly-once or entitlement proof. See [the ledger](upgrade-2026-staging-subscription-successor-work.md). Current-source/full hosted/release gates remain open.

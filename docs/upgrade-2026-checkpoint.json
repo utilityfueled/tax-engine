@@ -5,7 +5,7 @@
   "applicationCommit": "d32cb8cf3d607c643c4c7f7e1b845fcace61563f",
   "branch": "upgrade/2026-baseline",
   "releaseReady": false,
-  "evidenceBoundary": "Historical checks below apply only to applicationCommit d32cb8c. Active execution evidence is separate: local synthetic packages and remote CI diagnostics, no staging, live provider evaluation, independent human review or release qualification.",
+  "evidenceBoundary": "Historical baseline checks apply only to their applicationCommit. Later named packages record separate local synthetic, remote CI and bounded exact-source Preview observations. No independent human review, live model qualification, production or release readiness is established.",
   "runtime": {
     "node": "24.22.1",
     "pnpm": "10.34.8",
@@ -205,7 +205,7 @@
   "releaseBlockers": [
     "Independent human tax review, PA/OH all-three-residency implementation and qualification, and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Six interpretation questions await a qualified reviewer.",
     "The AI corpus has zero human reviews and no live results. The owner approved up to5USD total synthetic provider spend, but securely configured provider project access remains missing. Actual spend0; no model is promoted.",
-    "Existing Vercel Preview and free Preview-only Neon/Redis are authorized and connected; SMTP variables and the owner-entered secret are saved Preview only. Test-account new-password submission remains an owner browser handoff. Actual hosted auth/security/billing/outage/recovery rehearsal is unproved; local and CI checks do not qualify staging.",
+    "Existing Preview-only Neon/Redis and Zoho SMTP are configured. The authorized test accounts exist; bounded exact-source auth/recovery, tenant/workspace cleanup, scoped read-only database and sandbox billing observations are recorded in their named successor sections. Fresh5996 event/duplicate/cleanup each200; new scalar query awaits Vercel owner MFA. Final-artifact hosted security, credit/provider reconciliation, outages, migrations, backup restoration and rollback remain required.",
     "Latest ARM64 engineering candidate has176 matches/80 OS advisory IDs against November2 scanner database, all owner decisions pending by2026-11-07; zero critical/npm/fixed-version matches. Historical68-ID scan is retained. Final selected-state committed-source ARM64/AMD64 artifacts, human security review and publication authorization remain pending.",
     "The 2026 federal calculation remains incomplete and unavailable in production. Final 2026 Form 1040/Tax Table and necessary remaining forms are unavailable; final C/R disabled physical candidates exist and are not qualified."
   ],
@@ -17970,5 +17970,24 @@
     "deployedProof": false,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-hosted-webhook-configuration-gates-work.md"
+  },
+  "stagingSubscription5996Successor20261104": {
+    "status": "bounded ROOT-observed sandbox deliveries; distinct receipt/source consistency review",
+    "sourceCommit": "5996cbda71678c70f16f3c909590163f38b21909",
+    "deployment": "dpl_JBeGtajVHSpT9Sn29Q9WGpgLqERa",
+    "destinationOnlyHostnameChanged": true,
+    "historicalDuplicate200": true,
+    "freshSubscriptionEvent200": true,
+    "sameFreshEventDuplicate200": true,
+    "cleanupEvent200": true,
+    "syntheticMetadataRemoved": true,
+    "reportedUnchangedProviderFields": 14,
+    "receiptSha256": "b83c1f10b187da9256b6ac2f87d67a1312fdc75a80f072c719b4515a49744eb6",
+    "independentReceiptReviewSha256": "663b09bbfc65093ba3c0b397de6e47020abe3d3b741fd5c02e4e95bf8a2b1d66",
+    "reviewerNetworkExecuted": false,
+    "newScopedSqlExecuted": false,
+    "exactOnceEntitlementCreditCrashQualified": false,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-staging-subscription-successor-work.md"
   }
 }
