@@ -6814,6 +6814,26 @@
       ]
     },
     {
+      "key": "federal/hosted-workspace-ingestion-shell",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "packages/contracts/src/index.ts",
+      "specPath": "spec/federal/hosted-workspace-ingestion-shell.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-workspace-json-limits",
       "jurisdiction": "federal",
       "taxYear": 2026,

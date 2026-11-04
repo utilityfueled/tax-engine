@@ -1,0 +1,54 @@
+form: Hosted workspace ingestion shell
+schedule: Hosting privacy boundary
+taxYear: 2026
+reference: packages/contracts/src/index.ts
+notes: |
+  This is transport metadata, not a tax calculation or a filing/year promotion.
+  Real workspace ingestion builds interviewQueue from public canonical prompt
+  strings, while the hosted shell currently accepts only fact IDs. The contract
+  declares string[]; workspace-storage consumers preserve prompts and count the
+  pending queue. Keep existing fact-ID compatibility and original local records.
+  Permit only fixed public prompts or existing known IDs, never arbitrary text.
+  The year-change control passes the same existing workspace through2026 then
+  explicit2025 reconciliation before ingestion; it does not create a new shell.
+  Filename-derived local document IDs are a separate unresolved concern: this
+  package must not widen opaque IDs, alter ingestion IDs or silently erase facts.
+lines:
+  - line: "actual-ingestion"
+    formula: |
+      Create hosted shell, retain explicit unsupported2026 gate, select2025,
+      ingest committed official sample W2 filename and exact existing bytes size,
+      then preserve the two actual canonical pending prompts in the metadata shell.
+      Sample size1343180 comes from the retained existing sample SHA256
+      6a52ad63693de54220a3326b22c4d0fb34f4c25084366537087312975a55ae96.
+      The ingestion API consumes only filename/size/detection metadata; tests
+      use that exact size without requiring an ignored download in CI.
+      No PDF is authored or calculated values injected.
+    testRef: "tests/apps/web/hosted-workspace-ingestion-shell.test.ts::persists the actual sample W2 pipeline after explicit 2026 to 2025 selection"
+  - line: "local-versus-hosted"
+    formula: |
+      Hosted save sends only sanitized metadata and returns the unchanged full
+      local workspace. Answer text, names, source IDs, raw text and amounts are
+      absent in the shell; pending/answered status and actual years remain typed.
+    testRef: "tests/apps/web/hosted-workspace-ingestion-shell.test.ts::sends the real ingested shell and returns the unchanged local record"
+  - line: "finite-public-queue"
+    formula: |
+      Every canonical seeded fact prompt may remain a prompt. Existing known
+      fact IDs remain byte-identical for legacy shell compatibility. Do not
+      convert prompts to IDs because the local contract and consumers use prompts.
+    testRef: "tests/apps/web/hosted-workspace-ingestion-shell.test.ts::accepts every fixed canonical prompt without accepting supplied private text"
+  - line: "legacy-id-compatibility"
+    formula: "Existing fact-ID queue values remain unchanged."
+    testRef: "tests/apps/web/hosted-workspace-ingestion-shell.test.ts::preserves existing fact ID shell queue values exactly"
+  - line: "deny-private-queue"
+    formula: "Private or modified prompt strings fail before network, without input echo."
+    testRef: "tests/apps/web/hosted-workspace-ingestion-shell.test.ts::rejects private or modified queue content before fetch: %s"
+  - line: "unknown-fact-guard"
+    formula: "Unknown fact identity stays invalid; do not broaden other metadata."
+    testRef: "tests/apps/web/hosted-workspace-ingestion-shell.test.ts::rejects an unknown fact identity in %s"
+  - line: "unknown-stays-unknown"
+    formula: "Missing source year and no detected facts remain null and empty."
+    testRef: "tests/apps/web/hosted-workspace-ingestion-shell.test.ts::preserves unknown source year and absent detected facts without guessing"
+  - line: "fixed-bounds"
+    formula: "Existing maximum100 queue entries and opaque ID restrictions remain."
+    testRef: "tests/apps/web/hosted-workspace-ingestion-shell.test.ts::retains queue bounds and opaque document ID restrictions"

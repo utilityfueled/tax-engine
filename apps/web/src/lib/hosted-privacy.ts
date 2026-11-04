@@ -14,6 +14,7 @@ const timestamp = z.iso.datetime({ offset: true });
 const count = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const year = z.number().int().min(1900).max(2200);
 const factId = z.enum(seededFactDefinitions.map((fact) => fact.id));
+const interviewQueueEntry = z.union([factId, z.enum(seededFactDefinitions.map((fact) => fact.prompt))]);
 const answerMetadata = { status: z.enum(["pending", "answered"]), answeredAt: timestamp.nullable() };
 
 // Strip unknown keys at every level. A denylist cannot protect new private
@@ -36,7 +37,7 @@ const shellMetadataSchema = z.object({
     taxYearHints: z.array(year).max(100),
     facts: z.array(z.object({ id: factId, ...answerMetadata })).max(100),
     interviewQuestions: z.array(z.object({ id: factId, factId, ...answerMetadata })).max(100),
-    interviewQueue: z.array(factId).max(100), nextQuestionId: factId.nullable(),
+    interviewQueue: z.array(interviewQueueEntry).max(100), nextQuestionId: factId.nullable(),
   }),
   returnSummary: z.object({ status: z.enum(["empty", "awaiting-interview", "needs-review", "ready-to-recompute"]),
     targetTaxYear: year.nullable(), taxYearState: z.enum(["missing", "single", "multiple"]),
