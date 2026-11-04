@@ -1,5 +1,7 @@
 # 2026 upgrade implementation evidence
 
+- November4: [public source refresh](upgrade-2026-public-source-refresh-20261104.md) independently verifies44 retained responses (36HTTP200/8HTTP404). Seven advisory API failures remain unresolved; alternate official fields retain their conflicts. IRS1040 remains2025; C/R2026 and Ohio2025 bytes unchanged. No risk acceptance, deadline extension, provider-account qualification or readiness promotion.
+
 ## Active continuation — November 3, 2026
 
 - [x] Separate2025 Ohio212-day business/header method now binds actual majority-year

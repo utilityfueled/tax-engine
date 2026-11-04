@@ -205,7 +205,7 @@
   "releaseBlockers": [
     "Independent human tax review, PA/OH all-three-residency implementation and qualification, and final physical forms remain outstanding. Filing stays disabled and PDFs review-only. Six interpretation questions await a qualified reviewer.",
     "The AI corpus has zero human reviews and no live results. The owner approved up to5USD total synthetic provider spend, but securely configured provider project access remains missing. Actual spend0; no model is promoted.",
-    "Existing Preview-only Neon/Redis and Zoho SMTP are configured. The authorized test accounts exist; bounded exact-source auth/recovery, tenant/workspace cleanup, scoped read-only database and sandbox billing observations are recorded in their named successor sections. Fresh5996 event/duplicate/cleanup each200; new scalar query awaits Vercel owner MFA. Final-artifact hosted security, credit/provider reconciliation, outages, migrations, backup restoration and rollback remain required.",
+    "Existing Preview-only Neon/Redis and Zoho SMTP are configured. The authorized test accounts exist; bounded exact-source auth/recovery, tenant/workspace cleanup, scoped read-only database and sandbox billing observations are recorded in their named successor sections. Fresh5996 event/duplicate/cleanup each200; the authorized scoped scalar query completed after owner MFA, with exact successor evidence recorded. A separate synthetic-schema migration/backup/restore/rollback rehearsal is now authorized but has not yet run. Final-artifact hosted security, credit/provider reconciliation, outages, migrations, backup restoration and rollback remain required.",
     "Latest ARM64 engineering candidate has176 matches/80 OS advisory IDs against November2 scanner database, all owner decisions pending by2026-11-07; zero critical/npm/fixed-version matches. Historical68-ID scan is retained. Final selected-state committed-source ARM64/AMD64 artifacts, human security review and publication authorization remain pending.",
     "The 2026 federal calculation remains incomplete and unavailable in production. Final 2026 Form 1040/Tax Table and necessary remaining forms are unavailable; final C/R disabled physical candidates exist and are not qualified."
   ],
@@ -18369,5 +18369,20 @@
       "qualified human/final2026/filing qualification pending"
     ],
     "ledger": "docs/upgrade-2026-oh-business-part-year-header-work.md"
+  },
+  "publicSourceRefresh20261104": {
+    "sourceCommit": "ad23b0fad2d76013173151d68700c212783d67cb",
+    "retrievedAt": "2026-11-04T03:42:44.645968+00:00",
+    "requests": 44,
+    "http200": 36,
+    "http404": 8,
+    "advisoryApi404": 7,
+    "allRawHashesIndependentlyVerified": true,
+    "independentReviewSHA256": "552d055de3a505987406a96d97ea0ce200535a0b4938a634a83d7a24baf56aca",
+    "ledger": "docs/upgrade-2026-public-source-refresh-20261104.md",
+    "nextMetadataFollowup": "2026-11-04T19:30:00Z or before release/staging qualification, whichever occurs first",
+    "riskAcceptance": false,
+    "providerAccountAvailabilityVerified": false,
+    "readinessPromoted": false
   }
 }
