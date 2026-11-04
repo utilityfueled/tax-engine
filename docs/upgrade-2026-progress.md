@@ -2712,3 +2712,7 @@ All eight business/reciprocal journeys now pass without retries under the unchan
 ### November 3: actual historical Preview upload and shared auth limits
 
 Exact377fe Preview accepts a synthetic1MiB PNG and rejects5MiB at the platform413 boundary; disposable tuple cleanup and private/no-store checks pass. Two independent platform-only clients share20allowed nonexistent-auth-route POSTs before both receive429, without account/email/billing actions. Distinct offline review approves the bounded receipts. See [the probe ledger](upgrade-2026-staging-upload-abuse-probes-work.md). No physical multi-instance, outage, final-source or release qualification is claimed; the upload correction remains under test.
+
+### November 3: complete hosted webhook configuration guard
+
+The webhook now honors existing billing and durable database blocked flags before body/authentication/effects, preserving rate-limit and self-host precedence. Main10genuineRED/4PASS precedes exact reviewed adoption;114unique billing controls and all12check sets pass, including strictlint, inventory and both builds. Distinct static review passes. See [the ledger](upgrade-2026-hosted-webhook-configuration-gates-work.md). Actual deployment, SSL policy and broader hosted/release gates remain open.

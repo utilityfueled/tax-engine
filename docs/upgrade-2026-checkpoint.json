@@ -17955,5 +17955,20 @@
     "independentReceiptSha256": "c9c301bd21045153c2f8bb5c825708760d5f0a659ceb052f209ba87d34e74423",
     "currentHeadQualified": false,
     "ledger": "docs/upgrade-2026-staging-upload-abuse-probes-work.md"
+  },
+  "hostedWebhookConfiguration20261103": {
+    "status": "bounded main implementation and distinct static review pass",
+    "baseCommit": "d26e17c1",
+    "before": {
+      "failed": 10,
+      "passed": 4
+    },
+    "uniqueNonAstPassed": 114,
+    "checkSetsPassed": 12,
+    "mainChecksSha256": "33721063b2f1c0042e9258fefbf548a74aeb8442ee7280838d0e58ff1f0069af",
+    "independentReviewSha256": "4312a7ec05005f4d52d008cd8a50b32e83d8730c607e9740fb61826c4f7a26cd",
+    "deployedProof": false,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-hosted-webhook-configuration-gates-work.md"
   }
 }

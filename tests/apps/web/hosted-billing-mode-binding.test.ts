@@ -172,21 +172,21 @@ describe("hosted Stripe mode binding source-first controls", () => {
   });
   it.each(kinds)("rejects opposite signed event mode before all state writes (%s)", async (kind) => {
     for (const mode of modes) {
-      vi.clearAllMocks(); expect((await webhook({ ...env(mode), STRIPE_SECRET_KEY: undefined }).POST(signed(payload(kind, mode !== "live")))).status).toBe(400); noWrites();
+      vi.clearAllMocks(); expect((await webhook({ ...env(mode), NODE_ENV: "development", STRIPE_SECRET_KEY: undefined }).POST(signed(payload(kind, mode !== "live")))).status).toBe(400); noWrites();
       const store = createInMemoryHostedBillingSubscriptionStore();
-      const handler = createHostedBillingWebhookRouteHandlers({ env: { ...env(mode), DATABASE_URL: undefined, STRIPE_SECRET_KEY: undefined }, subscriptionStore: store, nowUnixSeconds: now });
+      const handler = createHostedBillingWebhookRouteHandlers({ env: { ...env(mode), NODE_ENV: "development", DATABASE_URL: undefined, STRIPE_SECRET_KEY: undefined }, subscriptionStore: store, nowUnixSeconds: now });
       expect((await handler.POST(signed(payload("subscription", mode !== "live")))).status).toBe(400);
       expect(store.get("sub_mode_binding")).toBeNull();
     }
   });
   it.each([undefined, null, "false", "true", 0, 1])("rejects absent or malformed signed event mode (%j)", async (bad) => {
     for (const mode of modes) for (const kind of kinds) {
-      vi.clearAllMocks(); expect((await webhook({ ...env(mode), STRIPE_SECRET_KEY: undefined }).POST(signed(payload(kind, bad)))).status).toBe(400); noWrites();
+      vi.clearAllMocks(); expect((await webhook({ ...env(mode), NODE_ENV: "development", STRIPE_SECRET_KEY: undefined }).POST(signed(payload(kind, bad)))).status).toBe(400); noWrites();
     }
   });
   it.each(kinds)("accepts matching signed events without requiring an outbound API key (%s)", async (kind) => {
     for (const mode of modes) {
-      vi.clearAllMocks(); const facts = { ...env(mode), STRIPE_SECRET_KEY: undefined, STRIPE_PRICE_ID_STARTER_MONTHLY: undefined, STRIPE_PRICE_ID_PLUS_MONTHLY: undefined };
+      vi.clearAllMocks(); const facts = { ...env(mode), NODE_ENV: "development", STRIPE_SECRET_KEY: undefined, STRIPE_PRICE_ID_STARTER_MONTHLY: undefined, STRIPE_PRICE_ID_PLUS_MONTHLY: undefined };
       expect((await webhook(facts).POST(signed(payload(kind, mode === "live")))).status).toBe(200);
       expect(mocks.mark).toHaveBeenCalledTimes(1);
       if (kind === "credit") expect(mocks.credit).toHaveBeenCalledExactlyOnceWith(facts, {
@@ -228,5 +228,48 @@ describe("hosted Stripe mode binding source-first controls", () => {
     expect(facts).toEqual(before); noOutbound();
     expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain("PRIVATE");
     expect(JSON.stringify(vi.mocked(console.warn).mock.calls)).not.toContain("PRIVATE");
+  });
+});
+
+// These controls retain real local SDK signature verification with complete
+// production prerequisites. They do not call the provider or a database.
+describe("fully configured production webhook signed-mode controls", () => {
+  it.each(kinds)("rejects opposite or malformed signed modes with fully configured production: %s", async (kind) => {
+    for (const mode of modes) for (const eventMode of [mode !== "live", undefined, null, "false", "true", 0, 1]) {
+      vi.clearAllMocks();
+      const facts = env(mode, `sk_${mode}_fictional`);
+      const raw = payload(kind, eventMode);
+      const response = await webhook(facts).POST(signed(raw));
+      expect(response.status).toBe(400); noWrites();
+      expect(mocks.key).toHaveBeenCalledExactlyOnceWith(`sk_${mode}_fictional`);
+      expect(mocks.customer).not.toHaveBeenCalled(); expect(mocks.checkout).not.toHaveBeenCalled();
+      expect(mocks.portal).not.toHaveBeenCalled(); expect(mocks.adapter).not.toHaveBeenCalled();
+    }
+  });
+  it.each(kinds)("accepts matching signed modes with fully configured production: %s", async (kind) => {
+    for (const mode of modes) {
+      vi.clearAllMocks();
+      const facts = env(mode, `sk_${mode}_fictional`);
+      const response = await webhook(facts).POST(signed(payload(kind, mode === "live")));
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ acknowledged: true });
+      expect(mocks.key).toHaveBeenCalledExactlyOnceWith(`sk_${mode}_fictional`);
+      expect(mocks.mark).toHaveBeenCalledTimes(1);
+      if (kind === "credit") {
+        expect(mocks.credit).toHaveBeenCalledExactlyOnceWith(facts, {
+          checkoutSessionId: "cs_mode_binding", ownerId: "owner-mode-binding", stripeCustomerId: "cus_mode_binding",
+          amountPaidCents: 1500, creditedBudgetCents: 1000, currency: "usd", createdAt: new Date(now * 1000).toISOString(),
+        });
+        expect(mocks.persist).not.toHaveBeenCalled();
+      } else {
+        expect(mocks.persist).toHaveBeenCalledExactlyOnceWith(facts, expect.objectContaining({
+          ownerId: "owner-mode-binding", stripeCustomerId: "cus_mode_binding",
+          stripeSubscriptionId: "sub_mode_binding", planId: "starter",
+        }));
+        expect(mocks.credit).not.toHaveBeenCalled();
+      }
+      expect(mocks.customer).not.toHaveBeenCalled(); expect(mocks.checkout).not.toHaveBeenCalled();
+      expect(mocks.portal).not.toHaveBeenCalled(); expect(mocks.adapter).not.toHaveBeenCalled();
+    }
   });
 });

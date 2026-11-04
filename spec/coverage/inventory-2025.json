@@ -6634,6 +6634,26 @@
       ]
     },
     {
+      "key": "federal/hosted-webhook-configuration-gates",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "apps/web/src/lib/hosted-server-db.ts; apps/web/src/lib/hosted-billing.ts; apps/web/src/lib/hosted-runtime-safety.ts",
+      "specPath": "spec/federal/hosted-webhook-configuration-gates.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-webhook-delivery",
       "jurisdiction": "federal",
       "taxYear": 2026,

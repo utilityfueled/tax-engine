@@ -415,7 +415,8 @@ export function createHostedBillingWebhookRouteHandlers(
         });
       }
 
-      if (!isHostedStripeKeyModeCompatible(env, config.mode)) {
+      if (config.blocked || getHostedServerDatabaseConfig(env).blocked
+        || !isHostedStripeKeyModeCompatible(env, config.mode)) {
         return NextResponse.json(
           { error: "Hosted billing is unavailable. Please contact the administrator." },
           { status: 503 }
