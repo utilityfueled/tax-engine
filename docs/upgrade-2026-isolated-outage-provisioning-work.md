@@ -1,7 +1,9 @@
 # Isolated hosted outage rehearsal: provisioning and remaining gates
 
-November 4, 2026. Application source remains `8487fb4b6d8818d83739fb902fc0730e19698053`;
-these observations do not qualify a deployed artifact. Production is untouched.
+November 4, 2026. Initial provisioning binds source
+`8487fb4b6d8818d83739fb902fc0730e19698053`; the later functional successor
+`045fbedbdfbe612cb3caa28956fa7228bb3df320` is not deployed here.
+These observations do not qualify a deployed artifact. Production is untouched.
 
 The owner approved a separate Preview-only project, empty Neon branch/database,
 dedicated Redis resource, and separate Stripe Sandbox. The later Redis approval
@@ -59,3 +61,46 @@ bootstrap controls; their actual results above remain separately attributed.
 Native controller/archive preparation continues independently. No hosted outage,
 automatic Stripe retry, security review, AI qualification or release completion
 is claimed.
+
+## Later complete read-only catalog inspection
+
+A separately reviewed metadata-only successor inventories all three reachable
+databases: neondb, postgres and template1, followed by a fresh neondb identity
+witness. It completes 100 ordinary queries and four cleanup rollbacks within
+the declared bounds: 21,850 rows, 3,955,910 row-JSON bytes and 15,543 ms. Each
+database has a repeatable-read, read-only transaction; these are not one atomic
+cross-database snapshot. Verified TLS1.3, hostname validation and mandatory
+SCRAM-SHA-256-PLUS remain enforced. No relation contents, passwords, function
+bodies or connection strings are selected. All sessions close according to the
+reviewed receipt path; no independent backend-session observation is claimed.
+
+Independent actual-evidence review verifies all 26 catalog sections per database,
+row field allowlists, source/authority bindings and bounds. It identifies no
+ordinary user/tax relation in the baseline. It does identify provider-owned
+relations/routines in postgres and PUBLIC SELECT on two statistics views.
+The current administrator inherits statistics-reader privileges; its visibility
+cannot represent a new app role. PostgreSQL documents statistics visibility and
+restrictions on other users' SQL text; normalization is not a redaction boundary.
+[PostgreSQL18 pg_stat_statements](https://www.postgresql.org/docs/18/pgstatstatements.html)
+and [Neon role guidance](https://neon.com/docs/manage/roles) support the separate
+SQL-created restricted-role approach.
+
+This inspection leaves literal CONNECT exclusivity, app-role privileges,
+privacy, template0 inventory and provider internal-hop encryption unqualified.
+The original bootstrap failure is unchanged. No new app role/database exists
+at this stage. A separate source-only package prepares an initially NOLOGIN
+role, a new synthetic database and metadata-only effective-privilege checks
+before any password, LOGIN or deployment. Existing provider databases, roles
+and ACLs will not be changed by that proposed package.
+
+Retained receipt SHA256:
+
+- Actual catalog: `168899eaffbef4cec03c4bde62f2e4c9b8c6e93c3d61b9f4897d238d3530f793`.
+- Independent actual review: `419f924070ef55d8931a16049bde2cdc8e2146c3ea07bb92fd2ac179e62c5805`.
+- Independent bootstrap conditions: `9969d4ce33357e7d6da57313cf9abee79825c5d3cc9790a8ed2d519730be3a8d`.
+
+The catalog launcher V1's independent offline review found a safe failure could
+return zero. Its failure evidence remains preserved. V2 requires a verified,
+exact inventory-only PASS before exit0; 46 author/independent offline controls
+pass before the actual operation. This correction enables no privacy or release
+claim.

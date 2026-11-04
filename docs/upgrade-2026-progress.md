@@ -3051,3 +3051,15 @@ removal pass. See [the verification ledger](upgrade-2026-045-full-local-verifica
 Remote jobs continue. This qualifies local checks only; final artifacts,
 staging outages/retries, providers, advisory dispositions, human review and
 final2026 forms remain required.
+
+### November 4: isolated provider catalog inspection completed
+
+The separate synthetic Neon branch now passes complete read-only metadata
+inspection across its three reachable databases, with100queries/four cleanup
+rollbacks and21,850rows within fixed bounds. Independent actual review confirms
+bindings and identifies the provider statistics/routine surface; no relation
+contents or credentials are selected. The original PUBLIC CONNECT failure stays
+failed. Initial NOLOGIN-role/newDB preparation is source-only; no password,
+LOGIN or deployment follows this inventory. See [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).
+Privacy, app privileges, internal-hop encryption and integrated hosted readiness
+remain unqualified.

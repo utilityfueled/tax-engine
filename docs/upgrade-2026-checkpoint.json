@@ -19234,5 +19234,26 @@
     "distributionQualified": false,
     "releaseReady": false,
     "independentEvidenceReviewReceiptSHA256": "39deabc615ac722f7a56bbd5c4f9c8ef6506e22a08e871c1c740e5aa83e5dbd0"
+  },
+  "nov04IsolatedReachableCatalogInspection": {
+    "status": "PASS_READONLY_REACHABLE_CATALOG_INVENTORY_ONLY",
+    "ledger": "docs/upgrade-2026-isolated-outage-provisioning-work.md",
+    "receiptSHA256": "168899eaffbef4cec03c4bde62f2e4c9b8c6e93c3d61b9f4897d238d3530f793",
+    "independentReceiptSHA256": "419f924070ef55d8931a16049bde2cdc8e2146c3ea07bb92fd2ac179e62c5805",
+    "databasesInventoried": 3,
+    "ordinaryQueries": 100,
+    "cleanupRollbacks": 4,
+    "rows": 21850,
+    "rowJSONBytes": 3955910,
+    "elapsedMs": 15543,
+    "DDL": false,
+    "appRoleExists": false,
+    "appDatabaseExists": false,
+    "literalConnectExclusivity": false,
+    "privacyBoundaryQualified": false,
+    "appRolePrivilegesQualified": false,
+    "template0ConnectionInventoryQualified": false,
+    "providerInternalHopEncryptionQualified": false,
+    "next": "SEPARATELY_REVIEWED_NOLOGIN_ROLE_AND_SYNTHETIC_DATABASE_BOOTSTRAP_THEN_METADATA_PRIVILEGES"
   }
 }
