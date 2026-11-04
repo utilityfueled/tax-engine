@@ -2912,3 +2912,18 @@ creation, with own sessions closed. Separate read-only observations verify clien
 identity while backend pg_stat_ssl=false. The provider internal hop remains
 unverified. No migration/restore or final-source rehearsal is claimed. Human reviews, provider access/evaluation, advisory dispositions,
 final2026 forms and all final-distribution/staging gates remain required.
+
+
+## November 4: actual Preview upload/reopen and isolated-schema restoration
+
+Exact76af Preview accepts the official blank2025 W-2 and retains its document
+and selected year after fresh reopen. No amounts were inferred. The separate
+filename-derived-ID repair is under source review.
+
+Historical9d isolated-schema V5.3 passes all migration, transaction rollback,
+exact nine-table native backup/restore, precision, reapply/idempotence and
+RESTRICT cleanup checks, including explicit pool closure and final zero sessions.
+V5.1/V5.2 failures and intervening read-only reconciliations stay retained. See
+[the bounded database ledger](upgrade-2026-preview-schema-rehearsal-work.md).
+Verified client TLS does not resolve the provider-internal transport observation.
+Final-source/global/artifact/staging and external review gates remain open.

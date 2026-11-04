@@ -27,3 +27,16 @@ receipt; no test deadlines, coverage thresholds, year or filing gates changed.
 This fixes the reproduced queue contract mismatch. Actual successor Preview
 upload, final-source global checks and the separate filename-derived-ID privacy
 repair remain pending. No production deployment or release claim is made.
+
+## Actual successor Preview
+
+Deployment `dpl_3W9DPs6EocaoCDinaUvdUNAM3RJ9` is bound to application commit
+`76af2285b7e0a805841dd26b0be209f7b3fc334d`. The existing authorized synthetic
+account uploaded the official blank 2025 W-2 (1,343,180 bytes) through the native
+Chrome UI. The app reported one processed document stored locally, without the
+previous shell-metadata error. After visiting the return list and loading the
+same return afresh, it retained tax year 2025 and the document filename/kind.
+Private upload and reopen screenshots are retained. This proves the bounded
+upload/reopen repair; confirmation, calculation, export, deletion and final-source
+integrated hosted qualification remain separate. No taxpayer facts were inferred
+from the blank form, and no PDF output or model request occurred.

@@ -18739,5 +18739,29 @@
       "providerInternalHopVerified": false,
       "rehearsalPassed": false
     }
+  },
+  "nov04ActualPreviewUploadAndSchemaMechanism": {
+    "recordedUTC": "2026-11-04T15:46:46.288701+00:00",
+    "releaseReady": false,
+    "upload": {
+      "sourceCommit": "76af2285b7e0a805841dd26b0be209f7b3fc334d",
+      "deploymentId": "dpl_3W9DPs6EocaoCDinaUvdUNAM3RJ9",
+      "status": "PASS_BLANK_2025_W2_UPLOAD_AND_FRESH_REOPEN",
+      "factsInferred": false,
+      "integratedJourneyQualified": false
+    },
+    "schemaMechanism": {
+      "sourceCommit": "9d38882585e05b3fe42ca1657edfb746ec1a7075",
+      "status": "PASS_SCHEMA_MECHANISM_CLIENT_TLS_ONLY",
+      "receiptSHA256": "95716771e61450c4c18323ff74c3cd1a312019e6e2c86705be574e667d2a80a4",
+      "tables": 9,
+      "syntheticRows": 12,
+      "ownSessionsRemaining": 0,
+      "schemaAbsent": true,
+      "previousFailuresRetained": true,
+      "internalHopQualified": false,
+      "currentFinalSourceQualified": false
+    },
+    "ledger": "docs/upgrade-2026-preview-schema-rehearsal-work.md"
   }
 }
