@@ -37,13 +37,25 @@ showed a loading placeholder; it is not visual delivery evidence.
 
 Identical acknowledged200 responses do not distinguish applied, duplicate or
 superseded outcomes. The duplicate path intentionally returns before provider
-lookup. A fresh scalar-only SELECT for the exact two authorized test accounts,
-two new events and subscription is prepared but NOT RUN: Vercel requires fresh
-owner authenticator/passkey verification. Do not infer exact receipt cardinality,
-current entitlement, crash atomicity or credit-pack settlement from these200s.
-The earlier scoped read-only database proof remains historical and separate.
+lookup. At this delivery checkpoint, the fresh scalar-only SELECT was prepared but
+unrun pending owner authenticator/passkey verification. The November4 follow-up
+below records its later actual execution. The acknowledged200s alone did not
+establish receipt cardinality, current entitlement, crash atomicity or
+credit-pack settlement; the earlier November3 database observation stays separate.
 
 Final-source auth/isolation/security, failure/outage behavior, shared spending,
 credit-pack/provider reconciliation, migrations/backup/restore/rollback and
 both distribution artifacts remain required. All filing/model/release gates
 remain closed; this is bounded staging evidence.
+
+## November4 actual scoped read-only database follow-up
+
+After the owner completed verification, ROOT ran two retained single-statement SELECTs in the existing Preview Neon Query editor with Read-only checked. Both internally resolve only the two authorized test accounts, require exactly one identity per actor and two distinct owners, and return scalar counts/sums only. No broad Data Editor, database write, credential transfer or raw private row output was used. Exact executed SQL, observed DOM and the full copied credit-result CSV are retained privately.
+
+The first actual result was scope_valid=true, fresh_event_receipts=1, cleanup_event_receipts=1, exact_current_provider_state_rows=1 and wrong_owner_subscription_rows=0. The matched subscription row names the expected Starter/active plan state, cleanup last-event ID, exact period endpoint and false cancellation flag. This verifies the named retained state after the fresh event, duplicate and cleanup deliveries; it does not establish historical exactly-once chronology or crash recovery. The event receipt lookup is exact-event scoped; receipts themselves have no owner column.
+
+For each approved actor, the second result contains zero credit-purchase rows/credited budget cents, legacy usage rows/included and purchased charges, reservation rows/net charges, and provider-attempt rows/provider cost. All nine values are exact SQL integer or NUMERIC aggregates, copied without truncating virtualized columns. Subscription events granted no AI credits in these observed accounts. This is not proof of included plan allowance, credit-pack settlement, live provider usage reconciliation or general spend protection.
+
+Actual receipt: `.local/upgrade-evidence/nov04-preview-subscription-5996-readonly/receipt.json`, SHA256 `dc90e6961e26ea4243d179825113433445ef4cf421e3f01ff459e7137b419c2c`. Independent offline consistency/source review SHA256 `343f875d257f4559c16e030411780be70705b967fbc47bec3d98fcfe756fa8e5` verifies all five saved hashes, exact SQL scope/presentation-normalized DOM, scalar labels, full two-row CSV and current schema meanings. The reviewer did not query the database, replay events or independently fetch provider state.
+
+The database MFA step is resolved for this observation. Automatic failed-delivery retry/backoff, actual outage recovery, crash-atomic and credit-pack/provider settlement, migrations/restoration, final artifact staging and independent security/privacy/human qualification remain open. No release, model or filing promotion follows.

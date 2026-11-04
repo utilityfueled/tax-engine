@@ -17985,10 +17985,31 @@
     "receiptSha256": "b83c1f10b187da9256b6ac2f87d67a1312fdc75a80f072c719b4515a49744eb6",
     "independentReceiptReviewSha256": "663b09bbfc65093ba3c0b397de6e47020abe3d3b741fd5c02e4e95bf8a2b1d66",
     "reviewerNetworkExecuted": false,
-    "newScopedSqlExecuted": false,
+    "newScopedSqlExecuted": true,
     "exactOnceEntitlementCreditCrashQualified": false,
     "releaseReady": false,
-    "ledger": "docs/upgrade-2026-staging-subscription-successor-work.md"
+    "ledger": "docs/upgrade-2026-staging-subscription-successor-work.md",
+    "scopedReadonlyFollowup": {
+      "status": "actual Preview read-only observation passed; independent offline consistency/source review",
+      "resource": "tax-engine-staging-postgres",
+      "ownerMFAResolvedForObservation": true,
+      "readOnlyChecked": true,
+      "exactExecutedSqlRetained": true,
+      "scopeValid": true,
+      "freshEventReceipts": "1",
+      "cleanupEventReceipts": "1",
+      "exactNamedCurrentProviderStateRows": "1",
+      "wrongOwnerSubscriptionRows": "0",
+      "approvedActors": 2,
+      "perActorNineCreditUsageMetrics": "all zero",
+      "receiptSha256": "dc90e6961e26ea4243d179825113433445ef4cf421e3f01ff459e7137b419c2c",
+      "independentReviewSha256": "343f875d257f4559c16e030411780be70705b967fbc47bec3d98fcfe756fa8e5",
+      "reviewerNetworkExecuted": false,
+      "mutations": 0,
+      "historicExactlyOnceOrCrashAtomicityProved": false,
+      "creditPackProviderQualificationProved": false,
+      "finalArtifactQualificationProved": false
+    }
   },
   "ohHeaderPrivacyFixture20261104": {
     "baseCommit": "9eaa5073",

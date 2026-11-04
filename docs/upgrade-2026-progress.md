@@ -2,6 +2,14 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] Owner verification now permits the fresh5996 Preview database follow-up:
+  actual read-only results show one fresh receipt, one cleanup receipt, one named
+  current subscription state and zero wrong-owner rows. Both approved actors have
+  zero AI purchase/usage/reservation/attempt effects. Exact SQL/fullCSV and distinct
+  offline source review are retained. Crash atomicity, credit-pack/provider
+  settlement, outages and final-artifact staging remain open.
+  [Evidence](upgrade-2026-staging-subscription-successor-work.md).
+
 - [x] Node26.13.0/Undici8.12.2 runtime integration passes a fresh full24,714-test
   unit and coverage composition with zero skips and87.35% branches; all unchanged
   thresholds and eleven final static/build sets pass. Current de05 checkout adds
