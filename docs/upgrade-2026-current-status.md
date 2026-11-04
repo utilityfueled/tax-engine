@@ -1,9 +1,10 @@
 # Current 2026 upgrade continuation
 
-Updated November 4, 2026, against application commit
-`8487fb4b6d8818d83739fb902fc0730e19698053` on
-`upgrade/2026-baseline`. This is the current crosswalk into the append-only
-history. Earlier checklist entries and checkpoint root values describe their
+Updated November 4, 2026, on `upgrade/2026-baseline`. The last full local
+verification binds `8487fb4b6d8818d83739fb902fc0730e19698053`; the later
+[comparison successor](upgrade-2026-pa-dependency-comparison-work.md) changes
+application bytes and requires fresh integrated qualification. This is the
+current crosswalk into the append-only history. Earlier checklist entries and checkpoint root values describe their
 named revisions. The [execution brief](upgrade-2026-execution-brief.md) remains
 the completion contract. **The upgrade is not release-ready.**
 
@@ -49,3 +50,10 @@ Isolated hosted outage provisioning now has a separate Preview project, empty Ne
 No production deployment, main merge, force push, filing activation or model
 promotion is authorized by these results. Versioned artifact publication remains
 subject to its qualification and authorization requirements.
+
+The guided-flow source-comparison successor now changes application bytes after
+8487: it reuses an identical PA dependency comparison only when both records
+lack all three PA packets. Current-main505focused controls, all eight
+static/build/lint checks and distinct behavioral review pass. Fixed CPU
+measurements are bounded function-level evidence; fresh full checks and actual
+image/browser/hosted qualification remain required. See [the successor ledger](upgrade-2026-pa-dependency-comparison-work.md).

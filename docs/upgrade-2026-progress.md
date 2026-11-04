@@ -3013,3 +3013,17 @@ before live execution. The later actual tenant failure and separate upload
 observations are now recorded in the [episode ledger](upgrade-2026-a4ac-preview-tenant-limits-work.md). These are separate from local-suite
 success and do not qualify final images, deployed integration, advisory
 dispositions, provider evaluation, professional review or final2026 forms.
+
+
+### November 4: reuse an identical state-source comparison
+
+The bounded guided-flow successor reuses the already-computed section comparison
+only when both records lack all three PA source packets. Retained/removed and
+malformed packets preserve their original path; no tax, source confirmation,
+commitment or readiness rule changes. Distinct review repeats73 whole-function
+parity cases and1,225 comparison pairs. The fixed16-process benchmark records
+median168.1325→104.293ms CPU per400 updates; it does not qualify browser speed.
+Current-main505focused controls and all eight static/build/lint checks pass
+with unchanged thresholds and no lint delta. See [the package ledger](upgrade-2026-pa-dependency-comparison-work.md).
+Fresh exact-commit integrated checks and hosted/native artifacts remain required;
+historical8487 evidence remains separately attributed.

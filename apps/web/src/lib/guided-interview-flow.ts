@@ -1700,6 +1700,23 @@ function paStateDependencyValues(value: StateReturnData | undefined): unknown {
   return dependencies;
 }
 
+
+/** Reuse only the already computed comparison of identical plain source material.
+ * Both old and incoming PA packets must be absent; retained/unknown packets keep
+ * their existing dependency projection, including its malformed-value behavior. */
+function canReusePAStateDependencyComparison(previous: unknown, next: unknown): boolean {
+  const packetsAbsent = (value: unknown): boolean => {
+    if (value === undefined || value === null) return true;
+    if (typeof value !== "object" || Array.isArray(value)) return false;
+    const stateReturn = value as Partial<StateReturnData>;
+    return stateReturn.paMarriedOrdinarySources === undefined
+      && stateReturn.paOrdinaryReturnFacts === undefined
+      && stateReturn.paOrdinaryReturnCompletionSources === undefined;
+  };
+  return next !== null && typeof next === "object" && !Array.isArray(next)
+    && packetsAbsent(previous) && packetsAbsent(next);
+}
+
 function w2OriginalFields(entry: W2EntryData | undefined) {
   if (!entry) return undefined;
   const { stateLocalSources: _source, aiSuggestedFields: _suggestions, ...original } = entry;
@@ -1790,7 +1807,9 @@ export function updateSectionData(
   const ohioInterestChanged = sectionId === "income-investments" && ohioStateReturn?.ohioInterestAllocation;
   const stateOriginalsChanged = sourceValuesChanged && sectionId !== "state-return" && ohioStateReturn;
   const incomingStateReturn = sectionId === "state-return" ? data as StateReturnData : undefined;
-  const paDependenciesChanged = incomingStateReturn && guidedSourceValuesChanged(paStateDependencyValues(ohioStateReturn), paStateDependencyValues(incomingStateReturn));
+  const paDependenciesChanged = incomingStateReturn && (canReusePAStateDependencyComparison(ohioStateReturn, incomingStateReturn)
+    ? sourceValuesChanged
+    : guidedSourceValuesChanged(paStateDependencyValues(ohioStateReturn), paStateDependencyValues(incomingStateReturn)));
   const paOrdinaryChanged = incomingStateReturn && guidedSourceValuesChanged(paOrdinarySourceValues(ohioStateReturn?.paOrdinaryReturnFacts), paOrdinarySourceValues(incomingStateReturn.paOrdinaryReturnFacts));
   const paCompletionChanged = incomingStateReturn && guidedSourceValuesChanged(paCompletionSourceValues(ohioStateReturn?.paOrdinaryReturnCompletionSources), paCompletionSourceValues(incomingStateReturn.paOrdinaryReturnCompletionSources));
   const paMarriedChanged=incomingStateReturn&&guidedSourceValuesChanged(paMarriedSourceValues(ohioStateReturn?.paMarriedOrdinarySources),paMarriedSourceValues(incomingStateReturn.paMarriedOrdinarySources));

@@ -19133,5 +19133,33 @@
     "finalDiskBytes": 17233920000,
     "archiveDeletionExportPerformed": false,
     "qualification": false
+  },
+  "nov04PADependencyComparisonReuse": {
+    "status": "ADOPTED_FOCUSED_CHECKS_PASS_FULL_SUCCESSOR_CHECKS_PENDING",
+    "ledger": "docs/upgrade-2026-pa-dependency-comparison-work.md",
+    "flowSHA256": "2c982491c1ea82b48e1f0a58a08fd5e3e4b818c8668f92b002a7e26b2b60ca2e",
+    "focusedTests": 505,
+    "focusedFiles": 18,
+    "additionalDurableTestsPassed": 6,
+    "durableTestReceiptSHA256": "b8a794fe3ad2abf9695352c6927f2c12f931a16066b728dce2f3062f06e2a0ac",
+    "focusedFailed": 0,
+    "focusedPending": 0,
+    "staticBuildLintChecksPassed": 8,
+    "lintWarnings": 11715,
+    "lintErrors": 0,
+    "lintSemanticAdditions": [],
+    "lintSemanticRemovals": [],
+    "fullFunctionParityCases": 73,
+    "independentComparisonPairs": 1225,
+    "independentReceiptSHA256": "9f296c38ec52f704e1c4b9e59d472508e116fb7e2ee9c1b73f2c554dec54d9d1",
+    "benchmarkSamples": 16,
+    "timedUpdates": 6400,
+    "baselineMedianCPUmsPer400": "168.1325",
+    "successorMedianCPUmsPer400": "104.293",
+    "pairedMedianRatio": "0.623605",
+    "nativeBrowserDeadlineQualified": false,
+    "fullIntegratedSuccessorQualified": false,
+    "taxRulesChanged": false,
+    "readinessChanged": false
   }
 }
