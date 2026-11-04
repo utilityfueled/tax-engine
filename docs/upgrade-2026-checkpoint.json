@@ -19099,5 +19099,21 @@
     "completeFinal2026Packet": false,
     "nextAdvisoryObligationUTC": "2026-11-04T19:30:00Z or before qualification",
     "risksAccepted": false
+  },
+  "nov04IsolatedOutageProvisioning": {
+    "status": "PARTIAL_PROVISIONING_NOT_QUALIFIED",
+    "applicationCommit": "8487fb4b6d8818d83739fb902fc0730e19698053",
+    "ledger": "docs/upgrade-2026-isolated-outage-provisioning-work.md",
+    "productionChanged": false,
+    "newPreviewDeployed": false,
+    "neonReadonlyIdentity": "PASS_TLS_HOSTNAME_SCRAM_PLUS_EMPTY_BRANCH",
+    "neonIdentityReceiptSHA256": "ff95bb76f337d9e5a3bd4aa5212dba7a05c253a2b64543ca6ec9c0351a9e2b51",
+    "maintenancePrivilegeReceiptSHA256": "01858f4f25e18e5f956859f5a1c223d4caacb10f195dddd45e412bb4edbb09fe",
+    "appDatabaseAndRoleCreated": false,
+    "databasePermissionMutations": false,
+    "redis": "UNUSED_DISCONNECTED_CACHE_DELETED_AFTER_APPROVAL; minimum budget20 exceeds approved hard1",
+    "redisReplacementDecisionPending": true,
+    "stripe": "SEPARATE_SANDBOX_IDENTITY_TWO_PRODUCTS_TWO_TEST_PRICES_ONLY",
+    "automaticRetryQualified": false
   }
 }

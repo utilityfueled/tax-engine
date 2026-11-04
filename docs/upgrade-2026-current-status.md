@@ -20,6 +20,8 @@ the completion contract. **The upgrade is not release-ready.**
 
 Documentation-only commits through4190b5d3 follow8487 without changing its application bytes;8487 differs froma4ac only in the PDF-reader test setup and work ledger. The native configuration remains fixed to8487. Historical output/source boundaries remain intact.
 
+Isolated hosted outage provisioning now has a separate Preview project, empty Neon branch and test Stripe catalog. The unused Redis cache was deleted after its $20 minimum rejected the approved $1 budget; a replacement decision is pending. Direct read-only Neon identity passes, while provider-owned maintenance PUBLIC CONNECT prevents the unchanged exclusive-database bootstrap. No new deployment or outage qualification is claimed. See [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).
+
 ## Work continuing independently
 
 - Currenta4ac isolated Preview-schema rehearsal now passes with the tracked pool-closure helper, exact restore and zero sessions. Preserve its backend-versus-client SSL boundary and carry the bounded mechanism into final deployed integration. No new access approval is requested.

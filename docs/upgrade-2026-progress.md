@@ -8,6 +8,8 @@ below apply to their named revisions.
 
 - November4: [currenta4ac tenant/limits evidence](upgrade-2026-a4ac-preview-tenant-limits-work.md) records auth8PASS, tenant48FAIL at the first unclassified multipart500 with JSON3PASS/cleanup5, later same-body upload8PASS, and separately authorized remainder23PASS/four boundaries/cleanup4. The default-sandbox remainder first attempt has no response or writes. All failures remain; no combined tenant/release PASS is claimed.
 
+- November4: [isolated outage provisioning](upgrade-2026-isolated-outage-provisioning-work.md) records the separate Preview project/empty Neon branch/test Stripe catalog, successful read-only direct TLS/PLUS identity, unchanged maintenance-database exclusivity block, and approved deletion of the unused Redis cache after its $20 minimum rejected the $1 budget. No outage/deployment/automatic retry qualification is claimed.
+
 ## Active continuation — November 3, 2026
 
 - [x] Prepared a fixedf09 [independent tax-review packet](upgrade-2026-independent-review-packet-20261104.md), delivery manifest binding1519public synthetic/spec/ledger files and ten empty decision records. Distinct engineering review verifies every binding and confirms no human approval. Reviewer assignment, independently derived professional expectations and signed disposition remain external requirements; no external message or readiness promotion occurred.
