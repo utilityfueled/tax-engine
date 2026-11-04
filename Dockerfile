@@ -1,10 +1,14 @@
 # syntax=docker/dockerfile:1.7
 
-FROM node:24.22.1-trixie-slim AS base
+FROM node:26.13.0-trixie-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39 AS base
 ENV PNPM_HOME="/pnpm"
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN npm pack --ignore-scripts --pack-destination /tmp pnpm@10.34.8 \
+    && node -e 'const fs=require("node:fs"); const crypto=require("node:crypto"); if ("sha512-"+crypto.createHash("sha512").update(fs.readFileSync("/tmp/pnpm-10.34.8.tgz")).digest("base64")!=="sha512-9ieo6XE0Ov5J39D2PQKCNCAd+oMdXLWIcz4eX42ya/FpiaMhYatcG02zsf28NzFgYGtbieAC323RmoWt+R/FqA==") throw new Error("pnpm archive integrity mismatch");' \
+    && npm install --global --ignore-scripts --no-audit --no-fund /tmp/pnpm-10.34.8.tgz \
+    && test "$(pnpm --version)" = "10.34.8" \
+    && rm /tmp/pnpm-10.34.8.tgz
 WORKDIR /app
 
 # Install dependencies in a separate layer with manifests, lockfile and patches.
@@ -24,7 +28,7 @@ COPY . .
 RUN NODE_OPTIONS="--max-old-space-size=${NODE_BUILD_MAX_OLD_SPACE_MB}" pnpm --filter @tax-engine/web build
 
 # Production runner
-FROM node:24.22.1-trixie-slim AS runner
+FROM node:26.13.0-trixie-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39 AS runner
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0

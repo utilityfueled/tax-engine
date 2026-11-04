@@ -1,0 +1,39 @@
+form: "Node26-DOM-Storage-Compatibility"
+fullName: "Node 26 Vitest DOM-owned storage compatibility"
+taxYear: 2026
+reference: "https://raw.githubusercontent.com/nodejs/node/v26.13.0/doc/api/cli.md; https://raw.githubusercontent.com/nodejs/node/v26.13.0/lib/internal/webstorage.js; https://vitest.dev/config/execargv; https://vitest.dev/config/environment"
+notes: |
+  Test environment contract only; no tax calculation or production/browser flag.
+  Node 26 enables server Web Storage by default. Vitest 4.1.12 leaves existing
+  Node globals in place unless explicitly listed; DOM tests must use jsdom's
+  original per-window storage. The documented worker-only Node option may
+  remove native server Web Storage so jsdom supplies the real DOM test storage.
+  Do not mock storage, provide a shared disk file, suppress warnings/errors,
+  alter fetch/Undici, replace old assertions or change budgets/coverage gates.
+  Official globals documentation describes a missing-file DOMException but
+  exact v26.13.0 implementation and observed run return undefined with a warning;
+  retain the source discrepancy and initial full 96-failure result.
+  Fresh-window isolation below concerns separately constructed jsdom instances,
+  not same-origin tabs in a real browser and not cross-file test qualification.
+lines:
+  - line: "local-binding"
+    formula: "Global localStorage is the original jsdom window localStorage, never unavailable Node server storage."
+    testRef: "tests/runtime/node26-dom-storage-compatibility.test.ts::uses the actual DOM window local storage"
+  - line: "session-binding"
+    formula: "Global sessionStorage is the original jsdom window sessionStorage, never process-scoped Node server storage."
+    testRef: "tests/runtime/node26-dom-storage-compatibility.test.ts::uses the actual DOM window session storage"
+  - line: "local-roundtrip"
+    formula: "Repeated same-window local writes, replacement, reads and removal preserve exact strings."
+    testRef: "tests/runtime/node26-dom-storage-compatibility.test.ts::retains local values across independent same-window calls"
+  - line: "session-independent"
+    formula: "Same key has independent local and session values and independent removal."
+    testRef: "tests/runtime/node26-dom-storage-compatibility.test.ts::keeps same-window session values separate from local values"
+  - line: "window-isolation"
+    formula: "Separate same-origin jsdom instances have distinct local and session storage without cross-copy."
+    testRef: "tests/runtime/node26-dom-storage-compatibility.test.ts::isolates independently constructed same-origin DOM windows"
+  - line: "guided-roundtrip"
+    formula: "Existing public guided save/load retains current year and explicit unknown/null/zero/false/empty-list facts without mutation."
+    testRef: "tests/runtime/node26-dom-storage-compatibility.test.ts::reopens guided sources with unknown and known-zero values intact"
+  - line: "fresh-window"
+    formula: "Closing a separate DOM instance does not transfer its saved values to a fresh same-origin instance."
+    testRef: "tests/runtime/node26-dom-storage-compatibility.test.ts::opens a fresh DOM window without a closed windows saved sentinel"

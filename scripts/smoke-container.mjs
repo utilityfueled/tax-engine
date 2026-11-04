@@ -57,13 +57,14 @@ try {
     const packageRows = execFileSync('/usr/bin/dpkg-query', ['-W', packageFormat], { encoding: 'utf8' })
       .trim().split(String.fromCharCode(10)).map(row => row.split(String.fromCharCode(9)));
     const installedPackages = new Set(packageRows.filter(([, , status]) => status === 'installed').map(([name]) => name.split(':')[0]));
-    console.log(JSON.stringify({ uid: process.getuid(), node: process.version, architecture: process.arch,
+    console.log(JSON.stringify({ uid: process.getuid(), node: process.version, undici: process.versions.undici, architecture: process.arch,
       debianPackages: packageRows,
       aptPackageRecords: packageRows.map(([name]) => name).filter(name => /^(?:apt|libapt-pkg7[.]0)(?::|$)/u.test(name)),
       aptBinaries: ['apt', 'apt-cache', 'apt-cdrom', 'apt-config', 'apt-get', 'apt-mark'].filter(name => fs.existsSync('/usr/bin/' + name)),
       aptLibraries: fs.readdirSync('/usr/lib', { recursive: true }).filter(name => /^libapt.*[.]so(?:[.]|$)/u.test(name.split('/').at(-1))),
       dpkgAudit: execFileSync('/usr/bin/dpkg', ['--audit'], { encoding: 'utf8' }).trim(),
       corePackagesInstalled: ['dpkg', 'libc6', 'libstdc++6', 'libgcc-s1'].every(name => installedPackages.has(name)),
+      libatomicInstalled: installedPackages.has("libatomic1"),
       imageCacheFilesystem: fs.statfsSync('/app/apps/web/.next/cache').type,
       imageCacheLimitBytes: fs.statfsSync('/app/apps/web/.next/cache').blocks * fs.statfsSync('/app/apps/web/.next/cache').bsize,
       packageTools: ['/usr/local/bin/npm', '/usr/local/bin/corepack', '/usr/local/bin/yarn'].some(p => fs.existsSync(p)),
@@ -73,7 +74,9 @@ try {
   assert.equal(processEvidence.uid, 1001);
   assert.equal(processEvidence.imageCacheFilesystem, 0x01021994, "Image cache must be a disposable tmpfs.");
   assert.equal(processEvidence.imageCacheLimitBytes, 64 * 1024 * 1024, "Image cache must remain bounded to64MiB.");
-  assert.match(processEvidence.node, /^v24\./u);
+  assert.equal(processEvidence.node, "v26.13.0");
+  assert.equal(processEvidence.undici, "8.12.2");
+  assert.equal(processEvidence.libatomicInstalled, true, "Retain the official Node 26 Linux libatomic runtime dependency.");
   assert.equal(processEvidence.packageTools, false);
   assert.deepEqual(processEvidence.aptPackageRecords, [], "APT packages must be purged through dpkg, with no installed or residual records.");
   assert.deepEqual(processEvidence.aptBinaries, [], "The runner must not retain APT executables.");
@@ -85,7 +88,7 @@ try {
   // The exact filesystem-layer prefix proves shared base contents; a tag alone does not.
   const runnerBaseReference = readFileSync(new URL("../Dockerfile", import.meta.url), "utf8")
     .match(/^FROM (\S+) AS runner$/mu)?.[1];
-  assert.equal(runnerBaseReference, "node:24.22.1-trixie-slim", "Use the shipped fixed runner base for the package proof.");
+  assert.equal(runnerBaseReference, "node:26.13.0-trixie-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39", "Use the shipped fixed runner base for the package proof.");
   const baseline = JSON.parse(docker("image", "inspect", runnerBaseReference))[0];
   const candidate = JSON.parse(docker("image", "inspect", metadata.Image))[0];
   assert.equal(candidate.Id, metadata.Image);

@@ -34,7 +34,7 @@ src/pdf/mappings/2025/  Historical review mappings tied to those template bytes
 
 ### Prerequisites
 
-- Node.js 24.22.1 (`nvm use`, or a runtime manager reading `.node-version`)
+- Node.js 26.13.0 (`nvm use`, or a runtime manager reading `.node-version`)
 - pnpm 10.34.8 (pinned in `packageManager`)
 - Python 3.13+ with `venv` for PDF text assertions
 

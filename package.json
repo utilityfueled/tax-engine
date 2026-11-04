@@ -47,7 +47,7 @@
     "spec:inventory:check": "node --import tsx scripts/generate-coverage-inventory.ts --check"
   },
   "engines": {
-    "node": ">=24.22.1 <25"
+    "node": ">=26.13.0 <27"
   },
   "packageManager": "pnpm@10.34.8",
   "license": "AGPL-3.0-only",

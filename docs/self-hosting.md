@@ -2,7 +2,9 @@
 
 The current self-host target is a single `docker compose` stack for the monorepo.
 
-The image uses Node 24.22.1 and includes public assets and blank PDF templates.
+The image uses Node 26.13.0 and includes public assets and blank PDF templates.
+The fixed official Trixie base includes `libatomic1`, required by Node 26 Linux
+binaries; the runtime smoke check verifies that dependency remains installed.
 `/api/health` reports process liveness; it does not certify database health,
 tax-law completeness, or filing readiness. CI builds the runtime image, smoke
 tests it without AI credentials, exercises browser/recovery flows, and produces

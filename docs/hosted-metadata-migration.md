@@ -23,7 +23,7 @@ does not grant either. Stop legacy writers and restrict access during restoratio
 2. Supply `TAX_ENGINE_METADATA_MIGRATION_DATABASE_URL` through the secret manager.
    The command deliberately does not consume ordinary `DATABASE_URL`. Do not put
    credentials in command arguments or copied logs.
-3. From the repository with Node 24 and the frozen dependencies installed, run:
+3. From the repository with Node 26 and the frozen dependencies installed, run:
 
    ```sh
    pnpm exec tsx --tsconfig apps/web/tsconfig.json scripts/migrate-hosted-metadata.ts

@@ -8208,6 +8208,46 @@
       ]
     },
     {
+      "key": "federal/node26-dom-storage-compatibility",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://raw.githubusercontent.com/nodejs/node/v26.13.0/doc/api/cli.md; https://raw.githubusercontent.com/nodejs/node/v26.13.0/lib/internal/webstorage.js; https://vitest.dev/config/execargv; https://vitest.dev/config/environment",
+      "specPath": "spec/federal/node26-dom-storage-compatibility.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "federal/node26-runtime-source-contract",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://nodejs.org/en/blog/release/v26.13.0; https://raw.githubusercontent.com/nodejs/docker-node/34e1b0030b415bdea959ccb15afda976a0761346/26/trixie-slim/Dockerfile; https://registry.npmjs.org/pnpm/10.34.8",
+      "specPath": "spec/federal/node26-runtime-source-contract.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/nol-filing-unit-native-boundaries",
       "jurisdiction": "federal",
       "taxYear": 2025,

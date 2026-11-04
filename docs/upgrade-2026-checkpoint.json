@@ -18141,5 +18141,92 @@
     "imageQualified": false,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-next-1645-security-work.md"
+  },
+  "node26RuntimeLocal20261104": {
+    "status": "local full composition and current-checkout integration passed; image/browser/hosted qualification pending",
+    "testedBase": "322f0221a0dccee006029ee7291e47c0dade8451",
+    "integrationBase": "de05f153dce4d52c3245fef61d8685bac9240765",
+    "node": "26.13.0",
+    "undici": "8.12.2",
+    "pnpm": "10.34.8",
+    "lockSha256": "d199e2344fa6cf61402330f216e3f7ccf6bc9b5e7a568670b29a9fe27dc8c23f",
+    "finalPrivateManifestSha256": "dc96d999d88bc61d1cf0a46166b63a1593f3a921205b44769e2b0f7bb24ad4a8",
+    "unit": {
+      "session": 94765,
+      "exit": 0,
+      "pass": 24714,
+      "files": 1832,
+      "fail": 0,
+      "skip": 0,
+      "seconds": 593.48,
+      "logSha256": "d205dc82807783801623692ff21f14521c6e4b0585bd35b9e7d1dcff29a9bdaf"
+    },
+    "coverage": {
+      "session": 94765,
+      "exit": 0,
+      "pass": 24714,
+      "files": 1832,
+      "fail": 0,
+      "skip": 0,
+      "seconds": 946.9,
+      "statements": [
+        91.71,
+        78140,
+        85198
+      ],
+      "branches": [
+        87.35,
+        70644,
+        80873
+      ],
+      "functions": [
+        90.62,
+        15557,
+        17166
+      ],
+      "lines": [
+        94.91,
+        61416,
+        64705
+      ],
+      "existingThresholds": [
+        90,
+        85,
+        90,
+        90
+      ],
+      "logSha256": "51dd55cf4bc2693fa2ea9c2b128b270f032d440982567b61448309c5897ca8a3"
+    },
+    "static": {
+      "session": 17224,
+      "checksets": 11,
+      "allPass": true,
+      "types": 3,
+      "specRefs": 7986,
+      "astPass": 758,
+      "ownedStrictWarnings": 0,
+      "ownedStrictErrors": 0,
+      "fullLintErrors": 0,
+      "fullLintWarnings": 11716,
+      "inventoryGenerateCheck": true,
+      "engineBuild": true,
+      "webBuild": true,
+      "checksSha256": "4c0843c242cd49119a20e83645bcbfe3db1e9814a31475e001c955bbfbdd3a1a"
+    },
+    "currentIntegrationChecksets": 12,
+    "currentIntegrationAllPassed": true,
+    "generatedInventorySha256": "ef77cd021a1a659f5f3fee5affc1f19fcfb1d9a6407d20d1374d81911be19d9e",
+    "originalFullFailureRetained": true,
+    "workerOnlyDOMStorageCorrection": true,
+    "productionAndBrowserFlagsUnchanged": true,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-node26-runtime-work.md",
+    "remaining": [
+      "native arm64/amd64 images and linkage/package proof",
+      "current ordinary/image browser and recovery",
+      "fresh SBOM/image advisory disposition",
+      "actual hosted Node26 runtime",
+      "independent final human/security/form/AI qualification"
+    ]
   }
 }

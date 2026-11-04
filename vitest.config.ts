@@ -12,6 +12,8 @@ export default defineConfig({
   },
   test: {
     globals: true,
+    // Use jsdom per-window storage in DOM tests, rather than Node server storage.
+    execArgv: ["--no-experimental-webstorage"],
     testTimeout: coverageRun ? 15_000 : 5_000,
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     coverage: {

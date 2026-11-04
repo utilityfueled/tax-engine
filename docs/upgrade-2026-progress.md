@@ -2,6 +2,15 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] Node26.13.0/Undici8.12.2 runtime integration passes a fresh full24,714-test
+  unit and coverage composition with zero skips and87.35% branches; all unchanged
+  thresholds and eleven final static/build sets pass. Current de05 checkout adds
+  only documentation to that tested base; all twelve integration sets pass and
+  inventory reproduces exactly. The worker-only DOM-storage correction follows
+  genuine five-failure RED and retains the original96-failure full run. Native
+  images, browser/recovery/scans, actual hosted26, human/final2026 and release
+  qualification remain open. [Evidence](upgrade-2026-node26-runtime-work.md).
+
 - [x] Remote0aa coverage passes23,215tests/1,772files with0pending:
   branches87.31%, functions90.57%; all unchanged coverage gates pass. Actual
   AMD64 image completes six recovery phases, SBOM and scan (176matches/80known
