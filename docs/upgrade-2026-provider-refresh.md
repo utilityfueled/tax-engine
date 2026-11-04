@@ -124,3 +124,23 @@ Project credentials, independently reviewed cases, held-out measurements and
 hosted billing/recovery evidence remain missing. Local source receipts are in
 `.local/upgrade-evidence/nov03-provider-documentation/`. This documentation-only
 change passes `git diff --check`; it does not claim new runtime test results.
+
+## November 4 public-source recheck
+
+The official [OpenAI pricing](https://developers.openai.com/api/docs/pricing)
+and [Google pricing](https://aistudio.google.com/docs/pricing#gemini-3.8-flash)
+pages were rechecked November 4. Standard short-context Luna input/output
+remains $0.10/$0.50 and Sol $2/$10 per million tokens. Gemini 3.8 Flash remains
+$0.75/$3.75 through December 31, then $1.50/$7.50 from January 1, 2027;
+thinking tokens count as output. Published cache charges remain separate.
+
+The exact [Luna](https://developers.openai.com/api/docs/models/gpt-6-luna),
+[Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) and
+[Gemini 3.8 Flash](https://aistudio.google.com/docs/models/gemini-3.8-flash)
+documentation remains available. [OpenAI's retirement notice](https://developers.openai.com/api/docs/deprecations)
+still names December 11 for GPT-5 Mini; [Google's lifecycle list](https://aistudio.google.com/docs/deprecations)
+still announces no shutdown for Gemini 3.8 Flash. These public statements do not
+establish this account's access, capability acceptance, privacy settings or
+measured usage. Secure project selection remains pending; no credential or
+provider run is invented. Actual live evaluation spending remains $0 under the
+approved $5 ceiling. No price registry, route or promotion gate changed.
