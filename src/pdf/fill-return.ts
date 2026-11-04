@@ -1,3 +1,5 @@
+import {hasForm2210OriginalIdentity,prepareForm2210Review,form2210ReviewOriginalInput,requiresForm2210ScheduleAiReview,recordSavedForm2210Review,type PreparedForm2210Review,type SavedForm2210Review} from './form-2210-review-context.js';
+import {fillForm2210} from './mappings/2025/fill-form-2210.js';
 import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result.js';
 import {resolvePAMarriedReturnReview,type PreparedPAMarriedReturnReview} from './pa-married-return-review-context.js';
 import {fillPAMarriedOfficialReview} from './mappings/2025/fill-pa-married-official-review.js';
@@ -15,7 +17,7 @@ import {assertPAOrdinaryReturnReview,isPAOrdinaryReturnResult,type PreparedPAOrd
 import { join } from "path";
 import { assertPreparedEducationReturn, hasInKindEducationReviewSources, prepareEducationReview, type PreparedEducationReview } from "./education-review-context.js";
 import { hasSavingsBondReviewSources, prepareSavingsBondReview, savingsBondReviewOriginalInput, type PreparedSavingsBondReview } from "./savings-bond-review-context.js";
-import type { PDFDocument } from "pdf-lib";
+import { PDFDocument, PDFName } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -415,6 +417,8 @@ export interface FillReturnOptions {
   /** Actual historical benefits and income, checked before identifier redaction. */
   adoptionReview?: PreparedAdoptionReview;
   qbiLossReview?: PreparedQbiLossReview;
+  /** Prepared from complete actual originals before display redaction. */
+  form2210Review?:PreparedForm2210Review;
   scheduleEReview?: PreparedScheduleEReview;
   paRoyaltyReview?: PreparedPARoyaltyReview;
   /** Actual WPTC originals checked before render-only identifier redaction. */
@@ -436,6 +440,8 @@ export interface FillReturnOptions {
 export interface FillReturnResult {
   /** List of filled PDF file paths. */
   filledForms: string[];
+  /** Opaque source/current-result/saved-byte proof; never inferred from filenames. */
+  form2210ReviewArtifact?:SavedForm2210Review;
 }
 
 /**
@@ -449,6 +455,9 @@ export async function fillReturn(
   options: FillReturnOptions,
 ): Promise<FillReturnResult> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear, options.purpose);
+  const form2210Review=options.form2210Review??(requiresForm2210ScheduleAiReview(input,result)&&hasForm2210OriginalIdentity(input)?prepareForm2210Review(input):undefined);
+  if(form2210Review)form2210ReviewOriginalInput(input,result,form2210Review);
+  let form2210ReviewArtifact:SavedForm2210Review|undefined;
   const paMarriedReview=options.paMarriedReview;
   const marriedRequested=input.paMarriedOrdinarySources!==undefined||isPAMarriedOrdinaryReturnResult(result.stateReturns?.pennsylvania)||paMarriedReview!==undefined;
   if(marriedRequested){
@@ -1185,7 +1194,23 @@ export async function fillReturn(
   }
 
   // ── Form 2210 (if applicable — Underpayment of Estimated Tax) ──
-  // We do not auto-attach Form 2210 to the packet by default.
+  // Other 2210 methods remain omitted. This is not generic auto-attachment.
+  if(form2210Review&&requiresForm2210ScheduleAiReview(input,result)){
+    let doc=await fillForm2210(input,result,join(blankFormsDir,"f2210.pdf"),qbiLossReview,form2210Review);
+    if(flatten){
+      await flattenForm(doc.getForm());
+      // The new static review is a page-only copy, excluding the blank source
+      // catalog and unreachable field/action graph after appearance painting.
+      // Interactive direct mapper callers retain their original form fields.
+      for(const page of doc.getPages()){page.node.delete(PDFName.of("Annots"));page.node.delete(PDFName.of("AA"));}
+      const completed=await PDFDocument.create();
+      for(const page of await completed.copyPages(doc,doc.getPageIndices()))completed.addPage(page);
+      completed.setTitle("Form 2210 with Schedule AI - review only");completed.setAuthor("Tax Engine");
+      doc=completed;
+    }
+    const path=join(outputDir,"f2210-filled.pdf");await savePacketPdf(doc,path);filledForms.push(path);
+    form2210ReviewArtifact=await recordSavedForm2210Review(input,result,form2210Review,path);
+  }
   // The main return can reflect an estimated tax penalty without requiring
   // this supporting worksheet to be filed, and attaching it automatically
   // makes draft packets look more filing-ready than they are.
@@ -1584,5 +1609,5 @@ export async function fillReturn(
     const doc = await loadBlankPdf(path);
     await savePacketPdf(doc, path);
   }
-  return { filledForms };
+  return { filledForms,form2210ReviewArtifact };
 }

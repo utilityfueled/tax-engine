@@ -1,5 +1,5 @@
 /** Physical 2025 Form 2210 review map; calculations belong exclusively to the engine. */
-import { PDFDocument, StandardFonts } from "pdf-lib";
+import { PDFDocument, StandardFonts, type PDFForm } from "pdf-lib";
 import Decimal from "decimal.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
 import type { TaxYearInput } from "@/models/inputs.js";
@@ -7,7 +7,9 @@ import { assertPdfExportAllowed, markReviewPdf } from "../../export-policy.js";
 import { qbiLossReviewOriginalSourceInput, type PreparedQbiLossReview } from "../../qbi-loss-review-context.js";
 import { calculateFederalTax } from "@/engine/federal.js";
 import { calculateForm2210ScheduleAi } from "@/engine/forms/form-2210-schedule-ai.js";
-import { formatCurrency, loadReviewTemplate, setCheckBox, setTextField } from "../../pdf-utils.js";
+import { flattenForm, formatCurrency, loadReviewTemplate, setCheckBox, setTextField } from "../../pdf-utils.js";
+
+import {form2210ReviewOriginalInput,hasForm2210OriginalIdentity,prepareForm2210Review,requiresForm2210ScheduleAiReview,type PreparedForm2210Review} from '../../form-2210-review-context.js';
 
 const p1 = (name: string) => `topmostSubform[0].Page1[0].${name}`;
 const p2 = (name: string) => `topmostSubform[0].Page2[0].${name}`;
@@ -34,8 +36,52 @@ export const FORM_2210_FIELDS = {
   line19: p2("f2_37[0]"),
 } as const;
 
-export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string, qbiLossReview?: PreparedQbiLossReview): Promise<PDFDocument> {
+/** All field names follow the actual pinned printed line/column widgets.
+ * Printed constants have one-point placeholders and must remain blank. */
+function fillScheduleAiPage(form:PDFForm,input:TaxYearInput,result:TaxReturnResult,owner:'primary'|'spouse',spouseOnly=false):void{
+ const calculation=result.form2210,source=input.form2210,ai=calculation?.scheduleAi;
+ if(!calculation||!source||!ai||!source.annualizedIncomePeriods)throw new Error('Form2210 physical Schedule AI requires current original sources');
+ const rows=new Map(calculation.lines.filter(row=>row.form==='Form 2210 Schedule AI').map(row=>[row.line,row.value]));
+ const value=(id:string):Decimal=>{const current=rows.get(id);if(!current)throw new Error('Form2210 missing current Schedule AI audit '+id);return current;};
+ const actualAmount=(raw:string|undefined):Decimal=>{if(raw===undefined)throw new Error('Form2210 actual original period amount is missing');return new Decimal(raw);};
+ const both=source.selfEmploymentOwnerPeriods!==undefined;
+ const partII=both||ai.returnContext.selfEmployedOwners>0;
+ const constants=new Set([2,5,20,29,32,34]);
+ for(let line=1;line<=36;line++)for(let column=0;column<4;column++){
+  const suffix=String.fromCharCode(97+column),field=`topmostSubform[0].Page3[0].${line<=27?'Part1Table':'PartIITable'}[0].Line${line}[0].f3_${(line-1)*4+column+1}[0]`;
+  const period=source.annualizedIncomePeriods[column];if(!period)throw new Error('Form2210 missing current original period');
+  let printed:Decimal|undefined;
+  if(!constants.has(line)&&!(spouseOnly&&line<=27)&&!(line>=28&&!partII)&&!([22,25].includes(line)&&column===0)&&!(line===6&&result.deductionUsed!=='itemized')){
+   if(line===1)printed=actualAmount(period.adjustedGrossIncome);
+   else if(line===4)printed=actualAmount(period.itemizedDeductions);
+   else if(line===10)printed=value('8'+suffix).plus(value('9'+suffix));
+   else if(line===11)printed=value('3'+suffix).minus(value('8'+suffix)).minus(value('9'+suffix));
+   else if(line===12)printed=new Decimal(0);
+   else if(line===15)printed=value('36'+suffix);
+   else if(line===17)printed=value('14'+suffix).plus(value('36'+suffix)).plus(value('16'+suffix));
+   else if(line>=28){
+    if(both)printed=value(String(line)+suffix+'-'+owner);
+    else{
+     const raw=actualAmount(period.netProfitFromSelfEmployment).times('0.9235');
+     const rounded=Decimal.max(0,raw).toDecimalPlaces(0,Decimal.ROUND_HALF_UP),earnings=rounded.lt(400)?new Decimal(0):rounded;
+     const wage=actualAmount(period.socialSecurityWages),cap=Decimal.max(0,new Decimal(['44025','73375','117400','176100'][column]??'0').minus(wage));
+     const amounts:Record<number,Decimal>={28:earnings,30:wage,31:cap,33:Decimal.min(earnings,cap).times(['0.496','0.2976','0.186','0.124'][column]??'0'),35:earnings.times(['0.116','0.0696','0.0435','0.029'][column]??'0'),36:value('36'+suffix)};
+     printed=amounts[line];if(!printed)throw new Error('Form2210 missing source Part II physical row');
+    }
+   }else printed=value(String(line)+suffix);
+  }
+  setTextField(form,field,printed===undefined?'':printed.isZero()?'0':formatCurrency(printed));
+ }
+}
+
+export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult, blankPdfPath: string, qbiLossReview?: PreparedQbiLossReview, preparedReview?:PreparedForm2210Review): Promise<PDFDocument> {
   assertPdfExportAllowed(input.taxpayer.taxYear, result.taxYear);
+  // Validate complete current originals before any template/file I/O. Legacy
+  // original-less direct calls retain their old disclosure rather than recapture.
+  const review=preparedReview??(requiresForm2210ScheduleAiReview(input,result)&&hasForm2210OriginalIdentity(input)?prepareForm2210Review(input):undefined);
+  const actualOriginal=review?form2210ReviewOriginalInput(input,result,review):undefined;
+  // A supplied older QBI proof remains authoritative, even beside the new context.
+  if(qbiLossReview){try{qbiLossReviewOriginalSourceInput(input,result,qbiLossReview);}catch(error){throw new Error('Form 2210 current actual owner sources cannot be reconciled to the original QBI review context',{cause:error});}}
   const calculation = result.form2210;
   if (!calculation) throw new Error("Form 2210 review requires its calculation audit");
   const actualBusinessOwners = new Set([
@@ -52,8 +98,8 @@ export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult,
     // Replaying a saved returnContext would trust stale payroll or source identity.
     let current: typeof calculation;
     try {
-      const original = input.qbiLossSources || qbiLossReview
-        ? qbiLossReviewOriginalSourceInput(input, result, qbiLossReview) : input;
+      const original = actualOriginal ?? (input.qbiLossSources || qbiLossReview
+        ? qbiLossReviewOriginalSourceInput(input, result, qbiLossReview) : input);
       const actual = calculateFederalTax(original).form2210;
       if (!actual) throw new Error("Missing actual calculation");
       current = actual;
@@ -114,7 +160,23 @@ export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult,
   }, new Decimal(0));
   if (!exactTotal.eq(calculation.exactPenalty)) throw new Error("Form 2210 dated penalty audit does not reconcile to exactPenalty");
 
+  const annualized = source?.calculationMethod === "annualized";
+  const scheduleAi = calculation.lines.filter(entry => entry.form === "Form 2210 Schedule AI");
+  if (annualized !== (scheduleAi.length > 0) && calculation.installments.length > 0) throw new Error("Form 2210 Schedule AI audit does not reconcile to the source method");
+  if (scheduleAi.length > 0) {
+    if (!calculation.scheduleAi || !source) throw new Error("Form 2210 Schedule AI audit does not reconcile to the source method");
+    const recomputed = calculateForm2210ScheduleAi({ ...calculation.scheduleAi, facts: source }).lines;
+    const text = (rows: typeof scheduleAi) => JSON.stringify(rows.map(row => [row.line, row.value.toFixed()]));
+    if (text(recomputed) !== text(scheduleAi)) throw new Error("Form 2210 Schedule AI lines do not reconcile to the original period sources");
+  }
+  for (const [index, installment] of calculation.installments.entries()) {
+    const line27 = scheduleAi.filter(entry => entry.line === `27${String.fromCharCode(97 + index)}`);
+    const actualLine27=line27[0];
+    if (annualized && (line27.length !== 1 || !actualLine27 || !actualLine27.value.eq(installment.required))) throw new Error("Form 2210 line10 does not reconcile to Schedule AI line27");
+  }
+
   const doc = await loadReviewTemplate(blankPdfPath, 2025);
+  const spouseSource=actualOriginal?.form2210?.selfEmploymentOwnerPeriods!==undefined?await PDFDocument.load(await doc.save()):undefined;
   const form = doc.getForm();
   const F = FORM_2210_FIELDS;
   const name = input.taxpayer.spouse
@@ -138,19 +200,6 @@ export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult,
   setCheckBox(form, F.line9Yes, !stopsAtPartI && line9Greater);
   // Disaster relief never reaches this mapping. Missing physical
   // source facts remain disclosed; unchecked is not an inferred answer.
-  const annualized = source?.calculationMethod === "annualized";
-  const scheduleAi = calculation.lines.filter(entry => entry.form === "Form 2210 Schedule AI");
-  if (annualized !== (scheduleAi.length > 0) && calculation.installments.length > 0) throw new Error("Form 2210 Schedule AI audit does not reconcile to the source method");
-  if (scheduleAi.length > 0) {
-    if (!calculation.scheduleAi || !source) throw new Error("Form 2210 Schedule AI audit does not reconcile to the source method");
-    const recomputed = calculateForm2210ScheduleAi({ ...calculation.scheduleAi, facts: source }).lines;
-    const text = (rows: typeof scheduleAi) => JSON.stringify(rows.map(row => [row.line, row.value.toFixed()]));
-    if (text(recomputed) !== text(scheduleAi)) throw new Error("Form 2210 Schedule AI lines do not reconcile to the original period sources");
-  }
-  for (const [index, installment] of calculation.installments.entries()) {
-    const line27 = scheduleAi.filter(entry => entry.line === `27${String.fromCharCode(97 + index)}`);
-    if (annualized && (line27.length !== 1 || !line27[0]!.value.eq(installment.required))) throw new Error("Form 2210 line10 does not reconcile to Schedule AI line27");
-  }
   setCheckBox(form, F.boxA, calculation.waiver?.kind === "full");
   setCheckBox(form, F.boxB, calculation.waiver?.kind === "partial");
   setCheckBox(form, F.boxC, annualized && scheduleAi.length > 0);
@@ -159,6 +208,23 @@ export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult,
     && source.priorYearJointReturn !== (input.taxpayer.filingStatus === "married_filing_jointly");
   const priorRequired = audited.get("8");
   setCheckBox(form, F.boxE, changedJointStatus && priorRequired !== undefined && priorRequired.lt(required("5")));
+
+  if(actualOriginal){
+    fillScheduleAiPage(form,actualOriginal,result,'primary');
+    if(spouseSource){
+      // Flatten the separate source page before inserting it, avoiding duplicate
+      // AcroForm names or accidental pooling of the two owners' wage limits.
+      fillScheduleAiPage(spouseSource.getForm(),actualOriginal,result,'spouse',true);
+      await flattenForm(spouseSource.getForm());
+      const copied=await doc.copyPages(spouseSource,[2]);const spousePage=copied[0];
+      if(!spousePage)throw new Error('Form2210 missing actual spouse source worksheet page');
+      doc.insertPage(3,spousePage);
+      const labelFont=await doc.embedFont(StandardFonts.Helvetica);
+      const primaryPage=doc.getPages()[2];if(!primaryPage)throw new Error('Form2210 missing actual primary source worksheet page');
+      primaryPage.drawText('REVIEW ONLY - PRIMARY PART II WORKSHEET',{x:36,y:26,size:7,font:labelFont});
+      spousePage.drawText('REVIEW ONLY - SPOUSE PART II WORKSHEET',{x:36,y:26,size:7,font:labelFont});
+    }
+  }
 
   const font = await doc.embedFont(StandardFonts.Helvetica);
   let page = doc.addPage();
@@ -173,8 +239,8 @@ export async function fillForm2210(input: TaxYearInput, result: TaxReturnResult,
   };
   write(`FORM 2210 REVIEW - dated ${scheduleAi.length > 0 ? "annualized-income" : "regular-method"} evidence`);
   write(calculation.sourceFactsVerified ? "Calculation uses the supported actual-source contract." : "Historical or exception-only calculation: complete source qualification has not been established.");
-  write("This is a review worksheet. The default return packet omits Form 2210; no filing qualification is implied.");
-  if (scheduleAi.length > 0) write("Schedule AI page 3 is not completed in this packet. Its calculated lines follow.");
+  write(actualOriginal?"Form 2210 with completed Schedule AI is included for source-qualified review only; no filing qualification is implied.":"This is a review worksheet. The default return packet omits Form 2210; no filing qualification is implied.");
+  if (scheduleAi.length > 0) write(actualOriginal?"The printed Schedule AI source page is completed. Separate actual owner Part II worksheets are included when required.":"Schedule AI page 3 is not completed in this packet. Its calculated lines follow.");
   for (const entry of scheduleAi) write(`Schedule AI line ${entry.line}: ${entry.description} ${entry.value.toFixed()}`);
   if (source?.priorYearJointReturn === undefined && priorRequired !== undefined) write("Prior joint-return status is unknown; Part II box E remains unanswered.");
   if (!source) write("Physical filing-reason source facts are uncollected; unchecked boxes are not confirmed negative answers.");

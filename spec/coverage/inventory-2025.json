@@ -3402,6 +3402,26 @@
       ]
     },
     {
+      "key": "federal/form-2210-schedule-ai-physical-review",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "https://www.irs.gov/instructions/i2210",
+      "specPath": "spec/federal/form-2210-schedule-ai-physical-review.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/form-2441",
       "jurisdiction": "federal",
       "taxYear": 2026,

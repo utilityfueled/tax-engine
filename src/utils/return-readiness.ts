@@ -1,3 +1,4 @@
+import {hasSavedForm2210Review,type SavedForm2210Review} from '@/pdf/form-2210-review-context.js';
 import {isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result.js';
 import type { TaxYearInput } from "@/models/inputs.js";
 import type { TaxReturnResult } from "@/models/outputs.js";
@@ -28,6 +29,7 @@ export interface AssessReturnReadinessInput {
   taxInput: TaxYearInput;
   federalResult: TaxReturnResult;
   includedForms: string[];
+  form2210ReviewArtifact?:SavedForm2210Review;
   stateCode?: string | null;
 }
 
@@ -267,7 +269,8 @@ export function assessReturnReadiness(
   const estimatedTax = input.federalResult.form2210;
   if (input.federalResult.estimatedTaxPenalty.gt(0) || estimatedTax?.requiresForm2210 || estimatedTax?.waiver) {
     packetCompleteness = "partial";
-    findings.push(
+    const actualAi=hasSavedForm2210Review(input.taxInput,input.federalResult,input.includedForms,input.form2210ReviewArtifact);
+    findings.push(actualAi?"Form 2210 with completed Schedule AI is included as a source-qualified review copy. Filing remains unqualified; this packet is partial and has not passed business-rule validation.":
       `${estimatedTax?.farmerMethod ? "Form 2210-F" : "Form 2210"} is still suppressed from the draft packet even when ${input.federalResult.estimatedTaxPenalty.gt(0) ? "an estimated tax penalty" : "a waiver request or required filing"} is present.`,
     );
   }

@@ -144,3 +144,9 @@ lines:
     formula: "The existing opaque prepared QBI context binds complete original/permitted-redacted input and independent source calculation. Its private original clone supplies fresh canonical recomputation; render only the supplied redacted input. Missing, forged, stale or mismatched tokens and saved-result edits reject before template I/O. No IDs are fabricated and no identity check is relaxed."
     irsRef: "Existing original-source privacy/export contract, i2210 complete current-return and separate-owner source binding"
     testRef: "tests/pdf/form-2210-two-owner-review.test.ts::renders valid redacted actual K1 sources through the opaque original context"
+
+  - line: "source-bound-physical-review"
+    description: "Complete the existing actual annualized worksheet on its printed source page"
+    formula: "See form-2210-schedule-ai-physical-review.yaml for source-pinned fields, skips, distinct owner PartII worksheets and current-original required review dispatch. No calculation, filing or2026 qualification changes."
+    irsRef: "Final2025 Form2210page3 and i2210boxC"
+    testRef: "tests/pdf/form-2210-schedule-ai-physical-review.test.ts::AI physical canonical preconditions match independent originals"

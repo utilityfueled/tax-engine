@@ -1,3 +1,4 @@
+import {prepareForm2210Review,requiresForm2210ScheduleAiReview,hasSavedForm2210Review,type SavedForm2210Review} from '@/pdf/form-2210-review-context.js';
 import {assertNoPAMarriedPaperExport,isPAMarriedOrdinaryReturnResult} from '@/engine/state/pa-return-result';
 import {calculatePAMarriedOrdinaryReturn} from '@/engine/state/pa-married-ordinary-return';
 import {preparePAMarriedReturnReview} from '@/pdf/pa-married-return-review-context';
@@ -375,6 +376,7 @@ function buildPacketSummary(
   includedForms: string[],
   source: WorkspaceFilledReturnSource,
   guidedFlowState?: GuidedFlowState | null,
+  form2210ReviewArtifact?:SavedForm2210Review,
 ): PacketSummary {
   const missingChecklistItems = workspace.checklist
     .filter((item) => item.status !== "ready")
@@ -447,15 +449,16 @@ function buildPacketSummary(
     missingBullets.push(`This return requests an estimated tax penalty waiver. The IRS decides, and may bill the penalty. Attach ${result.form2210.farmerMethod ? "Form 2210-F" : "Form 2210"} and your statement.`);
   }
 
+  const actualAiReview=hasSavedForm2210Review(taxInput,result,includedForms,form2210ReviewArtifact);
   if (result.form2210?.scheduleAi && result.form2210.requiresForm2210) {
-    missingBullets.push("This return uses the annualized income method, so Form 2210 with Schedule AI must be filed with it even when the penalty is zero. Neither is attached to this draft.");
+    missingBullets.push(actualAiReview?"Form 2210 with completed Schedule AI is included for source-qualified review, including when the calculated penalty is zero. Filing qualification has not been established.":"This return uses the annualized income method, so Form 2210 with Schedule AI must be filed with it even when the penalty is zero. Neither is attached to this draft.");
   }
 
   if (result.form2210?.farmerMethod && result.form2210.requiresForm2210 && !result.form2210.waiver) {
     missingBullets.push("Form 2210-F must be filed with this return because the joint filing status changed. It is not attached to this draft.");
   }
 
-  if (result.estimatedTaxPenalty.gt(0)) {
+  if (result.estimatedTaxPenalty.gt(0)&&!actualAiReview) {
     missingBullets.push(
       `The return currently includes an estimated tax penalty of ${formatCurrencyWholeDollars(result.estimatedTaxPenalty)}, but ${result.form2210?.farmerMethod ? "Form 2210-F" : "Form 2210"} is not auto-attached to this draft packet.`
     );
@@ -715,6 +718,7 @@ export async function buildWorkspaceFilledReturnDownload(
   const savingsBondReview = hasSavingsBondReviewSources(resolved.taxInput) ? prepareSavingsBondReview(resolved.taxInput) : undefined;
   const ohioOriginalReview = stateCode === "OH" ? prepareOhioResidencyReview(resolved.taxInput) : undefined;
   const ohioSourceOverlay = stateCode === "OH" ? buildGuidedOhioOverlay(resolved.taxInput, guidedFlowState, completeResult.taxExemptInterest) : undefined;
+  const form2210Review=requiresForm2210ScheduleAiReview(resolved.taxInput,completeResult)?prepareForm2210Review(resolved.taxInput):undefined;
   const redactedTaxInput = redactReviewIdentifiers(resolved.taxInput);
   const result = redactReviewIdentifiers(completeResult);
   const blankFormsDir = await resolveBlankFormsDir();
@@ -730,6 +734,7 @@ export async function buildWorkspaceFilledReturnDownload(
       nolFilingUnitReview,
       adoptionReview,
       qbiLossReview,
+      form2210Review,
       scheduleEReview,
       paRoyaltyReview,
       paWorkingCreditReview,
@@ -768,11 +773,13 @@ export async function buildWorkspaceFilledReturnDownload(
       includedForms,
       resolved.source,
       guidedFlowState,
+      fillResult.form2210ReviewArtifact,
     );
     const readiness = assessReturnReadiness({
       taxInput: redactedTaxInput,
       federalResult: result,
       includedForms,
+      form2210ReviewArtifact:fillResult.form2210ReviewArtifact,
       stateCode,
     });
     packetSummary.compiledBullets.push(
