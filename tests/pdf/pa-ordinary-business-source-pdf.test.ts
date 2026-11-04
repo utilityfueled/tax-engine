@@ -1,6 +1,6 @@
 /** Spec: state/pa-ordinary-business-sources.yaml packet. Actual source-derived all3 reference PDFs. */
 import {expect,it} from 'vitest';
-import {execFileSync} from 'node:child_process';
+import {execFileSync} from '../helpers/file-stdin-exec';
 import {mkdtemp,mkdir,readFile,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
