@@ -62,9 +62,13 @@ packet errors. Root typecheck and exact-file zero-warning lint also pass. The
 same proposed behavioral cases previously passed both baseline and successor;
 they pin behavior rather than comparator-call counts or implementation mirrors.
 
-A new exact-commit full unit/coverage/PostgreSQL/static verification and new
-hosted/native artifacts remain required. Historical 8487 full-suite and image
-receipts stay attributed to 8487; they do not qualify this functional successor.
+Fresh exact045fbedb unit and coverage each pass25,244tests/1,854files with zero
+failures or skips, including all six real PostgreSQL files (53 assertions).
+Coverage91.81/87.54/90.69/95.03 and all eight remaining checks pass with unchanged
+gates; lint has no semantic delta. Source exactness and database cleanup pass.
+See [the full verification ledger](upgrade-2026-045-full-local-verification-work.md).
+New hosted/native artifacts remain required. Historical 8487 full-suite and
+image receipts stay attributed to 8487.
 No filing, model promotion, release readiness or distribution qualification is
 asserted by this package.
 

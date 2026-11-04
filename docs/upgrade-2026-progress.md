@@ -3039,3 +3039,15 @@ retained. No storage repair, archive, deletion or export follows. See [the
 native ledger](upgrade-2026-8487-native-build-export-work.md). A new separately
 owned test VM for the functional successor is under source review; standard
 startup's shared-socket effects must be resolved before execution.
+
+### November 4: exact045fbedb full local verification completed
+
+Fresh unit and coverage each pass25,244tests/1,854files with zero failures or
+skips, including all six real PostgreSQL files and53 assertions in each run.
+Coverage91.81/87.54/90.69/95.03 passes the unchanged90/85/90/90 gates. All eight
+remaining checks pass; lint retains11,715warnings/0errors with no semantic delta.
+The tracked source stays exact; cluster stop, port-free and temporary-directory
+removal pass. See [the verification ledger](upgrade-2026-045-full-local-verification-work.md).
+Remote jobs continue. This qualifies local checks only; final artifacts,
+staging outages/retries, providers, advisory dispositions, human review and
+final2026 forms remain required.
