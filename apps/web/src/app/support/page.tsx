@@ -14,7 +14,7 @@ export default function SupportPage() {
       </section>
       <section className="panel" style={{ gridColumn: "1 / -1", overflowX: "auto" }}>
         <table>
-          <caption>Support status as of November 2, 2026</caption>
+          <caption>Review-output availability and filing limitations by tax year</caption>
           <thead><tr>{["Tax year", "Jurisdiction", "Residency and facts", "Forms and scenarios", "Available output", "Filing / e-file"].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead>
           <tbody>{taxYearSupportRows.map(row => <tr key={`${row[0]}-${row[1]}`}>{row.map((cell, index) => index === 0
             ? <th key={index} scope="row">{cell}</th> : <td key={index}>{cell}</td>)}</tr>)}</tbody>
