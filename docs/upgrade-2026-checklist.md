@@ -1,5 +1,9 @@
 # Remaining 2026 upgrade execution checklist
 
+The [November 4 current continuation](upgrade-2026-current-status.md) reconciles
+the latest source, checks, active work and external inputs. The dated entries
+below retain their original evidence boundaries.
+
 ## Active continuation — November 2, 2026
 
 The owner selected PA and Ohio, each with full-year resident, part-year resident and nonresident returns. Separate source-first state implementation/qualification work is active; selection does not activate unqualified outputs.

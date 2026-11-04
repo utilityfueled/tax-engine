@@ -1,5 +1,9 @@
 # 2026 upgrade implementation evidence
 
+Current source, verification and remaining work are summarized in the
+[November 4 continuation](upgrade-2026-current-status.md). Historical results
+below apply to their named revisions.
+
 - November4: [public source refresh](upgrade-2026-public-source-refresh-20261104.md) independently verifies44 retained responses (36HTTP200/8HTTP404). Seven advisory API failures remain unresolved; alternate official fields retain their conflicts. IRS1040 remains2025; C/R2026 and Ohio2025 bytes unchanged. No risk acceptance, deadline extension, provider-account qualification or readiness promotion.
 
 ## Active continuation — November 3, 2026
@@ -2806,3 +2810,28 @@ Current f09 passes24,815 tests across1,837files with zero failures/skips and87.3
 ### November4: dated part-year Ohio school payroll
 
 Commit5cbec8e8 adds the finite2025 Hillsdale0302 January–July Ohio/August–December Virginia specifically identified payroll method. Actual home, payroll, state/local withholding and separate account originals replay; resident40000 is not day-prorated annual60000. Current68focused+564adjacent and all12checksets pass, with distinct source/engine/native/municipal review. The unqualified PY paper path explicitly omits output after source validation. See [the ledger](upgrade-2026-oh-school-district-part-year-work.md). Public filing/final2026/human/browser/distribution/staging gates remain open. Separate supportfc013fad and hosted-runtime22d5f422 commits pass their19affected controls/types/strictlint/webbuild; actual Preview runtime logs remain pending.
+
+### November4: source-bound part-year school paper and HTTP outage handling
+
+Commita757d735 delivers the separate finite Ohio part-year school review paper;
+22 focused,68 prior-source and648 adjacent tests and all13 checksets pass.
+Independent32PDF/76page review passes. Commit5b5cc475 contains actual
+post-initialization auth/workspace database failures with generic private503s.
+Ten workspace and four returned-auth regressions fail before their narrow fixes;
+the final actual production HTTP rehearsal passes13/13 with cleanup verified.
+See [the paper ledger](upgrade-2026-oh-school-district-part-year-official-review-work.md)
+and [HTTP ledger](upgrade-2026-hosted-http-fault-rehearsal-work.md). The current
+continuation index distinguishes these results from final browser, staging,
+runtime-image, human and2026 qualification.
+
+### November4: driver-effective hosted database TLS
+
+Selected-verification repairac5efa89 and verified-remote pool default4b9b93e3
+are separately reviewed and pushed. Main88TLS controls,201adjacent and all10
+checksets pass, including three actual trusted/untrusted/wrong-host local TLS
+handshakes and an actualHTTP13/13 repeat. Effective-last certificate originals
+and runtime/schema cache policy are preserved. Independent review identifies a
+separate auth-instance cache-policy gap; its ten new controls yield six genuine
+failures/four passes, and that internal successor remains in progress. See
+[the TLS ledger](upgrade-2026-hosted-remote-database-tls-work.md). No deployed
+plaintext or broad hosted qualification is inferred.

@@ -18491,5 +18491,83 @@
     "actualHostedRuntimeObserved": false,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-hosted-preview-runtime-identity-work.md"
+  },
+  "currentContinuation20261104": {
+    "applicationSource": "4b9b93e38a7e00670ea0423db0c5154d9cd20422",
+    "index": "docs/upgrade-2026-current-status.md",
+    "localFullVerificationSource": "f09a3dd7ad2f3a12f02a8d50efd0da01050033e6",
+    "currentFullVerificationPassed": false,
+    "currentManagedReciprocalPassed": 4,
+    "managedObserverExit": 1,
+    "managedObserverDiagnostic": "18 new Next runtime route-cache files; all preexisting bundle entries and tracked source exact",
+    "managedReceiptSHA256": "c77227dc833cecc535a7f3ff1d11e20501c039b51fb619e64638afa29c73af48",
+    "hostedRuntimeObserved": {
+      "source": "3a959a3d7c19ac1c00dd6a134f9b5d6927dc684e",
+      "node": "26.13.0",
+      "undici": "8.12.2",
+      "arch": "x64",
+      "scope": "one Preview function invocation",
+      "evidence": "docs/upgrade-2026-hosted-runtime-20261104.json"
+    },
+    "activeSoftware": [
+      "Auth-instance TLS policy cache binding",
+      "Schedule AI page3 source-bound physical review and saved-output verification",
+      "Final-source native image recovery/replay and whole-suite checks",
+      "Actual Ohio part-year school guided-to-paper lifecycle",
+      "Approved Preview synthetic schema migration/restore after credential handoff"
+    ],
+    "imageAdvisories": {
+      "matchesEach": 181,
+      "idsEach": 80,
+      "ownerAcceptance": false,
+      "evidence": "docs/upgrade-2026-image-advisories-20261104.json"
+    },
+    "releaseReady": false,
+    "applicationCommit": "4b9b93e38a7e00670ea0423db0c5154d9cd20422",
+    "ohPartYearSchoolPaper": {
+      "commit": "a757d735",
+      "focusedMainPassed": 22,
+      "priorSourcePassed": 68,
+      "adjacentPassed": 648,
+      "integrationCheckSetsPassed": 13,
+      "savedIndependentReviewSha256": "ad8fcd58f775b85adb2f8341c58e56aaf7b51728fed2684cae17be7094b55d0a",
+      "actualNativeLifecycleQualified": false
+    },
+    "nativeCurrentImageFollowup": {
+      "image": "0acfa78ea72a41a071bf2a841f5d1da703856cbe23b3ff6b38326ebd8b44f2eb",
+      "source": "5a03fa4e",
+      "initialBuildMetadataPassed": true,
+      "replayPrerequisiteFailed": true,
+      "smokeOrBrowserExecuted": false,
+      "confirmedEmptyCandidateLayerMetadata": 4,
+      "findingSha256": "58125e9db13ccef0785b691e2581392116b9ce882f5bd108c04e08ceac1f1a66",
+      "underlyingCauseProven": false,
+      "sharedStoreRepaired": false,
+      "isolatedEmptyStorePreflightPassed": true,
+      "isolatedPrivateApiBasePassed": true,
+      "isolatedPrivateApiBaseReceiptSha256": "240df4be529236ca97d755b4a6567eab1371ab8ee93e4df3bddc2441e6a6da1d",
+      "verifiedBaseOciSha256": "8c837ce449ba53fb5f3d8352430a7a113fe4b74ef52ccc516e17cc8ea51cb7bb",
+      "finalSourceApplicationBuildExecuted": false
+    },
+    "hostedHttpFaultRehearsal": {
+      "commit": "5b5cc475",
+      "passed": 13,
+      "failed": 0,
+      "cleanupPassed": true,
+      "receiptSha256": "a0e473cfa7f52501303801acef7cd6295f990250e412b36ad592e76e0192b530",
+      "actualProviderQualification": false,
+      "ledger": "docs/upgrade-2026-hosted-http-fault-rehearsal-work.md"
+    },
+    "hostedDatabaseTls": {
+      "selectedCommit": "ac5efa89",
+      "remotePoolCommit": "4b9b93e3",
+      "mainTlsControlsPassed": 88,
+      "actualSyntheticHandshakeControlsPassed": 3,
+      "mainAdjacentPassed": 201,
+      "mainChecksetsPassed": 10,
+      "actualHttpRepeatPassed": 13,
+      "authInstanceCacheSuccessorComplete": false,
+      "ledger": "docs/upgrade-2026-hosted-remote-database-tls-work.md"
+    }
   }
 }
