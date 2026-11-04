@@ -18562,7 +18562,34 @@
         "finalSafety": "PASS",
         "diagnosisPending": true,
         "retainedStoresRepaired": false,
-        "imageQualified": false
+        "imageQualified": false,
+        "sameParentBuildExportSuccessor": {
+          "status": "FAIL_FINAL_SAFETY",
+          "source": "8487fb4b6d8818d83739fb902fc0730e19698053",
+          "tree": "ce8f9746fb424f6efe52238076bca6a510e272c8",
+          "buildExitCode": 0,
+          "candidateID": "c23e86d4acd3be5f90b7fa5c0a6ccb41dd291a4028c38b0e7020c8490354203b",
+          "platform": "linux/arm64",
+          "failure": "archive config identity differs",
+          "OCIConfigID": "53430a2dfbae7b69f09d1b29da0cdeeba46f7c58fe19a2d9978d8ae3c3d9133f",
+          "archiveHealthcheckMissing": true,
+          "allNineRootfsDiffIDsEqual": true,
+          "soleRawByteDifferenceClaim": false,
+          "diskAvailableBytes": 17107730432,
+          "diskFloorBytes": 17179869184,
+          "diskShortfallBytes": 72138752,
+          "finalSafety": "FAIL_OR_UNAVAILABLE",
+          "receiptSHA256": "69ca087eaef005da39a4d2c722db385ecc78128bb2e7ce11badf7b474a9809d1",
+          "savedIdentityProofSHA256": "ae990a20ff31b89ddad7e56e5ad03ecfa2db1644b20dc6bee33833c171acfdbf",
+          "V5Status": "SOURCE_ONLY_NOT_EXECUTED",
+          "V5ManifestSHA256": "19492bf9c38defc5789d2e4af09c14e7a219b22cc940648c1f3e748704c126d6",
+          "ownedSpaceRecoveryStatus": "SOURCE_ONLY_PROPOSAL_NO_DELETE_GRANT",
+          "existingCandidateExportRecoveryStatus": "SOURCE_ONLY_NOT_EXECUTED_DISABLED",
+          "existingCandidateExportRecoveryManifestSHA256": "2b987fcd707966e21bacf8354ed8780a5a42c7fee06453642735f12a99505c8d",
+          "restartImportExecuted": false,
+          "candidateRuntimeQualified": false,
+          "ledger": "docs/upgrade-2026-8487-native-build-export-work.md"
+        }
       }
     },
     "hostedHttpFaultRehearsal": {
@@ -19042,8 +19069,8 @@
     "receiptSHA256": "08e1d9bc7a524461d7c4cf5e2a57566fe88cbb30e25d702e91881202cf8399a4",
     "terminalResultSHA256": "48418e46a76efc48cf4d31a349c1969da030b6cf262c9aeab306c0d86deb3d88",
     "terminalArtifactManifestSHA256": "f5bb78342ca3cf688a5ca8a5952d527fec72613c754c99d163374d71a9304320",
-    "nativeRuntimeScope": "Fresh base bootstrap and subsequent pre-build inspect only; application build not executed",
-    "nativeApplicationBuildPassed": false,
+    "nativeRuntimeScope": "Earlier pre-build failures retained; later exact8487 ARM64 build exits0, OCI archive identity rejected and final disk-floor safety fails; V5/recovery source-only pending",
+    "nativeApplicationBuildPassed": true,
     "ledger": "docs/upgrade-2026-8487-full-local-verification-work.md"
   },
   "nov04IndependentReviewDelta": {

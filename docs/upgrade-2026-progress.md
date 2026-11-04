@@ -2998,9 +2998,12 @@ no semantic additions or removals againstb254. Source stays exact before/after;
 cluster stop, port-free and temp-removal checks pass. See [the bounded ledger](upgrade-2026-8487-full-local-verification-work.md).
 The earlier address-precondition and native-stdin-hang attempts remain retained.
 
-Fresh native-store official-base bootstrap passes, but the following8487
-application-image operation stops at pinned-base inspect before build, with
-finalSafetyPASS; diagnosis remains open. The corrected Preview tenant harness
+Fresh native-store official-base bootstrap and earlier pre-build failures remain
+retained. A later same-parent exact8487 build exits0 with ARM64 candidatec23e86d4,
+but OCI export changes its ConfigID and omits the healthcheck. Strict identity
+rejection and the final disk-floor failure remain; V5 Docker-archive correction
+and owned-space recovery are source-only/pending. See [the native ledger](upgrade-2026-8487-native-build-export-work.md).
+The corrected Preview tenant harness
 passed14 author fake-transport controls and eight independent offline methods
 before live execution. The later actual tenant failure and separate upload
 observations are now recorded in the [episode ledger](upgrade-2026-a4ac-preview-tenant-limits-work.md). These are separate from local-suite
