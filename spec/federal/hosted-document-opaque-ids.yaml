@@ -1,0 +1,148 @@
+form: Hosted document opaque identities
+schedule: Hosting privacy and local recovery boundary
+taxYear: 2026
+reference: apps/web/src/lib/hosted-privacy.ts
+notes: |
+  Deterministic aliases are pseudonyms, not authentication, secrecy or anonymity.
+  Original local IDs, source facts, names, files, recovery format and dedupe remain unchanged.
+  Preserve the eleven exact fixed public guided document IDs required by existing
+  guided-prefix consumers, but give arbitrary guided-prefixed content no bypass.
+  Ambiguous alias reads return null; selected alias deletion preflights all identities
+  and rejects generically before any write if multiple retained originals match.
+  Private answer fixtures use the existing public question-answer API so fact/question
+  status and answer text are coherent. Local persisted snapshots follow the unchanged
+  hydration contract (including optional blobStorageKey null); aliasing must not change it.
+  Original source provenance and private metadata remain local. Server get/list
+  normalization does not erase old rows or historical backups. No tax/filing gate changes.
+  IDB tests use a bounded transaction/cursor fixture, not live browser durability proof.
+lines:
+  - line: "P01"
+    formula: "real ingestion allowed-character private filename is absent from hosted shell; literal alias present"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P01 real ingestion allowed-character private filename is absent from hosted shell; literal alias present"
+  - line: "P02"
+    formula: "real ingestion official fixture name/size uses fixed fixture prefix and safe alias"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P02 real ingestion official fixture name/size uses fixed fixture prefix and safe alias"
+  - line: "P03"
+    formula: "real ingestion unknown Unicode/space filename accepted only through exact factory shape; shell contains no filename"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P03 real ingestion unknown Unicode/space filename accepted only through exact factory shape; shell contains no filename"
+  - line: "P04"
+    formula: "exact factory-shaped SSN-bearing filename is stripped before unchanged final direct-ID scan"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P04 exact factory-shaped SSN-bearing filename is stripped before unchanged final direct-ID scan"
+  - line: "P05"
+    formula: "ordinary doc-42 becomes independent literal alias, remaining metadata equals old shell"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P05 ordinary doc-42 becomes independent literal alias, remaining metadata equals old shell"
+  - line: "P06"
+    formula: "same raw id in another workspace has distinct literal alias"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P06 same raw id in another workspace has distinct literal alias"
+  - line: "P07"
+    formula: "duplicate-name document rows carrying distinct original #2 identities remain distinct"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P07 duplicate-name document rows carrying distinct original #2 identities remain distinct"
+  - line: "P08"
+    formula: "reordering documents preserves each identity, with names still generic per display position"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P08 reordering documents preserves each identity, with names still generic per display position"
+  - line: "P09"
+    formula: "deleting a document does not rename surviving alias"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P09 deleting a document does not rename surviving alias"
+  - line: "P10"
+    formula: "sanitize(sanitize(workspace)) is exactly idempotent"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P10 sanitize(sanitize(workspace)) is exactly idempotent"
+  - line: "P11"
+    formula: "save/get/list normalization preserves canonical aliases and strips historical filename ids without mutating stored old row"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P11 save/get/list normalization preserves canonical aliases and strips historical filename ids without mutating stored old row"
+  - line: "P12"
+    formula: "savePersistedWorkspace sends safe shell and returns exact full local object/source refs/cache snapshot"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P12 savePersistedWorkspace sends safe shell and returns exact full local object/source refs/cache snapshot"
+  - line: "P13"
+    formula: "bare SSN document id still rejects with generic non-echoing error"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P13 bare SSN document id still rejects with generic non-echoing error"
+  - line: "P14"
+    formula: "invalid non-factory ID characters still reject"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P14 invalid non-factory ID characters still reject"
+  - line: "P15"
+    formula: "factory name mismatch rejects"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P15 factory name mismatch rejects"
+  - line: "P16"
+    formula: "factory size mismatch rejects"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P16 factory size mismatch rejects"
+  - line: "P17"
+    formula: "unknown fixture prefix or fixture-kind mismatch rejects"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P17 unknown fixture prefix or fixture-kind mismatch rejects"
+  - line: "P18"
+    formula: "invalid duplicate suffix (#0/#1/#02/noninteger) rejects"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P18 invalid duplicate suffix (#0/#1/#02/noninteger) rejects"
+  - line: "P19"
+    formula: "invalid typed size/year/unknown kind still rejects before network"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P19 invalid typed size/year/unknown kind still rejects before network"
+  - line: "P20"
+    formula: "duplicate raw ids reject rather than collapse document rows"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P20 duplicate raw ids reject rather than collapse document rows"
+  - line: "P21"
+    formula: "submitted canonical alias equal to another derived alias rejects duplicate output"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P21 submitted canonical alias equal to another derived alias rejects duplicate output"
+  - line: "P22"
+    formula: "canonical alias allowed by unchanged opaque schema has no direct-ID scanner match"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P22 canonical alias allowed by unchanged opaque schema has no direct-ID scanner match"
+  - line: "P23"
+    formula: "malformed alias-like input receives ordinary validation rather than trusted canonical bypass"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P23 malformed alias-like input receives ordinary validation rather than trusted canonical bypass"
+  - line: "P24"
+    formula: "opaque workspace/event/fact identity guards remain strict and unchanged"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P24 opaque workspace/event/fact identity guards remain strict and unchanged"
+  - line: "C01"
+    formula: "raw cache read still returns exact filename/bytes/type/lastModified"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::C01 raw cache read still returns exact filename/bytes/type/lastModified"
+  - line: "C02"
+    formula: "literal alias cache read returns same exact original File"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::C02 literal alias cache read returns same exact original File"
+  - line: "C03"
+    formula: "unknown alias returns null and hasCached false"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::C03 unknown alias returns null and hasCached false"
+  - line: "C04"
+    formula: "another workspace cannot resolve alias of retained original"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::C04 another workspace cannot resolve alias of retained original"
+  - line: "C05"
+    formula: "tuple-delimiter workspace/document combinations remain distinct"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::C05 tuple-delimiter workspace/document combinations remain distinct"
+  - line: "C06"
+    formula: "IDB-only current-format record resolves alias after module-memory reset"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::C06 IDB-only current-format record resolves alias after module-memory reset"
+  - line: "C07"
+    formula: "IDB-only former key format resolves alias only with exact stored ownership/key consistency"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::C07 IDB-only former key format resolves alias only with exact stored ownership/key consistency"
+  - line: "C08"
+    formula: "malformed key/record ownership mismatch cannot return cached bytes"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::C08 malformed key/record ownership mismatch cannot return cached bytes"
+  - line: "C09"
+    formula: "alias reads do not put/change original records or ids"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::C09 alias reads do not put/change original records or ids"
+  - line: "C10"
+    formula: "alias-selective deletion removes raw original while unrelated same-workspace and other-workspace files survive"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::C10 alias-selective deletion removes raw original while unrelated same-workspace and other-workspace files survive"
+  - line: "C11"
+    formula: "existing raw selective deletion and full-workspace deletion remain exact"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::C11 existing raw selective deletion and full-workspace deletion remain exact"
+  - line: "C12"
+    formula: "loadPersistedWorkspace without local workspace JSON returns shell whose alias can recover original cached File"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::C12 loadPersistedWorkspace without local workspace JSON returns shell whose alias can recover original cached File"
+  - line: "C13"
+    formula: "local workspace present/newer continues to win and retain all original IDs"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::C13 local workspace present/newer continues to win and retain all original IDs"
+  - line: "C14"
+    formula: "recovery original metadata/raw-ID cache roundtrip remains compatible; no migration/recapture"
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::C14 recovery original metadata/raw-ID cache roundtrip remains compatible; no migration/recapture"
+  - line: "identity-contract"
+    formula: |
+      Noncanonical document IDs project to hdoc:v1: plus SHA256 byte pairs separated
+      by colon over UTF8(JSON.stringify(["hosted-document-id",1,workspaceId,rawDocumentId])).
+      Canonical inputs are idempotent. Eight independently derived literals are pinned
+      before implementation. Duplicate input/output identities fail generically.
+      Ordinary IDs still require existing opaque alphabet/max and direct-ID safety.
+      Exact bounded name/size known-factory identity permits projection of valid local
+      filenames with spaces/Unicode/private tokens. This compatibility classifier is
+      not proof of trusted ingress; the safe output stands independently of it.
+      Names nonempty<=1024, size safe/nonnegative integer, optional #N canonical integer>=2.
+      Only fixed exact public guided IDs retain their public semantic prefix.
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::P24 opaque workspace/event/fact identity guards remain strict and unchanged"
+  - line: "C15"
+    formula: "An available IndexedDB with failed open or aborted inventory cannot prove unique alias identity; alias read returns null and deletion fails without memory mutation, while exact raw-ID memory fallback stays available."
+    testRef: "tests/apps/web/hosted-document-opaque-ids.test.ts::C15 incomplete durable inventory denies alias read and deletion without altering raw fallback"

@@ -8,6 +8,7 @@ import {
 } from "@tax-engine/contracts";
 import { z } from "zod";
 import { containsUnsafeDirectIdentifier } from "./provider-request-privacy";
+import { toHostedDocumentId } from "./hosted-document-identity";
 
 const opaqueId = z.string().min(1).max(256).regex(/^[a-zA-Z0-9_.:-]+$/);
 const timestamp = z.iso.datetime({ offset: true });
@@ -51,6 +52,59 @@ const shellMetadataSchema = z.object({
     questionId: factId.nullable() })).max(10000),
 });
 
+// Validate collection/root shape before projecting any identity; never repair
+// malformed input into an empty shell. Other fields still use the same schema.
+const identityProjectionInput = z.object({
+  id: opaqueId,
+  documents: z.array(z.record(z.string(), z.unknown())).max(500),
+}).passthrough();
+const documentKinds = new Set<string>([...supportMatrix.map(entry => entry.kind), "unknown"]);
+
+function invalidShellMetadata() {
+  return new Error("Server configuration error: hosted persistence rejected invalid workspace shell metadata.");
+}
+
+/** Compatibility for IDs authored by the existing local ingestion factory.
+ * Name/size are untrusted corroboration, not trusted ingress. No original text
+ * reaches the shell: every admitted uploaded ID is replaced before validation.
+ */
+function matchesLocalDocumentFactory(document: Record<string, unknown>): boolean {
+  const { id, name, size, kind, matchedFixtureId } = document;
+  if (typeof id !== "string" || typeof name !== "string" || name.length === 0 || name.length > 1024
+    || typeof size !== "number" || !Number.isSafeInteger(size) || size < 0
+    || typeof kind !== "string" || !documentKinds.has(kind)) return false;
+  let prefix = kind;
+  if (matchedFixtureId !== null) {
+    const fixture = officialSampleDocumentFixtures.find(entry => entry.id === matchedFixtureId);
+    if (!fixture || fixture.kind !== kind) return false;
+    prefix = fixture.id;
+  }
+  const base = `${prefix}:${name}:${size}`;
+  if (id === base) return true;
+  if (!id.startsWith(`${base}#`)) return false;
+  const suffix = id.slice(base.length + 1);
+  const number = Number(suffix);
+  return /^[1-9]\d*$/u.test(suffix) && Number.isSafeInteger(number) && number >= 2;
+}
+
+function projectHostedDocumentIdentities(workspace: ReturnWorkspaceRecord) {
+  const input = identityProjectionInput.safeParse(workspace);
+  if (!input.success) throw invalidShellMetadata();
+  const rawIds = new Set<string>();
+  const hostedIds = new Set<string>();
+  const documents = input.data.documents.map(document => {
+    const id = document.id;
+    if (typeof id !== "string" || id.length === 0) throw invalidShellMetadata();
+    if ((!opaqueId.safeParse(id).success || containsUnsafeDirectIdentifier(id))
+      && !matchesLocalDocumentFactory(document)) throw invalidShellMetadata();
+    const hostedId = toHostedDocumentId(input.data.id, id);
+    if (rawIds.has(id) || hostedIds.has(hostedId)) throw invalidShellMetadata();
+    rawIds.add(id); hostedIds.add(hostedId);
+    return { ...document, id: hostedId };
+  });
+  return { ...input.data, documents };
+}
+
 function sanitizeAuditEventMessage(kind: WorkspaceAuditEventRecord["kind"]) {
   switch (kind) {
     case "workspace-created":
@@ -73,7 +127,7 @@ function sanitizeAuditEventMessage(kind: WorkspaceAuditEventRecord["kind"]) {
 export function sanitizeWorkspaceForHostedStorage(
   workspace: ReturnWorkspaceRecord
 ): ReturnWorkspaceRecord {
-  const parsed = shellMetadataSchema.safeParse(workspace);
+  const parsed = shellMetadataSchema.safeParse(projectHostedDocumentIdentities(workspace));
   if (!parsed.success) {
     // Do not echo validation values: even a nominally numeric field can carry
     // private text in an HTTP request or an old local record.

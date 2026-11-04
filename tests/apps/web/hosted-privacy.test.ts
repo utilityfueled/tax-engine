@@ -38,7 +38,7 @@ describe("hosted workspace shell privacy", () => {
     for (const privateValue of ["Casey Sample", "98765.43", "123-45-6789", "private/raw", "futurePrivateField", "rawText"]) {
       expect(serialized).not.toContain(privateValue);
     }
-    expect(shell.documents[0]).toMatchObject({ id: "doc-42", taxYear: null, name: "Document 1", label: "Form W-2", blobStorageKey: null, detectedFacts: null });
+    expect(shell.documents[0]).toMatchObject({ id: "hdoc:v1:a0:3d:88:79:f2:8d:01:a3:80:8c:26:5b:91:b8:4a:d0:c9:65:09:e0:d0:ef:bb:65:c4:5d:36:f3:42:81:e6:9c", taxYear: null, name: "Document 1", label: "Form W-2", blobStorageKey: null, detectedFacts: null });
     expect(shell.seededReturn.facts[0]).toMatchObject({ status: "answered", answeredAt: workspace.updatedAt, answerText: null, sourceDocumentIds: [] });
     expect(JSON.stringify(workspace)).toBe(before);
   });

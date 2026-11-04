@@ -6514,6 +6514,26 @@
       ]
     },
     {
+      "key": "federal/hosted-document-opaque-ids",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "apps/web/src/lib/hosted-privacy.ts",
+      "specPath": "spec/federal/hosted-document-opaque-ids.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-homepage-request-boundary",
       "jurisdiction": "federal",
       "taxYear": 2026,
