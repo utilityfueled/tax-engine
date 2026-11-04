@@ -240,12 +240,18 @@ async function createHostedAdapter(
 }
 
 const WORKSPACE_SAVE_MAX_BODY_SIZE = 5 * 1024 * 1024; // 5 MB
+// Leave room below Vercel's 4.5 MB ingress limit for app-level JSON rejection.
+const VERCEL_WORKSPACE_SAVE_MAX_BODY_SIZE = 4 * 1024 * 1024;
 
 async function readWorkspaceSnapshotFromRequest(
   request: Request,
-  workspaceId: string
+  workspaceId: string,
+  env: HostedWorkspaceRouteEnvironment
 ) {
-  const parsed = await safeParseJsonBody(request, WORKSPACE_SAVE_MAX_BODY_SIZE);
+  const maxBodySize = env.VERCEL === "1"
+    ? VERCEL_WORKSPACE_SAVE_MAX_BODY_SIZE
+    : WORKSPACE_SAVE_MAX_BODY_SIZE;
+  const parsed = await safeParseJsonBody(request, maxBodySize);
 
   if (!parsed.ok) {
     return {
@@ -671,7 +677,9 @@ export function createHostedWorkspaceRouteHandlers(
         return result.response;
       }
 
-      const payload = await readWorkspaceSnapshotFromRequest(request, context.workspaceId);
+      const payload = await readWorkspaceSnapshotFromRequest(
+        request, context.workspaceId, dependencies.env ?? process.env
+      );
 
       if ("response" in payload) {
         return payload.response;

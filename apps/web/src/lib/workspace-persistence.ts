@@ -782,6 +782,11 @@ async function requestHostedWorkspacePersistence(
   fetchFn: PersistenceFetch
 ) {
   const response = await fetchFn(endpoint, init);
+  if (response.status === 413 && (init.method ?? "GET").toUpperCase() === "POST") {
+    throw new Error(
+      "This return is too large for the server to save. Export a full backup to keep your facts and documents."
+    );
+  }
   const payload = await response.json() as HostedWorkspacePersistenceResponse | HostedPersistenceErrorResponse;
 
   if (!response.ok && !(response.status === 401 && (init.method ?? "GET") === "GET")) {

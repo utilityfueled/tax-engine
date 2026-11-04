@@ -2724,3 +2724,7 @@ READY5996 Preview accepts a fresh sandbox subscription event, same-event duplica
 ### November 4: restore header privacy regression coverage
 
 A fresh full suite found24571PASS/1FAIL/41existingSKIP: the old header privacy setup stopped at its placeholder employer-ID validation. A separate fictional actual eight-digit source, explicitly reconfirmed through native APIs, lets the unchanged saved-output privacy assertions run. Main37+92cases and all10checks pass; no renderer, tax, original fixture, malformed-ID guard or assertion changed. See [the fixture ledger](upgrade-2026-oh-header-public-fixture-work.md). Full current unit/coverage with disposable PostgreSQL remains pending.
+
+### November 4: bounded workspace JSON saves and platform errors
+
+The separate JSON save path now uses4MiB on Vercel, retains5MiB elsewhere and handles POST413 before reading its body with fixed full-backup guidance. Source-first6genuineRED/5PASS precedes100 affected controls and all10 static/build checks passing. Initial new-test strict warnings are retained and corrected with explicit fixture guards; no suppression or weaker assertion. Distinct review approves. See [the transport ledger](upgrade-2026-workspace-json-limits-work.md). Actual successor Preview, full current unit/coverage, distributions, human/final2026 and release criteria remain open.

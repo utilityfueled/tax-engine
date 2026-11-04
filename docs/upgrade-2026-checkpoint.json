@@ -18009,5 +18009,44 @@
     "fullCurrentSuiteQualified": false,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-oh-header-public-fixture-work.md"
+  },
+  "workspaceJsonTransportNov04": {
+    "at": "2026-11-04T01:20:38.673589+00:00",
+    "baseCommit": "b227d0e455a3a2761af55de5f02be341f0377515",
+    "releaseReady": false,
+    "behavior": "VERCEL=1 JSON save limit4MiB; other servers5MiB; POST413 handled before bodyread with fixedfullbackupguidance; no truncation/auth/source/privacy/readiness weakening",
+    "source": "https://vercel.com/docs/functions/limitations#request-body-size",
+    "specFirst": {
+      "failedBefore": 6,
+      "passedBefore": 5,
+      "finalFocusedPassed": 11,
+      "adjacentUnchangedPassed": 89,
+      "newTestLintGuardErratum": "First strict command stopped on five nonnull warnings in newtest; explicit actualstream/event guards preserve expected results. Final11 replay and strict0 pass."
+    },
+    "staticChecks": {
+      "types": 3,
+      "specReferences": 7940,
+      "ASTControls": 754,
+      "inventoryEntries": 821,
+      "strictWarnings": 0,
+      "engineBuild": "passed",
+      "webBuild": "passed"
+    },
+    "evidence": {
+      ".local/upgrade-evidence/nov04-workspace-json-platform/source-first.json": "22d4ead79ccd5572967c72771bd8b847cb32199cbe2b56c38b351466210faa5c",
+      ".local/upgrade-evidence/nov04-workspace-json-platform/product-before-green.json": "31513deb2899d92129e070ccd0bbee139f6c51674d75aeee4aaddbb981b094af",
+      ".local/upgrade-evidence/nov04-workspace-json-platform-tail/checks.json": "fd31676bba9a542e86166182f5ee85fee13c5f49db455c0c9fc1fc0ed11fcc2d",
+      ".local/upgrade-evidence/nov04-workspace-json-platform-tail-successor/checks.json": "6f89ae24295f79ecfcb7c293e799d814908175bf106ca056fdee09e3685d3f50",
+      ".local/upgrade-evidence/nov04-workspace-json-platform-adjacent/checks.json": "caf1745f5f26cae53ce2ea67107cfd1591180c747eb2601df55e39225cc87e62",
+      ".local/upgrade-evidence/nov04-workspace-json-platform-independent/independent-product-review-result.json": "34381cb11c18c9908d31cc5d5d1b77023e6766ccdf4bad957c863200f87ec858",
+      ".local/upgrade-evidence/nov04-workspace-json-platform/main-adopted-manifest.json": "362c4ccc5b0d8701be6f06db950f53727fb7c4d208da844561eb1c3ea8b8d6b4",
+      ".local/upgrade-evidence/nov04-workspace-json-platform-independent/lint-guard-successor-review/independent-review-result.json": "319176dc1431f94beec7c67f8f9cd6c233c6d0496151c2ae8f3f061729e564a6"
+    },
+    "limitations": [
+      "Local synthetic request/response and MapStorage only; no new Preview ingress/deployment or real browserquota/fullbackup qualification",
+      "Full current unit/coverage, runtime/container/browser/staging/provider/human/final2026/release criteria remain open"
+    ],
+    "currentMainAffectedPassed": 100,
+    "currentMainLogSHA256": "87e995b83a98657bd0274aaf4a79c4d2d7d20201fd5c7f6855e4f6e40123ee10"
   }
 }
