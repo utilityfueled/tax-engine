@@ -1,4 +1,5 @@
 import { PDFBool, PDFContentStream, PDFDocument, PDFName, PDFStream, StandardFonts, degrees, drawRectangle, drawText, rgb, type PDFFont } from "pdf-lib";
+import {removeReviewActiveContent} from './review-active-content.js';
 
 export type PdfExportPurpose = "review" | "filing";
 export const REVIEW_PDF_NOTICE = "FOR REVIEW ONLY - NOT FOR FILING";
@@ -20,6 +21,7 @@ export function assertPdfExportAllowed(inputYear: number, resultYear: number, pu
 
 /** A visible notice stays with each page when a packet is split or printed. */
 export async function markReviewPdf(doc: PDFDocument): Promise<void> {
+  removeReviewActiveContent(doc);
   const pages = doc.getPages();
   if (pages.length) {
     const font = reviewFonts.get(doc) ?? await doc.embedFont(StandardFonts.HelveticaBold);

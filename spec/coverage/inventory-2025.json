@@ -8933,6 +8933,26 @@
       ]
     },
     {
+      "key": "federal/review-pdf-active-content",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "forms/blank/2025/f1040s1.pdf; src/pdf/export-policy.ts",
+      "specPath": "spec/federal/review-pdf-active-content.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/royalty-property-sources",
       "jurisdiction": "federal",
       "taxYear": 2025,

@@ -1,0 +1,29 @@
+form: "Review-PDF-Active-Content"
+fullName: "Review PDF source scripts cannot execute in exported review copies"
+taxYear: 2025
+reference: "forms/blank/2025/f1040s1.pdf; src/pdf/export-policy.ts"
+notes: |
+  Security presentation contract only. Independent saved review found three
+  original Adobe JavaScript actions in the pinned IRS Schedule 1, unchanged in
+  individual exported review copies. The original template stays byte-exact.
+  Marking a review copy removes JavaScript, automatic actions and unsafe action
+  types across the complete object graph, including orphaned indirect objects.
+  Preserve actual interactive fields, appearances, page geometry, source content,
+  tagged-table attributes, named destinations and explicit ordinary URI links.
+  This is no tax calculation, redaction substitute or filing qualification.
+  Scope is existing mapped review copies and the source-tested action types,
+  not an arbitrary uploaded-PDF sanitizer or an XFA interpreter. Existing
+  mappers access their AcroForm through pdf-lib, which removes unsupported XFA.
+lines:
+  - line: "official-source"
+    description: "Actual pinned IRS source scripts do not survive marking a review copy"
+    formula: "Verify the exact Schedule1 source hash and actual preexisting JavaScript; save/reopen both interactive and flattened review outputs and require zero executable entries. Keep the input template unchanged."
+    testRef: "tests/pdf/review-pdf-active-content.test.ts::removes original IRS scripts from the %s review copy"
+  - line: "graph"
+    description: "Nested and orphaned automatic actions are removed without destroying benign attributes"
+    formula: "Neutralize JavaScript, Launch, GoToR, GoToE, SubmitForm, ImportData, Rendition, Sound and Movie action objects; remove AA/OpenAction/JS/JavaScript entry points. Preserve actual fields, ordinary URI links, tagged-table A attributes and unrelated named destinations."
+    testRef: "tests/pdf/review-pdf-active-content.test.ts::removes executable actions throughout the graph and preserves ordinary document semantics"
+  - line: "repeat"
+    description: "Repeated review marking retains one notice and stable fields"
+    formula: "A repeated mark has no executable actions and keeps the same original field names, values and page geometry after save/reopen; notices stay idempotent."
+    testRef: "tests/pdf/review-pdf-active-content.test.ts::keeps fields and review notices stable when marking twice"
