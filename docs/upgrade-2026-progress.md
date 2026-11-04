@@ -3027,3 +3027,15 @@ Current-main505focused controls and all eight static/build/lint checks pass
 with unchanged thresholds and no lint delta. See [the package ledger](upgrade-2026-pa-dependency-comparison-work.md).
 Fresh exact-commit integrated checks and hosted/native artifacts remain required;
 historical8487 evidence remains separately attributed.
+
+
+### November 4: retained native candidate metadata diagnosed
+
+Direct guarded read-only observation finds zero-byte `lower` and `link` files
+in the exact retained candidate top layer. The pinned storage source explains
+its readlink failure; the cause of those empty files remains unknown. The
+first stopped-machine attempt and successful direct diagnosis both remain
+retained. No storage repair, archive, deletion or export follows. See [the
+native ledger](upgrade-2026-8487-native-build-export-work.md). A new separately
+owned test VM for the functional successor is under source review; standard
+startup's shared-socket effects must be resolved before execution.

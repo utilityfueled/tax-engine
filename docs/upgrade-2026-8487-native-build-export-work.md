@@ -97,3 +97,80 @@ Evidence SHA256:
 
 The exact-source runtime qualification work remains active; retained failures
 are not silently retried or repaired.
+
+
+## Later direct metadata diagnosis: zero-byte layer records
+
+The first bounded read-only helper stops after one exact machine inspection
+because the retained VM is stopped. It performs no SSH, storage access or
+mutation. A separately reviewed successor permits one start of that exact
+known VM and binds every direct read to its newly observed boot. It passes
+eight commands and all boot, memory, disk, process, mount, type and owner
+guards. Neither operation retries candidate inspection or repairs storage.
+
+The exact candidate top layer has present **zero-byte `lower` and `link`
+files**. The pinned Podman 5.8.2 storage source splits the empty `lower`
+contents into one empty token and calls readlink on the overlay directory.
+That source path explains the observed invalid-argument inspection failure;
+the cause of the zero-byte files themselves remains unestablished. No
+filesystem-loss, automatic VM-shutdown or prior successful durability claim
+is inferred. No symlink targets, storage API, image export, archive or deletion
+are attempted. All retained stores and failure receipts remain intact.
+
+- Stopped-machine attempt receipt: `nov04-native-candidate-readlink-diagnosis/actual-readonly/receipt.json`, SHA256 `eb68b8d61cee99acf969a5f37fb343b00eeef7d7acf097d8b722ad860b378254`.
+- Direct metadata receipt: `nov04-native-candidate-readlink-diagnosis-v2/actual-readonly/receipt.json`, SHA256 `6d4d4d403be4cae57185f93e63d3e9288df91f626d0f77107dcb1828c80ea4b7`.
+- V2 source manifest: `nov04-native-candidate-readlink-diagnosis-v2/manifest.json`, SHA256 `da3bcfda3eb197ca95223b17afce5b1e915e172ac3a482ec79ca7b2ceca88411`.
+
+All paths above are relative to `.local/upgrade-evidence/`. The V2 actual
+receipt establishes only the direct diagnosis, not candidate qualification.
+
+The next proposed route uses a separately owned 80 GiB ARM64 test VM and new
+stores for the functional source successor, preserving every old store. The
+installed host's standard startup may alter shared Podman/Docker socket
+forwarding because its helper is installed. Source-only provisioning and
+startup boundaries are being reviewed before execution; no new VM or image
+is claimed by this diagnosis. New source and guest-version identity, strict
+Docker archive/restart/import and all same-image release gates remain required.
+
+
+## Separate VM initialization: pinned-reference parser rejection
+
+The proposed fresh test VM binds application commit
+`045fbedbdfbe612cb3caa28956fa7228bb3df320`, not the historical 8487 image.
+Independent review of INIT V1 finds a genuine default-connection failure path:
+Podman's internal initialization cleanup can select the retained default name.
+V2 requires that retained rootless connection to already be the sole default
+and records preservation observations after init failures. Its 88 author and
+25 additional independent controls pass before the actual attempt.
+
+Actual V2 stops at init exit125: `Docker references with both a tag and digest
+are currently not supported`. The pinned index reference is rejected despite
+the earlier source-only feasibility recommendation. All eight bounded calls
+finish; the retained machine inspection, existing machine list, connections
+and default, shared socket/helper metadata and retained config bytes each
+match their baselines. New-machine inspection is unavailable and the post-list
+contains no new registered machine. No VM is started or image qualified. The
+controller does not retry, restore or delete; provider internal failure cleanup
+is explicitly distinguished from controller actions.
+
+Actual receipt: `nov04-new-native-vm-provision-sourcefirst-v2/actual-init/receipt.json`,
+SHA256 `2bca3d7e06ea4089abd1b156c9343f1b791f90eb21067272464df193b2730e4f`.
+Source manifest SHA256 `c02d056b0122d93dd149368885d6c6310f81172017dbdc37649a2140a801c3e7`;
+independent review manifest SHA256 `9ef3a0a6a0544b13fccf523e21be2990b199de989649ed7b91a3cbcdd09f1615`.
+Paths remain relative to `.local/upgrade-evidence/`.
+
+The next source-only correction uses the same published ARM64 raw.zst blob
+through a verified local file, preserving its exact SHA256 and size. A public
+HEAD returns200 and922,390,904bytes without a redirect; no body is read by
+that metadata request. Actual download and any new init attempt require
+their own reviewed source and receipts. No tag-only or mutable-image fallback
+is used. The separate startup/shared-routing and complete native gates remain
+open.
+
+The independently reviewed V3 downloader makes one bounded HTTPS GET of that
+exact public blob. Unlike the earlier HEAD, the GET redirects; the helper
+rejects it, retains `HOLD_DOWNLOAD_RETAINED` and does not follow or retain the
+target URL. No image bytes, decompression or VM operation occur. Its 43 author
+and 21 independent offline controls remain separate from this failed actual
+transfer. A successor's explicitly allowed public CDN redirect handling is
+under source review; the published size/hash and all native gates stay fixed.

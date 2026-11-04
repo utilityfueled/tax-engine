@@ -19161,5 +19161,40 @@
     "fullIntegratedSuccessorQualified": false,
     "taxRulesChanged": false,
     "readinessChanged": false
+  },
+  "nov04NativeDirectMetadataDiagnosis": {
+    "status": "PASS_DIRECT_READONLY_TWO_PRESENT_ZERO_BYTE_LAYER_FILES",
+    "ledger": "docs/upgrade-2026-8487-native-build-export-work.md",
+    "candidateImageID": "c23e86d4acd3be5f90b7fa5c0a6ccb41dd291a4028c38b0e7020c8490354203b",
+    "v1StoppedAttemptReceiptSHA256": "eb68b8d61cee99acf969a5f37fb343b00eeef7d7acf097d8b722ad860b378254",
+    "v2ActualReceiptSHA256": "6d4d4d403be4cae57185f93e63d3e9288df91f626d0f77107dcb1828c80ea4b7",
+    "lowerBytes": 0,
+    "linkBytes": 0,
+    "storageRepairArchiveDeleteExport": false,
+    "rootCauseOfZeroBytesEstablished": false,
+    "nativeQualification": false,
+    "nextRoute": "NEW_SEPARATELY_OWNED_80GIB_VM_SOURCE_REVIEW; SHARED_SOCKET_STARTUP_BOUNDARY_OPEN"
+  },
+  "nov04FreshNativeVMInitV2": {
+    "status": "HOLD_INIT125_PINNED_TAG_DIGEST_PARSER_REJECTION",
+    "applicationCommit": "045fbedbdfbe612cb3caa28956fa7228bb3df320",
+    "ledger": "docs/upgrade-2026-8487-native-build-export-work.md",
+    "receiptSHA256": "2bca3d7e06ea4089abd1b156c9343f1b791f90eb21067272464df193b2730e4f",
+    "calls": 8,
+    "preservationClassificationsMatched": 5,
+    "newRegisteredMachineObserved": false,
+    "VMStarted": false,
+    "controllerCleanupAttempted": false,
+    "nativeQualified": false,
+    "next": "SOURCE_ONLY_LOCAL_PUBLISHED_BLOB_PIN; no mutable tag fallback"
+  },
+  "nov04FreshNativeV3Download": {
+    "status": "HOLD_DOWNLOAD_RETAINED",
+    "GETs": 1,
+    "redirectRejected": true,
+    "redirectTargetRetained": false,
+    "VMOperations": 0,
+    "receiptSHA256": "0bc534f163e15002bbc017022bb2b4732d9cb6c344017887cce36442626d7ea9",
+    "nativeQualified": false
   }
 }
