@@ -771,7 +771,15 @@ export function createHostedAuthRouteHandlers(
 
     const handler = toNextJsHandler(await (dependencies.authFactory ?? createHostedAuth)(config, env))[method];
 
-    return handler(request);
+    const response = await handler(request);
+    // Better Auth can serialize dependency failures instead of throwing them.
+    if (response.status >= 500) {
+      return NextResponse.json(
+        { error: "Authentication service is unavailable. Please try again later." },
+        { status: 503, headers: { "Retry-After": "30" } },
+      );
+    }
+    return response;
   }
 
   async function handle(method: HostedAuthRouteMethod, request: Request) {

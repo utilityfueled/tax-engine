@@ -173,25 +173,30 @@ async function createHostedAdapter(
     } as const;
   }
 
-  const actor = await resolveHostedWorkspaceActor({
-    env,
-    requestHeaders: request.headers
-  });
+  let actor: Awaited<ReturnType<typeof resolveHostedWorkspaceActor>>;
+  try {
+    actor = await resolveHostedWorkspaceActor({
+      env,
+      requestHeaders: request.headers
+    });
 
-  if (!actor) {
-    return {
-      response: buildOwnerRequiredResponse()
-    } as const;
-  }
-
-  if (!env.TAX_ENGINE_HOSTED_PREVIEW_ACTOR_ID?.trim()) {
-    const { entitlement } = await getHostedEntitlementByOwnerId(env, actor.id);
-
-    if (!entitlement.workspaceAccess) {
+    if (!actor) {
       return {
-        response: buildPlanRequiredResponse()
+        response: buildOwnerRequiredResponse()
       } as const;
     }
+
+    if (!env.TAX_ENGINE_HOSTED_PREVIEW_ACTOR_ID?.trim()) {
+      const { entitlement } = await getHostedEntitlementByOwnerId(env, actor.id);
+
+      if (!entitlement.workspaceAccess) {
+        return {
+          response: buildPlanRequiredResponse()
+        } as const;
+      }
+    }
+  } catch (error) {
+    return { response: buildPersistenceUnavailableResponse(error) } as const;
   }
 
   const hostedStoreFactory = dependencies.hostedStoreFactory

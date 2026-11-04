@@ -88,6 +88,29 @@ describe("hosted account recovery security boundary", () => {
     expect(await response.text()).not.toMatch(/postgres|password@|synthetic@/);
     expect(response.headers.get("cache-control")).toContain("no-store");
   });
+  it.each([500, 502, 503, 504])("contains returned upstream auth failure %s without private diagnostics", async (status) => {
+    // spec/federal/hosted-workspace-auth-outages.yaml: auth-upstream-response
+    const handler = vi.fn(async () => new Response("PRIVATE_UPSTREAM_DATABASE_ERROR", {
+      status, headers: { "set-cookie": "private_failure_cookie=secret; HttpOnly" },
+    }));
+    const routes = createHostedAuthRouteHandlers({ env, rateLimitStore: createRateLimitStore(), authFactory: async () => ({ handler }) } as never);
+    const response = await routes.GET(new Request("https://tax.example/api/auth/get-session"));
+    expect(response.status).toBe(503);
+    expect(response.headers.get("cache-control")).toContain("no-store");
+    expect(response.headers.get("retry-after")).toBe("30");
+    expect(response.headers.getSetCookie()).toEqual([]);
+    expect(await response.text()).not.toMatch(/PRIVATE_UPSTREAM|secret/);
+    expect(handler).toHaveBeenCalledOnce();
+  });
+  it.each([200, 400, 401, 403, 429])("preserves ordinary upstream auth status %s and cookies", async (status) => {
+    const handler = vi.fn(async () => new Response("ordinary", { status, headers: { "set-cookie": "session=value; HttpOnly" } }));
+    const routes = createHostedAuthRouteHandlers({ env, rateLimitStore: createRateLimitStore(), authFactory: async () => ({ handler }) } as never);
+    const response = await routes.GET(new Request("https://tax.example/api/auth/get-session"));
+    expect(response.status).toBe(status);
+    expect(response.headers.getSetCookie()).toEqual(["session=value; HttpOnly"]);
+    expect(await response.text()).toBe("ordinary");
+    expect(response.headers.get("cache-control")).toContain("no-store");
+  });
   it("rejects cross-origin and legacy URL-token routes before auth and fails closed without shared protection", async () => {
     const handler = vi.fn(async () => new Response("{}"));
     const routes = createHostedAuthRouteHandlers({ env, rateLimitStore: createRateLimitStore(), authFactory: async () => ({ handler }) } as never);

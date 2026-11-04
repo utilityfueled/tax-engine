@@ -1,0 +1,18 @@
+form: "Hosted-Workspace-Auth-Outages"
+fullName: "Workspace authentication and entitlement dependency failures return private service errors"
+taxYear: 2025
+reference: "docs/upgrade-2026-hosted-http-fault-rehearsal-spec.md"
+notes: "Actual production HTTP rehearsals on a757d735 returned500 during disposable PostgreSQL outage. Auth initialization exceptions returned503, but initialized auth may return a500 Response rather than throw. Workspace actor/entitlement awaited outside its existing persistence error boundary. Preserve session/plan denial semantics and every privacy, rate, body and persistence guard. No deployed outage or customer impact is claimed."
+lines:
+  - line: "actor-dependency"
+    description: "All five workspace handlers contain authentication dependency failures before persistence"
+    formula: "Thrown actor/session/database error returns503 with existing generic persistence-unavailable JSON and private,no-store,max-age0. It must not escape to a framework500 or expose private error values. No store/blob writes occur."
+    testRef: "tests/apps/web/hosted-workspace-cache-policy.test.ts::contains auth dependency failure for %s before persistence"
+  - line: "entitlement-dependency"
+    description: "All five workspace handlers contain billing entitlement dependency failures before persistence"
+    formula: "After an actual actor is resolved, thrown entitlement dependency error returns the same private generic503 without store/blob writes. Existing actual null-actor401 and denied-plan403 remain unchanged."
+    testRef: "tests/apps/web/hosted-workspace-cache-policy.test.ts::contains entitlement dependency failure for %s before persistence"
+  - line: "auth-upstream-response"
+    description: "Contain initialized authentication service failure Responses"
+    formula: "An upstream auth500/502/503/504 Response becomes the existing generic private503 with Retry-After30; discard upstream body, diagnostics and cookies. Ordinary200/400/401/403/429 Responses retain status and valid cookies. Thrown failures retain the existing503 boundary."
+    testRef: "tests/apps/web/hosted-auth-recovery.test.ts::contains returned upstream auth failure %s without private diagnostics"

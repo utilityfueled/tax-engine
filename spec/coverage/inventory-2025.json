@@ -6714,6 +6714,26 @@
       ]
     },
     {
+      "key": "federal/hosted-workspace-auth-outages",
+      "jurisdiction": "federal",
+      "taxYear": 2025,
+      "sourceAuthority": "docs/upgrade-2026-hosted-http-fault-rehearsal-spec.md",
+      "specPath": "spec/federal/hosted-workspace-auth-outages.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-workspace-cache-policy",
       "jurisdiction": "federal",
       "taxYear": 2025,

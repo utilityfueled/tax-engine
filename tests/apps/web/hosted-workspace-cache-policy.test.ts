@@ -43,6 +43,20 @@ beforeEach(()=>{
  mocks.rate.mockResolvedValue({allowed:true,remaining:29,retryAfterMs:null});
 });
 describe('hosted workspace returned response cache policy (existing APIs, synthetic dependencies)',()=>{
+ it.each(methods)('contains auth dependency failure for %s before persistence',async method=>{
+  const f=fixture();const save=vi.spyOn(f.store,'save');const upload=vi.spyOn(f.blobs,'save');
+  mocks.actor.mockRejectedValue(new Error('PRIVATE_AUTH_DATABASE_DETAIL'));
+  const response=await invoke(f.handlers,method);expect(response.status).toBe(503);
+  expect(await response.json()).toEqual(unavailableBody);cache(response);
+  expect(mocks.entitlement).not.toHaveBeenCalled();expect(save).not.toHaveBeenCalled();expect(upload).not.toHaveBeenCalled();
+ });
+ it.each(methods)('contains entitlement dependency failure for %s before persistence',async method=>{
+  const f=fixture();const save=vi.spyOn(f.store,'save');const upload=vi.spyOn(f.blobs,'save');
+  mocks.entitlement.mockRejectedValue(new Error('PRIVATE_ENTITLEMENT_DATABASE_DETAIL'));
+  const response=await invoke(f.handlers,method);expect(response.status).toBe(503);
+  expect(await response.json()).toEqual(unavailableBody);cache(response);
+  expect(save).not.toHaveBeenCalled();expect(upload).not.toHaveBeenCalled();
+ });
  it.each(methods)('keeps successful %s responses private and uncached',async method=>{
   const f=fixture();const response=await invoke(f.handlers,method);expect(response.status).toBe(200);
   const body=await response.json();expect(body.ownerScope).toEqual(owner);expect(body.availability).toBe('ready');
