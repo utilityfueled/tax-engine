@@ -1684,7 +1684,7 @@ function ohioActualSourceValues(value: unknown): unknown {
 
 function ohioHeaderActualSourceValues(value: OhioReturnHeaderDraft | undefined): unknown {
   if (!value) return value;
-  const {originalFederalSources:_f,originalOhioResidencySources:_r,originalOhioPaymentSources:_p,confirmedHeaderSources:_h,...actual}=value;
+  const {originalFederalSources:_f,originalOhioResidencySources:_r,originalOhioPaymentSources:_p,originalOhioSchoolDistrictSources:_s,confirmedHeaderSources:_h,...actual}=value;
   return ohioActualSourceValues(actual);
 }
 
@@ -1826,7 +1826,7 @@ export function updateSectionData(
     ...(currentOhioHeader&&invalidateHeader?{ohioReturnHeaderSources:{...currentOhioHeader,sourceFactsConfirmed:null}}:{}),
     ...(incomingStateReturn.ohioResidency && (ohioResidencyChanged||invalidateBusiness||invalidateResidentCredit) ? { ohioResidency: { ...incomingStateReturn.ohioResidency, sourceFactsConfirmed: null,...(currentOhioBusiness&&invalidateBusiness?{businessSources:invalidateOhioBusiness(currentOhioBusiness)}:{}),...(currentOhioResidentCredit&&invalidateResidentCredit?{residentCreditSources:invalidateOhioResidentCredit(currentOhioResidentCredit)}:{}) } } : {}),
     ...(incomingStateReturn.ohioPayments && ohioPaymentsChanged ? { ohioPayments: { ...incomingStateReturn.ohioPayments, sourceFactsConfirmed: null } } : {}),
-    ...(incomingStateReturn.ohioSchoolDistrict ? { ohioSchoolDistrict: { ...incomingStateReturn.ohioSchoolDistrict, sourceFactsConfirmed: null } } : {}),
+    ...(incomingStateReturn.ohioSchoolDistrict && (ohioResidencyChanged || ohioPaymentsChanged || ohioSchoolDistrictChanged || ohioReciprocalChanged || invalidateBusiness || invalidateResidentCredit) ? { ohioSchoolDistrict: { ...incomingStateReturn.ohioSchoolDistrict, sourceFactsConfirmed: null } } : {}),
     ...(incomingStateReturn.ohioReciprocalWages && (ohioResidencyChanged || ohioPaymentsChanged || ohioSchoolDistrictChanged || ohioReciprocalChanged) ? {ohioReciprocalWages:{...incomingStateReturn.ohioReciprocalWages,sourceFactsConfirmed:null}} : {}),
   } : undefined;
   return {
@@ -2186,7 +2186,7 @@ function guidedOhioActualSourceErrors(state: GuidedFlowState): Record<string, st
       catch(error){errors.ohioResidentCredit=error instanceof Error?error.message:'Complete and explicitly confirm the actual Virginia return and completed account sources.';}
     }
     if(data?.ohioReturnHeaderSources){
-      try{buildGuidedOhioReturnHeaderSources(parsed.data,data.ohioReturnHeaderSources,data.ohioResidency,data.ohioPayments);}
+      try{buildGuidedOhioReturnHeaderSources(parsed.data,data.ohioReturnHeaderSources,data.ohioResidency,data.ohioPayments,data.ohioSchoolDistrict);}
       catch(error){errors.ohioReturnHeader=error instanceof Error?error.message:'Complete and explicitly confirm the actual residential, Finder and county originals.';}
     }
     if(data?.ohioReciprocalWages){

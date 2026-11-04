@@ -5,6 +5,7 @@ import type { TaxYearInput } from '@/models/inputs';
 import { OHIO_HEADER_2025_BOOKLET_SHA256 } from '@/models/ohio-return-header-sources';
 import type { OhioResidencyDraft } from '@/lib/guided-ohio-residency-facts';
 import type { OhioPaymentDraft } from '@/lib/guided-ohio-payment-facts';
+import type { OhioSchoolDistrictDraft } from '@/lib/guided-ohio-school-district-facts';
 import { confirmGuidedOhioReturnHeaderSources, emptyOhioReturnHeaderDraft, emptyOhioHeaderResidencePeriod, type OhioReturnHeaderDraft } from '@/lib/guided-ohio-return-header-sources';
 import { BooleanFact, TextFact } from './fact-fields';
 
@@ -16,12 +17,13 @@ const addressLabels: Record<AddressKey, readonly [string, string, string, string
     finderOriginal: ['Finder queried residential street', 'Finder queried residential city', 'Finder queried residential state', 'Finder queried residential ZIP', 'Finder queried residential apartment'],
     countyOriginal: ['County original residential street', 'County original residential city', 'County original residential state', 'County original residential ZIP', 'County original residential apartment'],
 };
-export function OhioReturnHeaderDetails({ data, onChange, originalInput, ohioResidency, ohioPayments, taxYear }: {
+export function OhioReturnHeaderDetails({ data, onChange, originalInput, ohioResidency, ohioPayments, ohioSchoolDistrict, taxYear }: {
     data: OhioReturnHeaderDraft | undefined;
     onChange: (next: OhioReturnHeaderDraft) => void;
     originalInput?: TaxYearInput | null;
     ohioResidency: OhioResidencyDraft | undefined;
     ohioPayments: OhioPaymentDraft | undefined;
+    ohioSchoolDistrict?: OhioSchoolDistrictDraft;
     taxYear?: number | null;
 }) {
     const [error, setError] = useState<string | null>(null);
@@ -99,7 +101,7 @@ export function OhioReturnHeaderDetails({ data, onChange, originalInput, ohioRes
             <p role="status">{data.sourceFactsConfirmed === true ? 'Stored header confirmation; current originals are checked again when used.' : 'Header originals need explicit confirmation.'}</p>
             <button type="button" className="utility-button" onClick={() => {
                 if (!originalInput || taxYear !== originalInput.taxpayer.taxYear) { setError('Current return originals and the matching selected source year are required.'); return; }
-                try { const confirmed = confirmGuidedOhioReturnHeaderSources(originalInput, data, ohioResidency, ohioPayments); setError(null); onChange(confirmed); }
+                try { const confirmed = confirmGuidedOhioReturnHeaderSources(originalInput, data, ohioResidency, ohioPayments, ohioSchoolDistrict); setError(null); onChange(confirmed); }
                 catch { setError('Complete and reconcile the actual header records with current confirmed residency, payment and resident-credit originals.'); }
             }}>Confirm actual Ohio resident return header sources</button>
             {error && <p role="alert" style={{ overflowWrap: 'anywhere' }}>{error}</p>}

@@ -112,7 +112,7 @@ export function buildGuidedStateOriginals(input: TaxYearInput, state?: GuidedFlo
     if(data?.ohioResidency?.residentCreditSources)ohioResidency=buildGuidedOhioResidentCreditSources(input,data.ohioResidency.residentCreditSources,ohioResidency,ohioPayments);
     const ohioSchoolDistrict=ohioResidency.schoolDistrictStatus==='actual_district_sources_required'||data?.ohioSchoolDistrict||input.ohioSchoolDistrict
       ?buildGuidedOhioSchoolDistrictFacts(input,data?.ohioSchoolDistrict,data?.ohioResidency,data?.ohioPayments):undefined;
-    const ohioReturnHeaderSources=data?.ohioReturnHeaderSources?buildGuidedOhioReturnHeaderSources(input,data.ohioReturnHeaderSources,data.ohioResidency,data.ohioPayments):undefined;
+    const ohioReturnHeaderSources=data?.ohioReturnHeaderSources?buildGuidedOhioReturnHeaderSources(input,data.ohioReturnHeaderSources,data.ohioResidency,data.ohioPayments,data.ohioSchoolDistrict):undefined;
     return {...input, ohioResidency, ohioPayments,...(ohioSchoolDistrict?{ohioSchoolDistrict}: {}),...(ohioReturnHeaderSources?{ohioReturnHeaderSources}:{})};
   }
   if (state.segmentation.stateCode === "PA") {
