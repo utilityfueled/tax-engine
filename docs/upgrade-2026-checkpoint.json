@@ -19331,5 +19331,23 @@
     "committedMutations": [],
     "privacyQualified": false,
     "next": "INDEPENDENT_ACTUAL_METADATA_REVIEW_AND_NARROW_SOURCE_SUCCESSOR"
+  },
+  "nov04NativeBootAndStop": {
+    "ledger": "docs/upgrade-2026-8487-native-build-export-work.md",
+    "status": "PASS_OWNED_STOPPED_ROUTE_RESTORED_ONLY",
+    "guestPodmanVersion": "6.0.2",
+    "guestArchitecture": "aarch64",
+    "guestMountAdmission": "HOLD_INPUT_SHARE_WRITABLE",
+    "sourceTransferred": false,
+    "buildOrStorageAPICalls": 0,
+    "actualStopReceiptSHA256": "70f6fa3880b81386d46678efe4ad8cb12ef606ee6b8058d2a5b6091f4666a944",
+    "stopCalls": 1,
+    "totalStopControllerCalls": 9,
+    "ownedVMStopped": true,
+    "ownedHelpersAbsent": true,
+    "originalRouteRestored": true,
+    "completedWithinOriginal15Minutes": true,
+    "nativeQualified": false,
+    "next": "REVIEW_NO_HOST_EXPORT_REHEARSAL_SOURCE_AND_EXPLICIT_NEW_BOOT_SCOPE"
   }
 }

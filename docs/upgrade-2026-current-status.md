@@ -61,8 +61,11 @@ checks now pass; actual image/browser/hosted qualification remains required. See
 The later verified official machine-image transfer and local-file initialization
 now produce a separate stopped80GiB test VM with exactly two empty scoped mounts.
 All existing-state preservation classifications match, with independent actual
-review. No guest is booted or qualified; shared-routing startup and every
-same-image native gate remain open. The old candidate's zero-byte layer records
+review. A later approved diagnostic boots the empty guest once, observes Podman6.0.2,
+and fails strict read-only mount admission. The separately reviewed owned stop
+restores the original user route within the original15-minute window; both
+helper processes are absent. No application source or build/store workload runs;
+every same-image native gate remains open. The old candidate's zero-byte layer records
 are diagnosed but not repaired. [Current native ledger](upgrade-2026-8487-native-build-export-work.md).
 
 The independently reviewed NOLOGIN bootstrap V2 now retains one actual failure: fresh catalog comparison passes, then role metadata validation stops before COMMIT and cleanup ROLLBACK returns. No database-create attempt, password or LOGIN occurs. The separate rollback-only diagnostic now captures safe metadata and passes fresh before/after catalog reconciliation, including target absence; its strict-policy mismatch awaits independent interpretation. This is not a confirmed setup or privacy PASS. See [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).

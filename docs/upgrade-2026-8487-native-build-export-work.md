@@ -218,3 +218,41 @@ Startup requires a separate concrete shared-routing boundary and source review.
 Actual guest version/resources, new exact045 application build, strict Docker
 archive/restart/import, smoke, browser, recovery, SBOM/scan and release gates
 remain open. All old stores, candidates and failed receipts remain untouched.
+
+## Bounded boot diagnostic and owned stop
+
+The owner separately approved one diagnostic boot lasting at most15minutes.
+The new empty VM starts once. The startup controller stops on helper provenance
+admission: existing containers.conf selects custom helper binaries, whereas
+the controller expected Homebrew paths. Exact PID, UID, process start time,
+executable bytes and complete arguments subsequently establish ownership of
+the two actual helpers; no process-wide or unproved cleanup is attempted.
+
+The fixed read-only guest diagnostic observes Podman6.0.2, ARM64,2CPUs,
+7,626,996KiB memory and81,703,424,000-byte disk. Its input mount reports writable
+despite persisted ReadOnly=true; the strict mount check stays failed. Both
+scoped host directories remain empty. No source transfer, build, image/store
+API or qualification follows this observation. The /mnt to /var/mnt target
+canonicalization is retained separately from the read-only failure.
+
+A separately authored, independently reviewed stop-only controller binds the
+actual helper identities and original absolute deadline. Its17author checks
+and24additional assertions pass before execution. The actual run completes
+nine CLI calls with exactly one owned stop. The new VM is stopped, both owned
+helpers are absent, the original user socket route is restored, and protected
+old-VM/default/root-route/configuration identities match. It finishes before
+the original deadline; no new authorization window is introduced.
+
+The result is `PASS_OWNED_STOPPED_ROUTE_RESTORED_ONLY`, not native qualification.
+Guest mount admission, exact-source application build, restart/import, browser,
+recovery and final SBOM/security gates remain open. No old store is repaired,
+deleted or exported, and no further boot is authorized by this diagnostic.
+
+Private retained bindings:
+
+- Startup actual HOLD receipt: `994ffc6a0307228f1e77622ac2ed6a453460fb9d99c723f7f907b85d4cdfa6a7`.
+- Targeted process ownership proof: `8f3add104cfb4f5a77b739d6d85849d52fac5d1993a450e6340cbde61523f340`.
+- Guest mount HOLD receipt: `094cbf9c36b8a0faa6217c01a10461f5d64aa155e81c7579fa6d87816970a17c`.
+- Stop-only source manifest: `1d9101c8c9163c6a29be165f79ce9626e5569a9ec99ea922ace249cf7426dac0`.
+- Independent source-review manifest: `167c63e196509181134ff5cb9330f808ee3841bf68f91af7f6518df1309e4a51`.
+- Actual stop/restoration receipt: `70f6fa3880b81386d46678efe4ad8cb12ef606ee6b8058d2a5b6091f4666a944`.

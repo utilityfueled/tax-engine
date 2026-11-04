@@ -3089,3 +3089,14 @@ The separately reviewed rollback-only diagnostic now passes217queries/10rollback
 with fresh before/after baseline reconciliation and target absence. Safe metadata
 captures a strict-policy mismatch for independent interpretation; privacy, LOGIN,
 deployment and broader hosting qualification remain open.
+
+### November 4: bounded guest diagnostic and route restoration
+
+The separately approved empty test VM boots once and reports Podman6.0.2,
+ARM64 and expected resources. Its intended read-only input mount is writable,
+so admission remains failed and both shares remain empty. Custom helper paths
+explain the startup provenance HOLD. Exact owned-process proof precedes a
+separate17author/24independent-control stop helper; actual nine-call execution
+stops the VM and restores the original user socket route within15minutes.
+No source transfer, build/store workload or native qualification occurs.
+See [the native ledger](upgrade-2026-8487-native-build-export-work.md).
