@@ -18493,7 +18493,7 @@
     "ledger": "docs/upgrade-2026-hosted-preview-runtime-identity-work.md"
   },
   "currentContinuation20261104": {
-    "applicationSource": "6bc0d74760e1e1a8bd2265606616f5dc59295c81",
+    "applicationSource": "76af2285b7e0a805841dd26b0be209f7b3fc334d",
     "index": "docs/upgrade-2026-current-status.md",
     "localFullVerificationSource": "f09a3dd7ad2f3a12f02a8d50efd0da01050033e6",
     "currentFullVerificationPassed": false,
@@ -18522,7 +18522,7 @@
       "evidence": "docs/upgrade-2026-image-advisories-20261104.json"
     },
     "releaseReady": false,
-    "applicationCommit": "6bc0d74760e1e1a8bd2265606616f5dc59295c81",
+    "applicationCommit": "76af2285b7e0a805841dd26b0be209f7b3fc334d",
     "ohPartYearSchoolPaper": {
       "commit": "a757d735",
       "focusedMainPassed": 22,
@@ -18638,6 +18638,106 @@
       "sourceValidated": true,
       "newRemoteRuntimePassed": false,
       "ledger": "docs/upgrade-2026-ci-immutable-image-work.md"
+    }
+  },
+  "nov04B254GlobalAndArtifactEvidence": {
+    "sourceCommit": "b25496d505c59171e8cde1126e42436fdf799747",
+    "unitPassed": 25147,
+    "files": 1849,
+    "unitFailed": 0,
+    "unitSkipped": 0,
+    "coverage": {
+      "statements": 91.75,
+      "branches": 87.51,
+      "functions": 90.63,
+      "lines": 94.98
+    },
+    "thresholdsUnchanged": true,
+    "globalReceiptSHA256": "cc21cc62c7d34f3dbf2e3183933ba244d8c7a333592920d076d00c703773fa19",
+    "independentGlobalSHA256": "b8a2204d8477e69937120f536e3ec10372ecb9a1bd0765931f96dc5a844e515c",
+    "lintWarnings": 11715,
+    "lintAddedWarningsAgainstF09": 0,
+    "localManaged": {
+      "passed": 565,
+      "skipped": 5,
+      "failed": 0,
+      "retries": 0,
+      "flaky": 0
+    },
+    "remoteCI": {
+      "run": 41801597458,
+      "allSixJobsPassed": true
+    },
+    "remoteManaged": {
+      "passed": 565,
+      "skipped": 5,
+      "configuredRetries": 1,
+      "actualRetriesIndividuallyObserved": false
+    },
+    "remoteWeb": {
+      "run": 41801597467,
+      "result": "FAIL",
+      "syntheticMerge": "17d67b735e4bbfe070282c55e6403793bd9fd8eb",
+      "tree": "d26f56e5a86f3d66129b4bbcc080010e9f78f5b2",
+      "treeMatchesB254": true,
+      "image": "sha256:ce1934ab50e42e7e0bb1a6430377c76bf8570371c3cb85672c5af821ee792909",
+      "browserPassed": 541,
+      "browserFailed": 24,
+      "browserSkipped": 5,
+      "browserRetries": 0,
+      "timeoutMilliseconds": 30000,
+      "smokePassed": true,
+      "syntheticRecoveryPhasesPassed": 6,
+      "savedImageBindingPassed": true,
+      "advisoryMatches": 181,
+      "advisoryIDs": 80,
+      "criticalMatches": 0,
+      "riskAccepted": false
+    },
+    "remoteIndependentReceiptSHA256": "fdb8c19b0492a177d84fd178e0f88dc047736a2e9555d4d58420d07bd8867f3e",
+    "currentFinalSourceQualified": false,
+    "releaseReady": false
+  },
+  "nov04HostedIngestionShell": {
+    "commit": "76af2285b7e0a805841dd26b0be209f7b3fc334d",
+    "focusedPassed": 31,
+    "adjacentPassed": 64,
+    "relevantChecksetsPassed": 11,
+    "mainReceiptSHA256": "67d88dba7bde8ae987417c04159217fe950e8e231537723347a7745fbec4d1d3",
+    "independentSourceSHA256": "0dbcdcd019c432607e8d21ebbf12073f3da410b4c5acf71d2066c3df2527d4b1",
+    "actualSuccessorPreviewPassed": false,
+    "filenameDerivedIDsPrivacyRepairPending": true,
+    "ledger": "docs/upgrade-2026-hosted-workspace-ingestion-shell-work.md",
+    "releaseReady": false
+  },
+  "nov04PreviewIsolatedSchemaRehearsal": {
+    "sourceCommit": "9d38882585e05b3fe42ca1657edfb746ec1a7075",
+    "resourceID": "store_yj7rrlUl873SaeLp",
+    "privateCredentialTransferComplete": true,
+    "latestRunner": "V4.1",
+    "status": "FAIL_STOPPED",
+    "phase": "readonly-preflight",
+    "safeFailingCheck": "SESSION_SSL",
+    "schemaCreated": false,
+    "ownSessionsRemaining": 0,
+    "clientTLSProxyDiagnosticPending": false,
+    "existingAppRowsReadOrWritten": false,
+    "finalSourceQualified": false,
+    "releaseReady": false,
+    "separateReadOnlyTransportDiagnostic": {
+      "receiptSHA256": "7c3120e25d33e26eb424548440e48d39060738647af79253566d859a4b15191e",
+      "status": "PASS_READONLY_TRANSPORT_OBSERVATIONS_ONLY",
+      "pgStatSSL": false,
+      "clientEncrypted": true,
+      "clientAuthorized": true,
+      "TLSProtocol": "TLSv1.3",
+      "hostnameVerified": true,
+      "databaseAndRoleIdentityMatch": true,
+      "schemaAbsent": true,
+      "readOnlyRolledBack": true,
+      "clientClosed": true,
+      "providerInternalHopVerified": false,
+      "rehearsalPassed": false
     }
   }
 }

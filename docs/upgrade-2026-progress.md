@@ -2879,3 +2879,36 @@ gap alongside the delivered physical, TLS and PDF security packages.
 Headere8d0a2c5 passes37focused/489adjacent and all12validation sets. Browser6bc0d747 passes four real desktop/mobile refund/known-zero source, reconfirmation, review-download, reopen and deletion journeys without retries/skips or longer deadlines. Distinct saved4PDF/124page review passes660cells/88statuses,48geometry records and62exact text/RGB page pairs. The retained failed reader and long-message premises were corrected from source-first contracts; tax, source and filing oracles remain unchanged. See [the browser ledger](upgrade-2026-oh-school-district-part-year-native-browser-work.md).
 
 CI8755e1f2 binds every runtime operation and native SBOM/scan to full immutable image/source/config/rootfs identity;03ed65b9 separately retains failure traces with retries0. Source checks and independent review pass; actual remote runtime evidence is pending. See [the CI ledger](upgrade-2026-ci-immutable-image-work.md). Final-source full checks, native qualification, approved Preview migration/recovery, provider runs, professional reviews, advisory decisions and final2026 forms remain required.
+
+### November 4: full b254 evidence and actual hosted upload repair
+
+Exactb254 local and remote PostgreSQL-backed unit/coverage checks each pass
+25,147 tests in1,849 files with no failures/skips. Coverage is91.75% statements,
+87.51% branches,90.63% functions and94.98% lines at unchanged thresholds; all
+required types/spec/inventory/build/lint checks pass. Lint has11,715 inherited
+warnings, zero additions againstf09. Local full managed browser passes565/five
+hosted skips with retries0; remote managed also passes565/five skips with
+configuredretry1. Skipped hosted cases supply no staging proof.
+
+Remote CI41801597458 passes all six jobs. Web41801597467 fails its exact-tree
+AMD64 image browser:541PASS/24FAIL/fiveSKIP at unchanged30s/retries0. The
+synthetic merge17d67b73 has the exactb254 tree; immutablece1934ab image smoke,
+six-phase synthetic recovery and full-config/rootfs/SBOM/source binding pass.
+The scan's181Debian matches/80IDs/zeroCritical are not accepted risk. All failed
+traces remain retained; a measured reciprocal CPU diagnostic continues without
+weakened browser assertions or expanded deadlines.
+
+An actualb254 Preview official blank-W2 upload rejects shell metadata. Narrow
+hosting fix76af2285 accepts only canonical public interview prompts alongside
+existing fact IDs. Independent source review approves; main31focused/64adjacent
+and all11relevant checksets pass, including both builds and zero owned lint
+warnings. See [the hosting ledger](upgrade-2026-hosted-workspace-ingestion-shell-work.md).
+Actual successor Preview and a separate filename-derived-ID privacy repair remain
+pending.
+
+Approved Preview credential transfer is complete privately. The historical9d
+synthetic schema runner stops at its read-only SESSION_SSL guard, before schema
+creation, with own sessions closed. Separate read-only observations verify client TLS1.3, CA/hostname and exact
+identity while backend pg_stat_ssl=false. The provider internal hop remains
+unverified. No migration/restore or final-source rehearsal is claimed. Human reviews, provider access/evaluation, advisory dispositions,
+final2026 forms and all final-distribution/staging gates remain required.
