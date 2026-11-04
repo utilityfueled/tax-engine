@@ -18401,5 +18401,30 @@
     "ciAndDistributionPerformanceVerified": false,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-oh-reciprocal-official-review-work.md"
+  },
+  "ohBusinessJuly212NativeBrowser20261104": {
+    "testedSourceBase": "ad23b0fad2d76013173151d68700c212783d67cb",
+    "mainCompositionBase": "9d388825",
+    "newFiles": 3,
+    "productChanges": 0,
+    "actualManagedJourneys": 2,
+    "passed": 2,
+    "retries": 0,
+    "managedTimeoutMilliseconds": 90000,
+    "priorV3FailuresPreserved": 2,
+    "sourceReviewSHA256": "82973aac682fe744f5e3ca983df2d818e8858e6b4865617ace99ae6c22f09d4e",
+    "actualLogSHA256": "0b519bcd7eaccbcff322bfbdf97012bfc0203fb26137d694f0dbbf543b4b2dc8",
+    "savedReviewSHA256": "c5bf906bdfd3b1af538a4dbf129a5766edac50e356d87855a447300971ccde67",
+    "pdfs": 2,
+    "pages": 88,
+    "sourceCells": 780,
+    "sourceStatusAppearances": 82,
+    "geometryRecords": 38,
+    "screenshots": 40,
+    "mainChecks": "strict lint0/webtypes/spec/inventory generation+check PASS",
+    "actualImageAndPreviewQualified": false,
+    "filingQualified": false,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-oh-business-part-year-native-browser-work.md"
   }
 }

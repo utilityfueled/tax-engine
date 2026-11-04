@@ -4,6 +4,8 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] Actual July212 Ohio business/header desktop/mobile native sources pass2/2 with unchanged90s managed budget/retries0. Independently reviewed2PDF/88pages/780cells/82statuses and38geometry records pass. Mainstrict/types/spec/inventory pass; image30s/Preview/human/final2026 gates remain open. See [the browser ledger](upgrade-2026-oh-business-part-year-native-browser-work.md).
+
 - [x] Reciprocal saved-PDF reader caches each parsed page within one fresh file. All40 tests, assertions and5000ms budgets remain unchanged. Serial original/proposed40 both pass; independent81PDF-per-run semantic/privacy parity passes. Strict lint0. Local timing17.09→9.96s is bounded evidence; current CI/image performance remains required. See [the reader ledger](upgrade-2026-oh-reciprocal-official-review-work.md).
 
 - [x] Separate2025 Ohio212-day business/header method now binds actual majority-year
