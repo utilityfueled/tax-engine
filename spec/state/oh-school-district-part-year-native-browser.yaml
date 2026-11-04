@@ -1,0 +1,52 @@
+form: "Ohio SD100 part-year native browser"
+taxYear: 2025
+status: "Bounded production-managed four journeys PASS; independent saved-artifact review pending"
+jurisdiction: OH
+source: "Official 2025 Ohio booklet, pinned SD100/withholding bundle, reviewed actual dated-payroll fixture"
+source_commit: "10c9f7825c3089919db0207ea0be6fb20df538fb"
+authorities:
+  - "Official 2025 Ohio IT1040 booklet, printed pages 15 and 51; retained original SHA931b21e7484ba96e561cf2346d8a7d2a8005bd990724b5903c9a90acede5f50e"
+  - "Official 2025 SD100/withholding original bundle; pinned source rectangles and AP states in oh-school-district-part-year-official-review fixture"
+  - "state/oh-school-district-part-year-sources.yaml; actual dated payroll determines wages, never day proration"
+finite_scope:
+  - "Single primary taxpayer 35; actual OH/Hillsdale home January 1–July 31 and VA home August 1–December 31"
+  - "Actual independently supplied Ashland county/Finder originals at the OH home; Virginia mailing address is separate"
+  - "One actual annual W2 60000, OH-service payroll 40000 and VA-service payroll 20000; complete unrelated federal originals seeded only once"
+  - "Originate residency, IT payment, school payroll/account and header facts through typed visible controls and explicit confirmation, never post-seed storage writes"
+  - "Desktop 1280x900 and mobile 390x844, refund100 and covered0; four production-managed journeys"
+lines:
+  - line: "dated-source-lifecycle"
+    label: "Actual part-year school source and review boundary"
+    formula: "Blank/unknown drafts deny confirmation; same-cash source-reference edit and unknown payroll invalidate; saved snapshots retained until explicit reconfirmation; reopen immutable"
+    testRef: "apps/web/tests/oh-school-district-part-year-native.spec.ts::originates dated school and header originals through actual review and saved reopen"
+  - line: "separate-cash"
+    label: "Actual part-year school source and review boundary"
+    formula: "School taxable earned wages=40000; rate=.0125; tax=500. SD WH600/refund100 or WH500/refund0; IT withholding2000 remains separate. No estimated/prior/outgoing payment inference"
+    testRef: "apps/web/tests/oh-school-district-part-year-native.spec.ts::originates dated school and header originals through actual review and saved reopen"
+  - line: "printed-source-cells"
+    label: "Actual part-year school source and review boundary"
+    formula: "Every 165 text and22 AP states per actual packet match pinned original cells; rows0302/212/.5808 and9999/153/.4191; CountyASHL; VA mailing address; source SSN blank"
+    testRef: "apps/web/tests/oh-school-district-part-year-native.spec.ts::originates dated school and header originals through actual review and saved reopen"
+  - line: "actual-public-review"
+    label: "Actual part-year school source and review boundary"
+    formula: "Visible Download Review PDF returns200 review/no-store and identical saved/download bytes; actual SD1003pages+W1page included; unsupported PY IT1040 paper omitted; actual filing request400 unchanged"
+    testRef: "apps/web/tests/oh-school-district-part-year-native.spec.ts::originates dated school and header originals through actual review and saved reopen"
+  - line: "truthful-qualified-copy"
+    label: "Qualified actual method disclosure"
+    formula: "Actual source panel names Ashland/Hillsdale header originals and conditional PY availability; shared summary names only qualified original-bound full-year or212/153-payroll methods, with filing unavailable. Separate approved copy-only successor is a runtime dependency; this browser package changes no product."
+    testRef: "apps/web/tests/oh-school-district-part-year-native.spec.ts::originates dated school and header originals through actual review and saved reopen"
+  - line: "privacy-geometry"
+    label: "Actual part-year school source and review boundary"
+    formula: "All saved objects/streams/raw decodings contain no actual SSN/private source markers; zero fields/widgets/actions; one review notice per page. No outbound private data except explicit local review API; no Finder/provider calls; per-phase viewport/control geometry and console clean"
+    testRef: "apps/web/tests/oh-school-district-part-year-native.spec.ts::originates dated school and header originals through actual review and saved reopen"
+budgets:
+  policy: "Existing production-managed Playwright config unchanged:90s per test,180s webserver,2workers; CLI retries0, no increased timeout"
+  pdf: "Saved-only strict Python reader30s, source constants/coordinates pinned before output; independent visual review remains separate"
+
+helper_locator_contract: "Exact visible label identifies its direct-parent label row; that row must contain one exact label and one current input/select even when CurrencyField nests the input in its own wrapper."
+
+residency_row_setup_contract: "Existing Add primary owner creates one unknown period. Assert its blank from-date, then add only the missing second row; enter exactly the unchanged two actual212/153-day periods. Never assume an empty owner row list or infer dates."
+
+unchecked_status_appearance_contract: "A selected status requires exactly one visibly selected source appearance [True]. An unchecked source status permits no painted appearance [] or one blank Off appearance [False], and rejects selected ink or duplicate appearances. All22 statuses remain asserted. No text/cell/cash/privacy oracle changes."
+
+long_validation_readability_contract: "Blank-school and blank-header validation messages are scrollable page text, not controls required to fit in one viewport. Preserve each complete message, count1 and horizontal bounds. Independently scroll actual first and last text-character Ranges to viewport center and require each actual line rect fully in viewport and unobscured with the whole message unchanged; record phase-specific evidence. The original full-viewport anchor checks continue unchanged for every interactive control and other phase, including both blank-phase confirm buttons; do not hide, shorten, collapse or resize the alert or widen the viewport."
