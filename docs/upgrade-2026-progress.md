@@ -2,12 +2,21 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] Exact73f95517 Preview multipart boundaries pass five actual requests:
+  file4MiB and whole4,456,448 bytes accept200; each plus-one returns the fixed
+  app413;5MiB reaches platform413. Fresh test-account auth, private/no-store,
+  scoped deletion/absent readback and unrelated baseline preservation pass.
+  Distinct source/result reviews pass; browser uploader wiring, durable blobs,
+  outages and final-artifact release qualification remain open.
+  [Evidence](upgrade-2026-staging-upload-abuse-probes-work.md).
+
 - [x] Hosted multipart upload requests now enforce measured binary/envelope limits,
   bounded cancellation and fixed platform413 guidance. Current source-first
   19FAIL/14PASS precedes190unique affected tests passing without skips/unhandled
   errors; private ten type/spec/strict/inventory/build sets and current main
   190/spec/inventory checks pass. The committed JSON boundary stays intact.
-  Actual new Preview and final distribution/global qualification remain open.
+  The exact73 Preview successor now passes the bounded five-request rehearsal;
+  final distribution/global qualification remains open.
   [Evidence](upgrade-2026-hosted-upload-request-limits-work.md).
 
 - [x] Owner verification now permits the fresh5996 Preview database follow-up:

@@ -1,6 +1,6 @@
 # Hosted upload request limits — source-first work
 
-Current integration status (November4): source-first19FAIL/14PASS, then190unique affected tests and ten private type/spec/lint/inventory/build checksets pass on committed84e9 plus the reviewed seven paths. Current9020 checkout integration also passes the same190 tests, spec and inventory checks. The earlier stages below are historical; actual new Preview, full upload-composed global checks and final distribution/release qualification remain open.
+Current integration status (November4): source-first19FAIL/14PASS, then190unique affected tests and ten private type/spec/lint/inventory/build checksets pass on committed84e9 plus the reviewed seven paths. Current9020 checkout integration also passes the same190 tests, spec and inventory checks. The committed73f95517 Preview now passes five actual multipart boundary requests and scoped cleanup; see the [staging ledger](upgrade-2026-staging-upload-abuse-probes-work.md). The earlier stages below are historical; full upload-composed global checks and final distribution/release qualification remain open.
 
 
 The observed Preview accepted a synthetic 1 MiB upload but rejected a 5 MiB request at the platform with HTTP 413 `FUNCTION_PAYLOAD_TOO_LARGE`. Vercel documents a 4.5 MB whole-request limit. This is a request boundary; it does not demonstrate a cache leak, durable document storage, or general release qualification.

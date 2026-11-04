@@ -18317,5 +18317,34 @@
     "lockSha256": "d199e2344fa6cf61402330f216e3f7ccf6bc9b5e7a568670b29a9fe27dc8c23f",
     "ledger": "docs/upgrade-2026-hosted-upload-request-limits-work.md",
     "releaseReady": false
+  },
+  "stagingMultipart73Successor20261104": {
+    "status": "bounded actual Preview multipart ingress passed; release not qualified",
+    "sourceCommit": "73f9551779e69cf43ad317dd4d725b36dc99452b",
+    "deploymentId": "dpl_6HMwthLv7BzVnrofVUzWE2EEx7rZ",
+    "checkedAtUtc": "2026-11-04T02:59:22.468621+00:00",
+    "actualHttpStatuses": [
+      200,
+      413,
+      200,
+      413,
+      413
+    ],
+    "fileLimitBytes": 4194304,
+    "requestLimitBytes": 4456448,
+    "inclusiveAndPlusOnePassed": true,
+    "oneExistingAccountSignInPassed": true,
+    "privateNoStorePassed": true,
+    "scopedCleanupAndUnrelatedBaselinePassed": true,
+    "receiptSha256": "762a430b974367b9097e7e8386de51048caa054f785ffabe522ba3aa40abe95b",
+    "preparedIndependentReviewSha256": "3514d6752b94b0105765b2d4aa998efa4513bb6f00e9ae9233a2f0e56e3bcb4a",
+    "actualResultsIndependentReviewSha256": "da74ee95e920525b488899305ebc8cfa562f9b1ce65aa1695b1fcc3c8ccf3040",
+    "limits": [
+      "direct multipart API only; existing local file picker does not call exported uploader",
+      "no durable blob readback or forensic erasure claim",
+      "no exact hosted Node patch identity or outage/recovery qualification",
+      "no final-artifact release qualification"
+    ],
+    "ledger": "docs/upgrade-2026-staging-upload-abuse-probes-work.md"
   }
 }
