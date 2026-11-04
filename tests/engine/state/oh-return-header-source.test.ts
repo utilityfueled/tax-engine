@@ -10,6 +10,7 @@ import {fillOhioReferenceForms} from '@/pdf/mappings/2025/fill-oh-reference-form
 import {redactReviewIdentifiers} from '@/pdf/redact-review-identifiers';
 import {calculateOhioReturnHeaderSource} from '@/engine/state/oh-return-header-source';
 import {ohioReturnHeaderFixture} from '../../fixtures/oh-return-header-sources';
+import {ohioReturnHeaderPublicReviewFixture} from '../../fixtures/oh-return-header-public-review';
 it('Ohio header derives actual2503 and FRAN without using mailing geography',()=>{
  const f=ohioReturnHeaderFixture(),before=structuredClone(f),r=calculateOhioReturnHeaderSource(f.input,f.header);
  expect(r.header).toEqual({schoolDistrictNumber:'2503',ohioCounty:'FRAN',residency:'resident'});expect(r.residentDays).toBe(365);expect(r.methodVersion).toBe('oh-2025-resident-header-v1');expect(r.sourceCommitment).toMatch(/^[a-f0-9]{64}$/);expect(f).toEqual(before);
@@ -33,7 +34,7 @@ it('Ohio header safe projection and audit omit private source originals',()=>{
 });
 
 it('Ohio header public review excludes private originals from every saved object without provider transfer',async()=>{
- const f=ohioReturnHeaderFixture(),input={...f.input,ohioReturnHeaderSources:f.header},before=structuredClone(input);
+ const f=ohioReturnHeaderPublicReviewFixture(),input={...f.input,ohioReturnHeaderSources:f.header},before=structuredClone(input);
  const request=vi.fn(()=>{throw Error('Header review cannot transfer actual originals to a provider');});vi.stubGlobal('fetch',request);
  const root=process.env.TAX_ENGINE_OH_HEADER_ARTIFACT_DIR;if(root)await mkdir(root,{recursive:true});
  const dir=await mkdtemp(join(root??tmpdir(),'oh-header-private-review-'));

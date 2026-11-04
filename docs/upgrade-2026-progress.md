@@ -2720,3 +2720,7 @@ The webhook now honors existing billing and durable database blocked flags befor
 ### November 4: actual subscription reconciliation Preview deliveries
 
 READY5996 Preview accepts a fresh sandbox subscription event, same-event duplicate and metadata-cleanup event with200. The temporary metadata is removed; ROOT reports14unchanged subscription fields. Distinct receipt/source consistency review passes, without independent network execution. The scoped scalar DB query waits for fresh Vercel verification;200alone is not exactly-once or entitlement proof. See [the ledger](upgrade-2026-staging-subscription-successor-work.md). Current-source/full hosted/release gates remain open.
+
+### November 4: restore header privacy regression coverage
+
+A fresh full suite found24571PASS/1FAIL/41existingSKIP: the old header privacy setup stopped at its placeholder employer-ID validation. A separate fictional actual eight-digit source, explicitly reconfirmed through native APIs, lets the unchanged saved-output privacy assertions run. Main37+92cases and all10checks pass; no renderer, tax, original fixture, malformed-ID guard or assertion changed. See [the fixture ledger](upgrade-2026-oh-header-public-fixture-work.md). Full current unit/coverage with disposable PostgreSQL remains pending.

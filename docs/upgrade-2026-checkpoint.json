@@ -17989,5 +17989,25 @@
     "exactOnceEntitlementCreditCrashQualified": false,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-staging-subscription-successor-work.md"
+  },
+  "ohHeaderPrivacyFixture20261104": {
+    "baseCommit": "9eaa5073",
+    "status": "fixture-only main successor verifies actual privacy assertions; no product change",
+    "fullSuiteBefore": {
+      "passed": 24571,
+      "failed": 1,
+      "skipped": 41,
+      "logSha256": "cc805f5ee0de03b4c49045d12f767c5f4b409f17bb93828a2b43ffd1c83dbaec"
+    },
+    "cause": "historical employer-ID placeholder rejected before PDF privacy scan",
+    "mainAffectedPassed": 129,
+    "files": 6,
+    "checkSets": 10,
+    "mainChecksSha256": "4ecf277501954f525703284044c34c597a27e5ad40088b725dfbeb820a1d87ae",
+    "allExisting37TitlesAndAssertionsPreserved": true,
+    "productionChanges": 0,
+    "fullCurrentSuiteQualified": false,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-oh-header-public-fixture-work.md"
   }
 }

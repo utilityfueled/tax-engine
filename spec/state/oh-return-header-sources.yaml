@@ -112,3 +112,8 @@ lines:
     description: "Full prepared source context includes separately converted native method"
     formula: "Missing/unconfirmed payments or child, separately reconfirmed equal-money payment/RC original changes, and retained canonical RC with missing native child all reject old header without read refresh. Full originalOhioResidencySources and originalOhioPaymentSources remain privately bound. Existing native W2 lossless metadata is validated before canonical comparison."
     testRef: "tests/apps/web/guided-ohio-return-header-sources.test.tsx::Ohio header requires complete current native payment and credit replay %s"
+
+  - line: "public-physical-source-prerequisites"
+    description: "Separate explicit fictional actual employer account for physical Schedule W"
+    formula: "Public privacy review uses an independently supplied actual fictional Ohio employer ID07100412, never the old placeholder PRIVATE-OH-RC-STATE-ID or a production default. Explicitly reconfirm current parent/payment/native RC/header through existing APIs; no direct snapshot rebinding. Preserve all original header fixture, privacy/cash/source expectations and malformed employer-account negatives. Conditional fixture successor only after retained full-suite stack confirms the physical employer-ID guard. No tax or renderer change."
+    testRef: "tests/engine/state/oh-return-header-source.test.ts::Ohio header public review excludes private originals from every saved object without provider transfer"
