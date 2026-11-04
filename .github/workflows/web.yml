@@ -96,6 +96,7 @@ jobs:
       - run: docker pull node:26.13.0-trixie-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39
       - run: docker build --label org.opencontainers.image.revision="$GITHUB_SHA" --tag tax-engine:ci .
       - name: Retain native host and immutable candidate provenance
+        id: candidate
         run: |
           uname -sm > container-host.txt
           test "$(uname -sm)" = 'Linux x86_64'
@@ -106,29 +107,45 @@ jobs:
           sha256sum Dockerfile pnpm-lock.yaml .github/workflows/web.yml >> container-source.txt
           git archive "$GITHUB_SHA" | sha256sum >> container-source.txt
           candidate_id=$(docker image inspect --format '{{.Id}}' tax-engine:ci)
+          test "${candidate_id#sha256:}" != "$candidate_id"
+          docker image inspect "$candidate_id" > container-candidate.json
+          printf 'image_id=%s\n' "$candidate_id" >> "$GITHUB_OUTPUT"
           docker image inspect --format '{{json .Id}} {{json .Os}} {{json .Architecture}} {{json .Config.Labels}} {{json .RepoDigests}} {{json .RootFS.Layers}}' "$candidate_id" > container-candidate.txt
           test "$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$candidate_id")" = "$GITHUB_SHA"
           test "$(docker image inspect --format '{{.Architecture}}' "$candidate_id")" = "$(docker version --format '{{.Server.Arch}}')"
           docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges --entrypoint /usr/bin/ldd "$candidate_id" /usr/local/bin/node > container-ldd.txt
           if grep -F 'not found' container-ldd.txt; then exit 1; fi
-      - run: node scripts/smoke-container.mjs tax-engine:ci | tee container-smoke.log
+      - env:
+          CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
+        run: node scripts/smoke-container.mjs "$CANDIDATE_IMAGE_ID" | tee container-smoke.log
       - name: Build immutable previous application for upgrade and rollback
+        id: previous
         run: |
           previous_source=$(mktemp -d)
           trap 'rm -rf "$previous_source"' EXIT
           git archive d32cb8cf3d607c643c4c7f7e1b845fcace61563f | tar -x -C "$previous_source"
           docker build --label org.opencontainers.image.revision=d32cb8cf3d607c643c4c7f7e1b845fcace61563f --tag tax-engine:previous "$previous_source"
+          previous_id=$(docker image inspect --format '{{.Id}}' tax-engine:previous)
+          test "$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$previous_id")" = d32cb8cf3d607c643c4c7f7e1b845fcace61563f
+          docker image inspect "$previous_id" > container-previous.json
+          printf 'image_id=%s\n' "$previous_id" >> "$GITHUB_OUTPUT"
       - name: Rehearse isolated Compose upgrade, recovery and rollback
         env:
           TAX_ENGINE_TEST_POSTGRES_BIN: /usr/lib/postgresql/16/bin
-        run: node --import tsx scripts/rehearse-self-host-release.mjs tax-engine:previous tax-engine:ci 2>&1 | tee container-recovery.log
+          PREVIOUS_IMAGE_ID: ${{ steps.previous.outputs.image_id }}
+          CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
+        run: node --import tsx scripts/rehearse-self-host-release.mjs "$PREVIOUS_IMAGE_ID" "$CANDIDATE_IMAGE_ID" 2>&1 | tee container-recovery.log
       - name: Start isolated runtime for browser flows
+        env:
+          CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
         run: |
           docker run --detach --name tax-engine-browser-ci --read-only --cap-drop ALL \
             --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=64m \
             --tmpfs /app/apps/web/.next/cache:rw,noexec,nosuid,nodev,size=64m,mode=1777 \
             --publish 127.0.0.1:3109:3000 --env TAX_ENGINE_DEPLOYMENT_MODE=self-host \
-            --env TAX_ENGINE_APP_URL=http://127.0.0.1:3109 tax-engine:ci
+            --env TAX_ENGINE_APP_URL=http://127.0.0.1:3109 "$CANDIDATE_IMAGE_ID"
+          test "$(docker inspect --format '{{.Image}}' tax-engine-browser-ci)" = "$CANDIDATE_IMAGE_ID"
+          docker inspect tax-engine-browser-ci > container-browser.json
           for attempt in $(seq 1 60); do
             if curl --fail --silent http://127.0.0.1:3109/api/health; then exit 0; fi
             sleep 1
@@ -139,18 +156,70 @@ jobs:
           PLAYWRIGHT_DISABLE_WEBSERVER: "true"
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3109
         run: pnpm test:web --retries=0 --timeout=30000
-      - uses: anchore/sbom-action@v0
-        if: ${{ !cancelled() }}
-        with:
-          image: tax-engine:ci
-          format: cyclonedx-json
-          output-file: container.cdx.json
-          upload-release-assets: false
-          upload-artifact: false
+      - uses: anchore/sbom-action/download-syft@v0
+        id: syft
+        if: ${{ !cancelled() && steps.candidate.outcome == 'success' }}
+      - name: Generate both SBOM formats from the immutable candidate
+        id: sbom
+        if: ${{ !cancelled() && steps.syft.outcome == 'success' }}
+        env:
+          CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
+          SYFT_CMD: ${{ steps.syft.outputs.cmd }}
+          SYFT_CHECK_FOR_APP_UPDATE: "false"
+        run: |
+          "$SYFT_CMD" version > container-syft-tool.txt
+          sha256sum "$SYFT_CMD" >> container-syft-tool.txt
+          "$SYFT_CMD" scan "docker:$CANDIDATE_IMAGE_ID" -o json=container.syft.json -o cyclonedx-json=container.cdx.json
+      - name: Verify immutable SBOM source
+        id: source_binding
+        if: ${{ !cancelled() && steps.sbom.outcome == 'success' }}
+        env:
+          CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
+          REQUIRE_SCAN: "false"
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, os
+          from pathlib import Path
+          expected = json.loads(Path("container-candidate.json").read_text())
+          assert len(expected) == 1
+          expected = expected[0]
+          image_id = os.environ["CANDIDATE_IMAGE_ID"]
+          assert expected["Id"] == image_id and image_id.startswith("sha256:") and len(image_id) == 71
+          assert expected["Os"] == "linux" and expected["Architecture"] == "amd64"
+          assert expected["Config"]["Labels"]["org.opencontainers.image.revision"] == os.environ["GITHUB_SHA"]
+          sbom = json.loads(Path("container.syft.json").read_text())
+          assert sbom["source"]["type"] == "image"
+          metadata = sbom["source"]["metadata"]
+          def verify(metadata):
+              assert metadata["imageID"] == image_id
+              assert metadata["os"] == "linux" and metadata["architecture"] == "amd64"
+              assert metadata["labels"]["org.opencontainers.image.revision"] == os.environ["GITHUB_SHA"]
+              raw = base64.b64decode(metadata["config"], validate=True)
+              assert "sha256:" + hashlib.sha256(raw).hexdigest() == image_id
+              config = json.loads(raw)
+              assert config["rootfs"]["diff_ids"] == expected["RootFS"]["Layers"]
+              assert config["os"] == "linux" and config["architecture"] == "amd64"
+              assert config["config"]["Labels"]["org.opencontainers.image.revision"] == os.environ["GITHUB_SHA"]
+          verify(metadata)
+          if Path("container-vulnerabilities.json").exists():
+              scan = json.loads(Path("container-vulnerabilities.json").read_text())
+              assert scan["source"]["type"] == "image"
+              verify(scan["source"]["target"])
+          else:
+              assert os.environ["REQUIRE_SCAN"] == "false"
+          paths = ["container-candidate.json", "container.syft.json"]
+          if os.environ["REQUIRE_SCAN"] == "true":
+              paths += ["container.cdx.json", "container-vulnerabilities.json"]
+          receipt = {"imageId": image_id, "source": os.environ["GITHUB_SHA"], "platform": "linux/amd64",
+                     "rootfs": expected["RootFS"]["Layers"], "scanVerified": os.environ["REQUIRE_SCAN"] == "true",
+                     "sha256": {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths}}
+          Path("container-source-binding.json").write_text(json.dumps(receipt, indent=2) + "\n")
+          PY
       - uses: anchore/scan-action@v7
-        if: ${{ !cancelled() }}
+        id: scan
+        if: ${{ !cancelled() && steps.source_binding.outcome == 'success' }}
         with:
-          sbom: container.cdx.json
+          sbom: container.syft.json
           grype-version: v0.121.0
           output-format: json
           output-file: container-vulnerabilities.json
@@ -158,12 +227,62 @@ jobs:
           # the separate owned, expiring release disposition; CI is not approval.
           fail-build: true
           severity-cutoff: critical
+      - name: Verify scan source against the immutable candidate
+        if: ${{ !cancelled() && steps.scan.outcome != 'skipped' && steps.source_binding.outcome == 'success' }}
+        env:
+          CANDIDATE_IMAGE_ID: ${{ steps.candidate.outputs.image_id }}
+          REQUIRE_SCAN: "true"
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, os
+          from pathlib import Path
+          expected = json.loads(Path("container-candidate.json").read_text())
+          assert len(expected) == 1
+          expected = expected[0]
+          image_id = os.environ["CANDIDATE_IMAGE_ID"]
+          assert expected["Id"] == image_id and image_id.startswith("sha256:") and len(image_id) == 71
+          assert expected["Os"] == "linux" and expected["Architecture"] == "amd64"
+          assert expected["Config"]["Labels"]["org.opencontainers.image.revision"] == os.environ["GITHUB_SHA"]
+          sbom = json.loads(Path("container.syft.json").read_text())
+          assert sbom["source"]["type"] == "image"
+          metadata = sbom["source"]["metadata"]
+          def verify(metadata):
+              assert metadata["imageID"] == image_id
+              assert metadata["os"] == "linux" and metadata["architecture"] == "amd64"
+              assert metadata["labels"]["org.opencontainers.image.revision"] == os.environ["GITHUB_SHA"]
+              raw = base64.b64decode(metadata["config"], validate=True)
+              assert "sha256:" + hashlib.sha256(raw).hexdigest() == image_id
+              config = json.loads(raw)
+              assert config["rootfs"]["diff_ids"] == expected["RootFS"]["Layers"]
+              assert config["os"] == "linux" and config["architecture"] == "amd64"
+              assert config["config"]["Labels"]["org.opencontainers.image.revision"] == os.environ["GITHUB_SHA"]
+          verify(metadata)
+          if Path("container-vulnerabilities.json").exists():
+              scan = json.loads(Path("container-vulnerabilities.json").read_text())
+              assert scan["source"]["type"] == "image"
+              verify(scan["source"]["target"])
+          else:
+              assert os.environ["REQUIRE_SCAN"] == "false"
+          paths = ["container-candidate.json", "container.syft.json"]
+          if os.environ["REQUIRE_SCAN"] == "true":
+              paths += ["container.cdx.json", "container-vulnerabilities.json"]
+          receipt = {"imageId": image_id, "source": os.environ["GITHUB_SHA"], "platform": "linux/amd64",
+                     "rootfs": expected["RootFS"]["Layers"], "scanVerified": os.environ["REQUIRE_SCAN"] == "true",
+                     "sha256": {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths}}
+          Path("container-source-binding.json").write_text(json.dumps(receipt, indent=2) + "\n")
+          PY
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: container-runtime-evidence
           path: |
             container.cdx.json
+            container.syft.json
+            container-syft-tool.txt
+            container-source-binding.json
+            container-candidate.json
+            container-previous.json
+            container-browser.json
             container-vulnerabilities.json
             container-smoke.log
             container-recovery.log
