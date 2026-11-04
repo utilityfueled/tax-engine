@@ -1,3 +1,4 @@
+import {prepareOhioBusinessOfficialReview,stageOhioBusinessOfficialReview,writeOhioBusinessOfficialReview} from './fill-oh-business-official-review.js';
 import { prepareOhioResidentCreditOfficialReview, fillOhioResidentCreditOfficialReview } from './fill-oh-resident-credit-official-review.js';
 import { fillOhioSchoolDistrictOfficialReview } from './fill-oh-school-district-official-review.js';
 import {resolveOhioResidencyReview,type PreparedOhioResidencyReview} from "../../../engine/state/oh-residency-source.js";
@@ -256,6 +257,7 @@ export async function fillOhioReferenceForms(
     ? resolveOhioResidencyReview(taxInput, federalResult, reviewContext)
     : taxInput;
   const residentCreditOfficialReview = prepareOhioResidentCreditOfficialReview(taxInput, federalResult, overlay, reviewContext);
+  const businessOfficialReview = prepareOhioBusinessOfficialReview(taxInput, federalResult, overlay, reviewContext);
   const ohioInput = buildOhioResidentReturnInput(original, federalResult, overlay);
   const ohioResult = calculateOhioResidentReturn(ohioInput);
   const digitalCapitalInput = calculateDigitalAssetStateSources(original, "OH");
@@ -279,6 +281,9 @@ export async function fillOhioReferenceForms(
     form1099OIDs: original.form1099OID,
   });
   const lumpSumDistributionWorksheet = getLumpSumDistributionWorksheet(ohioInput);
+
+  // Complete business source/template staging before any reference output directory exists.
+  const stagedBusinessReview = businessOfficialReview ? await stageOhioBusinessOfficialReview(businessOfficialReview,blankFormsDir) : undefined;
 
   const filledForms: string[] = [];
 
@@ -433,5 +438,6 @@ export async function fillOhioReferenceForms(
   filledForms.push(...await fillOhioOrdinaryOfficialReview(taxInput,federalResult,outputDir,overlay,reviewContext,blankFormsDir));
   filledForms.push(...await fillOhioSchoolDistrictOfficialReview(taxInput,federalResult,outputDir,overlay,reviewContext,blankFormsDir));
   if (residentCreditOfficialReview) filledForms.push(...await fillOhioResidentCreditOfficialReview(residentCreditOfficialReview,outputDir,blankFormsDir));
+  if (stagedBusinessReview) filledForms.push(...await writeOhioBusinessOfficialReview(stagedBusinessReview,outputDir));
   return { filledForms };
 }

@@ -12600,6 +12600,46 @@
       ]
     },
     {
+      "key": "state/oh-business-official-review",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://dam.assets.ohio.gov/image/upload/tax.ohio.gov/forms/ohio_individual/individual/2025/itnrc-fi.pdf; https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf",
+      "specPath": "spec/state/oh-business-official-review.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
+      "key": "state/oh-business-private-description-provenance",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "https://dam.assets.ohio.gov/image/upload/v1767095693/tax.ohio.gov/forms/ohio_individual/individual/2025/it1040-booklet.pdf",
+      "specPath": "spec/state/oh-business-private-description-provenance.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-business-source",
       "jurisdiction": "state",
       "taxYear": null,

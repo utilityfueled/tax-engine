@@ -2728,3 +2728,8 @@ A fresh full suite found24571PASS/1FAIL/41existingSKIP: the old header privacy s
 ### November 4: bounded workspace JSON saves and platform errors
 
 The separate JSON save path now uses4MiB on Vercel, retains5MiB elsewhere and handles POST413 before reading its body with fixed full-backup guidance. Source-first6genuineRED/5PASS precedes100 affected controls and all10 static/build checks passing. Initial new-test strict warnings are retained and corrected with explicit fixture guards; no suppression or weaker assertion. Distinct review approves. See [the transport ledger](upgrade-2026-workspace-json-limits-work.md). Actual successor Preview, full current unit/coverage, distributions, human/final2026 and release criteria remain open.
+
+
+### November 4: original-bound Ohio business official review pages
+
+The finite2025 ordinary Schedule C method now emits source-bound NR5/PY4 official companions with staged opaque bytes and private-original display protection. Genuine missing-output and four saved privacy failures precede the reviewed repair; current-main397 affected controls and all relevant static/build checks pass. Distinct100PDF/234page strict/privacy review,1426 cells and58 rendered/visually reviewed pages pass. The earlier own literal Credits1/11 and formatting/oracle errata remain explicit. See [the physical ledger](upgrade-2026-oh-business-official-review-work.md). Fixture amounts are not a literal admission allowlist; final2026, human, global/distribution/staging and release gates remain open. Workspace JSON8c03648c is pushed separately.

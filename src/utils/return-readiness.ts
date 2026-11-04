@@ -360,7 +360,7 @@ export function assessReturnReadiness(
     );
     const hasOhioReviewForms = hasIncludedForm(
       input.includedForms,
-      /^oh-(?:it-(?:1040|nrc|rc)|schedule-(?:adjustments|credits|of-withholding)|sd-(?:100|withholding))-review\.pdf$/i,
+      /^oh-(?:it-(?:1040|nrc|rc)|schedule-(?:adjustments|credits|of-withholding|business-income)|sd-(?:100|withholding))-review\.pdf$/i,
     );
 
     if (!hasOhioReferenceForms && !hasOhioReviewForms) {
