@@ -59,3 +59,13 @@ For each approved actor, the second result contains zero credit-purchase rows/cr
 Actual receipt: `.local/upgrade-evidence/nov04-preview-subscription-5996-readonly/receipt.json`, SHA256 `dc90e6961e26ea4243d179825113433445ef4cf421e3f01ff459e7137b419c2c`. Independent offline consistency/source review SHA256 `343f875d257f4559c16e030411780be70705b967fbc47bec3d98fcfe756fa8e5` verifies all five saved hashes, exact SQL scope/presentation-normalized DOM, scalar labels, full two-row CSV and current schema meanings. The reviewer did not query the database, replay events or independently fetch provider state.
 
 The database MFA step is resolved for this observation. Automatic failed-delivery retry/backoff, actual outage recovery, crash-atomic and credit-pack/provider settlement, migrations/restoration, final artifact staging and independent security/privacy/human qualification remain open. No release, model or filing promotion follows.
+
+### November 4: distinguish implemented atomicity from deployed failure evidence
+
+The subscription transaction package already implements crash/rollback handling;
+eight actual local PostgreSQL cases pass, including deferred commit failure,
+connection termination/recovery and acknowledgement-loss retry. See the
+[atomicity ledger](upgrade-2026-hosted-subscription-atomicity-work.md). The open
+items above concern actual deployed failure/recovery qualification and broader
+credit-pack/provider settlement. They do not describe missing subscription
+transaction implementation. No staging failure injection is claimed here.

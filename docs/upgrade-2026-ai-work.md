@@ -1,6 +1,6 @@
 # 2026 AI and billing execution evidence
 
-Updated 2026-10-25 UTC. This is a durable package checklist, not release approval. No live model call, paid service use, staging deployment, model promotion or human qualification review occurred.
+Initial software record: 2026-10-25 UTC; later evidence is appended below. This is a durable package checklist, not release approval. As of November 4, no live model evaluation, model promotion or human qualification review has occurred. The current [continuation crosswalk](upgrade-2026-current-status.md) separates subsequent staging evidence from these initial local checks.
 
 | Package | Status | Evidence |
 | --- | --- | --- |
@@ -33,7 +33,7 @@ Read through official developer documentation on 2026-10-24/25; these are docume
 
 ## Remaining required actions
 
-1. Owner must supply approved synthetic-only provider account access and an explicit spending cap. Record actual model IDs, structured-output/effort/usage capability, account settings and dated evidence for Luna High, Sol Low/High, optional Gemini 3.8 High and the two baseline profiles. Document unavailable/failed profiles; do not infer availability from pricing pages. No API key was present in the inspected process/usual local env-file locations.
+1. The owner approved a total USD 5 synthetic-provider ceiling; secure account/project access is still needed. Record actual model IDs, structured-output/effort/usage capability, account settings and dated evidence for Luna High, Sol Low/High, optional Gemini 3.8 High and the two baseline profiles. Document unavailable/failed profiles; do not infer availability from pricing pages. No API key was present in the inspected process/usual local env-file locations.
 2. Independent human reviewers must validate 200–300 representative cases and their expected fields/source grounding, retaining the held-out split. The 240 individually authored drafts do not satisfy this requirement. Execute repeated runs within the approved budget; retain failures, actual tokens/cost and independent quality/PII judgments. No LLM-only monetary judge is used.
 3. The transient calculation transport is implemented under [its explicit privacy contract](ai-transient-calculation-contract.md). Separate unchecked calculation consent is required, local-only preferences take precedence, and the server recomputes validated facts. Known source identities are removed before provider/accounting hooks; known-identity model answers use the billed-failure fallback. Opaque request IDs stay stable when facts change; a separate payload digest detects reuse with changed calculations. The2026 catalog and model promotion remain closed. Final integrated browser/release and human review evidence is still required.
 4. Rehearse real authenticated staging billing/provider/DB outages, duplicate/retried Stripe credits, concurrent spend, migration, backup restore and rollback with approved staging credentials. Local PostgreSQL tests are useful software evidence, not staging/auth/provider evidence.
