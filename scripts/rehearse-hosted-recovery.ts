@@ -2,12 +2,20 @@ import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdtemp, rm, chmod } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { ensureHostedAppSchema, getHostedServerDatabase } from "../apps/web/src/lib/hosted-server-db";
 import { migrateHostedWorkspaceMetadata } from "../apps/web/src/lib/hosted-workspace-metadata-migration";
 import { createWorkspaceRecord } from "../apps/web/src/lib/workspace-storage";
+
+/** Close the raw Pool as well when Kysely's lazy driver was never initialized. */
+export async function closeRecoveryRuntime(runtime: Awaited<ReturnType<typeof getHostedServerDatabase>>) {
+  await runtime.db.destroy();
+  if (!runtime.pool.ending && !runtime.pool.ended) await runtime.pool.end();
+  assert.equal(runtime.pool.ended, true, "Hosted recovery pool did not finish closing");
+}
 
 /** Synthetic, local-only PostgreSQL dump/restore rehearsal. Never DATABASE_URL. */
 async function main() {
@@ -91,14 +99,16 @@ async function main() {
     const digest = createHash("sha256").update(JSON.stringify(after)).digest("hex");
     console.log(JSON.stringify({ result: "passed", evidence: "local-synthetic-postgresql-dump-restore", tables: tables.length, tenantWorkspaces: 2, exactCostRestored: true, metadataCleanupReapplied: true, metadataCleanupIdempotent: true, checksum: digest }));
   } finally {
-    if (runtime) await runtime.db.destroy();
+    if (runtime) await closeRecoveryRuntime(runtime);
     if (created) await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
     await admin.end();
     await rm(directory, { recursive: true, force: true });
   }
 }
 
-main().catch(() => {
-  console.error("Local synthetic hosted recovery rehearsal failed. No staging or production recovery has been established.");
-  process.exitCode = 1;
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  main().catch(() => {
+    console.error("Local synthetic hosted recovery rehearsal failed. No staging or production recovery has been established.");
+    process.exitCode = 1;
+  });
+}

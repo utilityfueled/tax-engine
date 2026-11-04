@@ -6654,6 +6654,26 @@
       ]
     },
     {
+      "key": "federal/hosted-recovery-pool-lifecycle",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "scripts/rehearse-hosted-recovery.ts",
+      "specPath": "spec/federal/hosted-recovery-pool-lifecycle.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-remote-database-tls",
       "jurisdiction": "federal",
       "taxYear": 2026,
