@@ -155,7 +155,7 @@ jobs:
         env:
           PLAYWRIGHT_DISABLE_WEBSERVER: "true"
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3109
-        run: pnpm test:web --retries=0 --timeout=30000
+        run: pnpm test:web --retries=0 --timeout=30000 --trace=retain-on-failure
       - uses: anchore/sbom-action/download-syft@v0
         id: syft
         if: ${{ !cancelled() && steps.candidate.outcome == 'success' }}
