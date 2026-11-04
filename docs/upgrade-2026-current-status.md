@@ -1,7 +1,7 @@
 # Current 2026 upgrade continuation
 
 Updated November 4, 2026, against application commit
-`51a8d4c4055329c09ff9e62ca878d1cfbc2df8d4` on
+`6bc0d74760e1e1a8bd2265606616f5dc59295c81` on
 `upgrade/2026-baseline`. This is the current crosswalk into the append-only
 history. Earlier checklist entries and checkpoint root values describe their
 named revisions. The [execution brief](upgrade-2026-execution-brief.md) remains
@@ -9,7 +9,7 @@ the completion contract. **The upgrade is not release-ready.**
 
 | Package | Verified evidence | Remaining work |
 | --- | --- | --- |
-| Coverage and dependencies | Exact f09 local PostgreSQL-backed unit and coverage runs passed 24,815 tests in 1,837 files, with no failures or skips and 87.35% branches. Types, specs, inventory, builds and lint passed. Thresholds remain unchanged. | Repeat the full checks on the final application source. Remote f09 coverage was cancelled without a report; the two-worker successor is pending. Current whole-browser CI is not green. |
+| Coverage and dependencies | Exact f09 local PostgreSQL-backed unit and coverage runs passed 24,815 tests in 1,837 files, with no failures or skips and 87.35% branches. Types, specs, inventory, builds and lint passed. Thresholds remain unchanged. | Repeat the full checks on the final application source. Remote f09 coverage was cancelled without a report; the two-worker successor is pending. Current whole-browser CI is not green. Immutable image/source/SBOM binding is committed in8755e1f2; zero-retry failure-trace retention follows in03ed65b9. Fresh remote runtime proof remains pending. |
 | Complete taxpayer facts and federal law | Source-bound collectors, year-aware rules, original records and guarded unsupported methods are documented in the package ledgers. Unknown values and actual zero remain distinct. | Independent professional review and the specific unresolved interpretations in the [external handoff](upgrade-2026-external-actions.md). Do not treat software tests or agent review as professional approval. |
 | Pennsylvania and Ohio | The owner selected both states for full-year, part-year and nonresident returns. Delivered finite source methods and historical review companions remain bounded by the [support disclosure](upgrade-2026-oh-support-publication-work.md) and [state gap analysis](upgrade-2026-state-gaps.md). Commit 5cbec8e8 adds dated Ohio part-year school payroll sources; its 68 focused and 564 adjacent tests and 12 checksets passed. | Commit a757d735 delivers separately source-bound part-year school paper: current-main22 focused, original68 and648 adjacent controls and all13 checksets pass; independent32PDF/76page review passes. Commit e3ec646c delivers source-bound Schedule AI physical review:41 new and 222 existing controls and all 14 main checksets pass. Independent review of 142 PDFs and 335 pages matches 1,680 cells; new Form 2210 and workspace outputs are clean. The independent scan also identified inherited Adobe scripts in 120 retained legacy PDFs. Commit 51a8d4c4 removes the listed executable entrypoints from mapped review copies: 1,948 PDF and 62 workspace controls pass; independent four-PDF/six-page review confirms unchanged appearance. Historical retained files remain unchanged. Broader state and final-year form qualification remains open. |
 | Guided interview | Commit 5a03fa4e shares current display validation within each render, with no persistent cache. Current 12 controls, 279 adjacent tests and all 12 checksets passed; independent source review passed. Four unchanged managed reciprocal journeys passed without retries at 16.2–20.6 seconds. | Independent saved managed4PDF/120page privacy/text/geometry and60 viewport RGB pairs pass. Native-image replay and complete managed/container browser suites remain. The observer's separate runtime-cache diagnostic is retained; it is not represented as a clean wrapper exit. |
@@ -20,12 +20,12 @@ the completion contract. **The upgrade is not release-ready.**
 
 ## Work continuing independently
 
-- Complete the actual guided-to-paper Ohio part-year school lifecycle. Four real browser journeys now reach school-source confirmation but fail at header confirmation: its replay omits the confirmed school records, and header-only edits clear them. A source-first integration fix and independent stale-source controls are in progress; all four original attempts remain retained.
+- Carry the completed finite Ohio part-year school lifecycle into the final distributions. Header compositione8d0a2c5 passes37focused/489adjacent controls and all12sets. Browser6bc0d747 passes all4 desktop/mobile refund/known-zero journeys, static4 and inventory/spec3 with unchanged budgets and zero retries/skips. Distinct saved4PDF/124page review verifies660cells/88statuses,48geometry records and62desktop/mobile text/RGB pairs. All earlier failures remain retained in the [browser ledger](upgrade-2026-oh-school-district-part-year-native-browser-work.md).
 - Recover native qualification through isolated owned storage, without hand repairing the retained store, and retain all failed runs.
 - Carry the reviewed PDF active-content fix into final integrated outputs and runtime artifacts.
 - Carry the delivered Form2210 Schedule AI review package and truthful Ohio disclosure commit f6000455 into final integrated checks.
 - Carry the passing provider-free HTTP fault rehearsal forward to the final integrated source; controlled REST transport does not qualify actual Upstash/Neon staging.
-- Run the required full local and remote checks on the resulting final source.
+- Run the required full local and remote checks on the resulting final source, then build/export/restart/import the exact native image with the independently reviewed private-source runner correction. Fresh private Compose targeting must be proved against that import store before recovery; a historical provider receipt is insufficient.
 
 ## External inputs still needed
 

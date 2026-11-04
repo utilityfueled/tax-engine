@@ -18493,7 +18493,7 @@
     "ledger": "docs/upgrade-2026-hosted-preview-runtime-identity-work.md"
   },
   "currentContinuation20261104": {
-    "applicationSource": "51a8d4c4055329c09ff9e62ca878d1cfbc2df8d4",
+    "applicationSource": "6bc0d74760e1e1a8bd2265606616f5dc59295c81",
     "index": "docs/upgrade-2026-current-status.md",
     "localFullVerificationSource": "f09a3dd7ad2f3a12f02a8d50efd0da01050033e6",
     "currentFullVerificationPassed": false,
@@ -18510,11 +18510,10 @@
       "evidence": "docs/upgrade-2026-hosted-runtime-20261104.json"
     },
     "activeSoftware": [
-      "Actual Ohio part-year school guided-to-paper lifecycle",
       "Final-source complete unit/coverage/browser/PostgreSQL/CI checks",
       "Final-source isolated native image export/restart/import/smoke/recovery/SBOM qualification",
-      "Approved Preview synthetic schema migration/restore after credential handoff",
-      "Remaining source-complete federal NOL/COD method audit and implementation where authority is determinate"
+      "Approved Preview synthetic schema migration/restore after required Vercel verification",
+      "Actual approved-budget provider qualification after secure project credential setup"
     ],
     "imageAdvisories": {
       "matchesEach": 181,
@@ -18523,7 +18522,7 @@
       "evidence": "docs/upgrade-2026-image-advisories-20261104.json"
     },
     "releaseReady": false,
-    "applicationCommit": "51a8d4c4055329c09ff9e62ca878d1cfbc2df8d4",
+    "applicationCommit": "6bc0d74760e1e1a8bd2265606616f5dc59295c81",
     "ohPartYearSchoolPaper": {
       "commit": "a757d735",
       "focusedMainPassed": 22,
@@ -18614,12 +18613,31 @@
       "scope": "Mapped review action entrypoints; not arbitrary PDF or XFA sanitization"
     },
     "ohPartYearNativeIntegration": {
+      "headerCommit": "e8d0a2c5",
+      "browserCommit": "6bc0d747",
       "actualJourneys": 4,
-      "passed": 0,
-      "failure": "Header replay omits confirmed school originals; header-only invalidation also clears school confirmation",
-      "actualLogSha256": "e9f8f6ae3bda7f2a1f57239f3d4a4d617de730b01f231f531c68ef67920a4717",
-      "fixStatus": "Source-first proposal and distinct invalidation controls in progress",
+      "passed": 4,
+      "retries": 0,
+      "skipped": 0,
+      "actualLogSha256": "617b5b506924521361665608ec52dafc4c28c61f421eaee6e8c547601aaa6979",
+      "independentSavedReviewSha256": "ac05b9a6858be7ab5542d4787ad9c40e322b1098fd591967f7f957245b0844ea",
+      "pdfs": 4,
+      "pages": 124,
+      "sourceCells": 660,
+      "sourceStatuses": 88,
+      "geometryRecords": 48,
+      "validationReadabilityRecords": 8,
+      "exactDesktopMobileTextRgbPagePairs": 62,
+      "mainStaticSets": 4,
+      "inventorySpecSets": 3,
       "filingQualified": false
+    },
+    "ciImmutableImage": {
+      "commit": "8755e1f2",
+      "traceCommit": "03ed65b9",
+      "sourceValidated": true,
+      "newRemoteRuntimePassed": false,
+      "ledger": "docs/upgrade-2026-ci-immutable-image-work.md"
     }
   }
 }

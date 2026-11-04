@@ -2873,3 +2873,9 @@ integration repair is in progress. Earlier environment, label-wrapper and blank
 period setup failures remain retained separately; no passing browser or final
 artifact result is claimed. The current crosswalk records this integration
 gap alongside the delivered physical, TLS and PDF security packages.
+
+### November 4: completed native school lifecycle and immutable CI binding
+
+Headere8d0a2c5 passes37focused/489adjacent and all12validation sets. Browser6bc0d747 passes four real desktop/mobile refund/known-zero source, reconfirmation, review-download, reopen and deletion journeys without retries/skips or longer deadlines. Distinct saved4PDF/124page review passes660cells/88statuses,48geometry records and62exact text/RGB page pairs. The retained failed reader and long-message premises were corrected from source-first contracts; tax, source and filing oracles remain unchanged. See [the browser ledger](upgrade-2026-oh-school-district-part-year-native-browser-work.md).
+
+CI8755e1f2 binds every runtime operation and native SBOM/scan to full immutable image/source/config/rootfs identity;03ed65b9 separately retains failure traces with retries0. Source checks and independent review pass; actual remote runtime evidence is pending. See [the CI ledger](upgrade-2026-ci-immutable-image-work.md). Final-source full checks, native qualification, approved Preview migration/recovery, provider runs, professional reviews, advisory decisions and final2026 forms remain required.
