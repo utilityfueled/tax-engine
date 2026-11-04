@@ -1,0 +1,66 @@
+form: "Hosted-Remote-Database-TLS"
+fullName: "Hosted PostgreSQL defaults to verified TLS, with an explicit local test allowance"
+taxYear: 2026
+reference: "https://node-postgres.com/features/ssl; https://www.postgresql.org/docs/16/libpq-ssl.html"
+notes: |
+  Security source contract; no tax calculation or deployment qualification.
+  Every hosted connection selects certificate- and hostname-verified TLS unless
+  NODE_ENV explicitly equals development/test, VERCEL_ENV is not preview, and
+  the actual URL host is exactly localhost, 127.0.0.1 or [::1], without a query
+  host override. Missing NODE_ENV does not authorize plaintext. Public/deceptive
+  names, alternate numeric forms and URL query host overrides are not local proof.
+  Self-host selection remains unchanged. Preview only selects its isolated URL.
+  Reject effective unsafe or unsupported security switches before allocation,
+  certificate reads or cache lookup. Effective-last duplicate semantics follow
+  the pinned parser; secure custom CA/client credentials remain lossless.
+  Cache identity includes effective TLS policy, for runtime and schema promises.
+  Preserve all existing transaction/connection/query deadlines and error privacy.
+  Separate constructor-only controls forbid all sockets. Three separately invoked
+  real loopback tests generate disposable synthetic CA/server certificates and
+  negotiate actual PostgreSQL direct TLS: matching trusted hostname succeeds;
+  an unrelated root and a mismatched hostname fail. No provider or real secrets.
+lines:
+  - line: "preserved"
+    description: "Secure selected URLs, literal local development and self-host remain usable"
+    formula: "Actual pg Client policy preserves selected verification and custom CA; explicit development/test literal loopback remains plaintext; self-host hosted runtime stays disabled."
+    testRef: "tests/apps/web/hosted-remote-database-tls.test.ts::preserves explicit %s loopback %s without sockets"
+  - line: "default-verified"
+    description: "Remote, production, Preview and unknown-environment allocations verify TLS"
+    formula: "Inspect a real installed Client constructed from the actual returned Pool options: SSL enabled, rejectUnauthorized not false, no replacement checkServerIdentity; preserve immutable source, isolated selection, cache repeat and deadlines."
+    testRef: "tests/apps/web/hosted-remote-database-tls.test.ts::selects actual verified TLS for %s"
+  - line: "unsafe-switches"
+    description: "Explicit conflicting or ambiguous security settings fail closed before I/O"
+    formula: "Both production and isolated Preview reject effective disabled/unverified modes, libpq compatibility downgrade and unsupported SSL/mode values; diagnostics exclude URL/credentials/host/certificate paths."
+    testRef: "tests/apps/web/hosted-remote-database-tls.test.ts::rejects unsafe remote %s in %s before I/O"
+  - line: "effective-host"
+    description: "A query host cannot create a plaintext development exemption"
+    formula: "A literal loopback authority plus remote query host and disable must reject before allocation; remote authority plus local query host without flags must still verify. No DNS qualification."
+    testRef: "tests/apps/web/hosted-remote-database-tls.test.ts::rejects query-host plaintext laundering in %s"
+  - line: "runtime-cache"
+    description: "The same URL cannot reuse a runtime created under a weaker TLS policy"
+    formula: "Development plaintext and production verified allocations for the identical literal loopback URL are distinct in both request orders; same-policy repeats remain identical."
+    testRef: "tests/apps/web/hosted-remote-database-tls.test.ts::separates runtime cache policies when %s comes first"
+  - line: "schema-cache"
+    description: "Schema cache cannot bypass current TLS admission or effective connection policy"
+    formula: "A previously resolved schema promise cannot admit a now-unsafe hosted configuration; safe development and production schema executions use distinct effective policies without real sockets."
+    testRef: "tests/apps/web/hosted-remote-database-tls.test.ts::revalidates unsafe %s before a previously resolved schema promise"
+  - line: "real-trust"
+    description: "An actual synthetic trusted certificate and matching host negotiate PostgreSQL TLS"
+    formula: "Use the runtime's actual pg options with direct TLS and a local protocol peer; encrypted startup completes only with the authored CA and matching localhost SAN."
+    testRef: "tests/apps/web/hosted-remote-database-tls.test.ts::negotiates actual loopback PostgreSQL TLS with the trusted CA and matching hostname"
+  - line: "real-untrusted"
+    description: "A different synthetic CA cannot authenticate the local PostgreSQL peer"
+    formula: "Real Client connect rejects certificate trust before PostgreSQL startup; no global insecure TLS switches or external service."
+    testRef: "tests/apps/web/hosted-remote-database-tls.test.ts::rejects an actual loopback peer signed by an untrusted CA"
+  - line: "real-hostname"
+    description: "A trusted CA does not authenticate a mismatched server hostname"
+    formula: "A separately authored certificate signed by the same trusted CA has only other.synthetic.invalid SAN and fails for an IP127.0.0.1 connection; actual Client rejects with ERR_TLS_CERT_ALTNAME_INVALID before PostgreSQL startup."
+    testRef: "tests/apps/web/hosted-remote-database-tls.test.ts::rejects an actual trusted loopback peer with a mismatched hostname"
+  - line: "effective-last-root"
+    description: "System-root normalization respects the actual last sslrootcert original"
+    formula: "Last custom CA preserves exact URL and loaded synthetic CA; last system removes duplicate sslrootcert keys before pg filesystem parsing; last empty is retained losslessly and performs no certificate read. No sockets."
+    testRef: "tests/apps/web/hosted-remote-database-tls.test.ts::preserves effective-last root certificate semantics for %s"
+  - line: "effective-last-security-options"
+    description: "Effective-last empty/unknown and certificate replacement follow the real parser"
+    formula: "Last verify-full after unsupported mode is accepted; last empty mode receives verified default; last unsupported mode after verify-full rejects; last ssl=true after unsupported SSL is accepted; actual custom certificate options replace a prior unused unsupported ssl string."
+    testRef: "tests/apps/web/hosted-remote-database-tls.test.ts::preserves effective-last option semantics for %s"

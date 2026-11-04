@@ -6614,6 +6614,26 @@
       ]
     },
     {
+      "key": "federal/hosted-remote-database-tls",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://node-postgres.com/features/ssl; https://www.postgresql.org/docs/16/libpq-ssl.html",
+      "specPath": "spec/federal/hosted-remote-database-tls.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-subscription-atomicity",
       "jurisdiction": "federal",
       "taxYear": 2026,

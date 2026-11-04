@@ -44,7 +44,7 @@ function normalizeHostedDatabaseUrl(databaseUrl: string) {
   try {
     const parsed = new URL(databaseUrl);
 
-    if (parsed.searchParams.get("sslrootcert") === "system") {
+    if (parsed.searchParams.getAll("sslrootcert").at(-1) === "system") {
       parsed.searchParams.delete("sslrootcert");
     }
 
@@ -94,6 +94,48 @@ function selectedHostedTlsIsDowngraded(databaseUrl: string) {
   } catch {
     return false; // Existing malformed/missing URL admission remains unchanged.
   }
+}
+
+// Plaintext is a development/test allowance for literal loopback originals,
+// never a URL-query/DNS inference or a default for a missing environment.
+function allowsHostedLoopbackPlaintext(databaseUrl: string, env: HostedDbEnvironment) {
+  const explicitNodeEnv = env.NODE_ENV?.trim().toLowerCase();
+  if (env.VERCEL_ENV === "preview"
+    || (explicitNodeEnv !== "development" && explicitNodeEnv !== "test")) return false;
+  try {
+    const parsed = new URL(databaseUrl);
+    return (parsed.protocol === "postgres:" || parsed.protocol === "postgresql:")
+      && ["localhost", "127.0.0.1", "[::1]"].includes(parsed.hostname)
+      && !parsed.searchParams.has("host");
+  } catch {
+    return false;
+  }
+}
+
+function hostedDatabaseTlsIsBlocked(databaseUrl: string, env: HostedDbEnvironment) {
+  if (selectedHostedTlsIsDowngraded(databaseUrl)) return true;
+  if (allowsHostedLoopbackPlaintext(databaseUrl, env)) return false;
+  try {
+    const parsed = new URL(normalizeHostedDatabaseUrl(databaseUrl));
+    if ((parsed.protocol !== "postgres:" && parsed.protocol !== "postgresql:") || !parsed.hostname) return true;
+    const last = (key: string) => parsed.searchParams.getAll(key).at(-1);
+    const mode = last("sslmode");
+    if (mode && !["prefer", "require", "verify-ca", "verify-full"].includes(mode)) return true;
+    if (last("uselibpqcompat") === "true"
+      && (mode === "prefer" || mode === "require" || mode === "verify-ca")) return true;
+    const replacesSsl = Boolean(mode || last("sslcert") || last("sslkey") || last("sslrootcert"));
+    const ssl = last("ssl");
+    if (!replacesSsl && ssl !== undefined && ssl !== "true" && ssl !== "1") return true;
+    const negotiation = last("sslnegotiation");
+    return negotiation !== undefined && negotiation !== "postgres" && negotiation !== "direct";
+  } catch {
+    return true;
+  }
+}
+
+function hostedDatabasePolicyCacheKey(databaseUrl: string, env: HostedDbEnvironment) {
+  const normalized = normalizeHostedDatabaseUrl(databaseUrl);
+  return JSON.stringify([allowsHostedLoopbackPlaintext(normalized, env) ? "local-development" : "verified-tls", normalized]);
 }
 
 function normalizeHostedSchemaError(error: unknown) {
@@ -164,7 +206,7 @@ export function getHostedServerDatabaseConfig(
     ? getIsolatedPreviewDatabaseUrl(env)
     : env.DATABASE_URL?.trim() || null;
   const tlsBlocked = deploymentMode === "hosted" && databaseUrl !== null
-    && selectedHostedTlsIsDowngraded(databaseUrl);
+    && hostedDatabaseTlsIsBlocked(databaseUrl, env);
   const blocked = tlsBlocked
     || (deploymentMode === "hosted" && (nodeEnv === "production" || preview) && !databaseUrl);
 
@@ -210,7 +252,8 @@ export async function getHostedServerDatabase(
 
   const normalizedDatabaseUrl = normalizeHostedDatabaseUrl(config.databaseUrl);
   const cache = getDatabaseRuntimeCache();
-  const existing = cache.get(normalizedDatabaseUrl);
+  const cacheKey = hostedDatabasePolicyCacheKey(normalizedDatabaseUrl, env);
+  const existing = cache.get(cacheKey);
 
   if (existing) {
     return existing;
@@ -218,7 +261,9 @@ export async function getHostedServerDatabase(
 
   const pool = new Pool({
     connectionString: normalizedDatabaseUrl,
-    ssl: resolveHostedPoolSsl(normalizedDatabaseUrl),
+    ssl: allowsHostedLoopbackPlaintext(normalizedDatabaseUrl, env)
+      ? resolveHostedPoolSsl(normalizedDatabaseUrl)
+      : { rejectUnauthorized: true },
     max: 10,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 5_000,
@@ -242,7 +287,7 @@ export async function getHostedServerDatabase(
   });
   const runtime = { pool, db };
 
-  cache.set(normalizedDatabaseUrl, runtime);
+  cache.set(cacheKey, runtime);
   return runtime;
 }
 
@@ -379,8 +424,14 @@ export async function ensureHostedAppSchema(
     return;
   }
 
+  // Admission must precede even a previously resolved local schema promise.
+  if (config.blocked) {
+    throw new Error("Server configuration error: verified TLS is required for the selected hosted database.");
+  }
+
+  const cacheKey = hostedDatabasePolicyCacheKey(config.databaseUrl, env);
   const schemaPromiseCache = getSchemaPromiseCache();
-  const existing = schemaPromiseCache.get(config.databaseUrl);
+  const existing = schemaPromiseCache.get(cacheKey);
 
   if (existing) {
     await existing;
@@ -392,12 +443,12 @@ export async function ensureHostedAppSchema(
     await createHostedAppTables(pool);
   })();
 
-  schemaPromiseCache.set(config.databaseUrl, promise);
+  schemaPromiseCache.set(cacheKey, promise);
 
   try {
     await promise;
   } catch (error) {
-    schemaPromiseCache.delete(config.databaseUrl);
+    schemaPromiseCache.delete(cacheKey);
     throw normalizeHostedSchemaError(error);
   }
 }
