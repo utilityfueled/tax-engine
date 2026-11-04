@@ -71,6 +71,31 @@ function resolveHostedPoolSsl(databaseUrl: string) {
   }
 }
 
+// pg reparses connectionString after Pool.ssl. Inspect its effective-last URL
+// switches so an explicitly selected verified-TLS contract cannot be downgraded.
+function selectedHostedTlsIsDowngraded(databaseUrl: string) {
+  try {
+    const parsed = new URL(normalizeHostedDatabaseUrl(databaseUrl));
+    const last = (key: string) => parsed.searchParams.getAll(key).at(-1);
+    const selected = parsed.hostname.endsWith(".psdb.cloud")
+      || parsed.searchParams.getAll("sslmode").some(mode =>
+        mode === "require" || mode === "verify-ca" || mode === "verify-full");
+    if (!selected) return false;
+
+    const mode = last("sslmode");
+    if (mode === "disable" || mode === "no-verify") return true;
+    if (last("uselibpqcompat") === "true"
+      && (mode === "prefer" || mode === "require" || mode === "verify-ca")) return true;
+
+    // Certificate or mode options replace URL ssl before pg applies ssl=0 or
+    // ssl=no-verify; retain legitimate custom CA/client certificate semantics.
+    const replacesSsl = Boolean(mode || last("sslcert") || last("sslkey") || last("sslrootcert"));
+    return !replacesSsl && (last("ssl") === "0" || last("ssl") === "no-verify");
+  } catch {
+    return false; // Existing malformed/missing URL admission remains unchanged.
+  }
+}
+
 function normalizeHostedSchemaError(error: unknown) {
   if (error instanceof Error && /permission denied for schema/i.test(error.message)) {
     return new Error(
@@ -138,13 +163,18 @@ export function getHostedServerDatabaseConfig(
   const databaseUrl = preview
     ? getIsolatedPreviewDatabaseUrl(env)
     : env.DATABASE_URL?.trim() || null;
-  const blocked = deploymentMode === "hosted" && (nodeEnv === "production" || preview) && !databaseUrl;
+  const tlsBlocked = deploymentMode === "hosted" && databaseUrl !== null
+    && selectedHostedTlsIsDowngraded(databaseUrl);
+  const blocked = tlsBlocked
+    || (deploymentMode === "hosted" && (nodeEnv === "production" || preview) && !databaseUrl);
 
   if (blocked) {
     console.error(
-      (preview
-        ? "[security] CRITICAL: Isolated hosted preview database configuration is missing or invalid. "
-        : "[security] CRITICAL: DATABASE_URL is not configured for hosted production mode. ") +
+      (tlsBlocked
+        ? "[security] CRITICAL: Selected hosted database TLS configuration must preserve server verification. "
+        : preview
+          ? "[security] CRITICAL: Isolated hosted preview database configuration is missing or invalid. "
+          : "[security] CRITICAL: DATABASE_URL is not configured for hosted production mode. ") +
       "Hosted auth, billing, and workspace persistence are blocked."
     );
   }
@@ -172,6 +202,10 @@ export async function getHostedServerDatabase(
         ? "Server configuration error: a valid isolated preview PostgreSQL connection is required for hosted account, billing, and persistence features."
         : "Server configuration error: DATABASE_URL is required for hosted account, billing, and persistence features."
     );
+  }
+
+  if (config.blocked) {
+    throw new Error("Server configuration error: verified TLS is required for the selected hosted database.");
   }
 
   const normalizedDatabaseUrl = normalizeHostedDatabaseUrl(config.databaseUrl);
