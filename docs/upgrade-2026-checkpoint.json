@@ -19115,5 +19115,23 @@
     "redisReplacementDecisionPending": true,
     "stripe": "SEPARATE_SANDBOX_IDENTITY_TWO_PRODUCTS_TWO_TEST_PRICES_ONLY",
     "automaticRetryQualified": false
+  },
+  "nov04NativeInventoryV4Actual": {
+    "status": "FAIL_DIAGNOSTIC_STOP_NO_RETRY",
+    "applicationCommit": "8487fb4b6d8818d83739fb902fc0730e19698053",
+    "ledger": "docs/upgrade-2026-8487-native-build-export-work.md",
+    "actualReceiptSHA256": "7c9ed17fd28939731253a864bb401fc0b59cde75afb91cf0de29725b81a968e3",
+    "controllerReceiptSHA256": "16376ba311727d002279bec31921b765b6a215a0bf08d8368e56866bc3dc3544",
+    "createdOnlyThreeExactEmptyVolatileDirectories": true,
+    "persistentMetadataFingerprintEquality": true,
+    "wholeLayerPayloadParityClaimed": false,
+    "candidateInspectExit": 125,
+    "candidateInspectError": "readlink graphroot/overlay: invalid argument",
+    "rootCauseEstablished": false,
+    "finalSafety": "PASS",
+    "finalMemoryBytes": 7720235008,
+    "finalDiskBytes": 17233920000,
+    "archiveDeletionExportPerformed": false,
+    "qualification": false
   }
 }

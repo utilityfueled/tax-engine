@@ -20,6 +20,8 @@ the completion contract. **The upgrade is not release-ready.**
 
 Documentation-only commits through4190b5d3 follow8487 without changing its application bytes;8487 differs froma4ac only in the PDF-reader test setup and work ledger. The native configuration remains fixed to8487. Historical output/source boundaries remain intact.
 
+The later bounded native inventory admits its three exact empty volatile directories and passes final safety, then stops on Podman125/readlink at exact candidate inspection. No archive/deletion/export follows; the root cause remains under investigation. [Retained native evidence](upgrade-2026-8487-native-build-export-work.md).
+
 Isolated hosted outage provisioning now has a separate Preview project, empty Neon branch and test Stripe catalog. The unused Redis cache was deleted after its $20 minimum rejected the approved $1 budget; a replacement decision is pending. Direct read-only Neon identity passes, while provider-owned maintenance PUBLIC CONNECT prevents the unchanged exclusive-database bootstrap. No new deployment or outage qualification is claimed. See [the provisioning ledger](upgrade-2026-isolated-outage-provisioning-work.md).
 
 ## Work continuing independently

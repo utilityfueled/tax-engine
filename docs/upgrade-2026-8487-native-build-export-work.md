@@ -60,3 +60,40 @@ professional-review gate is satisfied by this build.
 - Source-only correction: `.local/upgrade-evidence/nov04-native-export-format-sourcefirst-v5/{manifest.json,v4-to-v5.diff,source-check-receipt.json}`; manifest SHA256 `19492bf9c38defc5789d2e4af09c14e7a219b22cc940648c1f3e748704c126d6`.
 - Pending recovery boundaries: `.local/upgrade-evidence/nov04-native-export-format-sourcefirst-v5/owned-space-recovery-proposal.json`.
 - Disabled exact-candidate recovery: `.local/upgrade-evidence/nov04-native-existing-candidate-recovery-sourcefirst/{README.md,manifest.json,recovery-config.json}`.
+
+## Later bounded inventory: candidate inspection still fails
+
+The reviewed V4 inventory corrects the earlier process-query/mount-query error
+handling and checks boot/mount continuity before service startup. Its 74 author
+controls were rerun by a distinct reviewer with 26 additional controls; frozen
+source hashes remain unchanged. The separate parent/archive package passes 50
+archive/evidence controls and 31 controller controls. ROOT verifies its 18 local
+and seven external pins and grants only the bounded inventory phase.
+
+Actual inventory creates only the three specifically admitted empty volatile
+directories for the candidate namespace. Persistent directory/metadata
+fingerprints match before and after reconstitution; all six existing paths,
+positive process/mount absence and same-boot API handoff are admitted. These
+fingerprints cover declared metadata, not every layer payload byte.
+
+Podman then exits125 inspecting the exact retained candidate, with
+`readlink …/graphroot/overlay: invalid argument`. The run stops at this first
+failure; the message alone does not prove its root cause or authorize repair.
+The parent closes1 with `FAIL_PHASE_STOPPED_NO_RETRY`. No forensic archive,
+old-store deletion, measured reclaim, export, pull or rebuild follows.
+
+Final safety passes with 7,720,235,008 available-memory bytes and
+17,233,920,000 available-storage bytes, retaining the original floors and
+unchanged default-store/volume checks. This later result does not rewrite the
+original failed build/export final safety or qualify the candidate.
+
+Evidence SHA256:
+
+- V4 helper: `1651e163f3b86c6d43652eef330596ca18068068dc9c71f6a75041f8646d9143`.
+- Distinct V4 source review: `6f80f7459f506ebca6da87d29c468c3e495aa64e1431e9dd374f58f9222fb0bf`.
+- Frozen parent/archive package: `23dca152d298236ae714d0c7c29f785b9e335ddd4052bf37a8e0a1a51ae15821`.
+- Actual inventory receipt: `7c9ed17fd28939731253a864bb401fc0b59cde75afb91cf0de29725b81a968e3`.
+- Closed parent receipt: `16376ba311727d002279bec31921b765b6a215a0bf08d8368e56866bc3dc3544`.
+
+The exact-source runtime qualification work remains active; retained failures
+are not silently retried or repaired.
