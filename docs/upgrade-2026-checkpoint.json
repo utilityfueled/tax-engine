@@ -19349,5 +19349,49 @@
     "completedWithinOriginal15Minutes": true,
     "nativeQualified": false,
     "next": "REVIEW_NO_HOST_EXPORT_REHEARSAL_SOURCE_AND_EXPLICIT_NEW_BOOT_SCOPE"
+  },
+  "nov04Exact045RemoteVerification": {
+    "ledger": "docs/upgrade-2026-045-remote-verification-work.md",
+    "sourceCommit": "045fbedbdfbe612cb3caa28956fa7228bb3df320",
+    "sourceTree": "cc964be84406697ce2b15e60f7d6c9cc148af2b7",
+    "pushCI": {
+      "run": 41925117138,
+      "conclusion": "success",
+      "unitPass": 25244,
+      "coveragePass": 25244,
+      "files": 1854
+    },
+    "pullRequestCI": {
+      "run": 41925125035,
+      "conclusion": "success"
+    },
+    "pushWeb": {
+      "run": 41925117220,
+      "conclusion": "failure",
+      "managedBrowserPass": 565,
+      "managedBrowserSkip": 5,
+      "containerPass": 541,
+      "containerFail": 24,
+      "containerSkip": 5,
+      "containerTimeoutMs": 30000,
+      "containerRetries": 0,
+      "smoke": "success",
+      "sixPhaseRecovery": "success"
+    },
+    "pullRequestWeb": {
+      "run": 41925125083,
+      "conclusion": "failure"
+    },
+    "candidate": "sha256:98569b07d935492a7e36792d2e65d1b4c38d2e795562e1834167b3fb3f47dcf0",
+    "independentBindingAssertions": 20,
+    "grypeMatches": 181,
+    "critical": 0,
+    "high": 61,
+    "medium": 65,
+    "low": 11,
+    "negligible": 44,
+    "advisoryRiskAccepted": false,
+    "runtimeQualified": false,
+    "next": "PROFILE_AND_REDUCE_CURRENT_RENDER_REPLAY_WITHOUT_STALE_VALIDATION"
   }
 }

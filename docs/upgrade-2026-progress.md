@@ -3100,3 +3100,16 @@ separate17author/24independent-control stop helper; actual nine-call execution
 stops the VM and restores the original user socket route within15minutes.
 No source transfer, build/store workload or native qualification occurs.
 See [the native ledger](upgrade-2026-8487-native-build-export-work.md).
+
+### November 4: exact045 remote CI and container trace evidence
+
+Push and PR CI pass; retained push unit and coverage each report25,244PASS
+across1,854files with unchanged87.54%branches. Managed browser passes565/five
+hosted skips, while actual AMD64 container browser retains541PASS/24FAIL/five
+SKIP at unchanged30seconds/retry0. Smoke and six-phase recovery pass. Twenty
+independent source/config/rootfs/SBOM/scan bindings pass for image98569b07; its
+181advisory matches include61High and zeroCritical, without risk acceptance.
+Actual traces separate cumulative field-entry time from later teardown frames.
+See [the remote ledger](upgrade-2026-045-remote-verification-work.md). Same-state
+preview profiling continues; no performance patch or image qualification is
+claimed by this evidence package.
