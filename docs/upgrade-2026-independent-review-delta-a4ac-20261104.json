@@ -1,0 +1,4310 @@
+{
+  "schemaVersion": 1,
+  "kind": "fixed-human-review-packet-source-delta",
+  "status": "PREPARED_COMPANION_NOT_HUMAN_REVIEWED",
+  "preparedAtUTC": "2026-11-04T17:45:59.324082+00:00",
+  "proposedPublicPath": "docs/upgrade-2026-independent-review-delta-a4ac-20261104.json",
+  "sourceBoundary": {
+    "baselineCommit": "f09a3dd7ad2f3a12f02a8d50efd0da01050033e6",
+    "baselineTree": "45488b161876873cbbed6091e79ee24a2317954c",
+    "targetCommit": "a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45",
+    "targetTree": "696da57a66191f7b7d2127d84bba1f6101339be5",
+    "comparison": "Tracked Git blobs/modes only, f09 to a4ac. Later working-tree docs and successor commits excluded.",
+    "authority": "Engineering preparation only; no human acceptance or tax/security/filing/release approval."
+  },
+  "fixedPacketPreserved": {
+    "inputs": [
+      {
+        "path": "docs/upgrade-2026-independent-review-packet-20261104.md",
+        "mode": "100644",
+        "gitBlob": "eb902671f9275e566bea97084c5e111122a65f52",
+        "sha256": "cb4a218c2680f27c68cd1b439d1ebecd3506515a9db76f16b9e8c274cfaf4b1d",
+        "bytes": 9381
+      },
+      {
+        "path": "docs/upgrade-2026-independent-review-delivery-20261104.json",
+        "mode": "100644",
+        "gitBlob": "48f11cb6d486f2a99a316f05080943b1e91437c5",
+        "sha256": "03204298643355f8cc6a08813d0ff78862798b0171363eea1308e97ab25c1489",
+        "bytes": 182184
+      },
+      {
+        "path": "docs/upgrade-2026-independent-review-decisions-20261104.json",
+        "mode": "100644",
+        "gitBlob": "cf9f8330c3d9ad1a0ab9f018fe1ae498cdfb51a8",
+        "sha256": "7dfa171a47ad5ec27b338e663d162c16a4987b755dc44db8ad52785808a366bd",
+        "bytes": 3515
+      }
+    ],
+    "publication": "The three fixed packet files were published after f09 while deliberately binding f09. Their additions in the118-path diff are not tax-method changes.",
+    "originalFilesModifiedByPreparation": false,
+    "originalHumanDecisionTemplateUnmodified": true
+  },
+  "fixedDeliveryComparison": {
+    "baselineMemberCount": 1519,
+    "baselineHashesVerified": 1519,
+    "sameBytesAndModesAtTarget": 1511,
+    "changedAtTarget": 8,
+    "absentAtTarget": 0,
+    "unchangedMembershipSHA256": "6e605fde22767c5764d149a3d706e51e98ab9a6abbe30d2267267cebf05319c1",
+    "membershipHashFormat": "SHA256 sorted unchanged repository paths, UTF8 one per line with final newline. Full original hashes remain in the fixed delivery manifest.",
+    "changedMembers": [
+      {
+        "path": "docs/upgrade-2026-ai-work.md",
+        "baseline": {
+          "mode": "100644",
+          "gitBlob": "15f0347b109ed602de8f9786e464fc8fa20e9f6d",
+          "sha256": "2c6849cde7c4b1acc241410663694952fc66641a998f78d27e057f935c3e231a",
+          "bytes": 23295
+        },
+        "target": {
+          "mode": "100644",
+          "gitBlob": "7e093993cd15f5ddd634f8e273ff03d0c7dbdea3",
+          "sha256": "bf6902c1f391a06dd6f6195f8f0c33b4efa8bce9fdf40eba6b4db89b008f8292",
+          "bytes": 23488
+        }
+      },
+      {
+        "path": "docs/upgrade-2026-external-actions.md",
+        "baseline": {
+          "mode": "100644",
+          "gitBlob": "5cbf2bb0d512671ac134bc9d40b391651fc7fa23",
+          "sha256": "5af81df566d26d8c7f36f70361fc54de37e0abc31c5c78a84108cb7fef4b09b2",
+          "bytes": 14724
+        },
+        "target": {
+          "mode": "100644",
+          "gitBlob": "1f7342288c9a20a6a67319713f74bc2984ac71f2",
+          "sha256": "7762b2d8043567cd6c05d84d2653264f5b2a4d1b63f6c8fef5f98780d42734eb",
+          "bytes": 15264
+        }
+      },
+      {
+        "path": "docs/upgrade-2026-node26-runtime-work.md",
+        "baseline": {
+          "mode": "100644",
+          "gitBlob": "81d925d139a7a0c0d841e1c9980ed128cad979ba",
+          "sha256": "97c5080fb3c0f919ce290ea8380c5525a3091910259bf396d168190b58e70970",
+          "bytes": 19131
+        },
+        "target": {
+          "mode": "100644",
+          "gitBlob": "e1e4fb68b73db57b44b1979df1b481095722ed74",
+          "sha256": "9e16207e8e6a086921b6f3701184ccbb2db0f229337dcba46fdfa68ddff8371e",
+          "bytes": 24240
+        }
+      },
+      {
+        "path": "docs/upgrade-2026-staging-subscription-successor-work.md",
+        "baseline": {
+          "mode": "100644",
+          "gitBlob": "4eb0e29602a0474f901dc858cc7c74107d17ca94",
+          "sha256": "64649fab61076ac28a825ab359bbb9697dabe867b4ac3d587843e1f427918fd0",
+          "bytes": 5386
+        },
+        "target": {
+          "mode": "100644",
+          "gitBlob": "ba6f2d56d8838935c1bcb89d92df3ebb97f3cdf8",
+          "sha256": "bc86c67589eae8e1a12509d15ba7b5f4e2e6848929d3eb2521ca1f173fb191aa",
+          "bytes": 6008
+        }
+      },
+      {
+        "path": "spec/coverage/inventory-2025.json",
+        "baseline": {
+          "mode": "100644",
+          "gitBlob": "ef1e37dc6f0ffb2210b092d97b69c5d31478827f",
+          "sha256": "2e6e4d6ca701a6f93e19f6ebdc4946851c19dbebdcb7fbbba980e60e4f24bdae",
+          "bytes": 676175
+        },
+        "target": {
+          "mode": "100644",
+          "gitBlob": "c6257b99d28fda016c5ba1f595e7e11029c67bff",
+          "sha256": "b3aaeeb8d6dc36ef602fc4bdd44a3cab6b77ba3ee4038f02136fc0bec5c01128",
+          "bytes": 687910
+        }
+      },
+      {
+        "path": "spec/federal/form-2210-schedule-ai.yaml",
+        "baseline": {
+          "mode": "100644",
+          "gitBlob": "b2bcdf5463a8d404f835ecde51a31fb89c4d95d3",
+          "sha256": "ad3fbe3978d2a5fdc4bf18fec036e5da4065e04bd73a473765d85dd15cca030f",
+          "bytes": 16170
+        },
+        "target": {
+          "mode": "100644",
+          "gitBlob": "783f1d70a79691281f22de608464c4121c8d0ea7",
+          "sha256": "10c32940250cb11b5d9b9cc49fe4881ce0bbab07fac10061edaf9645803eb4fa",
+          "bytes": 16724
+        }
+      },
+      {
+        "path": "spec/state/oh-return-header-sources.yaml",
+        "baseline": {
+          "mode": "100644",
+          "gitBlob": "83168e01496127e5e4d1f48ea8458cd445804df6",
+          "sha256": "bfe7cd13e4287bfb8858dd45cc522d5b375cca128df7df3a7e5d522510e4549b",
+          "bytes": 13698
+        },
+        "target": {
+          "mode": "100644",
+          "gitBlob": "a5adb1c67fcf753f43272be54d63cc8d18ce15cb",
+          "sha256": "cda607858445c974ef3509fd2db49d33889512871c5a854aefc2141cb1c5c4af",
+          "bytes": 14368
+        }
+      },
+      {
+        "path": "src/utils/return-readiness.ts",
+        "baseline": {
+          "mode": "100644",
+          "gitBlob": "af682ce649c95b78a05445a98cf5144f29bf30ff",
+          "sha256": "9a2af9bff9f2fdcd5055979cdf1ef49ce636dbc6dba05e3b759a7981e2721c16",
+          "bytes": 30027
+        },
+        "target": {
+          "mode": "100644",
+          "gitBlob": "f6ae9ccb07fdd958a5204f62d2e7b892f9cfd747",
+          "sha256": "86e17aca83f6ad5132561970277f3bc6968b03f355c20ce7010f3d8edec0dbc2",
+          "bytes": 30492
+        }
+      }
+    ],
+    "unchangedOriginalFixtureMembers": 388,
+    "addedFixtureFiles": [
+      {
+        "path": "tests/fixtures/form-2210-schedule-ai-physical-review.ts",
+        "mode": "100644",
+        "gitBlob": "51b76e1f2636e59fa6841f8e00f448188b0a4a45",
+        "sha256": "14edeeb7728e633efc96abdf961df2f3a3af57976c710f313356ba46b738d8b0",
+        "bytes": 48582,
+        "sourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/fixtures/form-2210-schedule-ai-physical-review.ts",
+        "description": "Five separately authored synthetic families (single, zero penalty, itemizer, two-owner C/F and two-owner K1), source widget geometry and literal printed matrices; existing calculation fixtures not replaced.",
+        "humanIndependentExpectation": null
+      },
+      {
+        "path": "tests/fixtures/oh-school-district-part-year-sources.ts",
+        "mode": "100644",
+        "gitBlob": "2f1659a45fa081e62914f1c0455bc5375adc0be7",
+        "sha256": "0e02d40f548565db9a6a2ee3240eceaa4c5994d36e197c80cfb3d4ac01c104a2",
+        "bytes": 7715,
+        "sourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/fixtures/oh-school-district-part-year-sources.ts",
+        "description": "Fictional dated OH/VA homes and complete payroll: annual60000, OH40000, VA20000;212/153 days; school withholding600 or500 separate from IT withholding2000.",
+        "humanIndependentExpectation": null
+      },
+      {
+        "path": "tests/fixtures/oh-school-district-part-year-official-review.ts",
+        "mode": "100644",
+        "gitBlob": "e114d7bcb7c532d05b3494ea7971aec75f0f55f6",
+        "sha256": "75d51ef1dc5535d67bf8046370daef87c290b757e15175a5d78b782a2fc9c66f",
+        "bytes": 39155,
+        "sourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/fixtures/oh-school-district-part-year-official-review.ts",
+        "description": "Explicit same-home Ashland/Finder/header originals and165text/22status widget matrix for refund100/covered0; not geolocation or real taxpayer data.",
+        "humanIndependentExpectation": null
+      }
+    ]
+  },
+  "trackedDeltaSummary": {
+    "total": 118,
+    "added": 69,
+    "modified": 49,
+    "deleted": 0,
+    "renamed": 0,
+    "byRoot": {
+      ".github": 2,
+      "apps": 21,
+      "docs": 39,
+      "scripts": 2,
+      "spec": 19,
+      "src": 13,
+      "tests": 22
+    },
+    "hashFormat": "SHA256 raw Git blob bytes; mode and Git blob ID separate. Symlinks are not dereferenced.",
+    "allChangedPathsPinned": true
+  },
+  "trackedChanges": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "6a880bd7cfa6600764f49a6fb3421c05e73f5fa8",
+        "sha256": "343d9926f1897c019af1468159391187e5d4d05cc46b84d59b823379be5ce0e2",
+        "bytes": 4742
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "778bade204fd10d2de813bd077cd3e8eedd3aa3b",
+        "sha256": "837b8e389997727f69619c237ee73abe3ba806c262235b518173329a760dc38e",
+        "bytes": 4684
+      },
+      "scopeTags": [
+        "ci-execution-and-immutable-evidence"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/.github/workflows/ci.yml"
+    },
+    {
+      "path": ".github/workflows/web.yml",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "bf3299bd2fdda6ee948095556aff5ddd01e49cde",
+        "sha256": "0d88160ea2ef5e02a3cdb21f1e14fb139cbf4a22ca8f4228171917f99916324d",
+        "bytes": 7349
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "65ac17091bd71883d763418be5a63377efde5913",
+        "sha256": "6826e68960461eaaae7a29e008460bd798ac3c763c6d8141d8a3748987feae82",
+        "bytes": 14829
+      },
+      "scopeTags": [
+        "ci-execution-and-immutable-evidence"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/.github/workflows/web.yml"
+    },
+    {
+      "path": "apps/web/src/app/support/page.tsx",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "f738bb66fac65a685fb8aed9daa043cb45ad39a0",
+        "sha256": "3a394227a41a989b59275be62a2403836f7fa50ed17ac5bceb6a2bceb2317358",
+        "bytes": 2006
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "63e32470f1830c13628a63088b4c2939b5a1a1af",
+        "sha256": "ba1504428e9905e3f6f3426b67021d49bd27b332b0bca8352b6eb958b1b8210f",
+        "bytes": 2030
+      },
+      "scopeTags": [
+        "ohio-review-disclosure"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/app/support/page.tsx"
+    },
+    {
+      "path": "apps/web/src/components/guided-interview/guided-interview-shell.tsx",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "2aefbdbf3eeab1ead4f2e8600333f33e57e86a63",
+        "sha256": "57257dd666dfbafb5afa097a7e7e545dceb4c001f97317281b095c1a907c78bf",
+        "bytes": 56505
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "4bcdcd2f63841d1cbe4e09bcec5286de4ebf38aa",
+        "sha256": "6921f01a07f7f7d6c445e2b338276bddfca3b4bc3ce42bbb2d10b965e843c140",
+        "bytes": 57091
+      },
+      "scopeTags": [
+        "guided-current-render-analysis"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/components/guided-interview/guided-interview-shell.tsx"
+    },
+    {
+      "path": "apps/web/src/components/guided-interview/ohio-return-header-details.tsx",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "c59f7daf3b0457f12f3a51402278590df3383a6c",
+        "sha256": "5b83c277b69400a81d956dd05d02ebeb1530e87c1cc1a5928c68b73a0b34638b",
+        "bytes": 13791
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "425a271e63739a76a2f591426c405bc1e2ad918d",
+        "sha256": "9f1879e95c72fc71cc65f2551d50df8e686fae97d90379801a1d620c3f07ca15",
+        "bytes": 14105
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/components/guided-interview/ohio-return-header-details.tsx"
+    },
+    {
+      "path": "apps/web/src/components/guided-interview/ohio-school-district-details.tsx",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "170b330f10d4dd21ea2cbd0b5b3a01a6ef2b907d",
+        "sha256": "6a6560bd41d98359f18eb14dbe8368f3ba533f7dd7657789beb2492aebcac8f8",
+        "bytes": 21528
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "6afac3586f5fe3ebe1622ab4b33d25fa1e108bff",
+        "sha256": "310328c21e150d8f23201afbcb7d704e2c1b59f817f89133ee3da2fb18491dee",
+        "bytes": 29162
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/components/guided-interview/ohio-school-district-details.tsx"
+    },
+    {
+      "path": "apps/web/src/components/guided-interview/section-review.tsx",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "21696f2eaae2720ac2156a2b40a888f319eda1a7",
+        "sha256": "7ddba85bc2040084bb1b38432fb81363946012a5aeb825eeb02ea60255787697",
+        "bytes": 43471
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "a2f059923f6e65a3f507795a0f4f1e428736f872",
+        "sha256": "edea9f7b145f8aabeb00c2973cf9593a2387ec012929b0878314f46e98ae1bdc",
+        "bytes": 43856
+      },
+      "scopeTags": [
+        "guided-current-render-analysis",
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/components/guided-interview/section-review.tsx"
+    },
+    {
+      "path": "apps/web/src/components/guided-interview/section-state-return.tsx",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "d156b54d91e3040c761b04e64d9d76a722520655",
+        "sha256": "6f6a5d7054cdbb8158a9f3079dd71b32d41bd6dc5bf5c4f90e6b8620f1c85c89",
+        "bytes": 22968
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "882733948fd9c094c815c9542e0e22d6d27393f7",
+        "sha256": "3eae4c9a69ccb7552ea4f70123137402eaa28e321e959ab23fcf45c7e78e9dcb",
+        "bytes": 23280
+      },
+      "scopeTags": [
+        "ohio-review-disclosure"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/components/guided-interview/section-state-return.tsx"
+    },
+    {
+      "path": "apps/web/src/instrumentation.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "ad3e7cccc85fbf818dee7fa0df5c47fe94b1604d",
+        "sha256": "2766a9e278fd08d361482cd75f570d47357eb7a1b0879b319c671863336f51c8",
+        "bytes": 443
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "a873221d17f4255cf5891e54e40f1c142cb0f699",
+        "sha256": "a365f73766f390dcc3c7c37e0e50d60ba8b885c281220d668b76deb00230aa59",
+        "bytes": 814
+      },
+      "scopeTags": [
+        "preview-runtime-identity"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/instrumentation.ts"
+    },
+    {
+      "path": "apps/web/src/lib/guided-interview-flow.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "2135f193d44517c3b5fa60b430076f97ccf0ebf5",
+        "sha256": "4662010e0bad25638eea1e9679eb4bc46ea75c9d5a702d910c852ec5e65d2e8e",
+        "bytes": 130582
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "3b9786ecfba1e380623702d3cd60365d073ac387",
+        "sha256": "172d0977a483c0148bf9daf96887d92b98bc610a408e0b4ba4f1e041f9e6f0f4",
+        "bytes": 132301
+      },
+      "scopeTags": [
+        "guided-current-render-analysis",
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/lib/guided-interview-flow.ts"
+    },
+    {
+      "path": "apps/web/src/lib/guided-ohio-return-header-sources.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "7b69d9ce848ecdf9917460855c2a7cf796fb3ca9",
+        "sha256": "76de89e617e01adfdb49fa1c628a1738485060d6aa6b3e9c42b72a79d5dc7e42",
+        "bytes": 6593
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "f34f95084dbf006ea0eedd2f8e6952ff4be3e046",
+        "sha256": "02f306e861c637a1991c6de706aa75ed23857f7053db93d7e43f52b42bcd3a7c",
+        "bytes": 7671
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/lib/guided-ohio-return-header-sources.ts"
+    },
+    {
+      "path": "apps/web/src/lib/guided-ohio-school-district-facts.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "84a8d31f33e229a84b11434e02b03441eae2c9f6",
+        "sha256": "e8bc299e20dd67c4446d0b24723549f5b39f06155449f7d67240699e8c99dca7",
+        "bytes": 12910
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "5af8ff858521a52064c0139f3e635ad5665ccaeb",
+        "sha256": "49858c6a9d2180028700128d2105a2485e33efa93207c0841dc85ce8d87c802b",
+        "bytes": 16650
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/lib/guided-ohio-school-district-facts.ts"
+    },
+    {
+      "path": "apps/web/src/lib/guided-state-engine-inputs.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "7abade924dc64f0636b110800cc6ac0e03cbb008",
+        "sha256": "4df8fa3c00deefd9fa58306d9d595a8354973567f4aa03d6392cad6d08e16c13",
+        "bytes": 10860
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "b3b45a6b52b7ddfa0334d3f895e688003f8311a0",
+        "sha256": "def837888ac8f3f283b667ffe9e1912b4240488d05d2ca70b869c31ae407538f",
+        "bytes": 10884
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/lib/guided-state-engine-inputs.ts"
+    },
+    {
+      "path": "apps/web/src/lib/hosted-auth.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "84675b6d0010934c90bb3a97fa4612991caacfac",
+        "sha256": "f1c47ae45a204b08613402e89bf4a3e5605b6fe5fce1afc3597a92bebc85165c",
+        "bytes": 28990
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "273ec915ede2a6fe295cd170dd7b3814552a102e",
+        "sha256": "1eb89389097eccf771e9ae6e5b1f8d326f3349bcb3945333190a8f4e314a8717",
+        "bytes": 29496
+      },
+      "scopeTags": [
+        "hosted-tls-and-cache",
+        "hosted-outage-response"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/lib/hosted-auth.ts"
+    },
+    {
+      "path": "apps/web/src/lib/hosted-document-identity.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "f8b21a7c3e6626508e3f44787e12553280d63f96",
+        "sha256": "6143adf39aa85d48558e6cae3f8ab28673ac4f252b6bbee62fe22cb979dbf150",
+        "bytes": 1354
+      },
+      "scopeTags": [
+        "hosted-metadata-and-local-document-identity"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/lib/hosted-document-identity.ts"
+    },
+    {
+      "path": "apps/web/src/lib/hosted-privacy.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "5f9032858e5b224e7aa10f63e26f6712dd3f7a87",
+        "sha256": "7449d3be21a46d4731742b2ac383924e2edd38ef3abec9313e06298f84b6eb53",
+        "bytes": 6083
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "f20b7912b048e5f7ccfc0008efbbe77822b15cac",
+        "sha256": "c65af6bdff3ecc3a96bf25cc5c513533b846299c3b5d0a71e1920f505283eb84",
+        "bytes": 8879
+      },
+      "scopeTags": [
+        "hosted-metadata-and-local-document-identity"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/lib/hosted-privacy.ts"
+    },
+    {
+      "path": "apps/web/src/lib/hosted-server-db.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "90d70bcbe23dedffa849e2330fe770e4c7457191",
+        "sha256": "8dc3e8cea2a85c8019ef10a8e92fee06b512dada1f0c03e87fc9811b51bed578",
+        "bytes": 12549
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "068b5e07fd318315efec9b2ec53e6056d6c971eb",
+        "sha256": "e5d7668f37863b98a3a4ee84d7bbabd678742ea89823c3864b428d5e111f4685",
+        "bytes": 16798
+      },
+      "scopeTags": [
+        "hosted-tls-and-cache"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/lib/hosted-server-db.ts"
+    },
+    {
+      "path": "apps/web/src/lib/hosted-workspace-route.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "f83ed9308a60457b7de765b7f9836bec79ab9328",
+        "sha256": "945903eb4b2407bdec7d6476c949933e23cfc3095e5af5627afcdf5924638569",
+        "bytes": 25956
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "53d04e699dd89f5eb0cac1559526fa7892ec4345",
+        "sha256": "633d86e1815eed97422d20eeb4ef49a454cbac2425a7e4133a31f589ca4e905e",
+        "bytes": 26164
+      },
+      "scopeTags": [
+        "hosted-outage-response"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/lib/hosted-workspace-route.ts"
+    },
+    {
+      "path": "apps/web/src/lib/tax-year-support.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "06bd4cb52522678f190d8b2bb1c5cf83dad4ccdf",
+        "sha256": "2e5a1839e947a3103aba09a840b6bce623277cff85cf2b00d8617484a564541f",
+        "bytes": 3288
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "f4cca1c4dab48184eb24caf6b2dc6c8d7754bf8c",
+        "sha256": "03b269d7254eaf0c757d6b572f6a9d6c6d9d019d27f05913d13435fc8601ceb6",
+        "bytes": 3689
+      },
+      "scopeTags": [
+        "ohio-review-disclosure"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/lib/tax-year-support.ts"
+    },
+    {
+      "path": "apps/web/src/lib/workspace-document-file-cache.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "acba1b77b7ba290ac3502391898e6029a92424ec",
+        "sha256": "d642d9a4902319f07087489228a8a5401cac0405f3d88183c9d4116fd2a0755f",
+        "bytes": 6821
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "4f2ff7d09bc2c0ab901e33707bd057cc31a4c2b8",
+        "sha256": "e1ebe57bd1e193ab49054ba3291409bb5c505140631056d8c19101497ad0145d",
+        "bytes": 12082
+      },
+      "scopeTags": [
+        "hosted-metadata-and-local-document-identity"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/lib/workspace-document-file-cache.ts"
+    },
+    {
+      "path": "apps/web/src/lib/workspace-filled-return.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "3c6dd58289dd849f22ced9bc16c525c1b9afad84",
+        "sha256": "16f231bd877cc56bfe0f0f7698df6b2f112acaf3cb1d24d0a2773e5b56948c3c",
+        "bytes": 30901
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "478303b266e444a6f683cba7ede83267a153547e",
+        "sha256": "6bf2522ded369456da3a9d8c6cb7088fe22be092a44e75d4009c5eaf0b144c0d",
+        "bytes": 31678
+      },
+      "scopeTags": [
+        "federal-2210-annualized-physical-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/src/lib/workspace-filled-return.ts"
+    },
+    {
+      "path": "apps/web/tests/oh-school-district-native.spec.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "c6f4048eba8c0d4a383801280745e3bcff4fe437",
+        "sha256": "a7b7a92444d0666b63604dbc28208dc0167591183a11522f3b348588442498da",
+        "bytes": 12243
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "ebc1ae50d5c80cac6873018fdf0175dc72a6ebb5",
+        "sha256": "333113c448f6dca3246f157b202e4946bcfdac867298fddc70e4bf9b89cd64ed",
+        "bytes": 12507
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output",
+        "ohio-review-disclosure"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/tests/oh-school-district-native.spec.ts"
+    },
+    {
+      "path": "apps/web/tests/oh-school-district-part-year-native.spec.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "a8f7fd892080fe9c8f1c502fbe9b249d33215824",
+        "sha256": "3550bb17668ae124fd07326834794d87462c09725d5bc51fef44fe275401032e",
+        "bytes": 38849
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/tests/oh-school-district-part-year-native.spec.ts"
+    },
+    {
+      "path": "docs/self-hosting.md",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "ab25216dac9c6d775389e497b755cc5e1f730361",
+        "sha256": "2c796eb32001dae209a56f03540355046b094acfbccee92c4f4d9be0861cf15e",
+        "bytes": 7673
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "1a7fcf9d37427de32578c2cbad71eaddfd566b0d",
+        "sha256": "a4c7f3d5107b59e158776b50f45b326773d386fef3aab261d57aba7f375884d6",
+        "bytes": 8258
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/self-hosting.md"
+    },
+    {
+      "path": "docs/upgrade-2026-ai-work.md",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "15f0347b109ed602de8f9786e464fc8fa20e9f6d",
+        "sha256": "2c6849cde7c4b1acc241410663694952fc66641a998f78d27e057f935c3e231a",
+        "bytes": 23295
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "7e093993cd15f5ddd634f8e273ff03d0c7dbdea3",
+        "sha256": "bf6902c1f391a06dd6f6195f8f0c33b4efa8bce9fdf40eba6b4db89b008f8292",
+        "bytes": 23488
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-ai-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-checklist.md",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "bd0b8ac738557629628fe91868b95040c80234de",
+        "sha256": "8f070f19f15b77ec79bf7b153efa5aeadc44bab17cf567f184188317f7967cc5",
+        "bytes": 206275
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "8fc4e839f2d70abc9ff26670408aee44246cceda",
+        "sha256": "4434a80b62cde192ba6effac24f5839fb4ed86e1c8def8c18abcd1f91780d386",
+        "bytes": 206484
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-checklist.md"
+    },
+    {
+      "path": "docs/upgrade-2026-checkpoint.json",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "fbb0e9cc36d5421795584423bdbf38ed4d12962d",
+        "sha256": "17bd095e4be33166984513c09c2a99434fcd056050791f640780a5574f8ffc06",
+        "bytes": 815898
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "02a6e750a227d4d58bbdb81929a5bc308e19ccb6",
+        "sha256": "53c6bda49b391145e7d4e145f6bb7fade6d24de86bd2235b67ccaf3b88866bfd",
+        "bytes": 829235
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-checkpoint.json"
+    },
+    {
+      "path": "docs/upgrade-2026-ci-coverage-workers-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "89d34e2ce945a638227f3cbeb1e03f44f4538a2c",
+        "sha256": "9e64fd7c20338fed7697f2c25f94fab28b792dfa5d0f9ce7230817987ceef56b",
+        "bytes": 1617
+      },
+      "scopeTags": [
+        "ci-execution-and-immutable-evidence"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-ci-coverage-workers-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-ci-immutable-image-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "c792ab2af30bdec0d38ea4f01625f7ef8fbcee8c",
+        "sha256": "5af8e50ee9cb74198496e569cd9d02818436e97157ff0ea1469b016e260f4f07",
+        "bytes": 4153
+      },
+      "scopeTags": [
+        "ci-execution-and-immutable-evidence"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-ci-immutable-image-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-current-status.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "4ef4e581e7cbd18e2502c8b749d8cf3108bcc678",
+        "sha256": "4bb65b08a50e05cf0ac9ed2ab5076f8f77a51c5fa9a74a7f961e61301f812a0f",
+        "bytes": 9174
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-current-status.md"
+    },
+    {
+      "path": "docs/upgrade-2026-external-actions.md",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "5cbf2bb0d512671ac134bc9d40b391651fc7fa23",
+        "sha256": "5af81df566d26d8c7f36f70361fc54de37e0abc31c5c78a84108cb7fef4b09b2",
+        "bytes": 14724
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "1f7342288c9a20a6a67319713f74bc2984ac71f2",
+        "sha256": "7762b2d8043567cd6c05d84d2653264f5b2a4d1b63f6c8fef5f98780d42734eb",
+        "bytes": 15264
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-external-actions.md"
+    },
+    {
+      "path": "docs/upgrade-2026-form-2210-schedule-ai-physical-review-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "175bc169f0cafad92a7519bc7c6d01bde888757c",
+        "sha256": "fcffe45f2f94c1cc12363fa0ff5c166f813f6fb3b11174c7d715ee045709685d",
+        "bytes": 10663
+      },
+      "scopeTags": [
+        "federal-2210-annualized-physical-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-form-2210-schedule-ai-physical-review-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-guided-render-analysis-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "85e3d4195e57287ef7a58e0b05c12a5ddce9ce2d",
+        "sha256": "6618d1ab5c7a40bc61b9e2f9e6d702522d9d72bb79b596c0b4fee9d45a2f7679",
+        "bytes": 4553
+      },
+      "scopeTags": [
+        "guided-current-render-analysis"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-guided-render-analysis-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-hosted-database-tls-policy-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "d97f3cdb2f2aa3ee83302ed7d0a6f33830e66b8d",
+        "sha256": "eac79f225a73925575de7391f38e60b5d299b503b12cb51ee85aece4c67551fe",
+        "bytes": 4819
+      },
+      "scopeTags": [
+        "hosted-tls-and-cache"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-hosted-database-tls-policy-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-hosted-document-opaque-ids-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "cfa6bd4ea613b0024e8f54107c85e59f40d99040",
+        "sha256": "0b5d320b6a664e9851c9b42e3e1e82509f59246f44be1f0507c3d7d60d896f65",
+        "bytes": 5140
+      },
+      "scopeTags": [
+        "hosted-metadata-and-local-document-identity"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-hosted-document-opaque-ids-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-hosted-http-fault-rehearsal-spec.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "d5574eeb31bd3d28e18bbdc902ce9f7dac259554",
+        "sha256": "e01e03a2ff3dff4e6ab8020af8e42bf8378ddd161f0801ecd3efd95fa75b3dd5",
+        "bytes": 3888
+      },
+      "scopeTags": [
+        "hosted-outage-response"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-hosted-http-fault-rehearsal-spec.md"
+    },
+    {
+      "path": "docs/upgrade-2026-hosted-http-fault-rehearsal-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "9ba2e4539c76b051fcf0a2f10d7498876e402ee6",
+        "sha256": "042dcc86bf21b131520b6ac836f64b3d1097773490bd740686810c3cf17b63b8",
+        "bytes": 4800
+      },
+      "scopeTags": [
+        "hosted-outage-response"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-hosted-http-fault-rehearsal-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-hosted-preview-runtime-identity-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "60149adf8f1693cf514cc2dc7d619f3f90c0f33f",
+        "sha256": "da3a5fd470f53b3258b660eff096a13354b65d99242bc7f14bbbe20629e91593",
+        "bytes": 3994
+      },
+      "scopeTags": [
+        "preview-runtime-identity"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-hosted-preview-runtime-identity-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-hosted-recovery-pool-lifecycle-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "5e164f008e3cef438d30f993cb47ff926ff15240",
+        "sha256": "fcfc9713dc0ca1f14bbf88298a06d5ec4c95224e1c08394609e81372175d17d5",
+        "bytes": 6413
+      },
+      "scopeTags": [
+        "recovery-pool-lifecycle"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-hosted-recovery-pool-lifecycle-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-hosted-remote-database-tls-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "209da6539bfc715f714aa467d623fcf37abe4d35",
+        "sha256": "8e0fd732b26082afbb37e7bc98c657a84e89a2f9ca9be5ac618b919027199f5e",
+        "bytes": 10222
+      },
+      "scopeTags": [
+        "hosted-tls-and-cache"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-hosted-remote-database-tls-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-hosted-runtime-20261104.json",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "e7662076547932bcd6763c120f5e2472c1974311",
+        "sha256": "39ffe12434397073f4f79e8b5d601551cc4dfcf76b861ff8fc3f080cbb120858",
+        "bytes": 995
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-hosted-runtime-20261104.json"
+    },
+    {
+      "path": "docs/upgrade-2026-hosted-workspace-ingestion-shell-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "cc70a2c5fa5c911b1dfb3857e1ad719abba45530",
+        "sha256": "62e6d5a69f75bcef6d080471bcaf1b159b13c08d923961de5fe36906492c5950",
+        "bytes": 4714
+      },
+      "scopeTags": [
+        "hosted-metadata-and-local-document-identity"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-hosted-workspace-ingestion-shell-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-image-advisories-20261104.json",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "6d992bbdbd6211c83fc54662c6134c251eb5118e",
+        "sha256": "b4a9429cdd9972cc451ffd2da9446371806847d11e30cc92c736679ba1de0e4c",
+        "bytes": 101016
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-image-advisories-20261104.json"
+    },
+    {
+      "path": "docs/upgrade-2026-image-advisories.json",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "92c2932f7390e5c93da6b0af5095288df21b8386",
+        "sha256": "4dc072530b5418c5271da86c620d51143caa0ee587d22c0628ffcadf52b84184",
+        "bytes": 134665
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "7b34f9422dda703c7df2a2906d44a5141419c9f5",
+        "sha256": "3994a1de0155e4f49186c530d363e4a873a5977198d726bcce2f6f69ccd5f763",
+        "bytes": 135137
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-image-advisories.json"
+    },
+    {
+      "path": "docs/upgrade-2026-independent-review-decisions-20261104.json",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "cf9f8330c3d9ad1a0ab9f018fe1ae498cdfb51a8",
+        "sha256": "7dfa171a47ad5ec27b338e663d162c16a4987b755dc44db8ad52785808a366bd",
+        "bytes": 3515
+      },
+      "scopeTags": [
+        "fixed-f09-packet-publication"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-independent-review-decisions-20261104.json"
+    },
+    {
+      "path": "docs/upgrade-2026-independent-review-delivery-20261104.json",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "48f11cb6d486f2a99a316f05080943b1e91437c5",
+        "sha256": "03204298643355f8cc6a08813d0ff78862798b0171363eea1308e97ab25c1489",
+        "bytes": 182184
+      },
+      "scopeTags": [
+        "fixed-f09-packet-publication"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-independent-review-delivery-20261104.json"
+    },
+    {
+      "path": "docs/upgrade-2026-independent-review-packet-20261104.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "eb902671f9275e566bea97084c5e111122a65f52",
+        "sha256": "cb4a218c2680f27c68cd1b439d1ebecd3506515a9db76f16b9e8c274cfaf4b1d",
+        "bytes": 9381
+      },
+      "scopeTags": [
+        "fixed-f09-packet-publication"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-independent-review-packet-20261104.md"
+    },
+    {
+      "path": "docs/upgrade-2026-node26-runtime-work.md",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "81d925d139a7a0c0d841e1c9980ed128cad979ba",
+        "sha256": "97c5080fb3c0f919ce290ea8380c5525a3091910259bf396d168190b58e70970",
+        "bytes": 19131
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "e1e4fb68b73db57b44b1979df1b481095722ed74",
+        "sha256": "9e16207e8e6a086921b6f3701184ccbb2db0f229337dcba46fdfa68ddff8371e",
+        "bytes": 24240
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-node26-runtime-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-oh-review-disclosure-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "1cda65636dcd4397acdd1622fe3069e587fb9a01",
+        "sha256": "4dd96241427aacafd971f7ae8c3b7c09ce2d72dc956085ad8d77a327e5cfd17b",
+        "bytes": 4242
+      },
+      "scopeTags": [
+        "ohio-review-disclosure"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-oh-review-disclosure-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-oh-school-district-part-year-native-browser-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "7b86da69081e0db01a4b38d66d0ffd95991fa4db",
+        "sha256": "caff63d57473329d5d64bb7a838c83d41fa7040e51573dc866131fd1243060f4",
+        "bytes": 8027
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-oh-school-district-part-year-native-browser-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-oh-school-district-part-year-official-review-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "4215395927f571fab2467ce4666b507ab6c0891e",
+        "sha256": "2ad269479a702ea3b6845d3ca13465ce444649fd83524b55896dfee18fe35481",
+        "bytes": 7009
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-oh-school-district-part-year-official-review-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-oh-school-district-part-year-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "fd472c6b4906413cf338d5166dd1ba2e6f0ee0cf",
+        "sha256": "56a4efde30caa5983208a94a09acce7b94c6630ec1dce9c41117198894814e95",
+        "bytes": 9043
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-oh-school-district-part-year-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-oh-school-header-native-composition-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "1744e3ebcba5aa7312a88b60a0ef88595d0a7a1a",
+        "sha256": "1c25c3c6c6d88140b0b39effce7f66c01cdf0f8a7c65d7cb2020fba0f12f0cbc",
+        "bytes": 3633
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-oh-school-header-native-composition-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-oh-source-material-equality-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "b5f9cdb76178f551dc4e3100c3d49ec1c3d08e8c",
+        "sha256": "2fce6a87f468d8fa459c1280843949e0156d899d357c5c54c6ddda67328b7de4",
+        "bytes": 2792
+      },
+      "scopeTags": [
+        "ohio-source-comparison"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-oh-source-material-equality-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-oh-support-publication-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "03ab407b017a693b3ab9004d34393d433bfcfbdb",
+        "sha256": "e48cf9b6487ca766d63a7b5106a62b57e4f075a0e839d4c64d18d668c5271e7c",
+        "bytes": 3022
+      },
+      "scopeTags": [
+        "ohio-review-disclosure"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-oh-support-publication-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-preview-schema-rehearsal-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "a48ad1387296976b2eadc0ea9bc3e2f77dff37a1",
+        "sha256": "dc09aa0ea1ae4313b6c240561040e2a5da67a5cdf7b8a6e0cbe1caf3f31d62f3",
+        "bytes": 2767
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-preview-schema-rehearsal-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-progress.md",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "e5234c8767dc91b970d1da29826b86da0a7038de",
+        "sha256": "04e6f0afa5c96a8726c87b77d75486c567847e4c8a4460ece5d4ce03041ce57f",
+        "bytes": 251078
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "51467d192fca0ad6aa7dc03452d54ed9a09d392e",
+        "sha256": "8d1f88ed963318c2201e25346305dada018640aea429940eeef23eda03d5760a",
+        "bytes": 262004
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-progress.md"
+    },
+    {
+      "path": "docs/upgrade-2026-provider-refresh.md",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "d3b8eaa5fd5c139f6eb183430b7edc6fbf8c1d43",
+        "sha256": "9215472a79b5c1ba5f4e454e1bb3a209d3cc13b8d3cd73b7f590effb56837f39",
+        "bytes": 8449
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "48061452c57884c6399393c7cf521ee5a3ef5c67",
+        "sha256": "97174f322e5a70ca1ef332cd7e995f39eccc68fa296a9f4dc4bd6b53e8aa028a",
+        "bytes": 9780
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-provider-refresh.md"
+    },
+    {
+      "path": "docs/upgrade-2026-review-pdf-active-content-work.md",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "540a680d836ac0f951d41fdc753b4cad4c1e619f",
+        "sha256": "1513b4193cc5db1c379d8e08f690337f77cf3532d3b9b8530a48fae0bb93bc76",
+        "bytes": 2699
+      },
+      "scopeTags": [
+        "mapped-review-pdf-active-content"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-review-pdf-active-content-work.md"
+    },
+    {
+      "path": "docs/upgrade-2026-runtime-ad23-arm64.json",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "f6939c26406220a02b7e42100412ad2520856f73",
+        "sha256": "5db8bea5b736fd9d493edb733120141d9bee431eb48a0c9b7029820a210355c3",
+        "bytes": 9336
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-runtime-ad23-arm64.json"
+    },
+    {
+      "path": "docs/upgrade-2026-runtime-f09-amd64.json",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "d3b9a06e898e6696e34e831e2fffd1b2295556ae",
+        "sha256": "e550fd2835055b951a8b8ef21a6aa1f6a8e36f8d745b965834b1d9984f32857c",
+        "bytes": 6492
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-runtime-f09-amd64.json"
+    },
+    {
+      "path": "docs/upgrade-2026-staging-subscription-successor-work.md",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "4eb0e29602a0474f901dc858cc7c74107d17ca94",
+        "sha256": "64649fab61076ac28a825ab359bbb9697dabe867b4ac3d587843e1f427918fd0",
+        "bytes": 5386
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "ba6f2d56d8838935c1bcb89d92df3ebb97f3cdf8",
+        "sha256": "bc86c67589eae8e1a12509d15ba7b5f4e2e6848929d3eb2521ca1f173fb191aa",
+        "bytes": 6008
+      },
+      "scopeTags": [
+        "status-and-engineering-provenance"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-staging-subscription-successor-work.md"
+    },
+    {
+      "path": "scripts/rehearse-hosted-http-faults.mjs",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "113a244b2d6ac30e60eb3456049a1e669b7223c7",
+        "sha256": "ac0bbe1785a89d36777a24183c10d0221b7285efc32f011c6df8fdfa36349af9",
+        "bytes": 19988
+      },
+      "scopeTags": [
+        "hosted-outage-response"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/scripts/rehearse-hosted-http-faults.mjs"
+    },
+    {
+      "path": "scripts/rehearse-hosted-recovery.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "0f3fbd6b5f77f197768c99084a0e73a259abef19",
+        "sha256": "56d9dff6c240d1996405f084412f3ef3d2ae57c6c45b3022ab88c4638e4f8818",
+        "bytes": 7784
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "9d46585380ff236cac7448bd48a80ccdfb7805ff",
+        "sha256": "1a8f48647d577fe4291f5c31d7358a8cda982f9dc5587529bb5493c50bf218ef",
+        "bytes": 8330
+      },
+      "scopeTags": [
+        "recovery-pool-lifecycle"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/scripts/rehearse-hosted-recovery.ts"
+    },
+    {
+      "path": "spec/coverage/inventory-2025.json",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "ef1e37dc6f0ffb2210b092d97b69c5d31478827f",
+        "sha256": "2e6e4d6ca701a6f93e19f6ebdc4946851c19dbebdcb7fbbba980e60e4f24bdae",
+        "bytes": 676175
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "c6257b99d28fda016c5ba1f595e7e11029c67bff",
+        "sha256": "b3aaeeb8d6dc36ef602fc4bdd44a3cab6b77ba3ee4038f02136fc0bec5c01128",
+        "bytes": 687910
+      },
+      "scopeTags": [
+        "generated-spec-inventory"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/coverage/inventory-2025.json"
+    },
+    {
+      "path": "spec/federal/form-2210-schedule-ai-physical-review.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "c16a678f42b4dbdce5e55bc94fd7742b6a3c5742",
+        "sha256": "79254b49362201b73ae74a6dfaff3257fe31a2896762db81073ae15898d1c2c7",
+        "bytes": 20008
+      },
+      "scopeTags": [
+        "federal-2210-annualized-physical-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/federal/form-2210-schedule-ai-physical-review.yaml"
+    },
+    {
+      "path": "spec/federal/form-2210-schedule-ai.yaml",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "b2bcdf5463a8d404f835ecde51a31fb89c4d95d3",
+        "sha256": "ad3fbe3978d2a5fdc4bf18fec036e5da4065e04bd73a473765d85dd15cca030f",
+        "bytes": 16170
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "783f1d70a79691281f22de608464c4121c8d0ea7",
+        "sha256": "10c32940250cb11b5d9b9cc49fe4881ce0bbab07fac10061edaf9645803eb4fa",
+        "bytes": 16724
+      },
+      "scopeTags": [
+        "federal-2210-annualized-physical-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/federal/form-2210-schedule-ai.yaml"
+    },
+    {
+      "path": "spec/federal/guided-render-analysis.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "92ae897ec1f0e831f709560f45032415107f47a6",
+        "sha256": "96c145a191b5838b46d4f933e1495a055f4d9b051c27b6649ffc0501c5a6f15c",
+        "bytes": 2268
+      },
+      "scopeTags": [
+        "guided-current-render-analysis"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/federal/guided-render-analysis.yaml"
+    },
+    {
+      "path": "spec/federal/hosted-database-tls-policy.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "0a5f315beb8d8ec54e18fa5ef52fac2d9685df8d",
+        "sha256": "cd258c657a60ca6fb3f3f7b86b58a7936294566d79a341b352a4e4a03c448d44",
+        "bytes": 3175
+      },
+      "scopeTags": [
+        "hosted-tls-and-cache"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/federal/hosted-database-tls-policy.yaml"
+    },
+    {
+      "path": "spec/federal/hosted-document-opaque-ids.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "134343e4f544d3dc3cca747fc502e5e34182d3f7",
+        "sha256": "ce81e086e3366f7e5d8118fc52837483f8ecbace4a946807eecdfe0a457c22fc",
+        "bytes": 12152
+      },
+      "scopeTags": [
+        "hosted-metadata-and-local-document-identity"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/federal/hosted-document-opaque-ids.yaml"
+    },
+    {
+      "path": "spec/federal/hosted-recovery-pool-lifecycle.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "83f811aeb12bffa6a9f55a1f5a7a7f946802b8a1",
+        "sha256": "902eed3b478f38639611948adae0ab5f89c5d5dc3d5f23652f7448a1b915d709",
+        "bytes": 2959
+      },
+      "scopeTags": [
+        "recovery-pool-lifecycle"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/federal/hosted-recovery-pool-lifecycle.yaml"
+    },
+    {
+      "path": "spec/federal/hosted-remote-database-tls.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "e7de26d246ae6ba499761c17e34bd950123ccef8",
+        "sha256": "0b6874e2fd3c0f9ffdca6a61f2d332109debe34acab2db0c0358c6d9a1a5623c",
+        "bytes": 7646
+      },
+      "scopeTags": [
+        "hosted-tls-and-cache"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/federal/hosted-remote-database-tls.yaml"
+    },
+    {
+      "path": "spec/federal/hosted-workspace-auth-outages.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "45e3de6355fa40c0e1e4c540d22a067be6334259",
+        "sha256": "23008856b4d708ef12d6e8ccef8c71be1953a8aecd789cc67af0fccf57f2f921",
+        "bytes": 2206
+      },
+      "scopeTags": [
+        "hosted-outage-response"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/federal/hosted-workspace-auth-outages.yaml"
+    },
+    {
+      "path": "spec/federal/hosted-workspace-ingestion-shell.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "a1a07f9bece83116c71a89a21b2a7624ddd03649",
+        "sha256": "cc80106629557545cdf7a251647a12fa8af1df7b8d0636cebb091e880247bd5a",
+        "bytes": 3790
+      },
+      "scopeTags": [
+        "hosted-metadata-and-local-document-identity"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/federal/hosted-workspace-ingestion-shell.yaml"
+    },
+    {
+      "path": "spec/federal/review-pdf-active-content.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "561abcdc2667429ec5b65006c6305279169e97ec",
+        "sha256": "c22b09c29c03bd8732ab1a267bdfb3222450a66d27fd9bb2084a6cfac29aea74",
+        "bytes": 2457
+      },
+      "scopeTags": [
+        "mapped-review-pdf-active-content"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/federal/review-pdf-active-content.yaml"
+    },
+    {
+      "path": "spec/state/oh-header-school-native-independent.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "e031fdabb402b9b17e747c7f4583d875223547fa",
+        "sha256": "a79416cd4229b3002f8b02b36aafe4baffb0f1bb50f31c04ff6a0229558540d9",
+        "bytes": 3929
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-header-school-native-independent.yaml"
+    },
+    {
+      "path": "spec/state/oh-return-header-sources.yaml",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "83168e01496127e5e4d1f48ea8458cd445804df6",
+        "sha256": "bfe7cd13e4287bfb8858dd45cc522d5b375cca128df7df3a7e5d522510e4549b",
+        "bytes": 13698
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "a5adb1c67fcf753f43272be54d63cc8d18ce15cb",
+        "sha256": "cda607858445c974ef3509fd2db49d33889512871c5a854aefc2141cb1c5c4af",
+        "bytes": 14368
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-return-header-sources.yaml"
+    },
+    {
+      "path": "spec/state/oh-review-method-disclosures.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "af1a41eee3eb7ed9ba5c4404cec0917ef0f9ae2c",
+        "sha256": "f19230fc3f4b577d8f61e9ce4da365b2fcf5f2ca69c685bed72a3559aee09c32",
+        "bytes": 3648
+      },
+      "scopeTags": [
+        "ohio-review-disclosure"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-review-method-disclosures.yaml"
+    },
+    {
+      "path": "spec/state/oh-school-district-part-year-native-browser.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "c9fb595c651705411aa0fba8ba5966fa05d217c4",
+        "sha256": "9fcf81f9fe0142cdd0edc35c5aba38d9a84d50ec5fa31aed2eba09ec26540c1b",
+        "bytes": 6133
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-school-district-part-year-native-browser.yaml"
+    },
+    {
+      "path": "spec/state/oh-school-district-part-year-official-review.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "09503c94bbf02e5da574db0ec4c5c8f1ead1f82a",
+        "sha256": "f247ab04f2deede69e0d50efaa12d69c27092dc28353fb049ee57dc22ae500cf",
+        "bytes": 6046
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-school-district-part-year-official-review.yaml"
+    },
+    {
+      "path": "spec/state/oh-school-district-part-year-sources.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "b6c8212643e3fcbdb663d3b708d474955932a390",
+        "sha256": "3fec1513c7c3b1c13aa611810838d53aaa48b841339a7153d91d6f80f425f020",
+        "bytes": 8451
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-school-district-part-year-sources.yaml"
+    },
+    {
+      "path": "spec/state/oh-school-header-native-composition.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "cb24160a71db90cbc52bbbf1247580d7f89a710a",
+        "sha256": "ee29f348608bd823fa629885bf8ab0f40ec9b53c34c85bcd096813b843a6eded",
+        "bytes": 4057
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-school-header-native-composition.yaml"
+    },
+    {
+      "path": "spec/state/oh-source-material-equality.yaml",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "8e3e19bea48a4fb8fefe7d34e53ca1a26382f602",
+        "sha256": "826ef62f947257a2938a7e8d253dadac7d5b9e4759062e717a9ed4d9193dd6cd",
+        "bytes": 3049
+      },
+      "scopeTags": [
+        "ohio-source-comparison"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-source-material-equality.yaml"
+    },
+    {
+      "path": "src/engine/state/oh-payment-source.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "380af55ef4076e54faa19245f60d5f3c937c6e3d",
+        "sha256": "68999a1236774d5d40b605716951ec8f36983954ea6329c55c85d26b951b2c36",
+        "bytes": 14104
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "4f2ad7ee8e8bf613aa79325cebd510ac094e3908",
+        "sha256": "3cc5477921b5073847bae83731bd653450da9e35f030f614125c1d867cef3cf3",
+        "bytes": 14354
+      },
+      "scopeTags": [
+        "ohio-source-comparison"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-payment-source.ts"
+    },
+    {
+      "path": "src/engine/state/oh-residency-source.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "a303fae63ff4b1af77cd5ef9fb29e23597b2d12c",
+        "sha256": "b965bc22b7fd0640a7f4a02b3f1287f57d5f81261c5e32aafd98a3845f9f20c3",
+        "bytes": 12676
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "f0291e78fe1f9de773926be00addee818f57f482",
+        "sha256": "46aabf84cb65ea79310d089ab5e616602e0c75ca0b4a69f8282b3e4925b7be3b",
+        "bytes": 12928
+      },
+      "scopeTags": [
+        "ohio-source-comparison"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-residency-source.ts"
+    },
+    {
+      "path": "src/engine/state/oh-return-header-source.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "9a6a8de533104cb111a759b88724782b8660d96b",
+        "sha256": "9be1068185284d96820f2f28237b0c3d3ab5e3630fe50095a52d0aca2531306c",
+        "bytes": 9640
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "ade39a0d77a7cb0a88225b44139d420919e71c97",
+        "sha256": "2eac860c43f4bf93b1ac5b2c7056c50afd7e481da4be446421478eb885987287",
+        "bytes": 10942
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-return-header-source.ts"
+    },
+    {
+      "path": "src/engine/state/oh-sd-100-sources.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "b20a854f475f877da11426408dcf663dd51193e4",
+        "sha256": "5231e1e1bf43addc56a6f37d5bb184c8a96497a4781b1fd5498d2a508ba1bdd2",
+        "bytes": 26132
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "80a628d4555b144c7a940beaac3a26ebaa3f235a",
+        "sha256": "bdae86092878a5821d3d5501a4d80b6ddd0c8695cf38d7686a815199cd259eb1",
+        "bytes": 33734
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-sd-100-sources.ts"
+    },
+    {
+      "path": "src/engine/state/oh-sd-100.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "02e895abc610c22d18dd2bb35a356bdc937deb84",
+        "sha256": "e89285fb9db97b927100afc3951eb6a72a76647e5d6b456148af030ba31993f1",
+        "bytes": 20711
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "8a26d801e2ae272bcbc32a9dd49c7ad14514774c",
+        "sha256": "fe91369e4c0479eef788087e9db0ef5b55b4113570dbd89fd12630e75c427603",
+        "bytes": 22414
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-sd-100.ts"
+    },
+    {
+      "path": "src/models/ohio-school-district.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "639d15cfa7bcc6e268508a5b87adaf3554697b11",
+        "sha256": "264c332d12561d1c5aeb907bcd1411dffa3af30a87e5ed44af0ae18161b4d295",
+        "bytes": 5042
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "b92bebdeed098707ef1fba598fdf82cc9d65b936",
+        "sha256": "6069582748404271cea3e827850be92cbaf6dd1c33943ad4362aed67e627610f",
+        "bytes": 6357
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/models/ohio-school-district.ts"
+    },
+    {
+      "path": "src/pdf/export-policy.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "1500e0c5febb45a9a0db11590456d2785af4ddb8",
+        "sha256": "f62d90214091afedbb4de7b6941151b135e187c2b2b1864b3823b938911bb5c8",
+        "bytes": 3015
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "4e79ef1fde40df247659385971b40dbf4ea69d04",
+        "sha256": "af79ca06ca3a4a376d1d5846a0335ee25dcc745d3d3a91864b3e247f9b4086c4",
+        "bytes": 3119
+      },
+      "scopeTags": [
+        "mapped-review-pdf-active-content"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/pdf/export-policy.ts"
+    },
+    {
+      "path": "src/pdf/fill-return.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "19c8182dc4cc85c263377d2bfc091b6b97c620f2",
+        "sha256": "ea770f40c6862dce61321ed7eb613d56c549d0901c7f0074489e7d45f8e35efd",
+        "bytes": 79881
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "d63070c6245035d93bacf375bcfc45d5e3e426f8",
+        "sha256": "e4965a1b28b177e18018ec0da4dc7a51104afa7e21fdf4882436f90da379d5d8",
+        "bytes": 81854
+      },
+      "scopeTags": [
+        "federal-2210-annualized-physical-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/pdf/fill-return.ts"
+    },
+    {
+      "path": "src/pdf/form-2210-review-context.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "5cf2b3078ef6764de4903dcd0f31af9927be8c67",
+        "sha256": "4ce6f297a0745d53c3cef133e53151e4643cd621ad8d9b27442bd4993547212e",
+        "bytes": 5971
+      },
+      "scopeTags": [
+        "federal-2210-annualized-physical-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/pdf/form-2210-review-context.ts"
+    },
+    {
+      "path": "src/pdf/mappings/2025/fill-form-2210.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "6168bb69fabf3f9bb66206cb19fac6de8774a0ca",
+        "sha256": "c5d01e774a2d1f48b3733c044466f4ef3a20a04497069ba9343c918a9220e596",
+        "bytes": 13992
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "065549c8953637b9b2edf68d7897f0c36c68af28",
+        "sha256": "3cd5586b04ef5c87861e8bfde54af0f311a023c9a818e25222f5f4f887c607e0",
+        "bytes": 19624
+      },
+      "scopeTags": [
+        "federal-2210-annualized-physical-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/pdf/mappings/2025/fill-form-2210.ts"
+    },
+    {
+      "path": "src/pdf/mappings/2025/fill-oh-school-district-official-review.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "e6d780682b41817cb16553c24954dc12e78f3ed6",
+        "sha256": "9cc45f37f6996f4a54cfa649436aa047341a1bff969052f946f4e5900eaeb1d3",
+        "bytes": 11967
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "d22b3bcb1318e554ab19aafed9254f610d4e3064",
+        "sha256": "3900b67ca20927aece6d6def16f437231cc3ea98a40ef6aabb938266512bb369",
+        "bytes": 12765
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/pdf/mappings/2025/fill-oh-school-district-official-review.ts"
+    },
+    {
+      "path": "src/pdf/review-active-content.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "a3793769c8f4f642c8635e195e55ae1dfcb20e3d",
+        "sha256": "58e5aa7b9ac325ce9cef93f8b5c77533557490ecf52377cbbe3674dd8ea032cf",
+        "bytes": 1986
+      },
+      "scopeTags": [
+        "mapped-review-pdf-active-content"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/pdf/review-active-content.ts"
+    },
+    {
+      "path": "src/utils/return-readiness.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "af682ce649c95b78a05445a98cf5144f29bf30ff",
+        "sha256": "9a2af9bff9f2fdcd5055979cdf1ef49ce636dbc6dba05e3b759a7981e2721c16",
+        "bytes": 30027
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "f6ae9ccb07fdd958a5204f62d2e7b892f9cfd747",
+        "sha256": "86e17aca83f6ad5132561970277f3bc6968b03f355c20ce7010f3d8edec0dbc2",
+        "bytes": 30492
+      },
+      "scopeTags": [
+        "federal-2210-annualized-physical-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/utils/return-readiness.ts"
+    },
+    {
+      "path": "tests/apps/web/guided-render-analysis.test.tsx",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "516fd1b09819d2efdb31cd12a894470182ee29d1",
+        "sha256": "c101bc6dc7a77253bf3ec5ee64e7705a2153890dbfa240325defa9a73bc694c0",
+        "bytes": 8586
+      },
+      "scopeTags": [
+        "guided-current-render-analysis"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/apps/web/guided-render-analysis.test.tsx"
+    },
+    {
+      "path": "tests/apps/web/hosted-auth-recovery.test.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "248b651153eeeb86d48059c7d2088b23c3f091f1",
+        "sha256": "f0e583264bff956cc5ef147e98bc61ed20448d84889b0dddc9f40c4e50deb05a",
+        "bytes": 8506
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "c8a67547204c0da76795b166b788df51e56d08fa",
+        "sha256": "1d20984bfbe5103862df5ebb2eceb15244b98ed3320a779c36e743601ce75d2e",
+        "bytes": 10234
+      },
+      "scopeTags": [
+        "hosted-outage-response"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/apps/web/hosted-auth-recovery.test.ts"
+    },
+    {
+      "path": "tests/apps/web/hosted-auth-tls-cache.test.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "b96fa8e3d3399f11002351e7fa3b39867e750927",
+        "sha256": "19c21f523a27c6bc78d7caca0b3578338063653eb9351d760ad0891a85c004cf",
+        "bytes": 6214
+      },
+      "scopeTags": [
+        "hosted-tls-and-cache"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/apps/web/hosted-auth-tls-cache.test.ts"
+    },
+    {
+      "path": "tests/apps/web/hosted-database-tls-policy.test.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "9504977fc92a63b4fe70429e3cc59aa8204a43f9",
+        "sha256": "d980253bf55e6370e79038085e83dca150d1ec680d7835bd678c8e45e1c92737",
+        "bytes": 9345
+      },
+      "scopeTags": [
+        "hosted-tls-and-cache"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/apps/web/hosted-database-tls-policy.test.ts"
+    },
+    {
+      "path": "tests/apps/web/hosted-document-opaque-ids.test.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "bf62797fb169c6de71a9f67d562fce6fe5ecfe56",
+        "sha256": "6acb8846bf51975506634baedb1faaa3a13b5c809f6c7decf83f0688fbbda76e",
+        "bytes": 33622
+      },
+      "scopeTags": [
+        "hosted-metadata-and-local-document-identity"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/apps/web/hosted-document-opaque-ids.test.ts"
+    },
+    {
+      "path": "tests/apps/web/hosted-preview-runtime-identity.test.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "481fc3d48bed86a828259fb8627978955e5350fb",
+        "sha256": "3d3527a287c27885f1da204d8d7410dc763384dc4748dd6760e46041b5aecd99",
+        "bytes": 5708
+      },
+      "scopeTags": [
+        "preview-runtime-identity"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/apps/web/hosted-preview-runtime-identity.test.ts"
+    },
+    {
+      "path": "tests/apps/web/hosted-privacy.test.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "a8a87ffccc0f2517daac851f4c2a8cea5637abcb",
+        "sha256": "a281c2153ca076ea7b767d34593aa167842bb40b454ac81c1f35a0cf73eb311f",
+        "bytes": 6320
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "a05111cc4acb5f3c87df44efc9594419288b7446",
+        "sha256": "8a521f8d167cd23f4b0f83fbd6d377c9bdd68a74160a7d374698c81554bf69ee",
+        "bytes": 6417
+      },
+      "scopeTags": [
+        "hosted-metadata-and-local-document-identity"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/apps/web/hosted-privacy.test.ts"
+    },
+    {
+      "path": "tests/apps/web/hosted-remote-database-tls.test.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "feb24293008dcdd08b4cfa04041fb6a42dcaab64",
+        "sha256": "c928f21be05040a201a5890f9360fc1f3f2b964a113f1cbb32d1a51d0fd22968",
+        "bytes": 20701
+      },
+      "scopeTags": [
+        "hosted-tls-and-cache"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/apps/web/hosted-remote-database-tls.test.ts"
+    },
+    {
+      "path": "tests/apps/web/hosted-workspace-cache-policy.test.ts",
+      "status": "M",
+      "baseline": {
+        "mode": "100644",
+        "gitBlob": "562cf9dbedd2e5c2db1cd918f6f469a5e83c6cd1",
+        "sha256": "1c36eee36901e67f8af983a0e29070f1058d5409af8a1de9dcce30273e090367",
+        "bytes": 9675
+      },
+      "target": {
+        "mode": "100644",
+        "gitBlob": "dd2095eb42e5c40ce63ae1284c8acfda8a74c201",
+        "sha256": "e8d04eb8f2fee1af846aaa4a864c6d3014542301891f57fc7177427bafaf6b04",
+        "bytes": 10756
+      },
+      "scopeTags": [
+        "hosted-outage-response"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/apps/web/hosted-workspace-cache-policy.test.ts"
+    },
+    {
+      "path": "tests/apps/web/hosted-workspace-ingestion-shell.test.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "e5a24b7547c1709d3eddb581fd29cafcfdffa143",
+        "sha256": "40521885f8dcdcfeddfdaaf8a7ad38d6708f4d492fcb5110b2c90254908aaa88",
+        "bytes": 7853
+      },
+      "scopeTags": [
+        "hosted-metadata-and-local-document-identity"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/apps/web/hosted-workspace-ingestion-shell.test.ts"
+    },
+    {
+      "path": "tests/apps/web/oh-header-school-native-independent.test.tsx",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "5766e7084efabdc38414f39cb253c36881de3d81",
+        "sha256": "a962cb11e430f635c9e32c9924c20668997cd0574a95a5ae8b2df01a65d387a2",
+        "bytes": 10876
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/apps/web/oh-header-school-native-independent.test.tsx"
+    },
+    {
+      "path": "tests/apps/web/oh-review-method-disclosures.test.tsx",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "6c73e454f3e91fd30544665616f2e4ab8938b8ac",
+        "sha256": "f09c543d4dc4bf2060356f34dca67531a6b95c75f8c962a8e6751691eca402ca",
+        "bytes": 7104
+      },
+      "scopeTags": [
+        "ohio-review-disclosure"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/apps/web/oh-review-method-disclosures.test.tsx"
+    },
+    {
+      "path": "tests/apps/web/oh-school-header-native-composition.test.tsx",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "8037f3b16d20c12afc198171b5681f2946d480cd",
+        "sha256": "7e8c588d73849994f93c5e3629a70a04cb397a1181bcbea10f944606197031ed",
+        "bytes": 12728
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/apps/web/oh-school-header-native-composition.test.tsx"
+    },
+    {
+      "path": "tests/engine/state/oh-school-district-part-year-official-review.test.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "cf4b46e3518fa3349659cf998811840f0bb4d326",
+        "sha256": "4e067edd62c1deee42a3579599509bbd3b39a18ea2338ef74b78dc05222bf210",
+        "bytes": 15318
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/engine/state/oh-school-district-part-year-official-review.test.ts"
+    },
+    {
+      "path": "tests/engine/state/oh-school-district-part-year-sources.test.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "4b340b6c84b6aa9ecc50aaef166fa4a57c196fbf",
+        "sha256": "0e1db2f2b7ff46c4311f5d996ee3986a093340d57f1c3c41c17bb871f59428a0",
+        "bytes": 24102
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/engine/state/oh-school-district-part-year-sources.test.ts"
+    },
+    {
+      "path": "tests/engine/state/oh-source-material-equality.test.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "2ea7a9c092d5f74d5b4220e4107474a471d35f03",
+        "sha256": "ce7b80e98e222ab1eff28bf4b4bdb2219286fd351e82f8a8bc3d0a2aca8e6687",
+        "bytes": 9797
+      },
+      "scopeTags": [
+        "ohio-source-comparison"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/engine/state/oh-source-material-equality.test.ts"
+    },
+    {
+      "path": "tests/fixtures/form-2210-schedule-ai-physical-review.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "51b76e1f2636e59fa6841f8e00f448188b0a4a45",
+        "sha256": "14edeeb7728e633efc96abdf961df2f3a3af57976c710f313356ba46b738d8b0",
+        "bytes": 48582
+      },
+      "scopeTags": [
+        "federal-2210-annualized-physical-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/fixtures/form-2210-schedule-ai-physical-review.ts"
+    },
+    {
+      "path": "tests/fixtures/oh-school-district-part-year-official-review.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "e114d7bcb7c532d05b3494ea7971aec75f0f55f6",
+        "sha256": "75d51ef1dc5535d67bf8046370daef87c290b757e15175a5d78b782a2fc9c66f",
+        "bytes": 39155
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/fixtures/oh-school-district-part-year-official-review.ts"
+    },
+    {
+      "path": "tests/fixtures/oh-school-district-part-year-sources.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "2f1659a45fa081e62914f1c0455bc5375adc0be7",
+        "sha256": "0e02d40f548565db9a6a2ee3240eceaa4c5994d36e197c80cfb3d4ac01c104a2",
+        "bytes": 7715
+      },
+      "scopeTags": [
+        "ohio-dated-school-source-header-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/fixtures/oh-school-district-part-year-sources.ts"
+    },
+    {
+      "path": "tests/pdf/form-2210-schedule-ai-physical-review.test.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "55d61a6112de1bbfb95499db385d4ad7119b4e11",
+        "sha256": "596a2da82c72550d005414df13bb3cb3e2ac6a040fc6657b2857ba476420872c",
+        "bytes": 22611
+      },
+      "scopeTags": [
+        "federal-2210-annualized-physical-output"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/pdf/form-2210-schedule-ai-physical-review.test.ts"
+    },
+    {
+      "path": "tests/pdf/review-pdf-active-content.test.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "621d8f4eec6fdcfd6fa4371f96dcaedadf633e07",
+        "sha256": "ca5310ab4c0b72c206c218eb42fab8eecbf4e95e10815fa556e1140672144984",
+        "bytes": 5883
+      },
+      "scopeTags": [
+        "mapped-review-pdf-active-content"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/pdf/review-pdf-active-content.test.ts"
+    },
+    {
+      "path": "tests/scripts/hosted-recovery-pool-lifecycle.test.ts",
+      "status": "A",
+      "baseline": null,
+      "target": {
+        "mode": "100644",
+        "gitBlob": "13a6a0e85e2310a06fa7600ca163534cac12140e",
+        "sha256": "97da857df4c5b7420ef1822802e19798038bacf1a7689c02bb46fec68c14a7ac",
+        "bytes": 6069
+      },
+      "scopeTags": [
+        "recovery-pool-lifecycle"
+      ],
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/tests/scripts/hosted-recovery-pool-lifecycle.test.ts"
+    }
+  ],
+  "unchangedDependencyPinCount": 169,
+  "unchangedDependencyPins": [
+    {
+      "path": "apps/web/playwright.config.ts",
+      "mode": "100644",
+      "gitBlob": "a3fc1b824de6b8bc5801795d1949c83ab511d1b5",
+      "sha256": "e837ce163d0df2933a43867951e28e863203af80ce776af029a7c1c6e317eefb",
+      "bytes": 1903,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/apps/web/playwright.config.ts"
+    },
+    {
+      "path": "forms/blank/2025/f2210.pdf",
+      "mode": "100644",
+      "gitBlob": "babe30240a80f817a4afff76a8e4e6207265f18a",
+      "sha256": "6899ce672648b280bf00ab47200f1b0fbf40368cfbf137df507b945b8577159a",
+      "bytes": 163566,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/forms/blank/2025/f2210.pdf"
+    },
+    {
+      "path": "forms/blank/2025/oh-sd100-bundle.pdf",
+      "mode": "100644",
+      "gitBlob": "635279d0522541fb83f61dde02d34a9ecfe1921f",
+      "sha256": "4b065c66f85d9f732e52bc45c78f5ba2d9439c10a9ee1da5dbb95a35bea38a5e",
+      "bytes": 2874485,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/forms/blank/2025/oh-sd100-bundle.pdf"
+    },
+    {
+      "path": "package.json",
+      "mode": "100644",
+      "gitBlob": "1b18a6a91e96d3c1a2850698fc084409c2b5c565",
+      "sha256": "5235a692dd8c90d36dff45e67d700be4289d1aca642ce80a1cb316d6ace5681f",
+      "bytes": 3647,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/package.json"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "mode": "100644",
+      "gitBlob": "97d812dfef56a0f718a5d5521f1c668eef18ac51",
+      "sha256": "d199e2344fa6cf61402330f216e3f7ccf6bc9b5e7a568670b29a9fe27dc8c23f",
+      "bytes": 176750,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/pnpm-lock.yaml"
+    },
+    {
+      "path": "spec/federal/form-2210-f.yaml",
+      "mode": "100644",
+      "gitBlob": "4921011352bef49db50cdbca24a4db4c55fe6e8e",
+      "sha256": "e9b79d40c6e26d2ddfb158ed0fd5f2b62609b018957ba0fd66b93eb16836c5d5",
+      "bytes": 5950,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/federal/form-2210-f.yaml"
+    },
+    {
+      "path": "spec/federal/form-2210.yaml",
+      "mode": "100644",
+      "gitBlob": "07c13817a043d1721b4b379a8f563af37768538b",
+      "sha256": "a176d23203361042b3e8ebc524f167fc97ce38ecf812ecd8347e028481f1b0bf",
+      "bytes": 15759,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/federal/form-2210.yaml"
+    },
+    {
+      "path": "spec/federal/rule-packs.yaml",
+      "mode": "100644",
+      "gitBlob": "45e04071b033bae3e4b846ff9b3824261b7287e9",
+      "sha256": "30889b19a1f67a63e52283412db950e0bf9b0fcf959db9021d3cd9c33a1fda2a",
+      "bytes": 1529,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/federal/rule-packs.yaml"
+    },
+    {
+      "path": "spec/state/oh-2026-baseline.yaml",
+      "mode": "100644",
+      "gitBlob": "2566ff537d57826d1631e5edf06aedbd7f48898d",
+      "sha256": "036c7315b1cd0b216d186f095f4e5d1726c4f695389592a63bf8c572fdce226a",
+      "bytes": 5356,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-2026-baseline.yaml"
+    },
+    {
+      "path": "spec/state/oh-business-native-browser.yaml",
+      "mode": "100644",
+      "gitBlob": "e76ecac92e871878038812bdfae2ee4b54111bc8",
+      "sha256": "f9f60546c65b6321b1a006b5dc8157d8b91d7ceea65d6dc77c5083e287fc16bf",
+      "bytes": 7865,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-business-native-browser.yaml"
+    },
+    {
+      "path": "spec/state/oh-business-native-independent.yaml",
+      "mode": "100644",
+      "gitBlob": "2dc2b53e1f7e2a7a7c63402b399dd6239a7000d5",
+      "sha256": "1ce0244c716eec73f9830604719a762d608b8e9d85443c7f11cba339dbc01701",
+      "bytes": 4747,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-business-native-independent.yaml"
+    },
+    {
+      "path": "spec/state/oh-business-official-review.yaml",
+      "mode": "100644",
+      "gitBlob": "3950493c88b8c5878deea9cf41c1bf4d18fe6ae8",
+      "sha256": "0967888d1d1a27dcb46c94832c6cc73f3badbbcd8fcc29e22ae0f2aa9c62e057",
+      "bytes": 15236,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-business-official-review.yaml"
+    },
+    {
+      "path": "spec/state/oh-business-part-year-header.yaml",
+      "mode": "100644",
+      "gitBlob": "b9da9d84feafb700a4b66a910d839b4c6ac6f04f",
+      "sha256": "8d5f46c7efecf402b8ddd2c503483aa1a36a3fc52c45ad0306ef041aec10f856",
+      "bytes": 14529,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-business-part-year-header.yaml"
+    },
+    {
+      "path": "spec/state/oh-business-part-year-native-browser.yaml",
+      "mode": "100644",
+      "gitBlob": "f151f33c44b810d934a61ad0adabc95dcd144876",
+      "sha256": "d41d6f0c070bb88973d089d116096711916af95c6c8c1b9fc97dba992677b7a3",
+      "bytes": 5868,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-business-part-year-native-browser.yaml"
+    },
+    {
+      "path": "spec/state/oh-business-private-description-provenance.yaml",
+      "mode": "100644",
+      "gitBlob": "5cf50b44034f769f551b9b4ee265f1ca97b0f1fb",
+      "sha256": "5c4fbe4d8d279d586241da28ce70544afd7c11864e7a300ebe5524158b30c515",
+      "bytes": 2779,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-business-private-description-provenance.yaml"
+    },
+    {
+      "path": "spec/state/oh-canonical-business-guided.yaml",
+      "mode": "100644",
+      "gitBlob": "c639a5b4e1b6b405833a9c0ff960718f4dfb46aa",
+      "sha256": "d6441feb5cf55d5b59f7ba0a94a6f528eb236a9dd6a4c411c51982f6d3e7c66d",
+      "bytes": 4448,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-canonical-business-guided.yaml"
+    },
+    {
+      "path": "spec/state/oh-canonical-business-independent.yaml",
+      "mode": "100644",
+      "gitBlob": "f81c08ebe3609654f1944c690f026a575f835bcf",
+      "sha256": "c0be61d632e0996f9c1175427575c012f42a3ce4b4e69c04c2a92f5a637a3bc0",
+      "bytes": 3573,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-canonical-business-independent.yaml"
+    },
+    {
+      "path": "spec/state/oh-canonical-business-sources.yaml",
+      "mode": "100644",
+      "gitBlob": "5fc1bcf619611a07f8c9453a6823a85fbc76e04d",
+      "sha256": "5a3e61c23e3385fbd56ee00626b2021efb8cc188a57086559cf9f2b468abf856",
+      "bytes": 7211,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-canonical-business-sources.yaml"
+    },
+    {
+      "path": "spec/state/oh-engine.yaml",
+      "mode": "100644",
+      "gitBlob": "5f887e4af44255e93f4e0b8a20dbf5e9d359223d",
+      "sha256": "b22e88a42fe5fc051f534d588d5778da863e24231aa2b31482413da2b3e76cf7",
+      "bytes": 2773,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-engine.yaml"
+    },
+    {
+      "path": "spec/state/oh-government-income.yaml",
+      "mode": "100644",
+      "gitBlob": "a4d91a48f307d0eae5a7a92bc5d9fa3bc32b6033",
+      "sha256": "5c0ee5a333dc02eee15e9a201cbf747cf57bc4c78c0b18d6ec77ceb74789d177",
+      "bytes": 2901,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-government-income.yaml"
+    },
+    {
+      "path": "spec/state/oh-input-adapter.yaml",
+      "mode": "100644",
+      "gitBlob": "72cb7270ece8c77a9cd290d5365d4ba4a34162c6",
+      "sha256": "3f79de5cdb0517b383432d971be2b638e05f895b415d6900d54ffebfdd45bbf6",
+      "bytes": 39774,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-input-adapter.yaml"
+    },
+    {
+      "path": "spec/state/oh-it-1040.yaml",
+      "mode": "100644",
+      "gitBlob": "e22085d03ab28a3170bd82bf9c585f9a63d8af08",
+      "sha256": "d4e7446da7b95b4a4681463fb2bac1c45afa48a5b4c0b44d7c6f163d5255b1fc",
+      "bytes": 19719,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-it-1040.yaml"
+    },
+    {
+      "path": "spec/state/oh-it-bus.yaml",
+      "mode": "100644",
+      "gitBlob": "736e07ea803aecba165246f9bade7650c19cb3d2",
+      "sha256": "af0631de0c9a1db82bad93994204903dff487e8ca4209755a84a88993cf00051",
+      "bytes": 5890,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-it-bus.yaml"
+    },
+    {
+      "path": "spec/state/oh-it-nrc-business.yaml",
+      "mode": "100644",
+      "gitBlob": "f58cf13c8e97f1b833bcaa601b7d61e1c62ce63a",
+      "sha256": "c7f81cadbc2a1a9a7eb7f3139dfbb441824e2537fa19751d453ac5e2ed2758aa",
+      "bytes": 10064,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-it-nrc-business.yaml"
+    },
+    {
+      "path": "spec/state/oh-it-nrc.yaml",
+      "mode": "100644",
+      "gitBlob": "30bf7b83cc813ad7e8ebddaec37ae7b4f228c7a2",
+      "sha256": "ce379171c2c5e1665327cc0f505bc20dd142172163476d56d3815e27902a4af9",
+      "bytes": 8234,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-it-nrc.yaml"
+    },
+    {
+      "path": "spec/state/oh-it-sd-2210-dated.yaml",
+      "mode": "100644",
+      "gitBlob": "22946a66c7c04f25b77e74f0e85526a6bdb289cf",
+      "sha256": "640f9107dce4f6bcfbb2cbd7a6e39700831435acfc70f26936989fada32fa75b",
+      "bytes": 4168,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-it-sd-2210-dated.yaml"
+    },
+    {
+      "path": "spec/state/oh-it-sd-2210.yaml",
+      "mode": "100644",
+      "gitBlob": "2c09736fd551b52783412b1cc8614c002bc538ae",
+      "sha256": "35b6f294cbb085e47419fcda55ddd960fc353eda4a9763c3dbcf66087140b17a",
+      "bytes": 12963,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-it-sd-2210.yaml"
+    },
+    {
+      "path": "spec/state/oh-lump-sum-distribution-credit.yaml",
+      "mode": "100644",
+      "gitBlob": "a43353fda91a9ea6fe1a813bbd7342eb47b2aee6",
+      "sha256": "81935415938e0d5da59842b473f8f17153694facaacb290bd087bc9c35fe228b",
+      "bytes": 4987,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-lump-sum-distribution-credit.yaml"
+    },
+    {
+      "path": "spec/state/oh-lump-sum-retirement-credit.yaml",
+      "mode": "100644",
+      "gitBlob": "819c8e33d166849a0bd279adcef746d28ee130bb",
+      "sha256": "81bec811c0155863fe873c0f1b11ca9f8a66334d549773801c0e202cca9e9558",
+      "bytes": 10424,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-lump-sum-retirement-credit.yaml"
+    },
+    {
+      "path": "spec/state/oh-official-ordinary-physical-independent.yaml",
+      "mode": "100644",
+      "gitBlob": "729a521a6bb06fb417f5716e9787c136623061c5",
+      "sha256": "073e469f5b5099297b35feae0afcb2b037f95ec510df8decbcf69185eebf35e5",
+      "bytes": 3001,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-official-ordinary-physical-independent.yaml"
+    },
+    {
+      "path": "spec/state/oh-official-physical-candidates.yaml",
+      "mode": "100644",
+      "gitBlob": "a1ba594d2ceac2072281eeb12582cacf53782b48",
+      "sha256": "06db7d1806987fef98a46c17ee965eeafa7b060f9a293a5341856f17443f5789",
+      "bytes": 4279,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-official-physical-candidates.yaml"
+    },
+    {
+      "path": "spec/state/oh-ordinary-official-review.yaml",
+      "mode": "100644",
+      "gitBlob": "798cae2d0476fd2d0302d0e892f98f091c0afd25",
+      "sha256": "7395bf586efd49254f8b4f24867fe6663572b770b09dc14687454de628e7733a",
+      "bytes": 5123,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-ordinary-official-review.yaml"
+    },
+    {
+      "path": "spec/state/oh-payment-dated-source.yaml",
+      "mode": "100644",
+      "gitBlob": "5f9c8324251c5b93c3fc5af48e9439379b3f8a49",
+      "sha256": "450af1ab1e350c95bdcaa335c696449c0e11cb811d01e88b4723422d2b76fc38",
+      "bytes": 5198,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-payment-dated-source.yaml"
+    },
+    {
+      "path": "spec/state/oh-reciprocal-native-browser.yaml",
+      "mode": "100644",
+      "gitBlob": "54aed7f7824a96792b751859df323b94e85f2a13",
+      "sha256": "c6fcc475795993d7e514d96b575d59be007e1df125d3bcbefee620aa7cadb7da",
+      "bytes": 7306,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-reciprocal-native-browser.yaml"
+    },
+    {
+      "path": "spec/state/oh-reciprocal-native-independent.yaml",
+      "mode": "100644",
+      "gitBlob": "8cd6acbd7b23111f07a1daff097a5d62017fc578",
+      "sha256": "cddbec405e134fd80496efaa5abec3e5e3776b9d629db9098313a176fbc4ea51",
+      "bytes": 2897,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-reciprocal-native-independent.yaml"
+    },
+    {
+      "path": "spec/state/oh-reciprocal-official-review.yaml",
+      "mode": "100644",
+      "gitBlob": "4c4b9783cc4f7f686d2655cbe1e7dd0068a43ee7",
+      "sha256": "361198a2ceff728664dd84f658c762a98ad359b31c64f509bcf435bb90d8b832",
+      "bytes": 8573,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-reciprocal-official-review.yaml"
+    },
+    {
+      "path": "spec/state/oh-reciprocal-wage-sources.yaml",
+      "mode": "100644",
+      "gitBlob": "6e913d96fd0cfc1195953b2e6e54901082d2e14e",
+      "sha256": "0c00fc4db98f654a561e954e8915e6a369485178e339bc7d850243f301b58056",
+      "bytes": 10516,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-reciprocal-wage-sources.yaml"
+    },
+    {
+      "path": "spec/state/oh-reciprocal-wages-guided.yaml",
+      "mode": "100644",
+      "gitBlob": "cbb405e3c8dd31a9ce6a0818450facfc79e3768f",
+      "sha256": "4db37c01a8df8f8326247de49004e57f9529fdb14d8de9123059fa1c084b9f23",
+      "bytes": 5134,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-reciprocal-wages-guided.yaml"
+    },
+    {
+      "path": "spec/state/oh-reciprocal-wages-independent.yaml",
+      "mode": "100644",
+      "gitBlob": "013a3e1921c38b7b55692a6d16941fe51fd22c7c",
+      "sha256": "ee845e88ae87f192780c8460d6dc35e6a6313eb749ed357668d370e640117468",
+      "bytes": 3735,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-reciprocal-wages-independent.yaml"
+    },
+    {
+      "path": "spec/state/oh-resident-credit-native-browser.yaml",
+      "mode": "100644",
+      "gitBlob": "5dda9a82982da7aafb7e4f1848e48921bd329195",
+      "sha256": "7063f6c1bc02f28bc6a0c9539cc0543e70e6be6acab7b96e6f40e39cf90f627f",
+      "bytes": 6438,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-resident-credit-native-browser.yaml"
+    },
+    {
+      "path": "spec/state/oh-resident-credit-native-independent.yaml",
+      "mode": "100644",
+      "gitBlob": "69376ead43d6ff8c80c1d5d6f667cdd8d087528a",
+      "sha256": "7a8372f7fad5235aa91d1234ff28d1f6d5d25205116034b8457efcf45ad12b50",
+      "bytes": 1744,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-resident-credit-native-independent.yaml"
+    },
+    {
+      "path": "spec/state/oh-resident-credit-native.yaml",
+      "mode": "100644",
+      "gitBlob": "c51a43a6d9f5ccae46a674bcd1710342df9c6a64",
+      "sha256": "b40dee3ff98dcd79b25273481fa79855f49ff37392267385f6988c40b423203a",
+      "bytes": 5507,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-resident-credit-native.yaml"
+    },
+    {
+      "path": "spec/state/oh-resident-credit-official-review.yaml",
+      "mode": "100644",
+      "gitBlob": "0368109ca1e4ee2452bd3cc0830e6fbb79ee706b",
+      "sha256": "52374297c7a6d0ee10cc3f100b93b23097281e9740050c91d4be8ffce25f9ed8",
+      "bytes": 9337,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-resident-credit-official-review.yaml"
+    },
+    {
+      "path": "spec/state/oh-resident-credit-source-independent.yaml",
+      "mode": "100644",
+      "gitBlob": "17fe9194282cc3b567b641786703d3eb2925212d",
+      "sha256": "cbcacb233513bf093da0b3b6f4f8647feebf76e2cff6839b2ddc04595dd9afba",
+      "bytes": 3302,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-resident-credit-source-independent.yaml"
+    },
+    {
+      "path": "spec/state/oh-resident-credit-sources.yaml",
+      "mode": "100644",
+      "gitBlob": "94d8debc14785874017d95409d0be4298a7ee9be",
+      "sha256": "f532c16c4a46fe6547c02af2ff7b1a73a5e0ed331857d08d63039faaab598dee",
+      "bytes": 4575,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-resident-credit-sources.yaml"
+    },
+    {
+      "path": "spec/state/oh-resident-credit-template-root.yaml",
+      "mode": "100644",
+      "gitBlob": "7b6eded685486f61f2d56dc7ae6afef26381f663",
+      "sha256": "e674671f69570014dc97ee295884dd92202a7353c0852b0342e7c3b2ab7ca5ca",
+      "bytes": 5030,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-resident-credit-template-root.yaml"
+    },
+    {
+      "path": "spec/state/oh-resident-credit-transactions-independent.yaml",
+      "mode": "100644",
+      "gitBlob": "dbdfc6a854d044628fd2d8c849df4839f4814609",
+      "sha256": "73a56865dfdea9fb5db120548a781b89b116c7463f41826233c46828a3c6dd23",
+      "bytes": 2003,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-resident-credit-transactions-independent.yaml"
+    },
+    {
+      "path": "spec/state/oh-resident-credit-transactions.yaml",
+      "mode": "100644",
+      "gitBlob": "85a5cae79cc8eaf0add83e1fb9c9dd935a8fee53",
+      "sha256": "4342dfa2cd83f5bc4bacfe685735b10db32a6b71f8f11e8d557190565900a7f3",
+      "bytes": 4176,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-resident-credit-transactions.yaml"
+    },
+    {
+      "path": "spec/state/oh-resident-credit.yaml",
+      "mode": "100644",
+      "gitBlob": "4242fdb42e657ad05a937c225f8b784c4e5e8305",
+      "sha256": "0090cad3b9164d40e6553c183930330e445bea1126c49fb5b925e0c94b8ebca0",
+      "bytes": 5606,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-resident-credit.yaml"
+    },
+    {
+      "path": "spec/state/oh-return-header-lifecycle.yaml",
+      "mode": "100644",
+      "gitBlob": "506c1bf2ef637cc5b0ec2f5fa7092ec0a6bbf32c",
+      "sha256": "be687d3a425ecfabf811787ae9cde0188ee27799da655ef6f2fc308a0f0f21a6",
+      "bytes": 2561,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-return-header-lifecycle.yaml"
+    },
+    {
+      "path": "spec/state/oh-return.yaml",
+      "mode": "100644",
+      "gitBlob": "def48c988585a008d48a309203f689002203dcc4",
+      "sha256": "64077e9c8276af3f498f8a9c83972052c78276b90dff67d276e02c33711be01f",
+      "bytes": 15969,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-return.yaml"
+    },
+    {
+      "path": "spec/state/oh-review-packet-cover-inventory.yaml",
+      "mode": "100644",
+      "gitBlob": "51777ae4fd5bf0ac039f9955f23916cbcf5e2e9f",
+      "sha256": "83b456b9b2de01e37d34ce13a96a6d7e3ac7a2db9d90a2721e556a37b7e9e15b",
+      "bytes": 3059,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-review-packet-cover-inventory.yaml"
+    },
+    {
+      "path": "spec/state/oh-review-template-root.yaml",
+      "mode": "100644",
+      "gitBlob": "46e491f241a4d1ebc8aef45400cdec0ebe3896db",
+      "sha256": "e34e4da7f4ce1929c28c1165c993e6af85be1bbca9f2f797dc645338c9d7fa26",
+      "bytes": 3522,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-review-template-root.yaml"
+    },
+    {
+      "path": "spec/state/oh-schedule-adjustments.yaml",
+      "mode": "100644",
+      "gitBlob": "70a7b5f6b36ca4037b9f7279296f219ceb0beb59",
+      "sha256": "74eeaa2754a6540c3fd606d4a851701c9b6f84c7f6eb655091a3ac199ea09d0e",
+      "bytes": 31959,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-schedule-adjustments.yaml"
+    },
+    {
+      "path": "spec/state/oh-schedule-credits.yaml",
+      "mode": "100644",
+      "gitBlob": "eef3bec0304b2525c2ae83b4c01c62ebaffbfc8b",
+      "sha256": "61dbe20566f69d21c4d680ae542c3be73f8f6c517ee62d3bcf6a0c335a64029f",
+      "bytes": 34696,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-schedule-credits.yaml"
+    },
+    {
+      "path": "spec/state/oh-schedule-of-withholding.yaml",
+      "mode": "100644",
+      "gitBlob": "faf61f10e52ca101fc2133840f77363311ec883a",
+      "sha256": "85b96c27a450309ff37609598e37eb2fa5f0a7f68330e866a31f7ef7f6827654",
+      "bytes": 9670,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-schedule-of-withholding.yaml"
+    },
+    {
+      "path": "spec/state/oh-school-district-lookup.yaml",
+      "mode": "100644",
+      "gitBlob": "95dced19868449cab7a84e49c0f63477cde3a7af",
+      "sha256": "2df0c8ac9f55c1feec94a7423e7b503ff43c77398f7acba251994ba4bc558272",
+      "bytes": 7135,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-school-district-lookup.yaml"
+    },
+    {
+      "path": "spec/state/oh-school-district-name-index.yaml",
+      "mode": "100644",
+      "gitBlob": "6e1a4a275a7beeed40b7b63ffd3ed4458658d64a",
+      "sha256": "59b78750e6740eefdafb0fc939dbf44dd83966b8c134c61104d6f7326293e373",
+      "bytes": 3351,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-school-district-name-index.yaml"
+    },
+    {
+      "path": "spec/state/oh-school-district-native-browser.yaml",
+      "mode": "100644",
+      "gitBlob": "0b1b46a6217cdd98e22c4ecaa82158df5bf8bcee",
+      "sha256": "dbb03b856c263c14f6e766f6b030f5ac4efcc34ddb6e4307778685474243c0d4",
+      "bytes": 4458,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-school-district-native-browser.yaml"
+    },
+    {
+      "path": "spec/state/oh-school-district-native-geometry.yaml",
+      "mode": "100644",
+      "gitBlob": "0f59afed730acb3adcd36f621b0c2490a3de3950",
+      "sha256": "0d8f1de85acb55d7248edc8723d4e010cbcdd5de5f34b08174fbc726533c492f",
+      "bytes": 1761,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-school-district-native-geometry.yaml"
+    },
+    {
+      "path": "spec/state/oh-school-district-native-independent.yaml",
+      "mode": "100644",
+      "gitBlob": "09ac768b88abe261e9c9a210b2c7440beedda33e",
+      "sha256": "edbf70539fa4c90fdefa34ef726e9fa79d9401f28178a191c7c3576ef0fe2af8",
+      "bytes": 3187,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-school-district-native-independent.yaml"
+    },
+    {
+      "path": "spec/state/oh-school-district-official-independent.yaml",
+      "mode": "100644",
+      "gitBlob": "987bbe8242166348b65569c093c22949649556c6",
+      "sha256": "e3a2f9992de8feb73fed2d82912e66a64fa230cb617de5792efe5d7de53aea04",
+      "bytes": 3427,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-school-district-official-independent.yaml"
+    },
+    {
+      "path": "spec/state/oh-school-district-official-review.yaml",
+      "mode": "100644",
+      "gitBlob": "7ec9bc0a386f3df719fc82ecb13987a26687fe35",
+      "sha256": "d3ecbf3dc4f498db4a3381ec5df48edb157cedfbcd17a407738883add01d6484",
+      "bytes": 5444,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-school-district-official-review.yaml"
+    },
+    {
+      "path": "spec/state/oh-sd-100-guided.yaml",
+      "mode": "100644",
+      "gitBlob": "47b423798abf78e45e127c33f7682556e31dd52d",
+      "sha256": "abd1a556f497702fa72f102f13ecf41a6fef9a16f016603e4a447c330bf84b93",
+      "bytes": 8797,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-sd-100-guided.yaml"
+    },
+    {
+      "path": "spec/state/oh-sd-100-independent.yaml",
+      "mode": "100644",
+      "gitBlob": "b85c17a59a9e137a6988e12921fe8f2217be7a22",
+      "sha256": "fc29c56162ab1bbda44b27097a802023eca22665f0b502704f431e07227ab4f1",
+      "bytes": 3461,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-sd-100-independent.yaml"
+    },
+    {
+      "path": "spec/state/oh-sd-100-resident-income.yaml",
+      "mode": "100644",
+      "gitBlob": "e5fc426c6c84e1a941c60196bd802c25f02dec6c",
+      "sha256": "9dda3b2603fcbf624523a425abc5da1fc795dd4426a8599487b007faea678988",
+      "bytes": 4719,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-sd-100-resident-income.yaml"
+    },
+    {
+      "path": "spec/state/oh-sd-100-sources.yaml",
+      "mode": "100644",
+      "gitBlob": "7f14c15f8059951d9c9a1ce1e25303989a8c799d",
+      "sha256": "52ad3e0bb1ea589f8737cec914aa9a6375f69be43863a3629f6029361f81526d",
+      "bytes": 10570,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-sd-100-sources.yaml"
+    },
+    {
+      "path": "spec/state/oh-sd-100.yaml",
+      "mode": "100644",
+      "gitBlob": "b8c4e4372720171332ef5de0d5a4638330cd84d2",
+      "sha256": "163fc742f887b50cec321ce1c76e4d8741497c96d22511bb7dd7fffbe0a9eb8a",
+      "bytes": 16870,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-sd-100.yaml"
+    },
+    {
+      "path": "spec/state/oh-w2-state-withholding-consumer.yaml",
+      "mode": "100644",
+      "gitBlob": "293e43fa58abf578a2a537daef266463c4b5a03d",
+      "sha256": "a92111828579a965ec500f21605e7797e0daa280ea19b6f48e831ed332f8948b",
+      "bytes": 4050,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-w2-state-withholding-consumer.yaml"
+    },
+    {
+      "path": "spec/state/oh-w2-withholding-reference.yaml",
+      "mode": "100644",
+      "gitBlob": "968c5aeed62d2309b5352279ade53e40f6705bce",
+      "sha256": "7e01d6869759352c3bc7617536dc77963e8d65764459d87bdf775a2c88d26304",
+      "bytes": 3668,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-w2-withholding-reference.yaml"
+    },
+    {
+      "path": "spec/state/oh-workspace-actual-source-export.yaml",
+      "mode": "100644",
+      "gitBlob": "8c7754aa1dc86045ea59056d0c93f821fe0a4049",
+      "sha256": "a475375a21014a34efd4a6252e96f9e121bea9a6b432db28f4e0adc4fe421ace",
+      "bytes": 3586,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/spec/state/oh-workspace-actual-source-export.yaml"
+    },
+    {
+      "path": "src/engine/federal.ts",
+      "mode": "100644",
+      "gitBlob": "d8671afd06966659f8b4e4f262ef5ce589308ee0",
+      "sha256": "33040ac240ec1c4547d3362eabc356c89c461d17e81b202eb069bf957fb135a6",
+      "bytes": 418829,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/federal.ts"
+    },
+    {
+      "path": "src/engine/forms/form-2210-owner-source.ts",
+      "mode": "100644",
+      "gitBlob": "f8c6ebcaa70a7ecd03c237a0b73427623422fb44",
+      "sha256": "7cbd11cfe9d2ee8ee84dccc4cd21a89eb0b3837fae92394ce18175e5a743d213",
+      "bytes": 3278,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/forms/form-2210-owner-source.ts"
+    },
+    {
+      "path": "src/engine/forms/form-2210-schedule-ai.ts",
+      "mode": "100644",
+      "gitBlob": "e43b6bbb5fd26b7b243b0b77e8debc16080f10bf",
+      "sha256": "70655fa52a3af2226842e7ef93448aade4697a43418c86e0dc4a919a44aa6175",
+      "bytes": 12225,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/forms/form-2210-schedule-ai.ts"
+    },
+    {
+      "path": "src/engine/forms/form-2210.ts",
+      "mode": "100644",
+      "gitBlob": "4388900a5d74d928ac8c61e670c1ffa3063bbce2",
+      "sha256": "9a83a941d3734c4b9fdc266d8b47fca4bee0a19d9cf887cefb1f5e3416b0cd02",
+      "bytes": 31851,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/forms/form-2210.ts"
+    },
+    {
+      "path": "src/engine/state/oh-2026-baseline.ts",
+      "mode": "100644",
+      "gitBlob": "54efcb13009565c813f190134fe3425fdd1d7a5f",
+      "sha256": "351ffb200cbe92dcf145f43204333a34521889b024e26fe45b9f42c5b4e596f3",
+      "bytes": 7160,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-2026-baseline.ts"
+    },
+    {
+      "path": "src/engine/state/oh-business-source.ts",
+      "mode": "100644",
+      "gitBlob": "0569847af37a21592ad9c8d7e8b6de6a43e4b149",
+      "sha256": "1ad1cfad26baac2a2c426bf7bdc7af74437d32345a734c11456c6b47cdcd0080",
+      "bytes": 12498,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-business-source.ts"
+    },
+    {
+      "path": "src/engine/state/oh-engine.ts",
+      "mode": "100644",
+      "gitBlob": "47e6a8212494304f77b4cc732d5e8ca8fe2bafa1",
+      "sha256": "22bb26c955f0ca6c9e6124d65925dc8f358d31ff8ed71ac2dba4a7203d86780e",
+      "bytes": 812,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-engine.ts"
+    },
+    {
+      "path": "src/engine/state/oh-input-adapter.ts",
+      "mode": "100644",
+      "gitBlob": "2599dce649ad82b818d05f473eef3291a0e24c17",
+      "sha256": "5be01387b0a40b4e89a24b588663327a0dfb567601b2b365c1a78e41274de702",
+      "bytes": 47239,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-input-adapter.ts"
+    },
+    {
+      "path": "src/engine/state/oh-it-1040.ts",
+      "mode": "100644",
+      "gitBlob": "e8bc4f0d6a4d70f632b075334c9704238e4f191a",
+      "sha256": "4e7ec9acf6cb27ef94e4e5987def84222d51662820289222e5870967f48095d8",
+      "bytes": 15635,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-it-1040.ts"
+    },
+    {
+      "path": "src/engine/state/oh-it-bus.ts",
+      "mode": "100644",
+      "gitBlob": "ddd8ef0e52ab95007e2a3c91ce4e135c411d5791",
+      "sha256": "655a0abb9e522c4ca2dd136ceb23a99e1cba36c9d6b9afffbc31581586f89343",
+      "bytes": 5808,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-it-bus.ts"
+    },
+    {
+      "path": "src/engine/state/oh-it-nrc-business.ts",
+      "mode": "100644",
+      "gitBlob": "a28d096aec6d453ceceddb3009e35668f0165abd",
+      "sha256": "80bbb53421e2e2f1cde7da7b6c2b76f78bf425973a8d7cdddfb25856c7da1be4",
+      "bytes": 10854,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-it-nrc-business.ts"
+    },
+    {
+      "path": "src/engine/state/oh-it-nrc.ts",
+      "mode": "100644",
+      "gitBlob": "0716a4e33612520ad322d4deb6dfbec35b354bd0",
+      "sha256": "4eff44ad372542fab86ab468c7cb26326c14f0b251ab660d49c0343692534b98",
+      "bytes": 11508,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-it-nrc.ts"
+    },
+    {
+      "path": "src/engine/state/oh-it-sd-2210-dated.ts",
+      "mode": "100644",
+      "gitBlob": "858aad2693ade0c1ed823af553911293f9ca06da",
+      "sha256": "a266c91e679b3950652530f358104cbd9840acd5fc77b8553d9250df3b4f0a63",
+      "bytes": 7874,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-it-sd-2210-dated.ts"
+    },
+    {
+      "path": "src/engine/state/oh-it-sd-2210.ts",
+      "mode": "100644",
+      "gitBlob": "533b1399b8b935669ae735eb95847e10c63f0e36",
+      "sha256": "bc01fecad192bd2c7ef6bd8ecf7f9d8cbac27a036827c14e16826b758d6d6e79",
+      "bytes": 14774,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-it-sd-2210.ts"
+    },
+    {
+      "path": "src/engine/state/oh-lump-sum-distribution-credit.ts",
+      "mode": "100644",
+      "gitBlob": "d8632345b40b5a768d837cc890c9b13c4c307a60",
+      "sha256": "bc40579f2527aa72a54197c865a019f3f254702b462da159d5527dc0f1395d06",
+      "bytes": 3041,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-lump-sum-distribution-credit.ts"
+    },
+    {
+      "path": "src/engine/state/oh-lump-sum-retirement-credit.ts",
+      "mode": "100644",
+      "gitBlob": "163e69da9f57aa3e45e3d4f8cd48e66565bf46a7",
+      "sha256": "cc8f3e4f8e88874c250ab85852776fe80e719c70a8a0d1f41b4ff4537a9b5833",
+      "bytes": 7662,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-lump-sum-retirement-credit.ts"
+    },
+    {
+      "path": "src/engine/state/oh-payment-dated-source.ts",
+      "mode": "100644",
+      "gitBlob": "98a892e8e2771ddd8c174173e2810bf2e2c05bb9",
+      "sha256": "09a2fab7fca3edc868f1acf9354d6668f610d46fc3ee3e4db1ad4e3d89bd43f8",
+      "bytes": 4121,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-payment-dated-source.ts"
+    },
+    {
+      "path": "src/engine/state/oh-reciprocal-wage-source.ts",
+      "mode": "100644",
+      "gitBlob": "98e373ca1124e9e58ebb7d306d5db62dffe37f26",
+      "sha256": "4d63f290eb45558529ae01a682464128bd4f90d8a9afda33f3b6148964332023",
+      "bytes": 14452,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-reciprocal-wage-source.ts"
+    },
+    {
+      "path": "src/engine/state/oh-resident-credit-source.ts",
+      "mode": "100644",
+      "gitBlob": "e7abdb5bbc93d4f3d027fa75dc8595a3eb482703",
+      "sha256": "b2e69e02143c994929805b66b0bf7dd145786bf5cab92eb93708cfa477e144c1",
+      "bytes": 15648,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-resident-credit-source.ts"
+    },
+    {
+      "path": "src/engine/state/oh-resident-credit.ts",
+      "mode": "100644",
+      "gitBlob": "834baf4d3629b550ce2999c99cb484f020e6828f",
+      "sha256": "2b4a4991e0327d0e34ee0f87479312a0c523a5bb0255420fd6327f303f7a145a",
+      "bytes": 7316,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-resident-credit.ts"
+    },
+    {
+      "path": "src/engine/state/oh-return.ts",
+      "mode": "100644",
+      "gitBlob": "9027d58b2947def35fcf0394b96c60e600e408d2",
+      "sha256": "9c11fa29b9cef8c6e40e840ff9492623e3c3adcec1dc381276cb8b51be80fef8",
+      "bytes": 36428,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-return.ts"
+    },
+    {
+      "path": "src/engine/state/oh-schedule-adjustments.ts",
+      "mode": "100644",
+      "gitBlob": "016f73209c9d7adcc469fe0c6d989750a7854209",
+      "sha256": "829109dbdca968cf423d827ce52944d4f71d35e166a5866010878f9d1bfdeb2e",
+      "bytes": 33751,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-schedule-adjustments.ts"
+    },
+    {
+      "path": "src/engine/state/oh-schedule-credits.ts",
+      "mode": "100644",
+      "gitBlob": "5248824e7802cd6e16351fd253835564f54a280d",
+      "sha256": "4522921bc686a2afc333b2da4ee296b0e491adfb78207e81d007a6028cbb26d6",
+      "bytes": 37638,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-schedule-credits.ts"
+    },
+    {
+      "path": "src/engine/state/oh-schedule-of-withholding.ts",
+      "mode": "100644",
+      "gitBlob": "7d26ef40cd3016d36ee6c732cde67930cc8c3ec1",
+      "sha256": "e0dc3f5db7f1eff109ecd0283e0eadf6cf657ad56b4d51cee22cde8513661878",
+      "bytes": 10252,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-schedule-of-withholding.ts"
+    },
+    {
+      "path": "src/engine/state/oh-school-district-lookup.ts",
+      "mode": "100644",
+      "gitBlob": "8b04111d02a4c371f164882cdf4ba909cb207534",
+      "sha256": "ab24d6a489614b608d3fe55e1e89e7318f0186c3f8b0cfd79118bbf556d12c1b",
+      "bytes": 28669,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-school-district-lookup.ts"
+    },
+    {
+      "path": "src/engine/state/oh-school-district-name-index.ts",
+      "mode": "100644",
+      "gitBlob": "7dd30a4a58ec835b039e7c38ed0d40c4ba0dfa28",
+      "sha256": "98cdad4bd4fd37a5e6c5546b5b46a53317f7e6059f9ffb210c848e540400c119",
+      "bytes": 21662,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-school-district-name-index.ts"
+    },
+    {
+      "path": "src/engine/state/oh-sd-100-resident-income.ts",
+      "mode": "100644",
+      "gitBlob": "69bb96ecd101176784ec31ec5553f2402f1d0088",
+      "sha256": "b6fffdab7ca9dd6243e1146e128973fa8a6c91887ce1edcbcfd675cfdff0b7c8",
+      "bytes": 8997,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/oh-sd-100-resident-income.ts"
+    },
+    {
+      "path": "src/engine/state/pa-40.ts",
+      "mode": "100644",
+      "gitBlob": "a88d8c993943b0cc3c9d63a9e574d39701149a99",
+      "sha256": "41b43cf95a6d0944a8f4c4b8bbc5795b5012c2f0fc100a11fdb1fc52c4cf3a51",
+      "bytes": 23681,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-40.ts"
+    },
+    {
+      "path": "src/engine/state/pa-business-pending-account.ts",
+      "mode": "100644",
+      "gitBlob": "7b78722b10bef6d0e99027cd45003f4b89c9f424",
+      "sha256": "947c40dfa2cea2740fe7c093e93dc37963cac13499f14239362768ccb1274d09",
+      "bytes": 11874,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-business-pending-account.ts"
+    },
+    {
+      "path": "src/engine/state/pa-digital-tax-refund-sources.ts",
+      "mode": "100644",
+      "gitBlob": "80134862a37ca45aa96caa89643d52ad24b68421",
+      "sha256": "317ac24caaaca50faf87c69725faf989e43326ea847e215c2912d8414cf6bb9e",
+      "bytes": 11682,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-digital-tax-refund-sources.ts"
+    },
+    {
+      "path": "src/engine/state/pa-investment-withholding-account.ts",
+      "mode": "100644",
+      "gitBlob": "bd031f953e9953952f8b2e43ec560e51c5a33c14",
+      "sha256": "0ba18a7db347fd8b07c121cb3def06f38cc13d070e5d328b09dcdfa4bf012082",
+      "bytes": 11595,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-investment-withholding-account.ts"
+    },
+    {
+      "path": "src/engine/state/pa-local-eit.ts",
+      "mode": "100644",
+      "gitBlob": "0ced194f4e55ad358ea0bc4ae5795093b9e886e4",
+      "sha256": "5319c22193ce27f14b875cf022bffa861c31d4b387d6f9a739437149ad84a4e9",
+      "bytes": 8608,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-local-eit.ts"
+    },
+    {
+      "path": "src/engine/state/pa-married-ordinary-return.ts",
+      "mode": "100644",
+      "gitBlob": "c6dce88ebadd5e28b242bffa08d167e20fddad4b",
+      "sha256": "0c55ed83f40c722e51fc9eb5100cb865881d1fddf34873d2fcea302205e097dd",
+      "bytes": 27076,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-married-ordinary-return.ts"
+    },
+    {
+      "path": "src/engine/state/pa-nonresident-orchestrator.ts",
+      "mode": "100644",
+      "gitBlob": "32f67b2013c53a38d87ac7d2a2b445f994e1a07b",
+      "sha256": "c6c7dbc3dd3fc5f7cd303232a08af57abed7ef6411c6b0a8574057801232b35d",
+      "bytes": 26089,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-nonresident-orchestrator.ts"
+    },
+    {
+      "path": "src/engine/state/pa-oid-pending-oh-account.ts",
+      "mode": "100644",
+      "gitBlob": "35ff604aa1d65f121ac257f45904d3e0c88820c1",
+      "sha256": "969b0a21f89371b8f1b364794760fc07c5059119668e92a42f892d4a334fc261",
+      "bytes": 10271,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-oid-pending-oh-account.ts"
+    },
+    {
+      "path": "src/engine/state/pa-oid-sources.ts",
+      "mode": "100644",
+      "gitBlob": "72dbc560c5114194ec4cf5974f6748bedae40bce",
+      "sha256": "5ba365f6b771ab633ecbe3e5e79a6420faf86073440b848ca5b7c31df7fcedb5",
+      "bytes": 5710,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-oid-sources.ts"
+    },
+    {
+      "path": "src/engine/state/pa-orchestrator.ts",
+      "mode": "100644",
+      "gitBlob": "0a92a8ce37832cbad790fe2285a8b47fdcbec5f8",
+      "sha256": "a19d52bbbfae6586d919ee8a374876a848d7af5b492ffb6fdb8b7744da1758fc",
+      "bytes": 90824,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-orchestrator.ts"
+    },
+    {
+      "path": "src/engine/state/pa-ordinary-brokerage-sources.ts",
+      "mode": "100644",
+      "gitBlob": "7f39d5d93377e14c3e1bb3e4e2cebdb69a7a0e4e",
+      "sha256": "2f37811ece81f13e3a5c163102e0474edba650a160e3f2e8a4e27d995083c449",
+      "bytes": 14272,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-ordinary-brokerage-sources.ts"
+    },
+    {
+      "path": "src/engine/state/pa-ordinary-business-sources.ts",
+      "mode": "100644",
+      "gitBlob": "fe5eff272c49bfcbc89a73c0a6c0e49d2db27707",
+      "sha256": "acf4907364557a9add86ea6744f06a31d03a9e3120179398b8b71451cdccca38",
+      "bytes": 20274,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-ordinary-business-sources.ts"
+    },
+    {
+      "path": "src/engine/state/pa-ordinary-care-sources.ts",
+      "mode": "100644",
+      "gitBlob": "447bc610f3e0e4b123e26917a1c6717f3de96ced",
+      "sha256": "3ffe8746e4b4d7aeec40d3e856b24b83a198406c27812a0706d2b725fe86801e",
+      "bytes": 11284,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-ordinary-care-sources.ts"
+    },
+    {
+      "path": "src/engine/state/pa-ordinary-digital-sources.ts",
+      "mode": "100644",
+      "gitBlob": "be900db1ef09dc12b1804e0f342482a13c1ebdae",
+      "sha256": "d1d98964f26679727465770f3aed667210458584af900b89c9835e76f8b97907",
+      "bytes": 7983,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-ordinary-digital-sources.ts"
+    },
+    {
+      "path": "src/engine/state/pa-ordinary-employee-sources.ts",
+      "mode": "100644",
+      "gitBlob": "6858fcfe55a58743372198c6e7ed06aff30e19fb",
+      "sha256": "ca3bd60a22620f117dad6b40a1b2e913f25955552af1350a5da8d555626da3a2",
+      "bytes": 26388,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-ordinary-employee-sources.ts"
+    },
+    {
+      "path": "src/engine/state/pa-ordinary-oid-sources.ts",
+      "mode": "100644",
+      "gitBlob": "78e7b897bef5944a1c361f811491785c54bd87b9",
+      "sha256": "9c556768e43f1a5fd855b280c6ea35131da5fe0353795d8c38b819da1a7abf5f",
+      "bytes": 14115,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-ordinary-oid-sources.ts"
+    },
+    {
+      "path": "src/engine/state/pa-ordinary-return-facts.ts",
+      "mode": "100644",
+      "gitBlob": "ae4ae5d9865e183a1568f537e918ca3ccef46e70",
+      "sha256": "00ba5261b71a60ed1652bc6e8999ada524b90e7c42d83150de468d552dcb810d",
+      "bytes": 26537,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-ordinary-return-facts.ts"
+    },
+    {
+      "path": "src/engine/state/pa-ordinary-return.ts",
+      "mode": "100644",
+      "gitBlob": "98664aa9fe77989a3e3f7e4605f66186bc7fe5a9",
+      "sha256": "02e1f0628e092f74b18a753ce8de30ee7b8b7e894a20fce0cac6d894b58d67ff",
+      "bytes": 26058,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-ordinary-return.ts"
+    },
+    {
+      "path": "src/engine/state/pa-ordinary-royalty-sources.ts",
+      "mode": "100644",
+      "gitBlob": "08b4ccf5adee15ebbcd542d1edac194f6375fa4c",
+      "sha256": "9d87ad8dec49c483b121df1f9f87baff73d0f1036128097cf58cfa3956919311",
+      "bytes": 13241,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-ordinary-royalty-sources.ts"
+    },
+    {
+      "path": "src/engine/state/pa-ordinary-source-precision.ts",
+      "mode": "100644",
+      "gitBlob": "20b343ad8c3dd6c659d375c61e8f284e6e0d9fdf",
+      "sha256": "327389ed7781753e787e4f28ede1c5e7ef8365abc6f777fc0af90bc353aa6283",
+      "bytes": 1637,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-ordinary-source-precision.ts"
+    },
+    {
+      "path": "src/engine/state/pa-personal-debt-foreign-sources.ts",
+      "mode": "100644",
+      "gitBlob": "e38079b86e1942119ef97be55701077f4f2b7892",
+      "sha256": "00e723f4f6bb9d6b21b842f20e698f46ecc1fee704bec2f0997dd5661ae9cc61",
+      "bytes": 12005,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-personal-debt-foreign-sources.ts"
+    },
+    {
+      "path": "src/engine/state/pa-philadelphia-wage-tax.ts",
+      "mode": "100644",
+      "gitBlob": "dbd533c13782b2bb2bf2a71e2ad3c6355452bdd4",
+      "sha256": "9f66ebb9c2d1776eb72cd1da83cf899dc2c726698934d5250d5acb717e199706",
+      "bytes": 6881,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-philadelphia-wage-tax.ts"
+    },
+    {
+      "path": "src/engine/state/pa-reciprocity.ts",
+      "mode": "100644",
+      "gitBlob": "38cbdd40c70a8b5babd26f250fba691811130de1",
+      "sha256": "8cfe7f9b3afa4e63736d99b2fa2f07add8e3de86d907f38d1ef178c06b849d0d",
+      "bytes": 18210,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-reciprocity.ts"
+    },
+    {
+      "path": "src/engine/state/pa-rental-classification.ts",
+      "mode": "100644",
+      "gitBlob": "ff116459ba49e1316b59a6f7a0d5760db22580ce",
+      "sha256": "a58002ecf91314cb3e627dc441a53b44735aa503f324f985f15b382b16af29cc",
+      "bytes": 3166,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-rental-classification.ts"
+    },
+    {
+      "path": "src/engine/state/pa-rental-income-expenses.ts",
+      "mode": "100644",
+      "gitBlob": "2f6f52b1f70e99d385e533dcbd3dabf9f0c4e1f5",
+      "sha256": "59db8253906238507acf82959aca7855dc581c7187a051a5b3e18ba020443b5c",
+      "bytes": 5257,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-rental-income-expenses.ts"
+    },
+    {
+      "path": "src/engine/state/pa-rental-ownership.ts",
+      "mode": "100644",
+      "gitBlob": "89e994b9bb73eb255b3627c1f9c01c2780082893",
+      "sha256": "75956815d0461f968c797b3052cd6ff0e5acf49eb6e33fe50b162560656af5c0",
+      "bytes": 1050,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-rental-ownership.ts"
+    },
+    {
+      "path": "src/engine/state/pa-residency-sources.ts",
+      "mode": "100644",
+      "gitBlob": "2cf8640e28b635d48839fba05323e4ac9e66f642",
+      "sha256": "55d658695bb2656ae59eed700406ef06fea87958c973c92bcc9f3e06e082b72e",
+      "bytes": 41211,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-residency-sources.ts"
+    },
+    {
+      "path": "src/engine/state/pa-resident-credit-sources.ts",
+      "mode": "100644",
+      "gitBlob": "57ba881f15512c5a98f65e451771ab0137d7c704",
+      "sha256": "648c60ff54faf18ddb02993186ead80039f841daf2ff358afb06a54fb7e879fd",
+      "bytes": 14882,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-resident-credit-sources.ts"
+    },
+    {
+      "path": "src/engine/state/pa-retirement-sources.ts",
+      "mode": "100644",
+      "gitBlob": "a08dfd5d9690408fc0f32441885f525e1f1c68d1",
+      "sha256": "6d08481f221b28515a675526bdb9b36dd515209d75a65902f418b81349fea80f",
+      "bytes": 9843,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-retirement-sources.ts"
+    },
+    {
+      "path": "src/engine/state/pa-return-result.ts",
+      "mode": "100644",
+      "gitBlob": "341bf560881f4093a5018678a7d2177820978377",
+      "sha256": "34c2db19d10941e7dd156fcc1e3fae2940a07d66659e0de57417607c014f364c",
+      "bytes": 1178,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-return-result.ts"
+    },
+    {
+      "path": "src/engine/state/pa-rev-1630.ts",
+      "mode": "100644",
+      "gitBlob": "60d1d5c8f9b2210f86f27093faea6c88b7272acc",
+      "sha256": "0fe7bdac5cf896c8e81ad03d84936c7ebf18e529d22a5ea25ae35b34a028d184",
+      "bytes": 20427,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-rev-1630.ts"
+    },
+    {
+      "path": "src/engine/state/pa-royalty-property-sources.ts",
+      "mode": "100644",
+      "gitBlob": "eb81ed9fd1e062f7a881d876a16a433c04b63507",
+      "sha256": "4bf6c93e305ba652bf9f2079b287bd35809487f35b0a5dfb7e597d5445fdb54b",
+      "bytes": 6698,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-royalty-property-sources.ts"
+    },
+    {
+      "path": "src/engine/state/pa-royalty-tax-refund-sources.ts",
+      "mode": "100644",
+      "gitBlob": "32ec0a081f2bf04229c52d3fd34b8bea8952b4a2",
+      "sha256": "0b12907e55cd2d39510ebe3661c9145fe213713958b4815b94e7583b87ba96a7",
+      "bytes": 11800,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-royalty-tax-refund-sources.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-a.ts",
+      "mode": "100644",
+      "gitBlob": "819b302dbbc22f8e7d38b0dcaa4c3d7fea10ada0",
+      "sha256": "cd8ce387777cc9f201777ee17f1965963f97e7ed5bf02a0d679000a67b5373c2",
+      "bytes": 7051,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-a.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-b.ts",
+      "mode": "100644",
+      "gitBlob": "0e1a2a37babc969717b7330e64831eb54adf3876",
+      "sha256": "5648d9eacb494c65879bb9be117b5c73a471a385166e20fbd767b7b6182fc10b",
+      "bytes": 5774,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-b.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-c.ts",
+      "mode": "100644",
+      "gitBlob": "a8205ea0ac2e3ec1acca4f3376bfb17d34181b43",
+      "sha256": "e14cdda6c7837a90b03897f0717bac49eafd1c3ceb77ca5cdc5a3b04c6139532",
+      "bytes": 14017,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-c.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-d.ts",
+      "mode": "100644",
+      "gitBlob": "1fe9076260b7b848b311c8c477840c005a7abe54",
+      "sha256": "d2028a8a767dbcdee1d0cb23f140b17c5ca228f7577b6f316457179131699fda",
+      "bytes": 16589,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-d.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-dc.ts",
+      "mode": "100644",
+      "gitBlob": "421ce82f7e0321706585d54e22c73d17f2846e66",
+      "sha256": "f35db1fb1fa0eb27d74d56a19aca58aa20e7f5d8dee0c3dd24e12cb1c85a2ab4",
+      "bytes": 8568,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-dc.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-e.ts",
+      "mode": "100644",
+      "gitBlob": "9fc4e4c5ba31e679f9d024b4f2fb926066563edf",
+      "sha256": "dc3269edcaacdf8ce63c1218d0cf8fe59addb45fecc15d660e7a4d08bcf63e80",
+      "bytes": 9643,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-e.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-f.ts",
+      "mode": "100644",
+      "gitBlob": "ae2485d60bd92d6c46fa3e677d08f65b3af48703",
+      "sha256": "6d2c5ecfc5dac4e6ea4847783b63b6ff38c704fd7f73cc833672263e50fa3102",
+      "bytes": 15226,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-f.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-g-l.ts",
+      "mode": "100644",
+      "gitBlob": "0dee2574c65e29673ea2c3ac03cdc58d43c168e1",
+      "sha256": "c2f1aa8373133801d9ab6726b321d85b4965b682ab62c449004ca9fde10e0e0d",
+      "bytes": 5996,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-g-l.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-j.ts",
+      "mode": "100644",
+      "gitBlob": "6064d3aa675070322587363fe37e370808e0d29a",
+      "sha256": "b0e303166bc78ba54e012b6f6f9e13ada2c12909609f3f4f171b77221d60556f",
+      "bytes": 3108,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-j.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-nrh.ts",
+      "mode": "100644",
+      "gitBlob": "1f575302be50179eb74ccf81da76adaa6f3224c9",
+      "sha256": "ebe3e9876fc5dfb1d13bc64152fd3cdefd7b7f95a62680bc52e63f2d5d28efad",
+      "bytes": 13353,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-nrh.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-o.ts",
+      "mode": "100644",
+      "gitBlob": "1c98fdb0190155b4e61d8db062b6a2a38198335d",
+      "sha256": "cc4077dd5670a6b08ee711f165f437d7f990b975419cbca21425794807c7febc",
+      "bytes": 10354,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-o.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-oc.ts",
+      "mode": "100644",
+      "gitBlob": "c978d8ae5413b34f1585ec2f6c5e85501bddf3a6",
+      "sha256": "42e1e20a6c702b365da7dcae33d91bca4c0dfabd32f1f965205b1f076344592c",
+      "bytes": 7269,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-oc.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-rk1.ts",
+      "mode": "100644",
+      "gitBlob": "e7be8015ed07cd5a0585b969c01e5bbf3e5f98fe",
+      "sha256": "0faf8946ec517c6796f72116a6ac9d8b3c51eec35b90a16b4c088409295e5977",
+      "bytes": 7282,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-rk1.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-sd.ts",
+      "mode": "100644",
+      "gitBlob": "c74e5f547ea35aa3bc613ce0c0472896d466a1df",
+      "sha256": "428574b50190497baf04939e48e2d43a10e723395665f7a63a531fe55abccd77",
+      "bytes": 8476,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-sd.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-sp.ts",
+      "mode": "100644",
+      "gitBlob": "f80d8c69c72bbe5f35bdfec10d13f1535ae8c31f",
+      "sha256": "f8bf38aa2895eaea442b442ac5c95c0fa63a3404969bbdf8da5c85b7d9a57c35",
+      "bytes": 12387,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-sp.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-t.ts",
+      "mode": "100644",
+      "gitBlob": "c74f4097e58d498061abccd334310a3ea06c9294",
+      "sha256": "177892ea4737ecbe095e41f6f93116b6df302b0fb0505feaa9a00d31cc41fca2",
+      "bytes": 8812,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-t.ts"
+    },
+    {
+      "path": "src/engine/state/pa-schedule-ue.ts",
+      "mode": "100644",
+      "gitBlob": "eb39a5c05cd338064c14f3526960860f966bdbbe",
+      "sha256": "12196dfc9495969ffc6ee77adba451830957a7f908cb429a6c7493ec5e26a13f",
+      "bytes": 11674,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-schedule-ue.ts"
+    },
+    {
+      "path": "src/engine/state/pa-use-tax.ts",
+      "mode": "100644",
+      "gitBlob": "79aa61557ebd0cc5fd0dc9540aa08436c9959a20",
+      "sha256": "fa4b3c0fba04d11f199aca6bf864fad1d57631cb46e05636c3b51422a49c64bc",
+      "bytes": 8061,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-use-tax.ts"
+    },
+    {
+      "path": "src/engine/state/pa-working-pennsylvanians-tax-credit.ts",
+      "mode": "100644",
+      "gitBlob": "52cfba37db50925de4c54394267c4c031257d4cd",
+      "sha256": "3acd3882cf0d260c93c76f8325301a772036c2a7f663d8e4efce632971b79223",
+      "bytes": 7451,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/engine/state/pa-working-pennsylvanians-tax-credit.ts"
+    },
+    {
+      "path": "src/models/constants.ts",
+      "mode": "100644",
+      "gitBlob": "22b947858eba8fc34a122eb9ab87bfda265aa6bb",
+      "sha256": "9e2b56e2e051f74e5fb7e35ff4cd79419a40cb6bec6783bfcef9e018d8a657b1",
+      "bytes": 86721,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/models/constants.ts"
+    },
+    {
+      "path": "src/models/inputs.ts",
+      "mode": "100644",
+      "gitBlob": "7fa2daad2496493deb52d94733c5879123649af4",
+      "sha256": "dee7fbd7355f2b6a2b5a767926c476290a6404f65776443f7efdcd7d922ecd07",
+      "bytes": 352102,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/models/inputs.ts"
+    },
+    {
+      "path": "src/models/ohio-2026-baseline.ts",
+      "mode": "100644",
+      "gitBlob": "99d586f14aa0c66d6db178f78105f089a5713e42",
+      "sha256": "036eb3223bcc4c582f7e56bd5ca587c6064f0ef1c716641b59174250b1e6c469",
+      "bytes": 3017,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/models/ohio-2026-baseline.ts"
+    },
+    {
+      "path": "src/models/ohio-business-apportionment.ts",
+      "mode": "100644",
+      "gitBlob": "e5d9fe183889f670133895e1080c73b31cf0e858",
+      "sha256": "628e7b3b117fcf04fb81565b754582d01e03a245d15dc0f1fdf6a6295bc38215",
+      "bytes": 3431,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/models/ohio-business-apportionment.ts"
+    },
+    {
+      "path": "src/models/ohio-canonical-business-sources.ts",
+      "mode": "100644",
+      "gitBlob": "1136a86192edace6f322abcf39a5a24ee354718e",
+      "sha256": "bc515886c1839085f182b06d9dbb23c40fd3c50e7df72f523cbb821cbd6a7886",
+      "bytes": 1727,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/models/ohio-canonical-business-sources.ts"
+    },
+    {
+      "path": "src/models/ohio-payments.ts",
+      "mode": "100644",
+      "gitBlob": "da3c41ba2c0b2e4251acd5664161462f22e32ae2",
+      "sha256": "236e1fd36a1153ce599409a1c4c736013c159bb8e9e2eec750dff149e76cc08b",
+      "bytes": 3550,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/models/ohio-payments.ts"
+    },
+    {
+      "path": "src/models/ohio-reciprocal-wage-sources.ts",
+      "mode": "100644",
+      "gitBlob": "a34d802fbed8d9517c1d4d0f393485faaeef79c6",
+      "sha256": "b1117d90ba506aa48bbde9d255269034c0784df4265ac23c4ae3bd3f45f91ee3",
+      "bytes": 1963,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/models/ohio-reciprocal-wage-sources.ts"
+    },
+    {
+      "path": "src/models/ohio-residency.ts",
+      "mode": "100644",
+      "gitBlob": "ce9c85e5eaadd89d3213b117ae6e11eda7dc3bc5",
+      "sha256": "55986f9fbf7bd329fd751d4ab77661f1d0993a0253e21f4542ca3fcc1a3a75bd",
+      "bytes": 2525,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/models/ohio-residency.ts"
+    },
+    {
+      "path": "src/models/ohio-resident-credit-sources.ts",
+      "mode": "100644",
+      "gitBlob": "077b2f977771650ae1cd45ac9e3336189c4bf2c8",
+      "sha256": "699460e463cec6eb491e1f88eee36c5c519fa2b5e23cd14ee037ed25e78f6ded",
+      "bytes": 3386,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/models/ohio-resident-credit-sources.ts"
+    },
+    {
+      "path": "src/models/ohio-return-header-sources.ts",
+      "mode": "100644",
+      "gitBlob": "979b2f0abd260e48b76de445e3aa5fe951e07f8a",
+      "sha256": "587d9d48bbc19c8f998b6ace2c920e46d52024c78705321ad28af3b139a46c55",
+      "bytes": 2236,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/models/ohio-return-header-sources.ts"
+    },
+    {
+      "path": "src/models/outputs.ts",
+      "mode": "100644",
+      "gitBlob": "5657d90c15e36d92247eb1e5e462b746e8521589",
+      "sha256": "08f5fc42d0022a2a822848816975963ef1eb8207381b74568a6a437b14b73c3e",
+      "bytes": 21738,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/models/outputs.ts"
+    },
+    {
+      "path": "src/models/rule-pack-metadata.ts",
+      "mode": "100644",
+      "gitBlob": "57354815cfbde60e2612df3230cf295c778f5663",
+      "sha256": "d1d858eabdf727e2722d8ceefddc7a349d002bd6147e1348bb9c6e91344790fa",
+      "bytes": 209654,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/models/rule-pack-metadata.ts"
+    },
+    {
+      "path": "src/models/state-constants.ts",
+      "mode": "100644",
+      "gitBlob": "a3884ea415aec8849401c85db7dc303da2e3debf",
+      "sha256": "acdb05ca25e66acf987641bc7f981296388c31d6f41b98e7108cb2338cbe54fa",
+      "bytes": 95577,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/models/state-constants.ts"
+    },
+    {
+      "path": "src/pdf/filing-registry.ts",
+      "mode": "100644",
+      "gitBlob": "e81195b01d9b065adb01d8afda3d8f9be7eb52ef",
+      "sha256": "98a8b3cd422d67663a367925e2db99967ad8b1fddabc28f893856e4516ed02d9",
+      "bytes": 1628,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/pdf/filing-registry.ts"
+    },
+    {
+      "path": "src/pdf/filing-return.ts",
+      "mode": "100644",
+      "gitBlob": "fb8a9cbb312a413ff32b77a4578c37ccd6bed535",
+      "sha256": "6df0ecc59e2e2bab382468b0591643befb5bfe1007732e4350d03ec73dbcb7ce",
+      "bytes": 4485,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/pdf/filing-return.ts"
+    },
+    {
+      "path": "src/pdf/mappings/2025/template-manifest.ts",
+      "mode": "100644",
+      "gitBlob": "7c4ecd127b533969656195ecf316db9fa61c2109",
+      "sha256": "39b5048ebb67b0d417e81bd07199d191a251966cfadebd0fb5efafbfdcfff9bc",
+      "bytes": 7689,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/pdf/mappings/2025/template-manifest.ts"
+    },
+    {
+      "path": "src/pdf/redact-review-identifiers.ts",
+      "mode": "100644",
+      "gitBlob": "da83e4a3da5ebb94d24732058e76527cea41910d",
+      "sha256": "67550436706aef0a97fff5225e4df79517d5c53fca78132e9f0b277bd32f8b6b",
+      "bytes": 1088,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/pdf/redact-review-identifiers.ts"
+    },
+    {
+      "path": "src/pdf/template-registry.ts",
+      "mode": "100644",
+      "gitBlob": "542822398dd28e3aa7143d2417c5e2ae62b4a849",
+      "sha256": "ea352fdaff6500d1f3082583e44ad092166e88e421746c80b9e134bb8cac9eb9",
+      "bytes": 1573,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/src/pdf/template-registry.ts"
+    },
+    {
+      "path": "vitest.config.ts",
+      "mode": "100644",
+      "gitBlob": "8e0cd4d6c288d2609283198c2a6555fec4018946",
+      "sha256": "3147856b0584375c352c1704ee6129cd8b162514283045dfd53c527909518bb2",
+      "bytes": 1509,
+      "sameAtBaseline": true,
+      "targetSourceURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/vitest.config.ts"
+    }
+  ],
+  "proposedAdditionalReviewScopes": [
+    {
+      "id": "ohio-dated-school-source-header-output",
+      "kind": "tax-source-and-physical-output",
+      "boundary": "2025 single primary under65, one complete ordinary W2, no other income/business/municipal composition; OH Jan1-Jul31 thenVA Aug1-Dec31; actual service/pay/home records and Hillsdale0302 earned-income. Supplied Ashland/Finder/booklet header required for school paper. No broader dates/districts/cents.",
+      "needs": "Authority/source derivation, rounding, SD/IT cash separation, native reconfirmation/reload and physical fields.",
+      "reviewer": null,
+      "scopeAccepted": null,
+      "decision": null,
+      "approval": null,
+      "signedReference": null
+    },
+    {
+      "id": "federal-2210-annualized-physical-output",
+      "kind": "tax-output-and-source-binding",
+      "boundary": "2025 source-verified required annualized ScheduleAI, nonfarmer/nonwaiver, canonical original/redacted context and branded saved-output proof. Formulas unchanged; separate ownerPartII and zero-penalty attachment retained.",
+      "needs": "Printed lines1-36, skips, combined36once, spouse worksheet, required attachments/partial cover; filename alone insufficient.",
+      "reviewer": null,
+      "scopeAccepted": null,
+      "decision": null,
+      "approval": null,
+      "signedReference": null
+    },
+    {
+      "id": "ohio-source-comparison",
+      "kind": "source-integrity-engineering",
+      "boundary": "Three transient stable-normalization comparisons avoid hashing; durable source commitments remainSHA256.",
+      "needs": "Current stale/missing/owner/year/same-money mutation rejection and complete output equivalence; no new allocation or speedup claim.",
+      "reviewer": null,
+      "scopeAccepted": null,
+      "decision": null,
+      "approval": null,
+      "signedReference": null
+    },
+    {
+      "id": "mapped-review-pdf-active-content",
+      "kind": "security-and-output-engineering",
+      "boundary": "Mapped review marking strips executable actions while preserving ordinary fields/links; not arbitrary uploadedPDF/XFA sanitation.",
+      "needs": "Current saved graph/privacy/field/text/render checks; separate professional security judgment.",
+      "reviewer": null,
+      "scopeAccepted": null,
+      "decision": null,
+      "approval": null,
+      "signedReference": null
+    },
+    {
+      "id": "guided-current-render-analysis",
+      "kind": "guided-source-lifecycle-engineering",
+      "boundary": "Entire current state analyzed once per root render for display; actions/previews/confirmation/export retain source validation.",
+      "needs": "Same-value edits, same-reference mutation, owner switch, navigation parity; no timing clearance inferred.",
+      "reviewer": null,
+      "scopeAccepted": null,
+      "decision": null,
+      "approval": null,
+      "signedReference": null
+    },
+    {
+      "id": "hosted-safety-and-recovery",
+      "kind": "separate-security-privacy-operations-review",
+      "boundary": "Client TLS/cache admission, private outage responses, prompt allowlist, pseudonymous IDs/local originals, Preview identity and explicit pool closure.",
+      "needs": "Deployment-specific identity/privacy/transport/recovery; no production, internal-hop, provider, anonymity or historical-erasure inference.",
+      "reviewer": null,
+      "scopeAccepted": null,
+      "decision": null,
+      "approval": null,
+      "signedReference": null
+    },
+    {
+      "id": "ci-execution-and-immutable-evidence",
+      "kind": "separate-distribution-evidence-review",
+      "boundary": "Coverage two workers with existing gates; immutable image/config/SBOM/scan evidence and retained traces.",
+      "needs": "Actual final-source suite/native image/scan results; historical failures/skips retained.",
+      "reviewer": null,
+      "scopeAccepted": null,
+      "decision": null,
+      "approval": null,
+      "signedReference": null
+    }
+  ],
+  "originalScenarioScopeComparison": [
+    {
+      "scenarioId": "federal2025-baseline",
+      "sourceComparison": "Output/source-binding delta; federal arithmetic source unchanged.",
+      "proposedCurrentReviewQuestions": "Review current Schedule AI printed lines/skips, separate-owner Part II, required zero-penalty attachment, original/redacted context rejection before I/O, actual saved-artifact proof and partial-packet disclosure. Existing household/source questions remain open.",
+      "scopeTags": [
+        "federal-2210-annualized-physical-output",
+        "mapped-review-pdf-active-content",
+        "guided-current-render-analysis"
+      ],
+      "reviewer": null,
+      "qualifications": null,
+      "independence": null,
+      "scopeAccepted": null,
+      "reviewedCommit": null,
+      "reviewedTree": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": null,
+      "approval": null,
+      "conditionsForReReview": [],
+      "reviewDateUTC": null,
+      "signedReference": null
+    },
+    {
+      "scenarioId": "federal2026-enacted-law",
+      "sourceComparison": "No enacted-law calculation or constant delta.",
+      "proposedCurrentReviewQuestions": "Retain the original incomplete-law assignment. The new Form2210 and Ohio methods are 2025 only; no final2026 or filing qualification follows. Shared output/runtime changes need separate current-source checks.",
+      "scopeTags": [
+        "mapped-review-pdf-active-content",
+        "guided-current-render-analysis"
+      ],
+      "reviewer": null,
+      "qualifications": null,
+      "independence": null,
+      "scopeAccepted": null,
+      "reviewedCommit": null,
+      "reviewedTree": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": null,
+      "approval": null,
+      "conditionsForReReview": [],
+      "reviewDateUTC": null,
+      "signedReference": null
+    },
+    {
+      "scenarioId": "pa-ordinary-single",
+      "sourceComparison": "PA engine/source arithmetic unchanged; shared output and guided/hosting paths changed.",
+      "proposedCurrentReviewQuestions": "Original PA eligibility, SP and monetary review remains uncompleted. For current delivery compare source edits/reconfirmation and actual review outputs through changed shared PDF and hosted metadata paths.",
+      "scopeTags": [
+        "mapped-review-pdf-active-content",
+        "guided-current-render-analysis",
+        "hosted-metadata-and-local-document-identity"
+      ],
+      "reviewer": null,
+      "qualifications": null,
+      "independence": null,
+      "scopeAccepted": null,
+      "reviewedCommit": null,
+      "reviewedTree": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": null,
+      "approval": null,
+      "conditionsForReReview": [],
+      "reviewDateUTC": null,
+      "signedReference": null
+    },
+    {
+      "scenarioId": "pa-married-j-m",
+      "sourceComparison": "PA engine/source arithmetic unchanged; shared output and guided/hosting paths changed.",
+      "proposedCurrentReviewQuestions": "Keep separate-owner J/M election and rounding questions. Recheck current guided confirmation and saved output without treating unchanged originals as proof of unchanged rendering or approval.",
+      "scopeTags": [
+        "mapped-review-pdf-active-content",
+        "guided-current-render-analysis",
+        "hosted-metadata-and-local-document-identity"
+      ],
+      "reviewer": null,
+      "qualifications": null,
+      "independence": null,
+      "scopeAccepted": null,
+      "reviewedCommit": null,
+      "reviewedTree": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": null,
+      "approval": null,
+      "conditionsForReReview": [],
+      "reviewDateUTC": null,
+      "signedReference": null
+    },
+    {
+      "scenarioId": "pa-care",
+      "sourceComparison": "PA care method and original fixtures unchanged.",
+      "proposedCurrentReviewQuestions": "Retain original provider/receipt and eligibility assignment. Current rendered-review/privacy and source lifecycle evidence needs comparison at a4ac.",
+      "scopeTags": [
+        "mapped-review-pdf-active-content",
+        "guided-current-render-analysis",
+        "hosted-metadata-and-local-document-identity"
+      ],
+      "reviewer": null,
+      "qualifications": null,
+      "independence": null,
+      "scopeAccepted": null,
+      "reviewedCommit": null,
+      "reviewedTree": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": null,
+      "approval": null,
+      "conditionsForReReview": [],
+      "reviewDateUTC": null,
+      "signedReference": null
+    },
+    {
+      "scenarioId": "pa-royalty-debt-interest",
+      "sourceComparison": "Named PA source methods and original fixtures unchanged.",
+      "proposedCurrentReviewQuestions": "Keep each royalty, debt and interest interpretation and actual refund/credit boundary separate. Shared PDF/hosting changes require current output and privacy review, not a new inferred tax method.",
+      "scopeTags": [
+        "mapped-review-pdf-active-content",
+        "guided-current-render-analysis",
+        "hosted-metadata-and-local-document-identity"
+      ],
+      "reviewer": null,
+      "qualifications": null,
+      "independence": null,
+      "scopeAccepted": null,
+      "reviewedCommit": null,
+      "reviewedTree": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": null,
+      "approval": null,
+      "conditionsForReReview": [],
+      "reviewDateUTC": null,
+      "signedReference": null
+    },
+    {
+      "scenarioId": "oh-reciprocal-employee",
+      "sourceComparison": "Reciprocal arithmetic/fixtures unchanged; common Ohio equality, native/header composition and disclosures changed.",
+      "proposedCurrentReviewQuestions": "Recheck durable commitments, current/redacted original comparison and guide invalidation. Retain separate PA/OH cash, nominal printed credit and required companions; do not apply the new school cohort to reciprocal employment.",
+      "scopeTags": [
+        "ohio-source-comparison",
+        "ohio-dated-school-source-header-output",
+        "ohio-review-disclosure",
+        "mapped-review-pdf-active-content"
+      ],
+      "reviewer": null,
+      "qualifications": null,
+      "independence": null,
+      "scopeAccepted": null,
+      "reviewedCommit": null,
+      "reviewedTree": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": null,
+      "approval": null,
+      "conditionsForReReview": [],
+      "reviewDateUTC": null,
+      "signedReference": null
+    },
+    {
+      "scenarioId": "oh-resident-va-credit",
+      "sourceComparison": "Resident/VA credit arithmetic and originals unchanged; common Ohio source/guide/output paths changed.",
+      "proposedCurrentReviewQuestions": "Recheck same-income originals and current result replay through equality change; retain actual VA chronology/transaction identities and saved companions. No positive credit or settled cash is inferred from wording.",
+      "scopeTags": [
+        "ohio-source-comparison",
+        "ohio-dated-school-source-header-output",
+        "ohio-review-disclosure",
+        "mapped-review-pdf-active-content"
+      ],
+      "reviewer": null,
+      "qualifications": null,
+      "independence": null,
+      "scopeAccepted": null,
+      "reviewedCommit": null,
+      "reviewedTree": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": null,
+      "approval": null,
+      "conditionsForReReview": [],
+      "reviewDateUTC": null,
+      "signedReference": null
+    },
+    {
+      "scenarioId": "oh-business-nr-py-july212",
+      "sourceComparison": "Existing business and July212/old181 financial methods unchanged; shared native/header/source comparison changed.",
+      "proposedCurrentReviewQuestions": "Retain property/payroll/sales and source-dated deduction review. Test header/source isolation and preserved no-header/old181 omissions. The new W2-only school method establishes no business-school or municipal composition.",
+      "scopeTags": [
+        "ohio-source-comparison",
+        "ohio-dated-school-source-header-output",
+        "ohio-review-disclosure",
+        "mapped-review-pdf-active-content"
+      ],
+      "reviewer": null,
+      "qualifications": null,
+      "independence": null,
+      "scopeAccepted": null,
+      "reviewedCommit": null,
+      "reviewedTree": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": null,
+      "approval": null,
+      "conditionsForReReview": [],
+      "reviewDateUTC": null,
+      "signedReference": null
+    },
+    {
+      "scenarioId": "oh-hillsdale0302",
+      "sourceComparison": "Material new dated part-year source, native confirmation and official-school review path.",
+      "proposedCurrentReviewQuestions": "Independently assess exact single/under65/one-W2/212-day OH then153-day VA cohort, actual receipt/service/home reconciliation, specific residentMAGI instead of day-proration, separate SD/IT cash, actual Ashland/Finder/booklet header and printed fields. Preserve full-year and no-header limits.",
+      "scopeTags": [
+        "ohio-dated-school-source-header-output",
+        "ohio-source-comparison",
+        "ohio-review-disclosure",
+        "mapped-review-pdf-active-content"
+      ],
+      "reviewer": null,
+      "qualifications": null,
+      "independence": null,
+      "scopeAccepted": null,
+      "reviewedCommit": null,
+      "reviewedTree": null,
+      "authorityRevisions": [],
+      "originalFactHashes": [],
+      "independentExpectationsHash": null,
+      "findings": [],
+      "decision": null,
+      "approval": null,
+      "conditionsForReReview": [],
+      "reviewDateUTC": null,
+      "signedReference": null
+    }
+  ],
+  "engineeringEvidenceReferences": [
+    {
+      "id": "form2210-physical",
+      "trackedLedger": "docs/upgrade-2026-form-2210-schedule-ai-physical-review-work.md",
+      "trackedLedgerSHA256": "fcffe45f2f94c1cc12363fa0ff5c166f813f6fb3b11174c7d715ee045709685d",
+      "trackedLedgerURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-form-2210-schedule-ai-physical-review-work.md",
+      "recordedArtifactManifestSHA256": "8c653b4acbf220dbf5e79109beb9343c3f8b265778e747d55f2658ccdfb57e10",
+      "recordedEngineeringReviewReceiptSHA256": "abdfc2b9e4c921d9283c41df5f784fd7c9c3ea02b4580eb84067ba56a340ea62",
+      "reportedEngineeringEvidence": "Ledger records142PDFs/335pages and finite independent cell/render checks. Identifiers intentionally remain in47 RAW files; prepared/redacted modes are distinct. Later global PDF safety is separate.",
+      "rawPrivateArtifactsReopenedForThisCompanion": false,
+      "professionalReviewDecision": null
+    },
+    {
+      "id": "oh-school-paper",
+      "trackedLedger": "docs/upgrade-2026-oh-school-district-part-year-official-review-work.md",
+      "trackedLedgerSHA256": "2ad269479a702ea3b6845d3ca13465ce444649fd83524b55896dfee18fe35481",
+      "trackedLedgerURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-oh-school-district-part-year-official-review-work.md",
+      "recordedArtifactManifestSHA256": null,
+      "recordedEngineeringReviewReceiptSHA256": "ad8fcd58f775b85adb2f8341c58e56aaf7b51728fed2684cae17be7094b55d0a",
+      "reportedEngineeringEvidence": "Ledger records32PDFs/76pages,16official pages rendered and all-object/privacy checks; author9bd8d577 and short manifest7059d24f identify a historical package, not current whole-tree source.",
+      "rawPrivateArtifactsReopenedForThisCompanion": false,
+      "professionalReviewDecision": null
+    },
+    {
+      "id": "oh-school-native",
+      "trackedLedger": "docs/upgrade-2026-oh-school-district-part-year-native-browser-work.md",
+      "trackedLedgerSHA256": "caff63d57473329d5d64bb7a838c83d41fa7040e51573dc866131fd1243060f4",
+      "trackedLedgerURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-oh-school-district-part-year-native-browser-work.md",
+      "recordedArtifactManifestSHA256": "94770a7f9c6c1df978aaef03f81e2fe5ecee8f63a0b7fa3bf41a12646bfa1d73",
+      "recordedEngineeringReviewReceiptSHA256": "ac05b9a6858be7ab5542d4787ad9c40e322b1098fd591967f7f957245b0844ea",
+      "reportedEngineeringEvidence": "Ledger records four desktop/mobile refund/covered cases, four actual PDFs/124pages and62paired pages; PY IT1040 official paper omitted and filing denied.",
+      "rawPrivateArtifactsReopenedForThisCompanion": false,
+      "professionalReviewDecision": null
+    },
+    {
+      "id": "pdf-safety",
+      "trackedLedger": "docs/upgrade-2026-review-pdf-active-content-work.md",
+      "trackedLedgerSHA256": "1513b4193cc5db1c379d8e08f690337f77cf3532d3b9b8530a48fae0bb93bc76",
+      "trackedLedgerURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-review-pdf-active-content-work.md",
+      "recordedArtifactManifestSHA256": null,
+      "recordedEngineeringReviewReceiptSHA256": "634b1475d7ac9038adfdbf98462673d9ea2a00a2368b8ceb2f6ca335f15376fb",
+      "reportedEngineeringEvidence": "Ledger records four PDFs/six pages,2448objects/334streams and fields/text/RGB parity. Finite mapped-output engineering, not arbitrary-PDF safety or professional security approval.",
+      "rawPrivateArtifactsReopenedForThisCompanion": false,
+      "professionalReviewDecision": null
+    },
+    {
+      "id": "native-header",
+      "trackedLedger": "docs/upgrade-2026-oh-school-header-native-composition-work.md",
+      "trackedLedgerSHA256": "1c25c3c6c6d88140b0b39effce7f66c01cdf0f8a7c65d7cb2020fba0f12f0cbc",
+      "trackedLedgerURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-oh-school-header-native-composition-work.md",
+      "recordedArtifactManifestSHA256": "dd32e5411c86b9372d8075db098c7a8609bd28fa5d24b780e8a5d82586f7b4a0",
+      "recordedEngineeringReviewReceiptSHA256": "0f39ec9337b16b1be2ed867aa3f2f4c5d29362c19f54636e18fb2833da0e5a11",
+      "reportedEngineeringEvidence": "Ledger records native source lifecycle and stale-confirmation checks; no county or cash inferred from output.",
+      "rawPrivateArtifactsReopenedForThisCompanion": false,
+      "professionalReviewDecision": null
+    },
+    {
+      "id": "oh-source-equality",
+      "trackedLedger": "docs/upgrade-2026-oh-source-material-equality-work.md",
+      "trackedLedgerSHA256": "2fce6a87f468d8fa459c1280843949e0156d899d357c5c54c6ddda67328b7de4",
+      "trackedLedgerURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-oh-source-material-equality-work.md",
+      "recordedArtifactManifestSHA256": null,
+      "recordedEngineeringReviewReceiptSHA256": null,
+      "reportedEngineeringEvidence": "Ledger records14full baseline result fingerprints/501controls and preserved durable digests, not a speedup or remote deadline clearance.",
+      "rawPrivateArtifactsReopenedForThisCompanion": false,
+      "professionalReviewDecision": null
+    },
+    {
+      "id": "guided-render",
+      "trackedLedger": "docs/upgrade-2026-guided-render-analysis-work.md",
+      "trackedLedgerSHA256": "6618d1ab5c7a40bc61b9e2f9e6d702522d9d72bb79b596c0b4fee9d45a2f7679",
+      "trackedLedgerURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-guided-render-analysis-work.md",
+      "recordedArtifactManifestSHA256": null,
+      "recordedEngineeringReviewReceiptSHA256": null,
+      "reportedEngineeringEvidence": "Ledger records whole-current-state per-render sharing and same-money/same-reference/owner-switch controls, not cross-render caching or deadline clearance.",
+      "rawPrivateArtifactsReopenedForThisCompanion": false,
+      "professionalReviewDecision": null
+    },
+    {
+      "id": "hosting-tls",
+      "trackedLedger": "docs/upgrade-2026-hosted-remote-database-tls-work.md",
+      "trackedLedgerSHA256": "8e0fd732b26082afbb37e7bc98c657a84e89a2f9ca9be5ac618b919027199f5e",
+      "trackedLedgerURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-hosted-remote-database-tls-work.md",
+      "recordedArtifactManifestSHA256": null,
+      "recordedEngineeringReviewReceiptSHA256": null,
+      "reportedEngineeringEvidence": "Ledger separates constructor controls, three synthetic trusted-CA loopback handshakes, auth cache correction and local HTTP checks; not deployed backend/internal-hop proof.",
+      "rawPrivateArtifactsReopenedForThisCompanion": false,
+      "professionalReviewDecision": null
+    },
+    {
+      "id": "hosted-identity",
+      "trackedLedger": "docs/upgrade-2026-hosted-document-opaque-ids-work.md",
+      "trackedLedgerSHA256": "0b5d320b6a664e9851c9b42e3e1e82509f59246f44be1f0507c3d7d60d896f65",
+      "trackedLedgerURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-hosted-document-opaque-ids-work.md",
+      "recordedArtifactManifestSHA256": null,
+      "recordedEngineeringReviewReceiptSHA256": null,
+      "reportedEngineeringEvidence": "Ledger records alias/local-cache controls and scoped main database tests; pseudonyms are not authentication, anonymity or erasure of historical rows/backups.",
+      "rawPrivateArtifactsReopenedForThisCompanion": false,
+      "professionalReviewDecision": null
+    },
+    {
+      "id": "recovery-lifecycle",
+      "trackedLedger": "docs/upgrade-2026-hosted-recovery-pool-lifecycle-work.md",
+      "trackedLedgerSHA256": "fcfc9713dc0ca1f14bbf88298a06d5ec4c95224e1c08394609e81372175d17d5",
+      "trackedLedgerURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-hosted-recovery-pool-lifecycle-work.md",
+      "recordedArtifactManifestSHA256": null,
+      "recordedEngineeringReviewReceiptSHA256": "318738a554a7503ece032c4c57277c7a41aa7560ad15e7d8c25b58ac780b8ab0",
+      "reportedEngineeringEvidence": "Ledger separates socket-free controls, retained failed alias invocation and corrected disposable PostgreSQL16 CLI receipt1c4853855ae78012f331a6cd6fc613b103a44abea0ec60ceffd1856ef080333e; not production/PITR/internal-hop proof.",
+      "rawPrivateArtifactsReopenedForThisCompanion": false,
+      "professionalReviewDecision": null
+    },
+    {
+      "id": "image-binding",
+      "trackedLedger": "docs/upgrade-2026-ci-immutable-image-work.md",
+      "trackedLedgerSHA256": "5af8e50ee9cb74198496e569cd9d02818436e97157ff0ea1469b016e260f4f07",
+      "trackedLedgerURL": "https://github.com/utilityfueled/tax-engine/blob/a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45/docs/upgrade-2026-ci-immutable-image-work.md",
+      "recordedArtifactManifestSHA256": null,
+      "recordedEngineeringReviewReceiptSHA256": null,
+      "reportedEngineeringEvidence": "Ledger records source-only immutable-image/SBOM/scan binding and earlier failed remote browsers, not completed successor execution.",
+      "rawPrivateArtifactsReopenedForThisCompanion": false,
+      "professionalReviewDecision": null
+    }
+  ],
+  "evidenceReuseBoundary": {
+    "verifiedUnchangedSourceEvidence": [
+      "All388 original delivered fixture members.",
+      "All1511 unchanged fixed delivery members; eight changed members have both hashes recorded.",
+      "Federal engine/calculators/constants and PA engine members in unchanged pins.",
+      "Pinned final2025 Form2210 and OhioSD100 blank PDFs.",
+      "Rule/template/filing registries, lockfile and test configurations in unchanged pins."
+    ],
+    "historicalArtifacts": "Saved PDFs/screenshots/logs/receipts remain attributed to their producing source. This preparation did not reopen private artifacts or repeat tests. Unchanged facts/blanks do not prove unchanged current output bytes.",
+    "currentOutputReview": "Shared marking, Form2210 dispatch/mapping/readiness and Ohio native/header/physical paths changed; compare actual output on accepted current source before transferring an earlier conclusion.",
+    "ledgerEvidence": "Recorded private receipt hashes locate finite engineering evidence, not independently reopened artifacts or human decisions in this companion.",
+    "successorPolicy": "Every later source change, including a test-only stdin-reader correction, needs an explicit delta or byte-equivalence comparison. Do not relabel a4ac evidence with a successor. No running/later full suite is represented as completed."
+  },
+  "unchangedOpenQuestions": [
+    "Original Form172/section1202 competing99800/100000 interpretation.",
+    "Mixed employee/business tips attribution beforeQBI.",
+    "Two educators/community-bond and broader Coverdell.",
+    "Two-owner cappedPTC and retained COD/charity frames.",
+    "Named EIC/foreign-tax/shared-policy/annualized/business1099G after exact-boundary verification.",
+    "PA government unemployment and youngcode7 sources."
+  ],
+  "releaseGates": {
+    "rulePacks": {
+      "2025": {
+        "version": "2025.223",
+        "calculationStatus": "legacy-available",
+        "independentReviewStatus": "independent-review-pending"
+      },
+      "2026": {
+        "version": "2026.221-law-integration-draft",
+        "calculationStatus": "incomplete",
+        "independentReviewStatus": "independent-review-pending"
+      }
+    },
+    "reviewTemplatePack": "2025.2-review",
+    "filingAllowlistEntryCount": 0,
+    "ruleVersionsUnchangedAcrossDelta": true,
+    "versionBoundary": "Version strings alone do not bind added source/output behavior; use commit/tree/member hashes.",
+    "launchJurisdictions": [
+      "PA",
+      "OH"
+    ],
+    "residencyCategories": [
+      "resident",
+      "part-year",
+      "nonresident"
+    ],
+    "broadJurisdictionQualification": false,
+    "final2026Qualification": false,
+    "filingOrReleaseAuthorization": false
+  },
+  "humanReview": {
+    "reviewer": null,
+    "qualifications": null,
+    "independence": null,
+    "acceptedScope": null,
+    "reviewedCommit": null,
+    "reviewedTree": null,
+    "deliveredCompanionSHA256": null,
+    "independentExpectationsHash": null,
+    "decision": null,
+    "approval": null,
+    "reviewDateUTC": null,
+    "signedReference": null,
+    "humanReviewComplete": false
+  },
+  "preparationMethod": {
+    "gitReads": [
+      "ls-tree",
+      "rev-parse",
+      "cat-file --batch",
+      "show",
+      "diff"
+    ],
+    "pythonFileReadsAndHashes": true,
+    "nodeOrTaxRuntimeExecuted": false,
+    "testsBrowsersOrPDFProductionExecuted": false,
+    "networkOrDatabaseConnection": false,
+    "credentialFilesRead": false,
+    "mainOrFixedPacketWrites": false,
+    "privateWriteBoundary": ".local/upgrade-evidence/nov04-human-review-current-a4ac-delta/",
+    "externalPersonContacted": false
+  }
+}
