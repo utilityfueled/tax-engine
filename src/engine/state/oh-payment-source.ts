@@ -12,6 +12,10 @@ function stable(v: unknown): unknown { if (Decimal.isDecimal(v))
     return v.map(stable); if (v !== null && typeof v === 'object')
     return Object.fromEntries(Object.entries(v).filter(([, child]) => child !== undefined).sort(([a], [b]) => a.localeCompare(b)).map(([k, child]) => [k, stable(child)])); return v; }
 function digest(v: unknown) { return bytesToHex(sha256(new TextEncoder().encode(JSON.stringify(stable(v))))); }
+/** Spec: state/oh-source-material-equality.yaml#normalization; durable digests remain unchanged. */
+function sameSourceMaterial(left: unknown, right: unknown): boolean {
+    return JSON.stringify(stable(left)) === JSON.stringify(stable(right));
+}
 function fail(message: string): never { throw new Error(`Ohio actual payment sources: ${message}`); }
 function actualDate(value: string) { const d = new Date(value + 'T00:00:00Z'); if (!Number.isFinite(d.getTime()) || d.toISOString().slice(0, 10) !== value)
     fail('a real source date is required'); return value; }
@@ -48,7 +52,7 @@ export function buildOhioPaymentSource(input: TaxYearInput, raw: unknown): OhioP
         ohioPayments?: unknown;
         ohioSchoolDistrict?: unknown;
     };
-    if (digest(original) !== digest(facts.originalFederalSources))
+    if (!sameSourceMaterial(original, facts.originalFederalSources))
         fail('current original federal snapshot differs');
     const timing = facts.currentTiming;
     const asOf = actualDate(timing.asOfDate);

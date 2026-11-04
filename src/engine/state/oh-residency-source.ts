@@ -29,6 +29,10 @@ function stable(value: unknown): unknown {
 function digest(value: unknown): string {
     return bytesToHex(sha256(new TextEncoder().encode(JSON.stringify(stable(value)))));
 }
+/** Spec: state/oh-source-material-equality.yaml#normalization; durable digests remain unchanged. */
+function sameSourceMaterial(left: unknown, right: unknown): boolean {
+    return JSON.stringify(stable(left)) === JSON.stringify(stable(right));
+}
 function fail(message: string): never {
     throw new Error(`Ohio actual residency sources: ${message}`);
 }
@@ -87,11 +91,11 @@ export function buildOhioResidencySource(input: TaxYearInput, result: TaxReturnR
     const facts = parsed.data;
     if (facts.taxYear !== input.taxpayer.taxYear || result.taxYear !== input.taxpayer.taxYear || result.filingStatus !== input.taxpayer.filingStatus)
         fail('current year or filing status contradicts originals');
-    if (!facts.originalFederalSources || digest(facts.originalFederalSources) !== digest(withoutFacts(input))) {
+    if (!facts.originalFederalSources || !sameSourceMaterial(facts.originalFederalSources, withoutFacts(input))) {
         fail('current private federal original source snapshot is missing or changed');
     }
     const fresh = calculateFederalTax(input);
-    if (digest(redactReviewIdentifiers(fresh)) !== digest(redactReviewIdentifiers(result)))
+    if (!sameSourceMaterial(redactReviewIdentifiers(fresh), redactReviewIdentifiers(result)))
         fail('saved federal result is stale');
     if (input.ohioSchoolDistrict) {
         buildOhioSchoolDistrictSource(input, result, ohio);

@@ -1,0 +1,38 @@
+form: "Ohio current-source material comparison"
+fullName: "Transient source replay equality with unchanged durable commitments"
+taxYear: 2025
+reference: "spec/state/oh-input-adapter.yaml"
+notes: |
+  Pure implementation-equivalence successor; no tax formula, original-source,
+  year, readiness, or filing admission changes. Existing stable serialization
+  converts Decimal to its exact decimal string, preserves array order and null,
+  omits undefined object children, and sorts object keys with existing localeCompare.
+  Three transient comparisons may compare that same complete JSON material directly.
+  Every digest actually returned, audited, or stored in prepared original contexts
+  retains its existing SHA256 implementation and bytes. Current federal recomputation
+  and full redacted result comparison remain mandatory. No cache or shared replay.
+  Literal money comes from existing independently source-pinned fictional fixtures;
+  full-output fingerprints are captured from unchanged 3d13 baseline before products,
+  are compatibility oracles rather than independent tax authority, and include audits.
+  Baseline control errata: the 80000 AGI school fixture exemption is2150,
+  so Ohio tax=round(342+(80000-2150-26050)*.0275)=1767, not1773.
+  Federal complete audit lives in allLines; use a fresh independent federal result
+  for tampering rather than structuredClone of Decimal-bearing results.
+  Performance evidence is serial same-host/default-budget only, with no CI/native claim.
+lines:
+  - line: "full-output-parity"
+    description: "Complete federal, adapted Ohio, payment-source and calculated output parity"
+    formula: "Literal fixture expectations plus unchanged-baseline full JSON SHA256, including every audit and durable commitment"
+    testRef: "tests/engine/state/oh-source-material-equality.test.ts::preserves complete baseline output and commitments for %s"
+  - line: "normalization"
+    description: "Existing source material equivalence"
+    formula: "Object order/undefined and exact Decimal-string representations remain equivalent; arrays, Unicode, null and changed source values remain distinct"
+    testRef: "tests/engine/state/oh-source-material-equality.test.ts::preserves actual source normalization for %s"
+  - line: "current-source-guards"
+    description: "Retained originals and fresh federal calculation are still required"
+    formula: "Reject same-money identity changes, missing captures, changed Unicode, changed arrays and changed full federal audit; never recapture originals on read"
+    testRef: "tests/engine/state/oh-source-material-equality.test.ts::rejects changed complete source material for %s"
+  - line: "prepared-context"
+    description: "Original private context commitments are unchanged"
+    formula: "Raw/redacted complete current context succeeds; forged, stale source and changed full federal result fail; inputs and captured originals remain immutable"
+    testRef: "tests/engine/state/oh-source-material-equality.test.ts::preserves prepared raw and redacted context integrity"

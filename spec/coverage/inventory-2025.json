@@ -14180,6 +14180,26 @@
       ]
     },
     {
+      "key": "state/oh-source-material-equality",
+      "jurisdiction": "state",
+      "taxYear": 2025,
+      "sourceAuthority": "spec/state/oh-input-adapter.yaml",
+      "specPath": "spec/state/oh-source-material-equality.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "state/oh-w2-state-withholding-consumer",
       "jurisdiction": "state",
       "taxYear": 2025,
