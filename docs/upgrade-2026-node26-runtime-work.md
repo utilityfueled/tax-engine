@@ -67,3 +67,23 @@ ROOT copied only the final reviewed sixteen paths onto de05f153, first verifying
 All twelve current-checkout checksets passed: offline frozen install from the existing explicit .local/pnpm-store, fourteen runtime controls, types3, spec/AST, owned strict lint0, inventory generation/check and both builds. The initial pnpm prerequisite attempts stopped before tests because non-TTY purge confirmation and then the default store's missing offline tarball required CI=true and the previously validated explicit store; both failure logs remain retained. No network dependency download, lock change or test/budget correction was used. Current receipt/logs are in ignored nov04-root-node26-main(-checks-shared-store) evidence.
 
 The full24,714/zero-skip unit and coverage evidence above remains attributed to322 plus the identical tested sixteen paths; current integration is not represented as another full run. Historical global lint warnings remain11,716, with zero errors; owned strict lint stays zero. This commit updates the operational runtime contract only. Immutable native Linux images, current browser/recovery/scanner and actual hosted26 qualification still require their separate checks.
+
+## Retained native CI provenance
+
+The container job now explicitly requires a Linux x86_64 host and Linux/AMD64
+Docker server, checks the candidate architecture and source revision, and saves
+the immutable image ID, layers, source archive/tree and lock hashes. A separate
+read-only, network-disabled, capability-free invocation retains the actual Node
+binary's dynamic-library resolution and fails if a library is unresolved. The
+four new evidence files join the existing job artifact. The ordinary smoke,
+recovery, browser, SBOM and scanner commands, security flags, deadlines and retries
+are unchanged.
+
+System PyYAML6.0.3 parsed the resulting workflow. Removing only the added step and
+four artifact paths reproduces the previous parsed workflow exactly. ROOT source
+validation is retained under ignored nov04-root-ci-provenance; the independently
+prepared source proposal is nov04-ci-native-qualification-independent/native-precondition-v2
+with receipt SHA256ee3d428f33f33e43dbb490dc328203b4421d7632854a030b22f266730c5713a5.
+This is local workflow validation; these added remote checks have not yet run.
+Neither the pending historical73 jobs nor the pinned ARM64 base pull establishes
+a final candidate image, complete browser/scanner result or release qualification.

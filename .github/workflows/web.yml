@@ -95,6 +95,22 @@ jobs:
           fi
       - run: docker pull node:26.13.0-trixie-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39
       - run: docker build --label org.opencontainers.image.revision="$GITHUB_SHA" --tag tax-engine:ci .
+      - name: Retain native host and immutable candidate provenance
+        run: |
+          uname -sm > container-host.txt
+          test "$(uname -sm)" = 'Linux x86_64'
+          test "$(docker version --format '{{.Server.Os}}')" = linux
+          test "$(docker version --format '{{.Server.Arch}}')" = amd64
+          docker info --format '{{json .Architecture}} {{json .OSType}} {{json .CgroupVersion}} {{json .NCPU}} {{json .MemTotal}}' >> container-host.txt
+          git rev-parse HEAD HEAD^{tree} > container-source.txt
+          sha256sum Dockerfile pnpm-lock.yaml .github/workflows/web.yml >> container-source.txt
+          git archive "$GITHUB_SHA" | sha256sum >> container-source.txt
+          candidate_id=$(docker image inspect --format '{{.Id}}' tax-engine:ci)
+          docker image inspect --format '{{json .Id}} {{json .Os}} {{json .Architecture}} {{json .Config.Labels}} {{json .RepoDigests}} {{json .RootFS.Layers}}' "$candidate_id" > container-candidate.txt
+          test "$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$candidate_id")" = "$GITHUB_SHA"
+          test "$(docker image inspect --format '{{.Architecture}}' "$candidate_id")" = "$(docker version --format '{{.Server.Arch}}')"
+          docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges --entrypoint /usr/bin/ldd "$candidate_id" /usr/local/bin/node > container-ldd.txt
+          if grep -F 'not found' container-ldd.txt; then exit 1; fi
       - run: node scripts/smoke-container.mjs tax-engine:ci | tee container-smoke.log
       - name: Build immutable previous application for upgrade and rollback
         run: |
@@ -151,6 +167,10 @@ jobs:
             container-vulnerabilities.json
             container-smoke.log
             container-recovery.log
+            container-host.txt
+            container-source.txt
+            container-candidate.txt
+            container-ldd.txt
             apps/web/playwright-report/
             apps/web/test-results/
       - name: Remove this job's browser container
