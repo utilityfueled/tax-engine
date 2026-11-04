@@ -4,6 +4,10 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] Prepared a fixedf09 [independent tax-review packet](upgrade-2026-independent-review-packet-20261104.md), delivery manifest binding1519public synthetic/spec/ledger files and ten empty decision records. Distinct engineering review verifies every binding and confirms no human approval. Reviewer assignment, independently derived professional expectations and signed disposition remain external requirements; no external message or readiness promotion occurred.
+
+- [x] Retained native ARM64 ad23 image706761b1 passes unchanged smoke and all six synthetic recovery phases, preserving database/browser facts/original document bytes with owned cleanup. Actual image30s reciprocal4 all time out; SBOM/Grype processes finish with181matches/zeroCritical while the enclosing post-run memory gate fails. Final browser/scanner/advisory qualification remains pending; unrelated workloads and original failures remain retained. [Bounded evidence](upgrade-2026-runtime-ad23-arm64.json).
+
 - [x] Actual July212 Ohio business/header desktop/mobile native sources pass2/2 with unchanged90s managed budget/retries0. Independently reviewed2PDF/88pages/780cells/82statuses and38geometry records pass. Mainstrict/types/spec/inventory pass; image30s/Preview/human/final2026 gates remain open. See [the browser ledger](upgrade-2026-oh-business-part-year-native-browser-work.md).
 
 - [x] Reciprocal saved-PDF reader caches each parsed page within one fresh file. All40 tests, assertions and5000ms budgets remain unchanged. Serial original/proposed40 both pass; independent81PDF-per-run semantic/privacy parity passes. Strict lint0. Local timing17.09→9.96s is bounded evidence; current CI/image performance remains required. See [the reader ledger](upgrade-2026-oh-reciprocal-official-review-work.md).
@@ -2792,3 +2796,13 @@ Production426 and all-dependency522 registry scopes both report zero findings ag
 ### November 4: deployed Preview JSON boundary rehearsal
 
 READY322f Preview accepts exact4MiB synthetic JSON, rejects4MiB+1 with the app JSON413 and5MiB with platform413. Fresh accepted-shell readbacks, scoped cleanup/null and unchanged unrelated baseline pass with zero app cache-header failures. The memory-only write-ahead review finding was corrected before requests. See [the transport ledger](upgrade-2026-workspace-json-limits-work.md). Padding is transport evidence, not a full backup or browser-client qualification; final Node26/global/current-artifact and release gates remain open. Security evidence2d5b7451 is pushed separately.
+
+
+### November4: exact f09 full local checks and retained image failures
+
+Current f09 passes24,815 tests across1,837files with zero failures/skips and87.35% branch coverage against the unchanged85% threshold; types3/spec/inventory/builds2/full lint pass with owned disposable PostgreSQL cleanup. Native ARM64 smoke and six-phase recovery pass, while four actual reciprocal browser cases all time out at unchanged30s. Exact-image SBOM/Grype processes complete with181 Debian matches/zeroCritical; overall operation fails the post-run memory floor and retains final safetyPASS. Remote managed/image browser failures remain open. See [the bounded runtime evidence](upgrade-2026-runtime-ad23-arm64.json) and [runtime ledger](upgrade-2026-node26-runtime-work.md). No release qualification is claimed.
+
+
+### November4: dated part-year Ohio school payroll
+
+Commit5cbec8e8 adds the finite2025 Hillsdale0302 January–July Ohio/August–December Virginia specifically identified payroll method. Actual home, payroll, state/local withholding and separate account originals replay; resident40000 is not day-prorated annual60000. Current68focused+564adjacent and all12checksets pass, with distinct source/engine/native/municipal review. The unqualified PY paper path explicitly omits output after source validation. See [the ledger](upgrade-2026-oh-school-district-part-year-work.md). Public filing/final2026/human/browser/distribution/staging gates remain open. Separate supportfc013fad and hosted-runtime22d5f422 commits pass their19affected controls/types/strictlint/webbuild; actual Preview runtime logs remain pending.

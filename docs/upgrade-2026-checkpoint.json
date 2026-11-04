@@ -18426,5 +18426,70 @@
     "filingQualified": false,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-oh-business-part-year-native-browser-work.md"
+  },
+  "nativeArm64Recovery20261104": {
+    "sourceCommit": "ad23b0fad2d76013173151d68700c212783d67cb",
+    "imageID": "706761b11058485b6ee29a99a9d7ac3fc7fbaf4f6ec0fe69927a83b8fd4a57a8",
+    "smokePassed": true,
+    "unchangedRecoveryPhasesPassed": 6,
+    "recoveryReceiptSHA256": "4841c5c0be9f4375f4ea65d06a70d7e463f355b273b91a4baa32436637aec7bb",
+    "actualImageBrowserExecuted": true,
+    "freshImageScanCompleted": false,
+    "previewQualification": false,
+    "releaseReady": false,
+    "evidence": "docs/upgrade-2026-runtime-ad23-arm64.json",
+    "actualImageBrowserPassed": 0,
+    "actualImageBrowserTimedOut": 4,
+    "fullImageBrowserExecuted": false,
+    "scanProcessesCompleted": true,
+    "scanMatches": 181,
+    "scanCriticalMatches": 0,
+    "scanPostRunMemoryGatePassed": false,
+    "browserReceiptSHA256": "19c70c249acb599b6af1bab4259f4c9caf5bc38341542e11f7f3b28b1b447f94",
+    "scanReceiptSHA256": "0acb8821eb683937e0461fc39c537bc4f29909ba4d905dbf9b365f6a50ab24a1"
+  },
+  "independentReviewPacket20261104": {
+    "fixedSourceCommit": "f09a3dd7ad2f3a12f02a8d50efd0da01050033e6",
+    "fixedTree": "45488b161876873cbbed6091e79ee24a2317954c",
+    "boundPublicFiles": 1519,
+    "emptyDecisionRecords": 10,
+    "status": "UNASSIGNED_NOT_HUMAN_REVIEWED",
+    "engineeringAccuracyReviewSHA256": "7d7b95db616d8fb387e24942a1f8f079fbd8267a9c7309ea79f98b44cadfd00e",
+    "humanReviewComplete": false,
+    "externalMessageSent": false,
+    "releaseReady": false,
+    "packet": "docs/upgrade-2026-independent-review-packet-20261104.md"
+  },
+  "currentF09FullVerification20261104": {
+    "sourceCommit": "f09a3dd7ad2f3a12f02a8d50efd0da01050033e6",
+    "unitPassed": 24815,
+    "files": 1837,
+    "failed": 0,
+    "skipped": 0,
+    "branchesPercent": "87.35",
+    "thresholdsUnchanged": true,
+    "typesSpecInventoryBuildsLintPassed": true,
+    "browserPassed": false,
+    "receiptSHA256": "95193822c68d14c96f262a0fcb9732dfc3defe62339eccaf2491e1ba5eb23779",
+    "evidenceBoundary": "Local synthetic disposable PostgreSQL16, exact f09 application source; no hosted or release qualification."
+  },
+  "ohSchoolDistrictPartYearSources20261104": {
+    "commit": "5cbec8e8",
+    "sourceMethod": "oh-2025-sd100-part-year-payroll-sources-v1",
+    "focusedPassed": 68,
+    "adjacentPassed": 564,
+    "currentChecksetsPassed": 12,
+    "humanReview": false,
+    "partYearOfficialPaperAvailable": false,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-oh-school-district-part-year-work.md"
+  },
+  "hostedPreviewRuntimeObservation20261104": {
+    "commit": "22d5f422",
+    "localAffectedPassed": 19,
+    "webTypesStrictLintBuildPassed": true,
+    "actualHostedRuntimeObserved": false,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-hosted-preview-runtime-identity-work.md"
   }
 }

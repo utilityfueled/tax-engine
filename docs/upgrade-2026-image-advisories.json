@@ -3698,5 +3698,16 @@
     "source": "Fresh primary Debian tracker pages; raw evidence and exact scope retained under .local/upgrade-evidence/nov02-runtime-package-minimization/independent-static-review",
     "independentHumanReview": false,
     "ownerAcceptance": false
+  },
+  "node26Native20261104": {
+    "arm64": "docs/upgrade-2026-runtime-ad23-arm64.json",
+    "amd64": "docs/upgrade-2026-runtime-f09-amd64.json",
+    "primaryAdvisoryStatus": "docs/upgrade-2026-image-advisories-20261104.json",
+    "matchesEach": 181,
+    "uniqueAdvisoriesEach": 80,
+    "criticalEach": 0,
+    "ownerConfirmation": "pending; no acceptance",
+    "reviewBy": "2026-11-07 or before qualification; earlier Next deadline unchanged",
+    "releaseReady": false
   }
 }

@@ -1,0 +1,149 @@
+{
+  "recordedAt": "2026-11-04T05:24:29.123106+00:00",
+  "kind": "remote-ci-native-amd64-bounded-evidence",
+  "workflowRun": 41772061833,
+  "job": 126383958313,
+  "source": {
+    "headCommit": "f09a3dd7ad2f3a12f02a8d50efd0da01050033e6",
+    "workflowMergeCommit": "3aca3b6107a39bec082544829f870f4d894f8784",
+    "gitTree": "45488b161876873cbbed6091e79ee24a2317954c",
+    "treeMatchesActualF09": true,
+    "criticalGitBlobSHA256": {
+      "Dockerfile": "df469bf2676fcf9b48c310de3a243584bce345fb168149a0b1cffc58a9b4a4a4",
+      "pnpm-lock.yaml": "d199e2344fa6cf61402330f216e3f7ccf6bc9b5e7a568670b29a9fe27dc8c23f",
+      ".github/workflows/web.yml": "0d88160ea2ef5e02a3cdb21f1e14fb139cbf4a22ca8f4228171917f99916324d"
+    },
+    "savedGitArchiveSHA256": "2f7722a71aaa5aaff842eef713f87a324f280cab0cdba18984e42480404706f9",
+    "archiveLimitation": "Saved hash retained; synthetic merge archive not independently reconstructed or downloaded archive digest recomputed."
+  },
+  "image": {
+    "immutableLocalID": "sha256:6b3f9671eb5868526fee6c345776e3e52a5367ea04832ce1fb55f57d5975c273",
+    "platform": "linux/amd64",
+    "host": "Linux x86_64; explicit uname/Docker-server guards visible in saved workflow/log",
+    "publishedRepoDigests": [],
+    "sourceRevision": "3aca3b6107a39bec082544829f870f4d894f8784",
+    "layerCount": 10,
+    "runnerBase": "node:26.13.0-trixie-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39",
+    "sameArchitectureBasePrefixVerified": true,
+    "lddMissingLibraries": false,
+    "libatomicResolved": true
+  },
+  "smoke": {
+    "result": "passed",
+    "node": "v26.13.0",
+    "undici": "8.12.2",
+    "uid": 1001,
+    "architecture": "x64",
+    "healthy": true,
+    "readOnly": true,
+    "assets": true,
+    "selfHostAuth": true,
+    "libatomicInstalled": true,
+    "templates": 51,
+    "providerKeys": false
+  },
+  "recovery": {
+    "result": "passed",
+    "previousDigest": "sha256:f5e4802a006729deb9449c5204f630c8a5231fee0be5c3c2a11536add19e5431",
+    "candidateDigest": "sha256:6b3f9671eb5868526fee6c345776e3e52a5367ea04832ce1fb55f57d5975c273",
+    "phases": [
+      "previous",
+      "upgrade",
+      "database-restart",
+      "database-dump-restore",
+      "rollback",
+      "re-upgrade"
+    ],
+    "allThreePayloadHashesStableAcrossSixPhases": true,
+    "databaseRecovery": {
+      "result": "passed",
+      "evidence": "local-synthetic-postgresql-dump-restore",
+      "tables": 9,
+      "tenantWorkspaces": 2,
+      "exactCostRestored": true,
+      "metadataCleanupReapplied": true,
+      "metadataCleanupIdempotent": true,
+      "checksum": "226647ccfc776a80fe16483eaf486c4298e371c1786603d331a22ff3e4f0d8ae"
+    },
+    "browserRecovery": {
+      "passed": true,
+      "encrypted": true,
+      "wrongPasswordRejected": true,
+      "tamperRejected": true,
+      "originalBytes": true,
+      "unknownYearPreserved": true,
+      "exactCents": true,
+      "deletion": true,
+      "networkObservation": {
+        "requests": 399,
+        "startsBeforeUpload": true,
+        "rawPrivateMarkersAbsent": true,
+        "limitation": "Checks raw request URLs and postData for the synthetic SSN, filename and PDF signature; not a general encoded or binary PII proof."
+      }
+    },
+    "limitation": "Synthetic local nine-table/two-tenant rehearsal; not external provider, deployment DB, broad encoded-PII or full application browser qualification."
+  },
+  "browser": {
+    "passed": 545,
+    "failed": 16,
+    "skipped": 5,
+    "duration": "36.2m",
+    "retries": 0,
+    "configuredPerTestTimeoutMs": 30000,
+    "failedCohorts": {
+      "oh-business-native": 4,
+      "oh-business-part-year-native": 2,
+      "oh-reciprocal-native": 4,
+      "oh-resident-credit-native": 4,
+      "pa-royalty-sources": 2
+    },
+    "hostedSkippedNotQualified": true,
+    "jobNotGreen": true
+  },
+  "scan": {
+    "syftVersion": "1.42.3",
+    "grypeVersion": "0.121.0",
+    "matches": 181,
+    "uniqueAdvisoryIDs": 80,
+    "packageVersionPairs": 36,
+    "severity": {
+      "High": 61,
+      "Negligible": 44,
+      "Medium": 65,
+      "Low": 11
+    },
+    "critical": 0,
+    "packageTypes": {
+      "deb": 181
+    },
+    "fixStates": {
+      "wont-fix": 136,
+      "not-fixed": 45
+    },
+    "fixedVersionMatches": 0,
+    "componentCount": 2883,
+    "bindingLimitation": "Syft scanned mutable local tax-engine:ci tag after immutable candidate inspection/smoke/recovery; report retains revision label and synthetic Syft image identity, not full immutable Docker config ID. Saved workflow/log has no intervening candidate retag/rebuild, but no independent exported image archive is present.",
+    "disposition": "All 80 advisory IDs remain OPEN_UNACCEPTED; fresh primary-source/exposure disposition is separate work."
+  },
+  "databaseBuilt": "2026-11-03T06:20:47Z",
+  "artifactSHA256": {
+    "container-artifact/container-candidate.txt": "765c5fc9ea2cd39d0c396a9f5355685452e2967bc51b17e0442e8779445b03c7",
+    "container-artifact/container-host.txt": "a6b090c152ebc36f39a981f56a123d212e062ad7615f5731354f3c5e3f803e01",
+    "container-artifact/container-ldd.txt": "f75c3063cf138a53bac14e2db8fea499d787dbc9148a3bae82651df26efd4b8d",
+    "container-artifact/container-recovery.log": "1399419780a13b5f747e969ca59de7611006804ce6c408a84882628af125a7d9",
+    "container-artifact/container-smoke.log": "d9a042ff0d0799ea20e5b084883b23ab3305cde0dd72d90e0c4c1a4b12732eaa",
+    "container-artifact/container-source.txt": "1b443da20c3f1642604670177d10fccd959d086942068a441549e48f683eedec",
+    "container-artifact/container-vulnerabilities.json": "9db3d33d883c664c140070feb07374ff03fd13110e15048df049760140431f82",
+    "container-artifact/container.cdx.json": "7ca7b67bca99bd43a684b5078ebf6ea184a2c48cf17e6e93054ddc75c75848ba",
+    "container.log": "27c091170c5081f962ea40859b97cbcb07246a33d70fe92adc88db0de2758434",
+    "artifacts.json": "e050911b45d17032cd36ced2149d96d49983b0637b08629b5f0f15a3a7f9995b"
+  },
+  "independentEngineeringReviewSHA256": "a30f2c15889df0f72bca47187162e3c11b1f850c21f724e0664f6148736ecf12",
+  "releaseReady": false,
+  "limitations": [
+    "No new native execution or independent network verification.",
+    "Eight core evidencefiles reviewed; nested 810 browser artifact files were not exhaustively opened or visually inspected.",
+    "Retained Actions metadata artifact digest is not claimed independently recomputed from original downloaded ZIP.",
+    "No registry publication, production, human tax review, final2026 or readiness approval."
+  ]
+}

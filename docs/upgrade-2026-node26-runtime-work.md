@@ -87,3 +87,27 @@ with receipt SHA256ee3d428f33f33e43dbb490dc328203b4421d7632854a030b22f266730c571
 This is local workflow validation; these added remote checks have not yet run.
 Neither the pending historical73 jobs nor the pinned ARM64 base pull establishes
 a final candidate image, complete browser/scanner result or release qualification.
+
+## November4 UTC: actual retained ARM64 recovery
+
+The immutable ad23 ARM64 image706761b1 now passes the unchanged smoke and six-phase synthetic recovery rehearsal: previous, upgrade, database restart, database dump/restore, rollback and reupgrade. Each phase preserves the same database, browser facts and original document hashes; actual runtime checks retain the read-only root, uid1001, no capabilities/no-new-privileges and absent provider keys. [The bounded runtime receipt](upgrade-2026-runtime-ad23-arm64.json) records exact source/image/evidence hashes and limitations. No application source changed between that image and f09; later files are docs/spec/tests/inventory only.
+
+The original failed metadata inspection remains retained: Podman reports image Healthcheck at its top level. Separate reconciliation verified those unchanged values, followed by actual unchanged smoke. The unchanged recovery commands required explicit Docker Compose5.5.1 through the same local Podman endpoint because Podman Compose1.6.0 rejects the service-qualified ps command. No application or rehearsal script was changed; memory-floor and other preflight failures remain recorded. Owned cleanup passed.
+
+The retained first preflights stopped on unrelated workloads, a missing unchanged timing reporter or the unchanged memory floor. After the owned full checks ended, the actual four reciprocal cases ran against the exact image: all four reporter outcomes timedOut at the unchanged30s deadline, retries0/configuredworkers2 (observedoneworker for the nonparallel file). The mobile count assertion began after the deadline and does not establish a wrong UI count. Full image browser execution did not start. Independent saved timing/source diagnosis is retained as c93afd11; the owned container cleanup, closed port and final safety checks passed. No deadline, assertion or readiness gate changed.
+
+Separate exact-image Syft/Grype processes both closed0 with the fresh November3 database, yielding181 Debian matches (61High/65Medium/11Low/44Negligible), zeroCritical. The overall operation remains FAIL_STOPPED because its post-operation free-memory floor failed; final source/image/empty-running safety checks passed. The SBOM/report and failed operation receipt remain retained, not represented as a passing qualification or risk acceptance. Current AMD64/Preview, final image browser/scanner/advisory dispositions and human/final-form qualification remain pending.
+
+
+## Exact f09 full local successor
+
+On November4, current f09 application source passed24,815 tests across1,837files, zero failures/skips, with an owned disposable PostgreSQL16 cluster. Coverage passed the unchanged90/85/90/90 gates: statements91.71%, branches87.35%, functions90.62%, lines94.92%. All three type checks, spec validation, inventory check, both builds and full lint passed. The owned cluster stopped and was removed; port5432 was untouched. Receipt95193822 and unit/coverage logs remain under ignored nov04-head-f09-full-verification. This is local synthetic evidence. Remote f09 PR browser CI separately failed: managed555PASS/6FAIL/5hostedSKIP at90s; image545PASS/16FAIL/5hostedSKIP at30s. Global browser, staging and release qualification remain open.
+
+
+## Retained native AMD64 and primary advisory successor
+
+PR run41772061833 now retains actual native Linux AMD64 image6b3f9671, Node26.13.0/Undici8.12.2, resolved libatomic and same-architecture pinned-base layer proof. Synthetic merge3aca3b61 has exact f09 tree45488b16; it is not the same commit. Smoke and six synthetic recovery phases pass; the actual30s browser remains545PASS/16FAIL/5hostedSKIP. [The bounded AMD64 receipt](upgrade-2026-runtime-f09-amd64.json) preserves artifact hashes, source equivalence and the local-tag/Syft identity limitation. Distinct engineering reviewa30f2c15 verifies saved evidence, without new execution. This does not qualify later application changes.
+
+Both retained images scan at181 Debian matches/80advisory IDs/zeroCritical. The fresh [per-advisory source record](upgrade-2026-image-advisories-20261104.json) maps the actual ARM64 installed versions through17source packages to primary Debian trixie records: all80 remain open with no fixed_version recorded. Repository versions are not called fixes. Distinct refreshd0c8549a preserves response hashes, cache age and earlier retrieval failures. All original register entries remain untouched; ownership confirmation and risk acceptance remain pending, with November7 or earlier qualification review and the separate November4 19:30UTC Next obligation unchanged. The ARM64 enclosing scan memory-floor failure, all browser failures and human/final-form/hosted gates remain open.
+
+The remote f09 coverage job ended cancelled after roughly60minutes with no completed coverage report; the terminal log reports cancellation. Local exact-f09 full coverage remains separate passing evidence. Coverage concurrency now has a separately reviewed [two-worker successor](upgrade-2026-ci-coverage-workers-work.md), preserving all tests, thresholds and deadlines; its remote result remains pending.

@@ -1,0 +1,2752 @@
+{
+  "recordedAt": "2026-11-04T05:24:29.123106+00:00",
+  "scope": "Exact retained ad23 ARM64 image; source status is not risk acceptance or final-image qualification",
+  "sourceCommit": "ad23b0fad2d76013173151d68700c212783d67cb",
+  "imageID": "706761b11058485b6ee29a99a9d7ac3fc7fbaf4f6ec0fe69927a83b8fd4a57a8",
+  "matches": 181,
+  "uniqueAdvisories": 80,
+  "binaryVersionPairs": 36,
+  "sourcePackages": 17,
+  "overallScanOperation": "FAIL_STOPPED post-operation memory floor; scan processes0 and finalSafetyPASS",
+  "primarySource": "https://security-tracker.debian.org/tracker/data/json",
+  "primaryRetrievedAt": "2026-11-04T05:18:40.445978+00:00",
+  "compressedResponseSHA256": "4fb9ef86f4842cd71b3bbe3e448f542d464e8ee8bf3ef3700f2c5613ebe75f96",
+  "decodedResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+  "independentEngineeringRefreshSHA256": "d0c8549af8d76d61ab2fa529bbffe7945d9a420d1c2dba20319712b89d9a522b",
+  "earlierNextRecheck": "2026-11-04T19:30:00Z or before qualification; unchanged",
+  "advisories": [
+    {
+      "id": "CVE-2005-2541",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2005-2541",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "tar",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "1.35+dfsg-3.1"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "tar",
+          "version": "1.35+dfsg-3.1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2007-5686",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2007-5686",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "shadow",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "1:4.17.4-2"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "login.defs",
+          "version": "1:4.17.4-2"
+        },
+        {
+          "name": "passwd",
+          "version": "1:4.17.4-2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2010-4756",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2010-4756",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2011-4116",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2011-4116",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "perl",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "5.40.1-6+deb13u1"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "perl-base",
+          "version": "5.40.1-6+deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2013-4392",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2013-4392",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "systemd",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "257.13-1~deb13u1"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsystemd0",
+          "version": "257.13-1~deb13u1"
+        },
+        {
+          "name": "libudev1",
+          "version": "257.13-1~deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2017-18018",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2017-18018",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "coreutils",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "9.7-3"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "coreutils",
+          "version": "9.7-3"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2018-20796",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2018-20796",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2019-1010022",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2019-1010022",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2019-1010023",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2019-1010023",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2019-1010024",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2019-1010024",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2019-1010025",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2019-1010025",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2019-9192",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2019-9192",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2021-45346",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2021-45346",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "sqlite3",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2022-0563",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2022-0563",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "util-linux",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41.5-0+deb13u1",
+            "trixie-security": "2.41.5-0+deb13u1"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "bsdutils",
+          "version": "1:2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libblkid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "liblastlog2-2",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libmount1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libsmartcols1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libuuid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "login",
+          "version": "1:4.16.0-2+really2.41.5-0+deb13u1"
+        },
+        {
+          "name": "mount",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "util-linux",
+          "version": "2.41.5-0+deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2023-31437",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2023-31437",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "systemd",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "257.13-1~deb13u1"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsystemd0",
+          "version": "257.13-1~deb13u1"
+        },
+        {
+          "name": "libudev1",
+          "version": "257.13-1~deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2023-31438",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2023-31438",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "systemd",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "257.13-1~deb13u1"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsystemd0",
+          "version": "257.13-1~deb13u1"
+        },
+        {
+          "name": "libudev1",
+          "version": "257.13-1~deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2023-31439",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2023-31439",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "systemd",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "257.13-1~deb13u1"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsystemd0",
+          "version": "257.13-1~deb13u1"
+        },
+        {
+          "name": "libudev1",
+          "version": "257.13-1~deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2024-56433",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2024-56433",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "shadow",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "1:4.17.4-2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "login.defs",
+          "version": "1:4.17.4-2"
+        },
+        {
+          "name": "passwd",
+          "version": "1:4.17.4-2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2025-5278",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2025-5278",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "coreutils",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "9.7-3"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "coreutils",
+          "version": "9.7-3"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2025-6141",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2025-6141",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "ncurses",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "6.5+20250216-2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libtinfo6",
+          "version": "6.5+20250216-2"
+        },
+        {
+          "name": "ncurses-base",
+          "version": "6.5+20250216-2"
+        },
+        {
+          "name": "ncurses-bin",
+          "version": "6.5+20250216-2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2025-69720",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2025-69720",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "ncurses",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "6.5+20250216-2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libtinfo6",
+          "version": "6.5+20250216-2"
+        },
+        {
+          "name": "ncurses-base",
+          "version": "6.5+20250216-2"
+        },
+        {
+          "name": "ncurses-bin",
+          "version": "6.5+20250216-2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2025-70873",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2025-70873",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "sqlite3",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-102010",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-102010",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "gcc-14",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "14.2.0-19"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "gcc-14-base",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libatomic1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libgcc-s1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libstdc++6",
+          "version": "14.2.0-19"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-102473",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-102473",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "dash",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "0.5.12-12"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "dash",
+          "version": "0.5.12-12"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-102474",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-102474",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "dash",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "0.5.12-12"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "dash",
+          "version": "0.5.12-12"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-114690",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-114690",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "gcc-14",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "14.2.0-19"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "gcc-14-base",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libatomic1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libgcc-s1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libstdc++6",
+          "version": "14.2.0-19"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-114691",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-114691",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "gcc-14",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "14.2.0-19"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "gcc-14-base",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libatomic1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libgcc-s1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libstdc++6",
+          "version": "14.2.0-19"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-115455",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-115455",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "gcc-14",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "14.2.0-19"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "gcc-14-base",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libatomic1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libgcc-s1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libstdc++6",
+          "version": "14.2.0-19"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-119371",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-119371",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "sqlite3",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-119372",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-119372",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "sqlite3",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-119373",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-119373",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "sqlite3",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-119374",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-119374",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "sqlite3",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-119375",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-119375",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "sqlite3",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-119376",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-119376",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "sqlite3",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-119377",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-119377",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "sqlite3",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-119378",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-119378",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "sqlite3",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-119379",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-119379",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "sqlite3",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-119591",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-119591",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "sqlite3",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-15059",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-15059",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "systemd",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "257.13-1~deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsystemd0",
+          "version": "257.13-1~deb13u1"
+        },
+        {
+          "name": "libudev1",
+          "version": "257.13-1~deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-15534",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-15534",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "perl",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "5.40.1-6+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Wait for exposure unstable and coordinate with Perl maintainers",
+          "nodsa_reason": "postponed"
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "perl-base",
+          "version": "5.40.1-6+deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-16742",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-16742",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "systemd",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "257.13-1~deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsystemd0",
+          "version": "257.13-1~deb13u1"
+        },
+        {
+          "name": "libudev1",
+          "version": "257.13-1~deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-18374",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-18374",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-18477",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-18477",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "tar",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "1.35+dfsg-3.1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "tar",
+          "version": "1.35+dfsg-3.1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-18508",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-18508",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "tar",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "1.35+dfsg-3.1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "tar",
+          "version": "1.35+dfsg-3.1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-19499",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-19499",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-19542",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-19542",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-27171",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-27171",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "zlib",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "1:1.3.dfsg+really1.3.1-1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "zlib1g",
+          "version": "1:1.3.dfsg+really1.3.1-1+b1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-3184",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-3184",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "util-linux",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41.5-0+deb13u1",
+            "trixie-security": "2.41.5-0+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "bsdutils",
+          "version": "1:2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libblkid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "liblastlog2-2",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libmount1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libsmartcols1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libuuid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "login",
+          "version": "1:4.16.0-2+really2.41.5-0+deb13u1"
+        },
+        {
+          "name": "mount",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "util-linux",
+          "version": "2.41.5-0+deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-40228",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-40228",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "systemd",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "257.13-1~deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsystemd0",
+          "version": "257.13-1~deb13u1"
+        },
+        {
+          "name": "libudev1",
+          "version": "257.13-1~deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-42250",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-42250",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "bzip2",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "1.0.8-6"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libbz2-1.0",
+          "version": "1.0.8-6"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-50812",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-50812",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "sqlite3",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-50813",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-50813",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "sqlite3",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "3.46.1-7+deb13u2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libsqlite3-0",
+          "version": "3.46.1-7+deb13u2"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-53910",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-53910",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "diffutils",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "1:3.10-4"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "diffutils",
+          "version": "1:3.10-4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-5435",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-5435",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-54369",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-54369",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "acl",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.3.2-2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Will be fixed first in unstable, then point release update; not to be backported by individual patches",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libacl1",
+          "version": "2.3.2-2+b1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-54370",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-54370",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "acl",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.3.2-2"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Will be fixed first in unstable, then point release update; not to be backported by individual patches",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libacl1",
+          "version": "2.3.2-2+b1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-54371",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-54371",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "attr",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "1:2.5.2-3"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Will be fixed first in unstable, then point release update; not to be backported by individual patches",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libattr1",
+          "version": "1:2.5.2-3"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-54411",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-54411",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "pam",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "1.7.0-5"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libpam-modules",
+          "version": "1.7.0-5"
+        },
+        {
+          "name": "libpam-modules-bin",
+          "version": "1.7.0-5"
+        },
+        {
+          "name": "libpam-runtime",
+          "version": "1.7.0-5"
+        },
+        {
+          "name": "libpam0g",
+          "version": "1.7.0-5"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-56391",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-56391",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "coreutils",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "9.7-3"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "coreutils",
+          "version": "9.7-3"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-56392",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-56392",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "coreutils",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "9.7-3"
+          },
+          "urgency": "unimportant",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "coreutils",
+          "version": "9.7-3"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-5704",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-5704",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "tar",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "1.35+dfsg-3.1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "tar",
+          "version": "1.35+dfsg-3.1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-6238",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-6238",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-6368",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-6368",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-6791",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-6791",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-76642",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "util-linux",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41.5-0+deb13u1",
+            "trixie-security": "2.41.5-0+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "bsdutils",
+          "version": "1:2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libblkid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "liblastlog2-2",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libmount1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libsmartcols1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libuuid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "login",
+          "version": "1:4.16.0-2+really2.41.5-0+deb13u1"
+        },
+        {
+          "name": "mount",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "util-linux",
+          "version": "2.41.5-0+deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-77117",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-77117",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-78408",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "util-linux",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41.5-0+deb13u1",
+            "trixie-security": "2.41.5-0+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "bsdutils",
+          "version": "1:2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libblkid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "liblastlog2-2",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libmount1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libsmartcols1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libuuid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "login",
+          "version": "1:4.16.0-2+really2.41.5-0+deb13u1"
+        },
+        {
+          "name": "mount",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "util-linux",
+          "version": "2.41.5-0+deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-78409",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "util-linux",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41.5-0+deb13u1",
+            "trixie-security": "2.41.5-0+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "bsdutils",
+          "version": "1:2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libblkid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "liblastlog2-2",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libmount1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libsmartcols1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libuuid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "login",
+          "version": "1:4.16.0-2+really2.41.5-0+deb13u1"
+        },
+        {
+          "name": "mount",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "util-linux",
+          "version": "2.41.5-0+deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-78410",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "util-linux",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41.5-0+deb13u1",
+            "trixie-security": "2.41.5-0+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "bsdutils",
+          "version": "1:2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libblkid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "liblastlog2-2",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libmount1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libsmartcols1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "libuuid1",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "login",
+          "version": "1:4.16.0-2+really2.41.5-0+deb13u1"
+        },
+        {
+          "name": "mount",
+          "version": "2.41.5-0+deb13u1"
+        },
+        {
+          "name": "util-linux",
+          "version": "2.41.5-0+deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-80489",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-80489",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-82560",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-82560",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "perl",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "5.40.1-6+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "perl-base",
+          "version": "5.40.1-6+deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-84243",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-84243",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-85091",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-85091",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "zlib",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "1:1.3.dfsg+really1.3.1-1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": null,
+          "nodsa_reason": null
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "zlib1g",
+          "version": "1:1.3.dfsg+really1.3.1-1+b1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-8674",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-8674",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-86805",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-86805",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-89092",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-89092",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-9538",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-9538",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "perl",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "5.40.1-6+deb13u1"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue; wait for regressions upstream sorted out",
+          "nodsa_reason": "postponed"
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "perl-base",
+          "version": "5.40.1-6+deb13u1"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-95619",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-95619",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "gcc-14",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "14.2.0-19"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "gcc-14-base",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libatomic1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libgcc-s1",
+          "version": "14.2.0-19"
+        },
+        {
+          "name": "libstdc++6",
+          "version": "14.2.0-19"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-95818",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-95818",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    },
+    {
+      "id": "CVE-2026-97399",
+      "disposition": "OPEN_UNACCEPTED",
+      "owner": "security/platform confirmation pending; unchanged",
+      "expires": "2026-11-07 or before qualification, unchanged",
+      "primarySource": "https://security-tracker.debian.org/tracker/CVE-2026-97399",
+      "retrievedAtUTC": "2026-11-04T05:18:40.445978+00:00",
+      "sourceResponseSHA256": "5bac274a9b369d0abaa2acf6a558fe87ad6e82fe25a37320399b63f24420c75b",
+      "literalTrixieRecords": [
+        {
+          "sourcePackage": "glibc",
+          "status": "open",
+          "fixed_version": null,
+          "repositories": {
+            "trixie": "2.41-12+deb13u4"
+          },
+          "urgency": "not yet assigned",
+          "nodsa": "Minor issue",
+          "nodsa_reason": ""
+        }
+      ],
+      "installedBinaryVersions": [
+        {
+          "name": "libc-bin",
+          "version": "2.41-12+deb13u4"
+        },
+        {
+          "name": "libc6",
+          "version": "2.41-12+deb13u4"
+        }
+      ],
+      "interpretation": "Primary trixie status open; no fixed_version in these exact rows. Repository candidate values are not represented as fixes; no risk acceptance or exposure conclusion."
+    }
+  ],
+  "independentHumanReview": false,
+  "ownerAcceptance": false,
+  "releaseReady": false
+}

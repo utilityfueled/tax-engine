@@ -116,6 +116,14 @@ node --import tsx scripts/rehearse-self-host-release.mjs PREVIOUS_IMAGE CANDIDAT
 For Podman, set `TAX_ENGINE_CONTAINER_RUNTIME=podman`. If PostgreSQL client tools
 are outside PATH, set `TAX_ENGINE_TEST_POSTGRES_BIN` to their directory. The script
 creates and removes only its own Compose project, volume and browser profile.
+Podman delegates Compose to an external provider. Select a compatible Docker
+Compose executable with `PODMAN_COMPOSE_PROVIDER=/absolute/path/to/docker-compose`
+and verify `podman compose version` before the rehearsal. The recorded ARM64 run
+used Docker Compose 5.5.1 through the local Podman socket. The Python
+`podman-compose` 1.6.0 provider rejects the required `ps --quiet web` command;
+it cannot run this rehearsal unchanged. Keep the service selector and recovery
+assertions intact when choosing a provider. See the
+[bounded ARM64 evidence](upgrade-2026-runtime-ad23-arm64.json).
 It uses loopback ports, synthetic facts and no provider or payment keys. It checks
 upgrade, database restart, dump/restore, rollback, browser backup/restore and
 deletion, including original document bytes and exact values.
