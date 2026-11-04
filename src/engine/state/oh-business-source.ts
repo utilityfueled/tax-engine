@@ -42,7 +42,8 @@ export function readOhioCanonicalBusinessSource(context: OhioCanonicalBusinessCo
 export function calculateOhioCanonicalBusinessSource(args: { taxInput: TaxYearInput; residencyFacts: OhioResidencyFacts | unknown; federalResult?: TaxReturnResult; draft2026?: boolean }): OhioCanonicalBusinessContext {
   const input = args.taxInput;
   const facts = OhioResidencyFactsSchema.parse(args.residencyFacts);
-  const { ohioResidency: _residency, ohioPayments: _payments, ...actualFederalOriginals } = input;
+  // The separately validated factual header is state evidence, not a federal original.
+  const { ohioResidency: _residency, ohioPayments: _payments, ohioReturnHeaderSources: _header, ...actualFederalOriginals } = input;
   if (!facts.originalFederalSources || digest(facts.originalFederalSources) !== digest(actualFederalOriginals)) fail('current private federal original source snapshot is missing or changed');
   const source = OhioCanonicalBusinessSourcesSchema.parse(facts.businessSources);
   const year = input.taxpayer.taxYear;

@@ -8,6 +8,7 @@ import type {TaxReturnResult} from '@/models/outputs.js';
 import {buildOhioResidentReturnInput,type OhioOverlayInput} from '@/engine/state/oh-input-adapter.js';
 import {calculateOhioResidentReturn} from '@/engine/state/oh-return.js';
 import {readOhioCanonicalBusinessSource} from '@/engine/state/oh-business-source.js';
+import {calculateOhioReturnHeaderSource} from '@/engine/state/oh-return-header-source.js';
 import {resolveOhioResidencyReview,type PreparedOhioResidencyReview} from '@/engine/state/oh-residency-source.js';
 import {redactReviewIdentifiers} from '@/pdf/redact-review-identifiers.js';
 import {assertPdfExportAllowed,markReviewPdf} from '@/pdf/export-policy.js';
@@ -22,6 +23,7 @@ export interface PreparedOhioBusinessOfficialReview{readonly[brand]:true}
 export interface StagedOhioBusinessOfficialReview{readonly[stagedBrand]:true}
 interface Projection{
  readonly includeIT1040:boolean;
+ readonly primaryResidencyStatus:'2'|'3'|undefined;
  readonly bundle:Readonly<Record<string,string>>;
  readonly nrc:Readonly<Record<string,string>>;
  readonly weights:Readonly<Record<string,string>>;
@@ -77,11 +79,12 @@ export function prepareOhioBusinessOfficialReview(
  if(!facts||!source||!owner||!business||!canonical||!nrc)fail('complete current canonical business and owner context required');
  const current=readOhioCanonicalBusinessSource(canonical,facts,federal.agi),worksheet=current.worksheet,row=worksheet.businesses[0];
  if(!row)fail('actual complete primary business worksheet required');
- // This method has no invented header, tax-payment timing or additional income attachment.
+ const header=original.ohioReturnHeaderSources===undefined?undefined:calculateOhioReturnHeaderSource(original,original.ohioReturnHeaderSources);
+ // Only separately current actual header evidence can qualify the new212-day physical variant.
  // Source validation above runs even when the valid financial cohort remains physically unsupported.
  if(original.taxpayer.filingStatus!=='single'||original.taxpayer.spouse||original.taxpayer.dependents.length
   ||facts.owners.length!==1||source.facts.businesses.length!==1||owner.accountHolder!=='primary'
-  ||business.accountHolder!=='primary'||original.ohioReturnHeaderSources!==undefined||original.ohioSchoolDistrict
+  ||business.accountHolder!=='primary'||(header!==undefined&&header.methodVersion!=='oh-2025-py-business-header-212-v1')||original.ohioSchoolDistrict
   ||result.sd100||result.schoolDistrictSource||nrc.fullResidentOnly||current.draft2026
   ||!original.ohioPayments||original.ohioPayments.remainingTaxPayment.status!=='no_remaining_tax'
   ||original.ohioPayments.paymentRows.length||!result.it1040.line10_taxAfterCredits.isZero())return undefined;
@@ -91,8 +94,8 @@ export function prepareOhioBusinessOfficialReview(
   if(owner.periods.length!==1||period?.from!=='2025-01-01'||period.to!=='2025-12-31'||period.domicileState!=='VA')return undefined;
  }else{
   const periods=[...owner.periods].sort((a,b)=>a.from.localeCompare(b.from)),first=periods[0],second=periods[1];
-  if(owner.status!=='part_year_resident'||periods.length!==2||first?.from!=='2025-01-01'||first.to!=='2025-06-30'
-   ||first.domicileState!=='OH'||second?.from!=='2025-07-01'||second.to!=='2025-12-31'||second.domicileState!=='VA')return undefined;
+  if(owner.status!=='part_year_resident'||periods.length!==2||first?.from!=='2025-01-01'||first.to!==(header?'2025-07-31':'2025-06-30')
+   ||first.domicileState!=='OH'||second?.from!==(header?'2025-08-01':'2025-07-01')||second.to!=='2025-12-31'||second.domicileState!=='VA')return undefined;
  }
  const credits=result.scheduleOfCredits,it=result.it1040,adj=result.scheduleOfAdjustments;
  if(!federal.scheduleC||!federal.scheduleSE||!worksheet.columnA.eq(federal.scheduleC.netProfit)
@@ -117,11 +120,12 @@ export function prepareOhioBusinessOfficialReview(
  const display=redactReviewIdentifiers(original),primary=display.taxpayer.primary,address=display.taxpayer.address;
  const bundle:Record<string,string>={};
  const integer=(value:Parameters<typeof roundDollar>[0])=>roundDollar(value).toFixed(0);
- if(nonresident){
+ if(nonresident||header){
   Object.assign(bundle,{TP_FN:primary.firstName.toUpperCase(),TP_LN:primary.lastName.toUpperCase(),
    ADDRESS1:address.street.toUpperCase(),ADDRESS2:address.apt?.toUpperCase()??'',CITY:address.city.toUpperCase(),STATE:address.state,ZIP:address.zip,
-   SD_NUM:'9999',PRIM_NON_RES_STATE:owner.periods[0]?.domicileState??fail('actual nonresident state missing'),L4_EXEMPT:'1',L7a:integer(it.line7_taxableNonbusinessIncome)});
+   SD_NUM:header?.header.schoolDistrictNumber??'9999',PRIM_NON_RES_STATE:(nonresident?owner.periods[0]:owner.periods.find(period=>period.domicileState!=='OH'))?.domicileState??fail('actual nonresident state missing'),L4_EXEMPT:'1',L7a:integer(it.line7_taxableNonbusinessIncome)});
   for(const line of it.lines){const field=itFields[line.line];if(field&&!(line.line==='2a'&&line.value.isZero()))bundle[field]=integer(line.value);}
+  if(header)bundle.COUNTY=header.header.ohioCounty;
   bundle.L9=integer(printedTotal);
   for(const name of ['L25A','L25B','L25C','L25D','L25E','L25F','L25G'])bundle[name]='0';
  }
@@ -166,7 +170,7 @@ export function prepareOhioBusinessOfficialReview(
  nrcValues['3-5-1']=integer(worksheetLine('5'));
  for(let line=6;line<=22;line++)nrcValues[`3-${line-1}`]=integer(worksheetLine(String(line)));
  const token=Object.freeze({[brand]:true as const});
- prepared.set(token,Object.freeze({includeIT1040:nonresident,bundle:Object.freeze(bundle),nrc:Object.freeze(nrcValues),weights:Object.freeze({Dropdown1:row.propertyWeight.toFixed(2),Dropdown2:row.payrollWeight.toFixed(2),Dropdown3:row.salesWeight.toFixed(2)})}));
+ prepared.set(token,Object.freeze({includeIT1040:nonresident||header!==undefined,primaryResidencyStatus:nonresident?'3':header?'2':undefined,bundle:Object.freeze(bundle),nrc:Object.freeze(nrcValues),weights:Object.freeze({Dropdown1:row.propertyWeight.toFixed(2),Dropdown2:row.payrollWeight.toFixed(2),Dropdown3:row.salesWeight.toFixed(2)})}));
  return token;
 }
 
@@ -254,7 +258,7 @@ export async function stageOhioBusinessOfficialReview(token:PreparedOhioBusiness
   });
   const y=(old.bottom+old.top)/2;page.drawLine({start:{x:old.left,y},end:{x:old.right,y},thickness:.7,color:rgb(0,0,0)});
  }
- if(projection.includeIT1040){selectStatus(bundle,'CHK_PRIM_RES','3');selectStatus(bundle,'CHK_FILING_STATUS','1');}
+ if(projection.includeIT1040){selectStatus(bundle,'CHK_PRIM_RES',projection.primaryResidencyStatus??fail('actual primary residency status missing'));selectStatus(bundle,'CHK_FILING_STATUS','1');}
  selectStatus(nrc,'Check Box1','1');flatten(bundle,true);flatten(nrc,false);
  const plans=[...(projection.includeIT1040?[{source:bundle,pages:[0,1],name:'oh-it-1040-review.pdf'}]:[]),
   {source:nrc,pages:[0,1,2],name:'oh-it-nrc-review.pdf'},

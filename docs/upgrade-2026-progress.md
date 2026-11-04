@@ -2,6 +2,15 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] Separate2025 Ohio212-day business/header method now binds actual majority-year
+  residence, county/district originals and current business/payment sources.
+  Genuine nine-guard RED precedes887 affected author checks; main65/types3/spec/
+  inventory pass. Distinct final source and93PDF/221page strict reviews pass,
+  including actual50page visual scope and780 cells/82 statuses. Original oracle
+  and diagnostic failures remain explicit. Actual browser/current distributions,
+  staging, human/final2026 and filing qualification remain open.
+  [Evidence](upgrade-2026-oh-business-part-year-header-work.md).
+
 - [x] Exact73f95517 Preview multipart boundaries pass five actual requests:
   file4MiB and whole4,456,448 bytes accept200; each plus-one returns the fixed
   app413;5MiB reaches platform413. Fresh test-account auth, private/no-store,

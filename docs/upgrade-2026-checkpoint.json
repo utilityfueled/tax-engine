@@ -18346,5 +18346,28 @@
       "no final-artifact release qualification"
     ],
     "ledger": "docs/upgrade-2026-staging-upload-abuse-probes-work.md"
+  },
+  "ohBusinessPartYearHeader21220261104": {
+    "status": "bounded-2025-source-header-review-only-pass",
+    "compositionHead": "f36974d80cd6902361b853aed4e743f7f8aed3cd",
+    "finalSourceManifestSha256": "c101db19c74ea345ccf77475237975d36e5ed9c4ab26a3e13b0d4292cfb79828",
+    "independentSourceReviewSha256": "3abb2bd0a50c64e78d60df47873964360c88f0e89c85500ece33f10c00fc5e63",
+    "independentSavedReviewSha256": "a488a3b583a01e2fd974cf8f0c917c60d20d118f6ff28caacdf1496498067d68",
+    "authorAffectedTests": 887,
+    "mainFocusedTests": 65,
+    "mainTypes": 3,
+    "mainSpecAndInventoryPassed": true,
+    "savedPDFs": 93,
+    "savedPages": 221,
+    "savedObjects": 7585,
+    "sourceCells": 780,
+    "statusAppearances": 82,
+    "actuallyViewedPages": 50,
+    "limits": [
+      "2025 finite source/header review method only",
+      "actual212 browser/current distributions/staging pending",
+      "qualified human/final2026/filing qualification pending"
+    ],
+    "ledger": "docs/upgrade-2026-oh-business-part-year-header-work.md"
   }
 }

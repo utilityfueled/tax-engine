@@ -45,6 +45,8 @@ export function prepareOhioResidentCreditOfficialReview(
 ): PreparedOhioResidentCreditOfficialReview | undefined {
   assertPdfExportAllowed(input.taxpayer.taxYear, federal.taxYear);
   if (input.ohioReturnHeaderSources === undefined) return undefined;
+  // The ordinary-business physical method owns its separately validated header branch.
+  if (input.ohioResidency?.businessSources !== undefined) return undefined;
   const original = resolveOhioResidencyReview(input, federal, context);
   const header = calculateOhioReturnHeaderSource(original, original.ohioReturnHeaderSources);
   const facts = original.ohioResidency;
