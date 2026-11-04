@@ -58,3 +58,39 @@ There is no new actual Preview deployment or ingress observation here. Requests
 over the platform's own limit can still be rejected before the app; the client
 now handles that status safely. Current full unit/coverage, both runtime
 distributions, staging, independent human and release criteria remain open.
+
+
+## Actual READY322 Preview JSON ingress, November 4
+
+Exact source `322f0221a0dccee006029ee7291e47c0dade8451`, deployment
+`dpl_67B2jpGa56JfuCUEqxJe8awpvfQu`, was READY before this bounded rehearsal.
+One fresh sign-in/session read as the existing authorized staging A account
+passes. Its private23-hour Preview link and session remain outside Git/output;
+this test does not use or modify the Stripe automation token.
+
+Three synthetic POSTs prove the deployed ingress boundaries:4194304 bytes
+returns200 with the exact small sanitized workspace shell;4194305 bytes returns
+413 with the exact application JSON error and private/no-store;5242880 bytes
+returns413 with Vercel FUNCTION_PAYLOAD_TOO_LARGE. Fresh-session readback after
+each request preserves the accepted shell. Scoped DELETE200, null readback and
+exact unrelated A baseline pass, with zero app private/no-store failures.
+
+Actual receipt SHA
+`245fcb7820f126f53146e56a8173c09f00032b63c78450d0243cd4e8289685cb`
+and executed script SHA
+`b4fcc2cf6b852fa9ab27c0aaf590850b4b051a3990a4f0534dbbbd07b468fed1`
+are retained under `.local/upgrade-evidence/nov04-staging-322-json-limits/`.
+The pre-execution reviewer found the initial cleanup intent was memory-only.
+Before any probe POST, a narrow correction persisted0600 exact-tuple/source/
+deployment/baseline intent with flush/fsync; corrected-script review `feaa1430`
+approves. Original script/proposal/finding remain retained. Successful actual
+cleanup resolves the private write-ahead record against the receipt. Distinct
+execution/source consistency review `68f6535064baecfda9d00ddd8e8e712a45f645608a67feb43034296c49314a7c`
+approves this bounded receipt; the reviewer did not replay network requests.
+
+Padding exercises transport bytes; it is not a4MiB taxpayer-data or document
+backup. This proves bounded actual server ingress, small-shell persistence and
+cleanup, not browser client413 rendering, browser quota/full-fidelity recovery,
+forensic erasure, outages, final Node26 artifact or whole hosted qualification.
+No account creation/reset, email, billing, provider or other-owner data actions
+are performed by the probe.

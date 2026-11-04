@@ -2738,3 +2738,8 @@ The finite2025 ordinary Schedule C method now emits source-bound NR5/PY4 officia
 ### November 4: current-lock dependency and advisory refresh
 
 Production426 and all-dependency522 registry scopes both report zero findings against unchanged lockd199e234. All seven official Next advisory metadata conflicts remain unchanged, with the existing November4 19:30UTC-or-before-qualification recheck obligation and no risk acceptance. See [the security ledger](upgrade-2026-next-1645-security-work.md). Image/OS/runtime, independent human and release qualification remain separate. Ohio physical322f0221 is pushed; Node26 current-source full unit/coverage verification continues privately.
+
+
+### November 4: deployed Preview JSON boundary rehearsal
+
+READY322f Preview accepts exact4MiB synthetic JSON, rejects4MiB+1 with the app JSON413 and5MiB with platform413. Fresh accepted-shell readbacks, scoped cleanup/null and unchanged unrelated baseline pass with zero app cache-header failures. The memory-only write-ahead review finding was corrected before requests. See [the transport ledger](upgrade-2026-workspace-json-limits-work.md). Padding is transport evidence, not a full backup or browser-client qualification; final Node26/global/current-artifact and release gates remain open. Security evidence2d5b7451 is pushed separately.

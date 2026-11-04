@@ -18047,7 +18047,39 @@
       "Full current unit/coverage, runtime/container/browser/staging/provider/human/final2026/release criteria remain open"
     ],
     "currentMainAffectedPassed": 100,
-    "currentMainLogSHA256": "87e995b83a98657bd0274aaf4a79c4d2d7d20201fd5c7f6855e4f6e40123ee10"
+    "currentMainLogSHA256": "87e995b83a98657bd0274aaf4a79c4d2d7d20201fd5c7f6855e4f6e40123ee10",
+    "actualPreview": {
+      "sourceCommit": "322f0221a0dccee006029ee7291e47c0dade8451",
+      "deploymentId": "dpl_67B2jpGa56JfuCUEqxJe8awpvfQu",
+      "readyBeforeExecution": true,
+      "requestByteStatuses": [
+        [
+          4194304,
+          200
+        ],
+        [
+          4194305,
+          413
+        ],
+        [
+          5242880,
+          413
+        ]
+      ],
+      "exactAppJsonError": true,
+      "platformPayloadTooLarge": true,
+      "freshReadbackAfterEach": true,
+      "scopedCleanupVerified": true,
+      "unrelatedBaselinePreserved": true,
+      "applicationCacheHeaderFailures": 0,
+      "receiptSHA256": "245fcb7820f126f53146e56a8173c09f00032b63c78450d0243cd4e8289685cb",
+      "executedScriptSHA256": "b4fcc2cf6b852fa9ab27c0aaf590850b4b051a3990a4f0534dbbbd07b468fed1",
+      "initialMemoryOnlyWriteaheadCorrectedBeforeAnyProbePOST": true,
+      "clientUiOrFullBackupQualified": false,
+      "finalNode26ArtifactQualified": false,
+      "independentReceiptReviewSHA256": "68f6535064baecfda9d00ddd8e8e712a45f645608a67feb43034296c49314a7c",
+      "reviewerNetworkExecuted": false
+    }
   },
   "ohBusinessOfficialPhysical20261104": {
     "baseCommit": "8c03648cc8d45560a27e3e05bab183790f4c3609",
