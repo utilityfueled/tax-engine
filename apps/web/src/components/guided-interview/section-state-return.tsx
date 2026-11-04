@@ -231,7 +231,7 @@ export function SectionStateReturn({
           <StateSummaryRow label="Actual school credit election" value={formatCurrency(stateMetrics.schoolDistrict.outgoingCarryforward)}/>
           <StateSummaryRow label="Calculated school district refund" value={formatCurrency(stateMetrics.schoolDistrict.refund)}/>
           <StateSummaryRow label="School district balance due" value={formatCurrency(stateMetrics.schoolDistrict.amountOwed)}/>
-          <p>Physical school-district forms and filing remain unavailable pending their separate qualification.</p>
+          <p>Experimental SD 100 and school withholding review PDFs cover only qualified, current original-bound Hillsdale (0302) full-year or 212-day Ohio / 153-day Virginia payroll methods. The part-year packet requires actual Ashland County / Hillsdale header originals. Other methods and incomplete sources remain unavailable for paper review; filing remains unavailable.</p>
         </section>}
 
         <ZeroIncomeMiscDetails data={current.zeroIncomeMiscSources} taxYear={taxYear} filingStatus={filingStatus}

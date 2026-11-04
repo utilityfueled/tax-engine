@@ -58,7 +58,7 @@ async function expectSeparateResults(page: Page) {
   ]) await expectRow(school, label, value);
   await expectRow(page, 'Ohio IT1040 Payments', '$3,000');
   await expect(school).toContainText('A calculated refund is not received cash.');
-  await expect(school).toContainText('Physical school-district forms and filing remain unavailable pending their separate qualification.');
+  await expect(school).toContainText('Experimental SD 100 and school withholding review PDFs cover only qualified, current original-bound Hillsdale (0302) full-year or 212-day Ohio / 153-day Virginia payroll methods. The part-year packet requires actual Ashland County / Hillsdale header originals. Other methods and incomplete sources remain unavailable for paper review; filing remains unavailable.');
   await expect(school).not.toContainText('$4,100');
   for (const secret of ['900-70-0302', '302 Fictional District Lane', 'PRIVATE-', 'originalFederalSources', 'originalTaxpayer', 'accountSsn']) {
     await expect(school).not.toContainText(secret);
