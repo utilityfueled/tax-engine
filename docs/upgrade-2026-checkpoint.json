@@ -18495,7 +18495,7 @@
   "currentContinuation20261104": {
     "applicationSource": "8487fb4b6d8818d83739fb902fc0730e19698053",
     "index": "docs/upgrade-2026-current-status.md",
-    "currentFullVerificationPassed": false,
+    "currentFullVerificationPassed": true,
     "hostedRuntimeObserved": {
       "source": "3a959a3d7c19ac1c00dd6a134f9b5d6927dc684e",
       "node": "26.13.0",
@@ -18505,7 +18505,7 @@
       "evidence": "docs/upgrade-2026-hosted-runtime-20261104.json"
     },
     "activeSoftware": [
-      "Final-source complete unit/coverage/browser/PostgreSQL/CI checks",
+      "Final-source browser, remote CI and deployed/native artifact qualification; exact8487 full local unit/coverage/PostgreSQL/tails PASS",
       "Final-source isolated native image export/restart/import/smoke/recovery/SBOM qualification",
       "Current isolated Preview schema mechanism PASS; deployed outage/integration remains",
       "Actual approved-budget provider qualification after secure project credential setup"
@@ -18550,6 +18550,19 @@
         "blobs": 12,
         "metadataAndVolumesExact": true,
         "finalResourceFloorsPassed": true
+      },
+      "exact8487FreshStore": {
+        "bootstrapStatus": "PASS_FRESH_BUILD_STORE_OFFICIAL_BASE_ONLY",
+        "bootstrapFinalSafety": "PASS",
+        "bootstrapReceiptSHA256": "c83f873f0a9584074ffb322e02098ae2f37c652f0bc7ca81c421608378360882",
+        "followingBuildStatus": "FAIL_STOPPED",
+        "failurePhase": "pinned-base inspect before application build",
+        "buildExecuted": false,
+        "failureReceiptSHA256": "3bd3f9e1f0061d0cedcd3be2f11edaa733042209ecf22a8f83c7e6b855be7b56",
+        "finalSafety": "PASS",
+        "diagnosisPending": true,
+        "retainedStoresRepaired": false,
+        "imageQualified": false
       }
     },
     "hostedHttpFaultRehearsal": {
@@ -18643,10 +18656,41 @@
     },
     "currentLocalFullVerification": {
       "source": "8487fb4b6d8818d83739fb902fc0730e19698053",
-      "status": "RUNNING",
+      "status": "PASS_FULL_LOCAL_CHECKS_ONLY",
       "priorA4acStoppedOnNativeEOF": true,
       "priorA4acFilesCompleted": 1852,
-      "priorA4acCoverageExecuted": false
+      "priorA4acCoverageExecuted": false,
+      "unitPassed": 25238,
+      "coveragePassed": 25238,
+      "testFiles": 1853,
+      "failedEachRun": 0,
+      "skippedEachRun": 0,
+      "conditionalDBFilesEachRun": 6,
+      "conditionalDBAssertionsEachRun": 53,
+      "coveragePercent": {
+        "statements": 91.81,
+        "branches": 87.54,
+        "functions": 90.69,
+        "lines": 95.03
+      },
+      "eightRemainingChecksPassed": true,
+      "lintWarnings": 11715,
+      "lintErrors": 0,
+      "lintSemanticAdditions": 0,
+      "lintSemanticRemovals": 0,
+      "sourceExactAfter": true,
+      "ownedPostgresStoppedPortFreeTempRemoved": true,
+      "receiptSHA256": "08e1d9bc7a524461d7c4cf5e2a57566fe88cbb30e25d702e91881202cf8399a4",
+      "ledger": "docs/upgrade-2026-8487-full-local-verification-work.md"
+    },
+    "currentFullVerificationScope": "PASS_FULL_LOCAL_CHECKS_ONLY; exact8487 unit/coverage/tails, not native or deployed qualification",
+    "currentPreviewTenantLimits": {
+      "source": "a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45",
+      "harnessVersion": "V2",
+      "authorFakeTransportControlsPassed": 14,
+      "independentOfflineMethodsPassed": 8,
+      "liveTenantRequests": 0,
+      "freshAuthAndRuntimeQualificationPending": true
     }
   },
   "nov04B254GlobalAndArtifactEvidence": {
@@ -18909,11 +18953,36 @@
     "conditionalDBFiles": 6,
     "conditionalDBAssertions": 53,
     "unitJSONSHA256": "7a4941556a6b26d6e2704911eb3b7d8328b2d296505c642cbce94bcadbd96da6",
-    "coverageStatus": "RUNNING",
-    "remainingChecksStatus": "PENDING",
-    "nativeRuntimeExecuted": false,
+    "coverageStatus": "PASS",
+    "remainingChecksStatus": "PASS_ALL_8",
+    "nativeRuntimeExecuted": true,
     "nativeInitialConfigSHA256": "9ce97a6a411c73c7d533f6ca77be78c7224cfbfa022e6425d4ad426fe0e39fc4",
-    "releaseReady": false
+    "releaseReady": false,
+    "status": "PASS_FULL_LOCAL_CHECKS_ONLY",
+    "unitFailed": 0,
+    "coveragePassed": 25238,
+    "coverageFailed": 0,
+    "coverageSkipped": 0,
+    "coveragePercent": {
+      "statements": 91.81,
+      "branches": 87.54,
+      "functions": 90.69,
+      "lines": 95.03
+    },
+    "thresholdsUnchanged": true,
+    "conditionalDBAssertionsEachRun": 53,
+    "lintWarnings": 11715,
+    "lintErrors": 0,
+    "lintSemanticAdditions": 0,
+    "lintSemanticRemovals": 0,
+    "sourceExactAfter": true,
+    "ownedPostgresCleanupPassed": true,
+    "receiptSHA256": "08e1d9bc7a524461d7c4cf5e2a57566fe88cbb30e25d702e91881202cf8399a4",
+    "terminalResultSHA256": "48418e46a76efc48cf4d31a349c1969da030b6cf262c9aeab306c0d86deb3d88",
+    "terminalArtifactManifestSHA256": "f5bb78342ca3cf688a5ca8a5952d527fec72613c754c99d163374d71a9304320",
+    "nativeRuntimeScope": "Fresh base bootstrap and subsequent pre-build inspect only; application build not executed",
+    "nativeApplicationBuildPassed": false,
+    "ledger": "docs/upgrade-2026-8487-full-local-verification-work.md"
   },
   "nov04IndependentReviewDelta": {
     "publishedCommit": "62a8975a",

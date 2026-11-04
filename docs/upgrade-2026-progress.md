@@ -2975,10 +2975,31 @@ See [the exact remote ledger](upgrade-2026-a4ac-remote-verification-work.md).
 Test-only8487 repairs the synchronous PA PDF stdin lifecycle using the existing
 bounded file-descriptor helper. Its focused3cases and required checks pass; its
 full unit now passes25,238/1,853/zero skips including all six PostgreSQL files.
-Coverage/tails remain running. Commit62a8975a publishes the fixedf09→a4ac
+Its coverage and all eight remaining checks now also pass; the bounded result
+is recorded below. Commit62a8975a publishes the fixedf09→a4ac
 [human-review companion](upgrade-2026-independent-review-delta-a4ac-20261104.md),
 with every human decision blank. Commit85d72dfb separately records36 actual
 [official-source/provider GETs](upgrade-2026-public-source-refresh-afternoon-20261104.md).
 No final2026 packet, provider access/run, risk acceptance or human approval is
 inferred. Native8487 configuration is fixed before those documentation-only
 commits; actual native and deployed-security work continues.
+
+
+### November 4: exact8487 full local verification completed
+
+Exact8487 unit and coverage each pass25,238 tests/1,853files with zero failures
+or skips. Both execute all six real PostgreSQL files (53 assertions each run)
+against a fresh disposable loopback cluster. Coverage91.81/87.54/90.69/95.03
+passes unchanged90/85/90/90 gates; all eight remaining checks pass, including
+types3, spec/inventory and both builds. Lint remains11,715warnings/0errors with
+no semantic additions or removals againstb254. Source stays exact before/after;
+cluster stop, port-free and temp-removal checks pass. See [the bounded ledger](upgrade-2026-8487-full-local-verification-work.md).
+The earlier address-precondition and native-stdin-hang attempts remain retained.
+
+Fresh native-store official-base bootstrap passes, but the following8487
+application-image operation stops at pinned-base inspect before build, with
+finalSafetyPASS; diagnosis remains open. The corrected Preview tenant harness
+passes14 author fake-transport controls and eight independent offline methods;
+zero live tenant requests have executed. These are separate from local-suite
+success and do not qualify final images, deployed integration, advisory
+dispositions, provider evaluation, professional review or final2026 forms.
