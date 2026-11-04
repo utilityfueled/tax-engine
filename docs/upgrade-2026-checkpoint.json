@@ -18384,5 +18384,22 @@
     "riskAcceptance": false,
     "providerAccountAvailabilityVerified": false,
     "readinessPromoted": false
+  },
+  "ohReciprocalPdfReaderCache20261104": {
+    "baselineSourceCommit": "ad23b0fad2d76013173151d68700c212783d67cb",
+    "ownedTest": "tests/pdf/oh-reciprocal-official-review.test.ts",
+    "testSourceSHA256": "52e127970f92e63714be044083a970db3956ffb43baf8f61103f8f1fb687ca64",
+    "sourcePeerReviewSHA256": "5f2e22325eb0a127b8b4f56d06789bfb8956c765deba0ebfa8d3144a82120dcf",
+    "savedPeerReviewSHA256": "ed9cf52a1b42c84f8849ebf2573a73c5af75ee0675cf4db68841f6e6af65fd2f",
+    "original40": "PASS 17.09s total/15.53s tests",
+    "proposed40": "PASS9.96s total/7.98s tests",
+    "savedPDFsPerRun": 81,
+    "savedPagesPerRun": 163,
+    "sameHostSerialOnly": true,
+    "allAssertionsAnd5000msDeadlinePreserved": true,
+    "strictLintWarnings": 0,
+    "ciAndDistributionPerformanceVerified": false,
+    "releaseReady": false,
+    "ledger": "docs/upgrade-2026-oh-reciprocal-official-review-work.md"
   }
 }

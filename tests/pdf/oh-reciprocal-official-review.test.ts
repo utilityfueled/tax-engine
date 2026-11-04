@@ -108,14 +108,15 @@ for name,pages in plans.items():
  page_cells={};fieldValues={}
  for c in cells:
   if c['file']!=name:continue
-  page_cells.setdefault(c['page'],painted(r.pages[c['page']-1],r))
+  if c['page'] not in page_cells:page_cells[c['page']]=painted(r.pages[c['page']-1],r)
   matches=[t for rect,t,ink in page_cells[c['page']]if all(abs(a-b)<.02 for a,b in zip(rect,c['rect']))]
   assert len(matches)==1,(name,c,'saved appearance count',len(matches))
   assert matches[0].replace(',','').strip()==c['value'],(name,c,'saved physical value',matches[0])
   fieldValues[c['field']]=matches[0].replace(',','').strip()
  if name=='oh-it-1040-review.pdf':
+  if 1 not in page_cells:page_cells[1]=painted(r.pages[0],r)
   for label,box in[('single',[330.723,406.407,338.898,419.275]),('nonresident',[179.555,407.416,187.73,420.284])]:
-   marks=[ink for rect,t,ink in painted(r.pages[0],r)if all(abs(a-b)<.02 for a,b in zip(rect,box))]
+   marks=[ink for rect,t,ink in page_cells[1]if all(abs(a-b)<.02 for a,b in zip(rect,box))]
    assert marks==[True],(label,marks)
  checked[name]={'pages':len(r.pages),'ordinaryAndCompressedObjects':len(ids),'physicalCells':sum(1 for c in cells if c['file']==name),'texts':texts,'fieldValues':fieldValues}
 assert set(checked)==set(plans) and sum(v['pages']for v in checked.values())==sum(plans.values())

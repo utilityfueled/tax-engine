@@ -4,6 +4,8 @@
 
 ## Active continuation — November 3, 2026
 
+- [x] Reciprocal saved-PDF reader caches each parsed page within one fresh file. All40 tests, assertions and5000ms budgets remain unchanged. Serial original/proposed40 both pass; independent81PDF-per-run semantic/privacy parity passes. Strict lint0. Local timing17.09→9.96s is bounded evidence; current CI/image performance remains required. See [the reader ledger](upgrade-2026-oh-reciprocal-official-review-work.md).
+
 - [x] Separate2025 Ohio212-day business/header method now binds actual majority-year
   residence, county/district originals and current business/payment sources.
   Genuine nine-guard RED precedes887 affected author checks; main65/types3/spec/
