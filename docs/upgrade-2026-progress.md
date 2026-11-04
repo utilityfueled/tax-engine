@@ -6,6 +6,8 @@ below apply to their named revisions.
 
 - November4: [public source refresh](upgrade-2026-public-source-refresh-20261104.md) independently verifies44 retained responses (36HTTP200/8HTTP404). Seven advisory API failures remain unresolved; alternate official fields retain their conflicts. IRS1040 remains2025; C/R2026 and Ohio2025 bytes unchanged. No risk acceptance, deadline extension, provider-account qualification or readiness promotion.
 
+- November4: [currenta4ac tenant/limits evidence](upgrade-2026-a4ac-preview-tenant-limits-work.md) records auth8PASS, tenant48FAIL at the first unclassified multipart500 with JSON3PASS/cleanup5, later same-body upload8PASS, and separately authorized remainder23PASS/four boundaries/cleanup4. The default-sandbox remainder first attempt has no response or writes. All failures remain; no combined tenant/release PASS is claimed.
+
 ## Active continuation — November 3, 2026
 
 - [x] Prepared a fixedf09 [independent tax-review packet](upgrade-2026-independent-review-packet-20261104.md), delivery manifest binding1519public synthetic/spec/ledger files and ten empty decision records. Distinct engineering review verifies every binding and confirms no human approval. Reviewer assignment, independently derived professional expectations and signed disposition remain external requirements; no external message or readiness promotion occurred.
@@ -2999,7 +3001,8 @@ The earlier address-precondition and native-stdin-hang attempts remain retained.
 Fresh native-store official-base bootstrap passes, but the following8487
 application-image operation stops at pinned-base inspect before build, with
 finalSafetyPASS; diagnosis remains open. The corrected Preview tenant harness
-passes14 author fake-transport controls and eight independent offline methods;
-zero live tenant requests have executed. These are separate from local-suite
+passed14 author fake-transport controls and eight independent offline methods
+before live execution. The later actual tenant failure and separate upload
+observations are now recorded in the [episode ledger](upgrade-2026-a4ac-preview-tenant-limits-work.md). These are separate from local-suite
 success and do not qualify final images, deployed integration, advisory
 dispositions, provider evaluation, professional review or final2026 forms.

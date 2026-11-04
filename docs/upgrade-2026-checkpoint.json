@@ -18686,11 +18686,73 @@
     "currentFullVerificationScope": "PASS_FULL_LOCAL_CHECKS_ONLY; exact8487 unit/coverage/tails, not native or deployed qualification",
     "currentPreviewTenantLimits": {
       "source": "a4ac9f0ea004bfaed3f9713af62a3bf1b56f0d45",
+      "status": "SEPARATE_BOUNDED_EPISODES_NOT_COMBINED_TENANT_PASS",
       "harnessVersion": "V2",
       "authorFakeTransportControlsPassed": 14,
       "independentOfflineMethodsPassed": 8,
-      "liveTenantRequests": 0,
-      "freshAuthAndRuntimeQualificationPending": true
+      "authBootstrap": {
+        "requests": 8,
+        "status": "PASS_EXISTING_TWO_ACCOUNT_AUTH_BOOTSTRAP_ONLY",
+        "receiptSHA256": "f5e224e84c1f444e73dfc7dde4368f7973a814a81a52f52922d4949070b5a261"
+      },
+      "tenantRun": {
+        "status": "FAIL",
+        "requests": 48,
+        "GET": 32,
+        "POST": 9,
+        "DELETE": 7,
+        "jsonCasesPassed": 3,
+        "firstMultipartStatus": 500,
+        "firstMultipartCause": "UNCLASSIFIED",
+        "laterMultipartCasesNotRun": 4,
+        "ownedTuplesCleaned": 5,
+        "unrelatedBaselineExact": true,
+        "receiptSHA256": "478848081495e532df6302ef99e47e4eb1674a22d37238bc30e2df3952e75fc9",
+        "savedReconciliationChecksPassed": 683
+      },
+      "laterSingleUpload": {
+        "status": "UPLOAD_200_AND_METADATA_CLEANUP_VERIFIED",
+        "requests": 8,
+        "sameOriginalBody": true,
+        "ownedTuplesCleaned": 1,
+        "doesNotExplainPrior500": true,
+        "receiptSHA256": "a0f67e578b372c50d96966c214dbf9b10dd239605b44b3ba133fdfc9f25473b1"
+      },
+      "remainderDefaultSandboxAttempt": {
+        "status": "FAIL_NO_RESPONSE_NO_WRITES",
+        "requestIntents": 1,
+        "httpResponses": 0,
+        "writeTuples": 0,
+        "cleanupVacuous": true,
+        "DNSCauseOnlyCorroboratingInference": true,
+        "receiptSHA256": "23e0b8000571787986a8f6b68f305f4cb60759ea47a354f792e5a4309236b88b"
+      },
+      "remainderNetworkEnabled": {
+        "status": "PASS_FOUR_REMAINING_MULTIPART_BOUNDARIES_ONLY",
+        "requests": 23,
+        "GET": 15,
+        "POST": 4,
+        "DELETE": 4,
+        "casesPassed": 4,
+        "statuses": [
+          413,
+          200,
+          413,
+          413
+        ],
+        "ownedTuplesCleaned": 4,
+        "unrelatedBaselineExact": true,
+        "platform413ApplicationCacheFlagsNotAsserted": true,
+        "receiptSHA256": "bc8589b6b6ab81d7c5217b3f1c516a3c88f632b9da808045e4d2759fc4da9460",
+        "independentSavedChecksPassed": 459,
+        "independentSavedReviewSHA256": "c24880d2544a771708846e1a7dd7ec5f584867caf825811206e8a52653cfb5da"
+      },
+      "freshExistingAuthAndBoundedExecutionCompleted": true,
+      "finalHostedQualificationPending": true,
+      "first500Unresolved": true,
+      "blobErasureQualified": false,
+      "naturalOutageQualified": false,
+      "ledger": "docs/upgrade-2026-a4ac-preview-tenant-limits-work.md"
     }
   },
   "nov04B254GlobalAndArtifactEvidence": {
