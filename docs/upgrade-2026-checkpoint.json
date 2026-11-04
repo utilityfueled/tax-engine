@@ -17940,5 +17940,20 @@
     "filingQualified": false,
     "releaseReady": false,
     "ledger": "docs/upgrade-2026-oh-native-browser-successor-work.md"
+  },
+  "historicalPreviewUploadAbuse20261103": {
+    "sourceCommit": "377fe75500f2be900176c71bfb2150b3d1a66628",
+    "smallUploadStatus": 200,
+    "largeUploadStatus": 413,
+    "largeUploadRejectedByPlatform": true,
+    "cleanupVerified": true,
+    "authClients": 2,
+    "authRequests": 22,
+    "authInitial404": 20,
+    "authLimited429": 2,
+    "physicalMultiInstanceProved": false,
+    "independentReceiptSha256": "c9c301bd21045153c2f8bb5c825708760d5f0a659ceb052f209ba87d34e74423",
+    "currentHeadQualified": false,
+    "ledger": "docs/upgrade-2026-staging-upload-abuse-probes-work.md"
   }
 }

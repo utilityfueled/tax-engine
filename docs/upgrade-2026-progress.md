@@ -2708,3 +2708,7 @@ Six source-first existing-API cases reproduce three genuine failures before the 
 ### November 3: combined Ohio native browser successor
 
 All eight business/reciprocal journeys now pass without retries under the unchanged managed90s configuration. Exact progress targets are centered before ordinary clicks; privacy sampling preserves normalized matching and every individual negative assertion. Reciprocal inventory now asserts actual review-copy basenames without qualification. All eight scoped check sets and distinct saved8PDF/252page privacy/text/pixel plus80geometry review pass. See [the successor ledger](upgrade-2026-oh-native-browser-successor-work.md). The actual image30s workflow, broader cohorts, human/final2026 and release criteria remain open. Atomic billing5996cbda is pushed separately.
+
+### November 3: actual historical Preview upload and shared auth limits
+
+Exact377fe Preview accepts a synthetic1MiB PNG and rejects5MiB at the platform413 boundary; disposable tuple cleanup and private/no-store checks pass. Two independent platform-only clients share20allowed nonexistent-auth-route POSTs before both receive429, without account/email/billing actions. Distinct offline review approves the bounded receipts. See [the probe ledger](upgrade-2026-staging-upload-abuse-probes-work.md). No physical multi-instance, outage, final-source or release qualification is claimed; the upload correction remains under test.
