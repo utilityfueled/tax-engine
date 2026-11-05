@@ -51,6 +51,11 @@ now has two synthetic accounts/trials and verified owned subscription/event rows
 Actual operations bind deployed480ca19d; failed-delivery automatic retry and
 outages remain untested, and later code is not qualified by this result.
 
+The [actual minute usage export](upgrade-2026-ai-minute-usage-reconciliation-work.md)
+exactly matches 33 known successful Mini requests in the timeout window. It
+contains no request-level settlement; the0.022384USD reserve stays held and
+known-plus-reserve remains0.28520560USD. No new paid request or promotion.
+
 The later [guided render performance experiment](upgrade-2026-guided-render-experiment-work.md)
 is rejected after its final unchanged browser comparison yields successor9PASS/1timeout
 against baseline10PASS. All seven experimental paths are archived and restored/removed;

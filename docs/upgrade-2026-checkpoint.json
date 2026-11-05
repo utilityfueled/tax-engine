@@ -20803,5 +20803,22 @@
     "laterSourceQualified": false,
     "productionChanged": false,
     "releaseReady": false
+  },
+  "nov05OpenAIMinuteUsageReconciliation": {
+    "status": "aggregate_match_request_level_unresolved",
+    "knownRequestsInWindow": 33,
+    "inputTokens": 20223,
+    "outputTokens": 11026,
+    "cachedTokens": 0,
+    "completionMinutesExact": 3,
+    "independentControls": 12,
+    "independentManifest": "2b7ff8b6e909068e5d16dc6ae03f1b496c9dca3a802788db9f2ed84cf2e0f63e",
+    "knownUsd": "0.26282160",
+    "heldReserveUsd": "0.022384",
+    "knownPlusReserveUsd": "0.28520560",
+    "requestLevelResolved": false,
+    "costCsvObtained": false,
+    "newPaidCalls": 0,
+    "modelPromotion": false
   }
 }
