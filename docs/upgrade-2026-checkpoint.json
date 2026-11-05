@@ -20945,5 +20945,23 @@
     "qualifiedProfessionalReview": "pending",
     "whole2026": "gated",
     "filingEligible": false
+  },
+  "nov05ProviderLatePrimaryRefresh": {
+    "status": "bounded_public_document_refresh_PASS_wire_and_qualification_open",
+    "baselineCommit": "8bb563af",
+    "successfulOfficialGets": 18,
+    "boundedControls": 51,
+    "sourcePins": 14,
+    "selectedPriceRowsUnchanged": 6,
+    "manifest": "053802f2dbde876263d70a12c3a40ea950546ca6010e57c45608ab7bef08e3ed",
+    "googleExactGenerateContentWire": "unverified_current_retrieved_guides",
+    "projectAccessNewlyVerified": false,
+    "newInferenceCalls": 0,
+    "newInferenceSpendUsd": "0",
+    "knownUsd": "0.26282160",
+    "heldReserveUsd": "0.022384",
+    "knownPlusReserveUsd": "0.28520560",
+    "qualifiedHumanReview": "pending",
+    "promotion": false
   }
 }

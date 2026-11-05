@@ -70,6 +70,11 @@ now has two synthetic accounts/trials and verified owned subscription/event rows
 Actual operations bind deployed480ca19d; failed-delivery automatic retry and
 outages remain untested, and later code is not qualified by this result.
 
+The [later provider refresh](upgrade-2026-provider-late-refresh-work.md) retains
+current selected prices and lifecycle guards with no inference spend. Exact
+current Google generateContent wire compatibility remains unverified; public
+listing and finite historical runs do not qualify routes or human evaluation.
+
 The [actual minute usage export](upgrade-2026-ai-minute-usage-reconciliation-work.md)
 exactly matches 33 known successful Mini requests in the timeout window. It
 contains no request-level settlement; the0.022384USD reserve stays held and
