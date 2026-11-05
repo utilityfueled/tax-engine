@@ -20670,5 +20670,32 @@
     "filingQualified": false,
     "fullFederal2026": "gated",
     "qualifiedHumanReview": "pending"
+  },
+  "nov05Current7dGlobalVerification": {
+    "status": "full_unit_and_coverage_PASS_not_release",
+    "sourceCommit": "7d93fd67ff8d4cc2bce8eb0a120e0b893903ec9d",
+    "unitTests": 26262,
+    "unitFiles": 1904,
+    "coverageTests": 26262,
+    "coverageFiles": 1904,
+    "reportedSkips": 0,
+    "realPostgresTestsEachRun": 53,
+    "sourcePins": 5252,
+    "sourceDrift": 0,
+    "coveragePercent": {
+      "statements": "91.82",
+      "branches": "87.61",
+      "functions": "90.81",
+      "lines": "95.09"
+    },
+    "thresholdsUnchanged": {
+      "statements": 90,
+      "branches": 85,
+      "functions": 90,
+      "lines": 90
+    },
+    "manifest": "07b1eb3a80dbd987b0c8956c6f8bfa055e4a656355c094f666851e5565e6f56f",
+    "ledger": "docs/upgrade-2026-7d93-global-verification-work.md",
+    "releaseReady": false
   }
 }
