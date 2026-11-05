@@ -1,0 +1,34 @@
+form: Hosted database pool request lifecycle
+schedule: Hosted operational connection lifecycle
+taxYear: 2026
+reference: https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package#attachdatabasepool
+notes: |
+  Operational pool lifecycle only; unchanged TLS, max10, idle30s, startup5s,
+  server10s/lock3s/transaction15s/client15s deadlines and mutation non-replay.
+  Official attachDatabasePool registers a pg release listener once per created
+  shared Pool. On each release its real request context waitUntil keeps the
+  function active through the existing idle timer. It does not end active pools.
+  Tests use real pg Pool and retained official SDK with a socket-free Client
+  constructor adapter and AsyncLocalStorage request context; no remote proof.
+lines:
+  - line: "request-idle"
+    formula: "Actual pg release registers a real SDK request waitUntil; pg evicts idle client at30000ms before the SDK promise resolves at30100ms. Pool stays reusable."
+    testRef: "tests/apps/web/hosted-pool-request-lifecycle.test.ts::keeps the request alive through actual pg idle eviction without ending the pool"
+  - line: "shared-once"
+    formula: "The existing cache returns one Pool with one SDK release listener; separate release requests each register their own context promise without duplicate listeners."
+    testRef: "tests/apps/web/hosted-pool-request-lifecycle.test.ts::attaches once to the cached pool and uses each release request context"
+  - line: "active-reuse"
+    formula: "Reacquiring an idle client before30000ms cancels its pg eviction; no active client is closed by the SDK. Later release starts the ordinary idle interval."
+    testRef: "tests/apps/web/hosted-pool-request-lifecycle.test.ts::preserves a checked out client across the earlier idle interval"
+  - line: "non-vercel"
+    formula: "Without both VERCEL_URL and VERCEL_REGION, the SDK registers no request waitUntil and ordinary pg timers still evict idle clients. Self-host rejects before pool construction."
+    testRef: "tests/apps/web/hosted-pool-request-lifecycle.test.ts::preserves ordinary Node pooling and rejects self-host before construction"
+  - line: "read-timeout"
+    formula: "Exact un-coded Query read timeout destroys that client before release; it cannot return to idle/reuse and no mutation is retried."
+    testRef: "tests/apps/web/hosted-pool-request-lifecycle.test.ts::retains read timeout destruction without mutation replay"
+  - line: "attachment-failure"
+    formula: "A failed lifecycle attachment closes its newly created lazy Pool, publishes no cache/runtime and returns a safe configuration error. A later explicit call may construct a fresh runtime."
+    testRef: "tests/apps/web/hosted-pool-request-lifecycle.test.ts::closes a newly created pool when attachment fails without caching a half runtime"
+  - line: "platform-deadline-boundary"
+    formula: "The official SDK bounds its wait by remaining platform deadline; an early deadline may settle before pg idle eviction. The hook never force-closes a checked-out or idle client to claim drain."
+    testRef: "tests/apps/web/hosted-pool-request-lifecycle.test.ts::honors the actual SDK platform deadline without claiming early connection drain"

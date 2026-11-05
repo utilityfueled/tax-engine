@@ -21258,5 +21258,30 @@
     "manifest": "47963467f028e612b24e5fe56be12b0782840cd5c8234c05bc80eac39d4445e6",
     "ledger": "docs/upgrade-2026-vercel-functions-dependency-work.md",
     "hostedQualified": false
+  },
+  "nov05HostedPoolLifecycle": {
+    "status": "FINITE_LOCAL_INSTALLED_SDK_PG_PASS_STAGING_PENDING",
+    "focusedTests": 126,
+    "focusedFiles": 6,
+    "existingTLSTests": 62,
+    "browserAuditControls": 76,
+    "metadataTests": 892,
+    "specLines": 8470,
+    "inventoryTotal": 902,
+    "supportedUnchanged": 68,
+    "types": "all3PASS",
+    "builds": "bothPASS",
+    "lintErrors": 0,
+    "lintWarnings": 11863,
+    "mainManifest": "38aee81dd6ef0ec00f0b7dd46f31edd9da7e94e53ffd4209fe4eaaaef8e372f8",
+    "finalRootManifest": "8a22c42f61e98f246d8d780a96b8dfe2d503aac90670dbb6a1427bd9d0594945",
+    "testCorrectionReviewManifest": "4e21b8e9749f174f95e15e00a5772321fb6af27f1d9feebcf54e3ecd203fa0a3",
+    "sourceAuditManifest": "0384dd20be9e2f267813f60ede611029ca299f7c7fec0f2cd929f7abe06dcc89",
+    "hashChanges": 1,
+    "contractsUnchanged": 148,
+    "casesUnchanged": 580,
+    "deployedDrainQualified": false,
+    "productionDeployed": false,
+    "ledger": "docs/upgrade-2026-hosted-pool-lifecycle-work.md"
   }
 }

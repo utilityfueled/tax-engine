@@ -1,3 +1,4 @@
+import { attachDatabasePool } from "@vercel/functions/db-connections";
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool, type PoolClient } from "pg";
 import { resolveDeploymentMode } from "./deployment-mode";
@@ -276,6 +277,15 @@ export async function getHostedServerDatabase(
     keepAlive: true,
     keepAliveInitialDelayMillis: 10_000,
   });
+  // Attach once before publishing the shared runtime. The SDK registers each
+  // release's request waitUntil so pg's existing idle timer can run on Vercel.
+  // Outside a Vercel request runtime it leaves ordinary Node pooling intact.
+  try {
+    attachDatabasePool(pool);
+  } catch {
+    await pool.end();
+    throw new Error("Server configuration error: hosted database pool lifecycle initialization failed.");
+  }
   pool.on("connect", discardClientAfterReadTimeout);
   // pg has already discarded an idle client before emitting this event.
   // An absent listener crashes Node; raw driver errors can contain private data.

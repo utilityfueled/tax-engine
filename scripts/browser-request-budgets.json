@@ -387,7 +387,7 @@
     "apps/web/src/lib/hosted-recovery-contract.ts": "6e7a5c2a054ee3d7191bdfd9c1943c94f9f780b13de81e92ed477235de1a5c8a",
     "apps/web/src/lib/hosted-recovery-mail.ts": "d62098cbfe54b2c190e64d537d52812e786d3beab0a39743df51bd9ebe04e76d",
     "apps/web/src/lib/hosted-runtime-safety.ts": "2b129194600f4e0e450b8b1f6145056e6beaa25a5179c2d010457c015d95c844",
-    "apps/web/src/lib/hosted-server-db.ts": "e5d7668f37863b98a3a4ee84d7bbabd678742ea89823c3864b428d5e111f4685",
+    "apps/web/src/lib/hosted-server-db.ts": "243070e360042fb236862c2af23ccaa501fbd3f68e870e80d246364bbba3bbdc",
     "apps/web/src/lib/hosted-workspace-metadata-migration.ts": "caa7a0b2a5e358c4c8f36124c9b9b2e5d107af1585db0c10ae701921b5f7ffbc",
     "apps/web/src/lib/hosted-workspace-route.ts": "633d86e1815eed97422d20eeb4ef49a454cbac2425a7e4133a31f589ca4e905e",
     "apps/web/src/lib/interview-question-ui.ts": "b85e29d4f27b8f78817666f519afe6f9b258f489a384199032120cc6058caf94",

@@ -6833,6 +6833,26 @@
       ]
     },
     {
+      "key": "federal/hosted-pool-request-lifecycle",
+      "jurisdiction": "federal",
+      "taxYear": 2026,
+      "sourceAuthority": "https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package#attachdatabasepool",
+      "specPath": "spec/federal/hosted-pool-request-lifecycle.yaml",
+      "enginePath": null,
+      "packetPath": null,
+      "specExists": true,
+      "engineExists": false,
+      "packetGenerationExists": false,
+      "testCoverageExists": true,
+      "efileBusinessRuleCoverageExists": false,
+      "status": "unsupported",
+      "knownGaps": [
+        "Missing engine implementation",
+        "Missing packet generation or inclusion rule",
+        "Missing e-file and business-rule validation coverage"
+      ]
+    },
+    {
       "key": "federal/hosted-preview-database-selection",
       "jurisdiction": "federal",
       "taxYear": 2026,
