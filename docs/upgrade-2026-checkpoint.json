@@ -20339,5 +20339,27 @@
     "hostedQualified": false,
     "selfHostedQualified": false,
     "filingQualified": false
+  },
+  "nov05ActualAILocalLedger": {
+    "status": "actual3provider/localPG integration PASS; distinct45checks+5realreadonlyqueries PASS",
+    "providerRequests": 3,
+    "newCalculatedProviderUSD": "0.0081287",
+    "cumulativeCalculatedUSD": "0.17264080",
+    "priorUnresolvedReserveUSD": "0.022384",
+    "knownPlusReserveUSD": "0.19502480",
+    "retailLogicalChargesCents": [
+      "1",
+      "1"
+    ],
+    "finalHeldCreditCents": "0",
+    "rejectedAttempt": "deliberate engineering rejection after application parsing, not natural model quality evidence",
+    "schemaCleanup": "exact9tables/schemaRESTRICT knownCOMMIT/absence/closedclient; priorpreconnect failures retained",
+    "actualReviewManifest": "b03511a840561bd2ed4f64dbe25054d445058180c0b9ca74e3a3186973c16a7f",
+    "cleanupActualManifest": "df8d88f5470663e92c4eaef34a08295161a774cd1d08f1753ad3e8acf3533695",
+    "ledger": "docs/upgrade-2026-ai-live-local-ledger-work.md",
+    "invoiceReconciled": false,
+    "hostedQualified": false,
+    "humanCorpusReviewed": false,
+    "modelPromotionEnabled": false
   }
 }
