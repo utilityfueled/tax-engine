@@ -33,9 +33,13 @@ import {
 import { d, roundDollar } from "@/utils/decimal.js";
 import { resolveMACRSAssetBasisSources, type MACRSBasisSourceAmounts, type MACRSBasisSourceStatus } from "@/models/macrs-asset-basis-sources.js";
 
+import { resolveMACRSDispositionSources } from "@/models/macrs-disposition-sources.js";
+
 const ZERO = new Decimal(0);
 
 export interface AssetDepreciationResult {
+  dispositionSourceStatus?: "documented_ordinary_nonterminal";
+  dispositionAudit?: { sourceTaxYear: number; dispositionDate: string; annualPercentage: Decimal; fraction: Decimal; fractionNumerator: Decimal; fractionDenominator: Decimal; priorAllowedOrAllowable: Decimal; openingAdjustedBasis: Decimal; uncappedDepreciation: Decimal; preRoundDepreciation: Decimal; };
   description: string;
   costBasis: Decimal;
   basisSourceStatus: MACRSBasisSourceStatus;
@@ -67,6 +71,18 @@ export function computeAssetDepreciation(
   taxYear: number,
   conventionOverride?: MACRSConvention,
 ): AssetDepreciationResult | null {
+  const disposition = resolveMACRSDispositionSources(asset, taxYear);
+  if (disposition) {
+    const uncappedDepreciation = disposition.originalMacrsBasis.times(disposition.annualPercentage).div(100).times(disposition.fractionNumerator).div(disposition.fractionDenominator);
+    const preRoundDepreciation = Decimal.min(uncappedDepreciation, disposition.remainingBasis);
+    return { description: asset.description ?? "", costBasis: disposition.originalMacrsBasis,
+      basisSourceStatus: "legacy_unqualified", dispositionSourceStatus: "documented_ordinary_nonterminal",
+      dispositionAudit: { sourceTaxYear: taxYear, dispositionDate: disposition.dispositionDate, annualPercentage: disposition.annualPercentage, fraction: disposition.fraction, fractionNumerator: disposition.fractionNumerator, fractionDenominator: disposition.fractionDenominator, priorAllowedOrAllowable: disposition.priorAllowedOrAllowable, openingAdjustedBasis: disposition.remainingBasis, uncappedDepreciation, preRoundDepreciation },
+      recoveryPeriod: disposition.recoveryPeriod, method: disposition.method, convention: disposition.convention,
+      placedInServiceYear: disposition.placedInServiceYear, placedInServiceMonth: disposition.placedInServiceMonth,
+      recoveryYear: disposition.recoveryYear, percentage: disposition.annualPercentage,
+      depreciation: roundDollar(preRoundDepreciation), fullyDepreciated: false };
+  }
   const basisSourceAmounts = resolveMACRSAssetBasisSources(asset, taxYear);
   const basisSourceStatus: MACRSBasisSourceStatus = basisSourceAmounts ? "documented_first_year" : "legacy_unqualified";
   const costBasis = basisSourceAmounts?.regularMacrsBasis ?? d(asset.costBasis);
@@ -121,20 +137,7 @@ export function computeAssetDepreciation(
   }
 
   const percentage = table[recoveryYear - 1];
-  let depreciation = roundDollar(costBasis.times(percentage).dividedBy(100));
-
-  if (asset.disposedDuringYear && !isRealProperty && recoveryYear <= maxYears) {
-    // Disposal year: half the table percentage for half-year convention,
-    // or the applicable quarter fraction for mid-quarter convention.
-    if (convention === "midQuarter") {
-      // Mid-quarter disposal: deduction for the quarter fraction of the year
-      // the asset was disposed. Since we don't track disposal quarter,
-      // use the same halving rule as a reasonable approximation.
-      depreciation = roundDollar(depreciation.dividedBy(2));
-    } else {
-      depreciation = roundDollar(depreciation.dividedBy(2));
-    }
-  }
+  const depreciation = roundDollar(costBasis.times(percentage).dividedBy(100));
 
   return {
     description: asset.description ?? "",
@@ -181,6 +184,16 @@ export function computeAggregateDepreciation(
   assets: DepreciableAsset[],
   taxYear: number,
 ): AggregatedDepreciation {
+
+  const dispositionIdentities = new Set<string>();
+  for (const asset of assets) {
+    resolveMACRSDispositionSources(asset, taxYear);
+    if (asset.dispositionSources !== undefined) {
+      const identity = JSON.stringify([asset.dispositionSources.activityIdentity, asset.dispositionSources.assetIdentity]);
+      if (dispositionIdentities.has(identity)) throw new Error("MACRS disposition sources: duplicate actual asset identity");
+      dispositionIdentities.add(identity);
+    }
+  }
   // --- Step 1: Mid-quarter test on current-year personal property ---
   // The mid-quarter test considers ALL personal property including listed property
   const midQuarterRequired = isMidQuarterRequired(assets, taxYear);
@@ -250,7 +263,8 @@ export function isMidQuarterRequired(
   let q4Basis = ZERO;
 
   for (const asset of assets) {
-    const basisSourceAmounts = resolveMACRSAssetBasisSources(asset, taxYear);
+    resolveMACRSDispositionSources(asset, taxYear);
+  const basisSourceAmounts = resolveMACRSAssetBasisSources(asset, taxYear);
     const recoveryPeriod = parseFloat(asset.recoveryPeriod);
     const isRealProperty = recoveryPeriod === 27.5 || recoveryPeriod === 39;
     if (isRealProperty) continue; // real property excluded from the test
@@ -335,6 +349,7 @@ export function computeListedPropertyDepreciation(
   taxYear: number,
   conventionOverride?: MACRSConvention,
 ): ListedPropertyResult | null {
+  if (resolveMACRSDispositionSources(asset, taxYear)) throw new Error("MACRS disposition sources: ordinary disposal cannot enter listed-property calculation");
   const basisSourceAmounts = resolveMACRSAssetBasisSources(asset, taxYear);
   const basisSourceStatus: MACRSBasisSourceStatus = basisSourceAmounts ? "documented_first_year" : "legacy_unqualified";
   const costBasis = basisSourceAmounts?.regularMacrsBasis ?? d(asset.costBasis);
@@ -400,12 +415,7 @@ export function computeListedPropertyDepreciation(
   }
 
   const percentage = table[recoveryYear - 1];
-  let rawDepreciation = roundDollar(costBasis.times(percentage).dividedBy(100));
-
-  // Disposal-year halving
-  if (asset.disposedDuringYear && !isRealProperty && recoveryYear <= maxYears) {
-    rawDepreciation = roundDollar(rawDepreciation.dividedBy(2));
-  }
+  const rawDepreciation = roundDollar(costBasis.times(percentage).dividedBy(100));
 
   // Apply business-use percentage
   const tentativeDepreciation = basisSourceAmounts
@@ -465,6 +475,7 @@ export function computeListedPropertyAggregation(
 
   for (const asset of assets) {
     resolveMACRSAssetBasisSources(asset, taxYear);
+    resolveMACRSDispositionSources(asset, taxYear);
     if (!asset.isListedProperty) continue;
 
     const result = computeListedPropertyDepreciation(asset, taxYear, conventionOverride);

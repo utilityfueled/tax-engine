@@ -294,13 +294,11 @@ describe("MACRS depreciation computation", () => {
       expect(result!.depreciation.toNumber()).toBe(2000);
     });
 
-    it("disposed 5-year asset in year 3 gets half the table percentage", () => {
-      const result = computeAssetDepreciation(
-        { costBasis: "10000", placedInServiceDate: "2023-06", recoveryPeriod: "5", disposedDuringYear: true },
-        2025,
-      );
-      // Year 3 normal = 19.20% of $10,000 = $1,920; half = $960
-      expect(result!.depreciation.toNumber()).toBe(960);
+    it("prior-year disposal requires actual source dates and history instead of a YYYY-MM approximation", () => {
+      const asset = { costBasis: "10000", placedInServiceDate: "2023-06", recoveryPeriod: "5", disposedDuringYear: true } as const;
+      const before = JSON.stringify(asset);
+      expect(() => computeAssetDepreciation(asset, 2025)).toThrow(/MACRS disposition sources/);
+      expect(JSON.stringify(asset)).toBe(before);
     });
 
     it("description is optional and defaults to empty string", () => {

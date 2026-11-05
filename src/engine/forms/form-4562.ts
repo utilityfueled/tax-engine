@@ -161,6 +161,10 @@ export function calculateForm4562(input: Form4562Input, ownerTaxYear?: number): 
   if (ownerTaxYear !== undefined && input.taxYear !== undefined && ownerTaxYear !== input.taxYear) {
     throw new Error('Form4562 year conflicts with the actual owner tax year');
   }
+  if (input.assets?.some(asset => asset.disposedDuringYear === true || asset.dispositionSources !== undefined)
+      && ownerTaxYear === undefined && input.taxYear === undefined) {
+    throw new Error("Form4562 disposal requires an explicit actual owner tax year");
+  }
   const taxYear = ownerTaxYear ?? input.taxYear ?? DEFAULT_TAX_YEAR;
   if (taxYear !== 2025 && taxYear !== 2026) throw new Error('Unsupported Form4562 tax year');
   const defaults = SECTION_179_DEFAULTS[taxYear];
@@ -438,6 +442,20 @@ export function calculateForm4562(input: Form4562Input, ownerTaxYear?: number): 
 
   // Per-asset depreciation audit trail entries
   for (const ar of assetResults) {
+    if (ar.dispositionAudit) {
+      const detail = ar.dispositionAudit;
+      audit.record("Form 4562", "asset", "Ordinary nonterminal disposal depreciation", ar.depreciation,
+        "min(original MACRS basis × annual percentage × disposition numerator / denominator, opening adjusted basis), rounded once",
+        { "Disposition source status": ar.dispositionSourceStatus ?? "unqualified",
+          "Actual disposition date": detail.dispositionDate,
+          "Original MACRS basis": ar.costBasis, "Annual table percentage": detail.annualPercentage,
+          "Disposition numerator": detail.fractionNumerator, "Disposition denominator": detail.fractionDenominator,
+          "Prior allowed or allowable": detail.priorAllowedOrAllowable,
+          "Opening adjusted basis": detail.openingAdjustedBasis,
+          "Uncapped current deduction": detail.uncappedDepreciation,
+          "Current deduction before rounding": detail.preRoundDepreciation });
+      continue;
+    }
     audit.record(
       "Form 4562", "asset",
       `${ar.description || "Asset"} (${ar.recoveryPeriod}-yr ${ar.method} ${ar.convention}, year ${ar.recoveryYear})`,

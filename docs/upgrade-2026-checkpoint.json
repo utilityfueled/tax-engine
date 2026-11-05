@@ -20220,5 +20220,39 @@
     "combinedDeductionsAndHistoryQualified": false,
     "filingQualified": false,
     "ledger": "docs/upgrade-2026-passenger-auto-business-use-work.md"
+  },
+  "nov05OrdinaryNonterminalMACRSDisposition": {
+    "status": "finite-original-bound-disposition-only",
+    "v1IndependentDefects": 2,
+    "v1FailuresRetained": true,
+    "checkoutRed": {
+      "failed": 27,
+      "passed": 4
+    },
+    "checkoutGreen": {
+      "passed": 240,
+      "files": 13
+    },
+    "distinctReviewFocusedPassed": 249,
+    "literalOracles": [
+      "513",
+      "757.50 ->758",
+      "960.4992 ->960"
+    ],
+    "types": "root/contracts/web pass",
+    "specReferences": 8355,
+    "inventory": {
+      "oldEntriesUnchanged": 874,
+      "total": 875,
+      "newStatus": "unsupported"
+    },
+    "lint": "strict changedproduction/newtests pass; normal repository pass; oldfixture76 inheritedwarnings",
+    "v2AuthorManifestSHA256": "ca16fec81683b1df63795704de49b078988eed48cd2978f976104b3b78e37f67",
+    "v2IndependentManifestSHA256": "e572021be88dcf0147645612fa983163e611500a069da2170660a14114806f33",
+    "checkoutManifestSHA256": "9cbda55aafdcfcd3c59126c1f41524017f6af60be2847022d593232df6b322b8",
+    "currentGlobalChecks": "pending final source integration",
+    "parentActivityGainFormsQualified": false,
+    "filingQualified": false,
+    "ledger": "docs/upgrade-2026-macrs-ordinary-disposition-work.md"
   }
 }
